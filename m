@@ -1,1296 +1,452 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f182.google.com ([209.85.128.182]:43770 "EHLO
-        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751928AbdLMJTP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 04:19:15 -0500
-Received: by mail-wr0-f182.google.com with SMTP id z34so1443599wrz.10
-        for <linux-pci@vger.kernel.org>; Wed, 13 Dec 2017 01:19:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20171208182634.GA1885@e107981-ln.cambridge.arm.com>
-References: <1511878688-8234-1-git-send-email-l.subrahmanya@mobiveil.co.in> <20171208182634.GA1885@e107981-ln.cambridge.arm.com>
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Wed, 13 Dec 2017 14:49:12 +0530
-Message-ID: <CAFZiPx1zapY4-8ZceMq+eXiun=39jbS49YtWuFjgoUj3ZAKtRA@mail.gmail.com>
-Subject: Re: [PATCH v4 2/2] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        Peter W Newton <peter.newton@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Raj Raina <rajesh.raina@nxp.com>,
-        Rajan Kapoor <rajan.kapoor@nxp.com>,
-        Prabhjot Singh <prabhjot.singh@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC 2/2] pci: dwc: pci-exynos: add the codes to support the
+ exynos5433
+To: Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org
+Cc: linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, robh+dt@kernel.org, krzk@kernel.org,
+        kgene@kernel.org, lorenzo.pieralisi@arm.com
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <21cb6abf-5428-03cf-77f1-be762d96d156@samsung.com>
+Date: Fri, 22 Dec 2017 07:21:03 +0900
+MIME-version: 1.0
+In-reply-to: <000401d37a76$899613c0$9cc23b40$@gmail.com>
+Content-type: text/plain; charset="utf-8"
+References: <20171221121408.22636-1-jh80.chung@samsung.com>
+        <CGME20171221121409epcas1p1a12d0f3b0b5d5e732da865ee78f6bb47@epcas1p1.samsung.com>
+        <20171221121408.22636-2-jh80.chung@samsung.com>
+        <000401d37a76$899613c0$9cc23b40$@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lorenzo,
+Hi Jingoo,
 
-
-On Fri, Dec 8, 2017 at 11:56 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Tue, Nov 28, 2017 at 09:18:08AM -0500, Subrahmanya Lingappa wrote:
->> This is the driver for Mobiveil AXI PCIe Host Bridge Soft IP -
->> GPEX 4.0, a PCIe gen4 IP. This configurable IP has upto 8
->> outbound and inbound windows for the address translation.
->
-> An imperative sentence is preferable.
->
-> Eg:
-> https://lkml.org/lkml/2016/4/5/709
->
->> Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
->> Cc: bhelgaas@google.com
->> Cc: lorenzo.pieralisi@arm.com
->> Cc: linux-pci@vger.kernel.org
->
-> Have a look at eg commit 39d710363c14 ("PCI: aardvark: Add Aardvark PCI
-> host controller driver") and use the commit log style and the same tag
-> format.
->
-> eg Bjorn's CC should be:
->
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
->
+On 12/22/2017 01:12 AM, Jingoo Han wrote:
+> On Thursday, December 21, 2017 7:14 AM, Jaehoon Chung wrote:
+>>
+>> Exynos5433 has the PCIe for WiFi.
+>> Added the codes relevant to PCIe for supporting the exynos5433.
+>> Also changed the binding documentation name to
+>> 'samsung,exynos-pcie.txt'.
+>> (It's not only exynos5440 anymore.)
+>>
+> 
+> I have no objection.
+> However, I added some comments about Exynos5440.
+> 
+>> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
 >> ---
->> Fixes:
->> - used git mailer, as tabs were converted to spaces by thunderbird before
->> - 0x4* and 0x10* look a patterns wrapped into STRIDE* macros
->> - tested driver on 4.14 git tree, while the v3 was on 4.9
->> - moved global bitmap msi_irq_in_use into port information structure
->> - changed *_setup_config_access() to *_host_init()
->> - pci_scan_root_bus_bridge() is used to replace pci_scan_child_bus()
->> - Did split the irq domain into MSI and INTx domains
->> - comaptible string changed to recommended name
->> - long delays during link up wait replaced by shorter polls
->> - fixed review comments for v3 patch
+>>  ...exynos5440-pcie.txt => samsung,exynos-pcie.txt} |   2 +-
+>>  drivers/pci/dwc/pci-exynos.c                       | 183
+> ++++++++++++++++-----
+>>  2 files changed, 144 insertions(+), 41 deletions(-)
+>>  rename Documentation/devicetree/bindings/pci/{samsung,exynos5440-pcie.txt
+>> => samsung,exynos-pcie.txt} (97%)
 >>
->>  drivers/pci/host/Kconfig         |   8 +
->>  drivers/pci/host/Makefile        |   1 +
->>  drivers/pci/host/pcie-mobiveil.c | 911 +++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 920 insertions(+)
->>  create mode 100644 drivers/pci/host/pcie-mobiveil.c
+>> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-
+>> pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
+>> similarity index 97%
+>> rename from Documentation/devicetree/bindings/pci/samsung,exynos5440-
+>> pcie.txt
+>> rename to Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
+>> index 34a11bfbfb60..958dcc150505 100644
+>> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
+>> @@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsys
+>> DesignWare PCIe IP
+>>  and thus inherits all the common properties defined in designware-
+>> pcie.txt.
 >>
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index 38d1298..09bf1d9 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -27,6 +27,14 @@ config PCIE_XILINX_NWL
->>        or End Point. The current option selection will only
->>        support root port enabling.
+>>  Required properties:
+>> -- compatible: "samsung,exynos5440-pcie"
+>> +- compatible: "samsung,exynos5440-pcie" or "samsung,exynos5433-pcie"
+>>  - reg: base addresses and lengths of the PCIe controller,
+>>  	the PHY controller, additional register for the PHY controller.
+>>  	(Registers for the PHY controller are DEPRECATED.
+>> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+>> index 5596fdedbb94..8dee2e90347e 100644
+>> --- a/drivers/pci/dwc/pci-exynos.c
+>> +++ b/drivers/pci/dwc/pci-exynos.c
+>> @@ -40,6 +40,8 @@
+>>  #define PCIE_IRQ_SPECIAL		0x008
+>>  #define PCIE_IRQ_EN_PULSE		0x00c
+>>  #define PCIE_IRQ_EN_LEVEL		0x010
+>> +#define PCIE_SW_WAKE			0x018
+>> +#define PCIE_BUS_EN			BIT(1)
+>>  #define IRQ_MSI_ENABLE			BIT(2)
+>>  #define PCIE_IRQ_EN_SPECIAL		0x014
+>>  #define PCIE_PWR_RESET			0x018
+>> @@ -49,7 +51,8 @@
+>>  #define PCIE_NONSTICKY_RESET		0x024
+>>  #define PCIE_APP_INIT_RESET		0x028
+>>  #define PCIE_APP_LTSSM_ENABLE		0x02c
+>> -#define PCIE_ELBI_RDLH_LINKUP		0x064
+>> +#define PCIE_ELBI_RDLH_LINKUP		0x074
+> 
+> The address of this register should be 0x064 for exynos5440.
+> Howe about the following?
+> 
+> +#define EXYNOS5440_PCIE_ELBI_RDLH_LINKUP	0x064
+> +#define PCIE_ELBI_RDLH_LINKUP		0x074
+> 
+> Or you can add the following.
+> 
+> /* Exynos5440 PCIe ELBI registers */
+> #define EXYNOS5440_PCIE_ELBI_RDLH_LINKUP	0x064
+
+Maybe, you're right. Because i didn't have Exynos5440 TRM, it's problem to me about updating other SoCs.
+I have checked almost all variants Exynos. They are using the LINKUP register as 0x74.
+
+If i can get the exynos5440 TRM, it's much helpful to me. Is it possible?
+
+> 
+>> +#define PCIE_ELBI_XMLH_LINKUP		BIT(4)
+>>  #define PCIE_ELBI_LTSSM_ENABLE		0x1
+>>  #define PCIE_ELBI_SLV_AWMISC		0x11c
+>>  #define PCIE_ELBI_SLV_ARMISC		0x120
+>> @@ -94,6 +97,10 @@
+>>  #define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
+>>  #define PCIE_PHY_TRSV3_LVCC		0x31c
 >>
->> +config PCIE_MOBIVEIL
->> +        bool "Mobiveil AXI PCIe host bridge support"
->> +        depends on ARCH_ZYNQMP || COMPILE_TEST
->> +        depends on PCI_MSI_IRQ_DOMAIN
->> +        help
->> +          Say 'Y' here if you want kernel to support the Mobiveil AXI PCIe
->> +          Host Bridge driver.
+>> +/* DBI register */
+>> +#define PCIE_MISC_CONTROL_1_OFF		0x8BC
+>> +#define DBI_RO_WR_EN			BIT(0)
 >> +
->>  config PCI_FTPCI100
->>       bool "Faraday Technology FTPCI100 PCI controller"
->>       depends on OF
->> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
->> index 34ec1d8..d745d68 100644
->> --- a/drivers/pci/host/Makefile
->> +++ b/drivers/pci/host/Makefile
->> @@ -23,6 +23,7 @@ obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
->>  obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
->>  obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
->>  obj-$(CONFIG_VMD) += vmd.o
->> +obj-$(CONFIG_PCIE_MOBIVEIL) += pcie-mobiveil.o
+>>  struct exynos_pcie_mem_res {
+>>  	void __iomem *elbi_base;   /* DT 0th resource: PCIe CTRL */
+>>  	void __iomem *phy_base;    /* DT 1st resource: PHY CTRL */
+>> @@ -221,6 +228,96 @@ static const struct exynos_pcie_ops
+>> exynos5440_pcie_ops = {
+>>  	.deinit_clk_resources	= exynos5440_pcie_deinit_clk_resources,
+>>  };
 >>
->>  # The following drivers are for devices that use the generic ACPI
->>  # pci_root.c driver but don't support standard ECAM config access.
->> diff --git a/drivers/pci/host/pcie-mobiveil.c b/drivers/pci/host/pcie-mobiveil.c
->> new file mode 100644
->> index 0000000..63e46ad
->> --- /dev/null
->> +++ b/drivers/pci/host/pcie-mobiveil.c
->> @@ -0,0 +1,911 @@
->> +/*
->> + * PCIe host controller driver for Mobiveil PCIe Host controller
->> + *
->> + * Copyright Mobiveil Inc. (C) 2012-2017. All rights reserved
->> + *
->> + * This program is free software; you can redistribute it and/or modify it
->> + * under the terms and conditions of the GNU General Public License,
->> + * version 2, as published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope it will be useful, but WITHOUT
->> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
->> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
->> + * more details.
->> + *
->> + * You should have received a copy of the GNU General Public License along with
->> + * this program.  If not, see <http://www.gnu.org/licenses/>.
->> + */
->
-> You may want to move this to the SPDX tag:
->
-> https://lkml.org/lkml/2017/11/2/590
->
-> See also Philippe's comment on:
->
-> https://patchwork.ozlabs.org/patch/840821/
->
->> +#include <linux/delay.h>
->> +#include <linux/interrupt.h>
->> +#include <linux/irqchip/chained_irq.h>
->> +#include <linux/module.h>
->> +#include <linux/of_address.h>
->> +#include <linux/of_irq.h>
->> +#include <linux/irq.h>
->> +#include <linux/msi.h>
->> +#include <linux/of_pci.h>
->> +#include <linux/pci.h>
->> +#include <linux/platform_device.h>
->> +#include <linux/slab.h>
->> +#include <linux/kernel.h>
->> +#include <linux/irqdomain.h>
->> +#include <linux/init.h>
->> +#include <linux/of_platform.h>
->
-> Alphabetical order.
->
->> +/* register offsets and bit positions */
+>> +static int exynos5433_pcie_get_mem_resources(struct platform_device
+> *pdev,
+>> +					     struct exynos_pcie *ep)
+>> +{
+>> +	struct dw_pcie *pci = ep->pci;
+>> +	struct device *dev = pci->dev;
+>> +	struct resource *res;
 >> +
->> +#define STRIDE4(window_num)  (0x4 * window_num)
->> +#define STRIDE10(window_num) (0x10 * window_num)
->
-> I am sure we can improve these macro names.
->
-> Open, for instance:
->
-> drivers/pci/host/pci-aardvark.c
->
-> and check OB_WIN_BASE_ADDR and OB_WIN_REG_ADDR
->
-> You need something similar if not identical (apart from the naming that
-> it is up to you), this driver is not unique and all you need is a base
-> address, a stride and a window offset.
->
-> Say (I do not know the register map):
->
-> #define PAB_AMAP_BASE                   0xba00
-> #define PAB_AMAP_BLOCK_SIZE             0x4
-> #define PAB_AMAP_REG_ADDR(win, offset)  (PAB_AMAP_BASE + \
->                                          PAB_AMAP_BLOCK_SIZE * (win) + \
->                                          (offset))
->
-> One of your macros becomes:
->
-> #define PAB_EXT_AXI_AMAP_SIZE(win)      PAB_AMAP_REG_ADDR(win, 0xf0)
->
-> Better ?
->
-It could have, but I have two different possible values  for
-PAB_AMAP_BLOCK_SIZE,
-so i would need to keep at-least two different macros, I will rename
-them to block size and
-change into something like following
-define PAB_REG_BLOCK_SIZE_4    4
-#define PAB_REG_BLOCK_SIZE_16   16
-#define PAB_REG_ADDR_4(offset, win) (offset + (win * PAB_REG_BLOCK_SIZE_4))
-#define PAB_REG_ADDR_16(offset, win) (offset + (win * PAB_REG_BLOCK_SIZE_16))
-
-#define PAB_EXT_AXI_AMAP_SIZE(win)      PAB_REG_ADDR_4(0xbaf0, win)
-#define PAB_AXI_AMAP_AXI_WIN(win)       PAB_REG_ADDR_16(0x0ba4, win)
-
-is that fine ?
-
->> +#define LTSSM_STATUS         0x0404
->> +#define  LTSSM_STATUS_L0_MASK        0x3f
->> +#define  LTSSM_STATUS_L0     0x2d
+>> +	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
+>> +	if (!ep->mem_res)
+>> +		return -ENOMEM;
 >> +
->> +#define PAB_CTRL             0x0808
->> +#define  AMBA_PIO_ENABLE_SHIFT       0
->> +#define  PEX_PIO_ENABLE_SHIFT        1
->> +#define  PAGE_SEL_SHIFT              13
->> +#define  PAGE_SEL_MASK               0x3f
->> +#define  PAGE_SEL_OFFSET_SHIFT       10
+>> +	/* External Local Bus interface(ELBI) Register */
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
+>> +	ep->mem_res->elbi_base = devm_ioremap_resource(&pdev->dev, res);
+>> +	if (IS_ERR(ep->mem_res->elbi_base))
+>> +		return PTR_ERR(ep->mem_res->elbi_base);
 >> +
->> +#define PAB_AXI_PIO_CTRL     0x0840
->> +#define  APIO_EN_MASK                0xf
+>> +	/* Data Bus Interface(DBI) Register */
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+>> +	pci->dbi_base = devm_ioremap_resource(&pdev->dev, res);
+>> +	if (IS_ERR(pci->dbi_base))
+>> +		return PTR_ERR(pci->dbi_base);
 >> +
->> +#define PAB_PEX_PIO_CTRL     0x08c0
->> +#define  PIO_ENABLE_SHIFT    0
+>> +	return 0;
+>> +}
 >> +
->> +#define PAB_INTP_AMBA_MISC_ENB       0x0b0c
->> +#define PAB_INTP_AMBA_MISC_STAT      0x0b1c
->> +#define  PAB_INTP_INTX_MASK  0x1e0
->> +#define  PAB_INTP_MSI_MASK   0x8
+>> +static int exynos5433_pcie_get_clk_resources(struct exynos_pcie *ep)
+>> +{
+>> +	struct dw_pcie *pci = ep->pci;
+>> +	struct device *dev = pci->dev;
 >> +
->> +#define PAB_AXI_AMAP_CTRL(win)       (0x0ba0 + STRIDE10(win))
->> +#define  WIN_ENABLE_SHIFT    0
->> +#define  WIN_TYPE_SHIFT              1
->> +#define  WIN_SIZE_SHIFT              10
+>> +	ep->clk_res = devm_kzalloc(dev, sizeof(*ep->clk_res), GFP_KERNEL);
+>> +	if (!ep->clk_res)
+>> +		return -ENOMEM;
 >> +
->> +#define PAB_EXT_AXI_AMAP_SIZE(win)   (0xbaf0 + STRIDE4(win))
+>> +	ep->clk_res->clk = devm_clk_get(dev, "pcie");
+>> +	if (IS_ERR(ep->clk_res->clk)) {
+>> +		dev_err(dev, "Failed to get pcie rc clock\n");
+>> +		return PTR_ERR(ep->clk_res->clk);
+>> +	}
 >> +
->> +#define PAB_AXI_AMAP_AXI_WIN(win)    (0x0ba4 + STRIDE10(win))
->> +#define  AXI_WINDOW_BASE_SHIFT               2
+>> +	ep->clk_res->bus_clk = devm_clk_get(dev, "pcie_bus");
+>> +	if (IS_ERR(ep->clk_res->bus_clk)) {
+>> +		dev_err(dev, "Failed to get pcie bus clock\n");
+>> +		return PTR_ERR(ep->clk_res->bus_clk);
+>> +	}
 >> +
->> +#define PAB_AXI_AMAP_PEX_WIN_L(win)  (0x0ba8 + STRIDE10(win))
->> +#define  PAB_BUS_SHIFT                       24
->> +#define  PAB_DEVICE_SHIFT            19
->> +#define  PAB_FUNCTION_SHIFT          16
+>> +	return 0;
+>> +}
 >> +
->> +#define PAB_AXI_AMAP_PEX_WIN_H(win)  (0x0bac + STRIDE10(win))
->> +#define PAB_INTP_AXI_PIO_CLASS               0x474
+>> +static void exynos5433_pcie_deinit_clk_resources(struct exynos_pcie *ep)
+>> +{
+>> +	clk_disable_unprepare(ep->clk_res->bus_clk);
+>> +	clk_disable_unprepare(ep->clk_res->clk);
+>> +}
 >> +
->> +#define PAB_PEX_AMAP_CTRL(win)               (0x4ba0 + STRIDE10(win))
->> +#define  AMAP_CTRL_EN_SHIFT          0
->> +#define  AMAP_CTRL_TYPE_SHIFT                1
 >> +
->> +#define PAB_EXT_PEX_AMAP_SIZEN(win)  (0xbef0 + STRIDE4(win))
->> +#define PAB_PEX_AMAP_AXI_WIN(win)    (0x4ba4 + STRIDE10(win))
->> +#define PAB_PEX_AMAP_PEX_WIN_L(win)  (0x4ba8 + STRIDE10(win))
->> +#define PAB_PEX_AMAP_PEX_WIN_H(win)  (0x4bac + STRIDE10(win))
->
-> See above - please clean this up.
->
->> +/* supported number of interrupts */
->> +#define PCI_NUM_INTX         4
->> +#define PCI_NUM_MSI          16
->> +#define PAB_INTA_POS         5
+>> +static int exynos5433_pcie_init_clk_resources(struct exynos_pcie *ep)
+>> +{
+>> +	struct dw_pcie *pci = ep->pci;
+>> +	struct device *dev = pci->dev;
+>> +	int ret;
 >> +
->> +/* MSI registers */
->> +#define MSI_BASE_LO_OFFSET   0x04
->> +#define MSI_BASE_HI_OFFSET   0x08
->> +#define MSI_SIZE_OFFSET              0x0c
->> +#define MSI_ENABLE_OFFSET    0x14
->> +#define MSI_STATUS_OFFSET    0x18
->> +#define MSI_DATA_OFFSET              0x20
->> +#define MSI_ADDR_L_OFFSET    0x24
->> +#define MSI_ADDR_H_OFFSET    0x28
+>> +	ret = clk_prepare_enable(ep->clk_res->clk);
+>> +	if (ret) {
+>> +		dev_err(dev, "cannot enable pcie rc clock");
+>> +		return ret;
+>> +	}
 >> +
->> +/* outbound and inbound window definitions */
->> +#define WIN_NUM_0            0
->> +#define WIN_NUM_1            1
->> +#define CFG_WINDOW_TYPE              0
->> +#define IO_WINDOW_TYPE               1
->> +#define MEM_WINDOW_TYPE              2
->> +#define IB_WIN_SIZE          (256 * 1024 * 1024)
->> +#define MAX_PIO_WINDOWS              8
+>> +	ret = clk_prepare_enable(ep->clk_res->bus_clk);
+>> +	if (ret) {
+>> +		dev_err(dev, "cannot enable pcie bus clock");
+>> +		goto err_bus_clk;
+>> +	}
 >> +
->> +/* register access types */
->> +#define OP_READ                      0
->> +#define OP_WRITE             1
+>> +	return 0;
 >> +
->> +/* Parameters for the waiting for link up routine */
->> +#define LINK_WAIT_MAX_RETRIES        10
->> +#define LINK_WAIT_MIN                90000
->> +#define LINK_WAIT_MAX                100000
+>> +err_bus_clk:
+>> +	clk_disable_unprepare(ep->clk_res->clk);
 >> +
->> +/*
->> + * PCIe port information
->
-> Useless comment.
->
->> + */
->> +struct mobiveil_pcie {
->> +     struct platform_device *pdev;
->> +     void __iomem *config_axi_slave_base;    /* endpoint config base */
->> +     void __iomem *csr_axi_slave_base;       /* root port config base */
->> +     void __iomem *gpio_slave_base;  /* GPIO register base */
->> +     void __iomem *apb_csr_base;     /* MSI register base */
->> +     struct irq_domain *intx_domain;
->> +     struct irq_domain *msi_domain;
->> +     struct list_head resources;
->> +     struct msi_controller msi_chip;
->> +     phys_addr_t msi_pages_phys;
->> +     int *msi_pages;
->> +     int irq;
->> +     int apio_wins;
->> +     int ppio_wins;
->> +     int ob_wins_configured; /*  configured outbound windows */
->> +     int ib_wins_configured; /*  configured inbound windows */
->> +     struct resource *ob_io_res;
->> +     struct resource *ob_mem_res[MAX_PIO_WINDOWS];
->> +     char root_bus_nr;
->> +     DECLARE_BITMAP(msi_irq_in_use, PCI_NUM_MSI);
+>> +	return ret;
+>> +}
+>> +
+>> +static const struct exynos_pcie_ops exynos5433_pcie_ops = {
+>> +	.get_mem_resources	= exynos5433_pcie_get_mem_resources,
+>> +	.get_clk_resources	= exynos5433_pcie_get_clk_resources,
+>> +	.init_clk_resources	= exynos5433_pcie_init_clk_resources,
+>> +	.deinit_clk_resources	= exynos5433_pcie_deinit_clk_resources,
 >> +};
 >> +
->> +static inline struct mobiveil_pcie *
->
-> Return value and storage specifier must be in the same line as the
-> function name.
->
-> static inline struct mobiveil_pcie *chip_to_mobiveil_pcie(
->                                 struct msi_controller *msi_chip)
->
->> +chip_to_mobiveil_pcie(struct msi_controller *msi_chip)
->> +{
->> +     return container_of(msi_chip, struct mobiveil_pcie, msi_chip);
->> +}
->
-> Anyway, struct msi_controller usage is deprecated, which means, as I said
-> before, that you need to update this code to stacked domains MSI.
->
-> As Marc already told you, please have a look at:
->
-> drivers/pci/host/pcie-tango.c
->
-> and its related discussions since it has been debated thoroughly:
->
-> https://lkml.org/lkml/2017/3/29/322
->
-> Do not bother posting a v5 before you have converted the code to
-> stacked MSI domains.
->
-next version will include stacked domains MSI, also I will split MSI
-code into different patch.
+>>  static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
+>>  {
+>>  	writel(val, base + reg);
+>> @@ -279,7 +376,9 @@ static void exynos_pcie_deassert_core_reset(struct
+>> exynos_pcie *ep)
+>>  	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_NONSTICKY_RESET);
+>>  	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_APP_INIT_RESET);
+>>  	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_APP_INIT_RESET);
+>> -	exynos_pcie_writel(ep->mem_res->block_base, 1, PCIE_PHY_MAC_RESET);
+>> +	if (ep->mem_res->block_base)
+>> +		exynos_pcie_writel(ep->mem_res->block_base, 1,
+>> +				PCIE_PHY_MAC_RESET);
+> 
+> Good.
+> 
+>>  }
+>>
+>>  static void exynos_pcie_assert_phy_reset(struct exynos_pcie *ep)
+>> @@ -413,9 +512,6 @@ static int exynos_pcie_establish_link(struct
+>> exynos_pcie *ep)
+>>  	if (ep->using_phy) {
+>>  		phy_reset(ep->phy);
+>>
+>> -		exynos_pcie_writel(ep->mem_res->elbi_base, 1,
+>> -				PCIE_PWR_RESET);
+>> -
+>>  		phy_power_on(ep->phy);
+>>  		phy_init(ep->phy);
+>>  	} else {
+>> @@ -430,14 +526,16 @@ static int exynos_pcie_establish_link(struct
+>> exynos_pcie *ep)
+>>  		udelay(500);
+>>  		exynos_pcie_writel(ep->mem_res->block_base, 0,
+>>  					PCIE_PHY_COMMON_RESET);
+>> +		exynos_pcie_deassert_core_reset(ep);
+>>  	}
+>>
+>> -	/* pulse for common reset */
+>> -	exynos_pcie_writel(ep->mem_res->block_base, 1,
+>> PCIE_PHY_COMMON_RESET);
+>> -	udelay(500);
+>> -	exynos_pcie_writel(ep->mem_res->block_base, 0,
+>> PCIE_PHY_COMMON_RESET);
+> 
+> These codes are also necessary for Exyno5440.
+> How about moving these codes instead of removing them?
+> 
+> @@ -430,14 +526,16 @@ static int exynos_pcie_establish_link(struct
+> exynos_pcie *ep)
+>  		udelay(500);
+>  		exynos_pcie_writel(ep->mem_res->block_base, 0,
+>  					PCIE_PHY_COMMON_RESET);
+> +		/* pulse for common reset */
+> +		exynos_pcie_writel(ep->mem_res->block_base, 1,
+> +					PCIE_PHY_COMMON_RESET);
+> +		udelay(500);
+> +		exynos_pcie_writel(ep->mem_res->block_base, 0,
+> +					PCIE_PHY_COMMON_RESET);
+> +		exynos_pcie_deassert_core_reset(ep);
+>  	}
+> 
+> 
+>> +	/*
+>> +	 * Enable DBI_RO_WR_EN bit.
+>> +	 * - When set to 1, some RO and HWinit bits are wriatble from
+>> +	 *   the local application through the DBI.
+>> +	 */
+>> +	dw_pcie_writel_dbi(pci, PCIE_MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
+>>
+>> -	exynos_pcie_deassert_core_reset(ep);
+>>  	dw_pcie_setup_rc(pp);
+>>  	exynos_pcie_assert_reset(ep);
+>>
+>> @@ -472,16 +570,6 @@ static void exynos_pcie_clear_irq_pulse(struct
+>> exynos_pcie *ep)
+>>  	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_PULSE);
+>>  }
+>>
+>> -static void exynos_pcie_enable_irq_pulse(struct exynos_pcie *ep)
+>> -{
+>> -	u32 val;
+>> -
+>> -	/* enable INTX interrupt */
+>> -	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
+>> -		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
+>> -	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_EN_PULSE);
+>> -}
+>> -
+>>  static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+>>  {
+>>  	struct exynos_pcie *ep = arg;
+>> @@ -513,9 +601,16 @@ static void exynos_pcie_msi_init(struct exynos_pcie
+>> *ep)
+>>  	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_EN_LEVEL);
+>>  }
+>>
+>> -static void exynos_pcie_enable_interrupts(struct exynos_pcie *ep)
+>> +static void exynos_pcie_enable_irq_pulse(struct exynos_pcie *ep)
+>>  {
+>> -	exynos_pcie_enable_irq_pulse(ep);
+>> +	u32 val;
+>> +
+>> +	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
+>> +		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
+>> +	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_EN_PULSE);
+>> +
+>> +	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_IRQ_EN_LEVEL);
+>> +	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_IRQ_EN_SPECIAL);
+> 
+> Good.
+> 
+>>
+>>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>>  		exynos_pcie_msi_init(ep);
+>> @@ -575,10 +670,8 @@ static int exynos_pcie_link_up(struct dw_pcie *pci)
+>>  	u32 val;
+>>
+>>  	val = exynos_pcie_readl(ep->mem_res->elbi_base,
+>> PCIE_ELBI_RDLH_LINKUP);
+>> -	if (val == PCIE_ELBI_LTSSM_ENABLE)
+>> -		return 1;
+> 
+> Exynos5440 uses 'PCIE_ELBI_LTSSM_ENABLE'.
+> Can you keep this code for Exyno5440?
 
->> +static inline void csr_writel(struct mobiveil_pcie *pcie,
->> +                     const unsigned int value, const unsigned int reg)
->> +{
->> +     writel_relaxed(value, pcie->csr_axi_slave_base + reg);
->> +}
->> +
->> +static inline unsigned int csr_readl(struct mobiveil_pcie *pcie,
->> +                     const unsigned int reg)
->
-> Return value should not be an unsigned int but a u32.
->
-> Documentation/driver-api/device-io.rst
->
->> +{
->> +     return readl_relaxed(pcie->csr_axi_slave_base + reg);
->> +}
->> +
->> +static inline int gpio_read(struct mobiveil_pcie *pcie, int addr)
->
-> int ?
->
-> readl_relaxed() returns u32 value not an int.
->
->> +{
->> +     return readl_relaxed(pcie->gpio_slave_base + addr);
->> +}
->> +
->> +static inline void gpio_write(struct mobiveil_pcie *pcie, int val, int addr)
->> +{
->> +     writel_relaxed(val, pcie->gpio_slave_base + addr);
->> +}
->> +
->> +static bool mobiveil_pcie_link_up(struct mobiveil_pcie *pcie)
->> +{
->> +     return (csr_readl(pcie, LTSSM_STATUS) &
->> +             LTSSM_STATUS_L0_MASK) == LTSSM_STATUS_L0;
->> +}
->> +
->> +static bool mobiveil_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
->> +{
->> +     struct mobiveil_pcie *pcie = bus->sysdata;
->> +
->> +     /* Check if link is up when trying to access downstream ports */
->> +     if (bus->number != pcie->root_bus_nr)
->> +             if (!mobiveil_pcie_link_up(pcie))
->> +                     return false;
->> +
->> +     /* Only one device down on each root port */
->> +     if ((bus->number == pcie->root_bus_nr) && (devfn > 0))
->> +             return false;
->> +
->> +     /*
->> +      * Do not read more than one device on the bus directly
->> +      * attached to RC
->> +      */
->> +     if ((bus->primary == pcie->root_bus_nr) && (devfn > 0))
->> +             return false;
->> +
->> +     return true;
->> +}
->> +
->> +/*
->> + * mobiveil_pcie_map_bus - routine to get the configuration base of either
->> + * root port or endpoint
->> + */
->> +static void __iomem *mobiveil_pcie_map_bus(struct pci_bus *bus,
->> +                                     unsigned int devfn, int where)
->> +{
->> +     struct mobiveil_pcie *pcie = bus->sysdata;
->> +     void __iomem *addr;
->> +
->> +     if (!mobiveil_pcie_valid_device(bus, devfn))
->> +             return NULL;
->> +
->> +     if (bus->number == pcie->root_bus_nr) {
->> +             /* RC config access */
->> +             addr =  pcie->csr_axi_slave_base + where;
->> +     } else {
->> +             /*
->> +              * EP config access (in Config/APIO space)
->> +              * Program PEX Address base (31..16 bits) with appropriate value
->> +              * (BDF) in PAB_AXI_AMAP_PEX_WIN_L0 Register.
->> +              * Relies on pci_lock serialization
->> +              */
->> +             csr_writel(pcie,
->> +                     bus->number << PAB_BUS_SHIFT |
->> +                     PCI_SLOT(devfn) << PAB_DEVICE_SHIFT |
->> +                     PCI_FUNC(devfn) << PAB_FUNCTION_SHIFT,
->> +                     PAB_AXI_AMAP_PEX_WIN_L(WIN_NUM_0));
->> +             addr = pcie->config_axi_slave_base + where;
->> +     }
->
-> return pcie->config_axi_slave_base + where;
->
-> ?
->
-> addr = pcie->config_axi_slave_base + where;
->
-> is duplicated for no reason.
->
->> +
->> +     return addr;
->> +}
->> +
->> +static struct pci_ops mobiveil_pcie_ops = {
->> +     .map_bus = mobiveil_pcie_map_bus,
->> +     .read = pci_generic_config_read,
->> +     .write = pci_generic_config_write,
->> +};
->> +
->> +static irqreturn_t mobiveil_pcie_isr(int irq, void *data)
->> +{
->> +     struct mobiveil_pcie *pcie = (struct mobiveil_pcie *)data;
->> +     unsigned int msi_addr_l, msi_addr_h, msi_data;
->
-> s/unsigned int/u32
->
->> +     unsigned int status, status2;
->
-> This naming isn't nice: intx_status, msi_status ? They should be u32.
->
->> +     unsigned long shifted_status;
->
-> Now this is unsigned long, why.
->
->> +     unsigned int bit1 = 0, virq;
->> +     unsigned int val, mask;
->
-> Again, u32.
->
->> +
->> +     /*
->> +      * The core provides a single interrupt for both INTx/MSI messages.
->> +      * So we'll read both INTx and MSI statuses
->> +      */
->> +
->> +     /* read INTx status */
->> +     val = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
->> +     mask = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
->> +     status = val & mask;
->> +
->> +     /* Handle INTx */
->> +     if (status & PAB_INTP_INTX_MASK) {
->> +             shifted_status = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
->> +             do {
->> +                     for_each_set_bit(bit1, &shifted_status, PCI_NUM_INTX) {
->> +
->> +                             /* clear interrupts */
->> +                             csr_writel(pcie, shifted_status << PAB_INTA_POS,
->> +                                             PAB_INTP_AMBA_MISC_STAT);
->> +
->> +                             virq =
->> +                             irq_find_mapping(pcie->intx_domain, bit1 + 1);
->
-> This indentation is not nice.
->
-> virq = irq_find_mapping(pcie->intx_domain,
->                         bit1 + 1);
->
-> is better.
->
-> Also bit1 as a variable name is quite unfortunate.
->
->> +                             if (virq)
->> +                                     generic_handle_irq(virq);
->> +                             else
->> +                                     dev_err(&pcie->pdev->dev,
->
-> stash &pcie->pdev->dev in local variable (eg struct device *dev)
-> and use it instead of the two dereferences each time.
->
-> dev_err_ratelimited() is probably what you want to avoid flooding
-> the log if things go wrong.
->
->> +                                             "unexpected IRQ, INT%d\n",
->> +                                             bit1);
->> +
->> +                     }
->> +
->> +                     shifted_status =
->> +                     csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
->> +
->> +             } while ((shifted_status >>  PAB_INTA_POS) != 0);
->> +     }
->> +
->> +     /* read MSI status */
->> +     status2 = readl(pcie->apb_csr_base + MSI_STATUS_OFFSET);
->> +
->> +     /* handle MSI interrupts */
->> +     if ((status & PAB_INTP_MSI_MASK) || (status2 & 1)) {
->> +             do {
->> +                     msi_data = readl(pcie->apb_csr_base + MSI_DATA_OFFSET);
->> +                     msi_addr_l = readl(pcie->apb_csr_base
->> +                                             + MSI_ADDR_L_OFFSET);
->> +                     msi_addr_h = readl(pcie->apb_csr_base
->> +                                             + MSI_ADDR_H_OFFSET);
->
-> I asked you before.
->
-> Why do you have to read msi_addr_l and msi_addr_h ?
-because of a hardware limitation; unless MSI_ADDR_L_OFFSET and
-MSI_ADDR_H_OFFSET are read
-MSI data fifo will not pop, so we need those two extra reads though we
-wont use the read values.
-I will add a comment before this code explaining it.
->
->> +                     /* Handle MSI */
->> +                     if (msi_data)
->> +                             generic_handle_irq(msi_data);
->> +                     else
->> +                             dev_err(&pcie->pdev->dev, "MSI data null\n");
->> +
->> +                     status2 = readl(pcie->apb_csr_base + MSI_STATUS_OFFSET);
->> +             } while (status2 & 1);
->
-> and what is clearing status2 so that you can actually get out of here ?
-Hardware clears this status2(msi_status) after all the MSI data and
-addresses are popped out of MSI hardware fifo.
+It's possible to keep, but if it has to keep, then it needs to distinguish between exynos5440 and other exynos.
+Although I already mentioned, i needs to get Exynos5440 TRM. :)
 
->
->> +     }
->> +
->> +     csr_writel(pcie, status, PAB_INTP_AMBA_MISC_STAT);
->> +     return IRQ_HANDLED;
->> +}
->> +
->> +/* routine to parse device tree */
->
-> Useless comment.
->
->> +static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
->> +{
->> +     struct device *dev = &pcie->pdev->dev;
->> +     struct platform_device *pdev = pcie->pdev;
->> +     struct device_node *node = dev->of_node;
->> +     struct resource *res;
->> +     const char *type;
->> +     int err;
->> +
->> +     type = of_get_property(node, "device_type", NULL);
->> +     if (!type || strcmp(type, "pci")) {
->> +             dev_err(dev, "invalid \"device_type\" %s\n", type);
->> +             return -EINVAL;
->> +     }
->> +
->> +     /* map config resource */
->> +     res =
->> +     platform_get_resource_byname(pdev, IORESOURCE_MEM, "config_axi_slave");
->
-> Again, I do not like this indentation, split the parameters and keep the
-> function name in the same line as assignment operator.
->
-> res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
->                                    "config_axi_slave");
->
->> +     if (IS_ERR(pcie->config_axi_slave_base))
->> +             return PTR_ERR(pcie->config_axi_slave_base);
->> +     pcie->ob_io_res = res;
->> +
->> +     /* map csr resource */
->> +     res =
->> +     platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr_axi_slave");
->
-> Indentation, again.
->
->> +     pcie->csr_axi_slave_base = devm_ioremap_resource(dev, res);
->
-> You must use devm_pci_remap_cfg_resource() to map config space.
->
->> +     if (IS_ERR(pcie->csr_axi_slave_base))
->> +             return PTR_ERR(pcie->csr_axi_slave_base);
->> +
->> +     /* map gpio resource */
->> +     res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "gpio_slave");
->> +     pcie->gpio_slave_base =
->> +             devm_ioremap_nocache(dev, res->start, resource_size(res));
->> +     if (IS_ERR(pcie->gpio_slave_base))
->> +             return PTR_ERR(pcie->gpio_slave_base);
->> +
->> +     /* map gpio resource */
->> +     res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "apb_csr");
->> +     pcie->apb_csr_base =
->> +             devm_ioremap_nocache(dev, res->start, resource_size(res));
->> +     if (IS_ERR(pcie->apb_csr_base))
->> +             return PTR_ERR(pcie->apb_csr_base);
->> +
->> +     /* read the number of windows requested */
->> +     if (!pcie->apio_wins &&
->
-> If pcie->apio_wins is not 0 that's a driver bug, isn't it ?
-yes, but thats not the case here as devm_kzalloc() in
-mobiveil_pcie_probe() is used to allocate pcie, isnt it ?
+Best Regards,
+Jaehoon Chung
 
->
->> +             of_property_read_u32(node, "apio-wins", &pcie->apio_wins)) {
->> +             pcie->apio_wins = MAX_PIO_WINDOWS;
->> +     }
->> +
->> +     if (!pcie->ppio_wins &&
->
-> Ditto.
->
->> +             of_property_read_u32(node, "ppio-wins", &pcie->ppio_wins)) {
->> +             pcie->ppio_wins = MAX_PIO_WINDOWS;
->> +     }
->> +
->> +     /* map IRQ resource */
->> +     pcie->irq = irq_of_parse_and_map(node, 0);
->> +     err = devm_request_irq(&pdev->dev, pcie->irq, mobiveil_pcie_isr,
->> +                             IRQF_SHARED | IRQF_NO_THREAD,
->> +                             "mobiveil-pcie", pcie);
->> +     if (err) {
->> +             dev_err(&pdev->dev, "unable to request IRQ %d\n", pcie->irq);
->> +             return err;
->> +     }
->> +
->> +     return 0;
->> +}
->> +
->> +/*
->> + * access_paged_register - routine to access paged register of root complex
->> + *
->> + * registers of RC are paged, with pg_sel field of the PAB_CTRL
->> + * register needs to be updated with page of the register, before
->> + * accessing least significant 10 bits offset
->> + *
->> + * This routine does the PAB_CTRL updation and split access of the
->> + * offset
->
-> I do not understand what this means, please rewrite it; actually I would
-> also like some comments in the respective lines of code to explain what
-> the code does.
->
->> + *
->> + */
->> +static unsigned int access_paged_register(struct mobiveil_pcie *pcie,
->> +                                     unsigned int write,
->> +                                     unsigned int val,
->> +                                     unsigned int offset)
->> +{
->> +     int pab_ctrl_dw, pg_sel;
->> +     unsigned int off = (offset & 0x3ff) + 0xc00;
->> +
->> +     pab_ctrl_dw = csr_readl(pcie, PAB_CTRL);
->> +     pg_sel = (offset >> PAGE_SEL_OFFSET_SHIFT) & PAGE_SEL_MASK;
->> +
->> +     /* clear pg_sel field */
->> +     pab_ctrl_dw = (pab_ctrl_dw & ~(PAGE_SEL_MASK << PAGE_SEL_SHIFT));
->> +
->> +     /* set pg_sel field */
->> +     pab_ctrl_dw |= ((pg_sel << PAGE_SEL_SHIFT));
->> +     csr_writel(pcie, pab_ctrl_dw, PAB_CTRL);
->> +
->> +     if (write == OP_WRITE)
->> +             csr_writel(pcie, val, off);
->> +     else
->> +             return csr_readl(pcie, off);
->> +     return 0;
->> +
->
-> Useless line.
->
-> You can create two functions (and a stub), pseudocode:
->
-> static void select_paged_register(...)
-> {
->         int pab_ctrl_dw, pg_sel;
->         unsigned int off = (offset & 0x3ff) + 0xc00;
->
->         pab_ctrl_dw = csr_readl(pcie, pab_ctrl);
->         pg_sel = (offset >> page_sel_offset_shift) & page_sel_mask;
->
->         /* clear pg_sel field */
->         pab_ctrl_dw = (pab_ctrl_dw & ~(page_sel_mask << page_sel_shift));
->
->         /* set pg_sel field */
->         pab_ctrl_dw |= ((pg_sel << PAGE_SEL_SHIFT));
->         csr_writel(pcie, pab_ctrl_dw, PAB_CTRL);
-> }
->
-> static inline u32 read_paged_register(...)
-> {
->         select_paged_register();
->         return csr_readl();
-> }
->
-> static inline void write_paged_register(...)
-> {
->         select_paged_register();
->         csr_writel();
-> }
->
->> +
->> +/*
->> + * routine to program the inbound windows
->
-> Useless comment.
->
->> + */
->> +static void program_ib_windows(struct mobiveil_pcie *pcie,
->> +                             int win_num,
->> +                             int pci_addr,
->> +                             int type,
->> +                             int size_kb)
->
-> What can fit in one line must stay in one line.
->
->> +{
->> +     int pio_ctrl_val;
->> +     int amap_ctrl_dw;
->> +     u64 size64 = (-1 << (WIN_SIZE_SHIFT + ilog2(size_kb)));
->
-> -1 ?
->
->> +     if ((pcie->ib_wins_configured + 1) > pcie->ppio_wins) {
->> +             dev_err(&pcie->pdev->dev,
->> +                     "ERROR: max inbound windows reached !\n");
->> +             return;
->> +     }
->> +
->> +     pio_ctrl_val = csr_readl(pcie, PAB_PEX_PIO_CTRL);
->> +     csr_writel(pcie,
->> +             pio_ctrl_val | (1 << PIO_ENABLE_SHIFT), PAB_PEX_PIO_CTRL);
->> +     amap_ctrl_dw =  access_paged_register(pcie,
->> +                             OP_READ, 0, PAB_PEX_AMAP_CTRL(win_num));
->> +     amap_ctrl_dw = (amap_ctrl_dw | (type << AMAP_CTRL_TYPE_SHIFT));
->> +     amap_ctrl_dw = (amap_ctrl_dw | (1 << AMAP_CTRL_EN_SHIFT));
->> +
->> +     access_paged_register(pcie, OP_WRITE,
->> +                             amap_ctrl_dw | lower_32_bits(size64),
->> +                             PAB_PEX_AMAP_CTRL(win_num));
->> +
->> +     access_paged_register(pcie, OP_WRITE, upper_32_bits(size64),
->> +                             PAB_EXT_PEX_AMAP_SIZEN(win_num));
->> +
->> +     access_paged_register(pcie, OP_WRITE, pci_addr,
->> +                             PAB_PEX_AMAP_AXI_WIN(win_num));
->> +
->> +     access_paged_register(pcie, OP_WRITE, pci_addr,
->> +                             PAB_PEX_AMAP_PEX_WIN_L(win_num));
->> +
->> +     access_paged_register(pcie, OP_WRITE, 0,
->> +                             PAB_PEX_AMAP_PEX_WIN_H(win_num));
->> +}
->> +
->> +/*
->> + * routine to program the outbound windows
->
-> Useless comment.
->
->> + */
->> +static void program_ob_windows(struct mobiveil_pcie *pcie,
->> +                             int win_num,
->> +                             u64 cpu_addr,
->> +                             u64 pci_addr,
->> +                             int config_io_bit,
->> +                             int size_kb)
->
-> Again, you do not need a line per parameter.
->
->> +{
->> +
->> +     unsigned int value, type;
->> +     u64 size64 = (-1 << (WIN_SIZE_SHIFT + ilog2(size_kb)));
->
-> -1 again, explain please.
->
->> +
->> +     if ((pcie->ob_wins_configured + 1) > pcie->apio_wins) {
->> +             dev_err(&pcie->pdev->dev,
->> +                     "ERROR: max outbound windows reached !\n");
->> +             return;
->> +     }
->> +
->> +     /*
->> +      * program Enable Bit to 1, Type Bit to (00) base 2, AXI Window Size Bit
->> +      * to 4 KB in PAB_AXI_AMAP_CTRL register
->> +      */
->> +     type = config_io_bit;
->> +     value = csr_readl(pcie, PAB_AXI_AMAP_CTRL(win_num));
->> +     csr_writel(pcie,
->> +                     1 << WIN_ENABLE_SHIFT |
->> +                     type << WIN_TYPE_SHIFT |
->> +                     lower_32_bits(size64),
->> +                     PAB_AXI_AMAP_CTRL(win_num));
->> +
->> +     access_paged_register(pcie, OP_WRITE, upper_32_bits(size64),
->> +                             PAB_EXT_AXI_AMAP_SIZE(win_num));
->> +
->> +     /*
->> +      * program AXI window base with appropriate value in
->> +      * PAB_AXI_AMAP_AXI_WIN0 register
->> +      */
->> +     value = csr_readl(pcie, PAB_AXI_AMAP_AXI_WIN(win_num));
->> +     csr_writel(pcie,
->> +                     cpu_addr >> AXI_WINDOW_BASE_SHIFT <<
->> +                     AXI_WINDOW_BASE_SHIFT, PAB_AXI_AMAP_AXI_WIN(win_num));
->> +
->> +     value = csr_readl(pcie, PAB_AXI_AMAP_PEX_WIN_H(win_num));
->> +
->> +     csr_writel(pcie, lower_32_bits(pci_addr),
->> +                     PAB_AXI_AMAP_PEX_WIN_L(win_num));
->> +     csr_writel(pcie, upper_32_bits(pci_addr),
->> +                     PAB_AXI_AMAP_PEX_WIN_H(win_num));
->> +
->> +     pcie->ob_wins_configured++;
->> +}
->> +
->> +static int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
->> +{
->> +     int retries;
->> +     struct device *dev = &pcie->pdev->dev;
->> +
->> +     if (!mobiveil_pcie_link_up(pcie)) {
->> +             /*
->> +              * if FSBL is not patched, link won't be up so let's bring it
->> +              * up by writing DIRM and OEN registers EMIO 6:0 programming
->> +              * sequence [3:0] = Link Width; [6:4] = Link Speed. Current
->> +              * setting width=4, speed = 1
->> +              */
->> +             gpio_write(pcie, 0x7f, 0x000a02c4);
->> +             gpio_write(pcie, 0x7f, 0x000a02c8);
->> +             gpio_write(pcie, 0x14, 0x000a004c);
->> +
->> +             gpio_write(pcie, 0x0200, 0x000a0244);
->> +             gpio_write(pcie, 0x0200, 0x000a0248);
->> +             gpio_write(pcie, 0x37f7, 0x00180208);
->> +             gpio_write(pcie, 0xfdff, 0x000a0044);
->
-> These are normal register writes and you should add a) a macro name for
-> offsets b) a proper explanation of what register values represent
-> instead a bunch of unfathomable hardcoded values (and an unreadable
-> comment).
-This board specific piece of code is to power up the PCIe slot, but
-looks like none of the other
-platforms seems are not doing as it is taken care by bootloader/BIOS.
-I will take out this sequence
-and just wait for link up like everyone else.
-
->
->> +             /* check if the link is up or not */
->> +             for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
->> +                     if (mobiveil_pcie_link_up(pcie))
->> +                             return 0;
->> +
->> +                     /* send PRESET to the slot */
->> +                     gpio_write(pcie, 0x80000000, 0x000a0344);
->> +                     gpio_write(pcie, 0x80000000, 0x000a0348);
->> +                     gpio_write(pcie, 0x00000000, 0x000a0054);
->> +                     gpio_write(pcie, 0x80000000, 0x000a0054);
->
-> Ditto.
->
->> +
->> +                     usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
->> +             }
->> +     }
->> +
->> +     dev_err(dev, "link never came up\n");
->> +     return -ETIMEDOUT;
->> +}
->> +
->> +static int mobiveil_host_init(struct mobiveil_pcie *pcie)
->> +{
->> +     unsigned int value;
->> +     int type = 0;
->> +     int pab_ctrl;
->> +     int err;
->> +     struct resource_entry *win, *tmp;
->> +
->> +     /* setup the PCIe slot link power*/
->> +     err = mobiveil_bringup_link(pcie);
->> +     if (err == 0)
->> +             dev_info(&pcie->pdev->dev, "link up\n");
->
-> I think this is pretty useless - what value it has in a log in a working
-> PCI configuration, who cares to read "link up".
->
-> Please change this to:
->
->         err = mobiveil_bringup_link(pcie);
->         if (err) {
->                 dev_info(&pcie->pdev->dev, "link bring-up failed\n");
->                 return err;
->         }
->
->
->> +     else
->> +             return err;
->> +     /*
->> +      * program Bus Master Enable Bit in Command Register in PAB Config
->> +      * Space
->> +      */
->> +     value = csr_readl(pcie, PCI_COMMAND);
->> +     csr_writel(pcie,
->> +             value |
->> +             PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER,
->> +             PCI_COMMAND);
->> +
->> +     /*
->> +      * program PIO Enable Bit to 1 (and PEX PIO Enable to 1) in PAB_CTRL
->> +      * register
->> +      */
->> +     pab_ctrl = csr_readl(pcie, PAB_CTRL);
->> +     csr_writel(pcie, pab_ctrl | (1 << AMBA_PIO_ENABLE_SHIFT) |
->> +             (1 << PEX_PIO_ENABLE_SHIFT),
->> +             PAB_CTRL);
->> +
->> +     csr_writel(pcie, (PAB_INTP_INTX_MASK | PAB_INTP_MSI_MASK),
->> +             PAB_INTP_AMBA_MISC_ENB);
->> +
->> +     /* program PIO Enable Bit to 1 and Config Window Enable Bit to 1 in
->> +      * PAB_AXI_PIO_CTRL Register
->> +      */
->> +     value = csr_readl(pcie, PAB_AXI_PIO_CTRL);
->> +     csr_writel(pcie, value | APIO_EN_MASK, PAB_AXI_PIO_CTRL);
->> +
->> +     /*
->> +      * we'll program one outbound window for config reads and
->> +      * another default inbound window for all the upstream traffic
->> +      * rest of the outbound windows will be configured according to
->> +      * the "ranges" field defined in device tree
->> +      */
->> +
->> +     /* config outbound translation window */
->> +     program_ob_windows(pcie,
->> +                     pcie->ob_wins_configured, pcie->ob_io_res->start,
->> +                     0,
->> +                     CFG_WINDOW_TYPE,
->> +                     resource_size(pcie->ob_io_res)/1024);
->> +
->> +     /* memory inbound  translation window */
->> +     program_ib_windows(pcie, WIN_NUM_1, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
->> +
->> +     /* Get the I/O and memory ranges from DT */
->> +     resource_list_for_each_entry_safe(win, tmp, &pcie->resources) {
->> +             type = 0;
->> +             if (resource_type(win->res) == IORESOURCE_MEM)
->> +                     type = MEM_WINDOW_TYPE;
->> +             if (resource_type(win->res) == IORESOURCE_IO)
->> +                     type = IO_WINDOW_TYPE;
->> +             if (type) {
->> +                     /* configure outbound translation window */
->> +                     pcie->ob_mem_res[pcie->ob_wins_configured] =  win->res;
->
-> I think pcie->ob_wins_configured should be incremented here according to
-> what program_ob_windows() return (yes - make it return a value), current
-> code is misleading - it seems we are saving win->res always at the same
-> index.
->
-This line is useless, as ob_mem_res is never used in the latest code
-and will take it out in next version.
-
->> +                     program_ob_windows(pcie,
->> +                             pcie->ob_wins_configured,
->> +                             win->res->start,
->> +                             0,
->> +                             type,
->> +                             resource_size(win->res)/1024);
->
-> Again, too many lines.
->
->> +             }
->> +     }
->> +
->> +     return err;
->> +}
->> +
->> +/* routine to setup the INTx related data */
->> +static int mobiveil_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
->> +                               irq_hw_number_t hwirq)
->> +{
->> +     irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
->> +     irq_set_chip_data(irq, domain->host_data);
->> +     return 0;
->> +}
->> +
->> +/* INTx domain opeartions structure */
->> +static const struct irq_domain_ops intx_domain_ops = {
->> +     .map = mobiveil_pcie_intx_map,
->> +};
->> +
->> +static void mobiveil_pcie_destroy_msi(struct msi_controller *msi_chip,
->> +                                     unsigned int irq)
->> +{
->> +     struct msi_desc *msi;
->> +     struct mobiveil_pcie *pcie = chip_to_mobiveil_pcie(msi_chip);
->> +
->> +     if (!test_bit(irq, pcie->msi_irq_in_use)) {
->> +             msi = irq_get_msi_desc(irq);
->> +             dev_info(&pcie->pdev->dev,
->> +                      "Trying to free unused MSI#%d\n", irq);
->> +     } else {
->> +             clear_bit(irq, pcie->msi_irq_in_use);
->> +     }
->> +}
->> +
->> +static int mobiveil_pcie_assign_msi(struct mobiveil_pcie *pcie)
->> +{
->> +     int pos;
->> +
->> +     pos = find_first_zero_bit(pcie->msi_irq_in_use, PCI_NUM_MSI);
->> +     if (pos < PCI_NUM_MSI)
->> +             set_bit(pos, pcie->msi_irq_in_use);
->> +     else
->> +             return -ENOSPC;
->> +
->> +     return pos;
->> +}
->> +
->> +static void mobiveil_msi_teardown_irq(struct msi_controller *msi_chip,
->> +                             unsigned int irq)
->> +{
->> +     mobiveil_pcie_destroy_msi(msi_chip, irq);
->> +     irq_dispose_mapping(irq);
->> +}
->> +
->> +static int mobiveil_pcie_msi_setup_irq(struct msi_controller *msi_chip,
->> +                             struct pci_dev *pdev,
->> +                             struct msi_desc *desc)
->> +{
->> +     int hwirq;
->> +     unsigned int irq;
->> +     struct msi_msg msg;
->> +     phys_addr_t msg_addr;
->> +     struct mobiveil_pcie *pcie = pdev->bus->sysdata;
->> +
->> +     hwirq = mobiveil_pcie_assign_msi(pcie);
->> +     if (hwirq < 0)
->> +             return -EINVAL;
->> +
->> +     irq = irq_create_mapping(pcie->msi_domain, hwirq);
->> +     if (!irq)
->> +             return -EINVAL;
->> +
->> +     irq_set_msi_desc(irq, desc);
->> +
->> +     msg_addr =
->> +             virt_to_phys((void *)pcie->msi_pages + (hwirq * sizeof(int)));
->> +
->> +     msg.address_hi = upper_32_bits(msg_addr);
->> +     msg.address_lo = lower_32_bits(msg_addr);
->> +     msg.data = irq;
->> +
->> +     pci_write_msi_msg(irq, &msg);
->> +
->> +     return 0;
->> +}
->> +
->> +static struct irq_chip mobiveil_msi_irq_chip = {
->> +     .name = "Mobiveil PCIe MSI",
->> +     .irq_enable = pci_msi_unmask_irq,
->> +     .irq_disable = pci_msi_mask_irq,
->> +     .irq_mask = pci_msi_mask_irq,
->> +     .irq_unmask = pci_msi_unmask_irq,
->> +};
->> +
->> +static int mobiveil_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
->> +                              irq_hw_number_t hwirq)
->> +{
->> +     irq_set_chip_and_handler(irq, &mobiveil_msi_irq_chip,
->> +                              handle_simple_irq);
->> +     irq_set_chip_data(irq, domain->host_data);
->> +
->> +     return 0;
->> +}
->> +
->> +static const struct irq_domain_ops msi_domain_ops = {
->> +     .map = mobiveil_pcie_msi_map,
->> +};
->> +
->> +static void mobiveil_pcie_enable_msi(struct mobiveil_pcie *pcie)
->> +{
->> +     phys_addr_t msg_addr;
->> +
->> +     pcie->msi_pages = (void *)__get_free_pages(GFP_DMA, 0);
->> +     msg_addr = virt_to_phys((void *)pcie->msi_pages);
->> +     pcie->msi_pages_phys = (void *)msg_addr;
->> +
->> +     writel_relaxed(lower_32_bits(msg_addr),
->> +             pcie->apb_csr_base + MSI_BASE_LO_OFFSET);
->> +     writel_relaxed(upper_32_bits(msg_addr),
->> +             pcie->apb_csr_base + MSI_BASE_HI_OFFSET);
->> +     writel_relaxed(4096, pcie->apb_csr_base + MSI_SIZE_OFFSET);
->> +     writel_relaxed(1,
->> +             pcie->apb_csr_base + MSI_ENABLE_OFFSET);
->> +}
->> +
->> +static int mobiveil_pcie_init_irq_domain(struct mobiveil_pcie *pcie)
->> +{
->> +     struct device *dev = &pcie->pdev->dev;
->> +     struct device_node *node = dev->of_node;
->> +
->> +     /* setup INTx */
->> +     pcie->intx_domain =
->> +             irq_domain_add_linear(node, PCI_NUM_INTX + 1, &intx_domain_ops,
->> +                               pcie);
->> +
->> +     if (!pcie->intx_domain) {
->> +             dev_err(dev, "Failed to get a INTx IRQ domain\n");
->> +             return -ENODEV;
->> +     }
->> +     /* setup MSI */
->> +     if (IS_ENABLED(CONFIG_PCI_MSI)) {
->> +             pcie->msi_domain =
->> +                     irq_domain_add_linear(node,
->> +                                             PCI_NUM_MSI,
->> +                                             &msi_domain_ops,
->> +                                             &pcie->msi_chip);
->> +             if (!pcie->msi_domain) {
->> +                     dev_err(dev, "Failed to get a MSI IRQ domain\n");
->> +                     return -ENODEV;
->> +             }
->> +
->> +             mobiveil_pcie_enable_msi(pcie);
->
-> You need to rewrite the MSI support - I will review it then, see above.
->
->> +     }
->> +     return 0;
->> +}
->> +
->> +static int mobiveil_pcie_probe(struct platform_device *pdev)
->> +{
->> +     struct mobiveil_pcie *pcie;
->> +     struct pci_bus *bus;
->> +     struct pci_bus *child;
->> +     struct pci_host_bridge *bridge;
->> +     struct device *dev = &pdev->dev;
->> +     struct device_node *node = dev->of_node;
->> +     resource_size_t iobase;
->> +     int ret;
->> +
->> +     /* allocate the PCIe port */
->> +     bridge = devm_pci_alloc_host_bridge(&pdev->dev, sizeof(*pcie));
->> +     if (!bridge)
->> +             return -ENODEV;
->> +
->> +     pcie = pci_host_bridge_priv(bridge);
->> +     if (!pcie)
->> +             return -ENOMEM;
->> +
->> +     pcie->pdev = pdev;
->> +
->> +     /* parse the device tree */
->> +     ret = mobiveil_pcie_parse_dt(pcie);
->> +     if (ret) {
->> +             dev_err(&pdev->dev, "Parsing DT failed, ret: %x\n", ret);
->> +             return ret;
->> +     }
->> +
->> +     INIT_LIST_HEAD(&pcie->resources);
->> +
->> +     /* parse the host bridge base addresses from the device tree file */
->> +     ret = of_pci_get_host_bridge_resources(node,
->> +                     0, 0xff, &pcie->resources, &iobase);
->> +     if (ret) {
->> +             dev_err(dev, "Getting bridge resources failed\n");
->> +             return -ENOMEM;
->> +     }
->> +
->> +     /*
->> +      * configure all inbound and outbound windows and prepare the RC for
->> +      * config access
->> +      */
->> +     ret = mobiveil_host_init(pcie);
->> +     if (ret) {
->> +             dev_err(&pdev->dev, "Failed to initialize host\n");
->> +             goto error;
->> +     }
->> +
->> +     /* fixup for PCIe class register */
->> +     csr_writel(pcie, 0x060402ab, PAB_INTP_AXI_PIO_CLASS);
->> +
->> +     /* initialize the IRQ domains */
->> +     ret = mobiveil_pcie_init_irq_domain(pcie);
->> +     if (ret) {
->> +             dev_err(&pdev->dev, "Failed creating IRQ Domain\n");
->> +             goto error;
->> +     }
->> +
->> +     ret = devm_request_pci_bus_resources(dev, &pcie->resources);
->> +     if (ret)
->> +             goto error;
->> +
->> +     /* Initialize bridge */
->> +     list_splice_init(&pcie->resources, &bridge->windows);
->> +     bridge->dev.parent = &pdev->dev;
->> +     bridge->sysdata = pcie;
->> +     bridge->busnr = pcie->root_bus_nr;
->> +     bridge->ops = &mobiveil_pcie_ops;
->> +     bridge->map_irq = of_irq_parse_and_map_pci;
->> +     bridge->swizzle_irq = pci_common_swizzle;
->> +
->> +     /* setup MSI, if enabled */
->> +     if (IS_ENABLED(CONFIG_PCI_MSI)) {
->> +             pcie->msi_chip.dev = &pcie->pdev->dev;
->> +             pcie->msi_chip.setup_irq = mobiveil_pcie_msi_setup_irq;
->> +             pcie->msi_chip.teardown_irq = mobiveil_msi_teardown_irq;
->> +             bridge->msi = &pcie->msi_chip;
->> +     }
->
-> This should be removed - moving to the stacked domain method for MSI
-> will cater for that as I said above.
->
-> Thanks,
-> Lorenzo
->
->> +     /* setup the kernel resources for the newly added PCIe root bus */
->> +     ret = pci_scan_root_bus_bridge(bridge);
->> +     if (ret)
->> +             goto error;
->> +
->> +     bus = bridge->bus;
->> +
->> +     pci_assign_unassigned_bus_resources(bus);
->> +     list_for_each_entry(child, &bus->children, node)
->> +             pcie_bus_configure_settings(child);
->> +     pci_bus_add_devices(bus);
->> +
->> +     return 0;
->> +error:
->> +     pci_free_resource_list(&pcie->resources);
->> +     return ret;
->> +}
->> +
->> +static const struct of_device_id mobiveil_pcie_of_match[] = {
->> +     {.compatible = "mbvl,gpex40-pcie",},
->> +     {},
->> +};
->> +
->> +MODULE_DEVICE_TABLE(of, mobiveil_pcie_of_match);
->> +
->> +static struct platform_driver mobiveil_pcie_driver = {
->> +     .probe = mobiveil_pcie_probe,
->> +     .driver = {
->> +                     .name = "mobiveil-pcie",
->> +                     .of_match_table = mobiveil_pcie_of_match,
->> +                     .suppress_bind_attrs = true,
->> +             },
->> +};
->> +
->> +builtin_platform_driver(mobiveil_pcie_driver);
->> +
->> +MODULE_LICENSE("GPL v2");
->> +MODULE_DESCRIPTION("Mobiveil PCIe host controller driver");
->> +MODULE_AUTHOR("Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>");
+> 
+> This register can be added as below.
+> 
+> /* Exynos5440 PCIe ELBI registers */
+> #define EXYNOS5440_PCIE_ELBI_RDLH_LINKUP	0x064
+> #define EXYNOS5440_PCIE_ELBI_LTSSM_ENABLE	BIT(0)
+> 
+> Best regards,
+> Jingoo Han
+> 
+>>
+>> -	return 0;
+>> +	return (val & PCIE_ELBI_XMLH_LINKUP);
+>>  }
+>>
+>>  static int exynos_pcie_host_init(struct pcie_port *pp)
+>> @@ -587,7 +680,7 @@ static int exynos_pcie_host_init(struct pcie_port *pp)
+>>  	struct exynos_pcie *ep = to_exynos_pcie(pci);
+>>
+>>  	exynos_pcie_establish_link(ep);
+>> -	exynos_pcie_enable_interrupts(ep);
+>> +	exynos_pcie_enable_irq_pulse(ep);
+>>
+>>  	return 0;
+>>  }
+>> @@ -608,8 +701,11 @@ static int __init exynos_add_pcie_port(struct
+>> exynos_pcie *ep,
+>>
+>>  	pp->irq = platform_get_irq(pdev, 1);
+>>  	if (pp->irq < 0) {
+>> -		dev_err(dev, "failed to get irq\n");
+>> -		return pp->irq;
+>> +		pp->irq = platform_get_irq_byname(pdev, "intr");
+>> +		if (pp->irq < 0) {
+>> +			dev_err(dev, "failed to get irq\n");
+>> +			return pp->irq;
+>> +		}
+>>  	}
+>>  	ret = devm_request_irq(dev, pp->irq, exynos_pcie_irq_handler,
+>>  				IRQF_SHARED, "exynos-pcie", ep);
+>> @@ -678,13 +774,23 @@ static int __init exynos_pcie_probe(struct
+>> platform_device *pdev)
+>>
+>>  	ep->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+>>
+>> -	/* Assume that controller doesn't use the PHY framework */
+>> -	ep->using_phy = false;
+>> +	/*
+>> +	 * In case of Exynos5440,
+>> +	 * Assume that controller doesn't use the PHY frameork.
+>> +	 * Other SoCs might be used the PHY framework.
+>> +	 */
+>> +
+>> +	if (of_device_is_compatible(np, "samsung,exynos5440-pcie"))
+>> +		ep->using_phy = false;
+>>
+>> -	ep->phy = devm_of_phy_get(dev, np, NULL);
+>> +	ep->phy = devm_of_phy_get(dev, np, "pcie-phy");
+>>  	if (IS_ERR(ep->phy)) {
+>>  		if (PTR_ERR(ep->phy) == -EPROBE_DEFER)
+>>  			return PTR_ERR(ep->phy);
+>> +		if (!of_device_is_compatible(np, "samsung,exynos5440-pcie"))
+>> {
+>> +			dev_err(dev, "Can't find the pcie-phy\n");
+>> +			return PTR_ERR(ep->phy);
+>> +		}
+>>  		dev_warn(dev, "Use the 'phy' property. Current DT of pci-
+>> exynos was deprecated!!\n");
+>>  	} else
+>>  		ep->using_phy = true;
+>> @@ -734,23 +840,20 @@ static int __exit exynos_pcie_remove(struct
+>> platform_device *pdev)
+>>  static const struct of_device_id exynos_pcie_of_match[] = {
+>>  	{
+>>  		.compatible = "samsung,exynos5440-pcie",
+>> -		.data = &exynos5440_pcie_ops
+>> +		.data = &exynos5440_pcie_ops,
+>> +	}, {
+>> +		.compatible = "samsung,exynos5433-pcie",
+>> +		.data = &exynos5433_pcie_ops,
+>>  	},
+>>  	{},
+>>  };
+>>
+>>  static struct platform_driver exynos_pcie_driver = {
+>> +	.probe		= exynos_pcie_probe,
+>>  	.remove		= __exit_p(exynos_pcie_remove),
+>>  	.driver = {
+>>  		.name	= "exynos-pcie",
+>>  		.of_match_table = exynos_pcie_of_match,
+>>  	},
+>>  };
+>> -
+>> -/* Exynos PCIe driver does not allow module unload */
+>> -
+>> -static int __init exynos_pcie_init(void)
+>> -{
+>> -	return platform_driver_probe(&exynos_pcie_driver,
+>> exynos_pcie_probe);
+>> -}
+>> -subsys_initcall(exynos_pcie_init);
+>> +builtin_platform_driver(exynos_pcie_driver);
 >> --
->> 1.8.3.1
->>
-
-Thanks.
+>> 2.15.1
+> 
+> 
+> 
+> 
+> 
