@@ -1,165 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:37064 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753256AbdLHLER (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Dec 2017 06:04:17 -0500
-Date: Fri, 8 Dec 2017 11:04:52 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Gustavo.Pimentel@synopsys.com,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: Re-activate task to add MSI-X to pcie-designware
-Message-ID: <20171208110452.GD26816@red-moon>
-References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
- <1512661374.11506.19.camel@pengutronix.de>
- <9cde45e7-78cd-9185-5840-495b27340eab@arm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 20 Dec 2017 18:52:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: honghui.zhang@mediatek.com
+Subject: Re: [PATCH] PCI: Mediatek: clear irq status after irq dispathed to
+ avoid reentry
+Message-ID: <20171221005240.GC30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <1513738334-26213-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <9cde45e7-78cd-9185-5840-495b27340eab@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1513738334-26213-1-git-send-email-honghui.zhang@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, yong.wu@mediatek.com, linux-kernel@vger.kernel.org,
+ yt.shen@mediatek.com, matthias.bgg@gmail.com,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ linux-mediatek@lists.infradead.org, xinping.qian@mediatek.com,
+ bhelgaas@google.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 07, 2017 at 03:53:39PM +0000, Marc Zyngier wrote:
-> [+ Lorenzo]
-> 
-> On 07/12/17 15:42, Lucas Stach wrote:
-> > Hi Joao,
-> > 
-> > Am Donnerstag, den 07.12.2017, 15:14 +0000 schrieb Joao Pinto:
-> >> Hello to all,
-> >>
-> >> I am sending this e-mail to request your opinion about the tasks needed to add
-> >> support for MSI-X for pcie-designware based solutions.
-> >>
-> >> A few months ago I submited a patch-set that added support for MSI-X:
-> >>
-> >> [v2,9/9] pci: remove limitation of the number of the available IRQs
-> >> https://patchwork.ozlabs.org/patch/771320/
-> >> [v2,8/9] pci: removing old irq api from pcie-designware
-> >> https://patchwork.ozlabs.org/patch/771360/
-> >> [v2,7/9] pci: keystone SoC driver adapted to new irq API
-> >> https://patchwork.ozlabs.org/patch/771361/
-> >> [v2,6/9] pci: qcom SoC driver adapted to new irq API
-> >> https://patchwork.ozlabs.org/patch/771362/
-> >> [v2,5/9] pci: generic PCIe DW driver adapted to new irq API
-> >> https://patchwork.ozlabs.org/patch/771365/
-> >> [v2,4/9] pci: artpec6 SoC driver adapted to new irq API
-> >> https://patchwork.ozlabs.org/patch/771364/
-> >> [v2,3/9] pci: imx6 SoC driver adapted to new irq API
-> >> https://patchwork.ozlabs.org/patch/771363/
-> >> [v2,2/9] pci: exynos SoC driver adapted to new irq API
-> >> https://patchwork.ozlabs.org/patch/771359/
-> >> [v2,1/9] pci: adding new irq api to pci-designware
-> >> https://patchwork.ozlabs.org/patch/771366/
-> >>
-> >> The patch-set was globally accepted, but it broke the MSI mechanism for
-> >> Keystone, due to its specificity.
-> >>
-> >> We are now going to resume this task and we would like to have your feedback
-> >> about our plan:
-> >>
-> >> Task 1: Help TI to create a keystone_msi driver to isolate its custom msi mechanism
-> >> Task 2: Port the existing patches to the new kernel version (except the keystone
-> >> one)
-> >>
-> >> If TI can do the keystone_msi implementation it would be easier. If it's not
-> >> possible, we volunteer to do it, but we will need testing & debug assistance.
-> >>
-> >> I appreciate very much your attention and feedback.
-> >>
-> >> Thanks and have a good day,
-> >> Joao Pinto
-> >>
-> > 
-> > The trivial implementation I have for MSI-X support is below. This has
-> > been tested on i.MX6, but I guess it also works on Keystone as it
-> > doesn't change the way the IRQs are set up.
-> > 
-> > -------------------------------->8-------------------------------------
-> > 
-> > From 0d722f67e3995cf26795f6a5d66cca8e4997ed64 Mon Sep 17 00:00:00 2001
-> > From: Lucas Stach <l.stach@pengutronix.de>
-> > Date: Thu, 7 Dec 2017 12:54:04 +0100
-> > Subject: [PATCH] PCI: dwc: implement MSI-X support
-> > 
-> > The DWC MSI controller does not support different MSI-X target addresses
-> > and does not allow to route individual IRQs to different CPUs. Aside from
-> > those shortcomings it is able to support MSI-X just fine.
-> > 
-> > Some devices like the Intel i210 network controller depend on MSI-X to
-> > be available to enable all hardware features, so even a feature limited
-> > implementation of MSI-X on the host side is useful.
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > ---
-> >  drivers/pci/dwc/pcie-designware-host.c | 19 +++++++++++++------
-> >  1 file changed, 13 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> > index 81e2157a7cfb..a85101dd15c9 100644
-> > --- a/drivers/pci/dwc/pcie-designware-host.c
-> > +++ b/drivers/pci/dwc/pcie-designware-host.c
-> > @@ -206,9 +206,6 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
-> >  	int irq, pos;
-> >  	struct pcie_port *pp = pdev->bus->sysdata;
-> >  
-> > -	if (desc->msi_attrib.is_msix)
-> > -		return -EINVAL;
-> > -
-> >  	irq = assign_irq(1, desc, &pos);
-> >  	if (irq < 0)
-> >  		return irq;
-> > @@ -226,9 +223,19 @@ static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
-> >  	struct msi_desc *desc;
-> >  	struct pcie_port *pp = pdev->bus->sysdata;
-> >  
-> > -	/* MSI-X interrupts are not supported */
-> > -	if (type == PCI_CAP_ID_MSIX)
-> > -		return -EINVAL;
-> > +	if (type == PCI_CAP_ID_MSIX) {
-> > +		if ((MAX_MSI_IRQS - bitmap_weight(pp->msi_irq_in_use,
-> > +						  MAX_MSI_IRQS)) < nvec)
-> > +			return -ENOSPC;
-> > +
-> > +		for_each_pci_msi_entry(desc, pdev) {
-> > +			int ret = dw_msi_setup_irq(chip, pdev, desc);
-> > +			if (ret)
-> > +				return ret;
-> > +		}
-> > +
-> > +		return 0;
-> > +	}
-> >  
-> >  	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
-> >  	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
-> > -- 
-> > 2.11.0
-> > 
-> 
-> Hi Lucas,
-> 
-> This is exactly what we're trying hard to get rid off. The whole
-> msi_setup_irqs and msi_controller stuff gets in the way of proper
-> abstraction, and litters the PCI subsystem with legacy stuff.
-> 
-> I'd rather see Joao's patches making it into mainline instead of keeping
-> this DWC madness on life support.
+[+cc Lorenzo, please cc him on all drivers/{host,dwc,endpoint} material]
 
-+1
+Please run "git log --oneline drivers/pci/host/pcie-mediatek.c" and
+make yours match.  Same capitalization, same sentence structure, etc.,
+e.g.,
 
-Thanks,
-Lorenzo
+  PCI: mediatek: Clear IRQ status ...
+
+s/dispathed/dispatched/
+
+s/irq/IRQ/ in the summary and all the English text below.
+
+On Wed, Dec 20, 2017 at 10:52:14AM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> 
+> There maybe a same irq reentry scenario after irq received in current
+> irq handle flow:
+> 	EP device		PCIe host driver	EP driver
+> 1. issue an irq
+> 			2. received irq
+> 			3. clear irq status
+> 			4. dispatch irq
+> 						5. clear irq source
+> The irq status was not successfully cleared at step 2 since the irq
+> source was not cleared yet. So the PCIe host driver may receive the
+> same irq after step 5. Then there's an irq reentry occurred.
+> Even worse, if the reentry irq was not an irq that EP driver expected,
+> it may not handle the irq. Then we may run into the dead loop from
+
+By "dead loop" I assume you mean "infinite loop"?  I don't think it's
+a deadlock since nothing is waiting.
+
+> step 2 to step 4.
+> Clear the irq status after irq have been dispatched to avoid the irq
+> reentry.
+> 
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+>  drivers/pci/host/pcie-mediatek.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> index db93efd..3248771 100644
+> --- a/drivers/pci/host/pcie-mediatek.c
+> +++ b/drivers/pci/host/pcie-mediatek.c
+> @@ -605,11 +605,11 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+>  
+>  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
+>  		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
+> -			/* Clear the INTx */
+> -			writel(1 << bit, port->base + PCIE_INT_STATUS);
+>  			virq = irq_find_mapping(port->irq_domain,
+>  						bit - INTX_SHIFT);
+>  			generic_handle_irq(virq);
+> +			/* Clear the INTx */
+> +			writel(1 << bit, port->base + PCIE_INT_STATUS);
+>  		}
+>  	}
+>  
+> @@ -619,10 +619,10 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+>  
+>  			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
+>  				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
+> -					/* Clear the MSI */
+> -					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
+>  					virq = irq_find_mapping(port->msi_domain, bit);
+>  					generic_handle_irq(virq);
+> +					/* Clear the MSI */
+> +					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
+>  				}
+>  			}
+>  			/* Clear MSI interrupt status */
+> -- 
+> 2.6.4
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
