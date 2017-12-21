@@ -1,79 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60124 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751289AbdLKWRx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Dec 2017 17:17:53 -0500
-Subject: Patch "x86/PCI: Make broadcom_postcore_init() check acpi_disabled" has been added to the 3.18-stable tree
-To: rafael.j.wysocki@intel.com, bhelgaas@google.com,
-        dave.hansen@linux.intel.com, gregkh@linuxfoundation.org,
-        linux-pci@vger.kernel.org, mingo@kernel.org, tglx@linutronix.de
-Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@linuxfoundation.org>
-Date: Mon, 11 Dec 2017 23:17:18 +0100
-Message-ID: <151303063815659@kroah.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 21 Dec 2017 07:13:58 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 0/7] ARM: dts: dra7: Enable x2 lane mode support
+Message-ID: <20171221151358.GQ3875@atomide.com>
+References: <20171219093133.16565-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171219093133.16565-1-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, nsekhar@ti.com,
+ Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
+ Rob Herring <robh+dt@kernel.org>, bcousson@baylibre.com,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+* Kishon Vijay Abraham I <kishon@ti.com> [171219 01:34]:
+> Add properties to enable PCIe x2 lane mode since all dra7
+> based SoCs support x2 lane mode.
+> 
+> However only dra76-evm has a slot which can support x2 lane
+> cards. Hence only enable x2 lane mode in dra76-evm.
+> (am571x-idk can support x2 lane mode but that makes usb port
+> not functional so not including the patch to enable
+> x2 mode in am571x-idk)
+> 
+> Also included in this series is patch to enable PCIe configs
+> (both host and device) in omap2plus_defconfig and
+> multi_v7_defconfig
+> 
+> In order to get x2 mode working [1] is required.
+> 
+> However by keeping the older compatible, this series won't
+> break functionality if this series is merged before [1]
 
-This is a note to let you know that I've just added the patch titled
+OK applying into omap-for-v4.16/dt and omap-for-v4.16/defconfig.
 
-    x86/PCI: Make broadcom_postcore_init() check acpi_disabled
+Thanks,
 
-to the 3.18-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+Tony
 
-The filename of the patch is:
-     x86-pci-make-broadcom_postcore_init-check-acpi_disabled.patch
-and it can be found in the queue-3.18 subdirectory.
-
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
->From ddec3bdee05b06f1dda20ded003c3e10e4184cab Mon Sep 17 00:00:00 2001
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Date: Fri, 1 Dec 2017 15:08:12 +0100
-Subject: x86/PCI: Make broadcom_postcore_init() check acpi_disabled
-
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-commit ddec3bdee05b06f1dda20ded003c3e10e4184cab upstream.
-
-acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
-is set, but the host bridge information from the ACPI tables is not going
-to be used in that case and the Broadcom host bridge initialization should
-not be skipped then, So make broadcom_postcore_init() check acpi_disabled
-too to avoid this issue.
-
-Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
-Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>
-Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
-Signed-off-by: Ingo Molnar <mingo@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- arch/x86/pci/broadcom_bus.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/arch/x86/pci/broadcom_bus.c
-+++ b/arch/x86/pci/broadcom_bus.c
-@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init
- 	 * We should get host bridge information from ACPI unless the BIOS
- 	 * doesn't support it.
- 	 */
--	if (acpi_os_get_root_pointer())
-+	if (!acpi_disabled && acpi_os_get_root_pointer())
- 		return 0;
- #endif
- 
-
-
-Patches currently in stable-queue which might be from rafael.j.wysocki@intel.com are
-
-queue-3.18/x86-pci-make-broadcom_postcore_init-check-acpi_disabled.patch
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
