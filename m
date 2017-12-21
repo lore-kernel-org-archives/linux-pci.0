@@ -1,53 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0125.outbound.protection.outlook.com ([104.47.37.125]:41760
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750992AbdLMWSc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Dec 2017 17:18:32 -0500
-From: Casey Leedom <leedom@chelsio.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Juan Alvarez <jjalvare@linux.vnet.ibm.com>,
-        "Komali Katari" <komali@chelsio.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Eric Dumazet <edumazet@google.com>
-Subject: Re: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
- drivers when VFs are attached to VMs ...
-Date: Wed, 13 Dec 2017 22:18:27 +0000
-Message-ID: <SN1PR12MB03524D627983E00817C624B4C8350@SN1PR12MB0352.namprd12.prod.outlook.com>
-References: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <20171017133702.1b0e35bc@t450s.home>
- <MWHPR12MB16008EEBF251F321E9B48D41C84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAB=NE6U-1ytEbL9A2FeVjcOfN3VSNAJUa9JbsQH9UfjRfANKxw@mail.gmail.com>
- <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAB=NE6Xwj20hwX3XzW_bYEby+24c=gY_nQtXPOu1J_c7uRHRjA@mail.gmail.com>
- <MWHPR12MB16004ED0D14F6531DDDD1692C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <SN1PR12MB03524AF87997DFAC404CD514C8350@SN1PR12MB0352.namprd12.prod.outlook.com>,<CAKdAkRRuX-NcWB_fwWr6XHV61t+L2MCjedfZgaiAD-xpVB-mMQ@mail.gmail.com>
-In-Reply-To: <CAKdAkRRuX-NcWB_fwWr6XHV61t+L2MCjedfZgaiAD-xpVB-mMQ@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from smtp.codeaurora.org ([198.145.29.96]:50606 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756538AbdLUEnN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 23:43:13 -0500
+Subject: Re: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
+To: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Maik Broemme <mbroemme@libmpq.org>,
+        Pawandeep Oza <poza@codeaurora.org>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171219210643.24615-4-keith.busch@intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <35445e86-e7b6-3fed-f26a-954a0f8d5e8a@codeaurora.org>
+Date: Wed, 20 Dec 2017 23:43:07 -0500
 MIME-Version: 1.0
+In-Reply-To: <20171219210643.24615-4-keith.busch@intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-/ From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-| Sent: Wednesday, December 13, 2017 1:47 PM
-|
-| This should have been fixed with:
-|
-|   commit 6878e7de6af726de47f9f3bec649c3f49e786586
-|   Author: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-\   Date:   Wed Sep 13 16:29:48 2017 -0700
++Oza
 
-  I see that was committed on September 13, 2017.  I should have mentioned
-that Komali started her bisect with kernel.org commit
-a638349bf6c29433b938141f99225b160551ff48 which is dated December 11, 2017.
-So something more needs to be done ...
+On 12/19/2017 4:06 PM, Keith Busch wrote:
+> A DPC enabled device will suppress sending ERR_FATAL and ERR_NONFATAL,
+> which prevents the AER handler from reporting the details of the
+> error. This patch will have the DPC driver get the AER status registers
+> from the downstream port that detected the uncorrectable error, and
+> print out additional information.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
 
-  It looks like you and Eric are discussing an additional fix.  If you come
-up with a patch, we [Komali] can test it for you.
+Oza is doing some restructuring to unify DPC and AER error handling path per
+feedback from Bjorn. It is almost done. He is testing it. 
 
-Casey
+Can this patch wait until you review his version? I'm thinking this could
+be something that can be added to his series instead.
+
+Coming back to this patch. The interrupt number for DPC and AER could be the
+same or different. According to the spec, AER errors are always reported
+regardless of DPC driver presence (see the famous flow chart).
+
+If the interrupt IDs are the same for AER and DPC, your patch would introduce
+double printing for AER errors.
+
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
