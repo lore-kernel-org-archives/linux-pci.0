@@ -1,93 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46376 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751596AbdLBA1O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Dec 2017 19:27:14 -0500
-Subject: [PATCH v1] PCI: Make PCI_SCAN_ALL_PCIE_DEVS work for Root as well
- as Downstream Ports
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Michael Ellerman <mpe@ellerman.id.au>,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        Christian Zigotzky <chzigotzky@xenosoft.de>
-Date: Fri, 01 Dec 2017 18:27:10 -0600
-Message-ID: <20171202002710.17686.21340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 22 Dec 2017 15:20:44 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Tony Lindgren <tony@atomide.com>
+Subject: Re: [RFC PATCH v2 1/3] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20171222232043.GA158981@google.com>
+References: <20170817120431.12398-1-jeffy.chen@rock-chips.com>
+ <20170817120431.12398-2-jeffy.chen@rock-chips.com>
+ <20170818170107.GA119461@google.com>
+ <20170818181416.GF6008@atomide.com>
+ <5997486D.4040803@rock-chips.com>
+ <20170822172653.GJ6008@atomide.com>
+ <599CDB37.3070307@rock-chips.com>
+ <20171219004811.GA216620@google.com>
+ <20171220191912.GM3875@atomide.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171220191912.GM3875@atomide.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ shawn.lin@rock-chips.com, jeffy <jeffy.chen@rock-chips.com>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+ dianders@chromium.org, linux-rockchip@lists.infradead.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
++ Rafael to this thread
 
-PCIe Downstream Ports normally have only a Device 0 below them.  To
-optimize enumeration, we don't scan for other devices *unless* the
-PCI_SCAN_ALL_PCIE_DEVS flag is set by set by quirks or the
-"pci=pcie_scan_all" kernel parameter.
+On Wed, Dec 20, 2017 at 11:19:12AM -0800, Tony Lindgren wrote:
+> * Brian Norris <briannorris@chromium.org> [171219 00:50]:
+> > On Wed, Aug 23, 2017 at 09:32:39AM +0800, Jeffy Chen wrote:
+> > 
+> > Did this problem ever get resolved? To be clear, I believe the problem
+> > at hand is:
+> > 
+> > (a) in suspend/resume (not runtime PM; we may not even have runtime PM
+> > support for most PCI devices)
+> 
+> It seems it should be enough to implement runtime PM in the PCI
+> controller. Isn't each PCI WAKE# line is wired from each PCI device
+> to the PCI controller?
 
-Previously PCI_SCAN_ALL_PCIE_DEVS only affected scanning below Switch
-Downstream Ports, not Root Ports.
+No, not really. As discussed in later versions of this thread already,
+the WAKE# hierarchy is orthogonal to the PCI hierarchy, and I think we
+settled that it's reasonable to just consider this as a 1-per-device
+thing, with each device "directly" attached to the PM controller. While
+sharing could happen, that's something we decided to punt on...didn't
+we?
 
-But the "Nemo" system, also known as the AmigaOne X1000, has a PA Semi Root
-Port whose link leads to an AMD/ATI SB600 South Bridge.  The Root Port is a
-PCIe device, of course, but the SB600 contains only conventional PCI
-devices with no visible PCIe port.
+> Then the PCI controller can figure out from which PCI device the
+> WAKE# came from.
 
-Simplify and restructure only_one_child() so that we scan for all possible
-devices below Root Ports as well as Switch Downstream Ports when
-PCI_SCAN_ALL_PCIE_DEVS is set.
+I'm not completely sure of the details, but I believe this *can* be
+determined by PME. But I'm not sure it's guaranteed to be supported,
+especially in cases where we already have 1:1 WAKE#. So we should be
+*trying* to report this wakeirq info from the device, if possible.
 
-This is enough to make Nemo work with "pci=pcie_scan_all".  We would also
-like to add a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically on Nemo so
-users wouldn't have to use the "pci=pcie_scan_all" parameter, but we don't
-have that yet.
+> > Options I can think of:
+> > (1) implement runtime PM callbacks for all PCI devices, where we clear
+> > any PME status and ensure WAKE# stops asserting [1]
+> 
+> I don't think this is needed, it should be enough to have just
+> the PCI controller implement runtime PM :)
 
-Link: https://lkml.kernel.org/r/CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=198057
-Reported-and-Tested-by: Christian Zigotzky <chzigotzky@xenosoft.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |   25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 14e0ea1ff38b..303c0cb0550c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2215,22 +2215,27 @@ static unsigned next_fn(struct pci_bus *bus, struct pci_dev *dev, unsigned fn)
- 
- static int only_one_child(struct pci_bus *bus)
- {
--	struct pci_dev *parent = bus->self;
-+	struct pci_dev *bridge = bus->self;
- 
--	if (!parent || !pci_is_pcie(parent))
-+	/*
-+	 * Systems with unusual topologies set PCI_SCAN_ALL_PCIE_DEVS so
-+	 * we scan for all possible devices, not just Device 0.
-+	 */
-+	if (pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
- 		return 0;
--	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
--		return 1;
- 
- 	/*
--	 * PCIe downstream ports are bridges that normally lead to only a
--	 * device 0, but if PCI_SCAN_ALL_PCIE_DEVS is set, scan all
--	 * possible devices, not just device 0.  See PCIe spec r3.0,
--	 * sec 7.3.1.
-+	 * A PCIe Downstream Port normally leads to a Link with only Device
-+	 * 0 on it (PCIe spec r3.1, sec 7.3.1).  As an optimization, scan
-+	 * only for Device 0 in that situation.
-+	 *
-+	 * Checking has_secondary_link is a hack to identify Downstream
-+	 * Ports because sometimes Switches are configured such that the
-+	 * PCIe Port Type labels are backwards.
- 	 */
--	if (parent->has_secondary_link &&
--	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
-+	if (bridge && pci_is_pcie(bridge) && bridge->has_secondary_link)
- 		return 1;
-+
- 	return 0;
- }
- 
+Brian
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
