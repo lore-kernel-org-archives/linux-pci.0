@@ -1,66 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>,
- <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v4 0/2] PCI: mediatek: Fixups for the IRQ handle routine and
- MT7622's class code
-Date: Fri, 22 Dec 2017 13:39:36 +0800
-Message-ID: <1513921178-16148-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0062.outbound.protection.outlook.com ([104.47.37.62]:11136
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751465AbdLVNCc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Dec 2017 08:02:32 -0500
+From: Bharat Kumar Gogada <bharatku@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Michal Simek <michal.simek@xilinx.com>
+CC: Jim Quinlan <jim2101024@gmail.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
+        "linux-rockchip@lists.infradead.org"
+        <linux-rockchip@lists.infradead.org>
+Subject: RE: Why do we check for "link-up" in *_pcie_valid_device()?
+Date: Fri, 22 Dec 2017 13:02:28 +0000
+Message-ID: <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
+References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Hi all,
 
-Two fixups for mediatek's host bridge:
-The first patch fixup the IRQ handle routine to avoid IRQ reentry which
-may exist for both MT2712 and MT7622.
-The second patch fixup class type for MT7622.
+In the PCI config access path, the *_pcie_valid_device() functions in the d=
+wc, altera, rockchip, and xilinx drivers all check whether the link is up.
 
-Change since v3:
- - Setup the class type and vendor ID at the beginning of startup instead
-   of in a quirk.
- - Add mediatek's vendor ID, it could be found in:
-   https://pcisig.com/membership/member-companies?combine=&page=4
+I think this is racy because the link may go down after we check but before=
+ we perform the config access.
 
-Change since v2:
- - Move the initialize of the iterate before the loop to fix an
-   INTx IRQ issue in the first patch
+What would blow up if we removed the *_pcie_link_up() checks?
 
-Change since v1:
- - Add the second patch.
- - Make the first patch's commit message more standard.
+I'd like to either remove the checks or add comments about why the race is =
+acceptable.  If we've covered this before, I apologize.
+Adding a comment will keep me from pestering you about this again in the fu=
+ture.
 
-Honghui Zhang (2):
-  PCI: mediatek: Clear IRQ status after IRQ dispatched to avoid reentry
-  PCI: mediatek: Set up class type and vendor ID for MT7622
+Hi Bjorn,
 
- drivers/pci/host/pcie-mediatek.c | 23 ++++++++++++++++++-----
- include/linux/pci_ids.h          |  3 +++
- 2 files changed, 21 insertions(+), 5 deletions(-)
+In both Xilinx driver cases when link is down, hardware responds by AXI DEC=
+ERR/SLVERR status which=20
+causes an exception, synchronous external abort to CPU.=20
+This causes system to hang, so we need this check for both of our drivers.
+We will add comments.=20
 
--- 
-2.6.4
+We have shutdown, Please expect delay in response till 1st Jan, 2018.
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Bharat
