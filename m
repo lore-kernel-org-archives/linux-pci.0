@@ -1,62 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:19771 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753006AbdL1MoX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 07:44:23 -0500
-Subject: Re: [PATCH v3 7/9] pci: keystone SoC driver adapted to new irq API
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <marc.zyngier@arm.com>, <Joao.Pinto@synopsys.com>,
-        <bhelgaas@google.com>, <jingoohan1@gmail.com>
-References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
- <d814c419df5591f9170223d61388a0af746577c4.1514455857.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <m-karicheri2@ti.com>,
-        <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <10d22382-4914-da3b-a842-eb33693c7a83@ti.com>
-Date: Thu, 28 Dec 2017 18:13:35 +0530
+Received: from muru.com ([72.249.23.125]:33202 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752549AbdLVSYw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Dec 2017 13:24:52 -0500
+Date: Fri, 22 Dec 2017 10:24:48 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        linux-omap@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        nsekhar@ti.com
+Subject: Re: [PATCH v2 2/3] dt-bindings: PCI: dra7xx: Add properties to
+ enable x2 lane in dra7
+Message-ID: <20171222182448.GZ3875@atomide.com>
+References: <20171219085823.8695-1-kishon@ti.com>
+ <20171219085823.8695-3-kishon@ti.com>
+ <20171220185715.j5h7dlricom6kuiz@rob-hp-laptop>
+ <94336bfb-221d-95f7-72b2-09219b08099b@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <d814c419df5591f9170223d61388a0af746577c4.1514455857.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <94336bfb-221d-95f7-72b2-09219b08099b@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gustavo,
+* Kishon Vijay Abraham I <kishon@ti.com> [171222 06:06]:
+> Hi Rob,
+> 
+> On Thursday 21 December 2017 12:27 AM, Rob Herring wrote:
+> > On Tue, Dec 19, 2017 at 02:28:22PM +0530, Kishon Vijay Abraham I wrote:
+> >> Add syscon properties required for configuring PCIe in x2 lane mode.
+> >>
+> >> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> >> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+> >> ---
+> >>  Documentation/devicetree/bindings/pci/ti-pci.txt | 6 ++++++
+> >>  1 file changed, 6 insertions(+)
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> >> index 82cb875e4cec..bfbc77ac7355 100644
+> >> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+> >> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> >> @@ -13,6 +13,12 @@ PCIe DesignWare Controller
+> >>   - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
+> >>  	       where <X> is the instance number of the pcie from the HW spec.
+> >>   - num-lanes as specified in ../designware-pcie.txt
+> >> + - ti,syscon-lane-conf : phandle/offset pair. Phandle to the system control
+> >> +			 module and the register offset to specify 1 lane or
+> >> +			 2 lane.
+> >> + - ti,syscon-lane-sel : phandle/offset pair. Phandle to the system control
+> >> +			module and the register offset to specify lane
+> >> +			selection.
+> > 
+> > Adding a property for every syscon register doesn't really scale and 
+> > doesn't work if the register layout changes.
+> 
+> The register layout doesn't really change between silicon revisions and for new
+> SoCs, the phandle and the register offset for that SoC will have to be
+> populated again.
+> 
+> Having said that, I'm not aware of any other alternative here.
 
-On Thursday 28 December 2017 05:26 PM, Gustavo Pimentel wrote:
-> This patch adapts Keystone SoC specific driver to use the new interrupt api
-> available in pcie-designware. A new callback was added to dw_pcie_host_ops
-> to handle a specific Keystone function and msi_host_init callback is
-> changed to simplify the access to pci data structure for keystone all SoC
-> drivers that use the structure.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
-> Change v1->v2:
-> - Removed hardcoded num_vectors configuration (now it is done in the core driver by default)
-> Change v2->v3:
-> - 
-> 
-> 
-> 
-> 
-> 
->  drivers/pci/dwc/pci-keystone-dw.c      | 88 ++--------------------------------
->  drivers/pci/dwc/pci-keystone.c         |  1 +
->  drivers/pci/dwc/pci-keystone.h         |  4 +-
->  drivers/pci/dwc/pci-layerscape.c       |  3 +-
->  drivers/pci/dwc/pcie-designware-host.c | 19 ++++++--
->  drivers/pci/dwc/pcie-designware.h      |  3 +-
+Sorry I did not realize this is still open. Sounds like I need to
+revert commit 4ece93c020e3 ("ARM: dts: dra7: Add properties to
+enable PCIe x2 lane mode"), let me know if that is not the case.
 
-The designware specific patches should be part of
-"[1/9] pci: adding new irq api to pci-designware"
+Regards,
 
-Also layerscap is not related to $subject.
-
-Thanks
-Kishon
+Tony
