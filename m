@@ -1,91 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:15905 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752303AbdLHI6s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 03:58:48 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V4 2/7] PCI: tegra: Use bus->sysdata to store and get host private data
-Date: Fri, 8 Dec 2017 14:28:08 +0530
-Message-ID: <1512723493-865-3-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <SRS0=RG5w=DS=ellerman.id.au=mpe@kernel.org>
+Return-Path: <SRS0=RG5w=DS=ellerman.id.au=mpe@kernel.org>
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Christian Zigotzky <chzigotzky@xenosoft.de>, Bjorn Helgaas <helgaas@kernel.org>, Darren Stevens <darren@stevens-zone.net>, "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Olof Johansson <olof@lixom.net>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH] SB600 for the Nemo board has non-zero devices on non-root bus
+In-Reply-To: <af18fb51-a0bc-68e2-7594-5583e3090f98@xenosoft.de>
+References: <20171202230052.34y2ivxgpgr3osct@localhost> <CAOesGMhfMpt+xG1vhVHU+O5o4W5y2S5mZyn9tp+CPn9G6XrNVA@mail.gmail.com> <4CEE49CE-68F3-457F-B302-54BA8550F36A@xenosoft.de> <1d5276c3-1d29-114a-c868-6f022eee58e7@xenosoft.de> <99f78122-cd53-100f-4f58-be5bf7927d4e@xenosoft.de> <87fu8odnfk.fsf@concordia.ellerman.id.au> <20171206210637.GO23510@bhelgaas-glaptop.roam.corp.google.com> <877etxh1lf.fsf@concordia.ellerman.id.au> <f5fe03d3-87f8-2a2d-2d83-fbefcd489a77@xenosoft.de> <98c7e034-b523-a703-e637-957e2857ab32@xenosoft.de> <20171215202509.GZ30595@bhelgaas-glaptop.roam.corp.google.com> <6326d79e-405b-2ae8-5295-97bf11219b81@xenosoft.de> <af18fb51-a0bc-68e2-7594-5583e3090f98@xenosoft.de>
+Date: Fri, 22 Dec 2017 22:19:58 +1100
+Message-ID: <87zi6bnh5t.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra host driver is using pci_find_host_bridge() to get private data,
-however pci_find_host_bridge() is causing module build failure because
-it is not exported. pci_find_host_bridge() can be avoided by using
-bus->sysdata to store and get private data.
+Christian Zigotzky <chzigotzky@xenosoft.de> writes:
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V4:
-* new patch in V4
+> Hi Bjorn,
+>
+> Sorry I'm bothering you again. Is this small out of tree init routine in=
+=20
+> the Nemo patch? I haven't get an answer from Darren yet and I didn't=20
+> found the small out of tree init routine in the Nemo patch. Please find=20
+> attached the Nemo patch. Maybe you can find this small out of tree init=20
+> routine.
+>
+> What do you think of this following code?
+>
+> if (sb600_bus =3D=3D -1)
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 {
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 busp =3D pci_find_bus(0, 0);
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 pa_pxp_read_config(busp, PCI_DEVFN(17,0),=20
+> PCI_SECONDARY_BUS, 1, &val);
+> +
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 sb600_bus =3D val;
+> +
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 printk(KERN_CRIT "NEMO SB600 on bus %d.\n",sb600_bus);
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
 
- drivers/pci/host/pci-tegra.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+I suspect Darren was referring to all of sb600_set_flag().
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 6f2f44539020..a549c5899e26 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -448,8 +448,7 @@ static unsigned long tegra_pcie_conf_offset(unsigned char b, unsigned int devfn,
- 
- static int tegra_pcie_add_bus(struct pci_bus *bus)
- {
--	struct pci_host_bridge *host = pci_find_host_bridge(bus);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-+	struct tegra_pcie *pcie = bus->sysdata;
- 	struct tegra_pcie_bus *b;
- 
- 	b = kzalloc(sizeof(*b), GFP_KERNEL);
-@@ -466,8 +465,7 @@ static int tegra_pcie_add_bus(struct pci_bus *bus)
- 
- static void tegra_pcie_remove_bus(struct pci_bus *child)
- {
--	struct pci_host_bridge *host = pci_find_host_bridge(child);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-+	struct tegra_pcie *pcie = child->sysdata;
- 	struct tegra_pcie_bus *bus, *tmp;
- 
- 	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
-@@ -483,8 +481,7 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
- 					unsigned int devfn,
- 					int where)
- {
--	struct pci_host_bridge *host = pci_find_host_bridge(bus);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-+	struct tegra_pcie *pcie = bus->sysdata;
- 	void __iomem *addr = NULL;
- 	u32 val = 0;
- 	u32 offset = 0;
-@@ -675,8 +672,7 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- {
--	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-+	struct tegra_pcie *pcie = pdev->bus->sysdata;
- 	int irq;
- 
- 	tegra_cpuidle_pcie_irqs_in_use();
-@@ -2570,6 +2566,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	pcie = pci_host_bridge_priv(host);
-+	host->sysdata = pcie;
- 
- 	pcie->soc = of_device_get_match_data(dev);
- 	INIT_LIST_HEAD(&pcie->buses);
--- 
-2.1.4
+What we'd really like is to be able to do something like:
+
+void __init pas_pci_init(void)
+{
+	...
+
+	if (of_find_compatible_node(NULL, NULL, "nemo-something"))
+		pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS).
+
+
+But I don't know if there's anything in the NEMO device tree that we can
+use to uniquely identify those machines? ie. the "nemo-something" string.
+
+Can you attach the output of `lsprop /proc/device-tree` ?
+
+cheers
