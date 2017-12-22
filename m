@@ -1,57 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:50591 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753335AbdL1L5r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 06:57:47 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v3 0/9] add new irq api to pcie-designware
-Date: Thu, 28 Dec 2017 11:56:38 +0000
-Message-Id: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+Received: from mailgw01.mediatek.com ([210.61.82.183]:54415 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751631AbdLVFj5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Dec 2017 00:39:57 -0500
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v4 1/2] PCI: mediatek: Clear IRQ status after IRQ dispatched to avoid reentry
+Date: Fri, 22 Dec 2017 13:39:37 +0800
+Message-ID: <1513921178-16148-2-git-send-email-honghui.zhang@mediatek.com>
+In-Reply-To: <1513921178-16148-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1513921178-16148-1-git-send-email-honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds the new interrupt api to pcie-designware make it
-possible to use features like MSIX.
-The work consisted of adapting the pcie-designware-host and each SoC
-specific driver.
-The patch set was made against the Bjorn' next branch.
-A new patch set (v3) was created that includes Kishon's fixes (pci end
-point error and a dra7xx warning) in file
-0007-pci-keystone-SoC-driver-adapted-to-new-irq-API.patch.
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Gustavo Pimentel (9):
-  pci: adding new irq api to pci-designware
-  pci: exynos SoC driver adapted to new irq API
-  pci: imx6 SoC driver adapted to new irq API
-  pci: artpec6 SoC driver adapted to new irq API
-  pci: generic PCIe DW driver adapted to new irq API
-  pci: qcom SoC driver adapted to new irq API
-  pci: keystone SoC driver adapted to new irq API
-  pci: removing old irq api from pcie-designware
-  pci: remove limitation of the number of the available IRQs
+There maybe a same IRQ reentry scenario after IRQ received in current
+IRQ handle flow:
+	EP device		PCIe host driver	EP driver
+1. issue an IRQ
+			2. received IRQ
+			3. clear IRQ status
+			4. dispatch IRQ
+						5. clear IRQ source
+The IRQ status was not successfully cleared at step 2 since the IRQ
+source was not cleared yet. So the PCIe host driver may receive the
+same IRQ after step 5. Then there's an IRQ reentry occurred.
+Even worse, if the reentry IRQ was not an IRQ that EP driver expected,
+it may not handle the IRQ. Then we may run into the infinite loop from
+step 2 to step 4.
+Clear the IRQ status after IRQ have been dispatched to avoid the IRQ
+reentry.
+This patch also fix another INTx IRQ issue by initialize the iterate
+before the loop. If an INTx IRQ re-occurred while we are dispatching
+the INTx IRQ, then iterate may start from PCI_NUM_INTX + INTX_SHIFT
+instead of INTX_SHIFT for the second time entering the
+for_each_set_bit_from() loop.
 
- drivers/pci/dwc/pci-exynos.c           |  18 --
- drivers/pci/dwc/pci-imx6.c             |  18 --
- drivers/pci/dwc/pci-keystone-dw.c      |  88 +-------
- drivers/pci/dwc/pci-keystone.c         |   1 +
- drivers/pci/dwc/pci-keystone.h         |   4 +-
- drivers/pci/dwc/pci-layerscape.c       |   4 +-
- drivers/pci/dwc/pcie-artpec6.c         |  18 --
- drivers/pci/dwc/pcie-designware-host.c | 391 +++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware-plat.c |  16 --
- drivers/pci/dwc/pcie-designware.h      |  30 ++-
- drivers/pci/dwc/pcie-qcom.c            |  16 --
- 11 files changed, 254 insertions(+), 350 deletions(-)
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/pci/host/pcie-mediatek.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index db93efd..fc29a9a 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -601,15 +601,16 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+ 	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
+ 	unsigned long status;
+ 	u32 virq;
+-	u32 bit = INTX_SHIFT;
++	u32 bit;
+ 
+ 	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
++		bit = INTX_SHIFT;
+ 		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
+-			/* Clear the INTx */
+-			writel(1 << bit, port->base + PCIE_INT_STATUS);
+ 			virq = irq_find_mapping(port->irq_domain,
+ 						bit - INTX_SHIFT);
+ 			generic_handle_irq(virq);
++			/* Clear the INTx */
++			writel(1 << bit, port->base + PCIE_INT_STATUS);
+ 		}
+ 	}
+ 
+@@ -619,10 +620,10 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+ 
+ 			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
+ 				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
+-					/* Clear the MSI */
+-					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
+ 					virq = irq_find_mapping(port->msi_domain, bit);
+ 					generic_handle_irq(virq);
++					/* Clear the MSI */
++					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
+ 				}
+ 			}
+ 			/* Clear MSI interrupt status */
 -- 
-2.7.4
+2.6.4
