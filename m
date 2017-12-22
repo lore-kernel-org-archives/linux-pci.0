@@ -1,110 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:36619 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752506AbdLNO7r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 09:59:47 -0500
-Date: Thu, 14 Dec 2017 15:59:43 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: treding@nvidia.com, bhelgaas@google.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com
-Subject: Re: [PATCH V3 0/3] Add ASPM-L1 Substates support for Tegra
-Message-ID: <20171214145943.GC13733@ulmo>
-References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 22 Dec 2017 09:32:50 +0100
+From: Juri Lelli <juri.lelli@redhat.com>
+To: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-rt-users@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Peter Zijlstra <peterz@infradead.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Morten Rasmussen <morten.rasmussen@arm.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Dietmar Eggemann <dietmar.eggemann@arm.com>,
+        Luca Abeni <luca.abeni@santannapisa.it>,
+        Tommaso Cucinotta <tommaso.cucinotta@sssup.it>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Patrick Bellasi <patrick.bellasi@arm.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Paolo Valente <paolo.valente@unimore.it>,
+        Claudio Scordino <claudio@evidence.eu.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>, fweisbec@gmail.com,
+        Sai Gurrappadi <sgurrappadi@nvidia.com>,
+        Saravana Kannan <skannan@codeaurora.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Daniel Bristot de Oliveira <bristot@redhat.com>,
+        Byungchul Park <byungchul.park@lge.com>,
+        Clark Williams <williams@redhat.com>,
+        "Martuccelli, Peter" <peterm@redhat.com>,
+        Prarit Bhargava <prarit@redhat.com>,
+        Joel Fernandes <joelaf@google.com>,
+        Steve Muckle <smuckle@google.com>,
+        Atish Patra <atish.patra@oracle.com>,
+        Rohit Jain <rohit.k.jain@oracle.com>,
+        Todd Kjos <tkjos@android.com>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        ptitiano@baylibre.com, bobby.batacharia@arm.com,
+        robin.randhawa@arm.com, Matt Fleming <matt@codeblueprint.co.uk>,
+        juri.lelli@redhat.com, Dhaval Giani <dhaval.giani@oracle.com>
+Subject: [ANNOUNCE] OSPM-summit 2018 - Registrations are open!
+Message-ID: <20171222083250.GI18612@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="4ZLFUWh1odzi/v6L"
-In-Reply-To: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Power Management and Scheduling in the Linux Kernel II edition
+(OSPM-summit 2018)
 
---4ZLFUWh1odzi/v6L
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+April 16-18, 2018
+Scuola Superiore Sant'Anna
+Pisa, Italy
 
-On Sun, Nov 12, 2017 at 06:47:51PM +0530, Vidya Sagar wrote:
-> Tegra chips T210 and T186 support ASPM-L1 Substates (i.e. L1.1 and L1.2)
-> This patch series
-> - applies fixups to reflect correct capability values for
->   T_cmrt (Common Mode Restore Time) and
->   T_pwr_on (Power On)
->   and adjusts counter values for 19.2 MHz of clk_m
-> - applies fixup specific to T210 to avoid unnecessary wake ups from L1.2 =
-state
-> - enables advertisement of ASPM-L1 support in capability register
->=20
-> NOTE:- This version of patch series drops a patch (that was present till =
-V2 series)
-> that introduces an API for host controller drivers to specify LTR_L1.2_TH=
-RESHOLD
-> value as more details and better understanding of spec is required to pro=
-gram
-> LTR_L1.2_THRESHOLD value.
-> It also reorders patches to appropriately have software fixups and advert=
-isement
-> of capabilities
->=20
-> PCIe - ASPM L1 Sub States spec
-> https://pcisig.com/sites/default/files/specification_documents/ECN_L1_PM_=
-Substates_with_CLKREQ_31_May_2013_Rev10a.pdf
->=20
-> Testing Done on T210 and T186
-> - ASPM-L1:
->   Verified ASPM-L1 enablement by selecting PCIEASPM_POWERSAVE config
->   With the help of Tegra rootport's internal counter registers, confirmed
->   link entry in and out of ASPM-L1 state using USB3.0 add-on card, NVMe a=
-nd NIC
->   cards
-> - ASPM-L1 SubStates:
->   Verified ASPM-L1 Substates enablement by selecting PCIEASPM_POWER_SUPER=
-SAVE config
->   Confirmed link's entry into L1SS using Westren Digital NVMe card (with =
-Sandisk
->   Controller) using Tegra rootport's internal counter registers
->=20
-> Vidya Sagar (3):
->   PCI: tegra: Apply sw fixups to support ASPM-L1 Sub-States
->   PCI: tegra: fixups to avoid unnecessary wakeup from ASPM-L1.2
->   PCI: tegra: Enable ASPM-L1 capability advertisement
->=20
->  drivers/pci/host/pci-tegra.c | 93 ++++++++++++++++++++++++++++++++++++++=
-++++++
->  1 file changed, 93 insertions(+)
+https://marc.info/?l=linux-kernel&m=151075286322645&w=2
+http://retis.sssup.it/ospm-summit/
 
-Looks like these don't apply to an upstream kernel. Do you have any
-other patches in your tree that would cause the context to be different?
-I see a couple of fields in struct tegra_pcie_soc that aren't in the
-driver upstream and I didn't find any patches on the list that add them.
+---
 
-Can you rebase this on top of a recent linux-next or -rc and resend?
-Also, if the series depends on any other patches that have been sent to
-the list but haven't been merged yet, please include a reference to the
-patchwork or email thread for the dependencies.
+REGISTRATIONS ARE NOW OPEN!
 
-Thanks,
-Thierry
+Attending the OSPM-summit is free of charge, but registration to the
+event is mandatory. The event can allow a maximum of 50 people, and 15
+speakers already got in (so, be sure to register early!).
 
---4ZLFUWh1odzi/v6L
-Content-Type: application/pgp-signature; name="signature.asc"
+To register fill in the registration form available at
+https://goo.gl/forms/QHebUBdSWgFeSrKv2
 
------BEGIN PGP SIGNATURE-----
+The list of accepted topics is available at
+https://docs.google.com/spreadsheets/d/1ZPfASW6zVOM3xQvOrcaDEf1c-Pxi1XnFukVYHHwGUq4/edit?usp=sharing
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloykdwACgkQ3SOs138+
-s6ETTg//eHIjyBXaln/T6wA28Vjbvk/WmF8wyEz0w2lY4R3bQAActWaMzA7dMe6k
-O4YIoXGZZcjdvMXGOSuunuEJ4ynYqjF6PNpcrmFUSkxfEHkvawbm0DuPIoY2wreW
-dJSO4WxRKMfN1pj8wB2HEe2SQrDbVXb60sHBgjgsMEstOEDDBYojtDxO8ue1px0Q
-AHEEUv918JDg1Ge+RArhaSh27w0D4bk+choLb6lZpz+c7rZjbql201nraE/mcWG8
-vRwAS/TSI1HJN5CAE4JG0UXyNDmUjI91qUBsLxD+oygdKw9xZYM3H/++GY7oocht
-hIkOu9EC4I2HALlMglBDS6lAo7CJ1HawISi+m/jD+s7T81gEz8QfuEp7T7WI1JaG
-5Tr8CXwlpShcB9aAeD0B/DkM0W6EGR9HOQenGWSqMo4o+x50j2C3qljWrV7QTzfb
-4fMofDoiowsnF9RtyJiuesFjLHKa9xukD08sibdeO/gEgasuhQw7oaHIalM8RBE5
-4nXHdLzJdq+ZkKlq6xN7O+zqWuz7CfNMdu/CDgkB+WKjCwvWLLWaiBiDjXF8bgyf
-V+zbDvlutj1qD0lDcVEiZvbBFgXYj2rxgs3dzpB97rsJ00kG+szMgbCdlOaayCpi
-TlPmXbrB39r4KAWF7/tOTQmoPm8kPNLbvKbomFeAmusBpqGO5nk=
-=ETQZ
------END PGP SIGNATURE-----
+The list is not final yet; changes might be made at any time before the
+event. So, if you didn't submit anything yet, there is still lot of time
+to come to Pisa and talk about what matters to you. :)
 
---4ZLFUWh1odzi/v6L--
+Speakers with accepted topics were automatically registered to the
+event.
+
+.:: VENUE
+
+The workshop will take place at ReTiS Lab*, Scuola Superiore
+Sant'Anna, Pisa, Italy. Pisa is a small town, walking distance from
+the city centre to the venue is 20 minutes, walking distance from the
+airport to the city centre is 30 minutes. More details are available
+from the summit web page: http://retis.sssup.it/ospm-summit/#site
+
+* https://goo.gl/maps/2pPXG2v7Lfp
+
+.:: ORGANISERS (in alphabetical order)
+
+Luca Abeni (SSSA)
+Patrick Bellasi (Arm)
+Tommaso Cucinotta (SSSA)
+Dietmar Eggemann (Arm)
+Sudeep Holla (Arm)
+Juri Lelli (Red Hat)
+Lorenzo Pieralisi (Arm)
+Morten Rasmussen (Arm)
+Claudio Scordino (Evidence SRL)
