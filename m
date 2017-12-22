@@ -1,15 +1,18 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1513839672.25872.13.camel@mhfsdcap03>
+Date: Thu, 21 Dec 2017 21:15:47 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Honghui Zhang <honghui.zhang@mediatek.com>
 Subject: Re: [PATCH v2 2/2] PCI: mediatek: Fixup class type for MT7622
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Yong Wu <yong.wu@mediatek.com>
-Date: Thu, 21 Dec 2017 15:01:12 +0800
-In-Reply-To: <1513838476.23174.3.camel@mhfsdcap03>
+Message-ID: <20171222031546.GF30595@bhelgaas-glaptop.roam.corp.google.com>
 References: <1513822277-18329-1-git-send-email-honghui.zhang@mediatek.com>
  <1513822277-18329-3-git-send-email-honghui.zhang@mediatek.com>
  <1513838476.23174.3.camel@mhfsdcap03>
+ <1513839672.25872.13.camel@mhfsdcap03>
+ <20171222002712.GE30595@bhelgaas-glaptop.roam.corp.google.com>
+ <1513904194.25872.23.camel@mhfsdcap03>
 MIME-Version: 1.0
+In-Reply-To: <1513904194.25872.23.camel@mhfsdcap03>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,71 +23,38 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
 Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
  hongkun.cao@mediatek.com, ryder.lee@mediatek.com, yu.yu@mediatek.com,
  linux-pci@vger.kernel.org, sean.wang@mediatek.com,
- linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
+ linux-kernel@vger.kernel.org, matthias.bgg@gmail.com,
  lorenzo.pieralisi@arm.com, linux-mediatek@lists.infradead.org,
- xinping.qian@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
- eddie.huang@mediatek.com, linux-arm-kernel@lists.infradead.org
+ xinping.qian@mediatek.com, yt.shen@mediatek.com, yingjoe.chen@mediatek.com,
+ eddie.huang@mediatek.com, bhelgaas@google.com, Yong Wu <yong.wu@mediatek.com>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2017-12-21 at 14:41 +0800, Yong Wu wrote:
-> On Thu, 2017-12-21 at 10:11 +0800, honghui.zhang@mediatek.com wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > 
-> > The host bridge of MT7622 has hardware code the class code to an
-> > arbitrary, meaningless value, fix that.
-> > 
-> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > ---
-> >  drivers/pci/host/pcie-mediatek.c | 12 ++++++++++++
-> >  1 file changed, 12 insertions(+)
-> > 
-> > diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> > index 3248771..ae8d367 100644
-> > --- a/drivers/pci/host/pcie-mediatek.c
-> > +++ b/drivers/pci/host/pcie-mediatek.c
-> > @@ -1174,3 +1174,15 @@ static struct platform_driver mtk_pcie_driver = {
-> >  	},
-> >  };
-> >  builtin_platform_driver(mtk_pcie_driver);
-> > +
-> > +/* The host bridge of MT7622 advertises the wrong device class. */
-> > +static void mtk_fixup_class(struct pci_dev *dev)
-> > +{
-> > +	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-> > +}
-> > +
-> > +/*
-> > + * The HW default value of vendor id and device id for mt7622 are 0x0e8d,
-> > + * 0x3258, which are arbitrary, meaningless values.
-> > + */
-> 
-> What's the right vendor id and device id? is it possible to fix them
-> too?
+On Fri, Dec 22, 2017 at 08:56:34AM +0800, Honghui Zhang wrote:
+> There's an internal control register that control the Vendor ID and
+> device ID values, our designer leave the default value un-touched. I
+> will set these values in that way for the next version of fix.
 
-Vendor ID is managed by PCI-SIG, you may get the assigned vendor ID
-from:
-https://pci-ids.ucw.cz/read/PC?restrict=
+Then there's no problem.  The mtk_pcie driver is a platform driver
+that claims the host controller based on an of_device_id from a device
+tree.
 
-The vendor ID for Mediatek Corp. should be 14c3.
-Device ID is something like vendor-defined.
-Those values are in the configuration space and are read-only defined by
-spec, it's been stored at the pci_dev, we may change the vendor and
-device values in pci_dev, but I don't think it's necessary to change
-that.
-BTW, Does anyone really cares about the vendor ID and device ID except
-the device's driver?
+Apparently the bridge is also materialized in PCI config space, which
+is typical for x86 host bridges, and makes the bridge appear in
+"lspci".  But drivers generally don't claim bridges that way.
 
-thanks.
+You can just program the Vendor and Device IDs by writing the internal
+control registers somewhere in the mtk_pci_probe() path.
 
-> 
-> > +DECLARE_PCI_FIXUP_EARLY(0x0e8d, 0x3258, mtk_fixup_class);
-> 
-> 
+Then you can set the class code the same way, using an internal
+control register (if that's possible), or using a quirk with the
+correct Mediatek Vendor ID (if there is no internal writable
+register).
 
-
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
