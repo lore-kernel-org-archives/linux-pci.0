@@ -1,76 +1,66 @@
-Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <rjw@sisk.pl>, <linux-pci@vger.kernel.org>
-CC: <stable@vger.kernel.org>, <linuxarm@huawei.com>,
-        Dongdong Liu
-	<liudongdong3@huawei.com>
-Subject: [PATCH V2 1/2] PCI/portdrv: Fix switch devctrl error report enable
-Date: Tue, 5 Dec 2017 17:50:37 +0800
-Message-ID: <1512467438-42850-2-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
-References: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>,
+ <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v4 0/2] PCI: mediatek: Fixups for the IRQ handle routine and
+ MT7622's class code
+Date: Fri, 22 Dec 2017 13:39:36 +0800
+Message-ID: <1513921178-16148-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
+ yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code has a bug, switch upstream/downstream port error report
-is disabled.
-DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-We call aer_probe() for a root port, and it enables AER reporting for
-the root port and any downstream devices:
+Two fixups for mediatek's host bridge:
+The first patch fixup the IRQ handle routine to avoid IRQ reentry which
+may exist for both MT2712 and MT7622.
+The second patch fixup class type for MT7622.
 
-aer_probe(root port)                        # only binds to root ports
-  aer_enable_rootport
-    set_downstream_devices_error_reporting(root, true)
-      set_device_error_reporting(root, true)
-        pci_enable_pcie_error_reporting
-          pcie_capability_set_word(root, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS)
-        pci_walk_bus(root->subordinate set_device_error_reporting, true)
-          set_device_error_reporting(dev, true)
-            pci_enable_pcie_error_reporting
-              pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
-PCI_EXP_AER_FLAGS)
+Change since v3:
+ - Setup the class type and vendor ID at the beginning of startup instead
+   of in a quirk.
+ - Add mediatek's vendor ID, it could be found in:
+   https://pcisig.com/membership/member-companies?combine=&page=4
 
-We later call pcie_portdrv_probe() for every downstream bridge (it
-matches PCI_CLASS_BRIDGE_PCI devices, then discards any non-PCIe
-devices), and it *disables* AER reporting:
+Change since v2:
+ - Move the initialize of the iterate before the loop to fix an
+   INTx IRQ issue in the first patch
 
-pcie_portdrv_probe(switch port)
-  pcie_port_device_register
-    get_port_device_capability
-      pci_disable_pcie_error_reporting
-        pcie_capability_clear_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS)
+Change since v1:
+ - Add the second patch.
+ - Make the first patch's commit message more standard.
 
-The result is that we first enable AER for the downstream switch
-ports, then we disable it again.
+Honghui Zhang (2):
+  PCI: mediatek: Clear IRQ status after IRQ dispatched to avoid reentry
+  PCI: mediatek: Set up class type and vendor ID for MT7622
 
-It does not need to disable AER for upstream/downstream ports as
-AER driver only binds to root ports.
+ drivers/pci/host/pcie-mediatek.c | 23 ++++++++++++++++++-----
+ include/linux/pci_ids.h          |  3 +++
+ 2 files changed, 21 insertions(+), 5 deletions(-)
 
-Fixes: 2bd50dd800b5(PCI: PCIe: Disable PCIe port services during port
-initialization)
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-CC: stable@vger.kernel.org
----
- drivers/pci/pcie/portdrv_core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index a592103..a0dff44 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -241,7 +241,9 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		 * Disable AER on this port in case it's been enabled by the
- 		 * BIOS (the AER service driver will enable it when necessary).
- 		 */
--		pci_disable_pcie_error_reporting(dev);
-+		if ((pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
-+		    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
-+			pci_disable_pcie_error_reporting(dev);
- 	}
- 	/* VC support */
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_VC))
 -- 
-1.9.1
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
