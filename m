@@ -1,106 +1,58 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 11/26] iommu/amd: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:47 -0500
-Message-Id: <1513661883-28662-12-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- "open list:AMD IOMMU AMD-VI" <iommu@lists.linux-foundation.org>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pu1apc01on0139.outbound.protection.outlook.com ([104.47.126.139]:22880
+        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755934AbdLVVby (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Dec 2017 16:31:54 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: Alexandru Chirvasitu <achirvasub@gmail.com>,
+        Dou Liyang <douly.fnst@cn.fujitsu.com>
+CC: Thomas Gleixner <tglx@linutronix.de>, Pavel Machek <pavel@ucw.cz>,
+        "kernel list" <linux-kernel@vger.kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "Maciej W. Rozycki" <macro@linux-mips.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "Simon Xiao" <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        "Jork Loeser" <Jork.Loeser@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        KY Srinivasan <kys@microsoft.com>
+Subject: RE: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
+Date: Fri, 22 Dec 2017 21:31:28 +0000
+Message-ID: <KL1P15301MB000676F3F8C9A5AC8C489E75BF020@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <20171218082011.GA24638@arch-chirva.localdomain>
+ <20171218101131.GA5338@amd> <20171219083421.GB24638@arch-chirva.localdomain>
+ <alpine.DEB.2.20.1712200124440.2282@nanos>
+ <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com>
+ <20171220131929.GC24638@arch-chirva.localdomain>
+ <20171220194506.GD24638@arch-chirva.localdomain>
+ <20171221022356.GE24638@arch-chirva.localdomain>
+ <1bd74ca3-afca-9d61-6911-61250f459891@cn.fujitsu.com>
+ <20171222142053.3cbhi2nhh24w7yoo@D-69-91-141-110.dhcp4.washington.edu>
+In-Reply-To: <20171222142053.3cbhi2nhh24w7yoo@D-69-91-141-110.dhcp4.washington.edu>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+> From: Alexandru Chirvasitu [mailto:achirvasub@gmail.com]
+> Sent: Friday, December 22, 2017 06:21
+>=20
+> In the absence of logs, the best I can do at the moment is attach a
+> picture of the screen I am presented with on the apic=3Ddebug boot
+> attempt.
+> Alex
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+The panic happens in irq_matrix_assign_system+0x4e/0xd0 in your picture.
+IMO we should find which line of code causes the panic. I suppose
+"objdump -D kernel/irq/matrix.o" can help to do that.
 
-Hard-code the domain number as 0 for the AMD IOMMU driver.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/iommu/amd_iommu.c      | 3 ++-
- drivers/iommu/amd_iommu_init.c | 9 +++++----
- drivers/iommu/amd_iommu_v2.c   | 3 ++-
- 3 files changed, 9 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 7d5eb00..821547b 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -527,7 +527,8 @@ static void amd_iommu_report_page_fault(u16 devid, u16 domain_id,
- 	struct iommu_dev_data *dev_data = NULL;
- 	struct pci_dev *pdev;
- 
--	pdev = pci_get_bus_and_slot(PCI_BUS_NUM(devid), devid & 0xff);
-+	pdev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(devid),
-+					   devid & 0xff);
- 	if (pdev)
- 		dev_data = get_dev_data(&pdev->dev);
- 
-diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
-index 6fe2d03..4e4a615 100644
---- a/drivers/iommu/amd_iommu_init.c
-+++ b/drivers/iommu/amd_iommu_init.c
-@@ -1697,8 +1697,8 @@ static int iommu_init_pci(struct amd_iommu *iommu)
- 	u32 range, misc, low, high;
- 	int ret;
- 
--	iommu->dev = pci_get_bus_and_slot(PCI_BUS_NUM(iommu->devid),
--					  iommu->devid & 0xff);
-+	iommu->dev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(iommu->devid),
-+						 iommu->devid & 0xff);
- 	if (!iommu->dev)
- 		return -ENODEV;
- 
-@@ -1764,8 +1764,9 @@ static int iommu_init_pci(struct amd_iommu *iommu)
- 	if (is_rd890_iommu(iommu->dev)) {
- 		int i, j;
- 
--		iommu->root_pdev = pci_get_bus_and_slot(iommu->dev->bus->number,
--				PCI_DEVFN(0, 0));
-+		iommu->root_pdev =
-+			pci_get_domain_bus_and_slot(0, iommu->dev->bus->number,
-+						    PCI_DEVFN(0, 0));
- 
- 		/*
- 		 * Some rd890 systems may not be fully reconfigured by the
-diff --git a/drivers/iommu/amd_iommu_v2.c b/drivers/iommu/amd_iommu_v2.c
-index 7d94e1d..8696382 100644
---- a/drivers/iommu/amd_iommu_v2.c
-+++ b/drivers/iommu/amd_iommu_v2.c
-@@ -564,7 +564,8 @@ static int ppr_notifier(struct notifier_block *nb, unsigned long e, void *data)
- 	finish      = (iommu_fault->tag >> 9) & 1;
- 
- 	devid = iommu_fault->device_id;
--	pdev = pci_get_bus_and_slot(PCI_BUS_NUM(devid), devid & 0xff);
-+	pdev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(devid),
-+					   devid & 0xff);
- 	if (!pdev)
- 		return -ENODEV;
- 	dev_data = get_dev_data(&pdev->dev);
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+-- Dexuan
