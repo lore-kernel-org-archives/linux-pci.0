@@ -1,49 +1,458 @@
-Return-Path: <SRS0=Jvse=DK=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=Jvse=DK=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>, Michal Hocko <mhocko@kernel.org>, Andy Lutomirski <luto@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, the arch/x86 maintainers <x86@kernel.org>, Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-Date: Thu, 14 Dec 2017 16:54:09 +0100
-Message-ID: <11146834.AWaDHrVcmB@aspire.rjw.lan>
-In-Reply-To: <alpine.DEB.2.20.1712141648190.4998@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <5115041.vUGA3IjvdM@aspire.rjw.lan> <alpine.DEB.2.20.1712141648190.4998@nanos>
+Return-Path: <SRS0=UB9t=DS=xenosoft.de=chzigotzky@kernel.org>
+Return-Path: <SRS0=UB9t=DS=xenosoft.de=chzigotzky@kernel.org>
+Subject: [PATCH] SB600 for the Nemo board has non-zero devices on non-root bus
+From: Christian Zigotzky <chzigotzky@xenosoft.de>
+To: Bjorn Helgaas <helgaas@kernel.org>, Michael Ellerman
+ <mpe@ellerman.id.au>, Darren Stevens <darren@stevens-zone.net>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Olof Johansson <olof@lixom.net>,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+References: <20171202230052.34y2ivxgpgr3osct@localhost>
+ <CAOesGMhfMpt+xG1vhVHU+O5o4W5y2S5mZyn9tp+CPn9G6XrNVA@mail.gmail.com>
+ <4CEE49CE-68F3-457F-B302-54BA8550F36A@xenosoft.de>
+ <1d5276c3-1d29-114a-c868-6f022eee58e7@xenosoft.de>
+ <99f78122-cd53-100f-4f58-be5bf7927d4e@xenosoft.de>
+ <87fu8odnfk.fsf@concordia.ellerman.id.au>
+ <20171206210637.GO23510@bhelgaas-glaptop.roam.corp.google.com>
+ <877etxh1lf.fsf@concordia.ellerman.id.au>
+ <f5fe03d3-87f8-2a2d-2d83-fbefcd489a77@xenosoft.de>
+ <98c7e034-b523-a703-e637-957e2857ab32@xenosoft.de>
+ <20171215202509.GZ30595@bhelgaas-glaptop.roam.corp.google.com>
+ <6326d79e-405b-2ae8-5295-97bf11219b81@xenosoft.de>
+Message-ID: <af18fb51-a0bc-68e2-7594-5583e3090f98@xenosoft.de>
+Date: Fri, 22 Dec 2017 10:57:59 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <6326d79e-405b-2ae8-5295-97bf11219b81@xenosoft.de>
+Content-Type: multipart/mixed;
+ boundary="------------E752AF330487DAFAD252DEC7"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 14, 2017 4:52:22 PM CET Thomas Gleixner wrote:
-> On Thu, 14 Dec 2017, Rafael J. Wysocki wrote:
-> > The problem here is that pci_pm_thaw_noirq() calls pci_restore_state() which
-> > in fact requires the device to be in D0, so the caller should put it into
-> > D0 instead of trying to "update" its power state.
-> > 
-> > [Note that the PCI layer doesn't put devices into low-power states during the
-> > hibernation's "freeze" transition, but drivers can legitimately do that in
-> > their "freeze" callbacks which was overlooked in that code and that's what
-> > i915 does.]
-> > 
-> > So IMO what we need is the change below.  I'm going to test it shortly,
-> > but please give it a go too.
-> 
-> So now this looks more reasonable:
-> 
->   irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
->   __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a 
->   __pci_write_msi_msg: Not written
->   ...
->   device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [thaw]
->   pci_pm_thaw_noirq <-dpm_run_callback
->   __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a 
->   device_pm_callback_end: i915 0000:00:02.0, err=0
->   ...
->   resume_irqs: Resume 125
->   ...
->   irq_handler_entry: irq=125 name=i915
+This is a multi-part message in MIME format.
+--------------E752AF330487DAFAD252DEC7
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Cool.
+Hi Bjorn,
 
-Let me respin it with a changelog etc then.
+Sorry I'm bothering you again. Is this small out of tree init routine in 
+the Nemo patch? I haven't get an answer from Darren yet and I didn't 
+found the small out of tree init routine in the Nemo patch. Please find 
+attached the Nemo patch. Maybe you can find this small out of tree init 
+routine.
+
+What do you think of this following code?
+
+if (sb600_bus == -1)
++       {
++               busp = pci_find_bus(0, 0);
++               pa_pxp_read_config(busp, PCI_DEVFN(17,0), 
+PCI_SECONDARY_BUS, 1, &val);
++
++               sb600_bus = val;
++
++               printk(KERN_CRIT "NEMO SB600 on bus %d.\n",sb600_bus);
++       }
 
 Thanks,
-Rafael
+Christian
+
+
+On 04 December 2017 at 12:40PM, Darren Stevens wrote:
+ > Hello Bjorn
+ >
+ > Firstly sorry for not being able to join in this discussion, I have been
+ > moving house and only got my X1000 set up again yesterday..
+ >
+ > On 30/11/2017, Bjorn Helgaas wrote:
+ >> I *think* something like the patch below should make this work if you
+ >> use the "pci=pcie_scan_all" parameter.  We have some x86 DMI quirks
+ >> that set PCI_SCAN_ALL_PCIE_DEVS automatically.  I don't know how to do
+ >> something similar on powerpc, but maybe you do?
+ >
+ > Actually the root ports on the Nemo's PA6T processor don't respond to the
+ > SB600 unless we turn on a special 'relax pci-e' bit in one of its control
+ > registers. We use a small out of tree init routine to do this, and there
+ > would be the ideal place to put a call to
+ > pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS).
+ >
+ > This patch fixes the last major hurdle to getting the X1000 fully 
+supported in
+ > the linux kernel, so thanks very much for that.
+ >
+ > Regards
+ > Darren
+ >
+ >
+
+
+--------------E752AF330487DAFAD252DEC7
+Content-Type: text/x-patch;
+ name="nemo_4.14-1.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="nemo_4.14-1.patch"
+
+diff -rupN a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+--- a/arch/powerpc/platforms/pasemi/pci.c	2017-09-11 17:04:18.257586417 +0200
++++ b/arch/powerpc/platforms/pasemi/pci.c	2017-09-11 17:03:43.040599938 +0200
+@@ -27,6 +27,7 @@
+ #include <linux/pci.h>
+ 
+ #include <asm/pci-bridge.h>
++#include <asm/isa-bridge.h>
+ #include <asm/machdep.h>
+ 
+ #include <asm/ppc-pci.h>
+@@ -108,6 +109,69 @@ static int workaround_5945(struct pci_bu
+ 	return 1;
+ }
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++static int sb600_bus = 5;
++static void __iomem *iob_mapbase = NULL;
++
++static int pa_pxp_read_config(struct pci_bus *bus, unsigned int devfn,
++                             int offset, int len, u32 *val);
++
++static void sb600_set_flag(int bus)
++{
++    struct resource res;
++    struct device_node *dn;
++       struct pci_bus *busp;
++       u32 val;
++       int err;
++
++       if (sb600_bus == -1)
++       {
++               busp = pci_find_bus(0, 0);
++               pa_pxp_read_config(busp, PCI_DEVFN(17,0), PCI_SECONDARY_BUS, 1, &val);
++
++               sb600_bus = val;
++
++               printk(KERN_CRIT "NEMO SB600 on bus %d.\n",sb600_bus);
++       }
++
++       if (iob_mapbase == NULL)
++       {
++        dn = of_find_compatible_node(NULL, "isa", "pasemi,1682m-iob");
++        if (!dn)
++        {
++               printk(KERN_CRIT "NEMO SB600 missing iob node\n");
++                       return;
++               }
++
++               err = of_address_to_resource(dn, 0, &res);
++        of_node_put(dn);
++
++               if (err)
++               {
++               printk(KERN_CRIT "NEMO SB600 missing resource\n");
++                       return;
++               }
++
++               printk(KERN_CRIT "NEMO SB600 IOB base %08lx\n",res.start);
++
++               iob_mapbase = ioremap(res.start + 0x100, 0x94);
++       }
++
++       if (iob_mapbase != NULL)
++       {
++               if (bus == sb600_bus)
++               {
++                       out_le32(iob_mapbase + 4, in_le32(iob_mapbase + 4) | 0x800);
++               }
++               else
++               {
++                       out_le32(iob_mapbase + 4, in_le32(iob_mapbase + 4) & ~0x800);
++               }
++       }
++}
++#endif
++
++
+ static int pa_pxp_read_config(struct pci_bus *bus, unsigned int devfn,
+ 			      int offset, int len, u32 *val)
+ {
+@@ -126,6 +190,10 @@ static int pa_pxp_read_config(struct pci
+ 
+ 	addr = pa_pxp_cfg_addr(hose, bus->number, devfn, offset);
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++       sb600_set_flag(bus->number);
++#endif
++
+ 	/*
+ 	 * Note: the caller has already checked that offset is
+ 	 * suitably aligned and that len is 1, 2 or 4.
+@@ -210,6 +278,9 @@ static int __init pas_add_bridge(struct
+ 	/* Interpret the "ranges" property */
+ 	pci_process_bridge_OF_ranges(hose, dev, 1);
+ 
++	/* Scan for an isa bridge. */
++	isa_bridge_find_early(hose);
++
+ 	return 0;
+ }
+ 
+diff -rupN a/arch/powerpc/platforms/pasemi/setup.c b/arch/powerpc/platforms/pasemi/setup.c
+--- a/arch/powerpc/platforms/pasemi/setup.c	2017-09-11 17:04:18.256586450 +0200
++++ b/arch/powerpc/platforms/pasemi/setup.c	2017-09-11 17:03:43.042599888 +0200
+@@ -34,6 +34,7 @@
+ #include <asm/prom.h>
+ #include <asm/iommu.h>
+ #include <asm/machdep.h>
++#include <asm/i8259.h>
+ #include <asm/mpic.h>
+ #include <asm/smp.h>
+ #include <asm/time.h>
+@@ -72,6 +73,17 @@ static void __noreturn pas_restart(char
+ 		out_le32(reset_reg, 0x6000000);
+ }
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++void pas_shutdown(void)
++{
++       /* (added by DStevens 19/06/13)
++          Set the PLD bit that makes the SB600 think the power button is being pressed */
++       void __iomem *pld_map = ioremap(0xf5000000,4096);
++       while (1)
++               out_8(pld_map+7,0x01);
++}
++#endif
++
+ #ifdef CONFIG_SMP
+ static arch_spinlock_t timebase_lock;
+ static unsigned long timebase;
+@@ -183,16 +195,30 @@ static int __init pas_setup_mce_regs(voi
+ }
+ machine_device_initcall(pasemi, pas_setup_mce_regs);
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++static void sb600_8259_cascade(struct irq_desc *desc)
++{
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	unsigned int cascade_irq = i8259_irq();
++
++	if (cascade_irq !=NO_IRQ)
++               generic_handle_irq(cascade_irq);
++
++	chip->irq_eoi(&desc->irq_data);
++}
++#endif
++
+ static __init void pas_init_IRQ(void)
+ {
+ 	struct device_node *np;
+-	struct device_node *root, *mpic_node;
++	struct device_node *root, *mpic_node, *i8259_node;
+ 	unsigned long openpic_addr;
+ 	const unsigned int *opprop;
+ 	int naddr, opplen;
+ 	int mpic_flags;
+ 	const unsigned int *nmiprop;
+ 	struct mpic *mpic;
++	int gpio_virq;
+ 
+ 	mpic_node = NULL;
+ 
+@@ -244,6 +270,22 @@ static __init void pas_init_IRQ(void)
+ 		mpic_unmask_irq(irq_get_irq_data(nmi_virq));
+ 	}
+ 
++
++#ifdef CONFIG_PPC_PASEMI_NEMO
++       // Connect legacy i8259 controller in SB600
++	i8259_node = of_find_node_by_path("/pxp@0,e0000000");
++	printk("Init i8259\n");
++	i8259_init(i8259_node, 0);
++	of_node_put(i8259_node);
++
++	gpio_virq = irq_create_mapping(NULL, 3);
++	irq_set_irq_type(gpio_virq, IRQ_TYPE_LEVEL_HIGH);
++	irq_set_chained_handler(gpio_virq, sb600_8259_cascade);
++	mpic_unmask_irq(irq_get_irq_data(gpio_virq));
++
++	irq_set_default_host(mpic->irqhost);
++
++#endif
+ 	of_node_put(mpic_node);
+ 	of_node_put(root);
+ }
+@@ -398,6 +440,18 @@ static const struct of_device_id pasemi_
+ 	{},
+ };
+ 
++static struct resource rtc_resource[] = {{
++	.name = "rtc",
++	.start = 0x70,
++	.end = 0x71,
++	.flags = IORESOURCE_IO,
++}, {
++	.name = "rtc",
++	.start = 8,
++	.end = 8,
++	.flags = IORESOURCE_IRQ,
++}};
++
+ static int __init pasemi_publish_devices(void)
+ {
+ 	pasemi_pcmcia_init();
+@@ -405,6 +459,10 @@ static int __init pasemi_publish_devices
+ 	/* Publish OF platform devices for SDC and other non-PCI devices */
+ 	of_platform_bus_probe(NULL, pasemi_bus_ids, NULL);
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++	platform_device_register_simple("rtc_cmos", -1, rtc_resource, 2);
++#endif
++
+ 	return 0;
+ }
+ machine_device_initcall(pasemi, pasemi_publish_devices);
+@@ -421,9 +479,13 @@ static int __init pas_probe(void)
+ 
+ 	iommu_init_early_pasemi();
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++       pm_power_off              = pas_shutdown;         // Varisys provided a way to turn us off
++#endif
+ 	return 1;
+ }
+ 
++
+ define_machine(pasemi) {
+ 	.name			= "PA Semi PWRficient",
+ 	.probe			= pas_probe,
+@@ -435,4 +497,7 @@ define_machine(pasemi) {
+ 	.calibrate_decr		= generic_calibrate_decr,
+ 	.progress		= pas_progress,
+ 	.machine_check_exception = pas_machine_check_handler,
++#if 0 // def CONFIG_PPC_PASEMI_NEMO
++       .pci_probe_mode = sb600_pci_probe_mode,
++#endif
+ };
+diff -rupN a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+--- a/drivers/ata/pata_atiixp.c	2017-09-11 17:04:26.591307805 +0200
++++ b/drivers/ata/pata_atiixp.c	2017-09-11 17:03:43.043599863 +0200
+@@ -278,6 +278,12 @@ static int atiixp_init_one(struct pci_de
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, &info };
+ 
++        /* SB600 on the Nemo board doesn't have secondary port wired */
++        #ifdef CONFIG_PPC_PASEMI_NEMO
++        if((pdev->device == PCI_DEVICE_ID_ATI_IXP600_IDE))
++            ppi[1] = &ata_dummy_port_info;
++        #endif
++
+ 	return ata_pci_bmdma_init_one(pdev, ppi, &atiixp_sht, NULL,
+ 				      ATA_HOST_PARALLEL_SCAN);
+ }
+diff -rupN a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+--- a/drivers/ata/pata_of_platform.c	2017-09-11 17:04:26.565308689 +0200
++++ b/drivers/ata/pata_of_platform.c	2017-09-11 17:03:43.044599838 +0200
+@@ -40,14 +40,36 @@ static int pata_of_platform_probe(struct
+ 		return -EINVAL;
+ 	}
+ 
+-	ret = of_address_to_resource(dn, 1, &ctl_res);
+-	if (ret) {
+-		dev_err(&ofdev->dev, "can't get CTL address from "
+-			"device tree\n");
+-		return -EINVAL;
++	if (of_device_is_compatible(dn, "electra-ide")) {
++		/* Altstatus is really at offset 0x3f6 from the primary window
++		 * on electra-ide. Adjust ctl_res and io_res accordingly.
++		 */
++		ctl_res = io_res;
++		ctl_res.start = ctl_res.start+0x3f6;
++		io_res.end = ctl_res.start-1;
++
++#ifdef CONFIG_PPC_PASEMI_NEMO
++	} else if (of_device_is_compatible(dn, "electra-cf")) {
++		/* Task regs are at 0x800, with alt status @ 0x80e in the primary window
++		* on electra-cf. Adjust ctl_res and io_res accordingly.
++		*/
++		ctl_res = io_res;
++		io_res.start += 0x800;
++		ctl_res.start = ctl_res.start + 0x80e;
++		io_res.end = ctl_res.start-1;
++#endif
++	} else {
++		ret = of_address_to_resource(dn, 1, &ctl_res);
++		if (ret) {
++			dev_err(&ofdev->dev, "can't get CTL address from "
++				"device tree\n");
++			return -EINVAL;
++		}
+ 	}
+ 
+ 	irq_res = platform_get_resource(ofdev, IORESOURCE_IRQ, 0);
++	if (irq_res)
++		irq_res->flags = 0;
+ 
+ 	of_property_read_u32(dn, "reg-shift", &reg_shift);
+ 
+@@ -60,6 +82,11 @@ static int pata_of_platform_probe(struct
+ 		dev_info(&ofdev->dev, "pio-mode unspecified, assuming PIO0\n");
+ 	}
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++       irq_res = 0;                    // force irq off (doesn't seem to work)
++#endif
++
++
+ 	pio_mask = 1 << pio_mode;
+ 	pio_mask |= (1 << pio_mode) - 1;
+ 
+@@ -69,6 +96,10 @@ static int pata_of_platform_probe(struct
+ 
+ static const struct of_device_id pata_of_platform_match[] = {
+ 	{ .compatible = "ata-generic", },
++	{ .compatible = "electra-ide", },
++#ifdef CONFIG_PPC_PASEMI_NEMO
++	{ .compatible = "electra-cf",},
++#endif
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, pata_of_platform_match);
+diff -rupN a/drivers/i2c/busses/i2c-pasemi.c b/drivers/i2c/busses/i2c-pasemi.c
+--- a/drivers/i2c/busses/i2c-pasemi.c	2017-09-11 17:04:23.084427043 +0200
++++ b/drivers/i2c/busses/i2c-pasemi.c	2017-09-11 17:03:43.045599813 +0200
+@@ -365,7 +365,6 @@ static int pasemi_smb_probe(struct pci_d
+ 	smbus->adapter.class = I2C_CLASS_HWMON | I2C_CLASS_SPD;
+ 	smbus->adapter.algo = &smbus_algorithm;
+ 	smbus->adapter.algo_data = smbus;
+-	smbus->adapter.nr = PCI_FUNC(dev->devfn);
+ 
+ 	/* set up the sysfs linkage to our parent device */
+ 	smbus->adapter.dev.parent = &dev->dev;
+@@ -373,7 +372,7 @@ static int pasemi_smb_probe(struct pci_d
+ 	reg_write(smbus, REG_CTL, (CTL_MTR | CTL_MRR |
+ 		  (CLK_100K_DIV & CTL_CLK_M)));
+ 
+-	error = i2c_add_numbered_adapter(&smbus->adapter);
++	error = i2c_add_adapter(&smbus->adapter);
+ 	if (error)
+ 		goto out_release_region;
+ 
+diff -rupN a/drivers/pci/probe.c b/drivers/pci/probe.c
+--- a/drivers/pci/probe.c	2017-09-11 17:04:23.683406677 +0200
++++ b/drivers/pci/probe.c	2017-09-11 17:03:43.050599688 +0200
+@@ -2177,6 +2177,8 @@ static int only_one_child(struct pci_bus
+ 
+ 	if (!parent || !pci_is_pcie(parent))
+ 		return 0;
++	#ifndef CONFIG_PPC_PASEMI_NEMO
++	// SB600 has non-zero devices on non-root bus.
+ 	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+ 		return 1;
+ 
+@@ -2189,6 +2191,7 @@ static int only_one_child(struct pci_bus
+ 	if (parent->has_secondary_link &&
+ 	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+ 		return 1;
++	#endif
+ 	return 0;
+ }
+ 
+
+--------------E752AF330487DAFAD252DEC7--
