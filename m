@@ -1,66 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33919 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751137AbdLGW3H (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Dec 2017 17:29:07 -0500
-From: Govinda Tatti <Govinda.Tatti@Oracle.COM>
-To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        boris.ostrovsky@Oracle.COM, jgross@suse.com, JBeulich@suse.com,
-        roger.pau@citrix.com
-Cc: konrad.wilk@Oracle.COM
-Subject: [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr() interface
-Date: Thu,  7 Dec 2017 17:21:44 -0500
-Message-Id: <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
-In-Reply-To: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+Received: from mail.kernel.org ([198.145.29.99]:58668 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756079AbdLVR2S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Dec 2017 12:28:18 -0500
+Date: Fri, 22 Dec 2017 11:28:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharatku@xilinx.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Jim Quinlan <jim2101024@gmail.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
+        "linux-rockchip@lists.infradead.org"
+        <linux-rockchip@lists.infradead.org>
+Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
+Message-ID: <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
+ <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch exports pcie_has_flr() and it is being used by Xen pciback
-driver to reset (flr/slot/bus) PCI devices based on 'reset' SysFS
-attribute.
+On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada wrote:
+> Bjorn wrote:
+>> In the PCI config access path, the *_pcie_valid_device() functions
+>> in the dwc, altera, rockchip, and xilinx drivers all check whether
+>> the link is up.
+>> 
+>> I think this is racy because the link may go down after we check but
+>> before we perform the config access.
+>> 
+>> What would blow up if we removed the *_pcie_link_up() checks?
+>> 
+>> I'd like to either remove the checks or add comments about why the
+>> race is acceptable.  If we've covered this before, I apologize.
+>> Adding a comment will keep me from pestering you about this again in
+>> the future.
 
-Signed-off-by: Govinda Tatti <Govinda.Tatti@Oracle.COM>
----
-v3: -New
+> In both Xilinx driver cases when link is down, hardware responds by
+> AXI DECERR/SLVERR status which causes an exception, synchronous
+> external abort to CPU.  This causes system to hang, so we need this
+> check for both of our drivers.  We will add comments. 
 
- drivers/pci/pci.c   | 3 ++-
- include/linux/pci.h | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+This is a problem, and checking whether the link is up is a workaround
+but not a real solution.  That means your system may hang if the link
+happens to go down at the wrong time.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6078dfc..499e922 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3872,7 +3872,7 @@ static void pci_flr_wait(struct pci_dev *dev)
-  * Returns true if the device advertises support for PCIe function level
-  * resets.
-  */
--static bool pcie_has_flr(struct pci_dev *dev)
-+bool pcie_has_flr(struct pci_dev *dev)
- {
- 	u32 cap;
- 
-@@ -3882,6 +3882,7 @@ static bool pcie_has_flr(struct pci_dev *dev)
- 	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
- 	return cap & PCI_EXP_DEVCAP_FLR;
- }
-+EXPORT_SYMBOL_GPL(pcie_has_flr);
- 
- /**
-  * pcie_flr - initiate a PCIe function level reset
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d16a7c0..44bf2b5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1089,6 +1089,7 @@ int pcie_get_mps(struct pci_dev *dev);
- int pcie_set_mps(struct pci_dev *dev, int mps);
- int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
-+bool pcie_has_flr(struct pci_dev *dev);
- void pcie_flr(struct pci_dev *dev);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
--- 
-2.9.5
+A real solution would be to handle the synchronous external abort
+so it doesn't cause a system hang.
+
+Bjorn
