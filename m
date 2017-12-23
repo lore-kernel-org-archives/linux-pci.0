@@ -1,67 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:22460 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1757045AbdLXD3u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 22:29:50 -0500
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Dexuan Cui <decui@microsoft.com>
-CC: Alexandru Chirvasitu <achirvasub@gmail.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        KY Srinivasan <kys@microsoft.com>
-References: <20171218101131.GA5338@amd>
- <20171219083421.GB24638@arch-chirva.localdomain>
- <alpine.DEB.2.20.1712200124440.2282@nanos>
- <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com>
- <20171220131929.GC24638@arch-chirva.localdomain>
- <20171220194506.GD24638@arch-chirva.localdomain>
- <20171221022356.GE24638@arch-chirva.localdomain>
- <1bd74ca3-afca-9d61-6911-61250f459891@cn.fujitsu.com>
- <20171222142053.3cbhi2nhh24w7yoo@D-69-91-141-110.dhcp4.washington.edu>
- <KL1P15301MB000676F3F8C9A5AC8C489E75BF020@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <20171222222917.GA1138@arch-chirva.localdomain>
- <KL1P15301MB00064E9E767F9395744F42A3BF030@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <alpine.DEB.2.20.1712231432210.1853@nanos>
-From: Dou Liyang <douly.fnst@cn.fujitsu.com>
-Message-ID: <5de54d9c-236a-eed8-f0c3-618269442c07@cn.fujitsu.com>
-Date: Sun, 24 Dec 2017 11:29:45 +0800
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:47030 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751279AbdLWP5q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 10:57:46 -0500
+Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
+To: Greg KH <gregkh@linuxfoundation.org>,
+        Yisheng Xie <xieyisheng1@huawei.com>
+Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
+        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
+        boris.brezillon@free-electrons.com, richard@nod.at,
+        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
+        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
+        wim@iguana.be, linux-watchdog@vger.kernel.org,
+        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
+        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
+        ralf@linux-mips.org, linux-mips@linux-mips.org,
+        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
+        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
+        andriy.shevchenko@linux.intel.com,
+        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
+        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
+        linux-media@vger.kernel.org, a.zummo@towertech.it,
+        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie,
+        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
+        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
+        dvhart@infradead.org, andy@infradead.org,
+        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
+        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
+        netdev@vger.kernel.org, vinod.koul@intel.com,
+        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
+        jslaby@suse.com
+References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+ <20171223134831.GB10103@kroah.com>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
+Date: Sat, 23 Dec 2017 07:57:40 -0800
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1712231432210.1853@nanos>
-Content-Type: text/plain; charset="gbk"; format=flowed
+In-Reply-To: <20171223134831.GB10103@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
-
-At 12/23/2017 09:32 PM, Thomas Gleixner wrote:
-[...]
+On 12/23/2017 05:48 AM, Greg KH wrote:
+> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
+>> Hi all,
 >>
->> The BUG_ON panic happens at line 147:
->>                     BUG_ON(!test_and_clear_bit(bit, cm->alloc_map));
+>> When I tried to use devm_ioremap function and review related code, I found
+>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
+>> except one use ioremap while the other use ioremap_nocache.
+> 
+> For all arches?  Really?  Look at MIPS, and x86, they have different
+> functions.
+> 
+
+Both mips and x86 end up mapping the same function, but other arches don't.
+mn10300 is one where ioremap and ioremap_nocache are definitely different.
+
+Guenter
+
+>> While ioremap's
+>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
+>> same function with devm_ioremap, which can just be killed to reduce the size
+>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
 >>
->> I'm sure Thomas and Dou know it better than me.
+>> I have posted two versions, which use macro instead of function for
+>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
+>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
+>> thing. So here comes v3 and please help to review.
 > 
-> I'll have a look after the holidays.
+> I don't think this can be done, what am I missing?  These functions are
+> not identical, sorry for missing that before.
 > 
-
-Merry Christmas!  :-)
-
-I am trying to look into it.
-
-Thanks,
-	dou
+> thanks,
+> 
+> greg k-h
+> 
