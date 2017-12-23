@@ -1,47 +1,71 @@
-Return-Path: <SRS0=KSVl=DA=stevens-zone.net=darren@kernel.org>
-Return-Path: <SRS0=KSVl=DA=stevens-zone.net=darren@kernel.org>
-From: Darren Stevens <darren@stevens-zone.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Christian Zigotzky <chzigotzky@xenosoft.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	linux-pci@vger.kernel.org
-Date: Mon, 04 Dec 2017 11:40:11 +0000 (GMT)
-Message-ID: <4b18f51024d.45f899c9@auth.smtp.1and1.co.uk>
-In-Reply-To: <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
-References: <f3513294-6da0-456f-0f98-1f8c3bac90c9@xenosoft.de>
- <87tvxl15qx.fsf@concordia.ellerman.id.au>
- <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
- <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
- <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
- <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
- <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
- <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
-Subject: Re: SB600 for the Nemo board has non-zero devices on non-root bus
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60160 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750802AbdLWNsc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 08:48:32 -0500
+Date: Sat, 23 Dec 2017 14:48:31 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
+        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
+        boris.brezillon@free-electrons.com, richard@nod.at,
+        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
+        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
+        wim@iguana.be, linux@roeck-us.net, linux-watchdog@vger.kernel.org,
+        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
+        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
+        ralf@linux-mips.org, linux-mips@linux-mips.org,
+        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
+        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
+        andriy.shevchenko@linux.intel.com,
+        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
+        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
+        linux-media@vger.kernel.org, a.zummo@towertech.it,
+        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie,
+        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
+        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
+        dvhart@infradead.org, andy@infradead.org,
+        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
+        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
+        netdev@vger.kernel.org, vinod.koul@intel.com,
+        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
+        jslaby@suse.com
+Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
+Message-ID: <20171223134831.GB10103@kroah.com>
+References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn
+On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
+> Hi all,
+> 
+> When I tried to use devm_ioremap function and review related code, I found
+> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
+> except one use ioremap while the other use ioremap_nocache.
 
-Firstly sorry for not being=A0able to join in this discussion, I have been
-moving house and only got my X1000 set up again yesterday..
+For all arches?  Really?  Look at MIPS, and x86, they have different
+functions.
 
-On 30/11/2017, Bjorn Helgaas wrote:
-> I *think* something like the patch below should make this work if you
-> use the "pci=3Dpcie_scan_all" parameter.  We have some x86 DMI quirks
-> that set PCI_SCAN_ALL_PCIE_DEVS automatically.  I don't know how to do
-> something similar on powerpc, but maybe you do?
+> While ioremap's
+> default function is ioremap_nocache, so devm_ioremap_nocache also have the
+> same function with devm_ioremap, which can just be killed to reduce the size
+> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
+> 
+> I have posted two versions, which use macro instead of function for
+> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
+> devm_ioremap_nocache for no need to keep a macro around for the duplicate
+> thing. So here comes v3 and please help to review.
 
-Actually the root ports on the Nemo's PA6T processor don't respond to the
-SB600 unless we turn on a special 'relax pci-e' bit in one of its control
-registers. We use a small out of tree init routine to do this, and there
-would be the ideal place to put a call to
-pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS).
+I don't think this can be done, what am I missing?  These functions are
+not identical, sorry for missing that before.
 
-This patch fixes the last major hurdle to getting the X1000 fully supporte=
-d in
-the linux kernel, so thanks very much for that.
+thanks,
 
-Regards
-Darren
+greg k-h
