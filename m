@@ -1,62 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:35590 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755708AbdL2LyX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 06:54:23 -0500
-From: Vignesh R <vigneshr@ti.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
-Subject: [PATCH v2 1/2] PCI: dra7xx: Fix legacy INTD IRQ handling
-Date: Fri, 29 Dec 2017 17:11:30 +0530
-Message-ID: <20171229114131.22296-2-vigneshr@ti.com>
-In-Reply-To: <20171229114131.22296-1-vigneshr@ti.com>
-References: <20171229114131.22296-1-vigneshr@ti.com>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:42082 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750852AbdLWMXg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 07:23:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1514026724-32962-1-git-send-email-xieyisheng1@huawei.com>
+References: <1514026724-32962-1-git-send-email-xieyisheng1@huawei.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Sat, 23 Dec 2017 10:23:34 -0200
+Message-ID: <CAOMZO5AyC5wMgowLfwdA7fc8UNV9YORjdS09aUhekk01KYge0g@mail.gmail.com>
+Subject: Re: [PATCH v3 08/27] PCI: replace devm_ioremap_nocache with devm_ioremap
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        ysxie@foxmail.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Legacy INTD IRQ handling is broken on dra7xx due to fact that driver
-uses hwirq in range of 1-4 for INTA, INTD whereas IRQ domain is of size
-4 which is numbered 0-3. Therefore when INTD IRQ line is used with
-pci-dra7xx driver following warning is seen:
+On Sat, Dec 23, 2017 at 8:58 AM, Yisheng Xie <xieyisheng1@huawei.com> wrote:
+> Default ioremap is ioremap_nocache, so devm_ioremap has the same
+> function with devm_ioremap_nocache, which can just be killed to
+> save the size of devres.o
+>
+> This patch is to use use devm_ioremap instead of devm_ioremap_nocache,
+> which should not have any function change but prepare for killing
+> devm_ioremap_nocache.
+>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index e77a4cee..3f3712a 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -637,7 +637,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>         }
+>
+>         res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
+> -       base = devm_ioremap_nocache(dev, res->start, resource_size(res));
+> +       base = devm_ioremap(dev, res->start, resource_size(res));
 
-       WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
-       error: hwirq 0x4 is too large for dummy
+You could also consider using devm_ioremap_resource(), which checks
+whether the resource is NULL and it is a bit shorter:
 
-Fix this by using pci_irqd_intx_xlate() helper to translate the INTx 1-4
-range into the 0-3 as done in other PCIe drivers.
+base = devm_ioremap_resource(dev, res);
+if (IS_ERR(base))
+   return PTR_ERR(base);
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
-Signed-off-by: Vignesh R <vigneshr@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 58aed0896468..892f93910012 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -226,6 +226,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 
- static const struct irq_domain_ops intx_domain_ops = {
- 	.map = dra7xx_pcie_intx_map,
-+	.xlate = pci_irqd_intx_xlate,
- };
- 
- static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
-@@ -269,7 +270,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 	case INTC:
- 	case INTD:
- 		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
--						    ffs(reg)));
-+						    ffs(reg) - 1));
- 		break;
- 	}
- 
--- 
-2.15.1
+>
+> --
+> 1.8.3.1
+>
