@@ -1,56 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55890 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751274AbdLLRRF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Dec 2017 12:17:05 -0500
-Date: Tue, 12 Dec 2017 11:16:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Simon Horman <horms@verge.net.au>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Received: from Galois.linutronix.de ([146.0.238.70]:58692 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750928AbdLWNdF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 08:33:05 -0500
+Date: Sat, 23 Dec 2017 14:32:52 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Dexuan Cui <decui@microsoft.com>
+cc: Alexandru Chirvasitu <achirvasub@gmail.com>,
+        Dou Liyang <douly.fnst@cn.fujitsu.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "Maciej W. Rozycki" <macro@linux-mips.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: rcar: Misc error path fixes
-Message-ID: <20171212171658.GA53955@bhelgaas-glaptop.roam.corp.google.com>
-References: <1512641720-4715-1-git-send-email-geert+renesas@glider.be>
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        KY Srinivasan <kys@microsoft.com>
+Subject: RE: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
+In-Reply-To: <KL1P15301MB00064E9E767F9395744F42A3BF030@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Message-ID: <alpine.DEB.2.20.1712231432210.1853@nanos>
+References: <20171218101131.GA5338@amd> <20171219083421.GB24638@arch-chirva.localdomain> <alpine.DEB.2.20.1712200124440.2282@nanos> <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com> <20171220131929.GC24638@arch-chirva.localdomain>
+ <20171220194506.GD24638@arch-chirva.localdomain> <20171221022356.GE24638@arch-chirva.localdomain> <1bd74ca3-afca-9d61-6911-61250f459891@cn.fujitsu.com> <20171222142053.3cbhi2nhh24w7yoo@D-69-91-141-110.dhcp4.washington.edu>
+ <KL1P15301MB000676F3F8C9A5AC8C489E75BF020@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM> <20171222222917.GA1138@arch-chirva.localdomain> <KL1P15301MB00064E9E767F9395744F42A3BF030@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1512641720-4715-1-git-send-email-geert+renesas@glider.be>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 07, 2017 at 11:15:18AM +0100, Geert Uytterhoeven wrote:
-> 	Hi Simon, Lorenzo, Bjorn,
-> 
-> This patch series fixes two issues in the error path for the R-Car PCIe
-> host bridge driver.
-> 
-> The first issue is triggered easily by not having a PCIe card inserted,
-> and may cause a crash.
-> 
-> Thanks!
-> 
-> Geert Uytterhoeven (2):
->   PCI: rcar: Fix use-after-free in probe error path
->   PCI: rcar: Handle rcar_pcie_parse_request_of_pci_ranges() failures
-> 
->  drivers/pci/host/pcie-rcar.c | 11 +++++++----
->  1 file changed, 7 insertions(+), 4 deletions(-)
+On Sat, 23 Dec 2017, Dexuan Cui wrote:
 
-The first fixes ddd535f1ea3eb27e, which appeared in v4.14-rc1.  The
-second fixes 5d2917d469faab72, which appeared in v4.5-rc1.
+> > From: Alexandru Chirvasitu [mailto:achirvasub@gmail.com]
+> > Sent: Friday, December 22, 2017 14:29
+> > 
+> > The output of that precise command run just now on a freshly-compiled
+> > copy of that commit is attached.
+> > 
+> > On Fri, Dec 22, 2017 at 09:31:28PM +0000, Dexuan Cui wrote:
+> > > > From: Alexandru Chirvasitu [mailto:achirvasub@gmail.com]
+> > > > Sent: Friday, December 22, 2017 06:21
+> > > >
+> > > > In the absence of logs, the best I can do at the moment is attach a
+> > > > picture of the screen I am presented with on the apic=debug boot
+> > > > attempt.
+> > > > Alex
+> > >
+> > > The panic happens in irq_matrix_assign_system+0x4e/0xd0 in your picture.
+> > > IMO we should find which line of code causes the panic. I suppose
+> > > "objdump -D kernel/irq/matrix.o" can help to do that.
+> > >
+> > > Thanks,
+> > > -- Dexuan
+> 
+> The BUG_ON panic happens at line 147:
+>                    BUG_ON(!test_and_clear_bit(bit, cm->alloc_map));
+> 
+> I'm sure Thomas and Dou know it better than me. 
 
-After the merge window I normally just pull in critical fixes and
-fixes to things we merged during the window.
+I'll have a look after the holidays.
 
-I think the first makes sense for v4.15 because it can cause a crash
-with no obvious way to debug it.  The second one feels like v4.16
-material to me.
+Thanks,
 
-Thoughts?  We're trying to sort out how to handle this sort of thing
-between Lorenzo and myself, so I apologize for the confusion here.
-
-Bjorn
+	tglx
