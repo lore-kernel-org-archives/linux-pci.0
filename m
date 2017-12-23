@@ -1,189 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37336 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753236AbdLHLUl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Dec 2017 06:20:41 -0500
-Date: Fri, 8 Dec 2017 11:21:18 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, kishon@ti.com,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] PCI: designware-ep: Fix find_first_zero_bit()
- usage
-Message-ID: <20171208112118.GE26816@red-moon>
-References: <20171127154955.22214-1-niklas.cassel@axis.com>
- <20171127154955.22214-2-niklas.cassel@axis.com>
- <20171127165505.GB3435@red-moon>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+To: <linux-kernel@vger.kernel.org>, <gregkh@linuxfoundation.org>
+CC: <ysxie@foxmail.com>, <ulf.hansson@linaro.org>,
+        <linux-mmc@vger.kernel.org>, <boris.brezillon@free-electrons.com>,
+        <richard@nod.at>, <marek.vasut@gmail.com>,
+        <cyrille.pitchen@wedev4u.fr>, <linux-mtd@lists.infradead.org>,
+        <alsa-devel@alsa-project.org>, <wim@iguana.be>,
+        <linux@roeck-us.net>, <linux-watchdog@vger.kernel.org>,
+        <b.zolnierkie@samsung.com>, <linux-fbdev@vger.kernel.org>,
+        <linus.walleij@linaro.org>, <linux-gpio@vger.kernel.org>,
+        <ralf@linux-mips.org>, <linux-mips@linux-mips.org>,
+        <lgirdwood@gmail.com>, <broonie@kernel.org>, <tglx@linutronix.de>,
+        <jason@lakedaemon.net>, <marc.zyngier@arm.com>, <arnd@arndb.de>,
+        <andriy.shevchenko@linux.intel.com>,
+        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
+        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
+        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
+        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
+        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
+        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
+        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
+        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
+        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <dvhart@infradead.org>, <andy@infradead.org>,
+        <platform-driver-x86@vger.kernel.org>,
+        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
+        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
+        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
+        <dmaengine@vger.kernel.org>, <jslaby@suse.com>,
+        Yisheng Xie <xieyisheng1@huawei.com>
+Subject: [PATCH v3 27/27] devres: kill devm_ioremap_nocache
+Date: Sat, 23 Dec 2017 19:02:59 +0800
+Message-ID: <1514026979-33838-1-git-send-email-xieyisheng1@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171127165505.GB3435@red-moon>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 27, 2017 at 04:55:05PM +0000, Lorenzo Pieralisi wrote:
-> On Mon, Nov 27, 2017 at 04:49:53PM +0100, Niklas Cassel wrote:
-> > find_first_zero_bit()'s parameter 'size' is defined in bits,
-> > not in bytes.
-> > 
-> > find_first_zero_bit() was called with size in bytes rather than bits,
-> > which thus defined a too low upper limit, causing
-> > dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
-> > and bar 5, which made bar 5 overwrite the settings set by bar 4.
-> 
-> Same comments about past tense usage.
-> 
-> > Fix this by using bitmaps with a static upper limit (MAX_IATUS).
-> 
-> I think that given that we have the size from FW (num_ib/ob_windows),
-> you should allocate them dynamically (sorry for asking another respin).
-> 
-> > 256 was chosen since according to the databook, that is the
-> 
-> Nit: I think "datasheet" is more appropriate than "databook" here.
-> 
-> > maximum number of iATUs supported by the IP.
-> > 
-> > Additionally, make sure that ep->num_ob_windows and ep->num_ib_windows,
-> > which are obtained from device tree, are less than the maximum number of
-> 
-> s/less/smaller
-> 
-> > iATUs (MAX_IATUS).
-> > 
-> > Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
-> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > ---
-> >  drivers/pci/dwc/pcie-designware-ep.c | 22 ++++++++++++++--------
-> >  drivers/pci/dwc/pcie-designware.h    |  7 +++++--
-> >  2 files changed, 19 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> > index d53d5f168363..8b14e7db5487 100644
-> > --- a/drivers/pci/dwc/pcie-designware-ep.c
-> > +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> > @@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
-> >  	u32 free_win;
-> >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> >  
-> > -	free_win = find_first_zero_bit(&ep->ib_window_map,
-> > -				       sizeof(ep->ib_window_map));
-> > +	free_win = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
-> >  	if (free_win >= ep->num_ib_windows) {
-> >  		dev_err(pci->dev, "no free inbound window\n");
-> >  		return -EINVAL;
-> > @@ -85,7 +84,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
-> >  	}
-> >  
-> >  	ep->bar_to_atu[bar] = free_win;
-> > -	set_bit(free_win, &ep->ib_window_map);
-> > +	set_bit(free_win, ep->ib_window_map);
-> >  
-> >  	return 0;
-> >  }
-> > @@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
-> >  	u32 free_win;
-> >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> >  
-> > -	free_win = find_first_zero_bit(&ep->ob_window_map,
-> > -				       sizeof(ep->ob_window_map));
-> > +	free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
-> >  	if (free_win >= ep->num_ob_windows) {
-> >  		dev_err(pci->dev, "no free outbound window\n");
-> >  		return -EINVAL;
-> > @@ -106,7 +104,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
-> >  	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
-> >  				  phys_addr, pci_addr, size);
-> >  
-> > -	set_bit(free_win, &ep->ob_window_map);
-> > +	set_bit(free_win, ep->ob_window_map);
-> >  	ep->outbound_addr[free_win] = phys_addr;
-> >  
-> >  	return 0;
-> > @@ -121,7 +119,7 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
-> >  	dw_pcie_ep_reset_bar(pci, bar);
-> >  
-> >  	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
-> > -	clear_bit(atu_index, &ep->ib_window_map);
-> > +	clear_bit(atu_index, ep->ib_window_map);
-> >  }
-> >  
-> >  static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
-> > @@ -175,7 +173,7 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
-> >  		return;
-> >  
-> >  	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
-> > -	clear_bit(atu_index, &ep->ob_window_map);
-> > +	clear_bit(atu_index, ep->ob_window_map);
-> >  }
-> >  
-> >  static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
-> > @@ -298,12 +296,20 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
-> >  		dev_err(dev, "unable to read *num-ib-windows* property\n");
-> >  		return ret;
-> >  	}
-> > +	if (ep->num_ib_windows > MAX_IATUS) {
-> > +		dev_err(dev, "invalid *num-ib-windows*\n");
-> > +		return -EINVAL;
-> > +	}
-> >  
-> >  	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
-> >  	if (ret < 0) {
-> >  		dev_err(dev, "unable to read *num-ob-windows* property\n");
-> >  		return ret;
-> >  	}
-> > +	if (ep->num_ob_windows > MAX_IATUS) {
-> > +		dev_err(dev, "invalid *num-ob-windows*\n");
-> > +		return -EINVAL;
-> > +	}
-> >  
-> >  	addr = devm_kzalloc(dev, sizeof(phys_addr_t) * ep->num_ob_windows,
-> >  			    GFP_KERNEL);
-> > diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> > index e5d9d77b778e..189f45264c2a 100644
-> > --- a/drivers/pci/dwc/pcie-designware.h
-> > +++ b/drivers/pci/dwc/pcie-designware.h
-> > @@ -113,6 +113,9 @@
-> >  #define MAX_MSI_IRQS			32
-> >  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
-> >  
-> > +/* Maximum number of inbound/outbound iATUs */
-> > +#define MAX_IATUS			256
-> > +
-> >  struct pcie_port;
-> >  struct dw_pcie;
-> >  struct dw_pcie_ep;
-> > @@ -192,8 +195,8 @@ struct dw_pcie_ep {
-> >  	size_t			page_size;
-> >  	u8			bar_to_atu[6];
-> >  	phys_addr_t		*outbound_addr;
-> > -	unsigned long		ib_window_map;
-> > -	unsigned long		ob_window_map;
-> > +	DECLARE_BITMAP(ib_window_map, MAX_IATUS);
-> > +	DECLARE_BITMAP(ob_window_map, MAX_IATUS);
-> 
-> Only comment I have on the patch is, make the bitmap dynamic ie allocate
-> them using eg:
-> 
-> ib_window_map = kzalloc(BITS_TO_LONG(num_ib_windows) * sizeof(long),
-> GFP_KERNEL);
-> 
-> it is a common pattern in the kernel. I just do not like preallocating
-> static arrays if we know the real size.
-> 
-> It is correct to check the number of ib/ob windows parsed from DT
-> against MAX_IATUS, since that's a HW limitation therefore a FW (DT)
-> bug if they are exceeded.
-> 
-> find_first_zero_bit() should use num_ib/ob_windows as size parameter
-> (ie current patch is correct).
+Now, nobody use devm_ioremap_nocache anymore, can it can just be
+removed. After this patch the size of devres.o will be reduced from
+20304 bytes to 18992 bytes.
 
-Hi Niklas,
+Suggested-by: Greg KH <gregkh@linuxfoundation.org>
+Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+---
+ Documentation/driver-model/devres.txt   |  1 -
+ include/linux/io.h                      |  2 --
+ lib/devres.c                            | 29 -----------------------------
+ scripts/coccinelle/free/devm_free.cocci |  2 --
+ 4 files changed, 34 deletions(-)
 
-May I ask you please to update this series to the latest review comments
-and send out a v4 so that Bjorn can pull it please ?
-
-Thanks,
-Lorenzo
+diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+index c180045..c3fddb5 100644
+--- a/Documentation/driver-model/devres.txt
++++ b/Documentation/driver-model/devres.txt
+@@ -292,7 +292,6 @@ IOMAP
+   devm_ioport_map()
+   devm_ioport_unmap()
+   devm_ioremap()
+-  devm_ioremap_nocache()
+   devm_ioremap_wc()
+   devm_ioremap_resource() : checks resource, requests memory region, ioremaps
+   devm_iounmap()
+diff --git a/include/linux/io.h b/include/linux/io.h
+index 32e30e8..a9c7270 100644
+--- a/include/linux/io.h
++++ b/include/linux/io.h
+@@ -75,8 +75,6 @@ static inline void devm_ioport_unmap(struct device *dev, void __iomem *addr)
+ 
+ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+ 			   resource_size_t size);
+-void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+-				   resource_size_t size);
+ void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
+ 				   resource_size_t size);
+ void devm_iounmap(struct device *dev, void __iomem *addr);
+diff --git a/lib/devres.c b/lib/devres.c
+index 5f2aedd..f818fcf 100644
+--- a/lib/devres.c
++++ b/lib/devres.c
+@@ -44,35 +44,6 @@ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+ EXPORT_SYMBOL(devm_ioremap);
+ 
+ /**
+- * devm_ioremap_nocache - Managed ioremap_nocache()
+- * @dev: Generic device to remap IO address for
+- * @offset: Resource address to map
+- * @size: Size of map
+- *
+- * Managed ioremap_nocache().  Map is automatically unmapped on driver
+- * detach.
+- */
+-void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+-				   resource_size_t size)
+-{
+-	void __iomem **ptr, *addr;
+-
+-	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
+-	if (!ptr)
+-		return NULL;
+-
+-	addr = ioremap_nocache(offset, size);
+-	if (addr) {
+-		*ptr = addr;
+-		devres_add(dev, ptr);
+-	} else
+-		devres_free(ptr);
+-
+-	return addr;
+-}
+-EXPORT_SYMBOL(devm_ioremap_nocache);
+-
+-/**
+  * devm_ioremap_wc - Managed ioremap_wc()
+  * @dev: Generic device to remap IO address for
+  * @offset: Resource address to map
+diff --git a/scripts/coccinelle/free/devm_free.cocci b/scripts/coccinelle/free/devm_free.cocci
+index c990d2c..36b8752 100644
+--- a/scripts/coccinelle/free/devm_free.cocci
++++ b/scripts/coccinelle/free/devm_free.cocci
+@@ -51,8 +51,6 @@ expression x;
+ |
+  x = devm_ioremap(...)
+ |
+- x = devm_ioremap_nocache(...)
+-|
+  x = devm_ioport_map(...)
+ )
+ 
+-- 
+1.8.3.1
