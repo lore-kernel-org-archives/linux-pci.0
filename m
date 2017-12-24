@@ -1,73 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.136]:32831 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751613AbdLZCIw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Dec 2017 21:08:52 -0500
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v12 1/5] dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-Date: Tue, 26 Dec 2017 10:08:02 +0800
-Message-Id: <20171226020806.32710-2-jeffy.chen@rock-chips.com>
-In-Reply-To: <20171226020806.32710-1-jeffy.chen@rock-chips.com>
-References: <20171226020806.32710-1-jeffy.chen@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
+To: Guenter Roeck <linux@roeck-us.net>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Yisheng Xie <xieyisheng1@huawei.com>
+Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
+        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
+        boris.brezillon@free-electrons.com, richard@nod.at,
+        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
+        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
+        wim@iguana.be, linux-watchdog@vger.kernel.org,
+        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
+        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
+        ralf@linux-mips.org, linux-mips@linux-mips.org,
+        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
+        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
+        andriy.shevchenko@linux.intel.com,
+        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
+        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
+        linux-media@vger.kernel.org, a.zummo@towertech.it,
+        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie,
+        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
+        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
+        dvhart@infradead.org, andy@infradead.org,
+        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
+        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
+        netdev@vger.kernel.org, vinod.koul@intel.com,
+        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
+        jslaby@suse.com
+References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+ <20171223134831.GB10103@kroah.com>
+ <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
+From: christophe leroy <christophe.leroy@c-s.fr>
+Message-ID: <c28ac0bc-8bd2-3dce-3167-8c0f80ec601e@c-s.fr>
+Date: Sun, 24 Dec 2017 09:55:18 +0100
+MIME-Version: 1.0
+In-Reply-To: <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
-so add definitions of the optional PCIe WAKE# pin for PCI devices.
 
-Also add an definition of the optional PCI interrupt pin for PCI
-devices to distinguish it from the PCIe WAKE# pin.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Le 23/12/2017 à 16:57, Guenter Roeck a écrit :
+> On 12/23/2017 05:48 AM, Greg KH wrote:
+>> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
+>>> Hi all,
+>>>
+>>> When I tried to use devm_ioremap function and review related code, I 
+>>> found
+>>> devm_ioremap and devm_ioremap_nocache is almost the same with each 
+>>> other,
+>>> except one use ioremap while the other use ioremap_nocache.
+>>
+>> For all arches?  Really?  Look at MIPS, and x86, they have different
+>> functions.
+>>
+> 
+> Both mips and x86 end up mapping the same function, but other arches don't.
+> mn10300 is one where ioremap and ioremap_nocache are definitely different.
+
+alpha: identical
+arc: identical
+arm: identical
+arm64: identical
+cris: different        <==
+frv: identical
+hexagone: identical
+ia64: different        <==
+m32r: identical
+m68k: identical
+metag: identical
+microblaze: identical
+mips: identical
+mn10300: different     <==
+nios: identical
+openrisc: different    <==
+parisc: identical
+riscv: identical
+s390: identical
+sh: identical
+sparc: identical
+tile: identical
+um: rely on asm/generic
+unicore32: identical
+x86: identical
+asm/generic (no mmu): identical
+
+So 4 among all arches seems to have ioremap() and ioremap_nocache() 
+being different.
+
+Could we have a define set by the 4 arches on which ioremap() and 
+ioremap_nocache() are different, something like 
+HAVE_DIFFERENT_IOREMAP_NOCACHE ?
+
+Christophe
+
+> 
+> Guenter
+> 
+>>> While ioremap's
+>>> default function is ioremap_nocache, so devm_ioremap_nocache also 
+>>> have the
+>>> same function with devm_ioremap, which can just be killed to reduce 
+>>> the size
+>>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
+>>>
+>>> I have posted two versions, which use macro instead of function for
+>>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
+>>> devm_ioremap_nocache for no need to keep a macro around for the 
+>>> duplicate
+>>> thing. So here comes v3 and please help to review.
+>>
+>> I don't think this can be done, what am I missing?  These functions are
+>> not identical, sorry for missing that before.
+>>
+>> thanks,
+>>
+>> greg k-h
+>>
+> 
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-watchdog" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 ---
-
-Changes in v12: None
-Changes in v11:
-Only add irq definitions for PCI devices and rewrite the commit message.
-
-Changes in v10: None
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-
-Changes in v7: None
-Changes in v6: None
-Changes in v5:
-Move to pci.txt
-
-Changes in v3: None
-Changes in v2: None
-
- Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index c77981c5dd18..3045ac452f27 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -24,3 +24,13 @@ driver implementation may support the following properties:
-    unsupported link speed, for instance, trying to do training for
-    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
-    for gen2, and '1' for gen1. Any other values are invalid.
-+
-+PCI devices may support the following properties:
-+
-+- interrupts: Interrupt specifier for each name in interrupt-names.
-+- interrupt-names:
-+    May contain "wakeup" for PCIe WAKE# interrupt and "pci" for PCI interrupt.
-+    The PCI devices may optionally include an 'interrupts' property that
-+    represents the legacy PCI interrupt. And when we try to specify the PCIe
-+    WAKE# pin, a corresponding 'interrupt-names' property is required to
-+    distinguish them.
--- 
-2.11.0
+L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
+https://www.avast.com/antivirus
