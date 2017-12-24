@@ -1,58 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58668 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756079AbdLVR2S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Dec 2017 12:28:18 -0500
-Date: Fri, 22 Dec 2017 11:28:15 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Jim Quinlan <jim2101024@gmail.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:22460 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1757045AbdLXD3u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 22:29:50 -0500
+Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Dexuan Cui <decui@microsoft.com>
+CC: Alexandru Chirvasitu <achirvasub@gmail.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "Maciej W. Rozycki" <macro@linux-mips.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
-        "linux-rockchip@lists.infradead.org"
-        <linux-rockchip@lists.infradead.org>
-Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
-Message-ID: <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
- <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        KY Srinivasan <kys@microsoft.com>
+References: <20171218101131.GA5338@amd>
+ <20171219083421.GB24638@arch-chirva.localdomain>
+ <alpine.DEB.2.20.1712200124440.2282@nanos>
+ <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com>
+ <20171220131929.GC24638@arch-chirva.localdomain>
+ <20171220194506.GD24638@arch-chirva.localdomain>
+ <20171221022356.GE24638@arch-chirva.localdomain>
+ <1bd74ca3-afca-9d61-6911-61250f459891@cn.fujitsu.com>
+ <20171222142053.3cbhi2nhh24w7yoo@D-69-91-141-110.dhcp4.washington.edu>
+ <KL1P15301MB000676F3F8C9A5AC8C489E75BF020@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <20171222222917.GA1138@arch-chirva.localdomain>
+ <KL1P15301MB00064E9E767F9395744F42A3BF030@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <alpine.DEB.2.20.1712231432210.1853@nanos>
+From: Dou Liyang <douly.fnst@cn.fujitsu.com>
+Message-ID: <5de54d9c-236a-eed8-f0c3-618269442c07@cn.fujitsu.com>
+Date: Sun, 24 Dec 2017 11:29:45 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
+In-Reply-To: <alpine.DEB.2.20.1712231432210.1853@nanos>
+Content-Type: text/plain; charset="gbk"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada wrote:
-> Bjorn wrote:
->> In the PCI config access path, the *_pcie_valid_device() functions
->> in the dwc, altera, rockchip, and xilinx drivers all check whether
->> the link is up.
->> 
->> I think this is racy because the link may go down after we check but
->> before we perform the config access.
->> 
->> What would blow up if we removed the *_pcie_link_up() checks?
->> 
->> I'd like to either remove the checks or add comments about why the
->> race is acceptable.  If we've covered this before, I apologize.
->> Adding a comment will keep me from pestering you about this again in
->> the future.
+Hi Thomas,
 
-> In both Xilinx driver cases when link is down, hardware responds by
-> AXI DECERR/SLVERR status which causes an exception, synchronous
-> external abort to CPU.  This causes system to hang, so we need this
-> check for both of our drivers.  We will add comments. 
+At 12/23/2017 09:32 PM, Thomas Gleixner wrote:
+[...]
+>>
+>> The BUG_ON panic happens at line 147:
+>>                     BUG_ON(!test_and_clear_bit(bit, cm->alloc_map));
+>>
+>> I'm sure Thomas and Dou know it better than me.
+> 
+> I'll have a look after the holidays.
+> 
 
-This is a problem, and checking whether the link is up is a workaround
-but not a real solution.  That means your system may hang if the link
-happens to go down at the wrong time.
+Merry Christmas!  :-)
 
-A real solution would be to handle the synchronous external abort
-so it doesn't cause a system hang.
+I am trying to look into it.
 
-Bjorn
+Thanks,
+	dou
