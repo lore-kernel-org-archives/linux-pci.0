@@ -1,48 +1,77 @@
-Return-Path: <SRS0=gZr4=DF=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=gZr4=DF=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga07-in.huawei.com ([45.249.212.35]:36455 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751097AbdLYBiO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 24 Dec 2017 20:38:14 -0500
+Subject: Re: [PATCH v3 08/27] PCI: replace devm_ioremap_nocache with
+ devm_ioremap
+To: Fabio Estevam <festevam@gmail.com>
+References: <1514026724-32962-1-git-send-email-xieyisheng1@huawei.com>
+ <CAOMZO5AyC5wMgowLfwdA7fc8UNV9YORjdS09aUhekk01KYge0g@mail.gmail.com>
+CC: linux-kernel <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <ysxie@foxmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <7b3aa58d-2da3-db85-d395-afdca6fd42e5@huawei.com>
+Date: Mon, 25 Dec 2017 09:38:05 +0800
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20171208202556.GD12367@bhelgaas-glaptop.roam.corp.google.com>
-References: <3600031.yTsliOITBg@aspire.rjw.lan> <20171208202556.GD12367@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Sat, 9 Dec 2017 15:13:49 +0100
-Message-ID: <CAJZ5v0gNgOEmKE_Sf1Hfwmw=PDQ4QGe4UvWhr0=wNUrS6fnS2g@mail.gmail.com>
-Subject: Re: [PATCH] PM / sleep: Avoid excess pm_runtime_enable() calls in device_resume()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PM <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAOMZO5AyC5wMgowLfwdA7fc8UNV9YORjdS09aUhekk01KYge0g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 8, 2017 at 9:25 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Dec 07, 2017 at 03:26:14AM +0100, Rafael J. Wysocki wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> Middle-layer code doing suspend-time optimizations for devices with
->> the DPM_FLAG_SMART_SUSPEND flag set (currently, the PCI bus type and
->> the ACPI PM domain) needs to make the core skip ->thaw_early and
->> ->thaw callbacks for those devices in some cases and it sets the
->> power.direct_complete flag for them for this purpose.
->>
->> However, it turns out that setting power.direct_complete outside of
->> the PM core is a bad idea as it triggers an excessive invocation of
->> pm_runtime_enable() in device_resume().
->>
->> For this reason, provide a helper to clear power.is_late_suspended
->> and power.is_suspended to be invoked by the middle-layer code in
->> question instead of setting power.direct_complete and make that code
->> call the new helper.
->>
->> Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
->> Fixes: 05087360fd7a (ACPI / PM: Take SMART_SUSPEND driver flag into account)
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> I don't pretend to understand this (and I don't need to, so don't
-> waste your time explaining), but I trust you :)
+Hi Fabio,
 
-Thank you! :-)
+Thanks for you reviewing and comment!
+
+On 2017/12/23 20:23, Fabio Estevam wrote:
+> On Sat, Dec 23, 2017 at 8:58 AM, Yisheng Xie <xieyisheng1@huawei.com> wrote:
+>> Default ioremap is ioremap_nocache, so devm_ioremap has the same
+>> function with devm_ioremap_nocache, which can just be killed to
+>> save the size of devres.o
+>>
+>> This patch is to use use devm_ioremap instead of devm_ioremap_nocache,
+>> which should not have any function change but prepare for killing
+>> devm_ioremap_nocache.
+>>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: linux-pci@vger.kernel.org
+>> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+>> ---
+>>  drivers/pci/dwc/pci-dra7xx.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>> index e77a4cee..3f3712a 100644
+>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>> @@ -637,7 +637,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>>         }
+>>
+>>         res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
+>> -       base = devm_ioremap_nocache(dev, res->start, resource_size(res));
+>> +       base = devm_ioremap(dev, res->start, resource_size(res));
+> 
+> You could also consider using devm_ioremap_resource(), which checks
+> whether the resource is NULL and it is a bit shorter:
+> 
+> base = devm_ioremap_resource(dev, res);
+> if (IS_ERR(base))
+>    return PTR_ERR(base);
+
+Yeah, I will check if all the archs have the same ioremap and ioremap_noache, first.
+If it is so, I will take your suggestion.
+
+Thanks
+Yisheng
+
+> 
+> 
+>>
+>> --
+>> 1.8.3.1
+>>
+> 
+> .
+> 
