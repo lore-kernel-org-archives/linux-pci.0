@@ -1,69 +1,72 @@
-Return-Path: <SRS0=Iz4R=DB=ozlabs.ru=aik@kernel.org>
-Return-Path: <SRS0=Iz4R=DB=ozlabs.ru=aik@kernel.org>
-Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, helgaas@kernel.org,
- bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
- mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
- alex.williamson@redhat.com, linux-pci@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
- saeedm@mellanox.com
-References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
- <520bad85-e4a5-a8a8-c893-e53e7b46c65c@ozlabs.ru>
- <3a49b44e-833a-8440-aa3c-a4984ac47147@linux.vnet.ibm.com>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <466ac4c0-6503-a2eb-e352-d2bdfca10cb5@ozlabs.ru>
-Date: Tue, 5 Dec 2017 12:24:21 +1100
-MIME-Version: 1.0
-In-Reply-To: <3a49b44e-833a-8440-aa3c-a4984ac47147@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.139]:59855 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752027AbdLYLtY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Dec 2017 06:49:24 -0500
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [RFC PATCH v11 1/5] dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
+Date: Mon, 25 Dec 2017 19:47:38 +0800
+Message-Id: <20171225114742.18920-2-jeffy.chen@rock-chips.com>
+In-Reply-To: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/12/17 02:08, Bryant G. Ly wrote:
-> 
-> 
-> On 12/2/17 7:45 PM, Alexey Kardashevskiy wrote:
->> On 10/11/17 01:00, Bryant G. Ly wrote:
->>> v1 - Initial patch
->>> v2 - Addressed Bjorn's comment on creating a highly platform
->>>      dependent global exported symbol.
->>> v3 - Based patch off linux-ppc/master
->>> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
->>> v5 - Fixed comments and commit message
->>
->> What is this made against of? I'd like to give it a try but it does not
->> apply to Linus'es tree or powerpc/next. Thanks.
->>
-> This was made against powerpc/next back when it was still under 4.14-rc6.
-> It has been in review for awhile... 
+We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
+so add definitions of the optional PCIe WAKE# pin for PCI devices.
 
-Sure, sha1 or github tree would be enough though to try.
+Also add an definition of the optional PCI interrupt pin for PCI
+devices to distinguish it from the PCIe WAKE# pin.
 
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-> 
-> -Bryant
-> 
->>> Bryant G. Ly (3):
->>>   powerpc/kernel: Separate SR-IOV Calls
->>>   pseries: Add PSeries SR-IOV Machine dependent calls
->>>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
->>>
->>>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
->>>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
->>>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
->>>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
->>>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
->>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
->>>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
->>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
->>>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
->>>  drivers/pci/iov.c                            | 11 ++++++++++
->>>  include/linux/pci.h                          |  2 ++
->>>  11 files changed, 118 insertions(+), 33 deletions(-)
->>>
->>
-> 
+Changes in v11:
+Only add irq definitions for PCI devices and rewrite the commit message.
 
+Changes in v10: None
+Changes in v9:
+Add section for PCI devices and rewrite the commit message.
 
+Changes in v8:
+Add optional "pci", and rewrite commit message.
+
+Changes in v7: None
+Changes in v6: None
+Changes in v5:
+Move to pci.txt
+
+Changes in v3: None
+Changes in v2: None
+
+ Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+index c77981c5dd18..3045ac452f27 100644
+--- a/Documentation/devicetree/bindings/pci/pci.txt
++++ b/Documentation/devicetree/bindings/pci/pci.txt
+@@ -24,3 +24,13 @@ driver implementation may support the following properties:
+    unsupported link speed, for instance, trying to do training for
+    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+    for gen2, and '1' for gen1. Any other values are invalid.
++
++PCI devices may support the following properties:
++
++- interrupts: Interrupt specifier for each name in interrupt-names.
++- interrupt-names:
++    May contain "wakeup" for PCIe WAKE# interrupt and "pci" for PCI interrupt.
++    The PCI devices may optionally include an 'interrupts' property that
++    represents the legacy PCI interrupt. And when we try to specify the PCIe
++    WAKE# pin, a corresponding 'interrupt-names' property is required to
++    distinguish them.
 -- 
-Alexey
+2.11.0
