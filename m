@@ -1,122 +1,285 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 00/26] PCI: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:36 -0500
-Message-Id: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:39733 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751083AbdLZX4O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Dec 2017 18:56:14 -0500
+Date: Tue, 26 Dec 2017 17:56:07 -0600
+From: Rob Herring <robh@kernel.org>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: Re: [RFC PATCH v12 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+Message-ID: <20171226235607.4rgp4ebrrktt6d56@rob-hp-laptop>
+References: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
+ <20171226023646.17722-5-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171226023646.17722-5-jeffy.chen@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Deprecate pci_get_bus_and_slot() in favor of pci_get_domain_bus_and_slot()
-in order to remove domain 0 assumptions in the kernel.
+On Tue, Dec 26, 2017 at 10:36:45AM +0800, Jeffy Chen wrote:
+> Add of_pci_setup_wake_irq() and of_pci_teardown_wake_irq() to handle
+> the PCIe WAKE# interrupt.
+> 
+> Also use the dedicated wakeirq infrastructure to simplify it.
+> 
+> And add pci-of.c to enable/disable the wakeup irq in noirq stage to
+> avoid possible irq storm.
+> 
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ---
+> 
+> Changes in v13:
+> Fix compiler error reported by kbuild test robot <fengguang.wu@intel.com>
+> 
+> Changes in v12:
+> Enable the wake irq in noirq stage to avoid possible irq storm.
+> 
+> Changes in v11:
+> Only support 1-per-device PCIe WAKE# pin as suggested.
+> 
+> Changes in v10:
+> Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
+> since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
+> 
+> Changes in v9:
+> Fix check error in .cleanup().
+> Move dedicated wakeirq setup to setup() callback and use
+> device_set_wakeup_enable() to enable/disable.
+> 
+> Changes in v8:
+> Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
+> 
+> Changes in v7:
+> Move PCIE_WAKE handling into pci core.
+> 
+> Changes in v6:
+> Fix device_init_wake error handling, and add some comments.
+> 
+> Changes in v5:
+> Rebase.
+> 
+> Changes in v3:
+> Fix error handling.
+> 
+> Changes in v2:
+> Use dev_pm_set_dedicated_wake_irq.
+> 
+>  drivers/of/of_pci_irq.c  | 49 +++++++++++++++++++++++++++++++
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+Please move this to drivers/pci/of.c (or perhaps create pci/of_irq.c).
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
+>  drivers/pci/Makefile     |  1 +
+>  drivers/pci/pci-driver.c | 10 +++++++
+>  drivers/pci/pci-of.c     | 75 ++++++++++++++++++++++++++++++++++++++++++++++++
 
-Changes from v3:
-* rebase to linux-next
-* drop drm i915 as it is going through the drm tip
-* commit summary cleanups
+We already have drivers/pci/of.c. It's not clear what the difference is 
+from the filenames. Either merge with of.c or perhaps of-pm.c.
 
-Sinan Kaya (26):
-  alpha/PCI: deprecate pci_get_bus_and_slot()
-  powerpc/PCI: deprecate pci_get_bus_and_slot()
-  x86/PCI: deprecate pci_get_bus_and_slot()
-  ata: deprecate pci_get_bus_and_slot()
-  agp: nvidia: deprecate pci_get_bus_and_slot()
-  edd: deprecate pci_get_bus_and_slot()
-  ibft: deprecate pci_get_bus_and_slot()
-  drm/gma500: deprecate pci_get_bus_and_slot()
-  drm/nouveau: deprecate pci_get_bus_and_slot()
-  Drivers: ide: deprecate pci_get_bus_and_slot()
-  iommu/amd: deprecate pci_get_bus_and_slot()
-  powerpc/powermac: deprecate pci_get_bus_and_slot()
-  bnx2x: deprecate pci_get_bus_and_slot()
-  pch_gbe: deprecate pci_get_bus_and_slot()
-  PCI: cpqhp: deprecate pci_get_bus_and_slot()
-  PCI: ibmphp: deprecate pci_get_bus_and_slot()
-  PCI/quirks: deprecate pci_get_bus_and_slot()
-  PCI/syscall: deprecate pci_get_bus_and_slot()
-  xen: deprecate pci_get_bus_and_slot()
-  openprom: deprecate pci_get_bus_and_slot()
-  backlight: deprecate pci_get_bus_and_slot()
-  video: fbdev: intelfb: deprecate pci_get_bus_and_slot()
-  video: fbdev: nvidia: deprecate pci_get_bus_and_slot()
-  video: fbdev: riva: deprecate pci_get_bus_and_slot()
-  i7300_idle: remove unused file
-  PCI: Remove pci_get_bus_and_slot() function
+>  include/linux/of_pci.h   |  9 ++++++
+>  5 files changed, 144 insertions(+)
+>  create mode 100644 drivers/pci/pci-of.c
+> 
+> diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+> index d39565d5477b..abec3a44853b 100644
+> --- a/drivers/of/of_pci_irq.c
+> +++ b/drivers/of/of_pci_irq.c
+> @@ -1,8 +1,57 @@
+>  #include <linux/kernel.h>
+>  #include <linux/of_pci.h>
+>  #include <linux/of_irq.h>
+> +#include <linux/pm_wakeirq.h>
+>  #include <linux/export.h>
+>  
+> +int of_pci_setup_wake_irq(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *ppdev;
+> +	struct device_node *dn;
+> +	int ret, irq;
+> +
+> +	/* Get the pci_dev of our parent. Hopefully it's a port. */
+> +	ppdev = pdev->bus->self;
+> +	/* Nope, it's a host bridge. */
+> +	if (!ppdev)
+> +		return 0;
+> +
+> +	dn = pci_device_to_OF_node(ppdev);
+> +	if (!dn)
+> +		return 0;
+> +
+> +	irq = of_irq_get_byname(dn, "wakeup");
+> +	if (irq == -EPROBE_DEFER) {
+> +		return irq;
+> +	} else if (irq < 0) {
+> +		/* Ignore other errors, since a missing wakeup is non-fatal. */
+> +		dev_info(&pdev->dev, "cannot get wakeup interrupt: %d\n", irq);
+> +		return 0;
+> +	}
+> +
+> +	device_init_wakeup(&pdev->dev, true);
+> +
+> +	ret = dev_pm_set_dedicated_wake_irq(&pdev->dev, irq);
+> +	if (ret < 0) {
+> +		dev_err(&pdev->dev, "failed to set wake IRQ: %d\n", ret);
+> +		device_init_wakeup(&pdev->dev, false);
+> +		return ret;
+> +	}
+> +
+> +	/* Start out disabled to avoid irq storm */
+> +	dev_pm_disable_wake_irq(&pdev->dev);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(of_pci_setup_wake_irq);
+> +
+> +void of_pci_teardown_wake_irq(struct pci_dev *pdev)
+> +{
+> +	dev_pm_clear_wake_irq(&pdev->dev);
+> +	device_init_wakeup(&pdev->dev, false);
+> +}
+> +EXPORT_SYMBOL_GPL(of_pci_teardown_wake_irq);
+> +
+>  /**
+>   * of_irq_parse_pci - Resolve the interrupt for a PCI device
+>   * @pdev:       the device whose interrupt is to be resolved
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index c7819b973df7..d0182c82162a 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -29,6 +29,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
+>  # ACPI _DSM provided firmware instance and string name
+>  #
+>  obj-$(CONFIG_ACPI)    += pci-acpi.o
+> +obj-$(CONFIG_OF)      += pci-of.o
+>  
+>  # SMBIOS provided firmware instance and labels
+>  obj-$(CONFIG_PCI_LABEL) += pci-label.o
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index d79dbc377b9c..b4475ff35d97 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -17,6 +17,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/sched.h>
+>  #include <linux/cpu.h>
+> +#include <linux/of_pci.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/suspend.h>
+>  #include <linux/kexec.h>
+> @@ -421,10 +422,17 @@ static int pci_device_probe(struct device *dev)
+>  	if (error < 0)
+>  		return error;
+>  
+> +	error = of_pci_setup_wake_irq(pci_dev);
+> +	if (error < 0) {
+> +		pcibios_free_irq(pci_dev);
+> +		return error;
+> +	}
+> +
+>  	pci_dev_get(pci_dev);
+>  	if (pci_device_can_probe(pci_dev)) {
+>  		error = __pci_device_probe(drv, pci_dev);
+>  		if (error) {
+> +			of_pci_teardown_wake_irq(pci_dev);
+>  			pcibios_free_irq(pci_dev);
+>  			pci_dev_put(pci_dev);
+>  		}
+> @@ -438,6 +446,8 @@ static int pci_device_remove(struct device *dev)
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+>  	struct pci_driver *drv = pci_dev->driver;
+>  
+> +	of_pci_teardown_wake_irq(pci_dev);
+> +
+>  	if (drv) {
+>  		if (drv->remove) {
+>  			pm_runtime_get_sync(dev);
+> diff --git a/drivers/pci/pci-of.c b/drivers/pci/pci-of.c
+> new file mode 100644
+> index 000000000000..ad413b2de508
+> --- /dev/null
+> +++ b/drivers/pci/pci-of.c
+> @@ -0,0 +1,75 @@
+> +/*
+> + * File:	pci-of.c
+> + * Purpose:	Provide PCI PM/wakeup support in OF systems
+> + *
+> + * Copyright (C) 2017 Google, Inc.
+> + *	Brian Norris <briannorris@chromium.org>
+> + *
+> + * Copyright (C) 2017 Rockchip Electronics Co., Ltd.
+> + *	Jeffy Chen <jeffy.chen@rock-chips.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + */
+> +
+> +#include <linux/acpi.h>
+> +#include <linux/init.h>
+> +#include <linux/module.h>
+> +#include <linux/pci.h>
+> +#include <linux/pm_wakeirq.h>
+> +#include "pci.h"
+> +
+> +static bool of_pci_power_manageable(struct pci_dev *dev)
+> +{
+> +	return false;
+> +}
+> +
+> +static int of_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> +{
+> +	return -ENOSYS;
+> +}
+> +
+> +static pci_power_t of_pci_get_power_state(struct pci_dev *dev)
+> +{
+> +	return PCI_UNKNOWN;
+> +}
+> +
+> +static pci_power_t of_pci_choose_state(struct pci_dev *pdev)
+> +{
+> +	return PCI_POWER_ERROR;
+> +}
+> +
+> +static int of_pci_wakeup(struct pci_dev *dev, bool enable)
+> +{
+> +	if (enable)
+> +		dev_pm_enable_wake_irq(&dev->dev);
+> +	else
+> +		dev_pm_disable_wake_irq(&dev->dev);
+> +	return 0;
+> +}
+> +
+> +static bool of_pci_need_resume(struct pci_dev *dev)
+> +{
+> +	return false;
+> +}
+> +
+> +static const struct pci_platform_pm_ops of_pci_platform_pm = {
+> +	.is_manageable = of_pci_power_manageable,
+> +	.set_state = of_pci_set_power_state,
+> +	.get_state = of_pci_get_power_state,
+> +	.choose_state = of_pci_choose_state,
+> +	.set_wakeup = of_pci_wakeup,
+> +	.need_resume = of_pci_need_resume,
+> +};
+> +
+> +static int __init of_pci_init(void)
+> +{
+> +	if (!acpi_disabled)
+> +		return 0;
+> +
+> +	pci_set_platform_pm(&of_pci_platform_pm);
 
- arch/alpha/kernel/pci.c                            |  2 +-
- arch/alpha/kernel/sys_nautilus.c                   |  2 +-
- arch/powerpc/kernel/pci_32.c                       |  3 +-
- arch/powerpc/platforms/powermac/feature.c          |  2 +-
- arch/powerpc/sysdev/mv64x60_pci.c                  |  4 +-
- arch/x86/pci/irq.c                                 |  3 +-
- drivers/ata/pata_ali.c                             |  3 +-
- drivers/char/agp/nvidia-agp.c                      | 12 +++-
- drivers/char/agp/sworks-agp.c                      |  3 +-
- drivers/firmware/edd.c                             |  8 +--
- drivers/firmware/iscsi_ibft.c                      |  5 +-
- drivers/gpu/drm/gma500/cdv_device.c                | 16 +++--
- drivers/gpu/drm/gma500/gma_device.c                |  4 +-
- drivers/gpu/drm/gma500/mid_bios.c                  | 12 +++-
- drivers/gpu/drm/gma500/psb_drv.c                   | 10 ++-
- drivers/gpu/drm/gma500/psb_drv.h                   | 18 ++---
- drivers/gpu/drm/nouveau/dispnv04/arb.c             |  4 +-
- drivers/gpu/drm/nouveau/dispnv04/hw.c              | 10 ++-
- drivers/gpu/drm/nouveau/nouveau_drm.c              |  3 +-
- drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c   | 10 ++-
- drivers/ide/sl82c105.c                             |  5 +-
- drivers/iommu/amd_iommu.c                          |  3 +-
- drivers/iommu/amd_iommu_init.c                     |  9 +--
- drivers/iommu/amd_iommu_v2.c                       |  3 +-
- drivers/macintosh/via-pmu.c                        |  2 +-
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  | 10 ++-
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.h  |  1 +
- .../net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c   |  6 +-
- drivers/pci/hotplug/cpqphp_pci.c                   | 18 +++--
- drivers/pci/hotplug/ibmphp_core.c                  |  7 +-
- drivers/pci/quirks.c                               |  3 +-
- drivers/pci/syscall.c                              |  4 +-
- drivers/pci/xen-pcifront.c                         |  3 +-
- drivers/sbus/char/openprom.c                       |  5 +-
- drivers/video/backlight/apple_bl.c                 |  2 +-
- drivers/video/fbdev/intelfb/intelfbhw.c            |  4 +-
- drivers/video/fbdev/nvidia/nv_hw.c                 | 11 +--
- drivers/video/fbdev/nvidia/nv_setup.c              |  3 +-
- drivers/video/fbdev/riva/fbdev.c                   |  2 +-
- drivers/video/fbdev/riva/nv_driver.c               |  7 +-
- drivers/video/fbdev/riva/riva_hw.c                 | 20 ++++--
- drivers/video/fbdev/riva/riva_hw.h                 |  3 +-
- include/linux/i7300_idle.h                         | 84 ----------------------
- include/linux/pci.h                                |  8 ---
- 44 files changed, 175 insertions(+), 182 deletions(-)
- delete mode 100644 include/linux/i7300_idle.h
+I guess no DT based system will override this?
 
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> +
+> +	return 0;
+> +}
+> +arch_initcall(of_pci_init);
