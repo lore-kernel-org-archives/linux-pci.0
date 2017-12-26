@@ -1,70 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34010 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750740AbdLEUjX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Dec 2017 15:39:23 -0500
-Date: Tue, 5 Dec 2017 14:39:20 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [PATCH -next] pci: add function stub for
- pci_get_domain_bus_and_slot()
-Message-ID: <20171205203920.GI23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <80e3c9bb-fb65-4d87-76f9-db7c1273cef3@infradead.org>
+Received: from regular1.263xmail.com ([211.150.99.130]:39563 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750806AbdLZBHB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Dec 2017 20:07:01 -0500
+Message-ID: <5A41A0A7.5070605@rock-chips.com>
+Date: Tue, 26 Dec 2017 09:06:47 +0800
+From: JeffyChen <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <80e3c9bb-fb65-4d87-76f9-db7c1273cef3@infradead.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        dianders@chromium.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com> <20171225114742.18920-5-jeffy.chen@rock-chips.com> <9593014.U0c2JQdoEZ@aspire.rjw.lan>
+In-Reply-To: <9593014.U0c2JQdoEZ@aspire.rjw.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Sinan]
+Hi Rafael,
 
-On Tue, Nov 28, 2017 at 02:31:21PM -0800, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> The coretemp driver build fails when CONFIG_PCI is not enabled
-> because it uses a function that does not have a stub for that
-> config case, so add the function stub.
-> 
-> ../drivers/hwmon/coretemp.c: In function 'adjust_tjmax':
-> ../drivers/hwmon/coretemp.c:250:9: error: implicit declaration of function 'pci_get_domain_bus_and_slot' [-Werror=implicit-function-declaration]
->   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
-> ../drivers/hwmon/coretemp.c:250:32: warning: initialization makes pointer from integer without a cast [enabled by default]
->   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Thanks for your reply :)
 
-Applied with Guenter's ack to pci/enumeration for v4.16, thanks!
+On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
+>> >+
+>> >+	dn = pci_device_to_OF_node(ppdev);
+>> >+	if (!dn)
+>> >+		return 0;
+>> >+
+>> >+	irq = of_irq_get_byname(dn, "wakeup");
+> Why is this a property of the bridge and not of the device itself?
+That is suggested by Brian, because in that way, the wakeup pin would 
+not "tied to what exact device is installed (or no device, if it's a slot)."
 
-Apparently no other code calls pci_get_domain_bus_and_slot() when
-CONFIG_PCI isn't enabled.
+>
+>> >+	if (irq == -EPROBE_DEFER)
+> Braces here, please.
+ok, will fix in the next version.
 
-15ab6790f628 ("hwmon: (coretemp) deprecate pci_get_bus_and_slot()") is
-already in linux-next via hwmon-staging.
+>
+>> >+		return irq;
+>> >+	/* Ignore other errors, since a missing wakeup is non-fatal. */
+>> >+	else if (irq < 0) {
+>> >+		dev_info(&pdev->dev, "cannot get wakeup interrupt: %d\n", irq);
+>> >+		return 0;
+>> >+	}
+>> >+
+>> >+	device_init_wakeup(&pdev->dev, true);
+> Why do you call this before dev_pm_set_dedicated_wake_irq()?
+hmmm, i thought so too, but it turns out the dedicated wake irq 
+framework requires device_init_wakeup(dev, true) before attach the wake irq:
 
-The pci tree is merged into next slightly before hwmon-staging, so
-this should be resolved as soon as the 0-day builder builds my
-pci/enumeration branch and I merge it into my next branch.
+int device_wakeup_attach_irq(struct device *dev,
+                              struct wake_irq *wakeirq)
+{
+         struct wakeup_source *ws;
 
-> ---
->  include/linux/pci.h |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> --- linux-next-20171128.orig/include/linux/pci.h
-> +++ linux-next-20171128/include/linux/pci.h
-> @@ -1660,6 +1660,9 @@ static inline struct pci_dev *pci_get_sl
->  static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
->  						unsigned int devfn)
->  { return NULL; }
-> +static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
-> +					unsigned int bus, unsigned int devfn)
-> +{ return NULL; }
->  
->  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
->  static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
-> 
-> 
+         ws = dev->power.wakeup;
+         if (!ws) {
+                 dev_err(dev, "forgot to call device_init_wakeup?\n");
+                 return -EINVAL;
+
+
+>
+>> >+
+>> >+	ret = dev_pm_set_dedicated_wake_irq(&pdev->dev, irq);
+>> >+	if (ret < 0) {
+>> >+		dev_err(&pdev->dev, "failed to set wake IRQ: %d\n", ret);
+>> >+		device_init_wakeup(&pdev->dev, false);
+>> >+		return ret;
+>> >+	}
+>> >+
+> It would be more straightforward to call device_init_wakeup() here.
+>
+>> >+	return 0;
+>> >+}
+>> >+EXPORT_SYMBOL_GPL(of_pci_setup_wake_irq);
+>> >+
+>> >+void of_pci_teardown_wake_irq(struct pci_dev *pdev)
+>> >+{
+>> >+	if (!pdev->dev.power.wakeirq)
+>> >+		return;
+>> >+
+>> >+	dev_pm_clear_wake_irq(&pdev->dev);
+>> >+	device_init_wakeup(&pdev->dev, false);
+>> >+}
+>> >+EXPORT_SYMBOL_GPL(of_pci_teardown_wake_irq);
+>> >+
+>> >  /**
+>> >   * of_irq_parse_pci - Resolve the interrupt for a PCI device
+>> >   * @pdev:       the device whose interrupt is to be resolved
+> Thanks,
+> Rafael
+>
+>
+>
+>
