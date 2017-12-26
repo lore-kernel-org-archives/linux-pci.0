@@ -1,365 +1,277 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:34486 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750708AbdL2NJv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 08:09:51 -0500
-Date: Fri, 29 Dec 2017 14:09:40 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Alexandru Chirvasitu <achirvasub@gmail.com>
-cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:40157 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750705AbdLZM60 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Dec 2017 07:58:26 -0500
+Subject: Re: Re-activate task to add MSI-X to pcie-designware
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
+ <20171208110225.GC26816@red-moon>
+ <9ede58a6-7c0d-ae66-4e15-147234cbad6d@ti.com>
+ <69f78abd-f83e-b3a6-0daf-638f89d07f99@synopsys.com>
+ <8771860f-babd-afcb-ed07-2642d2a4d6a8@ti.com>
+ <0531c3e9-57e7-d531-1bee-a5a5bbff2a8c@synopsys.com>
+ <2e04befd-9434-b3ec-0c18-96a80744e327@ti.com>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-In-Reply-To: <20171229114915.GF10658@chirva-slack.chirva-slack>
-Message-ID: <alpine.DEB.2.20.1712291406420.1899@nanos>
-References: <20171228175009.ucxr4to2nb42e3s4@D-69-91-141-110.dhcp4.washington.edu> <alpine.DEB.2.20.1712281930590.1899@nanos> <alpine.DEB.2.20.1712282253180.1899@nanos> <20171228225014.GE10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712282357380.1899@nanos>
- <alpine.DEB.2.20.1712290018210.1899@nanos> <20171228233058.c76a4upqbx6elmvg@D-69-91-141-110.dhcp4.washington.edu> <alpine.DEB.2.20.1712290034420.1899@nanos> <20171228235909.iz2pevxo4vnczu54@D-69-91-141-110.dhcp4.washington.edu> <alpine.DEB.2.20.1712290906500.1899@nanos>
- <20171229114915.GF10658@chirva-slack.chirva-slack>
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "Nori, Sekhar" <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <513e28db-924d-569c-b3ae-cbb949229cc9@ti.com>
+Date: Tue, 26 Dec 2017 18:27:50 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <2e04befd-9434-b3ec-0c18-96a80744e327@ti.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 29 Dec 2017, Alexandru Chirvasitu wrote:
-> All right, I tried to do some more digging around, in the hope of
-> getting as close to the source of the problem as I can.
-> 
-> I went back to the very first commit that went astray for me, 2db1f95
-> (which is the only one actually panicking), and tried to move from its
-> parent 90ad9e2 (that boots fine) to it gradually, altering the code in
-> small chunks.
-> 
-> I tried to ignore the stuff that clearly shouldn't make a difference,
-> such as definitions. So in the end I get defined-but-unused-function
-> errors in my compilations, but I'm ignoring those for now. Some
-> results:
-> 
-> (1) When I move from the good commit 90ad9e2 according to the attached
-> bad-diff (which moves partly towards 2db1f95), I get a panic.
-> 
-> (2) On the other hand, when I further change this last panicking
-> commit by simply doing
-> 
-> 
-> ----------------------------------------------------------------
->     removed activate / deactivate from x86_vector_domain_ops
-> 
-> diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-> index 7317ba5a..063594d 100644
-> --- a/arch/x86/kernel/apic/vector.c
-> +++ b/arch/x86/kernel/apic/vector.c
-> @@ -514,8 +514,6 @@ void x86_vector_debug_show(struct seq_file *m, struct irq_domain *d,
->  static const struct irq_domain_ops x86_vector_domain_ops = {
->         .alloc          = x86_vector_alloc_irqs,
->         .free           = x86_vector_free_irqs,
-> -       .activate       = x86_vector_activate,
-> -       .deactivate     = x86_vector_deactivate,
->  #ifdef CONFIG_GENERIC_IRQ_DEBUGFS
->         .debug_show     = x86_vector_debug_show,
->  #endif
-> ----------------------------------------------------------------
-> 
-> all is well. 
+Hi,
 
-Nice detective work. Unfortunately that's not a real solution ...
+On Saturday 23 December 2017 03:46 PM, Kishon Vijay Abraham I wrote:
+> Hi Gustavo,
+> 
+> On Thursday 21 December 2017 07:38 PM, Gustavo Pimentel wrote:
+>> On 20/12/2017 13:03, Kishon Vijay Abraham I wrote:This is our most recent
+>> version of the patches that are running on our equipment, please check with yours
+>>> Hi,
+>>>
+>>> On Monday 18 December 2017 09:31 PM, Gustavo Pimentel wrote:
+>>>> Hi Kishon,
+>>>>
+>>>> I would like to collaborate with you on this subject, I have on my side João's
+>>>> patches updated to the Bjorn's latest kernel version.
+>>>
+>>> cool, do you have a branch so that I can check what breaks in keystone and debug?
+>>>
+>> Unfortunately not, however I'll mailed you the patches immediately.
+>> Once again, thanks.
+> 
+> Thanks.
+> 
+> I tried raising MSI with pci_endpoint_test EP device (16 MSI interrupts). Here
+> are some of my observations after applying your patch series.
+> 
+> root@k2g-evm:~# cat /proc/interrupts
+>            CPU0
+>  17:          0     GICv2  29 Level     arch_timer
+>  18:       1816     GICv2  30 Level     arch_timer
+>  21:          0     GICv2  36 Edge      arm-pmu
+>  22:        792     GICv2 196 Edge      ttyS0
+>  23:          5     GICv2 120 Edge      2530000.i2c
+>  24:          0     GICv2  33 Edge      soc:keystone_irq@26202a0
+>  25:        901     GICv2 356 Level     2a00000.msgmgr rx_005_002
+>  41:          0     GICv2 232 Edge      2700000.edma_ccint
+>  43:          0     GICv2 249 Edge      2700000.edma_ccerrint
+>  44:       2497     GICv2 240 Edge      2728000.edma_ccint
+>  46:          0     GICv2 252 Edge      2728000.edma_ccerrint
+>  47:       7551     GICv2 128 Edge      mmc0
+>  48:          0     GICv2 160 Edge      2680000.keystone-dwc3, xhci-hcd:usb1
+>  49:          0     GICv2 176 Edge      2580000.keystone-dwc3, xhci-hcd:usb3
+>  50:          0     GICv2  96 Edge      21805400.spi
+>  52:          0     GICv2 100 Edge      21805c00.spi
+>  53:          0     GICv2 102 Edge      21806000.spi
+>  54:          0     GICv2  92 Edge      pcie-error-irq
+> 211:          0      GPIO  12 Edge    -davinci_gpio  23000000.mmc cd
+> 280:          0   PCI-MSI   0 Edge      PCIe PME, aerdrv
+> 281:          0   PCI-MSI 524288 Edge      pci-endpoint-test
+> 282:          0   PCI-MSI 524289 Edge      pci-endpoint-test
+> 283:          0   PCI-MSI 524290 Edge      pci-endpoint-test
+> 284:          0   PCI-MSI 524291 Edge      pci-endpoint-test
+> 285:          0   PCI-MSI 524292 Edge      pci-endpoint-test
+> 286:          0   PCI-MSI 524293 Edge      pci-endpoint-test
+> 287:          0   PCI-MSI 524294 Edge      pci-endpoint-test
+> 288:          0   PCI-MSI 524295 Edge      pci-endpoint-test
+> 289:          0   PCI-MSI 524296 Edge      pci-endpoint-test
+> 290:          0   PCI-MSI 524297 Edge      pci-endpoint-test
+> 291:          0   PCI-MSI 524298 Edge      pci-endpoint-test
+> 292:          0   PCI-MSI 524299 Edge      pci-endpoint-test
+> 293:          0   PCI-MSI 524300 Edge      pci-endpoint-test
+> 294:          0   PCI-MSI 524301 Edge      pci-endpoint-test
+> 295:          0   PCI-MSI 524302 Edge      pci-endpoint-test
+> 296:          0   PCI-MSI 524303 Edge      pci-endpoint-test
+> IPI0:          0  CPU wakeup interrupts
+> IPI1:          0  Timer broadcast interrupts
+> IPI2:          0  Rescheduling interrupts
+> IPI3:          0  Function call interrupts
+> IPI4:          0  CPU stop interrupts
+> IPI5:          0  IRQ work interrupts
+> IPI6:          0  completion interrupts
+> Err:          0
+> 
+> root@k2g-evm:~# pcitest -m 1
+> [   45.966437] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 271
+> [   45.973544] keystone-pcie 21801000.pcie: irq: bit 0, vector 0, virq 280
+> MSI1:           NOT OKAY
+> 
+> Here there is an off by one error. "pcitest -m 1" should ideally have raised an
+> interrupt in 281 but from the above debug print it looks like it's raising an
+> interrupt in 280.
 
-Can you try the patch below on top of Linus tree, please?
+The above error was due to an pci_endpoint bug. I'll send a patch to fix this
+separately.
+> 
+> So I tried disabling the pcieportbus driver. These are my observations once I
+> disable pcieportbus driver
+> 
+> root@k2g-evm:~# cat /proc/interrupts
+>            CPU0
+>  17:          0     GICv2  29 Level     arch_timer
+>  18:       2222     GICv2  30 Level     arch_timer
+>  21:          0     GICv2  36 Edge      arm-pmu
+>  22:        821     GICv2 196 Edge      ttyS0
+>  23:          5     GICv2 120 Edge      2530000.i2c
+>  24:          0     GICv2  33 Edge      soc:keystone_irq@26202a0
+>  25:        909     GICv2 356 Level     2a00000.msgmgr rx_005_002
+>  41:          0     GICv2 232 Edge      2700000.edma_ccint
+>  43:          0     GICv2 249 Edge      2700000.edma_ccerrint
+>  44:       2442     GICv2 240 Edge      2728000.edma_ccint
+>  46:          0     GICv2 252 Edge      2728000.edma_ccerrint
+>  47:       7297     GICv2 128 Edge      mmc0
+>  48:          0     GICv2 160 Edge      2680000.keystone-dwc3, xhci-hcd:usb1
+>  49:          0     GICv2 176 Edge      2580000.keystone-dwc3, xhci-hcd:usb3
+>  50:          0     GICv2  96 Edge      21805400.spi
+>  52:          0     GICv2 100 Edge      21805c00.spi
+>  53:          0     GICv2 102 Edge      21806000.spi
+>  54:          0     GICv2  92 Edge      pcie-error-irq
+> 211:          0      GPIO  12 Edge    -davinci_gpio  23000000.mmc cd
+> 280:          0   PCI-MSI 524288 Edge      pci-endpoint-test
+> 281:          0   PCI-MSI 524289 Edge      pci-endpoint-test
+> 282:          0   PCI-MSI 524290 Edge      pci-endpoint-test
+> 283:          0   PCI-MSI 524291 Edge      pci-endpoint-test
+> 284:          0   PCI-MSI 524292 Edge      pci-endpoint-test
+> 285:          0   PCI-MSI 524293 Edge      pci-endpoint-test
+> 286:          0   PCI-MSI 524294 Edge      pci-endpoint-test
+> 287:          0   PCI-MSI 524295 Edge      pci-endpoint-test
+> 288:          0   PCI-MSI 524296 Edge      pci-endpoint-test
+> 289:          0   PCI-MSI 524297 Edge      pci-endpoint-test
+> 290:          0   PCI-MSI 524298 Edge      pci-endpoint-test
+> 291:          0   PCI-MSI 524299 Edge      pci-endpoint-test
+> 292:          0   PCI-MSI 524300 Edge      pci-endpoint-test
+> 293:          0   PCI-MSI 524301 Edge      pci-endpoint-test
+> 294:          0   PCI-MSI 524302 Edge      pci-endpoint-test
+> 295:          0   PCI-MSI 524303 Edge      pci-endpoint-test
+> IPI0:          0  CPU wakeup interrupts
+> IPI1:          0  Timer broadcast interrupts
+> IPI2:          0  Rescheduling interrupts
+> IPI3:          0  Function call interrupts
+> IPI4:          0  CPU stop interrupts
+> IPI5:          0  IRQ work interrupts
+> IPI6:          0  completion interrupts
+> Err:          0
+> 
+> root@k2g-evm:~# pcitest -m 1
+> [   57.791535] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 271
+> [   57.798643] keystone-pcie 21801000.pcie: irq: bit 0, vector 0, virq 280
+> MSI1:           OKAY
+> root@k2g-evm:~# pcitest -m 2
+> [   59.791509] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 272
+> [   59.798614] keystone-pcie 21801000.pcie: irq: bit 0, vector 1, virq 281
+> MSI2:           OKAY
+> root@k2g-evm:~# pcitest -m 3
+> [   61.271509] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 273
+> [   61.278616] keystone-pcie 21801000.pcie: irq: bit 0, vector 2, virq 282
+> MSI3:           OKAY
+> root@k2g-evm:~# pcitest -m 4
+> [   62.791514] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 274
+> [   62.798619] keystone-pcie 21801000.pcie: irq: bit 0, vector 3, virq 283
+> MSI4:           OKAY
+> root@k2g-evm:~# pcitest -m 5
+> [   64.311513] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 275
+> [   64.318620] keystone-pcie 21801000.pcie: irq: bit 0, vector 4, virq 284
+> MSI5:           OKAY
+> root@k2g-evm:~# pcitest -m 6
+> [   66.351518] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 276
+> [   66.358624] keystone-pcie 21801000.pcie: irq: bit 0, vector 5, virq 285
+> MSI6:           OKAY
+> root@k2g-evm:~# pcitest -m 7
+> [   67.811516] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 277
+> [   67.818623] keystone-pcie 21801000.pcie: irq: bit 0, vector 6, virq 286
+> MSI7:           OKAY
+> root@k2g-evm:~# pcitest -m 8
+> [   69.291518] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 278
+> [   69.298625] keystone-pcie 21801000.pcie: irq: bit 0, vector 7, virq 287
+> MSI8:           OKAY
+> root@k2g-evm:~# pcitest -m 9
+> MSI9:           NOT OKAY
+> root@k2g-evm:~# pcitest -m 10
+> MSI10:          NOT OKAY
+> 
+> So once I disable pcieportbus, I could get the first 8 interrupts correctly.
+> But after that there are no interrupts at all.
 
-Thanks,
+This issues is due to the previous interrupt not acknowledged and below fixes
+the issue.
 
-	tglx
-
-8<---------------------
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -339,6 +339,40 @@ int msi_domain_populate_irqs(struct irq_
- 	return ret;
+diff --git a/drivers/pci/dwc/pcie-designware-host.c
+b/drivers/pci/dwc/pcie-designware-host.c
+index 2816bd98f66c..b25e788e9828 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -58,8 +58,20 @@ static void dw_msi_unmask_irq(struct irq_data *d)
+        irq_chip_unmask_parent(d);
  }
- 
-+/*
-+ * Carefully check whether the device can use reservation mode. If
-+ * reservation mode is enabled then the early activation will assign a
-+ * dummy vector to the device. If the PCI/MSI device does not support
-+ * masking of the entry then this can result in spurious interrupts when
-+ * the device driver is not absolutely careful. But even then a malfunction
-+ * of the hardware could result in a spurious interrupt on the dummy vector
-+ * and render the device unusable. If the entry can be masked then the core
-+ * logic will prevent the spurious interrupt and reservation mode can be
-+ * used. For now reservation mode is restricted to PCI/MSI.
-+ */
-+static bool msi_check_reservation_mode(struct irq_domain *domain,
-+				       struct msi_domain_info *info,
-+				       struct device *dev)
+
++static void dw_pci_ack_irq(struct irq_data *d)
 +{
-+	struct msi_desc *desc;
++       struct msi_desc *msi = irq_data_get_msi_desc(d);
++       struct pcie_port *pp;
 +
-+	if (domain->bus_token != DOMAIN_BUS_PCI_MSI)
-+		return false;
++       pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
 +
-+	if (!(info->flags & MSI_FLAG_MUST_REACTIVATE))
-+		return false;
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI) && pci_msi_ignore_mask)
-+		return false;
-+
-+	/*
-+	 * Checking the first MSI descriptor is sufficient. MSIX supports
-+	 * masking and MSI does so when the maskbit is set.
-+	 */
-+	desc = first_msi_entry(dev);
-+	return desc->msi_attrib.is_msix || desc->msi_attrib.maskbit;
++       if (pp->ops->msi_irq_ack)
++               pp->ops->msi_irq_ack(d->irq, pp);
 +}
 +
- /**
-  * msi_domain_alloc_irqs - Allocate interrupts from a MSI interrupt domain
-  * @domain:	The domain to allocate from
-@@ -353,9 +387,11 @@ int msi_domain_alloc_irqs(struct irq_dom
- {
- 	struct msi_domain_info *info = domain->host_data;
- 	struct msi_domain_ops *ops = info->ops;
--	msi_alloc_info_t arg;
-+	struct irq_data *irq_data;
- 	struct msi_desc *desc;
-+	msi_alloc_info_t arg;
- 	int i, ret, virq;
-+	bool can_reserve;
- 
- 	ret = msi_domain_prepare_irqs(domain, dev, nvec, &arg);
- 	if (ret)
-@@ -385,6 +421,8 @@ int msi_domain_alloc_irqs(struct irq_dom
- 	if (ops->msi_finish)
- 		ops->msi_finish(&arg, 0);
- 
-+	can_reserve = msi_check_reservation_mode(domain, info, dev);
-+
- 	for_each_msi_entry(desc, dev) {
- 		virq = desc->irq;
- 		if (desc->nvec_used == 1)
-@@ -397,17 +435,28 @@ int msi_domain_alloc_irqs(struct irq_dom
- 		 * the MSI entries before the PCI layer enables MSI in the
- 		 * card. Otherwise the card latches a random msi message.
- 		 */
--		if (info->flags & MSI_FLAG_ACTIVATE_EARLY) {
--			struct irq_data *irq_data;
-+		if (!(info->flags & MSI_FLAG_ACTIVATE_EARLY))
-+			continue;
- 
-+		irq_data = irq_domain_get_irq_data(domain, desc->irq);
-+		if (!can_reserve)
-+			irqd_clr_can_reserve(irq_data);
-+		ret = irq_domain_activate_irq(irq_data, can_reserve);
-+		if (ret)
-+			goto cleanup;
-+	}
-+
-+	/*
-+	 * If these interrupts use reservation mode clear the activated bit
-+	 * so request_irq() will assign the final vector.
-+	 */
-+	if (can_reserve) {
-+		for_each_msi_entry(desc, dev) {
- 			irq_data = irq_domain_get_irq_data(domain, desc->irq);
--			ret = irq_domain_activate_irq(irq_data, true);
--			if (ret)
--				goto cleanup;
--			if (info->flags & MSI_FLAG_MUST_REACTIVATE)
--				irqd_clr_activated(irq_data);
-+			irqd_clr_activated(irq_data);
- 		}
- 	}
-+
- 	return 0;
- 
- cleanup:
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -184,6 +184,7 @@ static void reserve_irq_vector_locked(st
- 	irq_matrix_reserve(vector_matrix);
- 	apicd->can_reserve = true;
- 	apicd->has_reserved = true;
-+	irqd_set_can_reserve(irqd);
- 	trace_vector_reserve(irqd->irq, 0);
- 	vector_assign_managed_shutdown(irqd);
- }
-@@ -368,8 +369,18 @@ static int activate_reserved(struct irq_
- 	int ret;
- 
- 	ret = assign_irq_vector_any_locked(irqd);
--	if (!ret)
-+	if (!ret) {
- 		apicd->has_reserved = false;
-+		/*
-+		 * Core might have disabled reservation mode after
-+		 * allocating the irq descriptor. Ideally this should
-+		 * happen before allocation time, but that would require
-+		 * completely convoluted ways of transporting that
-+		 * information.
-+		 */
-+		if (!irqd_can_reserve(irqd))
-+			apicd->can_reserve = false;
-+	}
- 	return ret;
- }
- 
-@@ -478,6 +489,7 @@ static bool vector_configure_legacy(unsi
- 	} else {
- 		/* Release the vector */
- 		apicd->can_reserve = true;
-+		irqd_set_can_reserve(irqd);
- 		clear_irq_vector(irqd);
- 		realloc = true;
- 	}
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -212,6 +212,7 @@ struct irq_data {
-  *				  mask. Applies only to affinity managed irqs.
-  * IRQD_SINGLE_TARGET		- IRQ allows only a single affinity target
-  * IRQD_DEFAULT_TRIGGER_SET	- Expected trigger already been set
-+ * IRQD_CAN_RESERVE		- Can use reservation mode
-  */
- enum {
- 	IRQD_TRIGGER_MASK		= 0xf,
-@@ -233,6 +234,7 @@ enum {
- 	IRQD_MANAGED_SHUTDOWN		= (1 << 23),
- 	IRQD_SINGLE_TARGET		= (1 << 24),
- 	IRQD_DEFAULT_TRIGGER_SET	= (1 << 25),
-+	IRQD_CAN_RESERVE		= (1 << 26),
+ static struct irq_chip dw_pcie_msi_irq_chip = {
+        .name = "PCI-MSI",
++       .irq_ack = dw_pci_ack_irq,
+        .irq_mask = dw_msi_mask_irq,
+        .irq_unmask = dw_msi_unmask_irq,
  };
- 
- #define __irqd_to_state(d) ACCESS_PRIVATE((d)->common, state_use_accessors)
-@@ -377,6 +379,21 @@ static inline bool irqd_is_managed_and_s
- 	return __irqd_to_state(d) & IRQD_MANAGED_SHUTDOWN;
+@@ -193,20 +205,8 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+        spin_unlock_irqrestore(&pp->lock, flags);
  }
- 
-+static inline void irqd_set_can_reserve(struct irq_data *d)
-+{
-+	__irqd_to_state(d) |= IRQD_CAN_RESERVE;
-+}
-+
-+static inline void irqd_clr_can_reserve(struct irq_data *d)
-+{
-+	__irqd_to_state(d) &= ~IRQD_CAN_RESERVE;
-+}
-+
-+static inline bool irqd_can_reserve(struct irq_data *d)
-+{
-+	return __irqd_to_state(d) & IRQD_CAN_RESERVE;
-+}
-+
- #undef __irqd_to_state
- 
- static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
---- a/kernel/irq/debugfs.c
-+++ b/kernel/irq/debugfs.c
-@@ -113,6 +113,7 @@ static const struct irq_bit_descr irqdat
- 	BIT_MASK_DESCR(IRQD_SETAFFINITY_PENDING),
- 	BIT_MASK_DESCR(IRQD_AFFINITY_MANAGED),
- 	BIT_MASK_DESCR(IRQD_MANAGED_SHUTDOWN),
-+	BIT_MASK_DESCR(IRQD_CAN_RESERVE),
- 
- 	BIT_MASK_DESCR(IRQD_FORWARDED_TO_VCPU),
- 
---- a/arch/x86/kernel/apic/apic_flat_64.c
-+++ b/arch/x86/kernel/apic/apic_flat_64.c
-@@ -151,7 +151,7 @@ static struct apic apic_flat __ro_after_
- 	.apic_id_valid			= default_apic_id_valid,
- 	.apic_id_registered		= flat_apic_id_registered,
- 
--	.irq_delivery_mode		= dest_LowestPrio,
-+	.irq_delivery_mode		= dest_Fixed,
- 	.irq_dest_mode			= 1, /* logical */
- 
- 	.disable_esr			= 0,
---- a/arch/x86/kernel/apic/apic_noop.c
-+++ b/arch/x86/kernel/apic/apic_noop.c
-@@ -110,7 +110,7 @@ struct apic apic_noop __ro_after_init =
- 	.apic_id_valid			= default_apic_id_valid,
- 	.apic_id_registered		= noop_apic_id_registered,
- 
--	.irq_delivery_mode		= dest_LowestPrio,
-+	.irq_delivery_mode		= dest_Fixed,
- 	/* logical delivery broadcast to all CPUs: */
- 	.irq_dest_mode			= 1,
- 
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -39,17 +39,13 @@ static void irq_msi_compose_msg(struct i
- 		((apic->irq_dest_mode == 0) ?
- 			MSI_ADDR_DEST_MODE_PHYSICAL :
- 			MSI_ADDR_DEST_MODE_LOGICAL) |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			MSI_ADDR_REDIRECTION_CPU :
--			MSI_ADDR_REDIRECTION_LOWPRI) |
-+		MSI_ADDR_REDIRECTION_CPU |
- 		MSI_ADDR_DEST_ID(cfg->dest_apicid);
- 
- 	msg->data =
- 		MSI_DATA_TRIGGER_EDGE |
- 		MSI_DATA_LEVEL_ASSERT |
--		((apic->irq_delivery_mode != dest_LowestPrio) ?
--			MSI_DATA_DELIVERY_FIXED :
--			MSI_DATA_DELIVERY_LOWPRI) |
-+		MSI_DATA_DELIVERY_FIXED |
- 		MSI_DATA_VECTOR(cfg->vector);
- }
- 
---- a/arch/x86/kernel/apic/probe_32.c
-+++ b/arch/x86/kernel/apic/probe_32.c
-@@ -105,7 +105,7 @@ static struct apic apic_default __ro_aft
- 	.apic_id_valid			= default_apic_id_valid,
- 	.apic_id_registered		= default_apic_id_registered,
- 
--	.irq_delivery_mode		= dest_LowestPrio,
-+	.irq_delivery_mode		= dest_Fixed,
- 	/* logical delivery broadcast to all CPUs: */
- 	.irq_dest_mode			= 1,
- 
---- a/arch/x86/kernel/apic/x2apic_cluster.c
-+++ b/arch/x86/kernel/apic/x2apic_cluster.c
-@@ -184,7 +184,7 @@ static struct apic apic_x2apic_cluster _
- 	.apic_id_valid			= x2apic_apic_id_valid,
- 	.apic_id_registered		= x2apic_apic_id_registered,
- 
--	.irq_delivery_mode		= dest_LowestPrio,
-+	.irq_delivery_mode		= dest_Fixed,
- 	.irq_dest_mode			= 1, /* logical */
- 
- 	.disable_esr			= 0,
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -985,9 +985,7 @@ static u32 hv_compose_msi_req_v1(
- 	int_pkt->wslot.slot = slot;
- 	int_pkt->int_desc.vector = vector;
- 	int_pkt->int_desc.vector_count = 1;
--	int_pkt->int_desc.delivery_mode =
--		(apic->irq_delivery_mode == dest_LowestPrio) ?
--			dest_LowestPrio : dest_Fixed;
-+	int_pkt->int_desc.delivery_mode = dest_Fixed;
- 
- 	/*
- 	 * Create MSI w/ dummy vCPU set, overwritten by subsequent retarget in
-@@ -1008,9 +1006,7 @@ static u32 hv_compose_msi_req_v2(
- 	int_pkt->wslot.slot = slot;
- 	int_pkt->int_desc.vector = vector;
- 	int_pkt->int_desc.vector_count = 1;
--	int_pkt->int_desc.delivery_mode =
--		(apic->irq_delivery_mode == dest_LowestPrio) ?
--			dest_LowestPrio : dest_Fixed;
-+	int_pkt->int_desc.delivery_mode = dest_Fixed;
- 
- 	/*
- 	 * Create MSI w/ dummy vCPU set targeting just one vCPU, overwritten
+
+-static void dw_pci_bottom_ack(struct irq_data *d)
+-{
+-       struct msi_desc *msi = irq_data_get_msi_desc(d);
+-       struct pcie_port *pp;
+-
+-       pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+-
+-       if (pp->ops->msi_irq_ack)
+-               pp->ops->msi_irq_ack(d->irq, pp);
+-}
+-
+ static struct irq_chip dw_pci_msi_bottom_irq_chip = {
+        .name = "DWPCI-MSI",
+-       .irq_ack                = dw_pci_bottom_ack,
+        .irq_compose_msi_msg = dw_pci_setup_msi_msg,
+        .irq_set_affinity = dw_pci_msi_set_affinity,
+        .irq_mask = dw_pci_bottom_mask,
+@@ -240,7 +240,7 @@ static int dw_pcie_irq_domain_alloc(struct irq_domain *domain,
+        for (i = 0; i < nr_irqs; i++)
+                irq_domain_set_info(domain, virq + i, bit + i,
+                                    &dw_pci_msi_bottom_irq_chip,
+-                                   domain->host_data, handle_simple_irq,
++                                   domain->host_data, handle_level_irq,
+                                    NULL, NULL);
+
+        return 0;
+
+Thanks
+Kishon
