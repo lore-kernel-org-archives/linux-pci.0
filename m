@@ -1,91 +1,198 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Dexuan Cui <decui@microsoft.com>
-To: Alexandru Chirvasitu <achirvasub@gmail.com>
-CC: Dou Liyang <douly.fnst@cn.fujitsu.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "Simon Xiao" <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        "Jork Loeser" <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        KY Srinivasan <kys@microsoft.com>
-Subject: RE: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-Date: Sat, 23 Dec 2017 01:35:12 +0000
-Message-ID: <KL1P15301MB00064E9E767F9395744F42A3BF030@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-References: <20171218101131.GA5338@amd>
- <20171219083421.GB24638@arch-chirva.localdomain>
- <alpine.DEB.2.20.1712200124440.2282@nanos>
- <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com>
- <20171220131929.GC24638@arch-chirva.localdomain>
- <20171220194506.GD24638@arch-chirva.localdomain>
- <20171221022356.GE24638@arch-chirva.localdomain>
- <1bd74ca3-afca-9d61-6911-61250f459891@cn.fujitsu.com>
- <20171222142053.3cbhi2nhh24w7yoo@D-69-91-141-110.dhcp4.washington.edu>
- <KL1P15301MB000676F3F8C9A5AC8C489E75BF020@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <20171222222917.GA1138@arch-chirva.localdomain>
-In-Reply-To: <20171222222917.GA1138@arch-chirva.localdomain>
-Content-Type: text/plain; charset="us-ascii"
+Date: Tue, 26 Dec 2017 15:11:24 -0600
+From: Rob Herring <robh@kernel.org>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        krzk@kernel.org, jingoohan1@gmail.com, kgene@kernel.org,
+        lorenzo.pieralisi@arm.com
+Subject: Re: [RFC 2/2] pci: dwc: pci-exynos: add the codes to support the
+ exynos5433
+Message-ID: <20171226211123.feje5l46y62aft7u@rob-hp-laptop>
+References: <20171221121408.22636-1-jh80.chung@samsung.com>
+ <CGME20171221121409epcas1p1a12d0f3b0b5d5e732da865ee78f6bb47@epcas1p1.samsung.com>
+ <20171221121408.22636-2-jh80.chung@samsung.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171221121408.22636-2-jh80.chung@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Alexandru Chirvasitu [mailto:achirvasub@gmail.com]
-> Sent: Friday, December 22, 2017 14:29
->=20
-> The output of that precise command run just now on a freshly-compiled
-> copy of that commit is attached.
->=20
-> On Fri, Dec 22, 2017 at 09:31:28PM +0000, Dexuan Cui wrote:
-> > > From: Alexandru Chirvasitu [mailto:achirvasub@gmail.com]
-> > > Sent: Friday, December 22, 2017 06:21
-> > >
-> > > In the absence of logs, the best I can do at the moment is attach a
-> > > picture of the screen I am presented with on the apic=3Ddebug boot
-> > > attempt.
-> > > Alex
-> >
-> > The panic happens in irq_matrix_assign_system+0x4e/0xd0 in your picture=
-.
-> > IMO we should find which line of code causes the panic. I suppose
-> > "objdump -D kernel/irq/matrix.o" can help to do that.
-> >
-> > Thanks,
-> > -- Dexuan
+On Thu, Dec 21, 2017 at 09:14:07PM +0900, Jaehoon Chung wrote:
+> Exynos5433 has the PCIe for WiFi.
+> Added the codes relevant to PCIe for supporting the exynos5433.
+> Also changed the binding documentation name to
+> 'samsung,exynos-pcie.txt'.
+> (It's not only exynos5440 anymore.)
+> 
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> ---
+>  ...exynos5440-pcie.txt => samsung,exynos-pcie.txt} |   2 +-
+>  drivers/pci/dwc/pci-exynos.c                       | 183 ++++++++++++++++-----
+>  2 files changed, 144 insertions(+), 41 deletions(-)
+>  rename Documentation/devicetree/bindings/pci/{samsung,exynos5440-pcie.txt => samsung,exynos-pcie.txt} (97%)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
+> similarity index 97%
+> rename from Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+> rename to Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
+> index 34a11bfbfb60..958dcc150505 100644
+> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
+> @@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+>  and thus inherits all the common properties defined in designware-pcie.txt.
+>  
+>  Required properties:
+> -- compatible: "samsung,exynos5440-pcie"
+> +- compatible: "samsung,exynos5440-pcie" or "samsung,exynos5433-pcie"
 
-The BUG_ON panic happens at line 147:
-                   BUG_ON(!test_and_clear_bit(bit, cm->alloc_map));
+Quite a lot of driver changes for just a new compatible.
 
-I'm sure Thomas and Dou know it better than me.=20
+>  - reg: base addresses and lengths of the PCIe controller,
 
-137 void irq_matrix_assign_system(struct irq_matrix *m, unsigned int bit,
-138                               bool replace)
-139 {
-140         struct cpumap *cm =3D this_cpu_ptr(m->maps);
-141
-142         BUG_ON(bit > m->matrix_bits);
-143         BUG_ON(m->online_maps > 1 || (m->online_maps && !replace));
-144
-145         set_bit(bit, m->system_map);
-146         if (replace) {
-147                 BUG_ON(!test_and_clear_bit(bit, cm->alloc_map));
-148                 cm->allocated--;
-149                 m->total_allocated--;
-150         }
-151         if (bit >=3D m->alloc_start && bit < m->alloc_end)
-152                 m->systembits_inalloc++;
-153
-154         trace_irq_matrix_assign_system(bit, m);
-155 }
+For example, you're adding the DBI registers which is not documented 
+here. 
 
--- Dexuan
+Perhaps it is time to remove the old phy support before adding a new 
+platform.
+
+>  	the PHY controller, additional register for the PHY controller.
+>  	(Registers for the PHY controller are DEPRECATED.
+> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+> index 5596fdedbb94..8dee2e90347e 100644
+> --- a/drivers/pci/dwc/pci-exynos.c
+> +++ b/drivers/pci/dwc/pci-exynos.c
+> @@ -40,6 +40,8 @@
+>  #define PCIE_IRQ_SPECIAL		0x008
+>  #define PCIE_IRQ_EN_PULSE		0x00c
+>  #define PCIE_IRQ_EN_LEVEL		0x010
+> +#define PCIE_SW_WAKE			0x018
+> +#define PCIE_BUS_EN			BIT(1)
+>  #define IRQ_MSI_ENABLE			BIT(2)
+>  #define PCIE_IRQ_EN_SPECIAL		0x014
+>  #define PCIE_PWR_RESET			0x018
+> @@ -49,7 +51,8 @@
+>  #define PCIE_NONSTICKY_RESET		0x024
+>  #define PCIE_APP_INIT_RESET		0x028
+>  #define PCIE_APP_LTSSM_ENABLE		0x02c
+> -#define PCIE_ELBI_RDLH_LINKUP		0x064
+> +#define PCIE_ELBI_RDLH_LINKUP		0x074
+> +#define PCIE_ELBI_XMLH_LINKUP		BIT(4)
+>  #define PCIE_ELBI_LTSSM_ENABLE		0x1
+>  #define PCIE_ELBI_SLV_AWMISC		0x11c
+>  #define PCIE_ELBI_SLV_ARMISC		0x120
+> @@ -94,6 +97,10 @@
+>  #define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
+>  #define PCIE_PHY_TRSV3_LVCC		0x31c
+>  
+> +/* DBI register */
+> +#define PCIE_MISC_CONTROL_1_OFF		0x8BC
+> +#define DBI_RO_WR_EN			BIT(0)
+> +
+>  struct exynos_pcie_mem_res {
+>  	void __iomem *elbi_base;   /* DT 0th resource: PCIe CTRL */
+>  	void __iomem *phy_base;    /* DT 1st resource: PHY CTRL */
+> @@ -221,6 +228,96 @@ static const struct exynos_pcie_ops exynos5440_pcie_ops = {
+>  	.deinit_clk_resources	= exynos5440_pcie_deinit_clk_resources,
+>  };
+>  
+> +static int exynos5433_pcie_get_mem_resources(struct platform_device *pdev,
+> +					     struct exynos_pcie *ep)
+> +{
+> +	struct dw_pcie *pci = ep->pci;
+> +	struct device *dev = pci->dev;
+> +	struct resource *res;
+> +
+> +	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
+> +	if (!ep->mem_res)
+> +		return -ENOMEM;
+> +
+> +	/* External Local Bus interface(ELBI) Register */
+
+These are standard DW registers IIRC. So the DW core should handle this.
+
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
+> +	ep->mem_res->elbi_base = devm_ioremap_resource(&pdev->dev, res);
+> +	if (IS_ERR(ep->mem_res->elbi_base))
+> +		return PTR_ERR(ep->mem_res->elbi_base);
+> +
+> +	/* Data Bus Interface(DBI) Register */
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+> +	pci->dbi_base = devm_ioremap_resource(&pdev->dev, res);
+
+This is handled by the DW plat driver. Perhaps the DW core should handle 
+it too. 
+
+Does the 5440 really not have DBI registers or you just happen to not 
+need to access them?
+
+> +	if (IS_ERR(pci->dbi_base))
+> +		return PTR_ERR(pci->dbi_base);
+> +
+> +	return 0;
+> +}
+> +
+> +static int exynos5433_pcie_get_clk_resources(struct exynos_pcie *ep)
+> +{
+> +	struct dw_pcie *pci = ep->pci;
+> +	struct device *dev = pci->dev;
+> +
+> +	ep->clk_res = devm_kzalloc(dev, sizeof(*ep->clk_res), GFP_KERNEL);
+> +	if (!ep->clk_res)
+> +		return -ENOMEM;
+> +
+> +	ep->clk_res->clk = devm_clk_get(dev, "pcie");
+> +	if (IS_ERR(ep->clk_res->clk)) {
+> +		dev_err(dev, "Failed to get pcie rc clock\n");
+> +		return PTR_ERR(ep->clk_res->clk);
+> +	}
+> +
+> +	ep->clk_res->bus_clk = devm_clk_get(dev, "pcie_bus");
+> +	if (IS_ERR(ep->clk_res->bus_clk)) {
+> +		dev_err(dev, "Failed to get pcie bus clock\n");
+> +		return PTR_ERR(ep->clk_res->bus_clk);
+> +	}
+> +
+> +	return 0;
+> +}
+
+Can't you reuse exynos5440_pcie_get_clk_resources? They appear to be the 
+same.
+
+> +
+> +static void exynos5433_pcie_deinit_clk_resources(struct exynos_pcie *ep)
+> +{
+> +	clk_disable_unprepare(ep->clk_res->bus_clk);
+> +	clk_disable_unprepare(ep->clk_res->clk);
+> +}
+> +
+> +
+> +static int exynos5433_pcie_init_clk_resources(struct exynos_pcie *ep)
+> +{
+> +	struct dw_pcie *pci = ep->pci;
+> +	struct device *dev = pci->dev;
+> +	int ret;
+> +
+> +	ret = clk_prepare_enable(ep->clk_res->clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot enable pcie rc clock");
+> +		return ret;
+> +	}
+> +
+> +	ret = clk_prepare_enable(ep->clk_res->bus_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot enable pcie bus clock");
+> +		goto err_bus_clk;
+> +	}
+> +
+> +	return 0;
+> +
+> +err_bus_clk:
+> +	clk_disable_unprepare(ep->clk_res->clk);
+> +
+> +	return ret;
+> +}
+
+Ditto.
+
+Rob
