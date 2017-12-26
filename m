@@ -1,76 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42446 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751847AbdLAX1T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Dec 2017 18:27:19 -0500
-Date: Fri, 1 Dec 2017 17:27:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian Zigotzky <chzigotzky@xenosoft.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] SB600 for the Nemo board has non-zero devices on
- non-root bus
-Message-ID: <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
-References: <f3513294-6da0-456f-0f98-1f8c3bac90c9@xenosoft.de>
- <87tvxl15qx.fsf@concordia.ellerman.id.au>
- <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
- <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
- <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
- <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
- <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
- <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
- <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:41830 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751122AbdLZXf4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Dec 2017 18:35:56 -0500
+Date: Tue, 26 Dec 2017 17:35:52 -0600
+From: Rob Herring <robh@kernel.org>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [RFC PATCH v12 1/5] dt-bindings: PCI: Add definition of PCIe
+ WAKE# irq and PCI irq
+Message-ID: <20171226233552.nacwqbpkozmy7n6c@rob-hp-laptop>
+References: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
+ <20171226023646.17722-2-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171226023646.17722-2-jeffy.chen@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 01, 2017 at 11:08:46PM +0100, Christian Zigotzky wrote:
-> On 30.11.2017 23:42, Bjorn Helgaas wrote:
-> >
-> > 00:11.0 claims to be a PCIe Root Port leading to [bus 05-06]. That
-> > means there's a Link (presumably this A-Link II Express thing), and the
-> > downstream end of the Link *should* be a PCIe Upstream Port on bus 05,
-> > but no such device is visible.  I suppose the SB600 does implement
-> > some sort of PCIe Port there, but keeps it invisible to software, and
-> > at the same time, contains an invisible bridge that connects the Link
-> > to all the conventional PCI devices on bus 05.
-> >
-> > When we scan bus 05, we do this:
-> >
-> >   pci_scan_child_bus_extend(bus=05)
-> >     for (devfn = 0; devfn < 0x100; devfn += 8)
-> >       pci_scan_slot(05, 00.0)
-> >         pci_scan_single_device
-> >           pci_scan_device(05, 00.0)           # fails; no 05:00.0
-> >       pci_scan_slot(05, 01.0)
-> >         only_one_child(bus=05)
-> >           parent = 00:11.0
-> >           pci_pcie_type(00:11.0) == ROOT_PORT # returns true
-> >
-> > Since only_one_child() sees that 00:11.0 is a Root Port, we give up
-> > before we even get to the PCI_SCAN_ALL_PCIE_DEVS test.
-> >
-> > I *think* something like the patch below should make this work if you
-> > use the "pci=pcie_scan_all" parameter.  We have some x86 DMI quirks
-> > that set PCI_SCAN_ALL_PCIE_DEVS automatically.  I don't know how to do
-> > something similar on powerpc, but maybe you do?
-> >
+On Tue, Dec 26, 2017 at 10:36:42AM +0800, Jeffy Chen wrote:
+> We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
+> so add definitions of the optional PCIe WAKE# pin for PCI devices.
 > 
-> Hi Bjorn,
+> Also add an definition of the optional PCI interrupt pin for PCI
+> devices to distinguish it from the PCIe WAKE# pin.
+
+By v13 you should drop "RFC". RFC implies not ready for merging.
+
 > 
-> I tested your new patch today. It boots with the boot argument
-> "pci=pcie_scan_all". Well done! :-)
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ---
 > 
-> It doesn't boot without the boot argument "pci=pcie_scan_all".
+> Changes in v13: None
+> Changes in v12:
+> Only add irq definitions for PCI devices and rewrite the commit message.
+> 
+> Changes in v11: None
+> Changes in v10: None
+> Changes in v9:
+> Add section for PCI devices and rewrite the commit message.
+> 
+> Changes in v8:
+> Add optional "pci", and rewrite commit message.
+> 
+> Changes in v7: None
+> Changes in v6: None
+> Changes in v5:
+> Move to pci.txt
+> 
+> Changes in v3: None
+> Changes in v2: None
+> 
+>  Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 
-Thanks for testing that.  I'll merge a similar patch for v4.16.
-
-I don't think using "pci=pcie_scan_all" is really an acceptable
-long-term answer for you, though.  Is there some way we can identify
-at run-time whether we're on a Nemo system?  If so, we can make this
-happen automatically.
-
-Bjorn
+Reviewed-by: Rob Herring <robh@kernel.org>
