@@ -1,36 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51750 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:47268 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752361AbdLKRRx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Dec 2017 12:17:53 -0500
-Date: Mon, 11 Dec 2017 11:17:51 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Chris Clayton <chris2553@googlemail.com>,
-        LKML <linux-kernel@vger.kernel.org>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Subject: Re: Oops on 4.15-rc[123] on shutdown/reboot
-Message-ID: <20171211171751.GB16032@bhelgaas-glaptop.roam.corp.google.com>
-References: <1d802670-2d50-dd05-1205-561b0c025845@googlemail.com>
- <32fa4f94-8f36-0321-81fd-f9ccb91c2a1f@codeaurora.org>
+        id S1751107AbdLZRq7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Dec 2017 12:46:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <32fa4f94-8f36-0321-81fd-f9ccb91c2a1f@codeaurora.org>
+In-Reply-To: <20171222182448.GZ3875@atomide.com>
+References: <20171219085823.8695-1-kishon@ti.com> <20171219085823.8695-3-kishon@ti.com>
+ <20171220185715.j5h7dlricom6kuiz@rob-hp-laptop> <94336bfb-221d-95f7-72b2-09219b08099b@ti.com>
+ <20171222182448.GZ3875@atomide.com>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 26 Dec 2017 11:46:37 -0600
+Message-ID: <CAL_Jsq+f3u0yvftvESKDiDF76bUiwr9hZED3ZZ75=qMMr6RL1g@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] dt-bindings: PCI: dra7xx: Add properties to enable
+ x2 lane in dra7
+To: Tony Lindgren <tony@atomide.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        linux-omap <linux-omap@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+        <devicetree@vger.kernel.org>, linux-pci@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sekhar Nori <nsekhar@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+On Fri, Dec 22, 2017 at 12:24 PM, Tony Lindgren <tony@atomide.com> wrote:
+> * Kishon Vijay Abraham I <kishon@ti.com> [171222 06:06]:
+>> Hi Rob,
+>>
+>> On Thursday 21 December 2017 12:27 AM, Rob Herring wrote:
+>> > On Tue, Dec 19, 2017 at 02:28:22PM +0530, Kishon Vijay Abraham I wrote:
+>> >> Add syscon properties required for configuring PCIe in x2 lane mode.
+>> >>
+>> >> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> >> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+>> >> ---
+>> >>  Documentation/devicetree/bindings/pci/ti-pci.txt | 6 ++++++
+>> >>  1 file changed, 6 insertions(+)
+>> >>
+>> >> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+>> >> index 82cb875e4cec..bfbc77ac7355 100644
+>> >> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+>> >> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+>> >> @@ -13,6 +13,12 @@ PCIe DesignWare Controller
+>> >>   - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
+>> >>           where <X> is the instance number of the pcie from the HW spec.
+>> >>   - num-lanes as specified in ../designware-pcie.txt
+>> >> + - ti,syscon-lane-conf : phandle/offset pair. Phandle to the system control
+>> >> +                   module and the register offset to specify 1 lane or
+>> >> +                   2 lane.
+>> >> + - ti,syscon-lane-sel : phandle/offset pair. Phandle to the system control
+>> >> +                  module and the register offset to specify lane
+>> >> +                  selection.
+>> >
+>> > Adding a property for every syscon register doesn't really scale and
+>> > doesn't work if the register layout changes.
+>>
+>> The register layout doesn't really change between silicon revisions and for new
+>> SoCs, the phandle and the register offset for that SoC will have to be
+>> populated again.
 
-On Mon, Dec 11, 2017 at 11:29:50AM -0500, Sinan Kaya wrote:
-> Hi Chris,
-> 
-> > 
-> > I'm more than happy to provide additional diagnostics and test proposed fixes. As a starter for ten, I've attached the
-> > output from 'lspci -v'. If, however, you need to see the backtrace, I'll need some advice on how to capture that.
-> >
-> 
-> Can you open a bugzilla and also share the boot log?
-> 
-> There must be something unique about your system.
+And what about SoCs that don't exist yet?
 
-Can you attach "lspci -vv" output (as root) to the bugzilla, too?
+>> Having said that, I'm not aware of any other alternative here.
+
+What would you do if you had 20 different syscon registers to
+configure? Add 20 properties? No, you would have per SoC functions in
+the driver to handle the different cases.
+
+> Sorry I did not realize this is still open. Sounds like I need to
+> revert commit 4ece93c020e3 ("ARM: dts: dra7: Add properties to
+> enable PCIe x2 lane mode"), let me know if that is not the case.
+
+It's fine, I guess. Keep adding more syscon phandles and then I'll NAK
+it (if I remember :)).
+
+Rob
