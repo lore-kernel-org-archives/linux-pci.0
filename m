@@ -1,54 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59112 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751598AbdLFV1o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Dec 2017 16:27:44 -0500
-Date: Wed, 6 Dec 2017 15:27:41 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, adouglas@cadence.com,
-        stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
-        eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
-        sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
-        robh@kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/5] PCI: Add vendor ID for Cadence
-Message-ID: <20171206212741.GP23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
- <a93032cbbe02dc9efef8536a4b2a851d1b08ab6f.1511439189.git.cyrille.pitchen@free-electrons.com>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:9306 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750705AbdLZMvI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Dec 2017 07:51:08 -0500
+Subject: Re: [PATCH v6 06/18] PCI: designware-ep: Add generic function for
+ raising MSI irq
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+ <20171219232940.659-7-niklas.cassel@axis.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5fc44bf0-9d0e-e905-32fb-449d9ed1b01a@ti.com>
+Date: Tue, 26 Dec 2017 18:20:54 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a93032cbbe02dc9efef8536a4b2a851d1b08ab6f.1511439189.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <20171219232940.659-7-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 23, 2017 at 04:01:46PM +0100, Cyrille Pitchen wrote:
-> This patch adds a new PCI vendor ID for Cadence.
+Hi Niklas,
+
+On Wednesday 20 December 2017 04:59 AM, Niklas Cassel wrote:
+> Add a generic function for raising MSI irqs that can be used by all
+> DWC based controllers.
 > 
-> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-I assume Lorenzo will merge this along with the rest of the Cadence
-support.
-
+> Note that certain controllers, like DRA7xx, have a special convenience
+> register for raising MSI irqs that doesn't require you to explicitly map
+> the MSI address. Therefore, it is likely that certain drivers will
+> not use this generic function, even if they can.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 > ---
->  include/linux/pci_ids.h | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/pci/dwc/pcie-designware-ep.c | 35 +++++++++++++++++++++++++++++++++++
+>  drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
+>  2 files changed, 44 insertions(+)
 > 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index ab20dc5db423..eb13e84e1fef 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2381,6 +2381,8 @@
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index 700ed2f4becf..c5aa1cac5041 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -282,6 +282,41 @@ static const struct pci_epc_ops epc_ops = {
+>  	.stop			= dw_pcie_ep_stop,
+>  };
 >  
->  #define PCI_VENDOR_ID_LENOVO		0x17aa
->  
-> +#define PCI_VENDOR_ID_CDNS		0x17cd
+> +int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
+> +			     u8 interrupt_num)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	struct pci_epc *epc = ep->epc;
+> +	u16 msg_ctrl, msg_data;
+> +	u32 msg_addr_lower, msg_addr_upper;
+> +	u64 msg_addr;
+> +	bool has_upper;
+> +	int ret;
 > +
->  #define PCI_VENDOR_ID_ARECA		0x17d3
->  #define PCI_DEVICE_ID_ARECA_1110	0x1110
->  #define PCI_DEVICE_ID_ARECA_1120	0x1120
-> -- 
-> 2.11.0
-> 
+> +	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
+> +	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+> +	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
+> +	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
+> +	if (has_upper) {
+> +		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
+> +	} else {
+> +		msg_addr_upper = 0;
+> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
+> +	}
+> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+> +	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr,
+> +				  epc->mem->page_size);
+> +	if (ret)
+> +		return ret;
+> +
+> +	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
+
+Shouldn't this be msg_data + (interrupt_num - 1)?
+
+Thanks
+Kishon
