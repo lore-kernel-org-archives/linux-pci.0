@@ -1,59 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>,
- <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v3 0/2] PCI: mediatek: Fixups for the IRQ handle routine and
- MT7622's class code
-Date: Thu, 21 Dec 2017 19:38:43 +0800
-Message-ID: <1513856325-28813-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.136]:32831 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751613AbdLZCIw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Dec 2017 21:08:52 -0500
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [RFC PATCH v12 1/5] dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
+Date: Tue, 26 Dec 2017 10:08:02 +0800
+Message-Id: <20171226020806.32710-2-jeffy.chen@rock-chips.com>
+In-Reply-To: <20171226020806.32710-1-jeffy.chen@rock-chips.com>
+References: <20171226020806.32710-1-jeffy.chen@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
+so add definitions of the optional PCIe WAKE# pin for PCI devices.
 
-Two fixups for mediatek's host bridge:
-The first patch fixup the IRQ handle routine to avoid IRQ reentry which
-may exist for both MT2712 and MT7622.
-The second patch fixup class type for MT7622.
+Also add an definition of the optional PCI interrupt pin for PCI
+devices to distinguish it from the PCIe WAKE# pin.
 
-Change since v2:
- - Move the initialize of the iterate before the loop to fix an
-   INTx IRQ issue in the first patch
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-Change since v1:
- - Add the second patch.
- - Make the first patch's commit message more standard.
+Changes in v12: None
+Changes in v11:
+Only add irq definitions for PCI devices and rewrite the commit message.
 
-Honghui Zhang (2):
-  PCI: mediatek: Clear IRQ status after IRQ dispatched to avoid reentry
-  PCI: mediatek: Fixup class type for MT7622
+Changes in v10: None
+Changes in v9:
+Add section for PCI devices and rewrite the commit message.
 
- drivers/pci/host/pcie-mediatek.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
+Changes in v8:
+Add optional "pci", and rewrite commit message.
 
+Changes in v7: None
+Changes in v6: None
+Changes in v5:
+Move to pci.txt
+
+Changes in v3: None
+Changes in v2: None
+
+ Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+index c77981c5dd18..3045ac452f27 100644
+--- a/Documentation/devicetree/bindings/pci/pci.txt
++++ b/Documentation/devicetree/bindings/pci/pci.txt
+@@ -24,3 +24,13 @@ driver implementation may support the following properties:
+    unsupported link speed, for instance, trying to do training for
+    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+    for gen2, and '1' for gen1. Any other values are invalid.
++
++PCI devices may support the following properties:
++
++- interrupts: Interrupt specifier for each name in interrupt-names.
++- interrupt-names:
++    May contain "wakeup" for PCIe WAKE# interrupt and "pci" for PCI interrupt.
++    The PCI devices may optionally include an 'interrupts' property that
++    represents the legacy PCI interrupt. And when we try to specify the PCIe
++    WAKE# pin, a corresponding 'interrupt-names' property is required to
++    distinguish them.
 -- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
