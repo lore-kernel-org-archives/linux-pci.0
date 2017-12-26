@@ -1,69 +1,113 @@
-Return-Path: <SRS0=AwBA=DR=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=AwBA=DR=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH 1/4] PCI/AER: Return approrpiate value when AER is not
- supported
-To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
-References: <20171219210643.24615-1-keith.busch@intel.com>
- <20171221010452.GD30595@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, "Maik
- Broemme" <mbroemme@libmpq.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <0efc29a7-69ec-2dd3-0aa1-74013d10e5a3@huawei.com>
-Date: Thu, 21 Dec 2017 11:53:36 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org,
+	bhelgaas@google.com
+Subject: [RFC PATCH v12 0/5] PCI: rockchip: Move PCIe WAKE# handling into pci
+ core
+Date: Tue, 26 Dec 2017 10:08:01 +0800
+Message-Id: <20171226020806.32710-1-jeffy.chen@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-wireless@vger.kernel.org,
+ Heiko Stuebner <heiko@sntech.de>, tony@atomide.com, linux-pci@vger.kernel.org,
+ shawn.lin@rock-chips.com, Will Deacon <will.deacon@arm.com>,
+ Amitkumar Karwar <amitkarwar@gmail.com>,
+ Klaus Goger <klaus.goger@theobroma-systems.com>,
+ Frank Rowand <frowand.list@gmail.com>, briannorris@chromium.org,
+ linux-rockchip@lists.infradead.org, Matthias Kaehlcke <mka@chromium.org>,
+ linux-arm-kernel@lists.infradead.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Caesar Wang <wxt@rock-chips.com>,
+ devicetree@vger.kernel.org, Xinming Hu <huxm@marvell.com>,
+ linux-pm@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
+ Nishant Sarmukadam <nishants@marvell.com>, Rob Herring <robh+dt@kernel.org>,
+ Kalle Valo <kvalo@codeaurora.org>, Ganapathi Bhat <gbhat@marvell.com>,
+ netdev@vger.kernel.org, rjw@rjwysocki.net, dianders@chromium.org,
+ Enric Balletbo i Serra <enric.balletbo@collabora.com>
 MIME-Version: 1.0
-In-Reply-To: <20171221010452.GD30595@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code APEI AER and native AER seems a little different.
-APEI AER ,the device must have AER capability, then can do recovery.
-Native AER seems the device under the ROOT PORT can do not have the
-AER capability. Current patch seems can fix the Inconsistency.
-But as PCIe 4.0r1.0 6.2.5 Sequence of Device Error Signaling and Logging
-Operations describe,It seems the device can implement the Device Status reg,
-but do not have AER capability.So for such devices, can we use AER driver to
-call device error handler callback to do recovery?
 
-Thanks,
-Dongdong
-在 2017/12/21 9:04, Bjorn Helgaas 写道:
-> s/approrpiate/appropriate/
->
-> (But maybe should be restated altogether, see below.)
->
-> On Tue, Dec 19, 2017 at 02:06:40PM -0700, Keith Busch wrote:
->> Getting the AER information is documented to return 0 when it failed to
->> get the information.
->
-> I think this case is either impossible (if we only call this function
-> for devices known to support AER), or it fixes an actual bug (the
-> caller would call aer_print_error() when it shouldn't, and potentially
-> print garbage).  Right?
->
-> If the former, I vote for removing the test.  If the latter, the
-> changelog should mention that it fixes a bug.
->
->> Signed-off-by: Keith Busch <keith.busch@intel.com>
->> ---
->>  drivers/pci/pcie/aer/aerdrv_core.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
->> index 744805232155..ea0dc1cc7fc7 100644
->> --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> @@ -660,7 +660,7 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
->>
->>  	/* The device might not support AER */
->>  	if (!pos)
->> -		return 1;
->> +		return 0;
->>
->>  	if (info->severity == AER_CORRECTABLE) {
->>  		pci_read_config_dword(dev, pos + PCI_ERR_COR_STATUS,
->> --
->> 2.13.6
->>
->
-> .
->
+Currently we are handling wake irq in mrvl wifi driver. Move it into
+pci core.
+
+Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
+
+
+Changes in v12:
+Enable the wake irq in noirq stage to avoid possible irq storm.
+
+Changes in v11:
+Only add irq definitions for PCI devices and rewrite the commit message.
+Address Brian's comments.
+Only support 1-per-device PCIe WAKE# pin as suggested.
+Move to pcie port as Brian suggested.
+
+Changes in v10:
+Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
+since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
+
+Changes in v9:
+Add section for PCI devices and rewrite the commit message.
+Fix check error in .cleanup().
+Move dedicated wakeirq setup to setup() callback and use
+device_set_wakeup_enable() to enable/disable.
+Rewrite the commit message.
+
+Changes in v8:
+Add optional "pci", and rewrite commit message.
+Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
+Rewrite the commit message.
+
+Changes in v7:
+Move PCIE_WAKE handling into pci core.
+
+Changes in v6:
+Fix device_init_wake error handling, and add some comments.
+
+Changes in v5:
+Move to pci.txt
+Rebase.
+Use "wakeup" instead of "wake"
+
+Changes in v3:
+Fix error handling.
+
+Changes in v2:
+Use dev_pm_set_dedicated_wake_irq.
+
+Jeffy Chen (5):
+  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
+  of/irq: Adjust of_pci_irq parsing for multiple interrupts
+  mwifiex: Disable wakeup irq handling for pcie
+  PCI / PM: Add support for the PCIe WAKE# signal for OF
+  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie port for Gru
+
+ Documentation/devicetree/bindings/pci/pci.txt | 10 ++++
+ arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  | 11 ++--
+ drivers/net/wireless/marvell/mwifiex/main.c   |  4 ++
+ drivers/of/of_pci_irq.c                       | 74 ++++++++++++++++++++++++--
+ drivers/pci/Makefile                          |  1 +
+ drivers/pci/pci-driver.c                      | 10 ++++
+ drivers/pci/pci-of.c                          | 75 +++++++++++++++++++++++++++
+ include/linux/of_pci.h                        |  9 ++++
+ 8 files changed, 186 insertions(+), 8 deletions(-)
+ create mode 100644 drivers/pci/pci-of.c
+
+-- 
+2.11.0
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
