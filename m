@@ -1,48 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:38539 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752487AbdLKPQY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Dec 2017 10:16:24 -0500
-Date: Mon, 11 Dec 2017 07:16:21 -0800
-From: Tejun Heo <tj@kernel.org>
-To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Rafael Wysocki <rjw@rjwysocki.net>,
-        Len Brown <len.brown@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: [PATCH 7/9] workqueue: remove unneeded kallsyms include
-Message-ID: <20171211151621.GF2421075@devbig577.frc2.facebook.com>
-References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
- <20171208025616.16267-8-sergey.senozhatsky@gmail.com>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:62189 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751083AbdL0AoI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Dec 2017 19:44:08 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Rob Herring <robh@kernel.org>
+Cc: Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        dianders@chromium.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [RFC PATCH v12 1/5] dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
+Date: Wed, 27 Dec 2017 01:43:09 +0100
+Message-ID: <3268448.IvXk7OJtIY@aspire.rjw.lan>
+In-Reply-To: <20171226233552.nacwqbpkozmy7n6c@rob-hp-laptop>
+References: <20171226023646.17722-1-jeffy.chen@rock-chips.com> <20171226023646.17722-2-jeffy.chen@rock-chips.com> <20171226233552.nacwqbpkozmy7n6c@rob-hp-laptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171208025616.16267-8-sergey.senozhatsky@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 08, 2017 at 11:56:14AM +0900, Sergey Senozhatsky wrote:
-> The filw was converted from print_symbol() to %pf some time
-> ago (044c782ce3a901fb "workqueue: fix checkpatch issues").
-> kallsyms does not seem to be needed anymore.
+On Wednesday, December 27, 2017 12:35:52 AM CET Rob Herring wrote:
+> On Tue, Dec 26, 2017 at 10:36:42AM +0800, Jeffy Chen wrote:
+> > We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
+> > so add definitions of the optional PCIe WAKE# pin for PCI devices.
+> > 
+> > Also add an definition of the optional PCI interrupt pin for PCI
+> > devices to distinguish it from the PCIe WAKE# pin.
 > 
-> Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Lai Jiangshan <jiangshanlai@gmail.com>
+> By v13 you should drop "RFC". RFC implies not ready for merging.
 
-Applied to wq/for-4.15-fixes.
+Which very much still is the case AFAICS.
 
-Thanks.
-
--- 
-tejun
+Thanks,
+Rafael
