@@ -1,116 +1,252 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr00070.outbound.protection.outlook.com ([40.107.0.70]:22752
-        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752763AbdL1KF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 28 Dec 2017 05:05:58 -0500
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: Ilya Ledvich <ilya@compulab.co.il>,
-        Lucas Stach <l.stach@pengutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: imx6: Add PHY reference clock source support
-Date: Thu, 28 Dec 2017 10:05:55 +0000
-Message-ID: <AM5PR0402MB28505BE42AB7774EC90927E18C040@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-References: <1514369154-21105-1-git-send-email-ilya@compulab.co.il>
-In-Reply-To: <1514369154-21105-1-git-send-email-ilya@compulab.co.il>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:44034 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751972AbdL0KUr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Dec 2017 05:20:47 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH 2/4] PCI/DPC/AER: Address Concurrency between AER and DPC
+Date: Wed, 27 Dec 2017 15:50:20 +0530
+Message-Id: <1514370022-4431-3-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
+References: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ilya:
-I think the "ocsillator" in the binding document should be oscillator.
-Thanks.
+This patch addresses the race condition between AER and DPC for recovery.
 
-Best Regards
-Richard
+Current DPC driver does not do recovery, e.g. calling end-point's driver's
+callbacks, which sanitize the device.
+DPC driver implements link_reset callback, and calls pci_do_recovery.
 
-Best Regards
-hongxing zhu
-Linux BSP team
-Office: 86-21-28937189
-Email: hongxing.zhu@nxp.com
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-
------Original Message-----
-From: Ilya Ledvich [mailto:ilya@compulab.co.il]=20
-Sent: Wednesday, December 27, 2017 6:06 PM
-To: Richard Zhu <hongxing.zhu@nxp.com>; Lucas Stach <l.stach@pengutronix.de=
->
-Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; linux-a=
-rm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org; Ilya Ledvich <=
-ilya@compulab.co.il>
-Subject: [PATCH] PCI: imx6: Add PHY reference clock source support
-
-i.MX7D variant of the IP can use either Crystal Oscillator input or interna=
-l clock input as a Reference Clock input for PCIe PHY.
-Add support for an optional property 'pcie-phy-refclk-internal'.
-If present then an internal clock input is used as PCIe PHY reference clock=
- source. By default an external oscillator input is still used.
-
-Verified on Compulab SBC-iMX7 Single Board Computer.
-
-Signed-off-by: Ilya Ledvich <ilya@compulab.co.il>
----
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 5 +++++
- drivers/pci/dwc/pci-imx6.c                               | 8 +++++++-
- 2 files changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Doc=
-umentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 7b1e48b..f9cf11e 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -50,6 +50,11 @@ Additional required properties for imx7d-pcie:
- 	       - "pciephy"
- 	       - "apps"
-=20
-+Additional optional properties for imx7d-pcie:
-+- pcie-phy-refclk-internal: If present then an internal PLL input is=20
-+used as
-+  PCIe PHY reference clock source. By default an external ocsillator=20
-+input
-+  is used.
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 2d976a6..e7ced58 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -15,6 +15,9 @@
+ #include <linux/pci.h>
+ #include <linux/pcieport_if.h>
+ #include "../pci.h"
++#include "portdrv.h"
 +
- Example:
-=20
- 	pcie@0x01000000 {
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c index =
-b734835..a616192 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -61,6 +61,7 @@ struct imx6_pcie {
- 	u32			tx_swing_low;
- 	int			link_gen;
- 	struct regulator	*vpcie;
-+	bool			pciephy_refclk_sel;
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
+ 
+ struct rp_pio_header_log_regs {
+ 	u32 dw0;
+@@ -67,6 +70,60 @@ struct dpc_dev {
+ 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
  };
-=20
- /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */ @@ -474=
-,7 +475,9 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
- 	switch (imx6_pcie->variant) {
- 	case IMX7D:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
-+				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
-+				   imx6_pcie->pciephy_refclk_sel ?
-+				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL : 0);
- 		break;
- 	case IMX6SX:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, @@ -840,6 +843,9=
- @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 		imx6_pcie->vpcie =3D NULL;
- 	}
-=20
-+	imx6_pcie->pciephy_refclk_sel =3D
-+		of_property_read_bool(node, "pcie-phy-refclk-internal");
+ 
++static int find_dpc_dev_iter(struct device *device, void *data)
++{
++	struct pcie_port_service_driver *service_driver;
++	struct device **dev;
 +
- 	platform_set_drvdata(pdev, imx6_pcie);
-=20
- 	ret =3D imx6_add_pcie_port(imx6_pcie, pdev);
---
-1.9.1
++	dev = (struct device **) data;
++
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		service_driver = to_service_driver(device->driver);
++		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
++			*dev = device;
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++struct device *pci_find_dpc_dev(struct pci_dev *pdev)
++{
++	struct device *dev = NULL;
++
++	device_for_each_child(&pdev->dev, &dev, find_dpc_dev_iter);
++
++	return dev;
++}
++
++static int find_dpc_service_iter(struct device *device, void *data)
++{
++	struct pcie_port_service_driver *service_driver, **drv;
++
++	drv = (struct pcie_port_service_driver **) data;
++
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		service_driver = to_service_driver(device->driver);
++		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
++			*drv = service_driver;
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev)
++{
++	struct pcie_port_service_driver *drv = NULL;
++
++	device_for_each_child(&dev->dev, &drv, find_dpc_service_iter);
++
++	return drv;
++}
++EXPORT_SYMBOL(pci_find_dpc_service);
++
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ {
+ 	unsigned long timeout = jiffies + HZ;
+@@ -104,11 +161,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 		dev_warn(dev, "Link state not disabled for DPC event\n");
+ }
+ 
+-static void interrupt_event_handler(struct work_struct *work)
++/**
++ * dpc_reset_link - reset link DPC  routine
++ * @dev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver when performing link reset at Root Port.
++ */
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ {
+-	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+-	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
++	struct pci_dev *dev, *temp;
++	struct dpc_dev *dpc;
++	struct pcie_device *pciedev;
++	struct device *devdpc;
++
++	devdpc = pci_find_dpc_dev(pdev);
++	pciedev = to_pcie_device(devdpc);
++	dpc = get_service_data(pciedev);
+ 
+ 	pci_lock_rescan_remove();
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+@@ -125,7 +194,7 @@ static void interrupt_event_handler(struct work_struct *work)
+ 
+ 	dpc_wait_link_inactive(dpc);
+ 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
+-		return;
++		return PCI_ERS_RESULT_DISCONNECT;
+ 	if (dpc->rp && dpc->rp_pio_status) {
+ 		pci_write_config_dword(pdev,
+ 				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+@@ -135,6 +204,17 @@ static void interrupt_event_handler(struct work_struct *work)
+ 
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
++
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
++static void interrupt_event_handler(struct work_struct *work)
++{
++	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
++	struct pci_dev *pdev = dpc->dev->port;
++
++	/* From DPC point of view error is always FATAL. */
++	pci_do_recovery(pdev, PCI_ERR_DPC_FATAL);
+ }
+ 
+ static void dpc_rp_pio_print_tlp_header(struct device *dev,
+@@ -339,6 +419,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.reset_link     = dpc_reset_link,
+ };
+ 
+ static int __init dpc_service_init(void)
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index d59866c..8bac584 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -176,7 +176,7 @@ static pci_ers_result_t pci_default_reset_link(struct pci_dev *dev)
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+-pci_ers_result_t pci_reset_link(struct pci_dev *dev)
++pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
+ {
+ 	struct pci_dev *udev;
+ 	pci_ers_result_t status;
+@@ -191,7 +191,10 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev)
+ 	}
+ 
+ 	/* Use the aer driver of the component firstly */
+-	driver = pci_find_aer_service(udev);
++	if (severity == PCI_ERR_DPC_FATAL)
++		driver = pci_find_dpc_service(udev);
++	else
++		driver = pci_find_aer_service(udev);
+ 
+ 	if (driver && driver->reset_link) {
+ 		status = driver->reset_link(udev);
+@@ -280,7 +283,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 
+ 	mutex_lock(&pci_err_recovery_lock);
+ 
+-	if (severity == PCI_ERR_AER_FATAL)
++	if ((severity == PCI_ERR_AER_FATAL) ||
++	    (severity == PCI_ERR_DPC_FATAL))
+ 		state = pci_channel_io_frozen;
+ 	else
+ 		state = pci_channel_io_normal;
+@@ -290,8 +294,9 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 			"error_detected",
+ 			pci_report_error_detected);
+ 
+-	if (severity == PCI_ERR_AER_FATAL) {
+-		result = pci_reset_link(dev);
++	if ((severity == PCI_ERR_AER_FATAL) ||
++	    (severity == PCI_ERR_DPC_FATAL)) {
++		result = pci_reset_link(dev, severity);
+ 		if (result != PCI_ERS_RESULT_RECOVERED)
+ 			goto failed;
+ 	}
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 4f1992d..b013e24 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -80,4 +80,5 @@ static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
+ #endif /* !CONFIG_ACPI */
+ 
+ struct pcie_port_service_driver *pci_find_aer_service(struct pci_dev *dev);
++struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev);
+ #endif /* _PORTDRV_H_ */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 083408e..123ee15 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2005,6 +2005,7 @@ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int res
+ #define PCI_ERR_AER_NONFATAL		0
+ #define PCI_ERR_AER_FATAL		1
+ #define PCI_ERR_AER_CORRECTABLE		2
++#define PCI_ERR_DPC_FATAL		4
+ 
+ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
+ 					enum pci_channel_state state,
+@@ -2014,7 +2015,7 @@ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
+ int pci_report_slot_reset(struct pci_dev *dev, void *data);
+ int pci_report_resume(struct pci_dev *dev, void *data);
+ int pci_report_error_detected(struct pci_dev *dev, void *data);
+-pci_ers_result_t pci_reset_link(struct pci_dev *dev);
++pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity);
+ pci_ers_result_t pci_merge_result(enum pci_ers_result orig,
+ 				enum pci_ers_result new);
+ void pci_do_recovery(struct pci_dev *dev, int severity);
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
