@@ -1,63 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33464 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754474AbdLLMzm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 07:55:42 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Ingo Molnar <mingo@kernel.org>
-Subject: [PATCH 4.9 023/148] x86/PCI: Make broadcom_postcore_init() check acpi_disabled
-Date: Tue, 12 Dec 2017 13:43:53 +0100
-Message-Id: <20171212124432.158658505@linuxfoundation.org>
-In-Reply-To: <20171212124431.207182779@linuxfoundation.org>
-References: <20171212124431.207182779@linuxfoundation.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 27 Dec 2017 07:08:00 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: JeffyChen <jeffy.chen@rock-chips.com>,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
+        briannorris@chromium.org, dianders@chromium.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+Message-ID: <20171227150800.GF3875@atomide.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+ <9593014.U0c2JQdoEZ@aspire.rjw.lan>
+ <5A41A0A7.5070605@rock-chips.com>
+ <5491520.JsEYlZiECc@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5491520.JsEYlZiECc@aspire.rjw.lan>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+* Rafael J. Wysocki <rjw@rjwysocki.net> [171227 01:00]:
+> On Tuesday, December 26, 2017 2:06:47 AM CET JeffyChen wrote:
+> > Hi Rafael,
+> > 
+> > Thanks for your reply :)
+> > 
+> > On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
+> > >> >+
+> > >> >+	dn = pci_device_to_OF_node(ppdev);
+> > >> >+	if (!dn)
+> > >> >+		return 0;
+> > >> >+
+> > >> >+	irq = of_irq_get_byname(dn, "wakeup");
+> > > Why is this a property of the bridge and not of the device itself?
+> >
+> > That is suggested by Brian, because in that way, the wakeup pin would 
+> > not "tied to what exact device is installed (or no device, if it's a slot)."
+> 
+> But I don't think it works when there are two devices using different WAKE#
+> interrupt lines under the same bridge.  Or how does it work then?
 
-------------------
+It won't work currently for multiple devices but adding more than
+one wakeriq per device is doable. And I think we will have other
+cases where multiple wakeirqs are connected to a single device, so
+that issue should be sorted out sooner or later.
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+And if requesting wakeirq for the PCI WAKE# lines at the PCI
+controller does the job, then maybe that's all we need to start with.
 
-commit ddec3bdee05b06f1dda20ded003c3e10e4184cab upstream.
+Then in addition to that, we could do the following to allow
+PCI devices to request the wakeirq from the PCI controller:
 
-acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
-is set, but the host bridge information from the ACPI tables is not going
-to be used in that case and the Broadcom host bridge initialization should
-not be skipped then, So make broadcom_postcore_init() check acpi_disabled
-too to avoid this issue.
+1. PCI controller or framework implements a chained irq for
+   the WAKE# lines assuming it can mask/unmask the WAKE# lines
 
-Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
-Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>
-Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
-Signed-off-by: Ingo Molnar <mingo@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+2. PCI devices then can just request the wakeirq from the PCI
+   controller
 
----
- arch/x86/pci/broadcom_bus.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+And that's about it. Optionally we could leave out the dependency
+to having PCI devices implement PM runtime and just resume the
+parent (PCI controller) if PCI devices has not implemented
+PM runtime.
 
---- a/arch/x86/pci/broadcom_bus.c
-+++ b/arch/x86/pci/broadcom_bus.c
-@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init
- 	 * We should get host bridge information from ACPI unless the BIOS
- 	 * doesn't support it.
- 	 */
--	if (acpi_os_get_root_pointer())
-+	if (!acpi_disabled && acpi_os_get_root_pointer())
- 		return 0;
- #endif
- 
+> > >> >+	if (irq == -EPROBE_DEFER)
+> > > Braces here, please.
+> > ok, will fix in the next version.
+> > 
+> > >
+> > >> >+		return irq;
+> > >> >+	/* Ignore other errors, since a missing wakeup is non-fatal. */
+> > >> >+	else if (irq < 0) {
+> > >> >+		dev_info(&pdev->dev, "cannot get wakeup interrupt: %d\n", irq);
+> > >> >+		return 0;
+> > >> >+	}
+> > >> >+
+> > >> >+	device_init_wakeup(&pdev->dev, true);
+> > > Why do you call this before dev_pm_set_dedicated_wake_irq()?
+> >
+> > hmmm, i thought so too, but it turns out the dedicated wake irq 
+> > framework requires device_init_wakeup(dev, true) before attach the wake irq:
+> > 
+> > int device_wakeup_attach_irq(struct device *dev,
+> >                               struct wake_irq *wakeirq)
+> > {
+> >          struct wakeup_source *ws;
+> > 
+> >          ws = dev->power.wakeup;
+> >          if (!ws) {
+> >                  dev_err(dev, "forgot to call device_init_wakeup?\n");
+> >                  return -EINVAL;
+> > 
+> 
+> Well, that's a framework issue, fair enough.
+> 
+> That said, what if user space removes the wakeup source from under you
+> concurrently via sysfs?  Tony?
+
+Hmm sounds racy, need to take a look. I think the only reason
+to have the wakeirq pointer there was to save memory. It might
+make sense to remove the wakeirq dependency here.
+
+Regards,
+
+Tony
