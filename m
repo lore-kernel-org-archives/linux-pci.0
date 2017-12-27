@@ -1,61 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 4 Dec 2017 14:24:44 -0800
-From: "tip-bot for Rafael J. Wysocki" <tipbot@zytor.com>
-Message-ID: <tip-2ee90363a838cf41ebf1ad24bad274762e467d8d@git.kernel.org>
-Cc: rafael.j.wysocki@intel.com, tglx@linutronix.de,
-        bhelgaas@google.com, hpa@zytor.com, mingo@kernel.org,
-        linux-pci@vger.kernel.org, dave.hansen@linux.intel.com,
-        linux-kernel@vger.kernel.org
-Reply-To: dave.hansen@linux.intel.com, linux-kernel@vger.kernel.org,
-          linux-pci@vger.kernel.org, bhelgaas@google.com, hpa@zytor.com,
-          mingo@kernel.org, rafael.j.wysocki@intel.com, tglx@linutronix.de
-In-Reply-To: <3186627.pxZj1QbYNg@aspire.rjw.lan>
-References: <3186627.pxZj1QbYNg@aspire.rjw.lan>
-To: linux-tip-commits@vger.kernel.org
-Subject: [tip:x86/urgent] x86 / PCI: Make broadcom_postcore_init() check
- acpi_disabled
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 27 Dec 2017 12:45:42 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: honghui.zhang@mediatek.com
+Subject: Re: [PATCH v5 2/2] PCI: mediatek: Set up class type and vendor ID
+ for MT7622
+Message-ID: <20171227184542.GA79892@bhelgaas-glaptop.roam.corp.google.com>
+References: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
+ <1514336394-17747-3-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1514336394-17747-3-git-send-email-honghui.zhang@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
+ lorenzo.pieralisi@arm.com, linux-mediatek@lists.infradead.org,
+ yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
+ eddie.huang@mediatek.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit-ID:  2ee90363a838cf41ebf1ad24bad274762e467d8d
-Gitweb:     https://git.kernel.org/tip/2ee90363a838cf41ebf1ad24bad274762e467d8d
-Author:     Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-AuthorDate: Fri, 1 Dec 2017 15:08:12 +0100
-Committer:  Thomas Gleixner <tglx@linutronix.de>
-CommitDate: Mon, 4 Dec 2017 23:20:35 +0100
+On Wed, Dec 27, 2017 at 08:59:54AM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> 
+> The hardware default value of IDs and class type is not correct,
+> fix that by setup the correct values before start up.
+> 
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+>  drivers/pci/host/pcie-mediatek.c | 12 ++++++++++++
+>  include/linux/pci_ids.h          |  2 ++
+>  2 files changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> index fc29a9a..62aac0ea 100644
+> --- a/drivers/pci/host/pcie-mediatek.c
+> +++ b/drivers/pci/host/pcie-mediatek.c
+> @@ -74,6 +74,10 @@
+>  
+>  /* PCIe V2 per-port registers */
+>  #define PCIE_MSI_VECTOR		0x0c0
+> +
+> +#define PCIE_CONF_ID		0x100
+> +#define PCIE_CONF_CLASS		0x104
+> +
+>  #define PCIE_INT_MASK		0x420
+>  #define INTX_MASK		GENMASK(19, 16)
+>  #define INTX_SHIFT		16
+> @@ -393,6 +397,14 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+>  		val |= PCIE_CSR_LTSSM_EN(port->slot) |
+>  		       PCIE_CSR_ASPM_L1_EN(port->slot);
+>  		writel(val, pcie->base + PCIE_SYS_CFG_V2);
+> +
+> +		/* Set up vendor ID and device ID for MT7622*/
+> +		val = PCI_VENDOR_ID_MEDIATEK;
+> +		writel(val, port->base + PCIE_CONF_ID);
+> +
+> +		/* Set up class code for MT7622 */
+> +		val = PCI_CLASS_BRIDGE_PCI << 16;
+> +		writel(val, port->base + PCIE_CONF_CLASS);
 
-x86 / PCI: Make broadcom_postcore_init() check acpi_disabled
+1) Your comments mention MT7622 specifically, but this code is run for
+both mt2712-pcie and mt7622-pcie.  If this code is safe and necessary
+for both mt2712-pcie and mt7622-pcie, please remove the mention of
+MT7622.
 
-acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
-is set, but the host bridge information from the ACPI tables is not going
-to be used in that case and the Broadcom host bridge initialization should
-not be skipped then, So make broadcom_postcore_init() check acpi_disabled
-too to avoid this issue.
+2) The first comment mentions both "vendor ID and device ID" but you
+don't write the device ID.  Since this code applies to both
+mt2712-pcie and mt7622-pcie, my guess is that you don't *want* to
+write the device ID.  If that's the case, please fix the comment.
 
-Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
-Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>
-Cc: stable@vger.kernel.org
-Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
----
- arch/x86/pci/broadcom_bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+3) If you only need to set the vendor ID, you're performing a 32-bit
+write (writel()) to update a 16-bit value.  Please use writew()
+instead.
 
-diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
-index bb461cf..526536c 100644
---- a/arch/x86/pci/broadcom_bus.c
-+++ b/arch/x86/pci/broadcom_bus.c
-@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init(void)
- 	 * We should get host bridge information from ACPI unless the BIOS
- 	 * doesn't support it.
- 	 */
--	if (acpi_os_get_root_pointer())
-+	if (!acpi_disabled && acpi_os_get_root_pointer())
- 		return 0;
- #endif
- 
+4) If you only need to set the vendor ID, please use a definition like
+"PCIE_CONF_VENDOR_ID" instead of the ambiguous "PCIE_CONF_ID".
+
+5) If you only need to set the vendor ID, please update the changelog
+to mention "vendor ID" specifically instead of the ambiguous "IDs".
+
+6) Please add a space before the closing "*/" of the first comment.
+
+7) PCI_CLASS_BRIDGE_PCI is for a PCI-to-PCI bridge, i.e., one that has
+PCI on both the primary (upstream) side and the secondary (downstream)
+side.  That kind of bridge has a type 1 config header (see
+PCI_HEADER_TYPE) and the PCI_PRIMARY_BUS and PCI_SECONDARY_BUS
+registers tell us the bus number of the primary and secondary sides.
+
+I don't believe this device is a PCI-to-PCI bridge.  I think it's a
+*host* bridge that has some non-PCI interface on the upstream side and
+should have a type 0 config header.  If that's the case you should use
+PCI_CLASS_BRIDGE_HOST instead.
+
+>  	}
+>  
+>  	/* Assert all reset signals */
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index ab20dc5..2480b0e 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2113,6 +2113,8 @@
+>  
+>  #define PCI_VENDOR_ID_MYRICOM		0x14c1
+>  
+> +#define PCI_VENDOR_ID_MEDIATEK		0x14c3
+> +
+>  #define PCI_VENDOR_ID_TITAN		0x14D2
+>  #define PCI_DEVICE_ID_TITAN_010L	0x8001
+>  #define PCI_DEVICE_ID_TITAN_100L	0x8010
+> -- 
+> 2.6.4
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
