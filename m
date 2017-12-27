@@ -1,14 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 19 Dec 2017 09:14:20 -0500 (EST)
-Message-Id: <20171219.091420.1167803273395750836.davem@davemloft.net>
-To: okaya@codeaurora.org
-Subject: Re: [PATCH V4 13/26] bnx2x: deprecate pci_get_bus_and_slot()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1513661883-28662-14-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-14-git-send-email-okaya@codeaurora.org>
-Mime-Version: 1.0
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>,
+ <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v5 0/2] PCI: mediatek: Fixups for the IRQ handle routine and
+ MT7622's class code
+Date: Wed, 27 Dec 2017 08:59:52 +0800
+Message-ID: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
+MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,33 +19,50 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, ariel.elior@cavium.com, netdev@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, everest-linux-l2@cavium.com,
- linux-arm-kernel@lists.infradead.org
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
+ yong.wu@mediatek.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Sinan Kaya <okaya@codeaurora.org>
-Date: Tue, 19 Dec 2017 00:37:49 -0500
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Getting ready to remove pci_get_bus_and_slot() function in favor of
-> pci_get_domain_bus_and_slot().
-> 
-> Introduce bnx2x_vf_domain() function to extract the domain information
-> and save it to VF specific data structure.
-> 
-> Use the saved domain value while calling pci_get_domain_bus_and_slot().
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Two fixups for mediatek's host bridge:
+The first patch fixup the IRQ handle routine to avoid IRQ reentry which
+may exist for both MT2712 and MT7622.
+The second patch fixup class type for MT7622.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Change since v4:
+ - Only setup vendor ID for MT7622, igorning the device ID since mediatek's
+   host bridge driver does not cares about the device ID.
+
+Change since v3:
+ - Setup the class type and vendor ID at the beginning of startup instead
+   of in a quirk.
+ - Add mediatek's vendor ID, it could be found in:
+   https://pcisig.com/membership/member-companies?combine=&page=4
+
+Change since v2:
+ - Move the initialize of the iterate before the loop to fix an
+   INTx IRQ issue in the first patch
+
+Change since v1:
+ - Add the second patch.
+ - Make the first patch's commit message more standard.
+
+Honghui Zhang (2):
+  PCI: mediatek: Clear IRQ status after IRQ dispatched to avoid reentry
+  PCI: mediatek: Set up class type and vendor ID for MT7622
+
+ drivers/pci/host/pcie-mediatek.c | 23 ++++++++++++++++++-----
+ include/linux/pci_ids.h          |  2 ++
+ 2 files changed, 20 insertions(+), 5 deletions(-)
+
+-- 
+2.6.4
+
 
 _______________________________________________
 linux-arm-kernel mailing list
