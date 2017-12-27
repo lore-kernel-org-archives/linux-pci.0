@@ -1,150 +1,183 @@
-Return-Path: <SRS0=B59L=DD=intel.com=kenji.chen@kernel.org>
-Return-Path: <SRS0=B59L=DD=intel.com=kenji.chen@kernel.org>
-From: "Chen, Kenji" <kenji.chen@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Thierry Reding
-	<treding@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>, "David
- Daney" <david.daney@cavium.com>, Krishna Kishore <kthota@nvidia.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Vidya Sagar
-	<vidyas@nvidia.com>, Julia Lawall <Julia.Lawall@lip6.fr>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, Patrick Georgi
-	<pgeorgi@chromium.org>, Rajat Jain <rajatja@google.com>, Yinghai Lu
-	<yinghai@kernel.org>, Stefan Reinauer <stefan.reinauer@coreboot.org>, Duncan
- Laurie <dlaurie@chromium.org>
-Subject: RE: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
-Date: Thu, 7 Dec 2017 15:00:43 +0000
-Message-ID: <A7A4B3ECFA40144E98B82E71E29693557CA5BA74@PGSMSX102.gar.corp.intel.com>
-References: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171205194050.GD23510@bhelgaas-glaptop.roam.corp.google.com>
- <A7A4B3ECFA40144E98B82E71E29693557CA5516C@PGSMSX102.gar.corp.intel.com>
- <20171207144515.GA11788@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171207144515.GA11788@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:44316 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752036AbdL0KU4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Dec 2017 05:20:56 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH 4/4] PCI/DPC: Enumerate the devices after DPC trigger event
+Date: Wed, 27 Dec 2017 15:50:22 +0530
+Message-Id: <1514370022-4431-5-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
+References: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For Intel Broadwell, SKylake, and KabyLake PCIe Root Port, the threshold is=
- recommended as it is in the commit. If the BIOS/Coreboot porting between p=
-latforms is taken into consideration, using a build definition or variables=
- from somewhere of customizable zone is preferred. Let Coreboot guys make t=
-he call since I am working for Intel Only.
+Implement error_resume callback in DPC, which, after DPC trigger event
+enumerates the devices beneath.
 
------Original Message-----
-From: Bjorn Helgaas [mailto:helgaas@kernel.org]=20
-Sent: Thursday, December 7, 2017 10:45 PM
-To: Chen, Kenji <kenji.chen@intel.com>
-Cc: linux-pci@vger.kernel.org; Thierry Reding <treding@nvidia.com>; Manikan=
-ta Maddireddy <mmaddireddy@nvidia.com>; David Daney <david.daney@cavium.com=
->; Krishna Kishore <kthota@nvidia.com>; linux-kernel@vger.kernel.org; Vidya=
- Sagar <vidyas@nvidia.com>; Julia Lawall <Julia.Lawall@lip6.fr>; linux-tegr=
-a@vger.kernel.org; Patrick Georgi <pgeorgi@chromium.org>; Rajat Jain <rajat=
-ja@google.com>; Yinghai Lu <yinghai@kernel.org>; Stefan Reinauer <stefan.re=
-inauer@coreboot.org>; Duncan Laurie <dlaurie@chromium.org>
-Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-On Wed, Dec 06, 2017 at 01:55:37AM +0000, Chen, Kenji wrote:
-> https://pcisig.com/sites/default/files/specification_documents/ECN_L1_
-> PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf
-
-With all due respect, this doesn't seem to add any new information.
-For example, the L1 PM Substates Control 1 register description from the ab=
-ove is basically identical to the published PCIe r3.1, sec 7.33.3.
-
-So it doesn't answer the questions of:
-
-  1) Why coreboot sets the L1.2 threshold to a fixed value, and
-
-  2) How "(1 << 21) | (1 << 23) | (1 << 30)" relates to the Control 1
-     register
-
-> Pls also check My Intel Doc# 545845 for the bits fields description.
-
-I don't have access to this document.  The Linux code I'm proposing is base=
-d on the PCIe spec and is intended to work on all hardware that conforms to=
- that spec.  I'm not very familiar with coreboot, but maybe the L1 Substate=
-s code there is only intended to work on certain Intel chipsets and doesn't=
- need to work on other hardware?
-
-Bjorn
-
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Wednesday, December 6, 2017 3:41 AM
-> To: linux-pci@vger.kernel.org
-> Cc: Chen, Kenji <kenji.chen@intel.com>; Thierry Reding=20
-> <treding@nvidia.com>; Manikanta Maddireddy <mmaddireddy@nvidia.com>;=20
-> David Daney <david.daney@cavium.com>; Krishna Kishore=20
-> <kthota@nvidia.com>; linux-kernel@vger.kernel.org; Vidya Sagar=20
-> <vidyas@nvidia.com>; Julia Lawall <Julia.Lawall@lip6.fr>;=20
-> linux-tegra@vger.kernel.org; Patrick Georgi <pgeorgi@chromium.org>;=20
-> Rajat Jain <rajatja@google.com>; Yinghai Lu <yinghai@kernel.org>;=20
-> Stefan Reinauer <stefan.reinauer@coreboot.org>; Duncan Laurie=20
-> <dlaurie@chromium.org>
-> Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
->=20
-> On Sat, Dec 02, 2017 at 03:45:38PM -0600, Bjorn Helgaas wrote:
-> > The PCIe active link power state is L0.  ASPM defines two low-power
-> > states: L0s and L1.  The L1 PM Substates feature defines two=20
-> > additional low-power states: L1.1 and L2.2.
-> >=20
-> > The L1.2 state may have substantial entry/exit latency.  Downstream=20
-> > devices can use the Latency Tolerance Reporting (LTR) feature to=20
-> > report how much latency they can tolerate.  The L1 PM Substates=20
-> > capability includes a programmable L1.2 threshold register.  If the=20
-> > downstream devices can tolerate the latency indicated by the=20
-> > threshold, L1.2 may be used.
-> >=20
-> > If LTR is not enabled, the L1.2 threshold is ignored and L1.2 can be=20
-> > used whenever it is enabled and CLKREQ# is de-asserted.  Linux=20
-> > currently never enables LTR, but firmware may have done so.
-> >=20
-> > The current L1 PM substates support in Linux sets the L1.2 threshold=20
-> > to a fixed value (163.84us) copied from coreboot [1].  I don't know=20
-> > where that value came from, and it is incorrect for some platforms,=20
-> > e.g., Tegra [2].
-> >=20
-> > These patches change that so we calculate the L1.2 threshold based=20
-> > on values reported by the hardware, and we enable LTR whenever possible=
-.
-> >=20
-> > This is all just my understanding from reading the spec.  I'd be=20
-> > glad to be corrected if I'm going wrong.
-> >=20
-> > I'm particularly puzzled about the coreboot code in
-> > pciexp_L1_substate_commit() that sets LTR_L1.2_THRESHOLD:
-> >=20
-> > +	pcie_update_cfg(root, root_cap + 0x08, ~0xe3ff0000,
-> > +		(1 << 21) | (1 << 23) | (1 << 30));
-> >=20
-> > This is writing the L1 PM Substates Control 1 register, but the=20
-> > shifts don't match up with any of the fields in the register, so=20
-> > this is an awfully funny way to write the threshold.
-> >=20
-> > [1]
-> > https://mail.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.
-> > html [2]
-> > https://lkml.kernel.org/r/1510492674-12786-1-git-send-email-vidyas@n
-> > vi
-> > dia.com
-> >=20
-> > ---
-> >=20
-> > Bjorn Helgaas (2):
-> >       PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristic=
-s
-> >       PCI/ASPM: Enable Latency Tolerance Reporting when supported
-> >=20
-> >=20
-> >  drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++--------=
---------
-> >  drivers/pci/probe.c     |   33 ++++++++++++++++++++++
-> >  include/linux/pci.h     |    2 +
-> >  3 files changed, 82 insertions(+), 24 deletions(-)
->=20
-> I applied these with Vidya's Reviewed-by to pci/aspm for v4.16.
->=20
-> I'd still really like to hear from the coreboot folks about the rationale=
- for the current coreboot code.  You folks are in a much better position to=
- actually understand the hardware details.
->=20
-> Bjorn
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index e7ced58..78e557f 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -161,6 +161,43 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 		dev_warn(dev, "Link state not disabled for DPC event\n");
+ }
+ 
++static bool dpc_wait_link_active(struct pci_dev *pdev)
++{
++	unsigned long timeout = jiffies + HZ;
++	u16 lnk_status;
++	bool ret = true;
++
++	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++
++	while (!(lnk_status & PCI_EXP_LNKSTA_DLLLA) &&
++					!time_after(jiffies, timeout)) {
++		msleep(10);
++		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++	}
++
++	if (!(lnk_status & PCI_EXP_LNKSTA_DLLLA)) {
++		dev_warn(&pdev->dev, "Link state not enabled after DPC event\n");
++		ret = false;
++	}
++
++	return ret;
++}
++
++/**
++ * dpc_error_resume - enumerate the devices beneath
++ * @dev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver during nonfatal recovery.
++ */
++static void dpc_error_resume(struct pci_dev *pdev)
++{
++	if (dpc_wait_link_active(pdev)) {
++		pci_lock_rescan_remove();
++		pci_rescan_bus(pdev->bus);
++		pci_unlock_rescan_remove();
++	}
++}
++
+ /**
+  * dpc_reset_link - reset link DPC  routine
+  * @dev: pointer to Root Port's pci_dev data structure
+@@ -419,6 +456,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.error_resume	= dpc_error_resume,
+ 	.reset_link     = dpc_reset_link,
+ };
+ 
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index 1f01e76..9c4377c 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -231,7 +231,8 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
+ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
+ 	enum pci_channel_state state,
+ 	char *error_mesg,
+-	int (*cb)(struct pci_dev *, void *))
++	int (*cb)(struct pci_dev *, void *),
++	int severity)
+ {
+ 	struct pci_err_broadcast_data result_data;
+ 
+@@ -243,6 +244,15 @@ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
+ 		result_data.result = PCI_ERS_RESULT_RECOVERED;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		/* If DPC is triggered, call resume error hanlder
++		 * because, at this point we can safely assume that
++		 * link recovery has happened.
++		 */
++		if ((severity == PCI_ERR_DPC_FATAL) &&
++			(cb == pci_report_resume)) {
++			cb(dev, NULL);
++			return PCI_ERS_RESULT_RECOVERED;
++		}
+ 		/*
+ 		 * If the error is reported by a bridge, we think this error
+ 		 * is related to the downstream link of the bridge, so we
+@@ -328,7 +338,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	status = pci_broadcast_error_message(dev,
+ 			state,
+ 			"error_detected",
+-			pci_report_error_detected);
++			pci_report_error_detected,
++			severity);
+ 
+ 	if ((severity == PCI_ERR_AER_FATAL) ||
+ 	    (severity == PCI_ERR_DPC_FATAL)) {
+@@ -337,11 +348,15 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 			goto failed;
+ 	}
+ 
++	if (severity == PCI_ERR_DPC_FATAL)
++		goto resume;
++
+ 	if (status == PCI_ERS_RESULT_CAN_RECOVER)
+ 		status = pci_broadcast_error_message(dev,
+ 				state,
+ 				"mmio_enabled",
+-				pci_report_mmio_enabled);
++				pci_report_mmio_enabled,
++				severity);
+ 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+ 		/*
+@@ -352,16 +367,19 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 		status = pci_broadcast_error_message(dev,
+ 				state,
+ 				"slot_reset",
+-				pci_report_slot_reset);
++				pci_report_slot_reset,
++				severity);
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+ 		goto failed;
+ 
++resume:
+ 	pci_broadcast_error_message(dev,
+ 				state,
+ 				"resume",
+-				pci_report_resume);
++				pci_report_resume,
++				severity);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
+ 	mutex_unlock(&pci_err_recovery_lock);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 123ee15..46e2526 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2010,7 +2010,8 @@ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int res
+ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
+ 					enum pci_channel_state state,
+ 					char *error_mesg,
+-					int (*cb)(struct pci_dev *, void *));
++					int (*cb)(struct pci_dev *, void *),
++					int severity);
+ int pci_report_mmio_enabled(struct pci_dev *dev, void *data);
+ int pci_report_slot_reset(struct pci_dev *dev, void *data);
+ int pci_report_resume(struct pci_dev *dev, void *data);
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
