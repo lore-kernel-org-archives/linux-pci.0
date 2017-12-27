@@ -1,55 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:54810 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752030AbdLKKTK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Dec 2017 05:19:10 -0500
-Date: Mon, 11 Dec 2017 10:19:47 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Stephen Boyd <sboyd@codeaurora.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: Use {upper,lower}_32_bits() macros for clarity
-Message-ID: <20171211101947.GA3225@red-moon>
-References: <20171129005334.16425-1-sboyd@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [RFC PATCH v12 0/5] PCI: rockchip: Move PCIe WAKE# handling into
+ pci core
+Date: Wed, 27 Dec 2017 01:44:03 +0100
+Message-ID: <1979156.HCZ09VA8ni@aspire.rjw.lan>
+In-Reply-To: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
+References: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171129005334.16425-1-sboyd@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, Heiko Stuebner <heiko@sntech.de>,
+ tony@atomide.com, linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
+ Will Deacon <will.deacon@arm.com>, Amitkumar Karwar <amitkarwar@gmail.com>,
+ dianders@chromium.org, Klaus Goger <klaus.goger@theobroma-systems.com>,
+ Frank Rowand <frowand.list@gmail.com>, briannorris@chromium.org,
+ linux-rockchip@lists.infradead.org, Matthias Kaehlcke <mka@chromium.org>,
+ Kalle Valo <kvalo@codeaurora.org>, Catalin Marinas <catalin.marinas@arm.com>,
+ devicetree@vger.kernel.org, Xinming Hu <huxm@marvell.com>,
+ linux-pm@vger.kernel.org, Nishant Sarmukadam <nishants@marvell.com>,
+ Rob Herring <robh+dt@kernel.org>, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org, Ganapathi Bhat <gbhat@marvell.com>,
+ netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 28, 2017 at 04:53:34PM -0800, Stephen Boyd wrote:
-> We have macros for getting the upper or lower 32 bits of a
-> number. Use them here to shave a couple lines off the code.
+On Tuesday, December 26, 2017 3:36:41 AM CET Jeffy Chen wrote:
 > 
-> Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
+> Currently we are handling wake irq in mrvl wifi driver. Move it into
+> pci core.
 > 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 157621175147..ae5abfddf8de 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -89,10 +89,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
->  	msi_target = virt_to_phys((void *)pp->msi_data);
->  
->  	/* program the msi_data */
-> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-> -			    (u32)(msi_target & 0xffffffff));
-> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
-> -			    (u32)(msi_target >> 32 & 0xffffffff));
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4, lower_32_bits(msi_target));
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, upper_32_bits(msi_target));
->  }
+> Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
+> 
+> 
+> Changes in v13:
+> Fix compiler error reported by kbuild test robot <fengguang.wu@intel.com>
+> 
+> Changes in v12:
+> Only add irq definitions for PCI devices and rewrite the commit message.
+> Enable the wake irq in noirq stage to avoid possible irq storm.
+> 
+> Changes in v11:
+> Address Brian's comments.
+> Only support 1-per-device PCIe WAKE# pin as suggested.
+> Move to pcie port as Brian suggested.
+> 
+> Changes in v10:
+> Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
+> since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
+> 
+> Changes in v9:
+> Add section for PCI devices and rewrite the commit message.
+> Fix check error in .cleanup().
+> Move dedicated wakeirq setup to setup() callback and use
+> device_set_wakeup_enable() to enable/disable.
+> Rewrite the commit message.
+> 
+> Changes in v8:
+> Add optional "pci", and rewrite commit message.
+> Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
+> Rewrite the commit message.
+> 
+> Changes in v7:
+> Move PCIE_WAKE handling into pci core.
+> 
+> Changes in v6:
+> Fix device_init_wake error handling, and add some comments.
+> 
+> Changes in v5:
+> Move to pci.txt
+> Rebase.
+> Use "wakeup" instead of "wake"
+> 
+> Changes in v3:
+> Fix error handling.
+> 
+> Changes in v2:
+> Use dev_pm_set_dedicated_wake_irq.
+> 
+> Jeffy Chen (5):
+>   dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
+>   of/irq: Adjust of_pci_irq parsing for multiple interrupts
+>   mwifiex: Disable wakeup irq handling for pcie
+>   PCI / PM: Add support for the PCIe WAKE# signal for OF
+>   arm64: dts: rockchip: Move PCIe WAKE# irq to pcie port for Gru
+> 
+>  Documentation/devicetree/bindings/pci/pci.txt | 10 ++++
+>  arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  | 11 ++--
+>  drivers/net/wireless/marvell/mwifiex/main.c   |  4 ++
+>  drivers/of/of_pci_irq.c                       | 71 +++++++++++++++++++++++--
+>  drivers/pci/Makefile                          |  1 +
+>  drivers/pci/pci-driver.c                      | 10 ++++
+>  drivers/pci/pci-of.c                          | 75 +++++++++++++++++++++++++++
+>  include/linux/of_pci.h                        |  9 ++++
+>  8 files changed, 183 insertions(+), 8 deletions(-)
+>  create mode 100644 drivers/pci/pci-of.c
 
-Hi Stephen,
-
-I was about to apply it but I think that for consistency it would be
-better to convert to {lower,upper}_32_bits() also code in
-dw_msi_setup_msg() and slightly reword the log accordingly; if you do
-not mind sending a v2 with those changes I will apply then.
+I'm going to ignore this version till the discussion on the previous one is
+over.
 
 Thanks,
-Lorenzo
+Rafael
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
