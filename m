@@ -1,70 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Tony Lindgren <tony@atomide.com>, <bcousson@baylibre.com>
-Subject: [PATCH 6/7] ARM: omap2plus_defconfig: Enable CONFIG_PCI_DRA7XX (Host
- & Device modes)
-Date: Tue, 19 Dec 2017 15:01:32 +0530
-Message-ID: <20171219093133.16565-7-kishon@ti.com>
-In-Reply-To: <20171219093133.16565-1-kishon@ti.com>
-References: <20171219093133.16565-1-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:48458 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751211AbdL0A6F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Dec 2017 19:58:05 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: JeffyChen <jeffy.chen@rock-chips.com>, tony@atomide.com
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
+        briannorris@chromium.org, dianders@chromium.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE# signal for OF
+Date: Wed, 27 Dec 2017 01:57:07 +0100
+Message-ID: <5491520.JsEYlZiECc@aspire.rjw.lan>
+In-Reply-To: <5A41A0A7.5070605@rock-chips.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com> <9593014.U0c2JQdoEZ@aspire.rjw.lan> <5A41A0A7.5070605@rock-chips.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- kishon@ti.com, linux-pci@vger.kernel.org, nsekhar@ti.com,
- Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
- Rob Herring <robh+dt@kernel.org>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable CONFIG_PCI_DRA7XX in order to be able to configure PCIe
-controller present in dra7 SoCs in both host mode and device mode.
+On Tuesday, December 26, 2017 2:06:47 AM CET JeffyChen wrote:
+> Hi Rafael,
+> 
+> Thanks for your reply :)
+> 
+> On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
+> >> >+
+> >> >+	dn = pci_device_to_OF_node(ppdev);
+> >> >+	if (!dn)
+> >> >+		return 0;
+> >> >+
+> >> >+	irq = of_irq_get_byname(dn, "wakeup");
+> > Why is this a property of the bridge and not of the device itself?
+>
+> That is suggested by Brian, because in that way, the wakeup pin would 
+> not "tied to what exact device is installed (or no device, if it's a slot)."
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/configs/omap2plus_defconfig | 8 ++++++++
- 1 file changed, 8 insertions(+)
+But I don't think it works when there are two devices using different WAKE#
+interrupt lines under the same bridge.  Or how does it work then?
 
-diff --git a/arch/arm/configs/omap2plus_defconfig b/arch/arm/configs/omap2plus_defconfig
-index 7b97200c1d64..a01871d5aa73 100644
---- a/arch/arm/configs/omap2plus_defconfig
-+++ b/arch/arm/configs/omap2plus_defconfig
-@@ -48,6 +48,13 @@ CONFIG_SOC_AM43XX=y
- CONFIG_SOC_DRA7XX=y
- CONFIG_ARM_THUMBEE=y
- CONFIG_ARM_ERRATA_411920=y
-+CONFIG_PCI=y
-+CONFIG_PCI_MSI=y
-+CONFIG_PCI_DRA7XX=y
-+CONFIG_PCI_DRA7XX_EP=y
-+CONFIG_PCI_ENDPOINT=y
-+CONFIG_PCI_ENDPOINT_CONFIGFS=y
-+CONFIG_PCI_EPF_TEST=m
- CONFIG_SMP=y
- CONFIG_NR_CPUS=2
- CONFIG_CMA=y
-@@ -137,6 +144,7 @@ CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=16384
- CONFIG_SENSORS_TSL2550=m
- CONFIG_SRAM=y
-+CONFIG_PCI_ENDPOINT_TEST=m
- CONFIG_EEPROM_AT24=m
- CONFIG_BLK_DEV_SD=y
- CONFIG_SCSI_SCAN_ASYNC=y
--- 
-2.11.0
+> >> >+	if (irq == -EPROBE_DEFER)
+> > Braces here, please.
+> ok, will fix in the next version.
+> 
+> >
+> >> >+		return irq;
+> >> >+	/* Ignore other errors, since a missing wakeup is non-fatal. */
+> >> >+	else if (irq < 0) {
+> >> >+		dev_info(&pdev->dev, "cannot get wakeup interrupt: %d\n", irq);
+> >> >+		return 0;
+> >> >+	}
+> >> >+
+> >> >+	device_init_wakeup(&pdev->dev, true);
+> > Why do you call this before dev_pm_set_dedicated_wake_irq()?
+>
+> hmmm, i thought so too, but it turns out the dedicated wake irq 
+> framework requires device_init_wakeup(dev, true) before attach the wake irq:
+> 
+> int device_wakeup_attach_irq(struct device *dev,
+>                               struct wake_irq *wakeirq)
+> {
+>          struct wakeup_source *ws;
+> 
+>          ws = dev->power.wakeup;
+>          if (!ws) {
+>                  dev_err(dev, "forgot to call device_init_wakeup?\n");
+>                  return -EINVAL;
+> 
 
+Well, that's a framework issue, fair enough.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+That said, what if user space removes the wakeup source from under you
+concurrently via sysfs?  Tony?
+
+Thanks,
+Rafael
