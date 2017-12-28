@@ -1,151 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45008 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753272AbdLNWZf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Dec 2017 17:25:35 -0500
-Date: Thu, 14 Dec 2017 16:25:23 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: rui_feng@realsil.com.cn
-Cc: lee.jones@linaro.org, linux-kernel@vger.kernel.org,
-        Hans de Goede <hdegoede@redhat.com>,
-        Dave Jiang <dave.jiang@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6] mfd: Add support for RTS5250S power saving
-Message-ID: <20171214222522.GL30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <1504772799-15173-1-git-send-email-rui_feng@realsil.com.cn>
+Received: from mail-eopbgr00070.outbound.protection.outlook.com ([40.107.0.70]:22752
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752763AbdL1KF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Dec 2017 05:05:58 -0500
+From: Richard Zhu <hongxing.zhu@nxp.com>
+To: Ilya Ledvich <ilya@compulab.co.il>,
+        Lucas Stach <l.stach@pengutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: imx6: Add PHY reference clock source support
+Date: Thu, 28 Dec 2017 10:05:55 +0000
+Message-ID: <AM5PR0402MB28505BE42AB7774EC90927E18C040@AM5PR0402MB2850.eurprd04.prod.outlook.com>
+References: <1514369154-21105-1-git-send-email-ilya@compulab.co.il>
+In-Reply-To: <1514369154-21105-1-git-send-email-ilya@compulab.co.il>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1504772799-15173-1-git-send-email-rui_feng@realsil.com.cn>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Hans, Dave, linux-pci]
+Hi Ilya:
+I think the "ocsillator" in the binding document should be oscillator.
+Thanks.
 
-On Thu, Sep 07, 2017 at 04:26:39PM +0800, rui_feng@realsil.com.cn wrote:
-> From: Rui Feng <rui_feng@realsil.com.cn>
+Best Regards
+Richard
 
-I wish this had been posted to linux-pci before being merged.
+Best Regards
+hongxing zhu
+Linux BSP team
+Office: 86-21-28937189
+Email: hongxing.zhu@nxp.com
 
-I'm concerned because some of this appears to overlap and
-conflict with PCI core management of ASPM.
 
-I assume these devices advertise ASPM support in their Link
-Capabilites registers, right?  If so, why isn't the existing
-PCI core ASPM support sufficient?
+-----Original Message-----
+From: Ilya Ledvich [mailto:ilya@compulab.co.il]=20
+Sent: Wednesday, December 27, 2017 6:06 PM
+To: Richard Zhu <hongxing.zhu@nxp.com>; Lucas Stach <l.stach@pengutronix.de=
+>
+Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; linux-a=
+rm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org; Ilya Ledvich <=
+ilya@compulab.co.il>
+Subject: [PATCH] PCI: imx6: Add PHY reference clock source support
 
-> Enable power saving for RTS5250S as following steps:
-> 1.Set 0xFE58 to enable clock power management.
+i.MX7D variant of the IP can use either Crystal Oscillator input or interna=
+l clock input as a Reference Clock input for PCIe PHY.
+Add support for an optional property 'pcie-phy-refclk-internal'.
+If present then an internal clock input is used as PCIe PHY reference clock=
+ source. By default an external oscillator input is still used.
 
-Is this clock power management something specific to RTS5250S, or is
-it standard PCIe architected stuff?
+Verified on Compulab SBC-iMX7 Single Board Computer.
 
-> 2.Check cfg space whether support L1SS or not.
+Signed-off-by: Ilya Ledvich <ilya@compulab.co.il>
+---
+ Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 5 +++++
+ drivers/pci/dwc/pci-imx6.c                               | 8 +++++++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
-This sounds like standard PCIe ASPM L1 Substates, right?
-
-> 3.If support L1SS, set 0xFF03 to free clkreq.
-> 4.When entering idle status, enable aspm
->   and set parameters for L1SS and LTR.
-> 5.Wnen entering run status, disable aspm
->   and set parameters for L1SS and LTR.
-
-In general, drivers should not configure ASPM, L1SS, and LTR
-themselves; the PCI core should do that.
-
-If a driver needs to tweak ASPM at run-time, it should use interfaces
-exported by the PCI core to do so.
-
-> If entering L1SS mode successfully,
-> electric current will be below 2mA.
-
-> Signed-off-by: Rui Feng <rui_feng@realsil.com.cn>
-> ...
-
-> +static void rts5249_init_from_cfg(struct rtsx_pcr *pcr)
-> +{
-> +	struct rtsx_cr_option *option = &(pcr->option);
-> +	u32 lval;
-> +
-> +	if (CHK_PCI_PID(pcr, PID_524A))
-> +		rtsx_pci_read_config_dword(pcr,
-> +			PCR_ASPM_SETTING_REG1, &lval);
-> +	else
-> +		rtsx_pci_read_config_dword(pcr,
-> +			PCR_ASPM_SETTING_REG2, &lval);
-
-This looks like you're reading the ASPM L1 Substates capability, i.e.,
-PCI_L1SS_CAP, using hard-coded offsets based on the Device ID.  You
-should be using pci_find_ext_capability() to locate it.
-
-> +	if (lval & ASPM_L1_1_EN_MASK)
-> +		rtsx_set_dev_flag(pcr, ASPM_L1_1_EN);
-> +
-> +	if (lval & ASPM_L1_2_EN_MASK)
-> +		rtsx_set_dev_flag(pcr, ASPM_L1_2_EN);
-> +
-> +	if (lval & PM_L1_1_EN_MASK)
-> +		rtsx_set_dev_flag(pcr, PM_L1_1_EN);
-> +
-> +	if (lval & PM_L1_2_EN_MASK)
-> +		rtsx_set_dev_flag(pcr, PM_L1_2_EN);
-
-You're adding these:
-
-  #define ASPM_L1_1_EN_MASK              BIT(3)
-  #define ASPM_L1_2_EN_MASK              BIT(2)
-  #define PM_L1_1_EN_MASK                BIT(1)
-  #define PM_L1_2_EN_MASK                BIT(0)
-
-The PCI core already defines these and you should use them instead:
-
-  #define  PCI_L1SS_CAP_PCIPM_L1_2        0x00000001  /* PCI-PM L1.2 Supported */
-  #define  PCI_L1SS_CAP_PCIPM_L1_1        0x00000002  /* PCI-PM L1.1 Supported */
-  #define  PCI_L1SS_CAP_ASPM_L1_2         0x00000004  /* ASPM L1.2 Supported */
-  #define  PCI_L1SS_CAP_ASPM_L1_1         0x00000008  /* ASPM L1.1 Supported */
-
-> +	if (option->ltr_en) {
-> +		u16 val;
-> +
-> +		pcie_capability_read_word(pcr->pci, PCI_EXP_DEVCTL2, &val);
-> +		if (val & PCI_EXP_DEVCTL2_LTR_EN) {
-> +			option->ltr_enabled = true;
-> +			option->ltr_active = true;
-
-ltr_active is never actually used.
-
-> +			rtsx_set_ltr_latency(pcr, option->ltr_active_latency);
-> +		} else {
-> +			option->ltr_enabled = false;
-> +		}
-> +	}
-> +}
-> ...
-
-> +static void rts5249_set_aspm(struct rtsx_pcr *pcr, bool enable)
-> +{
-> +	struct rtsx_cr_option *option = &pcr->option;
-> +	u8 val = 0;
-> +
-> +	if (pcr->aspm_enabled == enable)
-> +		return;
-> +
-> +	if (option->dev_aspm_mode == DEV_ASPM_DYNAMIC) {
-> +		if (enable)
-> +			val = pcr->aspm_en;
-> +		rtsx_pci_update_cfg_byte(pcr,
-> +			pcr->pcie_cap + PCI_EXP_LNKCTL,
-> +			ASPM_MASK_NEG, val);
-
-This stomps on whatever ASPM configuration the PCI core did.
-
-> +	} else if (option->dev_aspm_mode == DEV_ASPM_BACKDOOR) {
-
-DEV_ASPM_BACKDOOR is never set, so this looks like dead code.
-
-> +		u8 mask = FORCE_ASPM_VAL_MASK | FORCE_ASPM_CTL0;
-> +		if (!enable)
-> +			val = FORCE_ASPM_CTL0;
-> +		rtsx_pci_write_register(pcr, ASPM_FORCE_CTL, mask, val);
-> +	}
-> +
-> +	pcr->aspm_enabled = enable;
-> +}
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Doc=
+umentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 7b1e48b..f9cf11e 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -50,6 +50,11 @@ Additional required properties for imx7d-pcie:
+ 	       - "pciephy"
+ 	       - "apps"
+=20
++Additional optional properties for imx7d-pcie:
++- pcie-phy-refclk-internal: If present then an internal PLL input is=20
++used as
++  PCIe PHY reference clock source. By default an external ocsillator=20
++input
++  is used.
++
+ Example:
+=20
+ 	pcie@0x01000000 {
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c index =
+b734835..a616192 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -61,6 +61,7 @@ struct imx6_pcie {
+ 	u32			tx_swing_low;
+ 	int			link_gen;
+ 	struct regulator	*vpcie;
++	bool			pciephy_refclk_sel;
+ };
+=20
+ /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */ @@ -474=
+,7 +475,9 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+ 	switch (imx6_pcie->variant) {
+ 	case IMX7D:
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
++				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
++				   imx6_pcie->pciephy_refclk_sel ?
++				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL : 0);
+ 		break;
+ 	case IMX6SX:
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, @@ -840,6 +843,9=
+ @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 		imx6_pcie->vpcie =3D NULL;
+ 	}
+=20
++	imx6_pcie->pciephy_refclk_sel =3D
++		of_property_read_bool(node, "pcie-phy-refclk-internal");
++
+ 	platform_set_drvdata(pdev, imx6_pcie);
+=20
+ 	ret =3D imx6_add_pcie_port(imx6_pcie, pdev);
+--
+1.9.1
