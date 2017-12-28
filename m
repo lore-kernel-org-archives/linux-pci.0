@@ -1,47 +1,75 @@
-Return-Path: <SRS0=5cVF=DO=Oracle.COM=Govinda.Tatti@kernel.org>
-Return-Path: <SRS0=5cVF=DO=Oracle.COM=Govinda.Tatti@kernel.org>
-Subject: Re: [Xen-devel] [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr()
- interface
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, jgross@suse.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        JBeulich@suse.com, bhelgaas@google.com, xen-devel@lists.xenproject.org,
-        boris.ostrovsky@Oracle.COM, roger.pau@citrix.com,
-        Russell Currey <ruscur@russell.cc>, Sinan Kaya <okaya@codeaurora.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Srikanth Jampala <Jampala.Srikanth@cavium.com>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
- <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
- <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
- <426eeeab-0dcd-8de3-9c5f-a166acf2c130@Oracle.COM>
- <20171212005919.GB30595@bhelgaas-glaptop.roam.corp.google.com>
- <49956aaf-5fd5-939d-5fc7-231ffdb98b70@Oracle.COM>
- <20171213212420.GH30595@bhelgaas-glaptop.roam.corp.google.com>
- <fea075cf-fe6f-0d0b-11e4-4279fbfc280a@Oracle.COM>
- <20171215181801.GU30595@bhelgaas-glaptop.roam.corp.google.com>
- <20171218122629.GA18423@infradead.org>
-From: Govinda Tatti <Govinda.Tatti@Oracle.COM>
-Message-ID: <7ded77fb-8c94-2ca6-33b7-90e35f5293d4@Oracle.COM>
-Date: Mon, 18 Dec 2017 11:22:06 -0600
-MIME-Version: 1.0
-In-Reply-To: <20171218122629.GA18423@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:50577 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753329AbdL1L5r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 06:57:47 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v3 5/9] pci: generic PCIe DW driver adapted to new irq API
+Date: Thu, 28 Dec 2017 11:56:43 +0000
+Message-Id: <42508691aa75457cce343fdf975b0309a9ee1269.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch adapts the generic PCIe DW driver to use the new interrupt api
+available in pcie-designware.
 
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
 
-On 12/18/2017 6:26 AM, Christoph Hellwig wrote:
-> On Fri, Dec 15, 2017 at 12:18:02PM -0600, Bjorn Helgaas wrote:
->> I think Christoph volunteered to do some restructuring, but I don't
->> know his timeframe.  If you can, I would probably wait for that
->> because there's so much overlap here.
-> I'll have some time over the holidays.  If you need it more urgent
-> than that feel free to take over.
-We will wait for your changes. Thanks Christoph.
+ drivers/pci/dwc/pcie-designware-plat.c | 16 ----------------
+ 1 file changed, 16 deletions(-)
 
-Cheers
-GOVINDA
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 168e238..c148152 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -28,13 +28,6 @@ struct dw_plat_pcie {
+ 	struct dw_pcie		*pci;
+ };
+ 
+-static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int dw_plat_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -66,15 +59,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 		pp->msi_irq = platform_get_irq(pdev, 0);
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					dw_plat_pcie_msi_irq_handler,
+-					IRQF_SHARED | IRQF_NO_THREAD,
+-					"dw-plat-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI IRQ\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.7.4
