@@ -1,62 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41106 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751846AbdLDWdO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 4 Dec 2017 17:33:14 -0500
-Date: Mon, 4 Dec 2017 16:33:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Dave Jones <davej@codemonkey.org.uk>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        linux-kernel@vger.kernel.org, David Woodhouse <dwmw@amazon.co.uk>
-Subject: Re: [PATCH v2] PCI: Remove sysfs resource mmap warning
-Message-ID: <20171204223311.GA24974@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171130163557.19488.80756.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171130163557.19488.80756.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:50603 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753346AbdL1L5r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 06:57:47 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v3 4/9] pci: artpec6 SoC driver adapted to new irq API
+Date: Thu, 28 Dec 2017 11:56:42 +0000
+Message-Id: <bc15819c6b9d01b295a4f5e933950dc473634d84.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 30, 2017 at 10:35:57AM -0600, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> When a process uses sysfs and tries to mmap more space than is available in
-> a PCI BAR, we emit a warning and a backtrace.  The mmap fails anyway, so
-> the backtrace is mainly for debugging.  But in general we don't emit kernel
-> messages when syscalls return failure.
-> 
-> The similar procfs mmap path simply fails the mmap with no warning.  Remove
-> the sysfs warning.
-> 
-> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+This patch adapts artpec6 SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
-Applied to pci/resource for v4.16.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
 
-> ---
->  drivers/pci/pci-sysfs.c |    9 ++-------
->  1 file changed, 2 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 06c7f0b85cd2..ccc0e28c6678 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1216,14 +1216,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
->  	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
->  		return -EINVAL;
->  
-> -	if (!pci_mmap_fits(pdev, bar, vma, PCI_MMAP_SYSFS)) {
-> -		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
-> -			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
-> -			pci_name(pdev), bar,
-> -			(u64)pci_resource_start(pdev, bar),
-> -			(u64)pci_resource_len(pdev, bar));
-> +	if (!pci_mmap_fits(pdev, bar, vma, PCI_MMAP_SYSFS))
->  		return -EINVAL;
-> -	}
-> +
->  	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
->  
->  	return pci_mmap_resource_range(pdev, bar, vma, mmap_type, write_combine);
-> 
+ drivers/pci/dwc/pcie-artpec6.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 6653619..d169c33 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -184,15 +184,6 @@ static const struct dw_pcie_host_ops artpec6_pcie_host_ops = {
+ 	.host_init = artpec6_pcie_host_init,
+ };
+ 
+-static irqreturn_t artpec6_pcie_msi_handler(int irq, void *arg)
+-{
+-	struct artpec6_pcie *artpec6_pcie = arg;
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 				 struct platform_device *pdev)
+ {
+@@ -207,15 +198,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 			dev_err(dev, "failed to get MSI irq\n");
+ 			return pp->msi_irq;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       artpec6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "artpec6-pcie-msi", artpec6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.7.4
