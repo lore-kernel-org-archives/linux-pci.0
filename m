@@ -1,138 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v6 15/18] PCI: dwc: Make cpu_addr_fixup take struct
- dw_pcie as argument
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:55814 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752693AbdL1CGk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Dec 2017 21:06:40 -0500
+Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
+To: Alexandru Chirvasitu <achirvasub@gmail.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+        Dexuan Cui <decui@microsoft.com>, Pavel Machek <pavel@ucw.cz>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "Maciej W. Rozycki" <macro@linux-mips.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
- <20171219232940.659-16-niklas.cassel@axis.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@axis.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <0dc3ffca-0ca2-ed94-5e73-0dd0fcf6e973@ti.com>
-Date: Wed, 20 Dec 2017 11:22:10 +0530
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        KY Srinivasan <kys@microsoft.com>
+References: <20171220194506.GD24638@arch-chirva.localdomain>
+ <20171221022356.GE24638@arch-chirva.localdomain>
+ <1bd74ca3-afca-9d61-6911-61250f459891@cn.fujitsu.com>
+ <20171222142053.3cbhi2nhh24w7yoo@D-69-91-141-110.dhcp4.washington.edu>
+ <KL1P15301MB000676F3F8C9A5AC8C489E75BF020@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <20171222222917.GA1138@arch-chirva.localdomain>
+ <KL1P15301MB00064E9E767F9395744F42A3BF030@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <alpine.DEB.2.20.1712231432210.1853@nanos>
+ <20171223200112.GC1138@arch-chirva.localdomain>
+ <548c814c-7e24-00c0-3436-26f2704cb427@cn.fujitsu.com>
+ <20171227161801.GE1410@arch-chirva.localdomain>
+From: Dou Liyang <douly.fnst@cn.fujitsu.com>
+Message-ID: <308183d9-d8d6-0100-159b-8c8be8636b31@cn.fujitsu.com>
+Date: Thu, 28 Dec 2017 10:06:25 +0800
 MIME-Version: 1.0
-In-Reply-To: <20171219232940.659-16-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171227161801.GE1410@arch-chirva.localdomain>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Alexandru,
 
+Thanks for testing !
+At 12/28/2017 12:18 AM, Alexandru Chirvasitu wrote:
+> As per instructions, I did the following:
+> 
+> (1)
+> 
+> Checked out
+> 
+> 464e1d5 Linux 4.15-rc5
+> 
+> (after getting my copy up to date, fetching, pulling ,etc.) and
+> compiled it as-is. Config attached (the one labeled 'np' for 'no
+> patch').
+> 
+> Result:
+> 
+> Boot with no extraparameters locks up after login, as before;
+> 
+> apic=debug does not panic, but locks up after login, as before;
+> 
+I also hope to see the log with "apic=debug" by "journalctl" command,
+though the logs don't have the lockup trace.
 
-On Wednesday 20 December 2017 04:59 AM, Niklas Cassel wrote:
-> The current cpu addr fixup mask for ARTPEC-6, GENMASK(27, 0), is wrong.
-> The correct cpu addr fixup mask for ARTPEC-6 is GENMASK(28, 0).
-> 
-> However, having a hardcoded cpu addr fixup mask in each driver is
-> arguably wrong.
-> A device tree property called something like "cpu-addr-fixup-mask"
-> would have been a better solution.
-> Introducing such a property is not needed though, since we already have
-> pp->cfg0_base and ep->phys_base, which is derived from already existing
-> device tree properties.
-> 
-> It is also worth noting that for ARTPEC-7, hardcoding the cpu addr fixup
-> mask is not possible, since it uses a High Address Bits Look Up Table,
-> which means that it can, at runtime, map the PCIe window to an arbitrary
-> address in the 32-bit address space.
-> 
-> By using pp->cfg0_base and ep->phys_base, we avoid hardcoding a mask
-> in each driver. This should work for ARTPEC-6, DRA7xx, and ARTPEC-7.
-> I have not changed the code in DRA7xx though, since their existing
-> code works, but if they want, they could use the same logic as
-> artpec6_pcie_cpu_addr_fixup, and thus remove their hardcoded mask.
-> 
-> The reason why the fixup mask is needed is explained in commit f4c55c5a3f7f
-> ("PCI: designware: Program ATU with untranslated address").
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c      |  2 +-
->  drivers/pci/dwc/pcie-artpec6.c    | 18 ++++++++++++++----
->  drivers/pci/dwc/pcie-designware.c |  2 +-
->  drivers/pci/dwc/pcie-designware.h |  2 +-
->  4 files changed, 17 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 224ff8affdce..89d87844abb3 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -110,7 +110,7 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
->  	writel(value, pcie->base + offset);
->  }
->  
-> -static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-> +static u64 dra7xx_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
->  {
->  	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
->  }
-> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-> index e7de4e4649eb..318a2bd0d97e 100644
-> --- a/drivers/pci/dwc/pcie-artpec6.c
-> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> @@ -67,8 +67,6 @@ static const struct of_device_id artpec6_pcie_of_match[];
->  #define PHY_STATUS			0x118
->  #define  PHY_COSPLLLOCK			BIT(0)
->  
-> -#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
-> -
->  static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
->  {
->  	u32 val;
-> @@ -82,9 +80,21 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
->  	regmap_write(artpec6_pcie->regmap, offset, val);
->  }
->  
-> -static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
-> +static u64 artpec6_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
->  {
-> -	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
-> +	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-> +	struct pcie_port *pp = &pci->pp;
-> +	struct dw_pcie_ep *ep = &pci->ep;
-> +
-> +	switch (artpec6_pcie->mode) {
-> +	case DW_PCIE_RC_TYPE:
-> +		return pci_addr - pp->cfg0_base;
-> +	case DW_PCIE_EP_TYPE:
-> +		return pci_addr - ep->phys_base;
-> +	default:
-> +		dev_err(pci->dev, "UNKNOWN device type\n");
-> +	}
-> +	return pci_addr;
->  }
->  
->  static int artpec6_pcie_establish_link(struct dw_pcie *pci)
-> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> index 88abdddee2ad..800be7a4f087 100644
-> --- a/drivers/pci/dwc/pcie-designware.c
-> +++ b/drivers/pci/dwc/pcie-designware.c
-> @@ -149,7 +149,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
->  	u32 retries, val;
->  
->  	if (pci->ops->cpu_addr_fixup)
-> -		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
-> +		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
->  
->  	if (pci->iatu_unroll_enabled) {
->  		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index 24edac035160..cca5a81c1c74 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -205,7 +205,7 @@ struct dw_pcie_ep {
->  };
->  
->  struct dw_pcie_ops {
-> -	u64	(*cpu_addr_fixup)(u64 cpu_addr);
-> +	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
->  	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
->  			    size_t size);
->  	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+Thanks,
+	dou.
 > 
