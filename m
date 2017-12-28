@@ -1,111 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:64730 "EHLO mout.web.de"
+Received: from mga11.intel.com ([192.55.52.93]:59238 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751070AbdL2O4N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Dec 2017 09:56:13 -0500
-To: linux-pci@vger.kernel.org,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kees Cook <keescook@chromium.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Paul Mackerras <paulus@samba.org>,
-        linuxppc-dev@lists.ozlabs.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] pci/hotplug: Delete error messages for a failed memory
- allocation in four functions
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-Message-ID: <dc3922b4-50f6-e7fa-482f-18e6ff5d905f@users.sourceforge.net>
-Date: Fri, 29 Dec 2017 15:55:52 +0100
+        id S1750765AbdL1Q1x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Dec 2017 11:27:53 -0500
+Date: Fri, 29 Dec 2017 00:27:08 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>,
+        Oza Pawandeep <poza@codeaurora.org>
+Subject: Re: [PATCH 2/4] PCI/DPC/AER: Address Concurrency between AER and DPC
+Message-ID: <201712290049.kffq1we5%fengguang.wu@intel.com>
+References: <1514370022-4431-3-git-send-email-poza@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1514370022-4431-3-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 29 Dec 2017 15:47:00 +0100
+Hi Oza,
 
-Omit extra messages for a memory allocation failure in these functions.
+Thank you for the patch! Perhaps something to improve:
 
-This issue was detected by using the Coccinelle software.
+[auto build test WARNING on linus/master]
+[also build test WARNING on v4.15-rc5]
+[cannot apply to pci/next pm/linux-next next-20171222]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+url:    https://github.com/0day-ci/linux/commits/Oza-Pawandeep/Address-error-and-recovery-for-AER-and-DPC/20171228-222058
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+
+Please review and possibly fold the followup patch.
+
 ---
- drivers/pci/hotplug/pciehp_hpc.c  | 5 ++---
- drivers/pci/hotplug/pnv_php.c     | 8 +-------
- drivers/pci/hotplug/shpchp_core.c | 5 ++---
- 3 files changed, 5 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 7bab0606f1a9..ed27635ec740 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -838,10 +838,9 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	struct pci_dev *pdev = dev->port;
- 
- 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
--	if (!ctrl) {
--		dev_err(&dev->device, "%s: Out of memory\n", __func__);
-+	if (!ctrl)
- 		goto abort;
--	}
-+
- 	ctrl->pcie = dev;
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
- 
-diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-index 74f6a17e4614..4ab318a0800d 100644
---- a/drivers/pci/hotplug/pnv_php.c
-+++ b/drivers/pci/hotplug/pnv_php.c
-@@ -266,7 +266,6 @@ static int pnv_php_add_devtree(struct pnv_php_slot *php_slot)
- 	fdt1 = kzalloc(0x10000, GFP_KERNEL);
- 	if (!fdt1) {
- 		ret = -ENOMEM;
--		dev_warn(&php_slot->pdev->dev, "Cannot alloc FDT blob\n");
- 		goto out;
- 	}
- 
-@@ -280,8 +279,6 @@ static int pnv_php_add_devtree(struct pnv_php_slot *php_slot)
- 	fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
- 	if (!fdt) {
- 		ret = -ENOMEM;
--		dev_warn(&php_slot->pdev->dev, "Cannot %d bytes memory\n",
--			 fdt_totalsize(fdt1));
- 		goto free_fdt1;
- 	}
- 
-@@ -756,11 +753,8 @@ static irqreturn_t pnv_php_interrupt(int irq, void *data)
- 	 * fine as the PCI devices (PE) aren't functional any more.
- 	 */
- 	event = kzalloc(sizeof(*event), GFP_ATOMIC);
--	if (!event) {
--		dev_warn(&pdev->dev, "PCI slot [%s] missed hotplug event 0x%04x\n",
--			 php_slot->name, sts);
-+	if (!event)
- 		return IRQ_HANDLED;
--	}
- 
- 	dev_info(&pdev->dev, "PCI slot [%s] %s (IRQ: %d)\n",
- 		 php_slot->name, added ? "added" : "removed", irq);
-diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-index 7bfb87bd2b7e..2f2b87acf179 100644
---- a/drivers/pci/hotplug/shpchp_core.c
-+++ b/drivers/pci/hotplug/shpchp_core.c
-@@ -305,10 +305,9 @@ static int shpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		return -ENODEV;
- 
- 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
--	if (!ctrl) {
--		dev_err(&pdev->dev, "%s: Out of memory\n", __func__);
-+	if (!ctrl)
- 		goto err_out_none;
--	}
-+
- 	INIT_LIST_HEAD(&ctrl->slot_list);
- 
- 	rc = shpc_init(ctrl, pdev);
--- 
-2.15.1
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
