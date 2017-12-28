@@ -1,40 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:40424 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752987AbdLRUGw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Dec 2017 15:06:52 -0500
-Date: Mon, 18 Dec 2017 15:06:49 -0500 (EST)
-Message-Id: <20171218.150649.1306487926708532702.davem@davemloft.net>
-To: romain.perier@gmail.com
-Cc: axboe@kernel.dk, akpm@linux-foundation.org,
-        dan.j.williams@intel.com, vinod.koul@intel.com,
-        jeffrey.t.kirsher@intel.com, aviad.krawczyk@huawei.com,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        gregkh@linuxfoundation.org, romain.perier@collabora.com
-Subject: Re: [PATCH v16 2/4] net: e100: Replace PCI pool old API
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20171215193123.13395-3-romain.perier@gmail.com>
-References: <20171215193123.13395-1-romain.perier@gmail.com>
-        <20171215193123.13395-3-romain.perier@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bastet.se.axis.com ([195.60.68.11]:42249 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751021AbdL1WnW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 17:43:22 -0500
+Date: Thu, 28 Dec 2017 23:43:19 +0100
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 06/18] PCI: designware-ep: Add generic function for
+ raising MSI irq
+Message-ID: <20171228224319.GA13865@axis.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+ <20171219232940.659-7-niklas.cassel@axis.com>
+ <5fc44bf0-9d0e-e905-32fb-449d9ed1b01a@ti.com>
+ <20171227222909.GA14106@axis.com>
+ <e8a50bf0-edab-db41-0c80-13a1509e289c@ti.com>
+ <672cfdc5-9e3d-311f-6307-0aedcf5d28ad@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <672cfdc5-9e3d-311f-6307-0aedcf5d28ad@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@gmail.com>
-Date: Fri, 15 Dec 2017 20:31:21 +0100
-
-> From: Romain Perier <romain.perier@collabora.com>
+On Thu, Dec 28, 2017 at 08:09:50PM +0530, Kishon Vijay Abraham I wrote:
+> Hi Niklas,
 > 
-> The PCI pool API is deprecated. This commit replaces the PCI pool old
-> API by the appropriate function with the DMA pool API.
+> On Thursday 28 December 2017 01:36 PM, Kishon Vijay Abraham I wrote:
+> > Hi Niklas,
+> > 
+> > On Thursday 28 December 2017 03:59 AM, Niklas Cassel wrote:
+> >> On Tue, Dec 26, 2017 at 06:20:54PM +0530, Kishon Vijay Abraham I wrote:
+> >>> Hi Niklas,
+> >>
+> >> Hello Kishon
+> >>
+> >>>
+> >>> On Wednesday 20 December 2017 04:59 AM, Niklas Cassel wrote:
+> >>>> Add a generic function for raising MSI irqs that can be used by all
+> >>>> DWC based controllers.
+> >>>>
+> >>>> Note that certain controllers, like DRA7xx, have a special convenience
+> >>>> register for raising MSI irqs that doesn't require you to explicitly map
+> >>>> the MSI address. Therefore, it is likely that certain drivers will
+> >>>> not use this generic function, even if they can.
+> >>>>
+> >>>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> >>>> ---
+> >>>>  drivers/pci/dwc/pcie-designware-ep.c | 35 +++++++++++++++++++++++++++++++++++
+> >>>>  drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
+> >>>>  2 files changed, 44 insertions(+)
+> >>>>
+> >>>> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> >>>> index 700ed2f4becf..c5aa1cac5041 100644
+> >>>> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> >>>> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> >>>> @@ -282,6 +282,41 @@ static const struct pci_epc_ops epc_ops = {
+> >>>>  	.stop			= dw_pcie_ep_stop,
+> >>>>  };
+> >>>>  
+> >>>> +int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
+> >>>> +			     u8 interrupt_num)
+> >>>> +{
+> >>>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> >>>> +	struct pci_epc *epc = ep->epc;
+> >>>> +	u16 msg_ctrl, msg_data;
+> >>>> +	u32 msg_addr_lower, msg_addr_upper;
+> >>>> +	u64 msg_addr;
+> >>>> +	bool has_upper;
+> >>>> +	int ret;
+> >>>> +
+> >>>> +	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
+> >>>> +	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+> >>>> +	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
+> >>>> +	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
+> >>>> +	if (has_upper) {
+> >>>> +		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+> >>>> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
+> >>>> +	} else {
+> >>>> +		msg_addr_upper = 0;
+> >>>> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
+> >>>> +	}
+> >>>> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+> >>>> +	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr,
+> >>>> +				  epc->mem->page_size);
+> >>>> +	if (ret)
+> >>>> +		return ret;
+> >>>> +
+> >>>> +	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
+> >>>
+> >>> Shouldn't this be msg_data + (interrupt_num - 1)?
+> >>
+> >> I'm not quite sure about this, but if there is a pending irq,
+> >> not yet processed by the RC, the msg_data we read out in this
+> >> function should have a bit set, matching the pending irq.
+> > 
+> > IIUC, the msg_data that we read here should not depend on the pending irq on
+> > the RC side. msg_data should have the starting MSI vector number assigned by RC
+> > for that EP device. (msg.data = pos; in dw_msi_setup_msg() also seem to suggest
+> > the same).
+> >>
+> >> If that irq is the same as the irq we are trying to raise,
+> >> doing an addition will produce a bogus vector number,
+> >> but a bitwise or should work.
+> > 
+> > if msg_data has the starting MSI vector, doing an addition should get to the
+> > correct MSI vector.
+> >>
+> >> For that reason, I think that doing bitwise or seems safer.
+> >> However, other than this case, I don't see why it should
+> >> matter if we do an addition or a bitwise or.
+> >>
+> >> Are you having some problem with the code?
+> >> It seems to be working fine on ARTPEC-6:
+> >>
+> >> # ./pcitest -m 1
+> >> MSI1:           OKAY
+> >> # ./pcitest -m 2
+> >> MSI2:           OKAY
+> >> # ./pcitest -m 3
+> >> MSI3:           OKAY
+> >> # ./pcitest -m 4
+> >> MSI4:           OKAY
+> >> # ./pcitest -m 5
+> >> MSI5:           OKAY
+> >> # ./pcitest -m 6
+> >> MSI6:           OKAY
+> >> # ./pcitest -m 7
+> >> MSI7:           OKAY
+> >> # ./pcitest -m 8
+> >> MSI8:           OKAY
+> >> # ./pcitest -m 9
+> >> MSI9:           OKAY
+> >> # cat /proc/interrupts | grep -i msi
+> >>  82:          9          0     GIC-0 180 Level     artpec6-pcie-msi
+> >> 188:          1          0   PCI-MSI  16 Edge      pci-endpoint-test
+> >> 189:          1          0   PCI-MSI  17 Edge      pci-endpoint-test
+> >> 190:          1          0   PCI-MSI  18 Edge      pci-endpoint-test
+> >> 191:          1          0   PCI-MSI  19 Edge      pci-endpoint-test
+> >> 192:          1          0   PCI-MSI  20 Edge      pci-endpoint-test
+> >> 193:          1          0   PCI-MSI  21 Edge      pci-endpoint-test
+> >> 194:          1          0   PCI-MSI  22 Edge      pci-endpoint-test
+> >> 195:          1          0   PCI-MSI  23 Edge      pci-endpoint-test
+> >> 196:          1          0   PCI-MSI  24 Edge      pci-endpoint-test
+> >> 197:          0          0   PCI-MSI  25 Edge      pci-endpoint-test
+> >> 198:          0          0   PCI-MSI  26 Edge      pci-endpoint-test
+> >> 199:          0          0   PCI-MSI  27 Edge      pci-endpoint-test
+> >> 200:          0          0   PCI-MSI  28 Edge      pci-endpoint-test
+> >> 201:          0          0   PCI-MSI  29 Edge      pci-endpoint-test
+> >> 202:          0          0   PCI-MSI  30 Edge      pci-endpoint-test
+> >> 203:          0          0   PCI-MSI  31 Edge      pci-endpoint-test
+> >>
+> >> From EP:
+> >> irq: 1 read msg_data: 0x10 writing: 0x10
+> >> irq: 2 read msg_data: 0x10 writing: 0x11
+> >> irq: 3 read msg_data: 0x10 writing: 0x12
+> >> irq: 4 read msg_data: 0x10 writing: 0x13
+> >> irq: 5 read msg_data: 0x10 writing: 0x14
+> >> irq: 6 read msg_data: 0x10 writing: 0x15
+> >> irq: 7 read msg_data: 0x10 writing: 0x16
+> >> irq: 8 read msg_data: 0x10 writing: 0x17
+> >> irq: 9 read msg_data: 0x10 writing: 0x18
+> > 
+> > since your msg_data is 0x10, you are not facing the issue. What if it's 0x1? In
+> > my case If I have Gustavo's patch series applied, msg_data has a value of 0x1
+> > and I don't get certain MSI interrupts.
 > 
-> Signed-off-by: Romain Perier <romain.perier@collabora.com>
-> Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-> Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-> Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
+> I think Gustavo's series doesn't align the MSI vector properly. That's why I
+> get 0x1. So your patch is fine as such.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+If the EP requests 16 irqs via Multiple Message Capable field,
+and the host grants it 16 irqs, by writing "100" to Multiple Message
+Enable field, then the endpoint can read MSI message data, modify
+bits 0-3, then write this modified value to the MSI message address.
+
+All bits that the EP is allowed to modify has to be initialized to
+0 by the host. E.g., in order to be able to raise 16 unique irqs,
+bits 0-3 has to be initialized to 0 (since we need to be able to use
+the whole range, 0x0-0xf).
+
+i.e. initializing MSI message data with 0x1 seems wrong, if the EP
+is requesting 16 irqs.
+
+Note that the case where Multiple Message Enable is "000", is special,
+since then the EP is not allowed to modify any bit, so then it is ok
+if bit 0 in MSI message data is set, but the code should handle this
+case already.
+
+So I agree, this patch should be fine as is.
+
+Regards,
+Niklas
