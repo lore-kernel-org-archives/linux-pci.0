@@ -1,167 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:33696 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753573AbdLMSu5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Dec 2017 13:50:57 -0500
-Date: Wed, 13 Dec 2017 18:51:37 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, Ley Foon Tan <lftan@altera.com>
-Subject: Re: [PATCH V3 03/12] PCI: tegra: Retrain link for Gen2 speed
-Message-ID: <20171213185137.GE4060@red-moon>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-4-git-send-email-mmaddireddy@nvidia.com>
- <20171212143201.GC30799@e107981-ln.cambridge.arm.com>
- <bc949c6d-1947-164f-d1f4-2e9e77be56d9@nvidia.com>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:39942 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751411AbdL1NA6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 08:00:58 -0500
+Subject: Re: [PATCH v2 0/9] PCI: Add support to the Cadence PCIe controller
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+CC: <adouglas@cadence.com>, <stelford@cadence.com>,
+        <dgary@cadence.com>, <kgopi@cadence.com>, <eandrews@cadence.com>,
+        <thomas.petazzoni@free-electrons.com>, <sureshp@cadence.com>,
+        <nsekhar@ti.com>, <linux-kernel@vger.kernel.org>,
+        <robh@kernel.org>, <devicetree@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <d30e0abe-8b08-b2bf-8410-e0fc2b18cacc@ti.com>
+Date: Thu, 28 Dec 2017 18:30:43 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bc949c6d-1947-164f-d1f4-2e9e77be56d9@nvidia.com>
+In-Reply-To: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 13, 2017 at 11:24:03PM +0530, Manikanta Maddireddy wrote:
+Hi Cyrille,
+
+On Monday 18 December 2017 11:46 PM, Cyrille Pitchen wrote:
+> Hi all,
 > 
+> this series of patches adds support to the Cadence PCIe controller.
+> It was tested on a ARM64 platform emulated by a Palladium running the
+> pci-next kernel.
 > 
-> On 12-Dec-17 8:02 PM, Lorenzo Pieralisi wrote:
-> > [+Ley Foon Tan]
-> > 
-> > On Mon, Oct 30, 2017 at 07:27:14PM +0530, Manikanta Maddireddy wrote:
-> >> Tegra124, 132, 210 and 186 support Gen2 link speed. After the link is up
-> >> in Gen1, set target link speed as Gen2 and retrain link. Link switches to
-> >> Gen2 speed if Gen2 capable end point is connected, else link stays in Gen1.
-> >>
-> >> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> >> ---
-> >> V3:
-> >> * Corrected commit log
-> >> * Replaced jiffies with ktime
-> >> V2:
-> >> * no change in this patch
-> >>
-> >>  drivers/pci/host/pci-tegra.c | 42 ++++++++++++++++++++++++++++++++++++++++++
-> >>  1 file changed, 42 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> >> index 068510b40c1a..ed5e8acfdc32 100644
-> >> --- a/drivers/pci/host/pci-tegra.c
-> >> +++ b/drivers/pci/host/pci-tegra.c
-> >> @@ -232,6 +232,8 @@
-> >>  #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
-> >>  #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
-> >>  
-> >> +#define LINK_RETRAIN_TIMEOUT 100000
-> >> +
-> >>  struct tegra_msi {
-> >>  	struct msi_controller chip;
-> >>  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-> >> @@ -2134,6 +2136,42 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
-> >>  	}
-> >>  }
-> >>  
-> >> +static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
-> >> +					 struct pci_dev *pci_dev)
-> >> +{
-> >> +	struct device *dev = pcie->dev;
-> >> +	ktime_t deadline;
-> >> +	unsigned short val;
-> > 
-> > u16
-> > 
-> >> +	/* Skip if the current device is not a root port */
-> >> +	if (pci_pcie_type(pci_dev) != PCI_EXP_TYPE_ROOT_PORT)
-> >> +		return;
-> >> +
-> >> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL2, &val);
-> >> +	val &= ~PCI_EXP_LNKSTA_CLS;
-> >> +	val |= PCI_EXP_LNKSTA_CLS_5_0GB;
-> >> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL2, val);
-> > 
-> > Should you not read the Link Capabilities 2 register ("Supported Speed
-> > Vector") before programming the Link control 2 register Target Link
-> > Speed value ?
-> > 
-> Link Capabilities 2 register is hardwired to 0 and not used in Tegra.
-> This information is documented in Tegra TRM.
+> The host mode was tested with some PCIe devices connected to the Palladium
+> through a speed-bridge. Some of those devices were a USB host controller
+> and a SATA controller. The PCIe host controller was also tested with a
+> second controller configured in endpoint mode and connected back to back
+> to the first controller.
+> 
+> The EndPoint Controller (EPC) driver of this series was tested with the
+> pci-epf-test.c EndPoint Function (EPF) driver and the pcitest userspace
+> program.
 
-You should add a comment to explain that then.
+Did you get to test multi function EP?
 
-> >> +	/* Retrain the link */
-> >> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &val);
-> >> +	val |= PCI_EXP_LNKCTL_RL;
-> >> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, val);
-> >> +
-> >> +	deadline = ktime_add_us(ktime_get(), LINK_RETRAIN_TIMEOUT);
-> >> +	for (;;) {
-> >> +		pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &val);
-> >> +		if (!(val & PCI_EXP_LNKSTA_LT))
-> >> +			break;
-> >> +		if (ktime_after(ktime_get(), deadline))
-> >> +			break;
-> >> +		usleep_range(2000, 3000);
-> > 
-> > Ok - I hope we won't end up with every host bridge re-writing its own
-> > link training loop because at that point in time we should think about
-> > consolidating this.
-> > 
-> Are you saying that we need to add common link retrain function in
-> pci core driver and reuse it in all host drivers?
-
-We do not need to, we should aim for it though. There is nothing
-(well - I wish) platform specific in what you are doing.
-
-> > CC'ing Ley Foon Tan since I would like to understand why the Altera
-> > driver link retraining can't be written with the same code as this
-> > driver - I suspect it has to do with the retraining sequence and when
-> > the retraining is actually carried out in the host bridge probe
-> > sequence.
-> >
-> >> +	}
-> >> +
-> >> +	if (val & PCI_EXP_LNKSTA_LT)
-> >> +		dev_err(dev, "link retrain of PCIe slot %u failed\n",
-> >> +			PCI_SLOT(pci_dev->devfn));
-> >> +}
-> >> +
-> >>  static const struct tegra_pcie_soc tegra20_pcie = {
-> >>  	.num_ports = 2,
-> >>  	.msi_base_shift = 0,
-> >> @@ -2335,6 +2373,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
-> >>  	struct pci_host_bridge *host;
-> >>  	struct tegra_pcie *pcie;
-> >>  	struct pci_bus *child;
-> >> +	struct pci_dev *pci_dev = NULL;
-> >>  	int err;
-> >>  
-> >>  	host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-> >> @@ -2400,6 +2439,9 @@ static int tegra_pcie_probe(struct platform_device *pdev)
-> >>  
-> >>  	pci_bus_add_devices(host->bus);
-> >>  
-> >> +	for_each_pci_dev(pci_dev)
-> >> +		tegra_pcie_change_link_speed(pcie, pci_dev);
-> >> +
-> > 
-> > Are you sure it is safe to change link speed after adding devices ?
-> > 
-> > Lorenzo
-> I tried to do link retrain right after 'linkup in Gen1' i.e before pci_bus_add_devices(),
-> but it taking more time than timeout(100 msec) I added in tegra_pcie_change_link_speed().
-
-You should not try, you should understand the reason behind it.
-
-> So I moved it here to have minimum delay for retraining link. I didn't see any issue
-> here, link speed is moving to Gen2 without any issue. Do you want me look into anything
-> particular here?
-
-At that point you can have devices matched to drivers - I do not think
-that's correct to carry out the retraining after devices are added even
-if it may work for you.
-
-Yes, I want you please to look into the reasons that bring to the timeout
-and the consequent retraining code placement in the probe path.
-
-Thanks,
-Lorenzo
+Thanks
+Kishon
+> 
+> For pci-next, I applied this series on top of Kishon's patch
+> ("PCI: endpoint: Use EPC's device in dma_alloc_coherent/dma_free_coherent")
+> otherwise dma_alloc_coherent() fails when called by pci_epf_alloc_space().
+> 
+> Best regards,
+> 
+> Cyrille
+> 
+> ChangeLog:
+> 
+> v1 -> v2:
+> - add new properties in the device-tree bindings: 'cdns,max-outbound-regions'
+>   and 'cdns,no-bar-match-nbits'.
+> - add a new patch to regroup all makefile rules in drivers/pci/Makefile, hence
+>   cleaning drivers/Makefile up.
+> - change the license text to use the recommanded format:
+>   // SPDX-License-Identifier: GPL-2.0
+> - add a new patch updating the API of the EPC library to add support to
+>   multi-function devices.
+> - add a 2 new patches to share more common code between host controller drivers
+> - remove some useless tests
+> - add more comments in both drivers.
+> - fix DT bindings examples
+> - remove useless init of the primary, secondary and sub-ordinate bus numbers in
+>   the PCI configuration space of the root port.
+> - remove cdns_pcie_ep_stop() function and rework cdns_pcie_ep_start() function
+> 
+> Cyrille Pitchen (8):
+>   PCI: Regroup all PCI related entries into drivers/pci/Makefile
+>   PCI: OF: Add generic function to parse and allocate PCI resources
+>   PCI: Add generic function to probe PCI host controllers
+>   PCI: Add vendor ID for Cadence
+>   PCI: cadence: Add host driver for Cadence PCIe controller
+>   PCI: endpoint: Add the function number as argument to EPC ops
+>   dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe endpoint
+>     controller
+>   PCI: cadence: Add EndPoint Controller driver for Cadence PCIe
+>     controller
+> 
+> Scott Telford (1):
+>   dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host
+>     controller
+> 
+>  .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  |  23 +
+>  .../bindings/pci/cdns,cdns-pcie-host.txt           |  60 +++
+>  MAINTAINERS                                        |   7 +
+>  drivers/Makefile                                   |   5 +-
+>  drivers/pci/Kconfig                                |   2 +
+>  drivers/pci/Makefile                               |  12 +-
+>  drivers/pci/cadence/Kconfig                        |  33 ++
+>  drivers/pci/cadence/Makefile                       |   4 +
+>  drivers/pci/cadence/pcie-cadence-ep.c              | 531 +++++++++++++++++++++
+>  drivers/pci/cadence/pcie-cadence-host.c            | 330 +++++++++++++
+>  drivers/pci/cadence/pcie-cadence.c                 |  95 ++++
+>  drivers/pci/cadence/pcie-cadence.h                 | 310 ++++++++++++
+>  drivers/pci/dwc/pcie-designware-ep.c               |  20 +-
+>  drivers/pci/endpoint/functions/pci-epf-test.c      |  41 +-
+>  drivers/pci/endpoint/pci-epc-core.c                |  62 ++-
+>  drivers/pci/host/Makefile                          |   2 +
+>  drivers/pci/host/pci-host-common.c                 |  87 +---
+>  drivers/pci/of.c                                   |  51 ++
+>  drivers/pci/probe.c                                |  50 ++
+>  include/linux/pci-epc.h                            |  43 +-
+>  include/linux/pci.h                                |  12 +
+>  include/linux/pci_ids.h                            |   2 +
+>  22 files changed, 1624 insertions(+), 158 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+>  create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+>  create mode 100644 drivers/pci/cadence/Kconfig
+>  create mode 100644 drivers/pci/cadence/Makefile
+>  create mode 100644 drivers/pci/cadence/pcie-cadence-ep.c
+>  create mode 100644 drivers/pci/cadence/pcie-cadence-host.c
+>  create mode 100644 drivers/pci/cadence/pcie-cadence.c
+>  create mode 100644 drivers/pci/cadence/pcie-cadence.h
+> 
