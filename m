@@ -1,163 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:56130 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752275AbdLLOQu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 09:16:50 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: kishon@ti.com, Niklas Cassel <niklass@axis.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 1/3] PCI: designware-ep: Fix find_first_zero_bit() usage
-Date: Tue, 12 Dec 2017 15:16:32 +0100
-Message-Id: <20171212141634.5985-2-niklas.cassel@axis.com>
-In-Reply-To: <20171212141634.5985-1-niklas.cassel@axis.com>
-References: <20171212141634.5985-1-niklas.cassel@axis.com>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:43942 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754445AbdL1RuM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 12:50:12 -0500
+Date: Thu, 28 Dec 2017 12:50:09 -0500
+From: Alexandru Chirvasitu <achirvasub@gmail.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "Maciej W. Rozycki" <macro@linux-mips.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Mihai Costache <v-micos@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
+Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
+Message-ID: <20171228175009.ucxr4to2nb42e3s4@D-69-91-141-110.dhcp4.washington.edu>
+References: <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com>
+ <20171220131929.GC24638@arch-chirva.localdomain>
+ <alpine.DEB.2.20.1712281145510.1688@nanos>
+ <20171228142117.GA10658@chirva-slack.chirva-slack>
+ <alpine.DEB.2.20.1712281531120.1899@nanos>
+ <20171228154835.GB10658@chirva-slack.chirva-slack>
+ <20171228160522.GC10658@chirva-slack.chirva-slack>
+ <alpine.DEB.2.20.1712281706010.1899@nanos>
+ <20171228172250.GD10658@chirva-slack.chirva-slack>
+ <alpine.DEB.2.20.1712281823140.1899@nanos>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1712281823140.1899@nanos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-find_first_zero_bit()'s parameter 'size' is defined in bits,
-not in bytes.
+No; it seems to be tied to this specific issue, and I was seeing even
+before getting logs just now, whenever I'd start one of the bad
+kernels in recovery mode.
 
-find_first_zero_bit() is called with size in bytes rather than bits,
-which thus defines a too low upper limit, causing
-dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
-and bar 5, which makes bar 5 overwrite the settings set by bar 4.
+But no, I've never seen that in any other logs, or on any other
+screens outside of those popping up in relation to this problem.
 
-Since the sizes of the bitmaps are known, dynamically allocate the
-bitmaps, and use the correct size when calling find_first_zero_bit().
-
-Additionally, make sure that ep->num_ob_windows and ep->num_ib_windows,
-which are obtained from device tree, are smaller than the maximum number
-of iATUs (MAX_IATU_IN/MAX_IATU_OUT).
-
-Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++--------
- drivers/pci/dwc/pcie-designware.h    |  8 ++++++--
- 2 files changed, 32 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index d53d5f168363..d5eb143040e3 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
- 	u32 free_win;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
--	free_win = find_first_zero_bit(&ep->ib_window_map,
--				       sizeof(ep->ib_window_map));
-+	free_win = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
- 	if (free_win >= ep->num_ib_windows) {
- 		dev_err(pci->dev, "no free inbound window\n");
- 		return -EINVAL;
-@@ -85,7 +84,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
- 	}
- 
- 	ep->bar_to_atu[bar] = free_win;
--	set_bit(free_win, &ep->ib_window_map);
-+	set_bit(free_win, ep->ib_window_map);
- 
- 	return 0;
- }
-@@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- 	u32 free_win;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
--	free_win = find_first_zero_bit(&ep->ob_window_map,
--				       sizeof(ep->ob_window_map));
-+	free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
- 	if (free_win >= ep->num_ob_windows) {
- 		dev_err(pci->dev, "no free outbound window\n");
- 		return -EINVAL;
-@@ -106,7 +104,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- 	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
- 				  phys_addr, pci_addr, size);
- 
--	set_bit(free_win, &ep->ob_window_map);
-+	set_bit(free_win, ep->ob_window_map);
- 	ep->outbound_addr[free_win] = phys_addr;
- 
- 	return 0;
-@@ -121,7 +119,7 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
- 	dw_pcie_ep_reset_bar(pci, bar);
- 
- 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
--	clear_bit(atu_index, &ep->ib_window_map);
-+	clear_bit(atu_index, ep->ib_window_map);
- }
- 
- static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
-@@ -175,7 +173,7 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
- 		return;
- 
- 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
--	clear_bit(atu_index, &ep->ob_window_map);
-+	clear_bit(atu_index, ep->ob_window_map);
- }
- 
- static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
-@@ -298,12 +296,32 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		dev_err(dev, "unable to read *num-ib-windows* property\n");
- 		return ret;
- 	}
-+	if (ep->num_ib_windows > MAX_IATU_IN) {
-+		dev_err(dev, "invalid *num-ib-windows*\n");
-+		return -EINVAL;
-+	}
- 
- 	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
- 	if (ret < 0) {
- 		dev_err(dev, "unable to read *num-ob-windows* property\n");
- 		return ret;
- 	}
-+	if (ep->num_ob_windows > MAX_IATU_OUT) {
-+		dev_err(dev, "invalid *num-ob-windows*\n");
-+		return -EINVAL;
-+	}
-+
-+	ep->ib_window_map = devm_kzalloc(dev, sizeof(long) *
-+					 BITS_TO_LONGS(ep->num_ib_windows),
-+					 GFP_KERNEL);
-+	if (!ep->ib_window_map)
-+		return -ENOMEM;
-+
-+	ep->ob_window_map = devm_kzalloc(dev, sizeof(long) *
-+					 BITS_TO_LONGS(ep->num_ob_windows),
-+					 GFP_KERNEL);
-+	if (!ep->ob_window_map)
-+		return -ENOMEM;
- 
- 	addr = devm_kzalloc(dev, sizeof(phys_addr_t) * ep->num_ob_windows,
- 			    GFP_KERNEL);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index e5d9d77b778e..e6fd0b024b21 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -113,6 +113,10 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
- 
-+/* Maximum number of inbound/outbound iATUs */
-+#define MAX_IATU_IN			256
-+#define MAX_IATU_OUT			256
-+
- struct pcie_port;
- struct dw_pcie;
- struct dw_pcie_ep;
-@@ -192,8 +196,8 @@ struct dw_pcie_ep {
- 	size_t			page_size;
- 	u8			bar_to_atu[6];
- 	phys_addr_t		*outbound_addr;
--	unsigned long		ib_window_map;
--	unsigned long		ob_window_map;
-+	unsigned long		*ib_window_map;
-+	unsigned long		*ob_window_map;
- 	u32			num_ib_windows;
- 	u32			num_ob_windows;
- };
--- 
-2.14.2
+On Thu, Dec 28, 2017 at 06:29:05PM +0100, Thomas Gleixner wrote:
+> On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
+> > On Thu, Dec 28, 2017 at 05:10:28PM +0100, Thomas Gleixner wrote:
+> > > On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
+> > > > Actually, it decided to cooperate for just long enough for me to get
+> > > > the dmesg out. Attached.
+> > > > 
+> > > > This is from the kernel you asked about: Dou's patch + yours, i.e. the
+> > > > latest one in that git log I just sent, booted up with 'apic=debug'.
+> > > 
+> > > Ok. As I suspected that warning does not trigger. I would have been
+> > > massively surprised if that happened. So Dou's patch is just a red herring
+> > > and just might change the timing enough to make the problem 'hide'.
+> > > 
+> > > Can you try something completely different please?
+> > > 
+> > > Just use plain Linus tree without any additional patches on top and disable
+> > > CONFIG_NO_HZ_IDLE, i.e. select CONFIG_HZ_PERIODIC.
+> > > 
+> > > If that works, then reenable it and add 'nohz=off' to the kernel command
+> > > line.
+> > >
+> > 
+> > No go here I'm afraid:
+> > 
+> > Linus' clean 4.15-rc5 compiled with CONFIG_HZ_PERIODIC exhibits the
+> > familiar behaviour: lockups, sometimes instant upon trying to log in,
+> > sometimes logging me in and freaking out seconds later.
+> 
+> Ok. So it's not the issue I had in mind. 
+> 
+> Back to some of the interesting bits in the logs:
+> 
+> [   36.017942] spurious APIC interrupt through vector ff on CPU#0, should never happen.
+> 
+> Does that message ever show up in 4.14 or 4.9?
+> 
+> Thanks,
+> 
+> 	tglx
