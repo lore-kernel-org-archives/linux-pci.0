@@ -1,356 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:12025 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752303AbdLHI7K (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 03:59:10 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V4 7/7] PCI: tegra: Add power management support
-Date: Fri, 8 Dec 2017 14:28:13 +0530
-Message-ID: <1512723493-865-8-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:39315 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754845AbdL1RnW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 12:43:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <6120485.xubBpvge6h@aspire.rjw.lan>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+ <CAJZ5v0hpK0_vjX3HinCpsFuKffVUn3d5EnqXdz0P893aRZgnRw@mail.gmail.com>
+ <20171228165134.GH3875@atomide.com> <6120485.xubBpvge6h@aspire.rjw.lan>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 28 Dec 2017 18:43:20 +0100
+Message-ID: <CAJZ5v0hSMqwitCvfi7D+sknuO0YFr5F-kdkV-cSoVp30Cmdaeg@mail.gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+To: Tony Lindgren <tony@atomide.com>
+Cc: JeffyChen <jeffy.chen@rock-chips.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Doug Anderson <dianders@chromium.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra186 powergate driver is implemented as power domain driver, power
-partition ungate/gate are registered as power_on/power_off callback
-functions. There are no direct functions to power gate/ungate host
-controller in Tegra186. Host controller driver should add "power-domains"
-property in device tree and implement runtime suspend and resume
-callback functons. Power gate and ungate is taken care by power domain
-driver when host controller driver calls pm_runtime_put_sync and
-pm_runtime_get_sync respectively.
+On Thu, Dec 28, 2017 at 6:29 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrot=
+e:
+> On Thursday, December 28, 2017 5:51:34 PM CET Tony Lindgren wrote:
+>> * Rafael J. Wysocki <rafael@kernel.org> [171228 12:21]:
+>> > On Thu, Dec 28, 2017 at 5:22 AM, Tony Lindgren <tony@atomide.com> wrot=
+e:
+>> > > * Rafael J. Wysocki <rafael@kernel.org> [171228 00:51]:
+>> > >> On Wed, Dec 27, 2017 at 4:08 PM, Tony Lindgren <tony@atomide.com> w=
+rote:
+>> > >> > * Rafael J. Wysocki <rjw@rjwysocki.net> [171227 01:00]:
+>> > >> >> On Tuesday, December 26, 2017 2:06:47 AM CET JeffyChen wrote:
+>> > >> >> > Hi Rafael,
+>> > >> >> >
+>> > >> >> > Thanks for your reply :)
+>> > >> >> >
+>> > >> >> > On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
+>> > >> >> > >> >+
+>> > >> >> > >> >+       dn =3D pci_device_to_OF_node(ppdev);
+>> > >> >> > >> >+       if (!dn)
+>> > >> >> > >> >+               return 0;
+>> > >> >> > >> >+
+>> > >> >> > >> >+       irq =3D of_irq_get_byname(dn, "wakeup");
+>> > >> >> > > Why is this a property of the bridge and not of the device i=
+tself?
+>> > >> >> >
+>> > >> >> > That is suggested by Brian, because in that way, the wakeup pi=
+n would
+>> > >> >> > not "tied to what exact device is installed (or no device, if =
+it's a slot)."
+>> > >> >>
+>> > >> >> But I don't think it works when there are two devices using diff=
+erent WAKE#
+>> > >> >> interrupt lines under the same bridge.  Or how does it work then=
+?
+>> > >> >
+>> > >> > It won't work currently for multiple devices but adding more than
+>> > >> > one wakeriq per device is doable. And I think we will have other
+>> > >> > cases where multiple wakeirqs are connected to a single device, s=
+o
+>> > >> > that issue should be sorted out sooner or later.
+>> > >> >
+>> > >> > And if requesting wakeirq for the PCI WAKE# lines at the PCI
+>> > >> > controller does the job, then maybe that's all we need to start w=
+ith.
+>> > >>
+>> > >> These are expected to be out-of-band, so not having anything to do
+>> > >> with the Root Complex.
+>> > >>
+>> > >> In-band PME Messages go through the PCIe hierarchy, but that is a
+>> > >> standard mechanism and it is supported already.
+>> > >>
+>> > >> WAKE# are platform-specific, pretty much by definition and I guess
+>> > >> that on most ARM boards they are just going to be some kind of GPIO
+>> > >> pins.
+>> > >
+>> > > OK. So probably supporting the following two configurations
+>> > > should be enough then:
+>> > >
+>> > > 1. One or more WAKE# lines configured as a wakeirq for the PCI
+>> > >    controller
+>> > >
+>> > >    When the wakeirq calls pm_wakeup_event() for the PCI controller
+>> > >    device driver, the PCI controller wakes up and can deal with
+>> > >    it's child devices
+>> >
+>> > But this shouldn't be necessary at all.  Or if it is, I wonder why
+>> > that's the case.
+>>
+>> Well Brian had a concern where we would have to implement PM runtime
+>> for all device drivers for PCI devices.
+>
+> Why would we?
+>
+>> > I'm assuming that we're talking about PCI Express here, which has two
+>> > wakeup mechanisms defined, one of which is based on using PME Messages
+>> > (Beacon) and the second one is WAKE#:
+>> >
+>> > "The WAKE# mechanism uses sideband signaling to implement wakeup
+>> > functionality. WAKE# is
+>> > an =E2=80=9Copen drain=E2=80=9D signal asserted by components requesti=
+ng wakeup and
+>> > observed by the associated
+>> > power controller."
+>> >
+>> > (from PCIe Base Spec 3.0).  [And there's a diagram showing the routing
+>> > of WAKE# in two cases in Figure 5-4: Conceptual Diagrams Showing Two
+>> > Example Cases of WAKE# Routing.]
+>>
+>> Thanks for the pointer, I had not seen that :) So the use cases
+>> I was trying to describe above are similar to the wiring in the
+>> PCIe Base Spec 3.0 "Figure 5-4" , but numbered the other way around.
+>>
+>> > Note that WAKE# is defined to be "observed by the associated power
+>> > controller", so I'm not sure what the PCI controller's role in the
+>> > handing of it is at all.
+>>
+>> To me it seems the "switch" part stays at least partially powered
+>> and then in-band PME messages are used after host is woken up to
+>> figure out which WAKE# triggered?
+>
+> Yes, that's my understanding too.
 
-Register suspend_noirq & resume_noirq callback functions to allow PCIe to
-come up after resume from RAM. Both runtime and noirq pm ops share same
-callback functions.
+To be precise, it is not quite possible to figure out which WAKE#
+triggered, if they are sharing the line, without looking into the
+config spaces of the devices below the switch.  The switch is not
+expected to do that AFAICS.  It only generates a PME message meaning
+"wakeup is being signaled somewhere below" and the PME driver that
+handles the Root Port receiving it should look at the PME Status bits
+of the devices below the switch (the pme.c driver does that IIRC or at
+least it should do that ;-)).
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
-V3:
-* no change in this patch
-V4:
-* no change in this patch
+Still, the handling of WAKE# doesn't need to cover this case AFAICS.
 
- drivers/pci/host/pci-tegra.c | 174 ++++++++++++++++++++++++++-----------------
- 1 file changed, 106 insertions(+), 68 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 1972081322c4..534cb4fccbbc 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1385,31 +1385,25 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 		}
- 	}
- 
--	err = tegra_pcie_power_on(pcie);
--	if (err) {
--		dev_err(dev, "failed to power up: %d\n", err);
--		goto phys_put;
--	}
--
- 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
- 	pcie->pads = devm_ioremap_resource(dev, pads);
- 	if (IS_ERR(pcie->pads)) {
- 		err = PTR_ERR(pcie->pads);
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	afi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "afi");
- 	pcie->afi = devm_ioremap_resource(dev, afi);
- 	if (IS_ERR(pcie->afi)) {
- 		err = PTR_ERR(pcie->afi);
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	/* request configuration space, but remap later, on demand */
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cs");
- 	if (!res) {
- 		err = -EADDRNOTAVAIL;
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	axi_addr = pcie->soc->use_4k_conf_space ?
-@@ -1417,21 +1411,21 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	pcie->cs = devm_request_mem_region(dev, axi_addr, SZ_4K, res->name);
- 	if (!pcie->cs) {
- 		err = -EADDRNOTAVAIL;
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	pcie->cfg_va_base = devm_ioremap(dev, pcie->cs->start, SZ_4K);
- 	if (!pcie->cfg_va_base) {
- 		dev_err(pcie->dev, "failed to ioremap config space\n");
- 		err = -EADDRNOTAVAIL;
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	/* request interrupt */
- 	err = platform_get_irq_byname(pdev, "intr");
- 	if (err < 0) {
- 		dev_err(dev, "failed to get IRQ: %d\n", err);
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	pcie->irq = err;
-@@ -1439,13 +1433,11 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	err = request_irq(pcie->irq, tegra_pcie_isr, IRQF_SHARED, "PCIE", pcie);
- 	if (err) {
- 		dev_err(dev, "failed to register IRQ: %d\n", err);
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	return 0;
- 
--poweroff:
--	tegra_pcie_power_off(pcie);
- phys_put:
- 	if (soc->program_uphy)
- 		tegra_pcie_phys_put(pcie);
-@@ -1459,8 +1451,6 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- 	if (pcie->irq > 0)
- 		free_irq(pcie->irq, pcie);
- 
--	tegra_pcie_power_off(pcie);
--
- 	if (soc->program_uphy)
- 		tegra_pcie_phys_put(pcie);
- 
-@@ -1638,37 +1628,41 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
- 	int err;
- 	u32 reg;
- 
--	mutex_init(&msi->lock);
-+	if (!msi->phys) {
-+		mutex_init(&msi->lock);
- 
--	msi->chip.dev = dev;
--	msi->chip.setup_irq = tegra_msi_setup_irq;
--	msi->chip.teardown_irq = tegra_msi_teardown_irq;
-+		msi->chip.dev = dev;
-+		msi->chip.setup_irq = tegra_msi_setup_irq;
-+		msi->chip.teardown_irq = tegra_msi_teardown_irq;
- 
--	msi->domain = irq_domain_add_linear(dev->of_node, INT_PCI_MSI_NR,
--					    &msi_domain_ops, &msi->chip);
--	if (!msi->domain) {
--		dev_err(dev, "failed to create IRQ domain\n");
--		return -ENOMEM;
--	}
-+		msi->domain = irq_domain_add_linear(dev->of_node,
-+						    INT_PCI_MSI_NR,
-+						    &msi_domain_ops,
-+						    &msi->chip);
-+		if (!msi->domain) {
-+			dev_err(dev, "failed to create IRQ domain\n");
-+			return -ENOMEM;
-+		}
- 
--	err = platform_get_irq_byname(pdev, "msi");
--	if (err < 0) {
--		dev_err(dev, "failed to get IRQ: %d\n", err);
--		goto err;
--	}
-+		err = platform_get_irq_byname(pdev, "msi");
-+		if (err < 0) {
-+			dev_err(dev, "failed to get IRQ: %d\n", err);
-+			goto err;
-+		}
- 
--	msi->irq = err;
-+		msi->irq = err;
- 
--	err = request_irq(msi->irq, tegra_pcie_msi_irq, IRQF_NO_THREAD,
--			  tegra_msi_irq_chip.name, pcie);
--	if (err < 0) {
--		dev_err(dev, "failed to request IRQ: %d\n", err);
--		goto err;
--	}
-+		err = request_irq(msi->irq, tegra_pcie_msi_irq, IRQF_NO_THREAD,
-+				  tegra_msi_irq_chip.name, pcie);
-+		if (err < 0) {
-+			dev_err(dev, "failed to request IRQ: %d\n", err);
-+			goto err;
-+		}
- 
--	/* setup AFI/FPCI range */
--	msi->pages = __get_free_pages(GFP_KERNEL, 0);
--	msi->phys = virt_to_phys((void *)msi->pages);
-+		/* setup AFI/FPCI range */
-+		msi->pages = __get_free_pages(GFP_KERNEL, 0);
-+		msi->phys = virt_to_phys((void *)msi->pages);
-+	}
- 
- 	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
- 	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
-@@ -2694,26 +2688,16 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
--	err = tegra_pcie_enable_controller(pcie);
--	if (err)
-+	pm_runtime_enable(pcie->dev);
-+	err = pm_runtime_get_sync(pcie->dev);
-+	if (err) {
-+		dev_err(dev, "fail to enable pcie controller: %d\n", err);
- 		goto put_resources;
-+	}
- 
- 	err = tegra_pcie_request_resources(pcie);
- 	if (err)
--		goto disable_controller;
--
--	/* setup the AFI address translations */
--	tegra_pcie_setup_translations(pcie);
--
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		err = tegra_pcie_enable_msi(pcie);
--		if (err < 0) {
--			dev_err(dev, "failed to enable MSI support: %d\n", err);
--			goto free_resources;
--		}
--	}
--
--	tegra_pcie_enable_ports(pcie);
-+		goto pm_runtime_put;
- 
- 	host->busnr = pcie->busn.start;
- 	host->dev.parent = &pdev->dev;
-@@ -2724,7 +2708,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	err = pci_scan_root_bus_bridge(host);
- 	if (err < 0) {
- 		dev_err(dev, "failed to register host: %d\n", err);
--		goto disable_msi;
-+		goto free_resources;
- 	}
- 
- 	pci_bus_size_bridges(host->bus);
-@@ -2746,14 +2730,13 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	return 0;
- 
--disable_msi:
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		tegra_pcie_disable_msi(pcie);
--	tegra_pcie_disable_ports(pcie);
- free_resources:
- 	tegra_pcie_free_resources(pcie);
--disable_controller:
--	tegra_pcie_disable_controller(pcie);
-+pm_runtime_put:
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		tegra_pcie_disable_msi(pcie);
-+	pm_runtime_put_sync(pcie->dev);
-+	pm_runtime_disable(pcie->dev);
- put_resources:
- 	tegra_pcie_put_resources(pcie);
- 	return err;
-@@ -2763,7 +2746,6 @@ static int tegra_pcie_remove(struct platform_device *pdev)
- {
- 	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
- 	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
--	struct tegra_pcie_port *port, *tmp;
- 
- 	if (IS_ENABLED(CONFIG_DEBUG_FS))
- 		tegra_pcie_debugfs_exit(pcie);
-@@ -2771,21 +2753,77 @@ static int tegra_pcie_remove(struct platform_device *pdev)
- 	pci_remove_root_bus(host->bus);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_disable_msi(pcie);
-+	tegra_pcie_free_resources(pcie);
-+	pm_runtime_put_sync(pcie->dev);
-+	pm_runtime_disable(pcie->dev);
-+	tegra_pcie_put_resources(pcie);
-+
-+	return 0;
-+}
-+
-+static int tegra_pcie_pm_suspend(struct device *dev)
-+{
-+	struct tegra_pcie *pcie = dev_get_drvdata(dev);
-+	struct tegra_pcie_port *port, *tmp;
-+
- 	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
- 		tegra_pcie_pme_turnoff(port);
- 	tegra_pcie_disable_ports(pcie);
--	tegra_pcie_free_resources(pcie);
- 	tegra_pcie_disable_controller(pcie);
--	tegra_pcie_put_resources(pcie);
-+	tegra_pcie_power_off(pcie);
- 
- 	return 0;
- }
- 
-+static int tegra_pcie_pm_resume(struct device *dev)
-+{
-+	struct tegra_pcie *pcie = dev_get_drvdata(dev);
-+	int err;
-+
-+	err = tegra_pcie_power_on(pcie);
-+	if (err) {
-+		dev_err(dev, "tegra pcie power on fail: %d\n", err);
-+		return err;
-+	}
-+	err = tegra_pcie_enable_controller(pcie);
-+	if (err) {
-+		dev_err(dev, "tegra pcie controller enable fail: %d\n", err);
-+		goto poweroff;
-+	}
-+	tegra_pcie_setup_translations(pcie);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		err = tegra_pcie_enable_msi(pcie);
-+		if (err < 0) {
-+			dev_err(dev, "failed to enable MSI support: %d\n", err);
-+			goto disable_controller;
-+		}
-+	}
-+
-+	tegra_pcie_enable_ports(pcie);
-+
-+	return 0;
-+
-+disable_controller:
-+	tegra_pcie_disable_controller(pcie);
-+poweroff:
-+	tegra_pcie_power_off(pcie);
-+
-+	return err;
-+}
-+
-+static const struct dev_pm_ops tegra_pcie_pm_ops = {
-+	SET_RUNTIME_PM_OPS(tegra_pcie_pm_suspend, tegra_pcie_pm_resume, NULL)
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(tegra_pcie_pm_suspend,
-+				      tegra_pcie_pm_resume)
-+};
-+
- static struct platform_driver tegra_pcie_driver = {
- 	.driver = {
- 		.name = "tegra-pcie",
- 		.of_match_table = tegra_pcie_of_match,
- 		.suppress_bind_attrs = true,
-+		.pm = &tegra_pcie_pm_ops,
- 	},
- 	.probe = tegra_pcie_probe,
- 	.remove = tegra_pcie_remove,
--- 
-2.1.4
+Thanks,
+Rafael
