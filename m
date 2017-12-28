@@ -1,74 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 23 Dec 2017 14:45:32 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Yisheng Xie <xieyisheng1@huawei.com>
-Cc: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
-        ulf.hansson@linaro.org, jakub.kicinski@netronome.com,
-        airlied@linux.ie, linux-wireless@vger.kernel.org,
-        linus.walleij@linaro.org, alsa-devel@alsa-project.org,
-        dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-mtd@lists.infradead.org, daniel.vetter@intel.com,
-        dan.j.williams@intel.com, jason@lakedaemon.net,
-        linux-rtc@vger.kernel.org, boris.brezillon@free-electrons.com,
-        mchehab@kernel.org, dmaengine@vger.kernel.org,
-        vinod.koul@intel.com, richard@nod.at, marek.vasut@gmail.com,
-        industrypack-devel@lists.sourceforge.net,
-        linux-pci@vger.kernel.org, dvhart@infradead.org,
-        linux@roeck-us.net, linux-media@vger.kernel.org,
-        seanpaul@chromium.org, devel@driverdev.osuosl.org,
-        linux-watchdog@vger.kernel.org, arnd@arndb.de,
-        b.zolnierkie@samsung.com, marc.zyngier@arm.com, jslaby@suse.com,
-        jani.nikula@linux.intel.com, linux-can@vger.kernel.org,
-        linux-gpio@vger.kernel.org, broonie@kernel.org, mkl@pengutronix.de,
-        linux-fbdev@vger.kernel.org, nios2-dev@lists.rocketboards.org,
-        bhelgaas@google.com, tglx@linutronix.de,
-        andriy.shevchenko@linux.intel.com, kvalo@codeaurora.org,
-        a.zummo@towertech.it, netdev@vger.kernel.org,
-        linux-mmc@vger.kernel.org, lgirdwood@gmail.com,
-        ralf@linux-mips.org, linux-spi@vger.kernel.org, ysxie@foxmail.com,
-        wg@grandegger.com, cyrille.pitchen@wedev4u.fr, tj@kernel.org,
-        alexandre.belloni@free-electrons.com, davem@davemloft.net,
-        andy@infradead.org
-Subject: Re: [PATCH v3 27/27] devres: kill devm_ioremap_nocache
-Message-ID: <20171223134532.GA10103@kroah.com>
-References: <1514026979-33838-1-git-send-email-xieyisheng1@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43222 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751169AbdL1XBP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Dec 2017 18:01:15 -0500
+Date: Thu, 28 Dec 2017 17:01:12 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, adouglas@cadence.com,
+        stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
+        eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
+        sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+        robh@kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 6/9] PCI: cadence: Add host driver for Cadence PCIe
+ controller
+Message-ID: <20171228230111.GB19819@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+ <4b2b67ad54e14ee5e1f83af65e9932ce408e82ec.1513620412.git.cyrille.pitchen@free-electrons.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1514026979-33838-1-git-send-email-xieyisheng1@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <4b2b67ad54e14ee5e1f83af65e9932ce408e82ec.1513620412.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 23, 2017 at 07:02:59PM +0800, Yisheng Xie wrote:
-> --- a/lib/devres.c
-> +++ b/lib/devres.c
-> @@ -44,35 +44,6 @@ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
->  EXPORT_SYMBOL(devm_ioremap);
+On Mon, Dec 18, 2017 at 07:16:06PM +0100, Cyrille Pitchen wrote:
+> This patch adds support to the Cadence PCIe controller in host mode.
+> 
+> The "cadence/" entry in drivers/pci/Makefile is placed after the
+> "endpoint/" entry so when the next patch introduces a EPC driver for the
+> Cadence PCIe controller, drivers/pci/cadence/pcie-cadence-ep.o will be
+> linked after drivers/pci/endpoint/*.o objects, otherwise the built-in
+> pci-cadence-ep driver would be probed before the PCI endpoint libraries
+> would have been initialized, which would result in a kernel crash.
+> 
+> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 7284a7f6ad1e..a66ddb347798 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -54,5 +54,6 @@ obj-y += host/
+>  obj-y += switch/
 >  
->  /**
-> - * devm_ioremap_nocache - Managed ioremap_nocache()
-> - * @dev: Generic device to remap IO address for
-> - * @offset: Resource address to map
-> - * @size: Size of map
-> - *
-> - * Managed ioremap_nocache().  Map is automatically unmapped on driver
-> - * detach.
-> - */
-> -void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
-> -				   resource_size_t size)
-> -{
-> -	void __iomem **ptr, *addr;
-> -
-> -	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
-> -	if (!ptr)
-> -		return NULL;
-> -
-> -	addr = ioremap_nocache(offset, size);
+>  obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
+> +obj-$(CONFIG_PCI_CADENCE)	+= cadence/
+>  # PCI dwc controller drivers
+>  obj-y				+= dwc/
 
-Wait, devm_ioremap() calls ioremap(), not ioremap_nocache(), are you
-_SURE_ that these are all identical?  For all arches?  If so, then
-ioremap_nocache() can also be removed, right?
+I don't like the fact that the cadence/ rule looks different than the
+dwc/ rule for no obvious reason.  With some work, the dwc/ rule could
+maybe be made to look like:
 
-In my quick glance, I don't think you can do this series at all :(
+  obj-$(CONFIG_PCIE_DW)                 += dwc/
 
-greg k-h
+I *think* that should actually be pretty easy.  Everything in
+drivers/pci/dwc/Kconfig selects PCIE_DW if set, either via
+PCIE_DW_HOST or PCIE_DW_EP.
+
+> diff --git a/drivers/pci/cadence/Kconfig b/drivers/pci/cadence/Kconfig
+> new file mode 100644
+> index 000000000000..0d15b40861e9
+> --- /dev/null
+> +++ b/drivers/pci/cadence/Kconfig
+> @@ -0,0 +1,24 @@
+> +menuconfig PCI_CADENCE
+> +	bool "Cadence PCI controllers support"
+> +	depends on PCI && HAS_IOMEM
+> +	help
+> +	  Say Y here if you want to support some Cadence PCI controller.
+> +
+> +	  When in doubt, say N.
+> +
+> +if PCI_CADENCE
+> +
+> +config PCIE_CADENCE
+> +	bool
+> +
+> +config PCIE_CADENCE_HOST
+> +	bool "Cadence PCIe host controller"
+> +	depends on OF
+> +	select IRQ_DOMAIN
+> +	select PCIE_CADENCE
+> +	help
+> +	  Say Y here if you want to support the Cadence PCIe controller in host
+> +	  mode. This PCIe controller may be embedded into many different vendors
+> +	  SoCs.
+> +
+> +endif # PCI_CADENCE
+
+Can you just use the same strategy as pci/dwc/Kconfig does, i.e., omit
+the top-level PCI_CADENCE symbol?  If we don't need it for dwc, with
+its dozen drivers, we probably don't need it for the one or two
+Cadence drivers.
+
+Bjorn
