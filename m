@@ -1,134 +1,161 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:15937 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752303AbdLHI7B (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 03:59:01 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V4 5/7] PCI: tegra: Add loadable kernel module support
-Date: Fri, 8 Dec 2017 14:28:11 +0530
-Message-ID: <1512723493-865-6-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: exynos: remove redundant code in
+ exynos_pcie_establish_link
+To: Pankaj Dubey <pankaj.dubey@samsung.com>, Jingoo Han
+ <jingoohan1@gmail.com>, 'Krzysztof Kozlowski' <krzk@kernel.org>
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Message-id: <533c6579-065f-100a-9a8f-c852ad4d0398@samsung.com>
+Date: Thu, 28 Dec 2017 18:58:02 +0900
+MIME-version: 1.0
+In-reply-to: <cd0c5923-899c-0652-20ce-7f08f4bf32e1@samsung.com>
+References: <CGME20171009141438epcas2p4ead7e2f2d1af7e0950f2c026e3a9943b@epcas2p4.samsung.com>
+ <1507558478-3218-1-git-send-email-pankaj.dubey@samsung.com>
+ <CAJKOXPeC=cS2cvAXHrKuK5F4tEqH6PppwYkxC+Z8+5D--48CAg@mail.gmail.com>
+ <000a01d3411a$82eea770$88cbf650$@gmail.com>
+ <b81a09be-1873-ab81-dcb2-c3b29ff7e430@samsung.com>
+ <000101d37a79$2bdb4c20$8391e460$@gmail.com>
+ <cd0c5923-899c-0652-20ce-7f08f4bf32e1@samsung.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: 'linux-pci' <linux-pci@vger.kernel.org>, linux-samsung-soc@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, 'Anvesh Salveru' <anvesh.s@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement remove callback function for Tegra PCIe driver to add
-loadable kernel module support. Change PCI_TEGRA config to tristate to
-allow pci-tegra driver to be build as a module.
+Hi Pankaj,
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
-V3:
-* use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_init()
-V4:
-* no change in this patch
+On 12/28/2017 06:50 PM, Pankaj Dubey wrote:
+> Hi Jingoo,
+> 
+> 
+> On 12/21/2017 10:01 PM, Jingoo Han wrote:
+>> On Tuesday, October 10, 2017 9:46 AM, Pankaj Dubey wrote:
+>>> Hi Jingoo,
+>>>
+>>>
+>>> On 10/09/2017 09:50 PM, Jingoo Han wrote:
+>>>> On Monday, October 9, 2017 10:44 AM, Krzysztof Kozlowski wrote:
+>>>>> On Mon, Oct 9, 2017 at 4:14 PM, Pankaj Dubey <pankaj.dubey@samsung.com>
+>>>>> wrote:
+>>>>>> From: Anvesh Salveru <anvesh.s@samsung.com>
+>>>>>>
+>>>>>> In exynos_pcie_establish_link if driver is not using generic phy,
+>>>>>> we are resetting PHY twice, which is redundant, so this patch removes
+>>>>> Hi Pankaj,
+>>>>>
+>>>>> This lacks the information why it is redundant.
+>>>> (I resend this mail, because email address of pci list was corrupted.)
+>>> Thanks, somehow I typed wrong email id.
+>>>> I think so, too.
+>>>>
+>>>> Did you test this code on some boards with Exynos PCIe?
+>>>> Or did hardware engineers confirm this?
+>>>> Please add more information on this patch.
+>>> I have replied reason behind this patch in reply to Krzysztof, hope I am
+>>> able to
+>>> explain logic behind this change.
+>>>
+>>> I do not have access to Exynos5440 PCIe, and this PHY_COMMON_RESET is not
+>>> applicable to other Exynos SoC which I have with me, so I can't test
+>>> this change,
+>>> but if you see the change it is an obvious change, before introducing
+>>> generic phy
+>>> support to this driver PHY_COMMON_RESET was programmed only once, then
+>>> in case platform is not using PHY it suppose to be done only once during
+>>> linkup.
+>>> I am not sure when Jaehoon introduced this patch, he verified this on
+>>> Exynos5440 or
+>>> not. We are just trying to make the logic as it was before without
+>>> affecting anything.
+>>>
+>>> Thanks,
+>>> Pankaj Dubey
+>>>> Best regards,
+>>>> Jingoo Han
+>>>>
+>>>>>> repeated lines of code for PHY reset.
+>>>>>>
+>>>>>> Signed-off-by: Anvesh Salveru <anvesh.s@samsung.com>
+>>>>> Your Signed-off-by is needed here.
+>> Sorry for being late.
+>> I checked that this patch is right.
+>>
+>> Can you send this patch again with your Signed-off-by?
+>> Also, you can add my Acked-by to your new patch.
+>>
+>> Acked-by: Jingoo Han <jingoohan1@gmail.com>
+> 
+> Thanks for review and ack.
+> Will resubmit the patch along with my Signed-off-by and your Acked-by.
 
- drivers/pci/host/Kconfig     |  2 +-
- drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
- 2 files changed, 32 insertions(+), 4 deletions(-)
+Maybe it will be removed with my patch.
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 38d12980db0f..6fd2a5937804 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -34,7 +34,7 @@ config PCI_FTPCI100
- 	default ARCH_GEMINI
- 
- config PCI_TEGRA
--	bool "NVIDIA Tegra PCIe controller"
-+	tristate "NVIDIA Tegra PCIe controller"
- 	depends on ARCH_TEGRA
- 	help
- 	  Say Y here if you want support for the PCIe host controller found
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 596dbe06d911..06d62122b269 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -35,6 +35,7 @@
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -2594,6 +2595,12 @@ static const struct file_operations tegra_pcie_ports_ops = {
- 	.release = seq_release,
- };
- 
-+static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
-+{
-+	debugfs_remove_recursive(pcie->debugfs);
-+	pcie->debugfs = NULL;
-+}
-+
- static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
- {
- 	struct dentry *file;
-@@ -2610,8 +2617,7 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
- 	return 0;
- 
- remove:
--	debugfs_remove_recursive(pcie->debugfs);
--	pcie->debugfs = NULL;
-+	tegra_pcie_debugfs_exit(pcie);
- 	return -ENOMEM;
- }
- 
-@@ -2630,6 +2636,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	pcie = pci_host_bridge_priv(host);
- 	host->sysdata = pcie;
-+	platform_set_drvdata(pdev, pcie);
- 
- 	pcie->soc = of_device_get_match_data(dev);
- 	INIT_LIST_HEAD(&pcie->buses);
-@@ -2711,6 +2718,25 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static int tegra_pcie_remove(struct platform_device *pdev)
-+{
-+	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+
-+	if (IS_ENABLED(CONFIG_DEBUG_FS))
-+		tegra_pcie_debugfs_exit(pcie);
-+	pci_stop_root_bus(host->bus);
-+	pci_remove_root_bus(host->bus);
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		tegra_pcie_disable_msi(pcie);
-+	tegra_pcie_disable_ports(pcie);
-+	tegra_pcie_free_resources(pcie);
-+	tegra_pcie_disable_controller(pcie);
-+	tegra_pcie_put_resources(pcie);
-+
-+	return 0;
-+}
-+
- static struct platform_driver tegra_pcie_driver = {
- 	.driver = {
- 		.name = "tegra-pcie",
-@@ -2718,5 +2744,7 @@ static struct platform_driver tegra_pcie_driver = {
- 		.suppress_bind_attrs = true,
- 	},
- 	.probe = tegra_pcie_probe,
-+	.remove = tegra_pcie_remove,
- };
--builtin_platform_driver(tegra_pcie_driver);
-+module_platform_driver(tegra_pcie_driver);
-+MODULE_LICENSE("GPL");
--- 
-2.1.4
+https://patchwork.ozlab.org/patch/853119/
+
+Because of my personal reason, i can't send the email to Bjorn's account..so i removed his account from cc.
+Sorry.
+
+Best Regards,
+Jaehoon Chung
+
+> 
+> Thanks,
+> Pankaj Dubey
+>> Best regards,
+>> Jingoo Han
+>>
+>>>>> Best regards,
+>>>>> Krzysztof
+>>>>>
+>>>>>> ---
+>>>>>>    drivers/pci/dwc/pci-exynos.c | 7 -------
+>>>>>>    1 file changed, 7 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-
+>>> exynos.c
+>>>>>> index 5596fde..85d2f4b 100644
+>>>>>> --- a/drivers/pci/dwc/pci-exynos.c
+>>>>>> +++ b/drivers/pci/dwc/pci-exynos.c
+>>>>>> @@ -423,13 +423,6 @@ static int exynos_pcie_establish_link(struct
+>>>>> exynos_pcie *ep)
+>>>>>>                   exynos_pcie_deassert_phy_reset(ep);
+>>>>>>                   exynos_pcie_power_on_phy(ep);
+>>>>>>                   exynos_pcie_init_phy(ep);
+>>>>>> -
+>>>>>> -               /* pulse for common reset */
+>>>>>> -               exynos_pcie_writel(ep->mem_res->block_base, 1,
+>>>>>> -                                       PCIE_PHY_COMMON_RESET);
+>>>>>> -               udelay(500);
+>>>>>> -               exynos_pcie_writel(ep->mem_res->block_base, 0,
+>>>>>> -                                       PCIE_PHY_COMMON_RESET);
+>>>>>>           }
+>>>>>>
+>>>>>>           /* pulse for common reset */
+>>>>>> --
+>>>>>> 2.7.4
+>>>>>>
+>>>>
+>>>>
+>>>>
+>>
+>>
+>>
+>>
+> 
+> 
+> 
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
