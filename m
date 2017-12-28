@@ -1,200 +1,75 @@
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v2 6/7] pseries/pci: Associate PEs to VFs in configure SR-IOV
-Date: Mon, 18 Dec 2017 16:38:07 -0600
-In-Reply-To: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
-References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20171218223808.83928-7-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:38670 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753301AbdL1L5r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 06:57:47 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v3 6/9] pci: qcom SoC driver adapted to new irq API
+Date: Thu, 28 Dec 2017 11:56:44 +0000
+Message-Id: <dc33384b3a98ac4b628258e97ec8188fe646e533.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After initial validation of SR-IOV resources, firmware will
-associate PEs to the dynamic VFs created within this call. This
-patch adds the association of PEs to the PF array of PE numbers
-indexed by VF.
+This patch adapts Qcom SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- arch/powerpc/platforms/pseries/pci.c | 151 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 148 insertions(+), 3 deletions(-)
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
 
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index 48d3af026f90..00e6475004ff 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -57,18 +57,163 @@ void pcibios_name_device(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
- #endif
--
- #ifdef CONFIG_PCI_IOV
-+#define MAX_VFS_FOR_MAP_PE 256
-+struct pe_map_bar_entry {
-+	__be64     bar;       /* Input:  Virtual Function BAR */
-+	__be16     rid;       /* Input:  Virtual Function Router ID */
-+	__be16     pe_num;    /* Output: Virtual Function PE Number */
-+	__be32     reserved;  /* Reserved Space */
-+};
-+
-+int pseries_send_map_pe(struct pci_dev *pdev,
-+			u16 num_vfs,
-+			struct pe_map_bar_entry *vf_pe_array)
-+{
-+	struct pci_dn *pdn;
-+	int rc;
-+	unsigned long buid, addr;
-+	int ibm_map_pes = rtas_token("ibm,open-sriov-map-pe-number");
-+
-+	if (ibm_map_pes == RTAS_UNKNOWN_SERVICE)
-+		return -EINVAL;
-+
-+	pdn = pci_get_pdn(pdev);
-+	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
-+	buid = pdn->phb->buid;
-+	spin_lock(&rtas_data_buf_lock);
-+	memcpy(rtas_data_buf, vf_pe_array,
-+	       RTAS_DATA_BUF_SIZE);
-+	rc = rtas_call(ibm_map_pes, 5, 1, NULL, addr,
-+		       BUID_HI(buid), BUID_LO(buid),
-+		       rtas_data_buf,
-+		       num_vfs * sizeof(struct pe_map_bar_entry));
-+	memcpy(vf_pe_array, rtas_data_buf, RTAS_DATA_BUF_SIZE);
-+	spin_unlock(&rtas_data_buf_lock);
-+
-+	if (rc)
-+		dev_err(&pdev->dev,
-+			"%s: Failed to associate pes PE#%lx, rc=%x\n",
-+			__func__,  addr, rc);
-+
-+	return rc;
-+}
-+
-+void pseries_set_pe_num(struct pci_dev *pdev, u16 vf_index, __be16 pe_num)
-+{
-+	struct pci_dn *pdn;
-+
-+	pdn = pci_get_pdn(pdev);
-+	pdn->pe_num_map[vf_index] = be16_to_cpu(pe_num);
-+	dev_dbg(&pdev->dev, "VF %04x:%02x:%02x.%x associated with PE#%x\n",
-+		pci_domain_nr(pdev->bus),
-+		pdev->bus->number,
-+		PCI_SLOT(pci_iov_virtfn_devfn(pdev, vf_index)),
-+		PCI_FUNC(pci_iov_virtfn_devfn(pdev, vf_index)),
-+		pdn->pe_num_map[vf_index]);
-+}
-+
-+int pseries_associate_pes(struct pci_dev *pdev, u16 num_vfs)
-+{
-+	struct pci_dn *pdn;
-+	int i, rc, vf_index;
-+	struct pe_map_bar_entry *vf_pe_array;
-+	struct resource *res;
-+	u64 size;
-+
-+	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
-+	if (!vf_pe_array)
-+		return -ENOMEM;
-+
-+	pdn = pci_get_pdn(pdev);
-+	/* create firmware structure to associate pes */
-+	for (vf_index = 0; vf_index < num_vfs; vf_index++) {
-+		pdn->pe_num_map[vf_index] = IODA_INVALID_PE;
-+		for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+			res = &pdev->resource[i + PCI_IOV_RESOURCES];
-+			if (!res->parent)
-+				continue;
-+			size = pcibios_iov_resource_alignment(pdev, i +
-+					PCI_IOV_RESOURCES);
-+			vf_pe_array[vf_index].bar =
-+				cpu_to_be64(res->start + size * vf_index);
-+			vf_pe_array[vf_index].rid =
-+				cpu_to_be16((pci_iov_virtfn_bus(pdev, vf_index)
-+					    << 8) | pci_iov_virtfn_devfn(pdev,
-+					    vf_index));
-+			vf_pe_array[vf_index].pe_num =
-+				cpu_to_be16(IODA_INVALID_PE);
-+		}
-+	}
-+
-+	rc = pseries_send_map_pe(pdev, num_vfs, vf_pe_array);
-+	/* Only zero is success */
-+	if (!rc)
-+		for (vf_index = 0; vf_index < num_vfs; vf_index++)
-+			pseries_set_pe_num(pdev, vf_index,
-+					   vf_pe_array[vf_index].pe_num);
-+
-+	kfree(vf_pe_array);
-+	return rc;
-+}
-+
-+int pseries_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-+{
-+	struct pci_dn         *pdn;
-+	int                    rc;
-+	const int *max_vfs;
-+	int max_config_vfs;
-+	struct device_node *dn = pci_device_to_OF_node(pdev);
-+
-+	max_vfs = of_get_property(dn, "ibm,number-of-configurable-vfs", NULL);
-+
-+	if (!max_vfs)
-+		return -EINVAL;
-+
-+	/* First integer stores max config */
-+	max_config_vfs = of_read_number(&max_vfs[0], 1);
-+	if (max_config_vfs < num_vfs && num_vfs > MAX_VFS_FOR_MAP_PE) {
-+		dev_err(&pdev->dev,
-+			"Num VFs %x > %x Configurable VFs\n",
-+			num_vfs, (num_vfs > MAX_VFS_FOR_MAP_PE) ?
-+			MAX_VFS_FOR_MAP_PE : max_config_vfs);
-+		return -EINVAL;
-+	}
-+
-+	pdn = pci_get_pdn(pdev);
-+	pdn->pe_num_map = kmalloc_array(num_vfs,
-+					sizeof(*pdn->pe_num_map),
-+					GFP_KERNEL);
-+	if (!pdn->pe_num_map)
-+		return -ENOMEM;
-+
-+	rc = pseries_associate_pes(pdev, num_vfs);
-+
-+	/* Anything other than zero is failure */
-+	if (rc) {
-+		dev_err(&pdev->dev, "Failure to enable sriov: %x\n", rc);
-+		kfree(pdn->pe_num_map);
-+	} else {
-+		pci_vf_drivers_autoprobe(pdev, false);
-+	}
-+
-+	return rc;
-+}
-+
- int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- {
- 	/* Allocate PCI data */
- 	add_dev_pci_data(pdev);
--	pci_vf_drivers_autoprobe(pdev, false);
--	return 0;
-+	return pseries_pci_sriov_enable(pdev, num_vfs);
+ drivers/pci/dwc/pcie-qcom.c | 16 ----------------
+ 1 file changed, 16 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index ce7ba5b..3cc1a42 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -188,13 +188,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+ 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
  }
  
- int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
+-static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
  {
-+	struct pci_dn         *pdn;
-+
-+	pdn = pci_get_pdn(pdev);
-+	/* Releasing pe_num_map */
-+	kfree(pdn->pe_num_map);
- 	/* Release PCI data */
- 	remove_dev_pci_data(pdev);
- 	pci_vf_drivers_autoprobe(pdev, true);
+ 	struct dw_pcie *pci = pcie->pci;
+@@ -1270,15 +1263,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       qcom_pcie_msi_irq_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "qcom-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "cannot request msi irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	ret = phy_init(pcie->phy);
 -- 
-2.14.3 (Apple Git-98)
+2.7.4
