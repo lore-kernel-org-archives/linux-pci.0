@@ -1,183 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50266 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755107AbdL2HYv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 02:24:51 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v2 4/4] PCI/DPC: Enumerate the devices after DPC trigger event
-Date: Fri, 29 Dec 2017 12:54:19 +0530
-Message-Id: <1514532259-19383-5-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
-References: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: exynos: remove redundant code in
+ exynos_pcie_establish_link
+To: Jingoo Han <jingoohan1@gmail.com>, 'Krzysztof Kozlowski' <krzk@kernel.org>
+From: Pankaj Dubey <pankaj.dubey@samsung.com>
+Message-ID: <cd0c5923-899c-0652-20ce-7f08f4bf32e1@samsung.com>
+Date: Thu, 28 Dec 2017 15:20:53 +0530
+MIME-Version: 1.0
+In-Reply-To: <000101d37a79$2bdb4c20$8391e460$@gmail.com>
+References: <CGME20171009141438epcas2p4ead7e2f2d1af7e0950f2c026e3a9943b@epcas2p4.samsung.com>
+ <1507558478-3218-1-git-send-email-pankaj.dubey@samsung.com>
+ <CAJKOXPeC=cS2cvAXHrKuK5F4tEqH6PppwYkxC+Z8+5D--48CAg@mail.gmail.com>
+ <000a01d3411a$82eea770$88cbf650$@gmail.com>
+ <b81a09be-1873-ab81-dcb2-c3b29ff7e430@samsung.com>
+ <000101d37a79$2bdb4c20$8391e460$@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+ 'linux-pci' <linux-pci@vger.kernel.org>, linux-samsung-soc@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, 'Anvesh Salveru' <anvesh.s@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement error_resume callback in DPC, which, after DPC trigger event
-enumerates the devices beneath.
+Hi Jingoo,
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 68296ec..4c6bef3 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -161,6 +161,43 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- 		dev_warn(dev, "Link state not disabled for DPC event\n");
- }
- 
-+static bool dpc_wait_link_active(struct pci_dev *pdev)
-+{
-+	unsigned long timeout = jiffies + HZ;
-+	u16 lnk_status;
-+	bool ret = true;
-+
-+	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+
-+	while (!(lnk_status & PCI_EXP_LNKSTA_DLLLA) &&
-+					!time_after(jiffies, timeout)) {
-+		msleep(10);
-+		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+	}
-+
-+	if (!(lnk_status & PCI_EXP_LNKSTA_DLLLA)) {
-+		dev_warn(&pdev->dev, "Link state not enabled after DPC event\n");
-+		ret = false;
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * dpc_error_resume - enumerate the devices beneath
-+ * @dev: pointer to Root Port's pci_dev data structure
-+ *
-+ * Invoked by Port Bus driver during nonfatal recovery.
-+ */
-+static void dpc_error_resume(struct pci_dev *pdev)
-+{
-+	if (dpc_wait_link_active(pdev)) {
-+		pci_lock_rescan_remove();
-+		pci_rescan_bus(pdev->bus);
-+		pci_unlock_rescan_remove();
-+	}
-+}
-+
- /**
-  * dpc_reset_link - reset link DPC  routine
-  * @dev: pointer to Root Port's pci_dev data structure
-@@ -419,6 +456,7 @@ static void dpc_remove(struct pcie_device *dev)
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
-+	.error_resume	= dpc_error_resume,
- 	.reset_link     = dpc_reset_link,
- };
- 
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 1991cc8..aadf0eb 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -238,7 +238,8 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
- pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 	enum pci_channel_state state,
- 	char *error_mesg,
--	int (*cb)(struct pci_dev *, void *))
-+	int (*cb)(struct pci_dev *, void *),
-+	int severity)
- {
- 	struct pci_err_broadcast_data result_data;
- 
-@@ -250,6 +251,15 @@ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 		result_data.result = PCI_ERS_RESULT_RECOVERED;
- 
- 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		/* If DPC is triggered, call resume error hanlder
-+		 * because, at this point we can safely assume that
-+		 * link recovery has happened.
-+		 */
-+		if ((severity == PCI_ERR_DPC_FATAL) &&
-+			(cb == pci_report_resume)) {
-+			cb(dev, NULL);
-+			return PCI_ERS_RESULT_RECOVERED;
-+		}
- 		/*
- 		 * If the error is reported by a bridge, we think this error
- 		 * is related to the downstream link of the bridge, so we
-@@ -335,7 +345,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 	status = pci_broadcast_error_message(dev,
- 			state,
- 			"error_detected",
--			pci_report_error_detected);
-+			pci_report_error_detected,
-+			severity);
- 
- 	if ((severity == PCI_ERR_AER_FATAL) ||
- 	    (severity == PCI_ERR_DPC_FATAL)) {
-@@ -344,11 +355,15 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 			goto failed;
- 	}
- 
-+	if (severity == PCI_ERR_DPC_FATAL)
-+		goto resume;
-+
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER)
- 		status = pci_broadcast_error_message(dev,
- 				state,
- 				"mmio_enabled",
--				pci_report_mmio_enabled);
-+				pci_report_mmio_enabled,
-+				severity);
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
- 		/*
-@@ -359,16 +374,19 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 		status = pci_broadcast_error_message(dev,
- 				state,
- 				"slot_reset",
--				pci_report_slot_reset);
-+				pci_report_slot_reset,
-+				severity);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
-+resume:
- 	pci_broadcast_error_message(dev,
- 				state,
- 				"resume",
--				pci_report_resume);
-+				pci_report_resume,
-+				severity);
- 
- 	dev_info(&dev->dev, "Device recovery successful\n");
- 	mutex_unlock(&pci_err_recovery_lock);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 123ee15..46e2526 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2010,7 +2010,8 @@ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int res
- pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 					enum pci_channel_state state,
- 					char *error_mesg,
--					int (*cb)(struct pci_dev *, void *));
-+					int (*cb)(struct pci_dev *, void *),
-+					int severity);
- int pci_report_mmio_enabled(struct pci_dev *dev, void *data);
- int pci_report_slot_reset(struct pci_dev *dev, void *data);
- int pci_report_resume(struct pci_dev *dev, void *data);
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+On 12/21/2017 10:01 PM, Jingoo Han wrote:
+> On Tuesday, October 10, 2017 9:46 AM, Pankaj Dubey wrote:
+>> Hi Jingoo,
+>>
+>>
+>> On 10/09/2017 09:50 PM, Jingoo Han wrote:
+>>> On Monday, October 9, 2017 10:44 AM, Krzysztof Kozlowski wrote:
+>>>> On Mon, Oct 9, 2017 at 4:14 PM, Pankaj Dubey <pankaj.dubey@samsung.com>
+>>>> wrote:
+>>>>> From: Anvesh Salveru <anvesh.s@samsung.com>
+>>>>>
+>>>>> In exynos_pcie_establish_link if driver is not using generic phy,
+>>>>> we are resetting PHY twice, which is redundant, so this patch removes
+>>>> Hi Pankaj,
+>>>>
+>>>> This lacks the information why it is redundant.
+>>> (I resend this mail, because email address of pci list was corrupted.)
+>> Thanks, somehow I typed wrong email id.
+>>> I think so, too.
+>>>
+>>> Did you test this code on some boards with Exynos PCIe?
+>>> Or did hardware engineers confirm this?
+>>> Please add more information on this patch.
+>> I have replied reason behind this patch in reply to Krzysztof, hope I am
+>> able to
+>> explain logic behind this change.
+>>
+>> I do not have access to Exynos5440 PCIe, and this PHY_COMMON_RESET is not
+>> applicable to other Exynos SoC which I have with me, so I can't test
+>> this change,
+>> but if you see the change it is an obvious change, before introducing
+>> generic phy
+>> support to this driver PHY_COMMON_RESET was programmed only once, then
+>> in case platform is not using PHY it suppose to be done only once during
+>> linkup.
+>> I am not sure when Jaehoon introduced this patch, he verified this on
+>> Exynos5440 or
+>> not. We are just trying to make the logic as it was before without
+>> affecting anything.
+>>
+>> Thanks,
+>> Pankaj Dubey
+>>> Best regards,
+>>> Jingoo Han
+>>>
+>>>>> repeated lines of code for PHY reset.
+>>>>>
+>>>>> Signed-off-by: Anvesh Salveru <anvesh.s@samsung.com>
+>>>> Your Signed-off-by is needed here.
+> Sorry for being late.
+> I checked that this patch is right.
+>
+> Can you send this patch again with your Signed-off-by?
+> Also, you can add my Acked-by to your new patch.
+>
+> Acked-by: Jingoo Han <jingoohan1@gmail.com>
+
+Thanks for review and ack.
+Will resubmit the patch along with my Signed-off-by and your Acked-by.
+
+Thanks,
+Pankaj Dubey
+> Best regards,
+> Jingoo Han
+>
+>>>> Best regards,
+>>>> Krzysztof
+>>>>
+>>>>> ---
+>>>>>    drivers/pci/dwc/pci-exynos.c | 7 -------
+>>>>>    1 file changed, 7 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-
+>> exynos.c
+>>>>> index 5596fde..85d2f4b 100644
+>>>>> --- a/drivers/pci/dwc/pci-exynos.c
+>>>>> +++ b/drivers/pci/dwc/pci-exynos.c
+>>>>> @@ -423,13 +423,6 @@ static int exynos_pcie_establish_link(struct
+>>>> exynos_pcie *ep)
+>>>>>                   exynos_pcie_deassert_phy_reset(ep);
+>>>>>                   exynos_pcie_power_on_phy(ep);
+>>>>>                   exynos_pcie_init_phy(ep);
+>>>>> -
+>>>>> -               /* pulse for common reset */
+>>>>> -               exynos_pcie_writel(ep->mem_res->block_base, 1,
+>>>>> -                                       PCIE_PHY_COMMON_RESET);
+>>>>> -               udelay(500);
+>>>>> -               exynos_pcie_writel(ep->mem_res->block_base, 0,
+>>>>> -                                       PCIE_PHY_COMMON_RESET);
+>>>>>           }
+>>>>>
+>>>>>           /* pulse for common reset */
+>>>>> --
+>>>>> 2.7.4
+>>>>>
+>>>
+>>>
+>>>
+>
+>
+>
+>
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
