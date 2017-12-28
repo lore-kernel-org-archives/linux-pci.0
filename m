@@ -1,45 +1,69 @@
-Return-Path: <SRS0=Imzn=DO=idt.com=Alexandre.Bounine@kernel.org>
-Return-Path: <SRS0=Imzn=DO=idt.com=Alexandre.Bounine@kernel.org>
-From: "Bounine, Alexandre" <Alexandre.Bounine@idt.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Matt Porter
-	<mporter@kernel.crashing.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Andrew Morton
-	<akpm@linux-foundation.org>
-Subject: RE: [PATCH] rapidio/tsi721: use PCI_EXP_DEVCTL2_COMP_TIMEOUT macro
-Date: Mon, 18 Dec 2017 15:25:19 +0000
-Message-ID: <8D983423E7EDF846BB3056827B8CC5D161B3B7F7@corpmail1>
-References: <20171215225952.177299.86044.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171215225952.177299.86044.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <CAL_JsqJssPABjoRM-XAnuN_Xd2-sHoFifJNrRDdk_ruQ0DRw6A@mail.gmail.com>
+References: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
+ <20171226023646.17722-5-jeffy.chen@rock-chips.com> <20171226235607.4rgp4ebrrktt6d56@rob-hp-laptop>
+ <5A42F847.5060305@rock-chips.com> <CAL_JsqJssPABjoRM-XAnuN_Xd2-sHoFifJNrRDdk_ruQ0DRw6A@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 28 Dec 2017 01:32:25 +0100
+Message-ID: <CAJZ5v0gVW12=10JfcQeOD+s6S1GqkF7KFz3k1rp3Up3dJDgaBg@mail.gmail.com>
+Subject: Re: [RFC PATCH v12 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+To: Rob Herring <robh@kernel.org>
+Cc: JeffyChen <jeffy.chen@rock-chips.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Doug Anderson <dianders@chromium.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+        <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QWNrZWQtYnk6IEFsZXhhbmRyZSBCb3VuaW5lIDxhbGV4YW5kcmUuYm91bmluZUBpZHQuY29tPg0K
-DQpIaSBBbmRyZXcsDQoNClBsZWFzZSBhcHBseSB0aGUgcGF0Y2ggYmVsb3cuDQogDQpUaGFuayB5
-b3UsICANCg0KQWxleC4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEJqb3Ju
-IEhlbGdhYXMgW21haWx0bzpoZWxnYWFzQGtlcm5lbC5vcmddIA0KU2VudDogRnJpZGF5LCBEZWNl
-bWJlciAxNSwgMjAxNyA2OjAwIFBNDQpUbzogQm91bmluZSwgQWxleGFuZHJlIDxBbGV4YW5kcmUu
-Qm91bmluZUBpZHQuY29tPjsgTWF0dCBQb3J0ZXIgPG1wb3J0ZXJAa2VybmVsLmNyYXNoaW5nLm9y
-Zz4NCkNjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBbUEFUQ0hdIHJhcGlk
-aW8vdHNpNzIxOiB1c2UgUENJX0VYUF9ERVZDVEwyX0NPTVBfVElNRU9VVCBtYWNybw0KDQpGcm9t
-OiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPg0KDQpVc2UgdGhlIGV4aXN0aW5n
-IFBDSV9FWFBfREVWQ1RMMl9DT01QX1RJTUVPVVQgbWFjcm8gaW5zdGVhZCBvZiBoYXJkLWNvZGlu
-Zw0KdGhlIFBDSWUgQ29tcGxldGlvbiBUaW1lb3V0IFZhbHVlIG1hc2suICBObyBmdW5jdGlvbmFs
-IGNoYW5nZSBpbnRlbmRlZC4NCg0KU2lnbmVkLW9mZi1ieTogQmpvcm4gSGVsZ2FhcyA8YmhlbGdh
-YXNAZ29vZ2xlLmNvbT4NCi0tLQ0KIGRyaXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5jIHwg
-ICAgNSArKystLQ0KIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25z
-KC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3JhcGlkaW8vZGV2aWNlcy90c2k3MjEuYyBiL2Ry
-aXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5jDQppbmRleCA5YTY4OTE0MTAwYWQuLmJiNjU1
-ODU0NzEzZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5jDQor
-KysgYi9kcml2ZXJzL3JhcGlkaW8vZGV2aWNlcy90c2k3MjEuYw0KQEAgLTI4ODAsOCArMjg4MCw5
-IEBAIHN0YXRpYyBpbnQgdHNpNzIxX3Byb2JlKHN0cnVjdCBwY2lfZGV2ICpwZGV2LA0KIAkJCQkg
-IkludmFsaWQgTVJSUyBvdmVycmlkZSB2YWx1ZSAlZCIsIHBjaWVfbXJycyk7DQogCX0NCiANCi0J
-LyogQWRqdXN0IFBDSWUgY29tcGxldGlvbiB0aW1lb3V0LiAqLw0KLQlwY2llX2NhcGFiaWxpdHlf
-Y2xlYXJfYW5kX3NldF93b3JkKHBkZXYsIFBDSV9FWFBfREVWQ1RMMiwgMHhmLCAweDIpOw0KKwkv
-KiBTZXQgUENJZSBjb21wbGV0aW9uIHRpbWVvdXQgdG8gMS0xMG1zICovDQorCXBjaWVfY2FwYWJp
-bGl0eV9jbGVhcl9hbmRfc2V0X3dvcmQocGRldiwgUENJX0VYUF9ERVZDVEwyLA0KKwkJCQkJICAg
-UENJX0VYUF9ERVZDVEwyX0NPTVBfVElNRU9VVCwgMHgyKTsNCiANCiAJLyoNCiAJICogRklYVVA6
-IGNvcnJlY3Qgb2Zmc2V0cyBvZiBNU0ktWCB0YWJsZXMgaW4gdGhlIE1TSS1YIENhcGFiaWxpdHkg
-QmxvY2sNCg0K
+On Wed, Dec 27, 2017 at 4:30 PM, Rob Herring <robh@kernel.org> wrote:
+> On Tue, Dec 26, 2017 at 7:32 PM, JeffyChen <jeffy.chen@rock-chips.com> wrote:
+>> Hi Rob,
+>>
+>> Thanks for your reply.
+>>
+>> On 12/27/2017 07:56 AM, Rob Herring wrote:
+>>>>
+>>>> >
+>>>> >  drivers/of/of_pci_irq.c  | 49 +++++++++++++++++++++++++++++++
+>>>
+>>> Please move this to drivers/pci/of.c (or perhaps create pci/of_irq.c).
+>>>
+>>>> >  drivers/pci/Makefile     |  1 +
+>>>> >  drivers/pci/pci-driver.c | 10 +++++++
+>>>> >  drivers/pci/pci-of.c     | 75
+>>>> > ++++++++++++++++++++++++++++++++++++++++++++++++
+>>>
+>>> We already have drivers/pci/of.c. It's not clear what the difference is
+>>> from the filenames. Either merge with of.c or perhaps of-pm.c.
+>>
+>>
+>> this new file does something similar to the pci-acpi.c and pci-mid.c..
+>
+> pci-acpi.c has similar things to pci/of.c. The naming is just not consistent.
+>
+> Also, I plan to move the rest of drivers/of/of_pci* to drivers/pci.
+>
+>> and i am agree the naming is not clear, maybe we can rename both of those
+>> files to something like pci-pm-***.c?
+>
+> At least pci-acpi.c is more than just PM functions, so that doesn't
+> make sense. Given that all the ACPI related functions are in 1 file,
+> we should do the same for DT.
+
+Agreed.
+
+Thanks,
+Rafael
