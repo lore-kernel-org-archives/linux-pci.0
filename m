@@ -1,217 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:35894 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751251AbdLIXoA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Dec 2017 18:44:00 -0500
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH 2/3] r8169: switch to device-managed functions in probe
-To: Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <9eee5aba-a739-a609-fd65-76666f377ed1@gmail.com>
-Message-ID: <80a201d7-ff1d-c823-c055-05250a018c48@gmail.com>
-Date: Sun, 10 Dec 2017 00:43:51 +0100
-MIME-Version: 1.0
-In-Reply-To: <9eee5aba-a739-a609-fd65-76666f377ed1@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from smtprelay.synopsys.com ([198.182.47.9]:50562 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753302AbdL1L5r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 06:57:47 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v3 3/9] pci: imx6 SoC driver adapted to new irq API
+Date: Thu, 28 Dec 2017 11:56:41 +0000
+Message-Id: <fbf0c30008fd1224855d2b24a6ebf621225c0fea.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify probe error path and remove callback by using device-managed
-functions.
+This patch adapts imx6 SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
-rtl_disable_msi isn't needed any longer because the release callback
-of pcim_enable_device does this implicitely.
-
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/net/ethernet/realtek/r8169.c | 80 +++++++++---------------------------
- 1 file changed, 20 insertions(+), 60 deletions(-)
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
 
-diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
-index fc0d5fa65..3c7d90d3a 100644
---- a/drivers/net/ethernet/realtek/r8169.c
-+++ b/drivers/net/ethernet/realtek/r8169.c
-@@ -4643,16 +4643,6 @@ static void rtl8169_phy_timer(struct timer_list *t)
- 	rtl_schedule_task(tp, RTL_FLAG_TASK_PHY_PENDING);
+ drivers/pci/dwc/pci-imx6.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index b734835..d2314cb 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -545,15 +545,6 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
+ 	return -EINVAL;
  }
  
--static void rtl8169_release_board(struct pci_dev *pdev, struct net_device *dev,
--				  void __iomem *ioaddr)
+-static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
 -{
--	iounmap(ioaddr);
--	pci_release_regions(pdev);
--	pci_clear_mwi(pdev);
--	pci_disable_device(pdev);
--	free_netdev(dev);
+-	struct imx6_pcie *imx6_pcie = arg;
+-	struct dw_pcie *pci = imx6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
 -}
 -
- DECLARE_RTL_COND(rtl_phy_reset_cond)
+ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
  {
- 	return tp->phy_reset_pending(tp);
-@@ -4784,14 +4774,6 @@ static int rtl_tbi_ioctl(struct rtl8169_private *tp, struct mii_ioctl_data *data
- 	return -EOPNOTSUPP;
- }
- 
--static void rtl_disable_msi(struct pci_dev *pdev, struct rtl8169_private *tp)
--{
--	if (tp->features & RTL_FEATURE_MSI) {
--		pci_disable_msi(pdev);
--		tp->features &= ~RTL_FEATURE_MSI;
--	}
--}
--
- static void rtl_init_mdio_ops(struct rtl8169_private *tp)
- {
- 	struct mdio_ops *ops = &tp->mdio_ops;
-@@ -8256,9 +8238,6 @@ static void rtl_remove_one(struct pci_dev *pdev)
- 
- 	unregister_netdev(dev);
- 
--	dma_free_coherent(&tp->pci_dev->dev, sizeof(*tp->counters),
--			  tp->counters, tp->counters_phys_addr);
--
- 	rtl_release_firmware(tp);
- 
- 	if (pci_dev_run_wake(pdev))
-@@ -8266,9 +8245,6 @@ static void rtl_remove_one(struct pci_dev *pdev)
- 
- 	/* restore original MAC address */
- 	rtl_rar_set(tp, dev->perm_addr);
--
--	rtl_disable_msi(pdev, tp);
--	rtl8169_release_board(pdev, dev, tp->mmio_addr);
- }
- 
- static const struct net_device_ops rtl_netdev_ops = {
-@@ -8445,11 +8421,9 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		       MODULENAME, RTL8169_VERSION);
- 	}
- 
--	dev = alloc_etherdev(sizeof (*tp));
--	if (!dev) {
--		rc = -ENOMEM;
--		goto out;
--	}
-+	dev = devm_alloc_etherdev(&pdev->dev, sizeof (*tp));
-+	if (!dev)
-+		return -ENOMEM;
- 
- 	SET_NETDEV_DEV(dev, &pdev->dev);
- 	dev->netdev_ops = &rtl_netdev_ops;
-@@ -8472,13 +8446,13 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 				     PCIE_LINK_STATE_CLKPM);
- 
- 	/* enable device (incl. PCI PM wakeup and hotplug setup) */
--	rc = pci_enable_device(pdev);
-+	rc = pcim_enable_device(pdev);
- 	if (rc < 0) {
- 		netif_err(tp, probe, dev, "enable failure\n");
--		goto err_out_free_dev_1;
-+		return rc;
- 	}
- 
--	if (pci_set_mwi(pdev) < 0)
-+	if (pcim_set_mwi(pdev) < 0)
- 		netif_info(tp, probe, dev, "Mem-Wr-Inval unavailable\n");
- 
- 	/* make sure PCI base addr 1 is MMIO */
-@@ -8486,30 +8460,28 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		netif_err(tp, probe, dev,
- 			  "region #%d not an MMIO resource, aborting\n",
- 			  region);
--		rc = -ENODEV;
--		goto err_out_mwi_2;
-+		return -ENODEV;
- 	}
- 
- 	/* check for weird/broken PCI region reporting */
- 	if (pci_resource_len(pdev, region) < R8169_REGS_SIZE) {
- 		netif_err(tp, probe, dev,
- 			  "Invalid PCI region size(s), aborting\n");
--		rc = -ENODEV;
--		goto err_out_mwi_2;
-+		return -ENODEV;
- 	}
- 
- 	rc = pci_request_regions(pdev, MODULENAME);
- 	if (rc < 0) {
- 		netif_err(tp, probe, dev, "could not request regions\n");
--		goto err_out_mwi_2;
-+		return rc;
- 	}
- 
- 	/* ioremap MMIO region */
--	ioaddr = ioremap(pci_resource_start(pdev, region), R8169_REGS_SIZE);
-+	ioaddr = devm_ioremap(&pdev->dev, pci_resource_start(pdev, region),
-+			      R8169_REGS_SIZE);
- 	if (!ioaddr) {
- 		netif_err(tp, probe, dev, "cannot remap MMIO, aborting\n");
--		rc = -EIO;
--		goto err_out_free_res_3;
-+		return -EIO;
- 	}
- 	tp->mmio_addr = ioaddr;
- 
-@@ -8535,7 +8507,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
- 		if (rc < 0) {
- 			netif_err(tp, probe, dev, "DMA configuration failed\n");
--			goto err_out_unmap_4;
-+			return rc;
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+@@ -677,15 +668,6 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+ 			dev_err(dev, "failed to get MSI irq\n");
+ 			return -ENODEV;
  		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       imx6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "mx6-pcie-msi", imx6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
+-		}
  	}
  
-@@ -8697,8 +8669,9 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	tp->rtl_fw = RTL_FIRMWARE_UNKNOWN;
- 
--	tp->counters = dma_alloc_coherent (&pdev->dev, sizeof(*tp->counters),
--					   &tp->counters_phys_addr, GFP_KERNEL);
-+	tp->counters = dmam_alloc_coherent (&pdev->dev, sizeof(*tp->counters),
-+					    &tp->counters_phys_addr,
-+					    GFP_KERNEL);
- 	if (!tp->counters) {
- 		rc = -ENOMEM;
- 		goto err_out_msi_5;
-@@ -8706,7 +8679,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	rc = register_netdev(dev);
- 	if (rc < 0)
--		goto err_out_cnt_6;
-+		goto err_out_msi_5;
- 
- 	pci_set_drvdata(pdev, dev);
- 
-@@ -8735,25 +8708,12 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	netif_carrier_off(dev);
- 
--out:
--	return rc;
-+	return 0;
- 
--err_out_cnt_6:
--	dma_free_coherent(&pdev->dev, sizeof(*tp->counters), tp->counters,
--			  tp->counters_phys_addr);
- err_out_msi_5:
- 	netif_napi_del(&tp->napi);
--	rtl_disable_msi(pdev, tp);
--err_out_unmap_4:
--	iounmap(ioaddr);
--err_out_free_res_3:
--	pci_release_regions(pdev);
--err_out_mwi_2:
--	pci_clear_mwi(pdev);
--	pci_disable_device(pdev);
--err_out_free_dev_1:
--	free_netdev(dev);
--	goto out;
-+
-+	return rc;
- }
- 
- static struct pci_driver rtl8169_pci_driver = {
+ 	pp->root_bus_nr = -1;
 -- 
-2.15.1
+2.7.4
