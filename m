@@ -1,108 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34968 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753129AbdLHXfA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Dec 2017 18:35:00 -0500
-Date: Fri, 8 Dec 2017 16:34:59 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Liang-Min Wang <liang-min.wang@intel.com>, kvm@vger.kernel.org,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>
-Subject: Re: [PATCH v2] Enable SR-IOV instantiation through /sys file
-Message-ID: <20171208163459.00fc5b20@t450s.home>
-In-Reply-To: <CAKgT0Ue=Wa-gamGoJFnHigqh+g4L9BRFE7c4RtG5nug-4HtZSA@mail.gmail.com>
-References: <20171208214758.6959-1-jeffrey.t.kirsher@intel.com>
-        <20171208155802.4d1159c5@t450s.home>
-        <CAKgT0Ue=Wa-gamGoJFnHigqh+g4L9BRFE7c4RtG5nug-4HtZSA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:38684 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753328AbdL1L5r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 06:57:47 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v3 9/9] pci: remove limitation of the number of the available IRQs
+Date: Thu, 28 Dec 2017 11:56:47 +0000
+Message-Id: <61ca7cb1da7c73a763fa34c682182eb3e68e633b.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 8 Dec 2017 15:19:18 -0800
-Alexander Duyck <alexander.duyck@gmail.com> wrote:
+The Synopsys PCIe Controller supports up to 256 IRQs distributed by 8
+controller registers.
+Having this in mind, the number of the maximum number of IRQs was changed
+to 256 and now the number of controllers is calculated based on the number
+of vectors used by the specific SoC driver.
 
-> On Fri, Dec 8, 2017 at 2:58 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Fri,  8 Dec 2017 13:47:58 -0800
-> > Jeff Kirsher <jeffrey.t.kirsher@intel.com> wrote:
-> >  
-> >> From: Liang-Min Wang <liang-min.wang@intel.com>
-> >>
-> >> When a SR-IOV capable device is bound with vfio-pci, the
-> >> device loses capability of creating SR-IOV instances through /sy/bus/
-> >> pci/devices/.../sriov_numvfs. This patch re-activates this capability
-> >> for a PCIe device that is SR-IOV capable and is bound with vfio-pci.ko.
-> >> This patch also disables drivers_autoprobe attribute of SR-IOV devices
-> >> created from vfio-pci bound device by default, so user-space PF device
-> >> can coordinate the bring-up of SR-IOV devices
-> >>
-> >> Signed-off-by: Liang-Min Wang <liang-min.wang@intel.com>
-> >> ---
-> >>  drivers/pci/pci-driver.c    | 12 ++++++++++++
-> >>  drivers/vfio/pci/vfio_pci.c | 22 ++++++++++++++++++++++
-> >>  include/linux/pci.h         |  1 +
-> >>  3 files changed, 35 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> >> index 7f47bb7..19522fe 100644
-> >> --- a/drivers/pci/pci-driver.c
-> >> +++ b/drivers/pci/pci-driver.c
-> >> @@ -1467,6 +1467,18 @@ void pci_dev_put(struct pci_dev *dev)
-> >>  }
-> >>  EXPORT_SYMBOL(pci_dev_put);
-> >>
-> >> +/**
-> >> + * pci_dev_sriov_autoprobe_set - set device sriov driver autoprobe
-> >> + * @dev: device with which sriov autoprobe will be set
-> >> + *
-> >> + */
-> >> +void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool autoprobe)
-> >> +{
-> >> +     if (dev && dev->sriov)
-> >> +             dev->sriov->drivers_autoprobe = autoprobe;
-> >> +}
-> >> +EXPORT_SYMBOL(pci_dev_sriov_autoprobe_set);  
-> >
-> > _GPL?
-> >
-> > It'd also be best to separate the pci and vfio changes into different
-> > patches.  Bjorn would need to at least ack this PCI interface.
-> >  
-> >> +
-> >>  static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
-> >>  {
-> >>       struct pci_dev *pdev;
-> >> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> >> index f041b1a..004836c 100644
-> >> --- a/drivers/vfio/pci/vfio_pci.c
-> >> +++ b/drivers/vfio/pci/vfio_pci.c
-> >> @@ -1213,6 +1213,8 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> >>               return -ENOMEM;
-> >>       }
-> >>
-> >> +     /* disable sriov automatic driver attachment */
-> >> +     pci_dev_sriov_autoprobe_set(pdev, false);  
-> >
-> > This looks stateful, VF autoprobe is not restored on release.  Also,
-> > how would we know the initial state to restore it to?  
-> 
-> The initial state is whatever the user set it to. It is something that
-> can be toggled on and off via sysfs, and it defaults to true at
-> initialization. In this case we are opting to toggle it off when VFIO
-> is attached to the device. Restoring it after unloading the driver
-> might be even more confusing since it is something the user could
-> toggle at any time so a restore would end up overwriting that.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- New patch.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
 
-I'm not really willing to sign up for the inevitable bug reports when
-users can't figure out how to make their VFs work again in the host
-after they've used the PF for userspace drivers with vfio-pci.  I
-agree, both options are confusing, how do we make it not confusing?
-Can PCI core reset the autoprobe attribute to the default at some
-obvious point?  Thanks,
+ drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
+ drivers/pci/dwc/pcie-designware.h      | 10 +++-------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-Alex
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 029a029..49c9c25 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -85,11 +85,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+ /* MSI int handler */
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ {
+-	u32 val;
+ 	int i, pos, irq;
++	u32 val, num_ctrls;
+ 	irqreturn_t ret = IRQ_NONE;
+ 
+-	for (i = 0; i < MAX_MSI_CTRLS; i++) {
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
++	for (i = 0; i < num_ctrls; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+ 				    &val);
+ 		if (!val)
+@@ -636,13 +638,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+-	u32 val, ctrl;
++	u32 val, ctrl, num_ctrls;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 
+ 	dw_pcie_setup(pci);
+ 
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
+ 	/* Initialize IRQ Status array */
+-	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
++	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+ 				    &pp->irq_status[ctrl]);
+ 	/* setup RC BARs */
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index c4b9c11..343db0c 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -105,13 +105,9 @@
+ #define MSI_MESSAGE_ADDR_L32		0x54
+ #define MSI_MESSAGE_ADDR_U32		0x58
+ 
+-/*
+- * Maximum number of MSI IRQs can be 256 per controller. But keep
+- * it 32 as of now. Probably we will never need more than 32. If needed,
+- * then increment it in multiple of 32.
+- */
+-#define MAX_MSI_IRQS			32
+-#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
++#define MAX_MSI_IRQS			256
++#define MAX_MSI_IRQS_PER_CTRL		32
++#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+ #define MSI_DEF_NUM_VECTORS		32
+ 
+ struct pcie_port;
+-- 
+2.7.4
