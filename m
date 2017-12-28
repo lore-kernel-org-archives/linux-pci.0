@@ -1,53 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:59013 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752033AbdLNNCR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:02:17 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 3/3] PCI: endpoint: Fix find_first_zero_bit() usage
-Date: Thu, 14 Dec 2017 14:01:46 +0100
-Message-Id: <20171214130147.1790-4-niklas.cassel@axis.com>
-In-Reply-To: <20171214130147.1790-1-niklas.cassel@axis.com>
-References: <20171214130147.1790-1-niklas.cassel@axis.com>
+Received: from mga07.intel.com ([134.134.136.100]:51274 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754168AbdL1Rat (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Dec 2017 12:30:49 -0500
+Date: Thu, 28 Dec 2017 10:34:29 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Wei Zhang <wzhang@fb.com>, Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH 0/4] Address error and recovery for AER and DPC
+Message-ID: <20171228173428.GA16071@localhost.localdomain>
+References: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-find_first_zero_bit()'s parameter 'size' is defined in bits,
-not in bytes.
+On Wed, Dec 27, 2017 at 02:20:18AM -0800, Oza Pawandeep wrote:
+> DPC should enumerate the devices after recovering the link, which is
+> achieved by implementing error_resume callback.
 
-Calling find_first_zero_bit() with the wrong size unit
-will lead to insidious bugs.
-
-Fix this by calling find_first_zero_bit() with size BITS_PER_LONG,
-rather than sizeof() and add missing find_first_zero_bit() return
-handling.
-
-Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/endpoint/pci-ep-cfs.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index e8f65eb51c1a..c9a2fb9dd49d 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -103,7 +103,10 @@ static int pci_epc_epf_link(struct config_item *epc_item,
- 	struct pci_epf *epf = epf_group->epf;
- 
- 	func_no = find_first_zero_bit(&epc_group->function_num_map,
--				      sizeof(epc_group->function_num_map));
-+				      BITS_PER_LONG);
-+	if (func_no >= BITS_PER_LONG)
-+		return -EINVAL;
-+
- 	set_bit(func_no, &epc_group->function_num_map);
- 	epf->func_no = func_no;
- 
--- 
-2.14.2
+Wouldn't that race with the link-up event that pciehp currently handles?
