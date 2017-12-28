@@ -1,53 +1,54 @@
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v1 0/7] SR-IOV Enablement on PowerVM
-Date: Mon, 18 Dec 2017 16:38:01 -0600
-Message-Id: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:33441 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751199AbdL1Xgn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 18:36:43 -0500
+Date: Fri, 29 Dec 2017 00:36:37 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Alexandru Chirvasitu <achirvasub@gmail.com>
+cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "Maciej W. Rozycki" <macro@linux-mips.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Mihai Costache <v-micos@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
+Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
+In-Reply-To: <20171228233058.c76a4upqbx6elmvg@D-69-91-141-110.dhcp4.washington.edu>
+Message-ID: <alpine.DEB.2.20.1712290034420.1899@nanos>
+References: <20171228160522.GC10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281706010.1899@nanos> <20171228172250.GD10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281823140.1899@nanos> <20171228175009.ucxr4to2nb42e3s4@D-69-91-141-110.dhcp4.washington.edu>
+ <alpine.DEB.2.20.1712281930590.1899@nanos> <alpine.DEB.2.20.1712282253180.1899@nanos> <20171228225014.GE10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712282357380.1899@nanos> <alpine.DEB.2.20.1712290018210.1899@nanos>
+ <20171228233058.c76a4upqbx6elmvg@D-69-91-141-110.dhcp4.washington.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series will enable SR-IOV on PowerVM. A specific set of
-lids for PFW/PHYP is required. They are planned to release with
-920 at the moment.
+On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
 
-For IBM internal testers let me know of a system you want to test on
-and we can put on the lids required or we can provide a system to run
-the tests.
+> Attached, but heads up on this: when redirecting the output of lspci
+> -vvv to a text file as root I get
+> 
+> pcilib: sysfs_read_vpd: read failed: Input/output error
+> 
+> I can find bugs filed for various distros to this same effect, but
+> haven't tracked down any explanations.
 
-This patch depends on the three patches:
-988fc3ba5653278a8c14d6ccf687371775930d2b
-dae7253f9f78a731755ca20c66b2d2c40b86baea
-608c0d8804ef3ca4cda8ec6ad914e47deb283d7b
+Weird, but the info looks complete.
 
-v1 - Initial Patch
-v2 - Addressed Alexey and Russell's comments
+Can you please add 'pci=nomsi' to the 4.15 kernel command line and see
+whether that works?
 
-Bryant G. Ly (7):
-  platform/pseries: Update VF config space after EEH
-  powerpc/kernel: Add uevents in EEH error/resume
-  platforms/pseries: Set eeh_pe of EEH_PE_VF type
-  powerpc/kernel Add EEH operations to notify resume
-  powerpc/kernel: Add EEH notify resume sysfs
-  pseries/pci: Associate PEs to VFs in configure SR-IOV
-  pseries/setup: Add Initialization of VF Bars
+Thanks,
 
- arch/powerpc/include/asm/eeh.h               |   1 +
- arch/powerpc/include/asm/pci-bridge.h        |   5 +-
- arch/powerpc/include/asm/pci.h               |   2 +
- arch/powerpc/kernel/eeh_driver.c             |   9 +-
- arch/powerpc/kernel/eeh_sysfs.c              |  46 ++++++-
- arch/powerpc/kernel/pci_of_scan.c            |   2 +-
- arch/powerpc/platforms/powernv/eeh-powernv.c |   3 +-
- arch/powerpc/platforms/pseries/eeh_pseries.c | 192 ++++++++++++++++++++++++++-
- arch/powerpc/platforms/pseries/pci.c         | 156 +++++++++++++++++++++-
- arch/powerpc/platforms/pseries/setup.c       | 183 +++++++++++++++++++++++++
- 10 files changed, 589 insertions(+), 10 deletions(-)
-
--- 
-2.14.3 (Apple Git-98)
+	tglx
