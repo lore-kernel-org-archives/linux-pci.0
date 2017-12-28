@@ -1,261 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:42609 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754428AbdLTUgL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 15:36:11 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>,
-        Vidya Saga <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH v4] PCI: tegra: Refactor configuration space mapping code
-Date: Wed, 20 Dec 2017 21:36:07 +0100
-Message-Id: <20171220203607.18288-1-thierry.reding@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:57182 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751258AbdL1Iu3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Dec 2017 03:50:29 -0500
+Message-ID: <1514450844.7000.305.camel@linux.intel.com>
+Subject: Re: [RFC PATCH v12 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Rob Herring <robh@kernel.org>,
+        JeffyChen <jeffy.chen@rock-chips.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pm@vger.kernel.org,
+        Tony Lindgren <tony@atomide.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Doug Anderson <dianders@chromium.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+        <devicetree@vger.kernel.org>, linux-pci@vger.kernel.org,
+        Frank Rowand <frowand.list@gmail.com>
+Date: Thu, 28 Dec 2017 10:47:24 +0200
+In-Reply-To: <CAL_JsqJssPABjoRM-XAnuN_Xd2-sHoFifJNrRDdk_ruQ0DRw6A@mail.gmail.com>
+References: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
+         <20171226023646.17722-5-jeffy.chen@rock-chips.com>
+         <20171226235607.4rgp4ebrrktt6d56@rob-hp-laptop>
+         <5A42F847.5060305@rock-chips.com>
+         <CAL_JsqJssPABjoRM-XAnuN_Xd2-sHoFifJNrRDdk_ruQ0DRw6A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vidya Sagar <vidyas@nvidia.com>
+On Wed, 2017-12-27 at 09:30 -0600, Rob Herring wrote:
+> On Tue, Dec 26, 2017 at 7:32 PM, JeffyChen <jeffy.chen@rock-chips.com>
+> wrote:
 
-Use only 4 KiB space from the available 1 GiB PCIe aperture to access
-endpoint configuration space by dynamically moving the AFI_FPCI_BAR base
-address. This frees more space for mapping endpoint device BARs on some
-Tegra platforms.
+> this new file does something similar to the pci-acpi.c and pci-mid.c..
 
-The ->add_bus() and ->remove_bus() callbacks are now no longer needed,
-so they can be removed.
+> pci-acpi.c has similar things to pci/of.c. The naming is just not
+> consistent.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-[treding@nvidia.com: various cleanups, update commit message]
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 148 +++++++++----------------------------------
- 1 file changed, 30 insertions(+), 118 deletions(-)
+> > and i am agree the naming is not clear, maybe we can rename both of
+> > those
+> > files to something like pci-pm-***.c?
+> 
+> At least pci-acpi.c is more than just PM functions, so that doesn't
+> make sense. Given that all the ACPI related functions are in 1 file,
+> we should do the same for DT.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index f2214ca1ad17..56434aa44b60 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -269,11 +269,10 @@ struct tegra_pcie {
- 
- 	void __iomem *pads;
- 	void __iomem *afi;
-+	void __iomem *cfg;
- 	int irq;
- 
--	struct list_head buses;
--	struct resource *cs;
--
-+	struct resource cs;
- 	struct resource io;
- 	struct resource pio;
- 	struct resource mem;
-@@ -322,7 +321,6 @@ struct tegra_pcie_port {
- };
- 
- struct tegra_pcie_bus {
--	struct vm_struct *area;
- 	struct list_head list;
- 	unsigned int nr;
- };
-@@ -362,100 +360,19 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
-  *
-  * Mapping the whole extended configuration space would require 256 MiB of
-  * virtual address space, only a small part of which will actually be used.
-- * To work around this, a 1 MiB of virtual addresses are allocated per bus
-- * when the bus is first accessed. When the physical range is mapped, the
-- * the bus number bits are hidden so that the extended register number bits
-- * appear as bits [19:16]. Therefore the virtual mapping looks like this:
-- *
-- *    [19:16] extended register number
-- *    [15:11] device number
-- *    [10: 8] function number
-- *    [ 7: 0] register number
-  *
-- * This is achieved by stitching together 16 chunks of 64 KiB of physical
-- * address space via the MMU.
-+ * To work around this, a 4 KiB region is used to generate the required
-+ * configuration transaction with relevant B:D:F and register offset values.
-+ * This is achieved by dynamically programming base address and size of
-+ * AFI_AXI_BAR used for end point config space mapping to make sure that the
-+ * address (access to which generates correct config transaction) falls in
-+ * this 4 KiB region.
-  */
--static unsigned long tegra_pcie_conf_offset(unsigned int devfn, int where)
--{
--	return ((where & 0xf00) << 8) | (PCI_SLOT(devfn) << 11) |
--	       (PCI_FUNC(devfn) << 8) | (where & 0xfc);
--}
--
--static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
--						   unsigned int busnr)
-+static unsigned int tegra_pcie_conf_offset(u8 bus, unsigned int devfn,
-+					   unsigned int where)
- {
--	struct device *dev = pcie->dev;
--	pgprot_t prot = pgprot_noncached(PAGE_KERNEL);
--	phys_addr_t cs = pcie->cs->start;
--	struct tegra_pcie_bus *bus;
--	unsigned int i;
--	int err;
--
--	bus = kzalloc(sizeof(*bus), GFP_KERNEL);
--	if (!bus)
--		return ERR_PTR(-ENOMEM);
--
--	INIT_LIST_HEAD(&bus->list);
--	bus->nr = busnr;
--
--	/* allocate 1 MiB of virtual addresses */
--	bus->area = get_vm_area(SZ_1M, VM_IOREMAP);
--	if (!bus->area) {
--		err = -ENOMEM;
--		goto free;
--	}
--
--	/* map each of the 16 chunks of 64 KiB each */
--	for (i = 0; i < 16; i++) {
--		unsigned long virt = (unsigned long)bus->area->addr +
--				     i * SZ_64K;
--		phys_addr_t phys = cs + i * SZ_16M + busnr * SZ_64K;
--
--		err = ioremap_page_range(virt, virt + SZ_64K, phys, prot);
--		if (err < 0) {
--			dev_err(dev, "ioremap_page_range() failed: %d\n", err);
--			goto unmap;
--		}
--	}
--
--	return bus;
--
--unmap:
--	vunmap(bus->area->addr);
--free:
--	kfree(bus);
--	return ERR_PTR(err);
--}
--
--static int tegra_pcie_add_bus(struct pci_bus *bus)
--{
--	struct pci_host_bridge *host = pci_find_host_bridge(bus);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
--	struct tegra_pcie_bus *b;
--
--	b = tegra_pcie_bus_alloc(pcie, bus->number);
--	if (IS_ERR(b))
--		return PTR_ERR(b);
--
--	list_add_tail(&b->list, &pcie->buses);
--
--	return 0;
--}
--
--static void tegra_pcie_remove_bus(struct pci_bus *child)
--{
--	struct pci_host_bridge *host = pci_find_host_bridge(child);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
--	struct tegra_pcie_bus *bus, *tmp;
--
--	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
--		if (bus->nr == child->number) {
--			vunmap(bus->area->addr);
--			list_del(&bus->list);
--			kfree(bus);
--			break;
--		}
--	}
-+	return ((where & 0xf00) << 16) | (bus << 16) | (PCI_SLOT(devfn) << 11) |
-+	       (PCI_FUNC(devfn) << 8) | (where & 0xff);
- }
- 
- static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
-@@ -464,7 +381,6 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
- {
- 	struct pci_host_bridge *host = pci_find_host_bridge(bus);
- 	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
--	struct device *dev = pcie->dev;
- 	void __iomem *addr = NULL;
- 
- 	if (bus->number == 0) {
-@@ -478,19 +394,17 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
- 			}
- 		}
- 	} else {
--		struct tegra_pcie_bus *b;
-+		unsigned int offset;
-+		u32 base;
- 
--		list_for_each_entry(b, &pcie->buses, list)
--			if (b->nr == bus->number)
--				addr = (void __iomem *)b->area->addr;
-+		offset = tegra_pcie_conf_offset(bus->number, devfn, where);
- 
--		if (!addr) {
--			dev_err(dev, "failed to map cfg. space for bus %u\n",
--				bus->number);
--			return NULL;
--		}
-+		/* move 4 KiB window to offset within the FPCI region */
-+		base = 0xfe100000 + ((offset & ~(SZ_4K - 1)) >> 8);
-+		afi_writel(pcie, base, AFI_FPCI_BAR0);
- 
--		addr += tegra_pcie_conf_offset(devfn, where);
-+		/* move to correct offset within the 4 KiB page */
-+		addr = pcie->cfg + (offset & (SZ_4K - 1));
- 	}
- 
- 	return addr;
-@@ -517,8 +431,6 @@ static int tegra_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
- }
- 
- static struct pci_ops tegra_pcie_ops = {
--	.add_bus = tegra_pcie_add_bus,
--	.remove_bus = tegra_pcie_remove_bus,
- 	.map_bus = tegra_pcie_map_bus,
- 	.read = tegra_pcie_config_read,
- 	.write = tegra_pcie_config_write,
-@@ -743,12 +655,9 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
- 	u32 fpci_bar, size, axi_address;
- 
- 	/* Bar 0: type 1 extended configuration space */
--	fpci_bar = 0xfe100000;
--	size = resource_size(pcie->cs);
--	axi_address = pcie->cs->start;
--	afi_writel(pcie, axi_address, AFI_AXI_BAR0_START);
-+	size = resource_size(&pcie->cs);
-+	afi_writel(pcie, pcie->cs.start, AFI_AXI_BAR0_START);
- 	afi_writel(pcie, size >> 12, AFI_AXI_BAR0_SZ);
--	afi_writel(pcie, fpci_bar, AFI_FPCI_BAR0);
- 
- 	/* Bar 1: downstream IO bar */
- 	fpci_bar = 0xfdfc0000;
-@@ -1353,10 +1262,14 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 		goto poweroff;
- 	}
- 
--	pcie->cs = devm_request_mem_region(dev, res->start,
--					   resource_size(res), res->name);
--	if (!pcie->cs) {
--		err = -EADDRNOTAVAIL;
-+	pcie->cs = *res;
-+
-+	/* constrain configuration space to 4 KiB */
-+	pcie->cs.end = pcie->cs.start + SZ_4K - 1;
-+
-+	pcie->cfg = devm_ioremap_resource(dev, &pcie->cs);
-+	if (IS_ERR(pcie->cfg)) {
-+		err = PTR_ERR(pcie->cfg);
- 		goto poweroff;
- 	}
- 
-@@ -2376,7 +2289,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	pcie = pci_host_bridge_priv(host);
- 
- 	pcie->soc = of_device_get_match_data(dev);
--	INIT_LIST_HEAD(&pcie->buses);
- 	INIT_LIST_HEAD(&pcie->ports);
- 	pcie->dev = dev;
- 
+> > but i have no idea about pci-mid.c or would it possible to have more
+> > platform pm ops in the future...maybe we should add some dependency
+> > in the
+> > Kconfig?
+
+You may consider pci-mid.c as pci-sfi.c to some extend.
+
+So, in that sense it more looks like pci-of.c would be the name for DT
+case.
+
 -- 
-2.15.1
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
