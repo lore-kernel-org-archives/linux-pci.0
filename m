@@ -1,203 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:37329 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752103AbdLKS6x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Dec 2017 13:58:53 -0500
-From: "Wang, Liang-min" <liang-min.wang@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Alexander Duyck <alexander.duyck@gmail.com>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:43643 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753479AbdL1Pq7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 10:46:59 -0500
+Date: Thu, 28 Dec 2017 10:48:35 -0500
+From: Alexandru Chirvasitu <achirvasub@gmail.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "Maciej W. Rozycki" <macro@linux-mips.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Mihai Costache <v-micos@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>
-Subject: RE: [PATCH v2] Enable SR-IOV instantiation through /sys file
-Date: Mon, 11 Dec 2017 18:58:52 +0000
-Message-ID: <B6CB929FEBC10D4FAC4BCA7EF2298E259DB708BE@FMSMSX110.amr.corp.intel.com>
-References: <20171208214758.6959-1-jeffrey.t.kirsher@intel.com>
-        <20171208155802.4d1159c5@t450s.home>
-        <CAKgT0Ue=Wa-gamGoJFnHigqh+g4L9BRFE7c4RtG5nug-4HtZSA@mail.gmail.com>
-        <20171208163459.00fc5b20@t450s.home>
-        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB707A8@FMSMSX110.amr.corp.intel.com>
- <20171211111326.250f51cf@t450s.home>
-In-Reply-To: <20171211111326.250f51cf@t450s.home>
-Content-Type: text/plain; charset="us-ascii"
+        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
+Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
+Message-ID: <20171228154835.GB10658@chirva-slack.chirva-slack>
+References: <20171218082011.GA24638@arch-chirva.localdomain>
+ <20171218101131.GA5338@amd>
+ <20171219083421.GB24638@arch-chirva.localdomain>
+ <alpine.DEB.2.20.1712200124440.2282@nanos>
+ <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com>
+ <20171220131929.GC24638@arch-chirva.localdomain>
+ <alpine.DEB.2.20.1712281145510.1688@nanos>
+ <20171228142117.GA10658@chirva-slack.chirva-slack>
+ <alpine.DEB.2.20.1712281531120.1899@nanos>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1712281531120.1899@nanos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> Sent: Monday, December 11, 2017 1:13 PM
-> To: Wang, Liang-min <liang-min.wang@intel.com>
-> Cc: Alexander Duyck <alexander.duyck@gmail.com>; Kirsher, Jeffrey T
-> <jeffrey.t.kirsher@intel.com>; kvm@vger.kernel.org; linux-
-> pci@vger.kernel.org; linux-kernel@vger.kernel.org; Bjorn Helgaas
-> <bhelgaas@google.com>; Duyck, Alexander H <alexander.h.duyck@intel.com>
-> Subject: Re: [PATCH v2] Enable SR-IOV instantiation through /sys file
-> 
-> On Mon, 11 Dec 2017 14:22:30 +0000
-> "Wang, Liang-min" <liang-min.wang@intel.com> wrote:
-> 
-> > > -----Original Message-----
-> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > Sent: Friday, December 08, 2017 6:35 PM
-> > > To: Alexander Duyck <alexander.duyck@gmail.com>
-> > > Cc: Kirsher, Jeffrey T <jeffrey.t.kirsher@intel.com>; Wang, Liang-min
-> <liang-
-> > > min.wang@intel.com>; kvm@vger.kernel.org; linux-pci@vger.kernel.org;
-> linux-
-> > > kernel@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>; Duyck,
-> > > Alexander H <alexander.h.duyck@intel.com>
-> > > Subject: Re: [PATCH v2] Enable SR-IOV instantiation through /sys file
+On Thu, Dec 28, 2017 at 03:48:15PM +0100, Thomas Gleixner wrote:
+> On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
+> > On Thu, Dec 28, 2017 at 12:00:47PM +0100, Thomas Gleixner wrote:
+> > > Ok, lets take a step back. The bisect/kexec attempts led us away from the
+> > > initial problem which is the machine locking up after login, right?
 > > >
-> > > On Fri, 8 Dec 2017 15:19:18 -0800
-> > > Alexander Duyck <alexander.duyck@gmail.com> wrote:
-> > >
-> > > > On Fri, Dec 8, 2017 at 2:58 PM, Alex Williamson
-> > > > <alex.williamson@redhat.com> wrote:
-> > > > > On Fri,  8 Dec 2017 13:47:58 -0800
-> > > > > Jeff Kirsher <jeffrey.t.kirsher@intel.com> wrote:
-> > > > >
-> > > > >> From: Liang-Min Wang <liang-min.wang@intel.com>
-> > > > >>
-> > > > >> When a SR-IOV capable device is bound with vfio-pci, the
-> > > > >> device loses capability of creating SR-IOV instances through /sy/bus/
-> > > > >> pci/devices/.../sriov_numvfs. This patch re-activates this capability
-> > > > >> for a PCIe device that is SR-IOV capable and is bound with vfio-pci.ko.
-> > > > >> This patch also disables drivers_autoprobe attribute of SR-IOV devices
-> > > > >> created from vfio-pci bound device by default, so user-space PF device
-> > > > >> can coordinate the bring-up of SR-IOV devices
-> > > > >>
-> > > > >> Signed-off-by: Liang-Min Wang <liang-min.wang@intel.com>
-> > > > >> ---
-> > > > >>  drivers/pci/pci-driver.c    | 12 ++++++++++++
-> > > > >>  drivers/vfio/pci/vfio_pci.c | 22 ++++++++++++++++++++++
-> > > > >>  include/linux/pci.h         |  1 +
-> > > > >>  3 files changed, 35 insertions(+)
-> > > > >>
-> > > > >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > > > >> index 7f47bb7..19522fe 100644
-> > > > >> --- a/drivers/pci/pci-driver.c
-> > > > >> +++ b/drivers/pci/pci-driver.c
-> > > > >> @@ -1467,6 +1467,18 @@ void pci_dev_put(struct pci_dev *dev)
-> > > > >>  }
-> > > > >>  EXPORT_SYMBOL(pci_dev_put);
-> > > > >>
-> > > > >> +/**
-> > > > >> + * pci_dev_sriov_autoprobe_set - set device sriov driver autoprobe
-> > > > >> + * @dev: device with which sriov autoprobe will be set
-> > > > >> + *
-> > > > >> + */
-> > > > >> +void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool
-> autoprobe)
-> > > > >> +{
-> > > > >> +     if (dev && dev->sriov)
-> > > > >> +             dev->sriov->drivers_autoprobe = autoprobe;
-> > > > >> +}
-> > > > >> +EXPORT_SYMBOL(pci_dev_sriov_autoprobe_set);
-> > > > >
-> > > > > _GPL?
-> > > > >
-> > > > > It'd also be best to separate the pci and vfio changes into different
-> > > > > patches.  Bjorn would need to at least ack this PCI interface.
-> > > > >
-> > > > >> +
-> > > > >>  static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
-> > > > >>  {
-> > > > >>       struct pci_dev *pdev;
-> > > > >> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> > > > >> index f041b1a..004836c 100644
-> > > > >> --- a/drivers/vfio/pci/vfio_pci.c
-> > > > >> +++ b/drivers/vfio/pci/vfio_pci.c
-> > > > >> @@ -1213,6 +1213,8 @@ static int vfio_pci_probe(struct pci_dev
-> *pdev,
-> > > const struct pci_device_id *id)
-> > > > >>               return -ENOMEM;
-> > > > >>       }
-> > > > >>
-> > > > >> +     /* disable sriov automatic driver attachment */
-> > > > >> +     pci_dev_sriov_autoprobe_set(pdev, false);
-> > > > >
-> > > > > This looks stateful, VF autoprobe is not restored on release.  Also,
-> > > > > how would we know the initial state to restore it to?
-> > > >
-> > > > The initial state is whatever the user set it to. It is something that
-> > > > can be toggled on and off via sysfs, and it defaults to true at
-> > > > initialization. In this case we are opting to toggle it off when VFIO
-> > > > is attached to the device. Restoring it after unloading the driver
-> > > > might be even more confusing since it is something the user could
-> > > > toggle at any time so a restore would end up overwriting that.
-> > >
-> > > I'm not really willing to sign up for the inevitable bug reports when
-> > > users can't figure out how to make their VFs work again in the host
-> > > after they've used the PF for userspace drivers with vfio-pci.  I
-> > > agree, both options are confusing, how do we make it not confusing?
-> > > Can PCI core reset the autoprobe attribute to the default at some
-> > > obvious point?  Thanks,
-> > >
-> >
-> > I would like to confirm the scenario discussed here is to unload PF driver,
-> right?
-> > Since users need to release all SR-IOV from PF driver first before PF driver is
-> > released, does it make sense to restore autoprobe when VFs are released?
+> > 
+> > Yes; sorry about that..
 > 
-> We don't know that VFs will be created, but perhaps you mean the point
-> at which SR-IOV would be disabled in the PF unbind process.  Still, I
-> think you're left with userspace and kernel-space both trying to use
-> the same control bit and they're going to step on each other and create
-> corner cases that are inconsistent.  It's not necessarily even clear
-> how using separate trackers solves it since the kernel isn't
-> necessarily behaving in the way the user directed.  Maybe the user
-> interface to autoprobe needs to be locked out if the PF driver disables
-> it.
- 
-To ensure there is no overlap between user-space applications to modify
-autoprobe bit while kernel is changing its value. One approach is to move
-the overwrite and restore into vfio_sriov_configure like below:
-
-static int vfio_sriov_configure(struct pci_dev *pdev, int num_vfs)
-{
-	int status;
-	bool old_autoprobe;
-
-	if (!num_vfs) {		
-		pci_disable_sriov(pdev);
-		return 0;
-	}
-
-	/*
-	 To avoid newly created VF to be bound with driver when
-	 user-space PF may not be ready, disable the SR-IOV
-	 instance driver automatic attachment, and save the original
-	 setting and restore the setting after SR-IOV are created.
-	 */
-	old_autoprobe = pci_dev_sriov_autoprobe_set(pdev, vdev->sriov_driver_autoprobe);
-
-	status = pci_enable_sriov(pdev, num_vfs);
-	if (!status) {
-		dev_crit("Created %d SR-IOV from a user-space driver based upon vfio-pci\n"
-			"These VFs are not bound with driver when they are created.\n"
-			"User needs to bring up user-space PF driver first,"
-			" then bind new VFs with respective driver to"
-			" ensure there is a PF driver to respond any VF request\n", num_vfs);
-		add_taint(TAINT_USER, LOCKDEP_STILL_OK);
-	}
-	pci_dev_sriov_autoprobe_set(pdev, old_autoprobe);
-
-Would that resolve the issue as described? If not, could there be an example to illustrate the scenario that was described.
-
-Larry
-
+> Nothing to be sorry about.
 > 
-> Didn't we also discuss whether or not it's safe for vfio to enable
-> SR-IOV while the PF is in use by a user?  Does that all fall into the
-> "Dr. it hurts when I do this..." category and contributes to tainting
-> the kernel when enabled?  Definitely worth some comment words to
-> describe the various considerations contributing to kernel tainting.
+> >     x86/vector: Replace the raw_spin_lock() with
+> > 
+> > diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+> > index 7504491..e5bab02 100644
+> > --- a/arch/x86/kernel/apic/vector.c
+> > +++ b/arch/x86/kernel/apic/vector.c
+> > @@ -726,6 +726,7 @@ static int apic_set_affinity(struct irq_data *irqd,
+> >                              const struct cpumask *dest, bool force)
+> >  {
+> >         struct apic_chip_data *apicd = apic_chip_data(irqd);
+> > +       unsigned long flags;
+> >         int err;
+> >  
+> >         /*
+> > @@ -740,13 +741,13 @@ static int apic_set_affinity(struct irq_data *irqd,
+> >             (apicd->is_managed || apicd->can_reserve))
+> >                 return IRQ_SET_MASK_OK;
+> >  
+> > -       raw_spin_lock(&vector_lock);
+> > +       raw_spin_lock_irqsave(&vector_lock, flags);
+> >         cpumask_and(vector_searchmask, dest, cpu_online_mask);
+> >         if (irqd_affinity_is_managed(irqd))
+> >                 err = assign_managed_vector(irqd, vector_searchmask);
+> >         else
+> >                 err = assign_vector_locked(irqd, vector_searchmask);
+> > -       raw_spin_unlock(&vector_lock);
+> > +       raw_spin_unlock_irqrestore(&vector_lock, flags);
+> >         return err ? err : IRQ_SET_MASK_OK;
+> >  }
+> > 
+> > With this, I still get the lockup messages after login, but not the
+> > freezes!
+> 
+> That's really interesting. There should be no code path which calls into
+> that with interrupts enabled. I assume you never ran that kernel with
+> CONFIG_PROVE_LOCKING=y.
+>
+
+Correct. That option is not set in .config.
+
+> Find below a debug patch which should show us the call chain for that
+> case. Please apply that on top of Dou's patch so the machine stays
+> accessible. Plain output from dmesg is sufficient.
+> 
+> > The lockups register in the log, which I am attaching (see below for
+> > attachment naming conventions).
+> 
+> Hmm. That's RCU lockups and that backtrace on the CPU which gets the stall
+> looks very familiar. I'd like to see the above result first and then I'll
+> send you another pile of patches which might cure that RCU issue.
+> 
 > Thanks,
 > 
-> Alex
+> 	tglx
+> 
+> 8<-------------------
+> --- a/arch/x86/kernel/apic/vector.c
+> +++ b/arch/x86/kernel/apic/vector.c
+> @@ -729,6 +729,8 @@ static int apic_set_affinity(struct irq_
+>  	unsigned long flags;
+>  	int err;
+>  
+> +	WARN_ON_ONCE(!irqs_disabled());
+> +
+>  	/*
+>  	 * Core code can call here for inactive interrupts. For inactive
+>  	 * interrupts which use managed or reservation mode there is no
+> 
+> 
+> 
+
+Bit of a step back here: the kernel treated with Dou's patch no longer
+logs me in reliably as before, with or without this newest patch on
+top..
+
+So now I sometimes get immediate lockups and freezes upon trying to
+log in, and other times I get logged in but get a freeze seconds
+later.
+
+In no case can I roam around long nough to get a dmesg, and I no
+longer get the non-freezing lockups from before. I can't imagine what
+I could possibly have changed..
+
+Here's the output of `git log --pretty=oneline -5` on the branch I'm
+working in.
+
+--------------------
+
+f2c02af5cc1d620c039b21fab0ca5948a06daf90 2nd tglx patch
+7715575170bacf3566d400b9f2210a10ce152880 x86/vector: Replace the raw_spin_lock() with raw_spin_lock_irqsave()
+8d9d56caf33d78bfe6b6087767b1b84acee58458 x86-32: fix kexec with stack canary (CONFIG_CC_STACKPROTECTOR)
+a197e9dea4ccb72e1a6457fac15329bd5319e719 irq/matrix: Remove the overused BUGON() in irq_matrix_assign_system()
+464e1d5f23cca236b930ef068c328a64cab78fb1 Linux 4.15-rc5
+
+--------------------
+
+7715575170bacf3566d400b9f2210a10ce152880, which is the kernel with
+Dou's patch, logged me in and allowed me to produce the dmesg from
+before. I did this a couple of times back then. I no longer can, for
+some reason, as it's reverted back to the no-go lockups from before.
+
+And the next one, f2c02af5cc1d620c039b21fab0ca5948a06daf90, where I
+applied the patch you just sent, behaves identically.
