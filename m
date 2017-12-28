@@ -1,369 +1,149 @@
-Return-Path: <SRS0=waQa=C5=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=waQa=C5=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 1 Dec 2017 16:20:26 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com, kishon@ti.com,
-	linux-pci@vger.kernel.org, adouglas@cadence.com,
-	stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
-	eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
-	sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
-	robh@kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 3/5] PCI: cadence: Add host driver for Cadence PCIe
- controller
-Message-ID: <20171201162026.GA26640@red-moon>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
- <2670f7ddf59e708beb9d32bef1353e15bd4e1ecf.1511439189.git.cyrille.pitchen@free-electrons.com>
- <20171128204114.GE11228@bhelgaas-glaptop.roam.corp.google.com>
- <c6a0d70d-d584-2db8-f862-0c3ddbf6939d@free-electrons.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:25215 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753394AbdL1O7D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 09:59:03 -0500
+Subject: Re: Re-activate task to add MSI-X to pcie-designware
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
+ <20171208110225.GC26816@red-moon>
+ <9ede58a6-7c0d-ae66-4e15-147234cbad6d@ti.com>
+ <69f78abd-f83e-b3a6-0daf-638f89d07f99@synopsys.com>
+ <8771860f-babd-afcb-ed07-2642d2a4d6a8@ti.com>
+ <0531c3e9-57e7-d531-1bee-a5a5bbff2a8c@synopsys.com>
+ <2e04befd-9434-b3ec-0c18-96a80744e327@ti.com>
+ <513e28db-924d-569c-b3ae-cbb949229cc9@ti.com>
+ <cafeb5b6-4954-becf-0d30-8b6ee7e71efa@synopsys.com>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "Nori, Sekhar" <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <2b0ad2cb-735b-e847-4c23-862e35b2c596@ti.com>
+Date: Thu, 28 Dec 2017 20:28:29 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <c6a0d70d-d584-2db8-f862-0c3ddbf6939d@free-electrons.com>
+In-Reply-To: <cafeb5b6-4954-becf-0d30-8b6ee7e71efa@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 01, 2017 at 11:37:49AM +0100, Cyrille Pitchen wrote:
-> Hi Bjorn,
+Hi Gustavo,
+
+On Wednesday 27 December 2017 07:55 PM, Gustavo Pimentel wrote:
+> On 26/12/2017 12:57, Kishon Vijay Abraham I wrote:
+>> Hi,
+>>
+>> On Saturday 23 December 2017 03:46 PM, Kishon Vijay Abraham I wrote:
+>>> Hi Gustavo,
+>>>
+>>> On Thursday 21 December 2017 07:38 PM, Gustavo Pimentel wrote:
+>>>> On 20/12/2017 13:03, Kishon Vijay Abraham I wrote:This is our most recent
+>>>> version of the patches that are running on our equipment, please check with yours
+>>>>> Hi,
+>>>>>
+>>>>> On Monday 18 December 2017 09:31 PM, Gustavo Pimentel wrote:
+>>>>>> Hi Kishon,
+>>>>>>
+>>>>>> I would like to collaborate with you on this subject, I have on my side João's
+>>>>>> patches updated to the Bjorn's latest kernel version.
+>>>>>
+>>>>> cool, do you have a branch so that I can check what breaks in keystone and debug?
+>>>>>
+>>>> Unfortunately not, however I'll mailed you the patches immediately.
+>>>> Once again, thanks.
+>>>
+>>> Thanks.
+>>>
+>>> I tried raising MSI with pci_endpoint_test EP device (16 MSI interrupts). Here
+>>> are some of my observations after applying your patch series.
+>>>
+>>> root@k2g-evm:~# cat /proc/interrupts
+>>>            CPU0
+>>>  17:          0     GICv2  29 Level     arch_timer
+>>>  18:       1816     GICv2  30 Level     arch_timer
+>>>  21:          0     GICv2  36 Edge      arm-pmu
+>>>  22:        792     GICv2 196 Edge      ttyS0
+>>>  23:          5     GICv2 120 Edge      2530000.i2c
+>>>  24:          0     GICv2  33 Edge      soc:keystone_irq@26202a0
+>>>  25:        901     GICv2 356 Level     2a00000.msgmgr rx_005_002
+>>>  41:          0     GICv2 232 Edge      2700000.edma_ccint
+>>>  43:          0     GICv2 249 Edge      2700000.edma_ccerrint
+>>>  44:       2497     GICv2 240 Edge      2728000.edma_ccint
+>>>  46:          0     GICv2 252 Edge      2728000.edma_ccerrint
+>>>  47:       7551     GICv2 128 Edge      mmc0
+>>>  48:          0     GICv2 160 Edge      2680000.keystone-dwc3, xhci-hcd:usb1
+>>>  49:          0     GICv2 176 Edge      2580000.keystone-dwc3, xhci-hcd:usb3
+>>>  50:          0     GICv2  96 Edge      21805400.spi
+>>>  52:          0     GICv2 100 Edge      21805c00.spi
+>>>  53:          0     GICv2 102 Edge      21806000.spi
+>>>  54:          0     GICv2  92 Edge      pcie-error-irq
+>>> 211:          0      GPIO  12 Edge    -davinci_gpio  23000000.mmc cd
+>>> 280:          0   PCI-MSI   0 Edge      PCIe PME, aerdrv
+>>> 281:          0   PCI-MSI 524288 Edge      pci-endpoint-test
+>>> 282:          0   PCI-MSI 524289 Edge      pci-endpoint-test
+>>> 283:          0   PCI-MSI 524290 Edge      pci-endpoint-test
+>>> 284:          0   PCI-MSI 524291 Edge      pci-endpoint-test
+>>> 285:          0   PCI-MSI 524292 Edge      pci-endpoint-test
+>>> 286:          0   PCI-MSI 524293 Edge      pci-endpoint-test
+>>> 287:          0   PCI-MSI 524294 Edge      pci-endpoint-test
+>>> 288:          0   PCI-MSI 524295 Edge      pci-endpoint-test
+>>> 289:          0   PCI-MSI 524296 Edge      pci-endpoint-test
+>>> 290:          0   PCI-MSI 524297 Edge      pci-endpoint-test
+>>> 291:          0   PCI-MSI 524298 Edge      pci-endpoint-test
+>>> 292:          0   PCI-MSI 524299 Edge      pci-endpoint-test
+>>> 293:          0   PCI-MSI 524300 Edge      pci-endpoint-test
+>>> 294:          0   PCI-MSI 524301 Edge      pci-endpoint-test
+>>> 295:          0   PCI-MSI 524302 Edge      pci-endpoint-test
+>>> 296:          0   PCI-MSI 524303 Edge      pci-endpoint-test
+>>> IPI0:          0  CPU wakeup interrupts
+>>> IPI1:          0  Timer broadcast interrupts
+>>> IPI2:          0  Rescheduling interrupts
+>>> IPI3:          0  Function call interrupts
+>>> IPI4:          0  CPU stop interrupts
+>>> IPI5:          0  IRQ work interrupts
+>>> IPI6:          0  completion interrupts
+>>> Err:          0
+>>>
+>>> root@k2g-evm:~# pcitest -m 1
+>>> [   45.966437] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 271
+>>> [   45.973544] keystone-pcie 21801000.pcie: irq: bit 0, vector 0, virq 280
+>>> MSI1:           NOT OKAY
+>>>
+>>> Here there is an off by one error. "pcitest -m 1" should ideally have raised an
+>>> interrupt in 281 but from the above debug print it looks like it's raising an
+>>> interrupt in 280.
+>>
+>> The above error was due to an pci_endpoint bug. I'll send a patch to fix this
+>> separately.
 > 
-> Le 28/11/2017 à 21:41, Bjorn Helgaas a écrit :
-> > On Thu, Nov 23, 2017 at 04:01:48PM +0100, Cyrille Pitchen wrote:
-> >> This patch adds support to the Cadence PCIe controller in host mode.
-> >>
-> >> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-> >> ---
-> >>  drivers/Makefile                        |   1 +
-> >>  drivers/pci/Kconfig                     |   1 +
-> >>  drivers/pci/cadence/Kconfig             |  24 ++
-> >>  drivers/pci/cadence/Makefile            |   2 +
-> >>  drivers/pci/cadence/pcie-cadence-host.c | 425 ++++++++++++++++++++++++++++++++
-> >>  drivers/pci/cadence/pcie-cadence.c      | 110 +++++++++
-> >>  drivers/pci/cadence/pcie-cadence.h      | 325 ++++++++++++++++++++++++
-> >>  7 files changed, 888 insertions(+)
-> >>  create mode 100644 drivers/pci/cadence/Kconfig
-> >>  create mode 100644 drivers/pci/cadence/Makefile
-> >>  create mode 100644 drivers/pci/cadence/pcie-cadence-host.c
-> >>  create mode 100644 drivers/pci/cadence/pcie-cadence.c
-> >>  create mode 100644 drivers/pci/cadence/pcie-cadence.h
-> > 
-> > I prefer a single file per driver.  I assume you're anticipating
-> > something like dwc, where the DesignWare core is incorporated into
-> > several devices in slightly different ways.  But it doesn't look like
-> > that's here yet, and personally, I'd rather split out the required
-> > things when they actually become required, not ahead of time.
-> >
-> 
-> The source code in pcie-cadence.c is shared between pcie-cadence-host.c
-> (Root Complex mode) and pcie-cadence-ep.c (Endpoint mode), the second
-> driver of this series.
-> 
-> Taking other comments into accounts, I will move endpoint only related
-> stuff in the pcie-cadence.{c,h} files from this patch to the endpoint
-> patch.
-> 
-> Otherwise your right, I expect this Cadence PCIe core to be embedded inside
-> several vendor SoCs but I thought I could handle this as much as possible
-> using mainly DT properties and/or the 'struct cdns_pcie_*_data' associated
-> to the DT 'compatible' strings. We will have to wait for those SoCs to be
-> released to know whether these two solutions are  enough or if we will need
-> dedicated files anyway.
->  
-> >> diff --git a/drivers/Makefile b/drivers/Makefile
-> >> index 1d034b680431..27bdd98784d9 100644
-> >> --- a/drivers/Makefile
-> >> +++ b/drivers/Makefile
-> >> @@ -18,6 +18,7 @@ obj-y				+= pwm/
-> >>  
-> >>  obj-$(CONFIG_PCI)		+= pci/
-> >>  obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
-> >> +obj-$(CONFIG_PCI_CADENCE)	+= pci/cadence/
-> > 
-> > I can't remember why we added CONFIG_PCI_ENDPOINT here instead of in
-> > drivers/pci/Makefile.  Is there any way to move both CONFIG_PCI_ENDPOINT
-> > and CONFIG_PCI_CADENCE into drivers/pci/Makefile so this is better
-> > encapsulated?
-> >
-> 
-> I will work on the solution I have proposed in another reply since it seems
-> to be OK for you :)
-> 
-> >>  # PCI dwc controller drivers
-> >>  obj-y				+= pci/dwc/
-> >> ...
-> > 
-> >> + * struct cdns_pcie_rc_data - hardware specific data
-> > 
-> > "cdns" is a weird abbreviation for "Cadence", since "Cadence" doesn't
-> > contain an "s".
-> > 
-> >> ...
-> >> +static int cdns_pcie_parse_request_of_pci_ranges(struct device *dev,
-> >> +						 struct list_head *resources,
-> >> +						 struct resource **bus_range)
-> >> +{
-> >> +	int err, res_valid = 0;
-> >> +	struct device_node *np = dev->of_node;
-> >> +	resource_size_t iobase;
-> >> +	struct resource_entry *win, *tmp;
-> >> +
-> >> +	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
-> >> +	if (err)
-> >> +		return err;
-> >> +
-> >> +	err = devm_request_pci_bus_resources(dev, resources);
-> >> +	if (err)
-> >> +		return err;
-> >> +
-> >> +	resource_list_for_each_entry_safe(win, tmp, resources) {
-> >> +		struct resource *res = win->res;
-> >> +
-> >> +		switch (resource_type(res)) {
-> >> +		case IORESOURCE_IO:
-> >> +			err = pci_remap_iospace(res, iobase);
-> >> +			if (err) {
-> >> +				dev_warn(dev, "error %d: failed to map resource %pR\n",
-> >> +					 err, res);
-> >> +				resource_list_destroy_entry(win);
-> >> +			}
-> >> +			break;
-> >> +		case IORESOURCE_MEM:
-> >> +			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-> >> +			break;
-> >> +		case IORESOURCE_BUS:
-> >> +			*bus_range = res;
-> >> +			break;
-> >> +		}
-> >> +	}
-> >> +
-> >> +	if (res_valid)
-> >> +		return 0;
-> >> +
-> >> +	dev_err(dev, "non-prefetchable memory resource required\n");
-> >> +	return -EINVAL;
-> >> +}
-> > 
-> > The code above is starting to look awfully familiar.  I wonder if it's
-> > time to think about some PCI-internal interface that can encapsulate
-> > this.  In this case, there's really nothing Cadence-specific here.
-> > There are other callers where there *is* vendor-specific code, but
-> > possibly that could be handled by returning pointers to bus number,
-> > I/O port, and MMIO resources so the caller could do the
-> > vendor-specific stuff?
-> > 
-> > Bjorn
-> > 
-> 
-> I am listing:
-> - gen_pci_parse_request_of_pci_ranges() [1]
-> - cdns_pcie_parse_request_of_pci_ranges() - same as [1]
-> - advk_pcie_parse_request_of_pci_ranges()
-> - altera_pcie_parse_request_of_pci_ranges()
-> - versatile_pci_parse_request_of_pci_ranges()
-> - rcar_pcie_parse_request_of_pci_ranges()
-> 
-> Then what about doing something like that:
-> 
-> ---8<--------------------------------------------------------------------------
-> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-> index 44a47d4f0b8f..2413c5d83cbd 100644
-> --- a/drivers/pci/host/pci-host-common.c
-> +++ b/drivers/pci/host/pci-host-common.c
-> @@ -24,10 +24,19 @@
->  #include <linux/pci-ecam.h>
->  #include <linux/platform_device.h>
->  
-> -static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
-> -		       struct list_head *resources, struct resource **bus_range)
-> +struct pci_host_resource_parser {
-> +	int	(*get_resource)(void *userdata, struct resource_entry *win,
-> +				resource_size_t iobase);
-> +	int	(*finalize)(void *userdata);
-> +	void	(*abort)(void *userdata);
-> +};
-> +
-> +int pci_host_parse_request_of_pci_ranges(struct device *dev,
-> +				 struct list_head *resources,
-> +				 const struct pci_host_resource_parser *parser,
-> +				 void *userdata)
->  {
-> -	int err, res_valid = 0;
-> +	int err;
->  	struct device_node *np = dev->of_node;
->  	resource_size_t iobase;
->  	struct resource_entry *win, *tmp;
-> @@ -40,34 +49,94 @@ static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
->  	if (err)
->  		return err;
->  
-> -	resource_list_for_each_entry_safe(win, tmp, resources) {
-> -		struct resource *res = win->res;
-> -
-> -		switch (resource_type(res)) {
-> -		case IORESOURCE_IO:
-> -			err = pci_remap_iospace(res, iobase);
-> -			if (err) {
-> -				dev_warn(dev, "error %d: failed to map resource %pR\n",
-> -					 err, res);
-> -				resource_list_destroy_entry(win);
-> -			}
-> -			break;
-> -		case IORESOURCE_MEM:
-> -			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-> -			break;
-> -		case IORESOURCE_BUS:
-> -			*bus_range = res;
-> -			break;
-> +	if (parser && parser->get_resource) {
-> +		resource_list_for_each_entry_safe(win, tmp, resources) {
-> +			err = parser->get_resource(userdata, win, iobase);
-> +			if (err)
-> +				goto do_abort;
-> +		}
-> +	}
-> +
-> +	if (parser && parser->finalize)
-> +		return parser->finalize(userdata);
-> +
-> +	return 0;
-> +
-> + do_abort:
-> +	if (parser && parser->abort)
-> +		parser->abort(userdata);
-> +
-> +	return err;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_host_parse_request_of_pci_ranges);
-> +
-> +
-> +struct gen_pci_parser_context {
-> +	struct device	*dev;
-> +	struct resource	**bus_range;
-> +	int		res_valid;
-> +};
-> +
-> +static int gen_pci_resource_parser_get_resource(void *userdata,
-> +						struct resource_entry *win,
-> +						resource_size_t iobase)
-> +{
-> +	struct gen_pci_parser_context *ctx = userdata;
-> +	struct device *dev = ctx->dev;
-> +	struct resource *res = win->res;
-> +	int err;
-> +
-> +	switch (resource_type(res)) {
-> +	case IORESOURCE_IO:
-> +		err = pci_remap_iospace(res, iobase);
-> +		if (err) {
-> +			dev_warn(dev, "error %d: failed to map resource %pR\n",
-> +				 err, res);
-> +			resource_list_destroy_entry(win);
->  		}
-> +		break;
-> +	case IORESOURCE_MEM:
-> +		ctx->res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-> +		break;
-> +	case IORESOURCE_BUS:
-> +		*ctx->bus_range = res;
-> +		break;
->  	}
->  
-> -	if (res_valid)
-> +	return 0;
-> +}
-> +
-> +static int gen_pci_resource_parser_finalize(void *userdata)
-> +{
-> +	struct gen_pci_parser_context *ctx = userdata;
-> +	struct device *dev = ctx->dev;
-> +
-> +	if (ctx->res_valid)
->  		return 0;
->  
->  	dev_err(dev, "non-prefetchable memory resource required\n");
->  	return -EINVAL;
->  }
->  
-> +static const struct pci_host_resource_parser gen_pci_resource_parser = {
-> +	.get_resource	= gen_pci_resource_parser_get_resource,
-> +	.finalize	= gen_pci_resource_parser_finalize,
-> +};
-> +
-> +static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
-> +		       struct list_head *resources, struct resource **bus_range)
-> +{
-> +	struct gen_pci_parser_context ctx;
-> +
-> +	ctx.dev = dev;
-> +	ctx.bus_range = bus_range;
-> +	ctx.res_valid = 0;
-> +
-> +	return pci_host_parse_request_of_pci_ranges(dev, resources,
-> +						    &gen_pci_resource_parser,
-> +						    &ctx);
-> +}
+> Ok great!
 
-I think that what you are doing is something along the lines:
+This too looks like a bug with the new API. If the EP requests 16 interrupts,
+the MSI vector (programmed in PCI_MSI_DATA) should be 0 and if 0 is not
+available it should be 16
+[From the spec: The Multiple Message Enable field (bits 6-4 of the Message
+Control register) defines the number of low
+order message data bits the function is permitted to modify to generate its
+system software allocated vectors]. For 16 interrupts, Multiple Message Enable
+will have a value of 4 which means the EP can modify the 4 low order bits to
+raise the 16 interrupts.
 
-acpi_dev_get_resources()
+With this series added, PCI_MSI_DATA is programmed to 0x1 which gets masked
+while the EP tries to raise an interrupt and hence we are observing off by one
+error.
 
-and the struct res_proc_context but maybe we can do something
-simpler to start with.
-
-We can go through the resource list twice in every driver, once through
-the generic function that we are creating - that embeds code common
-across bridges - to be clear something like:
-
-static int of_pci_parse_request_pci_resources(struct device *dev,
-					      struct list_head *res)
-{
-	int err, res_valid;
-	resource_size_t iobase;
-	struct device_node *np = dev->of_node;
-	struct resource_entry *win, *tmp;
-
-	err = of_pci_get_host_bridge_resources(np, 0, 0xff, res, &iobase);
-	if (err)
-		return err;
-
-	err = devm_request_pci_bus_resources(dev, res);
-	if (err)
-		goto out_release_res;
-
-	resource_list_for_each_entry_safe(win, tmp, res) {
-		struct resource *res = win->res;
-
-		switch (resource_type(res)) {
-		case IORESOURCE_IO:
-			err = pci_remap_iospace(res, iobase);
-			if (err) {
-				dev_warn(dev, "error %d: failed to map resource %pR\n",
-					 err, res);
-				resource_list_destroy_entry(win);
-			}
-			break;
-		case IORESOURCE_MEM:
-			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-			break;
-		}
-	}
-
-	if (res_valid)
-		return 0;
-
-	dev_err(dev, "non-prefetchable memory resource required\n");
-	err = -EINVAL;
-
-out_release_res:
-	pci_free_resource_list(res);
-	return err;
-}
-
-and then in a PCI host bridge specific loop that just carries
-out the host bridge specific actions for every resource returned
-in the res list.
-
-Lorenzo
-
-> +
->  static void gen_pci_unmap_cfg(void *ptr)
->  {
->  	pci_ecam_free((struct pci_config_window *)ptr);
-> ---8<--------------------------------------------------------------------------
+Thanks
+Kishon
