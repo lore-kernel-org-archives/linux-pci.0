@@ -1,116 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v2 1/9] PCI: Regroup all PCI related entries into drivers/pci/Makefile
-Date: Mon, 18 Dec 2017 19:16:01 +0100
-Message-Id: <49f5a733e05a46521340e913876332f3804e2042.1513620412.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:60828 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752905AbdL1LA6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 06:00:58 -0500
+Date: Thu, 28 Dec 2017 12:00:47 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Alexandru Chirvasitu <achirvasub@gmail.com>
+cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        "Maciej W. Rozycki" <macro@linux-mips.org>,
+        Mikael Pettersson <mikpelinux@gmail.com>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Mihai Costache <v-micos@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
+Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
+In-Reply-To: <20171220131929.GC24638@arch-chirva.localdomain>
+Message-ID: <alpine.DEB.2.20.1712281145510.1688@nanos>
+References: <20171218082011.GA24638@arch-chirva.localdomain> <20171218101131.GA5338@amd> <20171219083421.GB24638@arch-chirva.localdomain> <alpine.DEB.2.20.1712200124440.2282@nanos> <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com>
+ <20171220131929.GC24638@arch-chirva.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch cleans drivers/Makefile up by moving the pci/endpoint and
-pci/dwc entries from drivers/Makefile into drivers/pci/Makefile.
+On Wed, 20 Dec 2017, Alexandru Chirvasitu wrote:
+> On Wed, Dec 20, 2017 at 11:58:57AM +0800, Dou Liyang wrote:
+> > At 12/20/2017 08:31 AM, Thomas Gleixner wrote:
+> > > > I had never heard of 'bisect' before this casual mention (you might tell
+> > > > I am a bit out of my depth). I've since applied it to Linus' tree between
+> > > 
+> > > > bebc608 Linux 4.14 (good)
+> > > > 
+> > > > and
+> > > > 
+> > > > 4fbd8d1 Linux 4.15-rc1 (bad)
+> > > 
+> > > Is Linus current head 4.15-rc4 bad as well?
+> > > 
+> > [...]
+> 
+> Yes. Exactly the same symptoms on
+> 
+> 1291a0d5 Linux 4.15-rc4
+> 
+> compiled just now from Linus' tree. 
 
-Since we don't want to introduce any dependency between CONFIG_PCI and
-CONFIG_PCI_ENDPOINT, we now always execute drivers/pci/Makefile.
+Ok, lets take a step back. The bisect/kexec attempts led us away from the
+initial problem which is the machine locking up after login, right?
 
-Hence all Makefiles in drivers/pci/ were updated accordingly so no file is
-compiled when CONFIG_PCI is not defined.
+Could you try the patch below on top of Linus tree (rc5+)?
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
----
- drivers/Makefile          |  5 +----
- drivers/pci/Kconfig       |  1 +
- drivers/pci/Makefile      | 11 ++++++++---
- drivers/pci/host/Makefile |  2 ++
- 4 files changed, 12 insertions(+), 7 deletions(-)
+Thanks,
 
-diff --git a/drivers/Makefile b/drivers/Makefile
-index 1d034b680431..9757199b9a65 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -16,10 +16,7 @@ obj-$(CONFIG_PINCTRL)		+= pinctrl/
- obj-$(CONFIG_GPIOLIB)		+= gpio/
- obj-y				+= pwm/
+	tglx
+
+8<---------------
+--- a/arch/x86/kernel/apic/apic_flat_64.c
++++ b/arch/x86/kernel/apic/apic_flat_64.c
+@@ -151,7 +151,7 @@ static struct apic apic_flat __ro_after_
+ 	.apic_id_valid			= default_apic_id_valid,
+ 	.apic_id_registered		= flat_apic_id_registered,
  
--obj-$(CONFIG_PCI)		+= pci/
--obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
--# PCI dwc controller drivers
--obj-y				+= pci/dwc/
-+obj-y				+= pci/
+-	.irq_delivery_mode		= dest_LowestPrio,
++	.irq_delivery_mode		= dest_Fixed,
+ 	.irq_dest_mode			= 1, /* logical */
  
- obj-$(CONFIG_PARISC)		+= parisc/
- obj-$(CONFIG_RAPIDIO)		+= rapidio/
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index bda151788f3f..7eeb969ab86a 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -125,6 +125,7 @@ config PCI_PASID
+ 	.disable_esr			= 0,
+--- a/arch/x86/kernel/apic/probe_32.c
++++ b/arch/x86/kernel/apic/probe_32.c
+@@ -105,7 +105,7 @@ static struct apic apic_default __ro_aft
+ 	.apic_id_valid			= default_apic_id_valid,
+ 	.apic_id_registered		= default_apic_id_registered,
  
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
-+	depends on PCI
- 	select NLS
+-	.irq_delivery_mode		= dest_LowestPrio,
++	.irq_delivery_mode		= dest_Fixed,
+ 	/* logical delivery broadcast to all CPUs: */
+ 	.irq_dest_mode			= 1,
  
- config PCI_HYPERV
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index c7819b973df7..7284a7f6ad1e 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -3,12 +3,15 @@
- # Makefile for the PCI bus specific drivers.
- #
+--- a/arch/x86/kernel/apic/x2apic_cluster.c
++++ b/arch/x86/kernel/apic/x2apic_cluster.c
+@@ -184,7 +184,7 @@ static struct apic apic_x2apic_cluster _
+ 	.apic_id_valid			= x2apic_apic_id_valid,
+ 	.apic_id_registered		= x2apic_apic_id_registered,
  
--obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
-+obj-$(CONFIG_PCI)	+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
- 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
- 			irq.o vpd.o setup-bus.o vc.o mmap.o setup-irq.o
+-	.irq_delivery_mode		= dest_LowestPrio,
++	.irq_delivery_mode		= dest_Fixed,
+ 	.irq_dest_mode			= 1, /* logical */
  
-+ifdef CONFIG_PCI
- obj-$(CONFIG_PROC_FS) += proc.o
- obj-$(CONFIG_SYSFS) += slot.o
-+obj-$(CONFIG_OF) += of.o
-+endif
- 
- obj-$(CONFIG_PCI_QUIRKS) += quirks.o
- 
-@@ -44,10 +47,12 @@ obj-$(CONFIG_PCI_ECAM) += ecam.o
- 
- obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
- 
--obj-$(CONFIG_OF) += of.o
--
- ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
- 
- # PCI host controller drivers
- obj-y += host/
- obj-y += switch/
-+
-+obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
-+# PCI dwc controller drivers
-+obj-y				+= dwc/
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 34ec1d88f961..3b1059190867 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -34,6 +34,8 @@ obj-$(CONFIG_VMD) += vmd.o
- # ARM64 and use internal ifdefs to only build the pieces we need
- # depending on whether ACPI, the DT driver, or both are enabled.
- 
-+ifdef CONFIG_PCI
- obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
- obj-$(CONFIG_ARM64) += pci-thunder-pem.o
- obj-$(CONFIG_ARM64) += pci-xgene.o
-+endif
--- 
-2.11.0
+ 	.disable_esr			= 0,
