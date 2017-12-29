@@ -1,56 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:50638 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754771AbeASJjX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 04:39:23 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: lorenzo.pieralisi@arm.com, Bjorn Helgaas <bhelgaas@google.com>
-Cc: arnd@arndb.de, kishon@ti.com, Niklas Cassel <niklass@axis.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Add dummy pci_irqd_intx_xlate() for CONFIG_PCI=n build
-Date: Fri, 19 Jan 2018 10:39:06 +0100
-Message-Id: <20180119093906.27670-1-niklas.cassel@axis.com>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:39740 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751215AbeABTIV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:08:21 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v4 04/10] PCI: dwc: artpec6: Switch to use the IRQ chained API
+Date: Fri, 29 Dec 2017 14:21:36 +0000
+Message-Id: <9944cf3e7d9ff694d67efe8d06c3af2d03fe528c.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If CONFIG_PCI=n and CONFIG_PCI_DRA7XX_EP=y, the build fails with:
+Changes ARTPEC-6 SoC specific driver to use the IRQ chained API available
+in pcie-designware.
 
-  drivers/pci/dwc/pci-dra7xx.c:229:11: error: 'pci_irqd_intx_xlate'
-  undeclared here (not in a function)
-
-When building drivers/pci/dwc/pci-dra7xx.c without CONFIG_PCI,
-gcc is usually smart enough to realize that RC specific code
-is unreachable and can thus be eliminated.
-
-However, gcc cannot do this if there is a function that isn't
-even declared.
-
-Hence fix the issue by introducing a dummy for pci_irqd_intx_xlate().
-
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- include/linux/pci.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 83299833a6ce..41c676a011f4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1675,6 +1675,13 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- #define dev_is_pf(d) (false)
- static inline bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
- { return false; }
-+static inline int pci_irqd_intx_xlate(struct irq_domain *d,
-+				      struct device_node *node,
-+				      const u32 *intspec,
-+				      unsigned int intsize,
-+				      unsigned long *out_hwirq,
-+				      unsigned int *out_type)
-+{ return -EINVAL; }
- #endif /* CONFIG_PCI */
+ drivers/pci/dwc/pcie-artpec6.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 312f21b..03c1b85 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -386,15 +386,6 @@ static const struct dw_pcie_host_ops artpec6_pcie_host_ops = {
+ 	.host_init = artpec6_pcie_host_init,
+ };
  
- /* Include architecture-dependent settings and functions */
+-static irqreturn_t artpec6_pcie_msi_handler(int irq, void *arg)
+-{
+-	struct artpec6_pcie *artpec6_pcie = arg;
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 				 struct platform_device *pdev)
+ {
+@@ -409,15 +400,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 			dev_err(dev, "failed to get MSI irq\n");
+ 			return pp->msi_irq;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       artpec6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "artpec6-pcie-msi", artpec6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
 -- 
-2.14.2
+2.7.4
