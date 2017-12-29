@@ -1,59 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45616 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752041AbdLLPYX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Dec 2017 10:24:23 -0500
-Date: Tue, 12 Dec 2017 15:24:16 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: 'Niklas Cassel' <niklas.cassel@axis.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kishon@ti.com" <kishon@ti.com>, Niklas Cassel <niklass@axis.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 0/3] Fix find_first_zero_bit() usage
-Message-ID: <20171212152416.GA1262@e107981-ln.cambridge.arm.com>
-References: <20171212141634.5985-1-niklas.cassel@axis.com>
- <5a6a30994101482c94f16203e3c8ba7d@AcuMS.aculab.com>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:35590 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755708AbdL2LyX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 06:54:23 -0500
+From: Vignesh R <vigneshr@ti.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
+Subject: [PATCH v2 1/2] PCI: dra7xx: Fix legacy INTD IRQ handling
+Date: Fri, 29 Dec 2017 17:11:30 +0530
+Message-ID: <20171229114131.22296-2-vigneshr@ti.com>
+In-Reply-To: <20171229114131.22296-1-vigneshr@ti.com>
+References: <20171229114131.22296-1-vigneshr@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5a6a30994101482c94f16203e3c8ba7d@AcuMS.aculab.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 12, 2017 at 02:33:52PM +0000, David Laight wrote:
-> From: Niklas Cassel
-> > find_first_zero_bit()'s parameter 'size' is defined in bits,
-> > not in bytes.
-> > 
-> > Calling find_first_zero_bit() with the wrong size unit
-> > will lead to insidious bugs.
-> > 
-> > Fix all uses of find_first_zero_bit() called with
-> > sizeof() as size argument in drivers/pci.
-> ...
-> 
-> Isn't all this code just using the wrong function.
-> Shouldn't they be using ffz() (or whatever it is called)
-> to find the first zero in a numeric argument rather that
-> find_first_zero_bit() which is intended for large bitmaps.
-> 
-> Perhaps the type for 'large bitmaps' should be:
-> struct {
-> 	unsigned long bitmap_bits[0];
-> } bitmap;
-> rather than unsigned long[].
+Legacy INTD IRQ handling is broken on dra7xx due to fact that driver
+uses hwirq in range of 1-4 for INTA, INTD whereas IRQ domain is of size
+4 which is numbered 0-3. Therefore when INTD IRQ line is used with
+pci-dra7xx driver following warning is seen:
 
-David,
+       WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
+       error: hwirq 0x4 is too large for dummy
 
-I think you are referring to patch 3, which is a fix for the current
-find_first_zero_bit() usage. The point is, I think that
-struct pci_epc_group.function_num_map should actually be converted
-to a bitmap (and therefore using find_first_zero_bit() on it is the
-right API); patch 3 is just a fix for current code.
+Fix this by using pci_irqd_intx_xlate() helper to translate the INTx 1-4
+range into the 0-3 as done in other PCIe drivers.
 
-Unless you think patch 3 is technically wrong I would go ahead
-with the series as-is for fixes and we will refactor
-struct pci_epc_group.function_num_map usage to a proper bitmap
-for the upcoming merge window.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
+Signed-off-by: Vignesh R <vigneshr@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Lorenzo
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 58aed0896468..892f93910012 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -226,6 +226,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ 
+ static const struct irq_domain_ops intx_domain_ops = {
+ 	.map = dra7xx_pcie_intx_map,
++	.xlate = pci_irqd_intx_xlate,
+ };
+ 
+ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+@@ -269,7 +270,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ 	case INTC:
+ 	case INTD:
+ 		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
+-						    ffs(reg)));
++						    ffs(reg) - 1));
+ 		break;
+ 	}
+ 
+-- 
+2.15.1
