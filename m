@@ -1,67 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:20521 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751729AbdLNMO2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 07:14:28 -0500
-Subject: Re: [PATCH v4 2/3] PCI: endpoint: Fix error handling in
- pci_epc_epf_link()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20171212141634.5985-1-niklas.cassel@axis.com>
- <20171212141634.5985-3-niklas.cassel@axis.com>
- <691e3693-9f18-6546-29d0-4cb155ef5bf6@ti.com>
- <20171214120757.GB27147@e107981-ln.cambridge.arm.com>
-CC: Niklas Cassel <niklas.cassel@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <8eda75e3-f4e4-151e-5104-69ba2e40a31f@ti.com>
-Date: Thu, 14 Dec 2017 17:43:33 +0530
+Received: from mail.free-electrons.com ([62.4.15.54]:38609 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751412AbdL2UaD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 15:30:03 -0500
+Subject: Re: [PATCH v2 7/9] PCI: endpoint: Add the function number as argument
+ to EPC ops
+To: Kishon Vijay Abraham I <kishon@ti.com>, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+ <425171aaba3a9e8ea68b9e94f37b1c97e8cf9861.1513620412.git.cyrille.pitchen@free-electrons.com>
+ <ca8f5a74-3db5-87f4-3af5-ed5ee0d3b634@ti.com>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Message-ID: <22c6a835-86e1-4145-e20b-aa74444dfd94@free-electrons.com>
+Date: Fri, 29 Dec 2017 21:30:00 +0100
 MIME-Version: 1.0
-In-Reply-To: <20171214120757.GB27147@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <ca8f5a74-3db5-87f4-3af5-ed5ee0d3b634@ti.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Kishon,
 
-
-On Thursday 14 December 2017 05:37 PM, Lorenzo Pieralisi wrote:
-> On Thu, Dec 14, 2017 at 04:37:22PM +0530, Kishon Vijay Abraham I wrote:
->> Hi Niklas,
->>
->> On Tuesday 12 December 2017 07:46 PM, Niklas Cassel wrote:
->>> The error handling in pci_epc_epf_link() is broken,
->>> since the clean up code for pci_epc_add_epf() calls clear_bit(),
->>> even though the matching set_bit() is done after pci_epc_add_epf().
->>>
->>> Also, clear_bit() should be done before pci_epc_remove_epf(),
->>> since clean up code should normally do things in the reverse order.
->>>
->>> Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
->>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
->>> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>> ---
->>>  drivers/pci/endpoint/pci-ep-cfs.c | 6 ++----
->>>  1 file changed, 2 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
->>> index 4f74386c1ced..e1f5adc9e113 100644
->>> --- a/drivers/pci/endpoint/pci-ep-cfs.c
->>> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
->>> @@ -106,7 +106,7 @@ static int pci_epc_epf_link(struct config_item *epc_item,
->>>  	epf = epf_group->epf;
->>>  	ret = pci_epc_add_epf(epc, epf);
->>>  	if (ret)
->>> -		goto err_add_epf;
->>> +		return ret;
->>
->> Actually the func_no should be populated before invoking pci_epc_add_epf. Once
->> that is done, the error handling should be fine.
+Le 29/12/2017 à 10:23, Kishon Vijay Abraham I a écrit :
+> Hi,
 > 
-> Which means that current code works because pci_epc_add_epf() is called
-> with epf->func_no == 0 right ? I agree that the correct fix consists in
+> On Monday 18 December 2017 11:46 PM, Cyrille Pitchen wrote:
+>> This patch updates the prototype of most handlers from 'struct
+>> pci_epc_ops' so the EPC library can now support multi-function devices.
+>>
+>> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+>> ---
+>>  drivers/pci/dwc/pcie-designware-ep.c          | 20 +++++----
+>>  drivers/pci/endpoint/functions/pci-epf-test.c | 41 ++++++++++--------
+>>  drivers/pci/endpoint/pci-epc-core.c           | 62 ++++++++++++++++-----------
+>>  include/linux/pci-epc.h                       | 43 +++++++++++--------
+>>  4 files changed, 96 insertions(+), 70 deletions(-)
+>>
+[...]
+>> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+>> index cd7d4788b94d..77420364a728 100644
+>> --- a/drivers/pci/endpoint/pci-epc-core.c
+>> +++ b/drivers/pci/endpoint/pci-epc-core.c
+>> @@ -141,25 +141,26 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
+>>  /**
+>>   * pci_epc_raise_irq() - interrupt the host system
+>>   * @epc: the EPC device which has to interrupt the host
+>> + * @func_no: the endpoint function number in the EPC device
+>>   * @type: specify the type of interrupt; legacy or MSI
+>>   * @interrupt_num: the MSI interrupt number
+>>   *
+>>   * Invoke to raise an MSI or legacy interrupt
+>>   */
+>> -int pci_epc_raise_irq(struct pci_epc *epc, enum pci_epc_irq_type type,
+>> -		      u8 interrupt_num)
+>> +int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
+>> +		      enum pci_epc_irq_type type, u8 interrupt_num)
+>>  {
+>>  	int ret;
+>>  	unsigned long flags;
+>>  
+>> -	if (IS_ERR(epc))
+>> +	if (IS_ERR(epc) || func_no > BAR_5)
+> 
+> why is function number compared with BAR? here and everywhere below..
+>
 
-that's right Lorenzo.
+Oops! sorry for that. Actually it's a silly mistake, thanks for
+catching it!
 
-Thanks
-Kishon
+I plan to fix it replacing with something like this:
+
+s/func_no > BAR_5/func_no >= epc->max_functions/
+
+Then I guess if we already test with IS_ERR(), I should now replace
+IS_ERR() by IS_ERR_OR_NULL() before dereferencing epc when reading
+max_functions.
+
+Best regards,
+
+Cyrille
+ 
+> Thanks
+> Kishon
+> 
+
+
+-- 
+Cyrille Pitchen, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
