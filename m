@@ -1,65 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:13100 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751257AbeA3Khv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Jan 2018 05:37:51 -0500
-Date: Tue, 30 Jan 2018 12:37:45 +0200
-From: Mika Westerberg <mika.westerberg@intel.com>
-To: Kai Heng Feng <kai.heng.feng@canonical.com>
-Cc: linux-pci@vger.kernel.org, Ethan Hsieh <ethan.hsieh@canonical.com>,
-        thunderbolt-software@lists.01.org
-Subject: Re: Thunderbolt PCIe card doesn't get enumerated at cold boot
-Message-ID: <20180130103745.GG27654@lahna.fi.intel.com>
-References: <8831781F-8027-4875-AF82-835FBE40F5F0@canonical.com>
- <20180130102319.GE27654@lahna.fi.intel.com>
- <C4051028-A6AD-4B78-97E2-AE1BC34694EB@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <C4051028-A6AD-4B78-97E2-AE1BC34694EB@canonical.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:51346 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751300AbeABTIY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:08:24 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v4 03/10] PCI: dwc: imx6: Switch to use the IRQ chained API
+Date: Fri, 29 Dec 2017 14:21:35 +0000
+Message-Id: <9e3fee4c8b7097878b42211ef7540ff4b59c8efb.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 30, 2018 at 06:29:56PM +0800, Kai Heng Feng wrote:
-> 
-> 
-> > On 30 Jan 2018, at 6:23 PM, Mika Westerberg <mika.westerberg@intel.com> wrote:
-> > 
-> > On Tue, Jan 30, 2018 at 04:32:51PM +0800, Kai Heng Feng wrote:
-> >> Hi Mika,
-> >> 
-> >> Bother you again because you are the only TBT expert that I know of ;)
-> > 
-> > No problem. That's what I get paid for :-)
-> > 
-> >> We are enabling a new CFL desktop with TBT card.  The TBT card in
-> >> question doesn’t get enumerated at cold boot, so the card isn’t listed
-> >> under `lspci`.  Anything that does a PCI scan (# echo 1 >
-> >> /sys/bus/pci/rescan, S3, warmboot) can make the card gets detected
-> >> correctly.
-> >> 
-> >> The same TBT card doesn’t have the issue on a KBL desktop, so I not
-> >> sure if it’s a driver issue though.
-> > 
-> > By TBT "card" do you mean TBT host add-in-card? Is it Alpine Ridge?
-> 
-> Yes it is. It’s a PCIe add-in-card. It is Alpine Ridge.
-> 
-> Wondering if TBT requires special support from PCH or ACPI?
-> I am asking this because the very same card can’t get detected on a Ryzen
-> platform.
+Changes iMX6 SoC specific driver to use the IRQ chained API available in
+pcie-designware.
 
-Yes, it needs to have BIOS support and in addition you need to have
-those side band signals connected properly. BIOS support is needed for
-ACPI hotplug.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
 
-Unless it is in native PCIe hotplug mode but even then you need to have
-BIOS support.
+ drivers/pci/dwc/pci-imx6.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-> > 
-> >> Also, is there a more appropriate mailing list for TBT discussion?
-> > 
-> > I think you can use thunderbolt-software@lists.01.org as well.
-> 
-> Good to know ;)
-> 
-> Kai-Heng
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index b734835..d2314cb 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -545,15 +545,6 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
+ 	return -EINVAL;
+ }
+ 
+-static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
+-{
+-	struct imx6_pcie *imx6_pcie = arg;
+-	struct dw_pcie *pci = imx6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+@@ -677,15 +668,6 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+ 			dev_err(dev, "failed to get MSI irq\n");
+ 			return -ENODEV;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       imx6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "mx6-pcie-msi", imx6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.7.4
