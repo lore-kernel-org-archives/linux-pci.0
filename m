@@ -1,117 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60214 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753016AbeAVIvt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Jan 2018 03:51:49 -0500
-From: Hans de Goede <hdegoede@redhat.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Lv Zheng <lv.zheng@intel.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, devel@acpica.org
-Subject: [PATCH v2 4/5] ACPI / scan: Use acpi_bus_get_status for initial status of ACPI_TYPE_DEVICE devs
-Date: Mon, 22 Jan 2018 09:51:34 +0100
-Message-Id: <20180122085135.16732-5-hdegoede@redhat.com>
-In-Reply-To: <20180122085135.16732-1-hdegoede@redhat.com>
-References: <20180122085135.16732-1-hdegoede@redhat.com>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:39793 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751239AbeABTIW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:08:22 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v4 06/10] PCI: dwc: qcom: Switch to use the IRQ chained API
+Date: Fri, 29 Dec 2017 14:21:38 +0000
+Message-Id: <68f79ee906181353810aeeaf501bd52070d70429.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The acpi_get_bus_status wrapper for acpi_bus_get_status_handle has some
-code to handle certain device quirks, in some cases we also need this
-quirk handling for the initial _STA call.
+Changes QCOM SoC specific driver to use the IRQ chained API available in
+pcie-designware.
 
-Specifically on some devices calling _STA before all _DEP dependencies
-are met results in errors like these:
-
-[    0.123579] ACPI Error: No handler for Region [ECRM] (00000000ba9edc4c)
-               [GenericSerialBus] (20170831/evregion-166)
-[    0.123601] ACPI Error: Region GenericSerialBus (ID=9) has no handler
-               (20170831/exfldio-299)
-[    0.123618] ACPI Error: Method parse/execution failed
-               \_SB.I2C1.BAT1._STA, AE_NOT_EXIST (20170831/psparse-550)
-
-acpi_get_bus_status already has code to avoid this, so by using it we
-also silence these errors from the initial _STA call.
-
-Note that in order for the acpi_get_bus_status handling for this to work,
-we initialize dep_unmet to 1 until acpi_device_dep_initialize gets called,
-this means that battery devices will be instantiated with an initial
-status of 0. This is not a problem, acpi_bus_attach will get called soon
-after the instantiation anyways and it will update the status as first
-point of order.
-
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
-Note if we were to:
-1) move the acpi_bus_init_power call from acpi_bus_get_power_flags to
-   acpi_bus_attach, which already calls acpi_bus_init_power for uninitialized
-   devices; and
-2) move the acpi_bus_get_wakeup_device_flags call from acpi_add_single_object
-   to acpi_bus_attach. This one is tricky, because acpi_device_add checks
-   wakeup.flags.valid which gets set by this. And the acpi_wakeup_gpe_init
-   call actually is the troublesome one because it uses acpi_match_device_ids
-   which relies on the status...
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
 
-Then we can entirely rely on the acpi_bus_get_status call in acpi_bus_attach
-and remove the acpi_bus_get_status call from the device-instantiation path.
----
- drivers/acpi/scan.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+ drivers/pci/dwc/pcie-qcom.c | 16 ----------------
+ 1 file changed, 16 deletions(-)
 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index e0bd49b4c3f6..ffb64424771b 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1572,6 +1572,8 @@ void acpi_init_device_object(struct acpi_device *device, acpi_handle handle,
- 	device_initialize(&device->dev);
- 	dev_set_uevent_suppress(&device->dev, true);
- 	acpi_init_coherency(device);
-+	/* Assume there are unmet deps until acpi_device_dep_initialize runs */
-+	device->dep_unmet = 1;
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index ce7ba5b..3cc1a42 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -188,13 +188,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+ 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
  }
  
- void acpi_device_add_finalize(struct acpi_device *device)
-@@ -1595,6 +1597,14 @@ static int acpi_add_single_object(struct acpi_device **child,
+-static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+@@ -1270,15 +1263,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       qcom_pcie_msi_irq_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "qcom-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "cannot request msi irq\n");
+-			return ret;
+-		}
  	}
  
- 	acpi_init_device_object(device, handle, type, sta);
-+	/*
-+	 * For ACPI_BUS_TYPE_DEVICE getting the status is delayed till here so
-+	 * that we can call acpi_bus_get_status and use its quirk handling.
-+	 * Note this must be done before the get power-/wakeup_dev-flags calls.
-+	 */
-+	if (type == ACPI_BUS_TYPE_DEVICE)
-+		acpi_bus_get_status(device);
-+
- 	acpi_bus_get_power_flags(device);
- 	acpi_bus_get_wakeup_device_flags(device);
- 
-@@ -1667,9 +1677,11 @@ static int acpi_bus_type_and_status(acpi_handle handle, int *type,
- 			return -ENODEV;
- 
- 		*type = ACPI_BUS_TYPE_DEVICE;
--		status = acpi_bus_get_status_handle(handle, sta);
--		if (ACPI_FAILURE(status))
--			*sta = 0;
-+		/*
-+		 * acpi_add_single_object updates this once we've an acpi_device
-+		 * so that acpi_bus_get_status' quirk handling can be used.
-+		 */
-+		*sta = 0;
- 		break;
- 	case ACPI_TYPE_PROCESSOR:
- 		*type = ACPI_BUS_TYPE_PROCESSOR;
-@@ -1767,6 +1779,8 @@ static void acpi_device_dep_initialize(struct acpi_device *adev)
- 	acpi_status status;
- 	int i;
- 
-+	adev->dep_unmet = 0;
-+
- 	if (!acpi_has_method(adev->handle, "_DEP"))
- 		return;
- 
+ 	ret = phy_init(pcie->phy);
 -- 
-2.14.3
+2.7.4
