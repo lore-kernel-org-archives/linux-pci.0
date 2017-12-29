@@ -1,62 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:41830 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751122AbdLZXf4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Dec 2017 18:35:56 -0500
-Date: Tue, 26 Dec 2017 17:35:52 -0600
-From: Rob Herring <robh@kernel.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [RFC PATCH v12 1/5] dt-bindings: PCI: Add definition of PCIe
- WAKE# irq and PCI irq
-Message-ID: <20171226233552.nacwqbpkozmy7n6c@rob-hp-laptop>
-References: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
- <20171226023646.17722-2-jeffy.chen@rock-chips.com>
+Received: from mout.web.de ([212.227.15.3]:64730 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751070AbdL2O4N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Dec 2017 09:56:13 -0500
+To: linux-pci@vger.kernel.org,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kees Cook <keescook@chromium.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev@lists.ozlabs.org
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] pci/hotplug: Delete error messages for a failed memory
+ allocation in four functions
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Message-ID: <dc3922b4-50f6-e7fa-482f-18e6ff5d905f@users.sourceforge.net>
+Date: Fri, 29 Dec 2017 15:55:52 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171226023646.17722-2-jeffy.chen@rock-chips.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 26, 2017 at 10:36:42AM +0800, Jeffy Chen wrote:
-> We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
-> so add definitions of the optional PCIe WAKE# pin for PCI devices.
-> 
-> Also add an definition of the optional PCI interrupt pin for PCI
-> devices to distinguish it from the PCIe WAKE# pin.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 29 Dec 2017 15:47:00 +0100
 
-By v13 you should drop "RFC". RFC implies not ready for merging.
+Omit extra messages for a memory allocation failure in these functions.
 
-> 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
-> 
-> Changes in v13: None
-> Changes in v12:
-> Only add irq definitions for PCI devices and rewrite the commit message.
-> 
-> Changes in v11: None
-> Changes in v10: None
-> Changes in v9:
-> Add section for PCI devices and rewrite the commit message.
-> 
-> Changes in v8:
-> Add optional "pci", and rewrite commit message.
-> 
-> Changes in v7: None
-> Changes in v6: None
-> Changes in v5:
-> Move to pci.txt
-> 
-> Changes in v3: None
-> Changes in v2: None
-> 
->  Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+This issue was detected by using the Coccinelle software.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/pci/hotplug/pciehp_hpc.c  | 5 ++---
+ drivers/pci/hotplug/pnv_php.c     | 8 +-------
+ drivers/pci/hotplug/shpchp_core.c | 5 ++---
+ 3 files changed, 5 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 7bab0606f1a9..ed27635ec740 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -838,10 +838,9 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	struct pci_dev *pdev = dev->port;
+ 
+ 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
+-	if (!ctrl) {
+-		dev_err(&dev->device, "%s: Out of memory\n", __func__);
++	if (!ctrl)
+ 		goto abort;
+-	}
++
+ 	ctrl->pcie = dev;
+ 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
+ 
+diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+index 74f6a17e4614..4ab318a0800d 100644
+--- a/drivers/pci/hotplug/pnv_php.c
++++ b/drivers/pci/hotplug/pnv_php.c
+@@ -266,7 +266,6 @@ static int pnv_php_add_devtree(struct pnv_php_slot *php_slot)
+ 	fdt1 = kzalloc(0x10000, GFP_KERNEL);
+ 	if (!fdt1) {
+ 		ret = -ENOMEM;
+-		dev_warn(&php_slot->pdev->dev, "Cannot alloc FDT blob\n");
+ 		goto out;
+ 	}
+ 
+@@ -280,8 +279,6 @@ static int pnv_php_add_devtree(struct pnv_php_slot *php_slot)
+ 	fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
+ 	if (!fdt) {
+ 		ret = -ENOMEM;
+-		dev_warn(&php_slot->pdev->dev, "Cannot %d bytes memory\n",
+-			 fdt_totalsize(fdt1));
+ 		goto free_fdt1;
+ 	}
+ 
+@@ -756,11 +753,8 @@ static irqreturn_t pnv_php_interrupt(int irq, void *data)
+ 	 * fine as the PCI devices (PE) aren't functional any more.
+ 	 */
+ 	event = kzalloc(sizeof(*event), GFP_ATOMIC);
+-	if (!event) {
+-		dev_warn(&pdev->dev, "PCI slot [%s] missed hotplug event 0x%04x\n",
+-			 php_slot->name, sts);
++	if (!event)
+ 		return IRQ_HANDLED;
+-	}
+ 
+ 	dev_info(&pdev->dev, "PCI slot [%s] %s (IRQ: %d)\n",
+ 		 php_slot->name, added ? "added" : "removed", irq);
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index 7bfb87bd2b7e..2f2b87acf179 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -305,10 +305,9 @@ static int shpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		return -ENODEV;
+ 
+ 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
+-	if (!ctrl) {
+-		dev_err(&pdev->dev, "%s: Out of memory\n", __func__);
++	if (!ctrl)
+ 		goto err_out_none;
+-	}
++
+ 	INIT_LIST_HEAD(&ctrl->slot_list);
+ 
+ 	rc = shpc_init(ctrl, pdev);
+-- 
+2.15.1
