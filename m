@@ -1,58 +1,71 @@
-Return-Path: <SRS0=8eUd=C5=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=8eUd=C5=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com, alex.williamson@redhat.com, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com, aik@ozlabs.ru, ruscur@russell.cc
-Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
-In-Reply-To: <8f9ebacd-5e4e-a6d3-b1c2-dcf9bd0ea811@linux.vnet.ibm.com>
-References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com> <8f9ebacd-5e4e-a6d3-b1c2-dcf9bd0ea811@linux.vnet.ibm.com>
-Date: Fri, 01 Dec 2017 22:48:09 +1100
-Message-ID: <87k1y6breu.fsf@concordia.ellerman.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49866 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751356AbdL2HYc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 02:24:32 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v2 0/4] Address error and recovery for AER and DPC
+Date: Fri, 29 Dec 2017 12:54:15 +0530
+Message-Id: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"Bryant G. Ly" <bryantly@linux.vnet.ibm.com> writes:
+This patch set brings in support for DPC and AER to co-exist and not to
+race for recovery.
 
-> On 11/9/17 8:00 AM, Bryant G. Ly wrote:
->
->> v1 - Initial patch
->> v2 - Addressed Bjorn's comment on creating a highly platform
->>      dependent global exported symbol.
->> v3 - Based patch off linux-ppc/master
->> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
->> v5 - Fixed comments and commit message
->>
->> Bryant G. Ly (3):
->>   powerpc/kernel: Separate SR-IOV Calls
->>   pseries: Add PSeries SR-IOV Machine dependent calls
->>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
->>
->>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
->>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
->>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
->>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
->>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
->>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
->>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
->>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
->>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
->>  drivers/pci/iov.c                            | 11 ++++++++++
->>  include/linux/pci.h                          |  2 ++
->>  11 files changed, 118 insertions(+), 33 deletions(-)
->>
-> Hi Mike,
->
-> Any updates on when this is going to get pulled? I want to submit the full SR-IOV enablement on PowerVM,
-> but I haven't seen this get merged into 4.15 yet.
+The current implementation of AER and error message broadcasting to the
+EP driver is tightly coupled and limited to AER service driver.
+It is important to factor out broadcasting and other link handling
+callbacks. So that not only when AER gets triggered, but also when DPC get
+triggered, or both get triggered simultaneously (for e.g. ERR_FATAL),
+callbacks are handled appropriately.
+having modularized the code, the race between AER and DPC is handled
+gracefully.
+for e.g. when DPC is active and kicked in, AER should not attempt to do
+recovery, because DPC takes care of it.
 
-Hi Bryant,
+DPC should enumerate the devices after recovering the link, which is
+achieved by implementing error_resume callback.
 
-Sorry but this was too late for 4.15.
+Changes since v1:
+	Kbuild errors fixed:
+		> pci_find_dpc_dev made static
+		> ras_event.h updated
+		> pci_find_aer_service call with CONFIG check
+		> pci_find_dpc_service call with CONFIG check
 
-Timing wise it will be fine for 4.16, though I still have to convince
-myself that what you're doing will work for pseries on KVM.
+Oza Pawandeep (4):
+  PCI/AER: factor out error reporting from AER
+  PCI/DPC/AER: Address Concurrency between AER and DPC
+  PCI/ERR: Do not do recovery if DPC service is active
+  PCI/DPC: Enumerate the devices after DPC trigger event
 
-It would be good to get an ack from Alexey and Russell (added to CC).
+ drivers/acpi/apei/ghes.c               |   2 +-
+ drivers/pci/pcie/Makefile              |   2 +-
+ drivers/pci/pcie/aer/aerdrv.h          |  30 ---
+ drivers/pci/pcie/aer/aerdrv_core.c     | 306 +------------------------
+ drivers/pci/pcie/aer/aerdrv_errprint.c |  27 ++-
+ drivers/pci/pcie/pcie-dpc.c            | 127 ++++++++++-
+ drivers/pci/pcie/pcie-err.c            | 399 +++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/portdrv.h             |   2 +
+ include/linux/aer.h                    |   4 -
+ include/linux/pci.h                    |  23 ++
+ include/ras/ras_event.h                |   6 +-
+ 11 files changed, 579 insertions(+), 349 deletions(-)
+ create mode 100644 drivers/pci/pcie/pcie-err.c
 
-cheers
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
