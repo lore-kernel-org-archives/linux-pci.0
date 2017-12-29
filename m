@@ -1,45 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 30 Jan 2018 13:44:32 +0100 (CET)
-From: Sebastian Ott <sebott@linux.vnet.ibm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Gerald Schaefer <gerald.schaefer@de.ibm.com>
-Subject: Re: [PATCH] PCI: Add SPDX GPL-2.0+ to replace implicit GPL v2 or
- later statement
-In-Reply-To: <20180130004051.15416.78620.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180130003559.15416.18047.stgit@bhelgaas-glaptop.roam.corp.google.com>  <20180130004051.15416.78620.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Message-Id: <alpine.LFD.2.21.1801301344060.1608@schleppi>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:39754 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751226AbeABTIV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:08:21 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v4 02/10] PCI: dwc: exynos: Switch to use the IRQ chained API
+Date: Fri, 29 Dec 2017 14:21:34 +0000
+Message-Id: <1bb522bb0ead9a2bc9dd10aa4955e2b022692e47.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 29 Jan 2018, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> 7441b0627e22 ("s390/pci: PCI hotplug support via SCLP") added
-> s390_pci_hpc.c, which included this license information:
-> 
->   +MODULE_LICENSE("GPL");
-> 
-> Based on "git show 7441b0627e22:include/linux/module.h", that "GPL" string
-> means "GPL v2 or later":
-> 
->    *      "GPL"                           [GNU Public License v2 or later]
-> 
-> 0729dcf24832 ("s390: hotplug: make pci_hpc explicitly non-modular")
-> subsequently replaced the MODULE_LICENSE() with a "License: GPL" comment.
-> 
-> Add SPDX GPL-2.0+ and remove the "License: GPL" comment, relying on the
-> assertion in b24413180f56 ("License cleanup: add SPDX GPL-2.0 license
-> identifier to files with no license") that the SPDX identifier may be used
-> instead of the full boilerplate text.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Changes Exynos SoC specific driver to use the IRQ chained API available in
+pcie-designware.
 
-Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+
+ drivers/pci/dwc/pci-exynos.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 5596fde..d044952 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -490,15 +490,6 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct exynos_pcie *ep = arg;
+-	struct dw_pcie *pci = ep->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static void exynos_pcie_msi_init(struct exynos_pcie *ep)
+ {
+ 	struct dw_pcie *pci = ep->pci;
+@@ -624,15 +615,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+ 			dev_err(dev, "failed to get msi irq\n");
+ 			return pp->msi_irq;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					exynos_pcie_msi_irq_handler,
+-					IRQF_SHARED | IRQF_NO_THREAD,
+-					"exynos-pcie", ep);
+-		if (ret) {
+-			dev_err(dev, "failed to request msi irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.7.4
