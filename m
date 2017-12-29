@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:51313 "EHLO
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:39780 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751215AbeABTIY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:08:24 -0500
+        with ESMTP id S1751260AbeABTIW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:08:22 -0500
 From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
         jingoohan1@gmail.com, kishon@ti.com
@@ -14,47 +14,96 @@ Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
         wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
         svarbanov@mm-sol.com, nsekhar@ti.com,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v4 00/10] PCI: dwc: MSI-X feature
-Date: Fri, 29 Dec 2017 14:21:32 +0000
-Message-Id: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v4 10/10] PCI: dwc: Expand maximum number of IRQs from 32 to 256
+Date: Fri, 29 Dec 2017 14:21:42 +0000
+Message-Id: <79fd0abbb040a3512a0b9d417097e9487254182c.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replaces the use of IRQ domain hierarchy by the IRQ chained used by
-pcie-designware and each SoC specific driver in order to allow new and
-complex features like MSI-X.
+The Synopsys PCIe Root Complex supports up to 256 IRQs distributed by 8
+controller registers.
 
-Adds Synopsys Root Complex support for MSI-X feature.
+Having this in mind, the number of the maximum number of IRQs was changed
+to 256 and now the number of controllers is calculated based on the number
+of vectors used by the specific SoC driver.
 
-Expands the maximum number of IRQs from 32 to 256 distributed by
-a maximum of 8 controller registers.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- New patch file.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Patch renamed from v3-0009 to v4-0010.
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
 
-The patch set was made against the Bjorn's next branch.
+ drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
+ drivers/pci/dwc/pcie-designware.h      | 10 +++-------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-Gustavo Pimentel (10):
-  PCI: dwc: Add IRQ chained API support
-  PCI: dwc: exynos: Switch to use the IRQ chained API
-  PCI: dwc: imx6: Switch to use the IRQ chained API
-  PCI: dwc: artpec6: Switch to use the IRQ chained API
-  PCI: dwc: designware: Switch to use the IRQ chained API
-  PCI: dwc: qcom: Switch to use the IRQ chained API
-  PCI: dwc: keystone: Switch to use the IRQ chained API
-  PCI: dwc: keystone: Reuse designware domain allocation
-  PCI: dwc: Remove IRQ domain hierarchy API support
-  PCI: dwc: Expand maximum number of IRQs from 32 to 256
-
- drivers/pci/dwc/pci-exynos.c           |  18 --
- drivers/pci/dwc/pci-imx6.c             |  18 --
- drivers/pci/dwc/pci-keystone-dw.c      |  86 +------
- drivers/pci/dwc/pci-keystone.c         |   1 +
- drivers/pci/dwc/pci-keystone.h         |   4 +-
- drivers/pci/dwc/pci-layerscape.c       |   3 +-
- drivers/pci/dwc/pcie-artpec6.c         |  18 --
- drivers/pci/dwc/pcie-designware-host.c | 403 +++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware-plat.c |  16 --
- drivers/pci/dwc/pcie-designware.h      |  30 ++-
- drivers/pci/dwc/pcie-qcom.c            |  16 --
- 11 files changed, 257 insertions(+), 356 deletions(-)
-
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 7d12ce3..b3ac3f4 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -85,11 +85,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+ /* MSI int handler */
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ {
+-	u32 val;
+ 	int i, pos, irq;
++	u32 val, num_ctrls;
+ 	irqreturn_t ret = IRQ_NONE;
+ 
+-	for (i = 0; i < MAX_MSI_CTRLS; i++) {
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
++	for (i = 0; i < num_ctrls; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+ 				    &val);
+ 		if (!val)
+@@ -639,13 +641,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+-	u32 val, ctrl;
++	u32 val, ctrl, num_ctrls;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 
+ 	dw_pcie_setup(pci);
+ 
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
+ 	/* Initialize IRQ Status array */
+-	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
++	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+ 				    &pp->irq_status[ctrl]);
+ 	/* setup RC BARs */
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index c77c2e0..074bd14 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -110,13 +110,9 @@
+ #define MSI_MESSAGE_DATA_32		0x58
+ #define MSI_MESSAGE_DATA_64		0x5C
+ 
+-/*
+- * Maximum number of MSI IRQs can be 256 per controller. But keep
+- * it 32 as of now. Probably we will never need more than 32. If needed,
+- * then increment it in multiple of 32.
+- */
+-#define MAX_MSI_IRQS			32
+-#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
++#define MAX_MSI_IRQS			256
++#define MAX_MSI_IRQS_PER_CTRL		32
++#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+ #define MSI_DEF_NUM_VECTORS		32
+ 
+ /* Maximum number of inbound/outbound iATUs */
 -- 
 2.7.4
