@@ -1,50 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:33687 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933786AbdLSI6i (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 03:58:38 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Received: from muru.com ([72.249.23.125]:33732 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751573AbdL2RQo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Dec 2017 12:16:44 -0500
+Date: Fri, 29 Dec 2017 09:16:39 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: JeffyChen <jeffy.chen@rock-chips.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>
-CC: Mark Rutland <mark.rutland@arm.com>, <linux-omap@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v2 0/3] PCI: dra7xx: Support PCIe x2 lane mode
-Date: Tue, 19 Dec 2017 14:28:20 +0530
-Message-ID: <20171219085823.8695-1-kishon@ti.com>
+        Linux PM <linux-pm@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Doug Anderson <dianders@chromium.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+Message-ID: <20171229171639.GJ3875@atomide.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+ <CAJZ5v0hpK0_vjX3HinCpsFuKffVUn3d5EnqXdz0P893aRZgnRw@mail.gmail.com>
+ <20171228165134.GH3875@atomide.com>
+ <6120485.xubBpvge6h@aspire.rjw.lan>
+ <CAJZ5v0hSMqwitCvfi7D+sknuO0YFr5F-kdkV-cSoVp30Cmdaeg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0hSMqwitCvfi7D+sknuO0YFr5F-kdkV-cSoVp30Cmdaeg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previous version of this series can be found here @ [1]
+* Rafael J. Wysocki <rafael@kernel.org> [171228 17:46]:
+> 
+> To be precise, it is not quite possible to figure out which WAKE#
+> triggered, if they are sharing the line, without looking into the
+> config spaces of the devices below the switch.  The switch is not
+> expected to do that AFAICS.  It only generates a PME message meaning
+> "wakeup is being signaled somewhere below" and the PME driver that
+> handles the Root Port receiving it should look at the PME Status bits
+> of the devices below the switch (the pme.c driver does that IIRC or at
+> least it should do that ;-)).
+> 
+> Still, the handling of WAKE# doesn't need to cover this case AFAICS.
 
-Patch series adds support to enable x2 lane mode in dra74/dra76 and
-dra72 based boards in pci-dra7xx driver. It introduces new compatible
-strings in order to enable x2 lane mode support.
+OK makes sense now.
 
-Changes from v1:
-*) Added ti prefix to syscon-lane-conf and syscon-lane-sel as
-   suggested to Rob
-*) Merged "PCI: dwc: dra7xx: Add support for SoC specific compatible
-   strings" and "PCI: dwc: pci-dra7xx: Enable x2 mode support" into
-   a single patch.
-*) Fixed $subject as suggested by Bjorn
-*) Added x2 lane mode support for DRA72x
+Regards,
 
-The dts changes and phy changes will be sent as a separate series.
-
-[1] -> https://lkml.org/lkml/2017/10/10/276
-
-Kishon Vijay Abraham I (3):
-  dt-bindings: PCI: dra7xx: Add SoC specific compatible strings
-  dt-bindings: PCI: dra7xx: Add properties to enable x2 lane in dra7
-  PCI: dra7xx: Enable x2 mode support for dra74x, dra76x and dra72x
-
- Documentation/devicetree/bindings/pci/ti-pci.txt | 14 +++-
- drivers/pci/dwc/pci-dra7xx.c                     | 90 ++++++++++++++++++++++++
- 2 files changed, 102 insertions(+), 2 deletions(-)
-
--- 
-2.11.0
+Tony
