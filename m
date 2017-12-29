@@ -1,103 +1,76 @@
-Return-Path: <SRS0=fhAv=DC=intel.com=kenji.chen@kernel.org>
-Return-Path: <SRS0=fhAv=DC=intel.com=kenji.chen@kernel.org>
-From: "Chen, Kenji" <kenji.chen@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>
-CC: Thierry Reding <treding@nvidia.com>, Manikanta Maddireddy
-	<mmaddireddy@nvidia.com>, David Daney <david.daney@cavium.com>, "Krishna
- Kishore" <kthota@nvidia.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>, Julia Lawall
-	<Julia.Lawall@lip6.fr>, "linux-tegra@vger.kernel.org"
-	<linux-tegra@vger.kernel.org>, Patrick Georgi <pgeorgi@chromium.org>, "Rajat
- Jain" <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>, Stefan Reinauer
-	<stefan.reinauer@coreboot.org>, Duncan Laurie <dlaurie@chromium.org>
-Subject: RE: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
-Date: Wed, 6 Dec 2017 01:55:37 +0000
-Message-ID: <A7A4B3ECFA40144E98B82E71E29693557CA5516C@PGSMSX102.gar.corp.intel.com>
-References: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171205194050.GD23510@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171205194050.GD23510@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=gM3E=DZ=rowland.harvard.edu=stern+5a55f586@kernel.org>
+Return-Path: <SRS0=gM3E=DZ=rowland.harvard.edu=stern+5a55f586@kernel.org>
+Date: Fri, 29 Dec 2017 11:14:51 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+     <linux-pci@vger.kernel.org>,  <linux-kernel@vger.kernel.org>,
+    David Woodhouse <dwmw2@infradead.org>,
+    Andy Shevchenko <andy.shevchenko@gmail.com>,  <linux-usb@vger.kernel.org>
+Subject: Re: `pci_apply_final_quirks()` taking half a second
+In-Reply-To: <20171228212723.GB211339@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <Pine.LNX.4.44L0.1712291111580.24019-100000@netrider.rowland.org>
 MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-https://pcisig.com/sites/default/files/specification_documents/ECN_L1_PM_Su=
-bstates_with_CLKREQ_31_May_2013_Rev10a.pdf
-Pls also check My Intel Doc# 545845 for the bits fields description.
+On Thu, 28 Dec 2017, Bjorn Helgaas wrote:
 
------Original Message-----
-From: Bjorn Helgaas [mailto:helgaas@kernel.org]=20
-Sent: Wednesday, December 6, 2017 3:41 AM
-To: linux-pci@vger.kernel.org
-Cc: Chen, Kenji <kenji.chen@intel.com>; Thierry Reding <treding@nvidia.com>=
-; Manikanta Maddireddy <mmaddireddy@nvidia.com>; David Daney <david.daney@c=
-avium.com>; Krishna Kishore <kthota@nvidia.com>; linux-kernel@vger.kernel.o=
-rg; Vidya Sagar <vidyas@nvidia.com>; Julia Lawall <Julia.Lawall@lip6.fr>; l=
-inux-tegra@vger.kernel.org; Patrick Georgi <pgeorgi@chromium.org>; Rajat Ja=
-in <rajatja@google.com>; Yinghai Lu <yinghai@kernel.org>; Stefan Reinauer <=
-stefan.reinauer@coreboot.org>; Duncan Laurie <dlaurie@chromium.org>
-Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
+> On Tue, Dec 26, 2017 at 04:55:20PM +0100, Paul Menzel wrote:
+> > Am 08.04.2017 um 17:41 schrieb Bjorn Helgaas:
+> > >On Fri, Apr 07, 2017 at 11:07:15PM +0200, Paul Menzel wrote:
+> > 
+> > >>Measuring where time is spent during boot with `systemd-bootchart`
+> > >>on an Asus A780FullHD, it turns out that half a second is spent in
+> > >>`pci_apply_final_quirks()`.
+> > >
+> > >I agree, that seems like a crazy amount of time.
+> > >
+> > >Can you figure out how to turn on pr_debug() (via the dynamic debug
+> > >mess or whatever) and boot with "initcall_debug"?  That should tell us
+> > >how long each quirk took.
+> > 
+> > I am sorry for taking so long to reply. I finally added `dyndbg=file
+> > quirks.c +p` to the command line of Linux 4.13.13. This is on
+> > another AMD system (Asus F285M Pro).
 
-On Sat, Dec 02, 2017 at 03:45:38PM -0600, Bjorn Helgaas wrote:
-> The PCIe active link power state is L0.  ASPM defines two low-power
-> states: L0s and L1.  The L1 PM Substates feature defines two=20
-> additional low-power states: L1.1 and L2.2.
->=20
-> The L1.2 state may have substantial entry/exit latency.  Downstream=20
-> devices can use the Latency Tolerance Reporting (LTR) feature to=20
-> report how much latency they can tolerate.  The L1 PM Substates=20
-> capability includes a programmable L1.2 threshold register.  If the=20
-> downstream devices can tolerate the latency indicated by the=20
-> threshold, L1.2 may be used.
->=20
-> If LTR is not enabled, the L1.2 threshold is ignored and L1.2 can be=20
-> used whenever it is enabled and CLKREQ# is de-asserted.  Linux=20
-> currently never enables LTR, but firmware may have done so.
->=20
-> The current L1 PM substates support in Linux sets the L1.2 threshold=20
-> to a fixed value (163.84us) copied from coreboot [1].  I don't know=20
-> where that value came from, and it is incorrect for some platforms,=20
-> e.g., Tegra [2].
->=20
-> These patches change that so we calculate the L1.2 threshold based on=20
-> values reported by the hardware, and we enable LTR whenever possible.
->=20
-> This is all just my understanding from reading the spec.  I'd be glad=20
-> to be corrected if I'm going wrong.
->=20
-> I'm particularly puzzled about the coreboot code in
-> pciexp_L1_substate_commit() that sets LTR_L1.2_THRESHOLD:
->=20
-> +	pcie_update_cfg(root, root_cap + 0x08, ~0xe3ff0000,
-> +		(1 << 21) | (1 << 23) | (1 << 30));
->=20
-> This is writing the L1 PM Substates Control 1 register, but the shifts=20
-> don't match up with any of the fields in the register, so this is an=20
-> awfully funny way to write the threshold.
->=20
-> [1]=20
-> https://mail.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.
-> html [2]=20
-> https://lkml.kernel.org/r/1510492674-12786-1-git-send-email-vidyas@nvi
-> dia.com
->=20
-> ---
->=20
-> Bjorn Helgaas (2):
->       PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristics
->       PCI/ASPM: Enable Latency Tolerance Reporting when supported
->=20
->=20
->  drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++----------=
-------
->  drivers/pci/probe.c     |   33 ++++++++++++++++++++++
->  include/linux/pci.h     |    2 +
->  3 files changed, 82 insertions(+), 24 deletions(-)
+> > Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> > quirk_usb_early_handoff+0x0/0x6b0 returned after 197 usecs for
+> > 0000:00:10.0
+> > Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> > quirk_usb_early_handoff+0x0/0x6b0 returned after 127 usecs for
+> > 0000:00:10.1
+> > Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> > quirk_usb_early_handoff+0x0/0x6b0 returned after 88643 usecs for
+> > 0000:00:12.0
+> > Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> > quirk_usb_early_handoff+0x0/0x6b0 returned after 137 usecs for
+> > 0000:00:12.2
+> > Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> > pci_fixup_amd_ehci_pme+0x0/0x30 returned after 1 usecs for
+> > 0000:00:12.2
+> > Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> > quirk_usb_early_handoff+0x0/0x6b0 returned after 85770 usecs for
+> > 0000:00:13.0
+> > Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> > quirk_usb_early_handoff+0x0/0x6b0 returned after 134 usecs for
+> > 0000:00:13.2
+> > Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> > pci_fixup_amd_ehci_pme+0x0/0x30 returned after 1 usecs for
+> > 0000:00:13.2
+> > Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> > quirk_usb_early_handoff+0x0/0x6b0 returned after 125 usecs for
+> > 0000:03:00.0[…]
+> > ```
+> > 
+> > So it’s `pci fixup quirk_usb_early_handoff` taking around 85 ms, and
+> > that twice.
+> 
+> Wow.  That's pretty painful, but of course I don't know how to fix it.
+> From looking at quirk_usb_early_handoff(), it may depend on BIOS
+> details.  Maybe the USB folks will have some ideas.
 
-I applied these with Vidya's Reviewed-by to pci/aspm for v4.16.
+Can we see the output from lspci?  It would help to know what the 12.0 
+and 13.0 devices are.
 
-I'd still really like to hear from the coreboot folks about the rationale f=
-or the current coreboot code.  You folks are in a much better position to a=
-ctually understand the hardware details.
-
-Bjorn
+Alan Stern
