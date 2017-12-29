@@ -1,50 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:64296 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752726AbdL1JvV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 04:51:21 -0500
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20171228095120epoutp04a5edf4d1373dca65f5f17c147bbb2cf5~EbIH6p6t_0894908949epoutp04g
-        for <linux-pci@vger.kernel.org>; Thu, 28 Dec 2017 09:51:20 +0000 (GMT)
-Subject: Re: [PATCH] PCI: designware: move dw_pcie_iatu_unroll_enabled to
- pcie-designware.c
-To: Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: 'Kishon Vijay Abraham I' <kishon@ti.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'Joao Pinto' <Joao.Pinto@synopsys.com>
-From: Pankaj Dubey <pankaj.dubey@samsung.com>
-Message-ID: <eb56232e-83b0-c269-491b-a5b2fc20833a@samsung.com>
-Date: Thu, 28 Dec 2017 15:22:18 +0530
+Return-Path: <SRS0=g2f3=DZ=synopsys.com=gustavo.pimentel@kernel.org>
+Return-Path: <SRS0=g2f3=DZ=synopsys.com=gustavo.pimentel@kernel.org>
+Subject: Re: [PATCH v3 0/9] add new irq api to pcie-designware
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+ "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>, "kishon@ti.com"
+ <kishon@ti.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+ "thomas.petazzoni@free-electrons.com" <thomas.petazzoni@free-electrons.com>,
+ "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>,
+ "mingkai.hu@freescale.com" <mingkai.hu@freescale.com>,
+ "tie-fei.zang@freescale.com" <tie-fei.zang@freescale.com>,
+ "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+ "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+ "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+ "wangzhou1@hisilicon.com" <wangzhou1@hisilicon.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
+ "nsekhar@ti.com" <nsekhar@ti.com>
+References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
+ <20171228185652.GA211339@bhelgaas-glaptop.roam.corp.google.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <dd170704-f873-5bd0-ece6-57c9cdcd7597@synopsys.com>
+Date: Fri, 29 Dec 2017 14:07:40 +0000
 MIME-Version: 1.0
-In-Reply-To: <000201d37a79$978ce0a0$c6a6a1e0$@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-References: <CGME20171012044055epcas1p44b2e6b7cc21d42319529a518197aca9f@epcas1p4.samsung.com>
-        <1507783268-9022-1-git-send-email-pankaj.dubey@samsung.com>
-        <000201d37a79$978ce0a0$c6a6a1e0$@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171228185652.GA211339@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
 
+Hi Bjorn,
 
-On 12/21/2017 10:04 PM, Jingoo Han wrote:
-> On Thursday, October 12, 2017 12:41 AM, Pankaj Dubey wrote:
->> IATU unroll feature can be enabled in EP mode as well, so we need to
->> have this check in pcie-designware-ep.c, so instead of making this
->> function as static in pcie-desigware-host.c, let's move this in
->> pcie-designware.c so that both pcie-designware-host.c and
->> pcie-designware-ep.c can use it.
+On 28/12/2017 18:56, Bjorn Helgaas wrote:
+> On Thu, Dec 28, 2017 at 11:56:38AM +0000, Gustavo Pimentel wrote:
+>> This patch series adds the new interrupt api to pcie-designware make it
+>> possible to use features like MSIX.
+>> The work consisted of adapting the pcie-designware-host and each SoC
+>> specific driver.
+>> The patch set was made against the Bjorn' next branch.
+>> A new patch set (v3) was created that includes Kishon's fixes (pci end
+>> point error and a dra7xx warning) in file
+>> 0007-pci-keystone-SoC-driver-adapted-to-new-irq-API.patch.
 >>
->> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> Sorry for my late response.
->
-> Acked-by: Jingoo Han <jingoohan1@gmail.com>
->
-> Best regards,
-> Jingoo Han
+>> Gustavo Pimentel (9):
+>>   pci: adding new irq api to pci-designware
+>>   pci: exynos SoC driver adapted to new irq API
+>>   pci: imx6 SoC driver adapted to new irq API
+>>   pci: artpec6 SoC driver adapted to new irq API
+>>   pci: generic PCIe DW driver adapted to new irq API
+>>   pci: qcom SoC driver adapted to new irq API
+>>   pci: keystone SoC driver adapted to new irq API
+>>   pci: removing old irq api from pcie-designware
+>>   pci: remove limitation of the number of the available IRQs
+> 
+> Please update the summary lines to match the drivers/pci conventions:
+> 
+>   PCI: dwc: Add new IRQ API
+>   PCI: dwc: exynos: Adapt to new IRQ API
+>   PCI: dwc: imx6: Adapt to new IRQ API
+>   PCI: dwc: artpec6: Adapt to new IRQ API
+>   PCI: dwc: designware: Adapt to new IRQ API
+>   PCI: dwc: qcom: Adapt to new IRQ API
+>   PCI: dwc: keystone: Adapt to new IRQ API
+>   PCI: dwc: Remove old IRQ API
+>   PCI: dwc: Remove limitation on number of IRQs
+> 
+> The first patch summary should contain more information than "Add new
+> IRQ API".  That summary doesn't tell us anything about what is new or
+> why we want it.  Even the changelog doesn't contain that information.
+> 
+> Please also update the changelogs to consistently capitalize IRQ, API,
+> etc.  It's currently a mix, which is distracting to read.
+> 
+> Also, instead of saying "This patch adds the ...", simply say "Add the
+> ...".  The "This patch" context is obvious since the changelog is an
+> integral part of the commit.
+> 
+> Please use blank lines to separate paragraphs.
+> 
 
-Thanks for review and Ack. Will resubmit this along with your Ack.
+Ok, I'll do it like said. Thanks for the feedback.
 
-Thanks,
-Pankaj Dubey
+>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>  drivers/pci/dwc/pci-keystone-dw.c      |  88 +-------
+>>  drivers/pci/dwc/pci-keystone.c         |   1 +
+>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
+>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
+>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>  drivers/pci/dwc/pcie-designware-host.c | 391 +++++++++++++++++++--------------
+>>  drivers/pci/dwc/pcie-designware-plat.c |  16 --
+>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
+>>  drivers/pci/dwc/pcie-qcom.c            |  16 --
+>>  11 files changed, 254 insertions(+), 350 deletions(-)
+>>
+>> -- 
+>> 2.7.4
+>>
+>>
