@@ -1,36 +1,54 @@
-Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <rjw@sisk.pl>, <linux-pci@vger.kernel.org>
-CC: <stable@vger.kernel.org>, <linuxarm@huawei.com>,
-        Dongdong Liu
-	<liudongdong3@huawei.com>
-Subject: [PATCH V2 0/2] PCI/portdrv: Fix switch devctrl error report enable
-Date: Tue, 5 Dec 2017 17:50:36 +0800
-Message-ID: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from muru.com ([72.249.23.125]:33776 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751186AbdL2R5V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Dec 2017 12:57:21 -0500
+Date: Fri, 29 Dec 2017 09:57:17 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
+        briannorris@chromium.org, rjw@rjwysocki.net, dianders@chromium.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [RFC PATCH v12 1/5] dt-bindings: PCI: Add definition of PCIe
+ WAKE# irq and PCI irq
+Message-ID: <20171229175717.GL3875@atomide.com>
+References: <20171226020806.32710-1-jeffy.chen@rock-chips.com>
+ <20171226020806.32710-2-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171226020806.32710-2-jeffy.chen@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PATCH 1/2 is to fix switch upstream/downstream port error report.
-PATCH 2/2 is to make AER device configuration more reasonable.
-Delete the upstream/downstream port AER configuraion in PATCH 2/2,
-but if firmware does not enable upstream/downstream port error reporting, 
-it seems current no place to enable them, so PATCH 2/2 need more
-suggestion. Please see the commit log for more information. 
+* Jeffy Chen <jeffy.chen@rock-chips.com> [171226 02:11]:
+> We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
+> so add definitions of the optional PCIe WAKE# pin for PCI devices.
+> 
+> Also add an definition of the optional PCI interrupt pin for PCI
+> devices to distinguish it from the PCIe WAKE# pin.
 
-Changes from v1:
-- Rebase on v4.15-rc2.
-- Modify the change log.
-- Add PATCH 2/2.
+> --- a/Documentation/devicetree/bindings/pci/pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> @@ -24,3 +24,13 @@ driver implementation may support the following properties:
+>     unsupported link speed, for instance, trying to do training for
+>     unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+>     for gen2, and '1' for gen1. Any other values are invalid.
+> +
+> +PCI devices may support the following properties:
 
-Dongdong Liu (2):
-  PCI/portdrv: Fix switch devctrl error report enable
-  PCI/AER: Fix AER device configuration
+This should say PCI ports instead of PCI devices.
 
- drivers/pci/pcie/aer/aerdrv.c   | 49 ++++-------------------------------------
- drivers/pci/pcie/portdrv_core.c |  4 +++-
- 2 files changed, 7 insertions(+), 46 deletions(-)
-
--- 
-1.9.1
+> +- interrupts: Interrupt specifier for each name in interrupt-names.
+> +- interrupt-names:
+> +    May contain "wakeup" for PCIe WAKE# interrupt and "pci" for PCI interrupt.
+> +    The PCI devices may optionally include an 'interrupts' property that
+> +    represents the legacy PCI interrupt. And when we try to specify the PCIe
+> +    WAKE# pin, a corresponding 'interrupt-names' property is required to
+> +    distinguish them.
+> -- 
+> 2.11.0
+> 
+> 
