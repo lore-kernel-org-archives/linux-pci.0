@@ -1,107 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:47091 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752506AbdLNPcU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 10:32:20 -0500
-Date: Thu, 14 Dec 2017 16:32:16 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, jonathanh@nvidia.com, vidyas@nvidia.com,
-        mperttunen@nvidia.com, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, kthota@nvidia.com
-Subject: Re: [PATCH V3 07/12] PCI: tegra: Disable AFI dynamic clock gating
-Message-ID: <20171214153216.GH13733@ulmo>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-8-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:40158 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750762AbdL2Xjy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 18:39:54 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="MGu/vTNewDGZ7tmp"
-In-Reply-To: <1509371843-22931-8-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <20171229171548.GI3875@atomide.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+ <CAJZ5v0hpK0_vjX3HinCpsFuKffVUn3d5EnqXdz0P893aRZgnRw@mail.gmail.com>
+ <20171228165134.GH3875@atomide.com> <6120485.xubBpvge6h@aspire.rjw.lan> <20171229171548.GI3875@atomide.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 30 Dec 2017 00:39:52 +0100
+Message-ID: <CAJZ5v0icePurJoGdVtX06j=XHPdZSqXgm+vhL47ngv7OZoL3fw@mail.gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+To: Tony Lindgren <tony@atomide.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        JeffyChen <jeffy.chen@rock-chips.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Doug Anderson <dianders@chromium.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Dec 29, 2017 at 6:15 PM, Tony Lindgren <tony@atomide.com> wrote:
+> * Rafael J. Wysocki <rjw@rjwysocki.net> [171228 17:33]:
+>> On Thursday, December 28, 2017 5:51:34 PM CET Tony Lindgren wrote:
+>> >
+>> > Well Brian had a concern where we would have to implement PM runtime
+>> > for all device drivers for PCI devices.
+>>
+>> Why would we?
+>
+> Seems at least I was a bit confused. In the PCIe case the WAKE# is
+> owned by the PCIe slot, not the child PCIe device.
 
---MGu/vTNewDGZ7tmp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Well, it depends on what you mean by "slot" and "child device", but if
+my understanding of it is correct, WAKE# actually is "owned" by the
+latter.
 
-On Mon, Oct 30, 2017 at 07:27:18PM +0530, Manikanta Maddireddy wrote:
-> When there are 32 outstanding writes from AFI to memory, the outstanding
-> write counter overflows and indicates that there are "0" outstanding write
-> transactions. This outstanding write counter is used to generate IDLE
-> signal to dynamically gate the AFI clock.
->=20
-> When memory controller is under heavy load, its possible that write
-> completions will come back to AFI after long delay and AFI write counter
-> overflows. AFI clock gets gated even when there are outstanding
-> transactions towards memory controller resutling in system hang.
->=20
-> Disable dynamic clock gating of AFI clock to avoid system hang.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V3:
-> * no change in this patch
-> V2:
-> * no change in this patch
->=20
->  drivers/pci/host/pci-tegra.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 4562b0c113a8..c264037112cb 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -103,8 +103,9 @@
->  #define AFI_MSI_EN_VEC6		0xa4
->  #define AFI_MSI_EN_VEC7		0xa8
-> =20
-> -#define AFI_CONFIGURATION		0xac
-> -#define  AFI_CONFIGURATION_EN_FPCI	(1 << 0)
-> +#define AFI_CONFIGURATION			0xac
-> +#define  AFI_CONFIGURATION_EN_FPCI		(1 << 0)
-> +#define  AFI_CONFIGURATION_CLKEN_OVERRIDE	(1 << 31)
-> =20
->  #define AFI_FPCI_ERROR_MASKS	0xb0
-> =20
-> @@ -1059,9 +1060,10 @@ static int tegra_pcie_enable_controller(struct teg=
-ra_pcie *pcie)
->  		}
->  	}
-> =20
-> -	/* finally enable PCIe */
-> +	/* Disable AFI dynamic clock gating and enable PCIe */
->  	value =3D afi_readl(pcie, AFI_CONFIGURATION);
-> -	value |=3D AFI_CONFIGURATION_EN_FPCI;
-> +	value |=3D (AFI_CONFIGURATION_EN_FPCI |
-> +			AFI_CONFIGURATION_CLKEN_OVERRIDE);
+First, let me clarify the terminology.  PCI slots are not really
+represented in the device hierarchy in Linux.  They are represented by
+kernel objects for hotplug purposes, but these objects are not based
+on struct device.
 
-I think this is cleaner (and results in a smaller diff) if you simply
-put this on a new line:
+Generally, there are two kinds of PCI entities represented by struct
+pci_dev, bridges and endpoints (functions).  Bridges may represent
+physical devices, like PCI-to-PCI bridges, or parts of physical
+devices, like PCIe ports.  In PCIe, every port is logically
+represented by a bridge (and a PCI config space region with a Type 1
+header).  However, ports do not take actions like generating
+interrupts; the pieces of hardware containing them (switches, Root
+Complex) do that.
 
-	value |=3D AFI_CONFIGURATION_CLKEN_OVERRIDE;
+Endpoints (functions) are children of bridges (e.g. PCIe ports) and
+bridges may be children of other bridges (like in a switch that is
+represented by a bus segment with one upstream bridge - the upstream
+port - and possibly multiple downstream bridges - downstream ports).
+So in PCI a parent always is a bridge (either a PCI bridge - a bridge
+between to PCI bus segments - or a host bridge) and if that is a PCIe
+port, it cannot "own" anything like WAKE#, because it is not affected
+by it in any way and doesn't take part in the handling of it.
 
-Thierry
+In the context of "Figure 5-4" in the spec, Case 1, what matters is
+that every "Slot" in the figure represents a bunch (up to 8) of
+endpoints (functions), but the "Slot" is not the parent of them.  The
+port of the switch the "Slot" is connected to is the parent.  WAKE#
+basically comes from one of the endpoints belonging to the "Slot" and
+you need to look into the config space regions for all of these
+endpoints to check which one has PME Status set and clear it (to
+acknowledge the PME and make the hardware stop asserting the WAKE#
+signal).  So, from the software perspective, the endpoint (child) is
+the source of WAKE# and that should be reflected by DT properties IMO.
 
---MGu/vTNewDGZ7tmp
-Content-Type: application/pgp-signature; name="signature.asc"
+> So you're right, there should be no need for the child PCIe device drivers to
+> implement runtime PM.
 
------BEGIN PGP SIGNATURE-----
+There should be no need for that regardless.  You only need an
+interrupt handler that will look for the endpoint with PME Status set,
+acknowledge it and possibly invoke runtime PM for the endpoint in
+question (if supported).  All of that is standard and can happen at
+the bus type level and the interrupt handler I'm talking about may be
+based on pci_pme_wakeup() or pci_acpi_wake_dev().
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloymYAACgkQ3SOs138+
-s6HCvRAAvJrMlEervcZeA98DQKzDmaB7cKgrK8MLdnrpZZhVTrHKuR75+sbbpm0m
-xeYbp51MxP/s5QyG99UV6u5bOMKzGHYHLzH2MNg00pWpG2tCC8Qk3CHze7NC5FkB
-KRTCY/7TxzVQ/KXJql3TSCT97Vg87ND/IYHCJKLmLKPTA/WlaLYqs8Xwbgj4GczX
-l5+M1Ks4ZIypg5bnn8FLNdkVq3kFF5iCBZ8i6ca/+u6o8wHq1xu/lJkKMO5Bg5c5
-DbA8oBP/djXPFqyf/SOy3cs6MlBMXKMHCN7pDLPGNMyz2jd0/IhXBbyH4doSSEXY
-Am9AhCSFHPSCNhzm4q3BP/9StDLBkY51elXpiRz7LffLNqJLquMw3jue46yf88r6
-4mJEQwVGgkcDzRsBRsUUMHNOY+Q/Ubvz4+lMb4BU81ihViPjehNnkwaeScEClux4
-ICw12YPUlCJYdM1cI1Ey2AWgi8yNkUdKqGV+d17sLdAdVxEdLrX7V6DLKchWkduh
-4rUdBl/w40Iy6Ns0jmUU8VpF5C0/EjqjN7OZuvrPd2YS59WPjFnHGrlJ9VxWGkre
-5ZhNsiuymAg+lXjjpGBtjjh9k+wtPe0RmaBxbOVyPRTorQIRIqTE7WNZdsgV9EaB
-xMy8mN8z7CV7/S9hZyPI2beqJGCvMK8MQz0UBt9kuikOi81Vkk4=
-=Euq2
------END PGP SIGNATURE-----
+> I was thinking the wakeirq case with WLAN on SDIO bus. Some WLAN
+> devices can have a hardwired OOB wakeirq wired to a GPIO controller.
+> In that case the wakeirq is owned by the child device driver
+> (WLAN controller) and not by the SDIO slot. I was earlier
+> thinking this is the same as the "Figure 5-4" case 1, but it's
+> not.
 
---MGu/vTNewDGZ7tmp--
+Well, it is not in the sense that the endpoint driver is not expected
+to handle the wakeup interrupt by itself.  The PCI bus type is
+responsible for that, but technically WAKE# comes from the endpoint
+(child).
+
+> So in the PCIe WAKE# case for device tree, we must have the
+> wakeirq property for the PCIe slot for the struct device managing
+> that slot,
+
+Which doesn't exist.
+
+> and not for the child device driver. I think it's
+> already this way in the most recent set of patches, I need to
+> look again.
+
+No, you need a wakeirq properly for the child *device* and that
+property will be consumed by the PCI layer.
+
+>> > So isn't my option 1 above similar to the PCIe spec "Figure 5-4"
+>> > case 2?
+>>
+>> No, it isn't, because in that case there is no practical difference
+>> between WAKE# and an in-band PME message sent by the device (Beacon)
+>> from the software perspective.
+>>
+>> WAKE# causes the switch to send a PME message upstream and that is
+>> handled by the Root Complex through the standard mechanism already
+>> supported by our existing PME driver (drivers/pci/pcie/pme.c).
+>
+> OK. So if "Figure 5-4" case 2 is already handled then and we need
+> to just deal with "Figure 5-4" case 1 :)
+
+Right.
+
+>> > Yeah. FYI, for the dedicated wakeirq cases I have, we need to keep
+>> > them masked during runtime to avoid tons of interrupts as they
+>> > are often wired to the RX pins.
+>>
+>> OK
+>>
+>> BTW, enable_irq_wake() should take care of the sharing, shouldn't it?
+>
+> That can be used to tell us which device has wakeirq enabled for
+> wake-up events, but only for resume not runtiem PM. We still have the
+> shared IRQ problem to deal with. And the PCIe subsystem still needs
+> to go through the child devices.
+
+Right.
+
+It actually has to walk the bus below each of them too in case it is a
+bridge, like pci_acpi_wake_dev().
+
+>> But the WAKE# thing is not just for waking up the system from sleep states,
+>> it is for runtime PM's wakeup signaling too.
+>
+> Yes my test cases have it working for runtime PM and for waking
+> up system from suspend.
+
+OK
+
+>> > > > Currently nothing happens with wakeirqs if there's no struct
+>> > > > wakeup_source. On device_wakeup_enable() we call device_wakeup_attach()
+>> > > > that just copies dev->power.wakeirq to ws->wakeirq. And when struct
+>> > > > wake_source is freed the device should be active and wakeirq
+>> > > > disabled. Or are you seeing other issues here?
+>> > >
+>> > > I'm suspicious about one thing, but I need to look deeper into the code. :-)
+>>
+>> So we are fine except for the race and we need the wakeirq field in wakeup
+>> sources to automatically arm the wakeup IRQs during suspend.
+>
+> OK.
+>
+>> If I'm not mistaken, we only need something like the patch below (untested).
+>
+> Seems like it should fix the race, I'll do some testing next week.
+
+OK, thanks!
+
+Rafael
