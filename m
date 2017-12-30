@@ -1,198 +1,128 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 26 Dec 2017 15:11:24 -0600
-From: Rob Herring <robh@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        krzk@kernel.org, jingoohan1@gmail.com, kgene@kernel.org,
-        lorenzo.pieralisi@arm.com
-Subject: Re: [RFC 2/2] pci: dwc: pci-exynos: add the codes to support the
- exynos5433
-Message-ID: <20171226211123.feje5l46y62aft7u@rob-hp-laptop>
-References: <20171221121408.22636-1-jh80.chung@samsung.com>
- <CGME20171221121409epcas1p1a12d0f3b0b5d5e732da865ee78f6bb47@epcas1p1.samsung.com>
- <20171221121408.22636-2-jh80.chung@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171221121408.22636-2-jh80.chung@samsung.com>
+In-Reply-To: <CAJZ5v0icePurJoGdVtX06j=XHPdZSqXgm+vhL47ngv7OZoL3fw@mail.gmail.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+ <CAJZ5v0hpK0_vjX3HinCpsFuKffVUn3d5EnqXdz0P893aRZgnRw@mail.gmail.com>
+ <20171228165134.GH3875@atomide.com> <6120485.xubBpvge6h@aspire.rjw.lan>
+ <20171229171548.GI3875@atomide.com> <CAJZ5v0icePurJoGdVtX06j=XHPdZSqXgm+vhL47ngv7OZoL3fw@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 30 Dec 2017 01:21:16 +0100
+Message-ID: <CAJZ5v0hrzxJ2753Cj5LB=DkqDy9-JJnBXU_hJwOJpZazymStZg@mail.gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+To: Tony Lindgren <tony@atomide.com>
+Cc: JeffyChen <jeffy.chen@rock-chips.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Doug Anderson <dianders@chromium.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 21, 2017 at 09:14:07PM +0900, Jaehoon Chung wrote:
-> Exynos5433 has the PCIe for WiFi.
-> Added the codes relevant to PCIe for supporting the exynos5433.
-> Also changed the binding documentation name to
-> 'samsung,exynos-pcie.txt'.
-> (It's not only exynos5440 anymore.)
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> ---
->  ...exynos5440-pcie.txt => samsung,exynos-pcie.txt} |   2 +-
->  drivers/pci/dwc/pci-exynos.c                       | 183 ++++++++++++++++-----
->  2 files changed, 144 insertions(+), 41 deletions(-)
->  rename Documentation/devicetree/bindings/pci/{samsung,exynos5440-pcie.txt => samsung,exynos-pcie.txt} (97%)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
-> similarity index 97%
-> rename from Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-> rename to Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
-> index 34a11bfbfb60..958dcc150505 100644
-> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
-> @@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
->  and thus inherits all the common properties defined in designware-pcie.txt.
->  
->  Required properties:
-> -- compatible: "samsung,exynos5440-pcie"
-> +- compatible: "samsung,exynos5440-pcie" or "samsung,exynos5433-pcie"
+On Sat, Dec 30, 2017 at 12:39 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Fri, Dec 29, 2017 at 6:15 PM, Tony Lindgren <tony@atomide.com> wrote:
+>> * Rafael J. Wysocki <rjw@rjwysocki.net> [171228 17:33]:
+>>> On Thursday, December 28, 2017 5:51:34 PM CET Tony Lindgren wrote:
+>>> >
+>>> > Well Brian had a concern where we would have to implement PM runtime
+>>> > for all device drivers for PCI devices.
+>>>
+>>> Why would we?
+>>
+>> Seems at least I was a bit confused. In the PCIe case the WAKE# is
+>> owned by the PCIe slot, not the child PCIe device.
+>
+> Well, it depends on what you mean by "slot" and "child device", but if
+> my understanding of it is correct, WAKE# actually is "owned" by the
+> latter.
+>
+> First, let me clarify the terminology.  PCI slots are not really
+> represented in the device hierarchy in Linux.  They are represented by
+> kernel objects for hotplug purposes, but these objects are not based
+> on struct device.
+>
+> Generally, there are two kinds of PCI entities represented by struct
+> pci_dev, bridges and endpoints (functions).  Bridges may represent
+> physical devices, like PCI-to-PCI bridges, or parts of physical
+> devices, like PCIe ports.  In PCIe, every port is logically
+> represented by a bridge (and a PCI config space region with a Type 1
+> header).  However, ports do not take actions like generating
+> interrupts; the pieces of hardware containing them (switches, Root
+> Complex) do that.
+>
+> Endpoints (functions) are children of bridges (e.g. PCIe ports) and
+> bridges may be children of other bridges (like in a switch that is
+> represented by a bus segment with one upstream bridge - the upstream
+> port - and possibly multiple downstream bridges - downstream ports).
+> So in PCI a parent always is a bridge (either a PCI bridge - a bridge
+> between to PCI bus segments - or a host bridge) and if that is a PCIe
+> port, it cannot "own" anything like WAKE#, because it is not affected
+> by it in any way and doesn't take part in the handling of it.
+>
+> In the context of "Figure 5-4" in the spec, Case 1, what matters is
+> that every "Slot" in the figure represents a bunch (up to 8) of
+> endpoints (functions), but the "Slot" is not the parent of them.  The
+> port of the switch the "Slot" is connected to is the parent.  WAKE#
+> basically comes from one of the endpoints belonging to the "Slot" and
+> you need to look into the config space regions for all of these
+> endpoints to check which one has PME Status set and clear it (to
+> acknowledge the PME and make the hardware stop asserting the WAKE#
+> signal).  So, from the software perspective, the endpoint (child) is
+> the source of WAKE# and that should be reflected by DT properties IMO.
+>
+>> So you're right, there should be no need for the child PCIe device drivers to
+>> implement runtime PM.
+>
+> There should be no need for that regardless.  You only need an
+> interrupt handler that will look for the endpoint with PME Status set,
+> acknowledge it and possibly invoke runtime PM for the endpoint in
+> question (if supported).  All of that is standard and can happen at
+> the bus type level and the interrupt handler I'm talking about may be
+> based on pci_pme_wakeup() or pci_acpi_wake_dev().
+>
+>> I was thinking the wakeirq case with WLAN on SDIO bus. Some WLAN
+>> devices can have a hardwired OOB wakeirq wired to a GPIO controller.
+>> In that case the wakeirq is owned by the child device driver
+>> (WLAN controller) and not by the SDIO slot. I was earlier
+>> thinking this is the same as the "Figure 5-4" case 1, but it's
+>> not.
+>
+> Well, it is not in the sense that the endpoint driver is not expected
+> to handle the wakeup interrupt by itself.  The PCI bus type is
+> responsible for that, but technically WAKE# comes from the endpoint
+> (child).
+>
+>> So in the PCIe WAKE# case for device tree, we must have the
+>> wakeirq property for the PCIe slot for the struct device managing
+>> that slot,
+>
+> Which doesn't exist.
+>
+>> and not for the child device driver. I think it's
+>> already this way in the most recent set of patches, I need to
+>> look again.
+>
+> No, you need a wakeirq properly for the child *device* and that
+> property will be consumed by the PCI layer.
 
-Quite a lot of driver changes for just a new compatible.
+Or, if you use the convention mentioned in another message in this
+thread, you can make the wakeirq be a property of a bridge (port) with
+the clarification of the assumption that WAKE# is shared by all
+functions below the bridge.  So the presence of the "wakeirq" property
+for a bridge (in addition to providing the wakeup IRQ) will mean that
+it applies to all devices below the bridge.
 
->  - reg: base addresses and lengths of the PCIe controller,
+In the case of parallel PCI (not PCIe), there may be multiple "slots"
+(or "PCI devices" consisting each of multiple functions) under one
+bridge and in theory each of them may use a different IRQ for WAKE#
+signaling, so the above convention will not work then.
 
-For example, you're adding the DBI registers which is not documented 
-here. 
-
-Perhaps it is time to remove the old phy support before adding a new 
-platform.
-
->  	the PHY controller, additional register for the PHY controller.
->  	(Registers for the PHY controller are DEPRECATED.
-> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-> index 5596fdedbb94..8dee2e90347e 100644
-> --- a/drivers/pci/dwc/pci-exynos.c
-> +++ b/drivers/pci/dwc/pci-exynos.c
-> @@ -40,6 +40,8 @@
->  #define PCIE_IRQ_SPECIAL		0x008
->  #define PCIE_IRQ_EN_PULSE		0x00c
->  #define PCIE_IRQ_EN_LEVEL		0x010
-> +#define PCIE_SW_WAKE			0x018
-> +#define PCIE_BUS_EN			BIT(1)
->  #define IRQ_MSI_ENABLE			BIT(2)
->  #define PCIE_IRQ_EN_SPECIAL		0x014
->  #define PCIE_PWR_RESET			0x018
-> @@ -49,7 +51,8 @@
->  #define PCIE_NONSTICKY_RESET		0x024
->  #define PCIE_APP_INIT_RESET		0x028
->  #define PCIE_APP_LTSSM_ENABLE		0x02c
-> -#define PCIE_ELBI_RDLH_LINKUP		0x064
-> +#define PCIE_ELBI_RDLH_LINKUP		0x074
-> +#define PCIE_ELBI_XMLH_LINKUP		BIT(4)
->  #define PCIE_ELBI_LTSSM_ENABLE		0x1
->  #define PCIE_ELBI_SLV_AWMISC		0x11c
->  #define PCIE_ELBI_SLV_ARMISC		0x120
-> @@ -94,6 +97,10 @@
->  #define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
->  #define PCIE_PHY_TRSV3_LVCC		0x31c
->  
-> +/* DBI register */
-> +#define PCIE_MISC_CONTROL_1_OFF		0x8BC
-> +#define DBI_RO_WR_EN			BIT(0)
-> +
->  struct exynos_pcie_mem_res {
->  	void __iomem *elbi_base;   /* DT 0th resource: PCIe CTRL */
->  	void __iomem *phy_base;    /* DT 1st resource: PHY CTRL */
-> @@ -221,6 +228,96 @@ static const struct exynos_pcie_ops exynos5440_pcie_ops = {
->  	.deinit_clk_resources	= exynos5440_pcie_deinit_clk_resources,
->  };
->  
-> +static int exynos5433_pcie_get_mem_resources(struct platform_device *pdev,
-> +					     struct exynos_pcie *ep)
-> +{
-> +	struct dw_pcie *pci = ep->pci;
-> +	struct device *dev = pci->dev;
-> +	struct resource *res;
-> +
-> +	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
-> +	if (!ep->mem_res)
-> +		return -ENOMEM;
-> +
-> +	/* External Local Bus interface(ELBI) Register */
-
-These are standard DW registers IIRC. So the DW core should handle this.
-
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
-> +	ep->mem_res->elbi_base = devm_ioremap_resource(&pdev->dev, res);
-> +	if (IS_ERR(ep->mem_res->elbi_base))
-> +		return PTR_ERR(ep->mem_res->elbi_base);
-> +
-> +	/* Data Bus Interface(DBI) Register */
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-> +	pci->dbi_base = devm_ioremap_resource(&pdev->dev, res);
-
-This is handled by the DW plat driver. Perhaps the DW core should handle 
-it too. 
-
-Does the 5440 really not have DBI registers or you just happen to not 
-need to access them?
-
-> +	if (IS_ERR(pci->dbi_base))
-> +		return PTR_ERR(pci->dbi_base);
-> +
-> +	return 0;
-> +}
-> +
-> +static int exynos5433_pcie_get_clk_resources(struct exynos_pcie *ep)
-> +{
-> +	struct dw_pcie *pci = ep->pci;
-> +	struct device *dev = pci->dev;
-> +
-> +	ep->clk_res = devm_kzalloc(dev, sizeof(*ep->clk_res), GFP_KERNEL);
-> +	if (!ep->clk_res)
-> +		return -ENOMEM;
-> +
-> +	ep->clk_res->clk = devm_clk_get(dev, "pcie");
-> +	if (IS_ERR(ep->clk_res->clk)) {
-> +		dev_err(dev, "Failed to get pcie rc clock\n");
-> +		return PTR_ERR(ep->clk_res->clk);
-> +	}
-> +
-> +	ep->clk_res->bus_clk = devm_clk_get(dev, "pcie_bus");
-> +	if (IS_ERR(ep->clk_res->bus_clk)) {
-> +		dev_err(dev, "Failed to get pcie bus clock\n");
-> +		return PTR_ERR(ep->clk_res->bus_clk);
-> +	}
-> +
-> +	return 0;
-> +}
-
-Can't you reuse exynos5440_pcie_get_clk_resources? They appear to be the 
-same.
-
-> +
-> +static void exynos5433_pcie_deinit_clk_resources(struct exynos_pcie *ep)
-> +{
-> +	clk_disable_unprepare(ep->clk_res->bus_clk);
-> +	clk_disable_unprepare(ep->clk_res->clk);
-> +}
-> +
-> +
-> +static int exynos5433_pcie_init_clk_resources(struct exynos_pcie *ep)
-> +{
-> +	struct dw_pcie *pci = ep->pci;
-> +	struct device *dev = pci->dev;
-> +	int ret;
-> +
-> +	ret = clk_prepare_enable(ep->clk_res->clk);
-> +	if (ret) {
-> +		dev_err(dev, "cannot enable pcie rc clock");
-> +		return ret;
-> +	}
-> +
-> +	ret = clk_prepare_enable(ep->clk_res->bus_clk);
-> +	if (ret) {
-> +		dev_err(dev, "cannot enable pcie bus clock");
-> +		goto err_bus_clk;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_bus_clk:
-> +	clk_disable_unprepare(ep->clk_res->clk);
-> +
-> +	return ret;
-> +}
-
-Ditto.
-
-Rob
+Thanks,
+Rafael
