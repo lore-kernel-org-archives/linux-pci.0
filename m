@@ -1,50 +1,71 @@
-Return-Path: <SRS0=3s85=DE=gmail.com=sergey.senozhatsky@kernel.org>
-Return-Path: <SRS0=3s85=DE=gmail.com=sergey.senozhatsky@kernel.org>
-Date: Sat, 9 Dec 2017 08:55:49 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Michal Hocko <mhocko@suse.com>, Rafael Wysocki <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Fengguang Wu <fengguang.wu@intel.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Petr Mladek <pmladek@suse.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org,
-	Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: [PATCH 4/9] pci: remove unneeded kallsyms include
-Message-ID: <20171208235549.GD489@tigerII.localdomain>
-References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
- <20171208025616.16267-5-sergey.senozhatsky@gmail.com>
- <20171208175345.GA12367@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171208175345.GA12367@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Sat, 30 Dec 2017 09:27:48 +0530
+From: poza@codeaurora.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Wei Zhang <wzhang@fb.com>, Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v2 2/4] PCI/DPC/AER: Address Concurrency between AER and
+ DPC
+In-Reply-To: <20171229181340.GG16407@localhost.localdomain>
+References: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
+ <1514532259-19383-3-git-send-email-poza@codeaurora.org>
+ <20171229172324.GF16407@localhost.localdomain>
+ <481784bb38707839493fc04e6a2b4068@codeaurora.org>
+ <20171229181340.GG16407@localhost.localdomain>
+Message-ID: <c080079a21b839e4d755184429486da8@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On (12/08/17 11:53), Bjorn Helgaas wrote:
-> On Fri, Dec 08, 2017 at 11:56:11AM +0900, Sergey Senozhatsky wrote:
-> > The file was converted from print_fn_descriptor_symbol()
-> > to %pF some time ago (c9bbb4abb658da "PCI: use %pF instead
-> > of print_fn_descriptor_symbol() in quirks.c"). kallsyms does
-> > not seem to be needed anymore.
-> > 
-> > Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+On 2017-12-29 23:43, Keith Busch wrote:
+> On Fri, Dec 29, 2017 at 11:30:02PM +0530, poza@codeaurora.org wrote:
+>> On 2017-12-29 22:53, Keith Busch wrote:
+>> 
+>> > 2. A DPC event suppresses the error message required for the Linux
+>> > AER driver to run. How can AER and DPC run concurrently?
+>> 
+>> I afraid I could not grasp the first line completely.
 > 
-> Applied to pci/misc for v4.16, thanks for cleaning this up!
+> A DPC capable and enabled port discards error messages; the ERR_FATAL
+> or ERR_NONFATAL message required to trigger AER handling won't exist in
+> such a setup.
+> 
+> This behavior is defined in the specification 6.2.10 for Downstream
+> Port Containment:
+> 
+>   When DPC is triggered due to receipt of an uncorrectable error 
+> Message,
+>   the Requester ID from the Message is recorded in the DPC Error
+>   Source ID register and that Message is discarded and not forwarded
+>   Upstream. When DPC is triggered by an unmasked uncorrectable error,
+>   that error will not be signaled with an uncorrectable error Message,
+>   even if otherwise enabled.
 
-thanks!
+In my understanding, thiis talks about DPC enabled switch. this case is 
+taken care as well.
+if you look at patchset-3, when AER is triggered, AER's pci_dev is of 
+endpoint
+will traverse all the way up until it finds associated DPC service 
+enabled.
+pdev = pcie_port_upstream_bridge(dev);
 
-> I *assume* there's no ordering dependency like the one you mentioned
-> for sched/printk.
+if AER is not triggered, then at switch level DPC will take 
+care/suppress the msg
+and entire SW will not come into picture then.
 
-no dependency. you are right.
+But specifically the patches attempts to bring in some sort of 
+coordination and understanding between AER and DPC.
+as I mentioned in my previous mail.
 
-	-ss
+Regards,
+Oza.
