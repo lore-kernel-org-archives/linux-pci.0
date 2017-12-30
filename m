@@ -1,196 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:42249 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751021AbdL1WnW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 17:43:22 -0500
-Date: Thu, 28 Dec 2017 23:43:19 +0100
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 06/18] PCI: designware-ep: Add generic function for
- raising MSI irq
-Message-ID: <20171228224319.GA13865@axis.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
- <20171219232940.659-7-niklas.cassel@axis.com>
- <5fc44bf0-9d0e-e905-32fb-449d9ed1b01a@ti.com>
- <20171227222909.GA14106@axis.com>
- <e8a50bf0-edab-db41-0c80-13a1509e289c@ti.com>
- <672cfdc5-9e3d-311f-6307-0aedcf5d28ad@ti.com>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:39034 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750877AbdL3AbP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 19:31:15 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <672cfdc5-9e3d-311f-6307-0aedcf5d28ad@ti.com>
+In-Reply-To: <CAJZ5v0iRRAQWSji0ioJ5B5M5RjbYAyb1VmuWhTZw4qy0G7_a4g@mail.gmail.com>
+References: <20171226020806.32710-1-jeffy.chen@rock-chips.com>
+ <20171226020806.32710-2-jeffy.chen@rock-chips.com> <20171229175717.GL3875@atomide.com>
+ <CAJZ5v0iRRAQWSji0ioJ5B5M5RjbYAyb1VmuWhTZw4qy0G7_a4g@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 30 Dec 2017 01:31:14 +0100
+Message-ID: <CAJZ5v0hTUvqOFZU5OGaDL9EXZ+TnxbMDZdnqJ+_tvddm3YfgbQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v12 1/5] dt-bindings: PCI: Add definition of PCIe
+ WAKE# irq and PCI irq
+To: Tony Lindgren <tony@atomide.com>
+Cc: Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Doug Anderson <dianders@chromium.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 28, 2017 at 08:09:50PM +0530, Kishon Vijay Abraham I wrote:
-> Hi Niklas,
-> 
-> On Thursday 28 December 2017 01:36 PM, Kishon Vijay Abraham I wrote:
-> > Hi Niklas,
-> > 
-> > On Thursday 28 December 2017 03:59 AM, Niklas Cassel wrote:
-> >> On Tue, Dec 26, 2017 at 06:20:54PM +0530, Kishon Vijay Abraham I wrote:
-> >>> Hi Niklas,
-> >>
-> >> Hello Kishon
-> >>
-> >>>
-> >>> On Wednesday 20 December 2017 04:59 AM, Niklas Cassel wrote:
-> >>>> Add a generic function for raising MSI irqs that can be used by all
-> >>>> DWC based controllers.
-> >>>>
-> >>>> Note that certain controllers, like DRA7xx, have a special convenience
-> >>>> register for raising MSI irqs that doesn't require you to explicitly map
-> >>>> the MSI address. Therefore, it is likely that certain drivers will
-> >>>> not use this generic function, even if they can.
-> >>>>
-> >>>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> >>>> ---
-> >>>>  drivers/pci/dwc/pcie-designware-ep.c | 35 +++++++++++++++++++++++++++++++++++
-> >>>>  drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
-> >>>>  2 files changed, 44 insertions(+)
-> >>>>
-> >>>> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> >>>> index 700ed2f4becf..c5aa1cac5041 100644
-> >>>> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> >>>> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> >>>> @@ -282,6 +282,41 @@ static const struct pci_epc_ops epc_ops = {
-> >>>>  	.stop			= dw_pcie_ep_stop,
-> >>>>  };
-> >>>>  
-> >>>> +int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
-> >>>> +			     u8 interrupt_num)
-> >>>> +{
-> >>>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> >>>> +	struct pci_epc *epc = ep->epc;
-> >>>> +	u16 msg_ctrl, msg_data;
-> >>>> +	u32 msg_addr_lower, msg_addr_upper;
-> >>>> +	u64 msg_addr;
-> >>>> +	bool has_upper;
-> >>>> +	int ret;
-> >>>> +
-> >>>> +	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
-> >>>> +	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-> >>>> +	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
-> >>>> +	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-> >>>> +	if (has_upper) {
-> >>>> +		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
-> >>>> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-> >>>> +	} else {
-> >>>> +		msg_addr_upper = 0;
-> >>>> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-> >>>> +	}
-> >>>> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
-> >>>> +	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr,
-> >>>> +				  epc->mem->page_size);
-> >>>> +	if (ret)
-> >>>> +		return ret;
-> >>>> +
-> >>>> +	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
-> >>>
-> >>> Shouldn't this be msg_data + (interrupt_num - 1)?
-> >>
-> >> I'm not quite sure about this, but if there is a pending irq,
-> >> not yet processed by the RC, the msg_data we read out in this
-> >> function should have a bit set, matching the pending irq.
-> > 
-> > IIUC, the msg_data that we read here should not depend on the pending irq on
-> > the RC side. msg_data should have the starting MSI vector number assigned by RC
-> > for that EP device. (msg.data = pos; in dw_msi_setup_msg() also seem to suggest
-> > the same).
-> >>
-> >> If that irq is the same as the irq we are trying to raise,
-> >> doing an addition will produce a bogus vector number,
-> >> but a bitwise or should work.
-> > 
-> > if msg_data has the starting MSI vector, doing an addition should get to the
-> > correct MSI vector.
-> >>
-> >> For that reason, I think that doing bitwise or seems safer.
-> >> However, other than this case, I don't see why it should
-> >> matter if we do an addition or a bitwise or.
-> >>
-> >> Are you having some problem with the code?
-> >> It seems to be working fine on ARTPEC-6:
-> >>
-> >> # ./pcitest -m 1
-> >> MSI1:           OKAY
-> >> # ./pcitest -m 2
-> >> MSI2:           OKAY
-> >> # ./pcitest -m 3
-> >> MSI3:           OKAY
-> >> # ./pcitest -m 4
-> >> MSI4:           OKAY
-> >> # ./pcitest -m 5
-> >> MSI5:           OKAY
-> >> # ./pcitest -m 6
-> >> MSI6:           OKAY
-> >> # ./pcitest -m 7
-> >> MSI7:           OKAY
-> >> # ./pcitest -m 8
-> >> MSI8:           OKAY
-> >> # ./pcitest -m 9
-> >> MSI9:           OKAY
-> >> # cat /proc/interrupts | grep -i msi
-> >>  82:          9          0     GIC-0 180 Level     artpec6-pcie-msi
-> >> 188:          1          0   PCI-MSI  16 Edge      pci-endpoint-test
-> >> 189:          1          0   PCI-MSI  17 Edge      pci-endpoint-test
-> >> 190:          1          0   PCI-MSI  18 Edge      pci-endpoint-test
-> >> 191:          1          0   PCI-MSI  19 Edge      pci-endpoint-test
-> >> 192:          1          0   PCI-MSI  20 Edge      pci-endpoint-test
-> >> 193:          1          0   PCI-MSI  21 Edge      pci-endpoint-test
-> >> 194:          1          0   PCI-MSI  22 Edge      pci-endpoint-test
-> >> 195:          1          0   PCI-MSI  23 Edge      pci-endpoint-test
-> >> 196:          1          0   PCI-MSI  24 Edge      pci-endpoint-test
-> >> 197:          0          0   PCI-MSI  25 Edge      pci-endpoint-test
-> >> 198:          0          0   PCI-MSI  26 Edge      pci-endpoint-test
-> >> 199:          0          0   PCI-MSI  27 Edge      pci-endpoint-test
-> >> 200:          0          0   PCI-MSI  28 Edge      pci-endpoint-test
-> >> 201:          0          0   PCI-MSI  29 Edge      pci-endpoint-test
-> >> 202:          0          0   PCI-MSI  30 Edge      pci-endpoint-test
-> >> 203:          0          0   PCI-MSI  31 Edge      pci-endpoint-test
-> >>
-> >> From EP:
-> >> irq: 1 read msg_data: 0x10 writing: 0x10
-> >> irq: 2 read msg_data: 0x10 writing: 0x11
-> >> irq: 3 read msg_data: 0x10 writing: 0x12
-> >> irq: 4 read msg_data: 0x10 writing: 0x13
-> >> irq: 5 read msg_data: 0x10 writing: 0x14
-> >> irq: 6 read msg_data: 0x10 writing: 0x15
-> >> irq: 7 read msg_data: 0x10 writing: 0x16
-> >> irq: 8 read msg_data: 0x10 writing: 0x17
-> >> irq: 9 read msg_data: 0x10 writing: 0x18
-> > 
-> > since your msg_data is 0x10, you are not facing the issue. What if it's 0x1? In
-> > my case If I have Gustavo's patch series applied, msg_data has a value of 0x1
-> > and I don't get certain MSI interrupts.
-> 
-> I think Gustavo's series doesn't align the MSI vector properly. That's why I
-> get 0x1. So your patch is fine as such.
+On Sat, Dec 30, 2017 at 12:50 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Fri, Dec 29, 2017 at 6:57 PM, Tony Lindgren <tony@atomide.com> wrote:
+>> * Jeffy Chen <jeffy.chen@rock-chips.com> [171226 02:11]:
+>>> We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
+>>> so add definitions of the optional PCIe WAKE# pin for PCI devices.
+>>>
+>>> Also add an definition of the optional PCI interrupt pin for PCI
+>>> devices to distinguish it from the PCIe WAKE# pin.
+>>
+>>> --- a/Documentation/devicetree/bindings/pci/pci.txt
+>>> +++ b/Documentation/devicetree/bindings/pci/pci.txt
+>>> @@ -24,3 +24,13 @@ driver implementation may support the following properties:
+>>>     unsupported link speed, for instance, trying to do training for
+>>>     unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+>>>     for gen2, and '1' for gen1. Any other values are invalid.
+>>> +
+>>> +PCI devices may support the following properties:
+>>
+>> This should say PCI ports instead of PCI devices.
+>
+> No, it is more accurate to say "PCI devices".
+>
+> Well, it actually gets somewhat confusing, because in the PCI
+> terminology a "PCI device" means a physical piece of hardware that can
+> be put into a single "slot" (think socket on a board) and may consist
+> up to 8 functional units called "functions" which are each represented
+> by a struct pci_dev.  So there may be up to 8 struct pci_dev objects
+> per "PCI device" (as per the standard language) and, BTW, drivers bind
+> to functions (via the struct pci_dev objects).
+>
+> Now, WAKE# is shared by all functions within the same "PCI device"
+> (I'm not sure if the standard specifies that directly, but at least it
+> appears to be treated as an obvious physical limitation), so it may be
+> useful to represent the "slot" or "device" level in the DT even though
+> it has no struct device based representation in the kernel.
 
-If the EP requests 16 irqs via Multiple Message Capable field,
-and the host grants it 16 irqs, by writing "100" to Multiple Message
-Enable field, then the endpoint can read MSI message data, modify
-bits 0-3, then write this modified value to the MSI message address.
+Within the convention that bridges represent "everything below them"
+as far as WAKE# is concerned, it can say "The following properties may
+be provided for PCI bridges:" and the description below should explain
+the convention.
 
-All bits that the EP is allowed to modify has to be initialized to
-0 by the host. E.g., in order to be able to raise 16 unique irqs,
-bits 0-3 has to be initialized to 0 (since we need to be able to use
-the whole range, 0x0-0xf).
-
-i.e. initializing MSI message data with 0x1 seems wrong, if the EP
-is requesting 16 irqs.
-
-Note that the case where Multiple Message Enable is "000", is special,
-since then the EP is not allowed to modify any bit, so then it is ok
-if bit 0 in MSI message data is set, but the code should handle this
-case already.
-
-So I agree, this patch should be fine as is.
-
-Regards,
-Niklas
+Thanks,
+Rafael
