@@ -1,59 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:33350 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750982AbdL1Vye (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 16:54:34 -0500
-Date: Thu, 28 Dec 2017 22:54:25 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Alexandru Chirvasitu <achirvasub@gmail.com>
-cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-In-Reply-To: <alpine.DEB.2.20.1712281930590.1899@nanos>
-Message-ID: <alpine.DEB.2.20.1712282253180.1899@nanos>
-References: <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com> <20171220131929.GC24638@arch-chirva.localdomain> <alpine.DEB.2.20.1712281145510.1688@nanos> <20171228142117.GA10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281531120.1899@nanos>
- <20171228154835.GB10658@chirva-slack.chirva-slack> <20171228160522.GC10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281706010.1899@nanos> <20171228172250.GD10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281823140.1899@nanos>
- <20171228175009.ucxr4to2nb42e3s4@D-69-91-141-110.dhcp4.washington.edu> <alpine.DEB.2.20.1712281930590.1899@nanos>
+Return-Path: <SRS0=qgHJ=D3=rowland.harvard.edu=stern+5a55f586@kernel.org>
+Return-Path: <SRS0=qgHJ=D3=rowland.harvard.edu=stern+5a55f586@kernel.org>
+Date: Sun, 31 Dec 2017 16:16:45 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+cc: Bjorn Helgaas <helgaas@kernel.org>,  <linux-pci@vger.kernel.org>,
+     <linux-kernel@vger.kernel.org>, David Woodhouse <dwmw2@infradead.org>,
+    Andy Shevchenko <andy.shevchenko@gmail.com>,  <linux-usb@vger.kernel.org>
+Subject: Re: `pci_apply_final_quirks()` taking half a second
+In-Reply-To: <b1533fd5-1fae-7256-9597-36d3d5de9d2a@molgen.mpg.de>
+Message-ID: <Pine.LNX.4.44L0.1712311607450.15484-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 28 Dec 2017, Thomas Gleixner wrote:
-> On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
-> 
-> > No; it seems to be tied to this specific issue, and I was seeing even
-> > before getting logs just now, whenever I'd start one of the bad
-> > kernels in recovery mode.
+On Sun, 31 Dec 2017, Paul Menzel wrote:
+
+> Am 29.12.2017 um 17:14 schrieb Alan Stern:
+> > On Thu, 28 Dec 2017, Bjorn Helgaas wrote:
 > > 
-> > But no, I've never seen that in any other logs, or on any other
-> > screens outside of those popping up in relation to this problem.
+> >> On Tue, Dec 26, 2017 at 04:55:20PM +0100, Paul Menzel wrote:
+> >>> Am 08.04.2017 um 17:41 schrieb Bjorn Helgaas:
+> >>>> On Fri, Apr 07, 2017 at 11:07:15PM +0200, Paul Menzel wrote:
+> >>>
+> >>>>> Measuring where time is spent during boot with `systemd-bootchart`
+> >>>>> on an Asus A780FullHD, it turns out that half a second is spent in
+> >>>>> `pci_apply_final_quirks()`.
+> >>>>
+> >>>> I agree, that seems like a crazy amount of time.
+> >>>>
+> >>>> Can you figure out how to turn on pr_debug() (via the dynamic debug
+> >>>> mess or whatever) and boot with "initcall_debug"?  That should tell us
+> >>>> how long each quirk took.
+> >>>
+> >>> I am sorry for taking so long to reply. I finally added `dyndbg=file
+> >>> quirks.c +p` to the command line of Linux 4.13.13. This is on
+> >>> another AMD system (Asus F285M Pro).
+
+> >>> Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> >>> quirk_usb_early_handoff+0x0/0x6b0 returned after 88643 usecs for
+> >>> 0000:00:12.0
+
+> >>> Dez 26 16:21:46 asus-f2a85-pro kernel: pci fixup
+> >>> quirk_usb_early_handoff+0x0/0x6b0 returned after 85770 usecs for
+> >>> 0000:00:13.0
+
+> >>> So it’s `pci fixup quirk_usb_early_handoff` taking around 85 ms, and
+> >>> that twice.
+> >>
+> >> Wow.  That's pretty painful, but of course I don't know how to fix it.
+> >>  From looking at quirk_usb_early_handoff(), it may depend on BIOS
+> >> details.  Maybe the USB folks will have some ideas.
+> > 
+> > Can we see the output from lspci?  It would help to know what the 12.0
+> > and 13.0 devices are.
 > 
-> Ok. I'll dig into it and we have a 100% reproducer reported by someone else
-> now, which might give us simpler insight into that issue. I'll let you know
-> once I have something to test. Might be a couple of days though.
+> Sorry, that was trimmed from the original message. Here is the output 
+> from the ASRock A780FullD.
+> 
+> > ```
+> > $ more /proc/version
+> > Linux version 4.9.0-0.bpo.2-amd64 (debian-kernel@lists.debian.org)
+> > (gcc version 4.9.2 (Debian 4.9.2-10) ) #1 SMP Debian 4.9.13-1~bpo8+1 (2017-02-27)
+> > $ lspci -nn
 
-Can you please provide the output of
+> > 00:12.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB OHCI0 Controller [1002:4397]
+> > 00:12.1 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] SB7x0 USB OHCI1 Controller [1002:4398]
+> > 00:12.2 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB EHCI Controller [1002:4396]
+> > 00:13.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB OHCI0 Controller [1002:4397]
+> > 00:13.1 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] SB7x0 USB OHCI1 Controller [1002:4398]
+> > 00:13.2 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] SB7x0/SB8x0/SB9x0 USB EHCI Controller [1002:4396]
 
-    lspci -vvv
+> So far, this can be reproduce on all AMD systems I have (ASRock 
+> A780FullHD, ASRock E350M1, Asus F2A85-M Pro).
 
-from a working kernel, preferrably 4.14.y
+So they are OHCI controllers.  You could add some debugging statements 
+to quirk_usb_handoff_ohci() to try and locate the part that's taking so 
+long.
 
-Thanks,
+It's also worth mentioning that the same source file contains lots of 
+special-case code for AMD and ASmedia hardware.  I don't know whether 
+any of it is involved in the long time delays you are seeing, however.
 
-	tglx
+Alan Stern
