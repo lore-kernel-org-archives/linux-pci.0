@@ -1,198 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59030 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932549AbeAXVg7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Jan 2018 16:36:59 -0500
-Date: Wed, 24 Jan 2018 15:36:48 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Felix Kuehling <Felix.Kuehling@amd.com>
-Cc: linux-pci@vger.kernel.org, oded.gabbay@gmail.com,
-        Jay.Cornwall@amd.com, Michal Kalderon <Michal.Kalderon@cavium.com>,
-        Ram Amrani <Ram.Amrani@cavium.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Ariel Elior <Ariel.Elior@cavium.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH 1/2] PCI: Add pci_enable_atomic_ops_to_root
-Message-ID: <20180124213648.GK5317@bhelgaas-glaptop.roam.corp.google.com>
-References: <1515113100-4718-1-git-send-email-Felix.Kuehling@amd.com>
+Return-Path: <SRS0=JOmu=D4=rowland.harvard.edu=stern+5a55f586@kernel.org>
+Return-Path: <SRS0=JOmu=D4=rowland.harvard.edu=stern+5a55f586@kernel.org>
+Date: Mon, 1 Jan 2018 10:47:19 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+cc: Bjorn Helgaas <helgaas@kernel.org>,  <linux-pci@vger.kernel.org>,
+     <linux-kernel@vger.kernel.org>, David Woodhouse <dwmw2@infradead.org>,
+    Andy Shevchenko <andy.shevchenko@gmail.com>,  <linux-usb@vger.kernel.org>
+Subject: Re: `pci_apply_final_quirks()` taking half a second
+In-Reply-To: <92dff466-d0a5-b30c-4d47-48584fac579e@molgen.mpg.de>
+Message-ID: <Pine.LNX.4.44L0.1801011041420.5613-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1515113100-4718-1-git-send-email-Felix.Kuehling@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Michal, Ram, Doug, Ariel, Jason]
+On Mon, 1 Jan 2018, Paul Menzel wrote:
 
-On Thu, Jan 04, 2018 at 07:44:59PM -0500, Felix Kuehling wrote:
-> From: Jay Cornwall <Jay.Cornwall@amd.com>
+> > So they are OHCI controllers.  You could add some debugging statements
+> > to quirk_usb_handoff_ohci() to try and locate the part that's taking so
+> > long.
 > 
-> The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be
-> requested by, routed through and completed by PCIe components. Routing and
-> completion do not require software support. Component support for each is
-> detectable via the DEVCAP2 register.
-> 
-> A Requester is permitted to use AtomicOps only if its
-> PCI_EXP_DEVCTL2_ATOMIC_REQ is set. A driver should set
-> PCI_EXP_DEVCTL2_ATOMIC_REQ only if the Completer and all intermediate
-> routing elements support AtomicOps.
-> 
-> A concrete example is the AMD Fiji-class GPU, which is specified to
-> support AtomicOp requests, routed through a PLX 8747 switch (advertising
-> AtomicOp routing) to a Haswell host bridge (advertising AtomicOp
-> completion support).
-> 
-> Add pci_enable_atomic_ops_to_root for per-device control over AtomicOp
-> requests. Upstream bridges are checked for AtomicOp routing capability and
-> the call fails if any lack this capability. The root port is checked for
-> AtomicOp completion capabilities and the call fails if it does not support
-> any. Routes to other PCIe components are not checked for AtomicOp routing
-> and completion capabilities.
-> 
-> v2: Check for AtomicOp route to root port with AtomicOp completion
-> v3: Style fixes
-> v4: Endpoint to root port only, check upstream egress blocking
-> v5: Rebase, use existing PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK define
-> v6: Add comp_caps param, fix upstream port detection, cosmetic/comments
-> v7: Reword commit message
-> 
-> CC: linux-pci@vger.kernel.org
-> Signed-off-by: Jay Cornwall <Jay.Cornwall@amd.com>
-> Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
+> As you suggested debugging statements, I guess the Linux kernel doesn’t 
+> offer other ways to instrument functions without modifying the source code.
 
-I applied these two patches to pci/enumeration for v4.16, thanks!
+It does.  Look into ftrace, for example.  However, ftrace only provides
+tracing at the level of function calls (hence the name -- "ftrace" for
+"function trace"), not for individual statements within a function.  
+There are other facilities as well, but none of them are likely to help 
+here.
 
-  430a23689dea PCI: Add pci_enable_atomic_ops_to_root()
-  20c3ff6114b0 RDMA/qedr: Use pci_enable_atomic_ops_to_root()
+> Is it possible to only rebuild the module somehow or is the early 
+> handoff stuff not a module?
 
-Doug, Jason, the second changes drivers/infiniband/hw/qedr/main.c to
-use the new interface.  Ordinarily that would go through the
-Infiniband tree, but since it depends on the PCI patch I included it.
-Let me know if you'd like something else.
+It is not a module.
 
-> ---
->  drivers/pci/pci.c             | 80 +++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h           |  1 +
->  include/uapi/linux/pci_regs.h |  4 ++-
->  3 files changed, 84 insertions(+), 1 deletion(-)
+> > It's also worth mentioning that the same source file contains lots of
+> > special-case code for AMD and ASmedia hardware.  I don't know whether
+> > any of it is involved in the long time delays you are seeing, however.
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 4a7c686..9cea399 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3066,6 +3066,86 @@ int pci_rebar_set_size(struct pci_dev *pdev, int bar, int size)
->  }
->  
->  /**
-> + * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
-> + * @dev: the PCI device
-> + * @comp_caps: Caps required for atomic request completion
-> + *
-> + * Return 0 if all upstream bridges support AtomicOp routing, egress
-> + * blocking is disabled on all upstream ports, and the root port
-> + * supports the requested completion capabilities (32-bit, 64-bit
-> + * and/or 128-bit AtomicOp completion), or negative otherwise.
-> + */
-> +int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 comp_caps)
-> +{
-> +	struct pci_bus *bus = dev->bus;
-> +
-> +	if (!pci_is_pcie(dev))
-> +		return -EINVAL;
-> +
-> +	switch (pci_pcie_type(dev)) {
-> +	/*
-> +	 * PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
-> +	 * to implement AtomicOp requester capabilities.
-> +	 */
-> +	case PCI_EXP_TYPE_ENDPOINT:
-> +	case PCI_EXP_TYPE_LEG_END:
-> +	case PCI_EXP_TYPE_RC_END:
-> +		break;
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +
-> +	while (bus->parent) {
-> +		struct pci_dev *bridge = bus->self;
-> +		u32 cap;
-> +
-> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
-> +
-> +		switch (pci_pcie_type(bridge)) {
-> +		/*
-> +		 * Upstream, downstream and root ports may implement AtomicOp
-> +		 * routing capabilities. AtomicOp routing via a root port is
-> +		 * not considered.
-> +		 */
-> +		case PCI_EXP_TYPE_UPSTREAM:
-> +		case PCI_EXP_TYPE_DOWNSTREAM:
-> +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-> +				return -EINVAL;
-> +			break;
-> +
-> +		/*
-> +		 * Root ports are permitted to implement AtomicOp completion
-> +		 * capabilities.
-> +		 */
-> +		case PCI_EXP_TYPE_ROOT_PORT:
-> +			if ((cap & comp_caps) != comp_caps)
-> +				return -EINVAL;
-> +			break;
-> +		}
-> +
-> +		/*
-> +		 * Upstream ports may block AtomicOps on egress.
-> +		 */
-> +		if (!bridge->has_secondary_link) {
-> +			u32 ctl2;
-> +
-> +			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
-> +						   &ctl2);
-> +			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
-> +				return -EINVAL;
-> +		}
-> +
-> +		bus = bus->parent;
-> +	}
-> +
-> +	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-> +				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL(pci_enable_atomic_ops_to_root);
-> +
-> +/**
->   * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
->   * @dev: the PCI device
->   * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index c170c92..52a17754 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -2061,6 +2061,7 @@ void pci_request_acs(void);
->  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
->  bool pci_acs_path_enabled(struct pci_dev *start,
->  			  struct pci_dev *end, u16 acs_flags);
-> +int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 comp_caps);
->  
->  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
->  #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 70c2b2a..f31b56b 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -624,7 +624,9 @@
->  #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
->  #define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
->  #define  PCI_EXP_DEVCAP2_ATOMIC_ROUTE	0x00000040 /* Atomic Op routing */
-> -#define PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* Atomic 64-bit compare */
-> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
-> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
-> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion */
->  #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
->  #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
->  #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
-> -- 
-> 2.7.4
-> 
+> Thank you for already looking into this. I haven’t had to time to read 
+> the commit messages, which might shed some light into the reasoning.
+
+Good luck!
+
+Alan Stern
