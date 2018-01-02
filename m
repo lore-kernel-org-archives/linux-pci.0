@@ -1,101 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51788 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751835AbeAJSCc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Jan 2018 13:02:32 -0500
-Date: Wed, 10 Jan 2018 12:02:30 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?=
-        <ckoenig.leichtzumerken@gmail.com>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        David Airlie <airlied@linux.ie>
-Subject: Re: [PATCH 2/2] x86/PCI: limit the size of the 64bit window to 256GB
- v2
-Message-ID: <20180110180230.GA227910@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180110122551.1637-1-christian.koenig@amd.com>
- <20180110122551.1637-2-christian.koenig@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180110122551.1637-2-christian.koenig@amd.com>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:45802 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751283AbeABRyN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:54:13 -0500
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH v17 2/4] net: e100: Replace PCI pool old API
+Date: Tue,  2 Jan 2018 18:53:54 +0100
+Message-Id: <20180102175356.7999-3-romain.perier@gmail.com>
+In-Reply-To: <20180102175356.7999-1-romain.perier@gmail.com>
+References: <20180102175356.7999-1-romain.perier@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, previous cc list]
+From: Romain Perier <romain.perier@collabora.com>
 
-On Wed, Jan 10, 2018 at 01:25:51PM +0100, Christian König wrote:
-> Avoid problems with BIOS implementations which don't report all used
-> resources to the OS by only allocating a 256GB window directly below the
-> hardware limit.
-> 
-> v2: cleanup code a bit more, update comment and explain the hw limit
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
 
-Fixes a silent reboot loop reported by Aaro Koskinen
-<aaro.koskinen@iki.fi> on an AMD-based MSI MS-7699/760GA-P43(FX)
-system.
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
+Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Acked-by: David S. Miller <davem@davemloft.net>
+Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
+---
+ drivers/net/ethernet/intel/e100.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Link: https://lkml.kernel.org/r/20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi
-Reported-by: Aaro Koskinen <aaro.koskinen@iki.fi>
-
-> Signed-off-by: Christian König <christian.koenig@amd.com>
-> ---
->  arch/x86/pci/fixup.c | 19 +++++++++----------
->  1 file changed, 9 insertions(+), 10 deletions(-)
-> 
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index a91280da2ea1..9c1c98d7e3a7 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -662,10 +662,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
->   */
->  static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
->  {
-> -	unsigned i;
->  	u32 base, limit, high;
-> -	struct resource *res, *conflict;
->  	struct pci_dev *other;
-> +	struct resource *res;
-> +	unsigned i;
-> +	int r;
->  
->  	if (!(pci_probe & PCI_BIG_ROOT_WINDOW))
->  		return;
-> @@ -702,19 +703,17 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
->  	if (!res)
->  		return;
->  
-> +	/* Allocate a 256GB window directly below the 0xfd00000000 hw limit */
-
-Can you include a citation for the hardware limit in the changelog?
-I'll try to dig it up myself if you don't beat me to it.
-
->  	res->name = "PCI Bus 0000:00";
->  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
->  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-> -	res->start = 0x100000000ull;
-> +	res->start = 0xbd00000000ull;
->  	res->end = 0xfd00000000ull - 1;
->  
-> -	/* Just grab the free area behind system memory for this */
-> -	while ((conflict = request_resource_conflict(&iomem_resource, res))) {
-> -		if (conflict->end >= res->end) {
-> -			kfree(res);
-> -			return;
-> -		}
-> -		res->start = conflict->end + 1;
-> +	r = request_resource(&iomem_resource, res);
-> +	if (r) {
-> +		kfree(res);
-> +		return;
->  	}
->  
->  	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-> -- 
-> 2.11.0
-> 
+diff --git a/drivers/net/ethernet/intel/e100.c b/drivers/net/ethernet/intel/e100.c
+index 44b3937f7e81..29486478836e 100644
+--- a/drivers/net/ethernet/intel/e100.c
++++ b/drivers/net/ethernet/intel/e100.c
+@@ -607,7 +607,7 @@ struct nic {
+ 	struct mem *mem;
+ 	dma_addr_t dma_addr;
+ 
+-	struct pci_pool *cbs_pool;
++	struct dma_pool *cbs_pool;
+ 	dma_addr_t cbs_dma_addr;
+ 	u8 adaptive_ifs;
+ 	u8 tx_threshold;
+@@ -1892,7 +1892,7 @@ static void e100_clean_cbs(struct nic *nic)
+ 			nic->cb_to_clean = nic->cb_to_clean->next;
+ 			nic->cbs_avail++;
+ 		}
+-		pci_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
++		dma_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
+ 		nic->cbs = NULL;
+ 		nic->cbs_avail = 0;
+ 	}
+@@ -1910,7 +1910,7 @@ static int e100_alloc_cbs(struct nic *nic)
+ 	nic->cb_to_use = nic->cb_to_send = nic->cb_to_clean = NULL;
+ 	nic->cbs_avail = 0;
+ 
+-	nic->cbs = pci_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
++	nic->cbs = dma_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
+ 				   &nic->cbs_dma_addr);
+ 	if (!nic->cbs)
+ 		return -ENOMEM;
+@@ -2960,8 +2960,8 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		netif_err(nic, probe, nic->netdev, "Cannot register net device, aborting\n");
+ 		goto err_out_free;
+ 	}
+-	nic->cbs_pool = pci_pool_create(netdev->name,
+-			   nic->pdev,
++	nic->cbs_pool = dma_pool_create(netdev->name,
++			   &nic->pdev->dev,
+ 			   nic->params.cbs.max * sizeof(struct cb),
+ 			   sizeof(u32),
+ 			   0);
+@@ -3001,7 +3001,7 @@ static void e100_remove(struct pci_dev *pdev)
+ 		unregister_netdev(netdev);
+ 		e100_free(nic);
+ 		pci_iounmap(pdev, nic->csr);
+-		pci_pool_destroy(nic->cbs_pool);
++		dma_pool_destroy(nic->cbs_pool);
+ 		free_netdev(netdev);
+ 		pci_release_regions(pdev);
+ 		pci_disable_device(pdev);
+-- 
+2.14.1
