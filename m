@@ -1,11 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V4 24/26] video: fbdev: riva: deprecate
+ pci_get_bus_and_slot()
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <1513661883-28662-25-git-send-email-okaya@codeaurora.org>
 From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V2] PCI/ASPM: Suppress common clock mode setting failure
-Date: Mon, 22 Jan 2018 15:12:01 -0500
-Message-Id: <1516651924-21820-1-git-send-email-okaya@codeaurora.org>
+Message-ID: <04f4cf20-9b57-3eff-79b6-abfda1258174@codeaurora.org>
+Date: Tue, 2 Jan 2018 08:37:32 -0500
+MIME-Version: 1.0
+In-Reply-To: <1513661883-28662-25-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -13,62 +17,41 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kees Cook <keescook@chromium.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-arm-msm@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
- Sinan Kaya <okaya@codeaurora.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
- Yinghai Lu <yinghai@kernel.org>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Cc: "open list:NVIDIA \(rivafb and nvidiafb\) FRAMEBUFFER DRIVER"
+ <linux-fbdev@vger.kernel.org>, Antonino Daplas <adaplas@gmail.com>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Code is emitting warnings when it tries to set the common clock mode for
-ASPM and ASPM is already configured to common clock mode by the UEFI BIOS.
-Let's bail out silently in such a case.
+On 12/19/2017 12:38 AM, Sinan Kaya wrote:
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
+> 
+> Getting ready to remove pci_get_bus_and_slot() function in favor of
+> pci_get_domain_bus_and_slot().
+> 
+> struct riva_par has a pointer to struct pci_dev. Use the pci_dev member
+> to extract the domain information.
+> 
+> Change the function signature for CalcStateExt and RivaGetConfig to pass
+> in struct pci_dev in addition to RIVA_HW_INST so that code inside the
+> riva_hw.c can also calculate domain number and pass it to
+> pci_get_domain_bus_and_slot().
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-pci 0004:00:00.0: ASPM: Could not configure common clock
+Any feedback here, most of the remaining patches have the ACK except these?
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pcie/aspm.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 9783e10..913b90d 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -240,6 +240,24 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
- 	if (!(reg16 & PCI_EXP_LNKSTA_SLC))
- 		same_clock = 0;
- 
-+	/* Port might be already in common clock mode */
-+	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &reg16);
-+	if (same_clock && (reg16 & PCI_EXP_LNKCTL_CCC)) {
-+		bool consistent = true;
-+
-+		list_for_each_entry(child, &linkbus->devices, bus_list) {
-+			pcie_capability_read_word(child, PCI_EXP_LNKCTL,
-+						  &reg16);
-+			if (!(reg16 & PCI_EXP_LNKCTL_CCC)) {
-+				consistent = false;
-+				break;
-+			}
-+		}
-+		if (consistent)
-+			return;
-+		dev_warn(&parent->dev, "ASPM: current common clock configuration is broken, reconfiguring\n");
-+	}
-+
- 	/* Configure downstream component, all functions */
- 	list_for_each_entry(child, &linkbus->devices, bus_list) {
- 		pcie_capability_read_word(child, PCI_EXP_LNKCTL, &reg16);
 -- 
-1.9.1
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
 _______________________________________________
 linux-arm-kernel mailing list
