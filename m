@@ -1,139 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:5277 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753771AbeAKGIn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 01:08:43 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V6 5/7] PCI: tegra: Add loadable kernel module support
-Date: Thu, 11 Jan 2018 11:38:06 +0530
-Message-ID: <1515650888-9459-6-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:40074 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750928AbeABTWA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:22:00 -0500
+Subject: Re: Re-activate task to add MSI-X to pcie-designware
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "Nori, Sekhar" <nsekhar@ti.com>
+References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
+ <20171208110225.GC26816@red-moon>
+ <9ede58a6-7c0d-ae66-4e15-147234cbad6d@ti.com>
+ <69f78abd-f83e-b3a6-0daf-638f89d07f99@synopsys.com>
+ <8771860f-babd-afcb-ed07-2642d2a4d6a8@ti.com>
+ <0531c3e9-57e7-d531-1bee-a5a5bbff2a8c@synopsys.com>
+ <2e04befd-9434-b3ec-0c18-96a80744e327@ti.com>
+ <513e28db-924d-569c-b3ae-cbb949229cc9@ti.com>
+ <cafeb5b6-4954-becf-0d30-8b6ee7e71efa@synopsys.com>
+ <2b0ad2cb-735b-e847-4c23-862e35b2c596@ti.com>
+ <aa4e1e2b-b88e-a7f8-ded1-6af411f03a82@synopsys.com>
+ <68fe0782-8223-10c7-5d7c-863841fc1954@ti.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <4ab97221-57fa-b40e-c91c-bee8e7f37f2f@synopsys.com>
+Date: Tue, 2 Jan 2018 19:21:57 +0000
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <68fe0782-8223-10c7-5d7c-863841fc1954@ti.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement remove callback function for Tegra PCIe driver to add
-loadable kernel module support. Change PCI_TEGRA config to tristate to
-allow pci-tegra driver to be build as a module.
+On 29/12/2017 10:05, Kishon Vijay Abraham I wrote:
+> Hi Gustavo,
+> 
+> On Friday 29 December 2017 03:18 PM, Gustavo Pimentel wrote:
+>> Hi Kishon,
+>>
+>> On 28/12/2017 14:58, Kishon Vijay Abraham I wrote:
+>>> Hi Gustavo,
+>>>
+>>> On Wednesday 27 December 2017 07:55 PM, Gustavo Pimentel wrote:
+>>>> On 26/12/2017 12:57, Kishon Vijay Abraham I wrote:
+>>>>> Hi,
+>>>>>
+>>>>> On Saturday 23 December 2017 03:46 PM, Kishon Vijay Abraham I wrote:
+>>>>>> Hi Gustavo,
+>>>>>>
+>>>>>> On Thursday 21 December 2017 07:38 PM, Gustavo Pimentel wrote:
+>>>>>>> On 20/12/2017 13:03, Kishon Vijay Abraham I wrote:This is our most recent
+>>>>>>> version of the patches that are running on our equipment, please check with yours
+>>>>>>>> Hi,
+>>>>>>>>
+>>>>>>>> On Monday 18 December 2017 09:31 PM, Gustavo Pimentel wrote:
+>>>>>>>>> Hi Kishon,
+>>>>>>>>>
+>>>>>>>>> I would like to collaborate with you on this subject, I have on my side João's
+>>>>>>>>> patches updated to the Bjorn's latest kernel version.
+>>>>>>>>
+>>>>>>>> cool, do you have a branch so that I can check what breaks in keystone and debug?
+>>>>>>>>
+>>>>>>> Unfortunately not, however I'll mailed you the patches immediately.
+>>>>>>> Once again, thanks.
+>>>>>>
+>>>>>> Thanks.
+>>>>>>
+>>>>>> I tried raising MSI with pci_endpoint_test EP device (16 MSI interrupts). Here
+>>>>>> are some of my observations after applying your patch series.
+>>>>>>
+>>>>>> root@k2g-evm:~# cat /proc/interrupts
+>>>>>>            CPU0
+>>>>>>  17:          0     GICv2  29 Level     arch_timer
+>>>>>>  18:       1816     GICv2  30 Level     arch_timer
+>>>>>>  21:          0     GICv2  36 Edge      arm-pmu
+>>>>>>  22:        792     GICv2 196 Edge      ttyS0
+>>>>>>  23:          5     GICv2 120 Edge      2530000.i2c
+>>>>>>  24:          0     GICv2  33 Edge      soc:keystone_irq@26202a0
+>>>>>>  25:        901     GICv2 356 Level     2a00000.msgmgr rx_005_002
+>>>>>>  41:          0     GICv2 232 Edge      2700000.edma_ccint
+>>>>>>  43:          0     GICv2 249 Edge      2700000.edma_ccerrint
+>>>>>>  44:       2497     GICv2 240 Edge      2728000.edma_ccint
+>>>>>>  46:          0     GICv2 252 Edge      2728000.edma_ccerrint
+>>>>>>  47:       7551     GICv2 128 Edge      mmc0
+>>>>>>  48:          0     GICv2 160 Edge      2680000.keystone-dwc3, xhci-hcd:usb1
+>>>>>>  49:          0     GICv2 176 Edge      2580000.keystone-dwc3, xhci-hcd:usb3
+>>>>>>  50:          0     GICv2  96 Edge      21805400.spi
+>>>>>>  52:          0     GICv2 100 Edge      21805c00.spi
+>>>>>>  53:          0     GICv2 102 Edge      21806000.spi
+>>>>>>  54:          0     GICv2  92 Edge      pcie-error-irq
+>>>>>> 211:          0      GPIO  12 Edge    -davinci_gpio  23000000.mmc cd
+>>>>>> 280:          0   PCI-MSI   0 Edge      PCIe PME, aerdrv
+>>>>>> 281:          0   PCI-MSI 524288 Edge      pci-endpoint-test
+>>>>>> 282:          0   PCI-MSI 524289 Edge      pci-endpoint-test
+>>>>>> 283:          0   PCI-MSI 524290 Edge      pci-endpoint-test
+>>>>>> 284:          0   PCI-MSI 524291 Edge      pci-endpoint-test
+>>>>>> 285:          0   PCI-MSI 524292 Edge      pci-endpoint-test
+>>>>>> 286:          0   PCI-MSI 524293 Edge      pci-endpoint-test
+>>>>>> 287:          0   PCI-MSI 524294 Edge      pci-endpoint-test
+>>>>>> 288:          0   PCI-MSI 524295 Edge      pci-endpoint-test
+>>>>>> 289:          0   PCI-MSI 524296 Edge      pci-endpoint-test
+>>>>>> 290:          0   PCI-MSI 524297 Edge      pci-endpoint-test
+>>>>>> 291:          0   PCI-MSI 524298 Edge      pci-endpoint-test
+>>>>>> 292:          0   PCI-MSI 524299 Edge      pci-endpoint-test
+>>>>>> 293:          0   PCI-MSI 524300 Edge      pci-endpoint-test
+>>>>>> 294:          0   PCI-MSI 524301 Edge      pci-endpoint-test
+>>>>>> 295:          0   PCI-MSI 524302 Edge      pci-endpoint-test
+>>>>>> 296:          0   PCI-MSI 524303 Edge      pci-endpoint-test
+>>>>>> IPI0:          0  CPU wakeup interrupts
+>>>>>> IPI1:          0  Timer broadcast interrupts
+>>>>>> IPI2:          0  Rescheduling interrupts
+>>>>>> IPI3:          0  Function call interrupts
+>>>>>> IPI4:          0  CPU stop interrupts
+>>>>>> IPI5:          0  IRQ work interrupts
+>>>>>> IPI6:          0  completion interrupts
+>>>>>> Err:          0
+>>>>>>
+>>>>>> root@k2g-evm:~# pcitest -m 1
+>>>>>> [   45.966437] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 271
+>>>>>> [   45.973544] keystone-pcie 21801000.pcie: irq: bit 0, vector 0, virq 280
+>>>>>> MSI1:           NOT OKAY
+>>>>>>
+>>>>>> Here there is an off by one error. "pcitest -m 1" should ideally have raised an
+>>>>>> interrupt in 281 but from the above debug print it looks like it's raising an
+>>>>>> interrupt in 280.
+>>>>>
+>>>>> The above error was due to an pci_endpoint bug. I'll send a patch to fix this
+>>>>> separately.
+>>>>
+>>>> Ok great!
+>>>
+>>> This too looks like a bug with the new API. If the EP requests 16 interrupts,
+>>> the MSI vector (programmed in PCI_MSI_DATA) should be 0 and if 0 is not
+>>> available it should be 16
+>>> [From the spec: The Multiple Message Enable field (bits 6-4 of the Message
+>>> Control register) defines the number of low
+>>> order message data bits the function is permitted to modify to generate its
+>>> system software allocated vectors]. For 16 interrupts, Multiple Message Enable
+>>> will have a value of 4 which means the EP can modify the 4 low order bits to
+>>> raise the 16 interrupts.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
-V3:
-* use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_init()
-V4:
-* no change in this patch
-V5:
-* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-rebased on linux-next
-V6:
-* no change in this patch
+Ok, I will try to replicate your test environment to fix this error, meanwhile I
+will send a patch v4 to everyone in order to keep this alive and receive more
+comments from everyone.
 
- drivers/pci/host/Kconfig     |  2 +-
- drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
- 2 files changed, 32 insertions(+), 4 deletions(-)
+>>>
+>>> With this series added, PCI_MSI_DATA is programmed to 0x1 which gets masked
+>>> while the EP tries to raise an interrupt and hence we are observing off by one
+>>> error.
+>>
+>> The EP (USB 3.1 PCIe board) that I usually use only have 2 interrupts. I didn't
+>> perform the tests like you did. I typically plug the USB flash drive and observe
+>> the number of interrupts and perform some basic file operations on the USB flash
+>> drive (copy/move/delete/rename).
+> 
+> Do you have PCIEPORTBUS enabled? That takes 1 interrupt (assuming your host has
+> the required capabilities). You should be able to reproduce the issue with just
+> PCIEPORTBUS enabled then. (With your series added msg_data on USB device will
+> be 0x1 whereas it should be 0x2.
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 38d12980db0f..6fd2a5937804 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -34,7 +34,7 @@ config PCI_FTPCI100
- 	default ARCH_GEMINI
- 
- config PCI_TEGRA
--	bool "NVIDIA Tegra PCIe controller"
-+	tristate "NVIDIA Tegra PCIe controller"
- 	depends on ARCH_TEGRA
- 	help
- 	  Say Y here if you want support for the PCIe host controller found
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index e68507f658d8..981f126b14d6 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -35,6 +35,7 @@
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -2276,6 +2277,12 @@ static const struct file_operations tegra_pcie_ports_ops = {
- 	.release = seq_release,
- };
- 
-+static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
-+{
-+	debugfs_remove_recursive(pcie->debugfs);
-+	pcie->debugfs = NULL;
-+}
-+
- static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
- {
- 	struct dentry *file;
-@@ -2292,8 +2299,7 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
- 	return 0;
- 
- remove:
--	debugfs_remove_recursive(pcie->debugfs);
--	pcie->debugfs = NULL;
-+	tegra_pcie_debugfs_exit(pcie);
- 	return -ENOMEM;
- }
- 
-@@ -2311,6 +2317,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	pcie = pci_host_bridge_priv(host);
- 	host->sysdata = pcie;
-+	platform_set_drvdata(pdev, pcie);
- 
- 	pcie->soc = of_device_get_match_data(dev);
- 	INIT_LIST_HEAD(&pcie->ports);
-@@ -2388,6 +2395,25 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static int tegra_pcie_remove(struct platform_device *pdev)
-+{
-+	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+
-+	if (IS_ENABLED(CONFIG_DEBUG_FS))
-+		tegra_pcie_debugfs_exit(pcie);
-+	pci_stop_root_bus(host->bus);
-+	pci_remove_root_bus(host->bus);
-+	tegra_pcie_disable_ports(pcie);
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		tegra_pcie_disable_msi(pcie);
-+	tegra_pcie_free_resources(pcie);
-+	tegra_pcie_disable_controller(pcie);
-+	tegra_pcie_put_resources(pcie);
-+
-+	return 0;
-+}
-+
- static struct platform_driver tegra_pcie_driver = {
- 	.driver = {
- 		.name = "tegra-pcie",
-@@ -2395,5 +2421,7 @@ static struct platform_driver tegra_pcie_driver = {
- 		.suppress_bind_attrs = true,
- 	},
- 	.probe = tegra_pcie_probe,
-+	.remove = tegra_pcie_remove,
- };
--builtin_platform_driver(tegra_pcie_driver);
-+module_platform_driver(tegra_pcie_driver);
-+MODULE_LICENSE("GPL");
--- 
-2.1.4
+I have to check with HW team maybe. I think I don't have access to that info
+through lspci.
+
+> 
+> Before the patch series order_base_2 below helped in taking care of that.
+> pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
+> order_base_2(no_irqs));
+
+I didn't understand this. Sorry. Can you explain me your idea?
+
+>>
+>> Can you provide me information (source code, how to compile, how to use, that
+>> kind of info) about the pcitest tool that you mentioned? I would like to use it
+>> if possible, please.
+> 
+> Documentation/PCI/endpoint/ should have all the info..
+
+I have enable this settings in the kernel:
+PCI_EPF_TEST
+PCI_ENDPOINT_TEST
+PCI_ENDPOINT_CONFIGFS
+
+and also compile the pcitest.c file and generate a uImage for my ARC setup.
+
+# ls /sys/class/pci_epc/
+#
+
+# ls /sys/kernel/config/
+#
+
+# ls /sys/bus/pci-epf/drivers
+pci_epf_test
+
+
+Probably it's missing a very basic thing, but i don't see what. Do you have any
+idea?
+
+> 
+> Thanks
+> Kishon
+> 
