@@ -1,98 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:55391 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751121AbeACAkp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 19:40:45 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@the-dreams.de>
-Subject: [PATCH 0/7] PM / core: Direct handling of DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED
-Date: Wed, 03 Jan 2018 01:29:40 +0100
-Message-ID: <2436726.ykYRzVD45y@aspire.rjw.lan>
-In-Reply-To: <7742130.AaJQIxeI1n@aspire.rjw.lan>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:45580 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751403AbeABRyP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:54:15 -0500
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH v17 3/4] hinic: Replace PCI pool old API
+Date: Tue,  2 Jan 2018 18:53:55 +0100
+Message-Id: <20180102175356.7999-4-romain.perier@gmail.com>
+In-Reply-To: <20180102175356.7999-1-romain.perier@gmail.com>
+References: <20180102175356.7999-1-romain.perier@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, December 10, 2017 12:55:23 AM CET Rafael J. Wysocki wrote:
-> Hi All,
-> 
-> This series is a follow-up for
-> 
-> https://marc.info/?l=linux-doc&m=151101644105835&w=2
-> 
-> Patches[1-3/6] from the above have been reviewed and agreed on, so
-> they are in linux-next now and here's a next version of the rest.
-> 
-> Patches [1-2/4] are preparatory.  The first one is just really small
-> code duplication avoidance on top of this recent fix:
-> 
-> https://patchwork.kernel.org/patch/10097563/
-> 
-> and the second one simply moves some code to separate functions.
-> 
-> Patch [3/4] causes the PM core to carry out some optimizations for
-> drivers of devices with DPM_FLAG_SMART_SUSPEND set whose "late"
-> and "noirq" suspend (or equivalent) driver callbacks are invoked
-> directly by the core.
-> 
-> The underlying observation is that if the device is suspended (via
-> runtime PM) during the "late suspend" phase of a system transition,
-> invoking the "late" and "noirq" callbacks from the driver for it is not
-> going to make it more suspended, so to speak, so it doesn't make sense to
-> invoke them at all.
-> 
-> [That optimization is only done for devices with DPM_FLAG_SMART_SUSPEND
-> set, because drivers setting that flag are expected to be prepared for
-> skipping their "late" and "noirq" callbacks if the device is already
-> suspended.]
-> 
-> Patch [4/4] makes the core do an analogous thing for devices with
-> DPM_FLAG_LEAVE_SUSPENDED set whose "noirq" and "early" resume (or
-> equivalent) driver callbacks are directly invoked by the core.
-> 
-> In that case the observation is that if such devices can be left in
-> suspend after the system transition to the working state, running
-> resume callbacks from their drivers is simply not necessary.
-> 
-> Pathes [3-4/4] have been reoredered and reworked a bit since the last
-> iteration, so they are regarded as new.
-> 
-> The series is on top of the linux-next branch of the linux-pm.git tree
-> that should be merged into linux-next on Monday.
-> 
-> [I have developed debug bus type and driver modules to test that code,
-> but they are not ready to be made available at this point.]
+From: Romain Perier <romain.perier@collabora.com>
 
-Resending the original series (except for the first patch that has been
-applied already) along with some driver code changes based on them as
-requested by Ulf.
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
 
-The driver patches are an intel-lpss change (already reviewed), two
-modifications of i2c-designware-platdrv (posted previously but slightly
-changed since then) and a PCIe port driver change.
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
+Acked-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++++-----
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-At this point patches [1-3/7] are pretty much on the way in and the driver
-material depends on review comments (it is pointless to apply [4/7] without
-[5-6/7], so it depends on them in my view).
-
-I'm sending this from a system running with all of the series applied, although
-admittedly not using i2c-designware-platdrv.  However, one of my test machines
-has this one and I haven't seen any adverse effects of these changes on it so
-far.
-
-Thanks,
-Rafael
+diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
+index 7d95f0866fb0..28a81ac97af5 100644
+--- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
++++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
+@@ -143,7 +143,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ 	struct hinic_hwif *hwif = cmdqs->hwif;
+ 	struct pci_dev *pdev = hwif->pdev;
+ 
+-	cmdq_buf->buf = pci_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
++	cmdq_buf->buf = dma_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
+ 				       &cmdq_buf->dma_addr);
+ 	if (!cmdq_buf->buf) {
+ 		dev_err(&pdev->dev, "Failed to allocate cmd from the pool\n");
+@@ -161,7 +161,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ void hinic_free_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ 			 struct hinic_cmdq_buf *cmdq_buf)
+ {
+-	pci_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
++	dma_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
+ }
+ 
+ static unsigned int cmdq_wqe_size_from_bdlen(enum bufdesc_len len)
+@@ -875,7 +875,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
+ 	int err;
+ 
+ 	cmdqs->hwif = hwif;
+-	cmdqs->cmdq_buf_pool = pci_pool_create("hinic_cmdq", pdev,
++	cmdqs->cmdq_buf_pool = dma_pool_create("hinic_cmdq", &pdev->dev,
+ 					       HINIC_CMDQ_BUF_SIZE,
+ 					       HINIC_CMDQ_BUF_SIZE, 0);
+ 	if (!cmdqs->cmdq_buf_pool)
+@@ -916,7 +916,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
+ 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
+ 
+ err_saved_wqs:
+-	pci_pool_destroy(cmdqs->cmdq_buf_pool);
++	dma_pool_destroy(cmdqs->cmdq_buf_pool);
+ 	return err;
+ }
+ 
+@@ -942,5 +942,5 @@ void hinic_free_cmdqs(struct hinic_cmdqs *cmdqs)
+ 
+ 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
+ 
+-	pci_pool_destroy(cmdqs->cmdq_buf_pool);
++	dma_pool_destroy(cmdqs->cmdq_buf_pool);
+ }
+diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
+index b35583400cb6..23f8d39eab68 100644
+--- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
++++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
+@@ -157,7 +157,7 @@ struct hinic_cmdq {
+ struct hinic_cmdqs {
+ 	struct hinic_hwif       *hwif;
+ 
+-	struct pci_pool         *cmdq_buf_pool;
++	struct dma_pool         *cmdq_buf_pool;
+ 
+ 	struct hinic_wq         *saved_wqs;
+ 
+-- 
+2.14.1
