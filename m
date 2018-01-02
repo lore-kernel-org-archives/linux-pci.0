@@ -1,117 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 29 Jan 2018 16:38:21 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dave Airlie <airlied@gmail.com>
-Subject: Re: [PATCH V4 05/26] agp: nvidia: deprecate pci_get_bus_and_slot()
-Message-ID: <20180129223821.GE232763@bhelgaas-glaptop.roam.corp.google.com>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-6-git-send-email-okaya@codeaurora.org>
- <9b3cf544-173e-2450-589c-4bf14af307f2@codeaurora.org>
- <CAPM=9tzWpgF3mtq+ztKJ=P1Nw3Vh8ZEUfYH8Ep=+fRDZTbTtUg@mail.gmail.com>
+Return-Path: <SRS0=9jKw=D5=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=9jKw=D5=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 2 Jan 2018 11:37:50 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	"joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Jim Quinlan <jim2101024@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
+	"linux-rockchip@lists.infradead.org" <linux-rockchip@lists.infradead.org>
+Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
+Message-ID: <20180102113750.GC10536@red-moon>
+References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
+ <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
+ <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPM=9tzWpgF3mtq+ztKJ=P1Nw3Vh8ZEUfYH8Ep=+fRDZTbTtUg@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arnd Bergmann <arnd@arndb.de>, David Airlie <airlied@linux.ie>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- linux-arm-kernel@lists.infradead.org, Linux PCI <linux-pci@vger.kernel.org>,
- linux-arm-msm <linux-arm-msm@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 30, 2018 at 07:43:21AM +1000, Dave Airlie wrote:
-> On 3 January 2018 at 22:44, Sinan Kaya <okaya@codeaurora.org> wrote:
-> > On 12/19/2017 12:37 AM, Sinan Kaya wrote:
-> >> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> >> where a PCI device is present. This restricts the device drivers to be
-> >> reused for other domain numbers.
+On Fri, Dec 22, 2017 at 11:28:15AM -0600, Bjorn Helgaas wrote:
+> On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada wrote:
+> > Bjorn wrote:
+> >> In the PCI config access path, the *_pcie_valid_device() functions
+> >> in the dwc, altera, rockchip, and xilinx drivers all check whether
+> >> the link is up.
+> >> 
+> >> I think this is racy because the link may go down after we check but
+> >> before we perform the config access.
+> >> 
+> >> What would blow up if we removed the *_pcie_link_up() checks?
+> >> 
+> >> I'd like to either remove the checks or add comments about why the
+> >> race is acceptable.  If we've covered this before, I apologize.
+> >> Adding a comment will keep me from pestering you about this again in
+> >> the future.
 > 
-> So not a major problem, but it would be pretty much impossible for either
-> of these agp drivers to be used in any other domain ever.
+> > In both Xilinx driver cases when link is down, hardware responds by
+> > AXI DECERR/SLVERR status which causes an exception, synchronous
+> > external abort to CPU.  This causes system to hang, so we need this
+> > check for both of our drivers.  We will add comments. 
 > 
-> What does this buy us, maybe just rename pci_get_bus_and_slot to
-> pci_get_domain0_bus_and_slot as a helper, or just pass the pdev in
-> and have it do the right thing always.
-
-I already have this patch on my "next" branch, planned for the v4.16
-merge window, so it's done unless you have a major objection.
-
-> >> Getting ready to remove pci_get_bus_and_slot() function in favor of
-> >> pci_get_domain_bus_and_slot().
-> >>
-> >> Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
-> >> and extract the domain number from struct pci_dev.
-> >>
-> >> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> >> ---
-> >>  drivers/char/agp/nvidia-agp.c | 12 +++++++++---
-> >>  drivers/char/agp/sworks-agp.c |  3 ++-
-> >>  2 files changed, 11 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/char/agp/nvidia-agp.c b/drivers/char/agp/nvidia-agp.c
-> >> index 828b344..623205b 100644
-> >> --- a/drivers/char/agp/nvidia-agp.c
-> >> +++ b/drivers/char/agp/nvidia-agp.c
-> >> @@ -340,11 +340,17 @@ static int agp_nvidia_probe(struct pci_dev *pdev,
-> >>       u8 cap_ptr;
-> >>
-> >>       nvidia_private.dev_1 =
-> >> -             pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 1));
-> >> +             pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-> >> +                                         (unsigned int)pdev->bus->number,
-> >> +                                         PCI_DEVFN(0, 1));
-> >>       nvidia_private.dev_2 =
-> >> -             pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 2));
-> >> +             pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-> >> +                                         (unsigned int)pdev->bus->number,
-> >> +                                         PCI_DEVFN(0, 2));
-> >>       nvidia_private.dev_3 =
-> >> -             pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(30, 0));
-> >> +             pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-> >> +                                         (unsigned int)pdev->bus->number,
-> >> +                                         PCI_DEVFN(30, 0));
-> >>
-> >>       if (!nvidia_private.dev_1 || !nvidia_private.dev_2 || !nvidia_private.dev_3) {
-> >>               printk(KERN_INFO PFX "Detected an NVIDIA nForce/nForce2 "
-> >> diff --git a/drivers/char/agp/sworks-agp.c b/drivers/char/agp/sworks-agp.c
-> >> index 03be4ac..4dbdd3b 100644
-> >> --- a/drivers/char/agp/sworks-agp.c
-> >> +++ b/drivers/char/agp/sworks-agp.c
-> >> @@ -474,7 +474,8 @@ static int agp_serverworks_probe(struct pci_dev *pdev,
-> >>       }
-> >>
-> >>       /* Everything is on func 1 here so we are hardcoding function one */
-> >> -     bridge_dev = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
-> >> +     bridge_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-> >> +                     (unsigned int)pdev->bus->number,
-> >>                       PCI_DEVFN(0, 1));
-> >>       if (!bridge_dev) {
-> >>               dev_info(&pdev->dev, "can't find secondary device\n");
-> >>
-> >
-> > Any feedback here? most of the remaining patches have the ACK except these.
-> >
-> >
-> > --
-> > Sinan Kaya
-> > Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-> > Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> This is a problem, and checking whether the link is up is a workaround
+> but not a real solution.  That means your system may hang if the link
+> happens to go down at the wrong time.
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> A real solution would be to handle the synchronous external abort
+> so it doesn't cause a system hang.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I still have no idea why checking (in a broken way) that the link
+is up for _every_ given config access is a solution.
+
+If, say, the link is down in xilinx_pcie_init_port(), what would bring
+it up or, worded differently, why checking that the link is up for every
+config access instead of host bridge probe time make this code any safer
+?
+
+It is not safe anyway, it would be good to understand though why the code
+was written this way so that we can change it appropriately.
+
+Thanks,
+Lorenzo
