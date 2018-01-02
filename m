@@ -1,61 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:13354 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753683AbeAKGId (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 01:08:33 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V6 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for Tegra PCIe
-Date: Thu, 11 Jan 2018 11:38:04 +0530
-Message-ID: <1515650888-9459-4-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35976 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751211AbeABRyL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:54:11 -0500
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@gmail.com>
+Subject: [PATCH v17 0/4] Replace PCI pool by DMA pool API
+Date: Tue,  2 Jan 2018 18:53:52 +0100
+Message-Id: <20180102175356.7999-1-romain.perier@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Primary, secondary and subordinate default bus numbers are 0 in Tegra and
-it is expecting SW to program these numbers in configration space.
+The current PCI pool API are simple macro functions direct expanded to
+the appropriate dma pool functions. The prototypes are almost the same
+and semantically, they are very similar. I propose to use the DMA pool
+API directly and get rid of the old API.
 
-pci_scan_bridge_extend() function programs these numbers in configuration
-space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_BUS
-flag is set. Since secondary & subordinate default bus numbers are 0,
-PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
+This set of patches, replaces the old API by the dma pool API
+and remove the defines.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
----
-V3:
-* new patch in V3
-V4:
-* no change in this patch
-V5:
-* no change in this patch
-V6:
-* Rebased on lpieralisi/pci/tegra branch
+Changes in v17:
+- Rebased series onto next-20180102
+- Added Acked-by tags by David S. Miller on patches 02/04
+  and 03/04
 
- drivers/pci/host/pci-tegra.c | 1 -
- 1 file changed, 1 deletion(-)
+Changes in v16:
+- Rebased series onto next-20171215
+- I have fixed patch 04/04, so it can be applied
+- Added Acked-by for Bjorn Helgaas on patch 04/04
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 059aa73d5f76..e4b47ebc91fe 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -2293,7 +2293,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	tegra_pcie_enable_ports(pcie);
- 
--	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
- 	host->busnr = pcie->busn.start;
- 	host->dev.parent = &pdev->dev;
- 	host->ops = &tegra_pcie_ops;
+Changes in v15:
+- Rebased series onto next-20171120
+- Added patch 04/05 for mpt3sas scsi driver
+
+Changes in v14:
+- Rebased series onto next-20171018
+- Rebased patch 03/05 on latest driver
+
+Changes in v13:
+- Rebased series onto next-20170906
+- Added a new commit for the hinic ethernet driver
+- Remove previously merged patches
+
+Changes in v12:
+- Rebased series onto next-20170822
+
+Changes in v11:
+- Rebased series onto next-20170809
+- Removed patches 08-14, these have been merged.
+
+Changes in v10:
+- Rebased series onto next-20170706
+- I have fixed and improved patch "scsi: megaraid: Replace PCI pool old API"
+
+Changes in v9:
+- Rebased series onto next-20170522
+- I have fixed and improved the patch for lpfc driver
+
+Changes in v8:
+- Rebased series onto next-20170428
+
+Changes in v7:
+- Rebased series onto next-20170416
+- Added Acked-by, Tested-by and Reviwed-by tags
+
+Changes in v6:
+- Fixed an issue reported by kbuild test robot about changes in DAC960
+- Removed patches 15/19,16/19,17/19,18/19. They have been merged by Greg
+- Added Acked-by Tags
+
+Changes in v5:
+- Re-worded the cover letter (remove sentence about checkpatch.pl)
+- Rebased series onto next-20170308
+- Fix typos in commit message
+- Added Acked-by Tags
+
+Changes in v4:
+- Rebased series onto next-20170301
+- Removed patch 20/20: checks done by checkpath.pl, no longer required.
+  Thanks to Peter and Joe for their feedbacks.
+- Added Reviewed-by tags
+
+Changes in v3:
+- Rebased series onto next-20170224
+- Fix checkpath.pl reports for patch 11/20 and patch 12/20
+- Remove prefix RFC
+Changes in v2:
+- Introduced patch 18/20
+- Fixed cosmetic changes: spaces before brace, live over 80 characters
+- Removed some of the check for NULL pointers before calling dma_pool_destroy
+- Improved the regexp in checkpatch for pci_pool, thanks to Joe Perches
+- Added Tested-by and Acked-by tags
+
+Romain Perier (4):
+  block: DAC960: Replace PCI pool old API
+  net: e100: Replace PCI pool old API
+  hinic: Replace PCI pool old API
+  PCI: Remove PCI pool macro functions
+
+ drivers/block/DAC960.c                            | 38 +++++++++++------------
+ drivers/block/DAC960.h                            |  4 +--
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
+ drivers/net/ethernet/intel/e100.c                 | 12 +++----
+ include/linux/pci.h                               |  9 ------
+ 6 files changed, 32 insertions(+), 43 deletions(-)
+
 -- 
-2.1.4
+2.14.1
