@@ -1,87 +1,65 @@
-Return-Path: <SRS0=P7E9=EO=huawei.com=weiyongjun1@kernel.org>
-Return-Path: <SRS0=P7E9=EO=huawei.com=weiyongjun1@kernel.org>
-From: "weiyongjun (A)" <weiyongjun1@huawei.com>
-To: Ladislav Michl <ladis@linux-mips.org>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Kishon Vijay Abraham I <kishon@ti.com>, Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: RE: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
-Date: Fri, 19 Jan 2018 01:54:58 +0000
-Message-ID: <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
-References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
- <20180118145420.GA21163@lenoch>
- <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
- <20180118213417.GA30723@lenoch>
-In-Reply-To: <20180118213417.GA30723@lenoch>
-Content-Type: text/plain; charset="Windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:41374 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750979AbeABPq6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jan 2018 10:46:58 -0500
+Date: Tue, 2 Jan 2018 15:47:50 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Vignesh R <vigneshr@ti.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: dra7xx: Iterate over INTx status bits
+Message-ID: <20180102154750.GA13516@red-moon>
+References: <20171229114131.22296-1-vigneshr@ti.com>
+ <20171229114131.22296-3-vigneshr@ti.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171229114131.22296-3-vigneshr@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Thu, Jan 18, 2018 at 12:35:25PM -0600, Bjorn Helgaas wrote:
-> > On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
-> > > On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
-> > > > platform_get_resource_byname() may fail and return NULL, so we
-> should
-> > > > better check it's return value to avoid a NULL pointer dereference =
-a
-> > > > bit later in the code.
-> > > >
-> > > > This is detected by Coccinelle semantic patch.
-> > > >
-> > > > @@
-> > > > expression pdev, res, n, t, e, e1, e2;
-> > > > @@
-> > > >
-> > > > res =3D platform_get_resource_byname(pdev, t, n);
-> > > > + if (!res)
-> > > > +   return -EINVAL;
-> > > > ... when !=3D res =3D=3D NULL
-> > > > e =3D devm_ioremap(e1, res->start, e2);
-> > >
-> > > Well, then it should be replaced with devm_ioremap_resource()
-> > > which already checks for NULL and the right resource type
-> > > (IORESOURCE_MEM).
-> >
-> > That's probably a better idea.  Maybe we should add a comment like this
-> > to help avoid this in the future:
+On Fri, Dec 29, 2017 at 05:11:31PM +0530, Vignesh R wrote:
+> It is possible that more than one legacy IRQ may be set at the same
+> time, therefore iterate and handle all the pending INTx interrupts
+> before clearing the status and exiting the IRQ handler. Otherwise, some
+> interrupts would be lost.
+> 
+> Signed-off-by: Vignesh R <vigneshr@ti.com>
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c | 10 +++++++---
+>  1 file changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 892f93910012..48c6ae535847 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -257,7 +257,8 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>  	struct dra7xx_pcie *dra7xx = arg;
+>  	struct dw_pcie *pci = dra7xx->pci;
+>  	struct pcie_port *pp = &pci->pp;
+> -	u32 reg;
+> +	unsigned long reg;
+> +	u32 virq, bit;
+>  
+>  	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
+>  
+> @@ -269,8 +270,11 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>  	case INTB:
+>  	case INTC:
+>  	case INTD:
+> -		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
+> -						    ffs(reg) - 1));
+> +		for_each_set_bit(bit, &reg, PCI_NUM_INTX) {
+> +			virq = irq_find_mapping(dra7xx->irq_domain, bit);
+> +			if (virq)
+> +				generic_handle_irq(virq);
+> +		}
+>  		break;
+>  	}
 
-Not all of the place using devm_ioremap() can be replaced with
-devm_ioremap_resource(), devices share the memory resource for example.
+It is not strictly related to this patch but why MSI and INTX are
+handled as mutually exclusive in dra7xx_pcie_msi_irq_handler() ?
 
-So maybe you should also add an exception list to the comment, otherwise
-many people still not know how to use devm_ioremap_resource() or devm_iorem=
-ap().
-
-> >
-> > --- a/lib/devres.c
-> > +++ b/lib/devres.c
-> > @@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev,
-> void *res, void *match_data)
-> >   * @size: Size of map
-> >   *
-> >   * Managed ioremap().  Map is automatically unmapped on driver detach.
-> > + *
-> > + * When possible, use devm_ioremap_resource() instead.
-> >   */
-> >  void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
-> >  			   resource_size_t size)
->=20
-> Yes, please. It would be nice first patch in the serie converting existin=
-g
-> users of devm_ioremap into devm_ioremap_resource:
-> find drivers -name "*.c" | xargs grep "devm_ioremap(" | grep resource_siz=
-e
-> | wc -l
-> 82
-> I know, that was dumb, Coccinelle would certainly do better job.
-> And from a quick look a lot of
-> if (!res) {
-> 	print error
-> 	return -EINVAL;
-> }
-> code blocks could be deleted (and many cases where check for NULL
-> resource
-> is missing fixed).
->=20
+Lorenzo
