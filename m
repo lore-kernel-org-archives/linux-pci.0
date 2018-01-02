@@ -1,68 +1,84 @@
-Return-Path: <SRS0=xpU2=EA=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=xpU2=EA=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 5 Jan 2018 15:43:03 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
-	"joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Jim Quinlan <jim2101024@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
-	"linux-rockchip@lists.infradead.org" <linux-rockchip@lists.infradead.org>
-Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
-Message-ID: <20180105154303.GB24933@red-moon>
-References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
- <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
- <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
- <BLUPR0201MB1505659A7B1DDA658EFB7049A51C0@BLUPR0201MB1505.namprd02.prod.outlook.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59358 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751029AbeABSe4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 13:34:56 -0500
+Subject: Re: [PATCH v2 2/4] PCI/DPC/AER: Address Concurrency between AER and
+ DPC
+To: Keith Busch <keith.busch@intel.com>
+Cc: Oza Pawandeep <poza@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Wei Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>
+References: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
+ <1514532259-19383-3-git-send-email-poza@codeaurora.org>
+ <20171229172324.GF16407@localhost.localdomain>
+ <5e9ffecf-2da7-0014-9a62-e2ae10323ce3@codeaurora.org>
+ <20180102171238.GB24386@localhost.localdomain>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <c243100f-4fa8-612c-4105-70fda5ce4cde@codeaurora.org>
+Date: Tue, 2 Jan 2018 13:34:52 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BLUPR0201MB1505659A7B1DDA658EFB7049A51C0@BLUPR0201MB1505.namprd02.prod.outlook.com>
+In-Reply-To: <20180102171238.GB24386@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 05, 2018 at 02:26:34PM +0000, Bharat Kumar Gogada wrote:
-> On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada wrote:
-> > Bjorn wrote:
-> >> In the PCI config access path, the *_pcie_valid_device() functions in 
-> >> the dwc, altera, rockchip, and xilinx drivers all check whether the 
-> >> link is up.
-> >> 
-> >> I think this is racy because the link may go down after we check but 
-> >> before we perform the config access.
-> >> 
-> >> What would blow up if we removed the *_pcie_link_up() checks?
-> >> 
-> >> I'd like to either remove the checks or add comments about why the 
-> >> race is acceptable.  If we've covered this before, I apologize.
-> >> Adding a comment will keep me from pestering you about this again in 
-> >> the future.
+On 1/2/2018 12:12 PM, Keith Busch wrote:
+> On Tue, Jan 02, 2018 at 08:25:08AM -0500, Sinan Kaya wrote:
+>>> 2. A DPC event suppresses the error message required for the Linux
+>>> AER driver to run. How can AER and DPC run concurrently?
+>>>
+>>
+>> As we briefly discussed in previous email exchanges, I think you are
+>> looking at a use case with a switch that supports DPC functionality. 
 > 
-> > In both Xilinx driver cases when link is down, hardware responds by 
-> > AXI DECERR/SLVERR status which causes an exception, synchronous 
-> > external abort to CPU.  This causes system to hang, so we need this 
-> > check for both of our drivers.  We will add comments.
+> No, I'm interested in DPC in a general.
 > 
-> This is a problem, and checking whether the link is up is a workaround but not a real solution.  That means your system may hang if the link happens to go down at the wrong time.
+>> Oza and I are looking at a root port functionality with DPC feature. 
+>>
+>> As you already know, AER errors are logged to AER capability register
+>> independent of the DPC driver presence.
 > 
-> A real solution would be to handle the synchronous external abort so it doesn't cause a system hang.
+> The error is noted in the Uncorrectable Error Status Register if that's
+> what triggered the DPC event. This register has nothing to do with the
+> Root Error Status Register, which is required to have received an error
+> Message in order to have a status for the AER driver.
 > 
-> Yes, I agree that this is workaround. For pcie-xilinx.c for arm32, we can have fault handling similar to "imx6q_pcie_abort_handler" in drivers/pci/dwc/pci-imx6.c.
-> Since this driver is same for Microblaze architecture also, it requires separate handling.
+>> A root port is also allowed to share the MSI interrupts across DPC and
+>> AER. 
+>>
+>> Therefore, when a DPC interrupt fires; both AER driver and DPC driver
+>> starts recovery work. This is the issue we are trying to deal with. 
 > 
-> For pcie-xilinx-nwl.c ARM64 as per link [1], linux kernel will hang for the above AXI responses. 
-> As of now arm64 RAS is still work in progress [2].  
+> If DPC is implemented correctly, the AER Root Status can't have an
+> uncorrectable status for the driver to deal with. The only thing the AER
+> driver could possibly see is a correctable error if DPC ERR_COR Enable
+> is set.
 > 
-> [1] https://www.spinics.net/lists/arm-kernel/msg624203.html
+>> In the end, the driver needs to work for both root port and switches.
+>> I think you verified it against a switch. We are doing the same for a
+>> root port and submitting the plumbing code. 
 > 
-> [2] https://patchwork.kernel.org/patch/9973967/
+> I think we need to consider the possibility you are enabling a platform
+> that implemented DPC incorrectly. There's nothing in the specification
+> that says that DPC enabled root ports are not to discard the error message
+> if it came from downstream, or skip signalling the message for root port
+> detected errors.
 > 
-> The check can be removed, if above issues were addressed.
 
-I do not see why the above "issues" should be addressed in order to
-remove that check - as it was pointed out in this thread it just does
-not solve anything, so what's the reason for keeping it ?
+I'll circle this with the HW team.
 
-Lorenzo
+The current code still doesn't handle outstanding transactions properly.
+We can probably split the patch into two and deal with this aspect later.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
