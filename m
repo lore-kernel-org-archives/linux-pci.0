@@ -1,54 +1,74 @@
-Return-Path: <SRS0=Bunl=ET=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=Bunl=ET=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org, paulus@samba.org
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com, alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru, ruscur@russell.cc, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCH v4 3/7] platforms/pseries: Set eeh_pe of EEH_PE_VF type
-In-Reply-To: <20180105164552.36371-4-bryantly@linux.vnet.ibm.com>
-References: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com> <20180105164552.36371-4-bryantly@linux.vnet.ibm.com>
-Date: Wed, 24 Jan 2018 12:14:08 +1100
-Message-ID: <87shawukgv.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V3 1/6] PCI: Protect restore with device lock to be consistent
+Date: Tue,  2 Jan 2018 12:00:18 -0500
+Message-Id: <1514912423-13341-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
+References: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"Bryant G. Ly" <bryantly@linux.vnet.ibm.com> writes:
+Commit b014e96d1abb ("PCI: Protect pci_error_handlers->reset_notify() usage
+with device_lock()") added protection around pci_dev_restore() function so
+that device specific remove callback does not cause a race condition
+against hotplug.
 
-> To correctly use EEH code one has to make
-> sure that the EEH_PE_VF is set for dynamic created
-> VFs. Therefore this patch allocates an eeh_pe of
-> eeh type EEH_PE_VF and associates PE with parent.
->
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/include/asm/pci-bridge.h        |  5 ++++-
->  arch/powerpc/platforms/pseries/eeh_pseries.c | 17 +++++++++++++++++
->  2 files changed, 21 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index 9f66ddebb799..16d70740a76f 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -211,7 +211,10 @@ struct pci_dn {
->  	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
->  	bool    m64_single_mode;	/* Use M64 BAR in Single Mode */
->  #define IODA_INVALID_M64        (-1)
-> -	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
-> +	union {
-> +		int     (*m64_map)[PCI_SRIOV_NUM_BARS]; /*Only used in powernv */
-> +		int     last_allow_rc;	/* Only used in pSeries */
-> +	};
->  #endif /* CONFIG_PCI_IOV */
->  	int	mps;			/* Maximum Payload Size */
->  	struct list_head child_list;
+pci_dev_lock() usage has been forgotten in two different places in the
+code. Adding locks for pci_slot_restore() and moving pci_dev_restore()
+inside the locks for pci_try_reset_function().
 
-I don't see the point of using a union to save 4 bytes.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/pci.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-And if you look at the current layout of the struct there's actually a 4
-byte hole after mps, so it doesn't actually save any space at all.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 764ca7b..463b32d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4448,9 +4448,9 @@ int pci_try_reset_function(struct pci_dev *dev)
+ 
+ 	pci_dev_save_and_disable(dev);
+ 	rc = __pci_reset_function_locked(dev);
++	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
+ 
+-	pci_dev_restore(dev);
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(pci_try_reset_function);
+@@ -4658,7 +4658,9 @@ static void pci_slot_restore(struct pci_slot *slot)
+ 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+ 		if (!dev->slot || dev->slot != slot)
+ 			continue;
++		pci_dev_lock(dev);
+ 		pci_dev_restore(dev);
++		pci_dev_unlock(dev);
+ 		if (dev->subordinate)
+ 			pci_bus_restore(dev->subordinate);
+ 	}
+-- 
+1.9.1
 
-I can remove it before applying, unless there's some compelling reason
-for it I'm not seeing.
 
-cheers
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
