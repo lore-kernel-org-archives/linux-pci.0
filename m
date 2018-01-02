@@ -1,92 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53366 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750970AbeACSX3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Jan 2018 13:23:29 -0500
-Date: Wed, 3 Jan 2018 18:23:25 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        kernel-janitors@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 04/12] PCI: qcom: account for const type of
- of_device_id.data
-Message-ID: <20180103182325.GB8929@e107981-ln.cambridge.arm.com>
-References: <1514899688-27844-1-git-send-email-Julia.Lawall@lip6.fr>
- <1514899688-27844-5-git-send-email-Julia.Lawall@lip6.fr>
- <20180103122237.GD26554@red-moon>
- <alpine.DEB.2.20.1801031338140.23130@hadrien>
+Received: from mga11.intel.com ([192.55.52.93]:42909 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750968AbeABRIs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jan 2018 12:08:48 -0500
+Date: Tue, 2 Jan 2018 10:12:39 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Wei Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v2 2/4] PCI/DPC/AER: Address Concurrency between AER and
+ DPC
+Message-ID: <20180102171238.GB24386@localhost.localdomain>
+References: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
+ <1514532259-19383-3-git-send-email-poza@codeaurora.org>
+ <20171229172324.GF16407@localhost.localdomain>
+ <5e9ffecf-2da7-0014-9a62-e2ae10323ce3@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1801031338140.23130@hadrien>
+In-Reply-To: <5e9ffecf-2da7-0014-9a62-e2ae10323ce3@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 03, 2018 at 01:38:27PM +0100, Julia Lawall wrote:
+On Tue, Jan 02, 2018 at 08:25:08AM -0500, Sinan Kaya wrote:
+> > 2. A DPC event suppresses the error message required for the Linux
+> > AER driver to run. How can AER and DPC run concurrently?
+> > 
 > 
-> 
-> On Wed, 3 Jan 2018, Lorenzo Pieralisi wrote:
-> 
-> > On Tue, Jan 02, 2018 at 02:28:00PM +0100, Julia Lawall wrote:
-> > > This driver creates various const structures that it stores in the
-> > > data field of an of_device_id array.
-> > >
-> > > Adding const to the declaration of the location that receives the
-> > > const value from the data field ensures that the compiler will
-> > > continue to check that the value is not modified.  Furthermore, the
-> > > const-discarding cast on the extraction from the data field is no
-> > > longer needed.
-> > >
-> > > Done using Coccinelle.
-> > >
-> > > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> > >
-> > > ---
-> > >  drivers/pci/dwc/pcie-qcom.c |    4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> >
-> > Hi Julia,
-> >
-> > I am happy to take this patch through the PCI tree unless you see a
-> > problem with that, please let me know.
-> 
-> Please take it.  Thanks.
+> As we briefly discussed in previous email exchanges, I think you are
+> looking at a use case with a switch that supports DPC functionality. 
 
-Applied to pci/dwc for v4.16, thanks.
+No, I'm interested in DPC in a general.
 
-Lorenzo
-
-> julia
+> Oza and I are looking at a root port functionality with DPC feature. 
 > 
-> >
-> > Thanks,
-> > Lorenzo
-> >
-> > > diff -u -p a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> > > --- a/drivers/pci/dwc/pcie-qcom.c
-> > > +++ b/drivers/pci/dwc/pcie-qcom.c
-> > > @@ -171,7 +171,7 @@ struct qcom_pcie {
-> > >  	union qcom_pcie_resources res;
-> > >  	struct phy *phy;
-> > >  	struct gpio_desc *reset;
-> > > -	struct qcom_pcie_ops *ops;
-> > > +	const struct qcom_pcie_ops *ops;
-> > >  };
-> > >
-> > >  #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-> > > @@ -1234,7 +1234,7 @@ static int qcom_pcie_probe(struct platfo
-> > >
-> > >  	pcie->pci = pci;
-> > >
-> > > -	pcie->ops = (struct qcom_pcie_ops *)of_device_get_match_data(dev);
-> > > +	pcie->ops = of_device_get_match_data(dev);
-> > >
-> > >  	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
-> > >  	if (IS_ERR(pcie->reset))
-> > >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
+> As you already know, AER errors are logged to AER capability register
+> independent of the DPC driver presence.
+
+The error is noted in the Uncorrectable Error Status Register if that's
+what triggered the DPC event. This register has nothing to do with the
+Root Error Status Register, which is required to have received an error
+Message in order to have a status for the AER driver.
+
+> A root port is also allowed to share the MSI interrupts across DPC and
+> AER. 
+> 
+> Therefore, when a DPC interrupt fires; both AER driver and DPC driver
+> starts recovery work. This is the issue we are trying to deal with. 
+
+If DPC is implemented correctly, the AER Root Status can't have an
+uncorrectable status for the driver to deal with. The only thing the AER
+driver could possibly see is a correctable error if DPC ERR_COR Enable
+is set.
+
+> In the end, the driver needs to work for both root port and switches.
+> I think you verified it against a switch. We are doing the same for a
+> root port and submitting the plumbing code. 
+
+I think we need to consider the possibility you are enabling a platform
+that implemented DPC incorrectly. There's nothing in the specification
+that says that DPC enabled root ports are not to discard the error message
+if it came from downstream, or skip signalling the message for root port
+detected errors.
