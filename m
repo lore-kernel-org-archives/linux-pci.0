@@ -1,104 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47852 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750750AbeAQBQa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Jan 2018 20:16:30 -0500
-Date: Tue, 16 Jan 2018 19:16:24 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v4 2/5] PCI/ERR: Rename error reporting to generic pci
- naming
-Message-ID: <20180117011624.GG10860@bhelgaas-glaptop.roam.corp.google.com>
-References: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
- <1516096723-8013-3-git-send-email-poza@codeaurora.org>
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:43530 "EHLO
+        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbeABVvD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 16:51:03 -0500
+Received: by mail-yw0-f193.google.com with SMTP id n25so12352049ywh.10
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jan 2018 13:51:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1516096723-8013-3-git-send-email-poza@codeaurora.org>
+In-Reply-To: <alpine.LRH.2.02.1801021620520.4722@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1801021620520.4722@file01.intranet.prod.int.rdu2.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 2 Jan 2018 15:50:41 -0600
+Message-ID: <CAErSpo6nrJa0ZQkAe-AYzqwk1cw+vsrpZzcNTe+bLp-B=Q4bQA@mail.gmail.com>
+Subject: Re: the patch "alpha/PCI: Replace pci_fixup_irqs()" breaks networking
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Meelis Roos <mroos@linux.ee>, Matt Turner <mattst88@gmail.com>,
+        linux-alpha@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 16, 2018 at 03:28:40PM +0530, Oza Pawandeep wrote:
-> This patch renames error reporting to generic function with pci prefix
-> 
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 4fda843..5ed9575 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -285,7 +285,7 @@ static void handle_error_source(struct pcie_device *aerdev,
->  			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
->  					info->status);
->  	} else
-> -		do_recovery(dev, info->severity);
-> +		pci_do_recovery(dev, info->severity);
->  }
->  
->  #ifdef CONFIG_ACPI_APEI_PCIEAER
-> @@ -349,7 +349,7 @@ static void aer_recover_work_func(struct work_struct *work)
->  			continue;
->  		}
->  		cper_print_aer(pdev, entry.severity, entry.regs);
-> -		do_recovery(pdev, entry.severity);
-> +		pci_do_recovery(pdev, entry.severity);
->  		pci_dev_put(pdev);
->  	}
->  }
-> diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-> index 76e66bb..5792a9f 100644
-> --- a/drivers/pci/pcie/pcie-err.c
-> +++ b/drivers/pci/pcie/pcie-err.c
-> @@ -20,12 +20,12 @@
->  #include <linux/pcieport_if.h>
->  #include "portdrv.h"
->  
-> -struct aer_broadcast_data {
-> +struct pci_err_broadcast_data {
->  	enum pci_channel_state state;
->  	enum pci_ers_result result;
->  };
->  
-> -pci_ers_result_t merge_result(enum pci_ers_result orig,
-> +pci_ers_result_t pci_merge_result(enum pci_ers_result orig,
+[+cc linux-pci]
 
-Most of these functions started out static in aerdrv_core.c and should
-remain static.  Therefore, they do not need to be renamed.  Same for
-the struct aer_broadcast_data.
+Thanks for the report!  Lorenzo has been on vacation and is probably
+buried in email, but I'm sure he'll be on this as soon as he digs out.
 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 46fd243..babcd89 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1998,7 +1998,7 @@ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int res
->  void pci_hp_remove_module_link(struct pci_slot *pci_slot);
->  #endif
->  
-> -void do_recovery(struct pci_dev *dev, int severity);
-> +void pci_do_recovery(struct pci_dev *dev, int severity);
-
-This one started out static and now needs to be non-static so you can
-call it both from aerdrv_core.c and pcie-dpc.c.
-
-But it should not be exposed outside the PCI core, so the declaration
-should go in drivers/pci/pcie/aer/aerdrv.h or at most
-drivers/pci/pci.h.
-
-The rename should happen before the move out of aerdrv_core.c, i.e.,
-reorder patches 1 and 2.
-
->  /**
->   * pci_pcie_cap - get the saved PCIe capability offset
-> -- 
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-> 
+On Tue, Jan 2, 2018 at 3:32 PM, Mikulas Patocka <mpatocka@redhat.com> wrote:
+> Hi
+>
+> The patch 0e4c2eeb758a91e68b9eaf7a4bee9bd5ed97ff2b ("alpha/PCI: Replace
+> pci_fixup_irqs() call with host bridge IRQ mapping hooks") breaks
+> networking on Alpha for me. I have an Alpha Avanti server with tulip
+> network card.
+>
+> The patch 0e4c2eeb breaks it so that I get MCE when the network card
+> driver is loaded. The patch 814eae59 fixes the MCE, the system boot
+> completes, but the network card doesn't receive any interrupts (and soon
+> it reports warning about timeout on tx queue). All kernels in the 4.14
+> branch have this bug.
+>
+> Mikulas
+>
+>
+> # cat /proc/interrupts
+>            CPU0
+>   1:          3    XT-PIC      i8042
+>   2:          0    XT-PIC      cascade
+>   4:        752    XT-PIC      ttyS0
+>   8:      58118     dummy    -RTC       timer
+>  10:       1613    XT-PIC      ide0, ide1
+>  11:        739    XT-PIC      sym53c8xx
+>  12:          5    XT-PIC      i8042
+>  15:          0    XT-PIC      eth0     <--- note that the counter is zero
+> PMI:          0           Performance Monitoring
+> ERR:          0
+>
+> # lspci -vv
+> 00:06.0 SCSI storage controller: LSI Logic / Symbios Logic 53c810 (rev 01)
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 255
+>         Interrupt: pin A routed to IRQ 11
+>         Region 0: I/O ports at 8000 [size=256]
+>         Region 1: Memory at 01300000 (32-bit, non-prefetchable) [size=256]
+>         Kernel driver in use: sym53c8xx
+>         Kernel modules: sym53c8xx
+>
+> 00:07.0 ISA bridge: Intel Corporation 82378ZB/IB, 82379AB (SIO, SIO.A) PCI to ISA Bridge (rev 43)
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0
+>
+> 00:0b.0 Ethernet controller: Digital Equipment Corporation DECchip 21140 [FasterNet] (rev 22)
+>         Subsystem: Digital Equipment Corporation DECchip 21140 [FasterNet]
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+ Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 255 (5000ns min, 10000ns max), Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 15
+>         Region 0: I/O ports at 8400 [size=128]
+>         Region 1: Memory at 01302000 (32-bit, non-prefetchable) [size=128]
+>         Expansion ROM at 01280000 [disabled] [size=256K]
+>         Kernel driver in use: tulip
+>         Kernel modules: tulip
+>
+> 00:0c.0 Display controller: Digital Equipment Corporation DECchip 21030 [TGA] (rev 02)
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping+ SERR- FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 255
+>         Interrupt: pin A routed to IRQ 5
+>         Region 0: Memory at 02000000 (32-bit, prefetchable) [size=32M]
+>         Expansion ROM at 012c0000 [disabled] [size=256K]
+>         Kernel driver in use: tgafb
+>
+> 00:0d.0 RAID bus controller: Silicon Image, Inc. PCI0680 Ultra ATA-133 Host Controller (rev 02)
+>         Subsystem: Silicon Image, Inc. Winic W-680 (Silicon Image 680 based)
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 240, Cache Line Size: 4 bytes
+>         Interrupt: pin A routed to IRQ 10
+>         Region 0: I/O ports at 8490 [size=8]
+>         Region 1: I/O ports at 84a0 [size=4]
+>         Region 2: I/O ports at 8498 [size=8]
+>         Region 3: I/O ports at 84a4 [size=4]
+>         Region 4: I/O ports at 8480 [size=16]
+>         Region 5: Memory at 01301000 (32-bit, non-prefetchable) [size=256]
+>         Expansion ROM at 01200000 [disabled] [size=512K]
+>         Capabilities: [60] Power Management version 2
+>                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=2 PME-
+>         Kernel driver in use: SiI_IDE
+>
