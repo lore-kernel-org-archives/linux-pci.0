@@ -1,135 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: linux-iio@vger.kernel.org
-Subject: [PATCH 00/12] account for const type of of_device_id.data
-Date: Tue,  2 Jan 2018 14:27:56 +0100
-Message-Id: <1514899688-27844-1-git-send-email-Julia.Lawall@lip6.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>,
- linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-gpio@vger.kernel.org, kernel-janitors@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-spi@vger.kernel.org,
- linux-rockchip@lists.infradead.org, linux-mtd@lists.infradead.org,
- linux-i2c@vger.kernel.org, Peter Meerwald-Stadler <pmeerw@pmeerw.net>,
- Hartmut Knaack <knaack.h@gmx.de>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52552 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751170AbeABRAe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:00:34 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V3 2/6] PCI: Handle FLR failure and allow other reset types
+Date: Tue,  2 Jan 2018 12:00:19 -0500
+Message-Id: <1514912423-13341-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
+References: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Maintain const annotations when putting values into the data field of
-an of_device_id structure, and afterwards when extracting them from
-the data field of such a structure.
+pci_flr_wait() and pci_af_flr() functions assume graceful return even
+though the device is inaccessible under error conditions.
 
-This was done using the following semantic patch:
-(http://coccinelle.lip6.fr/)
+Return -ENOTTY in error cases so that __pci_reset_function_locked() can
+try other reset types if AF_FLR/FLR reset fails.
 
-// <smpl>
-@r@
-identifier i,j;
-const struct j *m;
-struct i *y;
-type T;
-expression x,e;
-position p;
-@@
-
-(
-y =@p (T)(of_device_get_match_data(...));
-|
-x = of_match_node(...);
-... when != x = e
-(
-m = e;
-|
-y =@p (T)(x->data);
-)
-)
-
-@s@
-identifier r.i,j;
-@@
-
-const struct i j = { ... };
-
-@t depends on s disable optional_qualifier@
-expression e;
-identifier r.i,x,j,n;
-struct j *m;
-struct i *e1;
-position any r.p;
-type T;
-@@
-
-(
-+const
-struct i *x;
-<+...
-(
-x =@p 
--   (T)(e)
-+   e
-|
-x =@p e
-)
-...+>
-|
-m->@e1 n =@p 
--   (T)(e)
-+   e
-|
-m->@e1 n =@p e
-)
-
-@disable optional_qualifier@
-identifier t.j,t.n,r.i;
-@@
-
-struct j {
-  ...
-+ const
-  struct i *n;
-  ...
-}
-
-@@
-identifier x,s.j;
-type T;
-@@
-
-struct of_device_id x[] = { ...,
-  { .data =
--           (T)
-            &j, }, ...};
-
-// </smpl>
-
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
+ drivers/pci/pci.c   | 18 ++++++++++--------
+ include/linux/pci.h |  2 +-
+ 2 files changed, 11 insertions(+), 9 deletions(-)
 
- drivers/i2c/busses/i2c-rk3x.c               |   16 ++++++++--------
- drivers/iio/common/ssp_sensors/ssp.h        |    2 +-
- drivers/iio/common/ssp_sensors/ssp_dev.c    |    2 +-
- drivers/mtd/spi-nor/fsl-quadspi.c           |    8 ++++----
- drivers/pci/dwc/pcie-qcom.c                 |    4 ++--
- drivers/pinctrl/mvebu/pinctrl-armada-37xx.c |    4 ++--
- drivers/pinctrl/pinctrl-at91-pio4.c         |    4 ++--
- drivers/pinctrl/pinctrl-axp209.c            |    2 +-
- drivers/power/avs/rockchip-io-domain.c      |   24 ++++++++++++------------
- drivers/power/reset/at91-sama5d2_shdwc.c    |    4 ++--
- drivers/power/supply/axp20x_ac_power.c      |    8 ++++----
- drivers/spi/spi-fsl-dspi.c                  |    7 +++----
- drivers/spi/spi-sirf.c                      |    4 ++--
- 13 files changed, 44 insertions(+), 44 deletions(-)
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 463b32d..ef15162 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3945,7 +3945,7 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+ 
+-static void pci_flr_wait(struct pci_dev *dev)
++static int pci_flr_wait(struct pci_dev *dev)
+ {
+ 	int delay = 1, timeout = 60000;
+ 	u32 id;
+@@ -3974,7 +3974,7 @@ static void pci_flr_wait(struct pci_dev *dev)
+ 		if (delay > timeout) {
+ 			dev_warn(&dev->dev, "not ready %dms after FLR; giving up\n",
+ 				 100 + delay - 1);
+-			return;
++			return -ENOTTY;
+ 		}
+ 
+ 		if (delay > 1000)
+@@ -3988,6 +3988,8 @@ static void pci_flr_wait(struct pci_dev *dev)
+ 
+ 	if (delay > 1000)
+ 		dev_info(&dev->dev, "ready %dms after FLR\n", 100 + delay - 1);
++
++	return 0;
+ }
+ 
+ /**
+@@ -4016,13 +4018,13 @@ static bool pcie_has_flr(struct pci_dev *dev)
+  * device supports FLR before calling this function, e.g. by using the
+  * pcie_has_flr() helper.
+  */
+-void pcie_flr(struct pci_dev *dev)
++int pcie_flr(struct pci_dev *dev)
+ {
+ 	if (!pci_wait_for_pending_transaction(dev))
+ 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
+ 
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+-	pci_flr_wait(dev);
++	return pci_flr_wait(dev);
+ }
+ EXPORT_SYMBOL_GPL(pcie_flr);
+ 
+@@ -4055,8 +4057,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
+ 
+ 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+-	pci_flr_wait(dev);
+-	return 0;
++	return pci_flr_wait(dev);
+ }
+ 
+ /**
+@@ -4307,8 +4308,9 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+ 	if (rc != -ENOTTY)
+ 		return rc;
+ 	if (pcie_has_flr(dev)) {
+-		pcie_flr(dev);
+-		return 0;
++		rc = pcie_flr(dev);
++		if (rc != -ENOTTY)
++			return rc;
+ 	}
+ 	rc = pci_af_flr(dev, 0);
+ 	if (rc != -ENOTTY)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 66cca1c..0c1335a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1081,7 +1081,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+-void pcie_flr(struct pci_dev *dev);
++int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+ int pci_reset_function_locked(struct pci_dev *dev);
+-- 
+1.9.1
