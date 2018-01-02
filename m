@@ -1,114 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:43530 "EHLO
-        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750726AbeABVvD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 16:51:03 -0500
-Received: by mail-yw0-f193.google.com with SMTP id n25so12352049ywh.10
-        for <linux-pci@vger.kernel.org>; Tue, 02 Jan 2018 13:51:02 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.99]:40904 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751127AbeABTRf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jan 2018 14:17:35 -0500
+Date: Tue, 2 Jan 2018 13:16:39 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, adouglas@cadence.com,
+        stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
+        eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
+        sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+        robh@kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 1/9] PCI: Regroup all PCI related entries into
+ drivers/pci/Makefile
+Message-ID: <20180102191639.GD6211@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+ <49f5a733e05a46521340e913876332f3804e2042.1513620412.git.cyrille.pitchen@free-electrons.com>
+ <20171228224718.GA19819@bhelgaas-glaptop.roam.corp.google.com>
+ <0b366da6-7673-4473-c9a5-9f6b643a093f@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.02.1801021620520.4722@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1801021620520.4722@file01.intranet.prod.int.rdu2.redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 2 Jan 2018 15:50:41 -0600
-Message-ID: <CAErSpo6nrJa0ZQkAe-AYzqwk1cw+vsrpZzcNTe+bLp-B=Q4bQA@mail.gmail.com>
-Subject: Re: the patch "alpha/PCI: Replace pci_fixup_irqs()" breaks networking
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Meelis Roos <mroos@linux.ee>, Matt Turner <mattst88@gmail.com>,
-        linux-alpha@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <0b366da6-7673-4473-c9a5-9f6b643a093f@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+On Fri, Dec 29, 2017 at 09:21:56PM +0100, Cyrille Pitchen wrote:
+> Hi Bjorn,
+> 
+> Le 28/12/2017 à 23:47, Bjorn Helgaas a écrit :
+> > On Mon, Dec 18, 2017 at 07:16:01PM +0100, Cyrille Pitchen wrote:
+> >> This patch cleans drivers/Makefile up by moving the pci/endpoint and
+> >> pci/dwc entries from drivers/Makefile into drivers/pci/Makefile.
+> > 
+> > Thanks a lot for doing this!
+> > 
+> > s/This patch cleans/Clean up/
+> >
+> 
+> updated for the next series
+>  
+> > Speaking of cleanup, this Makefile has useless comments and blank
+> > lines.  Maybe you could add a new patch to remove them and reorder it
+> > into a sensible order, with the Intel MID special case at the end and
+> > the host/dwc/cadence stuff together?
+> >
+> 
+> OK, I'm working on it. So right now I'm trying to sort entries by
+> alphabetical order but the first test has just failed: kernel oops
+> when calling pcied_init().
 
-Thanks for the report!  Lorenzo has been on vacation and is probably
-buried in email, but I'm sure he'll be on this as soon as he digs out.
+Sorting isn't a big deal.  The blank lines and useless comments do
+make it hard to scan, but if we can't sort them, I'm fine with that.
 
-On Tue, Jan 2, 2018 at 3:32 PM, Mikulas Patocka <mpatocka@redhat.com> wrote:
-> Hi
->
-> The patch 0e4c2eeb758a91e68b9eaf7a4bee9bd5ed97ff2b ("alpha/PCI: Replace
-> pci_fixup_irqs() call with host bridge IRQ mapping hooks") breaks
-> networking on Alpha for me. I have an Alpha Avanti server with tulip
-> network card.
->
-> The patch 0e4c2eeb breaks it so that I get MCE when the network card
-> driver is loaded. The patch 814eae59 fixes the MCE, the system boot
-> completes, but the network card doesn't receive any interrupts (and soon
-> it reports warning about timeout on tx queue). All kernels in the 4.14
-> branch have this bug.
->
-> Mikulas
->
->
-> # cat /proc/interrupts
->            CPU0
->   1:          3    XT-PIC      i8042
->   2:          0    XT-PIC      cascade
->   4:        752    XT-PIC      ttyS0
->   8:      58118     dummy    -RTC       timer
->  10:       1613    XT-PIC      ide0, ide1
->  11:        739    XT-PIC      sym53c8xx
->  12:          5    XT-PIC      i8042
->  15:          0    XT-PIC      eth0     <--- note that the counter is zero
-> PMI:          0           Performance Monitoring
-> ERR:          0
->
-> # lspci -vv
-> 00:06.0 SCSI storage controller: LSI Logic / Symbios Logic 53c810 (rev 01)
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 255
->         Interrupt: pin A routed to IRQ 11
->         Region 0: I/O ports at 8000 [size=256]
->         Region 1: Memory at 01300000 (32-bit, non-prefetchable) [size=256]
->         Kernel driver in use: sym53c8xx
->         Kernel modules: sym53c8xx
->
-> 00:07.0 ISA bridge: Intel Corporation 82378ZB/IB, 82379AB (SIO, SIO.A) PCI to ISA Bridge (rev 43)
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0
->
-> 00:0b.0 Ethernet controller: Digital Equipment Corporation DECchip 21140 [FasterNet] (rev 22)
->         Subsystem: Digital Equipment Corporation DECchip 21140 [FasterNet]
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+ Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 255 (5000ns min, 10000ns max), Cache Line Size: 64 bytes
->         Interrupt: pin A routed to IRQ 15
->         Region 0: I/O ports at 8400 [size=128]
->         Region 1: Memory at 01302000 (32-bit, non-prefetchable) [size=128]
->         Expansion ROM at 01280000 [disabled] [size=256K]
->         Kernel driver in use: tulip
->         Kernel modules: tulip
->
-> 00:0c.0 Display controller: Digital Equipment Corporation DECchip 21030 [TGA] (rev 02)
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping+ SERR- FastB2B- DisINTx-
->         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 255
->         Interrupt: pin A routed to IRQ 5
->         Region 0: Memory at 02000000 (32-bit, prefetchable) [size=32M]
->         Expansion ROM at 012c0000 [disabled] [size=256K]
->         Kernel driver in use: tgafb
->
-> 00:0d.0 RAID bus controller: Silicon Image, Inc. PCI0680 Ultra ATA-133 Host Controller (rev 02)
->         Subsystem: Silicon Image, Inc. Winic W-680 (Silicon Image 680 based)
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 240, Cache Line Size: 4 bytes
->         Interrupt: pin A routed to IRQ 10
->         Region 0: I/O ports at 8490 [size=8]
->         Region 1: I/O ports at 84a0 [size=4]
->         Region 2: I/O ports at 8498 [size=8]
->         Region 3: I/O ports at 84a4 [size=4]
->         Region 4: I/O ports at 8480 [size=16]
->         Region 5: Memory at 01301000 (32-bit, non-prefetchable) [size=256]
->         Expansion ROM at 01200000 [disabled] [size=512K]
->         Capabilities: [60] Power Management version 2
->                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
->                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=2 PME-
->         Kernel driver in use: SiI_IDE
->
+But I *am* curious about the failure you observed.  That sounds like
+we might have a dependency bug there and I'd like to fix that.  I
+don't like to rely on link ordering because it's invisible in the
+source code.
+
+Can you post the reordering patch you used so I can investigate it?
+
+> I guess there are more hidden dependencies than expected, solved by the
+> link order. This cleanup might bit risky after all, especially since I
+> won't be able to test all combinations or with all possible hardwares. 
+
+Bjorn
