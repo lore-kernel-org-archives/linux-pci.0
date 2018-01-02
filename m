@@ -1,67 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:51900 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756068AbeAHMzR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jan 2018 07:55:17 -0500
-Date: Mon, 8 Jan 2018 13:55:15 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Mason <slash.tmp@free.fr>
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/8] arch/sh: add sh7786_mm_sel() function
-Message-ID: <20180108135515.166da07c@windsurf>
-In-Reply-To: <a306b914-e95a-4199-60de-39e88782ac05@free.fr>
-References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-        <20171204150907.24345-2-thomas.petazzoni@free-electrons.com>
-        <a306b914-e95a-4199-60de-39e88782ac05@free.fr>
+Return-Path: <SRS0=9du3=D5=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=9du3=D5=rock-chips.com=shawn.lin@kernel.org>
+Cc: shawn.lin@rock-chips.com, Jingoo Han <jingoohan1@gmail.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>, Jim Quinlan <jim2101024@gmail.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ rfi@lists.rocketboards.org
+Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
+ <bfb3a1e1-73a7-8b84-b1b6-c4a00d04be47@rock-chips.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <bb0465da-3dcc-ba60-7c39-595db65e3945@rock-chips.com>
+Date: Tue, 2 Jan 2018 20:28:28 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <bfb3a1e1-73a7-8b84-b1b6-c4a00d04be47@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Hi Bjorn,
 
-On Mon, 8 Jan 2018 13:28:42 +0100, Mason wrote:
-
-> > +static inline u32 sh7786_mm_sel(void)
-> > +{
-> > +	return __raw_readl(0xFC400020) & 0x7;  
+On 2018/1/2 20:24, Shawn Lin wrote:
+> Hi Bjorn,
 > 
-> I thought we were never supposed to use __raw_readl(), rather use readl_relaxed() instead?
+> On 2017/12/15 6:58, Bjorn Helgaas wrote:
+>> Hi all,
+>>
+>> In the PCI config access path, the *_pcie_valid_device() functions in
+>> the dwc, altera, rockchip, and xilinx drivers all check whether the
+>> link is up.
+>>
+>> I think this is racy because the link may go down after we check but
+>> before we perform the config access.
+>>
 > 
-> The difference is that readl_relaxed() takes care of endianness, which would seem relevant
-> since you have both endianness. Am I missing something?
+> The link could be broken at any time, so the check if bogus. And we
+> have accessors for performing the config access but we don't have these
+> for performing memory access, so again the racy is always there.
+> 
+> 
+>> What would blow up if we removed the *_pcie_link_up() checks?
+> 
+> What Rockchip needs(probably for all arm64 system) is something
+> like this patchset[1]. And for arm32, we could refer to
+> imx6q_pcie_abort_handler in drivers/pci/dwc/pci-imx6.c
+> 
+> Note that ATF(ARM trust firmware) could help capture these
+> (a)synchronous, so we actually don't even need to resort to patchset[1],
+> and handle these abort in the firmware.
+> 
 
-Yes. That I/O accessors in Linux are a mess.
+Sorry for the wrong link, please refer to this one:
 
-On ARM for example, when the CPU runs big-endian, the devices are still
-little-endian, so we use readl/writel (or their relaxed variants) to do
-the endianness conversion.
+https://lkml.org/lkml/2017/3/24/413
 
-However, on SH, platform devices have an endianness that follow the
-CPU one. So if you run little-endian, your devices are little endian,
-if you run big-endian, your devices are big endian. Hence the use of
-__raw_readl().
-
-So you could ask me: but if SH behaves like this, why is readl/writel
-doing an endianness conversion on this architecture? Well because
-readl/writel were originally introduced for PCI devices, and PCI
-devices are always little-endian, even when your SH core runs
-big-endian.
-
-Basically, I think the I/O accessors are just a mess, and the only way
-to solve this mess properly would be to have a "struct device *" as
-argument to those accessors, that tells the accessor how the device
-behaves in terms of endianness.
-
-Best regards, 
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+> 
+> [1]https://lkml.org/lkml/2017/11/10/236
+> 
+> 
+>>
+>> I'd like to either remove the checks or add comments about why the
+> 
+> Remove it makes sense to me.
+> 
+>> race is acceptable.  If we've covered this before, I apologize.
+>> Adding a comment will keep me from pestering you about this again in
+>> the future.
+>>
+>> Bjorn
+>>
+>>
+>>
+> 
+> 
+> 
