@@ -1,49 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 5.mo179.mail-out.ovh.net ([46.105.43.140]:43796 "EHLO
-        5.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753247AbeA3VFJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 16:05:09 -0500
-Received: from player168.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 9A1D79A673
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jan 2018 21:58:08 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v6 03/11] PCI: generic: fix missing call of pci_free_resource_list()
-Date: Tue, 30 Jan 2018 21:56:51 +0100
-Message-Id: <19fc2c448cf8f19c47225450a375af657bd2c61a.1517343502.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36714 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751760AbeABK2A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jan 2018 05:28:00 -0500
+Date: Tue, 2 Jan 2018 10:28:52 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Stephen Boyd <sboyd@codeaurora.org>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org, Gustavo.Pimentel@synopsys.com
+Subject: Re: [PATCH v2] PCI: dwc: Use {upper,lower}_32_bits() macros for
+ clarity
+Message-ID: <20180102102852.GA10536@red-moon>
+References: <20171227232540.22341-1-sboyd@codeaurora.org>
+ <f855815f-79a3-9be2-1513-2c9edc907079@synopsys.com>
+ <20171228160955.GF7997@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171228160955.GF7997@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Call pci_free_resource_list() from pci_host_common_probe() when probing
-fails, as done inside gen_pci_init() when this later function fails.
+On Thu, Dec 28, 2017 at 08:09:55AM -0800, Stephen Boyd wrote:
+> On 12/28, Joao Pinto wrote:
+> > >  	if (pp->ops->get_msi_data)
+> > >  		msg.data = pp->ops->get_msi_data(pp, pos);
+> > > 
+> > 
+> > Thanks for the patch.
+> > Gustavo' patch-set targeting the update of the Interrupt API for
+> > pcie-designware* already does this modification, so I would suggest that we wait
+> > for Gustavo' patch to be stable and get the same modification.
+> > 
+> 
+> Ok.
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
----
- drivers/pci/host/pci-host-common.c | 1 +
- 1 file changed, 1 insertion(+)
+Ok, marked as superseded, thanks.
 
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index efd904d93562..10e3f5b39499 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -110,6 +110,7 @@ int pci_host_common_probe(struct platform_device *pdev,
- 	ret = pci_scan_root_bus_bridge(bridge);
- 	if (ret < 0) {
- 		dev_err(dev, "Scanning root bridge failed");
-+		pci_free_resource_list(&resources);
- 		return ret;
- 	}
- 
--- 
-2.11.0
+Lorenzo
