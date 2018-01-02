@@ -1,54 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:56772 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750749AbeACAkl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 19:40:41 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@the-dreams.de>
-Subject: [PATCH 7/7] PCI / PM: Use SMART_SUSPEND and LEAVE_SUSPENDED flags for PCIe ports
-Date: Wed, 03 Jan 2018 01:38:27 +0100
-Message-ID: <33674270.0PFIgc82r6@aspire.rjw.lan>
-In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan> <2436726.ykYRzVD45y@aspire.rjw.lan>
+Received: from mail.kernel.org ([198.145.29.99]:39696 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750715AbeABTAN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jan 2018 14:00:13 -0500
+Date: Tue, 2 Jan 2018 13:00:03 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Max Gurtovoy <maxg@mellanox.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: pci driver loads right after unload
+Message-ID: <20180102190003.GB6211@bhelgaas-glaptop.roam.corp.google.com>
+References: <13c000eb-5fbe-1787-54c0-d113500cf3db@mellanox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <13c000eb-5fbe-1787-54c0-d113500cf3db@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+[+cc Greg, linux-kernel]
 
-Make the PCIe port driver set DPM_FLAG_SMART_SUSPEND and
-DPM_FLAG_LEAVE_SUSPENDED for the devices handled by it to benefit
-from the opportunistic optimizations in the PCI layer enabled by
-these flags.
+Hi Max,
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pcie/portdrv_pci.c |    3 +++
- 1 file changed, 3 insertions(+)
+Thanks for the report!
 
-Index: linux-pm/drivers/pci/pcie/portdrv_pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pcie/portdrv_pci.c
-+++ linux-pm/drivers/pci/pcie/portdrv_pci.c
-@@ -150,6 +150,9 @@ static int pcie_portdrv_probe(struct pci
- 
- 	pci_save_state(dev);
- 
-+	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_SMART_SUSPEND |
-+					   DPM_FLAG_LEAVE_SUSPENDED);
-+
- 	if (pci_bridge_d3_possible(dev)) {
- 		/*
- 		 * Keep the port resumed 100ms to make sure things like
+On Tue, Jan 02, 2018 at 01:50:23AM +0200, Max Gurtovoy wrote:
+> hi all,
+> I encountered a strange phenomena using 2 different pci drivers
+> (nvme and mlx5_core) since 4.15-rc1:
+> when I try to unload the modules using "modprobe -r" cmd it calls
+> the .probe function right after calling the .remove function and the
+> module is not realy unloaded.
+> I think there is some race condition because when I added a
+> msleep(1000) after "pci_unregister_driver(&nvme_driver);" (in the
+> nvme module testing, it also worked in the mlx5_core), the issue
+> seems to dissapear.
+
+You say "since 4.15-rc1".  Does that mean it's a regression?  If so,
+what's the most recent kernel that does not have this problem?  Worst
+case, you could bisect to find where it broke.
+
+I don't see anything obvious in the drivers/pci changes between v4.14
+and v4.15-rc1.  Module loading and driver binding is mostly driven by
+the driver core and udev.  Maybe you could learn something with
+"udevadm monitor" or by turning on the some of the debug in
+lib/kobject_uevent.c?
+
+Bjorn
