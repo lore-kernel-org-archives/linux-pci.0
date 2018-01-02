@@ -1,125 +1,183 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Schmauss, Erik" <erik.schmauss@intel.com>
-To: Hans de Goede <hdegoede@redhat.com>
-CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Moore, Robert" <robert.moore@intel.com>,
-        "Zheng, Lv" <lv.zheng@intel.com>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@acpica.org" <devel@acpica.org>
-Subject: RE: ACPI: Do not call _STA on battery devices with unmet
- dependencies
-Date: Tue, 23 Jan 2018 00:24:32 +0000
-Message-ID: <CF6A88132359CE47947DB4C6E1709ED5396D7178@ORSMSX110.amr.corp.intel.com>
-References: <20180118160359.29971-1-hdegoede@redhat.com>
- <20180118191112.GI53542@bhelgaas-glaptop.roam.corp.google.com>
- <CF6A88132359CE47947DB4C6E1709ED5396D2A4C@ORSMSX110.amr.corp.intel.com>
- <03b11c2d-0c17-89d2-daa2-d48f4ea656d5@redhat.com>
-In-Reply-To: <03b11c2d-0c17-89d2-daa2-d48f4ea656d5@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:39338 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751836AbeABOM2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jan 2018 09:12:28 -0500
+Date: Tue, 2 Jan 2018 14:13:21 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <marc.zyngier@arm.com>, robh@kernel.org,
+        devicetree@vger.kernel.org, Mingkai Hu <mingkai.hu@nxp.com>,
+        Peter W Newton <peter.newton@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Raj Raina <rajesh.raina@nxp.com>,
+        Rajan Kapoor <rajan.kapoor@nxp.com>,
+        Prabhjot Singh <prabhjot.singh@nxp.com>
+Subject: Re: [PATCH v5 2/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
+ driver
+Message-ID: <20180102141321.GE10536@red-moon>
+References: <1513181317-19914-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+ <20171220170307.GC1709@red-moon>
+ <CAFZiPx1VVLii9hnTZCih8tu5cxvzX4ENgVGy9-WwpaG7vWyUWg@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFZiPx1VVLii9hnTZCih8tu5cxvzX4ENgVGy9-WwpaG7vWyUWg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEhhbnMgZGUgR29lZGUg
-W21haWx0bzpoZGVnb2VkZUByZWRoYXQuY29tXQ0KPiBTZW50OiBTYXR1cmRheSwgSmFudWFyeSAy
-MCwgMjAxOCA0OjQ4IEFNDQo+IFRvOiBTY2htYXVzcywgRXJpayA8ZXJpay5zY2htYXVzc0BpbnRl
-bC5jb20+DQo+IENjOiBSYWZhZWwgSiAuIFd5c29ja2kgPHJqd0Byand5c29ja2kubmV0PjsgTGVu
-IEJyb3duIDxsZW5iQGtlcm5lbC5vcmc+Ow0KPiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29n
-bGUuY29tPjsgTW9vcmUsIFJvYmVydA0KPiA8cm9iZXJ0Lm1vb3JlQGludGVsLmNvbT47IFpoZW5n
-LCBMdiA8bHYuemhlbmdAaW50ZWwuY29tPjsgbGludXgtDQo+IGFjcGlAdmdlci5rZXJuZWwub3Jn
-OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBkZXZlbEBhY3BpY2Eub3JnDQo+IFN1YmplY3Q6
-IFJlOiBBQ1BJOiBEbyBub3QgY2FsbCBfU1RBIG9uIGJhdHRlcnkgZGV2aWNlcyB3aXRoIHVubWV0
-IGRlcGVuZGVuY2llcw0KPiANCj4gSGksDQo+IA0KPiBPbiAxOS0wMS0xOCAyMjowMywgU2NobWF1
-c3MsIEVyaWsgd3JvdGU6DQo+ID4NCj4gPj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4g
-Pj4gRnJvbTogbGludXgtYWNwaS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1h
-Y3BpLQ0KPiA+PiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBCam9ybiBIZWxn
-YWFzDQo+ID4+IFNlbnQ6IFRodXJzZGF5LCBKYW51YXJ5IDE4LCAyMDE4IDExOjExIEFNDQo+ID4+
-IFRvOiBIYW5zIGRlIEdvZWRlIDxoZGVnb2VkZUByZWRoYXQuY29tPg0KPiA+PiBDYzogUmFmYWVs
-IEogLiBXeXNvY2tpIDxyandAcmp3eXNvY2tpLm5ldD47IExlbiBCcm93bg0KPiA+PiA8bGVuYkBr
-ZXJuZWwub3JnPjsgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT47IE1vb3JlLCBS
-b2JlcnQNCj4gPj4gPHJvYmVydC5tb29yZUBpbnRlbC5jb20+OyBaaGVuZywgTHYgPGx2LnpoZW5n
-QGludGVsLmNvbT47IGxpbnV4LQ0KPiA+PiBhY3BpQHZnZXIua2VybmVsLm9yZzsgbGludXgtcGNp
-QHZnZXIua2VybmVsLm9yZzsgZGV2ZWxAYWNwaWNhLm9yZw0KPiA+PiBTdWJqZWN0OiBSZTogQUNQ
-STogRG8gbm90IGNhbGwgX1NUQSBvbiBiYXR0ZXJ5IGRldmljZXMgd2l0aCB1bm1ldA0KPiA+PiBk
-ZXBlbmRlbmNpZXMNCj4gPj4NCj4gPj4gT24gVGh1LCBKYW4gMTgsIDIwMTggYXQgMDU6MDM6NTVQ
-TSArMDEwMCwgSGFucyBkZSBHb2VkZSB3cm90ZToNCj4gPg0KPiA+IEhpIEhhbnMsDQo+ID4NCj4g
-Pj4+IEhpIEFsbCwNCj4gPj4+DQo+ID4+PiBUaGUgQUNQSSBjb2RlIGFscmVhZHkgY29udGFpbnMg
-cXVpdGUgYSBiaXQgb2YgY29kZSB0byBub3QgYmluZCB0aGUNCj4gPj4+IEFDUEktYmF0dGVyeSB1
-bnRpbCBhbGwgZGVwcyBmb3IgYW4gQUNQSSBiYXR0ZXJ5IGRldmljZSBoYXZlIGJlZW4NCj4gPj4+
-IG1ldCwgYnV0IG9uIHNvbWUgZGV2aWNlcyBjYWxsaW5nIF9TVEEgYmVmb3JlIGFsbCBkZXBzIGFy
-ZSBtZXQgaXMgYQ0KPiA+Pj4gcHJvYmxlbSB0b28gYmVjYXVzZSB0aGUgX1NUQSBtZXRob2QgdXNl
-cyBhbiBpMmMgT3BSZWdpb24gdGhlcmUuDQo+ID4NCj4gPiBDb3VsZCB5b3UgZXhwbGFpbiB3aHkg
-X1NUQSBtZXRob2QgdXNpbmcgYW4gSTJDIE9wUmVnaW9uIGlzIHByb2JsZW1hdGljPw0KPiANCj4g
-SXQgaXMgcHJvYmxlbWF0aWMgaWYgd2UgY2FsbCB0aGUgX1NUQSBtZXRob2QgYmVmb3JlIHRoZSBo
-YW5kbGVyIGZvciB0aGUgT3BSZWdpb24NCj4gaGFzIGJlZW4gaW5zdGFsbGVkLCB0aGlzIHNlcmll
-cyBkZWxheXMgLyBhdm9pZHMgY2FsbGluZyBfU1RBIGJlZm9yZSB0aGUgT3BSZWdpb24NCj4gaGFz
-IGJlZW4gaW5zdGFsbGVkLg0KDQpUaGFua3MgZm9yIHRoZSBleHBsYW5hdGlvbi4NCkknbSBsb29r
-aW5nIGF0IHRoZSBBQ1BJIHNwZWMgYW5kIGZyb20gd2hhdCBpdCBzYWlkIGFib3V0IF9TVEEsIEkg
-Z2F0aGVyZWQgdGhhdCBfU1RBIGlzIGFsbG93ZWQgdG8gaGF2ZSBzaWRlLWVmZmVjdHMgdG8gbmFt
-ZWQgb2JqZWN0cyB3aXRoaW4gdGhlIEFNTCBuYW1lc3BhY2UuIFNvIHJlbW92aW5nIF9TVEEgZnJv
-bSBhY3BpX2dldF9vYmplY3RfaW5mbyBzZWVtcyBhIGxpdHRsZSBkYW5nZXJvdXMuLi4gSXMgdGhl
-cmUgYSByZWFzb24gd2h5IHlvdSBjYW5ub3QgcmVtb3ZlIG9yIGRlbGF5IHRoZSBjYWxsIHRvIGFj
-cGlfZ2V0X29iamVjdF9pbmZvIGluc3RlYWQ/IENoYXB0ZXIgNiBzZWN0aW9uIDEgb2YgdGhlIEFD
-UEkgc3BlYyBhbHNvIHN0YXRlcyB0aGF0IGl0J3MgcG9zc2libGUgZm9yIF9ISUQgYW5kIF9BRFIg
-dG8gcmVhZCBmcm9tIG9wZXJhdGlvbiByZWdpb25zIGFzIHdlbGwuIElzIGl0IGNvbW1vbiBjb252
-ZW50aW9uIHRoYXQgdGhlc2UgX0hJRCBhbmQgX0FEUiBvYmplY3RzIGRvIG5vdCBhY2Nlc3Mgb3Bl
-cmF0aW9uIHJlZ2lvbnM/DQoNClRoYW5rcywNCg0KRXJpaw0KPiANCj4gUmVnYXJkcywNCj4gDQo+
-IEhhbnMNCj4gDQo+IA0KPiA+DQo+ID4gVGhhbmtzLA0KPiA+IEVyaWsNCj4gPg0KPiA+Pj4NCj4g
-Pj4+IEhlcmUgaXMgdGhlIERTRFQgb2YgdGhlIGRldmljZSBJJ20gc2VlaW5nIHRoaXMgb246DQo+
-ID4+PiBodHRwczovL2ZlZG9yYXBlb3BsZS5vcmcvfmp3cmRlZ29lZGUvdG9zaGliYS1jbGljay1t
-aW5pLWRzZHQuZHNsDQo+ID4+DQo+ID4+IFRoaXMgbG9va3MgbGlrZSBpbnRlcmVzdGluZyBpbmZv
-LCBidXQgKGEpIHRoaXMgbGluayBpc24ndCBtZW50aW9uZWQNCj4gPj4gaW4gdGhlIGFjdHVhbCBw
-YXRjaGVzLCBhbmQgKGIpIGl0J3MgY29uY2VpdmFibGUgdGhhdCBmZWRvcmFwZW9wbGUub3JnIGNv
-dWxkIGdvDQo+IGF3YXkgc29tZWRheS4NCj4gPj4gSWYgdGhpcyB3ZXJlIGEgUENJIHNlcmllcywg
-SSB3b3VsZCBzdWdnZXN0IG9wZW5pbmcgYSByZXBvcnQgYXQNCj4gPj4gYnVnemlsbGEua2VybmVs
-Lm9yZywgYXR0YWNoaW5nIHRoZSBEU0wgdGhlcmUsIGFuZCBpbmNsdWRpbmcgdGhlIGxpbmsgaW4g
-dGhlDQo+IHBhdGNoIGNoYW5nZWxvZy4NCj4gPj4NCj4gPj4+IFRoaXMgc2VyaWVzIG1vZGlmaWVz
-IHRoZSBrZXJuZWwgdG8gbm90IGNhbGwgX1NUQSB1bnRpbCBhbGwgZGVwcyBhcmUNCj4gPj4+IG1l
-dCwgbWlycm9yaW5nIHRoZSBiaW5kaW5nIGJlaGF2aW9yIG9mIHRoZSBiYXR0ZXJ5IGRyaXZlci4N
-Cj4gPj4+DQo+ID4+PiBXaXRob3V0IHRoaXMgc2VyaWVzIGEgdG90YWwgb2YgMzIgQUNQSSBlcnJv
-cnMgZ2V0IHByaW50ZW5kIHRvIHRoZQ0KPiA+Pj4gY29uc29sZSBvbiBib290LCB0aGVyZSBhcmUg
-NCBlcnJvcnMgcGVyIF9TVEEgY2FsbCwgMiBiYXR0ZXJ5IGRldmljZXMNCj4gPj4+IG9uIHRoaXMg
-c3lzdGVtIGFuZCA0IF9TVEEgY2FsbHMgcGVyIGJhdHRlcnkgZGV2aWNlLg0KPiA+Pj4NCj4gPj4+
-IFRoZSBmaXJzdCBjb21taXQgaXMgYSBwcmVwYXJhdGlvbiBjb21taXQgZm9yIG1ha2luZyB0aGUg
-QUNQSUNBDQo+ID4+PiBjaGFuZ2VzIGluIHRoZSA0dGggY29tbWl0LCB0aGlzIGNvbW1pdCBpcyBu
-ZWNlc3NhcnkgdG8gbm90IGJyZWFrDQo+ID4+PiB0aGluZ3MgYWZ0ZXIgdGhlIEFDUElDQSBjaGFu
-Z2VzLg0KPiA+Pj4NCj4gPj4+IFRoZSBzZWNvbmQgY29tbWl0IG1vZGlmaWVzIGFjcGlfYnVzX2dl
-dF9zdGF0dXMgdG8gbm90IGNhbGwgX1NUQSBvbg0KPiA+Pj4gYmF0dGVyeSBkZXZpY2VzIHVudGls
-IGFsbCBkZXBzIGFyZSBtZXQuIFRoaXMgZml4ZXMgMiBvZiB0aGUgNCB0b28NCj4gPj4+IGVhcmx5
-IF9TVEEgY2FsbHMgdHJpZ2dlcmluZyB0aGVzZSBlcnJvcnMuDQo+ID4+Pg0KPiA+Pj4gVGhlIHRo
-aXJkIGNvbW1pdCBtYWtlcyB0aGUgZGV2aWNlIGluc3RhbnRpYXRpb24gY29kZSB1c2UNCj4gPj4+
-IGFjcGlfYnVzX2dldF9zdGF0dXMgaW5zdGVhZCBvZiBhY3BpX2J1c19nZXRfc3RhdHVzX2hhbmRs
-ZSBzbyB0aGF0DQo+ID4+PiB0aGUgY29kZSB0byBnZXQgdGhlIGluaXRpYWwgc3RhdHVzIGFsc28g
-ZG9lcyBub3QgbWFrZXMgMSB0b28gZWFybHkgX1NUQSBjYWxsLg0KPiA+Pj4NCj4gPj4+IFRoZSBm
-b3VydGggY29tbWl0IGNoYW5nZXMgdGhlIEFDUElDQSBhY3BpX2dldF9vYmplY3RfaW5mbyBmdW5j
-dGlvbg0KPiA+Pj4gdG8gbm90IGNhbGwgX1NUQS4gT25seSAxIHVzZXIgKHdoaWNoIGlzIGZpeGVk
-IGluIHRoZSBmaXJzdCBjb21taXQpDQo+ID4+PiBjYXJlcyBhYm91dCBhY3BpX2RldmljZV9pbmZv
-LmN1cnJlbnRfc3RhdHVzLiBBbmQgdGhlIEFDUElDQSBjb2RlIGhhcw0KPiA+Pj4gdGhpcw0KPiA+
-PiBjb21tZW50Og0KPiA+Pj4NCj4gPj4+ICAgKiBOb3RlOiBUaGlzIGludGVyZmFjZSBpcyBpbnRl
-bmRlZCB0byBiZSB1c2VkIGR1cmluZyB0aGUgaW5pdGlhbA0KPiA+Pj4gZGV2aWNlDQo+ID4+PiAg
-ICogZGlzY292ZXJ5IG5hbWVzcGFjZSB0cmF2ZXJzYWwuIFRoZXJlZm9yZSwgbm8gY29tcGxleCBt
-ZXRob2RzIGNhbiBiZQ0KPiA+Pj4gICAqIGV4ZWN1dGVkLCBlc3BlY2lhbGx5IHRob3NlIHRoYXQg
-YWNjZXNzIG9wZXJhdGlvbiByZWdpb25zLg0KPiA+Pj4gVGhlcmVmb3JlLCBkbw0KPiA+Pj4gICAq
-IG5vdCBhZGQgYW55IGFkZGl0aW9uYWwgbWV0aG9kcyB0aGF0IGNvdWxkIGNhdXNlIHByb2JsZW1z
-IGluIHRoaXMgYXJlYS4NCj4gPj4+ICAgKiBCZWNhdXNlIG9mIHRoaXMgcmVhc29uIHN1cHBvcnQg
-Zm9yIHRoZSBmb2xsb3dpbmcgbWV0aG9kcyBoYXMNCj4gPj4+IGJlZW4NCj4gPj4gcmVtb3ZlZDoN
-Cj4gPj4+ICAgKiB0aGlzIHdhcyB0aGUgZmF0ZSBvZiB0aGUgX1NVQiBtZXRob2Qgd2hpY2ggd2Fz
-IGZvdW5kIHRvIGNhdXNlIHN1Y2gNCj4gPj4+ICAgKiBwcm9ibGVtcyBhbmQgd2FzIHJlbW92ZWQg
-KDExLzIwMTUpLg0KPiA+Pj4NCj4gPj4+IFRoZSBkZXNjcmliZWQgcHJvYmxlbXMgd2l0aCB0aGUg
-X1NVQiBtZXRob2QgY2xlYXJseSBhbHNvIGFwcGx5IHRvDQo+ID4+PiB0aGUgX1NUQSBtZXRob2Qs
-IHNvIHJlbW92aW5nIGl0IGZyb20gYWNwaV9nZXRfb2JqZWN0X2luZm8gc2VlbXMgbGlrZQ0KPiA+
-Pj4gaXQgaXMgdGhlIHJpZ2h0IHRoaW5nIHRvIGRvIGhlcmUuIFRoaXMgdG9vIGZpeGVzIDEgdG9v
-IGVhcmx5IF9TVEENCj4gPj4+IGNhbGwsIHNvIHRoYXQgd2l0aCBhbGwNCj4gPj4+IDQgcGF0Y2hl
-cyBpbiBwbGFjZSB3ZSd2ZSBmaXhlZCBhbGwgNCB0b28gZWFybHkgX1NUQSBjYWxscy4NCj4gPj4+
-DQo+ID4+PiBSZWdhcmRzLA0KPiA+Pj4NCj4gPj4+IEhhbnMNCj4gPj4+IC0tDQo+ID4+PiBUbyB1
-bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGlu
-dXgtYWNwaSINCj4gPj4+IGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdl
-ci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vDQo+ID4+PiBpbmZvIGF0ICBodHRwOi8vdmdlci5r
-ZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCj4gPj4gLS0NCj4gPj4gVG8gdW5zdWJzY3Jp
-YmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LWFjcGki
-DQo+ID4+IGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwu
-b3JnIE1vcmUgbWFqb3Jkb21vDQo+ID4+IGluZm8gYXQgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9t
-YWpvcmRvbW8taW5mby5odG1sDQo=
+On Fri, Dec 22, 2017 at 01:29:00PM +0530, Subrahmanya Lingappa wrote:
+
+[...]
+
+> > > +static void mobiveil_pcie_isr(struct irq_desc *desc)
+> > > +{
+> > > +     struct irq_chip *chip = irq_desc_get_chip(desc);
+> > > +     struct mobiveil_pcie *pcie = irq_desc_get_handler_data(desc);
+> > > +     struct device *dev = &pcie->pdev->dev;
+> > > +     u32 intr_status;
+> > > +     unsigned long shifted_status;
+> >
+> > Why not u32 ?
+> >
+> for_each_set_bit() api warns about the variable not being unsigned
+> long. So used the same to take out the warning.
+> 
+> 
+> > > +     u32 bit, virq;
+> > > +     u32 val, mask;
+> > > +
+> > > +     chained_irq_enter(chip, desc);
+> > > +
+> > > +     /* read INTx status */
+> > > +     val = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
+> > > +     mask = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
+> > > +     intr_status = val & mask;
+> > > +
+> > > +     /*
+> > Handle INTx */
+> > > +     if (intr_status & PAB_INTP_INTX_MASK) {
+> > > +             shifted_status = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
+> >
+> > Why can't you reuse val to read the status and create shifted_status
+> > from it ?
+> >
+> > eg
+> >
+> > shifted_status = val << PAB_INTA_POS;
+> > csr_writel(pcie, shifted_status, PAB_INTP_AMBA_MISC_STAT);
+> >
+> > Just a hint to make the loop more readable. BTW, I do not think that
+> > writing shifted_status into that register is OK, see below.
+> >
+> > > +             do {
+> > > +                     for_each_set_bit(bit, &shifted_status, PCI_NUM_INTX) {
+> > > +
+> > > +                             /* clear interrupts */
+> > > +                             csr_writel(pcie, shifted_status <<
+> > PAB_INTA_POS,
+> > > +
+> > PAB_INTP_AMBA_MISC_STAT);
+> >
+> > Should not you clear just the interrupt you are about to handle ?
+> 
+> PAB_INTP_AMBA_MISC_STAT register has INTA, INTB, INTC, INTD status
+> bits at positions 5,6,7 and 8,
+> they are RW1C bits, so writing 1 to this bit clears the status.
+> So here the status read was written back to it to clear.
+
+Understood - the point is that IIUC you should clear just the IRQ (bit)
+that you are handling at each iteration not all at once.
+
+What do PAB_INTP_AMBA_MISC_STAT[4:0] represent then ?
+
+> > > +                             virq = irq_find_mapping(pcie->intx_domain,
+> > > +                                     bit + 1);
+> > > +                             if (virq)
+> > > +
+> > generic_handle_irq(virq);
+> > > +                             else
+> > > +                                     dev_err_ratelimited(dev,
+> > > +                                             "unexpected IRQ, INT%d\n",
+> > > +                                             bit);
+> > > +
+> > > +                     }
+> > > +
+> > > +                     shifted_status = csr_readl(pcie,
+> > > +                                             PAB_INTP_AMBA_MISC_STAT);
+> > > +
+> > > +             } while ((shifted_status >>  PAB_INTA_POS) != 0);
+> >
+> > I do not understand this. Can you explain to me how the
+> > register at:
+> >
+> > PAB_INTP_AMBA_MISC_STAT
+> >
+> > works ?
+> >
+> just repeating what explained before, to ease the readablility.
+> PAB_INTP_AMBA_MISC_STAT register has INTA, INTB, INTC, INTD status
+> bits at positions 5,6,7 and 8,
+> they are RW1C bits, so writing 1 to this bit clears the status.
+> 
+> >
+> > A patch for mediatek has been posted:
+> >
+> > https://patchwork.ozlabs.org/patch/851181/
+> >
+> > It looks like this loop may suffer from the same issue, so please do
+> > have a look.
+> >
+> I will clear the the interrupt after
+> 
+> its hadled by generic_handle_irq()
+> .
+> right ?
+
+Where ? Can you explain please what every bit in
+
+PAB_INTP_AMBA_MISC_STAT
+
+represent ?
+
+> > On top of that, most of the operations you are carrying out here
+> > can be done automatically by making them part of the struct irq_chip
+> > methods (ie acking IRQs, masking IRQs, etc, see below).
+> >
+> Any side effects of keeping this code as is ?
+
+Yes, that it will take us more effort to convert it to the usage
+I describe above - which is how it is expected to be written.
+
+[...]
+
+> > > +/* routine to setup the INTx related data */
+> > > +static int mobiveil_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+> > > +             irq_hw_number_t hwirq)
+> > > +{
+> > > +     irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+> >
+> > IIUC, the host bridge acts as an INTX/MSI controller/multiplexer.
+> >
+> > So, instead of relying on
+> > dummy_irq_chip, you should create your own
+> > irq_chip with the methods that you require (eg irq_ack(), irq_mask(),
+> > irq_compose_msi_msg()) and use that as bottom irq_chip for both
+> > INTX and MSI domains.
+> >
+> > That's why I asked you to have a look at pcie-tango.c (except that there
+> > INTX aren't supported but the basic idea does not change) and implement
+> > IRQ domains handling like that same driver.
+> >
+> are there any disadvantages of keeping dummy_irq_chip, as I see quite
+> a few host bridge
+> 
+> drivers including
+> otehr two major soft IP drivers from altera and xilinx with similar
+> MSI implementaion.
+
+See above, this is a new driver, the existing IP drivers will have to
+be converted eventually, new code should set an example not add more
+burden to code refactoring.
+
+Lorenzo
