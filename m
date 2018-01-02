@@ -1,63 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Hans de Goede <hdegoede@redhat.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Lv Zheng <lv.zheng@intel.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, devel@acpica.org
-Subject: [PATCH v2 2/5] PCI: acpiphp_ibm: prepare for acpi_get_object_info() no longer returning status
-Date: Mon, 22 Jan 2018 09:51:32 +0100
-Message-Id: <20180122085135.16732-3-hdegoede@redhat.com>
-In-Reply-To: <20180122085135.16732-1-hdegoede@redhat.com>
-References: <20180122085135.16732-1-hdegoede@redhat.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: kernel-janitors@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 04/12] PCI: qcom: account for const type of of_device_id.data
+Date: Tue,  2 Jan 2018 14:28:00 +0100
+Message-Id: <1514899688-27844-5-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1514899688-27844-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1514899688-27844-1-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-acpi_get_object_info() is intended for early probe usage and as such should
-not call any methods which may rely on OpRegions, but it used to also call
-_STA to get the status, which on some systems does rely on OpRegions, this
-behavior and the acpi_device_info.current_status member are being removed.
+This driver creates various const structures that it stores in the
+data field of an of_device_id array.
 
-This commit prepares the acpiphp_ibm code for this by having it get the
-status itself using acpi_bus_get_status_handle(). Note no error handling is
-necessary on any errors acpi_bus_get_status_handle() leaves the value of
-the passed in current_status at its 0 initialization value.
+Adding const to the declaration of the location that receives the
+const value from the data field ensures that the compiler will
+continue to check that the value is not modified.  Furthermore, the
+const-discarding cast on the extraction from the data field is no
+longer needed.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Done using Coccinelle.
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
 ---
-Changes in v2:
--Use () after function names in commit message
--Add  Bjorn's Acked-by
----
- drivers/pci/hotplug/acpiphp_ibm.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/dwc/pcie-qcom.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
-index 984c7e8cec5a..8472c4a27f70 100644
---- a/drivers/pci/hotplug/acpiphp_ibm.c
-+++ b/drivers/pci/hotplug/acpiphp_ibm.c
-@@ -399,6 +399,7 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
- 		u32 lvl, void *context, void **rv)
- {
- 	acpi_handle *phandle = (acpi_handle *)context;
-+	unsigned long long current_status = 0;
- 	acpi_status status;
- 	struct acpi_device_info *info;
- 	int retval = 0;
-@@ -410,7 +411,9 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
- 		return retval;
- 	}
+diff -u -p a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -171,7 +171,7 @@ struct qcom_pcie {
+ 	union qcom_pcie_resources res;
+ 	struct phy *phy;
+ 	struct gpio_desc *reset;
+-	struct qcom_pcie_ops *ops;
++	const struct qcom_pcie_ops *ops;
+ };
  
--	if (info->current_status && (info->valid & ACPI_VALID_HID) &&
-+	acpi_bus_get_status_handle(handle, &current_status);
-+
-+	if (current_status && (info->valid & ACPI_VALID_HID) &&
- 			(!strcmp(info->hardware_id.string, IBM_HARDWARE_ID1) ||
- 			 !strcmp(info->hardware_id.string, IBM_HARDWARE_ID2))) {
- 		pr_debug("found hardware: %s, handle: %p\n",
--- 
-2.14.3
-
+ #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
+@@ -1234,7 +1234,7 @@ static int qcom_pcie_probe(struct platfo
+ 
+ 	pcie->pci = pci;
+ 
+-	pcie->ops = (struct qcom_pcie_ops *)of_device_get_match_data(dev);
++	pcie->ops = of_device_get_match_data(dev);
+ 
+ 	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
+ 	if (IS_ERR(pcie->reset))
