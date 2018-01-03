@@ -1,81 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50446 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751438AbeAQKha (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jan 2018 05:37:30 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v5 0/4] Address error and recovery for AER and DPC
-Date: Wed, 17 Jan 2018 16:07:14 +0530
-Message-Id: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:61715 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750928AbeACAkn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 19:40:43 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Kevin Hilman <khilman@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-i2c <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@the-dreams.de>
+Subject: [PATCH 4/7] PM / mfd: intel-lpss: Use DPM_FLAG_SMART_SUSPEND
+Date: Wed, 03 Jan 2018 01:34:53 +0100
+Message-ID: <3548517.xcdEzff6pU@aspire.rjw.lan>
+In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
+References: <7742130.AaJQIxeI1n@aspire.rjw.lan> <2436726.ykYRzVD45y@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set brings in error handling support for DPC
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-The current implementation of AER and error message broadcasting to the
-EP driver is tightly coupled and limited to AER service driver.
-It is important to factor out broadcasting and other link handling
-callbacks. So that not only when AER gets triggered, but also when DPC get
-triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+Make the intel-lpss driver set DPM_FLAG_SMART_SUSPEND for its
+devices which will allow them to stay in runtime suspend during
+system suspend unless they need to be reconfigured for some reason.
 
-DPC should enumerate the devices after recovering the link, which is
-achieved by implementing error_resume callback.
+Also make it avoid resuming its child devices if they have
+DPM_FLAG_SMART_SUSPEND set to allow them to remain in runtime
+suspend during system suspend.
 
-Changes since v4:
-	Bjorn's comments incorporated.
-		> Renamed only do_recovery.
-		> moved the things more locally to drivers/pci/pci.h
-Changes since v3:
-	Bjorn's comments incorporated.
-		> Made separate patch renaming generic pci_err.c
-		> Introduce pci_err.h to contain all the error types and recovery
-		> removed all the dependencies on pci.h
-Changes since v2:
-	Based on feedback from Keith:
-	"
-	When DPC is triggered due to receipt of an uncorrectable error Message,
-	the Requester ID from the Message is recorded in the DPC Error
-	Source ID register and that Message is discarded and not forwarded Upstream.
-	"
-	Removed the patch where AER checks if DPC service is active
-Changes since v1:
-	Kbuild errors fixed:
-		> pci_find_dpc_dev made static
-		> ras_event.h updated
-		> pci_find_aer_service call with CONFIG check
-		> pci_find_dpc_service call with CONFIG check
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-for-MFD-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/mfd/intel-lpss.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Oza Pawandeep (4):
-  PCI/AER: factor out error reporting from AER
-  PCI/DPC/AER: Address Concurrency between AER and DPC
-  PCI/ERR: Do not do recovery if DPC service is active
-  PCI/DPC: Enumerate the devices after DPC trigger event
-
- drivers/acpi/apei/ghes.c               |   2 +-
- drivers/pci/pcie/Makefile              |   2 +-
- drivers/pci/pcie/aer/aerdrv.h          |  30 ---
- drivers/pci/pcie/aer/aerdrv_core.c     | 306 +------------------------
- drivers/pci/pcie/aer/aerdrv_errprint.c |  27 ++-
- drivers/pci/pcie/pcie-dpc.c            | 127 ++++++++++-
- drivers/pci/pcie/pcie-err.c            | 399 +++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.h             |   2 +
- include/linux/aer.h                    |   4 -
- include/linux/pci.h                    |  23 ++
- include/ras/ras_event.h                |   6 +-
- 11 files changed, 579 insertions(+), 349 deletions(-)
- create mode 100644 drivers/pci/pcie/pcie-err.c
-
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Index: linux-pm/drivers/mfd/intel-lpss.c
+===================================================================
+--- linux-pm.orig/drivers/mfd/intel-lpss.c
++++ linux-pm/drivers/mfd/intel-lpss.c
+@@ -450,6 +450,8 @@ int intel_lpss_probe(struct device *dev,
+ 	if (ret)
+ 		goto err_remove_ltr;
+ 
++	dev_pm_set_driver_flags(dev, DPM_FLAG_SMART_SUSPEND);
++
+ 	return 0;
+ 
+ err_remove_ltr:
+@@ -478,7 +480,9 @@ EXPORT_SYMBOL_GPL(intel_lpss_remove);
+ 
+ static int resume_lpss_device(struct device *dev, void *data)
+ {
+-	pm_runtime_resume(dev);
++	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND))
++		pm_runtime_resume(dev);
++
+ 	return 0;
+ }
+ 
