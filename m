@@ -1,150 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8.mo179.mail-out.ovh.net ([46.105.75.26]:34205 "EHLO
-        8.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752880AbeAJW4h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 17:56:37 -0500
-Received: from player690.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 5D0C990173
-        for <linux-pci@vger.kernel.org>; Wed, 10 Jan 2018 23:47:53 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v3 0/6] PCI: Add support to the Cadence PCIe controller
-Date: Wed, 10 Jan 2018 23:47:29 +0100
-Message-Id: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+Received: from mail-dm3nam03on0046.outbound.protection.outlook.com ([104.47.41.46]:58474
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750913AbeACWao (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jan 2018 17:30:44 -0500
+From: Veerasenareddy Burru <vburru@caviumnetworks.com>
+To: linux-pci@vger.kernel.org
+Cc: satananda.burla@cavium.com, vburru@caviumnetworks.com,
+        mpanicker@caviumnetworks.com
+Subject: [PATCH] pciutils: Extend pci_generic_scan() to scan all 256 buses.
+Date: Wed,  3 Jan 2018 14:30:04 -0800
+Message-Id: <1515018604-13008-1-git-send-email-vburru@caviumnetworks.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+Currently, pci_generic_scan() scans only bus 0 and its subordinate buses.
+Due to this, 'lspci -H1' does not list the devices that are not under
+root bus not 0 as shown below:
+[root@caliobm11 pciutils]# lspci -n -s 84:00.0
+84:00.0 0200: 177d:9702 (rev 02)
+[root@caliobm11 pciutils]# lspci -H1 -n -s 84:00.0
+[root@caliobm11 pciutils]#
 
-this series of patches adds support to the Cadence PCIe controller.
-It was tested on a ARM64 platform emulated by a Palladium running the
-pci-next kernel.
+Signed-off-by: Veerasenareddy Burru <vburru@caviumnetworks.com>
+---
+ lib/generic.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-The host mode was tested with some PCIe devices connected to the Palladium
-through a speed-bridge. Some of those devices were a USB host controller
-and a SATA controller. The PCIe host controller was also tested with a
-second controller configured in endpoint mode and connected back to back
-to the first controller.
-
-The EndPoint Controller (EPC) driver was removed only because I didn't
-have time to take all Kishon's comments into account. However, using a
-fixed patch based on patch 7 of the v2 series + another patch fixing
-the EPF device name chosen by pci_epf_make(), I was abled to probe
-both function 0 and function 1 of the of the 2nd Cadence PCIe controller
-configured in endpoint mode (new hardware design since v2 so function 1
-is now available).
-
-Currently I'm facing 2 issues, which I didn't have enough time to
-investigate and to fix yet:
-
-1 - when the vendor:device IDs are set to 104c:b500 for both functions,
-then I remove both devfn (echo 1 > /sys/bus/pci/devices/$BDF/remove)
-before scanning the PCI bus again (echo 1 > /sys/bus/pci/rescan),
-the PCI enumeration fails reporting that the PCI memory is exhausted.
-
-2 - when I set the vendor:device IDs to 104c:0100 for function 0 and
-104c:b500 and remove only function 1 before scanning the PCI bus again,
-I now pass the PCI enumeration. I also pass the 'pcitest -b <BAR>' test
-but I fail on the MSI test ('pcitest -m <MSI>').
-
-I'm still investigating on those issues.
-
-Best regards,
-
-Cyrille
-
-ChangeLog
-
-v2 -> v3:
-
-- rebase on today's linux-pci/next (20180110) 
-
-patch1:
-- rework the commit message of patch 1 and add two new comments on why endpoint
-  library users must be linked after the endpoint library itself and why
-  the dwc rule uses obj-y instead of obj-$(CONFIG_PCIE_CONFIG_DW).
-- update patch 1 to add missing ifdef CONFIG_PCI / endif in
-  drivers/pci/dwc/Makefile around the obj-$(CONFIG_ARM64) += pcie-hisi.o rule,
-  like for the other obj-$(CONFIG_ARM64) rules in drivers/pci/host/Makefile.
-
-patch2: unchanged
-
-patch3:
-- update patch 3 so the bridge hooks/members initialization is left to the
-  host bridges probe routines.
-
-patch4: unchanged
-
-patch5:
-- collect 'Reviewed-by' tag from Rob Herring for the DT bindings.
-
-patch6:
-- remove explanation in the commit message on why obj-$(CONFIG_PCIE_CANDENCE) is
-  placed after obj-$(CONFIG_PCI_ENDPOINT) in drivers/pci/Makefile since a
-  comment on it has been added into patch1.
-- remove menuconfig PCI_CADENCE in drivers/pci/cadence/Kconfig to match
-  drivers/pci/dwc/Kconfig.
-- adapt patch6 to the changes done in patch3 for the pci_host_probe() function.
-
-v1 -> v2:
-- add new properties in the device-tree bindings: 'cdns,max-outbound-regions'
-  and 'cdns,no-bar-match-nbits'.
-- add a new patch to regroup all makefile rules in drivers/pci/Makefile, hence
-  cleaning drivers/Makefile up.
-- change the license text to use the recommanded format:
-  // SPDX-License-Identifier: GPL-2.0
-- add a new patch updating the API of the EPC library to add support to
-  multi-function devices.
-- add a 2 new patches to share more common code between host controller drivers
-- remove some useless tests
-- add more comments in both drivers.
-- fix DT bindings examples
-- remove useless init of the primary, secondary and sub-ordinate bus numbers in
-  the PCI configuration space of the root port.
-- remove cdns_pcie_ep_stop() function and rework cdns_pcie_ep_start() function
-
-Cyrille Pitchen (5):
-  PCI: Regroup all PCI related entries into drivers/pci/Makefile
-  PCI: OF: Add generic function to parse and allocate PCI resources
-  PCI: Add generic function to probe PCI host controllers
-  PCI: Add vendor ID for Cadence
-  PCI: cadence: Add host driver for Cadence PCIe controller
-
-Scott Telford (1):
-  dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host
-    controller
-
- .../bindings/pci/cdns,cdns-pcie-host.txt           |  60 ++++
- MAINTAINERS                                        |   7 +
- drivers/Makefile                                   |   5 +-
- drivers/pci/Kconfig                                |   2 +
- drivers/pci/Makefile                               |  14 +-
- drivers/pci/cadence/Kconfig                        |  16 +
- drivers/pci/cadence/Makefile                       |   3 +
- drivers/pci/cadence/pcie-cadence-host.c            | 336 +++++++++++++++++++++
- drivers/pci/cadence/pcie-cadence.c                 |  68 +++++
- drivers/pci/cadence/pcie-cadence.h                 | 196 ++++++++++++
- drivers/pci/dwc/Makefile                           |   2 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pci-host-common.c                 |  74 +----
- drivers/pci/of.c                                   |  51 ++++
- drivers/pci/probe.c                                |  33 ++
- include/linux/pci.h                                |  10 +
- include/linux/pci_ids.h                            |   2 +
- 17 files changed, 805 insertions(+), 76 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
- create mode 100644 drivers/pci/cadence/Kconfig
- create mode 100644 drivers/pci/cadence/Makefile
- create mode 100644 drivers/pci/cadence/pcie-cadence-host.c
- create mode 100644 drivers/pci/cadence/pcie-cadence.c
- create mode 100644 drivers/pci/cadence/pcie-cadence.h
-
+diff --git a/lib/generic.c b/lib/generic.c
+index c219592..9c5e267 100644
+--- a/lib/generic.c
++++ b/lib/generic.c
+@@ -69,9 +69,14 @@ void
+ pci_generic_scan(struct pci_access *a)
+ {
+   byte busmap[256];
++  int bus;
+ 
+   memset(busmap, 0, sizeof(busmap));
+-  pci_generic_scan_bus(a, busmap, 0);
++  for (bus=0; bus<256; bus++)
++    {
++      if (!busmap[bus])
++        pci_generic_scan_bus(a, busmap, bus);
++    }
+ }
+ 
+ int
 -- 
-2.11.0
+1.8.3.1
