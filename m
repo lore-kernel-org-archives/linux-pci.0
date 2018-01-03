@@ -1,174 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:34594 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751238AbeABRyM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:54:12 -0500
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v17 1/4] block: DAC960: Replace PCI pool old API
-Date: Tue,  2 Jan 2018 18:53:53 +0100
-Message-Id: <20180102175356.7999-2-romain.perier@gmail.com>
-In-Reply-To: <20180102175356.7999-1-romain.perier@gmail.com>
-References: <20180102175356.7999-1-romain.perier@gmail.com>
+Received: from foss.arm.com ([217.140.101.70]:51460 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751595AbeACPv6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jan 2018 10:51:58 -0500
+Date: Wed, 3 Jan 2018 15:51:49 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Thierry Reding <thierry.reding@gmail.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: cyndis@kapsi.fi, bhelgaas@google.com, jonathanh@nvidia.com,
+        robh+dt@kernel.org, frowand.list@gmail.com, rjw@rjwysocki.net,
+        tglx@linutronix.de, vidyas@nvidia.com, kthota@nvidia.com,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH V4 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for
+ Tegra PCIe
+Message-ID: <20180103155149.GA8929@e107981-ln.cambridge.arm.com>
+References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+ <1512723493-865-4-git-send-email-mmaddireddy@nvidia.com>
+ <20171215173643.GA1050@red-moon>
+ <20171220193011.GA31757@ulmo>
+ <20171221104630.GB24280@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171221104630.GB24280@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
+On Thu, Dec 21, 2017 at 10:46:30AM +0000, Lorenzo Pieralisi wrote:
+> On Wed, Dec 20, 2017 at 08:30:11PM +0100, Thierry Reding wrote:
+> > On Fri, Dec 15, 2017 at 05:36:43PM +0000, Lorenzo Pieralisi wrote:
+> > > On Fri, Dec 08, 2017 at 02:28:09PM +0530, Manikanta Maddireddy wrote:
+> > > > Primary, secondary and subordinate default bus numbers are 0 in Tegra and
+> > > > it is expecting SW to program these numbers in configration space.
+> > > > 
+> > > > pci_scan_bridge_extend() function programs these numbers in configuration
+> > > > space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_BUS
+> > > > flag is set. Since secondary & subordinate default bus numbers are 0,
+> > > > PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
+> > > > 
+> > > > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > > > ---
+> > > > V3:
+> > > > * new patch in V3
+> > > > V4:
+> > > > * no change in this patch
+> > > > 
+> > > >  drivers/pci/host/pci-tegra.c | 1 -
+> > > >  1 file changed, 1 deletion(-)
+> > > > 
+> > > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> > > > index a549c5899e26..0d91f1a3a6b4 100644
+> > > > --- a/drivers/pci/host/pci-tegra.c
+> > > > +++ b/drivers/pci/host/pci-tegra.c
+> > > > @@ -2604,7 +2604,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+> > > >  
+> > > >  	tegra_pcie_enable_ports(pcie);
+> > > >  
+> > > > -	pci_add_flags(PCI_REASSIGN_ALL_BUS);
+> > > 
+> > > This looks obviously OK to me but I need Thierry's ACK to queue it.
+> > 
+> > Just as an additional note: I think the real reason why this is okay to
+> > do is because we reset the PCI host controller in the kernel driver, so
+> > any bus assignments done by the firmware are reset as well.
+> > 
+> > Acked-by: Thierry Reding <treding@nvidia.com>
+> 
+> Thank you. This series needs rebasing, we should try to untangle
+> the dependencies between series so that I can actually apply some
+> of these patches that make sense on their own.
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+Manikanta, would you be able to decouple this series from:
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- drivers/block/DAC960.c | 38 ++++++++++++++++++--------------------
- drivers/block/DAC960.h |  4 ++--
- 2 files changed, 20 insertions(+), 22 deletions(-)
+https://patchwork.ozlabs.org/patch/832053/
 
-diff --git a/drivers/block/DAC960.c b/drivers/block/DAC960.c
-index 442e777bdfb2..df8e3a8f63ec 100644
---- a/drivers/block/DAC960.c
-+++ b/drivers/block/DAC960.c
-@@ -268,17 +268,17 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
-   void *AllocationPointer = NULL;
-   void *ScatterGatherCPU = NULL;
-   dma_addr_t ScatterGatherDMA;
--  struct pci_pool *ScatterGatherPool;
-+  struct dma_pool *ScatterGatherPool;
-   void *RequestSenseCPU = NULL;
-   dma_addr_t RequestSenseDMA;
--  struct pci_pool *RequestSensePool = NULL;
-+  struct dma_pool *RequestSensePool = NULL;
- 
-   if (Controller->FirmwareType == DAC960_V1_Controller)
-     {
-       CommandAllocationLength = offsetof(DAC960_Command_T, V1.EndMarker);
-       CommandAllocationGroupSize = DAC960_V1_CommandAllocationGroupSize;
--      ScatterGatherPool = pci_pool_create("DAC960_V1_ScatterGather",
--		Controller->PCIDevice,
-+      ScatterGatherPool = dma_pool_create("DAC960_V1_ScatterGather",
-+		&Controller->PCIDevice->dev,
- 	DAC960_V1_ScatterGatherLimit * sizeof(DAC960_V1_ScatterGatherSegment_T),
- 	sizeof(DAC960_V1_ScatterGatherSegment_T), 0);
-       if (ScatterGatherPool == NULL)
-@@ -290,18 +290,18 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
-     {
-       CommandAllocationLength = offsetof(DAC960_Command_T, V2.EndMarker);
-       CommandAllocationGroupSize = DAC960_V2_CommandAllocationGroupSize;
--      ScatterGatherPool = pci_pool_create("DAC960_V2_ScatterGather",
--		Controller->PCIDevice,
-+      ScatterGatherPool = dma_pool_create("DAC960_V2_ScatterGather",
-+		&Controller->PCIDevice->dev,
- 	DAC960_V2_ScatterGatherLimit * sizeof(DAC960_V2_ScatterGatherSegment_T),
- 	sizeof(DAC960_V2_ScatterGatherSegment_T), 0);
-       if (ScatterGatherPool == NULL)
- 	    return DAC960_Failure(Controller,
- 			"AUXILIARY STRUCTURE CREATION (SG)");
--      RequestSensePool = pci_pool_create("DAC960_V2_RequestSense",
--		Controller->PCIDevice, sizeof(DAC960_SCSI_RequestSense_T),
-+      RequestSensePool = dma_pool_create("DAC960_V2_RequestSense",
-+		&Controller->PCIDevice->dev, sizeof(DAC960_SCSI_RequestSense_T),
- 		sizeof(int), 0);
-       if (RequestSensePool == NULL) {
--	    pci_pool_destroy(ScatterGatherPool);
-+	    dma_pool_destroy(ScatterGatherPool);
- 	    return DAC960_Failure(Controller,
- 			"AUXILIARY STRUCTURE CREATION (SG)");
-       }
-@@ -335,16 +335,16 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
-       Command->Next = Controller->FreeCommands;
-       Controller->FreeCommands = Command;
-       Controller->Commands[CommandIdentifier-1] = Command;
--      ScatterGatherCPU = pci_pool_alloc(ScatterGatherPool, GFP_ATOMIC,
-+      ScatterGatherCPU = dma_pool_alloc(ScatterGatherPool, GFP_ATOMIC,
- 							&ScatterGatherDMA);
-       if (ScatterGatherCPU == NULL)
- 	  return DAC960_Failure(Controller, "AUXILIARY STRUCTURE CREATION");
- 
-       if (RequestSensePool != NULL) {
--  	  RequestSenseCPU = pci_pool_alloc(RequestSensePool, GFP_ATOMIC,
-+  	  RequestSenseCPU = dma_pool_alloc(RequestSensePool, GFP_ATOMIC,
- 						&RequestSenseDMA);
-   	  if (RequestSenseCPU == NULL) {
--                pci_pool_free(ScatterGatherPool, ScatterGatherCPU,
-+                dma_pool_free(ScatterGatherPool, ScatterGatherCPU,
-                                 ScatterGatherDMA);
-     		return DAC960_Failure(Controller,
- 					"AUXILIARY STRUCTURE CREATION");
-@@ -379,8 +379,8 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
- static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
- {
-   int i;
--  struct pci_pool *ScatterGatherPool = Controller->ScatterGatherPool;
--  struct pci_pool *RequestSensePool = NULL;
-+  struct dma_pool *ScatterGatherPool = Controller->ScatterGatherPool;
-+  struct dma_pool *RequestSensePool = NULL;
-   void *ScatterGatherCPU;
-   dma_addr_t ScatterGatherDMA;
-   void *RequestSenseCPU;
-@@ -411,9 +411,9 @@ static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
- 	  RequestSenseDMA = Command->V2.RequestSenseDMA;
-       }
-       if (ScatterGatherCPU != NULL)
--          pci_pool_free(ScatterGatherPool, ScatterGatherCPU, ScatterGatherDMA);
-+          dma_pool_free(ScatterGatherPool, ScatterGatherCPU, ScatterGatherDMA);
-       if (RequestSenseCPU != NULL)
--          pci_pool_free(RequestSensePool, RequestSenseCPU, RequestSenseDMA);
-+          dma_pool_free(RequestSensePool, RequestSenseCPU, RequestSenseDMA);
- 
-       if ((Command->CommandIdentifier
- 	   % Controller->CommandAllocationGroupSize) == 1) {
-@@ -437,13 +437,11 @@ static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
-       Controller->CurrentStatusBuffer = NULL;
-     }
- 
--  if (ScatterGatherPool != NULL)
--  	pci_pool_destroy(ScatterGatherPool);
-+  dma_pool_destroy(ScatterGatherPool);
-   if (Controller->FirmwareType == DAC960_V1_Controller)
-   	return;
- 
--  if (RequestSensePool != NULL)
--	pci_pool_destroy(RequestSensePool);
-+  dma_pool_destroy(RequestSensePool);
- 
-   for (i = 0; i < DAC960_MaxLogicalDrives; i++) {
- 	kfree(Controller->V2.LogicalDeviceInformation[i]);
-diff --git a/drivers/block/DAC960.h b/drivers/block/DAC960.h
-index 6a6226a2b932..21aff470d268 100644
---- a/drivers/block/DAC960.h
-+++ b/drivers/block/DAC960.h
-@@ -2316,7 +2316,7 @@ typedef struct DAC960_Controller
-   bool SuppressEnclosureMessages;
-   struct timer_list MonitoringTimer;
-   struct gendisk *disks[DAC960_MaxLogicalDrives];
--  struct pci_pool *ScatterGatherPool;
-+  struct dma_pool *ScatterGatherPool;
-   DAC960_Command_T *FreeCommands;
-   unsigned char *CombinedStatusBuffer;
-   unsigned char *CurrentStatusBuffer;
-@@ -2429,7 +2429,7 @@ typedef struct DAC960_Controller
-       bool NeedDeviceSerialNumberInformation;
-       bool StartLogicalDeviceInformationScan;
-       bool StartPhysicalDeviceInformationScan;
--      struct pci_pool *RequestSensePool;
-+      struct dma_pool *RequestSensePool;
- 
-       dma_addr_t	FirstCommandMailboxDMA;
-       DAC960_V2_CommandMailbox_T *FirstCommandMailbox;
--- 
-2.14.1
+so that we can make forward progress ? There are some patches in
+this series that I could apply - if rebased.
+
+Lorenzo
