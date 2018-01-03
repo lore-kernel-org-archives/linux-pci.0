@@ -1,108 +1,75 @@
-Return-Path: <SRS0=q9Qe=ED=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=q9Qe=ED=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Mon, 8 Jan 2018 11:24:59 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Jim Quinlan <jim2101024@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
-	"linux-rockchip@lists.infradead.org" <linux-rockchip@lists.infradead.org>
-Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
-Message-ID: <20180108112458.GB32027@red-moon>
-References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
- <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
- <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
- <BLUPR0201MB1505659A7B1DDA658EFB7049A51C0@BLUPR0201MB1505.namprd02.prod.outlook.com>
- <20180105154303.GB24933@red-moon>
- <1515409414.12538.12.camel@pengutronix.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V4 06/26] edd: deprecate pci_get_bus_and_slot()
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <1513661883-28662-7-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <43c72767-7e12-3fc8-b857-460c53c360c9@codeaurora.org>
+Date: Wed, 3 Jan 2018 07:48:20 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1515409414.12538.12.camel@pengutronix.de>
+In-Reply-To: <1513661883-28662-7-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm <linux-arm-msm@vger.kernel.org>, gregkh@suse.de,
+ open list <linux-kernel@vger.kernel.org>, akpm@linux-foundation.org,
+ hpa@linux.intel.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 08, 2018 at 12:03:34PM +0100, Lucas Stach wrote:
-> Am Freitag, den 05.01.2018, 15:43 +0000 schrieb Lorenzo Pieralisi:
-> > On Fri, Jan 05, 2018 at 02:26:34PM +0000, Bharat Kumar Gogada wrote:
-> > > On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada
-> > > wrote:
-> > > > Bjorn wrote:
-> > > > > In the PCI config access path, the *_pcie_valid_device()
-> > > > > functions in 
-> > > > > the dwc, altera, rockchip, and xilinx drivers all check whether
-> > > > > the 
-> > > > > link is up.
-> > > > > 
-> > > > > I think this is racy because the link may go down after we
-> > > > > check but 
-> > > > > before we perform the config access.
-> > > > > 
-> > > > > What would blow up if we removed the *_pcie_link_up() checks?
-> > > > > 
-> > > > > I'd like to either remove the checks or add comments about why
-> > > > > the 
-> > > > > race is acceptable.  If we've covered this before, I apologize.
-> > > > > Adding a comment will keep me from pestering you about this
-> > > > > again in 
-> > > > > the future.
-> > > > In both Xilinx driver cases when link is down, hardware responds
-> > > > by 
-> > > > AXI DECERR/SLVERR status which causes an exception, synchronous 
-> > > > external abort to CPU.  This causes system to hang, so we need
-> > > > this 
-> > > > check for both of our drivers.  We will add comments.
-> > > 
-> > > This is a problem, and checking whether the link is up is a
-> > > workaround but not a real solution.  That means your system may
-> > > hang if the link happens to go down at the wrong time.
-> > > 
-> > > A real solution would be to handle the synchronous external abort
-> > > so it doesn't cause a system hang.
-> > > 
-> > > Yes, I agree that this is workaround. For pcie-xilinx.c for arm32,
-> > > we can have fault handling similar to "imx6q_pcie_abort_handler" in
-> > > drivers/pci/dwc/pci-imx6.c.
-> > > Since this driver is same for Microblaze architecture also, it
-> > > requires separate handling.
-> > > 
-> > > For pcie-xilinx-nwl.c ARM64 as per link [1], linux kernel will hang
-> > > for the above AXI responses. 
-> > > As of now arm64 RAS is still work in progress [2].  
-> > > 
-> > > [1] https://www.spinics.net/lists/arm-kernel/msg624203.html
-> > > 
-> > > [2] https://patchwork.kernel.org/patch/9973967/
-> > > 
-> > > The check can be removed, if above issues were addressed.
-> > 
-> > I do not see why the above "issues" should be addressed in order to
-> > remove that check - as it was pointed out in this thread it just does
-> > not solve anything, so what's the reason for keeping it ?
+On 12/19/2017 12:37 AM, Sinan Kaya wrote:
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
 > 
-> I solves the issue that you hang the system on PCIe enumeration in 100%
-> of the cases when the link is down and you don't have the abort handler
-> in place.
+> Getting ready to remove pci_get_bus_and_slot() function in favor of
+> pci_get_domain_bus_and_slot().
+> 
+> Domain number is not available in struct edd_info. Hard-coding the domain
+> number as 0.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/firmware/edd.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/firmware/edd.c b/drivers/firmware/edd.c
+> index e229576..60a8f13 100644
+> --- a/drivers/firmware/edd.c
+> +++ b/drivers/firmware/edd.c
+> @@ -669,10 +669,10 @@ static void edd_release(struct kobject * kobj)
+>  	struct edd_info *info = edd_dev_get_info(edev);
+>  
+>  	if (edd_dev_is_type(edev, "PCI") || edd_dev_is_type(edev, "XPRS")) {
+> -		return pci_get_bus_and_slot(info->params.interface_path.pci.bus,
+> -				     PCI_DEVFN(info->params.interface_path.pci.slot,
+> -					       info->params.interface_path.pci.
+> -					       function));
+> +		return pci_get_domain_bus_and_slot(0,
+> +				info->params.interface_path.pci.bus,
+> +				PCI_DEVFN(info->params.interface_path.pci.slot,
+> +				info->params.interface_path.pci.function));
+>  	}
+>  	return NULL;
+>  }
+> 
 
-There is a mechanism to detect if the link is up before starting
-enumeration or am I wrong ?
+Any feedback here? most of the remaining patches have the ACK except these.
 
-Probably what we should be discussing here is what are the causes
-for the link to go down *unexpectedly* - in other words - what
-makes that racy check "likely" to work - which was the initial
-question, by the way.
 
-> It doesn't solve the race issue, but that is a lot less likely to be
-> hit in the real world. I guess it's not a good idea to remove something
-> that covers 98% of the problem just because it doesn't cover the
-> remaining 2%, right?
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-See above - I want to understand what your 98% and 2% actually represent.
-
-Thanks,
-Lorenzo
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
