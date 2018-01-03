@@ -1,66 +1,43 @@
-Return-Path: <SRS0=EOj6=D7=gmail.com=romain.perier@kernel.org>
-Return-Path: <SRS0=EOj6=D7=gmail.com=romain.perier@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180103213433.GA189303@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180102175356.7999-1-romain.perier@gmail.com>
- <20180102221724.GE6211@bhelgaas-glaptop.roam.corp.google.com> <20180103213433.GA189303@bhelgaas-glaptop.roam.corp.google.com>
-From: Romain Perier <romain.perier@gmail.com>
-Date: Thu, 4 Jan 2018 16:59:44 +0100
-Message-ID: <CABgxDoLGGYGoEsmUgxk7RWFwc9WD5DBi53sBVsvKjwtM_AehjQ@mail.gmail.com>
-Subject: Re: [PATCH v17 0/4] Replace PCI pool by DMA pool API
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>,
-	Dan Williams <dan.j.williams@intel.com>, Vinod Koul <vinod.koul@intel.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:42276 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753462AbeACPY4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jan 2018 10:24:56 -0500
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tal Gilboa <talgi@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Tariq Toukan <tariqt@mellanox.com>
+Subject: [PATCH next 3/3] net/mlx5: Report device PCI link status and issues
+Date: Wed,  3 Jan 2018 17:24:22 +0200
+Message-Id: <1514993062-7328-4-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1514993062-7328-1-git-send-email-talgi@mellanox.com>
+References: <1514993062-7328-1-git-send-email-talgi@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Add a check for mlx5 PCI device's link status.
 
-Ok, will do. Thanks !
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Signed-off-by: Tariq Toukan <tariqt@mellanox.com>
+Signed-off-by: Saeed Mahameed <saeedm@mellanox.com>
+---
+ drivers/net/ethernet/mellanox/mlx5/core/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Romain
-
-2018-01-03 22:34 GMT+01:00 Bjorn Helgaas <helgaas@kernel.org>:
-> On Tue, Jan 02, 2018 at 04:17:24PM -0600, Bjorn Helgaas wrote:
->> On Tue, Jan 02, 2018 at 06:53:52PM +0100, Romain Perier wrote:
->> > The current PCI pool API are simple macro functions direct expanded to
->> > the appropriate dma pool functions. The prototypes are almost the same
->> > and semantically, they are very similar. I propose to use the DMA pool
->> > API directly and get rid of the old API.
->> >
->> > This set of patches, replaces the old API by the dma pool API
->> > and remove the defines.
->> > ...
->>
->> > Romain Perier (4):
->> >   block: DAC960: Replace PCI pool old API
->> >   net: e100: Replace PCI pool old API
->> >   hinic: Replace PCI pool old API
->> >   PCI: Remove PCI pool macro functions
->> >
->> >  drivers/block/DAC960.c                            | 38 +++++++++++------------
->> >  drivers/block/DAC960.h                            |  4 +--
->> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
->> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
->> >  drivers/net/ethernet/intel/e100.c                 | 12 +++----
->> >  include/linux/pci.h                               |  9 ------
->> >  6 files changed, 32 insertions(+), 43 deletions(-)
->>
->> Applied to pci/misc for v4.16, thanks!
->
-> Oops, my mistake.  I can't remove the macros themselves yet because
-> some of the uses were removed by patches that were applied via other
-> trees, and those patches are not in my tree.
->
-> To avoid ordering dependencies during the merge window, I dropped the
-> "PCI: Remove PCI pool macro functions" patch.  Please repost that
-> after all the removals have made it into Linus' tree.
->
-> Bjorn
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index 5f32344..7a43735 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -977,6 +977,8 @@ static int mlx5_load_one(struct mlx5_core_dev *dev, struct mlx5_priv *priv,
+ 	dev_info(&pdev->dev, "firmware version: %d.%d.%d\n", fw_rev_maj(dev),
+ 		 fw_rev_min(dev), fw_rev_sub(dev));
+ 
++	pcie_print_link_status(dev->pdev);
++
+ 	/* on load removing any previous indication of internal error, device is
+ 	 * up
+ 	 */
+-- 
+1.8.3.1
