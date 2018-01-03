@@ -1,49 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 0/7] PM / core: Direct handling of DPM_FLAG_SMART_SUSPEND
- and DPM_FLAG_LEAVE_SUSPENDED
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@the-dreams.de>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
- <2436726.ykYRzVD45y@aspire.rjw.lan>
-From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Message-ID: <0c8bf7c3-1aa4-e5fb-74e4-7117d6d43444@linux.intel.com>
-Date: Mon, 8 Jan 2018 16:33:07 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53366 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750970AbeACSX3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jan 2018 13:23:29 -0500
+Date: Wed, 3 Jan 2018 18:23:25 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        kernel-janitors@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 04/12] PCI: qcom: account for const type of
+ of_device_id.data
+Message-ID: <20180103182325.GB8929@e107981-ln.cambridge.arm.com>
+References: <1514899688-27844-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1514899688-27844-5-git-send-email-Julia.Lawall@lip6.fr>
+ <20180103122237.GD26554@red-moon>
+ <alpine.DEB.2.20.1801031338140.23130@hadrien>
 MIME-Version: 1.0
-In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1801031338140.23130@hadrien>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/03/2018 02:29 AM, Rafael J. Wysocki wrote:
-> Resending the original series (except for the first patch that has been
-> applied already) along with some driver code changes based on them as
-> requested by Ulf.
+On Wed, Jan 03, 2018 at 01:38:27PM +0100, Julia Lawall wrote:
 > 
-> The driver patches are an intel-lpss change (already reviewed), two
-> modifications of i2c-designware-platdrv (posted previously but slightly
-> changed since then) and a PCIe port driver change.
 > 
-> At this point patches [1-3/7] are pretty much on the way in and the driver
-> material depends on review comments (it is pointless to apply [4/7] without
-> [5-6/7], so it depends on them in my view).
+> On Wed, 3 Jan 2018, Lorenzo Pieralisi wrote:
 > 
-> I'm sending this from a system running with all of the series applied, although
-> admittedly not using i2c-designware-platdrv.  However, one of my test machines
-> has this one and I haven't seen any adverse effects of these changes on it so
-> far.
+> > On Tue, Jan 02, 2018 at 02:28:00PM +0100, Julia Lawall wrote:
+> > > This driver creates various const structures that it stores in the
+> > > data field of an of_device_id array.
+> > >
+> > > Adding const to the declaration of the location that receives the
+> > > const value from the data field ensures that the compiler will
+> > > continue to check that the value is not modified.  Furthermore, the
+> > > const-discarding cast on the extraction from the data field is no
+> > > longer needed.
+> > >
+> > > Done using Coccinelle.
+> > >
+> > > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> > >
+> > > ---
+> > >  drivers/pci/dwc/pcie-qcom.c |    4 ++--
+> > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> > Hi Julia,
+> >
+> > I am happy to take this patch through the PCI tree unless you see a
+> > problem with that, please let me know.
 > 
-Both i2cdetect and hexdump from touchscreen and touchpad devices were 
-working fine. I used linux-next next-20180108 and patches 4-7/7.
+> Please take it.  Thanks.
 
-Tested-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Applied to pci/dwc for v4.16, thanks.
+
+Lorenzo
+
+> julia
+> 
+> >
+> > Thanks,
+> > Lorenzo
+> >
+> > > diff -u -p a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+> > > --- a/drivers/pci/dwc/pcie-qcom.c
+> > > +++ b/drivers/pci/dwc/pcie-qcom.c
+> > > @@ -171,7 +171,7 @@ struct qcom_pcie {
+> > >  	union qcom_pcie_resources res;
+> > >  	struct phy *phy;
+> > >  	struct gpio_desc *reset;
+> > > -	struct qcom_pcie_ops *ops;
+> > > +	const struct qcom_pcie_ops *ops;
+> > >  };
+> > >
+> > >  #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
+> > > @@ -1234,7 +1234,7 @@ static int qcom_pcie_probe(struct platfo
+> > >
+> > >  	pcie->pci = pci;
+> > >
+> > > -	pcie->ops = (struct qcom_pcie_ops *)of_device_get_match_data(dev);
+> > > +	pcie->ops = of_device_get_match_data(dev);
+> > >
+> > >  	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
+> > >  	if (IS_ERR(pcie->reset))
+> > >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
