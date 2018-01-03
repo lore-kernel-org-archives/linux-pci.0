@@ -1,147 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53448 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751823AbeAPLxL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Jan 2018 06:53:11 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-alpha@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Meelis Roos <mroos@linux.ee>, Matt Turner <mattst88@gmail.com>
-Subject: [PATCH] alpha/PCI: Fix noname IRQ level detection
-Date: Tue, 16 Jan 2018 11:52:59 +0000
-Message-Id: <20180116115259.31861-1-lorenzo.pieralisi@arm.com>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:63263 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750938AbeACAkm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 19:40:42 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Kevin Hilman <khilman@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-i2c <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@the-dreams.de>
+Subject: [PATCH 5/7] PM: i2c-designware-platdrv: Use DPM_FLAG_SMART_PREPARE
+Date: Wed, 03 Jan 2018 01:35:54 +0100
+Message-ID: <1780798.HpLBO7aPyI@aspire.rjw.lan>
+In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
+References: <7742130.AaJQIxeI1n@aspire.rjw.lan> <2436726.ykYRzVD45y@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The conversion of the alpha architecture PCI host bridge legacy IRQ
-mapping/swizzling to the new PCI host bridge map/swizzle hooks carried
-out through:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-commit 0e4c2eeb758a ("alpha/PCI: Replace pci_fixup_irqs() call with
-host bridge IRQ mapping hooks")
+Modify i2c-designware-platdrv to set DPM_FLAG_SMART_PREPARE for its
+devices and return 0 from the system suspend ->prepare callback
+if the device has an ACPI companion object in order to tell the PM
+core and middle layers to avoid skipping system suspend/resume
+callbacks for the device in that case (which may be problematic,
+because the device may be accessed during suspend and resume of
+other devices via I2C operation regions then).
 
-implies that IRQ for devices are now allocated through pci_assign_irq()
-function in pci_device_probe() that is called when a driver matching a
-device is found in order to probe the device through the device driver.
+Also the pm_runtime_suspended() check in dw_i2c_plat_prepare()
+is not necessary any more, because the core does it when setting
+power.direct_complete for the device, so drop it.
 
-Alpha noname platforms required IRQ level programming to be executed
-in sio_fixup_irq_levels(), that is called in noname_init_pci(), a
-platform hook called within a subsys_initcall.
-
-In noname_init_pci(), present IRQs are detected through
-sio_collect_irq_levels() that check the struct pci_dev->irq number
-to detect if an IRQ has been allocated for the device.
-
-By the time sio_collect_irq_levels() is called, some devices may still
-have not a matching driver loaded to match them (eg loadable module)
-therefore their IRQ allocation is still pending - which means that
-sio_collect_irq_levels() does not programme the correct IRQ level for
-those devices, causing their IRQ handling to be broken when the device
-driver is actually loaded and the device is probed.
-
-Fix the issue by adding code in the noname map_irq() function
-(noname_map_irq()) that, whilst mapping/swizzling the IRQ line, it also
-ensures that the correct IRQ level programming is executed at platform
-level, fixing the issue.
-
-Fixes: 0e4c2eeb758a ("alpha/PCI: Replace pci_fixup_irqs() call with
-host bridge IRQ mapping hooks")
-Reported-by: Mikulas Patocka <mpatocka@redhat.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: stable@vger.kernel.org # 4.14
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Henderson <rth@twiddle.net>
-Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Cc: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Meelis Roos <mroos@linux.ee>
-Cc: Matt Turner <mattst88@gmail.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/alpha/kernel/sys_sio.c | 35 +++++++++++++++++++++++++++++------
- 1 file changed, 29 insertions(+), 6 deletions(-)
+ drivers/i2c/busses/i2c-designware-platdrv.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/arch/alpha/kernel/sys_sio.c b/arch/alpha/kernel/sys_sio.c
-index 37bd6d9b8eb9..a6bdc1da47ad 100644
---- a/arch/alpha/kernel/sys_sio.c
-+++ b/arch/alpha/kernel/sys_sio.c
-@@ -102,6 +102,15 @@ sio_pci_route(void)
- 				   alpha_mv.sys.sio.route_tab);
- }
+Index: linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+===================================================================
+--- linux-pm.orig/drivers/i2c/busses/i2c-designware-platdrv.c
++++ linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+@@ -372,6 +372,8 @@ static int dw_i2c_plat_probe(struct plat
+ 	ACPI_COMPANION_SET(&adap->dev, ACPI_COMPANION(&pdev->dev));
+ 	adap->dev.of_node = pdev->dev.of_node;
  
-+static bool sio_pci_dev_irq_needs_level(const struct pci_dev *dev)
-+{
-+	if ((dev->class >> 16 == PCI_BASE_CLASS_BRIDGE) &&
-+	    (dev->class >> 8 != PCI_CLASS_BRIDGE_PCMCIA))
-+		return false;
++	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_SMART_PREPARE);
 +
-+	return true;
-+}
-+
- static unsigned int __init
- sio_collect_irq_levels(void)
+ 	/* The code below assumes runtime PM to be disabled. */
+ 	WARN_ON(pm_runtime_enabled(&pdev->dev));
+ 
+@@ -435,7 +437,13 @@ MODULE_DEVICE_TABLE(of, dw_i2c_of_match)
+ #ifdef CONFIG_PM_SLEEP
+ static int dw_i2c_plat_prepare(struct device *dev)
  {
-@@ -110,8 +119,7 @@ sio_collect_irq_levels(void)
- 
- 	/* Iterate through the devices, collecting IRQ levels.  */
- 	for_each_pci_dev(dev) {
--		if ((dev->class >> 16 == PCI_BASE_CLASS_BRIDGE) &&
--		    (dev->class >> 8 != PCI_CLASS_BRIDGE_PCMCIA))
-+		if (!sio_pci_dev_irq_needs_level(dev))
- 			continue;
- 
- 		if (dev->irq)
-@@ -120,8 +128,7 @@ sio_collect_irq_levels(void)
- 	return level_bits;
+-	return pm_runtime_suspended(dev);
++	/*
++	 * If the ACPI companion device object is present for this device, it
++	 * may be accessed during suspend and resume of other devices via I2C
++	 * operation regions, so tell the PM core and middle layers to avoid
++	 * skipping system suspend/resume callbacks for it in that case.
++	 */
++	return !has_acpi_companion(dev);
  }
  
--static void __init
--sio_fixup_irq_levels(unsigned int level_bits)
-+static void __sio_fixup_irq_levels(unsigned int level_bits, bool reset)
- {
- 	unsigned int old_level_bits;
- 
-@@ -139,12 +146,21 @@ sio_fixup_irq_levels(unsigned int level_bits)
- 	 */
- 	old_level_bits = inb(0x4d0) | (inb(0x4d1) << 8);
- 
--	level_bits |= (old_level_bits & 0x71ff);
-+	if (reset)
-+		old_level_bits &= 0x71ff;
-+
-+	level_bits |= old_level_bits;
- 
- 	outb((level_bits >> 0) & 0xff, 0x4d0);
- 	outb((level_bits >> 8) & 0xff, 0x4d1);
- }
- 
-+static inline void
-+sio_fixup_irq_levels(unsigned int level_bits)
-+{
-+	__sio_fixup_irq_levels(level_bits, true);
-+}
-+
- static inline int
- noname_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
-@@ -181,7 +197,14 @@ noname_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 	const long min_idsel = 6, max_idsel = 14, irqs_per_slot = 5;
- 	int irq = COMMON_TABLE_LOOKUP, tmp;
- 	tmp = __kernel_extbl(alpha_mv.sys.sio.route_tab, irq);
--	return irq >= 0 ? tmp : -1;
-+
-+	irq = irq >= 0 ? tmp : -1;
-+
-+	/* Fixup IRQ level if an actual IRQ mapping is detected */
-+	if (sio_pci_dev_irq_needs_level(dev) && irq >= 0)
-+		__sio_fixup_irq_levels(1 << irq, false);
-+
-+	return irq;
- }
- 
- static inline int
--- 
-2.15.0
+ static void dw_i2c_plat_complete(struct device *dev)
