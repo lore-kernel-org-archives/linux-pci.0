@@ -1,118 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
- Brian Norris <computersforpeace@gmail.com>,
- Russell King <rmk+kernel@armlinux.org.uk>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- Florian Fainelli <f.fainelli@gmail.com>,
- Jonas Gorski <jonas.gorski@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v4 2/8] dt-bindings: pci: Add DT docs for Brcmstb PCIe device
-Date: Mon, 15 Jan 2018 18:28:39 -0500
-Message-Id: <1516058925-46522-3-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
-References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
- Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
- Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
- Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:55391 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751121AbeACAkp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 19:40:45 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Kevin Hilman <khilman@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-i2c <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@the-dreams.de>
+Subject: [PATCH 0/7] PM / core: Direct handling of DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED
+Date: Wed, 03 Jan 2018 01:29:40 +0100
+Message-ID: <2436726.ykYRzVD45y@aspire.rjw.lan>
+In-Reply-To: <7742130.AaJQIxeI1n@aspire.rjw.lan>
+References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The DT bindings description of the Brcmstb PCIe device is described.  This
-node can be used by almost all Broadcom settop box chips, using
-ARM, ARM64, or MIPS CPU architectures.
+On Sunday, December 10, 2017 12:55:23 AM CET Rafael J. Wysocki wrote:
+> Hi All,
+> 
+> This series is a follow-up for
+> 
+> https://marc.info/?l=linux-doc&m=151101644105835&w=2
+> 
+> Patches[1-3/6] from the above have been reviewed and agreed on, so
+> they are in linux-next now and here's a next version of the rest.
+> 
+> Patches [1-2/4] are preparatory.  The first one is just really small
+> code duplication avoidance on top of this recent fix:
+> 
+> https://patchwork.kernel.org/patch/10097563/
+> 
+> and the second one simply moves some code to separate functions.
+> 
+> Patch [3/4] causes the PM core to carry out some optimizations for
+> drivers of devices with DPM_FLAG_SMART_SUSPEND set whose "late"
+> and "noirq" suspend (or equivalent) driver callbacks are invoked
+> directly by the core.
+> 
+> The underlying observation is that if the device is suspended (via
+> runtime PM) during the "late suspend" phase of a system transition,
+> invoking the "late" and "noirq" callbacks from the driver for it is not
+> going to make it more suspended, so to speak, so it doesn't make sense to
+> invoke them at all.
+> 
+> [That optimization is only done for devices with DPM_FLAG_SMART_SUSPEND
+> set, because drivers setting that flag are expected to be prepared for
+> skipping their "late" and "noirq" callbacks if the device is already
+> suspended.]
+> 
+> Patch [4/4] makes the core do an analogous thing for devices with
+> DPM_FLAG_LEAVE_SUSPENDED set whose "noirq" and "early" resume (or
+> equivalent) driver callbacks are directly invoked by the core.
+> 
+> In that case the observation is that if such devices can be left in
+> suspend after the system transition to the working state, running
+> resume callbacks from their drivers is simply not necessary.
+> 
+> Pathes [3-4/4] have been reoredered and reworked a bit since the last
+> iteration, so they are regarded as new.
+> 
+> The series is on top of the linux-next branch of the linux-pm.git tree
+> that should be merged into linux-next on Monday.
+> 
+> [I have developed debug bus type and driver modules to test that code,
+> but they are not ready to be made available at this point.]
 
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
----
- .../devicetree/bindings/pci/brcmstb-pcie.txt       | 59 ++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
+Resending the original series (except for the first patch that has been
+applied already) along with some driver code changes based on them as
+requested by Ulf.
 
-diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
-new file mode 100644
-index 0000000..a1a9ad5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
-@@ -0,0 +1,59 @@
-+Brcmstb PCIe Host Controller Device Tree Bindings
-+
-+Required Properties:
-+- compatible
-+  "brcm,bcm7425-pcie" -- for 7425 family MIPS-based SOCs.
-+  "brcm,bcm7435-pcie" -- for 7435 family MIPS-based SOCs.
-+  "brcm,bcm7445-pcie" -- for 7445 and later ARM based SOCs (not including
-+      the 7278).
-+  "brcm,bcm7278-pcie"  -- for 7278 family ARM-based SOCs.
-+
-+- reg -- the register start address and length for the PCIe reg block.
-+- interrupts -- two interrupts are specified; the first interrupt is for
-+     the PCI host controller and the second is for MSI if the built-in
-+     MSI controller is to be used.
-+- interrupt-names -- names of the interrupts (above): "pcie" and "msi".
-+- #address-cells -- set to <3>.
-+- #size-cells -- set to <2>.
-+- #interrupt-cells: set to <1>.
-+- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-+     mapping of the PCIe interface to interrupt numbers.
-+- ranges: ranges for the PCI memory and I/O regions.
-+- linux,pci-domain -- should be unique per host controller.
-+
-+Optional Properties:
-+- clocks -- phandle of pcie clock.
-+- clock-names -- set to "sw_pcie" if clocks is used.
-+- dma-ranges -- Specifies the inbound memory mapping regions when
-+     an "identity map" is not possible.
-+- msi-controller -- this property is typically specified to have the
-+     PCIe controller use its internal MSI controller.
-+- msi-parent -- set to use an external MSI interrupt controller.
-+- brcm,enable-ssc -- (boolean) indicates usage of spread-spectrum clocking.
-+- max-link-speed --  (integer) indicates desired generation of link:
-+     1 => 2.5 Gbps (gen1), 2 => 5.0 Gbps (gen2), 3 => 8.0 Gbps (gen3).
-+
-+Example Node:
-+
-+pcie0: pcie@f0460000 {
-+		reg = <0x0 0xf0460000 0x0 0x9310>;
-+		interrupts = <0x0 0x0 0x4>;
-+		compatible = "brcm,bcm7445-pcie";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
-+			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &intc 0 47 3
-+				 0 0 0 2 &intc 0 48 3
-+				 0 0 0 3 &intc 0 49 3
-+				 0 0 0 4 &intc 0 50 3>;
-+		clocks = <&sw_pcie0>;
-+		clock-names = "sw_pcie";
-+		msi-parent = <&pcie0>;  /* use PCIe's internal MSI controller */
-+		msi-controller;         /* use PCIe's internal MSI controller */
-+		brcm,ssc;
-+		max-link-speed = <1>;
-+		linux,pci-domain = <0>;
-+	};
--- 
-1.9.0.138.g2de3478
+The driver patches are an intel-lpss change (already reviewed), two
+modifications of i2c-designware-platdrv (posted previously but slightly
+changed since then) and a PCIe port driver change.
 
+At this point patches [1-3/7] are pretty much on the way in and the driver
+material depends on review comments (it is pointless to apply [4/7] without
+[5-6/7], so it depends on them in my view).
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I'm sending this from a system running with all of the series applied, although
+admittedly not using i2c-designware-platdrv.  However, one of my test machines
+has this one and I haven't seen any adverse effects of these changes on it so
+far.
+
+Thanks,
+Rafael
