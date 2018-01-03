@@ -1,229 +1,251 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0040.outbound.protection.outlook.com ([104.47.36.40]:32708
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753976AbeAaQ3f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 31 Jan 2018 11:29:35 -0500
-Subject: Re: [PATCH 8/9] drm/amdkfd: Add dGPU device IDs and device info
-To: Oded Gabbay <oded.gabbay@gmail.com>
-Cc: amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        linux-pci@vger.kernel.org
-References: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
- <1515104268-25087-9-git-send-email-Felix.Kuehling@amd.com>
- <CAFCwf139atQQouUbFabUwWs8qX=QHwS4KVm5E8fqqf667JH8Eg@mail.gmail.com>
-From: Felix Kuehling <felix.kuehling@amd.com>
-Message-ID: <842469e0-9003-c8c0-6d2a-5089f81354f1@amd.com>
-Date: Wed, 31 Jan 2018 11:29:29 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAFCwf139atQQouUbFabUwWs8qX=QHwS4KVm5E8fqqf667JH8Eg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v3 1/7] platform/pseries: Update VF config space after EEH
+Date: Wed,  3 Jan 2018 11:16:27 -0600
+In-Reply-To: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
+References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20180103171633.94499-2-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+Add EEH platform operations for pseries to update VF
+config space. With this change after EEH, the VF
+will have updated config space for pseries platform.
 
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h               |  1 +
+ arch/powerpc/kernel/eeh.c                    | 59 +++++++++++++++++++++++++
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 65 ++--------------------------
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 26 ++++++++++-
+ 4 files changed, 88 insertions(+), 63 deletions(-)
 
-On 2018-01-31 10:20 AM, Oded Gabbay wrote:
-> On Fri, Jan 5, 2018 at 12:17 AM, Felix Kuehling <Felix.Kuehling@amd.com> wrote:
->> CC: linux-pci@vger.kernel.org
->> Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
->> ---
->>  drivers/gpu/drm/amd/amdkfd/kfd_device.c | 153 +++++++++++++++++++++++++++++++-
->>  1 file changed, 151 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_device.c b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
->> index 6dd50cc..612afaf 100644
->> --- a/drivers/gpu/drm/amd/amdkfd/kfd_device.c
->> +++ b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
->> @@ -63,12 +63,118 @@ static const struct kfd_device_info carrizo_device_info = {
->>  };
->>  #endif
->>
->> +static const struct kfd_device_info hawaii_device_info = {
->> +       .asic_family = CHIP_HAWAII,
->> +       .max_pasid_bits = 16,
->> +       /* max num of queues for KV.TODO should be a dynamic value */
->> +       .max_no_of_hqd  = 24,
->> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
->> +       .event_interrupt_class = &event_interrupt_class_cik,
->> +       .num_of_watch_points = 4,
->> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
->> +       .supports_cwsr = false,
->> +       .needs_iommu_device = false,
->> +       .needs_pci_atomics = false,
->> +};
->> +
->> +static const struct kfd_device_info tonga_device_info = {
->> +       .asic_family = CHIP_TONGA,
->> +       .max_pasid_bits = 16,
->> +       .max_no_of_hqd  = 24,
->> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
->> +       .event_interrupt_class = &event_interrupt_class_cik,
-> Is there any point in keeping the name event_interrupt_class_cik?
-> maybe just rename to event_interrupt_class ?
-> What will happen in vega ? If its the same I think removing the _cik
-> makes the code more consistent.
-
-Vega10 has its own class because the interrupt ring packet format
-changed significantly.
-
-Regards,
-  Felix
-
->
-> Oded
->
->
->> +       .num_of_watch_points = 4,
->> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
->> +       .supports_cwsr = false,
->> +       .needs_iommu_device = false,
->> +       .needs_pci_atomics = true,
->> +};
->> +
->> +static const struct kfd_device_info tonga_vf_device_info = {
->> +       .asic_family = CHIP_TONGA,
->> +       .max_pasid_bits = 16,
->> +       .max_no_of_hqd  = 24,
->> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
->> +       .event_interrupt_class = &event_interrupt_class_cik,
->> +       .num_of_watch_points = 4,
->> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
->> +       .supports_cwsr = false,
->> +       .needs_iommu_device = false,
->> +       .needs_pci_atomics = false,
->> +};
->> +
->> +static const struct kfd_device_info fiji_device_info = {
->> +       .asic_family = CHIP_FIJI,
->> +       .max_pasid_bits = 16,
->> +       .max_no_of_hqd  = 24,
->> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
->> +       .event_interrupt_class = &event_interrupt_class_cik,
->> +       .num_of_watch_points = 4,
->> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
->> +       .supports_cwsr = true,
->> +       .needs_iommu_device = false,
->> +       .needs_pci_atomics = true,
->> +};
->> +
->> +static const struct kfd_device_info fiji_vf_device_info = {
->> +       .asic_family = CHIP_FIJI,
->> +       .max_pasid_bits = 16,
->> +       .max_no_of_hqd  = 24,
->> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
->> +       .event_interrupt_class = &event_interrupt_class_cik,
->> +       .num_of_watch_points = 4,
->> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
->> +       .supports_cwsr = true,
->> +       .needs_iommu_device = false,
->> +       .needs_pci_atomics = false,
->> +};
->> +
->> +
->> +static const struct kfd_device_info polaris10_device_info = {
->> +       .asic_family = CHIP_POLARIS10,
->> +       .max_pasid_bits = 16,
->> +       .max_no_of_hqd  = 24,
->> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
->> +       .event_interrupt_class = &event_interrupt_class_cik,
->> +       .num_of_watch_points = 4,
->> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
->> +       .supports_cwsr = true,
->> +       .needs_iommu_device = false,
->> +       .needs_pci_atomics = true,
->> +};
->> +
->> +static const struct kfd_device_info polaris10_vf_device_info = {
->> +       .asic_family = CHIP_POLARIS10,
->> +       .max_pasid_bits = 16,
->> +       .max_no_of_hqd  = 24,
->> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
->> +       .event_interrupt_class = &event_interrupt_class_cik,
->> +       .num_of_watch_points = 4,
->> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
->> +       .supports_cwsr = true,
->> +       .needs_iommu_device = false,
->> +       .needs_pci_atomics = false,
->> +};
->> +
->> +static const struct kfd_device_info polaris11_device_info = {
->> +       .asic_family = CHIP_POLARIS11,
->> +       .max_pasid_bits = 16,
->> +       .max_no_of_hqd  = 24,
->> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
->> +       .event_interrupt_class = &event_interrupt_class_cik,
->> +       .num_of_watch_points = 4,
->> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
->> +       .supports_cwsr = true,
->> +       .needs_iommu_device = false,
->> +       .needs_pci_atomics = true,
->> +};
->> +
->> +
->>  struct kfd_deviceid {
->>         unsigned short did;
->>         const struct kfd_device_info *device_info;
->>  };
->>
->> -/* Please keep this sorted by increasing device id. */
->>  static const struct kfd_deviceid supported_devices[] = {
->>  #if defined(CONFIG_AMD_IOMMU_V2_MODULE) || defined(CONFIG_AMD_IOMMU_V2)
->>         { 0x1304, &kaveri_device_info },        /* Kaveri */
->> @@ -97,8 +203,51 @@ static const struct kfd_deviceid supported_devices[] = {
->>         { 0x9874, &carrizo_device_info },       /* Carrizo */
->>         { 0x9875, &carrizo_device_info },       /* Carrizo */
->>         { 0x9876, &carrizo_device_info },       /* Carrizo */
->> -       { 0x9877, &carrizo_device_info }        /* Carrizo */
->> +       { 0x9877, &carrizo_device_info },       /* Carrizo */
->>  #endif
->> +       { 0x67A0, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67A1, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67A2, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67A8, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67A9, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67AA, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67B0, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67B1, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67B8, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67B9, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67BA, &hawaii_device_info },        /* Hawaii */
->> +       { 0x67BE, &hawaii_device_info },        /* Hawaii */
->> +       { 0x6920, &tonga_device_info },         /* Tonga */
->> +       { 0x6921, &tonga_device_info },         /* Tonga */
->> +       { 0x6928, &tonga_device_info },         /* Tonga */
->> +       { 0x6929, &tonga_device_info },         /* Tonga */
->> +       { 0x692B, &tonga_device_info },         /* Tonga */
->> +       { 0x692F, &tonga_vf_device_info },      /* Tonga vf */
->> +       { 0x6938, &tonga_device_info },         /* Tonga */
->> +       { 0x6939, &tonga_device_info },         /* Tonga */
->> +       { 0x7300, &fiji_device_info },          /* Fiji */
->> +       { 0x730F, &fiji_vf_device_info },       /* Fiji vf*/
->> +       { 0x67C0, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67C1, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67C2, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67C4, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67C7, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67C8, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67C9, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67CA, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67CC, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67CF, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67D0, &polaris10_vf_device_info },  /* Polaris10 vf*/
->> +       { 0x67DF, &polaris10_device_info },     /* Polaris10 */
->> +       { 0x67E0, &polaris11_device_info },     /* Polaris11 */
->> +       { 0x67E1, &polaris11_device_info },     /* Polaris11 */
->> +       { 0x67E3, &polaris11_device_info },     /* Polaris11 */
->> +       { 0x67E7, &polaris11_device_info },     /* Polaris11 */
->> +       { 0x67E8, &polaris11_device_info },     /* Polaris11 */
->> +       { 0x67E9, &polaris11_device_info },     /* Polaris11 */
->> +       { 0x67EB, &polaris11_device_info },     /* Polaris11 */
->> +       { 0x67EF, &polaris11_device_info },     /* Polaris11 */
->> +       { 0x67FF, &polaris11_device_info },     /* Polaris11 */
->>  };
->>
->>  static int kfd_gtt_sa_init(struct kfd_dev *kfd, unsigned int buf_size,
->> --
->> 2.7.4
->>
-> Other then the note above, This patch is:
-> Reviewed-by: Oded Gabbay <oded.gabbay@gmail.com>
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 5161c37dd039..82829c65f31a 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -297,6 +297,7 @@ int eeh_pe_reset(struct eeh_pe *pe, int option);
+ int eeh_pe_configure(struct eeh_pe *pe);
+ int eeh_pe_inject_err(struct eeh_pe *pe, int type, int func,
+ 		      unsigned long addr, unsigned long mask);
++int eeh_restore_vf_config(struct pci_dn *pdn);
+ 
+ /**
+  * EEH_POSSIBLE_ERROR() -- test for possible MMIO failure.
+diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+index cbca0a667682..cc649809885e 100644
+--- a/arch/powerpc/kernel/eeh.c
++++ b/arch/powerpc/kernel/eeh.c
+@@ -740,6 +740,65 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
+ 	return NULL;
+ }
+ 
++int eeh_restore_vf_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 devctl, cmd, cap2, aer_capctl;
++	int old_mps;
++
++	if (edev->pcie_cap) {
++		/* Restore MPS */
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++
++		/* Disable Completion Timeout */
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				     4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn,
++					     edev->pcie_cap + PCI_EXP_DEVCTL2,
++					     4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn,
++					      edev->pcie_cap + PCI_EXP_DEVCTL2,
++					      4, cap2);
++		}
++	}
++
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				     4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				      4, aer_capctl);
++	}
++
++	return 0;
++}
++
+ /**
+  * pcibios_set_pcie_reset_state - Set PCI-E reset state
+  * @dev: pci device struct
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 961e64115d92..0665b6d03cb3 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1655,70 +1655,11 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
+ }
+ 
+-static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
+-{
+-	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+-	u32 devctl, cmd, cap2, aer_capctl;
+-	int old_mps;
+-
+-	if (edev->pcie_cap) {
+-		/* Restore MPS */
+-		old_mps = (ffs(pdn->mps) - 8) << 5;
+-		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+-				     2, &devctl);
+-		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
+-		devctl |= old_mps;
+-		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+-				      2, devctl);
+-
+-		/* Disable Completion Timeout */
+-		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
+-				     4, &cap2);
+-		if (cap2 & 0x10) {
+-			eeh_ops->read_config(pdn,
+-					     edev->pcie_cap + PCI_EXP_DEVCTL2,
+-					     4, &cap2);
+-			cap2 |= 0x10;
+-			eeh_ops->write_config(pdn,
+-					      edev->pcie_cap + PCI_EXP_DEVCTL2,
+-					      4, cap2);
+-		}
+-	}
+-
+-	/* Enable SERR and parity checking */
+-	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
+-	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+-	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
+-
+-	/* Enable report various errors */
+-	if (edev->pcie_cap) {
+-		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+-				     2, &devctl);
+-		devctl &= ~PCI_EXP_DEVCTL_CERE;
+-		devctl |= (PCI_EXP_DEVCTL_NFERE |
+-			   PCI_EXP_DEVCTL_FERE |
+-			   PCI_EXP_DEVCTL_URRE);
+-		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+-				      2, devctl);
+-	}
+-
+-	/* Enable ECRC generation and check */
+-	if (edev->pcie_cap && edev->aer_cap) {
+-		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
+-				     4, &aer_capctl);
+-		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
+-		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
+-				      4, aer_capctl);
+-	}
+-
+-	return 0;
+-}
+-
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+ 	struct pnv_phb *phb;
+-	s64 ret;
++	s64 ret = 0;
+ 	int config_addr = (pdn->busno << 8) | (pdn->devfn);
+ 
+ 	if (!edev)
+@@ -1732,7 +1673,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 	 * to be exported by firmware in extendible way.
+ 	 */
+ 	if (edev->physfn) {
+-		ret = pnv_eeh_restore_vf_config(pdn);
++		ret = eeh_restore_vf_config(pdn);
+ 	} else {
+ 		phb = pdn->phb->private_data;
+ 		ret = opal_pci_reinit(phb->opal_id,
+@@ -1745,7 +1686,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 		return -EIO;
+ 	}
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static struct eeh_ops pnv_eeh_ops = {
+diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+index 2295f117e2d3..a671ef4f57f5 100644
+--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
++++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+@@ -708,6 +708,30 @@ static int pseries_eeh_write_config(struct pci_dn *pdn, int where, int size, u32
+ 	return rtas_write_config(pdn, where, size, val);
+ }
+ 
++static int pseries_eeh_restore_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	s64 ret = 0;
++
++	if (!edev)
++		return -EEXIST;
++
++	/*
++	 * FIXME: The MPS, error routing rules, timeout setting are worthy
++	 * to be exported by firmware in extendible way.
++	 */
++	if (edev->physfn)
++		ret = eeh_restore_vf_config(pdn);
++
++	if (ret) {
++		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
++			__func__, edev->pe_config_addr, ret);
++		return -EIO;
++	}
++
++	return ret;
++}
++
+ static struct eeh_ops pseries_eeh_ops = {
+ 	.name			= "pseries",
+ 	.init			= pseries_eeh_init,
+@@ -723,7 +747,7 @@ static struct eeh_ops pseries_eeh_ops = {
+ 	.read_config		= pseries_eeh_read_config,
+ 	.write_config		= pseries_eeh_write_config,
+ 	.next_error		= NULL,
+-	.restore_config		= NULL
++	.restore_config		= pseries_eeh_restore_config
+ };
+ 
+ /**
+-- 
+2.14.3 (Apple Git-98)
