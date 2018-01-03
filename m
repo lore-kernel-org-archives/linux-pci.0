@@ -1,104 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59978 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752495AbeAWUiE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jan 2018 15:38:04 -0500
-Date: Tue, 23 Jan 2018 14:38:02 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: pciehp: Assume NoCompl+ for Thunderbolt ports
-Message-ID: <20180123203802.GB92112@bhelgaas-glaptop.roam.corp.google.com>
-References: <a1332c590cfb8dc8cf8e9ff61af694299f14eccd.1516203379.git.lukas@wunner.de>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:48692 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751687AbeACLmG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jan 2018 06:42:06 -0500
+Date: Wed, 3 Jan 2018 11:42:59 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@kernel.org, robh+dt@kernel.org, krzk@kernel.org,
+        jingoohan1@gmail.com, mark.rutland@arm.com, kgene@kernel.org
+Subject: Re: [PATCH] PCI: exynos: remove the deprecated phy codes
+Message-ID: <20180103114259.GA26554@red-moon>
+References: <CGME20171227094329epcas1p2a7b0a0f6130db4361592d8966d5ecb85@epcas1p2.samsung.com>
+ <20171227094327.5671-1-jh80.chung@samsung.com>
+ <20180102163407.GA9887@e107981-ln.cambridge.arm.com>
+ <adf86cd6-ba78-33d5-284f-a31e0e9bf13c@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a1332c590cfb8dc8cf8e9ff61af694299f14eccd.1516203379.git.lukas@wunner.de>
+In-Reply-To: <adf86cd6-ba78-33d5-284f-a31e0e9bf13c@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 17, 2018 at 04:48:39PM +0100, Lukas Wunner wrote:
-> Certain Thunderbolt 1 controllers claim to support Command Completed events
-> (value of 0b in the No Command Completed Support field of the Slot
-> Capabilities register) but in reality neither set the Command Completed bit
-> in the Slot Status register nor signal a Command Completed interrupt:
+On Wed, Jan 03, 2018 at 02:26:29PM +0900, Jaehoon Chung wrote:
+> On 01/03/2018 01:34 AM, Lorenzo Pieralisi wrote:
+> > On Wed, Dec 27, 2017 at 06:43:27PM +0900, Jaehoon Chung wrote:
+> >> pci-exynos had updated to use the PHY framework.
+> >> (drivers/phy/samsung/phy-exynos-pcie.c)
+> >> Removed the depreccated codes relevant to phy in pci-exynos.c.
+> >> Instead, use the phy-exynos-pcie.c file.
+> >>
+> >> Modified the binding documentation.
+> >>
+> >> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> >> ---
+> >>  .../bindings/pci/samsung,exynos5440-pcie.txt       |  58 ++----
+> >>  drivers/pci/dwc/pci-exynos.c                       | 219 ++-------------------
+> >>  2 files changed, 22 insertions(+), 255 deletions(-)
+> > 
+> > I have updated the commit log to the patch below, please
+> > check before I push it out.
 > 
-> 8086:1513  CV82524  [Light Ridge 4C  2010]
-> 8086:151a  DSL2310  [Eagle Ridge 2C  2011]
-> 8086:151b  CVL2510  [Light Peak 2C   2010]
-> 8086:1547  DSL3510  [Cactus Ridge 4C 2012]
-> 8086:1548  DSL3310  [Cactus Ridge 2C 2012]
-> 8086:1549  DSL2210  [Port Ridge 1C   2011]
-> 
-> All newer chips (Redwood Ridge and onwards) set the bit correctly to 1b.
-> 
-> The user-visible impact is that after unplugging such a device, 2 seconds
-> elapse until pciehp is unbound.  That's because on ->remove,
-> pcie_write_cmd() is called via pcie_disable_notification() and every call
-> to pcie_write_cmd() takes 2 seconds (1 second for each invocation of
-> pcie_wait_cmd()):
-> 
-> [  337.942727] pciehp 0000:0a:00.0:pcie204: Timeout on hotplug command 0x1038 (issued 21176 msec ago)
-> [  340.014735] pciehp 0000:0a:00.0:pcie204: Timeout on hotplug command 0x0000 (issued 2072 msec ago)
-> 
-> That by itself has always been unpleasant, but the situation has become
-> worse with commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services
-> during shutdown"):  Now pciehp is unbound on ->shutdown.  Because
-> Thunderbolt controllers typically have 4 hotplug ports, every reboot and
-> shutdown is now delayed by 8 seconds, plus another 2 seconds for every
-> attached Thunderbolt 1 device.
-> 
-> Thunderbolt hotplug slots are not physical slots that one inserts cards
-> into, but rather logical hotplug slots implemented in silicon.  Devices
-> appear beyond those logical slots once a PCI tunnel is established on top
-> of the Thunderbolt Converged I/O switch.  One would expect commands written
-> to the Slot Control register to be executed immediately by the silicon,
-> so for simplicity we always assume NoCompl+ for Thunderbolt ports.
-> 
-> Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: stable@vger.kernel.org # v4.12+
-> Cc: Sinan Kaya <okaya@codeaurora.org>
-> Cc: Yehezkel Bernat <yehezkel.bernat@intel.com>
-> Cc: Michael Jamet <michael.jamet@intel.com>
-> Cc: Andreas Noever <andreas.noever@gmail.com>
+> Looks good to me. At next time, i will write the commit-msg more carefully.
 
-Applied to pci/hotplug for v4.16, thanks!
+No problem, applied to pci/dwc for v4.16, thanks.
 
-> ---
-> Changes since v1:
-> - Rephrase code comment for clarity. (Bjorn)
-> - Amend commit message with info provided by Mika.
-> - Adhere to "Make Bjorn's life easier" guide.
-> 
->  drivers/pci/hotplug/pciehp_hpc.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 7bab0606f1a9..a89d8b990228 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -848,6 +848,13 @@ struct controller *pcie_init(struct pcie_device *dev)
->  	if (pdev->hotplug_user_indicators)
->  		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
->  
-> +	/*
-> +	 * We assume no Thunderbolt controllers support Command Complete events,
-> +	 * but some controllers falsely claim they do.
-> +	 */
-> +	if (pdev->is_thunderbolt)
-> +		slot_cap |= PCI_EXP_SLTCAP_NCCS;
-> +
->  	ctrl->slot_cap = slot_cap;
->  	mutex_init(&ctrl->ctrl_lock);
->  	init_waitqueue_head(&ctrl->queue);
-> -- 
-> 2.15.1
-> 
+Lorenzo
