@@ -1,78 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26207 "EHLO mga09.intel.com"
+Received: from muru.com ([72.249.23.125]:39210 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750868AbeAQFSx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jan 2018 00:18:53 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Maik Broemme <mbroemme@libmpq.org>,
-        Pawandeep Oza <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 2/6] PCI/AER: API for obtaining AER information
-Date: Tue, 16 Jan 2018 22:22:02 -0700
-Message-Id: <20180117052206.7703-3-keith.busch@intel.com>
-In-Reply-To: <20180117052206.7703-1-keith.busch@intel.com>
-References: <20180117052206.7703-1-keith.busch@intel.com>
+        id S1750952AbeACUIl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jan 2018 15:08:41 -0500
+Date: Wed, 3 Jan 2018 12:08:37 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+        JeffyChen <jeffy.chen@rock-chips.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Doug Anderson <dianders@chromium.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+Message-ID: <20180103200837.GP3875@atomide.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+ <CAJZ5v0hpK0_vjX3HinCpsFuKffVUn3d5EnqXdz0P893aRZgnRw@mail.gmail.com>
+ <20171228165134.GH3875@atomide.com>
+ <6120485.xubBpvge6h@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6120485.xubBpvge6h@aspire.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since this is making the function externally visible, appending "aer_"
-prefix to the function name.
+Hi,
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/aer/aerdrv.h      | 1 +
- drivers/pci/pcie/aer/aerdrv_core.c | 8 ++++----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+* Rafael J. Wysocki <rjw@rjwysocki.net> [171228 17:33]:
+> So we are fine except for the race and we need the wakeirq field in wakeup
+> sources to automatically arm the wakeup IRQs during suspend.
+> 
+> If I'm not mistaken, we only need something like the patch below (untested).
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index 5449e5ce139d..7c833a1d897e 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -107,6 +107,7 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
- }
- 
- extern struct bus_type pcie_port_bus_type;
-+int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info);
- void aer_isr(struct work_struct *work);
- void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
- void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info);
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index ea0dc1cc7fc7..4ba1fbd4700b 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -640,7 +640,7 @@ static void aer_recover_work_func(struct work_struct *work)
- #endif
- 
- /**
-- * get_device_error_info - read error status from dev and store it to info
-+ * aer_get_device_error_info - read error status from dev and store it to info
-  * @dev: pointer to the device expected to have a error record
-  * @info: pointer to structure to store the error record
-  *
-@@ -648,7 +648,7 @@ static void aer_recover_work_func(struct work_struct *work)
-  *
-  * Note that @info is reused among all error devices. Clear fields properly.
-  */
--static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
-+int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
- {
- 	int pos, temp;
- 
-@@ -707,11 +707,11 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
- 
- 	/* Report all before handle them, not to lost records by reset etc. */
- 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
--		if (get_device_error_info(e_info->dev[i], e_info))
-+		if (aer_get_device_error_info(e_info->dev[i], e_info))
- 			aer_print_error(e_info->dev[i], e_info);
- 	}
- 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
--		if (get_device_error_info(e_info->dev[i], e_info))
-+		if (aer_get_device_error_info(e_info->dev[i], e_info))
- 			handle_error_source(p_device, e_info->dev[i], e_info);
- 	}
- }
--- 
-2.13.6
+Yeah for your patch below works just fine for my
+test cases so:
+
+Tested-by: Tony Lindgren <tony@atomide.com>
+
+> ---
+>  drivers/base/power/wakeirq.c |    9 ++++-----
+>  drivers/base/power/wakeup.c  |    2 +-
+>  2 files changed, 5 insertions(+), 6 deletions(-)
+> 
+> Index: linux-pm/drivers/base/power/wakeirq.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/power/wakeirq.c
+> +++ linux-pm/drivers/base/power/wakeirq.c
+> @@ -33,7 +33,6 @@ static int dev_pm_attach_wake_irq(struct
+>  				  struct wake_irq *wirq)
+>  {
+>  	unsigned long flags;
+> -	int err;
+>  
+>  	if (!dev || !wirq)
+>  		return -EINVAL;
+> @@ -45,12 +44,12 @@ static int dev_pm_attach_wake_irq(struct
+>  		return -EEXIST;
+>  	}
+>  
+> -	err = device_wakeup_attach_irq(dev, wirq);
+> -	if (!err)
+> -		dev->power.wakeirq = wirq;
+> +	dev->power.wakeirq = wirq;
+> +	if (dev->power.wakeup)
+> +		device_wakeup_attach_irq(dev, wirq);
+>  
+>  	spin_unlock_irqrestore(&dev->power.lock, flags);
+> -	return err;
+> +	return 0;
+>  }
+>  
+>  /**
+> Index: linux-pm/drivers/base/power/wakeup.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/power/wakeup.c
+> +++ linux-pm/drivers/base/power/wakeup.c
+> @@ -303,7 +303,7 @@ int device_wakeup_attach_irq(struct devi
+>  	}
+>  
+>  	if (ws->wakeirq)
+> -		return -EEXIST;
+> +		dev_err(dev, "Leftover wakeup IRQ found, overriding\n");
+>  
+>  	ws->wakeirq = wakeirq;
+>  	return 0;
+> 
