@@ -1,100 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:44797 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753314AbeADPsJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 10:48:09 -0500
-Received: by mail-wm0-f65.google.com with SMTP id t8so4263383wmc.3
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jan 2018 07:48:08 -0800 (PST)
-From: Koen Vandeputte <koen.vandeputte@ncentric.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Koen Vandeputte <koen.vandeputte@ncentric.com>
-Subject: [PATCH] imx6: fix pcie enumeration
-Date: Thu,  4 Jan 2018 16:48:03 +0100
-Message-Id: <1515080883-30066-1-git-send-email-koen.vandeputte@ncentric.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V4 22/26] video: fbdev: intelfb: deprecate
+ pci_get_bus_and_slot()
+Date: Wed, 03 Jan 2018 12:18:15 +0100
+Message-id: <1712261.2Mai7cXr8p@amdc3058>
+In-reply-to: <7099e2af-4704-4611-94c0-830483de4578@codeaurora.org>
+MIME-version: 1.0
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <CGME20180102133833epcas1p4003614ea6c95c4568e8433acbb30f52d@epcas1p4.samsung.com>
+ <7099e2af-4704-4611-94c0-830483de4578@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:INTEL FRAMEBUFFER DRIVER
+ \(excluding 810 and 815\)" <linux-fbdev@vger.kernel.org>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org,
+ Maik Broemme <mbroemme@libmpq.org>, open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-By default, when the imx6 PCIe RC boots up, the subordinate is set
-equally to the secondary bus (1), and does not alter afterwards.
+On Tuesday, January 02, 2018 08:38:24 AM Sinan Kaya wrote:
+> On 12/19/2017 12:37 AM, Sinan Kaya wrote:
+> > pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> > where a PCI device is present. This restricts the device drivers to be
+> > reused for other domain numbers.
+> > 
+> > Getting ready to remove pci_get_bus_and_slot() function in favor of
+> > pci_get_domain_bus_and_slot().
+> > 
+> > Find the domain number from pdev.
+> > 
+> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> 
+> Any feedback here ? most of the remaining patches have the ACK except these.
 
-This means that theoretically, the highest bus reachable downstream is
-bus 1.
+Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Before commit a20c7f36bd3d ("PCI: Do not allocate more buses than
-available in parent"), the driver ignored the subord value and just
-allowed up to 0xff on each device downstream.
-
-This caused a lot of errors to be printed, as this is not logical
-according to spec. (but it worked ..)
-
-After this commit, the driver stopped scanning deeper when the last
-allocated busnr equals the subordinate of it's master, causing devices
-to be undiscovered (especially behind bridges), uncovering the impact of
-this bug.
-
-Before:
-
-00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00 ...
-	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-
-00:00.0 0604: 16c3:abcd (rev 01)
-01:00.0 0604: 10b5:8604 (rev ba)
-... stops after bus 1 ...
-
-After:
-
-00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
-...
-	Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
-
-00:00.0 0604: 16c3:abcd (rev 01)
-01:00.0 0604: 10b5:8604 (rev ba)
-02:01.0 0604: 10b5:8604 (rev ba)
-02:04.0 0604: 10b5:8604 (rev ba)
-02:05.0 0604: 10b5:8604 (rev ba)
-03:00.0 0280: 168c:0033 (rev 01)
-05:00.0 0280: 168c:0033 (rev 01)
-
-Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
----
-
-Needs backports to 4.14 & 4.9 stables
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
 
 
- drivers/pci/dwc/pci-imx6.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index b73483534a5b..3d13fa8c2eb1 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -76,6 +76,9 @@ struct imx6_pcie {
- 
- #define PCIE_RC_LCSR				0x80
- 
-+#define PCIE_RC_BNR				0x18
-+#define PCIE_RC_BNR_MAX_SUBORDINATE		(0xff << 16)
-+
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET 0x700
- #define PCIE_PL_PFLR (PL_OFFSET + 0x08)
-@@ -562,6 +565,17 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 	int ret;
- 
- 	/*
-+	 * By default, the subordinate is set equally to the secondary
-+	 * bus (0x01) when the RC boots.
-+	 * This means that theoretically, only bus 1 is reachable from the RC.
-+	 * Force the PCIe RC subordinate to 0xff, otherwise no downstream
-+	 * devices will be detected behind bus 1.
-+	*/
-+	tmp = dw_pcie_readl_rc(pp, PCIE_RC_BNR);
-+	tmp |= PCIE_RC_BNR_MAX_SUBORDINATE;
-+	dw_pcie_writel_rc(pp, PCIE_RC_BNR, tmp);
-+
-+	/*
- 	 * Force Gen1 operation when starting the link.  In case the link is
- 	 * started in Gen2 mode, there is a possibility the devices on the
- 	 * bus will not be detected at all.  This happens with PCIe switches.
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
