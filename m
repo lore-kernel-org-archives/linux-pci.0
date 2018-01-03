@@ -1,42 +1,173 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v4 3/7] PCI: generic: fix missing call of pci_free_resource_list()
-Date: Thu, 18 Jan 2018 23:52:48 +0100
-Message-Id: <f8de1b2931f0f1f03f7e5230bb8438a2622a607c.1516314953.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v3 4/7] powerpc/kernel Add EEH operations to notify resume
+Date: Wed,  3 Jan 2018 11:16:30 -0600
+In-Reply-To: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
+References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20180103171633.94499-5-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Call pci_free_resource_list() from pci_host_common_probe() when probing
-fails, as done inside gen_pci_init() when this later function fails.
+When pseries SR-IOV is enabled and after a PF driver
+has resumed from EEH, platform has to be notified
+of the event so the child VFs can be allowed to
+resume their normal recovery path.
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+This patch makes the EEH operation allow unfreeze
+platform dependent code and adds the call to
+pseries EEH code.
+
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
 ---
- drivers/pci/host/pci-host-common.c | 1 +
- 1 file changed, 1 insertion(+)
+ arch/powerpc/include/asm/eeh.h               |  1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  3 +-
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 94 +++++++++++++++++++++++++++-
+ 3 files changed, 96 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index a613ea310e76..9f27e90f578c 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -110,6 +110,7 @@ int pci_host_common_probe(struct platform_device *pdev,
- 	ret = pci_scan_root_bus_bridge(bridge);
- 	if (ret < 0) {
- 		dev_err(dev, "Scanning root bridge failed");
-+		pci_free_resource_list(&resources);
- 		return ret;
- 	}
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 82829c65f31a..fd37cc101f4f 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -214,6 +214,7 @@ struct eeh_ops {
+ 	int (*write_config)(struct pci_dn *pdn, int where, int size, u32 val);
+ 	int (*next_error)(struct eeh_pe **pe);
+ 	int (*restore_config)(struct pci_dn *pdn);
++	int (*notify_resume)(struct pci_dn *pdn);
+ };
  
+ extern int eeh_subsystem_flags;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 0665b6d03cb3..33c86c1a1720 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1704,7 +1704,8 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.read_config            = pnv_eeh_read_config,
+ 	.write_config           = pnv_eeh_write_config,
+ 	.next_error		= pnv_eeh_next_error,
+-	.restore_config		= pnv_eeh_restore_config
++	.restore_config		= pnv_eeh_restore_config,
++	.notify_resume		= NULL
+ };
+ 
+ #ifdef CONFIG_PCI_IOV
+diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+index 686e9c7feab5..bdd7be52b12d 100644
+--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
++++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+@@ -744,6 +744,97 @@ static int pseries_eeh_restore_config(struct pci_dn *pdn)
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++int pseries_send_allow_unfreeze(struct pci_dn *pdn,
++				u16 *vf_pe_array, int cur_vfs)
++{
++	int rc;
++	int ibm_allow_unfreeze = rtas_token("ibm,open-sriov-allow-unfreeze");
++	unsigned long buid, addr;
++
++	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
++	buid = pdn->phb->buid;
++	spin_lock(&rtas_data_buf_lock);
++	memcpy(rtas_data_buf, vf_pe_array, RTAS_DATA_BUF_SIZE);
++	rc = rtas_call(ibm_allow_unfreeze, 5, 1, NULL,
++		       addr,
++		       BUID_HI(buid),
++		       BUID_LO(buid),
++		       rtas_data_buf, cur_vfs * sizeof(u16));
++	spin_unlock(&rtas_data_buf_lock);
++	if (rc)
++		pr_warn("%s: Failed to allow unfreeze for PHB#%x-PE#%lx, rc=%x\n",
++			__func__,
++			pdn->phb->global_number, addr, rc);
++	return rc;
++}
++
++static int pseries_call_allow_unfreeze(struct eeh_dev *edev)
++{
++	struct pci_dn *pdn, *tmp, *parent, *physfn_pdn;
++	int cur_vfs = 0, rc = 0, vf_index, bus, devfn;
++	u16 *vf_pe_array;
++
++	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
++	if (!vf_pe_array)
++		return -ENOMEM;
++	if (pci_num_vf(edev->physfn ? edev->physfn : edev->pdev)) {
++		if (edev->pdev->is_physfn) {
++			cur_vfs = pci_num_vf(edev->pdev);
++			pdn = eeh_dev_to_pdn(edev);
++			parent = pdn->parent;
++			for (vf_index = 0; vf_index < cur_vfs; vf_index++)
++				vf_pe_array[vf_index] =
++					cpu_to_be16(pdn->pe_num_map[vf_index]);
++			rc = pseries_send_allow_unfreeze(pdn, vf_pe_array,
++							 cur_vfs);
++			pdn->last_allow_rc = rc;
++			for (vf_index = 0; vf_index < cur_vfs; vf_index++) {
++				list_for_each_entry_safe(pdn, tmp,
++							 &parent->child_list,
++							 list) {
++					bus = pci_iov_virtfn_bus(edev->pdev,
++								 vf_index);
++					devfn = pci_iov_virtfn_devfn(edev->pdev,
++								     vf_index);
++					if (pdn->busno != bus ||
++					    pdn->devfn != devfn)
++						continue;
++					pdn->last_allow_rc = rc;
++				}
++			}
++		} else {
++			pdn = pci_get_pdn(edev->pdev);
++			vf_pe_array[0] = cpu_to_be16(pdn->pe_number);
++			physfn_pdn = pci_get_pdn(edev->physfn);
++			rc = pseries_send_allow_unfreeze(physfn_pdn,
++							 vf_pe_array, 1);
++			pdn->last_allow_rc = rc;
++		}
++	}
++
++	kfree(vf_pe_array);
++	return rc;
++}
++
++static int pseries_notify_resume(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++
++	if (!edev)
++		return -EEXIST;
++
++	if (rtas_token("ibm,open-sriov-allow-unfreeze")
++	    == RTAS_UNKNOWN_SERVICE)
++		return -EINVAL;
++
++	if (edev->pdev->is_physfn || edev->pdev->is_virtfn)
++		return pseries_call_allow_unfreeze(edev);
++
++	return 0;
++}
++#endif
++
+ static struct eeh_ops pseries_eeh_ops = {
+ 	.name			= "pseries",
+ 	.init			= pseries_eeh_init,
+@@ -759,7 +850,8 @@ static struct eeh_ops pseries_eeh_ops = {
+ 	.read_config		= pseries_eeh_read_config,
+ 	.write_config		= pseries_eeh_write_config,
+ 	.next_error		= NULL,
+-	.restore_config		= pseries_eeh_restore_config
++	.restore_config		= pseries_eeh_restore_config,
++	.notify_resume		= pseries_notify_resume
+ };
+ 
+ /**
 -- 
-2.11.0
+2.14.3 (Apple Git-98)
