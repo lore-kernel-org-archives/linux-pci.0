@@ -1,49 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8.mo179.mail-out.ovh.net ([46.105.75.26]:51071 "EHLO
-        8.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752874AbeAJW4f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 17:56:35 -0500
-Received: from player690.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 2D2E590432
-        for <linux-pci@vger.kernel.org>; Wed, 10 Jan 2018 23:49:01 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v3 4/6] PCI: Add vendor ID for Cadence
-Date: Wed, 10 Jan 2018 23:47:33 +0100
-Message-Id: <fc146d33849fc3143866249254fbcc82c1823775.1515621150.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V4 24/26] video: fbdev: riva: deprecate
+ pci_get_bus_and_slot()
+Date: Wed, 03 Jan 2018 12:18:44 +0100
+Message-id: <5036032.4uFqTqHFln@amdc3058>
+In-reply-to: <04f4cf20-9b57-3eff-79b6-abfda1258174@codeaurora.org>
+MIME-version: 1.0
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <CGME20180102133737epcas1p2cb1a62d59d9a83564db1f265c1643bf4@epcas1p2.samsung.com>
+ <04f4cf20-9b57-3eff-79b6-abfda1258174@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:NVIDIA \(rivafb and nvidiafb\)
+ FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
+ Antonino Daplas <adaplas@gmail.com>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER
+ LAYER" <dri-devel@lists.freedesktop.org>, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a new PCI vendor ID for Cadence.
+On Tuesday, January 02, 2018 08:37:32 AM Sinan Kaya wrote:
+> On 12/19/2017 12:38 AM, Sinan Kaya wrote:
+> > pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> > where a PCI device is present. This restricts the device drivers to be
+> > reused for other domain numbers.
+> > 
+> > Getting ready to remove pci_get_bus_and_slot() function in favor of
+> > pci_get_domain_bus_and_slot().
+> > 
+> > struct riva_par has a pointer to struct pci_dev. Use the pci_dev member
+> > to extract the domain information.
+> > 
+> > Change the function signature for CalcStateExt and RivaGetConfig to pass
+> > in struct pci_dev in addition to RIVA_HW_INST so that code inside the
+> > riva_hw.c can also calculate domain number and pass it to
+> > pci_get_domain_bus_and_slot().
+> > 
+> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> 
+> Any feedback here, most of the remaining patches have the ACK except these?
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
----
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index ab20dc5db423..eb13e84e1fef 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2381,6 +2381,8 @@
- 
- #define PCI_VENDOR_ID_LENOVO		0x17aa
- 
-+#define PCI_VENDOR_ID_CDNS		0x17cd
-+
- #define PCI_VENDOR_ID_ARECA		0x17d3
- #define PCI_DEVICE_ID_ARECA_1110	0x1110
- #define PCI_DEVICE_ID_ARECA_1120	0x1120
--- 
-2.11.0
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
