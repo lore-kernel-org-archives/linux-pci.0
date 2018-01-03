@@ -1,97 +1,57 @@
-Return-Path: <SRS0=/bLX=EG=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=/bLX=EG=broadcom.com=ray.jui@kernel.org>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Rafal Milecki <rafal@milecki.pl>,
-	Ray Jui <ray.jui@broadcom.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH v2] PCI: iproc: Fix NULL pointer dereference for BCMA
-Date: Thu, 11 Jan 2018 12:36:16 -0800
-Message-Id: <1515702976-29275-1-git-send-email-ray.jui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v3 0/7] SR-IOV Enablement on PowerVM
+Date: Wed,  3 Jan 2018 11:16:26 -0600
+Message-Id: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-With the inbound DMA mapping supported added, the iProc PCIe driver
-parses DT property "dma-ranges" through call to
-"of_pci_dma_range_parser_init". In the case of BCMA, this results in a
-NULL pointer deference due to a missing of_node.
+This patch series will enable SR-IOV on PowerVM. A specific set of
+lids for PFW/PHYP is required. They are planned to release with
+920 at the moment.
 
-Fix this by adding a guard in pcie-iproc-platform.c to only enable the
-inbound DMA mapping logic when DT property "dma-ranges" is present
+For IBM internal testers let me know of a system you want to test on
+and we can put on the lids required or we can provide a system to run
+the tests.
 
-Fixes: dd9d4e7498de3 ("PCI: iproc: Add inbound DMA mapping support")
-Reported-by: Rafał Miłecki <rafal@milecki.pl>
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Tested-by: Rafał Miłecki <rafal@milecki.pl>
-cc: <stable@vger.kernel.org> # 4.10+
----
- drivers/pci/host/pcie-iproc-platform.c | 7 +++++++
- drivers/pci/host/pcie-iproc.c          | 8 +++++---
- drivers/pci/host/pcie-iproc.h          | 2 ++
- 3 files changed, 14 insertions(+), 3 deletions(-)
+This patch depends on the three patches:
+988fc3ba5653278a8c14d6ccf687371775930d2b
+dae7253f9f78a731755ca20c66b2d2c40b86baea
+608c0d8804ef3ca4cda8ec6ad914e47deb283d7b
 
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index a5073a9..32228d4 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -92,6 +92,13 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 		pcie->need_ob_cfg = true;
- 	}
- 
-+	/*
-+	 * DT nodes are not used by all platforms that use the iProc PCIe
-+	 * core driver. For platforms that require explict inbound mapping
-+	 * configuration, "dma-ranges" would have been present in DT
-+	 */
-+	pcie->need_ib_cfg = of_property_read_bool(np, "dma-ranges");
-+
- 	/* PHY use is optional */
- 	pcie->phy = devm_phy_get(dev, "pcie-phy");
- 	if (IS_ERR(pcie->phy)) {
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 935909b..7583606 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -1378,9 +1378,11 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 		}
- 	}
- 
--	ret = iproc_pcie_map_dma_ranges(pcie);
--	if (ret && ret != -ENOENT)
--		goto err_power_off_phy;
-+	if (pcie->need_ib_cfg) {
-+		ret = iproc_pcie_map_dma_ranges(pcie);
-+		if (ret && ret != -ENOENT)
-+			goto err_power_off_phy;
-+	}
- 
- #ifdef CONFIG_ARM
- 	pcie->sysdata.private_data = pcie;
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index a6b55ce..4ac6282 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -74,6 +74,7 @@ struct iproc_msi;
-  * @ob: outbound mapping related parameters
-  * @ob_map: outbound mapping related parameters specific to the controller
-  *
-+ * @need_ib_cfg: indicates SW needs to configure the inbound mapping window
-  * @ib: inbound mapping related parameters
-  * @ib_map: outbound mapping region related parameters
-  *
-@@ -101,6 +102,7 @@ struct iproc_pcie {
- 	struct iproc_pcie_ob ob;
- 	const struct iproc_pcie_ob_map *ob_map;
- 
-+	bool need_ib_cfg;
- 	struct iproc_pcie_ib ib;
- 	const struct iproc_pcie_ib_map *ib_map;
- 
+v1 - Initial Patch
+v2 - Addressed Alexey and Russell's comments
+v3 - Unify the call of .error_detected()
+
+Bryant G. Ly (7):
+  platform/pseries: Update VF config space after EEH
+  powerpc/kernel: Add uevents in EEH error/resume
+  platforms/pseries: Set eeh_pe of EEH_PE_VF type
+  powerpc/kernel Add EEH operations to notify resume
+  powerpc/kernel: Add EEH notify resume sysfs
+  pseries/pci: Associate PEs to VFs in configure SR-IOV
+  pseries/setup: Add Initialization of VF Bars
+
+ arch/powerpc/include/asm/eeh.h               |   2 +
+ arch/powerpc/include/asm/pci-bridge.h        |   5 +-
+ arch/powerpc/include/asm/pci.h               |   2 +
+ arch/powerpc/kernel/eeh.c                    |  59 ++++++++++
+ arch/powerpc/kernel/eeh_driver.c             |   8 +-
+ arch/powerpc/kernel/eeh_sysfs.c              |  46 +++++++-
+ arch/powerpc/kernel/pci_of_scan.c            |   2 +-
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  68 +----------
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 132 ++++++++++++++++++++-
+ arch/powerpc/platforms/pseries/pci.c         | 151 +++++++++++++++++++++++-
+ arch/powerpc/platforms/pseries/setup.c       | 164 +++++++++++++++++++++++++++
+ drivers/pci/pcie/aer/aerdrv_core.c           |   3 +
+ include/linux/pci.h                          |  36 ++++++
+ 13 files changed, 605 insertions(+), 73 deletions(-)
+
 -- 
-2.1.4
+2.14.3 (Apple Git-98)
