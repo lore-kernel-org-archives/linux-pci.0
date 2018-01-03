@@ -1,122 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to and
- from devices
-To: Sinan Kaya <okaya@codeaurora.org>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-6-jean-philippe.brucker@arm.com>
- <0772e71e-4861-1e7b-f248-88aaba8bf2fc@codeaurora.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <e2753b59-2b9e-ffc6-a7b8-0ed23df38e10@arm.com>
-Date: Fri, 19 Jan 2018 10:27:53 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 3 Jan 2018 12:22:37 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        kernel-janitors@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 04/12] PCI: qcom: account for const type of
+ of_device_id.data
+Message-ID: <20180103122237.GD26554@red-moon>
+References: <1514899688-27844-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1514899688-27844-5-git-send-email-Julia.Lawall@lip6.fr>
 MIME-Version: 1.0
-In-Reply-To: <0772e71e-4861-1e7b-f248-88aaba8bf2fc@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1514899688-27844-5-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
-
-On 19/01/18 04:52, Sinan Kaya wrote:
-> Hi Jean-Philippe,
+On Tue, Jan 02, 2018 at 02:28:00PM +0100, Julia Lawall wrote:
+> This driver creates various const structures that it stores in the
+> data field of an of_device_id array.
 > 
-> On 10/6/2017 9:31 AM, Jean-Philippe Brucker wrote:
->>  /**
->> + * iommu_process_bind_device - Bind a process address space to a device
->> + * @dev: the device
->> + * @task: the process to bind
->> + * @pasid: valid address where the PASID will be stored
->> + * @flags: bond properties (IOMMU_PROCESS_BIND_*)
->> + *
->> + * Create a bond between device and task, allowing the device to access the
->> + * process address space using the returned PASID.
->> + *
->> + * On success, 0 is returned and @pasid contains a valid ID. Otherwise, an error
->> + * is returned.
->> + */
->> +int iommu_process_bind_device(struct device *dev, struct task_struct *task,
->> +			      int *pasid, int flags)
+> Adding const to the declaration of the location that receives the
+> const value from the data field ensures that the compiler will
+> continue to check that the value is not modified.  Furthermore, the
+> const-discarding cast on the extraction from the data field is no
+> longer needed.
 > 
-> This API doesn't play nice with endpoint device drivers that have PASID limitations.
+> Done using Coccinelle.
 > 
-> The AMD driver seems to have PASID limitations per product that are not being
-> advertised in the PCI capability.
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 > 
-> device_iommu_pasid_init()
-> {
->         pasid_limit = min_t(unsigned int,
->                         (unsigned int)(1 << kfd->device_info->max_pasid_bits),
->                         iommu_info.max_pasids);
->         /*
->          * last pasid is used for kernel queues doorbells
->          * in the future the last pasid might be used for a kernel thread.
->          */
->         pasid_limit = min_t(unsigned int,
->                                 pasid_limit,
->                                 kfd->doorbell_process_limit - 1);
-> }
-> 
-> kfd->device_info->max_pasid_bits seems to contain per device limitations.
-> 
-> Would you be willing to extend the API so that the requester can impose some limit
-> on the PASID value that is getting allocated.
+> ---
+>  drivers/pci/dwc/pcie-qcom.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-Good point. Following the feedback for this series, next version adds
-another public function:
+Hi Julia,
 
-int iommu_sva_device_init(struct device *dev, int features);
-
-that has to be called by the device driver before any bind(). The intent
-is to let some IOMMU drivers initialize PASID tables and other features
-lazily, only if the device driver actually intends to use them. Maybe I
-could change this function to:
-
-int iommu_sva_device_init(struct device *dev, int features, unsigned int
-max_pasid);
-
-@features is a bitmask telling what the device driver needs (PASID and/or
-page faults). If features has IOMMU_SVA_FEAT_PASID set, then device driver
-can set a max_pasid limit, that we'd store in our private device-iommu
-data. If max_pasid is 0, then we'd use the PCI limit.
+I am happy to take this patch through the PCI tree unless you see a
+problem with that, please let me know.
 
 Thanks,
-Jean
+Lorenzo
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> diff -u -p a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+> --- a/drivers/pci/dwc/pcie-qcom.c
+> +++ b/drivers/pci/dwc/pcie-qcom.c
+> @@ -171,7 +171,7 @@ struct qcom_pcie {
+>  	union qcom_pcie_resources res;
+>  	struct phy *phy;
+>  	struct gpio_desc *reset;
+> -	struct qcom_pcie_ops *ops;
+> +	const struct qcom_pcie_ops *ops;
+>  };
+>  
+>  #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
+> @@ -1234,7 +1234,7 @@ static int qcom_pcie_probe(struct platfo
+>  
+>  	pcie->pci = pci;
+>  
+> -	pcie->ops = (struct qcom_pcie_ops *)of_device_get_match_data(dev);
+> +	pcie->ops = of_device_get_match_data(dev);
+>  
+>  	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
+>  	if (IS_ERR(pcie->reset))
+> 
