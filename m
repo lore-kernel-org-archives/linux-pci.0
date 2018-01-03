@@ -1,101 +1,158 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [PATCH 1/6] jailhouse: Provide detection for non-x86 systems
-Date: Mon, 22 Jan 2018 07:12:45 +0100
-Message-Id: <5541843651e0232ac90f347f638e486d2ddda237.1516601570.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
-References: <cover.1516601570.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
-References: <cover.1516601570.git.jan.kiszka@siemens.com>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Kevin Hilman <khilman@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-i2c <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@the-dreams.de>
+Subject: [PATCH 6/7] PM: i2c-designware-platdrv: Optimize power management
+Date: Wed, 03 Jan 2018 01:37:34 +0100
+Message-ID: <6243259.Xh4soKtjBb@aspire.rjw.lan>
+In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
+References: <7742130.AaJQIxeI1n@aspire.rjw.lan> <2436726.ykYRzVD45y@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Implement jailhouse_paravirt() via device tree probing on architectures
-!= x86. Will be used by the PCI core.
+Optimize the power management in i2c-designware-platdrv by making it
+set the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED which
+allows some code to be dropped from its PM callbacks.
 
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Mark Rutland <mark.rutland@arm.com>
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+First, setting DPM_FLAG_SMART_SUSPEND causes the intel-lpss driver
+to avoid resuming i2c-designware-platdrv devices in its ->prepare
+callback, so they can stay in runtime suspend after that point even
+if the direct-complete feature is not used for them.
+
+It also causes the ACPI PM domain and the PM core to avoid invoking
+"late" and "noirq" suspend callbacks for these devices if they are
+in runtime suspend at the beginning of the "late" phase of device
+suspend during system suspend.  That guarantees dw_i2c_plat_suspend()
+to be called for a device only if it is not in runtime suspend.
+
+Moreover, it causes the device's runtime PM status to be set to
+"active" after calling dw_i2c_plat_resume() for it, so the
+driver doesn't need internal flags to avoid invoking either
+dw_i2c_plat_suspend() or dw_i2c_plat_resume() twice in a row.
+
+Second, setting DPM_FLAG_LEAVE_SUSPENDED enables the optimization
+allowing the device to stay suspended after system resume under
+suitable conditions, so again the driver doesn't need to take
+care of that by itself.
+
+Accordingly, the internal "suspended" and "skip_resume" flags
+used by the driver are not necessary any more, so drop them and
+simplify the driver's PM callbacks.
+
+Additionally, notice that dw_i2c_plat_complete() only needs to
+schedule runtime PM resume for the device if platform firmware
+has been involved in resuming the system, so make it call
+pm_resume_via_firmware() to check that.  Also make it check the
+runtime PM status of the device instead of its direct_complete
+flag which also works if the device remained suspended due to
+the DPM_FLAG_LEAVE_SUSPENDED driver flag.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
- arch/x86/include/asm/jailhouse_para.h           |  2 +-
- include/linux/hypervisor.h                      | 17 +++++++++++++++--
- 3 files changed, 24 insertions(+), 3 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
+ drivers/i2c/busses/i2c-designware-core.h    |    2 -
+ drivers/i2c/busses/i2c-designware-platdrv.c |   31 ++++++++++------------------
+ 2 files changed, 12 insertions(+), 21 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/jailhouse.txt b/Documentation/devicetree/bindings/jailhouse.txt
-new file mode 100644
-index 000000000000..2901c25ff340
---- /dev/null
-+++ b/Documentation/devicetree/bindings/jailhouse.txt
-@@ -0,0 +1,8 @@
-+Jailhouse non-root cell device tree bindings
-+--------------------------------------------
-+
-+When running in a non-root Jailhouse cell (partition), the device tree of this
-+platform shall have a top-level "hypervisor" node with the following
-+properties:
-+
-+- compatible = "jailhouse,cell"
-diff --git a/arch/x86/include/asm/jailhouse_para.h b/arch/x86/include/asm/jailhouse_para.h
-index 875b54376689..b885a961a150 100644
---- a/arch/x86/include/asm/jailhouse_para.h
-+++ b/arch/x86/include/asm/jailhouse_para.h
-@@ -1,7 +1,7 @@
- /* SPDX-License-Identifier: GPL2.0 */
+Index: linux-pm/drivers/i2c/busses/i2c-designware-core.h
+===================================================================
+--- linux-pm.orig/drivers/i2c/busses/i2c-designware-core.h
++++ linux-pm/drivers/i2c/busses/i2c-designware-core.h
+@@ -280,8 +280,6 @@ struct dw_i2c_dev {
+ 	int			(*acquire_lock)(struct dw_i2c_dev *dev);
+ 	void			(*release_lock)(struct dw_i2c_dev *dev);
+ 	bool			pm_disabled;
+-	bool			suspended;
+-	bool			skip_resume;
+ 	void			(*disable)(struct dw_i2c_dev *dev);
+ 	void			(*disable_int)(struct dw_i2c_dev *dev);
+ 	int			(*init)(struct dw_i2c_dev *dev);
+Index: linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+===================================================================
+--- linux-pm.orig/drivers/i2c/busses/i2c-designware-platdrv.c
++++ linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+@@ -42,6 +42,7 @@
+ #include <linux/reset.h>
+ #include <linux/sched.h>
+ #include <linux/slab.h>
++#include <linux/suspend.h>
  
- /*
-- * Jailhouse paravirt_ops implementation
-+ * Jailhouse paravirt detection
-  *
-  * Copyright (c) Siemens AG, 2015-2017
-  *
-diff --git a/include/linux/hypervisor.h b/include/linux/hypervisor.h
-index b19563f9a8eb..fc08b433c856 100644
---- a/include/linux/hypervisor.h
-+++ b/include/linux/hypervisor.h
-@@ -8,15 +8,28 @@
-  */
+ #include "i2c-designware-core.h"
  
- #ifdef CONFIG_X86
-+
-+#include <asm/jailhouse_para.h>
- #include <asm/x86_init.h>
-+
- static inline void hypervisor_pin_vcpu(int cpu)
+@@ -372,7 +373,10 @@ static int dw_i2c_plat_probe(struct plat
+ 	ACPI_COMPANION_SET(&adap->dev, ACPI_COMPANION(&pdev->dev));
+ 	adap->dev.of_node = pdev->dev.of_node;
+ 
+-	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_SMART_PREPARE);
++	dev_pm_set_driver_flags(&pdev->dev,
++				DPM_FLAG_SMART_PREPARE |
++				DPM_FLAG_SMART_SUSPEND |
++				DPM_FLAG_LEAVE_SUSPENDED);
+ 
+ 	/* The code below assumes runtime PM to be disabled. */
+ 	WARN_ON(pm_runtime_enabled(&pdev->dev));
+@@ -448,7 +452,13 @@ static int dw_i2c_plat_prepare(struct de
+ 
+ static void dw_i2c_plat_complete(struct device *dev)
  {
- 	x86_platform.hyper.pin_vcpu(cpu);
+-	if (dev->power.direct_complete)
++	/*
++	 * The device can only be in runtime suspend at this point if it has not
++	 * been resumed throughout the ending system suspend/resume cycle, so if
++	 * the platform firmware might mess up with it, request the runtime PM
++	 * framework to resume it.
++	 */
++	if (pm_runtime_suspended(dev) && pm_resume_via_firmware())
+ 		pm_request_resume(dev);
  }
--#else
-+
-+#else /* !CONFIG_X86 */
-+
-+#include <linux/of.h>
-+
- static inline void hypervisor_pin_vcpu(int cpu)
+ #else
+@@ -461,16 +471,9 @@ static int dw_i2c_plat_suspend(struct de
  {
- }
--#endif
-+
-+static inline bool jailhouse_paravirt(void)
-+{
-+	return of_find_compatible_node(NULL, NULL, "jailhouse,cell");
-+}
-+
-+#endif /* !CONFIG_X86 */
+ 	struct dw_i2c_dev *i_dev = dev_get_drvdata(dev);
  
- #endif /* __LINUX_HYPEVISOR_H */
--- 
-2.13.6
+-	if (i_dev->suspended) {
+-		i_dev->skip_resume = true;
+-		return 0;
+-	}
+-
+ 	i_dev->disable(i_dev);
+ 	i2c_dw_plat_prepare_clk(i_dev, false);
+ 
+-	i_dev->suspended = true;
+-
+ 	return 0;
+ }
+ 
+@@ -478,19 +481,9 @@ static int dw_i2c_plat_resume(struct dev
+ {
+ 	struct dw_i2c_dev *i_dev = dev_get_drvdata(dev);
+ 
+-	if (!i_dev->suspended)
+-		return 0;
+-
+-	if (i_dev->skip_resume) {
+-		i_dev->skip_resume = false;
+-		return 0;
+-	}
+-
+ 	i2c_dw_plat_prepare_clk(i_dev, true);
+ 	i_dev->init(i_dev);
+ 
+-	i_dev->suspended = false;
+-
+ 	return 0;
+ }
+ 
