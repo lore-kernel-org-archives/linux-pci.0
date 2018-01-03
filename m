@@ -1,46 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 5 Jan 2018 12:01:35 -0700
-From: Keith Busch <keith.busch@intel.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 09/12] nvme-pci: Use PCI p2pmem subsystem to manage the
- CMB
-Message-ID: <20180105190135.GB10657@localhost.localdomain>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-10-logang@deltatee.com>
- <20180105181152.GA10657@localhost.localdomain>
- <6c89e4b4-1854-c251-a5ec-7e54bc8085fc@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:45854 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750996AbeACVWa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jan 2018 16:22:30 -0500
+Subject: Re: [PATCH v2 0/9] PCI: Add support to the Cadence PCIe controller
+To: Kishon Vijay Abraham I <kishon@ti.com>, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+ <d30e0abe-8b08-b2bf-8410-e0fc2b18cacc@ti.com>
+ <27684b50-ff08-5238-4cb0-8bc4431211bf@free-electrons.com>
+ <d170202a-4860-7ff5-a6a3-df696ce23729@ti.com>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Message-ID: <cfba420c-4b2e-c6d0-f708-336a2107f5b7@free-electrons.com>
+Date: Wed, 3 Jan 2018 22:22:17 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6c89e4b4-1854-c251-a5ec-7e54bc8085fc@deltatee.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <d170202a-4860-7ff5-a6a3-df696ce23729@ti.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 05, 2018 at 11:19:28AM -0700, Logan Gunthorpe wrote:
-> Although it is not explicitly stated anywhere, pci_alloc_p2pmem() should
-> always be at least 4k aligned. This is because the gen_pool that implements
-> it is created with PAGE_SHIFT for its min_alloc_order.
+Hi Kishon,
 
-Ah, I see that now. Thanks for the explanation.
+Le 03/01/2018 à 10:14, Kishon Vijay Abraham I a écrit :
+> Hi,
+> 
+> On Saturday 30 December 2017 02:23 AM, Cyrille Pitchen wrote:
+>> Hi Kishon,
+>>
+>> Le 28/12/2017 à 14:00, Kishon Vijay Abraham I a écrit :
+>>> Hi Cyrille,
+>>>
+>>> On Monday 18 December 2017 11:46 PM, Cyrille Pitchen wrote:
+>>>> Hi all,
+>>>>
+>>>> this series of patches adds support to the Cadence PCIe controller.
+>>>> It was tested on a ARM64 platform emulated by a Palladium running the
+>>>> pci-next kernel.
+>>>>
+>>>> The host mode was tested with some PCIe devices connected to the Palladium
+>>>> through a speed-bridge. Some of those devices were a USB host controller
+>>>> and a SATA controller. The PCIe host controller was also tested with a
+>>>> second controller configured in endpoint mode and connected back to back
+>>>> to the first controller.
+>>>>
+>>>> The EndPoint Controller (EPC) driver of this series was tested with the
+>>>> pci-epf-test.c EndPoint Function (EPF) driver and the pcitest userspace
+>>>> program.
+>>>
+>>> Did you get to test multi function EP?
+>>>
+>>
+>> No I didn't: I tested only with a single function to check for regression
+>> but currently I'm not able to test with multiple functions.
+>>
+>> With devmem, I've tried to read then write the Physical Function Configuration
+>> Register (offset 0x2c0 in the Local Management registers) to enable
+>> functions other than function 0.
+>>
+>> This is the CDNS_PCIE_LM_EP_FUNC_CFG register that the pcie-cadence_ep.c
+>> driver updates in cdns_pcie_ep_write_header() since v2 of the series.
+>>
+>> As written in the datasheet, BIT(0) is actually hard-wired to 1, hence
+>> function 0 can't be disabled: that makes sense. However other function
+>> enable bits were read as 0 whereas the datasheet claims they should be set
+>> at power up. Besides, I can't set any of them with devmem.
+>>
+>> Actually, I have 2 slightly different datasheets, in the first one I should
+>> have 4 functions but only 2 based on the second datasheet.
+>>
+>> Then I guess it's a design parameter used when synthesizing the controller.
+>>
+>> So I've asked Cadence whether I've missed or misunderstood something in the
+>> datasheets or whether the IP they provided me with has a single function
+>> for now. I'm waiting for their answers.
+> 
+> hmm.. It would be nice to have multi function tested since it would both
+> validate multi function support of PCI EP core and the cadence multi-function
+> itself.
+>
 
-Does it need to be created with page sized minimum alloc order? That
-granularity makes it difficult to fit SQs in CMB on archs with larger
-pages when we only needed 4k alignment.
+I will work with Cadence so we try to make it work.
 
-I was also hoping to extend this for PRP/SGL in CMB where even 4k is
-too high a granularity to make it really useful.
+Best regards,
 
-It looks like creating the gen pool with a smaller minimum and
-gen_pool_first_fit_order_align algo would satisfy my use cases, but I'm
-not sure if there's another reason you've set it to page alignment.
+Cyrille
+
+ 
+> Thanks
+> Kishon
+> 
+
+
+-- 
+Cyrille Pitchen, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
