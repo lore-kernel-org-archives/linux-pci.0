@@ -1,691 +1,320 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 10.mo179.mail-out.ovh.net ([46.105.79.46]:48279 "EHLO
-        10.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753346AbeA3VFK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 16:05:10 -0500
-Received: from player168.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 9FE1F9A69A
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jan 2018 21:59:16 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v6 07/11] PCI: cadence: Add host driver for Cadence PCIe controller
-Date: Tue, 30 Jan 2018 21:56:55 +0100
-Message-Id: <d826eb2b2302de065606fae79d617fe42930591e.1517343502.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:44251 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751099AbeACAkp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 19:40:45 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Kevin Hilman <khilman@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-i2c <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@the-dreams.de>
+Subject: [PATCH 1/7] PM / core: Add helpers for subsystem callback selection
+Date: Wed, 03 Jan 2018 01:31:40 +0100
+Message-ID: <7022547.IqIDhzI9bf@aspire.rjw.lan>
+In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
+References: <7742130.AaJQIxeI1n@aspire.rjw.lan> <2436726.ykYRzVD45y@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support to the Cadence PCIe controller in host mode.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Add helper routines to find and return a suitable subsystem callback
+during the "noirq" phases of system suspend/resume (or analogous)
+transitions as well as during the "late" phase of system suspend and
+the "early" phase of system resume (or analogous) transitions.
+
+The helpers will be called from additional sites going forward.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
 ---
- MAINTAINERS                          |   7 +
- drivers/pci/host/Kconfig             |  10 +
- drivers/pci/host/Makefile            |   1 +
- drivers/pci/host/pcie-cadence-host.c | 397 +++++++++++++++++++++++++++++++++++
- drivers/pci/host/pcie-cadence.h      | 189 +++++++++++++++++
- 5 files changed, 604 insertions(+)
- create mode 100644 drivers/pci/host/pcie-cadence-host.c
- create mode 100644 drivers/pci/host/pcie-cadence.h
+ drivers/base/power/main.c |  188 +++++++++++++++++++++++++++++++---------------
+ 1 file changed, 128 insertions(+), 60 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a6e86e20761e..460d5580f87e 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10402,6 +10402,13 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/pci-armada8k.txt
- F:	drivers/pci/dwc/pcie-armada8k.c
+Index: linux-pm/drivers/base/power/main.c
+===================================================================
+--- linux-pm.orig/drivers/base/power/main.c
++++ linux-pm/drivers/base/power/main.c
+@@ -551,6 +551,35 @@ bool dev_pm_may_skip_resume(struct devic
+ 	return !dev->power.must_resume && pm_transition.event != PM_EVENT_RESTORE;
+ }
  
-+PCI DRIVER FOR CADENCE PCIE IP
-+M:	Alan Douglas <adouglas@cadence.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/cdns,*.txt
-+F:	drivers/pci/host/pcie-cadence*
++static pm_callback_t dpm_subsys_resume_noirq_cb(struct device *dev,
++						pm_message_t state,
++						const char **info_p)
++{
++	pm_callback_t callback;
++	const char *info;
 +
- PCI DRIVER FOR FREESCALE LAYERSCAPE
- M:	Minghuan Lian <minghuan.Lian@freescale.com>
- M:	Mingkai Hu <mingkai.hu@freescale.com>
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 38d12980db0f..d6866733d69d 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -210,6 +210,16 @@ config PCIE_TANGO_SMP8759
- 	  This can lead to data corruption if drivers perform concurrent
- 	  config and MMIO accesses.
++	if (dev->pm_domain) {
++		info = "noirq power domain ";
++		callback = pm_noirq_op(&dev->pm_domain->ops, state);
++	} else if (dev->type && dev->type->pm) {
++		info = "noirq type ";
++		callback = pm_noirq_op(dev->type->pm, state);
++	} else if (dev->class && dev->class->pm) {
++		info = "noirq class ";
++		callback = pm_noirq_op(dev->class->pm, state);
++	} else if (dev->bus && dev->bus->pm) {
++		info = "noirq bus ";
++		callback = pm_noirq_op(dev->bus->pm, state);
++	} else {
++		return NULL;
++	}
++
++	if (info_p)
++		*info_p = info;
++
++	return callback;
++}
++
+ /**
+  * device_resume_noirq - Execute a "noirq resume" callback for given device.
+  * @dev: Device to handle.
+@@ -562,8 +591,8 @@ bool dev_pm_may_skip_resume(struct devic
+  */
+ static int device_resume_noirq(struct device *dev, pm_message_t state, bool async)
+ {
+-	pm_callback_t callback = NULL;
+-	const char *info = NULL;
++	pm_callback_t callback;
++	const char *info;
+ 	int error = 0;
  
-+config PCIE_CADENCE_HOST
-+	bool "Cadence PCIe host controller"
-+	depends on OF
-+	depends on PCI
-+	select IRQ_DOMAIN
-+	help
-+	  Say Y here if you want to support the Cadence PCIe controller in host
-+	  mode. This PCIe controller may be embedded into many different vendors
-+	  SoCs.
-+
- config VMD
- 	depends on PCI_MSI && X86_64 && SRCU
- 	tristate "Intel Volume Management Device Driver"
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 3b1059190867..2460f0785120 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -22,6 +22,7 @@ obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
- obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
- obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
-+obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o
- obj-$(CONFIG_VMD) += vmd.o
+ 	TRACE_DEVICE(dev);
+@@ -577,19 +606,7 @@ static int device_resume_noirq(struct de
  
- # The following drivers are for devices that use the generic ACPI
-diff --git a/drivers/pci/host/pcie-cadence-host.c b/drivers/pci/host/pcie-cadence-host.c
-new file mode 100644
-index 000000000000..9332601845ea
---- /dev/null
-+++ b/drivers/pci/host/pcie-cadence-host.c
-@@ -0,0 +1,397 @@
-+// SPDX-License-Identifier: GPL-2.0
-+// Copyright (c) 2017 Cadence
-+// Cadence PCIe host controller driver.
-+// Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-+
-+#include <linux/kernel.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
-+
-+#include "pcie-cadence.h"
-+
-+/**
-+ * struct cdns_pcie_rc - private data for this PCIe Root Complex driver
-+ * @pcie: Cadence PCIe controller
-+ * @dev: pointer to PCIe device
-+ * @cfg_res: start/end offsets in the physical system memory to map PCI
-+ *           configuration space accesses
-+ * @bus_range: first/last buses behind the PCIe host controller
-+ * @cfg_base: IO mapped window to access the PCI configuration space of a
-+ *            single function at a time
-+ * @max_regions: maximum number of regions supported by the hardware
-+ * @no_bar_nbits: Number of bits to keep for inbound (PCIe -> CPU) address
-+ *                translation (nbits sets into the "no BAR match" register)
-+ * @vendor_id: PCI vendor ID
-+ * @device_id: PCI device ID
-+ */
-+struct cdns_pcie_rc {
-+	struct cdns_pcie	pcie;
-+	struct device		*dev;
-+	struct resource		*cfg_res;
-+	struct resource		*bus_range;
-+	void __iomem		*cfg_base;
-+	u32			max_regions;
-+	u32			no_bar_nbits;
-+	u16			vendor_id;
-+	u16			device_id;
-+};
-+
-+static void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie,
-+				   u32 r, bool is_io,
-+				   u64 cpu_addr, u64 pci_addr, size_t size)
+ 	dpm_wait_for_superior(dev, async);
+ 
+-	if (dev->pm_domain) {
+-		info = "noirq power domain ";
+-		callback = pm_noirq_op(&dev->pm_domain->ops, state);
+-	} else if (dev->type && dev->type->pm) {
+-		info = "noirq type ";
+-		callback = pm_noirq_op(dev->type->pm, state);
+-	} else if (dev->class && dev->class->pm) {
+-		info = "noirq class ";
+-		callback = pm_noirq_op(dev->class->pm, state);
+-	} else if (dev->bus && dev->bus->pm) {
+-		info = "noirq bus ";
+-		callback = pm_noirq_op(dev->bus->pm, state);
+-	}
++	callback = dpm_subsys_resume_noirq_cb(dev, state, &info);
+ 
+ 	if (!callback && dev->driver && dev->driver->pm) {
+ 		info = "noirq driver ";
+@@ -704,6 +721,35 @@ void dpm_resume_noirq(pm_message_t state
+ 	dpm_noirq_end();
+ }
+ 
++static pm_callback_t dpm_subsys_resume_early_cb(struct device *dev,
++						pm_message_t state,
++						const char **info_p)
 +{
-+	/*
-+	 * roundup_pow_of_two() returns an unsigned long, which is not suited
-+	 * for 64bit values.
-+	 */
-+	u64 sz = 1ULL << fls64(size - 1);
-+	int nbits = ilog2(sz);
-+	u32 addr0, addr1, desc0, desc1;
++	pm_callback_t callback;
++	const char *info;
 +
-+	if (nbits < 8)
-+		nbits = 8;
-+
-+	/* Set the PCI address */
-+	addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(nbits) |
-+		(lower_32_bits(pci_addr) & GENMASK(31, 8));
-+	addr1 = upper_32_bits(pci_addr);
-+
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR0(r), addr0);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(r), addr1);
-+
-+	/* Set the PCIe header descriptor */
-+	if (is_io)
-+		desc0 = CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_IO;
-+	else
-+		desc0 = CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_MEM;
-+	desc1 = 0;
-+
-+	/*
-+	 * Whatever Bit [23] is set or not inside DESC0 register of the outbound
-+	 * PCIe descriptor, the PCI function number must be set into
-+	 * Bits [26:24] of DESC0 anyway.
-+	 *
-+	 * In Root Complex mode, the function number is always 0 but in Endpoint
-+	 * mode, the PCIe controller may support more than one function. This
-+	 * function number needs to be set properly into the outbound PCIe
-+	 * descriptor.
-+	 *
-+	 * Besides, setting Bit [23] is mandatory when in Root Complex mode:
-+	 * then the driver must provide the bus, resp. device, number in
-+	 * Bits [7:0] of DESC1, resp. Bits[31:27] of DESC0. Like the function
-+	 * number, the device number is always 0 in Root Complex mode.
-+	 */
-+	desc0 |= CDNS_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID |
-+		CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN(0);
-+	desc1 |= CDNS_PCIE_AT_OB_REGION_DESC1_BUS(pcie->bus);
-+
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC0(r), desc0);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(r), desc1);
-+
-+	/* Set the CPU address */
-+	cpu_addr -= pcie->mem_res->start;
-+	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(nbits) |
-+		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
-+	addr1 = upper_32_bits(cpu_addr);
-+
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), addr0);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), addr1);
-+}
-+
-+static void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
-+				      int where)
-+{
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
-+	struct cdns_pcie_rc *rc = pci_host_bridge_priv(bridge);
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	unsigned int busn = bus->number;
-+	u32 addr0, desc0;
-+
-+	if (busn == rc->bus_range->start) {
-+		/*
-+		 * Only the root port (devfn == 0) is connected to this bus.
-+		 * All other PCI devices are behind some bridge hence on another
-+		 * bus.
-+		 */
-+		if (devfn)
-+			return NULL;
-+
-+		return pcie->reg_base + (where & 0xfff);
++	if (dev->pm_domain) {
++		info = "early power domain ";
++		callback = pm_late_early_op(&dev->pm_domain->ops, state);
++	} else if (dev->type && dev->type->pm) {
++		info = "early type ";
++		callback = pm_late_early_op(dev->type->pm, state);
++	} else if (dev->class && dev->class->pm) {
++		info = "early class ";
++		callback = pm_late_early_op(dev->class->pm, state);
++	} else if (dev->bus && dev->bus->pm) {
++		info = "early bus ";
++		callback = pm_late_early_op(dev->bus->pm, state);
++	} else {
++		return NULL;
 +	}
 +
-+	/* Update Output registers for AXI region 0. */
-+	addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
-+		CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN(devfn) |
-+		CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS(busn);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR0(0), addr0);
++	if (info_p)
++		*info_p = info;
 +
-+	/* Configuration Type 0 or Type 1 access. */
-+	desc0 = CDNS_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID |
-+		CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN(0);
-+	/*
-+	 * The bus number was already set once for all in desc1 by
-+	 * cdns_pcie_host_init_address_translation().
-+	 */
-+	if (busn == rc->bus_range->start + 1)
-+		desc0 |= CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0;
-+	else
-+		desc0 |= CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1;
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC0(0), desc0);
-+
-+	return rc->cfg_base + (where & 0xfff);
++	return callback;
 +}
 +
-+static struct pci_ops cdns_pcie_host_ops = {
-+	.map_bus	= cdns_pci_map_bus,
-+	.read		= pci_generic_config_read,
-+	.write		= pci_generic_config_write,
-+};
-+
-+static const struct of_device_id cdns_pcie_host_of_match[] = {
-+	{ .compatible = "cdns,cdns-pcie-host" },
-+
-+	{ },
-+};
-+
-+static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+ /**
+  * device_resume_early - Execute an "early resume" callback for given device.
+  * @dev: Device to handle.
+@@ -714,8 +760,8 @@ void dpm_resume_noirq(pm_message_t state
+  */
+ static int device_resume_early(struct device *dev, pm_message_t state, bool async)
+ {
+-	pm_callback_t callback = NULL;
+-	const char *info = NULL;
++	pm_callback_t callback;
++	const char *info;
+ 	int error = 0;
+ 
+ 	TRACE_DEVICE(dev);
+@@ -729,19 +775,7 @@ static int device_resume_early(struct de
+ 
+ 	dpm_wait_for_superior(dev, async);
+ 
+-	if (dev->pm_domain) {
+-		info = "early power domain ";
+-		callback = pm_late_early_op(&dev->pm_domain->ops, state);
+-	} else if (dev->type && dev->type->pm) {
+-		info = "early type ";
+-		callback = pm_late_early_op(dev->type->pm, state);
+-	} else if (dev->class && dev->class->pm) {
+-		info = "early class ";
+-		callback = pm_late_early_op(dev->class->pm, state);
+-	} else if (dev->bus && dev->bus->pm) {
+-		info = "early bus ";
+-		callback = pm_late_early_op(dev->bus->pm, state);
+-	}
++	callback = dpm_subsys_resume_early_cb(dev, state, &info);
+ 
+ 	if (!callback && dev->driver && dev->driver->pm) {
+ 		info = "early driver ";
+@@ -1128,6 +1162,35 @@ static void dpm_superior_set_must_resume
+ 	device_links_read_unlock(idx);
+ }
+ 
++static pm_callback_t dpm_subsys_suspend_noirq_cb(struct device *dev,
++						 pm_message_t state,
++						 const char **info_p)
 +{
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	u32 value, ctrl;
++	pm_callback_t callback;
++	const char *info;
 +
-+	/*
-+	 * Set the root complex BAR configuration register:
-+	 * - disable both BAR0 and BAR1.
-+	 * - enable Prefetchable Memory Base and Limit registers in type 1
-+	 *   config space (64 bits).
-+	 * - enable IO Base and Limit registers in type 1 config
-+	 *   space (32 bits).
-+	 */
-+	ctrl = CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED;
-+	value = CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL(ctrl) |
-+		CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL(ctrl) |
-+		CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_ENABLE |
-+		CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_64BITS |
-+		CDNS_PCIE_LM_RC_BAR_CFG_IO_ENABLE |
-+		CDNS_PCIE_LM_RC_BAR_CFG_IO_32BITS;
-+	cdns_pcie_writel(pcie, CDNS_PCIE_LM_RC_BAR_CFG, value);
-+
-+	/* Set root port configuration space */
-+	if (rc->vendor_id != 0xffff)
-+		cdns_pcie_rp_writew(pcie, PCI_VENDOR_ID, rc->vendor_id);
-+	if (rc->device_id != 0xffff)
-+		cdns_pcie_rp_writew(pcie, PCI_DEVICE_ID, rc->device_id);
-+
-+	cdns_pcie_rp_writeb(pcie, PCI_CLASS_REVISION, 0);
-+	cdns_pcie_rp_writeb(pcie, PCI_CLASS_PROG, 0);
-+	cdns_pcie_rp_writew(pcie, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
-+
-+	return 0;
-+}
-+
-+static int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
-+{
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	struct resource *cfg_res = rc->cfg_res;
-+	struct resource *mem_res = pcie->mem_res;
-+	struct resource *bus_range = rc->bus_range;
-+	struct device *dev = rc->dev;
-+	struct device_node *np = dev->of_node;
-+	struct of_pci_range_parser parser;
-+	struct of_pci_range range;
-+	u32 addr0, addr1, desc1;
-+	u64 cpu_addr;
-+	int r, err;
-+
-+	/*
-+	 * Reserve region 0 for PCI configure space accesses:
-+	 * OB_REGION_PCI_ADDR0 and OB_REGION_DESC0 are updated dynamically by
-+	 * cdns_pci_map_bus(), other region registers are set here once for all.
-+	 */
-+	addr1 = 0; /* Should be programmed to zero. */
-+	desc1 = CDNS_PCIE_AT_OB_REGION_DESC1_BUS(bus_range->start);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(0), addr1);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(0), desc1);
-+
-+	cpu_addr = cfg_res->start - mem_res->start;
-+	addr0 = CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(12) |
-+		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
-+	addr1 = upper_32_bits(cpu_addr);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(0), addr0);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(0), addr1);
-+
-+	err = of_pci_range_parser_init(&parser, np);
-+	if (err)
-+		return err;
-+
-+	r = 1;
-+	for_each_of_pci_range(&parser, &range) {
-+		bool is_io;
-+
-+		if (r >= rc->max_regions)
-+			break;
-+
-+		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
-+			is_io = false;
-+		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
-+			is_io = true;
-+		else
-+			continue;
-+
-+		cdns_pcie_set_outbound_region(pcie, r, is_io,
-+					      range.cpu_addr,
-+					      range.pci_addr,
-+					      range.size);
-+		r++;
++	if (dev->pm_domain) {
++		info = "noirq power domain ";
++		callback = pm_noirq_op(&dev->pm_domain->ops, state);
++	} else if (dev->type && dev->type->pm) {
++		info = "noirq type ";
++		callback = pm_noirq_op(dev->type->pm, state);
++	} else if (dev->class && dev->class->pm) {
++		info = "noirq class ";
++		callback = pm_noirq_op(dev->class->pm, state);
++	} else if (dev->bus && dev->bus->pm) {
++		info = "noirq bus ";
++		callback = pm_noirq_op(dev->bus->pm, state);
++	} else {
++		return NULL;
 +	}
 +
-+	/*
-+	 * Set Root Port no BAR match Inbound Translation registers:
-+	 * needed for MSI and DMA.
-+	 * Root Port BAR0 and BAR1 are disabled, hence no need to set their
-+	 * inbound translation registers.
-+	 */
-+	addr0 = CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS(rc->no_bar_nbits);
-+	addr1 = 0;
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_IB_RP_BAR_ADDR0(RP_NO_BAR), addr0);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_IB_RP_BAR_ADDR1(RP_NO_BAR), addr1);
++	if (info_p)
++		*info_p = info;
 +
-+	return 0;
++	return callback;
 +}
 +
-+static int cdns_pcie_host_init(struct device *dev,
-+			       struct list_head *resources,
-+			       struct cdns_pcie_rc *rc)
+ /**
+  * __device_suspend_noirq - Execute a "noirq suspend" callback for given device.
+  * @dev: Device to handle.
+@@ -1139,8 +1202,8 @@ static void dpm_superior_set_must_resume
+  */
+ static int __device_suspend_noirq(struct device *dev, pm_message_t state, bool async)
+ {
+-	pm_callback_t callback = NULL;
+-	const char *info = NULL;
++	pm_callback_t callback;
++	const char *info;
+ 	int error = 0;
+ 
+ 	TRACE_DEVICE(dev);
+@@ -1159,19 +1222,7 @@ static int __device_suspend_noirq(struct
+ 	if (dev->power.syscore || dev->power.direct_complete)
+ 		goto Complete;
+ 
+-	if (dev->pm_domain) {
+-		info = "noirq power domain ";
+-		callback = pm_noirq_op(&dev->pm_domain->ops, state);
+-	} else if (dev->type && dev->type->pm) {
+-		info = "noirq type ";
+-		callback = pm_noirq_op(dev->type->pm, state);
+-	} else if (dev->class && dev->class->pm) {
+-		info = "noirq class ";
+-		callback = pm_noirq_op(dev->class->pm, state);
+-	} else if (dev->bus && dev->bus->pm) {
+-		info = "noirq bus ";
+-		callback = pm_noirq_op(dev->bus->pm, state);
+-	}
++	callback = dpm_subsys_suspend_noirq_cb(dev, state, &info);
+ 
+ 	if (!callback && dev->driver && dev->driver->pm) {
+ 		info = "noirq driver ";
+@@ -1306,6 +1357,35 @@ int dpm_suspend_noirq(pm_message_t state
+ 	return ret;
+ }
+ 
++static pm_callback_t dpm_subsys_suspend_late_cb(struct device *dev,
++						pm_message_t state,
++						const char **info_p)
 +{
-+	struct resource *bus_range = NULL;
-+	int err;
++	pm_callback_t callback;
++	const char *info;
 +
-+	/* Parse our PCI ranges and request their resources */
-+	err = pci_parse_request_of_pci_ranges(dev, resources, &bus_range);
-+	if (err)
-+		return err;
-+
-+	rc->bus_range = bus_range;
-+	rc->pcie.bus = bus_range->start;
-+
-+	err = cdns_pcie_host_init_root_port(rc);
-+	if (err)
-+		goto err_out;
-+
-+	err = cdns_pcie_host_init_address_translation(rc);
-+	if (err)
-+		goto err_out;
-+
-+	return 0;
-+
-+ err_out:
-+	pci_free_resource_list(resources);
-+	return err;
-+}
-+
-+static int cdns_pcie_host_probe(struct platform_device *pdev)
-+{
-+	const char *type;
-+	struct device *dev = &pdev->dev;
-+	struct device_node *np = dev->of_node;
-+	struct pci_host_bridge *bridge;
-+	struct list_head resources;
-+	struct cdns_pcie_rc *rc;
-+	struct cdns_pcie *pcie;
-+	struct resource *res;
-+	int ret;
-+
-+	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*rc));
-+	if (!bridge)
-+		return -ENOMEM;
-+
-+	rc = pci_host_bridge_priv(bridge);
-+	rc->dev = dev;
-+
-+	pcie = &rc->pcie;
-+
-+	rc->max_regions = 32;
-+	of_property_read_u32(np, "cdns,max-outbound-regions", &rc->max_regions);
-+
-+	rc->no_bar_nbits = 32;
-+	of_property_read_u32(np, "cdns,no-bar-match-nbits", &rc->no_bar_nbits);
-+
-+	rc->vendor_id = 0xffff;
-+	of_property_read_u16(np, "vendor-id", &rc->vendor_id);
-+
-+	rc->device_id = 0xffff;
-+	of_property_read_u16(np, "device-id", &rc->device_id);
-+
-+	type = of_get_property(np, "device_type", NULL);
-+	if (!type || strcmp(type, "pci")) {
-+		dev_err(dev, "invalid \"device_type\" %s\n", type);
-+		return -EINVAL;
++	if (dev->pm_domain) {
++		info = "late power domain ";
++		callback = pm_late_early_op(&dev->pm_domain->ops, state);
++	} else if (dev->type && dev->type->pm) {
++		info = "late type ";
++		callback = pm_late_early_op(dev->type->pm, state);
++	} else if (dev->class && dev->class->pm) {
++		info = "late class ";
++		callback = pm_late_early_op(dev->class->pm, state);
++	} else if (dev->bus && dev->bus->pm) {
++		info = "late bus ";
++		callback = pm_late_early_op(dev->bus->pm, state);
++	} else {
++		return NULL;
 +	}
 +
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "reg");
-+	pcie->reg_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(pcie->reg_base)) {
-+		dev_err(dev, "missing \"reg\"\n");
-+		return PTR_ERR(pcie->reg_base);
-+	}
++	if (info_p)
++		*info_p = info;
 +
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
-+	rc->cfg_base = devm_pci_remap_cfg_resource(dev, res);
-+	if (IS_ERR(rc->cfg_base)) {
-+		dev_err(dev, "missing \"cfg\"\n");
-+		return PTR_ERR(rc->cfg_base);
-+	}
-+	rc->cfg_res = res;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "mem");
-+	if (!res) {
-+		dev_err(dev, "missing \"mem\"\n");
-+		return -EINVAL;
-+	}
-+	pcie->mem_res = res;
-+
-+	pm_runtime_enable(dev);
-+	ret = pm_runtime_get_sync(dev);
-+	if (ret < 0) {
-+		dev_err(dev, "pm_runtime_get_sync() failed\n");
-+		goto err_get_sync;
-+	}
-+
-+	ret = cdns_pcie_host_init(dev, &resources, rc);
-+	if (ret)
-+		goto err_init;
-+
-+	list_splice_init(&resources, &bridge->windows);
-+	bridge->dev.parent = dev;
-+	bridge->busnr = pcie->bus;
-+	bridge->ops = &cdns_pcie_host_ops;
-+	bridge->map_irq = of_irq_parse_and_map_pci;
-+	bridge->swizzle_irq = pci_common_swizzle;
-+
-+	ret = pci_host_probe(bridge);
-+	if (ret < 0)
-+		goto err_host_probe;
-+
-+	return 0;
-+
-+ err_host_probe:
-+	pci_free_resource_list(&resources);
-+
-+ err_init:
-+	pm_runtime_put_sync(dev);
-+
-+ err_get_sync:
-+	pm_runtime_disable(dev);
-+
-+	return ret;
++	return callback;
 +}
 +
-+static struct platform_driver cdns_pcie_host_driver = {
-+	.driver = {
-+		.name = "cdns-pcie-host",
-+		.of_match_table = cdns_pcie_host_of_match,
-+	},
-+	.probe = cdns_pcie_host_probe,
-+};
-+builtin_platform_driver(cdns_pcie_host_driver);
-diff --git a/drivers/pci/host/pcie-cadence.h b/drivers/pci/host/pcie-cadence.h
-new file mode 100644
-index 000000000000..a28afdee0d02
---- /dev/null
-+++ b/drivers/pci/host/pcie-cadence.h
-@@ -0,0 +1,189 @@
-+// SPDX-License-Identifier: GPL-2.0
-+// Copyright (c) 2017 Cadence
-+// Cadence PCIe controller driver.
-+// Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-+
-+#ifndef _PCIE_CADENCE_H
-+#define _PCIE_CADENCE_H
-+
-+#include <linux/kernel.h>
-+#include <linux/pci.h>
-+
-+/*
-+ * Local Management Registers
-+ */
-+#define CDNS_PCIE_LM_BASE	0x00100000
-+
-+/* Vendor ID Register */
-+#define CDNS_PCIE_LM_ID		(CDNS_PCIE_LM_BASE + 0x0044)
-+#define  CDNS_PCIE_LM_ID_VENDOR_MASK	GENMASK(15, 0)
-+#define  CDNS_PCIE_LM_ID_VENDOR_SHIFT	0
-+#define  CDNS_PCIE_LM_ID_VENDOR(vid) \
-+	(((vid) << CDNS_PCIE_LM_ID_VENDOR_SHIFT) & CDNS_PCIE_LM_ID_VENDOR_MASK)
-+#define  CDNS_PCIE_LM_ID_SUBSYS_MASK	GENMASK(31, 16)
-+#define  CDNS_PCIE_LM_ID_SUBSYS_SHIFT	16
-+#define  CDNS_PCIE_LM_ID_SUBSYS(sub) \
-+	(((sub) << CDNS_PCIE_LM_ID_SUBSYS_SHIFT) & CDNS_PCIE_LM_ID_SUBSYS_MASK)
-+
-+/* Root Port Requestor ID Register */
-+#define CDNS_PCIE_LM_RP_RID	(CDNS_PCIE_LM_BASE + 0x0228)
-+#define  CDNS_PCIE_LM_RP_RID_MASK	GENMASK(15, 0)
-+#define  CDNS_PCIE_LM_RP_RID_SHIFT	0
-+#define  CDNS_PCIE_LM_RP_RID_(rid) \
-+	(((rid) << CDNS_PCIE_LM_RP_RID_SHIFT) & CDNS_PCIE_LM_RP_RID_MASK)
-+
-+/* Root Complex BAR Configuration Register */
-+#define CDNS_PCIE_LM_RC_BAR_CFG	(CDNS_PCIE_LM_BASE + 0x0300)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE_MASK	GENMASK(5, 0)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE(a) \
-+	(((a) << 0) & CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE_MASK)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL_MASK		GENMASK(8, 6)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL(c) \
-+	(((c) << 6) & CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL_MASK)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE_MASK	GENMASK(13, 9)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE(a) \
-+	(((a) << 9) & CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE_MASK)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL_MASK		GENMASK(16, 14)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL(c) \
-+	(((c) << 14) & CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL_MASK)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_ENABLE	BIT(17)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_32BITS	0
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_64BITS	BIT(18)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_ENABLE		BIT(19)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_16BITS		0
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_32BITS		BIT(20)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_CHECK_ENABLE		BIT(31)
-+
-+/* BAR control values applicable to both Endpoint Function and Root Complex */
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED		0x0
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_IO_32BITS		0x1
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_32BITS		0x4
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_32BITS	0x5
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_64BITS		0x6
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_64BITS	0x7
-+
-+
-+/*
-+ * Root Port Registers (PCI configuration space for the root port function)
-+ */
-+#define CDNS_PCIE_RP_BASE	0x00200000
-+
-+
-+/*
-+ * Address Translation Registers
-+ */
-+#define CDNS_PCIE_AT_BASE	0x00400000
-+
-+/* Region r Outbound AXI to PCIe Address Translation Register 0 */
-+#define CDNS_PCIE_AT_OB_REGION_PCI_ADDR0(r) \
-+	(CDNS_PCIE_AT_BASE + 0x0000 + ((r) & 0x1f) * 0x0020)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS_MASK	GENMASK(5, 0)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(nbits) \
-+	(((nbits) - 1) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS_MASK)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK	GENMASK(19, 12)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN(devfn) \
-+	(((devfn) << 12) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK	GENMASK(27, 20)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS(bus) \
-+	(((bus) << 20) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK)
-+
-+/* Region r Outbound AXI to PCIe Address Translation Register 1 */
-+#define CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(r) \
-+	(CDNS_PCIE_AT_BASE + 0x0004 + ((r) & 0x1f) * 0x0020)
-+
-+/* Region r Outbound PCIe Descriptor Register 0 */
-+#define CDNS_PCIE_AT_OB_REGION_DESC0(r) \
-+	(CDNS_PCIE_AT_BASE + 0x0008 + ((r) & 0x1f) * 0x0020)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_MASK		GENMASK(3, 0)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_MEM		0x2
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_IO		0x6
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0	0xa
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1	0xb
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_NORMAL_MSG	0xc
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_VENDOR_MSG	0xd
-+/* Bit 23 MUST be set in RC mode. */
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID	BIT(23)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK	GENMASK(31, 24)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN(devfn) \
-+	(((devfn) << 24) & CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK)
-+
-+/* Region r Outbound PCIe Descriptor Register 1 */
-+#define CDNS_PCIE_AT_OB_REGION_DESC1(r)	\
-+	(CDNS_PCIE_AT_BASE + 0x000c + ((r) & 0x1f) * 0x0020)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC1_BUS_MASK	GENMASK(7, 0)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC1_BUS(bus) \
-+	((bus) & CDNS_PCIE_AT_OB_REGION_DESC1_BUS_MASK)
-+
-+/* Region r AXI Region Base Address Register 0 */
-+#define CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r) \
-+	(CDNS_PCIE_AT_BASE + 0x0018 + ((r) & 0x1f) * 0x0020)
-+#define  CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS_MASK	GENMASK(5, 0)
-+#define  CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(nbits) \
-+	(((nbits) - 1) & CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS_MASK)
-+
-+/* Region r AXI Region Base Address Register 1 */
-+#define CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r) \
-+	(CDNS_PCIE_AT_BASE + 0x001c + ((r) & 0x1f) * 0x0020)
-+
-+/* Root Port BAR Inbound PCIe to AXI Address Translation Register */
-+#define CDNS_PCIE_AT_IB_RP_BAR_ADDR0(bar) \
-+	(CDNS_PCIE_AT_BASE + 0x0800 + (bar) * 0x0008)
-+#define  CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS_MASK	GENMASK(5, 0)
-+#define  CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS(nbits) \
-+	(((nbits) - 1) & CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS_MASK)
-+#define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
-+	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
-+
-+enum cdns_pcie_rp_bar {
-+	RP_BAR0,
-+	RP_BAR1,
-+	RP_NO_BAR
-+};
-+
-+/**
-+ * struct cdns_pcie - private data for Cadence PCIe controller drivers
-+ * @reg_base: IO mapped register base
-+ * @mem_res: start/end offsets in the physical system memory to map PCI accesses
-+ * @bus: In Root Complex mode, the bus number
-+ */
-+struct cdns_pcie {
-+	void __iomem		*reg_base;
-+	struct resource		*mem_res;
-+	u8			bus;
-+};
-+
-+/* Register access */
-+static inline void cdns_pcie_writeb(struct cdns_pcie *pcie, u32 reg, u8 value)
-+{
-+	writeb(value, pcie->reg_base + reg);
-+}
-+
-+static inline void cdns_pcie_writew(struct cdns_pcie *pcie, u32 reg, u16 value)
-+{
-+	writew(value, pcie->reg_base + reg);
-+}
-+
-+static inline void cdns_pcie_writel(struct cdns_pcie *pcie, u32 reg, u32 value)
-+{
-+	writel(value, pcie->reg_base + reg);
-+}
-+
-+static inline u32 cdns_pcie_readl(struct cdns_pcie *pcie, u32 reg)
-+{
-+	return readl(pcie->reg_base + reg);
-+}
-+
-+/* Root Port register access */
-+static inline void cdns_pcie_rp_writeb(struct cdns_pcie *pcie,
-+				       u32 reg, u8 value)
-+{
-+	writeb(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg);
-+}
-+
-+static inline void cdns_pcie_rp_writew(struct cdns_pcie *pcie,
-+				       u32 reg, u16 value)
-+{
-+	writew(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg);
-+}
-+
-+#endif /* _PCIE_CADENCE_H */
--- 
-2.11.0
+ /**
+  * __device_suspend_late - Execute a "late suspend" callback for given device.
+  * @dev: Device to handle.
+@@ -1316,8 +1396,8 @@ int dpm_suspend_noirq(pm_message_t state
+  */
+ static int __device_suspend_late(struct device *dev, pm_message_t state, bool async)
+ {
+-	pm_callback_t callback = NULL;
+-	const char *info = NULL;
++	pm_callback_t callback;
++	const char *info;
+ 	int error = 0;
+ 
+ 	TRACE_DEVICE(dev);
+@@ -1338,19 +1418,7 @@ static int __device_suspend_late(struct
+ 	if (dev->power.syscore || dev->power.direct_complete)
+ 		goto Complete;
+ 
+-	if (dev->pm_domain) {
+-		info = "late power domain ";
+-		callback = pm_late_early_op(&dev->pm_domain->ops, state);
+-	} else if (dev->type && dev->type->pm) {
+-		info = "late type ";
+-		callback = pm_late_early_op(dev->type->pm, state);
+-	} else if (dev->class && dev->class->pm) {
+-		info = "late class ";
+-		callback = pm_late_early_op(dev->class->pm, state);
+-	} else if (dev->bus && dev->bus->pm) {
+-		info = "late bus ";
+-		callback = pm_late_early_op(dev->bus->pm, state);
+-	}
++	callback = dpm_subsys_suspend_late_cb(dev, state, &info);
+ 
+ 	if (!callback && dev->driver && dev->driver->pm) {
+ 		info = "late driver ";
