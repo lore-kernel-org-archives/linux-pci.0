@@ -1,270 +1,244 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60730 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755256AbeASLKe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 06:10:34 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v6 4/7] PCI/DPC: Unify and plumb error handling into DPC
-Date: Fri, 19 Jan 2018 16:40:01 +0530
-Message-Id: <1516360204-1586-5-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1516360204-1586-1-git-send-email-poza@codeaurora.org>
-References: <1516360204-1586-1-git-send-email-poza@codeaurora.org>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:44670 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751058AbeACAkp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 19:40:45 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Kevin Hilman <khilman@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-i2c <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@the-dreams.de>
+Subject: [PATCH 2/7] PM / core: Direct DPM_FLAG_SMART_SUSPEND optimization
+Date: Wed, 03 Jan 2018 01:32:27 +0100
+Message-ID: <3712947.JyckaHJdUq@aspire.rjw.lan>
+In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
+References: <7742130.AaJQIxeI1n@aspire.rjw.lan> <2436726.ykYRzVD45y@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current DPC driver does not do recovery, e.g. calling end-point's driver's
-callbacks, which sanitize the sw.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-DPC driver implements link_reset callback, and calls pci_do_recovery.
+Make the PM core avoid invoking the "late" and "noirq" system-wide
+suspend (or analogous) callbacks provided by device drivers directly
+for devices with DPM_FLAG_SMART_SUSPEND set that are in runtime
+suspend during the "late" and "noirq" phases of system-wide suspend
+(or analogous) transitions.  That is only done for devices without
+any middle-layer "late" and "noirq" suspend callbacks (to avoid
+confusing the middle layer if there is one).
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+The underlying observation is that runtime PM is disabled for devices
+during the "late" and "noirq" system-wide suspend phases, so if they
+remain in runtime suspend from the "late" phase forward, it doesn't
+make sense to invoke the "late" and "noirq" callbacks provided by
+the drivers for them (arguably, the device is already suspended and
+in the right state).  Thus, if the remaining driver suspend callbacks
+are to be invoked directly by the core, they can be skipped.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 665ff6c..3b79593 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -343,8 +343,12 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- void pci_enable_acs(struct pci_dev *dev);
+This change really makes it possible for, say, platform device
+drivers to re-use runtime PM suspend and resume callbacks by
+pointing ->suspend_late and ->resume_early, respectively (and
+possibly the analogous hibernation-related callback pointers too),
+to them without adding any extra "is the device already suspended?"
+type of checks to the callback routines, as long as they will be
+invoked directly by the core.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ Documentation/driver-api/pm/devices.rst |   18 +++---
+ drivers/base/power/main.c               |   85 +++++++++++++++++++++++++++++---
+ 2 files changed, 88 insertions(+), 15 deletions(-)
+
+Index: linux-pm/Documentation/driver-api/pm/devices.rst
+===================================================================
+--- linux-pm.orig/Documentation/driver-api/pm/devices.rst
++++ linux-pm/Documentation/driver-api/pm/devices.rst
+@@ -777,14 +777,16 @@ The driver can indicate that by setting
+ runtime suspend at the beginning of the ``suspend_late`` phase of system-wide
+ suspend (or in the ``poweroff_late`` phase of hibernation), when runtime PM
+ has been disabled for it, under the assumption that its state should not change
+-after that point until the system-wide transition is over.  If that happens, the
+-driver's system-wide resume callbacks, if present, may still be invoked during
+-the subsequent system-wide resume transition and the device's runtime power
+-management status may be set to "active" before enabling runtime PM for it,
+-so the driver must be prepared to cope with the invocation of its system-wide
+-resume callbacks back-to-back with its ``->runtime_suspend`` one (without the
+-intervening ``->runtime_resume`` and so on) and the final state of the device
+-must reflect the "active" status for runtime PM in that case.
++after that point until the system-wide transition is over (the PM core itself
++does that for devices whose "noirq", "late" and "early" system-wide PM callbacks
++are executed directly by it).  If that happens, the driver's system-wide resume
++callbacks, if present, may still be invoked during the subsequent system-wide
++resume transition and the device's runtime power management status may be set
++to "active" before enabling runtime PM for it, so the driver must be prepared to
++cope with the invocation of its system-wide resume callbacks back-to-back with
++its ``->runtime_suspend`` one (without the intervening ``->runtime_resume`` and
++so on) and the final state of the device must reflect the "active" runtime PM
++status in that case.
  
- /* PCI error reporting and recovery */
-+#define DPC_FATAL	4
-+
- void pci_do_recovery(struct pci_dev *dev, int severity);
- 
-+
-+
- #ifdef CONFIG_PCIE_PTM
- void pci_ptm_init(struct pci_dev *dev);
- #else
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 2d976a6..b5c9fbd 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -15,6 +15,9 @@
- #include <linux/pci.h>
- #include <linux/pcieport_if.h>
- #include "../pci.h"
-+#include "portdrv.h"
-+
-+static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
- 
- struct rp_pio_header_log_regs {
- 	u32 dw0;
-@@ -67,6 +70,60 @@ struct dpc_dev {
- 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
- };
- 
-+static int find_dpc_dev_iter(struct device *device, void *data)
-+{
-+	struct pcie_port_service_driver *service_driver;
-+	struct device **dev;
-+
-+	dev = (struct device **) data;
-+
-+	if (device->bus == &pcie_port_bus_type && device->driver) {
-+		service_driver = to_service_driver(device->driver);
-+		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
-+			*dev = device;
-+			return 1;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static struct device *pci_find_dpc_dev(struct pci_dev *pdev)
-+{
-+	struct device *dev = NULL;
-+
-+	device_for_each_child(&pdev->dev, &dev, find_dpc_dev_iter);
-+
-+	return dev;
-+}
-+
-+static int find_dpc_service_iter(struct device *device, void *data)
-+{
-+	struct pcie_port_service_driver *service_driver, **drv;
-+
-+	drv = (struct pcie_port_service_driver **) data;
-+
-+	if (device->bus == &pcie_port_bus_type && device->driver) {
-+		service_driver = to_service_driver(device->driver);
-+		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
-+			*drv = service_driver;
-+			return 1;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev)
-+{
-+	struct pcie_port_service_driver *drv = NULL;
-+
-+	device_for_each_child(&dev->dev, &drv, find_dpc_service_iter);
-+
-+	return drv;
-+}
-+EXPORT_SYMBOL(pci_find_dpc_service);
-+
- static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- {
- 	unsigned long timeout = jiffies + HZ;
-@@ -104,11 +161,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- 		dev_warn(dev, "Link state not disabled for DPC event\n");
+ During system-wide resume from a sleep state it's easiest to put devices into
+ the full-power state, as explained in :file:`Documentation/power/runtime_pm.txt`.
+Index: linux-pm/drivers/base/power/main.c
+===================================================================
+--- linux-pm.orig/drivers/base/power/main.c
++++ linux-pm/drivers/base/power/main.c
+@@ -540,6 +540,24 @@ void dev_pm_skip_next_resume_phases(stru
  }
  
--static void interrupt_event_handler(struct work_struct *work)
-+/**
-+ * dpc_reset_link - reset link DPC  routine
-+ * @dev: pointer to Root Port's pci_dev data structure
-+ *
-+ * Invoked by Port Bus driver when performing link reset at Root Port.
+ /**
++ * suspend_event - Return a "suspend" message for given "resume" one.
++ * @resume_msg: PM message representing a system-wide resume transition.
 + */
-+static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- {
--	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
--	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
- 	struct pci_bus *parent = pdev->subordinate;
-+	struct pci_dev *dev, *temp;
-+	struct dpc_dev *dpc;
-+	struct pcie_device *pciedev;
-+	struct device *devdpc;
-+
-+	devdpc = pci_find_dpc_dev(pdev);
-+	pciedev = to_pcie_device(devdpc);
-+	dpc = get_service_data(pciedev);
- 
- 	pci_lock_rescan_remove();
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-@@ -125,7 +194,7 @@ static void interrupt_event_handler(struct work_struct *work)
- 
- 	dpc_wait_link_inactive(dpc);
- 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
--		return;
-+		return PCI_ERS_RESULT_DISCONNECT;
- 	if (dpc->rp && dpc->rp_pio_status) {
- 		pci_write_config_dword(pdev,
- 				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
-@@ -135,6 +204,17 @@ static void interrupt_event_handler(struct work_struct *work)
- 
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
- 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
-+
-+	return PCI_ERS_RESULT_RECOVERED;
++static pm_message_t suspend_event(pm_message_t resume_msg)
++{
++	switch (resume_msg.event) {
++	case PM_EVENT_RESUME:
++		return PMSG_SUSPEND;
++	case PM_EVENT_THAW:
++	case PM_EVENT_RESTORE:
++		return PMSG_FREEZE;
++	case PM_EVENT_RECOVER:
++		return PMSG_HIBERNATE;
++	}
++	return PMSG_ON;
 +}
 +
-+static void interrupt_event_handler(struct work_struct *work)
-+{
-+	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
-+	struct pci_dev *pdev = dpc->dev->port;
++/**
+  * dev_pm_may_skip_resume - System-wide device resume optimization check.
+  * @dev: Target device.
+  *
+@@ -580,6 +598,14 @@ static pm_callback_t dpm_subsys_resume_n
+ 	return callback;
+ }
+ 
++static pm_callback_t dpm_subsys_suspend_noirq_cb(struct device *dev,
++						 pm_message_t state,
++						 const char **info_p);
 +
-+	/* From DPC point of view error is always FATAL. */
-+	pci_do_recovery(pdev, DPC_FATAL);
- }
++static pm_callback_t dpm_subsys_suspend_late_cb(struct device *dev,
++						pm_message_t state,
++						const char **info_p);
++
+ /**
+  * device_resume_noirq - Execute a "noirq resume" callback for given device.
+  * @dev: Device to handle.
+@@ -607,13 +633,40 @@ static int device_resume_noirq(struct de
+ 	dpm_wait_for_superior(dev, async);
  
- static void dpc_rp_pio_print_tlp_header(struct device *dev,
-@@ -339,6 +419,7 @@ static void dpc_remove(struct pcie_device *dev)
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
-+	.reset_link     = dpc_reset_link,
- };
+ 	callback = dpm_subsys_resume_noirq_cb(dev, state, &info);
++	if (callback)
++		goto Run;
  
- static int __init dpc_service_init(void)
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 8318c84..05385c0 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -19,6 +19,7 @@
- #include <linux/aer.h>
- #include <linux/pcieport_if.h>
- #include "portdrv.h"
-+#include "./../pci.h"
- 
- static DEFINE_MUTEX(pci_err_recovery_lock);
- 
-@@ -181,7 +182,7 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
--static pci_ers_result_t reset_link(struct pci_dev *dev)
-+static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
- {
- 	struct pci_dev *udev;
- 	pci_ers_result_t status;
-@@ -195,9 +196,17 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- 		udev = dev->bus->self;
+-	if (!callback && dev->driver && dev->driver->pm) {
++	if (dev_pm_smart_suspend_and_suspended(dev)) {
++		pm_message_t suspend_msg = suspend_event(state);
++
++		/*
++		 * If "freeze" callbacks have been skipped during a transition
++		 * related to hibernation, the subsequent "thaw" callbacks must
++		 * be skipped too or bad things may happen.  Otherwise, resume
++		 * callbacks are going to be run for the device, so its runtime
++		 * PM status must be changed to reflect the new state after the
++		 * transition under way.
++		 */
++		if (!dpm_subsys_suspend_late_cb(dev, suspend_msg, NULL) &&
++		    !dpm_subsys_suspend_noirq_cb(dev, suspend_msg, NULL)) {
++			if (state.event == PM_EVENT_THAW) {
++				dev_pm_skip_next_resume_phases(dev);
++				goto Skip;
++			} else {
++				pm_runtime_set_active(dev);
++			}
++		}
++	}
++
++	if (dev->driver && dev->driver->pm) {
+ 		info = "noirq driver ";
+ 		callback = pm_noirq_op(dev->driver->pm, state);
  	}
  
++Run:
+ 	error = dpm_run_callback(callback, dev, state, info);
 +
-+	/* Use the service driver of the component firstly */
-+#if IS_ENABLED(CONFIG_PCIE_DPC)
-+	if (severity == DPC_FATAL)
-+		driver = pci_find_dpc_service(udev);
-+#endif
- #if IS_ENABLED(CONFIG_PCIEAER)
--	/* Use the aer driver of the component firstly */
--	driver = pci_find_aer_service(udev);
-+	if ((severity == AER_FATAL) ||
-+	    (severity == AER_NONFATAL) ||
-+	    (severity == AER_CORRECTABLE))
-+		driver = pci_find_aer_service(udev);
- #endif
++Skip:
+ 	dev->power.is_noirq_suspended = false;
  
- 	if (driver && driver->reset_link) {
-@@ -287,7 +296,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 
- 	mutex_lock(&pci_err_recovery_lock);
- 
--	if (severity == AER_FATAL)
-+	if ((severity == AER_FATAL) ||
-+	    (severity == DPC_FATAL))
- 		state = pci_channel_io_frozen;
- 	else
- 		state = pci_channel_io_normal;
-@@ -297,8 +307,9 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 			"error_detected",
- 			report_error_detected);
- 
--	if (severity == AER_FATAL) {
--		result = reset_link(dev);
-+	if ((severity == AER_FATAL) ||
-+	    (severity == DPC_FATAL)) {
-+		result = reset_link(dev, severity);
- 		if (result != PCI_ERS_RESULT_RECOVERED)
- 			goto failed;
+ 	if (dev_pm_may_skip_resume(dev)) {
+@@ -628,7 +681,7 @@ static int device_resume_noirq(struct de
+ 		dev_pm_skip_next_resume_phases(dev);
  	}
-@@ -335,6 +346,6 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
  
- failed:
- 	/* TODO: Should kernel panic here? */
--	dev_info(&dev->dev, "Device recovery failed\n");
- 	mutex_unlock(&pci_err_recovery_lock);
-+	dev_info(&dev->dev, "Device recovery failed\n");
- }
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 4f1992d..b013e24 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -80,4 +80,5 @@ static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
- #endif /* !CONFIG_ACPI */
+- Out:
++Out:
+ 	complete_all(&dev->power.completion);
+ 	TRACE_RESUME(error);
+ 	return error;
+@@ -1223,18 +1276,26 @@ static int __device_suspend_noirq(struct
+ 		goto Complete;
  
- struct pcie_port_service_driver *pci_find_aer_service(struct pci_dev *dev);
-+struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev);
- #endif /* _PORTDRV_H_ */
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+ 	callback = dpm_subsys_suspend_noirq_cb(dev, state, &info);
++	if (callback)
++		goto Run;
+ 
+-	if (!callback && dev->driver && dev->driver->pm) {
++	if (dev_pm_smart_suspend_and_suspended(dev) &&
++	    !dpm_subsys_suspend_late_cb(dev, state, NULL))
++		goto Skip;
++
++	if (dev->driver && dev->driver->pm) {
+ 		info = "noirq driver ";
+ 		callback = pm_noirq_op(dev->driver->pm, state);
+ 	}
+ 
++Run:
+ 	error = dpm_run_callback(callback, dev, state, info);
+ 	if (error) {
+ 		async_error = error;
+ 		goto Complete;
+ 	}
+ 
++Skip:
+ 	dev->power.is_noirq_suspended = true;
+ 
+ 	if (dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED)) {
+@@ -1419,17 +1480,27 @@ static int __device_suspend_late(struct
+ 		goto Complete;
+ 
+ 	callback = dpm_subsys_suspend_late_cb(dev, state, &info);
++	if (callback)
++		goto Run;
+ 
+-	if (!callback && dev->driver && dev->driver->pm) {
++	if (dev_pm_smart_suspend_and_suspended(dev) &&
++	    !dpm_subsys_suspend_noirq_cb(dev, state, NULL))
++		goto Skip;
++
++	if (dev->driver && dev->driver->pm) {
+ 		info = "late driver ";
+ 		callback = pm_late_early_op(dev->driver->pm, state);
+ 	}
+ 
++Run:
+ 	error = dpm_run_callback(callback, dev, state, info);
+-	if (!error)
+-		dev->power.is_late_suspended = true;
+-	else
++	if (error) {
+ 		async_error = error;
++		goto Complete;
++	}
++
++Skip:
++	dev->power.is_late_suspended = true;
+ 
+ Complete:
+ 	TRACE_SUSPEND(error);
