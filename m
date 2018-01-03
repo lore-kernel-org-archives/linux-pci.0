@@ -1,150 +1,242 @@
-Return-Path: <SRS0=MpAE=ES=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=MpAE=ES=codeaurora.org=okaya@kernel.org>
-Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
- pcie_bus_perf On NVMe Device
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ron Yuan <ron.yuan@memblaze.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Bo Chen <bo.chen@memblaze.com>, William Huang <william.huang@memblaze.com>,
- Fengming Wu <fengming.wu@memblaze.com>,
- Jason Jiang <jason.jiang@microsemi.com>,
- Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>,
- Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
- William Cheng <william.cheng@microsemi.com>,
- "Kim Helper (khelper)" <khelper@micron.com>,
- Linux PCI <linux-pci@vger.kernel.org>
-References: <5727b0b1-f0d5-7c78-373e-fc9d1bd662d2@codeaurora.org>
- <CABhMZUU0643U-qVc9ymA+1PMZToSLFm2dg8-cu=iQ2LGw2Pi8Q@mail.gmail.com>
- <SHAPR01MB173A36104635A8BFF9A83E1FEE80@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
- <0ce08a91-fc38-1288-7683-836fcbbbdf3c@codeaurora.org>
- <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
- <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
- <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
- <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
- <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
- <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
- <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <09bd3f5c-4671-d9dd-fa39-4d7619ee5860@codeaurora.org>
-Date: Mon, 22 Jan 2018 21:27:13 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v3 7/7] pseries/setup: Add Initialization of VF Bars
+Date: Wed,  3 Jan 2018 11:16:33 -0600
+In-Reply-To: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
+References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20180103171633.94499-8-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/22/2018 7:16 PM, Bjorn Helgaas wrote:
-> On Mon, Jan 22, 2018 at 06:24:22PM -0500, Sinan Kaya wrote:
->> On 1/22/2018 5:51 PM, Bjorn Helgaas wrote:
->>> On Mon, Jan 22, 2018 at 05:04:03PM -0500, Sinan Kaya wrote:
->>>> On 1/22/2018 4:36 PM, Bjorn Helgaas wrote:
->>
->>>>> Reducing MPS may be necessary if there are several devices in the
->>>>> hierarchy and one requires a smaller MPS than the others.  That
->>>>> obviously reduces the maximum read and write performance.
->>>>>
->>>>> Reducing the MRRS may be useful to prevent one device from hogging
->>>>> a link, but of course, it reduces read performance for that device
->>>>> because we need more read requests.
->>>>
->>>> Maybe, a picture could help.
->>>>
->>>>                root (MPS=256)
->>>>                  |
->>>>          ------------------
->>>>         /                  \
->>>>    bridge0 (MPS=256)      bridge1 (MPS=128)
->>>>       /                       \
->>>>     EP0 (MPS=256)            EP1 (MPS=128)
->>>>
->>>> If I understood this right, code allows the configuration above with
->>>> the performance mode so that MPS doesn't have to be uniform across
->>>> the tree. 
->>>
->>> Yes.  In PERFORMANCE mode, we will set EP1's MRRS=128 and
->>> EP0's MRRS=256, just as you show.
->>>
->>>> It just needs to be consistent between the root port and endpoints.
->>>
->>> No, it doesn't need to be consistent.  In PERFORMANCE mode, we'll set
->>> the root's MPS=256 and EP1's MPS=128.
->>>
->>> (I'm not actually 100% convinced that the PERFORMANCE mode approach of
->>> reducing MRRS is safe, necessary, and maintainable.  I suspect that in
->>> many of the interesting cases, the device we care about is the only
->>> one below a Root Port, and we can get the performance we need by
->>> maximizing MPS and MRRS for that Root Port and its children,
->>> independent of the rest of the system.)
->>
->> Maybe, I started seeing more and more NVMe devices behind a switch every
->> day. That's why, I'm concerned.
-> 
-> Are there a mix of devices that support large MPS and those that only
-> support a smaller MPS behind the same switch?
+When enabling SR-IOV in pseries platform,
+the VF bar properties for a PF are reported on
+the device node in the device tree.
 
-I guess we should understand the environment from Ron Yuan. Can we see
-lspci -vvv output of your system?
+This patch adds the IOV Bar resources to Linux
+structures from the device tree for later use
+when configuring SR-IOV by PF driver.
 
-We could maybe detect coexistence of slow and fast device condition and
-put some suggestions like moving the card to another slot as a best effort
-solution.
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci.h         |   2 +
+ arch/powerpc/kernel/pci_of_scan.c      |   2 +-
+ arch/powerpc/platforms/pseries/setup.c | 164 +++++++++++++++++++++++++++++++++
+ 3 files changed, 167 insertions(+), 1 deletion(-)
 
-> 
-> I don't have any actual data about topologies of interest.  I'm just
-> guessing that high-performance devices will often have their own root
-> port, without being mixed in with low-speed devices.  It's OK to have
-> switches in the path; it's the mixing high-speed with low-speed
-> devices that causes the problems.
-
-Agreed. Mine was just a general rant. I was curious if we could make it better.
-
-> 
->>>> Why are we reducing MRRS in this case?
->>>
->>> We have to set EP1's MRRS=128 so it will never receive a completion
->>> larger than 128 bytes.  If we set EP1's MRRS=256, it could receive
->>> 256-byte TLPs, which it would treat as malformed.  (We also assume no
->>> peer-to-peer DMA that targets EP1.)
->>
->> What if we were to keep root port MPS as 128? and not touch the BIOS
->> configured MRRS (4k) ?
->>
->> Everybody should be happy, right?
-> 
-> No.  In your picture (which helps a lot, thank you!), if you set the
-> root's MPS=128, EP1 will be fine no matter what its MRRS is because
-> the entire path has MPS=128.
-> 
-> But if EP0's MRRS is larger than 128, it's in trouble because it may
-> issue a 256-byte DMA write, which the root port will treat as
-> malformed.  The root port, as the receiver of that Memory Write
-> Request, is required to check the TLP against the MPS in its Device
-> Control (not Device Capability) register (this is in PCIe r4.0, sec
-> 2.2.2).
-
-Yeah, this breaks my theory.
-
-> 
->> I know there is a rule to check the completions against MPS. 
-> 
-> Sec 2.2.2 says a receiver must check "data payloads".  I think that
-> includes both Completions and Memory Writes.
-> 
->> Root port could generate transactions that is a multiple of 128
->> bytes for reads.
-> 
-> If the root port generates a 256-byte Memory Read request to EP1,
-> that's fine because EP1 will only respond with 128-byte completions.
-> If it sends that 256-byte Memory Read to EP0, we have a problem
-> because EP0 may generate a 256-byte completion, which will cause an
-> error if the root port has MPS=128.
-> 
->> Is there any rule against checking incoming writes?
-> 
-> Sec 2.2.2 says a receiver *must* check the payload size of incoming
-> Memory Write requests.
-> 
-
-
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 8dc32eacc97c..d82802ff5088 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -121,6 +121,8 @@ extern int remove_phb_dynamic(struct pci_controller *phb);
+ extern struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 					struct pci_bus *bus, int devfn);
+ 
++extern unsigned int pci_parse_of_flags(u32 addr0, int bridge);
++
+ extern void of_scan_pci_bridge(struct pci_dev *dev);
+ 
+ extern void of_scan_bus(struct device_node *node, struct pci_bus *bus);
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 0d790f8432d2..20ceec4a5f5e 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -38,7 +38,7 @@ static u32 get_int_prop(struct device_node *np, const char *name, u32 def)
+  * @addr0: value of 1st cell of a device tree PCI address.
+  * @bridge: Set this flag if the address is from a bridge 'ranges' property
+  */
+-static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
++unsigned int pci_parse_of_flags(u32 addr0, int bridge)
+ {
+ 	unsigned int flags = 0;
+ 
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index 5f1beb8367ac..1f8f70ec50d1 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -459,6 +459,162 @@ static void __init find_and_init_phbs(void)
+ 	of_pci_check_probe_only();
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++enum rtas_iov_fw_value_map {
++	NUM_RES_PROPERTY  = 0, /* Number of Resources */
++	LOW_INT           = 1, /* Lowest 32 bits of Address */
++	START_OF_ENTRIES  = 2, /* Always start of entry */
++	APERTURE_PROPERTY = 2, /* Start of entry+ to  Aperture Size */
++	WDW_SIZE_PROPERTY = 4, /* Start of entry+ to Window Size */
++	NEXT_ENTRY        = 7  /* Go to next entry on array */
++};
++
++enum get_iov_fw_value_index {
++	BAR_ADDRS     = 1,    /*  Get Bar Address */
++	APERTURE_SIZE = 2,    /*  Get Aperture Size */
++	WDW_SIZE      = 3     /*  Get Window Size */
++};
++
++resource_size_t pseries_get_iov_fw_value(struct pci_dev *dev, int resno,
++					 enum get_iov_fw_value_index value)
++{
++	const int *indexes;
++	struct device_node *dn = pci_device_to_OF_node(dev);
++	int i, num_res, ret = 0;
++
++	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
++	if (!indexes)
++		return  0;
++
++	/*
++	 * First element in the array is the number of Bars
++	 * returned.  Search through the list to find the matching
++	 * bar
++	 */
++	num_res = of_read_number(&indexes[NUM_RES_PROPERTY], 1);
++	if (resno >= num_res)
++		return 0; /* or an errror */
++
++	i = START_OF_ENTRIES + NEXT_ENTRY * resno;
++	switch (value) {
++	case BAR_ADDRS:
++		ret = of_read_number(&indexes[i], 2);
++		break;
++	case APERTURE_SIZE:
++		ret = of_read_number(&indexes[i + APERTURE_PROPERTY], 2);
++		break;
++	case WDW_SIZE:
++		ret = of_read_number(&indexes[i + WDW_SIZE_PROPERTY], 2);
++		break;
++	}
++
++	return ret;
++}
++
++void of_pci_set_vf_bar_size(struct pci_dev *dev, const int *indexes)
++{
++	struct resource *res;
++	resource_size_t base, size;
++	int i, r, num_res;
++
++	num_res = of_read_number(&indexes[NUM_RES_PROPERTY], 1);
++	num_res = min_t(int, num_res, PCI_SRIOV_NUM_BARS);
++	for (i = START_OF_ENTRIES, r = 0; r < num_res && r < PCI_SRIOV_NUM_BARS;
++	     i += NEXT_ENTRY, r++) {
++		res = &dev->resource[r + PCI_IOV_RESOURCES];
++		base = of_read_number(&indexes[i], 2);
++		size = of_read_number(&indexes[i + APERTURE_PROPERTY], 2);
++		res->flags = pci_parse_of_flags(of_read_number
++						(&indexes[i + LOW_INT], 1), 0);
++		res->flags |= (IORESOURCE_MEM_64 | IORESOURCE_PCI_FIXED);
++		res->name = pci_name(dev);
++		res->start = base;
++		res->end = base + size - 1;
++	}
++}
++
++void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
++{
++	struct resource *res, *root, *conflict;
++	resource_size_t base, size;
++	int i, r, num_res;
++
++	/*
++	 * First element in the array is the number of Bars
++	 * returned.  Search through the list to find the matching
++	 * bars assign them from firmware into resources structure.
++	 */
++	num_res = of_read_number(&indexes[NUM_RES_PROPERTY], 1);
++	for (i = START_OF_ENTRIES, r = 0; r < num_res && r < PCI_SRIOV_NUM_BARS;
++	     i += NEXT_ENTRY, r++) {
++		res = &dev->resource[r + PCI_IOV_RESOURCES];
++		base = of_read_number(&indexes[i], 2);
++		size = of_read_number(&indexes[i + WDW_SIZE_PROPERTY], 2);
++		res->name = pci_name(dev);
++		res->start = base;
++		res->end = base + size - 1;
++		root = &iomem_resource;
++		dev_dbg(&dev->dev,
++			"pSeries IOV BAR %d: trying firmware assignment %pR\n",
++			 r + PCI_IOV_RESOURCES, res);
++		conflict = request_resource_conflict(root, res);
++		if (conflict) {
++			dev_info(&dev->dev,
++				 "BAR %d: %pR conflicts with %s %pR\n",
++				 r + PCI_IOV_RESOURCES, res,
++				 conflict->name, conflict);
++			res->flags |= IORESOURCE_UNSET;
++		}
++	}
++}
++
++static void pseries_pci_fixup_resources(struct pci_dev *pdev)
++{
++	const int *indexes;
++	struct device_node *dn = pci_device_to_OF_node(pdev);
++
++	/*Firmware must support open sriov otherwise dont configure*/
++	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
++	if (!indexes)
++		return;
++	/* Assign the addresses from device tree*/
++	of_pci_set_vf_bar_size(pdev, indexes);
++}
++
++static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
++{
++	const int *indexes;
++	struct device_node *dn = pci_device_to_OF_node(pdev);
++
++	if (!pdev->is_physfn || pdev->is_added)
++		return;
++	/*Firmware must support open sriov otherwise dont configure*/
++	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
++	if (!indexes)
++		return;
++	/* Assign the addresses from device tree*/
++	of_pci_parse_iov_addrs(pdev, indexes);
++}
++
++static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
++							  int resno)
++{
++	const __be32 *reg;
++	struct device_node *dn = pci_device_to_OF_node(pdev);
++
++	/*Firmware must support open sriov otherwise report regular alignment*/
++	reg = of_get_property(dn, "ibm,is-open-sriov-pf", NULL);
++	if (!reg)
++		return pci_iov_resource_size(pdev, resno);
++
++	if (!pdev->is_physfn)
++		return 0;
++	return pseries_get_iov_fw_value(pdev,
++					resno - PCI_IOV_RESOURCES,
++					APERTURE_SIZE);
++}
++#endif
++
+ static void __init pSeries_setup_arch(void)
+ {
+ 	set_arch_panic_timeout(10, ARCH_PANIC_TIMEOUT);
+@@ -490,6 +646,14 @@ static void __init pSeries_setup_arch(void)
+ 		vpa_init(boot_cpuid);
+ 		ppc_md.power_save = pseries_lpar_idle;
+ 		ppc_md.enable_pmcs = pseries_lpar_enable_pmcs;
++#ifdef CONFIG_PCI_IOV
++		ppc_md.pcibios_fixup_resources =
++			pseries_pci_fixup_resources;
++		ppc_md.pcibios_fixup_sriov =
++			pseries_pci_fixup_iov_resources;
++		ppc_md.pcibios_iov_resource_alignment =
++			pseries_pci_iov_resource_alignment;
++#endif
+ 	} else {
+ 		/* No special idle routine */
+ 		ppc_md.enable_pmcs = power4_enable_pmcs;
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.14.3 (Apple Git-98)
