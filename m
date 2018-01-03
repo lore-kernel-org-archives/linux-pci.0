@@ -1,100 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:36884 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934021AbeAXQDW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jan 2018 11:03:22 -0500
-Received: by mail-qt0-f193.google.com with SMTP id d54so11561288qtd.4
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jan 2018 08:03:22 -0800 (PST)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Gustavo Pimentel'" <gustavo.pimentel@synopsys.com>,
-        <marc.zyngier@arm.com>, <Joao.Pinto@synopsys.com>,
-        <bhelgaas@google.com>, <kishon@ti.com>
-Cc: <linux-pci@vger.kernel.org>, <m-karicheri2@ti.com>,
-        <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <nsekhar@ti.com>
-References: <cover.1516701516.git.gustavo.pimentel@synopsys.com> <5526d39226e948d3be46297725522badfe63d024.1516701516.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <5526d39226e948d3be46297725522badfe63d024.1516701516.git.gustavo.pimentel@synopsys.com>
-Subject: Re: [PATCH v5 2/9] PCI: dwc: exynos: Switch to use the IRQ chained API
-Date: Wed, 24 Jan 2018 11:03:19 -0500
-Message-ID: <000001d3952c$daf2a0f0$90d7e2d0$@gmail.com>
+Return-Path: <SRS0=OafR=D6=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=OafR=D6=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Wed, 3 Jan 2018 12:15:20 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Honghui Zhang <honghui.zhang@mediatek.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com,
+	matthias.bgg@gmail.com, linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+	ryder.lee@mediatek.com, hongkun.cao@mediatek.com,
+	youlin.pei@mediatek.com, yong.wu@mediatek.com, yt.shen@mediatek.com,
+	sean.wang@mediatek.com, xinping.qian@mediatek.com
+Subject: Re: [PATCH v5 2/2] PCI: mediatek: Set up class type and vendor ID
+ for MT7622
+Message-ID: <20180103121520.GC26554@red-moon>
+References: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
+ <1514336394-17747-3-git-send-email-honghui.zhang@mediatek.com>
+ <20171227184542.GA79892@bhelgaas-glaptop.roam.corp.google.com>
+ <1514425152.25872.39.camel@mhfsdcap03>
+ <20180102105659.GB10536@red-moon>
+ <1514961544.25872.49.camel@mhfsdcap03>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1514961544.25872.49.camel@mhfsdcap03>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 23, 2018 7:25 AM, Gustavo Pimentel wrote:
+On Wed, Jan 03, 2018 at 02:39:04PM +0800, Honghui Zhang wrote:
+> On Tue, 2018-01-02 at 10:56 +0000, Lorenzo Pieralisi wrote:
+> > On Thu, Dec 28, 2017 at 09:39:12AM +0800, Honghui Zhang wrote:
+> > > On Wed, 2017-12-27 at 12:45 -0600, Bjorn Helgaas wrote:
+> > > > On Wed, Dec 27, 2017 at 08:59:54AM +0800, honghui.zhang@mediatek.com wrote:
+> > > > > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > > > > 
 > 
-> Changes Exynos SoC specific driver to use the IRQ chained API available in
-> pcie-designware.
+> > > > > +		/* Set up class code for MT7622 */
+> > > > > +		val = PCI_CLASS_BRIDGE_PCI << 16;
+> > > > > +		writel(val, port->base + PCIE_CONF_CLASS);
+> > > > 
+> > > > 1) Your comments mention MT7622 specifically, but this code is run for
+> > > > both mt2712-pcie and mt7622-pcie.  If this code is safe and necessary
+> > > > for both mt2712-pcie and mt7622-pcie, please remove the mention of
+> > > > MT7622.
+> > > 
+> > > Hmm, the code snippet added here will only be executed by MT7622, since
+> > > MT2712 will not enter this  "if (pcie->base) {"  condition.
+> > > Should the mention of MT7622 must be removed in this case?
+> > 
+> > You should add an explicit way (eg of_device_is_compatible() match for
+> > instance) to apply the quirk just on the platform that requires it.
+> > 
+> > Checking for "if (pcie->base)" is really not the way to do it.
+> > 
 > 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> hi, Lorenzo,
+> Thanks very much for your advise.
+> Passing the compatible string or platform data into this function needed
+> to add some new field in the struct mtk_pcie_port, then I guess both set
+> it for MT2712 and MT7622 is an easy way, since re-setting those values
+> for MT2712 is safe.
 
-It looks good.
+You have a pointer to the host bridge DT node through the
+mtk_pcie_port.pcie->dev pointer, use it to carry out the compatible
+match, you have to apply quirks only if needed - I do not want to
+guess it.
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Lorenzo
 
-Best regards,
-Jingoo Han
-
-> ---
-> Change v1->v2:
-> - Nothing changed, just to follow the patch set version.
-> Change v2->v3:
-> - Nothing changed, just to follow the patch set version.
-> Change v3->v4:
-> - Changed summary line to match the drivers/PCI convention and changelog
-> to
-> maintain the consistency (thanks Bjorn).
-> Change v4->v5:
-> - Nothing changed, just to follow the patch set version.
+> > > > 2) The first comment mentions both "vendor ID and device ID" but you
+> > > > don't write the device ID.  Since this code applies to both
+> > > > mt2712-pcie and mt7622-pcie, my guess is that you don't *want* to
+> > > > write the device ID.  If that's the case, please fix the comment.
+> > > > 
+> > > 
+> > > My bad, I did not check the comments carefully.
+> > > Thanks.
+> > > 
+> > > > 3) If you only need to set the vendor ID, you're performing a 32-bit
+> > > > write (writel()) to update a 16-bit value.  Please use writew()
+> > > > instead.
+> > > > 
+> > > 
+> > > Ok, thanks, I guess I could use the following code snippet in the next
+> > > version:
+> > > val = readl(port->base + PCIE_CONF_VENDOR_ID)
+> > > val &= ~GENMASK(15, 0);
+> > > val |= PCI_VENDOR_ID_MEDIATEK;
+> > > writel(val, port->base + PCIE_CONF_VENDOR_ID);
+> > 
+> > Have you read Bjorn's comment ? Or there is a problem with using
+> > a writew() ?
+> > 
 > 
->  drivers/pci/dwc/pci-exynos.c | 18 ------------------
->  1 file changed, 18 deletions(-)
+> This control register is a 32bit register, I'm not sure whether the apb
+> bus support write an 16bit value with 16bit but not 32bit address
+> alignment. I prefer the more safety old way of writel.
 > 
-> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-> index 56f32ae..0a6b283d 100644
-> --- a/drivers/pci/dwc/pci-exynos.c
-> +++ b/drivers/pci/dwc/pci-exynos.c
-> @@ -297,15 +297,6 @@ static irqreturn_t exynos_pcie_irq_handler(int irq,
-> void *arg)
->  	return IRQ_HANDLED;
->  }
+> I need to do more test about the writew if the code elegant is more
+> important.
 > 
-> -static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
-> -{
-> -	struct exynos_pcie *ep = arg;
-> -	struct dw_pcie *pci = ep->pci;
-> -	struct pcie_port *pp = &pci->pp;
-> -
-> -	return dw_handle_msi_irq(pp);
-> -}
-> -
->  static void exynos_pcie_msi_init(struct exynos_pcie *ep)
->  {
->  	struct dw_pcie *pci = ep->pci;
-> @@ -431,15 +422,6 @@ static int __init exynos_add_pcie_port(struct
-> exynos_pcie *ep,
->  			dev_err(dev, "failed to get msi irq\n");
->  			return pp->msi_irq;
->  		}
-> -
-> -		ret = devm_request_irq(dev, pp->msi_irq,
-> -					exynos_pcie_msi_irq_handler,
-> -					IRQF_SHARED | IRQF_NO_THREAD,
-> -					"exynos-pcie", ep);
-> -		if (ret) {
-> -			dev_err(dev, "failed to request msi irq\n");
-> -			return ret;
-> -		}
->  	}
+> thanks.
 > 
->  	pp->root_bus_nr = -1;
-> --
-> 2.7.4
+> > Lorenzo
+> > 
+> > > > 4) If you only need to set the vendor ID, please use a definition like
+> > > > "PCIE_CONF_VENDOR_ID" instead of the ambiguous "PCIE_CONF_ID".
+> > > > 
+> > > > 5) If you only need to set the vendor ID, please update the changelog
+> > > > to mention "vendor ID" specifically instead of the ambiguous "IDs".
+> > > 
+> > > > 6) Please add a space before the closing "*/" of the first comment.
+> > > > 
+> > > > 7) PCI_CLASS_BRIDGE_PCI is for a PCI-to-PCI bridge, i.e., one that has
+> > > > PCI on both the primary (upstream) side and the secondary (downstream)
+> > > > side.  That kind of bridge has a type 1 config header (see
+> > > > PCI_HEADER_TYPE) and the PCI_PRIMARY_BUS and PCI_SECONDARY_BUS
+> > > > registers tell us the bus number of the primary and secondary sides.
+> > > > 
+> > > > I don't believe this device is a PCI-to-PCI bridge.  I think it's a
+> > > > *host* bridge that has some non-PCI interface on the upstream side and
+> > > > should have a type 0 config header.  If that's the case you should use
+> > > > PCI_CLASS_BRIDGE_HOST instead.
+> > > > 
+> > > 
+> > > Thanks very much for your help with the review, I will fix the other
+> > > issue in the next version.
+> > > 
+> > > > >  	}
+> > > > >  
+> > > > >  	/* Assert all reset signals */
+> > > > > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> > > > > index ab20dc5..2480b0e 100644
+> > > > > --- a/include/linux/pci_ids.h
+> > > > > +++ b/include/linux/pci_ids.h
+> > > > > @@ -2113,6 +2113,8 @@
+> > > > >  
+> > > > >  #define PCI_VENDOR_ID_MYRICOM		0x14c1
+> > > > >  
+> > > > > +#define PCI_VENDOR_ID_MEDIATEK		0x14c3
+> > > > > +
+> > > > >  #define PCI_VENDOR_ID_TITAN		0x14D2
+> > > > >  #define PCI_DEVICE_ID_TITAN_010L	0x8001
+> > > > >  #define PCI_DEVICE_ID_TITAN_100L	0x8010
+> > > > > -- 
+> > > > > 2.6.4
+> > > > > 
+> > > 
+> > > 
+> 
 > 
