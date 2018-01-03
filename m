@@ -1,251 +1,53 @@
-Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v4 1/7] platform/pseries: Update VF config space after EEH
-Date: Fri,  5 Jan 2018 10:45:46 -0600
-In-Reply-To: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
-References: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20180105164552.36371-2-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:48710 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751428AbeACLmq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jan 2018 06:42:46 -0500
+Date: Wed, 3 Jan 2018 11:43:42 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Wei Yongjun <weiyongjun1@huawei.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@axis.com,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH -next] PCI: dwc: artpec6: Fix return value check in
+ artpec6_add_pcie_ep()
+Message-ID: <20180103114342.GB26554@red-moon>
+References: <1514964815-93190-1-git-send-email-weiyongjun1@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1514964815-93190-1-git-send-email-weiyongjun1@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add EEH platform operations for pseries to update VF
-config space. With this change after EEH, the VF
-will have updated config space for pseries platform.
+On Wed, Jan 03, 2018 at 07:33:35AM +0000, Wei Yongjun wrote:
+> In case of error, the function devm_ioremap() returns NULL pointer
+> not ERR_PTR(). The IS_ERR() test in the return value check should be
+> replaced with NULL test.
+> 
+> Fixes: b5074ef6fe7d ("PCI: dwc: artpec6: Add support for endpoint mode")
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> ---
+>  drivers/pci/dwc/pcie-artpec6.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |  1 +
- arch/powerpc/kernel/eeh.c                    | 59 +++++++++++++++++++++++++
- arch/powerpc/platforms/powernv/eeh-powernv.c | 65 ++--------------------------
- arch/powerpc/platforms/pseries/eeh_pseries.c | 26 ++++++++++-
- 4 files changed, 88 insertions(+), 63 deletions(-)
+Applied to pci/dwc for v4.16, thanks.
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 5161c37dd039..82829c65f31a 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -297,6 +297,7 @@ int eeh_pe_reset(struct eeh_pe *pe, int option);
- int eeh_pe_configure(struct eeh_pe *pe);
- int eeh_pe_inject_err(struct eeh_pe *pe, int type, int func,
- 		      unsigned long addr, unsigned long mask);
-+int eeh_restore_vf_config(struct pci_dn *pdn);
- 
- /**
-  * EEH_POSSIBLE_ERROR() -- test for possible MMIO failure.
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index cbca0a667682..cc649809885e 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -740,6 +740,65 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
- 	return NULL;
- }
- 
-+int eeh_restore_vf_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 devctl, cmd, cap2, aer_capctl;
-+	int old_mps;
-+
-+	if (edev->pcie_cap) {
-+		/* Restore MPS */
-+		old_mps = (ffs(pdn->mps) - 8) << 5;
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+		devctl |= old_mps;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+
-+		/* Disable Completion Timeout */
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
-+				     4, &cap2);
-+		if (cap2 & 0x10) {
-+			eeh_ops->read_config(pdn,
-+					     edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					     4, &cap2);
-+			cap2 |= 0x10;
-+			eeh_ops->write_config(pdn,
-+					      edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					      4, cap2);
-+		}
-+	}
-+
-+	/* Enable SERR and parity checking */
-+	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
-+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
-+
-+	/* Enable report various errors */
-+	if (edev->pcie_cap) {
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_CERE;
-+		devctl |= (PCI_EXP_DEVCTL_NFERE |
-+			   PCI_EXP_DEVCTL_FERE |
-+			   PCI_EXP_DEVCTL_URRE);
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+	}
-+
-+	/* Enable ECRC generation and check */
-+	if (edev->pcie_cap && edev->aer_cap) {
-+		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				     4, &aer_capctl);
-+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-+		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				      4, aer_capctl);
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * pcibios_set_pcie_reset_state - Set PCI-E reset state
-  * @dev: pci device struct
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 961e64115d92..0665b6d03cb3 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1655,70 +1655,11 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
- 	return ret;
- }
- 
--static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
--{
--	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
--	u32 devctl, cmd, cap2, aer_capctl;
--	int old_mps;
--
--	if (edev->pcie_cap) {
--		/* Restore MPS */
--		old_mps = (ffs(pdn->mps) - 8) << 5;
--		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				     2, &devctl);
--		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
--		devctl |= old_mps;
--		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				      2, devctl);
--
--		/* Disable Completion Timeout */
--		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
--				     4, &cap2);
--		if (cap2 & 0x10) {
--			eeh_ops->read_config(pdn,
--					     edev->pcie_cap + PCI_EXP_DEVCTL2,
--					     4, &cap2);
--			cap2 |= 0x10;
--			eeh_ops->write_config(pdn,
--					      edev->pcie_cap + PCI_EXP_DEVCTL2,
--					      4, cap2);
--		}
--	}
--
--	/* Enable SERR and parity checking */
--	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
--	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
--	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
--
--	/* Enable report various errors */
--	if (edev->pcie_cap) {
--		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				     2, &devctl);
--		devctl &= ~PCI_EXP_DEVCTL_CERE;
--		devctl |= (PCI_EXP_DEVCTL_NFERE |
--			   PCI_EXP_DEVCTL_FERE |
--			   PCI_EXP_DEVCTL_URRE);
--		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				      2, devctl);
--	}
--
--	/* Enable ECRC generation and check */
--	if (edev->pcie_cap && edev->aer_cap) {
--		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
--				     4, &aer_capctl);
--		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
--		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
--				      4, aer_capctl);
--	}
--
--	return 0;
--}
--
- static int pnv_eeh_restore_config(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
- 	struct pnv_phb *phb;
--	s64 ret;
-+	s64 ret = 0;
- 	int config_addr = (pdn->busno << 8) | (pdn->devfn);
- 
- 	if (!edev)
-@@ -1732,7 +1673,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 	 * to be exported by firmware in extendible way.
- 	 */
- 	if (edev->physfn) {
--		ret = pnv_eeh_restore_vf_config(pdn);
-+		ret = eeh_restore_vf_config(pdn);
- 	} else {
- 		phb = pdn->phb->private_data;
- 		ret = opal_pci_reinit(phb->opal_id,
-@@ -1745,7 +1686,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 		return -EIO;
- 	}
- 
--	return 0;
-+	return ret;
- }
- 
- static struct eeh_ops pnv_eeh_ops = {
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index 2295f117e2d3..a671ef4f57f5 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -708,6 +708,30 @@ static int pseries_eeh_write_config(struct pci_dn *pdn, int where, int size, u32
- 	return rtas_write_config(pdn, where, size, val);
- }
- 
-+static int pseries_eeh_restore_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	s64 ret = 0;
-+
-+	if (!edev)
-+		return -EEXIST;
-+
-+	/*
-+	 * FIXME: The MPS, error routing rules, timeout setting are worthy
-+	 * to be exported by firmware in extendible way.
-+	 */
-+	if (edev->physfn)
-+		ret = eeh_restore_vf_config(pdn);
-+
-+	if (ret) {
-+		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
-+			__func__, edev->pe_config_addr, ret);
-+		return -EIO;
-+	}
-+
-+	return ret;
-+}
-+
- static struct eeh_ops pseries_eeh_ops = {
- 	.name			= "pseries",
- 	.init			= pseries_eeh_init,
-@@ -723,7 +747,7 @@ static struct eeh_ops pseries_eeh_ops = {
- 	.read_config		= pseries_eeh_read_config,
- 	.write_config		= pseries_eeh_write_config,
- 	.next_error		= NULL,
--	.restore_config		= NULL
-+	.restore_config		= pseries_eeh_restore_config
- };
- 
- /**
--- 
-2.14.3 (Apple Git-98)
+Lorenzo
+
+> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+> index 312f21b..b1e9820 100644
+> --- a/drivers/pci/dwc/pcie-artpec6.c
+> +++ b/drivers/pci/dwc/pcie-artpec6.c
+> @@ -485,8 +485,8 @@ static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
+>  
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
+>  	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+> -	if (IS_ERR(pci->dbi_base2))
+> -		return PTR_ERR(pci->dbi_base2);
+> +	if (!pci->dbi_base2)
+> +		return -ENOMEM;
+>  
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+>  	if (!res)
+> 
