@@ -1,80 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:39374 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752617AbeADVMV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 16:12:21 -0500
-From: Rob Herring <robh@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Frank Rowand <frowand.list@gmail.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: [PATCH 3/3] PCI: make of_irq_parse_pci static
-Date: Thu,  4 Jan 2018 15:12:15 -0600
-Message-Id: <20180104211215.11344-4-robh@kernel.org>
-In-Reply-To: <20180104211215.11344-1-robh@kernel.org>
-References: <20180104211215.11344-1-robh@kernel.org>
+Received: from mail-by2nam03on0078.outbound.protection.outlook.com ([104.47.42.78]:32395
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752552AbeADWR5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Jan 2018 17:17:57 -0500
+From: Felix Kuehling <Felix.Kuehling@amd.com>
+To: amd-gfx@lists.freedesktop.org, oded.gabbay@gmail.com
+Cc: Jay Cornwall <Jay.Cornwall@amd.com>, linux-pci@vger.kernel.org,
+        Felix Kuehling <Felix.Kuehling@amd.com>
+Subject: [PATCH 1/9] PCI: Add pci_enable_atomic_ops_to_root
+Date: Thu,  4 Jan 2018 17:17:40 -0500
+Message-Id: <1515104268-25087-2-git-send-email-Felix.Kuehling@amd.com>
+In-Reply-To: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
+References: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that the DT PCI code is merged into drivers/pci, of_irq_parse_pci can
-be static.
+From: Jay Cornwall <Jay.Cornwall@amd.com>
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Rowand <frowand.list@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Rob Herring <robh@kernel.org>
+The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be
+requested by, routed through and completed by PCIe components. Routing and
+completion do not require software support. Component support for each is
+detectable via the DEVCAP2 register.
+
+AtomicOp requests are permitted only if a component's
+DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot be
+detected but is a no-op if set on a component with no support. These
+requests can only be serviced if the upstream components support AtomicOp
+completion and/or routing to a component which does.
+
+A concrete example is the AMD Fiji-class GPU, which is specified to
+support AtomicOp requests, routed through a PLX 8747 switch (advertising
+AtomicOp routing) to a Haswell host bridge (advertising AtomicOp
+completion support). When AtomicOp requests are disabled the GPU logs
+attempts to initiate requests to an MMIO register for debugging.
+
+Add pci_enable_atomic_ops_to_root for per-device control over AtomicOp
+requests. Upstream bridges are checked for AtomicOp routing capability and
+the call fails if any lack this capability. The root port is checked for
+AtomicOp completion capabilities and the call fails if it does not support
+any. Routes to other PCIe components are not checked for AtomicOp routing
+and completion capabilities.
+
+v2: Check for AtomicOp route to root port with AtomicOp completion
+v3: Style fixes
+v4: Endpoint to root port only, check upstream egress blocking
+v5: Rebase, use existing PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK define
+v6: Add comp_caps param, fix upstream port detection, cosmetic/comments
+
+CC: linux-pci@vger.kernel.org
+Signed-off-by: Jay Cornwall <Jay.Cornwall@amd.com>
+Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
 ---
- drivers/pci/of.c       | 3 +--
- include/linux/of_pci.h | 6 ------
- 2 files changed, 1 insertion(+), 8 deletions(-)
+ drivers/pci/pci.c             | 80 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h           |  1 +
+ include/uapi/linux/pci_regs.h |  4 ++-
+ 3 files changed, 84 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 859a43dd098d..511a5ec83f6e 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -479,7 +479,7 @@ int of_pci_map_rid(struct device_node *np, u32 rid,
-  * PCI tree until an device-node is found, at which point it will finish
-  * resolving using the OF tree walking.
-  */
--int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
-+static int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
- 	struct device_node *dn, *ppnode;
- 	struct pci_dev *ppdev;
-@@ -569,7 +569,6 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
- 	}
- 	return rc;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4a7c686..9cea399 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3066,6 +3066,86 @@ int pci_rebar_set_size(struct pci_dev *pdev, int bar, int size)
  }
--EXPORT_SYMBOL_GPL(of_irq_parse_pci);
  
  /**
-  * of_irq_parse_and_map_pci() - Decode a PCI irq from the device tree and map to a virq
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index f0e129e848ea..88865e0ebf4d 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -10,7 +10,6 @@ struct of_phandle_args;
- struct device_node;
++ * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
++ * @dev: the PCI device
++ * @comp_caps: Caps required for atomic request completion
++ *
++ * Return 0 if all upstream bridges support AtomicOp routing, egress
++ * blocking is disabled on all upstream ports, and the root port
++ * supports the requested completion capabilities (32-bit, 64-bit
++ * and/or 128-bit AtomicOp completion), or negative otherwise.
++ */
++int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 comp_caps)
++{
++	struct pci_bus *bus = dev->bus;
++
++	if (!pci_is_pcie(dev))
++		return -EINVAL;
++
++	switch (pci_pcie_type(dev)) {
++	/*
++	 * PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
++	 * to implement AtomicOp requester capabilities.
++	 */
++	case PCI_EXP_TYPE_ENDPOINT:
++	case PCI_EXP_TYPE_LEG_END:
++	case PCI_EXP_TYPE_RC_END:
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	while (bus->parent) {
++		struct pci_dev *bridge = bus->self;
++		u32 cap;
++
++		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
++
++		switch (pci_pcie_type(bridge)) {
++		/*
++		 * Upstream, downstream and root ports may implement AtomicOp
++		 * routing capabilities. AtomicOp routing via a root port is
++		 * not considered.
++		 */
++		case PCI_EXP_TYPE_UPSTREAM:
++		case PCI_EXP_TYPE_DOWNSTREAM:
++			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
++				return -EINVAL;
++			break;
++
++		/*
++		 * Root ports are permitted to implement AtomicOp completion
++		 * capabilities.
++		 */
++		case PCI_EXP_TYPE_ROOT_PORT:
++			if ((cap & comp_caps) != comp_caps)
++				return -EINVAL;
++			break;
++		}
++
++		/*
++		 * Upstream ports may block AtomicOps on egress.
++		 */
++		if (!bridge->has_secondary_link) {
++			u32 ctl2;
++
++			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
++						   &ctl2);
++			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
++				return -EINVAL;
++		}
++
++		bus = bus->parent;
++	}
++
++	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
++				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
++
++	return 0;
++}
++EXPORT_SYMBOL(pci_enable_atomic_ops_to_root);
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c170c92..52a17754 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2061,6 +2061,7 @@ void pci_request_acs(void);
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+ bool pci_acs_path_enabled(struct pci_dev *start,
+ 			  struct pci_dev *end, u16 acs_flags);
++int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 comp_caps);
  
- #if IS_ENABLED(CONFIG_OF) && IS_ENABLED(CONFIG_PCI)
--int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
-@@ -23,11 +22,6 @@ int of_pci_map_rid(struct device_node *np, u32 rid,
- 		   const char *map_name, const char *map_mask_name,
- 		   struct device_node **target, u32 *id_out);
- #else
--static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
--{
--	return 0;
--}
--
- static inline struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn)
- {
+ #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+ #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 70c2b2a..f31b56b 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -624,7 +624,9 @@
+ #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
+ #define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
+ #define  PCI_EXP_DEVCAP2_ATOMIC_ROUTE	0x00000040 /* Atomic Op routing */
+-#define PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* Atomic 64-bit compare */
++#define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
++#define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
++#define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion */
+ #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
+ #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+ #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
 -- 
-2.14.1
+2.7.4
