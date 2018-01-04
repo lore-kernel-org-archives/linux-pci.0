@@ -1,364 +1,251 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:1139 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751515AbeAIJVJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 04:21:09 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V5 7/7] PCI: tegra: Add power management support
-Date: Tue, 9 Jan 2018 14:49:37 +0530
-Message-ID: <1515489577-2197-8-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V4 08/26] drm/gma500: deprecate pci_get_bus_and_slot()
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <1513661883-28662-9-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <3a650c54-1c7f-ac00-de00-55d5c62d0abd@codeaurora.org>
+Date: Thu, 4 Jan 2018 07:27:18 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1513661883-28662-9-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: David Airlie <airlied@linux.ie>, linux-arm-msm@vger.kernel.org,
+ Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+ linux-arm-kernel@lists.infradead.org, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra186 powergate driver is implemented as power domain driver, power
-partition ungate/gate are registered as power_on/power_off callback
-functions. There are no direct functions to power gate/ungate host
-controller in Tegra186. Host controller driver should add "power-domains"
-property in device tree and implement runtime suspend and resume
-callback functons. Power gate and ungate is taken care by power domain
-driver when host controller driver calls pm_runtime_put_sync and
-pm_runtime_get_sync respectively.
+On 12/19/2017 12:37 AM, Sinan Kaya wrote:
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
+> 
+> Getting ready to remove pci_get_bus_and_slot() function in favor of
+> pci_get_domain_bus_and_slot().
+> 
+> Add domain parameter to CDV_MSG_READ32, CDV_MSG_WRITE32, MRST_MSG_READ32,
+> MRST_MSG_WRITE32, MDFLD_MSG_READ32, MDFLD_MSG_WRITE32.
+> 
+> Extract pci_dev from struct drm_device and use pdev to find the domain
+> number while calling pci_get_domain_bus_and_slot().
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/gpu/drm/gma500/cdv_device.c | 16 +++++++++-------
+>  drivers/gpu/drm/gma500/gma_device.c |  4 +++-
+>  drivers/gpu/drm/gma500/mid_bios.c   | 12 +++++++++---
+>  drivers/gpu/drm/gma500/psb_drv.c    | 10 ++++++++--
+>  drivers/gpu/drm/gma500/psb_drv.h    | 18 ++++++++++--------
+>  5 files changed, 39 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/gpu/drm/gma500/cdv_device.c b/drivers/gpu/drm/gma500/cdv_device.c
+> index 8745971..3a3bf75 100644
+> --- a/drivers/gpu/drm/gma500/cdv_device.c
+> +++ b/drivers/gpu/drm/gma500/cdv_device.c
+> @@ -185,21 +185,22 @@ static int cdv_backlight_init(struct drm_device *dev)
+>   *	for this and the MID devices.
+>   */
+>  
+> -static inline u32 CDV_MSG_READ32(uint port, uint offset)
+> +static inline u32 CDV_MSG_READ32(int domain, uint port, uint offset)
+>  {
+>  	int mcr = (0x10<<24) | (port << 16) | (offset << 8);
+>  	uint32_t ret_val = 0;
+> -	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
+> +	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+>  	pci_write_config_dword(pci_root, 0xD0, mcr);
+>  	pci_read_config_dword(pci_root, 0xD4, &ret_val);
+>  	pci_dev_put(pci_root);
+>  	return ret_val;
+>  }
+>  
+> -static inline void CDV_MSG_WRITE32(uint port, uint offset, u32 value)
+> +static inline void CDV_MSG_WRITE32(int domain, uint port, uint offset,
+> +				   u32 value)
+>  {
+>  	int mcr = (0x11<<24) | (port << 16) | (offset << 8) | 0xF0;
+> -	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
+> +	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+>  	pci_write_config_dword(pci_root, 0xD4, value);
+>  	pci_write_config_dword(pci_root, 0xD0, mcr);
+>  	pci_dev_put(pci_root);
+> @@ -216,11 +217,12 @@ static void cdv_init_pm(struct drm_device *dev)
+>  {
+>  	struct drm_psb_private *dev_priv = dev->dev_private;
+>  	u32 pwr_cnt;
+> +	int domain = pci_domain_nr(dev->pdev->bus);
+>  	int i;
+>  
+> -	dev_priv->apm_base = CDV_MSG_READ32(PSB_PUNIT_PORT,
+> +	dev_priv->apm_base = CDV_MSG_READ32(domain, PSB_PUNIT_PORT,
+>  							PSB_APMBA) & 0xFFFF;
+> -	dev_priv->ospm_base = CDV_MSG_READ32(PSB_PUNIT_PORT,
+> +	dev_priv->ospm_base = CDV_MSG_READ32(domain, PSB_PUNIT_PORT,
+>  							PSB_OSPMBA) & 0xFFFF;
+>  
+>  	/* Power status */
+> @@ -251,7 +253,7 @@ static void cdv_errata(struct drm_device *dev)
+>  	 *	Bonus Launch to work around the issue, by degrading
+>  	 *	performance.
+>  	 */
+> -	 CDV_MSG_WRITE32(3, 0x30, 0x08027108);
+> +	 CDV_MSG_WRITE32(pci_domain_nr(dev->pdev->bus), 3, 0x30, 0x08027108);
+>  }
+>  
+>  /**
+> diff --git a/drivers/gpu/drm/gma500/gma_device.c b/drivers/gpu/drm/gma500/gma_device.c
+> index 4a295f9..a7fb6de 100644
+> --- a/drivers/gpu/drm/gma500/gma_device.c
+> +++ b/drivers/gpu/drm/gma500/gma_device.c
+> @@ -19,7 +19,9 @@
+>  void gma_get_core_freq(struct drm_device *dev)
+>  {
+>  	uint32_t clock;
+> -	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
+> +	struct pci_dev *pci_root =
+> +		pci_get_domain_bus_and_slot(pci_domain_nr(dev->pdev->bus),
+> +					    0, 0);
+>  	struct drm_psb_private *dev_priv = dev->dev_private;
+>  
+>  	/*pci_write_config_dword(pci_root, 0xD4, 0x00C32004);*/
+> diff --git a/drivers/gpu/drm/gma500/mid_bios.c b/drivers/gpu/drm/gma500/mid_bios.c
+> index 1fa1633..7171b74 100644
+> --- a/drivers/gpu/drm/gma500/mid_bios.c
+> +++ b/drivers/gpu/drm/gma500/mid_bios.c
+> @@ -32,7 +32,9 @@
+>  static void mid_get_fuse_settings(struct drm_device *dev)
+>  {
+>  	struct drm_psb_private *dev_priv = dev->dev_private;
+> -	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
+> +	struct pci_dev *pci_root =
+> +		pci_get_domain_bus_and_slot(pci_domain_nr(dev->pdev->bus),
+> +					    0, 0);
+>  	uint32_t fuse_value = 0;
+>  	uint32_t fuse_value_tmp = 0;
+>  
+> @@ -104,7 +106,9 @@ static void mid_get_fuse_settings(struct drm_device *dev)
+>  static void mid_get_pci_revID(struct drm_psb_private *dev_priv)
+>  {
+>  	uint32_t platform_rev_id = 0;
+> -	struct pci_dev *pci_gfx_root = pci_get_bus_and_slot(0, PCI_DEVFN(2, 0));
+> +	int domain = pci_domain_nr(dev_priv->dev->pdev->bus);
+> +	struct pci_dev *pci_gfx_root =
+> +		pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(2, 0));
+>  
+>  	if (pci_gfx_root == NULL) {
+>  		WARN_ON(1);
+> @@ -281,7 +285,9 @@ static void mid_get_vbt_data(struct drm_psb_private *dev_priv)
+>  	u32 addr;
+>  	u8 __iomem *vbt_virtual;
+>  	struct mid_vbt_header vbt_header;
+> -	struct pci_dev *pci_gfx_root = pci_get_bus_and_slot(0, PCI_DEVFN(2, 0));
+> +	struct pci_dev *pci_gfx_root =
+> +		pci_get_domain_bus_and_slot(pci_domain_nr(dev->pdev->bus),
+> +					    0, PCI_DEVFN(2, 0));
+>  	int ret = -1;
+>  
+>  	/* Get the address of the platform config vbt */
+> diff --git a/drivers/gpu/drm/gma500/psb_drv.c b/drivers/gpu/drm/gma500/psb_drv.c
+> index 38d09d4..ac32ab5 100644
+> --- a/drivers/gpu/drm/gma500/psb_drv.c
+> +++ b/drivers/gpu/drm/gma500/psb_drv.c
+> @@ -248,7 +248,11 @@ static int psb_driver_load(struct drm_device *dev, unsigned long flags)
+>  		goto out_err;
+>  
+>  	if (IS_MRST(dev)) {
+> -		dev_priv->aux_pdev = pci_get_bus_and_slot(0, PCI_DEVFN(3, 0));
+> +		int domain = pci_domain_nr(dev->pdev->bus);
+> +
+> +		dev_priv->aux_pdev =
+> +			pci_get_domain_bus_and_slot(domain, 0,
+> +						    PCI_DEVFN(3, 0));
+>  
+>  		if (dev_priv->aux_pdev) {
+>  			resource_start = pci_resource_start(dev_priv->aux_pdev,
+> @@ -268,7 +272,9 @@ static int psb_driver_load(struct drm_device *dev, unsigned long flags)
+>  		}
+>  		dev_priv->gmbus_reg = dev_priv->aux_reg;
+>  
+> -		dev_priv->lpc_pdev = pci_get_bus_and_slot(0, PCI_DEVFN(31, 0));
+> +		dev_priv->lpc_pdev =
+> +			pci_get_domain_bus_and_slot(domain, 0,
+> +						    PCI_DEVFN(31, 0));
+>  		if (dev_priv->lpc_pdev) {
+>  			pci_read_config_word(dev_priv->lpc_pdev, PSB_LPC_GBA,
+>  				&dev_priv->lpc_gpio_base);
+> diff --git a/drivers/gpu/drm/gma500/psb_drv.h b/drivers/gpu/drm/gma500/psb_drv.h
+> index 4918efc..e8300f5 100644
+> --- a/drivers/gpu/drm/gma500/psb_drv.h
+> +++ b/drivers/gpu/drm/gma500/psb_drv.h
+> @@ -780,38 +780,40 @@ extern int psb_gem_dumb_create(struct drm_file *file, struct drm_device *dev,
+>  extern int drm_idle_check_interval;
+>  
+>  /* Utilities */
+> -static inline u32 MRST_MSG_READ32(uint port, uint offset)
+> +static inline u32 MRST_MSG_READ32(int domain, uint port, uint offset)
+>  {
+>  	int mcr = (0xD0<<24) | (port << 16) | (offset << 8);
+>  	uint32_t ret_val = 0;
+> -	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
+> +	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+>  	pci_write_config_dword(pci_root, 0xD0, mcr);
+>  	pci_read_config_dword(pci_root, 0xD4, &ret_val);
+>  	pci_dev_put(pci_root);
+>  	return ret_val;
+>  }
+> -static inline void MRST_MSG_WRITE32(uint port, uint offset, u32 value)
+> +static inline void MRST_MSG_WRITE32(int domain, uint port, uint offset,
+> +				    u32 value)
+>  {
+>  	int mcr = (0xE0<<24) | (port << 16) | (offset << 8) | 0xF0;
+> -	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
+> +	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+>  	pci_write_config_dword(pci_root, 0xD4, value);
+>  	pci_write_config_dword(pci_root, 0xD0, mcr);
+>  	pci_dev_put(pci_root);
+>  }
+> -static inline u32 MDFLD_MSG_READ32(uint port, uint offset)
+> +static inline u32 MDFLD_MSG_READ32(int domain, uint port, uint offset)
+>  {
+>  	int mcr = (0x10<<24) | (port << 16) | (offset << 8);
+>  	uint32_t ret_val = 0;
+> -	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
+> +	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+>  	pci_write_config_dword(pci_root, 0xD0, mcr);
+>  	pci_read_config_dword(pci_root, 0xD4, &ret_val);
+>  	pci_dev_put(pci_root);
+>  	return ret_val;
+>  }
+> -static inline void MDFLD_MSG_WRITE32(uint port, uint offset, u32 value)
+> +static inline void MDFLD_MSG_WRITE32(int domain, uint port, uint offset,
+> +				     u32 value)
+>  {
+>  	int mcr = (0x11<<24) | (port << 16) | (offset << 8) | 0xF0;
+> -	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
+> +	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+>  	pci_write_config_dword(pci_root, 0xD4, value);
+>  	pci_write_config_dword(pci_root, 0xD0, mcr);
+>  	pci_dev_put(pci_root);
+> 
 
-Register suspend_noirq & resume_noirq callback functions to allow PCIe to
-come up after resume from RAM. Both runtime and noirq pm ops share same
-callback functions.
+Any feedback here? I don't have any hardware to test the changes. I just did a compile test.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
-V3:
-* no change in this patch
-V4:
-* no change in this patch
-V5:
-* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-rebased on linux-next
 
- drivers/pci/host/pci-tegra.c | 181 ++++++++++++++++++++++++++-----------------
- 1 file changed, 110 insertions(+), 71 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index cc33fc0fb300..a106eb7ee695 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1287,31 +1287,25 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 		}
- 	}
- 
--	err = tegra_pcie_power_on(pcie);
--	if (err) {
--		dev_err(dev, "failed to power up: %d\n", err);
--		goto phys_put;
--	}
--
- 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
- 	pcie->pads = devm_ioremap_resource(dev, pads);
- 	if (IS_ERR(pcie->pads)) {
- 		err = PTR_ERR(pcie->pads);
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	afi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "afi");
- 	pcie->afi = devm_ioremap_resource(dev, afi);
- 	if (IS_ERR(pcie->afi)) {
- 		err = PTR_ERR(pcie->afi);
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	/* request configuration space, but remap later, on demand */
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cs");
- 	if (!res) {
- 		err = -EADDRNOTAVAIL;
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	pcie->cs = *res;
-@@ -1322,14 +1316,14 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	pcie->cfg = devm_ioremap_resource(dev, &pcie->cs);
- 	if (IS_ERR(pcie->cfg)) {
- 		err = PTR_ERR(pcie->cfg);
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	/* request interrupt */
- 	err = platform_get_irq_byname(pdev, "intr");
- 	if (err < 0) {
- 		dev_err(dev, "failed to get IRQ: %d\n", err);
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	pcie->irq = err;
-@@ -1337,7 +1331,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	err = request_irq(pcie->irq, tegra_pcie_isr, IRQF_SHARED, "PCIE", pcie);
- 	if (err) {
- 		dev_err(dev, "failed to register IRQ: %d\n", err);
--		goto poweroff;
-+		goto phys_put;
- 	}
- 
- 	return 0;
-@@ -1345,8 +1339,6 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- phys_put:
- 	if (soc->program_uphy)
- 		tegra_pcie_phys_put(pcie);
--poweroff:
--	tegra_pcie_power_off(pcie);
- 	return err;
- }
- 
-@@ -1357,8 +1349,6 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- 	if (pcie->irq > 0)
- 		free_irq(pcie->irq, pcie);
- 
--	tegra_pcie_power_off(pcie);
--
- 	if (soc->program_uphy)
- 		tegra_pcie_phys_put(pcie);
- 
-@@ -1536,37 +1526,41 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
- 	int err;
- 	u32 reg;
- 
--	mutex_init(&msi->lock);
-+	if (!msi->phys) {
-+		mutex_init(&msi->lock);
- 
--	msi->chip.dev = dev;
--	msi->chip.setup_irq = tegra_msi_setup_irq;
--	msi->chip.teardown_irq = tegra_msi_teardown_irq;
-+		msi->chip.dev = dev;
-+		msi->chip.setup_irq = tegra_msi_setup_irq;
-+		msi->chip.teardown_irq = tegra_msi_teardown_irq;
- 
--	msi->domain = irq_domain_add_linear(dev->of_node, INT_PCI_MSI_NR,
--					    &msi_domain_ops, &msi->chip);
--	if (!msi->domain) {
--		dev_err(dev, "failed to create IRQ domain\n");
--		return -ENOMEM;
--	}
-+		msi->domain = irq_domain_add_linear(dev->of_node,
-+						    INT_PCI_MSI_NR,
-+						    &msi_domain_ops,
-+						    &msi->chip);
-+		if (!msi->domain) {
-+			dev_err(dev, "failed to create IRQ domain\n");
-+			return -ENOMEM;
-+		}
- 
--	err = platform_get_irq_byname(pdev, "msi");
--	if (err < 0) {
--		dev_err(dev, "failed to get IRQ: %d\n", err);
--		goto err;
--	}
-+		err = platform_get_irq_byname(pdev, "msi");
-+		if (err < 0) {
-+			dev_err(dev, "failed to get IRQ: %d\n", err);
-+			goto err;
-+		}
- 
--	msi->irq = err;
-+		msi->irq = err;
- 
--	err = request_irq(msi->irq, tegra_pcie_msi_irq, IRQF_NO_THREAD,
--			  tegra_msi_irq_chip.name, pcie);
--	if (err < 0) {
--		dev_err(dev, "failed to request IRQ: %d\n", err);
--		goto err;
--	}
-+		err = request_irq(msi->irq, tegra_pcie_msi_irq, IRQF_NO_THREAD,
-+				  tegra_msi_irq_chip.name, pcie);
-+		if (err < 0) {
-+			dev_err(dev, "failed to request IRQ: %d\n", err);
-+			goto err;
-+		}
- 
--	/* setup AFI/FPCI range */
--	msi->pages = __get_free_pages(GFP_KERNEL, 0);
--	msi->phys = virt_to_phys((void *)msi->pages);
-+		/* setup AFI/FPCI range */
-+		msi->pages = __get_free_pages(GFP_KERNEL, 0);
-+		msi->phys = virt_to_phys((void *)msi->pages);
-+	}
- 
- 	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
- 	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
-@@ -2129,10 +2123,8 @@ static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
- {
- 	struct tegra_pcie_port *port, *tmp;
- 
--	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
- 		tegra_pcie_port_disable(port);
--		tegra_pcie_port_free(port);
--	}
- }
- 
- static const struct tegra_pcie_soc tegra20_pcie = {
-@@ -2375,26 +2367,16 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
--	err = tegra_pcie_enable_controller(pcie);
--	if (err)
-+	pm_runtime_enable(pcie->dev);
-+	err = pm_runtime_get_sync(pcie->dev);
-+	if (err) {
-+		dev_err(dev, "fail to enable pcie controller: %d\n", err);
- 		goto put_resources;
-+	}
- 
- 	err = tegra_pcie_request_resources(pcie);
- 	if (err)
--		goto disable_controller;
--
--	/* setup the AFI address translations */
--	tegra_pcie_setup_translations(pcie);
--
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		err = tegra_pcie_enable_msi(pcie);
--		if (err < 0) {
--			dev_err(dev, "failed to enable MSI support: %d\n", err);
--			goto free_resources;
--		}
--	}
--
--	tegra_pcie_enable_ports(pcie);
-+		goto pm_runtime_put;
- 
- 	host->busnr = pcie->busn.start;
- 	host->dev.parent = &pdev->dev;
-@@ -2405,7 +2387,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	err = pci_scan_root_bus_bridge(host);
- 	if (err < 0) {
- 		dev_err(dev, "failed to register host: %d\n", err);
--		goto disable_ports;
-+		goto free_resources;
- 	}
- 
- 	pci_bus_size_bridges(host->bus);
-@@ -2424,14 +2406,13 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	return 0;
- 
--disable_ports:
--	tegra_pcie_disable_ports(pcie);
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		tegra_pcie_disable_msi(pcie);
- free_resources:
- 	tegra_pcie_free_resources(pcie);
--disable_controller:
--	tegra_pcie_disable_controller(pcie);
-+pm_runtime_put:
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		tegra_pcie_disable_msi(pcie);
-+	pm_runtime_put_sync(pcie->dev);
-+	pm_runtime_disable(pcie->dev);
- put_resources:
- 	tegra_pcie_put_resources(pcie);
- 	return err;
-@@ -2447,23 +2428,81 @@ static int tegra_pcie_remove(struct platform_device *pdev)
- 		tegra_pcie_debugfs_exit(pcie);
- 	pci_stop_root_bus(host->bus);
- 	pci_remove_root_bus(host->bus);
--	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
--		tegra_pcie_pme_turnoff(port);
--	tegra_pcie_disable_ports(pcie);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_disable_msi(pcie);
- 	tegra_pcie_free_resources(pcie);
--	tegra_pcie_disable_controller(pcie);
-+	pm_runtime_put_sync(pcie->dev);
-+	pm_runtime_disable(pcie->dev);
- 	tegra_pcie_put_resources(pcie);
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-+		tegra_pcie_port_free(port);
-+
-+	return 0;
-+}
-+
-+static int tegra_pcie_pm_suspend(struct device *dev)
-+{
-+	struct tegra_pcie *pcie = dev_get_drvdata(dev);
-+	struct tegra_pcie_port *port, *tmp;
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-+		tegra_pcie_pme_turnoff(port);
-+	tegra_pcie_disable_ports(pcie);
-+	tegra_pcie_disable_controller(pcie);
-+	tegra_pcie_power_off(pcie);
-+
-+	return 0;
-+}
-+
-+static int tegra_pcie_pm_resume(struct device *dev)
-+{
-+	struct tegra_pcie *pcie = dev_get_drvdata(dev);
-+	int err;
-+
-+	err = tegra_pcie_power_on(pcie);
-+	if (err) {
-+		dev_err(dev, "tegra pcie power on fail: %d\n", err);
-+		return err;
-+	}
-+	err = tegra_pcie_enable_controller(pcie);
-+	if (err) {
-+		dev_err(dev, "tegra pcie controller enable fail: %d\n", err);
-+		goto poweroff;
-+	}
-+	tegra_pcie_setup_translations(pcie);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		err = tegra_pcie_enable_msi(pcie);
-+		if (err < 0) {
-+			dev_err(dev, "failed to enable MSI support: %d\n", err);
-+			goto disable_controller;
-+		}
-+	}
-+
-+	tegra_pcie_enable_ports(pcie);
- 
- 	return 0;
-+
-+disable_controller:
-+	tegra_pcie_disable_controller(pcie);
-+poweroff:
-+	tegra_pcie_power_off(pcie);
-+
-+	return err;
- }
- 
-+static const struct dev_pm_ops tegra_pcie_pm_ops = {
-+	SET_RUNTIME_PM_OPS(tegra_pcie_pm_suspend, tegra_pcie_pm_resume, NULL)
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(tegra_pcie_pm_suspend,
-+				      tegra_pcie_pm_resume)
-+};
-+
- static struct platform_driver tegra_pcie_driver = {
- 	.driver = {
- 		.name = "tegra-pcie",
- 		.of_match_table = tegra_pcie_of_match,
- 		.suppress_bind_attrs = true,
-+		.pm = &tegra_pcie_pm_ops,
- 	},
- 	.probe = tegra_pcie_probe,
- 	.remove = tegra_pcie_remove,
 -- 
-2.1.4
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
