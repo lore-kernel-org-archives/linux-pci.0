@@ -1,63 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 3 Jan 2018 15:34:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Romain Perier <romain.perier@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:47073 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752344AbeADWNp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 17:13:45 -0500
+Received: by mail-wr0-f196.google.com with SMTP id g17so2796326wrd.13
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jan 2018 14:13:45 -0800 (PST)
+Date: Thu, 4 Jan 2018 15:13:37 -0700
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v17 0/4] Replace PCI pool by DMA pool API
-Message-ID: <20180103213433.GA189303@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180102175356.7999-1-romain.perier@gmail.com>
- <20180102221724.GE6211@bhelgaas-glaptop.roam.corp.google.com>
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+ rdma_rw_ctx_[init|destroy]()
+Message-ID: <20180104221337.GV11348@ziepe.ca>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-7-logang@deltatee.com>
+ <20180104192225.GS11348@ziepe.ca>
+ <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180102221724.GE6211@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 02, 2018 at 04:17:24PM -0600, Bjorn Helgaas wrote:
-> On Tue, Jan 02, 2018 at 06:53:52PM +0100, Romain Perier wrote:
-> > The current PCI pool API are simple macro functions direct expanded to
-> > the appropriate dma pool functions. The prototypes are almost the same
-> > and semantically, they are very similar. I propose to use the DMA pool
-> > API directly and get rid of the old API.
-> > 
-> > This set of patches, replaces the old API by the dma pool API
-> > and remove the defines.
-> > ...
+On Thu, Jan 04, 2018 at 12:52:24PM -0700, Logan Gunthorpe wrote:
+> >I'd be much happier if dma_map_sg can tell the memory is P2P or not
+> >from the scatterlist or dir arguments and not require the callers to
+> >have this.
 > 
-> > Romain Perier (4):
-> >   block: DAC960: Replace PCI pool old API
-> >   net: e100: Replace PCI pool old API
-> >   hinic: Replace PCI pool old API
-> >   PCI: Remove PCI pool macro functions
-> > 
-> >  drivers/block/DAC960.c                            | 38 +++++++++++------------
-> >  drivers/block/DAC960.h                            |  4 +--
-> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
-> >  drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
-> >  drivers/net/ethernet/intel/e100.c                 | 12 +++----
-> >  include/linux/pci.h                               |  9 ------
-> >  6 files changed, 32 insertions(+), 43 deletions(-)
+> We tried things like this in an earlier iteration[1] which assumed the SG
+> was homogenous (all P2P or all regular memory). This required serious
+> ugliness to try and ensure SGs were in fact homogenous[2].
+
+I'm confused, these patches already assume the sg is homogenous,
+right? Sure looks that way. So [2] is just debugging??
+
+What I meant is to rely on the fact it is already homogenous and
+create a function like this:
+
+static inline bool sg_is_table_p2p(struct scatterlist *sg)
+{
+    return is_pci_p2p_page(sg_page(sg));
+}
+
+And then insert
+
+  if (sg_is_table_p2p(sg))
+       return pci_p2pmem_map_sg(...);
+
+At the top of dma_map_sg_attrs() (and similar for unmap)
+
+Then we don't need to patch RDMA because RDMA is not special when it
+comes to P2P. P2P should work with everything.
+
+This has been my objection to every P2P iteration so far, for
+years. RDMA is not special, P2P should not be patching RDMA's DMA
+path. This an issue between the DMA and PCI subsystems, not for RDMA.
+
+> >The signature of pci_p2pmem_map_sg also doesn't look very good, it
+> >should mirror the usual dma_map_sg, otherwise it needs more revision
+> >to extend this to do P2P through a root complex.
 > 
-> Applied to pci/misc for v4.16, thanks!
+> Generally, the feedback that I get is to not make changes that try to
+> anticipate the future. It would be easy enough to add those arguments when
+> the code for going through the RC is made (which I expect will be very
+> involved anyway).
 
-Oops, my mistake.  I can't remove the macros themselves yet because
-some of the uses were removed by patches that were applied via other
-trees, and those patches are not in my tree.
+Yes, but DMA mapping fundamentally requires the arguments to
+dma_map_sg, so it is hard to accept an API called dma_map without
+them.. Maybe just a naming issue.
 
-To avoid ordering dependencies during the merge window, I dropped the
-"PCI: Remove PCI pool macro functions" patch.  Please repost that
-after all the removals have made it into Linus' tree.
-
-Bjorn
+[2] https://github.com/sbates130272/linux-p2pmem/commit/61ec04fa63c79dab14570ea0e97432d9325ad127
