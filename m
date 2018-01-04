@@ -1,102 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:32817 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751637AbeAEEuk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 23:50:40 -0500
-Received: by mail-wm0-f66.google.com with SMTP id g130so4792210wme.0
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jan 2018 20:50:39 -0800 (PST)
-Date: Thu, 4 Jan 2018 21:50:31 -0700
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
- rdma_rw_ctx_[init|destroy]()
-Message-ID: <20180105045031.GX11348@ziepe.ca>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-7-logang@deltatee.com>
- <20180104192225.GS11348@ziepe.ca>
- <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
- <20180104221337.GV11348@ziepe.ca>
- <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:44797 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753314AbeADPsJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 10:48:09 -0500
+Received: by mail-wm0-f65.google.com with SMTP id t8so4263383wmc.3
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jan 2018 07:48:08 -0800 (PST)
+From: Koen Vandeputte <koen.vandeputte@ncentric.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, Koen Vandeputte <koen.vandeputte@ncentric.com>
+Subject: [PATCH] imx6: fix pcie enumeration
+Date: Thu,  4 Jan 2018 16:48:03 +0100
+Message-Id: <1515080883-30066-1-git-send-email-koen.vandeputte@ncentric.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 04, 2018 at 04:44:00PM -0700, Logan Gunthorpe wrote:
-> On 04/01/18 03:13 PM, Jason Gunthorpe wrote:
-> >On Thu, Jan 04, 2018 at 12:52:24PM -0700, Logan Gunthorpe wrote:
-> >>We tried things like this in an earlier iteration[1] which assumed the SG
-> >>was homogenous (all P2P or all regular memory). This required serious
-> >>ugliness to try and ensure SGs were in fact homogenous[2].
-> >
-> >I'm confused, these patches already assume the sg is homogenous,
-> >right? Sure looks that way. So [2] is just debugging??
-> 
-> Yes, but it's a bit different to expect that someone calling
-> pci_p2pmem_map_sg() will know what they're doing and provide a homogenous
-> SG. It is relatively clear by convention that the entire SG must be
-> homogenous given they're calling a pci_p2pmem function. Where as, allowing
-> P2P SGs into the core DMA code means all we can do is hope that future
-> developers don't screw it up and allow P2P pages to mix in with regular
-> pages.
+By default, when the imx6 PCIe RC boots up, the subordinate is set
+equally to the secondary bus (1), and does not alter afterwards.
 
-Well that argument applies equally to the RDMA RW API wrappers around
-the DMA API. I think it is fine if sgl are defined to only have P2P or
-not, and that debugging support seemed reasonable to me..
+This means that theoretically, the highest bus reachable downstream is
+bus 1.
 
-> It's also very difficult to add similar functionality to dma_map_page seeing
-> dma_unmap_page won't have any way to know what it's dealing with. It just
-> seems confusing to support P2P in the SG version and not the page version.
+Before commit a20c7f36bd3d ("PCI: Do not allocate more buses than
+available in parent"), the driver ignored the subord value and just
+allowed up to 0xff on each device downstream.
 
-Well, this proposal is to support P2P in only some RDMA APIs and not
-others, so it seems about as confusing to me..
+This caused a lot of errors to be printed, as this is not logical
+according to spec. (but it worked ..)
 
-> >Then we don't need to patch RDMA because RDMA is not special when it
-> >comes to P2P. P2P should work with everything.
-> 
-> Yes, I agree this would be very nice.
+After this commit, the driver stopped scanning deeper when the last
+allocated busnr equals the subordinate of it's master, causing devices
+to be undiscovered (especially behind bridges), uncovering the impact of
+this bug.
 
-Well, it is more than very nice. We have to keep RDMA working after
-all, and if you make it even more special things become harder for us.
+Before:
 
-It is already the case that DMA in RDMA is very strange. We have
-drivers that provide their own DMA ops, for instance.
+00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00 ...
+	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
 
-And on that topic, does this scheme work with HFI?
+00:00.0 0604: 16c3:abcd (rev 01)
+01:00.0 0604: 10b5:8604 (rev ba)
+... stops after bus 1 ...
 
-On first glance, it looks like no. The PCI device the HFI device is
-attached to may be able to do P2P, so it should be able to trigger the
-support.
+After:
 
-However, substituting the p2p_dma_map for the real device op dma_map
-will cause a kernel crash when working with HFI. HFI uses a custom DMA
-ops that returns CPU addreses in the dma_addr_t which the driver
-handles in various special ways. One cannot just replace them with PCI
-bus addresses.
+00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
+...
+	Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
 
-So, this kinda looks to me like it causes bad breakage for some RDMA
-drivers??
+00:00.0 0604: 16c3:abcd (rev 01)
+01:00.0 0604: 10b5:8604 (rev ba)
+02:01.0 0604: 10b5:8604 (rev ba)
+02:04.0 0604: 10b5:8604 (rev ba)
+02:05.0 0604: 10b5:8604 (rev ba)
+03:00.0 0280: 168c:0033 (rev 01)
+05:00.0 0280: 168c:0033 (rev 01)
 
-This is why P2P must fit in to the common DMA framework somehow, we
-rely on these abstractions to work properly and fully in RDMA.
+Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+---
 
-I think you should consider pushing this directly into the dma_ops
-implementations. Add a p2p_supported flag to struct dma_map_ops, and
-only if it is true can a caller pass a homogeneous SGL to ops->map_sg.
-Only map_sg would be supported for P2P. Upgraded implementations can
-call the helper function.
+Needs backports to 4.14 & 4.9 stables
 
-Jason
+
+ drivers/pci/dwc/pci-imx6.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index b73483534a5b..3d13fa8c2eb1 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -76,6 +76,9 @@ struct imx6_pcie {
+ 
+ #define PCIE_RC_LCSR				0x80
+ 
++#define PCIE_RC_BNR				0x18
++#define PCIE_RC_BNR_MAX_SUBORDINATE		(0xff << 16)
++
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET 0x700
+ #define PCIE_PL_PFLR (PL_OFFSET + 0x08)
+@@ -562,6 +565,17 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 	int ret;
+ 
+ 	/*
++	 * By default, the subordinate is set equally to the secondary
++	 * bus (0x01) when the RC boots.
++	 * This means that theoretically, only bus 1 is reachable from the RC.
++	 * Force the PCIe RC subordinate to 0xff, otherwise no downstream
++	 * devices will be detected behind bus 1.
++	*/
++	tmp = dw_pcie_readl_rc(pp, PCIE_RC_BNR);
++	tmp |= PCIE_RC_BNR_MAX_SUBORDINATE;
++	dw_pcie_writel_rc(pp, PCIE_RC_BNR, tmp);
++
++	/*
+ 	 * Force Gen1 operation when starting the link.  In case the link is
+ 	 * started in Gen2 mode, there is a possibility the devices on the
+ 	 * bus will not be detected at all.  This happens with PCIe switches.
+-- 
+2.7.4
