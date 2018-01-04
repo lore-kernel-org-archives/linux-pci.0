@@ -1,80 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51460 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751595AbeACPv6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Jan 2018 10:51:58 -0500
-Date: Wed, 3 Jan 2018 15:51:49 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thierry Reding <thierry.reding@gmail.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: cyndis@kapsi.fi, bhelgaas@google.com, jonathanh@nvidia.com,
-        robh+dt@kernel.org, frowand.list@gmail.com, rjw@rjwysocki.net,
-        tglx@linutronix.de, vidyas@nvidia.com, kthota@nvidia.com,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH V4 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for
- Tegra PCIe
-Message-ID: <20180103155149.GA8929@e107981-ln.cambridge.arm.com>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
- <1512723493-865-4-git-send-email-mmaddireddy@nvidia.com>
- <20171215173643.GA1050@red-moon>
- <20171220193011.GA31757@ulmo>
- <20171221104630.GB24280@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171221104630.GB24280@red-moon>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  4 Jan 2018 12:01:27 -0700
+Message-Id: <20180104190137.7654-3-logang@deltatee.com>
+In-Reply-To: <20180104190137.7654-1-logang@deltatee.com>
+References: <20180104190137.7654-1-logang@deltatee.com>
+Subject: [PATCH 02/12] pci-p2p: Add sysfs group to display p2pmem stats
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 21, 2017 at 10:46:30AM +0000, Lorenzo Pieralisi wrote:
-> On Wed, Dec 20, 2017 at 08:30:11PM +0100, Thierry Reding wrote:
-> > On Fri, Dec 15, 2017 at 05:36:43PM +0000, Lorenzo Pieralisi wrote:
-> > > On Fri, Dec 08, 2017 at 02:28:09PM +0530, Manikanta Maddireddy wrote:
-> > > > Primary, secondary and subordinate default bus numbers are 0 in Tegra and
-> > > > it is expecting SW to program these numbers in configration space.
-> > > > 
-> > > > pci_scan_bridge_extend() function programs these numbers in configuration
-> > > > space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_BUS
-> > > > flag is set. Since secondary & subordinate default bus numbers are 0,
-> > > > PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
-> > > > 
-> > > > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> > > > ---
-> > > > V3:
-> > > > * new patch in V3
-> > > > V4:
-> > > > * no change in this patch
-> > > > 
-> > > >  drivers/pci/host/pci-tegra.c | 1 -
-> > > >  1 file changed, 1 deletion(-)
-> > > > 
-> > > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> > > > index a549c5899e26..0d91f1a3a6b4 100644
-> > > > --- a/drivers/pci/host/pci-tegra.c
-> > > > +++ b/drivers/pci/host/pci-tegra.c
-> > > > @@ -2604,7 +2604,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
-> > > >  
-> > > >  	tegra_pcie_enable_ports(pcie);
-> > > >  
-> > > > -	pci_add_flags(PCI_REASSIGN_ALL_BUS);
-> > > 
-> > > This looks obviously OK to me but I need Thierry's ACK to queue it.
-> > 
-> > Just as an additional note: I think the real reason why this is okay to
-> > do is because we reset the PCI host controller in the kernel driver, so
-> > any bus assignments done by the firmware are reset as well.
-> > 
-> > Acked-by: Thierry Reding <treding@nvidia.com>
-> 
-> Thank you. This series needs rebasing, we should try to untangle
-> the dependencies between series so that I can actually apply some
-> of these patches that make sense on their own.
+Attributes display the total amount of P2P memory, the ammount available
+and whether it is published or not.
 
-Manikanta, would you be able to decouple this series from:
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ Documentation/ABI/testing/sysfs-bus-pci | 25 ++++++++++++++++
+ drivers/pci/p2p.c                       | 51 +++++++++++++++++++++++++++++++++
+ 2 files changed, 76 insertions(+)
 
-https://patchwork.ozlabs.org/patch/832053/
-
-so that we can make forward progress ? There are some patches in
-this series that I could apply - if rebased.
-
-Lorenzo
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 44d4b2be92fd..7b80ea77faca 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -323,3 +323,28 @@ Description:
+ 
+ 		This is similar to /sys/bus/pci/drivers_autoprobe, but
+ 		affects only the VFs associated with a specific PF.
++
++What:		/sys/bus/pci/devices/.../p2pmem/available
++Date:		November 2017
++Contact:	Logan Gunthorpe <logang@deltatee.com>
++Description:
++		If the device has any Peer-to-Peer memory registered, this
++	        file contains the ammount of memory that has not been
++		allocated (in decimal).
++
++What:		/sys/bus/pci/devices/.../p2pmem/size
++Date:		November 2017
++Contact:	Logan Gunthorpe <logang@deltatee.com>
++Description:
++		If the device has any Peer-to-Peer memory registered, this
++	        file contains the total ammount of memory that the device
++		provides (in decimal).
++
++What:		/sys/bus/pci/devices/.../p2pmem/published
++Date:		November 2017
++Contact:	Logan Gunthorpe <logang@deltatee.com>
++Description:
++		If the device has any Peer-to-Peer memory registered, this
++	        file contains a '1' if the memory has been published for
++		use inside the kernel or a '0' if it is only intended
++		for use within the driver that published it.
+diff --git a/drivers/pci/p2p.c b/drivers/pci/p2p.c
+index aa465ac9273d..03330c7b5e6d 100644
+--- a/drivers/pci/p2p.c
++++ b/drivers/pci/p2p.c
+@@ -28,6 +28,53 @@ struct pci_p2p {
+ 	bool published;
+ };
+ 
++static ssize_t size_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	size_t size = 0;
++
++	if (pdev->p2p->pool)
++		size = gen_pool_size(pdev->p2p->pool);
++
++	return snprintf(buf, PAGE_SIZE, "%zd\n", size);
++}
++static DEVICE_ATTR_RO(size);
++
++static ssize_t available_show(struct device *dev, struct device_attribute *attr,
++			      char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	size_t avail = 0;
++
++	if (pdev->p2p->pool)
++		avail = gen_pool_avail(pdev->p2p->pool);
++
++	return snprintf(buf, PAGE_SIZE, "%zd\n", avail);
++}
++static DEVICE_ATTR_RO(available);
++
++static ssize_t published_show(struct device *dev, struct device_attribute *attr,
++			      char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", pdev->p2p->published);
++}
++static DEVICE_ATTR_RO(published);
++
++static struct attribute *p2pmem_attrs[] = {
++	&dev_attr_size.attr,
++	&dev_attr_available.attr,
++	&dev_attr_published.attr,
++	NULL,
++};
++
++static const struct attribute_group p2pmem_group = {
++	.attrs = p2pmem_attrs,
++	.name = "p2pmem",
++};
++
+ static void pci_p2pmem_percpu_release(struct percpu_ref *ref)
+ {
+ 	struct pci_p2p *p2p =
+@@ -54,6 +101,7 @@ static void pci_p2pmem_release(void *data)
+ 	percpu_ref_exit(&pdev->p2p->devmap_ref);
+ 
+ 	gen_pool_destroy(pdev->p2p->pool);
++	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
+ 	pdev->p2p = NULL;
+ }
+ 
+@@ -82,6 +130,9 @@ static int pci_p2pmem_setup(struct pci_dev *pdev)
+ 	if (error)
+ 		goto out_pool_destroy;
+ 
++	if (sysfs_create_group(&pdev->dev.kobj, &p2pmem_group))
++		dev_warn(&pdev->dev, "failed to create p2p sysfs group\n");
++
+ 	pdev->p2p = p2p;
+ 
+ 	return 0;
+-- 
+2.11.0
