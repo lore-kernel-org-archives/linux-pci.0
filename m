@@ -1,126 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37279 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752437AbeAJSDf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 13:03:35 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Kong Lai <kong.lai@tundra.com>, linux-pci@vger.kernel.org,
-        linux-media@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] tsi108_eth: use dma API properly
-Date: Wed, 10 Jan 2018 19:03:21 +0100
-Message-Id: <20180110180322.30186-4-hch@lst.de>
-In-Reply-To: <20180110180322.30186-1-hch@lst.de>
-References: <20180110180322.30186-1-hch@lst.de>
+Received: from mail-by2nam03on0078.outbound.protection.outlook.com ([104.47.42.78]:32395
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753262AbeADWR6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Jan 2018 17:17:58 -0500
+From: Felix Kuehling <Felix.Kuehling@amd.com>
+To: amd-gfx@lists.freedesktop.org, oded.gabbay@gmail.com
+Cc: Felix Kuehling <Felix.Kuehling@amd.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 2/9] drm/amdkfd: Conditionally enable PCIe atomics
+Date: Thu,  4 Jan 2018 17:17:41 -0500
+Message-Id: <1515104268-25087-3-git-send-email-Felix.Kuehling@amd.com>
+In-Reply-To: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
+References: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to pass a struct device to the dma API, even if some
-architectures still support that for legacy reasons, and should not mix
-it with the old PCI dma API.
+This will be needed for most dGPUs.
 
-Note that the driver also seems to never actually unmap its dma mappings,
-but to fix that we'll need someone more familar with the driver.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+CC: linux-pci@vger.kernel.org
+Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
 ---
- drivers/net/ethernet/tundra/tsi108_eth.c | 36 ++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 16 deletions(-)
+ drivers/gpu/drm/amd/amdkfd/kfd_device.c | 17 +++++++++++++++++
+ drivers/gpu/drm/amd/amdkfd/kfd_priv.h   |  1 +
+ 2 files changed, 18 insertions(+)
 
-diff --git a/drivers/net/ethernet/tundra/tsi108_eth.c b/drivers/net/ethernet/tundra/tsi108_eth.c
-index 0624b71ab5d4..edcd1e60b30d 100644
---- a/drivers/net/ethernet/tundra/tsi108_eth.c
-+++ b/drivers/net/ethernet/tundra/tsi108_eth.c
-@@ -152,6 +152,8 @@ struct tsi108_prv_data {
- 	u32 msg_enable;			/* debug message level */
- 	struct mii_if_info mii_if;
- 	unsigned int init_media;
-+
-+	struct platform_device *pdev;
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_device.c b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
+index a8fa33a..fafe971 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_device.c
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
+@@ -41,6 +41,7 @@ static const struct kfd_device_info kaveri_device_info = {
+ 	.num_of_watch_points = 4,
+ 	.mqd_size_aligned = MQD_SIZE_ALIGNED,
+ 	.supports_cwsr = false,
++	.needs_pci_atomics = false,
  };
  
- /* Structure for a device driver */
-@@ -703,17 +705,18 @@ static int tsi108_send_packet(struct sk_buff * skb, struct net_device *dev)
- 		data->txskbs[tx] = skb;
+ static const struct kfd_device_info carrizo_device_info = {
+@@ -53,6 +54,7 @@ static const struct kfd_device_info carrizo_device_info = {
+ 	.num_of_watch_points = 4,
+ 	.mqd_size_aligned = MQD_SIZE_ALIGNED,
+ 	.supports_cwsr = true,
++	.needs_pci_atomics = false,
+ };
  
- 		if (i == 0) {
--			data->txring[tx].buf0 = dma_map_single(NULL, skb->data,
--					skb_headlen(skb), DMA_TO_DEVICE);
-+			data->txring[tx].buf0 = dma_map_single(&data->pdev->dev,
-+					skb->data, skb_headlen(skb),
-+					DMA_TO_DEVICE);
- 			data->txring[tx].len = skb_headlen(skb);
- 			misc |= TSI108_TX_SOF;
- 		} else {
- 			const skb_frag_t *frag = &skb_shinfo(skb)->frags[i - 1];
- 
--			data->txring[tx].buf0 = skb_frag_dma_map(NULL, frag,
--								 0,
--								 skb_frag_size(frag),
--								 DMA_TO_DEVICE);
-+			data->txring[tx].buf0 =
-+				skb_frag_dma_map(&data->pdev->dev, frag,
-+						0, skb_frag_size(frag),
-+						DMA_TO_DEVICE);
- 			data->txring[tx].len = skb_frag_size(frag);
- 		}
- 
-@@ -808,9 +811,9 @@ static int tsi108_refill_rx(struct net_device *dev, int budget)
- 		if (!skb)
- 			break;
- 
--		data->rxring[rx].buf0 = dma_map_single(NULL, skb->data,
--							TSI108_RX_SKB_SIZE,
--							DMA_FROM_DEVICE);
-+		data->rxring[rx].buf0 = dma_map_single(&data->pdev->dev,
-+				skb->data, TSI108_RX_SKB_SIZE,
-+				DMA_FROM_DEVICE);
- 
- 		/* Sometimes the hardware sets blen to zero after packet
- 		 * reception, even though the manual says that it's only ever
-@@ -1308,15 +1311,15 @@ static int tsi108_open(struct net_device *dev)
- 		       data->id, dev->irq, dev->name);
+ struct kfd_deviceid {
+@@ -127,6 +129,21 @@ struct kfd_dev *kgd2kfd_probe(struct kgd_dev *kgd,
+ 		return NULL;
  	}
  
--	data->rxring = dma_zalloc_coherent(NULL, rxring_size, &data->rxdma,
--					   GFP_KERNEL);
-+	data->rxring = dma_zalloc_coherent(&data->pdev->dev, rxring_size,
-+			&data->rxdma, GFP_KERNEL);
- 	if (!data->rxring)
- 		return -ENOMEM;
++	if (device_info->needs_pci_atomics) {
++		/* Allow BIF to recode atomics to PCIe 3.0
++		 * AtomicOps. 32 and 64-bit requests are possible and
++		 * must be supported.
++		 */
++		if (pci_enable_atomic_ops_to_root(pdev,
++				PCI_EXP_DEVCAP2_ATOMIC_COMP32 |
++				PCI_EXP_DEVCAP2_ATOMIC_COMP64) < 0) {
++			dev_info(kfd_device,
++				"skipped device %x:%x, PCI rejects atomics",
++				 pdev->vendor, pdev->device);
++			return NULL;
++		}
++	}
++
+ 	kfd = kzalloc(sizeof(*kfd), GFP_KERNEL);
+ 	if (!kfd)
+ 		return NULL;
+diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_priv.h b/drivers/gpu/drm/amd/amdkfd/kfd_priv.h
+index 6a48d29..eebfb1e 100644
+--- a/drivers/gpu/drm/amd/amdkfd/kfd_priv.h
++++ b/drivers/gpu/drm/amd/amdkfd/kfd_priv.h
+@@ -158,6 +158,7 @@ struct kfd_device_info {
+ 	uint8_t num_of_watch_points;
+ 	uint16_t mqd_size_aligned;
+ 	bool supports_cwsr;
++	bool needs_pci_atomics;
+ };
  
--	data->txring = dma_zalloc_coherent(NULL, txring_size, &data->txdma,
--					   GFP_KERNEL);
-+	data->txring = dma_zalloc_coherent(&data->pdev->dev, txring_size,
-+			&data->txdma, GFP_KERNEL);
- 	if (!data->txring) {
--		pci_free_consistent(NULL, rxring_size, data->rxring,
-+		dma_free_coherent(&data->pdev->dev, rxring_size, data->rxring,
- 				    data->rxdma);
- 		return -ENOMEM;
- 	}
-@@ -1428,10 +1431,10 @@ static int tsi108_close(struct net_device *dev)
- 		dev_kfree_skb(skb);
- 	}
- 
--	dma_free_coherent(0,
-+	dma_free_coherent(&data->pdev->dev,
- 			    TSI108_RXRING_LEN * sizeof(rx_desc),
- 			    data->rxring, data->rxdma);
--	dma_free_coherent(0,
-+	dma_free_coherent(&data->pdev->dev,
- 			    TSI108_TXRING_LEN * sizeof(tx_desc),
- 			    data->txring, data->txdma);
- 
-@@ -1576,6 +1579,7 @@ tsi108_init_one(struct platform_device *pdev)
- 	printk("tsi108_eth%d: probe...\n", pdev->id);
- 	data = netdev_priv(dev);
- 	data->dev = dev;
-+	data->pdev = pdev;
- 
- 	pr_debug("tsi108_eth%d:regs:phyresgs:phy:irq_num=0x%x:0x%x:0x%x:0x%x\n",
- 			pdev->id, einfo->regs, einfo->phyregs,
+ struct kfd_mem_obj {
 -- 
-2.14.2
+2.7.4
