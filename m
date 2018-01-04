@@ -1,45 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:50920 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751311AbeAYQkP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Jan 2018 11:40:15 -0500
-Date: Thu, 25 Jan 2018 08:40:10 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Brian Norris <briannorris@chromium.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        JeffyChen <jeffy.chen@rock-chips.com>,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
-        dianders@chromium.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
- signal for OF
-Message-ID: <20180125164010.GG4180@atomide.com>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
- <5491520.JsEYlZiECc@aspire.rjw.lan>
- <20180105004130.GA151625@google.com>
- <2806186.IK6EZBC0cX@aspire.rjw.lan>
- <20180125012148.lcgnxi3uwcjzue7o@ban.mtv.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] PCI: dra7xx: Iterate over INTx status bits
+To: Vignesh R <vigneshr@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20171229114131.22296-1-vigneshr@ti.com>
+ <20171229114131.22296-3-vigneshr@ti.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <7b62e14f-9571-82a2-76eb-8cad44103fde@ti.com>
+Date: Thu, 4 Jan 2018 11:39:36 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180125012148.lcgnxi3uwcjzue7o@ban.mtv.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171229114131.22296-3-vigneshr@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Brian Norris <briannorris@chromium.org> [180125 01:22]:
-> On Fri, Jan 05, 2018 at 02:13:33AM +0100, Rafael J. Wysocki wrote:
-> > The "wakeup-interrupt" property at the bridge level basically has to be defined
-> > as the wakeup interrupt for all devices on the bus under the bridge.
+
+
+On Friday 29 December 2017 05:11 PM, Vignesh R wrote:
+> It is possible that more than one legacy IRQ may be set at the same
+> time, therefore iterate and handle all the pending INTx interrupts
+> before clearing the status and exiting the IRQ handler. Otherwise, some
+> interrupts would be lost.
 > 
-> The only thing I'm at a loss for is whether this goes in (referring to
-> rk3399-gru.dtsi) &pcie or &pci_rootport. I think some versions of this
-> series have been aiming for the former, and some the latter.
+> Signed-off-by: Vignesh R <vigneshr@ti.com>
 
-I'd keep the wakeup interrupt property at the rootport level. That way
-it can work with whatever pcie card that might be plugged into that
-slot. That is in case it's just a slot and not hardwired pcie device :)
-
-Regards,
-
-Tony
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c | 10 +++++++---
+>  1 file changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 892f93910012..48c6ae535847 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -257,7 +257,8 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>  	struct dra7xx_pcie *dra7xx = arg;
+>  	struct dw_pcie *pci = dra7xx->pci;
+>  	struct pcie_port *pp = &pci->pp;
+> -	u32 reg;
+> +	unsigned long reg;
+> +	u32 virq, bit;
+>  
+>  	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
+>  
+> @@ -269,8 +270,11 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>  	case INTB:
+>  	case INTC:
+>  	case INTD:
+> -		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
+> -						    ffs(reg) - 1));
+> +		for_each_set_bit(bit, &reg, PCI_NUM_INTX) {
+> +			virq = irq_find_mapping(dra7xx->irq_domain, bit);
+> +			if (virq)
+> +				generic_handle_irq(virq);
+> +		}
+>  		break;
+>  	}
+>  
+> 
