@@ -1,83 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55072 "EHLO mx1.redhat.com"
+Received: from ale.deltatee.com ([207.54.116.67]:39984 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750816AbeAQTMO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jan 2018 14:12:14 -0500
-Date: Wed, 17 Jan 2018 12:12:13 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: KarimAllah Ahmed <karahmed@amazon.com>
-Cc: KarimAllah Ahmed <karahmed@amazon.de>, <linux-pci@vger.kernel.org>,
+        id S1752109AbeADTwk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Jan 2018 14:52:40 -0500
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-kernel@vger.kernel.org>,
-        "Jan H . =?UTF-8?B?U2Now7ZuaGVycg==?=" <jschoenh@amazon.de>
-Subject: Re: [PATCH] pci: Do not read INTx PIN and LINE registers for
- virtual functions
-Message-ID: <20180117121213.53b3bebe@w520.home>
-In-Reply-To: <afe21e82-b75a-107c-05d4-b4037dfd22b7@amazon.com>
-References: <1516213829-14844-1-git-send-email-karahmed@amazon.de>
-        <20180117114944.4835c296@w520.home>
-        <afe21e82-b75a-107c-05d4-b4037dfd22b7@amazon.com>
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-7-logang@deltatee.com> <20180104192225.GS11348@ziepe.ca>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
+Date: Thu, 4 Jan 2018 12:52:24 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20180104192225.GS11348@ziepe.ca>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+ rdma_rw_ctx_[init|destroy]()
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 17 Jan 2018 20:02:44 +0100
-KarimAllah Ahmed <karahmed@amazon.com> wrote:
 
-> On 01/17/2018 07:49 PM, Alex Williamson wrote:
-> > On Wed, 17 Jan 2018 19:30:29 +0100
-> > KarimAllah Ahmed <karahmed@amazon.de> wrote:
-> >  
-> >> ... since INTx is not supported by-spec for virtual functions.  
-> > But the spec also states that VFs must implement the interrupt pin
-> > register as read-only zero, so either this is redundant or it's a
-> > workaround for VFs that aren't quite compliant?  Thanks,  
+
+On 04/01/18 12:22 PM, Jason Gunthorpe wrote:
+> This seems really clunky since we are going to want to do this same
+> logic all over the place.
 > 
-> The end goal for me is just to NOT do the read across the PCI bus for no 
-> good reason. We have devices with thousands of virtual functions and 
-> this read is simply not useful in this case and can be optimized as I 
-> did. So from a functionality point of view probably the patch does not 
-> add any value as you mentioned, but it is really useful as a 
-> micro-optimization.
+> I'd be much happier if dma_map_sg can tell the memory is P2P or not
+> from the scatterlist or dir arguments and not require the callers to
+> have this.
 
-Thanks for the clarification, it's helpful to understand the motivation
-for a patch that otherwise seems unnecessary.
+We tried things like this in an earlier iteration[1] which assumed the 
+SG was homogenous (all P2P or all regular memory). This required serious 
+ugliness to try and ensure SGs were in fact homogenous[2]. If you don't 
+assume homogenousness you need change every DMA mapping provider or have 
+a way to efficiently know if the SGL contains any P2P pages.
 
-Alex
+Unfortunately, it's hard to do any of this without significant 
+improvements to the SGL code (like [3]) but I understand there's 
+significant push back against such changes at this time.
 
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: linux-pci@vger.kernel.org
-> >> Cc: linux-kernel@vger.kernel.org
-> >> Signed-off-by: KarimAllah Ahmed <karahmed@amazon.de>
-> >> Signed-off-by: Jan H. Schönherr <jschoenh@amazon.de>
-> >> ---
-> >>   drivers/pci/probe.c | 7 +++++++
-> >>   1 file changed, 7 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >> index 65099d0..61002fb 100644
-> >> --- a/drivers/pci/probe.c
-> >> +++ b/drivers/pci/probe.c
-> >> @@ -1232,6 +1232,13 @@ static void pci_read_irq(struct pci_dev *dev)
-> >>   {
-> >>   	unsigned char irq;
-> >>   
-> >> +	/* Virtual functions do not have INTx support */
-> >> +	if (dev->is_virtfn) {
-> >> +		dev->pin = 0;
-> >> +		dev->irq = 0;
-> >> +		return;
-> >> +	}
-> >> +
-> >>   	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &irq);
-> >>   	dev->pin = irq;
-> >>   	if (irq)  
-> >  
-> 
-> Amazon Development Center Germany GmbH
-> Berlin - Dresden - Aachen
-> main office: Krausenstr. 38, 10117 Berlin
-> Geschaeftsfuehrer: Dr. Ralf Herbrich, Christian Schlaeger
-> Ust-ID: DE289237879
-> Eingetragen am Amtsgericht Charlottenburg HRB 149173 B
+> For instance adding DMA_TO_P2P_DEVICE and DMA_FROM_P2P_DEVICE, or
+> adding another bit to the page flags in scatterlist.
+
+Creating new direction flags doesn't really solve the problem you point 
+out. It'd only really work in the rdma_rw_ctx_init() case because that 
+function already takes the direction argument. It doesn't work in the 
+similar block device case because the DMA direction isn't passed through 
+the request.
+
+Though, if there's agreement to do something like that I'm not against it.
+
+> The signature of pci_p2pmem_map_sg also doesn't look very good, it
+> should mirror the usual dma_map_sg, otherwise it needs more revision
+> to extend this to do P2P through a root complex.
+
+Generally, the feedback that I get is to not make changes that try to 
+anticipate the future. It would be easy enough to add those arguments 
+when the code for going through the RC is made (which I expect will be 
+very involved anyway).
+
+Logan
+
+[1] 
+https://github.com/sbates130272/linux-p2pmem/commit/af3d3742669511c343c2c5bfbbfaccc325bee80a
+[2] 
+https://github.com/sbates130272/linux-p2pmem/commit/61ec04fa63c79dab14570ea0e97432d9325ad127
+[3] 
+https://github.com/sbates130272/linux-p2pmem/commit/d8635a4de3c674b577b95653d431fd61c2504ccd
