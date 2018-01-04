@@ -1,317 +1,295 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:59742 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751173AbeAWMZn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:43 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v5 8/9] PCI: dwc: Remove IRQ domain hierarchy API support
-Date: Tue, 23 Jan 2018 12:25:31 +0000
-Message-Id: <2e13af4582771c00dee53a02c44f4c55efab2eed.1516701516.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+Received: from mail.kernel.org ([198.145.29.99]:42230 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752659AbeADVke (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Jan 2018 16:40:34 -0500
+Date: Thu, 4 Jan 2018 15:40:29 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 01/12] pci-p2p: Support peer to peer memory
+Message-ID: <20180104214028.GD189897@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-2-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180104190137.7654-2-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removes the unused IRQ domain hierarchy API support from pcie-designware.
+Run "git log --oneline drivers/pci" and follow the convention.  I
+think it would make sense to add a new tag like "PCI/P2P", although
+"P2P" has historically also been used in the "PCI-to-PCI bridge"
+context, so maybe there's something less ambiguous.  "P2PDMA"?
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Patch renamed from v3-0008 to v4-0009.
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
+When you add new files, I guess we're looking for the new SPDX
+copyright stuff?
 
- drivers/pci/dwc/pci-keystone-dw.c      |   2 +-
- drivers/pci/dwc/pci-keystone.h         |   3 +-
- drivers/pci/dwc/pci-layerscape.c       |   3 +-
- drivers/pci/dwc/pcie-designware-host.c | 190 +--------------------------------
- drivers/pci/dwc/pcie-designware.h      |   2 +-
- 5 files changed, 5 insertions(+), 195 deletions(-)
+On Thu, Jan 04, 2018 at 12:01:26PM -0700, Logan Gunthorpe wrote:
+> Some PCI devices may have memory mapped in a BAR space that's
+> intended for use in Peer-to-Peer transactions. In order to enable
+> such transactions the memory must be registered with ZONE_DEVICE pages
+> so it can be used by DMA interfaces in existing drivers.
+> 
+> A kernel interface is provided so that other subsystems can find and
+> allocate chunks of P2P memory as necessary to facilitate transfers
+> between two PCI peers. Depending on hardware, this may reduce the
+> bandwidth of the transfer but would significantly reduce pressure
+> on system memory. This may be desirable in many cases: for example a
+> system could be designed with a small CPU connected to a PCI switch by a
+> small number of lanes which would maximize the number of lanes available
+> to connect to NVME devices.
+> 
+> The interface requires a user driver to collect a list of client devices
+> involved in the transaction with the pci_p2pmem_add_client*() functions
+> then call pci_p2pmem_find() to obtain any suitable P2P memory. Once
+> this is done the list is bound to the memory and the calling driver is
+> free to add and remove clients as necessary. The ACS bits on the
+> downstream switch port will be managed for all the registered clients.
+> 
+> The code is designed to only utilize the p2pmem device if all the devices
+> involved in a transfer are behind the same PCI switch. This is because
+> using P2P transactions through the PCI root complex can have performance
+> limitations or, worse, might not work at all. Finding out how well a
+> particular RC supports P2P transfers is non-trivial. 
 
-diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
-index ace498e..7705814 100644
---- a/drivers/pci/dwc/pci-keystone-dw.c
-+++ b/drivers/pci/dwc/pci-keystone-dw.c
-@@ -161,7 +161,7 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
- 			 BIT(bit_pos));
- }
- 
--int ks_dw_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
-+int ks_dw_pcie_msi_host_init(struct pcie_port *pp)
- {
- 	return dw_pcie_allocate_domains(pp);
- }
-diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
-index aed3c73..8ac2f12 100644
---- a/drivers/pci/dwc/pci-keystone.h
-+++ b/drivers/pci/dwc/pci-keystone.h
-@@ -57,6 +57,5 @@ void ks_dw_pcie_msi_irq_ack(int i, struct pcie_port *pp);
- void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp);
--int ks_dw_pcie_msi_host_init(struct pcie_port *pp,
--		struct msi_controller *chip);
-+int ks_dw_pcie_msi_host_init(struct pcie_port *pp);
- int ks_dw_pcie_link_up(struct dw_pcie *pci);
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 8f34c2f..e77ff65 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -185,8 +185,7 @@ static int ls1021_pcie_host_init(struct pcie_port *pp)
- 	return ls_pcie_host_init(pp);
- }
- 
--static int ls_pcie_msi_host_init(struct pcie_port *pp,
--				 struct msi_controller *chip)
-+static int ls_pcie_msi_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct device *dev = pci->dev;
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 6554475..df5c90f 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -46,14 +46,6 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	return dw_pcie_write(pci->dbi_base + where, size, val);
- }
- 
--static struct irq_chip dw_msi_irq_chip = {
--	.name = "PCI-MSI",
--	.irq_enable = pci_msi_unmask_irq,
--	.irq_disable = pci_msi_mask_irq,
--	.irq_mask = pci_msi_mask_irq,
--	.irq_unmask = pci_msi_unmask_irq,
--};
--
- static void dw_msi_ack_irq(struct irq_data *d)
- {
- 	irq_chip_ack_parent(d);
-@@ -325,186 +317,6 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 			    upper_32_bits(msi_target));
- }
- 
--static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
--{
--	unsigned int res, bit, ctrl;
--
--	ctrl = irq / 32;
--	res = ctrl * 12;
--	bit = irq % 32;
--	pp->irq_status[ctrl] &= ~(1 << bit);
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
--			    pp->irq_status[ctrl]);
--}
--
--static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
--			    unsigned int nvec, unsigned int pos)
--{
--	unsigned int i;
--
--	for (i = 0; i < nvec; i++) {
--		irq_set_msi_desc_off(irq_base, i, NULL);
--		/* Disable corresponding interrupt on MSI controller */
--		if (pp->ops->msi_clear_irq)
--			pp->ops->msi_clear_irq(pp, pos + i);
--		else
--			dw_pcie_msi_clear_irq(pp, pos + i);
--	}
--
--	bitmap_release_region(pp->msi_irq_in_use, pos, order_base_2(nvec));
--}
--
--static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
--{
--	unsigned int res, bit, ctrl;
--
--	ctrl = irq / 32;
--	res = ctrl * 12;
--	bit = irq % 32;
--	pp->irq_status[ctrl] |= 1 << bit;
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
--			    pp->irq_status[ctrl]);
--}
--
--static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
--{
--	int irq, pos0, i;
--	struct pcie_port *pp;
--
--	pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
--	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
--				       order_base_2(no_irqs));
--	if (pos0 < 0)
--		goto no_valid_irq;
--
--	irq = irq_find_mapping(pp->irq_domain, pos0);
--	if (!irq)
--		goto no_valid_irq;
--
--	/*
--	 * irq_create_mapping (called from dw_pcie_host_init) pre-allocates
--	 * descs so there is no need to allocate descs here. We can therefore
--	 * assume that if irq_find_mapping above returns non-zero, then the
--	 * descs are also successfully allocated.
--	 */
--
--	for (i = 0; i < no_irqs; i++) {
--		if (irq_set_msi_desc_off(irq, i, desc) != 0) {
--			clear_irq_range(pp, irq, i, pos0);
--			goto no_valid_irq;
--		}
--		/*Enable corresponding interrupt in MSI interrupt controller */
--		if (pp->ops->msi_set_irq)
--			pp->ops->msi_set_irq(pp, pos0 + i);
--		else
--			dw_pcie_msi_set_irq(pp, pos0 + i);
--	}
--
--	*pos = pos0;
--	desc->nvec_used = no_irqs;
--	desc->msi_attrib.multiple = order_base_2(no_irqs);
--
--	return irq;
--
--no_valid_irq:
--	*pos = pos0;
--	return -ENOSPC;
--}
--
--static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
--{
--	struct msi_msg msg;
--	u64 msi_target;
--
--	if (pp->ops->get_msi_addr)
--		msi_target = pp->ops->get_msi_addr(pp);
--	else
--		msi_target = (u64)pp->msi_data;
--
--	msg.address_lo = (u32)(msi_target & 0xffffffff);
--	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
--
--	if (pp->ops->get_msi_data)
--		msg.data = pp->ops->get_msi_data(pp, pos);
--	else
--		msg.data = pos;
--
--	pci_write_msi_msg(irq, &msg);
--}
--
--static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
--			    struct msi_desc *desc)
--{
--	int irq, pos;
--	struct pcie_port *pp = pdev->bus->sysdata;
--
--	if (desc->msi_attrib.is_msix)
--		return -EINVAL;
--
--	irq = assign_irq(1, desc, &pos);
--	if (irq < 0)
--		return irq;
--
--	dw_msi_setup_msg(pp, irq, pos);
--
--	return 0;
--}
--
--static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
--			     int nvec, int type)
--{
--#ifdef CONFIG_PCI_MSI
--	int irq, pos;
--	struct msi_desc *desc;
--	struct pcie_port *pp = pdev->bus->sysdata;
--
--	/* MSI-X interrupts are not supported */
--	if (type == PCI_CAP_ID_MSIX)
--		return -EINVAL;
--
--	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
--	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
--
--	irq = assign_irq(nvec, desc, &pos);
--	if (irq < 0)
--		return irq;
--
--	dw_msi_setup_msg(pp, irq, pos);
--
--	return 0;
--#else
--	return -EINVAL;
--#endif
--}
--
--static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
--{
--	struct irq_data *data = irq_get_irq_data(irq);
--	struct msi_desc *msi = irq_data_get_msi_desc(data);
--	struct pcie_port *pp = (struct pcie_port *)msi_desc_to_pci_sysdata(msi);
--
--	clear_irq_range(pp, irq, 1, data->hwirq);
--}
--
--static struct msi_controller dw_pcie_msi_chip = {
--	.setup_irq = dw_msi_setup_irq,
--	.setup_irqs = dw_msi_setup_irqs,
--	.teardown_irq = dw_msi_teardown_irq,
--};
--
--static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
--			   irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops msi_domain_ops = {
--	.map = dw_pcie_msi_map,
--};
--
- int dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -644,7 +456,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 							    dw_chained_msi_isr,
- 							    pp);
- 		} else {
--			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
-+			ret = pp->ops->msi_host_init(pp);
- 			if (ret < 0)
- 				goto error;
- 		}
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index b603e88..c77c2e0 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -154,7 +154,7 @@ struct dw_pcie_host_ops {
- 	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
- 	void (*scan_bus)(struct pcie_port *pp);
- 	void (*set_num_vectors)(struct pcie_port *pp);
--	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
-+	int (*msi_host_init)(struct pcie_port *pp);
- 	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
- };
- 
--- 
-2.7.4
+It's more than "non-trivial" or "with good performance" (from Kconfig
+help), isn't it?  AFAIK, there's no standard way at all to discover
+whether P2P DMA is supported between root ports or RCs.
+
+> +config PCI_P2P
+> +	bool "PCI Peer to Peer transfer support"
+> +	depends on ZONE_DEVICE
+> +	select GENERIC_ALLOCATOR
+> +	help
+> +	  Enableѕ drivers to do PCI peer to peer transactions to and from
+> +	  bars that are exposed to other devices in the same domain.
+
+s/bars/BARs/ (and similarly below, except in C code)
+
+Similarly, s/dma/DMA/ and s/pci/PCI/ below.
+
+And probably also s/p2p/peer-to-peer DMA/ in messages.
+
+Maybe clarify this domain bit.  Using "domain" suggests the common PCI
+segment/domain usage, but I think you really mean something like the
+part of the hierarchy where peer-to-peer DMA is guaranteed by the PCI
+spec to work, i.e., anything below a single PCI bridge.
+
+> +
+> +	  Many PCIe root complexes do not support P2P transactions and
+> +	  it's hard to tell which support it with good performance, so
+> +	  at this time you will need a PCIe switch.
+> +
+> +	  If unsure, say N.
+
+> + * pci_p2pmem_add_resource - add memory for use as p2p memory
+> + * @pci: the device to add the memory to
+> + * @bar: PCI bar to add
+> + * @size: size of the memory to add, may be zero to use the whole bar
+> + * @offset: offset into the PCI bar
+> + *
+> + * The memory will be given ZONE_DEVICE struct pages so that it may
+> + * be used with any dma request.
+> + */
+> +int pci_p2pmem_add_resource(struct pci_dev *pdev, int bar, size_t size,
+> +			    u64 offset)
+> +{
+> +	struct dev_pagemap *pgmap;
+> +	void *addr;
+> +	int error;
+
+Seems like there should be
+
+  if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM))
+    return -EINVAL;
+
+or similar here?
+
+> +	if (WARN_ON(offset >= pci_resource_len(pdev, bar)))
+> +		return -EINVAL;
+
+Are these WARN_ONs for debugging purposes, or do you think we need
+them in production?  Granted, hitting it would probably be a kernel
+driver bug, but still, not sure if the PCI core needs to coddle the
+driver author that much.
+
+> +	if (!size)
+> +		size = pci_resource_len(pdev, bar) - offset;
+> +
+> +	if (WARN_ON(size + offset > pci_resource_len(pdev, bar)))
+> +		return -EINVAL;
+> +
+> +	if (!pdev->p2p) {
+> +		error = pci_p2pmem_setup(pdev);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	pgmap = devm_kzalloc(&pdev->dev, sizeof(*pgmap), GFP_KERNEL);
+> +	if (!pgmap)
+> +		return -ENOMEM;
+> +
+> +	pgmap->res.start = pci_resource_start(pdev, bar) + offset;
+> +	pgmap->res.end = pgmap->res.start + size - 1;
+
+I'm guessing Christoph's dev_pagemap revamp repo must change
+pgmap->res from a pointer to a structure, but I don't see the actual
+link in your cover letter.
+
+I think you should set pgmap->res.flags here, too.
+
+> +	pgmap->ref = &pdev->p2p->devmap_ref;
+> +	pgmap->type = MEMORY_DEVICE_PCI_P2P;
+> +
+> +	addr = devm_memremap_pages(&pdev->dev, pgmap);
+> +	if (IS_ERR(addr))
+> +		return PTR_ERR(addr);
+> +
+> +	error = gen_pool_add_virt(pdev->p2p->pool, (uintptr_t)addr,
+> +			pci_bus_address(pdev, bar) + offset,
+> +			resource_size(&pgmap->res), dev_to_node(&pdev->dev));
+> +	if (error)
+> +		return error;
+> +
+> +	error = devm_add_action_or_reset(&pdev->dev, pci_p2pmem_percpu_kill,
+> +					  &pdev->p2p->devmap_ref);
+> +	if (error)
+> +		return error;
+> +
+> +	dev_info(&pdev->dev, "added %zdB of p2p memory\n", size);
+
+Can we add %pR and print pgmap->res itself, too?
+
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_p2pmem_add_resource);
+
+> + * If a device is behind a switch, we try to find the upstream bridge
+> + * port of the switch. This requires two calls to pci_upstream_bridge:
+> + * one for the upstream port on the switch, one on the upstream port
+> + * for the next level in the hierarchy. Because of this, devices connected
+> + * to the root port will be rejected.
+> + */
+> +static struct pci_dev *get_upstream_switch_port(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *up1, *up2;
+> +
+> +	if (!pdev)
+> +		return NULL;
+> +
+> +	up1 = pci_dev_get(pci_upstream_bridge(pdev));
+> +	if (!up1)
+> +		return NULL;
+> +
+> +	up2 = pci_dev_get(pci_upstream_bridge(up1));
+> +	pci_dev_put(up1);
+> +
+> +	return up2;
+> +}
+> +
+> +static bool __upstream_bridges_match(struct pci_dev *upstream,
+> +				     struct pci_dev *client)
+> +{
+> +	struct pci_dev *dma_up;
+> +	bool ret = true;
+> +
+> +	dma_up = get_upstream_switch_port(client);
+> +
+> +	if (!dma_up) {
+> +		dev_dbg(&client->dev, "not a pci device behind a switch\n");
+
+You have a bit of a mix of PCI ("pci device", "bridge") and PCIe
+("switch", "switch port") terminology.  I haven't read the rest of the
+patches yet, so I don't know if you intend to restrict this to
+PCIe-only, e.g., so you can use ACS, or if you want to make it
+available on conventional PCI as well.
+
+If the latter, I would use the generic PCI terminology, i.e., "bridge"
+instead of "switch".
+
+> + * pci_virt_to_bus - return the pci bus address for a given virtual
+> + *	address obtained with pci_alloc_p2pmem
+> + * @pdev:	the device the memory was allocated from
+> + * @addr:	address of the memory that was allocated
+> + */
+> +pci_bus_addr_t pci_p2pmem_virt_to_bus(struct pci_dev *pdev, void *addr)
+> +{
+> +	if (!addr)
+> +		return 0;
+> +	if (!pdev->p2p)
+> +		return 0;
+> +
+> +	return gen_pool_virt_to_phys(pdev->p2p->pool, (unsigned long)addr);
+
+This doesn't seem right.  A physical address is not the same as a PCI
+bus address.  I expected something like pci_bus_address() or
+pcibios_resource_to_bus() here.  Am I missing something?  If so, a
+clarifying comment would be helpful.
+
+> + * pci_p2pmem_publish - publish the p2p memory for use by other devices
+> + *	with pci_p2pmem_find
+> + * @pdev:	the device with p2p memory to publish
+> + * @publish:	set to true to publish the memory, false to unpublish it
+> + */
+> +void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+> +{
+> +	if (WARN_ON(publish && !pdev->p2p))
+> +		return;
+
+Same WARN_ON question -- is this really intended for production?
+Doesn't seem like the end user can really do anything with the warning
+information.
+
+> diff --git a/include/linux/pci-p2p.h b/include/linux/pci-p2p.h
+> new file mode 100644
+> index 000000000000..f811c97a5886
+> --- /dev/null
+> +++ b/include/linux/pci-p2p.h
+> @@ -0,0 +1,85 @@
+> +#ifndef _LINUX_PCI_P2P_H
+> +#define _LINUX_PCI_P2P_H
+> +/*
+> + * Copyright (c) 2016-2017, Microsemi Corporation
+> + * Copyright (c) 2017, Christoph Hellwig.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+> + * more details.
+> + */
+> +
+> +#include <linux/pci.h>
+> +
+> +struct block_device;
+> +struct scatterlist;
+
+I've been noticing that we're accumulating PCI-related files in
+include/linux: pci.h, pci-aspm.h pci-ats.h, pci-dma.h, pcieport_if.h,
+etc.  I'm not sure there's value in all those and am thinking maybe
+they should just be folded into pci.h.  What do you think?
+
+> +#ifdef CONFIG_PCI_P2P
+> +int pci_p2pmem_add_resource(struct pci_dev *pdev, int bar, size_t size,
+> +		u64 offset);
+> +int pci_p2pmem_add_client(struct list_head *head, struct device *dev);
+> ...
+
+Bjorn
