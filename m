@@ -1,109 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:39780 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751260AbeABTIW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:08:22 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v4 10/10] PCI: dwc: Expand maximum number of IRQs from 32 to 256
-Date: Fri, 29 Dec 2017 14:21:42 +0000
-Message-Id: <79fd0abbb040a3512a0b9d417097e9487254182c.1514524551.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:39374 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752617AbeADVMV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 16:12:21 -0500
+From: Rob Herring <robh@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Frank Rowand <frowand.list@gmail.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: [PATCH 3/3] PCI: make of_irq_parse_pci static
+Date: Thu,  4 Jan 2018 15:12:15 -0600
+Message-Id: <20180104211215.11344-4-robh@kernel.org>
+In-Reply-To: <20180104211215.11344-1-robh@kernel.org>
+References: <20180104211215.11344-1-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Synopsys PCIe Root Complex supports up to 256 IRQs distributed by 8
-controller registers.
+Now that the DT PCI code is merged into drivers/pci, of_irq_parse_pci can
+be static.
 
-Having this in mind, the number of the maximum number of IRQs was changed
-to 256 and now the number of controllers is calculated based on the number
-of vectors used by the specific SoC driver.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Rowand <frowand.list@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Rob Herring <robh@kernel.org>
 ---
-Change v1->v2:
-- New patch file.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Patch renamed from v3-0009 to v4-0010.
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
+ drivers/pci/of.c       | 3 +--
+ include/linux/of_pci.h | 6 ------
+ 2 files changed, 1 insertion(+), 8 deletions(-)
 
- drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
- drivers/pci/dwc/pcie-designware.h      | 10 +++-------
- 2 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 7d12ce3..b3ac3f4 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -85,11 +85,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
- /* MSI int handler */
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 859a43dd098d..511a5ec83f6e 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -479,7 +479,7 @@ int of_pci_map_rid(struct device_node *np, u32 rid,
+  * PCI tree until an device-node is found, at which point it will finish
+  * resolving using the OF tree walking.
+  */
+-int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
++static int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
  {
--	u32 val;
- 	int i, pos, irq;
-+	u32 val, num_ctrls;
- 	irqreturn_t ret = IRQ_NONE;
+ 	struct device_node *dn, *ppnode;
+ 	struct pci_dev *ppdev;
+@@ -569,7 +569,6 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
+ 	}
+ 	return rc;
+ }
+-EXPORT_SYMBOL_GPL(of_irq_parse_pci);
  
--	for (i = 0; i < MAX_MSI_CTRLS; i++) {
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
-+	for (i = 0; i < num_ctrls; i++) {
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
- 				    &val);
- 		if (!val)
-@@ -639,13 +641,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ /**
+  * of_irq_parse_and_map_pci() - Decode a PCI irq from the device tree and map to a virq
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index f0e129e848ea..88865e0ebf4d 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -10,7 +10,6 @@ struct of_phandle_args;
+ struct device_node;
  
- void dw_pcie_setup_rc(struct pcie_port *pp)
+ #if IS_ENABLED(CONFIG_OF) && IS_ENABLED(CONFIG_PCI)
+-int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ int of_pci_get_devfn(struct device_node *np);
+@@ -23,11 +22,6 @@ int of_pci_map_rid(struct device_node *np, u32 rid,
+ 		   const char *map_name, const char *map_mask_name,
+ 		   struct device_node **target, u32 *id_out);
+ #else
+-static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+-{
+-	return 0;
+-}
+-
+ static inline struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn)
  {
--	u32 val, ctrl;
-+	u32 val, ctrl, num_ctrls;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
- 	dw_pcie_setup(pci);
- 
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
- 	/* Initialize IRQ Status array */
--	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
-+	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
- 				    &pp->irq_status[ctrl]);
- 	/* setup RC BARs */
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index c77c2e0..074bd14 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -110,13 +110,9 @@
- #define MSI_MESSAGE_DATA_32		0x58
- #define MSI_MESSAGE_DATA_64		0x5C
- 
--/*
-- * Maximum number of MSI IRQs can be 256 per controller. But keep
-- * it 32 as of now. Probably we will never need more than 32. If needed,
-- * then increment it in multiple of 32.
-- */
--#define MAX_MSI_IRQS			32
--#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
-+#define MAX_MSI_IRQS			256
-+#define MAX_MSI_IRQS_PER_CTRL		32
-+#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
 -- 
-2.7.4
+2.14.1
