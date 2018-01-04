@@ -1,45 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from yes.iam.tj ([109.74.197.121]:51092 "EHLO iam.tj"
+Received: from mail-bl2nam02on0053.outbound.protection.outlook.com ([104.47.38.53]:7296
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S964850AbeAXSZr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Jan 2018 13:25:47 -0500
-Received: from [10.254.1.52] (jeeves.iam.tj [82.71.24.87])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by iam.tj (Postfix) with ESMTPSA id CD7DE340FF
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jan 2018 18:18:01 +0000 (GMT)
-Subject: Re: Regression: bug #81431 (v3.15..V3.16) pci=realloc fails to modify
- bridge windows, causing devices to fail BAR allocation
-From: Tj <linux@iam.tj>
+        id S1751727AbeADBqE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jan 2018 20:46:04 -0500
+From: Veerasenareddy Burru <vburru@caviumnetworks.com>
 To: linux-pci@vger.kernel.org
-References: <5581B850.4010406@iam.tj>
-Message-ID: <610ce40c-ae0c-5dc5-a985-33c2d79c9d70@iam.tj>
-Date: Wed, 24 Jan 2018 18:18:01 +0000
+Cc: satananda.burla@cavium.com, vburru@caviumnetworks.com,
+        mpanicker@caviumnetworks.com
+Subject: [PATCH V2] pciutils: Extend pci_generic_scan() to scan all 256 buses.
+Date: Wed,  3 Jan 2018 17:45:27 -0800
+Message-Id: <1515030327-21722-1-git-send-email-vburru@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <5581B850.4010406@iam.tj>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This regression is still present in 4.15-rc9. It's been ongoing since
-3.16. Could someone take a look so it can finally be fixed?
+Currently, pci_generic_scan() scans only bus 0 and its subordinate buses.
+Due to this, "lspci -H1" does not list the devices that are not under
+root bus not 0 as shown below:
+[root@caliobm11 pciutils]# lspci -n -s 84:00.0
+84:00.0 0200: 177d:9702 (rev 02)
+[root@caliobm11 pciutils]# lspci -H1 -n -s 84:00.0
+[root@caliobm11 pciutils]#
 
-https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Added a new flag "-S" to enable scanning all root buses.
+Updated man pages for lspci and setpci.
 
-On 17/06/15 19:11, TJ wrote:
-> I've finally had the opportunity to bisect this regession down to:
-> 
->  PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources
-> 
-> commit 5b28541552ef5eeffc41d6936105f38c2508e566
-> Author: Yinghai Lu <yinghai@kernel.org>
-> Date:   Mon May 19 17:01:55 2014 -0600
-> 
-> The patch is quite involved so could someone with familiarity with the
-> allocation strategies take a look please?
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=81431
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Veerasenareddy Burru <vburru@caviumnetworks.com>
+---
+ Makefile      | 6 ++++--
+ common.c      | 3 +++
+ lib/generic.c | 9 ++++++++-
+ lib/pci.h     | 1 +
+ lspci.man     | 6 ++++++
+ pciutils.h    | 3 ++-
+ setpci.man    | 6 ++++++
+ 7 files changed, 30 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 8c7edb7..d649c8d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,8 +1,10 @@
+ # Makefile for The PCI Utilities
+ # (c) 1998--2017 Martin Mares <mj@ucw.cz>
+ 
+-OPT=-O2
+-CFLAGS=$(OPT) -Wall -W -Wno-parentheses -Wstrict-prototypes -Wmissing-prototypes
++#OPT=-O2
++#CFLAGS=$(OPT) -Wall -W -Wno-parentheses -Wstrict-prototypes -Wmissing-prototypes
++OPT=
++CFLAGS=$(OPT) -Wall -W -Wno-parentheses -Wstrict-prototypes -Wmissing-prototypes -g
+ 
+ VERSION=3.5.6
+ DATE=2017-11-17
+diff --git a/common.c b/common.c
+index 8ea52fa..bfa2030 100644
+--- a/common.c
++++ b/common.c
+@@ -125,6 +125,9 @@ parse_generic_option(int i, struct pci_access *pacc, char *optarg)
+     case 'G':
+       pacc->debugging++;
+       break;
++    case 'S':
++      pacc->scan_all_buses++;
++      break;
+     case 'O':
+       set_pci_option(pacc, optarg);
+       break;
+diff --git a/lib/generic.c b/lib/generic.c
+index c219592..61817ae 100644
+--- a/lib/generic.c
++++ b/lib/generic.c
+@@ -69,9 +69,16 @@ void
+ pci_generic_scan(struct pci_access *a)
+ {
+   byte busmap[256];
++  int bus;
++  int num_buses;
+ 
++  num_buses = a->scan_all_buses ? 256 : 0;
+   memset(busmap, 0, sizeof(busmap));
+-  pci_generic_scan_bus(a, busmap, 0);
++  for (bus=0; bus<num_buses; bus++)
++    {
++      if (!busmap[bus])
++        pci_generic_scan_bus(a, busmap, bus);
++    }
+ }
+ 
+ int
+diff --git a/lib/pci.h b/lib/pci.h
+index 81bdab3..1c8381e 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -58,6 +58,7 @@ struct pci_access {
+ 					/* Default: PCI_LOOKUP_CACHE */
+ 
+   int debugging;			/* Turn on debugging messages */
++  int scan_all_buses;
+ 
+   /* Functions you can override: */
+   void (*error)(char *msg, ...) PCI_PRINTF(1,2);	/* Write error message and quit */
+diff --git a/lspci.man b/lspci.man
+index 9348cfc..3e32775 100644
+--- a/lspci.man
++++ b/lspci.man
+@@ -201,6 +201,12 @@ requests for more dumps.
+ .TP
+ .B -G
+ Increase debug level of the library.
++.TP
++.B -S
++Scan all root buses, not just root bus 0 to get device list.
++Without this option, only the devices under root bus 0 are listed when a
++direct hardware access method is used. Use this flag to list a device that is
++not under root bus 0, when direct hardware access method is used.
+ 
+ .SH MACHINE READABLE OUTPUT
+ If you intend to process the output of lspci automatically, please use one of the
+diff --git a/pciutils.h b/pciutils.h
+index e433e6b..9cb5e05 100644
+--- a/pciutils.h
++++ b/pciutils.h
+@@ -40,9 +40,10 @@ int parse_generic_option(int i, struct pci_access *pacc, char *optarg);
+ #define GENHELP_DUMP
+ #endif
+ 
+-#define GENERIC_OPTIONS "A:GO:" GENOPT_INTEL GENOPT_DUMP
++#define GENERIC_OPTIONS "A:GSO:" GENOPT_INTEL GENOPT_DUMP
+ #define GENERIC_HELP \
+ 	"-A <method>\tUse the specified PCI access method (see `-A help' for a list)\n" \
+ 	"-O <par>=<val>\tSet PCI access parameter (see `-O help' for a list)\n" \
+ 	"-G\t\tEnable PCI access debugging\n" \
++	"-S\t\tScan all root buses\n" \
+ 	GENHELP_INTEL GENHELP_DUMP
+diff --git a/setpci.man b/setpci.man
+index d71628a..31f5528 100644
+--- a/setpci.man
++++ b/setpci.man
+@@ -84,6 +84,12 @@ Use direct hardware access via Intel configuration mechanism 2.
+ .TP
+ .B -G
+ Increase debug level of the library.
++.TP
++.B -S
++Scan all root buses, not just root bus 0 to get device list.
++Without this option, only the devices under root bus 0 are listed when a
++direct hardware access method is used. Use this flag to access a device that is
++not under root bus 0, when direct hardware access method is used.
+ 
+ .SH DEVICE SELECTION
+ .PP
+-- 
+1.8.3.1
