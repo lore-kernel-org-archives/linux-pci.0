@@ -1,78 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:46196 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751429AbeAYOZ4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jan 2018 09:25:56 -0500
-Date: Thu, 25 Jan 2018 15:25:52 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, robh+dt@kernel.org, frowand.list@gmail.com,
-        rjw@rjwysocki.net, tglx@linutronix.de, vidyas@nvidia.com,
-        kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org
-Subject: Re: [PATCH V6 4/7] PCI: tegra: Free resources on probe failure
-Message-ID: <20180125142552.GF27888@ulmo>
-References: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
- <1515650888-9459-5-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail-eopbgr40047.outbound.protection.outlook.com ([40.107.4.47]:53024
+        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751952AbeADWZn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Jan 2018 17:25:43 -0500
+Date: Thu, 4 Jan 2018 15:25:29 -0700
+From: Jason Gunthorpe <jgg@mellanox.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 02/12] pci-p2p: Add sysfs group to display p2pmem stats
+Message-ID: <20180104222529.GS11972@mellanox.com>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-3-logang@deltatee.com>
+ <20180104215040.GE189897@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="dgjlcl3Tl+kb3YDk"
-In-Reply-To: <1515650888-9459-5-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180104215040.GE189897@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Jan 04, 2018 at 03:50:40PM -0600, Bjorn Helgaas wrote:
+> >  		This is similar to /sys/bus/pci/drivers_autoprobe, but
+> >  		affects only the VFs associated with a specific PF.
+> > +
+> > +What:		/sys/bus/pci/devices/.../p2pmem/available
+> 
+> I wonder if "p2pdma" would be a more suggestive term?  It's not really
+> the *memory* that is peer-to-peer; the peer-to-peer part is referring
+> to *access* to the memory.
 
---dgjlcl3Tl+kb3YDk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+There have been out of tree patches using P2P DMA for a long time, and
+some of the use cases have nothing to do with 'memory' - eg DMA to
+'registers'
 
-On Thu, Jan 11, 2018 at 11:38:05AM +0530, Manikanta Maddireddy wrote:
-> tegra_pcie_probe() can fail in multiple instances, this patch takes care
-> of freeing the resources which are allocated before probe fail.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
-> V3:
-> * change 'if check' to 'legacy_phy is true' for tegra_pcie_phys_put_legac=
-y()
-> * commit log correction
-> V4:
-> * no change in this patch
-> V5:
-> * Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-> rebased on linux-next
-> V6:
-> * no change in this patch
->=20
->  drivers/pci/host/pci-tegra.c | 99 +++++++++++++++++++++++++++++++++++---=
-------
->  1 file changed, 79 insertions(+), 20 deletions(-)
+I notice that this series particularly focus on treating the target
+BAR as 'memory' - ie it puts genalloc on top of the BAR, and I guess
+treat all addresses as equal and interchangable.
 
-Acked-by: Thierry Reding <treding@nvidia.com>
+If this series gets accepted I would expect proposals to extend this
+infrastructure to allow for P2P for registers in some way as well.
 
---dgjlcl3Tl+kb3YDk
-Content-Type: application/pgp-signature; name="signature.asc"
+So I think the 'p2pmem' name is a good choice only when it is in
+places that talk about the genalloc part of this design.
 
------BEGIN PGP SIGNATURE-----
+We should reserve p2pdma to talk about the generic infrastructure
+unrelated to the genalloc pool.
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlpp6PAACgkQ3SOs138+
-s6HV0Q/8DhL7ecy4s5p4GPjEj7JU0VpMVn5sytnDdTlIMi5PHcNhT/z8P/ihKRpC
-oh3jMVQLsWiADtAvZHD8gMvhdK4m9kK7SNkDkDxxp/aWG3jFgn0aSuQMchQJ6wkj
-PY1w6AeHv44dfSkFK3oXektXlcTAZwiGjuhQLPpMgua2HZi2ou/bct5SKp68Yo41
-A5tC+CUfrY3cpKsH2rkN+ctznOgkZpovigXaInYj9pIUfDakgqLynVEVy4WaMCr1
-m/eDmisgo4Dgaq+ODFKrfNU54CH6PDHXS8Z+Juf/fZjDAL2jUhYt7S4KxTPX9zE4
-RNRc5V8Iu9eerX9tA3K+Mf2IDyXp72Op1cxGDJV2ihvQcFMGsyJMbO1dOHvmzWG9
-ptNhPqBYs4J45Wn3ovClAyuvD7fD6IgdjGVyRQp7Naewn/rHpj/yYvh+s3WEldQo
-Wo5rvU8KuJjTDLsc240C9i2BnlQaKKvbFao2Egbt5e5FJ8P2VNSINT5GOE7p5Oi8
-g8SmSOO9BMZu/bGbtqgXfwf220TVn9Xg/TD7YZL0wDJoA1hWMAbYiathgJ+MF1wV
-ZZRpVKY8M6zy+RdbImoy7UgtOPviZAxPlaXAGvgabkESs6QkHt1CLWKN3z8SYWXU
-5oEzWlTLdUkNtlmjB9RQUzSvV/247tW9ZDFubhFLHq/AgWM9koI=
-=0Jk2
------END PGP SIGNATURE-----
+Since these sysfs's seem to report the genalloc pool status, p2pmem
+seems like a good choice to me.
 
---dgjlcl3Tl+kb3YDk--
+> > @@ -82,6 +130,9 @@ static int pci_p2pmem_setup(struct pci_dev *pdev)
+> >  	if (error)
+> >  		goto out_pool_destroy;
+> >  
+> > +	if (sysfs_create_group(&pdev->dev.kobj, &p2pmem_group))
+> > +		dev_warn(&pdev->dev, "failed to create p2p sysfs group\n");
+> 
+> Not sure the warning (by itself) is worthwhile.  If we were going to
+> disable the feature if sysfs_create_group() failed, that's one thing,
+> but we aren't doing anything except generating a warning, which the
+> user can't really do anything with.  If the user is looking for the
+> sysfs file, its absence will be obvious even without the message.
+
+Don't most of the failure paths inside sysfs_create_group cause prints
+anyhow?
+
+Jason
