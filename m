@@ -1,67 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp5-g21.free.fr ([212.27.42.5]:34110 "EHLO smtp5-g21.free.fr"
+Received: from mail.kernel.org ([198.145.29.99]:59488 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933209AbeAOLu7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 15 Jan 2018 06:50:59 -0500
-Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root
- subordinate
-References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
-To: linux-pci <linux-pci@vger.kernel.org>
-Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <fcf1e2d5-b31c-9e4f-72e8-54e1e7bb040e@free.fr>
-Date: Mon, 15 Jan 2018 12:50:48 +0100
+        id S1751014AbeADAIT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jan 2018 19:08:19 -0500
+Date: Wed, 3 Jan 2018 18:08:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stuart Hayes <stuart.w.hayes@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI, sysfs: show ari_enabled in sysfs
+Message-ID: <20180104000811.GB189897@bhelgaas-glaptop.roam.corp.google.com>
+References: <3cfc87ab-755a-680a-d06f-ee7cc38d2195@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3cfc87ab-755a-680a-d06f-ee7cc38d2195@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15/01/2018 10:36, Koen Vandeputte wrote:
+Hi Stuart,
 
-> The subordinate value indicates the highest bus number which can be
-> reached downstream though a certain device.
-> 
-> Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
-> parent")
-> ensures that downstream devices cannot assign busnumbers higher than the
-> upstream device subordinate number, which was indeed illogical.
-> 
-> By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
-> value of 0x01.
-> 
-> Due to this combined with above commit, enumeration stops digging deeper
-> downstream as soon as bus num 0x01 has been assigned, which is always
-> the case for a bridge device.
-> 
-> This results in all devices behind a bridge bus to remain undetected, as
-> these would be connected to bus 0x02 or higher.
-> 
-> Fix this by initializing the RC to a subordinate value of 0xff, which is
-> not altering hardware behaviour in any way, but informs probing
-> function pci_scan_bridge() later on which reads this value back from
-> register.
-> 
-> Following nasty errors during boot are also fixed by this:
-> 
-> [    0.459145] pci_bus 0000:02: busn_res: can not insert [bus 02-ff]
-> under [bus 01] (conflicts with (null) [bus 01])
-> ...
-> [    0.464515] pci_bus 0000:03: [bus 03] partially hidden behind bridge
-> 0000:01 [bus 01]
-> ...
-> [    0.464892] pci_bus 0000:04: [bus 04] partially hidden behind bridge
-> 0000:01 [bus 01]
-> ...
-> [    0.466488] pci_bus 0000:05: [bus 05] partially hidden behind bridge
-> 0000:01 [bus 01]
-> [    0.466506] pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to
-> 05
-> [    0.466517] pci_bus 0000:02: busn_res: can not insert [bus 02-05]
-> under [bus 01] (conflicts with (null) [bus 01])
-> [    0.466534] pci_bus 0000:02: [bus 02-05] partially hidden behind
-> bridge 0000:01 [bus 01]
+Please run "git log --oneline drivers/pci/pci-sysfs.c" and follow the
+convention.
 
-FWIW, I find that this wrap-around looks ugly :-p
-
-Regards.
+On Wed, Jan 03, 2018 at 10:36:46AM -0600, Stuart Hayes wrote:
+> Some multifunction PCI devices with more than 8 functions use "alternative
+> routing-ID interpretation" (ARI), which means the 8-bit device/function
+> number field will be interpreted as 8 bits specifying the function number
+> (the device number is 0 implicitly), rather than the upper 5 bits
+> specifying the device number and the lower 3 bits specifying the function
+> number. The kernel can enable and use this.
+> 
+> Expose in a sysfs attribute whether the kernel has enabled ARI, so that a
+> program in userspace won't have to parse PCI devices and PCI configuration
+> space to figure out if it is enabled. This will allow better predictable
+> network naming using PCI function numbers without using PCI bus or device
+> numbers, which is desirable because bus and device numbers can change with
+> system configuration but function numbers will not.
+> 
+> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+> ---
+> 
+> --- linux-4.15-rc6/drivers/pci/pci-sysfs.c.orig	2017-12-31 17:47:43.000000000 -0500
+> +++ linux-4.15-rc6/drivers/pci/pci-sysfs.c	2018-01-02 13:58:23.372928377 -0500
+> @@ -278,6 +278,16 @@ static ssize_t subordinate_bus_number_sh
+>  }
+>  static DEVICE_ATTR_RO(subordinate_bus_number);
+>  
+> +static ssize_t ari_enabled_show(struct device *dev,
+> +				struct device_attribute *attr,
+> +				char *buf)
+> +{
+> +	struct pci_dev *pci_dev = to_pci_dev(dev);
+> +
+> +	return sprintf(buf, "%u\n", pci_ari_enabled(pci_dev->bus));
+> +}
+> +static DEVICE_ATTR_RO(ari_enabled);
+> +
+>  static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+>  			     char *buf)
+>  {
+> @@ -786,6 +796,7 @@ static struct attribute *pci_dev_attrs[]
+>  	&dev_attr_devspec.attr,
+>  #endif
+>  	&dev_attr_driver_override.attr,
+> +	&dev_attr_ari_enabled.attr,
+>  	NULL,
+>  };
+>  
+> 
+> 
+> ---
+> This email has been checked for viruses by Avast antivirus software.
+> https://www.avast.com/antivirus
+> 
