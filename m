@@ -1,89 +1,299 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Cc: Tony Lindgren <tony@atomide.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        JeffyChen <jeffy.chen@rock-chips.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Doug Anderson <dianders@chromium.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: [PATCH] PM / wakeup: Do not fail dev_pm_attach_wake_irq() unnecessarily
-Date: Fri, 05 Jan 2018 01:14:04 +0100
-Message-ID: <1542734.kK7NjWylRh@aspire.rjw.lan>
-In-Reply-To: <6120485.xubBpvge6h@aspire.rjw.lan>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com> <20171228165134.GH3875@atomide.com> <6120485.xubBpvge6h@aspire.rjw.lan>
+Return-Path: <SRS0=f+OH=D7=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=f+OH=D7=redhat.com=alex.williamson@kernel.org>
+Date: Thu, 4 Jan 2018 15:35:51 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
+ Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
+ <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
+ <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client
+ devices
+Message-ID: <20180104153551.3118f71b@t450s.home>
+In-Reply-To: <20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180104190137.7654-1-logang@deltatee.com>
+	<20180104190137.7654-5-logang@deltatee.com>
+	<20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, 4 Jan 2018 15:57:21 -0600
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Returning an error code from dev_pm_attach_wake_irq() if
-device_wakeup_attach_irq() called by it returns an error is
-pointless, because the wakeup source used by it may be deleted
-by user space via sysfs at any time and in particular right after
-dev_pm_attach_wake_irq() has returned.  Moreover, it requires
-the callers of dev_pm_attach_wake_irq() to create that wakeup
-source via device_wakeup_enable() upfront, but that obviously is
-racy with respect to the sysfs-based manipulations of it.
+> [+cc Alex]
+> 
+> On Thu, Jan 04, 2018 at 12:01:29PM -0700, Logan Gunthorpe wrote:
+> > When the ACS P2P flags are set in the downstream port of the switch,
+> > any P2P TLPs will be sent back to the root complex. The whole point of
+> > the P2P work is to have TLPs avoid the RC seeing it may not support
+> > P2P transactions or, at best, it will perform poorly. So we clear these  
+> 
+> "It will perform poorly" seems like an empirical statement about the
+> hardware you've seen, not something that's driven by the spec.  So I'm
+> not sure it adds information that will be useful long-term.
+> 
+> > flags for all devices involved in transactions with the p2pmem.  
+> 
+> I'm not sure how this coordinates with other uses of ACS, e.g., VFIO.
+> I think that should be addressed here somehow.
 
-To avoid the race, modify dev_pm_attach_wake_irq() to simply call
-device_wakeup_attach_irq() after checking that the wakeup source it
-is going to use is there (in which case it cannot fail) and set the
-power.wakeirq field for the device unconditionally.
+Yep, flipping these ACS bits invalidates any IOMMU groups that depend
+on the isolation of that downstream port and I suspect also any peers
+within the same PCI slot of that port and their downstream devices.  The
+entire sub-hierarchy grouping needs to be re-evaluated.  This
+potentially affects running devices that depend on that isolation, so
+I'm not sure how that happens dynamically.  A boot option might be
+easier.  Thanks,
 
-Tested-by: Tony Lindgren <tony@atomide.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/base/power/wakeirq.c |    9 ++++-----
- drivers/base/power/wakeup.c  |    2 +-
- 2 files changed, 5 insertions(+), 6 deletions(-)
+Alex
 
-Index: linux-pm/drivers/base/power/wakeirq.c
-===================================================================
---- linux-pm.orig/drivers/base/power/wakeirq.c
-+++ linux-pm/drivers/base/power/wakeirq.c
-@@ -33,7 +33,6 @@ static int dev_pm_attach_wake_irq(struct
- 				  struct wake_irq *wirq)
- {
- 	unsigned long flags;
--	int err;
- 
- 	if (!dev || !wirq)
- 		return -EINVAL;
-@@ -45,12 +44,12 @@ static int dev_pm_attach_wake_irq(struct
- 		return -EEXIST;
- 	}
- 
--	err = device_wakeup_attach_irq(dev, wirq);
--	if (!err)
--		dev->power.wakeirq = wirq;
-+	dev->power.wakeirq = wirq;
-+	if (dev->power.wakeup)
-+		device_wakeup_attach_irq(dev, wirq);
- 
- 	spin_unlock_irqrestore(&dev->power.lock, flags);
--	return err;
-+	return 0;
- }
- 
- /**
-Index: linux-pm/drivers/base/power/wakeup.c
-===================================================================
---- linux-pm.orig/drivers/base/power/wakeup.c
-+++ linux-pm/drivers/base/power/wakeup.c
-@@ -303,7 +303,7 @@ int device_wakeup_attach_irq(struct devi
- 	}
- 
- 	if (ws->wakeirq)
--		return -EEXIST;
-+		dev_err(dev, "Leftover wakeup IRQ found, overriding\n");
- 
- 	ws->wakeirq = wakeirq;
- 	return 0;
+> > A count of the number of requests to disable the flags is maintained.
+> > When the count transitions from 1 to 0, the old flags are restored.
+> > 
+> > Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> > ---
+> >  drivers/pci/p2p.c   | 144 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+> >  include/linux/pci.h |   2 +
+> >  2 files changed, 143 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/pci/p2p.c b/drivers/pci/p2p.c
+> > index 87cec87b02e3..617adaa905d2 100644
+> > --- a/drivers/pci/p2p.c
+> > +++ b/drivers/pci/p2p.c
+> > @@ -227,6 +227,89 @@ static struct pci_dev *find_parent_pci_dev(struct device *dev)
+> >  }
+> >  
+> >  /*
+> > + * The ACS flags for P2P Request Redirect and P2P Completion Redirect need
+> > + * to be disabled in the downstream port of each device in order for
+> > + * the TLPs to not be forwarded up to the RC.
+> > + */
+> > +#define PCI_P2P_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR)
+> > +
+> > +static int pci_p2pmem_disable_acs(struct pci_dev *pdev)
+> > +{
+> > +	int pos;
+> > +	u16 ctrl;
+> > +	struct pci_dev *downstream;
+> > +
+> > +	downstream = pci_dev_get(pci_upstream_bridge(pdev));
+> > +	if (!downstream) {
+> > +		dev_err(&pdev->dev, "could not find downstream port\n");
+> > +		return -ENODEV;
+> > +	}
+> > +
+> > +	device_lock(&downstream->dev);
+> > +	if (downstream->p2p_acs_requests++)
+> > +		goto unlock_and_return;
+> > +
+> > +	pos = pci_find_ext_capability(downstream, PCI_EXT_CAP_ID_ACS);
+> > +	if (!pos)
+> > +		goto unlock_and_return;
+> > +
+> > +	pci_read_config_word(downstream, pos + PCI_ACS_CTRL, &ctrl);
+> > +
+> > +	downstream->p2p_old_acs_flags = ctrl & PCI_P2P_ACS_FLAGS;
+> > +
+> > +	if (downstream->p2p_old_acs_flags)
+> > +		dev_info(&pdev->dev, "disabling p2p acs flags: %x\n", ctrl);
+> > +
+> > +	ctrl &= ~PCI_P2P_ACS_FLAGS;
+> > +
+> > +	pci_write_config_word(downstream, pos + PCI_ACS_CTRL, ctrl);
+> > +
+> > +unlock_and_return:
+> > +	device_unlock(&downstream->dev);
+> > +	pci_dev_put(downstream);
+> > +	return 0;
+> > +}
+> > +
+> > +static int pci_p2pmem_reset_acs(struct pci_dev *pdev)
+> > +{
+> > +	int pos;
+> > +	u16 ctrl;
+> > +	struct pci_dev *downstream;
+> > +
+> > +	downstream = pci_dev_get(pci_upstream_bridge(pdev));
+> > +	if (!downstream)
+> > +		return -ENODEV;
+> > +
+> > +	device_lock(&downstream->dev);
+> > +
+> > +	/* Only actually reset the flags on a 1->0 transition */
+> > +	if (!downstream->p2p_acs_requests)
+> > +		goto unlock_and_return;
+> > +
+> > +	if (--downstream->p2p_acs_requests)
+> > +		goto unlock_and_return;
+> > +
+> > +	pos = pci_find_ext_capability(downstream, PCI_EXT_CAP_ID_ACS);
+> > +	if (!pos)
+> > +		goto unlock_and_return;
+> > +
+> > +	pci_read_config_word(downstream, pos + PCI_ACS_CTRL, &ctrl);
+> > +
+> > +	ctrl &= ~PCI_P2P_ACS_FLAGS;
+> > +	ctrl |= downstream->p2p_old_acs_flags;
+> > +
+> > +	if (downstream->p2p_old_acs_flags)
+> > +		dev_info(&pdev->dev, "resetting p2p acs flags: %x\n", ctrl);
+> > +
+> > +	pci_write_config_word(downstream, pos + PCI_ACS_CTRL, ctrl);
+> > +
+> > +unlock_and_return:
+> > +	device_unlock(&downstream->dev);
+> > +	pci_dev_put(downstream);
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> >   * If a device is behind a switch, we try to find the upstream bridge
+> >   * port of the switch. This requires two calls to pci_upstream_bridge:
+> >   * one for the upstream port on the switch, one on the upstream port
+> > @@ -340,6 +423,10 @@ int pci_p2pmem_add_client(struct list_head *head, struct device *dev)
+> >  			ret = -EXDEV;
+> >  			goto put_client;
+> >  		}
+> > +
+> > +		ret = pci_p2pmem_disable_acs(client);
+> > +		if (!ret)
+> > +			goto put_client;
+> >  	}
+> >  
+> >  	new_item = kzalloc(sizeof(*new_item), GFP_KERNEL);
+> > @@ -363,6 +450,9 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_add_client);
+> >  
+> >  static void pci_p2pmem_client_free(struct pci_p2pmem_client *item)
+> >  {
+> > +	if (item->p2pmem)
+> > +		pci_p2pmem_reset_acs(item->client);
+> > +
+> >  	list_del(&item->list);
+> >  	pci_dev_put(item->client);
+> >  	pci_dev_put(item->p2pmem);
+> > @@ -383,6 +473,7 @@ void pci_p2pmem_remove_client(struct list_head *head, struct device *dev)
+> >  {
+> >  	struct pci_p2pmem_client *pos, *tmp;
+> >  	struct pci_dev *pdev;
+> > +	struct pci_dev *p2pmem = NULL;
+> >  
+> >  	pdev = find_parent_pci_dev(dev);
+> >  	if (!pdev)
+> > @@ -392,9 +483,16 @@ void pci_p2pmem_remove_client(struct list_head *head, struct device *dev)
+> >  		if (pos->client != pdev)
+> >  			continue;
+> >  
+> > +		if (!p2pmem)
+> > +			p2pmem = pci_dev_get(pos->p2pmem);
+> > +
+> >  		pci_p2pmem_client_free(pos);
+> >  	}
+> >  
+> > +	if (p2pmem && list_empty(head))
+> > +		pci_p2pmem_reset_acs(p2pmem);
+> > +
+> > +	pci_dev_put(p2pmem);
+> >  	pci_dev_put(pdev);
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_p2pmem_remove_client);
+> > @@ -412,6 +510,10 @@ void pci_p2pmem_client_list_free(struct list_head *head)
+> >  {
+> >  	struct pci_p2pmem_client *pos, *tmp;
+> >  
+> > +	pos = list_first_entry_or_null(head, struct pci_p2pmem_client, list);
+> > +	if (pos && pos->p2pmem)
+> > +		pci_p2pmem_reset_acs(pos->p2pmem);
+> > +
+> >  	list_for_each_entry_safe(pos, tmp, head, list)
+> >  		pci_p2pmem_client_free(pos);
+> >  }
+> > @@ -440,6 +542,40 @@ static bool upstream_bridges_match_list(struct pci_dev *pdev,
+> >  	return ret;
+> >  }
+> >  
+> > +static int bind_clients(struct pci_dev *p2pmem, struct list_head *clients)
+> > +{
+> > +	int ret;
+> > +	struct pci_p2pmem_client *pos, *unwind_pos;
+> > +
+> > +	ret = pci_p2pmem_disable_acs(p2pmem);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	list_for_each_entry(pos, clients, list) {
+> > +		ret = pci_p2pmem_disable_acs(pos->client);
+> > +		if (ret)
+> > +			goto unwind;
+> > +
+> > +		pos->p2pmem = pci_dev_get(p2pmem);
+> > +	}
+> > +
+> > +	return 0;
+> > +
+> > +unwind:
+> > +	list_for_each_entry(unwind_pos, clients, list) {
+> > +		if (pos == unwind_pos)
+> > +			break;
+> > +
+> > +		pci_p2pmem_reset_acs(unwind_pos->client);
+> > +		pci_dev_put(unwind_pos->p2pmem);
+> > +		unwind_pos->p2pmem = NULL;
+> > +	}
+> > +
+> > +	pci_p2pmem_reset_acs(p2pmem);
+> > +
+> > +	return ret;
+> > +}
+> > +
+> >  /**
+> >   * pci_p2pmem_find - find a p2p mem device compatible with the specified device
+> >   * @dev: list of device to check (NULL-terminated)
+> > @@ -450,11 +586,13 @@ static bool upstream_bridges_match_list(struct pci_dev *pdev,
+> >   *
+> >   * Returns a pointer to the PCI device with a reference taken (use pci_dev_put
+> >   * to return the reference) or NULL if no compatible device is found.
+> > + *
+> > + * The P2P ACS flags on all applicable PCI devices will be cleared and
+> > + * reset when the client is removed from the list.
+> >   */
+> >  struct pci_dev *pci_p2pmem_find(struct list_head *clients)
+> >  {
+> >  	struct pci_dev *pdev = NULL;
+> > -	struct pci_p2pmem_client *pos;
+> >  
+> >  	while ((pdev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, pdev))) {
+> >  		if (!pdev->p2p || !pdev->p2p->published)
+> > @@ -463,8 +601,8 @@ struct pci_dev *pci_p2pmem_find(struct list_head *clients)
+> >  		if (!upstream_bridges_match_list(pdev, clients))
+> >  			continue;
+> >  
+> > -		list_for_each_entry(pos, clients, list)
+> > -			pos->p2pmem = pdev;
+> > +		if (bind_clients(pdev, clients))
+> > +			continue;
+> >  
+> >  		return pdev;
+> >  	}
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 047aea679e87..cdd4d3c3e562 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -435,6 +435,8 @@ struct pci_dev {
+> >  #endif
+> >  #ifdef CONFIG_PCI_P2P
+> >  	struct pci_p2p *p2p;
+> > +	unsigned int p2p_acs_requests;
+> > +	u16 p2p_old_acs_flags;
+> >  #endif
+> >  	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+> >  	size_t romlen; /* Length of ROM if it's not from the BAR */
+> > -- 
+> > 2.11.0
+> >   
