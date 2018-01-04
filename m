@@ -1,51 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47564 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752719AbeA3S0n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Jan 2018 13:26:43 -0500
-Subject: [PATCH v2 10/14] PCI/DPC: Push dpc->rp_pio_status assignment into
- dpc_rp_pio_get_info()
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Tue, 30 Jan 2018 12:26:40 -0600
-Message-ID: <20180130182640.106875.52704.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Thu,  4 Jan 2018 12:01:32 -0700
+Message-Id: <20180104190137.7654-8-logang@deltatee.com>
+In-Reply-To: <20180104190137.7654-1-logang@deltatee.com>
+References: <20180104190137.7654-1-logang@deltatee.com>
+Subject: [PATCH 07/12] nvme-pci: clean up CMB initialization
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+From: Christoph Hellwig <hch@lst.de>
 
-Move the dpc->rp_pio_status assignment into dpc_rp_pio_get_info() since
-that's where we read rp_pio->status anway.  No functional change intended.
+Refactor the call to nvme_map_cmb, and change the conditions for probing
+for the CMB.  First remove the version check as NVMe TPs always apply
+to earlier versions of the spec as well.  Second check for the whole CMBSZ
+register for support of the CMB feature instead of just the size field
+inside of it to simplify the code a bit.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/pcie/pcie-dpc.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/nvme/host/pci.c | 41 ++++++++++++++---------------------------
+ 1 file changed, 14 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index fb7ddbe96811..7b96169a808c 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -158,6 +158,8 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
- 	dev_err(dev, "rp_pio_status: %#010x, rp_pio_mask: %#010x\n",
- 		rp_pio->status, rp_pio->mask);
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index f5800c3c9082..58c379af6fb4 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -1663,21 +1663,20 @@ static ssize_t nvme_cmb_show(struct device *dev,
+ }
+ static DEVICE_ATTR(cmb, S_IRUGO, nvme_cmb_show, NULL);
  
-+	dpc->rp_pio_status = rp_pio->status;
+-static void __iomem *nvme_map_cmb(struct nvme_dev *dev)
++static void nvme_map_cmb(struct nvme_dev *dev)
+ {
+ 	u64 szu, size, offset;
+ 	resource_size_t bar_size;
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+-	void __iomem *cmb;
+ 	int bar;
+ 
+ 	dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
+-	if (!(NVME_CMB_SZ(dev->cmbsz)))
+-		return NULL;
++	if (!dev->cmbsz)
++		return;
+ 	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
+ 
+ 	if (!use_cmb_sqes)
+-		return NULL;
++		return;
+ 
+ 	szu = (u64)1 << (12 + 4 * NVME_CMB_SZU(dev->cmbsz));
+ 	size = szu * NVME_CMB_SZ(dev->cmbsz);
+@@ -1686,7 +1685,7 @@ static void __iomem *nvme_map_cmb(struct nvme_dev *dev)
+ 	bar_size = pci_resource_len(pdev, bar);
+ 
+ 	if (offset > bar_size)
+-		return NULL;
++		return;
+ 
+ 	/*
+ 	 * Controllers may support a CMB size larger than their BAR,
+@@ -1696,13 +1695,16 @@ static void __iomem *nvme_map_cmb(struct nvme_dev *dev)
+ 	if (size > bar_size - offset)
+ 		size = bar_size - offset;
+ 
+-	cmb = ioremap_wc(pci_resource_start(pdev, bar) + offset, size);
+-	if (!cmb)
+-		return NULL;
+-
++	dev->cmb = ioremap_wc(pci_resource_start(pdev, bar) + offset, size);
++	if (!dev->cmb)
++		return;
+ 	dev->cmb_bus_addr = pci_bus_address(pdev, bar) + offset;
+ 	dev->cmb_size = size;
+-	return cmb;
 +
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY,
- 			      &rp_pio->severity);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR,
-@@ -213,7 +215,6 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 
- 	dpc_rp_pio_get_info(dpc, &rp_pio_regs);
- 
--	dpc->rp_pio_status = rp_pio_regs.status;
++	if (sysfs_add_file_to_group(&dev->ctrl.device->kobj,
++				    &dev_attr_cmb.attr, NULL))
++		dev_warn(dev->ctrl.device,
++			 "failed to add sysfs attribute for CMB\n");
  }
  
- static irqreturn_t dpc_irq(int irq, void *context)
+ static inline void nvme_release_cmb(struct nvme_dev *dev)
+@@ -2124,22 +2126,7 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+                         "set queue depth=%u\n", dev->q_depth);
+ 	}
+ 
+-	/*
+-	 * CMBs can currently only exist on >=1.2 PCIe devices. We only
+-	 * populate sysfs if a CMB is implemented. Since nvme_dev_attrs_group
+-	 * has no name we can pass NULL as final argument to
+-	 * sysfs_add_file_to_group.
+-	 */
+-
+-	if (readl(dev->bar + NVME_REG_VS) >= NVME_VS(1, 2, 0)) {
+-		dev->cmb = nvme_map_cmb(dev);
+-		if (dev->cmb) {
+-			if (sysfs_add_file_to_group(&dev->ctrl.device->kobj,
+-						    &dev_attr_cmb.attr, NULL))
+-				dev_warn(dev->ctrl.device,
+-					 "failed to add sysfs attribute for CMB\n");
+-		}
+-	}
++	nvme_map_cmb(dev);
+ 
+ 	pci_enable_pcie_error_reporting(pdev);
+ 	pci_save_state(pdev);
+-- 
+2.11.0
