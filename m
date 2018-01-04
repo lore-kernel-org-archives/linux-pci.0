@@ -1,119 +1,161 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:42004 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751183AbeAYBWI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jan 2018 20:22:08 -0500
-Received: by mail-pf0-f194.google.com with SMTP id b25so4560654pfd.9
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jan 2018 17:22:07 -0800 (PST)
-Date: Wed, 24 Jan 2018 17:22:04 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: JeffyChen <jeffy.chen@rock-chips.com>, tony@atomide.com,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
-        dianders@chromium.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
- signal for OF
-Message-ID: <20180125012148.lcgnxi3uwcjzue7o@ban.mtv.corp.google.com>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
- <5491520.JsEYlZiECc@aspire.rjw.lan>
- <20180105004130.GA151625@google.com>
- <2806186.IK6EZBC0cX@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 4 Jan 2018 14:24:31 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Subject: Re: [PATCH] imx6: fix pcie enumeration
+Message-ID: <20180104202430.GC189897@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2806186.IK6EZBC0cX@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1515080883-30066-1-git-send-email-koen.vandeputte@ncentric.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+[+cc Richard, Lucas, Lorenzo, linux-arm-kernel]
 
-Sorry once again on the delays...My email hygiene has been getting bad,
-so mail gets buried.
+Hi Koen,
 
-On Fri, Jan 05, 2018 at 02:13:33AM +0100, Rafael J. Wysocki wrote:
-> On Friday, January 5, 2018 1:41:31 AM CET Brian Norris wrote:
-> > On Wed, Dec 27, 2017 at 01:57:07AM +0100, Rafael J. Wysocki wrote:
-> > > On Tuesday, December 26, 2017 2:06:47 AM CET JeffyChen wrote:
-> > > > On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
-> > > > >> >+
-> > > > >> >+	dn = pci_device_to_OF_node(ppdev);
-> > > > >> >+	if (!dn)
-> > > > >> >+		return 0;
-> > > > >> >+
-> > > > >> >+	irq = of_irq_get_byname(dn, "wakeup");
-> > > > > Why is this a property of the bridge and not of the device itself?
-> > 
-> > Wait, isn't 'dn' the port node, not the bridge node?
+Thanks a lot for the fix!
+
+Please run "git log --oneline drivers/pci/dwc/pci-imx6.c" and follow
+the style convention, including "PCIe" capitalization.
+
+"fix pcie enumeration" is not very descriptive.  It should say something
+about the specific problem, e.g., setting the root port's subordinate
+bus number.
+
+On Thu, Jan 04, 2018 at 04:48:03PM +0100, Koen Vandeputte wrote:
+> By default, when the imx6 PCIe RC boots up, the subordinate is set
+
+Not sure what "RC boots up" means.  Maybe you're talking about a
+hardware-defined default value at power-up, or maybe a value
+programmed by a boot-loader?  Please clarify and update the similar
+comment in the code.
+
+> equally to the secondary bus (1), and does not alter afterwards.
 > 
-> I may be confused about the structure you have in DT.
+> This means that theoretically, the highest bus reachable downstream is
+> bus 1.
 
-Probably :) And my DT structure may not be correct. But it's easily
-available to review. See arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi:
+Not just theoretically.  If the bridge is operating correctly, it
+should not forward any config transaction for a bus number greater
+than the subordinate bus number.
 
-http://elixir.free-electrons.com/linux/v4.14.2/source/arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi#L705
-
-It has a bridge->port->device nesting hierarchy. I'm not actually sure
-where this came from exactly, but I *thought* it was derived from the
-standard documentation:
-
-Documentation/devicetree/bindings/pci/pci.txt
-PCI Bus Binding to: IEEE Std 1275-1994
-http://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
-
-I'm not so sure now...
-
-> In the device hierarchy PCIe ports are represented as bridges.
-
-But device hierarchy can be slightly different than DT hierarchy. In our
-case, pcie@0,0 seems to correspond to the port, but has no companion
-"device".
-
-Or maybe I'm really off-base.
-
-> > > > That is suggested by Brian, because in that way, the wakeup pin would 
-> > > > not "tied to what exact device is installed (or no device, if it's a slot)."
-> > 
-> > I believe my thinking has evolved a bit over time, and I definitely am
-> > not the one true authority on this. I'll explain my main concerns, and
-> > whatever solution resolves these concerns is fine with me.
-> > 
-> > * I was primarily interested in avoiding handling WAKE# in the endpoint
-> >   drivers (e.g., as mwifiex is today).
+> Before commit a20c7f36bd3d ("PCI: Do not allocate more buses than
+> available in parent"), the driver ignored the subord value and just
+> allowed up to 0xff on each device downstream.
 > 
-> OK, everybody on this thread is interested in that. :-)
+> This caused a lot of errors to be printed, as this is not logical
+> according to spec. (but it worked ..)
 
-Sure :)
+Including a sample error in the changelog might help somebody
+suffering from the problem find this solution.
 
-> > * I was also interested in not having to redefine a new DT device
-> >   node (with new "pciABCD,1234" compatible property) for each new device
-> >   attached. That just won't work for removable cards.
+> After this commit, the driver stopped scanning deeper when the last
+> allocated busnr equals the subordinate of it's master, causing devices
+> to be undiscovered (especially behind bridges), uncovering the impact of
+> this bug.
 > 
-> So if you make it the property of a bridge, it should be fine (as long
-> as the bridge itself is not removable).
-
-OK...in that case you've answered your question at the top: "Why is this
-a property of the bridge and not of the device itself?" I think Jeffy
-answered similarly, but this walked you through how *I* got to that
-conclusion, at least.
-
-> > I need to reread the rest of this thread a few times to really
-> > understand what Rafael and Tony are discussing. But I feel like some of
-> > this is still moving away from the second point above.
-> > 
-> > > But I don't think it works when there are two devices using different WAKE#
-> > > interrupt lines under the same bridge.  Or how does it work then?
+> Before:
 > 
-> We seem to have agreed that this case needs to be neglected here.
+> 00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00 ...
+> 	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+> 
+> 00:00.0 0604: 16c3:abcd (rev 01)
+> 01:00.0 0604: 10b5:8604 (rev ba)
+> ... stops after bus 1 ...
+> 
+> After:
+> 
+> 00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
+> ...
+> 	Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
+> 
+> 00:00.0 0604: 16c3:abcd (rev 01)
+> 01:00.0 0604: 10b5:8604 (rev ba)
+> 02:01.0 0604: 10b5:8604 (rev ba)
+> 02:04.0 0604: 10b5:8604 (rev ba)
+> 02:05.0 0604: 10b5:8604 (rev ba)
+> 03:00.0 0280: 168c:0033 (rev 01)
+> 05:00.0 0280: 168c:0033 (rev 01)
+> 
 
-OK, I guess that's a reasonable conclusion.
+Should have a "Fixes: a20c7f36bd3d ..." tag if that's really the
+correct commit.
 
-> The "wakeup-interrupt" property at the bridge level basically has to be defined
-> as the wakeup interrupt for all devices on the bus under the bridge.
+> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+> ---
+> 
+> Needs backports to 4.14 & 4.9 stables
 
-The only thing I'm at a loss for is whether this goes in (referring to
-rk3399-gru.dtsi) &pcie or &pci_rootport. I think some versions of this
-series have been aiming for the former, and some the latter.
+Add a "CC: stable@vger.kernel.org" after your signed-off-by to handle
+this.  But something's wrong because a20c7f36bd3d only appeared in
+v4.15-rc1, so either that's the wrong commit or stable kernels don't
+need the fix.
 
-Brian
+>  drivers/pci/dwc/pci-imx6.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+> index b73483534a5b..3d13fa8c2eb1 100644
+> --- a/drivers/pci/dwc/pci-imx6.c
+> +++ b/drivers/pci/dwc/pci-imx6.c
+> @@ -76,6 +76,9 @@ struct imx6_pcie {
+>  
+>  #define PCIE_RC_LCSR				0x80
+>  
+> +#define PCIE_RC_BNR				0x18
+> +#define PCIE_RC_BNR_MAX_SUBORDINATE		(0xff << 16)
+> +
+>  /* PCIe Port Logic registers (memory-mapped) */
+>  #define PL_OFFSET 0x700
+>  #define PCIE_PL_PFLR (PL_OFFSET + 0x08)
+> @@ -562,6 +565,17 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+>  	int ret;
+>  
+>  	/*
+> +	 * By default, the subordinate is set equally to the secondary
+> +	 * bus (0x01) when the RC boots.
+> +	 * This means that theoretically, only bus 1 is reachable from the RC.
+> +	 * Force the PCIe RC subordinate to 0xff, otherwise no downstream
+> +	 * devices will be detected behind bus 1.
+> +	*/
+> +	tmp = dw_pcie_readl_rc(pp, PCIE_RC_BNR);
+> +	tmp |= PCIE_RC_BNR_MAX_SUBORDINATE;
+> +	dw_pcie_writel_rc(pp, PCIE_RC_BNR, tmp);
+
+This functionality is not related to establishing the link, so I think
+it should be put elsewhere, maybe either directly in imx6_pcie_probe()
+or in imx6_pcie_host_init().
+
+The DT really should contain a "bus-range" property and
+dw_pcie_host_init() will already pay attention to that if it's
+present, and I think it defaults to 0-0xff if it's not present.
+
+So I think you should be using pp->busn instead of hard-coding
+PCIE_RC_BNR_MAX_SUBORDINATE.
+
+> +	/*
+>  	 * Force Gen1 operation when starting the link.  In case the link is
+>  	 * started in Gen2 mode, there is a possibility the devices on the
+>  	 * bus will not be detected at all.  This happens with PCIe switches.
+> -- 
+> 2.7.4
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
