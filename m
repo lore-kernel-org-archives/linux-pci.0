@@ -1,64 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:40038 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965243AbeAJLOn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Jan 2018 06:14:43 -0500
-Date: Wed, 10 Jan 2018 11:15:43 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
-        niklas.cassel@axis.com
-Subject: Re: [PATCH] PCI: dwc: fix enumeration end when reaching root
- subordinate
-Message-ID: <20180110111543.GB27463@red-moon>
-References: <1515508941-20055-1-git-send-email-koen.vandeputte@ncentric.com>
- <20180109152550.GA16285@red-moon>
- <20180109200025.GU27654@lahna.fi.intel.com>
+Return-Path: <SRS0=WxIJ=D7=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=WxIJ=D7=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+ Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-3-logang@deltatee.com>
+ <20180104215040.GE189897@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <b83d097d-bcde-b277-6d4f-26cd7f943bbd@deltatee.com>
+Date: Thu, 4 Jan 2018 16:13:09 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180109200025.GU27654@lahna.fi.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180104215040.GE189897@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 02/12] pci-p2p: Add sysfs group to display p2pmem stats
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 09, 2018 at 10:00:25PM +0200, Mika Westerberg wrote:
-> On Tue, Jan 09, 2018 at 03:25:58PM +0000, Lorenzo Pieralisi wrote:
-> > On Tue, Jan 09, 2018 at 03:42:21PM +0100, Koen Vandeputte wrote:
-> > > The subordinate value indicates the highest bus number which can be
-> > > reached downstream though a certain device.
-> > > 
-> > > Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
-> > > parent")
-> > > ensures that downstream devices cannot assign busnumbers higher than the
-> > > upstream device subordinate number, which was indeed illogical.
-> > > 
-> > > By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
-> > > value of 0x01.
-> > > 
-> > > Due to this combined with above commit, enumeration stops digging deeper
-> > > downstream as soon as bus num 0x01 has been assigned, which is always
-> > > the case for a bridge device.
-> > > 
-> > > This results in all devices behind a bridge bus to remain undetected, as
-> > > these would be connected to bus 0x02 or higher.
-> > > 
-> > > Fix this by initializing the RC to a subordinate value of 0xff, meaning
-> > > that all busses [0x00-0xff] are reachable through this RC.
-> > 
-> > This is not a correct description of the problem. AFAICS all busses
-> > are reachable through this RC _regardless_ of whatever subordinate
-> > bus number value you programme into it.
+
+
+On 04/01/18 02:50 PM, Bjorn Helgaas wrote:
+> On Thu, Jan 04, 2018 at 12:01:27PM -0700, Logan Gunthorpe wrote:
+>> Attributes display the total amount of P2P memory, the ammount available
+>> and whether it is published or not.
 > 
-> Type 1 (the ones directed to the other side of the bridge) configuration
-> transactions are not forwarded if the bus number in the transaction is
-> not included in secondary and subordinate numbers of the root bridge. I
-> think the description here is pretty accurate as the bridges (anything
-> higher than bus number 1) below are effectively hidden.
+> s/ammount/amount/ (also below)
 
-That's correct - but that's not what this patch is fixing which is
-what the commit log should describe.
+Will fix.
 
-See:
+> I wonder if "p2pdma" would be a more suggestive term?  It's not really
+> the *memory* that is peer-to-peer; the peer-to-peer part is referring
+> to *access* to the memory.
 
-https://marc.info/?l=linux-arm-kernel&m=151540153522730&w=2
+I agree with Jason on this point. For now, it only describes the 
+peer-to-peer memory attributes. If we change the directory to p2pdma 
+then we'd have to add a mem prefix or something to each attribute.
+
+>> @@ -82,6 +130,9 @@ static int pci_p2pmem_setup(struct pci_dev *pdev)
+>>   	if (error)
+>>   		goto out_pool_destroy;
+>>   
+>> +	if (sysfs_create_group(&pdev->dev.kobj, &p2pmem_group))
+>> +		dev_warn(&pdev->dev, "failed to create p2p sysfs group\n");
+> 
+> Not sure the warning (by itself) is worthwhile.  If we were going to
+> disable the feature if sysfs_create_group() failed, that's one thing,
+> but we aren't doing anything except generating a warning, which the
+> user can't really do anything with.  If the user is looking for the
+> sysfs file, its absence will be obvious even without the message.
+
+Unfortunately, sysfs_create_group() has the warn_unused_result flag set. 
+So I need to do something with the result to squash the warning. I could 
+just assign it to an unused variable but something seemed like it needed 
+to be done and printing a warning was the easiest thing...
+
+Logan
