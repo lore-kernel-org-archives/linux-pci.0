@@ -1,131 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:42278 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753463AbeACPY4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jan 2018 10:24:56 -0500
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tal Gilboa <talgi@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Tariq Toukan <tariqt@mellanox.com>
-Subject: [PATCH next 2/3] net/mlx4_core: Report PCI properties using dedicated function
-Date: Wed,  3 Jan 2018 17:24:21 +0200
-Message-Id: <1514993062-7328-3-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1514993062-7328-1-git-send-email-talgi@mellanox.com>
-References: <1514993062-7328-1-git-send-email-talgi@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] PCI: dra7xx: Fix legacy INTD IRQ handling
+To: Vignesh R <vigneshr@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20171229114131.22296-1-vigneshr@ti.com>
+ <20171229114131.22296-2-vigneshr@ti.com>
+ <953c7aac-0429-8fc7-02ce-ace94aa735f3@ti.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <ebf49e7f-7008-18b8-62d9-9f3dc2de6a54@ti.com>
+Date: Thu, 4 Jan 2018 19:04:30 +0530
+MIME-Version: 1.0
+In-Reply-To: <953c7aac-0429-8fc7-02ce-ace94aa735f3@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changed mlx4 method of checking and reporting PCI status and
-maximum capabilities to use the pci driver functions instead
-of implementing them in the driver code.
+Hi,
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Signed-off-by: Tariq Toukan <tariqt@mellanox.com>
-Signed-off-by: Saeed Mahameed <saeedm@mellanox.com>
----
- drivers/net/ethernet/mellanox/mlx4/main.c | 81 +------------------------------
- 1 file changed, 1 insertion(+), 80 deletions(-)
+On Thursday 04 January 2018 11:38 AM, Kishon Vijay Abraham I wrote:
+> 
+> 
+> On Friday 29 December 2017 05:11 PM, Vignesh R wrote:
+>> Legacy INTD IRQ handling is broken on dra7xx due to fact that driver
+>> uses hwirq in range of 1-4 for INTA, INTD whereas IRQ domain is of size
+>> 4 which is numbered 0-3. Therefore when INTD IRQ line is used with
+>> pci-dra7xx driver following warning is seen:
+>>
+>>        WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
+>>        error: hwirq 0x4 is too large for dummy
+>>
+>> Fix this by using pci_irqd_intx_xlate() helper to translate the INTx 1-4
+>> range into the 0-3 as done in other PCIe drivers.
+>>
+>> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
+>> Signed-off-by: Vignesh R <vigneshr@ti.com>
+> 
+> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/pci/dwc/pci-dra7xx.c | 3 ++-
+>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>> index 58aed0896468..892f93910012 100644
+>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>> @@ -226,6 +226,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+>>  
+>>  static const struct irq_domain_ops intx_domain_ops = {
+>>  	.map = dra7xx_pcie_intx_map,
+>> +	.xlate = pci_irqd_intx_xlate,
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-index 4d84cab..30cacac 100644
---- a/drivers/net/ethernet/mellanox/mlx4/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-@@ -623,85 +623,6 @@ static int mlx4_dev_cap(struct mlx4_dev *dev, struct mlx4_dev_cap *dev_cap)
- 	return 0;
- }
- 
--static int mlx4_get_pcie_dev_link_caps(struct mlx4_dev *dev,
--				       enum pci_bus_speed *speed,
--				       enum pcie_link_width *width)
--{
--	u32 lnkcap1, lnkcap2;
--	int err1, err2;
--
--#define  PCIE_MLW_CAP_SHIFT 4	/* start of MLW mask in link capabilities */
--
--	*speed = PCI_SPEED_UNKNOWN;
--	*width = PCIE_LNK_WIDTH_UNKNOWN;
--
--	err1 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP,
--					  &lnkcap1);
--	err2 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP2,
--					  &lnkcap2);
--	if (!err2 && lnkcap2) { /* PCIe r3.0-compliant */
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
--			*speed = PCIE_SPEED_8_0GT;
--		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
--			*speed = PCIE_SPEED_5_0GT;
--		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
--			*speed = PCIE_SPEED_2_5GT;
--	}
--	if (!err1) {
--		*width = (lnkcap1 & PCI_EXP_LNKCAP_MLW) >> PCIE_MLW_CAP_SHIFT;
--		if (!lnkcap2) { /* pre-r3.0 */
--			if (lnkcap1 & PCI_EXP_LNKCAP_SLS_5_0GB)
--				*speed = PCIE_SPEED_5_0GT;
--			else if (lnkcap1 & PCI_EXP_LNKCAP_SLS_2_5GB)
--				*speed = PCIE_SPEED_2_5GT;
--		}
--	}
--
--	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN) {
--		return err1 ? err1 :
--			err2 ? err2 : -EINVAL;
--	}
--	return 0;
--}
--
--static void mlx4_check_pcie_caps(struct mlx4_dev *dev)
--{
--	enum pcie_link_width width, width_cap;
--	enum pci_bus_speed speed, speed_cap;
--	int err;
--
--#define PCIE_SPEED_STR(speed) \
--	(speed == PCIE_SPEED_8_0GT ? "8.0GT/s" : \
--	 speed == PCIE_SPEED_5_0GT ? "5.0GT/s" : \
--	 speed == PCIE_SPEED_2_5GT ? "2.5GT/s" : \
--	 "Unknown")
--
--	err = mlx4_get_pcie_dev_link_caps(dev, &speed_cap, &width_cap);
--	if (err) {
--		mlx4_warn(dev,
--			  "Unable to determine PCIe device BW capabilities\n");
--		return;
--	}
--
--	err = pcie_get_minimum_link(dev->persist->pdev, &speed, &width);
--	if (err || speed == PCI_SPEED_UNKNOWN ||
--	    width == PCIE_LNK_WIDTH_UNKNOWN) {
--		mlx4_warn(dev,
--			  "Unable to determine PCI device chain minimum BW\n");
--		return;
--	}
--
--	if (width != width_cap || speed != speed_cap)
--		mlx4_warn(dev,
--			  "PCIe BW is different than device's capability\n");
--
--	mlx4_info(dev, "PCIe link speed is %s, device supports %s\n",
--		  PCIE_SPEED_STR(speed), PCIE_SPEED_STR(speed_cap));
--	mlx4_info(dev, "PCIe link width is x%d, device supports x%d\n",
--		  width, width_cap);
--	return;
--}
--
- /*The function checks if there are live vf, return the num of them*/
- static int mlx4_how_many_lives_vf(struct mlx4_dev *dev)
- {
-@@ -3475,7 +3396,7 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
- 	 * express device capabilities are under-satisfied by the bus.
- 	 */
- 	if (!mlx4_is_slave(dev))
--		mlx4_check_pcie_caps(dev);
-+		pcie_print_link_status(dev->persist->pdev);
- 
- 	/* In master functions, the communication channel must be initialized
- 	 * after obtaining its address from fw */
--- 
-1.8.3.1
+Looking at this again, I think the mapping should be done in device tree using
+the interrupt-map property.
+
+Lorenzo, can you hold merging this patch till we verify using the dt approach?
+
+Thanks
+Kishon
