@@ -1,65 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45042 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:39516 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752550AbeADWOw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 17:14:52 -0500
-Date: Thu, 4 Jan 2018 16:14:48 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@the-dreams.de>
-Subject: Re: [PATCH 7/7] PCI / PM: Use SMART_SUSPEND and LEAVE_SUSPENDED
- flags for PCIe ports
-Message-ID: <20180104221448.GH189897@bhelgaas-glaptop.roam.corp.google.com>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
- <2436726.ykYRzVD45y@aspire.rjw.lan>
- <33674270.0PFIgc82r6@aspire.rjw.lan>
+        id S1751294AbeADTIU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Jan 2018 14:08:20 -0500
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-8-logang@deltatee.com>
+Message-ID: <078f4435-22ac-1ff7-0b91-5022e22d126e@deltatee.com>
+Date: Thu, 4 Jan 2018 12:08:18 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <33674270.0PFIgc82r6@aspire.rjw.lan>
+In-Reply-To: <20180104190137.7654-8-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 07/12] nvme-pci: clean up CMB initialization
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 03, 2018 at 01:38:27AM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Make the PCIe port driver set DPM_FLAG_SMART_SUSPEND and
-> DPM_FLAG_LEAVE_SUSPENDED for the devices handled by it to benefit
-> from the opportunistic optimizations in the PCI layer enabled by
-> these flags.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Please merge this along with the rest of the series.
+On 04/01/18 12:01 PM, Logan Gunthorpe wrote:
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> Refactor the call to nvme_map_cmb, and change the conditions for probing
+> for the CMB.  First remove the version check as NVMe TPs always apply
+> to earlier versions of the spec as well.  Second check for the whole CMBSZ
+> register for support of the CMB feature instead of just the size field
+> inside of it to simplify the code a bit.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> ---
->  drivers/pci/pcie/portdrv_pci.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> Index: linux-pm/drivers/pci/pcie/portdrv_pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pcie/portdrv_pci.c
-> +++ linux-pm/drivers/pci/pcie/portdrv_pci.c
-> @@ -150,6 +150,9 @@ static int pcie_portdrv_probe(struct pci
->  
->  	pci_save_state(dev);
->  
-> +	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_SMART_SUSPEND |
-> +					   DPM_FLAG_LEAVE_SUSPENDED);
-> +
->  	if (pci_bridge_d3_possible(dev)) {
->  		/*
->  		 * Keep the port resumed 100ms to make sure things like
-> 
+Oops, I forgot:
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
