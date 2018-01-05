@@ -1,74 +1,59 @@
-Return-Path: <SRS0=pCDf=EG=google.com=rajatja@kernel.org>
-Return-Path: <SRS0=pCDf=EG=google.com=rajatja@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45424 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751278AbeAEOAI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Jan 2018 09:00:08 -0500
+Date: Fri, 5 Jan 2018 14:01:02 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        marc.zyngier@arm.com, robh@kernel.org, devicetree@vger.kernel.org,
+        mingkai.hu@nxp.com, peter.newton@nxp.com, minghuan.lian@nxp.com,
+        rajesh.raina@nxp.com, rajan.kapoor@nxp.com, prabhjot.singh@nxp.com
+Subject: Re: [PATCH v5 2/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
+ driver
+Message-ID: <20180105140102.GA24933@red-moon>
+References: <1513181317-19914-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+ <20171220170307.GC1709@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <20180111175916.GB2860@localhost.localdomain>
-References: <20171214184701.GA6322@libmpq.org> <20171215002155.GR30595@bhelgaas-glaptop.roam.corp.google.com>
- <CACK8Z6HyBgNdav_Atzpxe1RGvpviJF2vsLhkgATjL2B7GnYnwg@mail.gmail.com>
- <20171215190126.GI19904@libmpq.org> <20180111175040.GJ1377@libmpq.org> <20180111175916.GB2860@localhost.localdomain>
-From: Rajat Jain <rajatja@google.com>
-Date: Thu, 11 Jan 2018 12:22:26 -0800
-Message-ID: <CACK8Z6HgywQVD5RH+Bzg3G7c8XfMjekuc7hGGaBRNF0qqP00Kg@mail.gmail.com>
-Subject: Re: ASPM powersupersave change NVMe SSD Samsung 960 PRO capacity to 0
- and read-only
-To: Keith Busch <keith.busch@intel.com>
-Cc: Maik Broemme <mbroemme@libmpq.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171220170307.GC1709@red-moon>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 11, 2018 at 9:59 AM, Keith Busch <keith.busch@intel.com> wrote:
-> On Thu, Jan 11, 2018 at 06:50:40PM +0100, Maik Broemme wrote:
->> I've re-run the test with 4.15rc7.r111.g5f615b97cdea and the following
->> patches from Keith:
->>
->> [PATCH 1/4] PCI/AER: Return approrpiate value when AER is not supported
->> [PATCH 2/4] PCI/AER: Provide API for getting AER information
->> [PATCH 3/4] PCI/DPC: Enable DPC in conjuction with AER
->> [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
->>
->> The issue is still the same. Additionally to the output before I see now:
->>
->> Jan 11 18:34:45 server.theraso.int kernel: dpc 0000:00:10.0:pcie010: DPC containment event, status:0x1f09 source:0x0000
->> Jan 11 18:34:45 server.theraso.int kernel: dpc 0000:00:10.0:pcie010: DPC unmasked uncorrectable error detected, remove downstream devices
->> Jan 11 18:34:45 server.theraso.int kernel: pcieport 0000:00:10.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0080(Receiver ID)
->> Jan 11 18:34:45 server.theraso.int kernel: pcieport 0000:00:10.0:   device [8086:19aa] error status/mask=00000020/00000000
->> Jan 11 18:34:45 server.theraso.int kernel: pcieport 0000:00:10.0:    [ 5] Surprise Down Error    (First)
->> Jan 11 18:34:46 server.theraso.int kernel: nvme0n1: detected capacity change from 1024209543168 to 0
->
-> Okay, so that series wasn't going to fix anything, but at least it gets
-> some visibility into what's happened. The DPC was triggered due to a
-> Surprise Down uncorrectable error, so the power settting is causing the
-> link to fail.
->
-> The NVMe driver has quirks specifically for this vendor's devices to
-> fence off NVMe specific automated power settings. Your observations
-> appear to align with the same issues.
+On Wed, Dec 20, 2017 at 05:03:07PM +0000, Lorenzo Pieralisi wrote:
 
-Agree.
+[...]
 
-                /*
-                 * Samsung SSD 960 EVO drops off the PCIe bus after system
-                 * suspend on a Ryzen board, ASUS PRIME B350M-A.
-                 */
-                if (dmi_match(DMI_BOARD_VENDOR, "ASUSTeK COMPUTER INC.") &&
-                    dmi_match(DMI_BOARD_NAME, "PRIME B350M-A"))
-                        return NVME_QUIRK_NO_APST;
+> > +static int mobiveil_pcie_init_irq_domain(struct mobiveil_pcie *pcie)
+> > +{
+> > +	struct device *dev = &pcie->pdev->dev;
+> > +	struct device_node *node = dev->of_node;
+> > +	int ret;
+> 
+> ret is unused
+> 
+> > +	/* setup INTx */
+> > +	pcie->intx_domain = irq_domain_add_linear(node,
+> > +				PCI_NUM_INTX + 1, &intx_domain_ops, pcie);
+> 
+> You should use PCI_NUM_INTX and add pci_irqd_intx_xlate() as the
+> domain ops .xlate.
 
-It seems that the attempt to save extrapower using  ASPM L1 substates
-is causing it to fall off. Sorry but I suspect that it may be
-difficult to debug without a pcie analyzer, some debugging directions
-can be:
+Actually that's not quite correct - so scrap this. The point here is,
+the PCI host controller interrupt domain has to have 4 hwirqs (this
+is a pseudo interrupt controller - a multiplexer) and it
+is through DT interrupt-map that INTx pins (1-4) can be mapped to the
+"PCI interrupt controller hwirq inputs" that we consider numbered
+from 0 to 3.
 
-- Assuming this is a hotpluggable device, try with another NVMe to
-verify if the issue is specific to this device.
-- Can you please try switch the ASPM policy back from "powersupersave"
--> powersave, and potentially do a rescan (echo 1 >
-/sys/bus/pci/rescan), and see if the device comes back (and goes away
-again when you switch back to supersave)?
-- May be put some debug prints in pcie_config_aspm_l1ss() to see
-writing to which register causes the device to fall off (most likely
-this would be the last statement, but just throwing ideas).
-- May be dump the timing parameters link->l1ss.ctl1 and
-link->l1ss.ctl2 from aspm_calc_l1ss_info(), and try to play with them
-a little.
+It is not that clean-cut but IMO it is the DT interrupt mapping that
+should carry out the translation.
+
+See for instance:
+
+arch/arm64/boot/dts/marvell/armada-37xx.dtsi
+
+This requires DT/irqchip maintainers acknowledgement before proceeding.
+
+Lorenzo
