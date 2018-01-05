@@ -1,44 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 5 Jan 2018 07:46:30 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Koen Vandeputte <koen.vandeputte@ncentric.com>
-Subject: Re: [PATCH] imx6: fix pcie enumeration
-Message-ID: <20180105134630.GN189897@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180104202430.GC189897@bhelgaas-glaptop.roam.corp.google.com>
- <a2d7afee-7a41-6da6-e5a4-a36a6fcde55d@ncentric.com>
+Return-Path: <SRS0=16ub=EA=gmail.com=stuart.w.hayes@kernel.org>
+Return-Path: <SRS0=16ub=EA=gmail.com=stuart.w.hayes@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+From: Stuart Hayes <stuart.w.hayes@gmail.com>
+Subject: [PATCH] PCI: Expose ari_enabled in sysfs
+Message-ID: <d37c2b36-a372-68ea-3598-4acf2aad58a1@gmail.com>
+Date: Fri, 5 Jan 2018 12:51:55 -0600
 MIME-Version: 1.0
-In-Reply-To: <a2d7afee-7a41-6da6-e5a4-a36a6fcde55d@ncentric.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Richard Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
- bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 05, 2018 at 10:56:31AM +0100, Koen Vandeputte wrote:
-> ...
-> Hi Bjorn,
-> 
-> Thanks for your time and patience writing extended comments on all points,
-> especially since this is my first commit to this list.
+Some multifunction PCI devices with more than 8 functions use "alternative
+routing-ID interpretation" (ARI), which means the 8-bit device/function
+number field will be interpreted as 8 bits specifying the function number
+(the device number is 0 implicitly), rather than the upper 5 bits
+specifying the device number and the lower 3 bits specifying the function
+number. The kernel can enable and use this.
 
-Welcome, hope we see more from you!  Lorenzo is giving you more and
-better tips for digging into this, so I'm sure you'll get it all
-sorted out soon.
+Expose in a sysfs attribute whether the kernel has enabled ARI, so that a
+program in userspace won't have to parse PCI devices and PCI configuration
+space to figure out if it is enabled. This will allow better predictable
+network naming using PCI function numbers without using PCI bus or device
+numbers, which is desirable because bus and device numbers can change with
+system configuration but function numbers will not.
 
-Bjorn
+Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+---
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--- linux-4.15-rc6/drivers/pci/pci-sysfs.c.orig	2017-12-31 17:47:43.000000000 -0500
++++ linux-4.15-rc6/drivers/pci/pci-sysfs.c	2018-01-02 13:58:23.372928377 -0500
+@@ -278,6 +278,16 @@ static ssize_t subordinate_bus_number_sh
+ }
+ static DEVICE_ATTR_RO(subordinate_bus_number);
+ 
++static ssize_t ari_enabled_show(struct device *dev,
++				struct device_attribute *attr,
++				char *buf)
++{
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++
++	return sprintf(buf, "%u\n", pci_ari_enabled(pci_dev->bus));
++}
++static DEVICE_ATTR_RO(ari_enabled);
++
+ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+ {
+@@ -786,6 +796,7 @@ static struct attribute *pci_dev_attrs[]
+ 	&dev_attr_devspec.attr,
+ #endif
+ 	&dev_attr_driver_override.attr,
++	&dev_attr_ari_enabled.attr,
+ 	NULL,
+ };
+ 
