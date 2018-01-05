@@ -1,80 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 11 Jan 2018 12:09:05 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yazen Ghannam <Yazen.Ghannam@amd.com>
-Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, rjw@rjwysocki.net, lenb@kernel.org,
-        bhelgaas@google.com, bp@suse.de
-Subject: Re: [PATCH] PCI/ACPI: Disable AER when _OSC control bit is clear.
-Message-ID: <20180111180905.GK241460@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180111150316.19951-1-Yazen.Ghannam@amd.com>
+Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
+Date: Thu, 4 Jan 2018 20:33:00 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
+ Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
+ <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
+ <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client
+ devices
+Message-ID: <20180104203300.79487c98@w520.home>
+In-Reply-To: <20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
+References: <20180104190137.7654-1-logang@deltatee.com>
+	<20180104190137.7654-5-logang@deltatee.com>
+	<20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
+	<20180104153551.3118f71b@t450s.home>
+	<20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180111150316.19951-1-Yazen.Ghannam@amd.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 11, 2018 at 09:03:16AM -0600, Yazen Ghannam wrote:
-> From: Yazen Ghannam <yazen.ghannam@amd.com>
-> 
-> Currently, aer_service_init() checks if AER is available and that
-> Firmware First handling is not enabled. The _OSC request for AER is
-> not taken into account when deciding to enable AER in Linux.
-> 
-> We should check that the _OSC control for AER is set. If it's not
-> then AER should be disabled.
-> 
-> The _OSC control for AER is not requested when APEI Firmware First is
-> used, so the same condition applies.
-> 
-> Mark AER as disabled if the _OSC request was not made or accepted.
-> 
-> Remove redunant check for aer_acpi_firmware_first() when calling
-> aer_service_init(), since this is check is already included when
-> checking the _OSC control.
+On Thu, 4 Jan 2018 17:00:47 -0700
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-s/redunant/redundant/
-
-The concept seems right to me.  Please add a citation to the relevant spec
-section.  I think this is somewhere in the PCI Firmware spec.
-
-> Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
-> ---
->  drivers/acpi/pci_root.c       | 3 +++
->  drivers/pci/pcie/aer/aerdrv.c | 2 +-
->  2 files changed, 4 insertions(+), 1 deletion(-)
+> On 04/01/18 03:35 PM, Alex Williamson wrote:
+> > Yep, flipping these ACS bits invalidates any IOMMU groups that depend
+> > on the isolation of that downstream port and I suspect also any peers
+> > within the same PCI slot of that port and their downstream devices.  The
+> > entire sub-hierarchy grouping needs to be re-evaluated.  This
+> > potentially affects running devices that depend on that isolation, so
+> > I'm not sure how that happens dynamically.  A boot option might be
+> > easier.  Thanks,  
 > 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 6fc204a52493..19a625ed8de9 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -512,6 +512,9 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->  		 */
->  		*no_aspm = 1;
->  	}
-> +
-> +	if (!(requested & control & OSC_PCI_EXPRESS_AER_CONTROL))
-> +		pci_no_aer();
->  }
->  
->  static int acpi_pci_root_add(struct acpi_device *device,
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 6ff5f5b4f5e6..39bb059777d0 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -374,7 +374,7 @@ static void aer_error_resume(struct pci_dev *dev)
->   */
->  static int __init aer_service_init(void)
->  {
-> -	if (!pci_aer_available() || aer_acpi_firmware_first())
-> +	if (!pci_aer_available())
->  		return -ENXIO;
->  	return pcie_port_service_register(&aerdriver);
->  }
-> -- 
-> 2.14.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I don't see how this is the case in current kernel code. It appears to 
+> only enable ACS globally if the IOMMU requests it.
+
+IOMMU groups don't exist unless the IOMMU is enabled and x86 and ARM
+both request ACS be enabled if an IOMMU is present, so I'm not sure
+what you're getting at here.  Also, in reply to your other email, if
+the IOMMU is enabled, every device handled by the IOMMU is a member of
+an IOMMU group, see struct device.iommu_group.  There's an
+iommu_group_get() accessor to get a reference to it.
+ 
+> I also don't see how turning off ACS isolation for a specific device is 
+> going to hurt anything. The IOMMU should still be able to keep going on 
+> unaware that anything has changed. The only worry is that a security 
+> hole may now be created if a user was relying on the isolation between 
+> two devices that are in different VMs or something. However, if a user 
+> was relying on this, they probably shouldn't have turned on P2P in the 
+> first place.
+
+That's exactly what IOMMU groups represent, the smallest set of devices
+which have DMA isolation from other devices.  By poking this hole, the
+IOMMU group is invalid.  We cannot turn off ACS only for a specific
+device, in order to enable p2p it needs to be disabled at every
+downstream port between the devices where we want to enable p2p.
+Depending on the topology, that could mean we're also enabling p2p for
+unrelated devices.  Those unrelated devices might be in active use and
+the p2p IOVAs now have a different destination which is no longer IOMMU
+translated.
+ 
+> We started with a fairly unintelligent choice to simply disable ACS on 
+> any kernel that had CONFIG_PCI_P2P set. However, this did not seem like 
+> a good idea going forward. Instead, we now selectively disable the ACS 
+> bit only on the downstream ports that are involved in P2P transactions. 
+> This seems like the safest choice and still allows people to (carefully) 
+> use P2P adjacent to other devices that need to be isolated.
+
+I don't see that the code is doing much checking that adjacent devices
+are also affected by the p2p change and of course the IOMMU group is
+entirely invalid once the p2p holes start getting poked.
+
+> I don't think anyone wants another boot option that must be set in order 
+> to use this functionality (and only some hardware would require this). 
+> That's just a huge pain for users.
+
+No, but nor do we need IOMMU groups that no longer represent what
+they're intended to describe or runtime, unchecked routing changes
+through the topology for devices that might already be using
+conflicting IOVA ranges.  Maybe soft hotplugs are another possibility,
+designate a sub-hierarchy to be removed and re-scanned with ACS
+disabled.  Otherwise it seems like disabling and re-enabling ACS needs
+to also handle merging and splitting groups dynamically.  Thanks,
+
+Alex
