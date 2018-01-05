@@ -1,72 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Jaehoon Chung'" <jh80.chung@samsung.com>,
-	<linux-pci@vger.kernel.org>
-References: <CGME20180122022856epcas1p494a9efeae478b299e3e8006adad71e6a@epcas1p4.samsung.com>
- <20180122022854.3634-1-jh80.chung@samsung.com>
-In-Reply-To: <20180122022854.3634-1-jh80.chung@samsung.com>
-Subject: Re: [PATCH] PCI: exynos: fix the potential null pointer dereference
-Date: Mon, 22 Jan 2018 11:52:46 -0500
-Message-ID: <000201d393a1$6e7c8b70$4b75a250$@gmail.com>
+Return-Path: <SRS0=o8dQ=EA=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=o8dQ=EA=deltatee.com=logang@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+ Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-5-logang@deltatee.com>
+ <20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
+ <20180104153551.3118f71b@t450s.home>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
+Date: Thu, 4 Jan 2018 17:00:47 -0700
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, krzk@kernel.org,
- linux-samsung-soc@vger.kernel.org, kgene@kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180104153551.3118f71b@t450s.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client devices
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, January 21, 2018 6:29 PM, Jaehoon Chung wrote:
-> 
-> Before calling the callback function, it needs to check whether
-> init_clk_resources is assigned or not.
-> Otherwise, it can be occurred the NULL pointer dereference when
-> init_clk_resources is not assigned.
-> 
-> Even though init_clk_resources is assigned now, it needs to prevent the
-> potential NULL pointer dereference in future.
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
-> ---
->  drivers/pci/dwc/pci-exynos.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-> index 56f32aeebd0a..39f08881f9a4 100644
-> --- a/drivers/pci/dwc/pci-exynos.c
-> +++ b/drivers/pci/dwc/pci-exynos.c
-> @@ -499,7 +499,8 @@ static int __init exynos_pcie_probe(struct
-> platform_device *pdev)
->  			return ret;
->  	}
-> 
-> -	if (ep->ops && ep->ops->get_clk_resources) {
-> +	if (ep->ops && ep->ops->get_clk_resources &&
-> +			ep->ops->init_clk_resources) {
->  		ret = ep->ops->get_clk_resources(ep);
->  		if (ret)
->  			return ret;
-> --
-> 2.15.1
 
 
+On 04/01/18 03:35 PM, Alex Williamson wrote:
+> Yep, flipping these ACS bits invalidates any IOMMU groups that depend
+> on the isolation of that downstream port and I suspect also any peers
+> within the same PCI slot of that port and their downstream devices.  The
+> entire sub-hierarchy grouping needs to be re-evaluated.  This
+> potentially affects running devices that depend on that isolation, so
+> I'm not sure how that happens dynamically.  A boot option might be
+> easier.  Thanks,
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I don't see how this is the case in current kernel code. It appears to 
+only enable ACS globally if the IOMMU requests it.
+
+I also don't see how turning off ACS isolation for a specific device is 
+going to hurt anything. The IOMMU should still be able to keep going on 
+unaware that anything has changed. The only worry is that a security 
+hole may now be created if a user was relying on the isolation between 
+two devices that are in different VMs or something. However, if a user 
+was relying on this, they probably shouldn't have turned on P2P in the 
+first place.
+
+We started with a fairly unintelligent choice to simply disable ACS on 
+any kernel that had CONFIG_PCI_P2P set. However, this did not seem like 
+a good idea going forward. Instead, we now selectively disable the ACS 
+bit only on the downstream ports that are involved in P2P transactions. 
+This seems like the safest choice and still allows people to (carefully) 
+use P2P adjacent to other devices that need to be isolated.
+
+I don't think anyone wants another boot option that must be set in order 
+to use this functionality (and only some hardware would require this). 
+That's just a huge pain for users.
+
+Logan
