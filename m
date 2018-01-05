@@ -1,62 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Ghannam, Yazen" <Yazen.Ghannam@amd.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        "Bjorn Helgaas" <bhelgaas@google.com>, Borislav Petkov <bp@suse.de>
-Subject: RE: [PATCH] PCI/ACPI: Disable AER when _OSC control bit is clear.
-Date: Thu, 11 Jan 2018 17:48:21 +0000
-Message-ID: <DM5PR12MB191612888094C4794951FAE4F8160@DM5PR12MB1916.namprd12.prod.outlook.com>
-References: <20180111150316.19951-1-Yazen.Ghannam@amd.com>
- <CAJZ5v0gU6var3gNQsp2GkSujbR=vB2Zj4dZHKNOzfAtC76jFbA@mail.gmail.com>
-In-Reply-To: <CAJZ5v0gU6var3gNQsp2GkSujbR=vB2Zj4dZHKNOzfAtC76jFbA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
+Date: Fri, 5 Jan 2018 10:18:15 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
+ Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
+ <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
+ <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client
+ devices
+Message-ID: <20180105101815.0fcbc142@t450s.home>
+In-Reply-To: <77ec7893-6ff5-ebdf-163d-fc4e02077cc2@deltatee.com>
+References: <20180104190137.7654-1-logang@deltatee.com>
+	<20180104190137.7654-5-logang@deltatee.com>
+	<20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
+	<20180104153551.3118f71b@t450s.home>
+	<20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
+	<20180104203300.79487c98@w520.home>
+	<77ec7893-6ff5-ebdf-163d-fc4e02077cc2@deltatee.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiByand5c29ja2lAZ21haWwuY29t
-IFttYWlsdG86cmp3eXNvY2tpQGdtYWlsLmNvbV0gT24gQmVoYWxmIE9mDQo+IFJhZmFlbCBKLiBX
-eXNvY2tpDQo+IFNlbnQ6IFRodXJzZGF5LCBKYW51YXJ5IDExLCAyMDE4IDEyOjM5IFBNDQo+IFRv
-OiBHaGFubmFtLCBZYXplbiA8WWF6ZW4uR2hhbm5hbUBhbWQuY29tPg0KPiBDYzogQUNQSSBEZXZl
-bCBNYWxpbmcgTGlzdCA8bGludXgtYWNwaUB2Z2VyLmtlcm5lbC5vcmc+OyBMaW51eCBLZXJuZWwg
-TWFpbGluZw0KPiBMaXN0IDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgTGludXggUENJ
-IDxsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnPjsNCj4gUmFmYWVsIEouIFd5c29ja2kgPHJqd0By
-and5c29ja2kubmV0PjsgTGVuIEJyb3duIDxsZW5iQGtlcm5lbC5vcmc+OyBCam9ybg0KPiBIZWxn
-YWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsgQm9yaXNsYXYgUGV0a292IDxicEBzdXNlLmRlPg0K
-PiBTdWJqZWN0OiBSZTogW1BBVENIXSBQQ0kvQUNQSTogRGlzYWJsZSBBRVIgd2hlbiBfT1NDIGNv
-bnRyb2wgYml0IGlzIGNsZWFyLg0KPiANCj4gT24gVGh1LCBKYW4gMTEsIDIwMTggYXQgNDowMyBQ
-TSwgWWF6ZW4gR2hhbm5hbQ0KPiA8WWF6ZW4uR2hhbm5hbUBhbWQuY29tPiB3cm90ZToNCj4gPiBG
-cm9tOiBZYXplbiBHaGFubmFtIDx5YXplbi5naGFubmFtQGFtZC5jb20+DQo+ID4NCj4gPiBDdXJy
-ZW50bHksIGFlcl9zZXJ2aWNlX2luaXQoKSBjaGVja3MgaWYgQUVSIGlzIGF2YWlsYWJsZSBhbmQg
-dGhhdA0KPiA+IEZpcm13YXJlIEZpcnN0IGhhbmRsaW5nIGlzIG5vdCBlbmFibGVkLiBUaGUgX09T
-QyByZXF1ZXN0IGZvciBBRVIgaXMNCj4gPiBub3QgdGFrZW4gaW50byBhY2NvdW50IHdoZW4gZGVj
-aWRpbmcgdG8gZW5hYmxlIEFFUiBpbiBMaW51eC4NCj4gPg0KPiA+IFdlIHNob3VsZCBjaGVjayB0
-aGF0IHRoZSBfT1NDIGNvbnRyb2wgZm9yIEFFUiBpcyBzZXQuIElmIGl0J3Mgbm90DQo+ID4gdGhl
-biBBRVIgc2hvdWxkIGJlIGRpc2FibGVkLg0KPiA+DQo+ID4gVGhlIF9PU0MgY29udHJvbCBmb3Ig
-QUVSIGlzIG5vdCByZXF1ZXN0ZWQgd2hlbiBBUEVJIEZpcm13YXJlIEZpcnN0IGlzDQo+ID4gdXNl
-ZCwgc28gdGhlIHNhbWUgY29uZGl0aW9uIGFwcGxpZXMuDQo+ID4NCj4gPiBNYXJrIEFFUiBhcyBk
-aXNhYmxlZCBpZiB0aGUgX09TQyByZXF1ZXN0IHdhcyBub3QgbWFkZSBvciBhY2NlcHRlZC4NCj4g
-Pg0KPiA+IFJlbW92ZSByZWR1bmFudCBjaGVjayBmb3IgYWVyX2FjcGlfZmlybXdhcmVfZmlyc3Qo
-KSB3aGVuIGNhbGxpbmcNCj4gPiBhZXJfc2VydmljZV9pbml0KCksIHNpbmNlIHRoaXMgaXMgY2hl
-Y2sgaXMgYWxyZWFkeSBpbmNsdWRlZCB3aGVuDQo+ID4gY2hlY2tpbmcgdGhlIF9PU0MgY29udHJv
-bC4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFlhemVuIEdoYW5uYW0gPHlhemVuLmdoYW5uYW1A
-YW1kLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9hY3BpL3BjaV9yb290LmMgICAgICAgfCAz
-ICsrKw0KPiA+ICBkcml2ZXJzL3BjaS9wY2llL2Flci9hZXJkcnYuYyB8IDIgKy0NCj4gPiAgMiBm
-aWxlcyBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4gPg0KPiA+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYyBiL2RyaXZlcnMvYWNwaS9wY2lfcm9v
-dC5jDQo+ID4gaW5kZXggNmZjMjA0YTUyNDkzLi4xOWE2MjVlZDhkZTkgMTAwNjQ0DQo+ID4gLS0t
-IGEvZHJpdmVycy9hY3BpL3BjaV9yb290LmMNCj4gPiArKysgYi9kcml2ZXJzL2FjcGkvcGNpX3Jv
-b3QuYw0KPiA+IEBAIC01MTIsNiArNTEyLDkgQEAgc3RhdGljIHZvaWQgbmVnb3RpYXRlX29zX2Nv
-bnRyb2woc3RydWN0DQo+IGFjcGlfcGNpX3Jvb3QgKnJvb3QsIGludCAqbm9fYXNwbSkNCj4gPiAg
-ICAgICAgICAgICAgICAgICovDQo+ID4gICAgICAgICAgICAgICAgICpub19hc3BtID0gMTsNCj4g
-PiAgICAgICAgIH0NCj4gPiArDQo+ID4gKyAgICAgICBpZiAoIShyZXF1ZXN0ZWQgJiBjb250cm9s
-ICYgT1NDX1BDSV9FWFBSRVNTX0FFUl9DT05UUk9MKSkNCj4gDQo+IE9uZSBvZiB0aGUgb3BlcmF0
-b3JzIGFib3ZlIG5lZWRzIHRvIGJlIGEgJiYgSSBzdXBwb3NlPw0KPiANCg0KSXQncyBhIDMtd2F5
-IGJpdHdpc2UgQU5EIHRvIGNoZWNrIHRoYXQgT1NDX1BDSV9FWFBSRVNTX0FFUl9DT05UUk9MIGlz
-DQpzZXQgaW4gYm90aCAicmVxdWVzdGVkIiBhbmQgImNvbnRyb2wiLg0KDQpJT1csIHdlIGNoZWNr
-IGlmIEFFUiB3YXMgcmVxdWVzdGVkIGJ5IHRoZSBPUyBhbmQgdGhhdCB0aGUgcGxhdGZvcm0NCmdy
-YW50ZWQgdGhlIHJlcXVlc3QuDQoNClRoYW5rcywNCllhemVuDQo=
+On Fri, 5 Jan 2018 10:10:51 -0700
+Logan Gunthorpe <logang@deltatee.com> wrote:
+
+> On 04/01/18 08:33 PM, Alex Williamson wrote:
+> > That's exactly what IOMMU groups represent, the smallest set of devices
+> > which have DMA isolation from other devices.  By poking this hole, the
+> > IOMMU group is invalid.  We cannot turn off ACS only for a specific
+> > device, in order to enable p2p it needs to be disabled at every
+> > downstream port between the devices where we want to enable p2p.
+> > Depending on the topology, that could mean we're also enabling p2p for
+> > unrelated devices.  Those unrelated devices might be in active use and
+> > the p2p IOVAs now have a different destination which is no longer IOMMU
+> > translated.  
+> 
+> Oh, so IOMMU groups are created based on the existing hierarchy at boot 
+> time and not based on the user's needs for isolation?
+
+Yes, IOMMU groups expose the isolation of the system as devices are
+discovered.  Nothing currently accounts for intentionally decreasing
+the isolation between devices.  Thanks,
+
+Alex
