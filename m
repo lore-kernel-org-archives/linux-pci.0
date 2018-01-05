@@ -1,211 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:50537 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751150AbeAULgT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 21 Jan 2018 06:36:19 -0500
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
-        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
-        <dann.frazier@canonical.com>
-CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v11 0/9] LPC: legacy ISA I/O support
-Date: Sun, 21 Jan 2018 20:27:18 +0800
-Message-ID: <1516537647-50553-1-git-send-email-john.garry@huawei.com>
+Return-Path: <SRS0=5z9M=EA=redhat.com=jglisse@kernel.org>
+Return-Path: <SRS0=5z9M=EA=redhat.com=jglisse@kernel.org>
+Date: Fri, 5 Jan 2018 01:47:01 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+	linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Keith Busch <keith.busch@intel.com>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgg@mellanox.com>,
+	Max Gurtovoy <maxg@mellanox.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client devices
+Message-ID: <20180105064547.GA3212@redhat.com>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-5-logang@deltatee.com>
+ <20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
+ <20180104153551.3118f71b@t450s.home>
+ <20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
+ <20180104203300.79487c98@w520.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180104203300.79487c98@w520.home>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset supports the IPMI-bt device attached to the Low-Pin-Count
-interface implemented on Hisilicon Hip06/Hip07 SoC.
-                        -----------
-                        | LPC host|
-                        |         |
-                        -----------
-                             |
-                _____________V_______________LPC
-                  |                       |
-                  V                       V
-                                     ------------
-                                     |  BT(ipmi)|
-                                     ------------
+On Thu, Jan 04, 2018 at 08:33:00PM -0700, Alex Williamson wrote:
+> On Thu, 4 Jan 2018 17:00:47 -0700
+> Logan Gunthorpe <logang@deltatee.com> wrote:
+> 
+> > On 04/01/18 03:35 PM, Alex Williamson wrote:
+> > > Yep, flipping these ACS bits invalidates any IOMMU groups that depend
+> > > on the isolation of that downstream port and I suspect also any peers
+> > > within the same PCI slot of that port and their downstream devices.  The
+> > > entire sub-hierarchy grouping needs to be re-evaluated.  This
+> > > potentially affects running devices that depend on that isolation, so
+> > > I'm not sure how that happens dynamically.  A boot option might be
+> > > easier.  Thanks,  
+> > 
+> > I don't see how this is the case in current kernel code. It appears to 
+> > only enable ACS globally if the IOMMU requests it.
+> 
+> IOMMU groups don't exist unless the IOMMU is enabled and x86 and ARM
+> both request ACS be enabled if an IOMMU is present, so I'm not sure
+> what you're getting at here.  Also, in reply to your other email, if
+> the IOMMU is enabled, every device handled by the IOMMU is a member of
+> an IOMMU group, see struct device.iommu_group.  There's an
+> iommu_group_get() accessor to get a reference to it.
+>  
+> > I also don't see how turning off ACS isolation for a specific device is 
+> > going to hurt anything. The IOMMU should still be able to keep going on 
+> > unaware that anything has changed. The only worry is that a security 
+> > hole may now be created if a user was relying on the isolation between 
+> > two devices that are in different VMs or something. However, if a user 
+> > was relying on this, they probably shouldn't have turned on P2P in the 
+> > first place.
+> 
+> That's exactly what IOMMU groups represent, the smallest set of devices
+> which have DMA isolation from other devices.  By poking this hole, the
+> IOMMU group is invalid.  We cannot turn off ACS only for a specific
+> device, in order to enable p2p it needs to be disabled at every
+> downstream port between the devices where we want to enable p2p.
+> Depending on the topology, that could mean we're also enabling p2p for
+> unrelated devices.  Those unrelated devices might be in active use and
+> the p2p IOVAs now have a different destination which is no longer IOMMU
+> translated.
+>  
+> > We started with a fairly unintelligent choice to simply disable ACS on 
+> > any kernel that had CONFIG_PCI_P2P set. However, this did not seem like 
+> > a good idea going forward. Instead, we now selectively disable the ACS 
+> > bit only on the downstream ports that are involved in P2P transactions. 
+> > This seems like the safest choice and still allows people to (carefully) 
+> > use P2P adjacent to other devices that need to be isolated.
+> 
+> I don't see that the code is doing much checking that adjacent devices
+> are also affected by the p2p change and of course the IOMMU group is
+> entirely invalid once the p2p holes start getting poked.
+> 
+> > I don't think anyone wants another boot option that must be set in order 
+> > to use this functionality (and only some hardware would require this). 
+> > That's just a huge pain for users.
+> 
+> No, but nor do we need IOMMU groups that no longer represent what
+> they're intended to describe or runtime, unchecked routing changes
+> through the topology for devices that might already be using
+> conflicting IOVA ranges.  Maybe soft hotplugs are another possibility,
+> designate a sub-hierarchy to be removed and re-scanned with ACS
+> disabled.  Otherwise it seems like disabling and re-enabling ACS needs
+> to also handle merging and splitting groups dynamically.  Thanks,
+> 
 
-When master accesses those peripherals beneath the Hip06/Hip07 LPC, a specific
-LPC driver is needed to make LPC host generate the standard LPC I/O cycles with
-the target peripherals'I/O port addresses. But on curent arm64 world, there is
-no real I/O accesses. All the I/O operations through in/out accessors are based
-on MMIO ranges; on Hip06/Hip07 LPC the I/O accesses are performed through driver
-specific accessors rather than MMIO.
-To solve this issue and keep the relevant existing peripherals' drivers untouched,
-this patchset:
-   - introduces a generic I/O space management framework, LIBIO, to support I/O
-     operations on host controllers operating either on MMIO buses or on buses
-     requiring specific driver I/O accessors;
-   - redefines the in/out accessors to provide a unified interface for both MMIO
-     and driver specific I/O operations. Using LIBIO, th call of in/out() from
-     the host children drivers, such as ipmi-si, will be redirected to the
-     corresponding device-specific I/O hooks to perform the I/O accesses.
+Dumb question, can we use a PCI bar address of one device into the
+IOMMU page table of another address ie like we would DMA map a
+regular system page ?
 
-Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC peripherals can
-be supported without any changes on the existing ipmi-si driver.
+It would be much better in my view to follow down such path if that
+is at all possible from hardware point of view (i am not sure where
+to dig in the specification to answer my above question).
 
-The whole patchset has been tested on Hip07 D05 board both using DTB and ACPI.
-
-Differences to v10:
-    - dropped CONFIG_LOGIC_PIO. Reason is that CONFIG_PCI
-      depends on this, and CONFIG_PCI is a per-arch CONFIG.
-      So we would require all arch's kconfig to select this.
-    - Addressed Dann Frazier's comments on LPC driver, and
-      sopme other cleanup
-    - Moved logic_pio.h to be included in generic asm io.h
-    - Fixed ACPI indirect IO host setup to handle >1 child
-    - Relocated ACPI indirect IO host setup code to
-      drivers/acpi
-    - Rebased to linux next-20180118
-
-Changes from v9:
-  - patch 2 has been split into 3 patches according to Bjorn comments on
-    v9 thread
-  - patch 1 has been reworked accordign to Bjorn comments on v9
-  - now logic_pio_trans_hwaddr() has a sanity check to make sure the resource
-    size fits into the assigned range
-  - in patch 5 the MFD framework has been used to probe the LPC children
-    according to the suggestion from Mika Westerberg
-  - Maintaner has changed to Huawei Linuxarm mailing list
-
-Changes from v8:
-  - Simplified LIB IO framewrok
-  - Moved INDIRECT PIO ACPI framework under acpi/arm64
-  - Renamed occurrences of "lib io" and "indirect io" to "lib pio" and
-    "indirect pio" to keep the patchset nomenclature consistent
-  - Removed Alignment reuqirements
-  - Moved LPC specific code out of ACPI common framework
-  - Now PIO indirect HW ranges can overlap
-  - Changed HiSilicon LPC driver maintainer (Gabriele Paoloni now) and split
-    maintaner file modifications in a separate commit
-  - Removed the commit with the DT nodes support for hip06 and hip07 (to be
-    pushed separately)
-  - Added a checking on ioport_map() not to break that function as Arnd points
-    out in V7 review thread;
-  - fixed the compile issues on alpha, m68k;
-
-Changes from V7:
-  - Based on Arnd's comment, rename the LIBIO as LOGIC_PIO;
-  - Improved the mapping process in LOGIC_PIO to gain better efficiency when
-    redirecting the I/O accesses to right device driver;
-  - To reduce the impact on PCI MMIO to a minimum, add a new
-    CONFIG_INDIRECT_PIO for indirect-IO hosts/devices;
-  - Added a new ACPI handler for indirect-IO hosts/devices;
-  - Fixed the compile issues on V6;
-
-Changes from V6:
-  - According to the comments from Bjorn and Alex, merge PCI IO and indirect-IO
-    into a generic I/O space management, LIBIO;
-  - Adopted the '_DEP' to replace the platform bus notifier. In this way, we can
-    ensure the LPC peripherals' I/O resources had been translated to logical IO
-    before the LPC peripheral enumeration;
-  - Replaced the rwlock with rcu list based on Alex's suggestion;
-  - Applied relaxed write/read to LPC driver;
-  - Some bugs fixing and some optimazations based on the comments of V6;
-
-Changes from V5:
-  - Made the extio driver more generic and locate in lib/;
-  - Supported multiple indirect-IO bus instances;
-  - Extended the pci_register_io_range() to support indirect-IO, then dropped
-  the I/O reservation used in previous patchset;
-  - Reimplemented the ACPI LPC support;
-  - Fixed some bugs, including the compile error on other archs, the module
-  building failure found by Ming Lei, etc;
-
-Changes from V4:
-  - Some revises based on the comments from Bjorn, Rob on V4;
-  - Fixed the compile error on some platforms, such as openrisc;
-
-Changes from V3:
-  - UART support deferred to a separate patchset; This patchset only support
-  ipmi device under LPC;
-  - LPC bus I/O range is fixed to 0 ~ (PCIBIOS_MIN_IO - 1), which is separeted
-  from PCI/PCIE PIO space;
-  - Based on Arnd's remarks, removed the ranges property from Hip06 lpc dts and
-  added a new fixup function, of_isa_indirect_io(), to get the I/O address
-  directly from LPC dts configurations;
-  - Support in(w,l)/out(w,l) for Hip06 lpc I/O;
-  - Decouple the header file dependency on the gerenic io.h by defining in/out
-  as normal functions in c file;
-  - removed unused macro definitions in the LPC driver;
-
-Changes from V2:
-  - Support the PIO retrieval from the linux PIO generated by
-  pci_address_to_pio. This method replace the 4K PIO reservation in V2;
-  - Support the flat-tree earlycon;
-  - Some revises based on Arnd's remarks;
-  - Make sure the linux PIO range allocated to Hip06 LPC peripherals starts
-  from non-ZERO;
-
-Changes from V1:
-  - Support the ACPI LPC device;
-  - Optimize the dts LPC driver in ISA compatible mode;
-  - Reserve the IO range below 4K in avoid the possible conflict with PCI host
-  IO ranges;
-  - Support the LPC uart and relevant earlycon;
-
-V110 thread here: https://lkml.org/lkml/2017/10/27/465
-V9 thread here: https://lkml.org/lkml/2017/5/25/263
-V8 thread here: https://lkml.org/lkml/2017/3/30/619
-V7 thread here: https://lkml.org/lkml/2017/3/12/279
-v6 thread here: https://lkml.org/lkml/2017/1/24/25
-v5 thread here: https://lkml.org/lkml/2016/11/7/955
-v4 thread here: https://lkml.org/lkml/2016/10/20/149
-v3 thread here: https://lkml.org/lkml/2016/9/14/326
-v2 thread here: https://lkml.org/lkml/2016/9/7/356
-v1 thread here: https://lkml.org/lkml/2015/12/29/154
-
-
-Gabriele Paoloni (3):
-  PCI: Remove unused __weak attribute in pci_register_io_range()
-  PCI: Add fwnode handler as input param of pci_register_io_range()
-  PCI: Apply the new generic I/O management on PCI IO hosts
-
-John Garry (3):
-  ACPI: Translate the I/O range of non-MMIO devices before scanning
-  LPC, ACPI: Add the HISI LPC ACPI support
-  MAINTAINERS: Add maintainer for HiSilicon LPC driver
-
-Zhichang Yuan (3):
-  LIB: Introduce a generic PIO mapping method
-  OF: Add missing I/O range exception for indirect-IO devices
-  LPC: Support the LPC host on Hip06/Hip07 with DT bindings
-
- .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
- MAINTAINERS                                        |   7 +
- drivers/acpi/arm64/Makefile                        |   1 +
- drivers/acpi/arm64/acpi_indirectio.c               | 282 +++++++++++
- drivers/acpi/internal.h                            |   5 +
- drivers/acpi/pci_root.c                            |   8 +-
- drivers/acpi/scan.c                                |   1 +
- drivers/bus/Kconfig                                |   8 +
- drivers/bus/Makefile                               |   1 +
- drivers/bus/hisi_lpc.c                             | 541 +++++++++++++++++++++
- drivers/of/address.c                               |  95 +++-
- drivers/pci/pci.c                                  |  98 +---
- include/asm-generic/io.h                           |   4 +-
- include/linux/logic_pio.h                          | 141 ++++++
- include/linux/pci.h                                |   3 +-
- lib/Kconfig                                        |  15 +
- lib/Makefile                                       |   2 +
- lib/logic_pio.c                                    | 286 +++++++++++
- 18 files changed, 1430 insertions(+), 101 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
- create mode 100644 drivers/acpi/arm64/acpi_indirectio.c
- create mode 100644 drivers/bus/hisi_lpc.c
- create mode 100644 include/linux/logic_pio.h
- create mode 100644 lib/logic_pio.c
-
--- 
-1.9.1
+Cheers,
+Jérôme
