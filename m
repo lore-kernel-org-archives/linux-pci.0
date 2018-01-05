@@ -1,194 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v4 2/7] PCI: OF: Add generic function to parse and allocate PCI resources
-Date: Thu, 18 Jan 2018 23:52:47 +0100
-Message-Id: <f5d8cadb9afe6856d31a9743f174f80e75844017.1516314953.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=UQ06=EA=amd.com=Felix.Kuehling@kernel.org>
+Return-Path: <SRS0=UQ06=EA=amd.com=Felix.Kuehling@kernel.org>
+From: Felix Kuehling <Felix.Kuehling@amd.com>
+To: linux-pci@vger.kernel.org,
+	helgaas@kernel.org
+Cc: oded.gabbay@gmail.com,
+	Jay.Cornwall@amd.com,
+	Felix Kuehling <Felix.Kuehling@amd.com>,
+	Ram Amrani <Ram.Amrani@cavium.com>,
+	Doug Ledford <dledford@redhat.com>
+Subject: [PATCH 2/2] RDMA/qedr: Use pci_enable_atomic_ops_to_root
+Date: Thu,  4 Jan 2018 19:45:00 -0500
+Message-Id: <1515113100-4718-2-git-send-email-Felix.Kuehling@amd.com>
+In-Reply-To: <1515113100-4718-1-git-send-email-Felix.Kuehling@amd.com>
+References: <1515113100-4718-1-git-send-email-Felix.Kuehling@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch moves the gen_pci_parse_request_of_pci_ranges() function from
-drivers/pci/host/pci-host-common.c into drivers/pci/of.c to easily share
-common source code between PCI host drivers.
+Use common helper function pci_enable_atomic_ops_to_root to enable
+atomic capability.
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>
+CC: Ram Amrani <Ram.Amrani@cavium.com>
+CC: Doug Ledford <dledford@redhat.com>
+Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
 ---
- drivers/pci/host/pci-host-common.c | 49 ++----------------------------------
- drivers/pci/of.c                   | 51 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h                |  9 +++++++
- 3 files changed, 62 insertions(+), 47 deletions(-)
+ drivers/infiniband/hw/qedr/main.c | 59 ++++++---------------------------------
+ 1 file changed, 8 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index c4b891c84703..a613ea310e76 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -24,50 +24,6 @@
- #include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
+diff --git a/drivers/infiniband/hw/qedr/main.c b/drivers/infiniband/hw/qedr/main.c
+index 50812b3..b378647 100644
+--- a/drivers/infiniband/hw/qedr/main.c
++++ b/drivers/infiniband/hw/qedr/main.c
+@@ -430,59 +430,16 @@ static void qedr_remove_sysfiles(struct qedr_dev *dev)
  
--static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
--		       struct list_head *resources, struct resource **bus_range)
--{
--	int err, res_valid = 0;
--	struct device_node *np = dev->of_node;
--	resource_size_t iobase;
--	struct resource_entry *win, *tmp;
--
--	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
--	if (err)
--		return err;
--
--	err = devm_request_pci_bus_resources(dev, resources);
--	if (err)
--		return err;
--
--	resource_list_for_each_entry_safe(win, tmp, resources) {
--		struct resource *res = win->res;
--
--		switch (resource_type(res)) {
--		case IORESOURCE_IO:
--			err = pci_remap_iospace(res, iobase);
--			if (err) {
--				dev_warn(dev, "error %d: failed to map resource %pR\n",
--					 err, res);
--				resource_list_destroy_entry(win);
--			}
--			break;
--		case IORESOURCE_MEM:
--			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
--			break;
--		case IORESOURCE_BUS:
--			*bus_range = res;
--			break;
--		}
--	}
--
--	if (res_valid)
--		return 0;
--
--	dev_err(dev, "non-prefetchable memory resource required\n");
--	return -EINVAL;
--}
--
- static void gen_pci_unmap_cfg(void *ptr)
+ static void qedr_pci_set_atomic(struct qedr_dev *dev, struct pci_dev *pdev)
  {
- 	pci_ecam_free((struct pci_config_window *)ptr);
-@@ -82,9 +38,9 @@ static struct pci_config_window *gen_pci_init(struct device *dev,
- 	struct pci_config_window *cfg;
+-	struct pci_dev *bridge;
+-	u32 ctl2, cap2;
+-	u16 flags;
+-	int rc;
+-
+-	bridge = pdev->bus->self;
+-	if (!bridge)
+-		goto disable;
+-
+-	/* Check atomic routing support all the way to root complex */
+-	while (bridge->bus->parent) {
+-		rc = pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
+-		if (rc || ((flags & PCI_EXP_FLAGS_VERS) < 2))
+-			goto disable;
+-
+-		rc = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap2);
+-		if (rc)
+-			goto disable;
++	int rc = pci_enable_atomic_ops_to_root(pdev,
++					       PCI_EXP_DEVCAP2_ATOMIC_COMP64);
  
- 	/* Parse our PCI ranges and request their resources */
--	err = gen_pci_parse_request_of_pci_ranges(dev, resources, &bus_range);
-+	err = pci_parse_request_of_pci_ranges(dev, resources, &bus_range);
- 	if (err)
--		goto err_out;
-+		return ERR_PTR(err);
- 
- 	err = of_address_to_resource(dev->of_node, 0, &cfgres);
- 	if (err) {
-@@ -135,7 +91,6 @@ int pci_host_common_probe(struct platform_device *pdev,
- 	of_pci_check_probe_only();
- 
- 	/* Parse and map our Configuration Space windows */
--	INIT_LIST_HEAD(&resources);
- 	cfg = gen_pci_init(dev, &resources, ops);
- 	if (IS_ERR(cfg))
- 		return PTR_ERR(cfg);
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index e112da11630e..54e210501b73 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -88,3 +88,54 @@ struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
- 	return NULL;
- #endif
+-		rc = pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2, &ctl2);
+-		if (rc)
+-			goto disable;
+-
+-		if (!(cap2 & PCI_EXP_DEVCAP2_ATOMIC_ROUTE) ||
+-		    (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK))
+-			goto disable;
+-		bridge = bridge->bus->parent->self;
++	if (rc) {
++		dev->atomic_cap = IB_ATOMIC_NONE;
++		DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability disabled\n");
++	} else {
++		dev->atomic_cap = IB_ATOMIC_GLOB;
++		DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability enabled\n");
+ 	}
+-
+-	rc = pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
+-	if (rc || ((flags & PCI_EXP_FLAGS_VERS) < 2))
+-		goto disable;
+-
+-	rc = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap2);
+-	if (rc || !(cap2 & PCI_EXP_DEVCAP2_ATOMIC_COMP64))
+-		goto disable;
+-
+-	/* Set atomic operations */
+-	pcie_capability_set_word(pdev, PCI_EXP_DEVCTL2,
+-				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
+-	dev->atomic_cap = IB_ATOMIC_GLOB;
+-
+-	DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability enabled\n");
+-
+-	return;
+-
+-disable:
+-	pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL2,
+-				   PCI_EXP_DEVCTL2_ATOMIC_REQ);
+-	dev->atomic_cap = IB_ATOMIC_NONE;
+-
+-	DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability disabled\n");
+-
  }
-+
-+int pci_parse_request_of_pci_ranges(struct device *dev,
-+				    struct list_head *resources,
-+				    struct resource **bus_range)
-+{
-+	int err, res_valid = 0;
-+	struct device_node *np = dev->of_node;
-+	resource_size_t iobase;
-+	struct resource_entry *win, *tmp;
-+
-+	INIT_LIST_HEAD(resources);
-+	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
-+	if (err)
-+		return err;
-+
-+	err = devm_request_pci_bus_resources(dev, resources);
-+	if (err)
-+		goto out_release_res;
-+
-+	resource_list_for_each_entry_safe(win, tmp, resources) {
-+		struct resource *res = win->res;
-+
-+		switch (resource_type(res)) {
-+		case IORESOURCE_IO:
-+			err = pci_remap_iospace(res, iobase);
-+			if (err) {
-+				dev_warn(dev, "error %d: failed to map resource %pR\n",
-+					 err, res);
-+				resource_list_destroy_entry(win);
-+			}
-+			break;
-+		case IORESOURCE_MEM:
-+			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-+			break;
-+		case IORESOURCE_BUS:
-+			if (bus_range)
-+				*bus_range = res;
-+			break;
-+		}
-+	}
-+
-+	if (res_valid)
-+		return 0;
-+
-+	dev_err(dev, "non-prefetchable memory resource required\n");
-+	err = -EINVAL;
-+
-+ out_release_res:
-+	pci_free_resource_list(resources);
-+	return err;
-+}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e0ec63e1c7d4..4a4cbd444e1e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2163,6 +2163,9 @@ void pci_release_of_node(struct pci_dev *dev);
- void pci_set_bus_of_node(struct pci_bus *bus);
- void pci_release_bus_of_node(struct pci_bus *bus);
- struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus);
-+int pci_parse_request_of_pci_ranges(struct device *dev,
-+				    struct list_head *resources,
-+				    struct resource **bus_range);
  
- /* Arch may override this (weak) */
- struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
-@@ -2187,6 +2190,12 @@ static inline struct device_node *
- pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
- static inline struct irq_domain *
- pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
-+static inline int pci_parse_request_of_pci_ranges(struct device *dev,
-+						  struct list_head *resources,
-+						  struct resource **bus_range)
-+{
-+	return -EINVAL;
-+}
- #endif	/* CONFIG_OF */
- 
- #ifdef CONFIG_ACPI
+ static const struct qed_rdma_ops *qed_ops;
 -- 
-2.11.0
+2.7.4
