@@ -1,47 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: dwc: dra7xx: add back CONFIG_PCI dependency for endpoint
-Date: Thu, 18 Jan 2018 14:15:54 +0100
-Message-Id: <20180118131612.871559-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=o8dQ=EA=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=o8dQ=EA=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+ Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-2-logang@deltatee.com>
+ <20180104215941.GG189897@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <debc98f9-9c31-26a8-08e2-a2e31fc25e34@deltatee.com>
+Date: Thu, 4 Jan 2018 17:20:19 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180104215941.GG189897@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 01/12] pci-p2p: Support peer to peer memory
 List-ID: <linux-pci.vger.kernel.org>
 
-It was a nice idea to split out the PCI host and endpoint mode configuration
-into separate options. Unfortunately it doesn't build:
 
-drivers/pci/dwc/pci-dra7xx.c:229:11: error: 'pci_irqd_intx_xlate' undeclared here (not in a function)
 
-This is certainly a fixable problem, but since it's clear that this
-configuration was never tested, let's maybe revert back to the
-dependency for now, until it can be done in a way that works
-better.
+On 04/01/18 02:59 PM, Bjorn Helgaas wrote:
+> On Thu, Jan 04, 2018 at 12:01:26PM -0700, Logan Gunthorpe wrote:
+>> Some PCI devices may have memory mapped in a BAR space that's
+>> intended for use in Peer-to-Peer transactions. In order to enable
+>> such transactions the memory must be registered with ZONE_DEVICE pages
+>> so it can be used by DMA interfaces in existing drivers.
+>> ...
+> 
+>> + * pci_p2pmem_alloc_sgl - allocate p2p memory in an sgl
+>> + * @pdev:	the device to allocate memory from
+>> + * @sgl:	the allocated sgl
+>> + * @nents:      the number of sgs in the list
+>> + * @length:     number of bytes to allocate
+> 
+> Your later patches use "SGL" in English text.  If that's the conventional
+> capitalization, please use it here, too.
+> 
 
-Fixes: b052835c6385 ("PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep mode")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/pci/dwc/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'm not sure there is a convention. scatterlist.h uses 'sglist' and 
+'scatterlist' so I'll just change my comments to use the latter.
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 0fb96c7754de..540419527a92 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -36,7 +36,7 @@ config PCI_DRA7XX_HOST
- config PCI_DRA7XX_EP
- 	bool "TI DRA7xx PCIe controller Endpoint Mode"
- 	depends on SOC_DRA7XX || COMPILE_TEST
--	depends on PCI_ENDPOINT
-+	depends on PCI && PCI_ENDPOINT
- 	depends on OF && HAS_IOMEM && TI_PIPE3
- 	select PCIE_DW_EP
- 	select PCI_DRA7XX
--- 
-2.9.0
+Logan
