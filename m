@@ -1,80 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 3 Jan 2018 13:38:27 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        kernel-janitors@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 04/12] PCI: qcom: account for const type of
- of_device_id.data
-In-Reply-To: <20180103122237.GD26554@red-moon>
-Message-ID: <alpine.DEB.2.20.1801031338140.23130@hadrien>
-References: <1514899688-27844-1-git-send-email-Julia.Lawall@lip6.fr> <1514899688-27844-5-git-send-email-Julia.Lawall@lip6.fr> <20180103122237.GD26554@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:45619 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751100AbeAEBOl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 20:14:41 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Brian Norris <briannorris@chromium.org>
+Cc: JeffyChen <jeffy.chen@rock-chips.com>, tony@atomide.com,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
+        dianders@chromium.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE# signal for OF
+Date: Fri, 05 Jan 2018 02:13:33 +0100
+Message-ID: <2806186.IK6EZBC0cX@aspire.rjw.lan>
+In-Reply-To: <20180105004130.GA151625@google.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com> <5491520.JsEYlZiECc@aspire.rjw.lan> <20180105004130.GA151625@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Friday, January 5, 2018 1:41:31 AM CET Brian Norris wrote:
+> Hi,
+> 
+> Trying to catch up on this thread...
+> 
+> On Wed, Dec 27, 2017 at 01:57:07AM +0100, Rafael J. Wysocki wrote:
+> > On Tuesday, December 26, 2017 2:06:47 AM CET JeffyChen wrote:
+> > > Hi Rafael,
+> > > 
+> > > Thanks for your reply :)
+> > > 
+> > > On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
+> > > >> >+
+> > > >> >+	dn = pci_device_to_OF_node(ppdev);
+> > > >> >+	if (!dn)
+> > > >> >+		return 0;
+> > > >> >+
+> > > >> >+	irq = of_irq_get_byname(dn, "wakeup");
+> > > > Why is this a property of the bridge and not of the device itself?
+> 
+> Wait, isn't 'dn' the port node, not the bridge node?
 
+I may be confused about the structure you have in DT.
 
-On Wed, 3 Jan 2018, Lorenzo Pieralisi wrote:
+In the device hierarchy PCIe ports are represented as bridges.
 
-> On Tue, Jan 02, 2018 at 02:28:00PM +0100, Julia Lawall wrote:
-> > This driver creates various const structures that it stores in the
-> > data field of an of_device_id array.
-> >
-> > Adding const to the declaration of the location that receives the
-> > const value from the data field ensures that the compiler will
-> > continue to check that the value is not modified.  Furthermore, the
-> > const-discarding cast on the extraction from the data field is no
-> > longer needed.
-> >
-> > Done using Coccinelle.
-> >
-> > Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> >
-> > ---
-> >  drivers/pci/dwc/pcie-qcom.c |    4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> Hi Julia,
->
-> I am happy to take this patch through the PCI tree unless you see a
-> problem with that, please let me know.
+> > > That is suggested by Brian, because in that way, the wakeup pin would 
+> > > not "tied to what exact device is installed (or no device, if it's a slot)."
+> 
+> I believe my thinking has evolved a bit over time, and I definitely am
+> not the one true authority on this. I'll explain my main concerns, and
+> whatever solution resolves these concerns is fine with me.
+> 
+> * I was primarily interested in avoiding handling WAKE# in the endpoint
+>   drivers (e.g., as mwifiex is today).
 
-Please take it.  Thanks.
+OK, everybody on this thread is interested in that. :-)
 
-julia
+> * I was also interested in not having to redefine a new DT device
+>   node (with new "pciABCD,1234" compatible property) for each new device
+>   attached. That just won't work for removable cards.
 
->
-> Thanks,
-> Lorenzo
->
-> > diff -u -p a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> > --- a/drivers/pci/dwc/pcie-qcom.c
-> > +++ b/drivers/pci/dwc/pcie-qcom.c
-> > @@ -171,7 +171,7 @@ struct qcom_pcie {
-> >  	union qcom_pcie_resources res;
-> >  	struct phy *phy;
-> >  	struct gpio_desc *reset;
-> > -	struct qcom_pcie_ops *ops;
-> > +	const struct qcom_pcie_ops *ops;
-> >  };
-> >
-> >  #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-> > @@ -1234,7 +1234,7 @@ static int qcom_pcie_probe(struct platfo
-> >
-> >  	pcie->pci = pci;
-> >
-> > -	pcie->ops = (struct qcom_pcie_ops *)of_device_get_match_data(dev);
-> > +	pcie->ops = of_device_get_match_data(dev);
-> >
-> >  	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
-> >  	if (IS_ERR(pcie->reset))
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+So if you make it the property of a bridge, it should be fine (as long
+as the bridge itself is not removable).
+
+> I need to reread the rest of this thread a few times to really
+> understand what Rafael and Tony are discussing. But I feel like some of
+> this is still moving away from the second point above.
+> 
+> > But I don't think it works when there are two devices using different WAKE#
+> > interrupt lines under the same bridge.  Or how does it work then?
+
+We seem to have agreed that this case needs to be neglected here.
+
+The "wakeup-interrupt" property at the bridge level basically has to be defined
+as the wakeup interrupt for all devices on the bus under the bridge.
+
+Thanks,
+Rafael
