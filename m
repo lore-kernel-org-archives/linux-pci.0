@@ -1,108 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 4.mo68.mail-out.ovh.net ([46.105.59.63]:58144 "EHLO
-        4.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751997AbeA1Usj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jan 2018 15:48:39 -0500
-Received: from player776.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo68.mail-out.ovh.net (Postfix) with ESMTP id DC099BC40C
-        for <linux-pci@vger.kernel.org>; Sun, 28 Jan 2018 21:42:24 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v5 06/11] dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host controller
-Date: Sun, 28 Jan 2018 21:40:20 +0100
-Message-Id: <7179a04aa55d145a509d383f9581890ca11ab544.1517170521.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+Received: from ale.deltatee.com ([207.54.116.67]:46336 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752121AbeAESO6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Jan 2018 13:14:58 -0500
+To: Marta Rybczynska <mrybczyn@kalray.eu>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-10-logang@deltatee.com>
+ <281272464.115248600.1515166226009.JavaMail.zimbra@kalray.eu>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <a284e33f-c10d-0540-cd24-ad1993a042b6@deltatee.com>
+Date: Fri, 5 Jan 2018 11:14:38 -0700
+MIME-Version: 1.0
+In-Reply-To: <281272464.115248600.1515166226009.JavaMail.zimbra@kalray.eu>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 09/12] nvme-pci: Use PCI p2pmem subsystem to manage the
+ CMB
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Scott Telford <stelford@cadence.com>
 
-This patch adds documentation for the DT bindings of the Cadence PCIe
-controller when configured in host (Root Complex) mode.
 
-Signed-off-by: Scott Telford <stelford@cadence.com>
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- .../bindings/pci/cdns,cdns-pcie-host.txt           | 60 ++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+On 05/01/18 08:30 AM, Marta Rybczynska wrote:
+>> @@ -429,10 +429,7 @@ static void __nvme_submit_cmd(struct nvme_queue *nvmeq,
+>> {
+>> 	u16 tail = nvmeq->sq_tail;
+>>
+>> -	if (nvmeq->sq_cmds_io)
+>> -		memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
+>> -	else
+>> -		memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
+>> +	memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
+>>
+> 
+> Why is it always memcpy() and not memcpy_toio()? I'd expect something like
+> if (nvmeq->sq_cmds_is_io)
+> 	memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
+> else
+> 	memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
 
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-new file mode 100644
-index 000000000000..20a33f38f69d
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-@@ -0,0 +1,60 @@
-+* Cadence PCIe host controller
-+
-+This PCIe controller inherits the base properties defined in
-+host-generic-pci.txt.
-+
-+Required properties:
-+- compatible: Should contain "cdns,cdns-pcie-host" to identify the IP used.
-+- reg: Should contain the controller register base address, PCIe configuration
-+  window base address, and AXI interface region base address respectively.
-+- reg-names: Must be "reg", "cfg" and "mem" respectively.
-+- #address-cells: Set to <3>
-+- #size-cells: Set to <2>
-+- device_type: Set to "pci"
-+- ranges: Ranges for the PCI memory and I/O regions
-+- #interrupt-cells: Set to <1>
-+- interrupt-map-mask and interrupt-map: Standard PCI properties to define the
-+  mapping of the PCIe interface to interrupt numbers.
-+
-+Optional properties:
-+- cdns,max-outbound-regions: Set to maximum number of outbound regions
-+  (default 32)
-+- cdns,no-bar-match-nbits: Set into the no BAR match register to configure the
-+  number of least significant bits kept during inbound (PCIe -> AXI) address
-+  translations (default 32)
-+- vendor-id: The PCI vendor ID (16 bits, default is design dependent)
-+- device-id: The PCI device ID (16 bits, default is design dependent)
-+
-+Example:
-+
-+pcie@fb000000 {
-+	compatible = "cdns,cdns-pcie-host";
-+	device_type = "pci";
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	bus-range = <0x0 0xff>;
-+	linux,pci-domain = <0>;
-+	cdns,max-outbound-regions = <16>;
-+	cdns,no-bar-match-nbits = <32>;
-+	vendor-id = /bits/ 16 <0x17cd>;
-+	device-id = /bits/ 16 <0x0200>;
-+
-+	reg = <0x0 0xfb000000  0x0 0x01000000>,
-+	      <0x0 0x41000000  0x0 0x00001000>,
-+	      <0x0 0x40000000  0x0 0x04000000>;
-+	reg-names = "reg", "cfg", "mem";
-+
-+	ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
-+		 <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
-+
-+	#interrupt-cells = <0x1>;
-+
-+	interrupt-map = <0x0 0x0 0x0  0x1  &gic  0x0 0x0 0x0 14 0x1
-+			 0x0 0x0 0x0  0x2  &gic  0x0 0x0 0x0 15 0x1
-+			 0x0 0x0 0x0  0x3  &gic  0x0 0x0 0x0 16 0x1
-+			 0x0 0x0 0x0  0x4  &gic  0x0 0x0 0x0 17 0x1>;
-+
-+	interrupt-map-mask = <0x0 0x0 0x0  0x7>;
-+
-+	msi-parent = <&its_pci>;
-+};
--- 
-2.11.0
+We're going on the assumption that memory mapped with 
+devm_memremap_pages() can be treated as regular memory. So memcpy_toio 
+is not necessary for P2P memory.
+
+Logan
