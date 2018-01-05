@@ -1,129 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:65218 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751737AbeA2V2G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jan 2018 16:28:06 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 3/6] PCI/DPC: Remove rp_pio_status from dpc struct
-Date: Mon, 29 Jan 2018 14:31:42 -0700
-Message-Id: <20180129213145.26068-3-keith.busch@intel.com>
-In-Reply-To: <20180129213145.26068-1-keith.busch@intel.com>
-References: <20180129213145.26068-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
+Date: Fri, 5 Jan 2018 08:41:08 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jerome Glisse <jglisse@redhat.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas
+ <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
+ Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
+ <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
+ <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client
+ devices
+Message-ID: <20180105084108.47a45561@t450s.home>
+In-Reply-To: <20180105064547.GA3212@redhat.com>
+References: <20180104190137.7654-1-logang@deltatee.com>
+	<20180104190137.7654-5-logang@deltatee.com>
+	<20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
+	<20180104153551.3118f71b@t450s.home>
+	<20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
+	<20180104203300.79487c98@w520.home>
+	<20180105064547.GA3212@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-we don't need to save the rp pio status across multiple contexts anymore
-as all DPC event handling occurs in a single work queue context.
+On Fri, 5 Jan 2018 01:47:01 -0500
+Jerome Glisse <jglisse@redhat.com> wrote:
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/pcie-dpc.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+> On Thu, Jan 04, 2018 at 08:33:00PM -0700, Alex Williamson wrote:
+> > On Thu, 4 Jan 2018 17:00:47 -0700
+> > Logan Gunthorpe <logang@deltatee.com> wrote:
+> >   
+> > > On 04/01/18 03:35 PM, Alex Williamson wrote:  
+> > > > Yep, flipping these ACS bits invalidates any IOMMU groups that depend
+> > > > on the isolation of that downstream port and I suspect also any peers
+> > > > within the same PCI slot of that port and their downstream devices.  The
+> > > > entire sub-hierarchy grouping needs to be re-evaluated.  This
+> > > > potentially affects running devices that depend on that isolation, so
+> > > > I'm not sure how that happens dynamically.  A boot option might be
+> > > > easier.  Thanks,    
+> > > 
+> > > I don't see how this is the case in current kernel code. It appears to 
+> > > only enable ACS globally if the IOMMU requests it.  
+> > 
+> > IOMMU groups don't exist unless the IOMMU is enabled and x86 and ARM
+> > both request ACS be enabled if an IOMMU is present, so I'm not sure
+> > what you're getting at here.  Also, in reply to your other email, if
+> > the IOMMU is enabled, every device handled by the IOMMU is a member of
+> > an IOMMU group, see struct device.iommu_group.  There's an
+> > iommu_group_get() accessor to get a reference to it.
+> >    
+> > > I also don't see how turning off ACS isolation for a specific device is 
+> > > going to hurt anything. The IOMMU should still be able to keep going on 
+> > > unaware that anything has changed. The only worry is that a security 
+> > > hole may now be created if a user was relying on the isolation between 
+> > > two devices that are in different VMs or something. However, if a user 
+> > > was relying on this, they probably shouldn't have turned on P2P in the 
+> > > first place.  
+> > 
+> > That's exactly what IOMMU groups represent, the smallest set of devices
+> > which have DMA isolation from other devices.  By poking this hole, the
+> > IOMMU group is invalid.  We cannot turn off ACS only for a specific
+> > device, in order to enable p2p it needs to be disabled at every
+> > downstream port between the devices where we want to enable p2p.
+> > Depending on the topology, that could mean we're also enabling p2p for
+> > unrelated devices.  Those unrelated devices might be in active use and
+> > the p2p IOVAs now have a different destination which is no longer IOMMU
+> > translated.
+> >    
+> > > We started with a fairly unintelligent choice to simply disable ACS on 
+> > > any kernel that had CONFIG_PCI_P2P set. However, this did not seem like 
+> > > a good idea going forward. Instead, we now selectively disable the ACS 
+> > > bit only on the downstream ports that are involved in P2P transactions. 
+> > > This seems like the safest choice and still allows people to (carefully) 
+> > > use P2P adjacent to other devices that need to be isolated.  
+> > 
+> > I don't see that the code is doing much checking that adjacent devices
+> > are also affected by the p2p change and of course the IOMMU group is
+> > entirely invalid once the p2p holes start getting poked.
+> >   
+> > > I don't think anyone wants another boot option that must be set in order 
+> > > to use this functionality (and only some hardware would require this). 
+> > > That's just a huge pain for users.  
+> > 
+> > No, but nor do we need IOMMU groups that no longer represent what
+> > they're intended to describe or runtime, unchecked routing changes
+> > through the topology for devices that might already be using
+> > conflicting IOVA ranges.  Maybe soft hotplugs are another possibility,
+> > designate a sub-hierarchy to be removed and re-scanned with ACS
+> > disabled.  Otherwise it seems like disabling and re-enabling ACS needs
+> > to also handle merging and splitting groups dynamically.  Thanks,
+> >   
+> 
+> Dumb question, can we use a PCI bar address of one device into the
+> IOMMU page table of another address ie like we would DMA map a
+> regular system page ?
+> 
+> It would be much better in my view to follow down such path if that
+> is at all possible from hardware point of view (i am not sure where
+> to dig in the specification to answer my above question).
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index cf0398ccaeb6..f0f5f5ba71ff 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -19,7 +19,6 @@ struct dpc_dev {
- 	struct work_struct	work;
- 	u16			cap_pos;
- 	bool			rp_extensions;
--	u32			rp_pio_status;
- 	u8			rp_log_size;
- };
- 
-@@ -45,7 +44,7 @@ static const char * const rp_pio_error_string[] = {
- 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
- };
- 
--static void dpc_process_rp_pio_error(struct dpc_dev *dpc);
-+static u32 dpc_process_rp_pio_error(struct dpc_dev *dpc);
- 
- static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- {
-@@ -90,6 +89,7 @@ static void dpc_work(struct work_struct *work)
- 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
- 	struct pci_bus *parent = pdev->subordinate;
- 	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
-+	u32 pio_status = 0;
- 
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
-@@ -109,7 +109,7 @@ static void dpc_work(struct work_struct *work)
- 				     "reserved error");
- 
- 	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
--		dpc_process_rp_pio_error(dpc);
-+		pio_status = dpc_process_rp_pio_error(dpc);
- 
- 	pci_lock_rescan_remove();
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-@@ -127,17 +127,15 @@ static void dpc_work(struct work_struct *work)
- 	dpc_wait_link_inactive(dpc);
- 	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
- 		return;
--	if (dpc->rp_extensions && dpc->rp_pio_status) {
-+	if (dpc->rp_extensions && pio_status)
- 		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
--				       dpc->rp_pio_status);
--		dpc->rp_pio_status = 0;
--	}
-+				       pio_status);
- 
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
- }
- 
--static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
-+static u32 dpc_process_rp_pio_error(struct dpc_dev *dpc)
- {
- 	struct device *dev = &dpc->dev->device;
- 	struct pci_dev *pdev = dpc->dev->port;
-@@ -148,14 +146,14 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 	int i;
- 	u32 dw0, dw1, dw2, dw3;
- 	u32 log;
--	u32 prefix;
-+	u32 prefix, pio_status;
- 
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS, &status);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK, &mask);
- 	dev_err(dev, "rp_pio_status: %#010x, rp_pio_mask: %#010x\n",
- 		status, mask);
- 
--	dpc->rp_pio_status = status;
-+	pio_status = status;
- 
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY, &sev);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR, &syserr);
-@@ -175,7 +173,7 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 	}
- 
- 	if (dpc->rp_log_size < 4)
--		return;
-+		return pio_status;
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
- 			      &dw0);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
-@@ -188,7 +186,7 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 		dw0, dw1, dw2, dw3);
- 
- 	if (dpc->rp_log_size < 5)
--		return;
-+		return pio_status;
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG, &log);
- 	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", log);
- 
-@@ -197,6 +195,7 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG, &prefix);
- 		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i, prefix);
- 	}
-+	return pio_status;
- }
- 
- static irqreturn_t dpc_irq(int irq, void *context)
--- 
-2.14.3
+Yes, we can bounce device MMIO through the IOMMU, or at least vfio does
+enable these mappings to allow p2p between devices assigned to the same
+VM and we've seen evidence that they work, but like p2p in general,
+there are likely platform dependencies.  For Logan this doesn't really
+solve the problem unless the device and downstream port support ATS and
+ACS Direct Translated P2P is enable.  That would allow the device to do
+p2p with addresses pre-translated by the IOMMU and cached by ATS on the
+device without the transaction needing to traverse all the way to the
+IOMMU on the root bus.  The security of ATS is pretty questionable in
+general, but that would likely be a solution that wouldn't require
+manipulating the groupings.  Thanks,
+
+Alex
