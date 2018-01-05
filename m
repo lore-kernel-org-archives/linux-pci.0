@@ -1,201 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8.mo179.mail-out.ovh.net ([46.105.75.26]:54733 "EHLO
-        8.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752663AbeAJW4e (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 17:56:34 -0500
-Received: from player690.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 10857902FD
-        for <linux-pci@vger.kernel.org>; Wed, 10 Jan 2018 23:48:27 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v3 2/6] PCI: OF: Add generic function to parse and allocate PCI resources
-Date: Wed, 10 Jan 2018 23:47:31 +0100
-Message-Id: <0f07493122a00ae5f118604c5046d844e77cc11c.1515621150.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=NDM9=EA=ozlabs.ru=aik@kernel.org>
+Return-Path: <SRS0=NDM9=EA=ozlabs.ru=aik@kernel.org>
+Subject: Re: [PATCH v3 3/7] platforms/pseries: Set eeh_pe of EEH_PE_VF type
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
+ paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+ alex.williamson@redhat.com, helgaas@kernel.org, ruscur@russell.cc,
+ linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com
+References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
+ <20180103171633.94499-4-bryantly@linux.vnet.ibm.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <c468850c-369e-2eca-fcb2-3cb3a7992eae@ozlabs.ru>
+Date: Fri, 5 Jan 2018 12:24:30 +1100
+MIME-Version: 1.0
+In-Reply-To: <20180103171633.94499-4-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch moves the gen_pci_parse_request_of_pci_ranges() function from
-drivers/pci/host/pci-host-common.c into drivers/pci/of.c to easily share
-common source code between PCI host drivers.
+On 04/01/18 04:16, Bryant G. Ly wrote:
+> To correctly use EEH code one has to make
+> sure that the EEH_PE_VF is set for dynamic created
+> VFs. Therefore this patch allocates an eeh_pe of
+> eeh type EEH_PE_VF and associates PE with parent.
+> 
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/pci-bridge.h        |  5 ++++-
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 14 +++++++++++++-
+>  2 files changed, 17 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 9f66ddebb799..16d70740a76f 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -211,7 +211,10 @@ struct pci_dn {
+>  	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
+>  	bool    m64_single_mode;	/* Use M64 BAR in Single Mode */
+>  #define IODA_INVALID_M64        (-1)
+> -	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
+> +	union {
+> +		int     (*m64_map)[PCI_SRIOV_NUM_BARS]; /*Only used in powernv */
+> +		int     last_allow_rc;	/* Only used in pSeries */
+> +	};
+>  #endif /* CONFIG_PCI_IOV */
+>  	int	mps;			/* Maximum Payload Size */
+>  	struct list_head child_list;
+> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> index a671ef4f57f5..686e9c7feab5 100644
+> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
+> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> @@ -58,6 +58,8 @@ static int ibm_configure_pe;
+>  void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+>  {
+>  	struct pci_dn *pdn = pci_get_pdn(pdev);
+> +	struct pci_dn *physfn_pdn;
+> +	struct eeh_dev *edev;
+>  
+>  	if (!pdev->is_virtfn)
+>  		return;
+> @@ -65,6 +67,14 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+>  	pdn->device_id  =  pdev->device;
+>  	pdn->vendor_id  =  pdev->vendor;
+>  	pdn->class_code =  pdev->class;
+> +	/* Last allow unfreeze return code used for retrieval
+> +	 * by user space in eeh-sysfs to show the last command
+> +	 * completion from platform
+> +	 */
+> +	pdn->last_allow_rc =  0;
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
----
- drivers/pci/host/pci-host-common.c | 49 ++----------------------------------
- drivers/pci/of.c                   | 51 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h                |  9 +++++++
- 3 files changed, 62 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index c4b891c84703..a613ea310e76 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -24,50 +24,6 @@
- #include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
- 
--static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
--		       struct list_head *resources, struct resource **bus_range)
--{
--	int err, res_valid = 0;
--	struct device_node *np = dev->of_node;
--	resource_size_t iobase;
--	struct resource_entry *win, *tmp;
--
--	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
--	if (err)
--		return err;
--
--	err = devm_request_pci_bus_resources(dev, resources);
--	if (err)
--		return err;
--
--	resource_list_for_each_entry_safe(win, tmp, resources) {
--		struct resource *res = win->res;
--
--		switch (resource_type(res)) {
--		case IORESOURCE_IO:
--			err = pci_remap_iospace(res, iobase);
--			if (err) {
--				dev_warn(dev, "error %d: failed to map resource %pR\n",
--					 err, res);
--				resource_list_destroy_entry(win);
--			}
--			break;
--		case IORESOURCE_MEM:
--			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
--			break;
--		case IORESOURCE_BUS:
--			*bus_range = res;
--			break;
--		}
--	}
--
--	if (res_valid)
--		return 0;
--
--	dev_err(dev, "non-prefetchable memory resource required\n");
--	return -EINVAL;
--}
--
- static void gen_pci_unmap_cfg(void *ptr)
- {
- 	pci_ecam_free((struct pci_config_window *)ptr);
-@@ -82,9 +38,9 @@ static struct pci_config_window *gen_pci_init(struct device *dev,
- 	struct pci_config_window *cfg;
- 
- 	/* Parse our PCI ranges and request their resources */
--	err = gen_pci_parse_request_of_pci_ranges(dev, resources, &bus_range);
-+	err = pci_parse_request_of_pci_ranges(dev, resources, &bus_range);
- 	if (err)
--		goto err_out;
-+		return ERR_PTR(err);
- 
- 	err = of_address_to_resource(dev->of_node, 0, &cfgres);
- 	if (err) {
-@@ -135,7 +91,6 @@ int pci_host_common_probe(struct platform_device *pdev,
- 	of_pci_check_probe_only();
- 
- 	/* Parse and map our Configuration Space windows */
--	INIT_LIST_HEAD(&resources);
- 	cfg = gen_pci_init(dev, &resources, ops);
- 	if (IS_ERR(cfg))
- 		return PTR_ERR(cfg);
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index e112da11630e..54e210501b73 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -88,3 +88,54 @@ struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
- 	return NULL;
- #endif
- }
-+
-+int pci_parse_request_of_pci_ranges(struct device *dev,
-+				    struct list_head *resources,
-+				    struct resource **bus_range)
-+{
-+	int err, res_valid = 0;
-+	struct device_node *np = dev->of_node;
-+	resource_size_t iobase;
-+	struct resource_entry *win, *tmp;
-+
-+	INIT_LIST_HEAD(resources);
-+	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
-+	if (err)
-+		return err;
-+
-+	err = devm_request_pci_bus_resources(dev, resources);
-+	if (err)
-+		goto out_release_res;
-+
-+	resource_list_for_each_entry_safe(win, tmp, resources) {
-+		struct resource *res = win->res;
-+
-+		switch (resource_type(res)) {
-+		case IORESOURCE_IO:
-+			err = pci_remap_iospace(res, iobase);
-+			if (err) {
-+				dev_warn(dev, "error %d: failed to map resource %pR\n",
-+					 err, res);
-+				resource_list_destroy_entry(win);
-+			}
-+			break;
-+		case IORESOURCE_MEM:
-+			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-+			break;
-+		case IORESOURCE_BUS:
-+			if (bus_range)
-+				*bus_range = res;
-+			break;
-+		}
-+	}
-+
-+	if (res_valid)
-+		return 0;
-+
-+	dev_err(dev, "non-prefetchable memory resource required\n");
-+	err = -EINVAL;
-+
-+ out_release_res:
-+	pci_free_resource_list(resources);
-+	return err;
-+}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 978aad7841e5..a1b0672fd38a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2163,6 +2163,9 @@ void pci_release_of_node(struct pci_dev *dev);
- void pci_set_bus_of_node(struct pci_bus *bus);
- void pci_release_bus_of_node(struct pci_bus *bus);
- struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus);
-+int pci_parse_request_of_pci_ranges(struct device *dev,
-+				    struct list_head *resources,
-+				    struct resource **bus_range);
- 
- /* Arch may override this (weak) */
- struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
-@@ -2187,6 +2190,12 @@ static inline struct device_node *
- pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
- static inline struct irq_domain *
- pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
-+static inline int pci_parse_request_of_pci_ranges(struct device *dev,
-+						  struct list_head *resources,
-+						  struct resource **bus_range)
-+{
-+	return -EINVAL;
-+}
- #endif	/* CONFIG_OF */
- 
- #ifdef CONFIG_ACPI
+Fails to compile without CONFIG_IOV:
+
+/home/aik/p/guest-kernel/arch/powerpc/platforms/pseries/eeh_pseries.c: In
+function ‘pseries_pcibios_bus_add_device’:
+/home/aik/p/guest-kernel/arch/powerpc/platforms/pseries/eeh_pseries.c:74:5:
+error: ‘struct pci_dn’ has no member named ‘last_allow_rc’
+  pdn->last_allow_rc =  0;
+     ^
+
+
+There are more actually, you try and see.
+
+
+> +	physfn_pdn      =  pci_get_pdn(pdev->physfn);
+> +	pdn->pe_number  =  physfn_pdn->pe_num_map[pdn->vf_index];
+> +	edev = pdn_to_eeh_dev(pdn);
+>  
+>  	/*
+>  	 * The following operations will fail if VF's sysfs files
+> @@ -72,8 +82,10 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+>  	 */
+>  	eeh_add_device_early(pdn);
+>  	eeh_add_device_late(pdev);
+> +	edev->pe_config_addr =  (pdn->busno << 16) | (pdn->devfn << 8);
+> +	eeh_rmv_from_parent_pe(edev); /* Remove as it is adding to bus pe */
+> +	eeh_add_to_parent_pe(edev);   /* Add as VF PE type */
+>  	eeh_sysfs_add_device(pdev);
+> -
+
+While we are here - unrelated empty line removal here and in other patches
+of this patchset.
+
+>  }
+>  
+>  /*
+> 
+
+
 -- 
-2.11.0
+Alexey
