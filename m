@@ -1,51 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:61955 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751899AbeAaJdh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 31 Jan 2018 04:33:37 -0500
-Date: Wed, 31 Jan 2018 11:33:33 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Kai Heng Feng <kai.heng.feng@canonical.com>
-Cc: linux-pci@vger.kernel.org, Ethan Hsieh <ethan.hsieh@canonical.com>
-Subject: Re: Thunderbolt PCIe card doesn't get enumerated at cold boot
-Message-ID: <20180131093333.GU27654@lahna.fi.intel.com>
-References: <8831781F-8027-4875-AF82-835FBE40F5F0@canonical.com>
- <20180130102319.GE27654@lahna.fi.intel.com>
- <C4051028-A6AD-4B78-97E2-AE1BC34694EB@canonical.com>
- <20180130103745.GG27654@lahna.fi.intel.com>
- <A4805FBC-E94C-4EA6-9DC3-290FE3BB43E9@canonical.com>
- <20180131075347.GR27654@lahna.fi.intel.com>
- <4D112585-48B0-4D6D-9176-A9768FD5AC7A@canonical.com>
- <20180131085150.GS27654@lahna.fi.intel.com>
- <DBAFD3AB-DB4F-4539-B69D-B4DFC449AD94@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <DBAFD3AB-DB4F-4539-B69D-B4DFC449AD94@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v4 0/7] SR-IOV Enablement on PowerVM
+Date: Fri,  5 Jan 2018 10:45:45 -0600
+Message-Id: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 31, 2018 at 05:26:21PM +0800, Kai Heng Feng wrote:
-> 
-> > On 31 Jan 2018, at 4:51 PM, Mika Westerberg <mika.westerberg@linux.intel.com> wrote:
-> > 
-> > On Wed, Jan 31, 2018 at 04:23:21PM +0800, Kai Heng Feng wrote:
-> >> Now sure which string to grep, but looks like hotplug is supported.
-> >> Still attach dmesg to let you confirm it’s working.
-> > 
-> > This one:
-> > 
-> > [    0.197025] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]                                                                                                                         
-> > [    0.197222] acpi PNP0A08:00: _OSC: platform does not support [PCIeHotplug PME AER]                                                                                                                                
-> > [    0.197408] acpi PNP0A08:00: _OSC: OS now controls [PCIeCapability]            
-> 
-> So seems like it’s _OSC instead of _OSI?
+This patch series will enable SR-IOV on PowerVM. A specific set of
+lids for PFW/PHYP is required. They are planned to release with
+920 at the moment.
 
-Right, I always confuse the two.
+For IBM internal testers let me know of a system you want to test on
+and we can put on the lids required or we can provide a system to run
+the tests.
 
-> > So native PCIe hotplug is disabled.
-> 
-> Sorry for asking this again… is this the root cause of this issue?
-> On another platform I can see the same message, but TBT card get enumerated at cold boot.
+This patch depends on the three patches:
+988fc3ba5653278a8c14d6ccf687371775930d2b
+dae7253f9f78a731755ca20c66b2d2c40b86baea
+608c0d8804ef3ca4cda8ec6ad914e47deb283d7b
 
-No, I just wanted to check which hotplug the system is using. Now it is
-clear that it's using ACPI hotplug. So if possible try Windows first.
+v1 - Initial Patch
+v2 - Addressed Alexey and Russell's comments
+v3 - Unify the call of .error_detected()
+v4 - Fixed subject and change log per Bjorn's comments and
+     fixed Alexey's comments
+
+Bryant G. Ly (7):
+  platform/pseries: Update VF config space after EEH
+  linux/pci: Add uevents in AER and EEH error/resume
+  platforms/pseries: Set eeh_pe of EEH_PE_VF type
+  powerpc/kernel Add EEH operations to notify resume
+  powerpc/kernel: Add EEH notify resume sysfs
+  pseries/pci: Associate PEs to VFs in configure SR-IOV
+  pseries/setup: Add Initialization of VF Bars
+
+ arch/powerpc/include/asm/eeh.h               |   2 +
+ arch/powerpc/include/asm/pci-bridge.h        |   5 +-
+ arch/powerpc/include/asm/pci.h               |   2 +
+ arch/powerpc/kernel/eeh.c                    |  59 ++++++++++
+ arch/powerpc/kernel/eeh_driver.c             |   6 +
+ arch/powerpc/kernel/eeh_sysfs.c              |  45 ++++++++
+ arch/powerpc/kernel/pci_of_scan.c            |   2 +-
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  68 +----------
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 137 +++++++++++++++++++++-
+ arch/powerpc/platforms/pseries/pci.c         | 150 +++++++++++++++++++++++-
+ arch/powerpc/platforms/pseries/setup.c       | 164 +++++++++++++++++++++++++++
+ drivers/pci/pcie/aer/aerdrv_core.c           |   3 +
+ include/linux/pci.h                          |  36 ++++++
+ 13 files changed, 611 insertions(+), 68 deletions(-)
+
+-- 
+2.14.3 (Apple Git-98)
