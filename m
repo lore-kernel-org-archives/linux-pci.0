@@ -1,42 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59280 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932131AbeARW4B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Jan 2018 17:56:01 -0500
-Date: Thu, 18 Jan 2018 16:55:01 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: Frederick Lawler <fred@fredlawl.com>, kbuild-all@01.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [pci:pci/misc 10/10] drivers/pci/pcie/aer/aerdrv_core.c:229:3:
- error: implicit declaration of function 'pci_printk'; did you mean
- 'pci_intx'?
-Message-ID: <20180118225501.GA160618@bhelgaas-glaptop.roam.corp.google.com>
-References: <201801190308.UxduwqBp%fengguang.wu@intel.com>
+Return-Path: <SRS0=xpU2=EA=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=xpU2=EA=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 5 Jan 2018 15:43:03 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bharat Kumar Gogada <bharatku@xilinx.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+	"joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Jim Quinlan <jim2101024@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
+	"linux-rockchip@lists.infradead.org" <linux-rockchip@lists.infradead.org>
+Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
+Message-ID: <20180105154303.GB24933@red-moon>
+References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
+ <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
+ <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
+ <BLUPR0201MB1505659A7B1DDA658EFB7049A51C0@BLUPR0201MB1505.namprd02.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201801190308.UxduwqBp%fengguang.wu@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <BLUPR0201MB1505659A7B1DDA658EFB7049A51C0@BLUPR0201MB1505.namprd02.prod.outlook.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 19, 2018 at 03:18:10AM +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/misc
-> head:   ba8d362b6d084433dd311c13de5fd2dba1c90b93
-> commit: ba8d362b6d084433dd311c13de5fd2dba1c90b93 [10/10] PCI: Add wrappers for dev_printk()
-> config: i386-randconfig-x015-201802 (attached as .config)
-> compiler: gcc-7 (Debian 7.2.0-12) 7.2.1 20171025
-> reproduce:
->         git checkout ba8d362b6d084433dd311c13de5fd2dba1c90b93
->         # save the attached .config to linux build tree
->         make ARCH=i386 
+On Fri, Jan 05, 2018 at 02:26:34PM +0000, Bharat Kumar Gogada wrote:
+> On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada wrote:
+> > Bjorn wrote:
+> >> In the PCI config access path, the *_pcie_valid_device() functions in 
+> >> the dwc, altera, rockchip, and xilinx drivers all check whether the 
+> >> link is up.
+> >> 
+> >> I think this is racy because the link may go down after we check but 
+> >> before we perform the config access.
+> >> 
+> >> What would blow up if we removed the *_pcie_link_up() checks?
+> >> 
+> >> I'd like to either remove the checks or add comments about why the 
+> >> race is acceptable.  If we've covered this before, I apologize.
+> >> Adding a comment will keep me from pestering you about this again in 
+> >> the future.
 > 
-> All errors (new ones prefixed by >>):
+> > In both Xilinx driver cases when link is down, hardware responds by 
+> > AXI DECERR/SLVERR status which causes an exception, synchronous 
+> > external abort to CPU.  This causes system to hang, so we need this 
+> > check for both of our drivers.  We will add comments.
 > 
->    drivers/pci/pcie/aer/aerdrv_core.c: In function 'find_source_device':
-> >> drivers/pci/pcie/aer/aerdrv_core.c:229:3: error: implicit declaration of function 'pci_printk'; did you mean 'pci_intx'? [-Werror=implicit-function-declaration]
->       pci_printk(KERN_DEBUG, parent, "can't find device of ID%04x\n",
->       ^~~~~~~~~~
+> This is a problem, and checking whether the link is up is a workaround but not a real solution.  That means your system may hang if the link happens to go down at the wrong time.
+> 
+> A real solution would be to handle the synchronous external abort so it doesn't cause a system hang.
+> 
+> Yes, I agree that this is workaround. For pcie-xilinx.c for arm32, we can have fault handling similar to "imx6q_pcie_abort_handler" in drivers/pci/dwc/pci-imx6.c.
+> Since this driver is same for Microblaze architecture also, it requires separate handling.
+> 
+> For pcie-xilinx-nwl.c ARM64 as per link [1], linux kernel will hang for the above AXI responses. 
+> As of now arm64 RAS is still work in progress [2].  
+> 
+> [1] https://www.spinics.net/lists/arm-kernel/msg624203.html
+> 
+> [2] https://patchwork.kernel.org/patch/9973967/
+> 
+> The check can be removed, if above issues were addressed.
 
-Sorry, my fault again.  I screwed up the grep and concluded that
-pci_printk wasn't actually used, so I removed it.  Obviously it *is*
-used.  I added it back and repushed the branch.
+I do not see why the above "issues" should be addressed in order to
+remove that check - as it was pointed out in this thread it just does
+not solve anything, so what's the reason for keeping it ?
+
+Lorenzo
