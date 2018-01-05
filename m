@@ -1,221 +1,202 @@
-Return-Path: <SRS0=e0LY=EZ=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=e0LY=EZ=codeaurora.org=okaya@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 29 Jan 2018 19:42:54 -0500
-From: okaya@codeaurora.org
+Return-Path: <SRS0=r7nf=EA=ncentric.com=koen.vandeputte@kernel.org>
+Return-Path: <SRS0=r7nf=EA=ncentric.com=koen.vandeputte@kernel.org>
+Subject: Re: [PATCH] imx6: fix pcie enumeration
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org, Dongdong
- Liu <liudongdong3@huawei.com>, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH 6/8] PCI/DPC: Consolidate RP PIO get/print functions
-In-Reply-To: <20180126225622.58614.24127.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180126225622.58614.24127.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <51b6a3709f193727d85e08cee97c4133@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+ Richard Zhu <hongxing.zhu@nxp.com>, Lucas Stach <l.stach@pengutronix.de>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ linux-arm-kernel@lists.infradead.org
+References: <20180104202430.GC189897@bhelgaas-glaptop.roam.corp.google.com>
+From: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Message-ID: <a2d7afee-7a41-6da6-e5a4-a36a6fcde55d@ncentric.com>
+Date: Fri, 5 Jan 2018 10:56:31 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180104202430.GC189897@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-26 17:56, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Previously we defined a structure for RP PIO log information, allocated 
-> it
-> on the stack, called one function to fill it in from DPC registers, and
-> called another to print it out.
-> 
-> Simplify this by dropping the structure and printing the error 
-> information
-> as soon as we read it from the DPC capability.  This way we don't need 
-> a
-> structure, there's one function instead of four, and everything we do 
-> with
-> the register information is in one place instead of being split between
-> functions.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/pcie/pcie-dpc.c |  132 
-> +++++++++++++------------------------------
->  1 file changed, 39 insertions(+), 93 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-> index a6b8d1496322..06d3af112580 100644
-> --- a/drivers/pci/pcie/pcie-dpc.c
-> +++ b/drivers/pci/pcie/pcie-dpc.c
-> @@ -17,26 +17,6 @@
->  #include "../pci.h"
->  #include "aer/aerdrv.h"
-> 
-> -struct rp_pio_header_log_regs {
-> -	u32 dw0;
-> -	u32 dw1;
-> -	u32 dw2;
-> -	u32 dw3;
-> -};
-> -
-> -struct dpc_rp_pio_regs {
-> -	u32 status;
-> -	u32 mask;
-> -	u32 severity;
-> -	u32 syserror;
-> -	u32 exception;
-> -
-> -	struct rp_pio_header_log_regs header_log;
-> -	u32 impspec_log;
-> -	u32 tlp_prefix_log[4];
-> -	u16 first_error;
-> -};
-> -
->  struct dpc_dev {
->  	struct pcie_device	*dev;
->  	struct work_struct	work;
-> @@ -142,100 +122,66 @@ static void dpc_work(struct work_struct *work)
->  			      ctl | PCI_EXP_DPC_CTL_INT_EN);
->  }
-> 
-> -static void dpc_rp_pio_print_tlp_header(struct device *dev,
-> -					struct rp_pio_header_log_regs *t)
-> -{
-> -	dev_err(dev, "TLP Header: %#010x %#010x %#010x %#010x\n",
-> -		t->dw0, t->dw1, t->dw2, t->dw3);
-> -}
-> -
-> -static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
-> -				   struct dpc_rp_pio_regs *rp_pio)
-> +static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
->  {
->  	struct device *dev = &dpc->dev->device;
-> +	struct pci_dev *pdev = dpc->dev->port;
-> +	u16 cap = dpc->cap_pos;
-> +	u32 status, mask;
-> +	u32 sev, syserr, exc;
-> +	u16 dpc_status, first_error;
->  	int i;
-> -	u32 status;
-> +	u32 dw0, dw1, dw2, dw3;
-> +	u32 log;
-> +	u32 prefix;
-> 
-> +	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS, 
-> &status);
-> +	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK, &mask);
->  	dev_err(dev, "rp_pio_status: %#010x, rp_pio_mask: %#010x\n",
-> -		rp_pio->status, rp_pio->mask);
-> +		status, mask);
-> 
-> +	dpc->rp_pio_status = status;
-> +
-> +	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY, &sev);
-> +	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR, 
-> &syserr);
-> +	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION, 
-> &exc);
->  	dev_err(dev, "RP PIO severity=%#010x, syserror=%#010x, 
-> exception=%#010x\n",
-> -		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
-> +		sev, syserr, exc);
-> 
-> -	status = (rp_pio->status & ~rp_pio->mask);
-> +	/* Get First Error Pointer */
-> +	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &dpc_status);
-> +	first_error = (dpc_status & 0x1f00) >> 8;
 
-This didn't look like a simple change here.
 
-> 
-> +	status &= ~mask;
->  	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
-> -		if (!(status & (1 << i)))
-> -			continue;
-> -
-> -		dev_err(dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
-> -			rp_pio->first_error == i ? " (First)" : "");
-> +		if (status & (1 << i))
-> +			dev_err(dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
-> +				first_error == i ? " (First)" : "");
->  	}
-> 
-> -	dpc_rp_pio_print_tlp_header(dev, &rp_pio->header_log);
-> -	if (dpc->rp_log_size == 4)
-> -		return;
-> -
-> -	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", rp_pio->impspec_log);
-> -
-> -	for (i = 0; i < dpc->rp_log_size - 5; i++)
-> -		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i,
-> -			rp_pio->tlp_prefix_log[i]);
-> -}
-> -
-> -static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
-> -				struct dpc_rp_pio_regs *rp_pio)
-> -{
-> -	struct pci_dev *pdev = dpc->dev->port;
-> -	int i;
-> -	u16 cap = dpc->cap_pos, status;
-> -
-> -	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
-> -			      &rp_pio->status);
-> -	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK,
-> -			      &rp_pio->mask);
-> -
-> -	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY,
-> -			      &rp_pio->severity);
-> -	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR,
-> -			      &rp_pio->syserror);
-> -	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION,
-> -			      &rp_pio->exception);
-> -
-> -	/* Get First Error Pointer */
-> -	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
-> -	rp_pio->first_error = (status & 0x1f00) >> 8;
-> -
->  	if (dpc->rp_log_size < 4)
->  		return;
-> -
->  	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
-> -			      &rp_pio->header_log.dw0);
-> +			      &dw0);
->  	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
-> -			      &rp_pio->header_log.dw1);
-> +			      &dw1);
->  	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
-> -			      &rp_pio->header_log.dw2);
-> +			      &dw2);
->  	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
-> -			      &rp_pio->header_log.dw3);
-> -	if (dpc->rp_log_size == 4)
-> +			      &dw3);
-> +	dev_err(dev, "TLP Header: %#010x %#010x %#010x %#010x\n",
-> +		dw0, dw1, dw2, dw3);
-> +
-> +	if (dpc->rp_log_size < 5)
->  		return;
-> +	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG, 
-> &log);
-> +	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", log);
-> 
-> -	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
-> -			      &rp_pio->impspec_log);
-> -	for (i = 0; i < dpc->rp_log_size - 5; i++)
-> +	for (i = 0; i < dpc->rp_log_size - 5; i++) {
->  		pci_read_config_dword(pdev,
-> -			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
-> -			&rp_pio->tlp_prefix_log[i]);
-> -}
-> -
-> -static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
-> -{
-> -	struct dpc_rp_pio_regs rp_pio_regs;
-> -
-> -	dpc_rp_pio_get_info(dpc, &rp_pio_regs);
-> -	dpc_rp_pio_print_error(dpc, &rp_pio_regs);
-> -
-> -	dpc->rp_pio_status = rp_pio_regs.status;
-> +			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG, &prefix);
-> +		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i, prefix);
-> +	}
->  }
-> 
->  static irqreturn_t dpc_irq(int irq, void *context)
+On 2018-01-04 21:24, Bjorn Helgaas wrote:
+> [+cc Richard, Lucas, Lorenzo, linux-arm-kernel]
+>
+> Hi Koen,
+>
+> Thanks a lot for the fix!
+>
+> Please run "git log --oneline drivers/pci/dwc/pci-imx6.c" and follow
+> the style convention, including "PCIe" capitalization.
+>
+> "fix pcie enumeration" is not very descriptive.  It should say something
+> about the specific problem, e.g., setting the root port's subordinate
+> bus number.
+>
+> On Thu, Jan 04, 2018 at 04:48:03PM +0100, Koen Vandeputte wrote:
+>> By default, when the imx6 PCIe RC boots up, the subordinate is set
+> Not sure what "RC boots up" means.  Maybe you're talking about a
+> hardware-defined default value at power-up, or maybe a value
+> programmed by a boot-loader?  Please clarify and update the similar
+> comment in the code.
+>
+>> equally to the secondary bus (1), and does not alter afterwards.
+>>
+>> This means that theoretically, the highest bus reachable downstream is
+>> bus 1.
+> Not just theoretically.  If the bridge is operating correctly, it
+> should not forward any config transaction for a bus number greater
+> than the subordinate bus number.
+>
+>> Before commit a20c7f36bd3d ("PCI: Do not allocate more buses than
+>> available in parent"), the driver ignored the subord value and just
+>> allowed up to 0xff on each device downstream.
+>>
+>> This caused a lot of errors to be printed, as this is not logical
+>> according to spec. (but it worked ..)
+> Including a sample error in the changelog might help somebody
+> suffering from the problem find this solution.
+>
+>> After this commit, the driver stopped scanning deeper when the last
+>> allocated busnr equals the subordinate of it's master, causing devices
+>> to be undiscovered (especially behind bridges), uncovering the impact of
+>> this bug.
+>>
+>> Before:
+>>
+>> 00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00 ...
+>> 	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>>
+>> 00:00.0 0604: 16c3:abcd (rev 01)
+>> 01:00.0 0604: 10b5:8604 (rev ba)
+>> ... stops after bus 1 ...
+>>
+>> After:
+>>
+>> 00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
+>> ...
+>> 	Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
+>>
+>> 00:00.0 0604: 16c3:abcd (rev 01)
+>> 01:00.0 0604: 10b5:8604 (rev ba)
+>> 02:01.0 0604: 10b5:8604 (rev ba)
+>> 02:04.0 0604: 10b5:8604 (rev ba)
+>> 02:05.0 0604: 10b5:8604 (rev ba)
+>> 03:00.0 0280: 168c:0033 (rev 01)
+>> 05:00.0 0280: 168c:0033 (rev 01)
+>>
+> Should have a "Fixes: a20c7f36bd3d ..." tag if that's really the
+> correct commit.
+>
+>> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+>> ---
+>>
+>> Needs backports to 4.14 & 4.9 stables
+> Add a "CC: stable@vger.kernel.org" after your signed-off-by to handle
+> this.  But something's wrong because a20c7f36bd3d only appeared in
+> v4.15-rc1, so either that's the wrong commit or stable kernels don't
+> need the fix.
+>
+>>   drivers/pci/dwc/pci-imx6.c | 14 ++++++++++++++
+>>   1 file changed, 14 insertions(+)
+>>
+>> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+>> index b73483534a5b..3d13fa8c2eb1 100644
+>> --- a/drivers/pci/dwc/pci-imx6.c
+>> +++ b/drivers/pci/dwc/pci-imx6.c
+>> @@ -76,6 +76,9 @@ struct imx6_pcie {
+>>   
+>>   #define PCIE_RC_LCSR				0x80
+>>   
+>> +#define PCIE_RC_BNR				0x18
+>> +#define PCIE_RC_BNR_MAX_SUBORDINATE		(0xff << 16)
+>> +
+>>   /* PCIe Port Logic registers (memory-mapped) */
+>>   #define PL_OFFSET 0x700
+>>   #define PCIE_PL_PFLR (PL_OFFSET + 0x08)
+>> @@ -562,6 +565,17 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+>>   	int ret;
+>>   
+>>   	/*
+>> +	 * By default, the subordinate is set equally to the secondary
+>> +	 * bus (0x01) when the RC boots.
+>> +	 * This means that theoretically, only bus 1 is reachable from the RC.
+>> +	 * Force the PCIe RC subordinate to 0xff, otherwise no downstream
+>> +	 * devices will be detected behind bus 1.
+>> +	*/
+>> +	tmp = dw_pcie_readl_rc(pp, PCIE_RC_BNR);
+>> +	tmp |= PCIE_RC_BNR_MAX_SUBORDINATE;
+>> +	dw_pcie_writel_rc(pp, PCIE_RC_BNR, tmp);
+> This functionality is not related to establishing the link, so I think
+> it should be put elsewhere, maybe either directly in imx6_pcie_probe()
+> or in imx6_pcie_host_init().
+>
+> The DT really should contain a "bus-range" property and
+> dw_pcie_host_init() will already pay attention to that if it's
+> present, and I think it defaults to 0-0xff if it's not present.
+>
+> So I think you should be using pp->busn instead of hard-coding
+> PCIE_RC_BNR_MAX_SUBORDINATE.
+>
+>> +	/*
+>>   	 * Force Gen1 operation when starting the link.  In case the link is
+>>   	 * started in Gen2 mode, there is a possibility the devices on the
+>>   	 * bus will not be detected at all.  This happens with PCIe switches.
+>> -- 
+>> 2.7.4
+>>
+
+
+
+
+Hi Bjorn,
+
+Thanks for your time and patience writing extended comments on all points,
+especially since this is my first commit to this list.
+
+Highly appreciated!
+
+
+Secondly,
+
+Based on your suggestions, I've dug around deeper in the code and found 
+the actual line that initially causes it:  [1]
+
+
+*drivers/pci/dwc/pcie-designware-host.c* 
+<http://elixir.free-electrons.com/linux/v4.15-rc6/source/drivers/pci/dwc/pcie-designware-host.c#L588> 
+void  dw_pcie_setup_rc 
+<http://elixir.free-electrons.com/linux/v4.15-rc6/ident/dw_pcie_setup_rc>(struct  pcie_port <http://elixir.free-electrons.com/linux/v4.15-rc6/ident/pcie_port>  *pp <http://elixir.free-electrons.com/linux/v4.15-rc6/ident/pp>)
+{
+...
+
+	/* setup bus numbers */
+	val  =  dw_pcie_readl_dbi 
+<http://elixir.free-electrons.com/linux/v4.15-rc6/ident/dw_pcie_readl_dbi>(pci 
+<http://elixir.free-electrons.com/linux/v4.15-rc6/ident/pci>,  PCI_PRIMARY_BUS 
+<http://elixir.free-electrons.com/linux/v4.15-rc6/ident/PCI_PRIMARY_BUS>);
+	val  &=  0xff000000;
+	val  |=  0x00010100; <---
+	dw_pcie_writel_dbi 
+<http://elixir.free-electrons.com/linux/v4.15-rc6/ident/dw_pcie_writel_dbi>(pci 
+<http://elixir.free-electrons.com/linux/v4.15-rc6/ident/pci>,  PCI_PRIMARY_BUS 
+<http://elixir.free-electrons.com/linux/v4.15-rc6/ident/PCI_PRIMARY_BUS>,  val); ... The i.MX6 reference manual (page 417 - section 48.8.7 "Bus 
+Number Registers (PCIE_RC_BNR)") shows the following layout [2]: 31 23 
+15 7 0 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+| Sec lat timer | Subord num | Sec busnum | Prim busnum | 
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+Shouldn't this:"val |= 0x00010100;" change to: "val |= 0x00ff0100;"
+?
+
+
+
+It seems other platforms also use this function (and thus register layout) to setup the PCIe RC [3],
+so instead of doing a single fix for i.MX6 maybe it's best to fix it here so other platforms also benefit?
+
+As you know the code a lot better than me, what's your opinion on this? (or from anyone in CC)
+
+
+[1] http://elixir.free-electrons.com/linux/v4.15-rc6/source/drivers/pci/dwc/pcie-designware-host.c#L588
+[2] https://community.nxp.com/servlet/JiveServlet/downloadBody/101783-102-6-17831/IMX6DQRMr2_part2.pdf
+[3] http://elixir.free-electrons.com/linux/v4.15-rc6/ident/dw_pcie_setup_rc
+
+
+Koen
