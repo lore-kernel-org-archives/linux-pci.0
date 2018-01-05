@@ -1,181 +1,151 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v6 00/11] PCI: Add support to the Cadence PCIe controller
-Date: Tue, 30 Jan 2018 21:56:48 +0100
-Message-Id: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailgw02.mediatek.com ([1.203.163.81]:19586 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751083AbeAELwA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jan 2018 06:52:00 -0500
+Message-ID: <1515153107.25872.57.camel@mhfsdcap03>
+Subject: Re: [PATCH v5 1/2] PCI: mediatek: Clear IRQ status after IRQ
+ dispatched to avoid reentry
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Date: Fri, 5 Jan 2018 19:51:47 +0800
+In-Reply-To: <88c84a3e-17ea-08f2-e5fc-4799b41de267@arm.com>
+References: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
+         <1514336394-17747-2-git-send-email-honghui.zhang@mediatek.com>
+         <20180104184040.GE12239@red-moon>
+         <88c84a3e-17ea-08f2-e5fc-4799b41de267@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Thu, 2018-01-04 at 19:04 +0000, Marc Zyngier wrote:
+> On 04/01/18 18:40, Lorenzo Pieralisi wrote:
+> > [+Marc]
+> > 
+> > On Wed, Dec 27, 2017 at 08:59:53AM +0800, honghui.zhang@mediatek.com wrote:
+> >> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> >>
+> >> There maybe a same IRQ reentry scenario after IRQ received in current
+> >> IRQ handle flow:
+> >> 	EP device		PCIe host driver	EP driver
+> >> 1. issue an IRQ
+> >> 			2. received IRQ
+> >> 			3. clear IRQ status
+> >> 			4. dispatch IRQ
+> >> 						5. clear IRQ source
+> >> The IRQ status was not successfully cleared at step 2 since the IRQ
+> >> source was not cleared yet. So the PCIe host driver may receive the
+> >> same IRQ after step 5. Then there's an IRQ reentry occurred.
+> >> Even worse, if the reentry IRQ was not an IRQ that EP driver expected,
+> >> it may not handle the IRQ. Then we may run into the infinite loop from
+> >> step 2 to step 4.
+> >> Clear the IRQ status after IRQ have been dispatched to avoid the IRQ
+> >> reentry.
+> >> This patch also fix another INTx IRQ issue by initialize the iterate
+> >> before the loop. If an INTx IRQ re-occurred while we are dispatching
+> >> the INTx IRQ, then iterate may start from PCI_NUM_INTX + INTX_SHIFT
+> >> instead of INTX_SHIFT for the second time entering the
+> >> for_each_set_bit_from() loop.
+> > 
+> > This looks like two different issues that should be fixed with two
+> > patches.
 
-this series of patches adds support to the Cadence PCIe controller.
-It was tested on a ARM64 platform emulated by a Palladium running the
-pci-next kernel.
+Ok, I split this into two patches and figure out a more reasonable
+approach by using irq_chip solution.
 
-The host mode was tested with some PCIe devices connected to the Palladium
-through a speed-bridge. Some of those devices were a USB host controller
-and a SATA controller. The PCIe host controller was also tested with a
-second controller configured in endpoint mode and connected back to back
-to the first controller.
+> > 
+> >> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> >> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> >> ---
+> >>  drivers/pci/host/pcie-mediatek.c | 11 ++++++-----
+> >>  1 file changed, 6 insertions(+), 5 deletions(-)
+> > 
+> > For the sake of uniformity, I first want to understand why this
+> > driver does not call:
+> > 
+> > chained_irq_enter/exit()
+> > 
+> > in the primary handler (mtk_pcie_intr_handler()).
+> > 
+> > With the GIC as a primary interrupt controller we have not
+> > even figured out how current code can actually work without
+> > calling the chained_* API.
+> > 
+> > I want to come up with a consistent handling of IRQ domains for
+> > all host bridges and any discrepancy should be explained.
+> 
+> That's because this driver is a huge hack, see below:
+> 
+> > 
+> >> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> >> index db93efd..fc29a9a 100644
+> >> --- a/drivers/pci/host/pcie-mediatek.c
+> >> +++ b/drivers/pci/host/pcie-mediatek.c
+> >> @@ -601,15 +601,16 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+> 
+> This function is not a chained irqchip, but an interrupt handler...
+> 
+> >>  	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
+> >>  	unsigned long status;
+> >>  	u32 virq;
+> >> -	u32 bit = INTX_SHIFT;
+> >> +	u32 bit;
+> >>  
+> >>  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
+> >> +		bit = INTX_SHIFT;
+> >>  		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
+> >> -			/* Clear the INTx */
+> >> -			writel(1 << bit, port->base + PCIE_INT_STATUS);
+> >>  			virq = irq_find_mapping(port->irq_domain,
+> >>  						bit - INTX_SHIFT);
+> >>  			generic_handle_irq(virq);
+> 
+> and nonetheless, this calls into generic_handle_irq(). That's a complete
+> violation of the interrupt layering. Maybe there is a good reason for
+> it, but I'd like to know which one.
+> 
+> Which means that all of the ack/mask has to be done outside of the
+> irqchip framework too... Disgusting.
+> 
+> >> +			/* Clear the INTx */
+> >> +			writel(1 << bit, port->base + PCIE_INT_STATUS);
+> > 
+> > I think that these masking/acking should actually be done through
+> > the irq_chip hooks (see for instance pci-ftpci100.c) - that would
+> > make this kind of bugs much easier to prevent (because the IRQ
+> > layer does the sequencing for you).
+> 
+> +1.
+> 
 
-The EndPoint Controller (EPC) driver was tested with 2 PCI functions, both
-handled by the pci-epf-test driver, using the pcitest userspace program.
-I used the "-D" optional command line parameter to select the proper PCI
-function.
+Thanks for your advice, I need to do some homework to have a better
+understanding of the irq_chip approach.
 
-For linux-pci/master, I applied this series on top of Kishon's patch
-("PCI: endpoint: Use EPC's device in dma_alloc_coherent/dma_free_coherent")
-otherwise dma_alloc_coherent() fails when called by pci_epf_alloc_space().
+> > Marc (CC'ed) has a more comprehensive view on this than me - I would
+> > like to get to a point where all host bridges uses a consistent
+> > approach for chained IRQ handling and I hope this bug fix can be
+> > a starting point.
+> 
+> +1 again. We definitely need to come up with some form of common
+> approach for all these host drivers, and maybe turn that into a library...
+> 
 
-Best regards,
+Well, this is beyond my knowledge now, I guess I can figure out how to
+using irq_chip for the first step, then I may following this "common
+approach" after we have a solution for that?
 
-Cyrille
-
-ChangeLog
-
-v5 -> v6:
-- rebase on linux-pci/master (v4.15-rc4) + Kishon's patch from linux-pci/next:
-"PCI: endpoint: Use EPC's device in dma_alloc_coherent()/dma_free_coherent()"
-- all patches unchanged
-
-v4 -> v5:
-- rebase on today's (20180128) linux-pci/next
-- add again the endpoint driver
-
-- Patch 7:
- move host driver from drivers/pci/cadence into drivers/pci/host and remove
- all references to the endpoint mode, as requested by Lorenzo.
- The host driver will be moved back into drivers/pci/cadence by Patch 11
-
-- Patch 8:
- fix comparison of func_no to BAR5: compare to epc->max_functions
-
-- Patch 9:
- add new patch to fix support of PCI multi-function devices
-
-- Patch 10:
- change the 'cdns,max-outbound-regions' from optional to mandatory as requested
- by Kishon.
-
-- Patch 11:
- take Kishon's comments into account as much as I could.
-
-- Other patches: unchanged
-
-
-v3 -> v4:
-- split patch 3 from v3 into patches 3 and 4.
-- remove unused cdns_pcie_reset_outbound_region() from old patch 6
-  (new patch 7).
-- other patches are unchanged.
-
-v2 -> v3:
-
-- rebase on today's linux-pci/next (20180110) 
-
-patch1:
-- rework the commit message of patch 1 and add two new comments on why endpoint
-  library users must be linked after the endpoint library itself and why
-  the dwc rule uses obj-y instead of obj-$(CONFIG_PCIE_CONFIG_DW).
-- update patch 1 to add missing ifdef CONFIG_PCI / endif in
-  drivers/pci/dwc/Makefile around the obj-$(CONFIG_ARM64) += pcie-hisi.o rule,
-  like for the other obj-$(CONFIG_ARM64) rules in drivers/pci/host/Makefile.
-
-patch2: unchanged
-
-patch3:
-- update patch 3 so the bridge hooks/members initialization is left to the
-  host bridges probe routines.
-
-patch4: unchanged
-
-patch5:
-- collect 'Reviewed-by' tag from Rob Herring for the DT bindings.
-
-patch6:
-- remove explanation in the commit message on why obj-$(CONFIG_PCIE_CANDENCE) is
-  placed after obj-$(CONFIG_PCI_ENDPOINT) in drivers/pci/Makefile since a
-  comment on it has been added into patch1.
-- remove menuconfig PCI_CADENCE in drivers/pci/cadence/Kconfig to match
-  drivers/pci/dwc/Kconfig.
-- adapt patch6 to the changes done in patch3 for the pci_host_probe() function.
-
-v1 -> v2:
-- add new properties in the device-tree bindings: 'cdns,max-outbound-regions'
-  and 'cdns,no-bar-match-nbits'.
-- add a new patch to regroup all makefile rules in drivers/pci/Makefile, hence
-  cleaning drivers/Makefile up.
-- change the license text to use the recommanded format:
-  // SPDX-License-Identifier: GPL-2.0
-- add a new patch updating the API of the EPC library to add support to
-  multi-function devices.
-- add a 2 new patches to share more common code between host controller drivers
-- remove some useless tests
-- add more comments in both drivers.
-- fix DT bindings examples
-- remove useless init of the primary, secondary and sub-ordinate bus numbers in
-  the PCI configuration space of the root port.
-- remove cdns_pcie_ep_stop() function and rework cdns_pcie_ep_start() function
-
-Cyrille Pitchen (10):
-  PCI: Regroup all PCI related entries into drivers/pci/Makefile
-  PCI: OF: Add generic function to parse and allocate PCI resources
-  PCI: generic: fix missing call of pci_free_resource_list()
-  PCI: Add generic function to probe PCI host controllers
-  PCI: Add vendor ID for Cadence
-  PCI: cadence: Add host driver for Cadence PCIe controller
-  PCI: endpoint: Add the function number as argument to EPC ops
-  PCI: endpoint: Fix EPF device name to support multi-function devices
-  dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe endpoint
-    controller
-  PCI: cadence: Add EndPoint Controller driver for Cadence PCIe
-    controller
-
-Scott Telford (1):
-  dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host
-    controller
-
- .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  |  22 +
- .../bindings/pci/cdns,cdns-pcie-host.txt           |  60 +++
- MAINTAINERS                                        |   7 +
- drivers/Makefile                                   |   5 +-
- drivers/pci/Kconfig                                |   2 +
- drivers/pci/Makefile                               |  14 +-
- drivers/pci/cadence/Kconfig                        |  27 +
- drivers/pci/cadence/Makefile                       |   4 +
- drivers/pci/cadence/pcie-cadence-ep.c              | 542 +++++++++++++++++++++
- drivers/pci/cadence/pcie-cadence-host.c            | 336 +++++++++++++
- drivers/pci/cadence/pcie-cadence.c                 | 126 +++++
- drivers/pci/cadence/pcie-cadence.h                 | 311 ++++++++++++
- drivers/pci/dwc/Makefile                           |   2 +
- drivers/pci/dwc/pcie-designware-ep.c               |  20 +-
- drivers/pci/endpoint/functions/pci-epf-test.c      |  41 +-
- drivers/pci/endpoint/pci-ep-cfs.c                  |  46 +-
- drivers/pci/endpoint/pci-epc-core.c                |  62 ++-
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pci-host-common.c                 |  72 +--
- drivers/pci/of.c                                   |  51 ++
- drivers/pci/probe.c                                |  33 ++
- include/linux/pci-epc.h                            |  43 +-
- include/linux/pci.h                                |  10 +
- include/linux/pci_ids.h                            |   2 +
- 24 files changed, 1693 insertions(+), 147 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
- create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
- create mode 100644 drivers/pci/cadence/Kconfig
- create mode 100644 drivers/pci/cadence/Makefile
- create mode 100644 drivers/pci/cadence/pcie-cadence-ep.c
- create mode 100644 drivers/pci/cadence/pcie-cadence-host.c
- create mode 100644 drivers/pci/cadence/pcie-cadence.c
- create mode 100644 drivers/pci/cadence/pcie-cadence.h
-
--- 
-2.11.0
+thanks.
+> Thanks,
+> 
+> 	M.
