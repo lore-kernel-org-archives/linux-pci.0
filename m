@@ -1,121 +1,175 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: Ilya Ledvich <ilya@compulab.co.il>, Lucas Stach <l.stach@pengutronix.de>
-Subject: RE: [PATCH v3] PCI: imx6: Add PHY reference clock source support
-Date: Mon, 15 Jan 2018 02:19:39 +0000
-Message-ID: <AM5PR0402MB2850EE5537495B0960501D178CEB0@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-References: <CAOMZO5AFC9dxhsQjmRrDA7Z3KMkEemryKOBmQhXm19NXKxHkKQ@mail.gmail.com>
- <1515073977-10153-1-git-send-email-ilya@compulab.co.il>
- <1515408232.12538.7.camel@pengutronix.de>
- <498e20c0-7b86-0f86-7555-64a012b85b9e@compulab.co.il>
-In-Reply-To: <498e20c0-7b86-0f86-7555-64a012b85b9e@compulab.co.il>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v4 4/7] powerpc/kernel Add EEH operations to notify resume
+Date: Fri,  5 Jan 2018 10:45:49 -0600
+In-Reply-To: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
+References: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20180105164552.36371-5-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBJbHlhIExlZHZpY2ggW21haWx0
-bzppbHlhQGNvbXB1bGFiLmNvLmlsXSANClNlbnQ6IDIwMTjlubQx5pyIMTDml6UgMjE6NDQNClRv
-OiBMdWNhcyBTdGFjaCA8bC5zdGFjaEBwZW5ndXRyb25peC5kZT47IFJpY2hhcmQgWmh1IDxob25n
-eGluZy56aHVAbnhwLmNvbT4NCkNjOiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29t
-PjsgUm9iIEhlcnJpbmcgPHJvYmgrZHRAa2VybmVsLm9yZz47IGxpbnV4LXBjaUB2Z2VyLmtlcm5l
-bC5vcmc7IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgbGludXgta2VybmVs
-QHZnZXIua2VybmVsLm9yZzsgZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJl
-OiBbUEFUQ0ggdjNdIFBDSTogaW14NjogQWRkIFBIWSByZWZlcmVuY2UgY2xvY2sgc291cmNlIHN1
-cHBvcnQNCg0KSGkgTHVjYXMsDQoNCk9uIDAxLzA4LzIwMTggMTI6NDMgUE0sIEx1Y2FzIFN0YWNo
-IHdyb3RlOg0KPiBBbSBEb25uZXJzdGFnLCBkZW4gMDQuMDEuMjAxOCwgMTU6NTIgKzAyMDAgc2No
-cmllYiBJbHlhIExlZHZpY2g6DQo+PiBpLk1YN0QgdmFyaWFudCBvZiB0aGUgSVAgY2FuIHVzZSBl
-aXRoZXIgQ3J5c3RhbCBPc2NpbGxhdG9yIGlucHV0IG9yIA0KPj4gaW50ZXJuYWwgY2xvY2sgaW5w
-dXQgYXMgYSBSZWZlcmVuY2UgQ2xvY2sgaW5wdXQgZm9yIFBDSWUgUEhZLg0KPj4gQWRkIHN1cHBv
-cnQgZm9yIGFuIG9wdGlvbmFsIHByb3BlcnR5ICdmc2wscGNpZS1waHktcmVmY2xrLWludGVybmFs
-Jy4NCj4+IElmIHByZXNlbnQgdGhlbiBhbiBpbnRlcm5hbCBjbG9jayBpbnB1dCBpcyB1c2VkIGFz
-IFBDSWUgUEhZIHJlZmVyZW5jZSANCj4+IGNsb2NrIHNvdXJjZS4gQnkgZGVmYXVsdCBhbiBleHRl
-cm5hbCBvc2NpbGxhdG9yIGlucHV0IGlzIHN0aWxsIHVzZWQuDQo+Pg0KPj4gVmVyaWZpZWQgb24g
-Q29tcHVsYWIgU0JDLWlNWDcgU2luZ2xlIEJvYXJkIENvbXB1dGVyLg0KPiANCj4gU29ycnkgdG8g
-Z2V0IGluIGxhdGUgaGVyZSwgYnV0IEkgd291bGQgcmF0aGVyIGhhdmUgdGhlIGV4dGVybmFsIGNs
-b2NrIA0KPiBpbnB1dCBtb2RlbGVkIGFzIGEgcmVhbCBjbG9jayBhbmQgb25seSB1c2UgdGhlIGlu
-dGVybmFsIGNsb2NrIGlmIHRoYXQgDQo+IGlzbid0IHByZXNlbnQuDQo+IA0KDQpJIHRyaWVkIHRv
-IGZvbGxvdyB0aGUgbG9naWMgZGVzY3JpYmVkIGluIHRoZSBpTVg3IFRSTSwgd2hlcmUgZXh0ZXJu
-YWwgb3NjaWxsYXRvciBpcyBhIGRlZmF1bHQgb3B0aW9uLiBBZGRpdGlvbmFsbHksIHRoZSBleHRl
-cm5hbCBjbG9jayBpbnB1dCBtb2RlbCB5b3UndmUgc3VnZ2VzdGVkLCByZXF1aXJlcyBhZGRpdGlv
-bmFsIGNoYW5nZXMgaW4gdGhlIGlNWDcgU2FicmVTRCBib2FyZCAoYW5kIHByb2JhYmx5IG90aGVy
-IGJvYXJkcyB3aGljaCB1c2UgYW4gZXh0ZXJuYWwgaW5wdXQgdG9vKSBkZXZpY2V0cmVlIGZpbGVz
-Lg0KW1JpY2hhcmRdIE1heWJlIEx1Y2FzIHdhbnQgdG8gaGF2ZSB0aGUgaW50ZXJuYWwgUExMIGNs
-b2NrIG1vZGUgYXMgdGhlIGlNWCBQQ0lFIGRlZmF1bHQgcmVmZXJlbmNlIGNsb2NrLiBBbmQgbWFy
-ayB0aGUgZXh0ZXJuYWwgT1NDIGNsb2NrIGlucHV0IG1vZGUgZXhwbGljaXRseSwgYW5kIGRvY3Vt
-ZW50ZWQgaW4gdGhlIERUIGJpbmRpbmcgZG9jdW1lbnQuDQoNCj4gQXJlIHlvdSBldmVuIHN1cmUg
-dGhhdCB0aGUgaS5NWDcgY2xvY2sgeW91IG1lbnRpb24gaXNuJ3QgdGhlIGFscmVhZHkgDQo+IGRv
-Y3VtZW50ZWQgInBjaWVfYnVzIiBjbG9jaz8gVGhpcyBvbmUgaXMgYWxzbyBhbGxvd2VkIHRvIGJl
-IHNvdXJjZWQgDQo+IGV4dGVybmFsbHkgb24gdGhlIGkuTVg2Lg0KDQpUbyB0aGUgYmVzdCBvZiBt
-eSB1bmRlcnN0YW5kaW5nIGl0J3Mgbm90IHRoZSBwY2llX2J1cyBjbG9jaywgYnV0IEknbSBhYnNv
-bHV0ZWx5IHN1cmUuIENvdWxkIGFueWJvZHkgZnJvbSB0aGUgQlNQIHRlYW0gZ3V5cyBlbGFib3Jh
-dGUgb24gdGhpcyBpc3N1ZT8gVGhhbmtzIGEgbG90IQ0KQmVzdCByZWdhcmRzLA0KW1JpY2hhcmRd
-IGlNWCBQQ0lFIGlzIGludGVncmF0ZWQgb24gdGhlIEFYSSBidXMgaW4gdGhlIFNPQyBpbnRlcm5h
-bGx5Lg0KVGhlICJwY2llX2J1c+KAnCBjbG9jayBtYXJrZWQgYXMgdGhlIGNsb2NrIHByb3ZpZGVk
-IGJ5IHRoZSBSQywgYW5kIHVzZWQgYnkgdGhlIEVQIGluIHRoZSBpTVg2IHBsYXRmb3Jtcy4NCk9u
-IGlNWDYgcGxhdGZvcm1zLCB0aGUgaW50ZXJuYWwgUExMIGlzIG91dHB1dCBmcm9tIExWRFMxIE4v
-UCBwYWQsIGFuZCB1c2VkIGJ5IEVQIGluIHRoZSBIVyByZWZlcmVuY2UgZGVzaWducy4NCiAgICAg
-ICAgICAgICAgICAgICAgICAgIGNsb2NrcyA9IDwmY2xrcyBJTVg2UURMX0NMS19QQ0lFX0FYST4s
-DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8JmNsa3MgSU1YNlFETF9DTEtfTFZE
-UzFfR0FURT4sDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8JmNsa3MgSU1YNlFE
-TF9DTEtfUENJRV9SRUZfMTI1TT47DQogICAgICAgICAgICAgICAgICAgICAgICBjbG9jay1uYW1l
-cyA9ICJwY2llIiwgInBjaWVfYnVzIiwgInBjaWVfcGh5IjsNCg0KSWx5YS4NCg0KPj4gLS0tDQo+
-PiBjaGFuZ2VzIHNpbmNlIFYyOg0KPj4gCWFkZCBhIHZlbmRvciBwcmVmaXggJ2ZzbCcgdG8gYSBu
-ZXcgcHJvcGVydHkNCj4+DQo+PiAgwqBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
-cGNpL2ZzbCxpbXg2cS1wY2llLnR4dCB8IDUgKysrKysNCj4+ICDCoGRyaXZlcnMvcGNpL2R3Yy9w
-Y2ktaW14Ni5jwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqB8IDgNCj4+ICsrKysrKystDQo+PiAgwqAyIGZpbGVzIGNoYW5nZWQsIDEy
-IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4+DQo+PiBkaWZmIC0tZ2l0IGEvRG9jdW1l
-bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQNCj4+IGIv
-RG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQN
-Cj4+IGluZGV4IDdiMWU0OGIuLjE1OTFhNmEgMTAwNjQ0DQo+PiAtLS0gYS9Eb2N1bWVudGF0aW9u
-L2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2ZzbCxpbXg2cS1wY2llLnR4dA0KPj4gKysrIGIvRG9j
-dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQNCj4+
-IEBAIC01MCw2ICs1MCwxMSBAQCBBZGRpdGlvbmFsIHJlcXVpcmVkIHByb3BlcnRpZXMgZm9yIGlt
-eDdkLXBjaWU6DQo+PiAgwqAJwqDCoMKgwqDCoMKgwqAtICJwY2llcGh5Ig0KPj4gIMKgCcKgwqDC
-oMKgwqDCoMKgLSAiYXBwcyINCj4+ICAgDQo+PiArQWRkaXRpb25hbCBvcHRpb25hbCBwcm9wZXJ0
-aWVzIGZvciBpbXg3ZC1wY2llOg0KPj4gKy0gZnNsLHBjaWUtcGh5LXJlZmNsay1pbnRlcm5hbDog
-SWYgcHJlc2VudCB0aGVuIGFuIGludGVybmFsIFBMTA0KPj4gaW5wdXQgaXMgdXNlZA0KPj4gK8Kg
-wqBhcyBQQ0llIFBIWSByZWZlcmVuY2UgY2xvY2sgc291cmNlLiBCeSBkZWZhdWx0IGFuIGV4dGVy
-bmFsDQo+PiBvc2NpbGxhdG9yIGlucHV0DQo+PiArwqDCoGlzIHVzZWQuDQo+PiArDQo+PiAgwqBF
-eGFtcGxlOg0KPj4gICANCj4+ICDCoAlwY2llQDB4MDEwMDAwMDAgew0KPj4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvcGNpL2R3Yy9wY2ktaW14Ni5jIGIvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMg
-DQo+PiBpbmRleCBiNzM0ODM1Li4zNjgxMmQzIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9wY2kv
-ZHdjL3BjaS1pbXg2LmMNCj4+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktaW14Ni5jDQo+PiBA
-QCAtNjEsNiArNjEsNyBAQCBzdHJ1Y3QgaW14Nl9wY2llIHsNCj4+ICDCoAl1MzIJCQl0eF9zd2lu
-Z19sb3c7DQo+PiAgwqAJaW50CQkJbGlua19nZW47DQo+PiAgwqAJc3RydWN0IHJlZ3VsYXRvcgkq
-dnBjaWU7DQo+PiArCWJvb2wJCQlwY2llcGh5X3JlZmNsa19zZWw7DQo+PiAgwqB9Ow0KPj4gICAN
-Cj4+ICDCoC8qIFBhcmFtZXRlcnMgZm9yIHRoZSB3YWl0aW5nIGZvciBQQ0llIFBIWSBQTEwgdG8g
-bG9jayBvbiBpLk1YNyAqLyANCj4+IEBAIC00NzQsNyArNDc1LDkgQEAgc3RhdGljIHZvaWQgaW14
-Nl9wY2llX2luaXRfcGh5KHN0cnVjdCBpbXg2X3BjaWUNCj4+ICppbXg2X3BjaWUpDQo+PiAgwqAJ
-c3dpdGNoIChpbXg2X3BjaWUtPnZhcmlhbnQpIHsNCj4+ICDCoAljYXNlIElNWDdEOg0KPj4gIMKg
-CQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLA0KPj4gSU9NVVhDX0dQ
-UjEyLA0KPj4gLQkJCQnCoMKgwqBJTVg3RF9HUFIxMl9QQ0lFX1BIWV9SRUZDTEtfU0VMLA0KPj4g
-MCk7DQo+PiArCQkJCcKgwqDCoElNWDdEX0dQUjEyX1BDSUVfUEhZX1JFRkNMS19TRUwsDQo+PiAr
-CQkJCcKgwqDCoGlteDZfcGNpZS0+cGNpZXBoeV9yZWZjbGtfc2VsID8NCj4+ICsJCQkJwqDCoMKg
-SU1YN0RfR1BSMTJfUENJRV9QSFlfUkVGQ0xLX1NFTCA6DQo+PiAwKTsNCj4+ICDCoAkJYnJlYWs7
-DQo+PiAgwqAJY2FzZSBJTVg2U1g6DQo+PiAgwqAJCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2X3Bj
-aWUtPmlvbXV4Y19ncHIsDQo+PiBJT01VWENfR1BSMTIsDQo+PiBAQCAtODQwLDYgKzg0Myw5IEBA
-IHN0YXRpYyBpbnQgaW14Nl9wY2llX3Byb2JlKHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UNCj4+ICpw
-ZGV2KQ0KPj4gIMKgCQlpbXg2X3BjaWUtPnZwY2llID0gTlVMTDsNCj4+ICDCoAl9DQo+PiAgIA0K
-Pj4gKwlpbXg2X3BjaWUtPnBjaWVwaHlfcmVmY2xrX3NlbCA9DQo+PiArCQlvZl9wcm9wZXJ0eV9y
-ZWFkX2Jvb2wobm9kZSwgImZzbCxwY2llLXBoeS1yZWZjbGstDQo+PiBpbnRlcm5hbCIpOw0KPj4g
-Kw0KPj4gIMKgCXBsYXRmb3JtX3NldF9kcnZkYXRhKHBkZXYsIGlteDZfcGNpZSk7DQo+PiAgIA0K
-Pj4gIMKgCXJldCA9IGlteDZfYWRkX3BjaWVfcG9ydChpbXg2X3BjaWUsIHBkZXYpOw0KX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5l
-bCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6
-Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+When pseries SR-IOV is enabled and after a PF driver
+has resumed from EEH, platform has to be notified
+of the event so the child VFs can be allowed to
+resume their normal recovery path.
+
+This patch makes the EEH operation allow unfreeze
+platform dependent code and adds the call to
+pseries EEH code.
+
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h               |  1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  3 +-
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 96 +++++++++++++++++++++++++++-
+ 3 files changed, 98 insertions(+), 2 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 82829c65f31a..fd37cc101f4f 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -214,6 +214,7 @@ struct eeh_ops {
+ 	int (*write_config)(struct pci_dn *pdn, int where, int size, u32 val);
+ 	int (*next_error)(struct eeh_pe **pe);
+ 	int (*restore_config)(struct pci_dn *pdn);
++	int (*notify_resume)(struct pci_dn *pdn);
+ };
+ 
+ extern int eeh_subsystem_flags;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 0665b6d03cb3..33c86c1a1720 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1704,7 +1704,8 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.read_config            = pnv_eeh_read_config,
+ 	.write_config           = pnv_eeh_write_config,
+ 	.next_error		= pnv_eeh_next_error,
+-	.restore_config		= pnv_eeh_restore_config
++	.restore_config		= pnv_eeh_restore_config,
++	.notify_resume		= NULL
+ };
+ 
+ #ifdef CONFIG_PCI_IOV
+diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+index ca6bbfd83701..898bb055cb19 100644
+--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
++++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+@@ -749,6 +749,97 @@ static int pseries_eeh_restore_config(struct pci_dn *pdn)
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++int pseries_send_allow_unfreeze(struct pci_dn *pdn,
++				u16 *vf_pe_array, int cur_vfs)
++{
++	int rc;
++	int ibm_allow_unfreeze = rtas_token("ibm,open-sriov-allow-unfreeze");
++	unsigned long buid, addr;
++
++	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
++	buid = pdn->phb->buid;
++	spin_lock(&rtas_data_buf_lock);
++	memcpy(rtas_data_buf, vf_pe_array, RTAS_DATA_BUF_SIZE);
++	rc = rtas_call(ibm_allow_unfreeze, 5, 1, NULL,
++		       addr,
++		       BUID_HI(buid),
++		       BUID_LO(buid),
++		       rtas_data_buf, cur_vfs * sizeof(u16));
++	spin_unlock(&rtas_data_buf_lock);
++	if (rc)
++		pr_warn("%s: Failed to allow unfreeze for PHB#%x-PE#%lx, rc=%x\n",
++			__func__,
++			pdn->phb->global_number, addr, rc);
++	return rc;
++}
++
++static int pseries_call_allow_unfreeze(struct eeh_dev *edev)
++{
++	struct pci_dn *pdn, *tmp, *parent, *physfn_pdn;
++	int cur_vfs = 0, rc = 0, vf_index, bus, devfn;
++	u16 *vf_pe_array;
++
++	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
++	if (!vf_pe_array)
++		return -ENOMEM;
++	if (pci_num_vf(edev->physfn ? edev->physfn : edev->pdev)) {
++		if (edev->pdev->is_physfn) {
++			cur_vfs = pci_num_vf(edev->pdev);
++			pdn = eeh_dev_to_pdn(edev);
++			parent = pdn->parent;
++			for (vf_index = 0; vf_index < cur_vfs; vf_index++)
++				vf_pe_array[vf_index] =
++					cpu_to_be16(pdn->pe_num_map[vf_index]);
++			rc = pseries_send_allow_unfreeze(pdn, vf_pe_array,
++							 cur_vfs);
++			pdn->last_allow_rc = rc;
++			for (vf_index = 0; vf_index < cur_vfs; vf_index++) {
++				list_for_each_entry_safe(pdn, tmp,
++							 &parent->child_list,
++							 list) {
++					bus = pci_iov_virtfn_bus(edev->pdev,
++								 vf_index);
++					devfn = pci_iov_virtfn_devfn(edev->pdev,
++								     vf_index);
++					if (pdn->busno != bus ||
++					    pdn->devfn != devfn)
++						continue;
++					pdn->last_allow_rc = rc;
++				}
++			}
++		} else {
++			pdn = pci_get_pdn(edev->pdev);
++			vf_pe_array[0] = cpu_to_be16(pdn->pe_number);
++			physfn_pdn = pci_get_pdn(edev->physfn);
++			rc = pseries_send_allow_unfreeze(physfn_pdn,
++							 vf_pe_array, 1);
++			pdn->last_allow_rc = rc;
++		}
++	}
++
++	kfree(vf_pe_array);
++	return rc;
++}
++
++static int pseries_notify_resume(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++
++	if (!edev)
++		return -EEXIST;
++
++	if (rtas_token("ibm,open-sriov-allow-unfreeze")
++	    == RTAS_UNKNOWN_SERVICE)
++		return -EINVAL;
++
++	if (edev->pdev->is_physfn || edev->pdev->is_virtfn)
++		return pseries_call_allow_unfreeze(edev);
++
++	return 0;
++}
++#endif
++
+ static struct eeh_ops pseries_eeh_ops = {
+ 	.name			= "pseries",
+ 	.init			= pseries_eeh_init,
+@@ -764,7 +855,10 @@ static struct eeh_ops pseries_eeh_ops = {
+ 	.read_config		= pseries_eeh_read_config,
+ 	.write_config		= pseries_eeh_write_config,
+ 	.next_error		= NULL,
+-	.restore_config		= pseries_eeh_restore_config
++	.restore_config		= pseries_eeh_restore_config,
++#ifdef CONFIG_PCI_IOV
++	.notify_resume		= pseries_notify_resume
++#endif
+ };
+ 
+ /**
+-- 
+2.14.3 (Apple Git-98)
