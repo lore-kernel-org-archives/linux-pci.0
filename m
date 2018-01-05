@@ -1,63 +1,67 @@
-Return-Path: <SRS0=/8jO=ET=gmail.com=jpgrayson@kernel.org>
-Return-Path: <SRS0=/8jO=ET=gmail.com=jpgrayson@kernel.org>
-Date: Wed, 24 Jan 2018 11:45:30 -0500
-From: Peter Grayson <jpgrayson@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Peter Grayson <jpgrayson@gmail.com>,
-	Catalin Marinas <catalin.marinas@gmail.com>,
-	linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	Juergen Gross <jgross@suse.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	David Airlie <airlied@linux.ie>
-Subject: Re: [GIT PULL] PCI fixes for v4.15
-Message-ID: <20180124164530.br5mlcj777gxxt4w@chibold.localdomain>
-References: <20180123195644.GA92112@bhelgaas-glaptop.roam.corp.google.com>
- <CA+55aFxFp_rjSviLUEH-uZ1U=x_g-xiAFKoEQqOOxZQs4xV11A@mail.gmail.com>
- <20180124004603.GH5317@bhelgaas-glaptop.roam.corp.google.com>
- <CA+55aFwpmqZUnD=3U23c-r89XmyncoXQzK7+b8AyuQ9+soC19g@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:46408 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752063AbeAESTj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Jan 2018 13:19:39 -0500
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-10-logang@deltatee.com>
+ <20180105181152.GA10657@localhost.localdomain>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <6c89e4b4-1854-c251-a5ec-7e54bc8085fc@deltatee.com>
+Date: Fri, 5 Jan 2018 11:19:28 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA+55aFwpmqZUnD=3U23c-r89XmyncoXQzK7+b8AyuQ9+soC19g@mail.gmail.com>
+In-Reply-To: <20180105181152.GA10657@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 09/12] nvme-pci: Use PCI p2pmem subsystem to manage the
+ CMB
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 23, 2018 at 05:04:22PM -0800, Linus Torvalds wrote:
-> On Tue, Jan 23, 2018 at 4:46 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Tue, Jan 23, 2018 at 12:49:22PM -0800, Linus Torvalds wrote:
+
+
+On 05/01/18 11:11 AM, Keith Busch wrote:
+> On Thu, Jan 04, 2018 at 12:01:34PM -0700, Logan Gunthorpe wrote:
+>> Register the CMB buffer as p2pmem and use the appropriate allocation
+>> functions to create and destroy the IO SQ.
+>>
+>> If the CMB supports WDS and RDS, publish it for use as p2p memory
+>> by other devices.
 > 
-> > Applying that patch with "git am" results in the correct
-> >
-> >   Author: Christian König <ckoenig.leichtzumerken@gmail.com
+> <>
 > 
-> But apparently stgit does not:
+>> +	if (qid && dev->cmb_use_sqes) {
+>> +		nvmeq->sq_cmds = pci_alloc_p2pmem(pdev, SQ_SIZE(depth));
 > 
-> > Applying the identical patch with "stg import -M" results in
-> >
-> >   Author: =?UTF-8?q?Christian=20K=C3=B6nig?= <ckoenig.leichtzumerken@gmail.com>
+>> +		nvmeq->sq_dma_addr = pci_p2pmem_virt_to_bus(pdev,
+>> +							    nvmeq->sq_cmds);
+>> +		nvmeq->sq_cmds_is_io = true;
+>> +	}
 > 
-> I'm adding Peter Grayson and Catalin Marinas to the participants,
-> since they seem to be the main stgit developers.
+> This gets into some spec type trouble for creating an IO submission
+> queue. We use the sq_dma_addr as the PRP entry to the Create I/O
+> SQ command, which has some requirements:
+> 
+>    "the PRP Entry shall have an offset of 0h."
+> 
+> So this has to be 4k aligned, but pci_alloc_p2pmem doesn't guarantee
+> that. I doubt the spec's intention was to require such alignment for
+> CMB SQs, but there may be controllers enforcing the rule as written.
 
-It it probable that I caused this stgit regression with changes to make
-stgit compatible with Python 3. Mea culpa.
+Although it is not explicitly stated anywhere, pci_alloc_p2pmem() should 
+always be at least 4k aligned. This is because the gen_pool that 
+implements it is created with PAGE_SHIFT for its min_alloc_order.
 
-The issue is possibly already repaired. Catalin recently (a few days
-ago) merged repairs for several related email encoding regressions.
-
-> Bjorn, maybe you can send Catalin an example mbox?
-
-An example mbox or even just forwarding the email with the patch in
-question would be helpful.
-
-Also helpful would be the versions of stgit and python being used along
-with the LC_ALL and LANG environment variables used when running `stg
-import`.
-
-Thanks,
-Pete
+Logan
