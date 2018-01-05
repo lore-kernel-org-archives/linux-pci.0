@@ -1,78 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:42331 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751598AbeAYO2D (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jan 2018 09:28:03 -0500
-Date: Thu, 25 Jan 2018 15:27:59 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, robh+dt@kernel.org, frowand.list@gmail.com,
-        rjw@rjwysocki.net, tglx@linutronix.de, vidyas@nvidia.com,
-        kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org
-Subject: Re: [PATCH V6 5/7] PCI: tegra: Add loadable kernel module support
-Message-ID: <20180125142759.GG27888@ulmo>
-References: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
- <1515650888-9459-6-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail-bl2nam02on0049.outbound.protection.outlook.com ([104.47.38.49]:35920
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751495AbeAEO0i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Jan 2018 09:26:38 -0500
+From: Bharat Kumar Gogada <bharatku@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        "Jim Quinlan" <jim2101024@gmail.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
+        "linux-rockchip@lists.infradead.org"
+        <linux-rockchip@lists.infradead.org>
+Subject: RE: Why do we check for "link-up" in *_pcie_valid_device()?
+Date: Fri, 5 Jan 2018 14:26:34 +0000
+Message-ID: <BLUPR0201MB1505659A7B1DDA658EFB7049A51C0@BLUPR0201MB1505.namprd02.prod.outlook.com>
+References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
+ <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
+ <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="9Iq5ULCa7nGtWwZS"
-In-Reply-To: <1515650888-9459-6-git-send-email-mmaddireddy@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada wrote:
+> Bjorn wrote:
+>> In the PCI config access path, the *_pcie_valid_device() functions in=20
+>> the dwc, altera, rockchip, and xilinx drivers all check whether the=20
+>> link is up.
+>>=20
+>> I think this is racy because the link may go down after we check but=20
+>> before we perform the config access.
+>>=20
+>> What would blow up if we removed the *_pcie_link_up() checks?
+>>=20
+>> I'd like to either remove the checks or add comments about why the=20
+>> race is acceptable.  If we've covered this before, I apologize.
+>> Adding a comment will keep me from pestering you about this again in=20
+>> the future.
 
---9Iq5ULCa7nGtWwZS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> In both Xilinx driver cases when link is down, hardware responds by=20
+> AXI DECERR/SLVERR status which causes an exception, synchronous=20
+> external abort to CPU.  This causes system to hang, so we need this=20
+> check for both of our drivers.  We will add comments.
 
-On Thu, Jan 11, 2018 at 11:38:06AM +0530, Manikanta Maddireddy wrote:
-> Implement remove callback function for Tegra PCIe driver to add
-> loadable kernel module support. Change PCI_TEGRA config to tristate to
-> allow pci-tegra driver to be build as a module.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
-> V3:
-> * use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_ini=
-t()
-> V4:
-> * no change in this patch
-> V5:
-> * Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-> rebased on linux-next
-> V6:
-> * no change in this patch
->=20
->  drivers/pci/host/Kconfig     |  2 +-
->  drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
->  2 files changed, 32 insertions(+), 4 deletions(-)
+This is a problem, and checking whether the link is up is a workaround but =
+not a real solution.  That means your system may hang if the link happens t=
+o go down at the wrong time.
 
-Acked-by: Thierry Reding <treding@nvidia.com>
+A real solution would be to handle the synchronous external abort so it doe=
+sn't cause a system hang.
 
---9Iq5ULCa7nGtWwZS
-Content-Type: application/pgp-signature; name="signature.asc"
+Yes, I agree that this is workaround. For pcie-xilinx.c for arm32, we can h=
+ave fault handling similar to "imx6q_pcie_abort_handler" in drivers/pci/dwc=
+/pci-imx6.c.
+Since this driver is same for Microblaze architecture also, it requires sep=
+arate handling.
 
------BEGIN PGP SIGNATURE-----
+For pcie-xilinx-nwl.c ARM64 as per link [1], linux kernel will hang for the=
+ above AXI responses.=20
+As of now arm64 RAS is still work in progress [2]. =20
 
-iQIyBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlpp6W8ACgkQ3SOs138+
-s6Fc7w/3dNRRNw4XT4DU/vHGkt3/ajK4yWAXdyX8aI/+cJcNXQVwRQGBDI2ukbO1
-IMTW1FwNwnzq3vSgl6Hk6OCz8lQaV6ohlq81++k4Ruw99JUJjTl8uQytXO8GOyDE
-OFzMSSQS+Mdod3oiKH7IMlZ/y5uB8m4IIzkPXghMDw0GzWtT5q3ss+iywYzEu4jU
-KtkTXeIC+ju/xVuNLVV2v/u1K5aPei2PLOReteDc5qd5FWl2UBibbUzWHSZoMDwK
-Eqdp5/2s0NlOA+WyZN2qjUVENXJLqZkl/07G0o6LqTjT1VM2N5fbQ2472WCku2WO
-qHGtqN5IqAg2CHBbmaYjCBF52ymiHOax2X2x1jpZFlHR9MxQq8MC6HSlBFR+KxaM
-G9wKwqudVZP7K3TGwEyrH38JX5CP+DdwQOFjjGmJgWMv0VYkCIG39fp9rax9SRcC
-/VRQC9NkpjkBTtVSIygT1PWGrLGn8emsvbM4ghLpm5XbSIs/wsLKS/yglQLbxsG+
-iNxMsBE8VNQfbiY8Rrm7jUfVl8pO8/7/1t5d3ihmR9UsGTGK4rZMcvePsxWVYTe8
-OxmEVEMAoq7CXmP2bFgOK8u8DdwCaLB2G1rFtYMlwCf05pdJyIFEZuv6FCN3KxSZ
-jYrzDB/YYg+LZQua3f4dyEdYKYW5b/fohNY54DGfavKk/NUQQw==
-=u2+G
------END PGP SIGNATURE-----
+[1] https://www.spinics.net/lists/arm-kernel/msg624203.html
 
---9Iq5ULCa7nGtWwZS--
+[2] https://patchwork.kernel.org/patch/9973967/
+
+The check can be removed, if above issues were addressed.
+
+Regards,
+Bharat
+
+
+
+=20
