@@ -1,41 +1,45 @@
-Return-Path: <SRS0=awys=EW=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=awys=EW=linuxfoundation.org=gregkh@kernel.org>
-Date: Sat, 27 Jan 2018 15:56:16 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>, linux-kernel@vger.kernel.org,
-	Philippe Ombredanne <pombredanne@nexb.com>
-Subject: Re: [PATCH 0/4] PCI: Add SPDX tags
-Message-ID: <20180127145616.GA2117@kroah.com>
-References: <20180126212536.31503.43805.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:37593 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754084AbeAGPG3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 7 Jan 2018 10:06:29 -0500
+Date: Sun, 7 Jan 2018 16:06:27 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Rich Felker <dalias@libc.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 0/8] SH7786 PCIe support fixes
+Message-ID: <20180107160627.5a1231fa@windsurf>
+In-Reply-To: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
+References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180126212536.31503.43805.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 26, 2018 at 03:32:17PM -0600, Bjorn Helgaas wrote:
-> b24413180f56 ("License cleanup: add SPDX GPL-2.0 license identifier to
-> files with no license") added SPDX GPL-2.0 tags to several PCI files.
-> 
-> These patches add SPDX tags to almost all remaining PCI files.  For ease of
-> reviewing they're split into several cases (GPL v2, GPL v2+, etc.)
-> 
-> One file (drivers/pci/hotplug/s390_pci_hpc.c) specifies only "GPL"; I don't
-> know what to do with that, so I left it unchanged.
-> 
-> These are on my pci/spdx branch [1], and if they're non-controversial, I'll
-> include them for v4.16.  If they *are* controversial or you have other
-> plans, I'll hold off.  I couldn't tell if you have a grand scheme or if you
-> want maintainers to step up and finish things.
+Hello,
 
-No grand scheme here from me at all, I'd love for maintainers to step up
-and finish these things :)
+On Mon,  4 Dec 2017 16:08:59 +0100, Thomas Petazzoni wrote:
 
-All of these look great to me, feel free to add:
-	Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-to all of them if you want to.
+> Thomas Petazzoni (8):
+>   arch/sh: add sh7786_mm_sel() function
+>   arch/sh: make the DMA mapping operations observe dev->dma_pfn_offset
+>   arch/sh: pci: don't use disabled resources
+>   arch/sh: pcie-sh7786: mark unavailable PCI resource as disabled
+>   arch/sh: pcie-sh7786: exclude unusable PCI MEM areas
+>   arch/sh: pcie-sh7786: adjust PCI MEM and IO regions
+>   arch/sh: pcie-sh7786: adjust the memory mapping
+>   arch/sh: pcie-sh7786: handle non-zero DMA offset
 
-thanks for doing this work, much appreciated.
+It's been a month. Any feedback on those patches ?
 
-greg k-h
+Thanks!
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
