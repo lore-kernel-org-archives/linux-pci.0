@@ -1,76 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:13342 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751017AbeAKGI2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 01:08:28 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V6 2/7] PCI: tegra: Use bus->sysdata to store and get host private data
-Date: Thu, 11 Jan 2018 11:38:03 +0530
-Message-ID: <1515650888-9459-3-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 8 Jan 2018 19:34:34 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Christoph Hellwig <hch@lst.de>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+        rdma_rw_ctx_[init|destroy]()
+Message-ID: <20180108183434.GA15549@lst.de>
+References: <20180104190137.7654-1-logang@deltatee.com> <20180104190137.7654-7-logang@deltatee.com> <20180104192225.GS11348@ziepe.ca> <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com> <20180104221337.GV11348@ziepe.ca> <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com> <20180105045031.GX11348@ziepe.ca> <20180108145901.GA10743@lst.de> <20180108180917.GF11348@ziepe.ca>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180108180917.GF11348@ziepe.ca>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra host driver is using pci_find_host_bridge() to get private data,
-however pci_find_host_bridge() is causing module build failure because
-it is not exported. pci_find_host_bridge() can be avoided by using
-bus->sysdata to store and get private data.
+On Mon, Jan 08, 2018 at 11:09:17AM -0700, Jason Gunthorpe wrote:
+> > As usual we implement what actually has a consumer.  On top of that the
+> > R/W API is the only core RDMA API that actually does DMA mapping for the
+> > ULP at the moment.
+> 
+> Well again the same can be said for dma_map_page vs dma_map_sg...
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
----
-V4:
-* new patch in V4
-V5:
-* Rebase on top of linux-next
-V6:
-* no change in this patch
+I don't understand this comment.
 
- drivers/pci/host/pci-tegra.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> > For SENDs and everything else dma maps are done by the ULP (I'd like
+> > to eventually change that, though - e.g. sends through that are
+> > inline to the workqueue don't need a dma map to start with).
+> 
+> 
+> > That's because the initial design was to let the ULPs do the DMA
+> > mappings, which fundamentally is wrong.  I've fixed it for the R/W
+> > API when adding it, but no one has started work on SENDs and atomics.
+> 
+> Well, you know why it is like this, and it is very complicated to
+> unwind - the HW driver does not have enough information during CQ
+> processing to properly do any unmaps, let alone serious error tear
+> down unmaps, so we'd need a bunch of new APIs developed first, like RW
+> did. :\
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 4c105fbda777..059aa73d5f76 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -379,8 +379,7 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
- 					unsigned int devfn,
- 					int where)
- {
--	struct pci_host_bridge *host = pci_find_host_bridge(bus);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-+	struct tegra_pcie *pcie = bus->sysdata;
- 	void __iomem *addr = NULL;
- 
- 	if (bus->number == 0) {
-@@ -573,8 +572,7 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- {
--	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-+	struct tegra_pcie *pcie = pdev->bus->sysdata;
- 	int irq;
- 
- 	tegra_cpuidle_pcie_irqs_in_use();
-@@ -2258,6 +2256,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	pcie = pci_host_bridge_priv(host);
-+	host->sysdata = pcie;
- 
- 	pcie->soc = of_device_get_match_data(dev);
- 	INIT_LIST_HEAD(&pcie->ports);
--- 
-2.1.4
+Yes, if it was trivial we would have done it already.
+
+> > > And on that topic, does this scheme work with HFI?
+> > 
+> > No, and I guess we need an opt-out.  HFI generally seems to be
+> > extremely weird.
+> 
+> This series needs some kind of fix so HFI, QIB, rxe, etc don't get
+> broken, and it shouldn't be 'fixed' at the RDMA level.
+
+I don't think rxe is a problem as it won't show up a pci device.
+HFI and QIB do show as PCI devices, and could be used for P2P transfers
+from the PCI point of view.  It's just that they have a layer of
+software indirection between their hardware and what is exposed at
+the RDMA layer.
+
+So I very much disagree about where to place that workaround - the
+RDMA code is exactly the right place.
+
+> > > This is why P2P must fit in to the common DMA framework somehow, we
+> > > rely on these abstractions to work properly and fully in RDMA.
+> > 
+> > Moving P2P up to common RDMA code isn't going to fix this.  For that
+> > we need to stop preting that something that isn't DMA can abuse the
+> > dma mapping framework, and until then opt them out of behavior that
+> > assumes actual DMA like P2P.
+> 
+> It could, if we had a DMA op for p2p then the drivers that provide
+> their own ops can implement it appropriately or not at all.
+> 
+> Eg the correct implementation for rxe to support p2p memory is
+> probably somewhat straightfoward.
+
+But P2P is _not_ a factor of the dma_ops implementation at all,
+it is something that happens behind the dma_map implementation.
+
+Think about what the dma mapping routines do:
+
+ (a) translate from host address to bus addresses
+
+and
+
+ (b) flush caches (in non-coherent architectures)
+
+Both are obviously not needed for P2P transfers, as they never reach
+the host.
+
+> Very long term the IOMMUs under the ops will need to care about this,
+> so the wrapper is not an optimal place to put it - but I wouldn't
+> object if it gets it out of RDMA :)
+
+Unless you have an IOMMU on your PCIe switch and not before/inside
+the root complex that is not correct.
