@@ -1,57 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:16765 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751119AbeAIJUO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 04:20:14 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V5 1/7] of: Export of_pci_range_to_resource()
-Date: Tue, 9 Jan 2018 14:49:31 +0530
-Message-ID: <1515489577-2197-2-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from verein.lst.de ([213.95.11.211]:37857 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755418AbeAHS5p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jan 2018 13:57:45 -0500
+Date: Mon, 8 Jan 2018 19:57:43 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgg@ziepe.ca>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+        rdma_rw_ctx_[init|destroy]()
+Message-ID: <20180108185743.GA15936@lst.de>
+References: <20180104190137.7654-7-logang@deltatee.com> <20180104192225.GS11348@ziepe.ca> <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com> <20180104221337.GV11348@ziepe.ca> <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com> <20180105045031.GX11348@ziepe.ca> <20180108145901.GA10743@lst.de> <20180108180917.GF11348@ziepe.ca> <20180108183434.GA15549@lst.de> <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra PCIe host driver parses of_pci_range from device tree and converts
-to resource. Export of_pci_range_to_resource() to allow Tegra PCIe host
-driver to be compiled as loadable kernel module.
+On Mon, Jan 08, 2018 at 11:44:41AM -0700, Logan Gunthorpe wrote:
+>> Think about what the dma mapping routines do:
+>>
+>>   (a) translate from host address to bus addresses
+>>
+>> and
+>>
+>>   (b) flush caches (in non-coherent architectures)
+>>
+>> Both are obviously not needed for P2P transfers, as they never reach
+>> the host.
+>
+> Isn't pci_p2pdma_map_sg doing (a)? It's just translating from a host 
+> address to a PCI bus address.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
-V2:
-* commit message update
-V3:
-* no change in this patch
-V4:
-* no change in this patch
-V5:
-* no change in this patch
+It does, sort of - but in a different way then the normal DMA map
+ops.  And only to work around the fact that we need to map our
+P2P space into struct pages.  Without that we could just pass the
+bus address around, but the Linux stack and VM isn't anywhere near
+ready for something that advanced.
 
- drivers/of/address.c | 1 +
- 1 file changed, 1 insertion(+)
+>>> Very long term the IOMMUs under the ops will need to care about this,
+>>> so the wrapper is not an optimal place to put it - but I wouldn't
+>>> object if it gets it out of RDMA :)
+>>
+>> Unless you have an IOMMU on your PCIe switch and not before/inside
+>> the root complex that is not correct.
+>
+> Per the ACS discussion, in the future we might want to implement "ACS 
+> Direct Translated P2P" as Alex described. I expect it would be the IOMMU 
+> that needs to set that up. So, I think, we also have the dma_map 
+> implementations also doing something like:
+>
+> (c) setup/manage any security permissions on mappings
+> Which P2P may at some point be concerned with.
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index fa6cabfc3cb9..8d9b93f8701a 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -361,6 +361,7 @@ int of_pci_range_to_resource(struct of_pci_range *range,
- 	res->end = (resource_size_t)OF_BAD_ADDR;
- 	return err;
- }
-+EXPORT_SYMBOL(of_pci_range_to_resource);
- #endif /* CONFIG_PCI */
- 
- /*
--- 
-2.1.4
+Maybe once root complexes with iommus actually support P2P.  But until
+then we have a lot more more important problems to solve.
