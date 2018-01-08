@@ -1,122 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:39156 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751246AbeADTCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 14:02:00 -0500
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  4 Jan 2018 12:01:30 -0700
-Message-Id: <20180104190137.7654-6-logang@deltatee.com>
-In-Reply-To: <20180104190137.7654-1-logang@deltatee.com>
-References: <20180104190137.7654-1-logang@deltatee.com>
-Subject: [PATCH 05/12] block: Introduce PCI P2P flags for request and request queue
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=q9Qe=ED=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=q9Qe=ED=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 8 Jan 2018 11:00:16 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH] imx6: fix pcie enumeration
+Message-ID: <20180108110015.GA32027@red-moon>
+References: <20180104202430.GC189897@bhelgaas-glaptop.roam.corp.google.com>
+ <a2d7afee-7a41-6da6-e5a4-a36a6fcde55d@ncentric.com>
+ <20180105123206.GA24511@e107981-ln.cambridge.arm.com>
+ <ebf30c78-b772-6214-f441-c86ae7fdba7e@ncentric.com>
+ <20180105171828.GC24933@red-moon>
+ <5bc70c34-45b2-5aed-eb06-f8ecfe859fd0@ncentric.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <5bc70c34-45b2-5aed-eb06-f8ecfe859fd0@ncentric.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
-supports targeting P2P memory.
+[+cc Joao, Jingoo]
 
-REQ_PCI_P2P is introduced to indicate a particular bio request is
-directed to/from PCI P2P memory. A request with this flag is not
-accepted unless the corresponding queues have the QUEUE_FLAG_PCI_P2P
-flag set.
+On Mon, Jan 08, 2018 at 09:51:37AM +0100, Koen Vandeputte wrote:
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- block/blk-core.c          |  3 +++
- include/linux/blk_types.h | 18 +++++++++++++++++-
- include/linux/blkdev.h    |  2 ++
- 3 files changed, 22 insertions(+), 1 deletion(-)
+[...]
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index b8881750a3ac..f347c25731ff 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2141,6 +2141,9 @@ generic_make_request_checks(struct bio *bio)
- 	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q))
- 		goto not_supported;
- 
-+	if ((bio->bi_opf & REQ_PCI_P2P) && !blk_queue_pci_p2p(q))
-+		goto not_supported;
-+
- 	if (should_fail_request(&bio->bi_disk->part0, bio->bi_iter.bi_size))
- 		goto end_io;
- 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 9e7d8bd776d2..8e1b4d643478 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -228,6 +228,10 @@ enum req_flag_bits {
- 	__REQ_BACKGROUND,	/* background IO */
- 	__REQ_NOWAIT,           /* Don't wait if request will block */
- 
-+#ifdef CONFIG_PCI_P2P
-+	__REQ_PCI_P2P,		/* request is to/from P2P memory */
-+#endif
-+
- 	/* command specific flags for REQ_OP_WRITE_ZEROES: */
- 	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
- 
-@@ -252,6 +256,18 @@ enum req_flag_bits {
- #define REQ_BACKGROUND		(1ULL << __REQ_BACKGROUND)
- #define REQ_NOWAIT		(1ULL << __REQ_NOWAIT)
- 
-+#ifdef CONFIG_PCI_P2P
-+/*
-+ * Currently SGLs do not support mixed P2P and regular memory so
-+ * requests with P2P memory must not be merged.
-+ */
-+#define REQ_PCI_P2P		(1ULL << __REQ_PCI_P2P)
-+#define REQ_IS_PCI_P2P(req)	((req)->cmd_flags & REQ_PCI_P2P)
-+#else
-+#define REQ_PCI_P2P		0
-+#define REQ_IS_PCI_P2P(req)	0
-+#endif /* CONFIG_PCI_P2P */
-+
- #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
- 
- #define REQ_DRV			(1ULL << __REQ_DRV)
-@@ -260,7 +276,7 @@ enum req_flag_bits {
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
- 
- #define REQ_NOMERGE_FLAGS \
--	(REQ_NOMERGE | REQ_PREFLUSH | REQ_FUA)
-+	(REQ_NOMERGE | REQ_PREFLUSH | REQ_FUA | REQ_PCI_P2P)
- 
- #define bio_op(bio) \
- 	((bio)->bi_opf & REQ_OP_MASK)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 0ce8a372d506..877b71dd1122 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -651,6 +651,7 @@ struct request_queue {
- #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
- #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
- #define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
-+#define QUEUE_FLAG_PCI_P2P     30	/* device supports pci p2p requests */
- 
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
-@@ -746,6 +747,7 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
- #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
- #define blk_queue_scsi_passthrough(q)	\
- 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
-+#define blk_queue_pci_p2p(q)	test_bit(QUEUE_FLAG_PCI_P2P, &(q)->queue_flags)
- 
- #define blk_noretry_request(rq) \
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
--- 
-2.11.0
+> [ Node 4 | node-4 ] lspci -v
+> 00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
+> [Normal decode])
+>     Flags: bus master, fast devsel, latency 0, IRQ 298
+>     Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
+>     Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+                                     ^^^^^^^^^^^^^^
+
+So basically, the subordinate number in the root port does not
+affect config space forwarding from what I see and it has always
+been like that for dwc.
+
+You are forced to update it to 0xff because otherwise the kernel
+stops enumerating bus numbers > 1 but that's a software issue
+not HW - the subordinate bus number does not seem to affect anything
+here.
+
+Sigh.
+
+Another option would consist in forcing the kernel to reassign
+all bus numbers by setting the PCI_REASSIGN_ALL_BUS flag but
+that's not a good idea given how inconsistent that flag usage is.
+
+I think that updating the subordinate bus numbers in the DWC
+config register is the correct solution to make sure the kernel
+won't get confused anymore by what seems to be a fake root port,
+I need input from DWC maintainers to confirm my understanding.
+
+Thanks,
+Lorenzo
+
+>     I/O behind bridge: None
+>     Memory behind bridge: 01100000-012fffff [size=2M]
+>     Prefetchable memory behind bridge: None
+>     [virtual] Expansion ROM at 01300000 [disabled] [size=64K]
+>     Capabilities: [40] Power Management version 3
+>     Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
+>     Capabilities: [70] Express Root Port (Slot-), MSI 00
+>     Capabilities: [100] Advanced Error Reporting
+>     Capabilities: [140] Virtual Channel
+>     Kernel driver in use: pcieport
+> lspci: Unable to load libkmod resources: error -12
+> 
+> 01:00.0 PCI bridge: PLX Technology, Inc. PEX 8604 4-lane, 4-Port PCI
+> Express Gen 2 (5.0 GT/s) Switch (rev ba) (prog-if 00 [Normal
+> decode])
+>     Flags: bus master, fast devsel, latency 0, IRQ 298
+>     Memory at 01200000 (32-bit, non-prefetchable) [size=128K]
+>     Bus: primary=01, secondary=02, subordinate=05, sec-latency=0
+>     I/O behind bridge: None
+>     Memory behind bridge: 01100000-011fffff [size=1M]
+>     Prefetchable memory behind bridge: None
+>     Capabilities: [40] Power Management version 3
+>     Capabilities: [48] MSI: Enable- Count=1/4 Maskable+ 64bit+
+>     Capabilities: [68] Express Upstream Port, MSI 00
+>     Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8604
+> 4-lane, 4-Port PCI Express Gen 2 (5.0 GT/s) Switch
+>     Capabilities: [100] Device Serial Number ba-86-01-10-b5-df-0e-00
+>     Capabilities: [fb4] Advanced Error Reporting
+>     Capabilities: [138] Power Budgeting <?>
+>     Capabilities: [148] Virtual Channel
+>     Capabilities: [448] Vendor Specific Information: ID=0000 Rev=0
+> Len=0cc <?>
+>     Capabilities: [950] Vendor Specific Information: ID=0001 Rev=0
+> Len=010 <?>
+>     Kernel driver in use: pcieport
+> 
+> 02:01.0 PCI bridge: PLX Technology, Inc. PEX 8604 4-lane, 4-Port PCI
+> Express Gen 2 (5.0 GT/s) Switch (rev ba) (prog-if 00 [Normal
+> decode])
+>     Flags: bus master, fast devsel, latency 0, IRQ 299
+>     Bus: primary=02, secondary=03, subordinate=03, sec-latency=0
+>     I/O behind bridge: None
+>     Memory behind bridge: None
+>     Prefetchable memory behind bridge: None
+>     Capabilities: [40] Power Management version 3
+>     Capabilities: [48] MSI: Enable- Count=1/4 Maskable+ 64bit+
+>     Capabilities: [68] Express Downstream Port (Slot+), MSI 00
+>     Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8604
+> 4-lane, 4-Port PCI Express Gen 2 (5.0 GT/s) Switch
+>     Capabilities: [100] Device Serial Number ba-86-01-10-b5-df-0e-00
+>     Capabilities: [fb4] Advanced Error Reporting
+>     Capabilities: [148] Virtual Channel
+>     Capabilities: [520] Access Control Services
+>     Capabilities: [950] Vendor Specific Information: ID=0001 Rev=0
+> Len=010 <?>
+>     Kernel driver in use: pcieport
+> 
+> 02:04.0 PCI bridge: PLX Technology, Inc. PEX 8604 4-lane, 4-Port PCI
+> Express Gen 2 (5.0 GT/s) Switch (rev ba) (prog-if 00 [Normal
+> decode])
+>     Flags: bus master, fast devsel, latency 0, IRQ 298
+>     Bus: primary=02, secondary=04, subordinate=04, sec-latency=0
+>     I/O behind bridge: None
+>     Memory behind bridge: None
+>     Prefetchable memory behind bridge: None
+>     Capabilities: [40] Power Management version 3
+>     Capabilities: [48] MSI: Enable- Count=1/4 Maskable+ 64bit+
+>     Capabilities: [68] Express Downstream Port (Slot+), MSI 00
+>     Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8604
+> 4-lane, 4-Port PCI Express Gen 2 (5.0 GT/s) Switch
+>     Capabilities: [100] Device Serial Number ba-86-01-10-b5-df-0e-00
+>     Capabilities: [fb4] Advanced Error Reporting
+>     Capabilities: [148] Virtual Channel
+>     Capabilities: [520] Access Control Services
+>     Capabilities: [950] Vendor Specific Information: ID=0001 Rev=0
+> Len=010 <?>
+>     Kernel driver in use: pcieport
+> 
+> 02:05.0 PCI bridge: PLX Technology, Inc. PEX 8604 4-lane, 4-Port PCI
+> Express Gen 2 (5.0 GT/s) Switch (rev ba) (prog-if 00 [Normal
+> decode])
+>     Flags: bus master, fast devsel, latency 0, IRQ 299
+>     Bus: primary=02, secondary=05, subordinate=05, sec-latency=0
+>     I/O behind bridge: None
+>     Memory behind bridge: 01100000-011fffff [size=1M]
+>     Prefetchable memory behind bridge: None
+>     Capabilities: [40] Power Management version 3
+>     Capabilities: [48] MSI: Enable- Count=1/4 Maskable+ 64bit+
+>     Capabilities: [68] Express Downstream Port (Slot+), MSI 00
+>     Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8604
+> 4-lane, 4-Port PCI Express Gen 2 (5.0 GT/s) Switch
+>     Capabilities: [100] Device Serial Number ba-86-01-10-b5-df-0e-00
+>     Capabilities: [fb4] Advanced Error Reporting
+>     Capabilities: [148] Virtual Channel
+>     Capabilities: [520] Access Control Services
+>     Capabilities: [950] Vendor Specific Information: ID=0001 Rev=0
+> Len=010 <?>
+>     Kernel driver in use: pcieport
+> 
+> 05:00.0 Network controller: Qualcomm Atheros AR958x 802.11abgn
+> Wireless Network Adapter (rev 01)
+>     Subsystem: Device 19b6:d016
+>     Flags: bus master, fast devsel, latency 0, IRQ 299
+>     Memory at 01100000 (64-bit, non-prefetchable) [size=128K]
+>     [virtual] Expansion ROM at 01120000 [disabled] [size=64K]
+>     Capabilities: [40] Power Management version 3
+>     Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
+>     Capabilities: [70] Express Endpoint, MSI 00
+>     Capabilities: [100] Advanced Error Reporting
+>     Capabilities: [140] Virtual Channel
+>     Capabilities: [300] Device Serial Number 00-00-00-00-00-00-00-00
+>     Kernel driver in use: ath9k
+> 
