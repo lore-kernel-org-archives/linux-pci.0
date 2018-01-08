@@ -1,43 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44110 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:51906 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932407AbeAHWNO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Jan 2018 17:13:14 -0500
-Date: Mon, 8 Jan 2018 16:12:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
+        id S1756232AbeAHTGN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jan 2018 14:06:13 -0500
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 0/8] SH7786 PCIe support fixes
-Message-ID: <20180108221258.GA31640@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
- <20180107160627.5a1231fa@windsurf>
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180104190137.7654-7-logang@deltatee.com>
+ <20180104192225.GS11348@ziepe.ca>
+ <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
+ <20180104221337.GV11348@ziepe.ca>
+ <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com>
+ <20180105045031.GX11348@ziepe.ca> <20180108145901.GA10743@lst.de>
+ <20180108180917.GF11348@ziepe.ca> <20180108183434.GA15549@lst.de>
+ <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com>
+ <20180108185743.GA15936@lst.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <7d276107-d2ae-530b-3d56-e104e22b4eea@deltatee.com>
+Date: Mon, 8 Jan 2018 12:05:57 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180107160627.5a1231fa@windsurf>
+In-Reply-To: <20180108185743.GA15936@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+ rdma_rw_ctx_[init|destroy]()
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 07, 2018 at 04:06:27PM +0100, Thomas Petazzoni wrote:
-> Hello,
-> 
-> On Mon,  4 Dec 2017 16:08:59 +0100, Thomas Petazzoni wrote:
-> 
-> > Thomas Petazzoni (8):
-> >   arch/sh: add sh7786_mm_sel() function
-> >   arch/sh: make the DMA mapping operations observe dev->dma_pfn_offset
-> >   arch/sh: pci: don't use disabled resources
-> >   arch/sh: pcie-sh7786: mark unavailable PCI resource as disabled
-> >   arch/sh: pcie-sh7786: exclude unusable PCI MEM areas
-> >   arch/sh: pcie-sh7786: adjust PCI MEM and IO regions
-> >   arch/sh: pcie-sh7786: adjust the memory mapping
-> >   arch/sh: pcie-sh7786: handle non-zero DMA offset
-> 
-> It's been a month. Any feedback on those patches ?
 
-I'm assuming Yoshinori and Rich will handle these.  Let me know if
-otherwise.
+
+On 08/01/18 11:57 AM, Christoph Hellwig wrote:
+> It does, sort of - but in a different way then the normal DMA map
+> ops.  And only to work around the fact that we need to map our
+> P2P space into struct pages.  Without that we could just pass the
+> bus address around, but the Linux stack and VM isn't anywhere near
+> ready for something that advanced.
+
+Yeah, wouldn't that be nice.
+
+Ok, so if we shouldn't touch the dma_map infrastructure how should the 
+workaround to opt-out HFI and QIB look? I'm not that familiar with the 
+RDMA code.
+
+Thanks,
+
+Logan
