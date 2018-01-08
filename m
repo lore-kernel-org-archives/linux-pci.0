@@ -1,39 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:45496 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751386AbeAYLON (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jan 2018 06:14:13 -0500
-From: Tobias Schramm <tobleminer@gmail.com>
-To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Cc: Tobias Schramm <tobleminer@gmail.com>
-Subject: [PATCH v3 0/2] ath10k: Add support for Ubiquiti-branded QCA988X
-Date: Thu, 25 Jan 2018 12:13:38 +0100
-Message-Id: <20180125111340.17553-1-tobleminer@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 0/7] PM / core: Direct handling of DPM_FLAG_SMART_SUSPEND
+ and DPM_FLAG_LEAVE_SUSPENDED
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Kevin Hilman <khilman@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-i2c <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@the-dreams.de>
+References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
+ <2436726.ykYRzVD45y@aspire.rjw.lan>
+From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Message-ID: <0c8bf7c3-1aa4-e5fb-74e4-7117d6d43444@linux.intel.com>
+Date: Mon, 8 Jan 2018 16:33:07 +0200
+MIME-Version: 1.0
+In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A lot of more modern Ubiquiti AirMAX wireless devices contain a rebranded
-QCA988X with changed PCI vendor and device id.
-This patch adds support for those chips by treating them as QCA988X rev2
-radios.
+On 01/03/2018 02:29 AM, Rafael J. Wysocki wrote:
+> Resending the original series (except for the first patch that has been
+> applied already) along with some driver code changes based on them as
+> requested by Ulf.
+> 
+> The driver patches are an intel-lpss change (already reviewed), two
+> modifications of i2c-designware-platdrv (posted previously but slightly
+> changed since then) and a PCIe port driver change.
+> 
+> At this point patches [1-3/7] are pretty much on the way in and the driver
+> material depends on review comments (it is pointless to apply [4/7] without
+> [5-6/7], so it depends on them in my view).
+> 
+> I'm sending this from a system running with all of the series applied, although
+> admittedly not using i2c-designware-platdrv.  However, one of my test machines
+> has this one and I haven't seen any adverse effects of these changes on it so
+> far.
+> 
+Both i2cdetect and hexdump from touchscreen and touchpad devices were 
+working fine. I used linux-next next-20180108 and patches 4-7/7.
 
-Changes since v1:
- * Send patch to more people and lists
-
-Changes since v2:
- * Rename PCI_VENDOR_ID_UBNT to PCI_VENDOR_ID_UBIQUITI
-
-Tobias Schramm (2):
-  pci: Add vendor id of Ubiquiti Networks
-  ath10k: Add support for Ubiquiti rebranded QCA988X v2
-
- drivers/net/wireless/ath/ath10k/core.c | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  1 +
- drivers/net/wireless/ath/ath10k/pci.c  |  4 ++++
- include/linux/pci_ids.h                |  2 ++
- 4 files changed, 31 insertions(+)
-
--- 
-2.16.0
+Tested-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
