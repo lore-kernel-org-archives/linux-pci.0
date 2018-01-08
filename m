@@ -1,83 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:47073 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752344AbeADWNp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 17:13:45 -0500
-Received: by mail-wr0-f196.google.com with SMTP id g17so2796326wrd.13
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jan 2018 14:13:45 -0800 (PST)
-Date: Thu, 4 Jan 2018 15:13:37 -0700
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
- rdma_rw_ctx_[init|destroy]()
-Message-ID: <20180104221337.GV11348@ziepe.ca>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-7-logang@deltatee.com>
- <20180104192225.GS11348@ziepe.ca>
- <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:58340 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755837AbeAHHzT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jan 2018 02:55:19 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v3 0/4] Address error and recovery for AER and DPC
+Date: Mon,  8 Jan 2018 13:25:02 +0530
+Message-Id: <1515398105-10329-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 04, 2018 at 12:52:24PM -0700, Logan Gunthorpe wrote:
-> >I'd be much happier if dma_map_sg can tell the memory is P2P or not
-> >from the scatterlist or dir arguments and not require the callers to
-> >have this.
-> 
-> We tried things like this in an earlier iteration[1] which assumed the SG
-> was homogenous (all P2P or all regular memory). This required serious
-> ugliness to try and ensure SGs were in fact homogenous[2].
+This patch set brings in error handling support for DPC
 
-I'm confused, these patches already assume the sg is homogenous,
-right? Sure looks that way. So [2] is just debugging??
+The current implementation of AER and error message broadcasting to the
+EP driver is tightly coupled and limited to AER service driver.
+It is important to factor out broadcasting and other link handling
+callbacks. So that not only when AER gets triggered, but also when DPC get
+triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
 
-What I meant is to rely on the fact it is already homogenous and
-create a function like this:
+DPC should enumerate the devices after recovering the link, which is
+achieved by implementing error_resume callback.
 
-static inline bool sg_is_table_p2p(struct scatterlist *sg)
-{
-    return is_pci_p2p_page(sg_page(sg));
-}
+Changes since v2:
+	Based on feedback from Keith:
 
-And then insert
+	"
+	When DPC is triggered due to receipt of an uncorrectable error Message,
+	the Requester ID from the Message is recorded in the DPC Error
+	Source ID register and that Message is discarded and not forwarded Upstream.
+	"
 
-  if (sg_is_table_p2p(sg))
-       return pci_p2pmem_map_sg(...);
+	Removed the patch where AER checks if DPC service is active
+Changes since v1:
+	Kbuild errors fixed:
+		> pci_find_dpc_dev made static
+		> ras_event.h updated
+		> pci_find_aer_service call with CONFIG check
+		> pci_find_dpc_service call with CONFIG check
 
-At the top of dma_map_sg_attrs() (and similar for unmap)
+Oza Pawandeep (4):
+  PCI/AER: factor out error reporting from AER
+  PCI/DPC/AER: Address Concurrency between AER and DPC
+  PCI/ERR: Do not do recovery if DPC service is active
+  PCI/DPC: Enumerate the devices after DPC trigger event
 
-Then we don't need to patch RDMA because RDMA is not special when it
-comes to P2P. P2P should work with everything.
+ drivers/acpi/apei/ghes.c               |   2 +-
+ drivers/pci/pcie/Makefile              |   2 +-
+ drivers/pci/pcie/aer/aerdrv.h          |  30 ---
+ drivers/pci/pcie/aer/aerdrv_core.c     | 306 +------------------------
+ drivers/pci/pcie/aer/aerdrv_errprint.c |  27 ++-
+ drivers/pci/pcie/pcie-dpc.c            | 127 ++++++++++-
+ drivers/pci/pcie/pcie-err.c            | 399 +++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/portdrv.h             |   2 +
+ include/linux/aer.h                    |   4 -
+ include/linux/pci.h                    |  23 ++
+ include/ras/ras_event.h                |   6 +-
+ 11 files changed, 579 insertions(+), 349 deletions(-)
+ create mode 100644 drivers/pci/pcie/pcie-err.c
 
-This has been my objection to every P2P iteration so far, for
-years. RDMA is not special, P2P should not be patching RDMA's DMA
-path. This an issue between the DMA and PCI subsystems, not for RDMA.
-
-> >The signature of pci_p2pmem_map_sg also doesn't look very good, it
-> >should mirror the usual dma_map_sg, otherwise it needs more revision
-> >to extend this to do P2P through a root complex.
-> 
-> Generally, the feedback that I get is to not make changes that try to
-> anticipate the future. It would be easy enough to add those arguments when
-> the code for going through the RC is made (which I expect will be very
-> involved anyway).
-
-Yes, but DMA mapping fundamentally requires the arguments to
-dma_map_sg, so it is hard to accept an API called dma_map without
-them.. Maybe just a naming issue.
-
-[2] https://github.com/sbates130272/linux-p2pmem/commit/61ec04fa63c79dab14570ea0e97432d9325ad127
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
