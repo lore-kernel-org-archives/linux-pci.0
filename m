@@ -1,72 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:51788 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755867AbeAHSpE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Jan 2018 13:45:04 -0500
-To: Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgg@ziepe.ca>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:44036 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755100AbeAHSXq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jan 2018 13:23:46 -0500
+Date: Mon, 8 Jan 2018 18:24:45 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Vignesh R <vigneshr@ti.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-7-logang@deltatee.com> <20180104192225.GS11348@ziepe.ca>
- <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
- <20180104221337.GV11348@ziepe.ca>
- <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com>
- <20180105045031.GX11348@ziepe.ca> <20180108145901.GA10743@lst.de>
- <20180108180917.GF11348@ziepe.ca> <20180108183434.GA15549@lst.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com>
-Date: Mon, 8 Jan 2018 11:44:41 -0700
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: dra7xx: Fix legacy INTD IRQ handling
+Message-ID: <20180108182445.GF2530@red-moon>
+References: <20171229114131.22296-1-vigneshr@ti.com>
+ <20171229114131.22296-2-vigneshr@ti.com>
+ <953c7aac-0429-8fc7-02ce-ace94aa735f3@ti.com>
+ <ebf49e7f-7008-18b8-62d9-9f3dc2de6a54@ti.com>
+ <20180104161202.GB12239@red-moon>
+ <493a4f80-677c-b213-d13a-e922b28c38e0@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20180108183434.GA15549@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
- rdma_rw_ctx_[init|destroy]()
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <493a4f80-677c-b213-d13a-e922b28c38e0@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 08/01/18 11:34 AM, Christoph Hellwig wrote:
-> But P2P is _not_ a factor of the dma_ops implementation at all,
-> it is something that happens behind the dma_map implementation.
+On Mon, Jan 08, 2018 at 07:18:59PM +0530, Vignesh R wrote:
 > 
-> Think about what the dma mapping routines do:
 > 
->   (a) translate from host address to bus addresses
+> On Thursday 04 January 2018 09:42 PM, Lorenzo Pieralisi wrote:
+> > On Thu, Jan 04, 2018 at 07:04:30PM +0530, Kishon Vijay Abraham I wrote:
+> >> Hi,
+> >>
+> >> On Thursday 04 January 2018 11:38 AM, Kishon Vijay Abraham I wrote:
+> >>>
+> >>>
+> >>> On Friday 29 December 2017 05:11 PM, Vignesh R wrote:
+> >>>> Legacy INTD IRQ handling is broken on dra7xx due to fact that driver
+> >>>> uses hwirq in range of 1-4 for INTA, INTD whereas IRQ domain is of size
+> >>>> 4 which is numbered 0-3. Therefore when INTD IRQ line is used with
+> >>>> pci-dra7xx driver following warning is seen:
+> >>>>
+> >>>>        WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
+> >>>>        error: hwirq 0x4 is too large for dummy
+> >>>>
+> >>>> Fix this by using pci_irqd_intx_xlate() helper to translate the INTx 1-4
+> >>>> range into the 0-3 as done in other PCIe drivers.
+> >>>>
+> >>>> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> >>>> Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
+> >>>> Signed-off-by: Vignesh R <vigneshr@ti.com>
+> >>>
+> >>> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> >>>> ---
+> >>>>  drivers/pci/dwc/pci-dra7xx.c | 3 ++-
+> >>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+> >>>>
+> >>>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> >>>> index 58aed0896468..892f93910012 100644
+> >>>> --- a/drivers/pci/dwc/pci-dra7xx.c
+> >>>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> >>>> @@ -226,6 +226,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+> >>>>  
+> >>>>  static const struct irq_domain_ops intx_domain_ops = {
+> >>>>  	.map = dra7xx_pcie_intx_map,
+> >>>> +	.xlate = pci_irqd_intx_xlate,
+> >>
+> >> Looking at this again, I think the mapping should be done in device tree using
+> >> the interrupt-map property.
+> >>
+> >> Lorenzo, can you hold merging this patch till we verify using the dt approach?
+> > 
+> > Yes and I agree that's a DT mapping bug.
 > 
-> and
+> I did some testing by changing interrupt-map property of PCIe node as as
+> below:
+> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+> index 261b5deb2456..2b1a2c5303bb 100644
+> --- a/arch/arm/boot/dts/dra7.dtsi
+> +++ b/arch/arm/boot/dts/dra7.dtsi
+> @@ -332,10 +332,10 @@
+>                                 phys = <&pcie1_phy>;
+>                                 phy-names = "pcie-phy0";
+>                                 interrupt-map-mask = <0 0 0 7>;
+> -                               interrupt-map = <0 0 0 1 &pcie1_intc 1>,
+> -                                               <0 0 0 2 &pcie1_intc 2>,
+> -                                               <0 0 0 3 &pcie1_intc 3>,
+> -                                               <0 0 0 4 &pcie1_intc 4>;
+> +                               interrupt-map = <0 0 0 1 &pcie1_intc 0>,
+> +                                               <0 0 0 2 &pcie1_intc 1>,
+> +                                               <0 0 0 3 &pcie1_intc 2>,
+> +                                               <0 0 0 4 &pcie1_intc 3>;
 > 
->   (b) flush caches (in non-coherent architectures)
 > 
-> Both are obviously not needed for P2P transfers, as they never reach
-> the host.
-
-Isn't pci_p2pdma_map_sg doing (a)? It's just translating from a host 
-address to a PCI bus address.
-
->> Very long term the IOMMUs under the ops will need to care about this,
->> so the wrapper is not an optimal place to put it - but I wouldn't
->> object if it gets it out of RDMA :)
+> Although this eliminates need for xlate, we still need driver change to
+> call the correct handler with above change:
 > 
-> Unless you have an IOMMU on your PCIe switch and not before/inside
-> the root complex that is not correct.
+> static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+> @@ -269,7 +270,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int
+> irq, void *arg)
+>  	case INTC:
+>  	case INTD:
+>  		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
+> -						    ffs(reg)));
+> +						    ffs(reg) - 1));
+>  		break;
+>  	}
+> 
+> 
+> If we merge the driver change then the DT backward compatibility is
+> broken. Right now INTA/B/C keep working even with buggy interrupt-map
+> settings. But, if we fix  interrupt-map and merge above driver change,
+> then we will be *breaking* DT backward compatibility and INTA/B/C will
+> no longer work with older DTs.
+> Therefore, IMO, this patch should be merged in order to keep DT backward
+> compatibility and live with wrong DT representation.
 
-Per the ACS discussion, in the future we might want to implement "ACS 
-Direct Translated P2P" as Alex described. I expect it would be the IOMMU 
-that needs to set that up. So, I think, we also have the dma_map 
-implementations also doing something like:
+Yes, this is a mess. I am not fond at all of this fix but I will end
+up merging it for the same reasons you provided - I can't break
+backward DT compatibility.
 
-(c) setup/manage any security permissions on mappings
-Which P2P may at some point be concerned with.
-
-Logan
+Lorenzo
