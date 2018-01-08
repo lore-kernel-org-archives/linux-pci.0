@@ -1,110 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:41593 "EHLO
-        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932998AbeAITSJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 14:18:09 -0500
+Received: from foss.arm.com ([217.140.101.70]:39442 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757886AbeAHOcH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jan 2018 09:32:07 -0500
+Date: Mon, 8 Jan 2018 14:33:05 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
+        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 3/9] PCI: Add generic function to probe PCI host
+ controllers
+Message-ID: <20180108143305.GC32027@red-moon>
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+ <4eb40ebbad84527f57ffea73435a46407d0b1637.1513620412.git.cyrille.pitchen@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <628e2b58-b16b-5792-b4ef-88bec15ab779@amd.com>
-References: <20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi>
- <CA+55aFxCSWCG7ZvHW3AkLPzMPMAuG1BhL8fNgC0-JPYU4LZVow@mail.gmail.com>
- <CAErSpo7dOfabXk9rpZr=B87wK4_Ao9_moK89Ze0cyi6Mqb0Z+Q@mail.gmail.com> <628e2b58-b16b-5792-b4ef-88bec15ab779@amd.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 9 Jan 2018 11:18:08 -0800
-Message-ID: <CA+55aFxbpNHpiZdtddq8DqfChFwho0OWw5SAZkkwEpwPS4-QYg@mail.gmail.com>
-Subject: Re: [BISECTED] v4.15-rc: Boot regression on x86_64/AMD
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4eb40ebbad84527f57ffea73435a46407d0b1637.1513620412.git.cyrille.pitchen@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 9, 2018 at 2:37 AM, Christian K=C3=B6nig
-<christian.koenig@amd.com> wrote:
->
-> I tested a bit with Aaro and came up with the attached patch, it adds a 1=
-6GB
-> guard between the end of memory and the new window for the PCIe root hub.
-> But I agree with you that this is just a hack and not a real solution.
+On Mon, Dec 18, 2017 at 07:16:03PM +0100, Cyrille Pitchen wrote:
+> This patchs moves generic source code from
+> drivers/pci/host/pci-host-common.c into drivers/pci/probe.c.
+> 
+> Indeed the extracted lines of code were duplicated by many host
+> controller drivers. Regrouping them into a generic function gives a
+> change to properly share this code without introducing a useless
+> dependency to PCI_HOST_COMMON, which selects PCI_ECAM when not needed by
+> most host controller drivers.
+> 
+> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+> ---
+>  drivers/pci/host/pci-host-common.c | 38 +++--------------------------
+>  drivers/pci/probe.c                | 50 ++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h                |  3 +++
+>  3 files changed, 57 insertions(+), 34 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+> index a613ea310e76..ba5d3dab5d89 100644
+> --- a/drivers/pci/host/pci-host-common.c
+> +++ b/drivers/pci/host/pci-host-common.c
+> @@ -72,7 +72,6 @@ int pci_host_common_probe(struct platform_device *pdev,
+>  	const char *type;
+>  	struct device *dev = &pdev->dev;
+>  	struct device_node *np = dev->of_node;
+> -	struct pci_bus *bus, *child;
+>  	struct pci_host_bridge *bridge;
+>  	struct pci_config_window *cfg;
+>  	struct list_head resources;
+> @@ -95,41 +94,12 @@ int pci_host_common_probe(struct platform_device *pdev,
+>  	if (IS_ERR(cfg))
+>  		return PTR_ERR(cfg);
+>  
+> -	/* Do not reassign resources if probe only */
+> -	if (!pci_has_flag(PCI_PROBE_ONLY))
+> -		pci_add_flags(PCI_REASSIGN_ALL_BUS);
+> -
+> -	list_splice_init(&resources, &bridge->windows);
+> -	bridge->dev.parent = dev;
+> -	bridge->sysdata = cfg;
+> -	bridge->busnr = cfg->busr.start;
+> -	bridge->ops = &ops->pci_ops;
+> -	bridge->map_irq = of_irq_parse_and_map_pci;
+> -	bridge->swizzle_irq = pci_common_swizzle;
 
-Guys, that last statement makes no sense.
+Hi Cyrille,
 
-The *real* hack was that original patch that caused problems.
+I appreciate the idea, I think though that the setting of
+PCI_REASSIGN_ALL_BUS and the bridge hooks/members initialization should
+be left to the host bridges probe routines, that was the reasoning
+behind adding those hooks to struct pci_host_bridge in the first place.
 
-I mean, just look at it. It has a completely made up - and bad -
-default start, and then it tries to forcibly just create the maximum
-window it possibly can. Well, not quite, but almost.
+You can create an OF wrapper that does call the resulting function (eg
+of_pci_host_common_probe()) that sets the {map/swizzle}_irq() to the OF
+version and then call pci_host_common_probe().
 
-Now *THAT* is hacky, and fragile, and a bad idea. It's a fundamentally
-bad idea exactly because it assumes
+Lorenzo
 
- (a) we have perfect knowledge
-
- (b) that window that wasn't even enabled or configured in the first
-place should be the maximum window.
-
-both of those assumptions seem completely bogus, and seem to have no
-actual reason.
-
-This comment in that code really does say it all:
-
-        /* Just grab the free area behind system memory for this */
-
-very lackadaisical.
-
-I agree that the 16GB guard is _also_ random, but it's certainly not
-less random or hacky.
-
-But I really wonder why you want to be that close to memory at all.
-
-What was wrong with the patch thgat just put it the hell out of any
-normal memory range, and just changed the default start from one
-random (and clearly bad) value to _another_ random but at least
-out-of-the-way value?
-
-IOW, this change
-
--       res->start =3D 0x100000000ull;
-+       res->start =3D 0xbd00000000ull;
-
-really has a relatively solid explanation for it: "pick a high address
-that is likely out of the way". That's *much* better than "pick an
-address that is right after memory".
-
-Now, could there be a better high address to pick? Probably. It would
-be really nice to have a *reason* for the address to be picked.
-
-But honestly, even "it doesn't break Aaro's machine" is a better
-reason than many, in the absence of other reasons.
-
-For example, was there a reason for that random 756GB address? Is the
-limit of the particular AMD 64-bit bar perhaps at the 1TB mark (and
-that "res->end" value is because "close to it, but not at the top")?
-
-So I think "just above RAM" is a _horrible_ default starting point.
-The random 16GB guard is _better_, but it honestly doesn't seem any
-better than the simpler original patch.
-
-A starting point like "halfway to from the hardware limit" would
-actually be a better reason. Or just "we picked an end-point, let's
-pick a starting point that gives us a _sufficient_ - but not excessive
-- window".
-
-Or any number of other possible starting points. Almost _anything_ is
-better than "end of RAM".
-
-That "above end of RAM" might be a worst-case fall-back value (and in
-fact, I think that _is_ pretty close to what the PCI code uses for the
-case of "we don't have any parent at all, so we'll just have to assume
-it's a transparent bridge"), but I don't think it's necessarily what
-you should _strive_ for.
-
-So the hackyness of whatever the fix is really should be balanced with
-the hackyness of the original patch that introduced this problem.
-
-             Linus
+> -
+> -	ret = pci_scan_root_bus_bridge(bridge);
+> -	if (ret < 0) {
+> -		dev_err(dev, "Scanning root bridge failed");
+> +	ret = pci_host_probe(bridge, dev, cfg->busr.start, &ops->pci_ops, cfg,
+> +			     &resources);
+> +	if (ret) {
+> +		pci_free_resource_list(&resources);
+>  		return ret;
+>  	}
+>  
+> -	bus = bridge->bus;
+> -
+> -	/*
+> -	 * We insert PCI resources into the iomem_resource and
+> -	 * ioport_resource trees in either pci_bus_claim_resources()
+> -	 * or pci_bus_assign_resources().
+> -	 */
+> -	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> -		pci_bus_claim_resources(bus);
+> -	} else {
+> -		pci_bus_size_bridges(bus);
+> -		pci_bus_assign_resources(bus);
+> -
+> -		list_for_each_entry(child, &bus->children, node)
+> -			pcie_bus_configure_settings(child);
+> -	}
+> -
+> -	pci_bus_add_devices(bus);
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 1360db508035..3dfdc579b7de 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2685,6 +2685,56 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  }
+>  EXPORT_SYMBOL_GPL(pci_create_root_bus);
+>  
+> +int pci_host_probe(struct pci_host_bridge *bridge,
+> +		   struct device *parent,
+> +		   int busnr,
+> +		   struct pci_ops *ops,
+> +		   void *sysdata,
+> +		   struct list_head *resources)
+> +{
+> +	struct pci_bus *bus, *child;
+> +	int ret;
+> +
+> +	/* Do not reassign resources if probe only */
+> +	if (!pci_has_flag(PCI_PROBE_ONLY))
+> +		pci_add_flags(PCI_REASSIGN_ALL_BUS);
+> +
+> +	list_splice_init(resources, &bridge->windows);
+> +	bridge->dev.parent = parent;
+> +	bridge->sysdata = sysdata;
+> +	bridge->busnr = busnr;
+> +	bridge->ops = ops;
+> +	bridge->map_irq = of_irq_parse_and_map_pci;
+> +	bridge->swizzle_irq = pci_common_swizzle;
+> +
+> +	ret = pci_scan_root_bus_bridge(bridge);
+> +	if (ret < 0) {
+> +		dev_err(parent, "Scanning root bridge failed");
+> +		return ret;
+> +	}
+> +
+> +	bus = bridge->bus;
+> +
+> +	/*
+> +	 * We insert PCI resources into the iomem_resource and
+> +	 * ioport_resource trees in either pci_bus_claim_resources()
+> +	 * or pci_bus_assign_resources().
+> +	 */
+> +	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> +		pci_bus_claim_resources(bus);
+> +	} else {
+> +		pci_bus_size_bridges(bus);
+> +		pci_bus_assign_resources(bus);
+> +
+> +		list_for_each_entry(child, &bus->children, node)
+> +			pcie_bus_configure_settings(child);
+> +	}
+> +
+> +	pci_bus_add_devices(bus);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_host_probe);
+> +
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+>  {
+>  	struct resource *res = &b->busn_res;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 11823f4f1d83..e76df07dac07 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -879,6 +879,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  				    struct pci_ops *ops, void *sysdata,
+>  				    struct list_head *resources);
+> +int pci_host_probe(struct pci_host_bridge *bridge, struct device *parent,
+> +		   int busnr, struct pci_ops *ops, void *sysdata,
+> +		   struct list_head *resources);
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+>  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+>  void pci_bus_release_busn_res(struct pci_bus *b);
+> -- 
+> 2.11.0
+> 
