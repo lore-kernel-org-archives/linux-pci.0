@@ -1,77 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35281 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751234AbeAWKwZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 05:52:25 -0500
-Received: by mail-pg0-f68.google.com with SMTP id o13so26352pgs.2
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jan 2018 02:52:25 -0800 (PST)
-Date: Tue, 23 Jan 2018 18:52:08 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Daniel Thompson <daniel.thompson@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, project-aspen-dev@linaro.org,
-        Jianguo Sun <sunjianguo1@huawei.com>
-Subject: Re: [project-aspen-dev] [PATCH] PCI: histb: add power control GPIO
- for PCIe slot
-Message-ID: <20180123105206.GA23797@dragon>
-References: <1516669477-20151-1-git-send-email-shawn.guo@linaro.org>
- <20180123093944.rxysbjm2u6suycco@oak.lan>
+Received: from verein.lst.de ([213.95.11.211]:36604 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932121AbeAHO7E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jan 2018 09:59:04 -0500
+Date: Mon, 8 Jan 2018 15:59:01 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+        rdma_rw_ctx_[init|destroy]()
+Message-ID: <20180108145901.GA10743@lst.de>
+References: <20180104190137.7654-1-logang@deltatee.com> <20180104190137.7654-7-logang@deltatee.com> <20180104192225.GS11348@ziepe.ca> <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com> <20180104221337.GV11348@ziepe.ca> <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com> <20180105045031.GX11348@ziepe.ca>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180123093944.rxysbjm2u6suycco@oak.lan>
+In-Reply-To: <20180105045031.GX11348@ziepe.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Daniel,
-
-On Tue, Jan 23, 2018 at 09:39:44AM +0000, Daniel Thompson wrote:
-> > @@ -335,15 +344,28 @@ static int histb_pcie_probe(struct platform_device *pdev)
-> >  		return PTR_ERR(pci->dbi_base);
-> >  	}
-> >  
-> > +	hipcie->power_gpio = of_get_named_gpio_flags(np,
-> > +				"power-gpios", 0, &of_flags);
-> > +	if (of_flags & OF_GPIO_ACTIVE_LOW)
-> > +		flag |= GPIOF_ACTIVE_LOW;
+On Thu, Jan 04, 2018 at 09:50:31PM -0700, Jason Gunthorpe wrote:
+> Well that argument applies equally to the RDMA RW API wrappers around
+> the DMA API. I think it is fine if sgl are defined to only have P2P or
+> not, and that debugging support seemed reasonable to me..
 > 
-> Why isn't this inside the if statement?
+> > It's also very difficult to add similar functionality to dma_map_page seeing
+> > dma_unmap_page won't have any way to know what it's dealing with. It just
+> > seems confusing to support P2P in the SG version and not the page version.
+> 
+> Well, this proposal is to support P2P in only some RDMA APIs and not
+> others, so it seems about as confusing to me..
 
-Are you asking why the flag manipulation is not in the gpio_is_valid()
-if-clause below?
+As usual we implement what actually has a consumer.  On top of that the
+R/W API is the only core RDMA API that actually does DMA mapping for the
+ULP at the moment.  For SENDs and everything else dma maps are done by
+the ULP (I'd like to eventually change that, though - e.g. sends through
+that are inline to the workqueue don't need a dma map to start with).
 
-I guess this is a copy of how reset_gpio is handled.  It might be a bit
-more sensible to check the validity of the GPIO before handling the
-flag, but practically the current code doesn't really hurt too much.
+> Well, it is more than very nice. We have to keep RDMA working after
+> all, and if you make it even more special things become harder for us.
+> 
+> It is already the case that DMA in RDMA is very strange. We have
+> drivers that provide their own DMA ops, for instance.
 
-I will take Fabio's suggestion to reimplement it with a fixed regulator.
-But thanks for the comment anyway.
+That's because the initial design was to let the ULPs do the DMA
+mappings, which fundamentally is wrong.  I've fixed it for the R/W
+API when adding it, but no one has started work on SENDs and atomics.
 
-Shawn
+> And on that topic, does this scheme work with HFI?
 
-> > +	if (gpio_is_valid(hipcie->power_gpio)) {
-> > +		ret = devm_gpio_request_one(dev, hipcie->power_gpio,
-> > +				flag, "PCIe device power control");
-> > +		if (ret) {
-> > +			dev_err(dev, "unable to request power gpio\n");
-> > +			return ret;
-> > +		}
-> > +	}
-> > +
-> >  	hipcie->reset_gpio = of_get_named_gpio_flags(np,
-> >  				"reset-gpios", 0, &of_flags);
-> >  	if (of_flags & OF_GPIO_ACTIVE_LOW)
-> >  		flag |= GPIOF_ACTIVE_LOW;
-> >  	if (gpio_is_valid(hipcie->reset_gpio)) {
-> >  		ret = devm_gpio_request_one(dev, hipcie->reset_gpio,
-> > -				flag, "PCIe device power control");
-> > +				flag, "PCIe device reset control");
-> >  		if (ret) {
-> > -			dev_err(dev, "unable to request gpio\n");
-> > +			dev_err(dev, "unable to request reset gpio\n");
-> >  			return ret;
-> >  		}
-> >  	}
-> > -- 
-> > 1.9.1
-> > 
+No, and I guess we need an opt-out.  HFI generally seems to be
+extremely weird.
+
+> This is why P2P must fit in to the common DMA framework somehow, we
+> rely on these abstractions to work properly and fully in RDMA.
+
+Moving P2P up to common RDMA code isn't going to fix this.  For that
+we need to stop preting that something that isn't DMA can abuse the
+dma mapping framework, and until then opt them out of behavior that
+assumes actual DMA like P2P.
+
+> I think you should consider pushing this directly into the dma_ops
+> implementations. Add a p2p_supported flag to struct dma_map_ops, and
+> only if it is true can a caller pass a homogeneous SGL to ops->map_sg.
+> Only map_sg would be supported for P2P. Upgraded implementations can
+> call the helper function.
+
+If at all it should be in the dma_map* wrappers, but for that we'd need
+a good identifier.  And it still would not solve the whole fake dma
+ops issue.
+
+So for now I'd much prefer to let the drivers handle it, and once usage
+grows and we know usage patterns better (and I make progress refactoring
+both the dma-mapping subsystem itself and the RDMA dma map code to not
+be a complete mess) we can move it to the core.
