@@ -1,16 +1,11 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:42440 "EHLO newverein.lst.de"
+Received: from ale.deltatee.com ([207.54.116.67]:51788 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753609AbeAIQqm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 9 Jan 2018 11:46:42 -0500
-Date: Tue, 9 Jan 2018 17:46:40 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Christoph Hellwig <hch@lst.de>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma <linux-rdma@vger.kernel.org>,
+        id S1755867AbeAHSpE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jan 2018 13:45:04 -0500
+To: Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgg@ziepe.ca>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
         linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
         Stephen Bates <sbates@raithlin.com>,
         Jens Axboe <axboe@kernel.dk>,
@@ -19,23 +14,59 @@ Cc: Christoph Hellwig <hch@lst.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Max Gurtovoy <maxg@mellanox.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
-        rdma_rw_ctx_[init|destroy]()
-Message-ID: <20180109164640.GA12159@lst.de>
-References: <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com> <20180104221337.GV11348@ziepe.ca> <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com> <20180105045031.GX11348@ziepe.ca> <20180108145901.GA10743@lst.de> <20180108180917.GF11348@ziepe.ca> <20180108183434.GA15549@lst.de> <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com> <20180108185743.GA15936@lst.de> <20180108194950.GK11348@ziepe.ca>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-7-logang@deltatee.com> <20180104192225.GS11348@ziepe.ca>
+ <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
+ <20180104221337.GV11348@ziepe.ca>
+ <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com>
+ <20180105045031.GX11348@ziepe.ca> <20180108145901.GA10743@lst.de>
+ <20180108180917.GF11348@ziepe.ca> <20180108183434.GA15549@lst.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com>
+Date: Mon, 8 Jan 2018 11:44:41 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180108194950.GK11348@ziepe.ca>
+In-Reply-To: <20180108183434.GA15549@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+ rdma_rw_ctx_[init|destroy]()
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 08, 2018 at 12:49:50PM -0700, Jason Gunthorpe wrote:
-> Pretty sure P2P capable IOMMU hardware exists.
-> 
-> With SOC's we also have the scenario that an DMA originated from an
-> on-die device wishes to target an off-die PCI BAR (through the IOMMU),
-> that definitely exists today, and people care about it :)
 
-Then people will have to help and contribute support for it.
+
+On 08/01/18 11:34 AM, Christoph Hellwig wrote:
+> But P2P is _not_ a factor of the dma_ops implementation at all,
+> it is something that happens behind the dma_map implementation.
+> 
+> Think about what the dma mapping routines do:
+> 
+>   (a) translate from host address to bus addresses
+> 
+> and
+> 
+>   (b) flush caches (in non-coherent architectures)
+> 
+> Both are obviously not needed for P2P transfers, as they never reach
+> the host.
+
+Isn't pci_p2pdma_map_sg doing (a)? It's just translating from a host 
+address to a PCI bus address.
+
+>> Very long term the IOMMUs under the ops will need to care about this,
+>> so the wrapper is not an optimal place to put it - but I wouldn't
+>> object if it gets it out of RDMA :)
+> 
+> Unless you have an IOMMU on your PCIe switch and not before/inside
+> the root complex that is not correct.
+
+Per the ACS discussion, in the future we might want to implement "ACS 
+Direct Translated P2P" as Alex described. I expect it would be the IOMMU 
+that needs to set that up. So, I think, we also have the dma_map 
+implementations also doing something like:
+
+(c) setup/manage any security permissions on mappings
+Which P2P may at some point be concerned with.
+
+Logan
