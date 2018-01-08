@@ -1,67 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:43902 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932337AbeARWbC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 17:31:02 -0500
-Received: by mail-qt0-f195.google.com with SMTP id s3so34288338qtb.10
-        for <linux-pci@vger.kernel.org>; Thu, 18 Jan 2018 14:31:02 -0800 (PST)
-Date: Thu, 18 Jan 2018 17:30:59 -0500
-From: Jon Mason <jdmason@kudzu.us>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Stephen Bates <sbates@raithlin.com>, linux-pci@vger.kernel.org,
-        linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] [RESEND] ntb_hw_switchtec: fix logic error
-Message-ID: <20180118223058.GE25893@kudzu.us>
-References: <20180116135116.4065102-1-arnd@arndb.de>
+Return-Path: <SRS0=q9Qe=ED=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=q9Qe=ED=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 8 Jan 2018 15:46:48 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH] imx6: fix pcie enumeration
+Message-ID: <20180108154648.GA2530@red-moon>
+References: <20180104202430.GC189897@bhelgaas-glaptop.roam.corp.google.com>
+ <a2d7afee-7a41-6da6-e5a4-a36a6fcde55d@ncentric.com>
+ <20180105123206.GA24511@e107981-ln.cambridge.arm.com>
+ <ebf30c78-b772-6214-f441-c86ae7fdba7e@ncentric.com>
+ <20180105171828.GC24933@red-moon>
+ <5bc70c34-45b2-5aed-eb06-f8ecfe859fd0@ncentric.com>
+ <20180108110015.GA32027@red-moon>
+ <1684b8c6-1006-948b-f4f9-c9aaf9cf26a8@ncentric.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180116135116.4065102-1-arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1684b8c6-1006-948b-f4f9-c9aaf9cf26a8@ncentric.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 16, 2018 at 02:50:51PM +0100, Arnd Bergmann wrote:
-> Newer gcc (version 7 and 8 presumably) warn about a statement mixing
-> the << operator with logical and:
+On Mon, Jan 08, 2018 at 12:13:34PM +0100, Koen Vandeputte wrote:
 > 
-> drivers/ntb/hw/mscc/ntb_hw_switchtec.c: In function 'switchtec_ntb_init_sndev':
-> drivers/ntb/hw/mscc/ntb_hw_switchtec.c:888:24: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
 > 
-> My interpretation here is that the author must have intended a bitmask
-> rather than a comparison, so I'm changing the '&&' to '&', which makes
-> a lot more sense in the context.
+> On 2018-01-08 12:00, Lorenzo Pieralisi wrote:
+> >[+cc Joao, Jingoo]
+> >
+> >On Mon, Jan 08, 2018 at 09:51:37AM +0100, Koen Vandeputte wrote:
+> >
+> >[...]
+> >
+> >>[ Node 4 | node-4 ] lspci -v
+> >>00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
+> >>[Normal decode])
+> >>     Flags: bus master, fast devsel, latency 0, IRQ 298
+> >>     Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
+> >>     Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+> >                                      ^^^^^^^^^^^^^^
+> >
+> >So basically, the subordinate number in the root port does not
+> >affect config space forwarding from what I see and it has always
+> >been like that for dwc.
+> >
+> >You are forced to update it to 0xff because otherwise the kernel
+> >stops enumerating bus numbers > 1
+> Indeed, which affects all devices using Designware PCIe init + a
+> PCIe bridge downstream
+> >but that's a software issue
+> >not HW - the subordinate bus number does not seem to affect anything
+> >here.
 > 
-> Fixes: 1b249475275d ("ntb_hw_switchtec: Allow using Switchtec NTB in multi-partition setups")
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ----
-> Originally sent on Dec 9, but this patch never got picked up
+> >Sigh.
+> >
+> >Another option would consist in forcing the kernel to reassign
+> >all bus numbers by setting the PCI_REASSIGN_ALL_BUS flag but
+> >that's not a good idea given how inconsistent that flag usage is.
+> >
+> >I think that updating the subordinate bus numbers in the DWC
+> >config register is the correct solution to make sure the kernel
+> >won't get confused anymore by what seems to be a fake root port,
+> >I need input from DWC maintainers to confirm my understanding.
+> >
+> >Thanks,
+> >Lorenzo
+> >
+> 
+> The patch I'm currently using internally:
+> 
+> 
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -861,7 +861,7 @@ void dw_pcie_setup_rc(struct pcie_port *
+>      /* setup bus numbers */
+>      val = dw_pcie_readl_rc(pp, PCI_PRIMARY_BUS);
+>      val &= 0xff000000;
+> -    val |= 0x00010100;
+> +    val |= 0x00ff0100;
+>      dw_pcie_writel_rc(pp, PCI_PRIMARY_BUS, val);
+> 
+>      /* setup command register */
+> 
+> 
+> Above version logically fixes it for all dwc devices using a bridge
+> after the RC, not only imx6.
+> If this is fine, I would submit the patch above and drop the current one.
+It is fine by me but I won't merge it till I get ACKs and tested-by
+from the respective maintainers - it can have potential widespread
+impact.
 
-Sorry for missing the patch.  Applied to ntb-next.
+> Backporting this to stable kernels (4.9 .. 4.4 .. etc) will fix all
+> nasty warnings on these setups during boot without any change in
+> functionality.
+> These kernels will require a separate patch as this source file got
+> moved & renamed.
+> Thanks for your time and analysis so far,
 
-Thanks,
-Jon
+Thank you for reporting it and fixing it.
 
-> ---
->  drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-> index bcd5b6fb3800..76acb8bba3f2 100644
-> --- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-> +++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-> @@ -885,7 +885,7 @@ static int switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
->  		}
->  
->  		sndev->peer_partition = ffs(tpart_vec) - 1;
-> -		if (!(part_map && (1 << sndev->peer_partition))) {
-> +		if (!(part_map & (1 << sndev->peer_partition))) {
->  			dev_err(&sndev->stdev->dev,
->  				"ntb target partition is not NT partition\n");
->  			return -ENODEV;
-> -- 
-> 2.9.0
-> 
+Lorenzo
