@@ -1,144 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 7.mo179.mail-out.ovh.net ([46.105.61.94]:36987 "EHLO
-        7.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752711AbeA3U5g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 15:57:36 -0500
-Received: from player168.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 934859A629
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jan 2018 21:57:34 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v6 01/11] PCI: Regroup all PCI related entries into drivers/pci/Makefile
-Date: Tue, 30 Jan 2018 21:56:49 +0100
-Message-Id: <e74b20f039a4df71752801d4ff1e372585ea764a.1517343502.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35149 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755094AbeAHSJZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jan 2018 13:09:25 -0500
+Received: by mail-wm0-f67.google.com with SMTP id a79so15872641wma.0
+        for <linux-pci@vger.kernel.org>; Mon, 08 Jan 2018 10:09:24 -0800 (PST)
+Date: Mon, 8 Jan 2018 11:09:17 -0700
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+ rdma_rw_ctx_[init|destroy]()
+Message-ID: <20180108180917.GF11348@ziepe.ca>
+References: <20180104190137.7654-1-logang@deltatee.com>
+ <20180104190137.7654-7-logang@deltatee.com>
+ <20180104192225.GS11348@ziepe.ca>
+ <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
+ <20180104221337.GV11348@ziepe.ca>
+ <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com>
+ <20180105045031.GX11348@ziepe.ca>
+ <20180108145901.GA10743@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180108145901.GA10743@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clean up drivers/Makefile by moving the pci/endpoint and pci/dwc entries
-from drivers/Makefile into drivers/pci/Makefile.
+On Mon, Jan 08, 2018 at 03:59:01PM +0100, Christoph Hellwig wrote:
+> On Thu, Jan 04, 2018 at 09:50:31PM -0700, Jason Gunthorpe wrote:
+> > Well that argument applies equally to the RDMA RW API wrappers around
+> > the DMA API. I think it is fine if sgl are defined to only have P2P or
+> > not, and that debugging support seemed reasonable to me..
+> > 
+> > > It's also very difficult to add similar functionality to dma_map_page seeing
+> > > dma_unmap_page won't have any way to know what it's dealing with. It just
+> > > seems confusing to support P2P in the SG version and not the page version.
+> > 
+> > Well, this proposal is to support P2P in only some RDMA APIs and not
+> > others, so it seems about as confusing to me..
+> 
+> As usual we implement what actually has a consumer.  On top of that the
+> R/W API is the only core RDMA API that actually does DMA mapping for the
+> ULP at the moment.
 
-Since we don't want to introduce any dependency between CONFIG_PCI and
-CONFIG_PCI_ENDPOINT, we now always execute drivers/pci/Makefile.
+Well again the same can be said for dma_map_page vs dma_map_sg...
 
-Hence all Makefiles in drivers/pci/ were updated accordingly so no file is
-compiled when CONFIG_PCI is not defined.
+> For SENDs and everything else dma maps are done by the ULP (I'd like
+> to eventually change that, though - e.g. sends through that are
+> inline to the workqueue don't need a dma map to start with).
 
-Also, we add a comment to reinforce that EPC and EPF libraries must be
-initialized before their users. Hence built-in EPC drivers, such as
-those of Designware, are linked after the endpoint core libraries.
 
-Finally, we add another comment to explain why obj-y has been chosen
-instead of obj-$(CONFIG_PCIE_DW) to parse the dwc/ sub-folder.
+> That's because the initial design was to let the ULPs do the DMA
+> mappings, which fundamentally is wrong.  I've fixed it for the R/W
+> API when adding it, but no one has started work on SENDs and atomics.
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
----
- drivers/Makefile          |  5 +----
- drivers/pci/Kconfig       |  1 +
- drivers/pci/Makefile      | 13 ++++++++++---
- drivers/pci/dwc/Makefile  |  2 ++
- drivers/pci/host/Makefile |  2 ++
- 5 files changed, 16 insertions(+), 7 deletions(-)
+Well, you know why it is like this, and it is very complicated to
+unwind - the HW driver does not have enough information during CQ
+processing to properly do any unmaps, let alone serious error tear
+down unmaps, so we'd need a bunch of new APIs developed first, like RW
+did. :\
 
-diff --git a/drivers/Makefile b/drivers/Makefile
-index e06f7f633f73..8189b1edec00 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -16,10 +16,7 @@ obj-$(CONFIG_PINCTRL)		+= pinctrl/
- obj-$(CONFIG_GPIOLIB)		+= gpio/
- obj-y				+= pwm/
- 
--obj-$(CONFIG_PCI)		+= pci/
--obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
--# PCI dwc controller drivers
--obj-y				+= pci/dwc/
-+obj-y				+= pci/
- 
- obj-$(CONFIG_PARISC)		+= parisc/
- obj-$(CONFIG_RAPIDIO)		+= rapidio/
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index bda151788f3f..7eeb969ab86a 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -125,6 +125,7 @@ config PCI_PASID
- 
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
-+	depends on PCI
- 	select NLS
- 
- config PCI_HYPERV
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index c7819b973df7..ddb5aa6640d7 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -3,12 +3,15 @@
- # Makefile for the PCI bus specific drivers.
- #
- 
--obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
-+obj-$(CONFIG_PCI)	+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
- 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
- 			irq.o vpd.o setup-bus.o vc.o mmap.o setup-irq.o
- 
-+ifdef CONFIG_PCI
- obj-$(CONFIG_PROC_FS) += proc.o
- obj-$(CONFIG_SYSFS) += slot.o
-+obj-$(CONFIG_OF) += of.o
-+endif
- 
- obj-$(CONFIG_PCI_QUIRKS) += quirks.o
- 
-@@ -44,10 +47,14 @@ obj-$(CONFIG_PCI_ECAM) += ecam.o
- 
- obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
- 
--obj-$(CONFIG_OF) += of.o
--
- ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
- 
- # PCI host controller drivers
- obj-y += host/
- obj-y += switch/
-+
-+obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
-+
-+# Endpoint library must be initialized before its users
-+# pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
-+obj-y				+= dwc/
-diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-index 41ba499c96ee..cb35e45cd186 100644
---- a/drivers/pci/dwc/Makefile
-+++ b/drivers/pci/dwc/Makefile
-@@ -27,4 +27,6 @@ obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
- # ARM64 and use internal ifdefs to only build the pieces we need
- # depending on whether ACPI, the DT driver, or both are enabled.
- 
-+ifdef CONFIG_PCI
- obj-$(CONFIG_ARM64) += pcie-hisi.o
-+endif
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 34ec1d88f961..3b1059190867 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -34,6 +34,8 @@ obj-$(CONFIG_VMD) += vmd.o
- # ARM64 and use internal ifdefs to only build the pieces we need
- # depending on whether ACPI, the DT driver, or both are enabled.
- 
-+ifdef CONFIG_PCI
- obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
- obj-$(CONFIG_ARM64) += pci-thunder-pem.o
- obj-$(CONFIG_ARM64) += pci-xgene.o
-+endif
--- 
-2.11.0
+> > And on that topic, does this scheme work with HFI?
+> 
+> No, and I guess we need an opt-out.  HFI generally seems to be
+> extremely weird.
+
+This series needs some kind of fix so HFI, QIB, rxe, etc don't get
+broken, and it shouldn't be 'fixed' at the RDMA level.
+
+> > This is why P2P must fit in to the common DMA framework somehow, we
+> > rely on these abstractions to work properly and fully in RDMA.
+> 
+> Moving P2P up to common RDMA code isn't going to fix this.  For that
+> we need to stop preting that something that isn't DMA can abuse the
+> dma mapping framework, and until then opt them out of behavior that
+> assumes actual DMA like P2P.
+
+It could, if we had a DMA op for p2p then the drivers that provide
+their own ops can implement it appropriately or not at all.
+
+Eg the correct implementation for rxe to support p2p memory is
+probably somewhat straightfoward.
+
+> > I think you should consider pushing this directly into the dma_ops
+> > implementations. Add a p2p_supported flag to struct dma_map_ops, and
+> > only if it is true can a caller pass a homogeneous SGL to ops->map_sg.
+> > Only map_sg would be supported for P2P. Upgraded implementations can
+> > call the helper function.
+> 
+> If at all it should be in the dma_map* wrappers, but for that we'd need
+> a good identifier.  And it still would not solve the whole fake dma
+> ops issue.
+
+Very long term the IOMMUs under the ops will need to care about this,
+so the wrapper is not an optimal place to put it - but I wouldn't
+object if it gets it out of RDMA :)
+
+Jason
