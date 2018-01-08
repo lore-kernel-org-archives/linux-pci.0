@@ -1,93 +1,81 @@
-Return-Path: <SRS0=GjRy=ED=pengutronix.de=l.stach@kernel.org>
-Return-Path: <SRS0=GjRy=ED=pengutronix.de=l.stach@kernel.org>
-Message-ID: <1515409414.12538.12.camel@pengutronix.de>
-Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bharat Kumar Gogada
-	 <bharatku@xilinx.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
- "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>, Ley Foon Tan
- <lftan@altera.com>, Shawn Lin <shawn.lin@rock-chips.com>, Michal Simek
- <michal.simek@xilinx.com>, Jim Quinlan <jim2101024@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
- "linux-rockchip@lists.infradead.org" <linux-rockchip@lists.infradead.org>
-Date: Mon, 08 Jan 2018 12:03:34 +0100
-In-Reply-To: <20180105154303.GB24933@red-moon>
-References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
-	 <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
-	 <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
-	 <BLUPR0201MB1505659A7B1DDA658EFB7049A51C0@BLUPR0201MB1505.namprd02.prod.outlook.com>
-	 <20180105154303.GB24933@red-moon>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:23967 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757886AbeAHOcB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jan 2018 09:32:01 -0500
+Subject: Re: [PATCH 6/7] PM: i2c-designware-platdrv: Optimize power management
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Kevin Hilman <khilman@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-i2c <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@the-dreams.de>
+References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
+ <2436726.ykYRzVD45y@aspire.rjw.lan> <6243259.Xh4soKtjBb@aspire.rjw.lan>
+From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Message-ID: <bb17c593-d8ab-ace6-4127-249da0b8af54@linux.intel.com>
+Date: Mon, 8 Jan 2018 16:31:58 +0200
+MIME-Version: 1.0
+In-Reply-To: <6243259.Xh4soKtjBb@aspire.rjw.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 05.01.2018, 15:43 +0000 schrieb Lorenzo Pieralisi:
-> On Fri, Jan 05, 2018 at 02:26:34PM +0000, Bharat Kumar Gogada wrote:
-> > On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada
-> > wrote:
-> > > Bjorn wrote:
-> > > > In the PCI config access path, the *_pcie_valid_device()
-> > > > functions in 
-> > > > the dwc, altera, rockchip, and xilinx drivers all check whether
-> > > > the 
-> > > > link is up.
-> > > > 
-> > > > I think this is racy because the link may go down after we
-> > > > check but 
-> > > > before we perform the config access.
-> > > > 
-> > > > What would blow up if we removed the *_pcie_link_up() checks?
-> > > > 
-> > > > I'd like to either remove the checks or add comments about why
-> > > > the 
-> > > > race is acceptable.  If we've covered this before, I apologize.
-> > > > Adding a comment will keep me from pestering you about this
-> > > > again in 
-> > > > the future.
-> > > In both Xilinx driver cases when link is down, hardware responds
-> > > by 
-> > > AXI DECERR/SLVERR status which causes an exception, synchronous 
-> > > external abort to CPU.  This causes system to hang, so we need
-> > > this 
-> > > check for both of our drivers.  We will add comments.
-> > 
-> > This is a problem, and checking whether the link is up is a
-> > workaround but not a real solution.  That means your system may
-> > hang if the link happens to go down at the wrong time.
-> > 
-> > A real solution would be to handle the synchronous external abort
-> > so it doesn't cause a system hang.
-> > 
-> > Yes, I agree that this is workaround. For pcie-xilinx.c for arm32,
-> > we can have fault handling similar to "imx6q_pcie_abort_handler" in
-> > drivers/pci/dwc/pci-imx6.c.
-> > Since this driver is same for Microblaze architecture also, it
-> > requires separate handling.
-> > 
-> > For pcie-xilinx-nwl.c ARM64 as per link [1], linux kernel will hang
-> > for the above AXI responses. 
-> > As of now arm64 RAS is still work in progress [2].  
-> > 
-> > [1] https://www.spinics.net/lists/arm-kernel/msg624203.html
-> > 
-> > [2] https://patchwork.kernel.org/patch/9973967/
-> > 
-> > The check can be removed, if above issues were addressed.
+On 01/03/2018 02:37 AM, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> I do not see why the above "issues" should be addressed in order to
-> remove that check - as it was pointed out in this thread it just does
-> not solve anything, so what's the reason for keeping it ?
+> Optimize the power management in i2c-designware-platdrv by making it
+> set the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED which
+> allows some code to be dropped from its PM callbacks.
+> 
+> First, setting DPM_FLAG_SMART_SUSPEND causes the intel-lpss driver
+> to avoid resuming i2c-designware-platdrv devices in its ->prepare
+> callback, so they can stay in runtime suspend after that point even
+> if the direct-complete feature is not used for them.
+> 
+> It also causes the ACPI PM domain and the PM core to avoid invoking
+> "late" and "noirq" suspend callbacks for these devices if they are
+> in runtime suspend at the beginning of the "late" phase of device
+> suspend during system suspend.  That guarantees dw_i2c_plat_suspend()
+> to be called for a device only if it is not in runtime suspend.
+> 
+> Moreover, it causes the device's runtime PM status to be set to
+> "active" after calling dw_i2c_plat_resume() for it, so the
+> driver doesn't need internal flags to avoid invoking either
+> dw_i2c_plat_suspend() or dw_i2c_plat_resume() twice in a row.
+> 
+> Second, setting DPM_FLAG_LEAVE_SUSPENDED enables the optimization
+> allowing the device to stay suspended after system resume under
+> suitable conditions, so again the driver doesn't need to take
+> care of that by itself.
+> 
+> Accordingly, the internal "suspended" and "skip_resume" flags
+> used by the driver are not necessary any more, so drop them and
+> simplify the driver's PM callbacks.
+> 
+> Additionally, notice that dw_i2c_plat_complete() only needs to
+> schedule runtime PM resume for the device if platform firmware
+> has been involved in resuming the system, so make it call
+> pm_resume_via_firmware() to check that.  Also make it check the
+> runtime PM status of the device instead of its direct_complete
+> flag which also works if the device remained suspended due to
+> the DPM_FLAG_LEAVE_SUSPENDED driver flag.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>   drivers/i2c/busses/i2c-designware-core.h    |    2 -
+>   drivers/i2c/busses/i2c-designware-platdrv.c |   31 ++++++++++------------------
+>   2 files changed, 12 insertions(+), 21 deletions(-)
+> 
+This doesn't apply to linux-next due 0326f9f801b2 ("i2c: designware: 
+rename i2c_dw_plat_prepare_clk to i2c_dw_prepare_clk"). It was trivial 
+to fix which I did locally for testing.
 
-I solves the issue that you hang the system on PCIe enumeration in 100%
-of the cases when the link is down and you don't have the abort handler
-in place.
-
-It doesn't solve the race issue, but that is a lot less likely to be
-hit in the real world. I guess it's not a good idea to remove something
-that covers 98% of the problem just because it doesn't cover the
-remaining 2%, right?
-
-Regards,
-Lucas
+Acked-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
