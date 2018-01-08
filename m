@@ -1,16 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V4 22/26] video: fbdev: intelfb: deprecate
- pci_get_bus_and_slot()
-Date: Wed, 03 Jan 2018 12:18:15 +0100
-Message-id: <1712261.2Mai7cXr8p@amdc3058>
-In-reply-to: <7099e2af-4704-4611-94c0-830483de4578@codeaurora.org>
-MIME-version: 1.0
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <CGME20180102133833epcas1p4003614ea6c95c4568e8433acbb30f52d@epcas1p4.samsung.com>
- <7099e2af-4704-4611-94c0-830483de4578@codeaurora.org>
+Message-ID: <1515408232.12538.7.camel@pengutronix.de>
+Subject: Re: [PATCH v3] PCI: imx6: Add PHY reference clock source support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Ilya Ledvich <ilya@compulab.co.il>, Richard Zhu <hongxing.zhu@nxp.com>
+Date: Mon, 08 Jan 2018 11:43:52 +0100
+In-Reply-To: <1515073977-10153-1-git-send-email-ilya@compulab.co.il>
+References: <CAOMZO5AFC9dxhsQjmRrDA7Z3KMkEemryKOBmQhXm19NXKxHkKQ@mail.gmail.com>
+ <1515073977-10153-1-git-send-email-ilya@compulab.co.il>
+Mime-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,42 +16,69 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:INTEL FRAMEBUFFER DRIVER
- \(excluding 810 and 815\)" <linux-fbdev@vger.kernel.org>,
- linux-pci@vger.kernel.org, timur@codeaurora.org,
- Maik Broemme <mbroemme@libmpq.org>, open list <linux-kernel@vger.kernel.org>,
- "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 02, 2018 08:38:24 AM Sinan Kaya wrote:
-> On 12/19/2017 12:37 AM, Sinan Kaya wrote:
-> > pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> > where a PCI device is present. This restricts the device drivers to be
-> > reused for other domain numbers.
-> > 
-> > Getting ready to remove pci_get_bus_and_slot() function in favor of
-> > pci_get_domain_bus_and_slot().
-> > 
-> > Find the domain number from pdev.
-> > 
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> 
-> Any feedback here ? most of the remaining patches have the ACK except these.
-
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+QW0gRG9ubmVyc3RhZywgZGVuIDA0LjAxLjIwMTgsIDE1OjUyICswMjAwIHNjaHJpZWIgSWx5YSBM
+ZWR2aWNoOgo+IGkuTVg3RCB2YXJpYW50IG9mIHRoZSBJUCBjYW4gdXNlIGVpdGhlciBDcnlzdGFs
+IE9zY2lsbGF0b3IgaW5wdXQKPiBvciBpbnRlcm5hbCBjbG9jayBpbnB1dCBhcyBhIFJlZmVyZW5j
+ZSBDbG9jayBpbnB1dCBmb3IgUENJZSBQSFkuCj4gQWRkIHN1cHBvcnQgZm9yIGFuIG9wdGlvbmFs
+IHByb3BlcnR5ICdmc2wscGNpZS1waHktcmVmY2xrLWludGVybmFsJy4KPiBJZiBwcmVzZW50IHRo
+ZW4gYW4gaW50ZXJuYWwgY2xvY2sgaW5wdXQgaXMgdXNlZCBhcyBQQ0llIFBIWQo+IHJlZmVyZW5j
+ZSBjbG9jayBzb3VyY2UuIEJ5IGRlZmF1bHQgYW4gZXh0ZXJuYWwgb3NjaWxsYXRvciBpbnB1dAo+
+IGlzIHN0aWxsIHVzZWQuCj4gCj4gVmVyaWZpZWQgb24gQ29tcHVsYWIgU0JDLWlNWDcgU2luZ2xl
+IEJvYXJkIENvbXB1dGVyLgoKU29ycnkgdG8gZ2V0IGluIGxhdGUgaGVyZSwgYnV0IEkgd291bGQg
+cmF0aGVyIGhhdmUgdGhlIGV4dGVybmFsIGNsb2NrCmlucHV0IG1vZGVsZWQgYXMgYSByZWFsIGNs
+b2NrIGFuZCBvbmx5IHVzZSB0aGUgaW50ZXJuYWwgY2xvY2sgaWYgdGhhdAppc24ndCBwcmVzZW50
+LgoKQXJlIHlvdSBldmVuIHN1cmUgdGhhdCB0aGUgaS5NWDcgY2xvY2sgeW91IG1lbnRpb24gaXNu
+J3QgdGhlIGFscmVhZHkKZG9jdW1lbnRlZCAicGNpZV9idXMiIGNsb2NrPyBUaGlzIG9uZSBpcyBh
+bHNvIGFsbG93ZWQgdG8gYmUgc291cmNlZApleHRlcm5hbGx5IG9uIHRoZSBpLk1YNi4KClJlZ2Fy
+ZHMsCkx1Y2FzCgo+IFNpZ25lZC1vZmYtYnk6IElseWEgTGVkdmljaCA8aWx5YUBjb21wdWxhYi5j
+by5pbD4KPiAtLS0KPiBjaGFuZ2VzIHNpbmNlIFYyOgo+IAlhZGQgYSB2ZW5kb3IgcHJlZml4ICdm
+c2wnIHRvIGEgbmV3IHByb3BlcnR5Cj4gCj4gwqBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmlu
+ZGluZ3MvcGNpL2ZzbCxpbXg2cS1wY2llLnR4dCB8IDUgKysrKysKPiDCoGRyaXZlcnMvcGNpL2R3
+Yy9wY2ktaW14Ni5jwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqB8IDgKPiArKysrKysrLQo+IMKgMiBmaWxlcyBjaGFuZ2VkLCAxMiBp
+bnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCj4gCj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRp
+b24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZnNsLGlteDZxLXBjaWUudHh0IAo+IGIvRG9jdW1l
+bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQKPiBpbmRl
+eCA3YjFlNDhiLi4xNTkxYTZhIDEwMDY0NAo+IC0tLSBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJl
+ZS9iaW5kaW5ncy9wY2kvZnNsLGlteDZxLXBjaWUudHh0Cj4gKysrIGIvRG9jdW1lbnRhdGlvbi9k
+ZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQKPiBAQCAtNTAsNiArNTAs
+MTEgQEAgQWRkaXRpb25hbCByZXF1aXJlZCBwcm9wZXJ0aWVzIGZvciBpbXg3ZC1wY2llOgo+IMKg
+CcKgwqDCoMKgwqDCoMKgLSAicGNpZXBoeSIKPiDCoAnCoMKgwqDCoMKgwqDCoC0gImFwcHMiCj4g
+wqAKPiArQWRkaXRpb25hbCBvcHRpb25hbCBwcm9wZXJ0aWVzIGZvciBpbXg3ZC1wY2llOgo+ICst
+IGZzbCxwY2llLXBoeS1yZWZjbGstaW50ZXJuYWw6IElmIHByZXNlbnQgdGhlbiBhbiBpbnRlcm5h
+bCBQTEwKPiBpbnB1dCBpcyB1c2VkCj4gK8KgwqBhcyBQQ0llIFBIWSByZWZlcmVuY2UgY2xvY2sg
+c291cmNlLiBCeSBkZWZhdWx0IGFuIGV4dGVybmFsCj4gb3NjaWxsYXRvciBpbnB1dAo+ICvCoMKg
+aXMgdXNlZC4KPiArCj4gwqBFeGFtcGxlOgo+IMKgCj4gwqAJcGNpZUAweDAxMDAwMDAwIHsKPiBk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMgYi9kcml2ZXJzL3BjaS9kd2Mv
+cGNpLWlteDYuYwo+IGluZGV4IGI3MzQ4MzUuLjM2ODEyZDMgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVy
+cy9wY2kvZHdjL3BjaS1pbXg2LmMKPiArKysgYi9kcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYuYwo+
+IEBAIC02MSw2ICs2MSw3IEBAIHN0cnVjdCBpbXg2X3BjaWUgewo+IMKgCXUzMgkJCXR4X3N3aW5n
+X2xvdzsKPiDCoAlpbnQJCQlsaW5rX2dlbjsKPiDCoAlzdHJ1Y3QgcmVndWxhdG9yCSp2cGNpZTsK
+PiArCWJvb2wJCQlwY2llcGh5X3JlZmNsa19zZWw7Cj4gwqB9Owo+IMKgCj4gwqAvKiBQYXJhbWV0
+ZXJzIGZvciB0aGUgd2FpdGluZyBmb3IgUENJZSBQSFkgUExMIHRvIGxvY2sgb24gaS5NWDcgKi8K
+PiBAQCAtNDc0LDcgKzQ3NSw5IEBAIHN0YXRpYyB2b2lkIGlteDZfcGNpZV9pbml0X3BoeShzdHJ1
+Y3QgaW14Nl9wY2llCj4gKmlteDZfcGNpZSkKPiDCoAlzd2l0Y2ggKGlteDZfcGNpZS0+dmFyaWFu
+dCkgewo+IMKgCWNhc2UgSU1YN0Q6Cj4gwqAJCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2X3BjaWUt
+PmlvbXV4Y19ncHIsCj4gSU9NVVhDX0dQUjEyLAo+IC0JCQkJwqDCoMKgSU1YN0RfR1BSMTJfUENJ
+RV9QSFlfUkVGQ0xLX1NFTCwKPiAwKTsKPiArCQkJCcKgwqDCoElNWDdEX0dQUjEyX1BDSUVfUEhZ
+X1JFRkNMS19TRUwsCj4gKwkJCQnCoMKgwqBpbXg2X3BjaWUtPnBjaWVwaHlfcmVmY2xrX3NlbCA/
+Cj4gKwkJCQnCoMKgwqBJTVg3RF9HUFIxMl9QQ0lFX1BIWV9SRUZDTEtfU0VMIDoKPiAwKTsKPiDC
+oAkJYnJlYWs7Cj4gwqAJY2FzZSBJTVg2U1g6Cj4gwqAJCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2
+X3BjaWUtPmlvbXV4Y19ncHIsCj4gSU9NVVhDX0dQUjEyLAo+IEBAIC04NDAsNiArODQzLDkgQEAg
+c3RhdGljIGludCBpbXg2X3BjaWVfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZQo+ICpwZGV2
+KQo+IMKgCQlpbXg2X3BjaWUtPnZwY2llID0gTlVMTDsKPiDCoAl9Cj4gwqAKPiArCWlteDZfcGNp
+ZS0+cGNpZXBoeV9yZWZjbGtfc2VsID0KPiArCQlvZl9wcm9wZXJ0eV9yZWFkX2Jvb2wobm9kZSwg
+ImZzbCxwY2llLXBoeS1yZWZjbGstCj4gaW50ZXJuYWwiKTsKPiArCj4gwqAJcGxhdGZvcm1fc2V0
+X2RydmRhdGEocGRldiwgaW14Nl9wY2llKTsKPiDCoAo+IMKgCXJldCA9IGlteDZfYWRkX3BjaWVf
+cG9ydChpbXg2X3BjaWUsIHBkZXYpOwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtl
+cm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxt
+YW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
