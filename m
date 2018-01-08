@@ -1,80 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr40047.outbound.protection.outlook.com ([40.107.4.47]:53024
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751952AbeADWZn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 17:25:43 -0500
-Date: Thu, 4 Jan 2018 15:25:29 -0700
-From: Jason Gunthorpe <jgg@mellanox.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 02/12] pci-p2p: Add sysfs group to display p2pmem stats
-Message-ID: <20180104222529.GS11972@mellanox.com>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-3-logang@deltatee.com>
- <20180104215040.GE189897@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mga02.intel.com ([134.134.136.20]:23958 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756263AbeAHObx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Jan 2018 09:31:53 -0500
+Subject: Re: [PATCH 5/7] PM: i2c-designware-platdrv: Use
+ DPM_FLAG_SMART_PREPARE
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Kevin Hilman <khilman@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-i2c <linux-i2c@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@the-dreams.de>
+References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
+ <2436726.ykYRzVD45y@aspire.rjw.lan> <1780798.HpLBO7aPyI@aspire.rjw.lan>
+From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Message-ID: <8924de22-96f5-0e10-7aaf-29b5a490afe2@linux.intel.com>
+Date: Mon, 8 Jan 2018 16:31:49 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180104215040.GE189897@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1780798.HpLBO7aPyI@aspire.rjw.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 04, 2018 at 03:50:40PM -0600, Bjorn Helgaas wrote:
-> >  		This is similar to /sys/bus/pci/drivers_autoprobe, but
-> >  		affects only the VFs associated with a specific PF.
-> > +
-> > +What:		/sys/bus/pci/devices/.../p2pmem/available
+On 01/03/2018 02:35 AM, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> I wonder if "p2pdma" would be a more suggestive term?  It's not really
-> the *memory* that is peer-to-peer; the peer-to-peer part is referring
-> to *access* to the memory.
-
-There have been out of tree patches using P2P DMA for a long time, and
-some of the use cases have nothing to do with 'memory' - eg DMA to
-'registers'
-
-I notice that this series particularly focus on treating the target
-BAR as 'memory' - ie it puts genalloc on top of the BAR, and I guess
-treat all addresses as equal and interchangable.
-
-If this series gets accepted I would expect proposals to extend this
-infrastructure to allow for P2P for registers in some way as well.
-
-So I think the 'p2pmem' name is a good choice only when it is in
-places that talk about the genalloc part of this design.
-
-We should reserve p2pdma to talk about the generic infrastructure
-unrelated to the genalloc pool.
-
-Since these sysfs's seem to report the genalloc pool status, p2pmem
-seems like a good choice to me.
-
-> > @@ -82,6 +130,9 @@ static int pci_p2pmem_setup(struct pci_dev *pdev)
-> >  	if (error)
-> >  		goto out_pool_destroy;
-> >  
-> > +	if (sysfs_create_group(&pdev->dev.kobj, &p2pmem_group))
-> > +		dev_warn(&pdev->dev, "failed to create p2p sysfs group\n");
+> Modify i2c-designware-platdrv to set DPM_FLAG_SMART_PREPARE for its
+> devices and return 0 from the system suspend ->prepare callback
+> if the device has an ACPI companion object in order to tell the PM
+> core and middle layers to avoid skipping system suspend/resume
+> callbacks for the device in that case (which may be problematic,
+> because the device may be accessed during suspend and resume of
+> other devices via I2C operation regions then).
 > 
-> Not sure the warning (by itself) is worthwhile.  If we were going to
-> disable the feature if sysfs_create_group() failed, that's one thing,
-> but we aren't doing anything except generating a warning, which the
-> user can't really do anything with.  If the user is looking for the
-> sysfs file, its absence will be obvious even without the message.
-
-Don't most of the failure paths inside sysfs_create_group cause prints
-anyhow?
-
-Jason
+> Also the pm_runtime_suspended() check in dw_i2c_plat_prepare()
+> is not necessary any more, because the core does it when setting
+> power.direct_complete for the device, so drop it.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>   drivers/i2c/busses/i2c-designware-platdrv.c |   10 +++++++++-
+>   1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+Acked-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
