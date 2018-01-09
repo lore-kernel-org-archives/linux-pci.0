@@ -1,126 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
-        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
-        <dann.frazier@canonical.com>
-CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-        <rdunlap@infradead.org>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: [PATCH v12 3/9] PCI: Add fwnode handler as input param of pci_register_io_range()
-Date: Wed, 24 Jan 2018 00:36:19 +0800
-Message-ID: <1516725385-24535-4-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
-References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0079.outbound.protection.outlook.com ([104.47.40.79]:35855
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S964998AbeAITbc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 9 Jan 2018 14:31:32 -0500
+Subject: Re: [BISECTED] v4.15-rc: Boot regression on x86_64/AMD
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>
+References: <20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi>
+ <CA+55aFxCSWCG7ZvHW3AkLPzMPMAuG1BhL8fNgC0-JPYU4LZVow@mail.gmail.com>
+ <CAErSpo7dOfabXk9rpZr=B87wK4_Ao9_moK89Ze0cyi6Mqb0Z+Q@mail.gmail.com>
+ <628e2b58-b16b-5792-b4ef-88bec15ab779@amd.com>
+ <CA+55aFxbpNHpiZdtddq8DqfChFwho0OWw5SAZkkwEpwPS4-QYg@mail.gmail.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <5d794f18-f54c-3ca6-3869-5f5e2825b1ad@amd.com>
+Date: Tue, 9 Jan 2018 20:31:14 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CA+55aFxbpNHpiZdtddq8DqfChFwho0OWw5SAZkkwEpwPS4-QYg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Am 09.01.2018 um 20:18 schrieb Linus Torvalds:
+> On Tue, Jan 9, 2018 at 2:37 AM, Christian König
+> <christian.koenig@amd.com> wrote:
+>> I tested a bit with Aaro and came up with the attached patch, it adds a 16GB
+>> guard between the end of memory and the new window for the PCIe root hub.
+>> But I agree with you that this is just a hack and not a real solution.
+> Guys, that last statement makes no sense.
+>
+> The *real* hack was that original patch that caused problems.
+>
+> I mean, just look at it. It has a completely made up - and bad -
+> default start, and then it tries to forcibly just create the maximum
+> window it possibly can. Well, not quite, but almost.
+>
+> Now *THAT* is hacky, and fragile, and a bad idea. It's a fundamentally
+> bad idea exactly because it assumes
+>
+>   (a) we have perfect knowledge
+>
+>   (b) that window that wasn't even enabled or configured in the first
+> place should be the maximum window.
+>
+> both of those assumptions seem completely bogus, and seem to have no
+> actual reason.
+>
+> This comment in that code really does say it all:
+>
+>          /* Just grab the free area behind system memory for this */
+>
+> very lackadaisical.
+>
+> I agree that the 16GB guard is _also_ random, but it's certainly not
+> less random or hacky.
+>
+> But I really wonder why you want to be that close to memory at all.
 
-In preparation for having the PCI MMIO helpers to use the new generic
-I/O space management(LOGIC_PIO) we need to add the fwnode handler as
-extra input parameter.
-This patch changes the signature of pci_register_io_range() and of
-its callers as needed.
+Actually I don't want to be close to the end of memory at all. It's just 
+what I found a certain other OS is doing and I thought: Hey, that has 
+the best chance of working...
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c | 8 +++++---
- drivers/of/address.c    | 4 +++-
- drivers/pci/pci.c       | 3 ++-
- include/linux/pci.h     | 3 ++-
- 4 files changed, 12 insertions(+), 6 deletions(-)
+But yeah, thinking about it I agree with you that this was probably not 
+a good idea.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 6fc204a..1213479 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -729,7 +729,8 @@ static void acpi_pci_root_validate_resources(struct device *dev,
- 	}
- }
- 
--static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-+static void acpi_pci_root_remap_iospace(struct fwnode_handle *fwnode,
-+			struct resource_entry *entry)
- {
- #ifdef PCI_IOBASE
- 	struct resource *res = entry->res;
-@@ -738,7 +739,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
- 	resource_size_t length = resource_size(res);
- 	unsigned long port;
- 
--	if (pci_register_io_range(cpu_addr, length))
-+	if (pci_register_io_range(fwnode, cpu_addr, length))
- 		goto err;
- 
- 	port = pci_address_to_pio(cpu_addr);
-@@ -780,7 +781,8 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 	else {
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
- 			if (entry->res->flags & IORESOURCE_IO)
--				acpi_pci_root_remap_iospace(entry);
-+				acpi_pci_root_remap_iospace(&device->fwnode,
-+						entry);
- 
- 			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index c6c410b..85975fe 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -2,6 +2,7 @@
- #define pr_fmt(fmt)	"OF: " fmt
- 
- #include <linux/device.h>
-+#include <linux/fwnode.h>
- #include <linux/io.h>
- #include <linux/ioport.h>
- #include <linux/module.h>
-@@ -335,7 +336,8 @@ int of_pci_range_to_resource(struct of_pci_range *range,
- 
- 	if (res->flags & IORESOURCE_IO) {
- 		unsigned long port;
--		err = pci_register_io_range(range->cpu_addr, range->size);
-+		err = pci_register_io_range(&np->fwnode, range->cpu_addr,
-+				range->size);
- 		if (err)
- 			goto invalid_range;
- 		port = pci_address_to_pio(range->cpu_addr);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d8357ff..d60f0a3 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3383,7 +3383,8 @@ struct io_range {
-  * Record the PCI IO range (expressed as CPU physical address + size).
-  * Return a negative value if an error has occured, zero otherwise
-  */
--int pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
-+			resource_size_t	size)
- {
- 	int err = 0;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8329983..1b70732 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1225,7 +1225,8 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 			void *alignf_data);
- 
- 
--int pci_register_io_range(phys_addr_t addr, resource_size_t size);
-+int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
-+			resource_size_t size);
- unsigned long pci_address_to_pio(phys_addr_t addr);
- phys_addr_t pci_pio_to_address(unsigned long pio);
- int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
--- 
-1.9.1
+> What was wrong with the patch thgat just put it the hell out of any
+> normal memory range, and just changed the default start from one
+> random (and clearly bad) value to _another_ random but at least
+> out-of-the-way value?
 
+Well Bjorn didn't liked it because I couldn't come up with a good 
+explanation why 256GB is a good value in general (it is a good value for 
+our particular use case).
+
+> IOW, this change
+>
+> -       res->start = 0x100000000ull;
+> +       res->start = 0xbd00000000ull;
+>
+> really has a relatively solid explanation for it: "pick a high address
+> that is likely out of the way". That's *much* better than "pick an
+> address that is right after memory".
+>
+> Now, could there be a better high address to pick? Probably. It would
+> be really nice to have a *reason* for the address to be picked.
+>
+> But honestly, even "it doesn't break Aaro's machine" is a better
+> reason than many, in the absence of other reasons.
+>
+> For example, was there a reason for that random 756GB address? Is the
+> limit of the particular AMD 64-bit bar perhaps at the 1TB mark (and
+> that "res->end" value is because "close to it, but not at the top")?
+
+That is actually a hardware limit documented in the BIOS and Kernel 
+developers guide for AMD CPUs 
+(https://support.amd.com/TechDocs/49125_15h_Models_30h-3Fh_BKDG.pdf).
+
+I should probably add a comment explaining this.
+
+> So I think "just above RAM" is a _horrible_ default starting point.
+> The random 16GB guard is _better_, but it honestly doesn't seem any
+> better than the simpler original patch.
+>
+> A starting point like "halfway to from the hardware limit" would
+> actually be a better reason. Or just "we picked an end-point, let's
+> pick a starting point that gives us a _sufficient_ - but not excessive
+> - window".
+
+Well that is exactly what the 256GB patch was doing.
+
+So as long as you are fine with that I'm perfectly fine to use that one.
+
+Christian.
+
+> Or any number of other possible starting points. Almost _anything_ is
+> better than "end of RAM".
+>
+> That "above end of RAM" might be a worst-case fall-back value (and in
+> fact, I think that _is_ pretty close to what the PCI code uses for the
+> case of "we don't have any parent at all, so we'll just have to assume
+> it's a transparent bridge"), but I don't think it's necessarily what
+> you should _strive_ for.
+>
+> So the hackyness of whatever the fix is really should be balanced with
+> the hackyness of the original patch that introduced this problem.
+>
+>               Linus
