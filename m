@@ -1,46 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39394 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753272AbeARAI7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jan 2018 19:08:59 -0500
-Date: Wed, 17 Jan 2018 18:08:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Kong Lai <kong.lai@tundra.com>, linux-pci@vger.kernel.org,
-        linux-media@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: remove pci_dma_* abuses and workarounds V2
-Message-ID: <20180118000856.GE53542@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180110180322.30186-1-hch@lst.de>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:16736 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751544AbeAIJUB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 04:20:01 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V5 0/7] Add loadable kernel module and power management support
+Date: Tue, 9 Jan 2018 14:49:30 +0530
+Message-ID: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180110180322.30186-1-hch@lst.de>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc David]
+This series of patches adds loadable kernel module and power management
+support to Tegra PCIe host controller driver. irq_set_msi_desc() and
+tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
+set of patches.
 
-On Wed, Jan 10, 2018 at 07:03:18PM +0100, Christoph Hellwig wrote:
-> Back before the dawn of time pci_dma_* with a NULL pci_dev argument
-> was used for all kinds of things, e.g. dma mapping for non-PCI
-> devices.  All this has been long removed, but it turns out we
-> still care for a NULL pci_dev in the wrappers, and we still have
-> two odd USB drivers that use pci_dma_alloc_consistent for allocating
-> memory while ignoring the dma_addr_t entirely, and a network driver
-> mixing the already wrong usage of dma_* with a NULL device with a
-> single call to pci_free_consistent.
-> 
-> This series switches the two usb drivers to use plain kzalloc, the
-> net driver to properly use the dma API and then removes the handling
-> of the NULL pci_dev in the pci_dma_* wrappers.
-> 
-> Changes since V1:
->  - remove allocation failure printks
->  - use kcalloc
->  - fix tsi108_eth
->  - improve changelogs
+These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
+are the verification details.
+	- Multiple module insert & remove
+	- PCIe device functionality after module insert
+	- Free clock, resets, regulators, powergate, iomem and interrupt
+	resources after module remove
+	- PCIe device functionality after resume from RAM
 
-Applied to pci/dma for v4.16, thanks!
+V2: PM QoS fix is dropped in V2 from this series because the fix is
+incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
+latency framework")'. Update commit message of few patches in V2.
+
+V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_use()
+are dropped based on review comments. These symbols will be addressed in next
+series. Took care of few other review comments.
+
+V4: Dropped pci_find_host_bridge() export patch and added new patch to use
+bus->sysdata for private data.
+
+V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
+on top of linux-next
+
+Manikanta Maddireddy (7):
+  of: Export of_pci_range_to_resource()
+  PCI: tegra: Use bus->sysdata to store and get host private data
+  PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for Tegra PCIe
+  PCI: tegra: Free resources on probe failure
+  PCI: tegra: Add loadable kernel module support
+  PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
+  PCI: tegra: Add power management support
+
+ drivers/of/address.c         |   1 +
+ drivers/pci/host/Kconfig     |   2 +-
+ drivers/pci/host/pci-tegra.c | 333 ++++++++++++++++++++++++++++++++-----------
+ 3 files changed, 253 insertions(+), 83 deletions(-)
+
+-- 
+2.1.4
