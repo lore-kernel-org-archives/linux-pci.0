@@ -1,56 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36152 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753688AbeAQXz6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jan 2018 18:55:58 -0500
-Date: Wed, 17 Jan 2018 17:55:55 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Frank Rowand <frowand.list@gmail.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/3] PCI: move DT PCI functions to PCI core
-Message-ID: <20180117235555.GC53542@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180104211215.11344-1-robh@kernel.org>
+Return-Path: <SRS0=XFey=EE=axis.com=niklas.cassel@kernel.org>
+Return-Path: <SRS0=XFey=EE=axis.com=niklas.cassel@kernel.org>
+Subject: Re: Re: [PATCH] imx6: fix pcie enumeration
+To: Koen Vandeputte <koen.vandeputte@ncentric.com>, Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>, Richard Zhu <hongxing.zhu@nxp.com>, Lucas Stach
+	<l.stach@pengutronix.de>, <linux-arm-kernel@lists.infradead.org>, Joao Pinto
+	<Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>
+References: <20180104202430.GC189897@bhelgaas-glaptop.roam.corp.google.com>
+ <a2d7afee-7a41-6da6-e5a4-a36a6fcde55d@ncentric.com>
+ <20180105123206.GA24511@e107981-ln.cambridge.arm.com>
+ <ebf30c78-b772-6214-f441-c86ae7fdba7e@ncentric.com>
+ <20180105171828.GC24933@red-moon>
+ <5bc70c34-45b2-5aed-eb06-f8ecfe859fd0@ncentric.com>
+ <20180108110015.GA32027@red-moon>
+ <1684b8c6-1006-948b-f4f9-c9aaf9cf26a8@ncentric.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <3c4b9de6-de1d-55a4-5f44-b3815fa5bf85@axis.com>
+Date: Tue, 9 Jan 2018 14:48:14 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180104211215.11344-1-robh@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1684b8c6-1006-948b-f4f9-c9aaf9cf26a8@ncentric.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 04, 2018 at 03:12:12PM -0600, Rob Herring wrote:
-> Most subsystem specific functions have been moved into the respective
-> subsystems. Only PCI and networking remain. This series moves most of the
-> PCI related code to drivers/pci/of.c. Some bus address functions for PCI
-> remain in of/address.c because we don't have infrastructure to split up
-> the per bus helper functions.
+On 08/01/18 12:13, Koen Vandeputte wrote:
 > 
-> I expect Bjorn to take this series, so PPC maintainers please ack.
 > 
-> Rob
+> On 2018-01-08 12:00, Lorenzo Pieralisi wrote:
+>> [+cc Joao, Jingoo]
+>>
+>> On Mon, Jan 08, 2018 at 09:51:37AM +0100, Koen Vandeputte wrote:
+>>
+>> [...]
+>>
+>>> [ Node 4 | node-4 ] lspci -v
+>>> 00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
+>>> [Normal decode])
+>>>      Flags: bus master, fast devsel, latency 0, IRQ 298
+>>>      Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
+>>>      Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>>                                       ^^^^^^^^^^^^^^
+>>
+>> So basically, the subordinate number in the root port does not
+>> affect config space forwarding from what I see and it has always
+>> been like that for dwc.
+>>
+>> You are forced to update it to 0xff because otherwise the kernel
+>> stops enumerating bus numbers > 1
+> Indeed, which affects all devices using Designware PCIe init + a PCIe bridge downstream
+>> but that's a software issue
+>> not HW - the subordinate bus number does not seem to affect anything
+>> here.
 > 
-> Rob Herring (3):
->   PCI: move OF related PCI functions into PCI core
->   powerpc/pci: use of_irq_parse_and_map_pci helper
->   PCI: make of_irq_parse_pci static
+>> Sigh.
+>>
+>> Another option would consist in forcing the kernel to reassign
+>> all bus numbers by setting the PCI_REASSIGN_ALL_BUS flag but
+>> that's not a good idea given how inconsistent that flag usage is.
+>>
+>> I think that updating the subordinate bus numbers in the DWC
+>> config register is the correct solution to make sure the kernel
+>> won't get confused anymore by what seems to be a fake root port,
+>> I need input from DWC maintainers to confirm my understanding.
+>>
+>> Thanks,
+>> Lorenzo
+>>
 > 
->  arch/arm/mach-mvebu/Kconfig      |   1 -
->  arch/powerpc/kernel/pci-common.c |   8 +-
->  drivers/of/Kconfig               |  16 --
->  drivers/of/Makefile              |   2 -
->  drivers/of/address.c             |   8 +-
->  drivers/of/of_pci.c              | 384 -----------------------------
->  drivers/of/of_pci_irq.c          | 131 ----------
->  drivers/pci/of.c                 | 505 +++++++++++++++++++++++++++++++++++++++
->  include/linux/of_pci.h           |   8 +-
->  9 files changed, 510 insertions(+), 553 deletions(-)
->  delete mode 100644 drivers/of/of_pci.c
->  delete mode 100644 drivers/of/of_pci_irq.c
+> The patch I'm currently using internally:
+> 
+> 
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -861,7 +861,7 @@ void dw_pcie_setup_rc(struct pcie_port *
+>      /* setup bus numbers */
+>      val = dw_pcie_readl_rc(pp, PCI_PRIMARY_BUS);
+>      val &= 0xff000000;
+> -    val |= 0x00010100;
+> +    val |= 0x00ff0100;
+>      dw_pcie_writel_rc(pp, PCI_PRIMARY_BUS, val);
+> 
+>      /* setup command register */
+> 
+> 
+> Above version logically fixes it for all dwc devices using a bridge after the RC, not only imx6.
+> If this is fine, I would submit the patch above and drop the current one.
 
-Applied to pci/dt-resources for v4.16, thanks!
+I can confirm that commit a20c7f36bd3d ("PCI: Do not allocate more buses than
+available in parent") broke enumerating PCIe devices behind a PCIe switch
+on ARTPEC-6 (which uses the DWC IP).
+(FTR, arch/arm/boot/dts/artpec6.dtsi specifies bus-range = <0x00 0xff>).
 
-I'll update this if necessary if PPC maintainers comment.
+This patch resolves the problem.
+(I verified on linux-next: next-20180109).
+
+However, note that I had to patch the file
+drivers/pci/dwc/pcie-designware-host.c
+rather than
+drivers/pci/host/pcie-designware.c,
+which this patch suggests.
+
+Please feel free to submit a new patch with:
+
+Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+
+> 
+> Backporting this to stable kernels (4.9 .. 4.4 .. etc) will fix all nasty warnings on these setups during boot without any change in functionality.
+> These kernels will require a separate patch as this source file got moved & renamed.
+> 
+> 
+> Thanks for your time and analysis so far,
+> 
+> Koen
