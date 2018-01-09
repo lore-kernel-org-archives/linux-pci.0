@@ -1,161 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:3779 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754345AbeALJMj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Jan 2018 04:12:39 -0500
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-To: Christophe LEROY <christophe.leroy@c-s.fr>,
-        Greg KH <gregkh@linuxfoundation.org>
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134831.GB10103@kroah.com>
- <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
- <8dd19411-5b06-0aa4-fd0e-e5b112c25dcb@huawei.com>
- <1eb206ed-95e9-5839-485d-0e549ff3f505@c-s.fr>
-CC: <linux-kernel@vger.kernel.org>, <ysxie@foxmail.com>,
-        <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
-        <boris.brezillon@free-electrons.com>, <richard@nod.at>,
-        <marek.vasut@gmail.com>, <cyrille.pitchen@wedev4u.fr>,
-        <linux-mtd@lists.infradead.org>, <alsa-devel@alsa-project.org>,
-        <wim@iguana.be>, <linux@roeck-us.net>,
-        <linux-watchdog@vger.kernel.org>, <b.zolnierkie@samsung.com>,
-        <linux-fbdev@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <linux-gpio@vger.kernel.org>, <ralf@linux-mips.org>,
-        <linux-mips@linux-mips.org>, <lgirdwood@gmail.com>,
-        <broonie@kernel.org>, <tglx@linutronix.de>, <jason@lakedaemon.net>,
-        <marc.zyngier@arm.com>, <arnd@arndb.de>,
-        <andriy.shevchenko@linux.intel.com>,
-        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
-        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
-        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
-        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
-        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
-        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
-        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
-        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
-        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <dvhart@infradead.org>, <andy@infradead.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
-        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
-        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
-        <dmaengine@vger.kernel.org>, <jslaby@suse.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <ff498c83-d1ee-7553-e20c-a07369f8dad6@huawei.com>
-Date: Fri, 12 Jan 2018 17:12:12 +0800
+Received: from foss.arm.com ([217.140.101.70]:56586 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932205AbeAIPZF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 9 Jan 2018 10:25:05 -0500
+Date: Tue, 9 Jan 2018 15:25:58 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
+        niklas.cassel@axis.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH] PCI: dwc: fix enumeration end when reaching root
+ subordinate
+Message-ID: <20180109152550.GA16285@red-moon>
+References: <1515508941-20055-1-git-send-email-koen.vandeputte@ncentric.com>
 MIME-Version: 1.0
-In-Reply-To: <1eb206ed-95e9-5839-485d-0e549ff3f505@c-s.fr>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1515508941-20055-1-git-send-email-koen.vandeputte@ncentric.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Christophe ，
+On Tue, Jan 09, 2018 at 03:42:21PM +0100, Koen Vandeputte wrote:
+> The subordinate value indicates the highest bus number which can be
+> reached downstream though a certain device.
+> 
+> Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+> parent")
+> ensures that downstream devices cannot assign busnumbers higher than the
+> upstream device subordinate number, which was indeed illogical.
+> 
+> By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
+> value of 0x01.
+> 
+> Due to this combined with above commit, enumeration stops digging deeper
+> downstream as soon as bus num 0x01 has been assigned, which is always
+> the case for a bridge device.
+> 
+> This results in all devices behind a bridge bus to remain undetected, as
+> these would be connected to bus 0x02 or higher.
+> 
+> Fix this by initializing the RC to a subordinate value of 0xff, meaning
+> that all busses [0x00-0xff] are reachable through this RC.
 
-On 2018/1/4 16:05, Christophe LEROY wrote:
-> 
-> 
-> Le 25/12/2017 à 02:34, Yisheng Xie a écrit :
->>
->>
->> On 2017/12/24 17:05, christophe leroy wrote:
->>>
->>>
->>> Le 23/12/2017 à 14:48, Greg KH a écrit :
->>>> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->>>>> Hi all,
->>>>>
->>>>> When I tried to use devm_ioremap function and review related code, I found
->>>>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
->>>>> except one use ioremap while the other use ioremap_nocache.
->>>>
->>>> For all arches?  Really?  Look at MIPS, and x86, they have different
->>>> functions.
->>>>
->>>>> While ioremap's
->>>>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
->>>>> same function with devm_ioremap, which can just be killed to reduce the size
->>>>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
->>>>>
->>>>> I have posted two versions, which use macro instead of function for
->>>>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->>>>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
->>>>> thing. So here comes v3 and please help to review.
->>>>
->>>> I don't think this can be done, what am I missing?  These functions are
->>>> not identical, sorry for missing that before.
->>>
->>> devm_ioremap() and devm_ioremap_nocache() are quite similar, both use devm_ioremap_release() for the release, why not just defining:
->>>
->>> static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
->>>                 resource_size_t size, bool nocache)
->>> {
->>> [...]
->>>      if (nocache)
->>>          addr = ioremap_nocache(offset, size);
->>>      else
->>>          addr = ioremap(offset, size);
->>> [...]
->>> }
->>>
->>> then in include/linux/io.h
->>>
->>> static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
->>>                 resource_size_t size)
->>> {return __devm_ioremap(dev, offset, size, false);}
->>>
->>> static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
->>>                     resource_size_t size);
->>> {return __devm_ioremap(dev, offset, size, true);}
->>
->> Yeah, this seems good to me, right now we have devm_ioremap, devm_ioremap_wc, devm_ioremap_nocache
->> May be we can use an enum like:
->> typedef enum {
->>     DEVM_IOREMAP = 0,
->>     DEVM_IOREMAP_NOCACHE,
->>     DEVM_IOREMAP_WC,
->> } devm_ioremap_type;
->>
->> static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
->>                  resource_size_t size)
->>   {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP);}
->>
->>   static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
->>                      resource_size_t size);
->>   {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_NOCACHE);}
->>
->>   static inline void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
->>                      resource_size_t size);
->>   {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_WC);}
->>
->>   static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
->>                  resource_size_t size, devm_ioremap_type type)
->>   {
->>       void __iomem **ptr, *addr = NULL;
->>   [...]
->>       switch (type){
->>       case DEVM_IOREMAP:
->>           addr = ioremap(offset, size);
->>           break;
->>       case DEVM_IOREMAP_NOCACHE:
->>           addr = ioremap_nocache(offset, size);
->>           break;
->>       case DEVM_IOREMAP_WC:
->>           addr = ioremap_wc(offset, size);
->>           break;
->>       }
->>   [...]
->>   }
-> 
-> 
-> That looks good to me, will you submit a v4 ?
+This is not a correct description of the problem. AFAICS all busses
+are reachable through this RC _regardless_ of whatever subordinate
+bus number value you programme into it.
 
-Sorry for late response. And I will submit the v4 as your suggestion.
+You should extend the CC list to all dwc host submaintainers so
+that you can actually get it tested.
 
-Thanks
-Yisheng
+> Fixes: a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+> parent")
+> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+> Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+> 
+> Will send separate patches to stable as this file got moved/renamed
 
+Fixes: commit appeared at v4.15-rc1 (and v4.15 has not been released
+yet) - there is no separate patch to be sent.
+
+Thanks,
+Lorenzo
+
+>  drivers/pci/dwc/pcie-designware-host.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Christophe
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index bf558df5b7b3..2b5470173196 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -616,7 +616,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	/* setup bus numbers */
+>  	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
+>  	val &= 0xff000000;
+> -	val |= 0x00010100;
+> +	val |= 0x00ff0100;
+>  	dw_pcie_writel_dbi(pci, PCI_PRIMARY_BUS, val);
+>  
+>  	/* setup command register */
+> -- 
+> 2.7.4
 > 
->>
