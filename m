@@ -1,129 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51600 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752328AbeAZW4J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 Jan 2018 17:56:09 -0500
-Subject: [PATCH 4/8] PCI/DPC: Read RP PIO Log Size once at probe
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
-Date: Fri, 26 Jan 2018 16:56:04 -0600
-Message-ID: <20180126225604.58614.39255.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from bombadil.infradead.org ([65.50.211.133]:44337 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756463AbeAIUjw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 15:39:52 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] media/ttusb-dev: remove pci_zalloc_coherent abuse
+Date: Tue,  9 Jan 2018 21:39:38 +0100
+Message-Id: <20180109203939.5930-3-hch@lst.de>
+In-Reply-To: <20180109203939.5930-1-hch@lst.de>
+References: <20180109203939.5930-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Switch to a plain kzalloc instea of pci_zalloc_coherent to allocate
+memory for the USB DMA.
 
-The RP PIO Log Size is a read-only field in the DPC Capability, so it is
-constant and known at probe-time, but previously we read it every time we
-processed an RP PIO error.
-
-Read it once in dpc_probe() (if the RP Extensions for DPC are supported)
-and remember the size in struct dpc_dev.  No functional change intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/pcie/pcie-dpc.c |   29 ++++++++++++++++-------------
- 1 file changed, 16 insertions(+), 13 deletions(-)
+ drivers/media/usb/ttusb-dec/ttusb_dec.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 0bbdf513067a..17f60bd4ea5f 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -34,7 +34,6 @@ struct dpc_rp_pio_regs {
- 	struct rp_pio_header_log_regs header_log;
- 	u32 impspec_log;
- 	u32 tlp_prefix_log[4];
--	u32 log_size;
- 	u16 first_error;
- };
+diff --git a/drivers/media/usb/ttusb-dec/ttusb_dec.c b/drivers/media/usb/ttusb-dec/ttusb_dec.c
+index cdefb5dfbbdc..794ea8a78181 100644
+--- a/drivers/media/usb/ttusb-dec/ttusb_dec.c
++++ b/drivers/media/usb/ttusb-dec/ttusb_dec.c
+@@ -127,7 +127,6 @@ struct ttusb_dec {
+ 	struct urb		*irq_urb;
+ 	dma_addr_t		irq_dma_handle;
+ 	void			*iso_buffer;
+-	dma_addr_t		iso_dma_handle;
+ 	struct urb		*iso_urb[ISO_BUF_COUNT];
+ 	int			iso_stream_count;
+ 	struct mutex		iso_mutex;
+@@ -1185,11 +1184,7 @@ static void ttusb_dec_free_iso_urbs(struct ttusb_dec *dec)
  
-@@ -44,6 +43,7 @@ struct dpc_dev {
- 	u16			cap_pos;
- 	bool			rp_extensions;
- 	u32			rp_pio_status;
-+	u8			rp_log_size;
- };
- 
- static const char * const rp_pio_error_string[] = {
-@@ -173,11 +173,12 @@ static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
- 	}
- 
- 	dpc_rp_pio_print_tlp_header(dev, &rp_pio->header_log);
--	if (rp_pio->log_size == 4)
-+	if (dpc->rp_log_size == 4)
- 		return;
-+
- 	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", rp_pio->impspec_log);
- 
--	for (i = 0; i < rp_pio->log_size - 5; i++)
-+	for (i = 0; i < dpc->rp_log_size - 5; i++)
- 		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i,
- 			rp_pio->tlp_prefix_log[i]);
+ 	for (i = 0; i < ISO_BUF_COUNT; i++)
+ 		usb_free_urb(dec->iso_urb[i]);
+-
+-	pci_free_consistent(NULL,
+-			    ISO_FRAME_SIZE * (FRAMES_PER_ISO_BUF *
+-					      ISO_BUF_COUNT),
+-			    dec->iso_buffer, dec->iso_dma_handle);
++	kfree(dec->iso_buffer);
  }
-@@ -186,7 +187,6 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
- 				struct dpc_rp_pio_regs *rp_pio)
- {
- 	struct pci_dev *pdev = dpc->dev->port;
--	struct device *dev = &dpc->dev->device;
- 	int i;
- 	u16 cap = dpc->cap_pos, status;
  
-@@ -206,13 +206,8 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
- 	rp_pio->first_error = (status & 0x1f00) >> 8;
+ static int ttusb_dec_alloc_iso_urbs(struct ttusb_dec *dec)
+@@ -1198,10 +1193,8 @@ static int ttusb_dec_alloc_iso_urbs(struct ttusb_dec *dec)
  
--	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
--	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
--	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
--		dev_err(dev, "RP PIO log size %u is invalid\n",
--			rp_pio->log_size);
-+	if (dpc->rp_log_size < 4)
- 		return;
--	}
+ 	dprintk("%s\n", __func__);
  
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
- 			      &rp_pio->header_log.dw0);
-@@ -222,12 +217,12 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
- 			      &rp_pio->header_log.dw2);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
- 			      &rp_pio->header_log.dw3);
--	if (rp_pio->log_size == 4)
-+	if (dpc->rp_log_size == 4)
- 		return;
- 
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
- 			      &rp_pio->impspec_log);
--	for (i = 0; i < rp_pio->log_size - 5; i++)
-+	for (i = 0; i < dpc->rp_log_size - 5; i++)
- 		pci_read_config_dword(pdev,
- 			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
- 			&rp_pio->tlp_prefix_log[i]);
-@@ -327,6 +322,14 @@ static int dpc_probe(struct pcie_device *dev)
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
- 
- 	dpc->rp_extensions = (cap & PCI_EXP_DPC_CAP_RP_EXT);
-+	if (dpc->rp_extensions) {
-+		dpc->rp_log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
-+		if (dpc->rp_log_size < 4 || dpc->rp_log_size > 9) {
-+			dev_err(device, "RP PIO log size %u is invalid\n",
-+				dpc->rp_log_size);
-+			dpc->rp_log_size = 0;
-+		}
-+	}
- 
- 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
-@@ -334,7 +337,7 @@ static int dpc_probe(struct pcie_device *dev)
- 	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
- 		cap & PCI_EXP_DPC_IRQ, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
- 		FLAG(cap, PCI_EXP_DPC_CAP_POISONED_TLP),
--		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), (cap >> 8) & 0xf,
-+		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), dpc->rp_log_size,
- 		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
- 	return status;
- }
+-	dec->iso_buffer = pci_zalloc_consistent(NULL,
+-						ISO_FRAME_SIZE * (FRAMES_PER_ISO_BUF * ISO_BUF_COUNT),
+-						&dec->iso_dma_handle);
+-
++	dec->iso_buffer = kzalloc(ISO_FRAME_SIZE *
++			(FRAMES_PER_ISO_BUF * ISO_BUF_COUNT), GFP_KERNEL);
+ 	if (!dec->iso_buffer) {
+ 		dprintk("%s: pci_alloc_consistent - not enough memory\n",
+ 			__func__);
+-- 
+2.14.2
