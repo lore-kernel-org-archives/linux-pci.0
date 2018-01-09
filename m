@@ -1,62 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47748 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751429AbeA3S1J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Jan 2018 13:27:09 -0500
-Subject: [PATCH v2 13/14] PCI/DPC: Add and use DPC Status register field
- definitions
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Tue, 30 Jan 2018 12:27:05 -0600
-Message-ID: <20180130182705.106875.15572.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-io0-f172.google.com ([209.85.223.172]:43520 "EHLO
+        mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752684AbeAIT5M (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 14:57:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <5d794f18-f54c-3ca6-3869-5f5e2825b1ad@amd.com>
+References: <20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi>
+ <CA+55aFxCSWCG7ZvHW3AkLPzMPMAuG1BhL8fNgC0-JPYU4LZVow@mail.gmail.com>
+ <CAErSpo7dOfabXk9rpZr=B87wK4_Ao9_moK89Ze0cyi6Mqb0Z+Q@mail.gmail.com>
+ <628e2b58-b16b-5792-b4ef-88bec15ab779@amd.com> <CA+55aFxbpNHpiZdtddq8DqfChFwho0OWw5SAZkkwEpwPS4-QYg@mail.gmail.com>
+ <5d794f18-f54c-3ca6-3869-5f5e2825b1ad@amd.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 9 Jan 2018 11:57:11 -0800
+Message-ID: <CA+55aFyQchgcmZFJqYD3jpka82G76SYs3dZka5v9_3q5=tJR2w@mail.gmail.com>
+Subject: Re: [BISECTED] v4.15-rc: Boot regression on x86_64/AMD
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Tue, Jan 9, 2018 at 11:31 AM, Christian K=C3=B6nig
+<christian.koenig@amd.com> wrote:
+>>
+>> For example, was there a reason for that random 756GB address? Is the
+>> limit of the particular AMD 64-bit bar perhaps at the 1TB mark (and
+>> that "res->end" value is because "close to it, but not at the top")?
+>
+> That is actually a hardware limit documented in the BIOS and Kernel
+> developers guide for AMD CPUs
+> (https://support.amd.com/TechDocs/49125_15h_Models_30h-3Fh_BKDG.pdf).
+>
+> I should probably add a comment explaining this.
 
-Add definitions for DPC Status register fields and use them in the code.
-No functional change intended.
+Ok, good. So at least some of those values have reasons.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/pcie-dpc.c   |    4 ++--
- include/uapi/linux/pci_regs.h |    2 ++
- 2 files changed, 4 insertions(+), 2 deletions(-)
+And yes, documenting it would be great.
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 76a50d03e5db..5b4c65bc9267 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -216,8 +216,8 @@ static irqreturn_t dpc_irq(int irq, void *context)
- 	dev_info(dev, "DPC containment event, status:%#06x source:%#06x\n",
- 		status, source);
- 
--	reason = (status >> 1) & 0x3;
--	ext_reason = (status >> 5) & 0x3;
-+	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
-+	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
- 
- 	dev_warn(dev, "DPC %s detected, remove downstream devices\n",
- 		 (reason == 0) ? "unmasked uncorrectable error" :
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 70c2b2ade048..970a0dc535c4 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -979,8 +979,10 @@
- 
- #define PCI_EXP_DPC_STATUS		8	/* DPC Status */
- #define  PCI_EXP_DPC_STATUS_TRIGGER	0x01	/* Trigger Status */
-+#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN	0x06	/* Trigger Reason */
- #define  PCI_EXP_DPC_STATUS_INTERRUPT	0x08	/* Interrupt Status */
- #define  PCI_EXP_DPC_RP_BUSY		0x10	/* Root Port Busy */
-+#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT 0x60 /* Trig Reason Extension */
- 
- #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
- 
+>> A starting point like "halfway to from the hardware limit" would
+>> actually be a better reason. Or just "we picked an end-point, let's
+>> pick a starting point that gives us a _sufficient_ - but not excessive
+>> - window".
+>
+>
+> Well that is exactly what the 256GB patch was doing.
+
+Ahh, so 0xbd00000000ull is basically 256GB from the end point, and the
+end point is basically specified by hardware.
+
+So yes, I think that's a starting point that can at least be
+explained: let's try to make it something "big enough" (and 256GB
+seems to be big enough).
+
+Of course, since this is all "pick a random number", maybe that breaks
+something _else_.
+
+We do traditionally have a very similar issue for the 32-bit PCI
+starting address, where we used to have tons of issues with "we don't
+know all resources, we want to try to come up with a range that is out
+of the way".
+
+There we try to find a big enough gap in th e820 memory map
+(e820_search_gap()), and the end result is pci_mem_start (which is
+then exposed as PCIBIOS_MIN_MEM to the PCI resource allocation).
+
+If worst comes to worst, maybe we should look at having something
+similar for the full 64-bit range.
+
+             Linus
