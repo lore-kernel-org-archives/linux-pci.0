@@ -1,59 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 8 Jan 2018 16:35:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
-        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 6/9] PCI: cadence: Add host driver for Cadence PCIe
- controller
-Message-ID: <20180108223545.GB31640@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
- <4b2b67ad54e14ee5e1f83af65e9932ce408e82ec.1513620412.git.cyrille.pitchen@free-electrons.com>
- <20180108180613.GE2530@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:46241 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753867AbeAIUX3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 15:23:29 -0500
+Received: by mail-qk0-f175.google.com with SMTP id l12so19830271qke.13
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jan 2018 12:23:29 -0800 (PST)
+Subject: Re: Regression: NULL pointer dereference caused by
+ iproc_pcie_map_dma_ranges
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Oza Oza <oza.oza@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Scott Branden <scott.branden@broadcom.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>
+References: <CACna6rxOBUfVhqrMZ2=-6NLrey7193Dtgf-DniSw8Y+qCD6kKA@mail.gmail.com>
+ <6707e532-7a5e-261c-4d5b-950d0ccc8f66@broadcom.com>
+ <CACna6rygToq7xL0U4-qD5dftYq4=PRhcrpKqAafvuB3mw6Dcsw@mail.gmail.com>
+ <20180109155403.GB16285@red-moon>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <8dc3b50d-799b-9019-88a6-400b3f434bc4@broadcom.com>
+Date: Tue, 9 Jan 2018 12:23:23 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180108180613.GE2530@red-moon>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180109155403.GB16285@red-moon>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 08, 2018 at 06:06:13PM +0000, Lorenzo Pieralisi wrote:
-> On Mon, Dec 18, 2017 at 07:16:06PM +0100, Cyrille Pitchen wrote:
-> > This patch adds support to the Cadence PCIe controller in host mode.
-> > 
-> > The "cadence/" entry in drivers/pci/Makefile is placed after the
-> > "endpoint/" entry so when the next patch introduces a EPC driver for the
-> > Cadence PCIe controller, drivers/pci/cadence/pcie-cadence-ep.o will be
-> > linked after drivers/pci/endpoint/*.o objects, otherwise the built-in
-> > pci-cadence-ep driver would be probed before the PCI endpoint libraries
-> > would have been initialized, which would result in a kernel crash.
+Hi Lorenzo/Rafal,
 
-I assume this ordering requirement applies to both Cadence and
-DesignWare, i.e., drivers/pci/endpoint must be linked before
-drivers/pci/cadence and drivers/pci/dwc.
+A fix patch has been sent out to Bjorn and linux-pci.
 
-If so, please add a one-line comment in the Makefile, e.g.,
+Regards,
 
-  obj-$(CONFIG_PCI_ENDPOINT) += endpoint/
+Ray
 
-  # endpoint library must be initialized before its users
-  obj-$(CONFIG_PCI_CADENCE)  += cadence/
-  obj-y                      += dwc/
-
-I think the "PCI dwc controller drivers" comment adds no real value.
-
-> > diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> > index 7284a7f6ad1e..a66ddb347798 100644
-> > --- a/drivers/pci/Makefile
-> > +++ b/drivers/pci/Makefile
-> > @@ -54,5 +54,6 @@ obj-y += host/
-> >  obj-y += switch/
-> >  
-> >  obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
-> > +obj-$(CONFIG_PCI_CADENCE)	+= cadence/
-> >  # PCI dwc controller drivers
-> >  obj-y				+= dwc/
+On 1/9/2018 7:54 AM, Lorenzo Pieralisi wrote:
+> On Tue, Jan 02, 2018 at 11:00:43PM +0100, Rafał Miłecki wrote:
+>> On 2 January 2018 at 19:44, Ray Jui <ray.jui@broadcom.com> wrote:
+>>> Can you please give the following patch a try to see if that fixes the
+>>> issue? Thanks.
+>>
+>> It does, thank you!
+>>
+>>
+>>>  From f91de124bc8fb5645d7dbbfd68a9a68617955749 Mon Sep 17 00:00:00 2001
+>>> From: Ray Jui <ray.jui@broadcom.com>
+>>> Date: Tue, 2 Jan 2018 10:36:03 -0800
+>>> Subject: [PATCH] PCI: iproc: Fix NULL pointer dereference for BCMA
+>>>
+>>> With the inbound DMA mapping supported added, the iProc PCIe driver
+>>> parses DT property "dma-ranges" through call to
+>>> "of_pci_dma_range_parser_init". In the case of BCMA, this results in a
+>>> NULL pointer deference due to a missing of_node.
+>>>
+>>> Fix this by adding a guard in pcie-iproc-platform.c to only enable the
+>>> inbound DMA mapping logic when DT property "dma-ranges" is present
+>>>
+>>> fixes: dd9d4e7498de3 ("PCI: iproc: Add inbound DMA mapping support")
+>>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+>>
+>> Please add:
+>> Tested-by: Rafał Miłecki <rafal@milecki.pl>
+>> Cc: stable@vger.kernel.org # 4.10+
+> 
+> FYI, if you want the patch to be applied please post it on linux-pci
+> in a separate thread.
+> 
+> Thanks,
+> Lorenzo
+> 
