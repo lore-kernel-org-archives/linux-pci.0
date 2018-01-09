@@ -1,17 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 9 Jan 2018 16:14:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 3/7] PCI: aardvark: set host and device to the same
+ MAX payload size
+Message-ID: <20180109221436.GE31640@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+ <20170928125838.11887-4-thomas.petazzoni@free-electrons.com>
+ <20171005173102.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+ <20180109163918.5e46c1a1@windsurf.lan>
 MIME-Version: 1.0
-Date: Fri, 19 Jan 2018 08:07:21 -0500
-From: okaya@codeaurora.org
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to and
- from devices
-In-Reply-To: <e2753b59-2b9e-ffc6-a7b8-0ed23df38e10@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-6-jean-philippe.brucker@arm.com>
- <0772e71e-4861-1e7b-f248-88aaba8bf2fc@codeaurora.org>
- <e2753b59-2b9e-ffc6-a7b8-0ed23df38e10@arm.com>
-Message-ID: <c0e39c5a69a6f612e11c6076be9c5d53@codeaurora.org>
+In-Reply-To: <20180109163918.5e46c1a1@windsurf.lan>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,108 +19,80 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>, xieyisheng1@huawei.com,
- gabriele.paoloni@huawei.com, linux-pci@vger.kernel.org,
- Will Deacon <Will.Deacon@arm.com>, yi.l.liu@intel.com,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, ashok.raj@intel.com,
- tn@semihalf.com, joro@8bytes.org, robdclark@gmail.com,
- linux-acpi@vger.kernel.org, Catalin Marinas <Catalin.Marinas@arm.com>,
- rfranz@cavium.com, lenb@kernel.org, devicetree@vger.kernel.org,
- jacob.jun.pan@linux.intel.com, alex.williamson@redhat.com, robh+dt@kernel.org,
- thunder.leizhen@huawei.com, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, dwmw2@infradead.org, liubo95@huawei.com,
- rjw@rjwysocki.net, iommu@lists.linux-foundation.org, hanjun.guo@linaro.org,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- linux-pci-owner@vger.kernel.org, nwatters@codeaurora.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+ Hanna Hawa <hannah@marvell.com>, Nadav Haklai <nadavh@marvell.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ Victor Gu <xigu@marvell.com>,
+ =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@free-electrons.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Antoine Tenart <antoine.tenart@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-19 05:27, Jean-Philippe Brucker wrote:
-> Hi Sinan,
-> 
-> On 19/01/18 04:52, Sinan Kaya wrote:
->> Hi Jean-Philippe,
->> 
->> On 10/6/2017 9:31 AM, Jean-Philippe Brucker wrote:
->>>  /**
->>> + * iommu_process_bind_device - Bind a process address space to a 
->>> device
->>> + * @dev: the device
->>> + * @task: the process to bind
->>> + * @pasid: valid address where the PASID will be stored
->>> + * @flags: bond properties (IOMMU_PROCESS_BIND_*)
->>> + *
->>> + * Create a bond between device and task, allowing the device to 
->>> access the
->>> + * process address space using the returned PASID.
->>> + *
->>> + * On success, 0 is returned and @pasid contains a valid ID. 
->>> Otherwise, an error
->>> + * is returned.
->>> + */
->>> +int iommu_process_bind_device(struct device *dev, struct task_struct 
->>> *task,
->>> +			      int *pasid, int flags)
->> 
->> This API doesn't play nice with endpoint device drivers that have 
->> PASID limitations.
->> 
->> The AMD driver seems to have PASID limitations per product that are 
->> not being
->> advertised in the PCI capability.
->> 
->> device_iommu_pasid_init()
->> {
->>         pasid_limit = min_t(unsigned int,
->>                         (unsigned int)(1 << 
->> kfd->device_info->max_pasid_bits),
->>                         iommu_info.max_pasids);
->>         /*
->>          * last pasid is used for kernel queues doorbells
->>          * in the future the last pasid might be used for a kernel 
->> thread.
->>          */
->>         pasid_limit = min_t(unsigned int,
->>                                 pasid_limit,
->>                                 kfd->doorbell_process_limit - 1);
->> }
->> 
->> kfd->device_info->max_pasid_bits seems to contain per device 
->> limitations.
->> 
->> Would you be willing to extend the API so that the requester can 
->> impose some limit
->> on the PASID value that is getting allocated.
-> 
-> Good point. Following the feedback for this series, next version adds
-> another public function:
-> 
-> int iommu_sva_device_init(struct device *dev, int features);
-> 
-> that has to be called by the device driver before any bind(). The 
-> intent
-> is to let some IOMMU drivers initialize PASID tables and other features
-> lazily, only if the device driver actually intends to use them. Maybe I
-> could change this function to:
-> 
-> int iommu_sva_device_init(struct device *dev, int features, unsigned 
-> int
-> max_pasid);
-> 
-> @features is a bitmask telling what the device driver needs (PASID 
-> and/or
-> page faults). If features has IOMMU_SVA_FEAT_PASID set, then device 
-> driver
-> can set a max_pasid limit, that we'd store in our private device-iommu
-> data. If max_pasid is 0, then we'd use the PCI limit.
+[+cc Lorenzo, who maintains this area now]
 
-Yes, this should work.
-
+On Tue, Jan 09, 2018 at 04:39:18PM +0100, Thomas Petazzoni wrote:
+> Hello Bjorn,
 > 
-> Thanks,
-> Jean
+> On Thu, 5 Oct 2017 12:31:02 -0500, Bjorn Helgaas wrote:
+> > On Thu, Sep 28, 2017 at 02:58:34PM +0200, Thomas Petazzoni wrote:
+> > > From: Victor Gu <xigu@marvell.com>
+> > > 
+> > > Since the Aardvark does not implement a PCIe root bus,   
+> > 
+> > What exactly do you mean by "does not implement a PCIe root bus"?  I
+> > assume there is still a hierarchy of PCI buses, and I assume the
+> > hierarchy has a top-most ("root") bus.
+> > 
+> > Maybe there's no Root Port?  There are other systems that don't have
+> > Root Ports, and we've made changes to accommodate that, e.g.,
+> > 
+> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=1b8a6079015f
+> 
+> I'm trying to get back (finally) to this topic. Unfortunately, your
+> branch has been rebased, and this commit no longer exists. Do you have
+> an updated pointer about what you suggest to use for systems that don't
+> have Root Ports ?
+
+Sorry, about that; here's the upstream commit, FWIW:
+
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=ee8bdfb6568d
+
+If the OS sees no Root Port (I haven't seen the full lspci or kernel
+enumeration log, so I don't know what the topology actually is), I
+assume you probably have some Endpoints that have valid Link
+Capabilities, Control, and Status registers.  Those refer to the
+downstream end of the Link, and the Root Port would normally have
+corresponding registers that refer to the upstream end.
+
+The lack of the Root Port means we can't do any management of those
+top-level Links, so no ASPM, no MPS, no link width/speed management,
+etc.
+
+I see that advk_pcie_probe() calls pcie_bus_configure_settings() like
+all other drivers, and ideally we would try to make that work just
+like it does on other platforms.  The code is:
+
+  pci_scan_root_bus_bridge(bridge);
+  bus = bridge->bus;
+  list_for_each_entry(child, &bus->children, node)
+    pcie_bus_configure_settings(child);
+
+This MPS setting is all strictly in the PCIe domain (it's not in the
+Aardvark domain and shouldn't have any Aardvark dependencies), so I
+would expect the core code to just work, modulo some possible
+confusion if it expects to find a Root Port but doesn't.
+
+Can you collect "lspci -vv" output and details about what currently
+goes wrong?  Then we'd have something more concrete to talk about.
+
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
