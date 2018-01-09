@@ -1,41 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:42454 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755414AbeAIQrs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 9 Jan 2018 11:47:48 -0500
-Date: Tue, 9 Jan 2018 17:47:47 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgg@ziepe.ca>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
+Received: from smtprelay0028.hostedemail.com ([216.40.44.28]:57169 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752820AbeAIU64 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 15:58:56 -0500
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave07.hostedemail.com (Postfix) with ESMTP id 31FCB18037D35
+        for <linux-pci@vger.kernel.org>; Tue,  9 Jan 2018 20:49:30 +0000 (UTC)
+Message-ID: <1515530966.9619.124.camel@perches.com>
+Subject: Re: [PATCH 1/3] media/ttusb-budget: remove pci_zalloc_coherent abuse
+From: Joe Perches <joe@perches.com>
+To: Christoph Hellwig <hch@lst.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
-        rdma_rw_ctx_[init|destroy]()
-Message-ID: <20180109164747.GB12159@lst.de>
-References: <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com> <20180104221337.GV11348@ziepe.ca> <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com> <20180105045031.GX11348@ziepe.ca> <20180108145901.GA10743@lst.de> <20180108180917.GF11348@ziepe.ca> <20180108183434.GA15549@lst.de> <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com> <20180108185743.GA15936@lst.de> <7d276107-d2ae-530b-3d56-e104e22b4eea@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7d276107-d2ae-530b-3d56-e104e22b4eea@deltatee.com>
+        Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Tue, 09 Jan 2018 12:49:26 -0800
+In-Reply-To: <20180109203939.5930-2-hch@lst.de>
+References: <20180109203939.5930-1-hch@lst.de>
+         <20180109203939.5930-2-hch@lst.de>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 08, 2018 at 12:05:57PM -0700, Logan Gunthorpe wrote:
-> Ok, so if we shouldn't touch the dma_map infrastructure how should the 
-> workaround to opt-out HFI and QIB look? I'm not that familiar with the RDMA 
-> code.
+On Tue, 2018-01-09 at 21:39 +0100, Christoph Hellwig wrote:
+> Switch to a plain kzalloc instea of pci_zalloc_coherent to allocate
+> memory for the USB DMA.
+[]
+> diff --git a/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c b/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
+[]
+> @@ -792,21 +791,15 @@ static void ttusb_free_iso_urbs(struct ttusb *ttusb)
+> []
+>  static int ttusb_alloc_iso_urbs(struct ttusb *ttusb)
+>  {
+>  	int i;
+>  
+> -	ttusb->iso_buffer = pci_zalloc_consistent(NULL,
+> -						  ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF * ISO_BUF_COUNT,
+> -						  &ttusb->iso_dma_handle);
+> -
+> +	ttusb->iso_buffer = kzalloc(ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF *
+> +			ISO_BUF_COUNT, GFP_KERNEL);
+>  	if (!ttusb->iso_buffer) {
+>  		dprintk("%s: pci_alloc_consistent - not enough memory\n",
+>  			__func__);
 
-We can add a no_p2p quirk, I'm just not sure what the right place
-for it is.  As said they device don't really mind P2P at the PCIe
-level, it's just that their RDMA implementation is really strange.
+This message doesn't make sense anymore and it might as well
+be deleted.
 
-So I'd be tempted to do it in RDMA.
+And it might be better to use kcalloc
+
+	ttusb->iso_buffer = kcalloc(FRAMES_PER_ISO_BUF * ISO_BUF_COUNT,
+				    ISO_FRAME_SIZE, GFP_KERNEL);
