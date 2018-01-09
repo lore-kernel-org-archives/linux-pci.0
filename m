@@ -1,84 +1,151 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1515408232.12538.7.camel@pengutronix.de>
-Subject: Re: [PATCH v3] PCI: imx6: Add PHY reference clock source support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Ilya Ledvich <ilya@compulab.co.il>, Richard Zhu <hongxing.zhu@nxp.com>
-Date: Mon, 08 Jan 2018 11:43:52 +0100
-In-Reply-To: <1515073977-10153-1-git-send-email-ilya@compulab.co.il>
-References: <CAOMZO5AFC9dxhsQjmRrDA7Z3KMkEemryKOBmQhXm19NXKxHkKQ@mail.gmail.com>
- <1515073977-10153-1-git-send-email-ilya@compulab.co.il>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41414 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751824AbeAISi7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 9 Jan 2018 13:38:59 -0500
+Date: Tue, 9 Jan 2018 12:38:56 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        David Airlie <airlied@linux.ie>
+Subject: Re: [BISECTED] v4.15-rc: Boot regression on x86_64/AMD
+Message-ID: <20180109183856.GD31640@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi>
+ <CA+55aFxCSWCG7ZvHW3AkLPzMPMAuG1BhL8fNgC0-JPYU4LZVow@mail.gmail.com>
+ <CAErSpo7dOfabXk9rpZr=B87wK4_Ao9_moK89Ze0cyi6Mqb0Z+Q@mail.gmail.com>
+ <628e2b58-b16b-5792-b4ef-88bec15ab779@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <628e2b58-b16b-5792-b4ef-88bec15ab779@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gRG9ubmVyc3RhZywgZGVuIDA0LjAxLjIwMTgsIDE1OjUyICswMjAwIHNjaHJpZWIgSWx5YSBM
-ZWR2aWNoOgo+IGkuTVg3RCB2YXJpYW50IG9mIHRoZSBJUCBjYW4gdXNlIGVpdGhlciBDcnlzdGFs
-IE9zY2lsbGF0b3IgaW5wdXQKPiBvciBpbnRlcm5hbCBjbG9jayBpbnB1dCBhcyBhIFJlZmVyZW5j
-ZSBDbG9jayBpbnB1dCBmb3IgUENJZSBQSFkuCj4gQWRkIHN1cHBvcnQgZm9yIGFuIG9wdGlvbmFs
-IHByb3BlcnR5ICdmc2wscGNpZS1waHktcmVmY2xrLWludGVybmFsJy4KPiBJZiBwcmVzZW50IHRo
-ZW4gYW4gaW50ZXJuYWwgY2xvY2sgaW5wdXQgaXMgdXNlZCBhcyBQQ0llIFBIWQo+IHJlZmVyZW5j
-ZSBjbG9jayBzb3VyY2UuIEJ5IGRlZmF1bHQgYW4gZXh0ZXJuYWwgb3NjaWxsYXRvciBpbnB1dAo+
-IGlzIHN0aWxsIHVzZWQuCj4gCj4gVmVyaWZpZWQgb24gQ29tcHVsYWIgU0JDLWlNWDcgU2luZ2xl
-IEJvYXJkIENvbXB1dGVyLgoKU29ycnkgdG8gZ2V0IGluIGxhdGUgaGVyZSwgYnV0IEkgd291bGQg
-cmF0aGVyIGhhdmUgdGhlIGV4dGVybmFsIGNsb2NrCmlucHV0IG1vZGVsZWQgYXMgYSByZWFsIGNs
-b2NrIGFuZCBvbmx5IHVzZSB0aGUgaW50ZXJuYWwgY2xvY2sgaWYgdGhhdAppc24ndCBwcmVzZW50
-LgoKQXJlIHlvdSBldmVuIHN1cmUgdGhhdCB0aGUgaS5NWDcgY2xvY2sgeW91IG1lbnRpb24gaXNu
-J3QgdGhlIGFscmVhZHkKZG9jdW1lbnRlZCAicGNpZV9idXMiIGNsb2NrPyBUaGlzIG9uZSBpcyBh
-bHNvIGFsbG93ZWQgdG8gYmUgc291cmNlZApleHRlcm5hbGx5IG9uIHRoZSBpLk1YNi4KClJlZ2Fy
-ZHMsCkx1Y2FzCgo+IFNpZ25lZC1vZmYtYnk6IElseWEgTGVkdmljaCA8aWx5YUBjb21wdWxhYi5j
-by5pbD4KPiAtLS0KPiBjaGFuZ2VzIHNpbmNlIFYyOgo+IAlhZGQgYSB2ZW5kb3IgcHJlZml4ICdm
-c2wnIHRvIGEgbmV3IHByb3BlcnR5Cj4gCj4gwqBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmlu
-ZGluZ3MvcGNpL2ZzbCxpbXg2cS1wY2llLnR4dCB8IDUgKysrKysKPiDCoGRyaXZlcnMvcGNpL2R3
-Yy9wY2ktaW14Ni5jwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqB8IDgKPiArKysrKysrLQo+IMKgMiBmaWxlcyBjaGFuZ2VkLCAxMiBp
-bnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCj4gCj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRp
-b24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZnNsLGlteDZxLXBjaWUudHh0IAo+IGIvRG9jdW1l
-bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQKPiBpbmRl
-eCA3YjFlNDhiLi4xNTkxYTZhIDEwMDY0NAo+IC0tLSBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJl
-ZS9iaW5kaW5ncy9wY2kvZnNsLGlteDZxLXBjaWUudHh0Cj4gKysrIGIvRG9jdW1lbnRhdGlvbi9k
-ZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQKPiBAQCAtNTAsNiArNTAs
-MTEgQEAgQWRkaXRpb25hbCByZXF1aXJlZCBwcm9wZXJ0aWVzIGZvciBpbXg3ZC1wY2llOgo+IMKg
-CcKgwqDCoMKgwqDCoMKgLSAicGNpZXBoeSIKPiDCoAnCoMKgwqDCoMKgwqDCoC0gImFwcHMiCj4g
-wqAKPiArQWRkaXRpb25hbCBvcHRpb25hbCBwcm9wZXJ0aWVzIGZvciBpbXg3ZC1wY2llOgo+ICst
-IGZzbCxwY2llLXBoeS1yZWZjbGstaW50ZXJuYWw6IElmIHByZXNlbnQgdGhlbiBhbiBpbnRlcm5h
-bCBQTEwKPiBpbnB1dCBpcyB1c2VkCj4gK8KgwqBhcyBQQ0llIFBIWSByZWZlcmVuY2UgY2xvY2sg
-c291cmNlLiBCeSBkZWZhdWx0IGFuIGV4dGVybmFsCj4gb3NjaWxsYXRvciBpbnB1dAo+ICvCoMKg
-aXMgdXNlZC4KPiArCj4gwqBFeGFtcGxlOgo+IMKgCj4gwqAJcGNpZUAweDAxMDAwMDAwIHsKPiBk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMgYi9kcml2ZXJzL3BjaS9kd2Mv
-cGNpLWlteDYuYwo+IGluZGV4IGI3MzQ4MzUuLjM2ODEyZDMgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVy
-cy9wY2kvZHdjL3BjaS1pbXg2LmMKPiArKysgYi9kcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYuYwo+
-IEBAIC02MSw2ICs2MSw3IEBAIHN0cnVjdCBpbXg2X3BjaWUgewo+IMKgCXUzMgkJCXR4X3N3aW5n
-X2xvdzsKPiDCoAlpbnQJCQlsaW5rX2dlbjsKPiDCoAlzdHJ1Y3QgcmVndWxhdG9yCSp2cGNpZTsK
-PiArCWJvb2wJCQlwY2llcGh5X3JlZmNsa19zZWw7Cj4gwqB9Owo+IMKgCj4gwqAvKiBQYXJhbWV0
-ZXJzIGZvciB0aGUgd2FpdGluZyBmb3IgUENJZSBQSFkgUExMIHRvIGxvY2sgb24gaS5NWDcgKi8K
-PiBAQCAtNDc0LDcgKzQ3NSw5IEBAIHN0YXRpYyB2b2lkIGlteDZfcGNpZV9pbml0X3BoeShzdHJ1
-Y3QgaW14Nl9wY2llCj4gKmlteDZfcGNpZSkKPiDCoAlzd2l0Y2ggKGlteDZfcGNpZS0+dmFyaWFu
-dCkgewo+IMKgCWNhc2UgSU1YN0Q6Cj4gwqAJCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2X3BjaWUt
-PmlvbXV4Y19ncHIsCj4gSU9NVVhDX0dQUjEyLAo+IC0JCQkJwqDCoMKgSU1YN0RfR1BSMTJfUENJ
-RV9QSFlfUkVGQ0xLX1NFTCwKPiAwKTsKPiArCQkJCcKgwqDCoElNWDdEX0dQUjEyX1BDSUVfUEhZ
-X1JFRkNMS19TRUwsCj4gKwkJCQnCoMKgwqBpbXg2X3BjaWUtPnBjaWVwaHlfcmVmY2xrX3NlbCA/
-Cj4gKwkJCQnCoMKgwqBJTVg3RF9HUFIxMl9QQ0lFX1BIWV9SRUZDTEtfU0VMIDoKPiAwKTsKPiDC
-oAkJYnJlYWs7Cj4gwqAJY2FzZSBJTVg2U1g6Cj4gwqAJCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2
-X3BjaWUtPmlvbXV4Y19ncHIsCj4gSU9NVVhDX0dQUjEyLAo+IEBAIC04NDAsNiArODQzLDkgQEAg
-c3RhdGljIGludCBpbXg2X3BjaWVfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZQo+ICpwZGV2
-KQo+IMKgCQlpbXg2X3BjaWUtPnZwY2llID0gTlVMTDsKPiDCoAl9Cj4gwqAKPiArCWlteDZfcGNp
-ZS0+cGNpZXBoeV9yZWZjbGtfc2VsID0KPiArCQlvZl9wcm9wZXJ0eV9yZWFkX2Jvb2wobm9kZSwg
-ImZzbCxwY2llLXBoeS1yZWZjbGstCj4gaW50ZXJuYWwiKTsKPiArCj4gwqAJcGxhdGZvcm1fc2V0
-X2RydmRhdGEocGRldiwgaW14Nl9wY2llKTsKPiDCoAo+IMKgCXJldCA9IGlteDZfYWRkX3BjaWVf
-cG9ydChpbXg2X3BjaWUsIHBkZXYpOwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtl
-cm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxt
-YW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+[+cc Alex, Dave because this affects the AMDGPU large BAR support]
+
+On Tue, Jan 09, 2018 at 11:37:55AM +0100, Christian König wrote:
+> Am 09.01.2018 um 00:23 schrieb Bjorn Helgaas:
+> >[+cc Boris, Juergen, linux-pci]
+> >
+> >On Fri, Jan 5, 2018 at 6:00 PM, Linus Torvalds
+> ><torvalds@linux-foundation.org> wrote:
+> >>On Fri, Jan 5, 2018 at 2:04 PM, Aaro Koskinen <aaro.koskinen@iki.fi> wrote:
+> >>>After v4.14, I've been unable to boot my AMD compilation box with the
+> >>>v4.15-rc mainline Linux. It just ends up in a silent reboot loop.
+> >>>
+> >>>I bisected this to:
+> >>>
+> >>>commit fa564ad9636651fd11ec2c79c48dee844066f73a
+> >>>Author: Christian König <christian.koenig@amd.com>
+> >>>Date:   Tue Oct 24 14:40:29 2017 -0500
+> >>>
+> >>>     x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 00-1f, 30-3f, 60-7f)
+> >>Hmm. That was reported to break boot earlier already.
+> >>
+> >>The breakage was supposedly fixed by three patches from Christian:
+> >>
+> >>   a19e2696135e: "x86/PCI: Only enable a 64bit BAR on single-socket AMD
+> >>Family 15h"
+> >>
+> >>   470195f82e4e:  "x86/PCI: Fix infinite loop in search for 64bit BAR placement"
+> >>
+> >>and a third one that was apparently never applied.
+> >>
+> >>I'm not sure why that third patch was never applied, I'm including it here.
+> >>
+> >>Does the system work for you if you apply that patch (instead of
+> >>reverting all of them)?
+> >>
+> >>I wonder why that patch wasn't applied, but if it doesn't fix things,
+> >>I think we do need to revert it all.
+> >>
+> >>Christian? Bjorn?
+> >I didn't apply the third patch ("x86/PCI: limit the size of the 64bit
+> >BAR to 256GB") because (a) we thought it was optional ("just a
+> >precaution against eventual problems"), (b) we didn't have a good
+> >explanation of why 256GB was the correct number, and (c)  it seemed to
+> >be a workaround for a Xen issue that we hoped to fix in a better way.
+> 
+> Just for the record completely agree on that.
+> 
+> >It does apparently make Aaro's system work, but I still hesitate to
+> >apply it because it's magical -- avoiding the address space from
+> >0x1_00000000 to 0xbd_00000000 makes things work, but we don't know
+> >why.  I assume there's some unreported device in that area, but I
+> >don't think we have any real assurance that the
+> >0xbd_00000000-0xfd_00000000 area we now use is any safer.
+> 
+> Well, I knew why it's not working. The BIOS is not telling us the
+> truth about how much memory is installed.
+> 
+> A device above 4GB would actually be handled correctly by the code
+> (see the check when we walk over all the existing IO regions).
+> 
+> I tested a bit with Aaro and came up with the attached patch, it
+> adds a 16GB guard between the end of memory and the new window for
+> the PCIe root hub. But I agree with you that this is just a hack and
+> not a real solution.
+> 
+> >I would feel better about this if we made it opt-in via a kernel
+> >parameter and/or some kind of whitelist.  I still don't really *like*
+> >it, since ACPI does provide a mechanism (_PRS/_SRS) for doing this
+> >safely, and we could just say "if you want to use big BARs, the BIOS
+> >should enable big windows or at least make them available via ACPI
+> >resources."  The only problem is that BIOSes don't do that and we
+> >don't yet have Linux support for _PRS/_SRS for host bridges.
+> 
+> Well that is the point I disagree on. When the memory map we get
+> from the BIOS is not correct it makes no difference if we enable the
+> window with the BIOS or by direct programming the hardware.
+> 
+> I will work with Aaron some more to come up with a solution which
+> reads the memory map directly from the hardware as well and checks
+> if that is valid before doing anything else.
+
+I don't agree with this approach.  One goal of UEFI/ACPI is to remove
+the need for the OS to directly peek at the hardware for things like
+this.
+
+In Aaro's case, the BIOS apparently does not describe all of system
+memory in E820.  ACPI r5.0, sec 15.1 describes E820 and it does say
+that the the E820 interface "provides a memory map for all of the
+installed RAM, and of physical memory ranges reserved by the BIOS,"
+so one could argue that Aaro's BIOS is defective because it omits
+something.
+
+But I think the intent of the spec is that all non-discoverable
+resources available to the OS will be described via E820, UEFI
+GetMemoryMap(), ACPI tables, etc.  So I think a BIOS engineer would be
+on pretty safe ground to say "Mr. OS, we didn't tell you about X, so 
+you should not use X."
+
+And, again with a BIOS engineer's hat on, I would argue that the BIOS
+is entitled to use unreported things for its own purposes and rely on
+the assumption that the OS will not use them.
+
+So I'm not convinced this is necessarily a BIOS bug.  If we peek at
+the hardware directly for things the spec can express, I think we're
+making the OS less portable and opening the door to conflicts with the
+BIOS.
+
+> >I'll prepare a revert as a back-up plan in case we don't come up with
+> >a better solution.
+> 
+> Either that or only enable it when pci=add-root-window is given on
+> the kernel commandline.
+
+I don't like to add new parameters because I think it's an
+unreasonable burden on users and it makes it hard for distros, but I
+understand the desire to use this functionality.  What would you think
+of adding a "pci=big_root_window" parameter that logs an info message
+and taints the kernel with TAINT_FIRMWARE_WORKAROUND?  Then there's at
+least some clue that we're in uncharted territory.
+
+Bjorn
