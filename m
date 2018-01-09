@@ -1,133 +1,25 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47794 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751128AbeAWAQi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Jan 2018 19:16:38 -0500
-Date: Mon, 22 Jan 2018 18:16:34 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Ron Yuan <ron.yuan@memblaze.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bo Chen <bo.chen@memblaze.com>,
-        William Huang <william.huang@memblaze.com>,
-        Fengming Wu <fengming.wu@memblaze.com>,
-        Jason Jiang <jason.jiang@microsemi.com>,
-        Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>,
-        Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
-        William Cheng <william.cheng@microsemi.com>,
-        "Kim Helper (khelper)" <khelper@micron.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
- pcie_bus_perf On NVMe Device
-Message-ID: <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
-References: <5727b0b1-f0d5-7c78-373e-fc9d1bd662d2@codeaurora.org>
- <CABhMZUU0643U-qVc9ymA+1PMZToSLFm2dg8-cu=iQ2LGw2Pi8Q@mail.gmail.com>
- <SHAPR01MB173A36104635A8BFF9A83E1FEE80@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
- <0ce08a91-fc38-1288-7683-836fcbbbdf3c@codeaurora.org>
- <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
- <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
- <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
- <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
- <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
- <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:38298 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754821AbeAIUjq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 15:39:46 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: remove pci_dma_* abuses and workarounds
+Date: Tue,  9 Jan 2018 21:39:36 +0100
+Message-Id: <20180109203939.5930-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 22, 2018 at 06:24:22PM -0500, Sinan Kaya wrote:
-> On 1/22/2018 5:51 PM, Bjorn Helgaas wrote:
-> > On Mon, Jan 22, 2018 at 05:04:03PM -0500, Sinan Kaya wrote:
-> >> On 1/22/2018 4:36 PM, Bjorn Helgaas wrote:
-> 
-> >>> Reducing MPS may be necessary if there are several devices in the
-> >>> hierarchy and one requires a smaller MPS than the others.  That
-> >>> obviously reduces the maximum read and write performance.
-> >>>
-> >>> Reducing the MRRS may be useful to prevent one device from hogging
-> >>> a link, but of course, it reduces read performance for that device
-> >>> because we need more read requests.
-> >>
-> >> Maybe, a picture could help.
-> >>
-> >>                root (MPS=256)
-> >>                  |
-> >>          ------------------
-> >>         /                  \
-> >>    bridge0 (MPS=256)      bridge1 (MPS=128)
-> >>       /                       \
-> >>     EP0 (MPS=256)            EP1 (MPS=128)
-> >>
-> >> If I understood this right, code allows the configuration above with
-> >> the performance mode so that MPS doesn't have to be uniform across
-> >> the tree. 
-> > 
-> > Yes.  In PERFORMANCE mode, we will set EP1's MRRS=128 and
-> > EP0's MRRS=256, just as you show.
-> > 
-> >> It just needs to be consistent between the root port and endpoints.
-> > 
-> > No, it doesn't need to be consistent.  In PERFORMANCE mode, we'll set
-> > the root's MPS=256 and EP1's MPS=128.
-> > 
-> > (I'm not actually 100% convinced that the PERFORMANCE mode approach of
-> > reducing MRRS is safe, necessary, and maintainable.  I suspect that in
-> > many of the interesting cases, the device we care about is the only
-> > one below a Root Port, and we can get the performance we need by
-> > maximizing MPS and MRRS for that Root Port and its children,
-> > independent of the rest of the system.)
-> 
-> Maybe, I started seeing more and more NVMe devices behind a switch every
-> day. That's why, I'm concerned.
+Back before the dawn of time pci_dma_* with a NULL pci_dev argument
+was used for all kinds of things, e.g. dma mapping for non-PCI
+devices.  All this has been long removed, but it turns out we
+still care for a NULL pci_dev in the wrappers, and we still have
+two odd USB drivers that use pci_dma_alloc_consistent for allocating
+memory while ignoring the dma_addr_t entirely.
 
-Are there a mix of devices that support large MPS and those that only
-support a smaller MPS behind the same switch?
-
-I don't have any actual data about topologies of interest.  I'm just
-guessing that high-performance devices will often have their own root
-port, without being mixed in with low-speed devices.  It's OK to have
-switches in the path; it's the mixing high-speed with low-speed
-devices that causes the problems.
-
-> >> Why are we reducing MRRS in this case?
-> > 
-> > We have to set EP1's MRRS=128 so it will never receive a completion
-> > larger than 128 bytes.  If we set EP1's MRRS=256, it could receive
-> > 256-byte TLPs, which it would treat as malformed.  (We also assume no
-> > peer-to-peer DMA that targets EP1.)
-> 
-> What if we were to keep root port MPS as 128? and not touch the BIOS
-> configured MRRS (4k) ?
-> 
-> Everybody should be happy, right?
-
-No.  In your picture (which helps a lot, thank you!), if you set the
-root's MPS=128, EP1 will be fine no matter what its MRRS is because
-the entire path has MPS=128.
-
-But if EP0's MRRS is larger than 128, it's in trouble because it may
-issue a 256-byte DMA write, which the root port will treat as
-malformed.  The root port, as the receiver of that Memory Write
-Request, is required to check the TLP against the MPS in its Device
-Control (not Device Capability) register (this is in PCIe r4.0, sec
-2.2.2).
-
-> I know there is a rule to check the completions against MPS. 
-
-Sec 2.2.2 says a receiver must check "data payloads".  I think that
-includes both Completions and Memory Writes.
-
-> Root port could generate transactions that is a multiple of 128
-> bytes for reads.
-
-If the root port generates a 256-byte Memory Read request to EP1,
-that's fine because EP1 will only respond with 128-byte completions.
-If it sends that 256-byte Memory Read to EP0, we have a problem
-because EP0 may generate a 256-byte completion, which will cause an
-error if the root port has MPS=128.
-
-> Is there any rule against checking incoming writes?
-
-Sec 2.2.2 says a receiver *must* check the payload size of incoming
-Memory Write requests.
+This series switches the two drivers to use plain kzalloc and then
+removes the handling of the NULL pci_dev in the pci_dma_* wrappers.
