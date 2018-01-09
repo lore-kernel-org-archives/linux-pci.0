@@ -1,101 +1,114 @@
-Return-Path: <SRS0=6Ogi=EO=lip6.fr=julia.lawall@kernel.org>
-Return-Path: <SRS0=6Ogi=EO=lip6.fr=julia.lawall@kernel.org>
-Date: Fri, 19 Jan 2018 06:56:55 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: "weiyongjun (A)" <weiyongjun1@huawei.com>
-cc: Ladislav Michl <ladis@linux-mips.org>, Bjorn Helgaas <helgaas@kernel.org>,
-    Kishon Vijay Abraham I <kishon@ti.com>,
-    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-    Bjorn Helgaas <bhelgaas@google.com>,
-    "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-    "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-    "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: RE: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
-In-Reply-To: <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
-Message-ID: <alpine.DEB.2.20.1801190655080.3505@hadrien>
-References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com> <20180118145420.GA21163@lenoch> <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com> <20180118213417.GA30723@lenoch>
- <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: endpoint: Use EPC's device in
+ dma_alloc_coherent/dma_free_coherent
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <nsekhar@ti.com>, Robin Murphy <robin.murphy@arm.com>,
+        Rob Herring <robh@kernel.org>, Christoph Hellwig <hch@lst.de>
+References: <20171219083627.7904-1-kishon@ti.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <cc2cbb34-ad6e-0d5b-e7da-ef44b9c5e149@axis.com>
+Date: Tue, 9 Jan 2018 13:40:21 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20171219083627.7904-1-kishon@ti.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This is needed to get PCIe endpoint support working
+on ARTPEC-6 again.
 
+Tested-by: Niklas Cassel <niklas.cassel@axis.com>
 
-On Fri, 19 Jan 2018, weiyongjun (A) wrote:
-
-> > On Thu, Jan 18, 2018 at 12:35:25PM -0600, Bjorn Helgaas wrote:
-> > > On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
-> > > > On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
-> > > > > platform_get_resource_byname() may fail and return NULL, so we
-> > should
-> > > > > better check it's return value to avoid a NULL pointer dereference a
-> > > > > bit later in the code.
-> > > > >
-> > > > > This is detected by Coccinelle semantic patch.
-> > > > >
-> > > > > @@
-> > > > > expression pdev, res, n, t, e, e1, e2;
-> > > > > @@
-> > > > >
-> > > > > res = platform_get_resource_byname(pdev, t, n);
-> > > > > + if (!res)
-> > > > > +   return -EINVAL;
-> > > > > ... when != res == NULL
-> > > > > e = devm_ioremap(e1, res->start, e2);
-> > > >
-> > > > Well, then it should be replaced with devm_ioremap_resource()
-> > > > which already checks for NULL and the right resource type
-> > > > (IORESOURCE_MEM).
-> > >
-> > > That's probably a better idea.  Maybe we should add a comment like this
-> > > to help avoid this in the future:
->
-> Not all of the place using devm_ioremap() can be replaced with
-> devm_ioremap_resource(), devices share the memory resource for example.
->
-> So maybe you should also add an exception list to the comment, otherwise
-> many people still not know how to use devm_ioremap_resource() or devm_ioremap().
-
-I believe that there is a semantic patch in the kernel to remove the test
-when devm_ioremap_reource is used.  Maybe that should be extended or
-another one should be added to ensure that there is a test when
-devm_ioremap is used, since there seems to be a potential for confusion.
-
-julia
-
->
-> > >
-> > > --- a/lib/devres.c
-> > > +++ b/lib/devres.c
-> > > @@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev,
-> > void *res, void *match_data)
-> > >   * @size: Size of map
-> > >   *
-> > >   * Managed ioremap().  Map is automatically unmapped on driver detach.
-> > > + *
-> > > + * When possible, use devm_ioremap_resource() instead.
-> > >   */
-> > >  void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
-> > >  			   resource_size_t size)
-> >
-> > Yes, please. It would be nice first patch in the serie converting existing
-> > users of devm_ioremap into devm_ioremap_resource:
-> > find drivers -name "*.c" | xargs grep "devm_ioremap(" | grep resource_size
-> > | wc -l
-> > 82
-> > I know, that was dumb, Coccinelle would certainly do better job.
-> > And from a quick look a lot of
-> > if (!res) {
-> > 	print error
-> > 	return -EINVAL;
-> > }
-> > code blocks could be deleted (and many cases where check for NULL
-> > resource
-> > is missing fixed).
-> >
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On 19/12/17 09:36, Kishon Vijay Abraham I wrote:
+> After commit 723288836628bc1c08 ("of: restrict DMA configuration"),
+> of_dma_configure doesn't configure the coherent_dma_mask/dma_mask
+> of endpoint function device (since it doesn't have a dt node associated
+> with and hence no dma-ranges property), resulting in dma_alloc_coherent
+> (used in pci_epf_alloc_space) to fail.
+> 
+> Fix it by making dma_alloc_coherent use EPC's device for allocating
+> memory address as per discussion in [1]
+> 
+> [1] https://lkml.org/lkml/2017/10/24/26
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Tested-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+> ---
+> No change in patch. Only added "Tested-by" of Cyrille Pitchen.
+> 
+>  drivers/pci/endpoint/pci-epc-core.c | 10 ----------
+>  drivers/pci/endpoint/pci-epf-core.c |  4 ++--
+>  2 files changed, 2 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 42c2a1156325..cd7d4788b94d 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -18,7 +18,6 @@
+>   */
+>  
+>  #include <linux/device.h>
+> -#include <linux/dma-mapping.h>
+>  #include <linux/slab.h>
+>  #include <linux/module.h>
+>  #include <linux/of_device.h>
+> @@ -371,7 +370,6 @@ EXPORT_SYMBOL_GPL(pci_epc_write_header);
+>  int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+>  {
+>  	unsigned long flags;
+> -	struct device *dev = epc->dev.parent;
+>  
+>  	if (epf->epc)
+>  		return -EBUSY;
+> @@ -383,12 +381,6 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+>  		return -EINVAL;
+>  
+>  	epf->epc = epc;
+> -	if (dev->of_node) {
+> -		of_dma_configure(&epf->dev, dev->of_node);
+> -	} else {
+> -		dma_set_coherent_mask(&epf->dev, epc->dev.coherent_dma_mask);
+> -		epf->dev.dma_mask = epc->dev.dma_mask;
+> -	}
+>  
+>  	spin_lock_irqsave(&epc->lock, flags);
+>  	list_add_tail(&epf->list, &epc->pci_epf);
+> @@ -503,9 +495,7 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
+>  	INIT_LIST_HEAD(&epc->pci_epf);
+>  
+>  	device_initialize(&epc->dev);
+> -	dma_set_coherent_mask(&epc->dev, dev->coherent_dma_mask);
+>  	epc->dev.class = pci_epc_class;
+> -	epc->dev.dma_mask = dev->dma_mask;
+>  	epc->dev.parent = dev;
+>  	epc->ops = ops;
+>  
+> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+> index ae1611a62808..95ccc4b8a0a2 100644
+> --- a/drivers/pci/endpoint/pci-epf-core.c
+> +++ b/drivers/pci/endpoint/pci-epf-core.c
+> @@ -99,7 +99,7 @@ EXPORT_SYMBOL_GPL(pci_epf_bind);
+>   */
+>  void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar)
+>  {
+> -	struct device *dev = &epf->dev;
+> +	struct device *dev = epf->epc->dev.parent;
+>  
+>  	if (!addr)
+>  		return;
+> @@ -122,7 +122,7 @@ EXPORT_SYMBOL_GPL(pci_epf_free_space);
+>  void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
+>  {
+>  	void *space;
+> -	struct device *dev = &epf->dev;
+> +	struct device *dev = epf->epc->dev.parent;
+>  	dma_addr_t phys_addr;
+>  
+>  	if (size < 128)
+> 
