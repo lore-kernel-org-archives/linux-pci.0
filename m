@@ -1,104 +1,69 @@
-Return-Path: <SRS0=UQ06=EA=amd.com=Felix.Kuehling@kernel.org>
-Return-Path: <SRS0=UQ06=EA=amd.com=Felix.Kuehling@kernel.org>
-From: Felix Kuehling <Felix.Kuehling@amd.com>
-To: linux-pci@vger.kernel.org,
-	helgaas@kernel.org
-Cc: oded.gabbay@gmail.com,
-	Jay.Cornwall@amd.com,
-	Felix Kuehling <Felix.Kuehling@amd.com>,
-	Ram Amrani <Ram.Amrani@cavium.com>,
-	Doug Ledford <dledford@redhat.com>
-Subject: [PATCH 2/2] RDMA/qedr: Use pci_enable_atomic_ops_to_root
-Date: Thu,  4 Jan 2018 19:45:00 -0500
-Message-Id: <1515113100-4718-2-git-send-email-Felix.Kuehling@amd.com>
-In-Reply-To: <1515113100-4718-1-git-send-email-Felix.Kuehling@amd.com>
-References: <1515113100-4718-1-git-send-email-Felix.Kuehling@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:43350 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758579AbeAIOoZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 09:44:25 -0500
+Received: by mail-wm0-f67.google.com with SMTP id g1so3064451wmg.2
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jan 2018 06:44:25 -0800 (PST)
+From: Koen Vandeputte <koen.vandeputte@ncentric.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
+        niklas.cassel@axis.com,
+        Koen Vandeputte <koen.vandeputte@ncentric.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] PCI: dwc: fix enumeration end when reaching root subordinate
+Date: Tue,  9 Jan 2018 15:42:21 +0100
+Message-Id: <1515508941-20055-1-git-send-email-koen.vandeputte@ncentric.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common helper function pci_enable_atomic_ops_to_root to enable
-atomic capability.
+The subordinate value indicates the highest bus number which can be
+reached downstream though a certain device.
 
-CC: Bjorn Helgaas <helgaas@kernel.org>
-CC: Ram Amrani <Ram.Amrani@cavium.com>
-CC: Doug Ledford <dledford@redhat.com>
-Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
+Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+parent")
+ensures that downstream devices cannot assign busnumbers higher than the
+upstream device subordinate number, which was indeed illogical.
+
+By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
+value of 0x01.
+
+Due to this combined with above commit, enumeration stops digging deeper
+downstream as soon as bus num 0x01 has been assigned, which is always
+the case for a bridge device.
+
+This results in all devices behind a bridge bus to remain undetected, as
+these would be connected to bus 0x02 or higher.
+
+Fix this by initializing the RC to a subordinate value of 0xff, meaning
+that all busses [0x00-0xff] are reachable through this RC.
+
+Fixes: a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+parent")
+Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/infiniband/hw/qedr/main.c | 59 ++++++---------------------------------
- 1 file changed, 8 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/infiniband/hw/qedr/main.c b/drivers/infiniband/hw/qedr/main.c
-index 50812b3..b378647 100644
---- a/drivers/infiniband/hw/qedr/main.c
-+++ b/drivers/infiniband/hw/qedr/main.c
-@@ -430,59 +430,16 @@ static void qedr_remove_sysfiles(struct qedr_dev *dev)
+Will send separate patches to stable as this file got moved/renamed
+
+
+ drivers/pci/dwc/pcie-designware-host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index bf558df5b7b3..2b5470173196 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -616,7 +616,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	/* setup bus numbers */
+ 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
+ 	val &= 0xff000000;
+-	val |= 0x00010100;
++	val |= 0x00ff0100;
+ 	dw_pcie_writel_dbi(pci, PCI_PRIMARY_BUS, val);
  
- static void qedr_pci_set_atomic(struct qedr_dev *dev, struct pci_dev *pdev)
- {
--	struct pci_dev *bridge;
--	u32 ctl2, cap2;
--	u16 flags;
--	int rc;
--
--	bridge = pdev->bus->self;
--	if (!bridge)
--		goto disable;
--
--	/* Check atomic routing support all the way to root complex */
--	while (bridge->bus->parent) {
--		rc = pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
--		if (rc || ((flags & PCI_EXP_FLAGS_VERS) < 2))
--			goto disable;
--
--		rc = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap2);
--		if (rc)
--			goto disable;
-+	int rc = pci_enable_atomic_ops_to_root(pdev,
-+					       PCI_EXP_DEVCAP2_ATOMIC_COMP64);
- 
--		rc = pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2, &ctl2);
--		if (rc)
--			goto disable;
--
--		if (!(cap2 & PCI_EXP_DEVCAP2_ATOMIC_ROUTE) ||
--		    (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK))
--			goto disable;
--		bridge = bridge->bus->parent->self;
-+	if (rc) {
-+		dev->atomic_cap = IB_ATOMIC_NONE;
-+		DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability disabled\n");
-+	} else {
-+		dev->atomic_cap = IB_ATOMIC_GLOB;
-+		DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability enabled\n");
- 	}
--
--	rc = pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
--	if (rc || ((flags & PCI_EXP_FLAGS_VERS) < 2))
--		goto disable;
--
--	rc = pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap2);
--	if (rc || !(cap2 & PCI_EXP_DEVCAP2_ATOMIC_COMP64))
--		goto disable;
--
--	/* Set atomic operations */
--	pcie_capability_set_word(pdev, PCI_EXP_DEVCTL2,
--				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
--	dev->atomic_cap = IB_ATOMIC_GLOB;
--
--	DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability enabled\n");
--
--	return;
--
--disable:
--	pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL2,
--				   PCI_EXP_DEVCTL2_ATOMIC_REQ);
--	dev->atomic_cap = IB_ATOMIC_NONE;
--
--	DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability disabled\n");
--
- }
- 
- static const struct qed_rdma_ops *qed_ops;
+ 	/* setup command register */
 -- 
 2.7.4
