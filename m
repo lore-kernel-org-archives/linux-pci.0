@@ -1,135 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Kong Lai <kong.lai@tundra.com>, linux-pci@vger.kernel.org,
-        linux-media@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] PCI: Remove NULL device handling from PCI DMA API
-Date: Wed, 10 Jan 2018 19:03:22 +0100
-Message-Id: <20180110180322.30186-5-hch@lst.de>
-In-Reply-To: <20180110180322.30186-1-hch@lst.de>
-References: <20180110180322.30186-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=kwQm=EE=free-electrons.com=thomas.petazzoni@kernel.org>
+Return-Path: <SRS0=kwQm=EE=free-electrons.com=thomas.petazzoni@kernel.org>
+Date: Tue, 9 Jan 2018 17:49:18 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Andrew
+ Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper
+ <jason@lakedaemon.net>, Hanna Hawa <hannah@marvell.com>,
+ stable@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>, Victor Gu
+ <xigu@marvell.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
+ <miquel.raynal@free-electrons.com>, Gregory Clement
+ <gregory.clement@free-electrons.com>, Antoine Tenart
+ <antoine.tenart@free-electrons.com>, linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH v2 1/7] PCI: aardvark: fix logic in PCI configuration
+ read/write functions
+Message-ID: <20180109174918.5c4b9ee6@windsurf.lan>
+In-Reply-To: <20171005172330.GP25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+	<20170928125838.11887-2-thomas.petazzoni@free-electrons.com>
+	<20171005172330.GP25517@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Historically some ISA drivers used the old PCI DMA API with a NULL pdev
-argument, but these days this isn't used and not too useful due to the
-per-device DMA ops, so remove it.
+Hello Bjorn,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/pci-dma-compat.h | 27 +++++++++++++--------------
- 1 file changed, 13 insertions(+), 14 deletions(-)
+Again, reviving this very old thread :-)
 
-diff --git a/include/linux/pci-dma-compat.h b/include/linux/pci-dma-compat.h
-index d1f9fdade1e0..0dd1a3f7b309 100644
---- a/include/linux/pci-dma-compat.h
-+++ b/include/linux/pci-dma-compat.h
-@@ -17,91 +17,90 @@ static inline void *
- pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
- 		     dma_addr_t *dma_handle)
- {
--	return dma_alloc_coherent(hwdev == NULL ? NULL : &hwdev->dev, size, dma_handle, GFP_ATOMIC);
-+	return dma_alloc_coherent(&hwdev->dev, size, dma_handle, GFP_ATOMIC);
- }
+On Thu, 5 Oct 2017 12:23:30 -0500, Bjorn Helgaas wrote:
+
+> > -	if (PCI_SLOT(devfn) != 0) {
+> > +	if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0)) {  
+> 
+> I'm fine with this, but please take a look at these:
+> 
+>   8e7ca8ca5fd8 PCI: xilinx: Relax device number checking to allow SR-IOV
+>   e18934b5e9c7 PCI: designware: Relax device number checking to allow SR-IOV
+>   d99e30b7936a PCI: altera: Relax device number checking to allow SR-IOV
+> 
+> and make sure that reasoning doesn't apply here, too.
+> 
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8e7ca8ca5fd8
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e18934b5e9c7
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=d99e30b7936a
+
+The original code for xilinx/designware/altera was doing:
+
+ 	if (bus->number == port->root_busno && devfn > 0)
+ 		return false;
  
- static inline void *
- pci_zalloc_consistent(struct pci_dev *hwdev, size_t size,
- 		      dma_addr_t *dma_handle)
- {
--	return dma_zalloc_coherent(hwdev == NULL ? NULL : &hwdev->dev,
--				   size, dma_handle, GFP_ATOMIC);
-+	return dma_zalloc_coherent(&hwdev->dev, size, dma_handle, GFP_ATOMIC);
- }
- 
- static inline void
- pci_free_consistent(struct pci_dev *hwdev, size_t size,
- 		    void *vaddr, dma_addr_t dma_handle)
- {
--	dma_free_coherent(hwdev == NULL ? NULL : &hwdev->dev, size, vaddr, dma_handle);
-+	dma_free_coherent(&hwdev->dev, size, vaddr, dma_handle);
- }
- 
- static inline dma_addr_t
- pci_map_single(struct pci_dev *hwdev, void *ptr, size_t size, int direction)
- {
--	return dma_map_single(hwdev == NULL ? NULL : &hwdev->dev, ptr, size, (enum dma_data_direction)direction);
-+	return dma_map_single(&hwdev->dev, ptr, size, (enum dma_data_direction)direction);
- }
- 
- static inline void
- pci_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr,
- 		 size_t size, int direction)
- {
--	dma_unmap_single(hwdev == NULL ? NULL : &hwdev->dev, dma_addr, size, (enum dma_data_direction)direction);
-+	dma_unmap_single(&hwdev->dev, dma_addr, size, (enum dma_data_direction)direction);
- }
- 
- static inline dma_addr_t
- pci_map_page(struct pci_dev *hwdev, struct page *page,
- 	     unsigned long offset, size_t size, int direction)
- {
--	return dma_map_page(hwdev == NULL ? NULL : &hwdev->dev, page, offset, size, (enum dma_data_direction)direction);
-+	return dma_map_page(&hwdev->dev, page, offset, size, (enum dma_data_direction)direction);
- }
- 
- static inline void
- pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
- 	       size_t size, int direction)
- {
--	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
-+	dma_unmap_page(&hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
- }
- 
- static inline int
- pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
- 	   int nents, int direction)
- {
--	return dma_map_sg(hwdev == NULL ? NULL : &hwdev->dev, sg, nents, (enum dma_data_direction)direction);
-+	return dma_map_sg(&hwdev->dev, sg, nents, (enum dma_data_direction)direction);
- }
- 
- static inline void
- pci_unmap_sg(struct pci_dev *hwdev, struct scatterlist *sg,
- 	     int nents, int direction)
- {
--	dma_unmap_sg(hwdev == NULL ? NULL : &hwdev->dev, sg, nents, (enum dma_data_direction)direction);
-+	dma_unmap_sg(&hwdev->dev, sg, nents, (enum dma_data_direction)direction);
- }
- 
- static inline void
- pci_dma_sync_single_for_cpu(struct pci_dev *hwdev, dma_addr_t dma_handle,
- 		    size_t size, int direction)
- {
--	dma_sync_single_for_cpu(hwdev == NULL ? NULL : &hwdev->dev, dma_handle, size, (enum dma_data_direction)direction);
-+	dma_sync_single_for_cpu(&hwdev->dev, dma_handle, size, (enum dma_data_direction)direction);
- }
- 
- static inline void
- pci_dma_sync_single_for_device(struct pci_dev *hwdev, dma_addr_t dma_handle,
- 		    size_t size, int direction)
- {
--	dma_sync_single_for_device(hwdev == NULL ? NULL : &hwdev->dev, dma_handle, size, (enum dma_data_direction)direction);
-+	dma_sync_single_for_device(&hwdev->dev, dma_handle, size, (enum dma_data_direction)direction);
- }
- 
- static inline void
- pci_dma_sync_sg_for_cpu(struct pci_dev *hwdev, struct scatterlist *sg,
- 		int nelems, int direction)
- {
--	dma_sync_sg_for_cpu(hwdev == NULL ? NULL : &hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
-+	dma_sync_sg_for_cpu(&hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
- }
- 
- static inline void
- pci_dma_sync_sg_for_device(struct pci_dev *hwdev, struct scatterlist *sg,
- 		int nelems, int direction)
- {
--	dma_sync_sg_for_device(hwdev == NULL ? NULL : &hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
-+	dma_sync_sg_for_device(&hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
- }
- 
- static inline int
+	if (bus->primary == port->root_busno && devfn > 0)
+		return false;
+
+I.e, it was checking both if bus->number *and* bus->primary were equal
+to port->root_busno.
+
+The commit you points removed the check on bus->primary, keeping the
+check on bus->number.
+
+Your patch for the Aadvark driver only adds a check on bus->number, i.e
+exactly what the xilinx/designware/altera code is still doing today:
+
+Altera:
+
+        /* access only one slot on each root port */
+        if (bus->number == pcie->root_bus_nr && dev > 0)
+                return false;
+
+Designware:
+
+        /* access only one slot on each root port */
+        if (bus->number == pp->root_bus_nr && dev > 0)
+                return 0;
+
+Xilinx:
+
+        /* Only one device down on each root port */
+        if (bus->number == port->root_busno && devfn > 0)
+                return false;
+
+Aardvark (with our patch):
+
+        if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0)) {
+                *val = 0xffffffff;
+                return PCIBIOS_DEVICE_NOT_FOUND;
+        }
+
+So we're doing exactly the same thing.
+
+Do you agree ?
+
+Best regards,
+
+Thomas Petazzoni
 -- 
-2.14.2
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
