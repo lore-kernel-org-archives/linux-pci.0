@@ -1,57 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:37799 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751826AbeAaHhj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jan 2018 02:37:39 -0500
-Received: from mail-pf0-f199.google.com ([209.85.192.199])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1egmxe-0001AM-HI
-        for linux-pci@vger.kernel.org; Wed, 31 Jan 2018 07:37:38 +0000
-Received: by mail-pf0-f199.google.com with SMTP id s22so13728420pfh.21
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jan 2018 23:37:38 -0800 (PST)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Subject: Re: Thunderbolt PCIe card doesn't get enumerated at cold boot
-From: Kai Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <20180130103745.GG27654@lahna.fi.intel.com>
-Date: Wed, 31 Jan 2018 15:37:32 +0800
-Cc: linux-pci@vger.kernel.org, Ethan Hsieh <ethan.hsieh@canonical.com>,
-        thunderbolt-software@lists.01.org
-Message-Id: <A4805FBC-E94C-4EA6-9DC3-290FE3BB43E9@canonical.com>
-References: <8831781F-8027-4875-AF82-835FBE40F5F0@canonical.com>
- <20180130102319.GE27654@lahna.fi.intel.com>
- <C4051028-A6AD-4B78-97E2-AE1BC34694EB@canonical.com>
- <20180130103745.GG27654@lahna.fi.intel.com>
-To: Mika Westerberg <mika.westerberg@intel.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36600 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754007AbeAIRKP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 12:10:15 -0500
+Received: by mail-wm0-f68.google.com with SMTP id b76so22200601wmg.1
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jan 2018 09:10:14 -0800 (PST)
+Date: Tue, 9 Jan 2018 10:10:08 -0700
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+ rdma_rw_ctx_[init|destroy]()
+Message-ID: <20180109171008.GB4518@ziepe.ca>
+References: <20180104221337.GV11348@ziepe.ca>
+ <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com>
+ <20180105045031.GX11348@ziepe.ca>
+ <20180108145901.GA10743@lst.de>
+ <20180108180917.GF11348@ziepe.ca>
+ <20180108183434.GA15549@lst.de>
+ <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com>
+ <20180108185743.GA15936@lst.de>
+ <20180108194950.GK11348@ziepe.ca>
+ <20180109164640.GA12159@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180109164640.GA12159@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-> On 30 Jan 2018, at 6:37 PM, Mika Westerberg <mika.westerberg@intel.com> wrote:
->> 
->> Yes it is. It’s a PCIe add-in-card. It is Alpine Ridge.
->> 
->> Wondering if TBT requires special support from PCH or ACPI?
->> I am asking this because the very same card can’t get detected on a Ryzen
->> platform.
+On Tue, Jan 09, 2018 at 05:46:40PM +0100, Christoph Hellwig wrote:
+> On Mon, Jan 08, 2018 at 12:49:50PM -0700, Jason Gunthorpe wrote:
+> > Pretty sure P2P capable IOMMU hardware exists.
+> > 
+> > With SOC's we also have the scenario that an DMA originated from an
+> > on-die device wishes to target an off-die PCI BAR (through the IOMMU),
+> > that definitely exists today, and people care about it :)
 > 
-> Yes, it needs to have BIOS support and in addition you need to have
-> those side band signals connected properly. BIOS support is needed for
-> ACPI hotplug.
+> Then people will have to help and contribute support for it.
 
-Sounds like there are two different kind of supports:
-- Basic TBT support.
-- ACPI hotplug support in addition to basic support.
+Sure. But my point was all this will have to migrate under the dma_ops
+for that to work, so why the resistance to using dma_ops right away?
 
-What do I need to check if the motherboard fully support them?
-I guess there are special ACPI methods for them?
-
-> Unless it is in native PCIe hotplug mode but even then you need to have
-> BIOS support.
-
-How do I check this for the TBT add-in-card?
-
-Kai-Heng
+Jason
