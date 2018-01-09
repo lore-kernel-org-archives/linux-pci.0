@@ -1,125 +1,47 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 9 Jan 2018 19:11:36 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 1/7] PCI: aardvark: fix logic in PCI configuration
- read/write functions
-Message-ID: <20180110011136.GB157182@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
- <20170928125838.11887-2-thomas.petazzoni@free-electrons.com>
- <20171005172330.GP25517@bhelgaas-glaptop.roam.corp.google.com>
- <20180109174918.5c4b9ee6@windsurf.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:42523 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759421AbeAIQzv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 9 Jan 2018 11:55:51 -0500
+Date: Tue, 9 Jan 2018 17:55:49 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Christoph Hellwig <hch@lst.de>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
+        rdma_rw_ctx_[init|destroy]()
+Message-ID: <20180109165549.GC12159@lst.de>
+References: <20180104190137.7654-7-logang@deltatee.com> <20180104192225.GS11348@ziepe.ca> <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com> <20180104221337.GV11348@ziepe.ca> <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com> <20180105045031.GX11348@ziepe.ca> <20180108145901.GA10743@lst.de> <20180108180917.GF11348@ziepe.ca> <20180108183434.GA15549@lst.de> <20180108190116.GI11348@ziepe.ca>
 MIME-Version: 1.0
-In-Reply-To: <20180109174918.5c4b9ee6@windsurf.lan>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
- Hanna Hawa <hannah@marvell.com>, stable@vger.kernel.org,
- Nadav Haklai <nadavh@marvell.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@free-electrons.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Antoine Tenart <antoine.tenart@free-electrons.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180108190116.GI11348@ziepe.ca>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo, since he takes care of this now]
+On Mon, Jan 08, 2018 at 12:01:16PM -0700, Jason Gunthorpe wrote:
+> > So I very much disagree about where to place that workaround - the
+> > RDMA code is exactly the right place.
+> 
+> But why? RDMA is using core code to do this. It uses dma_ops in struct
+> device and it uses normal dma_map SG. How is it RDMA's problem that
+> some PCI drivers provide strange DMA ops?
 
-On Tue, Jan 09, 2018 at 05:49:18PM +0100, Thomas Petazzoni wrote:
-> Hello Bjorn,
-> 
-> Again, reviving this very old thread :-)
-> 
-> On Thu, 5 Oct 2017 12:23:30 -0500, Bjorn Helgaas wrote:
-> 
-> > > -	if (PCI_SLOT(devfn) != 0) {
-> > > +	if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0)) {  
-> > 
-> > I'm fine with this, but please take a look at these:
-> > 
-> >   8e7ca8ca5fd8 PCI: xilinx: Relax device number checking to allow SR-IOV
-> >   e18934b5e9c7 PCI: designware: Relax device number checking to allow SR-IOV
-> >   d99e30b7936a PCI: altera: Relax device number checking to allow SR-IOV
-> > 
-> > and make sure that reasoning doesn't apply here, too.
-> > 
-> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8e7ca8ca5fd8
-> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e18934b5e9c7
-> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=d99e30b7936a
-> 
-> The original code for xilinx/designware/altera was doing:
-> 
->  	if (bus->number == port->root_busno && devfn > 0)
->  		return false;
->  
-> 	if (bus->primary == port->root_busno && devfn > 0)
-> 		return false;
-> 
-> I.e, it was checking both if bus->number *and* bus->primary were equal
-> to port->root_busno.
-> 
-> The commit you points removed the check on bus->primary, keeping the
-> check on bus->number.
-> 
-> Your patch for the Aadvark driver only adds a check on bus->number, i.e
-> exactly what the xilinx/designware/altera code is still doing today:
+Because RDMA uses the dma_virt_ops to pretend a device does DMA when
+in fact it doesn't - at least not for the exact data mapped, or
+as far as I can tell often not all - e.g. the QIB/HFI devices
+might do mmio access for data mapped.
 
-This is a long time ago and I could have forgotten, but I don't think
-this is *my* patch, is it?  
-
-> Altera:
-> 
->         /* access only one slot on each root port */
->         if (bus->number == pcie->root_bus_nr && dev > 0)
->                 return false;
-> 
-> Designware:
-> 
->         /* access only one slot on each root port */
->         if (bus->number == pp->root_bus_nr && dev > 0)
->                 return 0;
-> 
-> Xilinx:
-> 
->         /* Only one device down on each root port */
->         if (bus->number == port->root_busno && devfn > 0)
->                 return false;
-> 
-> Aardvark (with our patch):
-> 
->         if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0)) {
->                 *val = 0xffffffff;
->                 return PCIBIOS_DEVICE_NOT_FOUND;
->         }
-> 
-> So we're doing exactly the same thing.
-> 
-> Do you agree ?
-
-I do agree.  I can't remember what I was thinking when I first
-responded.
-
-I *would* suggest making an advk_pcie_valid_device() so your structure
-matches the other drivers.  I know it seems trivial when you're mostly
-looking at one driver, but it really helps those who pay attention to
-all of them.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+This whole problem only exist because a few RDMA HCA drivers lie
+with the help of the RDMA core.
