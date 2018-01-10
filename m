@@ -1,99 +1,126 @@
-Return-Path: <SRS0=kwQm=EE=free-electrons.com=thomas.petazzoni@kernel.org>
-Return-Path: <SRS0=kwQm=EE=free-electrons.com=thomas.petazzoni@kernel.org>
-Date: Tue, 9 Jan 2018 17:49:18 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Andrew
- Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper
- <jason@lakedaemon.net>, Hanna Hawa <hannah@marvell.com>,
- stable@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>, Victor Gu
- <xigu@marvell.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
- <miquel.raynal@free-electrons.com>, Gregory Clement
- <gregory.clement@free-electrons.com>, Antoine Tenart
- <antoine.tenart@free-electrons.com>, linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH v2 1/7] PCI: aardvark: fix logic in PCI configuration
- read/write functions
-Message-ID: <20180109174918.5c4b9ee6@windsurf.lan>
-In-Reply-To: <20171005172330.GP25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-	<20170928125838.11887-2-thomas.petazzoni@free-electrons.com>
-	<20171005172330.GP25517@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:37279 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752437AbeAJSDf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 13:03:35 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Kong Lai <kong.lai@tundra.com>, linux-pci@vger.kernel.org,
+        linux-media@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 3/4] tsi108_eth: use dma API properly
+Date: Wed, 10 Jan 2018 19:03:21 +0100
+Message-Id: <20180110180322.30186-4-hch@lst.de>
+In-Reply-To: <20180110180322.30186-1-hch@lst.de>
+References: <20180110180322.30186-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+We need to pass a struct device to the dma API, even if some
+architectures still support that for legacy reasons, and should not mix
+it with the old PCI dma API.
 
-Again, reviving this very old thread :-)
+Note that the driver also seems to never actually unmap its dma mappings,
+but to fix that we'll need someone more familar with the driver.
 
-On Thu, 5 Oct 2017 12:23:30 -0500, Bjorn Helgaas wrote:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/net/ethernet/tundra/tsi108_eth.c | 36 ++++++++++++++++++--------------
+ 1 file changed, 20 insertions(+), 16 deletions(-)
 
-> > -	if (PCI_SLOT(devfn) != 0) {
-> > +	if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0)) {  
-> 
-> I'm fine with this, but please take a look at these:
-> 
->   8e7ca8ca5fd8 PCI: xilinx: Relax device number checking to allow SR-IOV
->   e18934b5e9c7 PCI: designware: Relax device number checking to allow SR-IOV
->   d99e30b7936a PCI: altera: Relax device number checking to allow SR-IOV
-> 
-> and make sure that reasoning doesn't apply here, too.
-> 
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8e7ca8ca5fd8
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=e18934b5e9c7
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=d99e30b7936a
-
-The original code for xilinx/designware/altera was doing:
-
- 	if (bus->number == port->root_busno && devfn > 0)
- 		return false;
+diff --git a/drivers/net/ethernet/tundra/tsi108_eth.c b/drivers/net/ethernet/tundra/tsi108_eth.c
+index 0624b71ab5d4..edcd1e60b30d 100644
+--- a/drivers/net/ethernet/tundra/tsi108_eth.c
++++ b/drivers/net/ethernet/tundra/tsi108_eth.c
+@@ -152,6 +152,8 @@ struct tsi108_prv_data {
+ 	u32 msg_enable;			/* debug message level */
+ 	struct mii_if_info mii_if;
+ 	unsigned int init_media;
++
++	struct platform_device *pdev;
+ };
  
-	if (bus->primary == port->root_busno && devfn > 0)
-		return false;
-
-I.e, it was checking both if bus->number *and* bus->primary were equal
-to port->root_busno.
-
-The commit you points removed the check on bus->primary, keeping the
-check on bus->number.
-
-Your patch for the Aadvark driver only adds a check on bus->number, i.e
-exactly what the xilinx/designware/altera code is still doing today:
-
-Altera:
-
-        /* access only one slot on each root port */
-        if (bus->number == pcie->root_bus_nr && dev > 0)
-                return false;
-
-Designware:
-
-        /* access only one slot on each root port */
-        if (bus->number == pp->root_bus_nr && dev > 0)
-                return 0;
-
-Xilinx:
-
-        /* Only one device down on each root port */
-        if (bus->number == port->root_busno && devfn > 0)
-                return false;
-
-Aardvark (with our patch):
-
-        if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0)) {
-                *val = 0xffffffff;
-                return PCIBIOS_DEVICE_NOT_FOUND;
-        }
-
-So we're doing exactly the same thing.
-
-Do you agree ?
-
-Best regards,
-
-Thomas Petazzoni
+ /* Structure for a device driver */
+@@ -703,17 +705,18 @@ static int tsi108_send_packet(struct sk_buff * skb, struct net_device *dev)
+ 		data->txskbs[tx] = skb;
+ 
+ 		if (i == 0) {
+-			data->txring[tx].buf0 = dma_map_single(NULL, skb->data,
+-					skb_headlen(skb), DMA_TO_DEVICE);
++			data->txring[tx].buf0 = dma_map_single(&data->pdev->dev,
++					skb->data, skb_headlen(skb),
++					DMA_TO_DEVICE);
+ 			data->txring[tx].len = skb_headlen(skb);
+ 			misc |= TSI108_TX_SOF;
+ 		} else {
+ 			const skb_frag_t *frag = &skb_shinfo(skb)->frags[i - 1];
+ 
+-			data->txring[tx].buf0 = skb_frag_dma_map(NULL, frag,
+-								 0,
+-								 skb_frag_size(frag),
+-								 DMA_TO_DEVICE);
++			data->txring[tx].buf0 =
++				skb_frag_dma_map(&data->pdev->dev, frag,
++						0, skb_frag_size(frag),
++						DMA_TO_DEVICE);
+ 			data->txring[tx].len = skb_frag_size(frag);
+ 		}
+ 
+@@ -808,9 +811,9 @@ static int tsi108_refill_rx(struct net_device *dev, int budget)
+ 		if (!skb)
+ 			break;
+ 
+-		data->rxring[rx].buf0 = dma_map_single(NULL, skb->data,
+-							TSI108_RX_SKB_SIZE,
+-							DMA_FROM_DEVICE);
++		data->rxring[rx].buf0 = dma_map_single(&data->pdev->dev,
++				skb->data, TSI108_RX_SKB_SIZE,
++				DMA_FROM_DEVICE);
+ 
+ 		/* Sometimes the hardware sets blen to zero after packet
+ 		 * reception, even though the manual says that it's only ever
+@@ -1308,15 +1311,15 @@ static int tsi108_open(struct net_device *dev)
+ 		       data->id, dev->irq, dev->name);
+ 	}
+ 
+-	data->rxring = dma_zalloc_coherent(NULL, rxring_size, &data->rxdma,
+-					   GFP_KERNEL);
++	data->rxring = dma_zalloc_coherent(&data->pdev->dev, rxring_size,
++			&data->rxdma, GFP_KERNEL);
+ 	if (!data->rxring)
+ 		return -ENOMEM;
+ 
+-	data->txring = dma_zalloc_coherent(NULL, txring_size, &data->txdma,
+-					   GFP_KERNEL);
++	data->txring = dma_zalloc_coherent(&data->pdev->dev, txring_size,
++			&data->txdma, GFP_KERNEL);
+ 	if (!data->txring) {
+-		pci_free_consistent(NULL, rxring_size, data->rxring,
++		dma_free_coherent(&data->pdev->dev, rxring_size, data->rxring,
+ 				    data->rxdma);
+ 		return -ENOMEM;
+ 	}
+@@ -1428,10 +1431,10 @@ static int tsi108_close(struct net_device *dev)
+ 		dev_kfree_skb(skb);
+ 	}
+ 
+-	dma_free_coherent(0,
++	dma_free_coherent(&data->pdev->dev,
+ 			    TSI108_RXRING_LEN * sizeof(rx_desc),
+ 			    data->rxring, data->rxdma);
+-	dma_free_coherent(0,
++	dma_free_coherent(&data->pdev->dev,
+ 			    TSI108_TXRING_LEN * sizeof(tx_desc),
+ 			    data->txring, data->txdma);
+ 
+@@ -1576,6 +1579,7 @@ tsi108_init_one(struct platform_device *pdev)
+ 	printk("tsi108_eth%d: probe...\n", pdev->id);
+ 	data = netdev_priv(dev);
+ 	data->dev = dev;
++	data->pdev = pdev;
+ 
+ 	pr_debug("tsi108_eth%d:regs:phyresgs:phy:irq_num=0x%x:0x%x:0x%x:0x%x\n",
+ 			pdev->id, einfo->regs, einfo->phyregs,
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+2.14.2
