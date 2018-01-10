@@ -1,171 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47628 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752637AbeA3S0u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Jan 2018 13:26:50 -0500
-Subject: [PATCH v2 11/14] PCI/DPC: Remove unnecessary RP PIO register structs
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 10 Jan 2018 17:35:15 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Tue, 30 Jan 2018 12:26:48 -0600
-Message-ID: <20180130182648.106875.32803.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Maximilian Heyne <mheyne@amazon.de>
+Cc: linux-pci@vger.kernel.org, Alexander Duyck <aduyck@mirantis.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Liang-Min Wang <liang-min.wang@intel.com>, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci-stub: enable SR-IOV configuration through sysfs
+Message-ID: <20180110233515.GI241460@bhelgaas-glaptop.roam.corp.google.com>
+References: <1513170333-19102-1-git-send-email-mheyne@amazon.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1513170333-19102-1-git-send-email-mheyne@amazon.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+[+cc Alex, Alex, Jeff, Liang-Min, kvm, LKML]
 
-We read and immediately print the RP PIO log registers.  We don't save
-them, so there's no need to define structs for them.  Remove the structs
-and read the registers into local variables instead.  No functional change
-intended.
+Anybody else have any thoughts on this?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/pcie-dpc.c |   87 +++++++++++++++----------------------------
- 1 file changed, 30 insertions(+), 57 deletions(-)
-
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 7b96169a808c..daad9c4ae607 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -17,26 +17,6 @@
- #include "../pci.h"
- #include "aer/aerdrv.h"
- 
--struct rp_pio_header_log_regs {
--	u32 dw0;
--	u32 dw1;
--	u32 dw2;
--	u32 dw3;
--};
--
--struct dpc_rp_pio_regs {
--	u32 status;
--	u32 mask;
--	u32 severity;
--	u32 syserror;
--	u32 exception;
--
--	struct rp_pio_header_log_regs header_log;
--	u32 impspec_log;
--	u32 tlp_prefix_log[4];
--	u16 first_error;
--};
--
- struct dpc_dev {
- 	struct pcie_device	*dev;
- 	struct work_struct	work;
-@@ -142,78 +122,71 @@ static void dpc_work(struct work_struct *work)
- 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
- }
- 
--static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
--				struct dpc_rp_pio_regs *rp_pio)
-+static void dpc_rp_pio_get_info(struct dpc_dev *dpc)
- {
- 	struct device *dev = &dpc->dev->device;
- 	struct pci_dev *pdev = dpc->dev->port;
- 	int i;
--	u16 cap = dpc->cap_pos, dpc_status;
--	u32 status;
--
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
--			      &rp_pio->status);
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK,
--			      &rp_pio->mask);
-+	u16 cap = dpc->cap_pos;
-+	u32 status, mask;
-+	u32 sev, syserr, exc;
-+	u16 dpc_status, first_error;
-+	u32 dw0, dw1, dw2, dw3;
-+	u32 log;
-+	u32 prefix;
-+
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS, &status);
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK, &mask);
- 	dev_err(dev, "rp_pio_status: %#010x, rp_pio_mask: %#010x\n",
--		rp_pio->status, rp_pio->mask);
-+		status, mask);
- 
--	dpc->rp_pio_status = rp_pio->status;
-+	dpc->rp_pio_status = status;
- 
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY,
--			      &rp_pio->severity);
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR,
--			      &rp_pio->syserror);
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION,
--			      &rp_pio->exception);
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY, &sev);
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR, &syserr);
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION, &exc);
- 	dev_err(dev, "RP PIO severity=%#010x, syserror=%#010x, exception=%#010x\n",
--		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
-+		sev, syserr, exc);
- 
- 	/* Get First Error Pointer */
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &dpc_status);
--	rp_pio->first_error = (dpc_status & 0x1f00) >> 8;
-+	first_error = (dpc_status & 0x1f00) >> 8;
- 
--	status = (rp_pio->status & ~rp_pio->mask);
-+	status &= ~mask;
- 	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
- 		if (status & (1 << i))
- 			dev_err(dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
--				rp_pio->first_error == i ? " (First)" : "");
-+				first_error == i ? " (First)" : "");
- 	}
- 
- 	if (dpc->rp_log_size < 4)
- 		return;
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
--			      &rp_pio->header_log.dw0);
-+			      &dw0);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
--			      &rp_pio->header_log.dw1);
-+			      &dw1);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
--			      &rp_pio->header_log.dw2);
-+			      &dw2);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
--			      &rp_pio->header_log.dw3);
-+			      &dw3);
- 	dev_err(dev, "TLP Header: %#010x %#010x %#010x %#010x\n",
--		rp_pio->header_log.dw0, rp_pio->header_log.dw1,
--		rp_pio->header_log.dw2, rp_pio->header_log.dw3);
-+		dw0, dw1, dw2, dw3);
- 
- 	if (dpc->rp_log_size < 5)
- 		return;
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
--			      &rp_pio->impspec_log);
--	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", rp_pio->impspec_log);
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG, &log);
-+	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", log);
- 
- 	for (i = 0; i < dpc->rp_log_size - 5; i++) {
- 		pci_read_config_dword(pdev,
--			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
--			&rp_pio->tlp_prefix_log[i]);
--		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i,
--			rp_pio->tlp_prefix_log[i]);
-+			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG, &prefix);
-+		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i, prefix);
- 	}
- }
- 
- static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- {
--	struct dpc_rp_pio_regs rp_pio_regs;
--
--	dpc_rp_pio_get_info(dpc, &rp_pio_regs);
-+	dpc_rp_pio_get_info(dpc);
- 
- }
- 
+On Wed, Dec 13, 2017 at 02:05:33PM +0100, Maximilian Heyne wrote:
+> Currently, SR-IOV VFs can only be configured through sysfs, if a driver
+> is loaded for the device. Sometimes we don't care about the PF, but only
+> want to assign VFs to guests, which is now possible with this patch.
+> 
+> Signed-off-by: Maximilian Heyne <mheyne@amazon.de>
+> ---
+>  drivers/pci/pci-stub.c | 23 ++++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-stub.c b/drivers/pci/pci-stub.c
+> index 886fb35..aa007c3 100644
+> --- a/drivers/pci/pci-stub.c
+> +++ b/drivers/pci/pci-stub.c
+> @@ -32,10 +32,27 @@ static int pci_stub_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  	return 0;
+>  }
+>  
+> +static void pci_stub_remove(struct pci_dev *dev)
+> +{
+> +	pci_disable_sriov(dev);
+> +}
+> +
+> +static int pci_stub_sriov_configure(struct pci_dev *dev, int num_vfs)
+> +{
+> +	if (!num_vfs) {
+> +		pci_disable_sriov(dev);
+> +		return 0;
+> +	}
+> +
+> +	return pci_enable_sriov(dev, num_vfs);
+> +}
+> +
+>  static struct pci_driver stub_driver = {
+> -	.name		= "pci-stub",
+> -	.id_table	= NULL,	/* only dynamic id's */
+> -	.probe		= pci_stub_probe,
+> +	.name			= "pci-stub",
+> +	.id_table		= NULL,	/* only dynamic IDs */
+> +	.probe			= pci_stub_probe,
+> +	.remove			= pci_stub_remove,
+> +	.sriov_configure	= pci_stub_sriov_configure,
+>  };
+>  
+>  static int __init pci_stub_init(void)
+> -- 
+> 2.7.4
+> 
