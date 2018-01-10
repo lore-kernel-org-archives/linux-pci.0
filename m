@@ -1,136 +1,144 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180110180322.30186-4-hch@lst.de>
-References: <20180110180322.30186-1-hch@lst.de> <20180110180322.30186-4-hch@lst.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 10 Jan 2018 22:09:20 +0200
-Message-ID: <CAHp75VeyM+ctSPO5p3DGizR34woFn3=B+b0Uf+pxM5oXkbS=Zw@mail.gmail.com>
-Subject: Re: [PATCH 3/4] tsi108_eth: use dma API properly
-To: Christoph Hellwig <hch@lst.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Kong Lai <kong.lai@tundra.com>, linux-pci@vger.kernel.org,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8.mo179.mail-out.ovh.net ([46.105.75.26]:34058 "EHLO
+        8.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752146AbeAJWsL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 17:48:11 -0500
+Received: from player690.ha.ovh.net (b7.ovh.net [213.186.33.57])
+        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 12902902B8
+        for <linux-pci@vger.kernel.org>; Wed, 10 Jan 2018 23:48:10 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v3 1/6] PCI: Regroup all PCI related entries into drivers/pci/Makefile
+Date: Wed, 10 Jan 2018 23:47:30 +0100
+Message-Id: <ee3d115d7127b1a0561b48ba2c0997b8bd06044a.1515621150.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 10, 2018 at 8:03 PM, Christoph Hellwig <hch@lst.de> wrote:
-> We need to pass a struct device to the dma API, even if some
-> architectures still support that for legacy reasons, and should not mix
-> it with the old PCI dma API.
->
-> Note that the driver also seems to never actually unmap its dma mappings,
-> but to fix that we'll need someone more familar with the driver.
+Clean up drivers/Makefile by moving the pci/endpoint and pci/dwc entries
+from drivers/Makefile into drivers/pci/Makefile.
 
-> +       struct platform_device *pdev;
+Since we don't want to introduce any dependency between CONFIG_PCI and
+CONFIG_PCI_ENDPOINT, we now always execute drivers/pci/Makefile.
 
-Do you really need platform_defice reference?
+Hence all Makefiles in drivers/pci/ were updated accordingly so no file is
+compiled when CONFIG_PCI is not defined.
 
-Perhaps
+Also, we add a comment to reinforce that EPC and EPF libraries must be
+initialized before their users. Hence built-in EPC drivers, such as
+those of Designware, are linked after the endpoint core libraries.
 
-struct device *hdev; // hardware device
+Finally, we add another comment to explain why obj-y has been chosen
+instead of obj-$(CONFIG_PCIE_DW) to parse the dwc/ sub-folder.
 
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ drivers/Makefile          |  5 +----
+ drivers/pci/Kconfig       |  1 +
+ drivers/pci/Makefile      | 13 ++++++++++---
+ drivers/pci/dwc/Makefile  |  2 ++
+ drivers/pci/host/Makefile |  2 ++
+ 5 files changed, 16 insertions(+), 7 deletions(-)
 
-data->hdev = &pdev->dev;
-
-Another idea
-
-dev->dev.parent = &pdev->dev;
-
-No new member needed.
-
->  };
->
->  /* Structure for a device driver */
-> @@ -703,17 +705,18 @@ static int tsi108_send_packet(struct sk_buff * skb, struct net_device *dev)
->                 data->txskbs[tx] = skb;
->
->                 if (i == 0) {
-> -                       data->txring[tx].buf0 = dma_map_single(NULL, skb->data,
-> -                                       skb_headlen(skb), DMA_TO_DEVICE);
-> +                       data->txring[tx].buf0 = dma_map_single(&data->pdev->dev,
-> +                                       skb->data, skb_headlen(skb),
-> +                                       DMA_TO_DEVICE);
->                         data->txring[tx].len = skb_headlen(skb);
->                         misc |= TSI108_TX_SOF;
->                 } else {
->                         const skb_frag_t *frag = &skb_shinfo(skb)->frags[i - 1];
->
-> -                       data->txring[tx].buf0 = skb_frag_dma_map(NULL, frag,
-> -                                                                0,
-> -                                                                skb_frag_size(frag),
-> -                                                                DMA_TO_DEVICE);
-> +                       data->txring[tx].buf0 =
-> +                               skb_frag_dma_map(&data->pdev->dev, frag,
-> +                                               0, skb_frag_size(frag),
-> +                                               DMA_TO_DEVICE);
->                         data->txring[tx].len = skb_frag_size(frag);
->                 }
->
-> @@ -808,9 +811,9 @@ static int tsi108_refill_rx(struct net_device *dev, int budget)
->                 if (!skb)
->                         break;
->
-> -               data->rxring[rx].buf0 = dma_map_single(NULL, skb->data,
-> -                                                       TSI108_RX_SKB_SIZE,
-> -                                                       DMA_FROM_DEVICE);
-> +               data->rxring[rx].buf0 = dma_map_single(&data->pdev->dev,
-> +                               skb->data, TSI108_RX_SKB_SIZE,
-> +                               DMA_FROM_DEVICE);
->
->                 /* Sometimes the hardware sets blen to zero after packet
->                  * reception, even though the manual says that it's only ever
-> @@ -1308,15 +1311,15 @@ static int tsi108_open(struct net_device *dev)
->                        data->id, dev->irq, dev->name);
->         }
->
-> -       data->rxring = dma_zalloc_coherent(NULL, rxring_size, &data->rxdma,
-> -                                          GFP_KERNEL);
-> +       data->rxring = dma_zalloc_coherent(&data->pdev->dev, rxring_size,
-> +                       &data->rxdma, GFP_KERNEL);
->         if (!data->rxring)
->                 return -ENOMEM;
->
-> -       data->txring = dma_zalloc_coherent(NULL, txring_size, &data->txdma,
-> -                                          GFP_KERNEL);
-> +       data->txring = dma_zalloc_coherent(&data->pdev->dev, txring_size,
-> +                       &data->txdma, GFP_KERNEL);
->         if (!data->txring) {
-> -               pci_free_consistent(NULL, rxring_size, data->rxring,
-> +               dma_free_coherent(&data->pdev->dev, rxring_size, data->rxring,
->                                     data->rxdma);
->                 return -ENOMEM;
->         }
-> @@ -1428,10 +1431,10 @@ static int tsi108_close(struct net_device *dev)
->                 dev_kfree_skb(skb);
->         }
->
-> -       dma_free_coherent(0,
-> +       dma_free_coherent(&data->pdev->dev,
->                             TSI108_RXRING_LEN * sizeof(rx_desc),
->                             data->rxring, data->rxdma);
-> -       dma_free_coherent(0,
-> +       dma_free_coherent(&data->pdev->dev,
->                             TSI108_TXRING_LEN * sizeof(tx_desc),
->                             data->txring, data->txdma);
->
-> @@ -1576,6 +1579,7 @@ tsi108_init_one(struct platform_device *pdev)
->         printk("tsi108_eth%d: probe...\n", pdev->id);
->         data = netdev_priv(dev);
->         data->dev = dev;
-> +       data->pdev = pdev;
->
->         pr_debug("tsi108_eth%d:regs:phyresgs:phy:irq_num=0x%x:0x%x:0x%x:0x%x\n",
->                         pdev->id, einfo->regs, einfo->phyregs,
-> --
-> 2.14.2
->
-
-
-
+diff --git a/drivers/Makefile b/drivers/Makefile
+index e06f7f633f73..8189b1edec00 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -16,10 +16,7 @@ obj-$(CONFIG_PINCTRL)		+= pinctrl/
+ obj-$(CONFIG_GPIOLIB)		+= gpio/
+ obj-y				+= pwm/
+ 
+-obj-$(CONFIG_PCI)		+= pci/
+-obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
+-# PCI dwc controller drivers
+-obj-y				+= pci/dwc/
++obj-y				+= pci/
+ 
+ obj-$(CONFIG_PARISC)		+= parisc/
+ obj-$(CONFIG_RAPIDIO)		+= rapidio/
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index bda151788f3f..7eeb969ab86a 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -125,6 +125,7 @@ config PCI_PASID
+ 
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
++	depends on PCI
+ 	select NLS
+ 
+ config PCI_HYPERV
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index c7819b973df7..ddb5aa6640d7 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -3,12 +3,15 @@
+ # Makefile for the PCI bus specific drivers.
+ #
+ 
+-obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
++obj-$(CONFIG_PCI)	+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
+ 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+ 			irq.o vpd.o setup-bus.o vc.o mmap.o setup-irq.o
+ 
++ifdef CONFIG_PCI
+ obj-$(CONFIG_PROC_FS) += proc.o
+ obj-$(CONFIG_SYSFS) += slot.o
++obj-$(CONFIG_OF) += of.o
++endif
+ 
+ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
+ 
+@@ -44,10 +47,14 @@ obj-$(CONFIG_PCI_ECAM) += ecam.o
+ 
+ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ 
+-obj-$(CONFIG_OF) += of.o
+-
+ ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
+ 
+ # PCI host controller drivers
+ obj-y += host/
+ obj-y += switch/
++
++obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
++
++# Endpoint library must be initialized before its users
++# pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
++obj-y				+= dwc/
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index a9d8a6fb48e3..5d2ce72c7a52 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -25,4 +25,6 @@ obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
+ # ARM64 and use internal ifdefs to only build the pieces we need
+ # depending on whether ACPI, the DT driver, or both are enabled.
+ 
++ifdef CONFIG_PCI
+ obj-$(CONFIG_ARM64) += pcie-hisi.o
++endif
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 34ec1d88f961..3b1059190867 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -34,6 +34,8 @@ obj-$(CONFIG_VMD) += vmd.o
+ # ARM64 and use internal ifdefs to only build the pieces we need
+ # depending on whether ACPI, the DT driver, or both are enabled.
+ 
++ifdef CONFIG_PCI
+ obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
+ obj-$(CONFIG_ARM64) += pci-thunder-pem.o
+ obj-$(CONFIG_ARM64) += pci-xgene.o
++endif
 -- 
-With Best Regards,
-Andy Shevchenko
+2.11.0
