@@ -1,80 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:37333 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964803AbeALP4h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jan 2018 10:56:37 -0500
-Received: by mail-wm0-f41.google.com with SMTP id f140so12692083wmd.2
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jan 2018 07:56:36 -0800 (PST)
-Subject: Re: [PATCH] PCI: dwc: fix enumeration end when reaching root
- subordinate
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
-        niklas.cassel@axis.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <1515508941-20055-1-git-send-email-koen.vandeputte@ncentric.com>
- <20180109152550.GA16285@red-moon>
-From: Koen Vandeputte <koen.vandeputte@ncentric.com>
-Message-ID: <4bf872a4-ce26-aca6-eacd-db25673fb8c6@ncentric.com>
-Date: Fri, 12 Jan 2018 16:56:33 +0100
+Received: from mail.kernel.org ([198.145.29.99]:60704 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751606AbeAJVkb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Jan 2018 16:40:31 -0500
+Date: Wed, 10 Jan 2018 15:40:27 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/ASPM: Unexport internal ASPM interfaces
+Message-ID: <20180110214027.GC241460@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171215213001.163656.66285.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180109152550.GA16285@red-moon>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171215213001.163656.66285.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+On Fri, Dec 15, 2017 at 03:30:02PM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Several of the interfaces defined in include/linux/pci-aspm.h are used only
+> internally from the PCI core:
+> 
+>   pcie_aspm_init_link_state()
+>   pcie_aspm_exit_link_state()
+>   pcie_aspm_pm_state_change()
+>   pcie_aspm_powersave_config_link()
+>   pcie_aspm_create_sysfs_dev_files()
+>   pcie_aspm_remove_sysfs_dev_files()
+> 
+> Move these to the internal drivers/pci/pci.h header so they don't clutter
+> the driver interface.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Apologies for the late reply, It's been really busy over here.
+This is on pci/aspm for v4.16.
 
-
-On 2018-01-09 16:25, Lorenzo Pieralisi wrote:
-> <snip>
->> Fix this by initializing the RC to a subordinate value of 0xff, meaning
->> that all busses [0x00-0xff] are reachable through this RC.
-> This is not a correct description of the problem. AFAICS all busses
-> are reachable through this RC _regardless_ of whatever subordinate
-> bus number value you programme into it.
-Noted.
-
-This was written meaning: "as seen be the probing functions below"
-I'll try harder in V2 to actually include the message that it's not a HW 
-related problem or influencing HW in any way, but really "tricking" the 
-probing functions below
->
-> You should extend the CC list to all dwc host submaintainers so
-> that you can actually get it tested.
-How to figure out who to include? (& please provide who to include)
-Reading online manuals on "how to send patches" only demo's 
-"get_maintainer.pl" script
-
->> <snip>
->> ---
->>
->> Will send separate patches to stable as this file got moved/renamed
-> Fixes: commit appeared at v4.15-rc1 (and v4.15 has not been released
-> yet) - there is no separate patch to be sent.
-This is something typical which is hard to learn/understand by just 
-reading "how to send patches" docs available everywhere. (like I did 
-before sending this one over ;-) )
-
-2 questions basically:
-- As the commit causing it was included in 4.15-*RC1*,  do I need to add 
-a "Fixes; bla bla" at all?
-- As the commit causing it was backported to 4.9, (how) should I send a 
-separate patch in order to get it fixed there? [0]
-
-> Thanks,
-> Lorenzo
-
-Probably annoying questions triggering a 'sigh' .. but I'm lacking 
-experience here ..
-
-Thanks for your time & patience so far,
-Highly appreciated,
-
-Koen
-
-
-[0] 
-https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/?h=v4.9.76&id=9a4bf05126f42c2632729ab0da503021d74ed454
+> ---
+>  drivers/pci/pci.h        |   20 ++++++++++++++++++++
+>  include/linux/pci-aspm.h |   35 ++---------------------------------
+>  2 files changed, 22 insertions(+), 33 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index f6b58b32a67c..e90009fff1a9 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -342,6 +342,26 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+>  
+>  void pci_enable_acs(struct pci_dev *dev);
+>  
+> +#ifdef CONFIG_PCIEASPM
+> +void pcie_aspm_init_link_state(struct pci_dev *pdev);
+> +void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+> +void pcie_aspm_pm_state_change(struct pci_dev *pdev);
+> +void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+> +#else
+> +static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
+> +static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev) { }
+> +static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev) { }
+> +static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
+> +#endif
+> +
+> +#ifdef CONFIG_PCIEASPM_DEBUG
+> +void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
+> +void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
+> +#else
+> +static inline void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev) { }
+> +static inline void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev) { }
+> +#endif
+> +
+>  #ifdef CONFIG_PCIE_PTM
+>  void pci_ptm_init(struct pci_dev *dev);
+>  #else
+> diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
+> index 3cc06b059017..df28af5cef21 100644
+> --- a/include/linux/pci-aspm.h
+> +++ b/include/linux/pci-aspm.h
+> @@ -24,43 +24,12 @@
+>  #define PCIE_LINK_STATE_CLKPM	4
+>  
+>  #ifdef CONFIG_PCIEASPM
+> -void pcie_aspm_init_link_state(struct pci_dev *pdev);
+> -void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+> -void pcie_aspm_pm_state_change(struct pci_dev *pdev);
+> -void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+>  void pci_disable_link_state(struct pci_dev *pdev, int state);
+>  void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
+>  void pcie_no_aspm(void);
+>  #else
+> -static inline void pcie_aspm_init_link_state(struct pci_dev *pdev)
+> -{
+> -}
+> -static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+> -{
+> -}
+> -static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev)
+> -{
+> -}
+> -static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+> -{
+> -}
+> -static inline void pci_disable_link_state(struct pci_dev *pdev, int state)
+> -{
+> -}
+> -static inline void pcie_no_aspm(void)
+> -{
+> -}
+> +static inline void pci_disable_link_state(struct pci_dev *pdev, int state) { }
+> +static inline void pcie_no_aspm(void) { }
+>  #endif
+>  
+> -#ifdef CONFIG_PCIEASPM_DEBUG /* this depends on CONFIG_PCIEASPM */
+> -void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
+> -void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
+> -#else
+> -static inline void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev)
+> -{
+> -}
+> -static inline void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev)
+> -{
+> -}
+> -#endif
+>  #endif /* LINUX_ASPM_H */
+> 
