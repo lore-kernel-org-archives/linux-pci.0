@@ -1,178 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41092 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932294AbeAXXSc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Jan 2018 18:18:32 -0500
-Date: Wed, 24 Jan 2018 16:18:31 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: geoff@hostfission.com
-Cc: linux-pci@vger.kernel.org, suravee.suthikulpanit@amd.com,
-        Gary R Hook <gary.hook@amd.com>
-Subject: Re: [PATCH] Restore PCI bridge configuration space on bridge reset
-Message-ID: <20180124161831.771200b7@w520.home>
-In-Reply-To: <745998038463da91584ef51dfc8ffcac@hostfission.com>
-References: <0986ad77b71f3b8e0a17f79e238d1ebc@hostfission.com>
-        <20180124141051.733f7b28@w520.home>
-        <745998038463da91584ef51dfc8ffcac@hostfission.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v3] PCI: imx6: Add PHY reference clock source support
+To: Lucas Stach <l.stach@pengutronix.de>, Richard Zhu <hongxing.zhu@nxp.com>
+References: <CAOMZO5AFC9dxhsQjmRrDA7Z3KMkEemryKOBmQhXm19NXKxHkKQ@mail.gmail.com>
+ <1515073977-10153-1-git-send-email-ilya@compulab.co.il>
+ <1515408232.12538.7.camel@pengutronix.de>
+From: Ilya Ledvich <ilya@compulab.co.il>
+Message-ID: <498e20c0-7b86-0f86-7555-64a012b85b9e@compulab.co.il>
+Date: Wed, 10 Jan 2018 15:43:41 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1515408232.12538.7.camel@pengutronix.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 25 Jan 2018 09:28:59 +1100
-geoff@hostfission.com wrote:
-
-> On 2018-01-25 08:10, Alex Williamson wrote:
-> > On Wed, 24 Jan 2018 19:02:33 +1100
-> > geoff@hostfission.com wrote:
-> >   
-> >> According to PCI-to-PCI Bridge Architecture Specification 3.2.5.17  
-> > 
-> > Correction, rev 1.2 section 3.2.5.18, in reference to the secondary bus
-> > reset bit in the bridge control register.
-> >   
-> 
-> Thanks, I will make this correction if the patch is deemed valid re 
-> below.
-> Please excuse any confusing terminology/wording, I am still coming to
-> terms with how PCI operates.
-> 
-> >> > The bridge’s secondary bus interface and any buffers between
-> >> > the two interfaces (primary and secondary) must be initialized
-> >> > back to their default state whenever this bit is set.  
-> >> 
-> >> Failure to observe this causes inability to access devices on the
-> >> secondary bus
-> >> on the AMD Threadripper platform after device reset when the device is
-> >> being
-> >> used for PCI passthrough with KVM.
-> >> 
-> >> The following patch corrects this by saving the pci state and 
-> >> restoring
-> >> it after
-> >> the bus has been reset.  
-> > 
-> > How do configuration registers on the primary bus interface fall into
-> > this requirement?  It's not very clear from the spec what these
-> > "buffers" are and the secondary interface has no configuration
-> > registers itself.  Figure 1-2 shows Transaction/Data Buffers which are
-> > clearly separate from the Primary Interface Configuration Registers.
-> > I'd tend to say this excerpt of the spec is describing a hardware
-> > requirement, not a software requirement.  
-> 
-> These are not the configuration registers on the primary bus but on the
-> secondary bus, in the case of a TR system a "PCIe GPP Bridge" device is
-> created and the PCI device is placed under it. It is this bridge that
-> needs it's configuration space rewritten.
-
-There are no configuration registers on the secondary interface, see:
-
-3.1.1 Type 0 Configuration Transaction Support
-
-  A bridge only responds to Type 0 configuration transactions on its
-  primary PCI interface when being configured. A bridge ignores Type 0
-  configuration transactions that originate on the secondary interface
-  of the bridge. Thus, the bridge does not implement IDSEL on its
-  secondary interface. A Type 0 configuration transaction is used to
-  configure the bridge and is not forwarded downstream by the bridge
-  (from its primary to secondary interface). 
-
-We interact with the bridge on the primary interface in order to reset
-the secondary interface.
-
-> Unless I am mistaken, currently pci.c is inconsistent with secondary
->   bus resets as it is. In `pci_reset_bus` the bus configuration space
->   is saved via `pci_bus_save_and_disable`, the bus is reset, and then
->   the configuration
-> is reloaded using `pci_bus_restore`.
-
-pci_reset_bus
-  pci_bus_save_and_disable
-  pci_bus_reset
-    pci_bus_lock
-    pci_reset_bridge_secondary_bus
-      pcibios_reset_secondary_bus
-        pci_reset_secondary_bus
-    pci_bus_unlock
-  pci_bus_restore
-
-> `pci_try_reset_bus` is different again, in that it calls
-> `pci_reset_bridge_secondary_bus` also.
-
-pci_try_reset_bus
-  pci_bus_save_and_disable
-  if (pci_bus_trylock()) {
-    pci_reset_bridge_secondary_bus
-      pcibios_reset_secondary_bus
-        pci_reset_secondary_bus
-    pci_bus_unlock
-  }
-  pci_bus_restore
-
-What's inconsistent here?
- 
-> In short, it is already happening under certain circumstances, but 
-> because
-> on TR the CPU view of the PCI configuration space seems to be cached,
->   it is
-> unable to determine the changes and thus a blind re-write is required.
-
-Hmm, we'd be in real trouble if the CPU is caching config space.  Seems
-more like we just can't trust the read value of the bridge registers.
-This "write only if read value doesn't match saved" comes from here:
-
-commit 04d9c1a1100b6bdeffa7e1bfc30080bdac28e183
-Author: Dave Jones <davej@redhat.com>
-Date:   Tue Apr 18 21:06:51 2006 -0700
-
-    [PATCH] PCI: Improve PCI config space writeback
-    
-    At least one laptop blew up on resume from suspend with a black screen due
-    to a lack of this patch.  By only writing back config space that is
-    different, we minimise the possibility of accidents like this.
-    
-    Signed-off-by: Dave Jones <davej@redhat.com>
-    Signed-off-by: Andrew Morton <akpm@osdl.org>
-    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
-It's unfortunate that we don't really have any more data than that, but
-are we better off with something like:
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4a7c6864fdf4..f4f625a08094 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1117,7 +1117,7 @@ static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
-        u32 val;
- 
-        pci_read_config_dword(pdev, offset, &val);
--       if (val == saved_val)
-+       if (!(pdev->dev_flags & PCI_DEV_FLAGS_RESTORE_ALL) && (val == saved_val))
-                return;
- 
-        for (;;) {
-
-And a quirk to set that flag on these bridges?
-
-> > I know that people have found that re-writing bridge registers on
-> > threadripper solves the reset problem, but this seems like a bit of
-> >   a stretch to attribute it to this spec statement.  Maybe it can be
-> > handled via a quirk if AMD isn't planning to release firmware that
-> > resolves this issue?  AMD...  Thanks,
-> >   
-> 
-> I'd love to see this fixed in firmware/bios/microcode, etc... but as
->   the spec reads, it is unclear if this is a software or hardware
->   requirement, IMO
-> it is a software requirement to reconfigure the configuration space
->   of the
-> secondary bus, but my understanding of PCI at this time is quite new
->   so I
-> am ready to accept a final decision by someone with more experience.
-
-I can't bring myself to support that interpretation of the spec.  The
-hardware is in an inconsistent state, the read value doesn't match the
-internal logic, that's not normal.  That sounds like a "we need a quirk
-to identify this device as untrusted for restore" kind of bug.  Thanks,
-
-Alex
+SGkgTHVjYXMsCgpPbiAwMS8wOC8yMDE4IDEyOjQzIFBNLCBMdWNhcyBTdGFjaCB3cm90ZToKPiBB
+bSBEb25uZXJzdGFnLCBkZW4gMDQuMDEuMjAxOCwgMTU6NTIgKzAyMDAgc2NocmllYiBJbHlhIExl
+ZHZpY2g6Cj4+IGkuTVg3RCB2YXJpYW50IG9mIHRoZSBJUCBjYW4gdXNlIGVpdGhlciBDcnlzdGFs
+IE9zY2lsbGF0b3IgaW5wdXQKPj4gb3IgaW50ZXJuYWwgY2xvY2sgaW5wdXQgYXMgYSBSZWZlcmVu
+Y2UgQ2xvY2sgaW5wdXQgZm9yIFBDSWUgUEhZLgo+PiBBZGQgc3VwcG9ydCBmb3IgYW4gb3B0aW9u
+YWwgcHJvcGVydHkgJ2ZzbCxwY2llLXBoeS1yZWZjbGstaW50ZXJuYWwnLgo+PiBJZiBwcmVzZW50
+IHRoZW4gYW4gaW50ZXJuYWwgY2xvY2sgaW5wdXQgaXMgdXNlZCBhcyBQQ0llIFBIWQo+PiByZWZl
+cmVuY2UgY2xvY2sgc291cmNlLiBCeSBkZWZhdWx0IGFuIGV4dGVybmFsIG9zY2lsbGF0b3IgaW5w
+dXQKPj4gaXMgc3RpbGwgdXNlZC4KPj4KPj4gVmVyaWZpZWQgb24gQ29tcHVsYWIgU0JDLWlNWDcg
+U2luZ2xlIEJvYXJkIENvbXB1dGVyLgo+IAo+IFNvcnJ5IHRvIGdldCBpbiBsYXRlIGhlcmUsIGJ1
+dCBJIHdvdWxkIHJhdGhlciBoYXZlIHRoZSBleHRlcm5hbCBjbG9jawo+IGlucHV0IG1vZGVsZWQg
+YXMgYSByZWFsIGNsb2NrIGFuZCBvbmx5IHVzZSB0aGUgaW50ZXJuYWwgY2xvY2sgaWYgdGhhdAo+
+IGlzbid0IHByZXNlbnQuCj4gCgpJIHRyaWVkIHRvIGZvbGxvdyB0aGUgbG9naWMgZGVzY3JpYmVk
+IGluIHRoZSBpTVg3IFRSTSwgd2hlcmUgZXh0ZXJuYWwgCm9zY2lsbGF0b3IgaXMgYSBkZWZhdWx0
+IG9wdGlvbi4gQWRkaXRpb25hbGx5LCB0aGUgZXh0ZXJuYWwgY2xvY2sgaW5wdXQgCm1vZGVsIHlv
+dSd2ZSBzdWdnZXN0ZWQsIHJlcXVpcmVzIGFkZGl0aW9uYWwgY2hhbmdlcyBpbiB0aGUgaU1YNyBT
+YWJyZVNEIApib2FyZCAoYW5kIHByb2JhYmx5IG90aGVyIGJvYXJkcyB3aGljaCB1c2UgYW4gZXh0
+ZXJuYWwgaW5wdXQgdG9vKSAKZGV2aWNldHJlZSBmaWxlcy4KCj4gQXJlIHlvdSBldmVuIHN1cmUg
+dGhhdCB0aGUgaS5NWDcgY2xvY2sgeW91IG1lbnRpb24gaXNuJ3QgdGhlIGFscmVhZHkKPiBkb2N1
+bWVudGVkICJwY2llX2J1cyIgY2xvY2s/IFRoaXMgb25lIGlzIGFsc28gYWxsb3dlZCB0byBiZSBz
+b3VyY2VkCj4gZXh0ZXJuYWxseSBvbiB0aGUgaS5NWDYuCgpUbyB0aGUgYmVzdCBvZiBteSB1bmRl
+cnN0YW5kaW5nIGl0J3Mgbm90IHRoZSBwY2llX2J1cyBjbG9jaywgYnV0IEknbSAKYWJzb2x1dGVs
+eSBzdXJlLiBDb3VsZCBhbnlib2R5IGZyb20gdGhlIEJTUCB0ZWFtIGd1eXMgZWxhYm9yYXRlIG9u
+IHRoaXMgCmlzc3VlPyBUaGFua3MgYSBsb3QhCkJlc3QgcmVnYXJkcywKSWx5YS4KCj4+IC0tLQo+
+PiBjaGFuZ2VzIHNpbmNlIFYyOgo+PiAJYWRkIGEgdmVuZG9yIHByZWZpeCAnZnNsJyB0byBhIG5l
+dyBwcm9wZXJ0eQo+Pgo+PiAgwqBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNp
+L2ZzbCxpbXg2cS1wY2llLnR4dCB8IDUgKysrKysKPj4gIMKgZHJpdmVycy9wY2kvZHdjL3BjaS1p
+bXg2LmPCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoHwgOAo+PiArKysrKysrLQo+PiAgwqAyIGZpbGVzIGNoYW5nZWQsIDEyIGluc2Vy
+dGlvbnMoKyksIDEgZGVsZXRpb24oLSkKPj4KPj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24v
+ZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZnNsLGlteDZxLXBjaWUudHh0Cj4+IGIvRG9jdW1lbnRh
+dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQKPj4gaW5kZXgg
+N2IxZTQ4Yi4uMTU5MWE2YSAxMDA2NDQKPj4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVl
+L2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQKPj4gKysrIGIvRG9jdW1lbnRhdGlvbi9k
+ZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQKPj4gQEAgLTUwLDYgKzUw
+LDExIEBAIEFkZGl0aW9uYWwgcmVxdWlyZWQgcHJvcGVydGllcyBmb3IgaW14N2QtcGNpZToKPj4g
+IMKgCcKgwqDCoMKgwqDCoMKgLSAicGNpZXBoeSIKPj4gIMKgCcKgwqDCoMKgwqDCoMKgLSAiYXBw
+cyIKPj4gICAKPj4gK0FkZGl0aW9uYWwgb3B0aW9uYWwgcHJvcGVydGllcyBmb3IgaW14N2QtcGNp
+ZToKPj4gKy0gZnNsLHBjaWUtcGh5LXJlZmNsay1pbnRlcm5hbDogSWYgcHJlc2VudCB0aGVuIGFu
+IGludGVybmFsIFBMTAo+PiBpbnB1dCBpcyB1c2VkCj4+ICvCoMKgYXMgUENJZSBQSFkgcmVmZXJl
+bmNlIGNsb2NrIHNvdXJjZS4gQnkgZGVmYXVsdCBhbiBleHRlcm5hbAo+PiBvc2NpbGxhdG9yIGlu
+cHV0Cj4+ICvCoMKgaXMgdXNlZC4KPj4gKwo+PiAgwqBFeGFtcGxlOgo+PiAgIAo+PiAgwqAJcGNp
+ZUAweDAxMDAwMDAwIHsKPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2R3Yy9wY2ktaW14Ni5j
+IGIvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMKPj4gaW5kZXggYjczNDgzNS4uMzY4MTJkMyAx
+MDA2NDQKPj4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMKPj4gKysrIGIvZHJpdmVy
+cy9wY2kvZHdjL3BjaS1pbXg2LmMKPj4gQEAgLTYxLDYgKzYxLDcgQEAgc3RydWN0IGlteDZfcGNp
+ZSB7Cj4+ICDCoAl1MzIJCQl0eF9zd2luZ19sb3c7Cj4+ICDCoAlpbnQJCQlsaW5rX2dlbjsKPj4g
+IMKgCXN0cnVjdCByZWd1bGF0b3IJKnZwY2llOwo+PiArCWJvb2wJCQlwY2llcGh5X3JlZmNsa19z
+ZWw7Cj4+ICDCoH07Cj4+ICAgCj4+ICDCoC8qIFBhcmFtZXRlcnMgZm9yIHRoZSB3YWl0aW5nIGZv
+ciBQQ0llIFBIWSBQTEwgdG8gbG9jayBvbiBpLk1YNyAqLwo+PiBAQCAtNDc0LDcgKzQ3NSw5IEBA
+IHN0YXRpYyB2b2lkIGlteDZfcGNpZV9pbml0X3BoeShzdHJ1Y3QgaW14Nl9wY2llCj4+ICppbXg2
+X3BjaWUpCj4+ICDCoAlzd2l0Y2ggKGlteDZfcGNpZS0+dmFyaWFudCkgewo+PiAgwqAJY2FzZSBJ
+TVg3RDoKPj4gIMKgCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLAo+
+PiBJT01VWENfR1BSMTIsCj4+IC0JCQkJwqDCoMKgSU1YN0RfR1BSMTJfUENJRV9QSFlfUkVGQ0xL
+X1NFTCwKPj4gMCk7Cj4+ICsJCQkJwqDCoMKgSU1YN0RfR1BSMTJfUENJRV9QSFlfUkVGQ0xLX1NF
+TCwKPj4gKwkJCQnCoMKgwqBpbXg2X3BjaWUtPnBjaWVwaHlfcmVmY2xrX3NlbCA/Cj4+ICsJCQkJ
+wqDCoMKgSU1YN0RfR1BSMTJfUENJRV9QSFlfUkVGQ0xLX1NFTCA6Cj4+IDApOwo+PiAgwqAJCWJy
+ZWFrOwo+PiAgwqAJY2FzZSBJTVg2U1g6Cj4+ICDCoAkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZf
+cGNpZS0+aW9tdXhjX2dwciwKPj4gSU9NVVhDX0dQUjEyLAo+PiBAQCAtODQwLDYgKzg0Myw5IEBA
+IHN0YXRpYyBpbnQgaW14Nl9wY2llX3Byb2JlKHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UKPj4gKnBk
+ZXYpCj4+ICDCoAkJaW14Nl9wY2llLT52cGNpZSA9IE5VTEw7Cj4+ICDCoAl9Cj4+ICAgCj4+ICsJ
+aW14Nl9wY2llLT5wY2llcGh5X3JlZmNsa19zZWwgPQo+PiArCQlvZl9wcm9wZXJ0eV9yZWFkX2Jv
+b2wobm9kZSwgImZzbCxwY2llLXBoeS1yZWZjbGstCj4+IGludGVybmFsIik7Cj4+ICsKPj4gIMKg
+CXBsYXRmb3JtX3NldF9kcnZkYXRhKHBkZXYsIGlteDZfcGNpZSk7Cj4+ICAgCj4+ICDCoAlyZXQg
+PSBpbXg2X2FkZF9wY2llX3BvcnQoaW14Nl9wY2llLCBwZGV2KTsKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBs
+aXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5m
+cmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
