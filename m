@@ -1,64 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 12 Jan 2018 18:07:41 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Vignesh R <vigneshr@ti.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:34105 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751932AbeAJSD3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 13:03:29 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Kong Lai <kong.lai@tundra.com>, linux-pci@vger.kernel.org,
+        linux-media@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: dra7xx: Iterate over INTx status bits
-Message-ID: <20180112180741.GC26438@red-moon>
-References: <20171229114131.22296-1-vigneshr@ti.com>
- <20171229114131.22296-3-vigneshr@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171229114131.22296-3-vigneshr@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 1/4] media/ttusb-budget: remove pci_zalloc_coherent abuse
+Date: Wed, 10 Jan 2018 19:03:19 +0100
+Message-Id: <20180110180322.30186-2-hch@lst.de>
+In-Reply-To: <20180110180322.30186-1-hch@lst.de>
+References: <20180110180322.30186-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 29, 2017 at 05:11:31PM +0530, Vignesh R wrote:
-> It is possible that more than one legacy IRQ may be set at the same
-> time, therefore iterate and handle all the pending INTx interrupts
-> before clearing the status and exiting the IRQ handler. Otherwise, some
-> interrupts would be lost.
-> 
-> Signed-off-by: Vignesh R <vigneshr@ti.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
+Switch to a plain kzalloc instead of pci_zalloc_coherent to allocate
+memory for the USB DMA.
 
-Applied to pci/dwc for v4.16, thanks.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
 
-Lorenzo
-
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 892f93910012..48c6ae535847 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -257,7 +257,8 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
->  	struct dra7xx_pcie *dra7xx = arg;
->  	struct dw_pcie *pci = dra7xx->pci;
->  	struct pcie_port *pp = &pci->pp;
-> -	u32 reg;
-> +	unsigned long reg;
-> +	u32 virq, bit;
->  
->  	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
->  
-> @@ -269,8 +270,11 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
->  	case INTB:
->  	case INTC:
->  	case INTD:
-> -		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
-> -						    ffs(reg) - 1));
-> +		for_each_set_bit(bit, &reg, PCI_NUM_INTX) {
-> +			virq = irq_find_mapping(dra7xx->irq_domain, bit);
-> +			if (virq)
-> +				generic_handle_irq(virq);
-> +		}
->  		break;
->  	}
->  
-> -- 
-> 2.15.1
-> 
+diff --git a/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c b/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
+index a142b9dc0feb..ea40a24947ba 100644
+--- a/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
++++ b/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
+@@ -102,7 +102,6 @@ struct ttusb {
+ 	unsigned int isoc_in_pipe;
+ 
+ 	void *iso_buffer;
+-	dma_addr_t iso_dma_handle;
+ 
+ 	struct urb *iso_urb[ISO_BUF_COUNT];
+ 
+@@ -792,26 +791,17 @@ static void ttusb_free_iso_urbs(struct ttusb *ttusb)
+ 
+ 	for (i = 0; i < ISO_BUF_COUNT; i++)
+ 		usb_free_urb(ttusb->iso_urb[i]);
+-
+-	pci_free_consistent(NULL,
+-			    ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF *
+-			    ISO_BUF_COUNT, ttusb->iso_buffer,
+-			    ttusb->iso_dma_handle);
++	kfree(ttusb->iso_buffer);
+ }
+ 
+ static int ttusb_alloc_iso_urbs(struct ttusb *ttusb)
+ {
+ 	int i;
+ 
+-	ttusb->iso_buffer = pci_zalloc_consistent(NULL,
+-						  ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF * ISO_BUF_COUNT,
+-						  &ttusb->iso_dma_handle);
+-
+-	if (!ttusb->iso_buffer) {
+-		dprintk("%s: pci_alloc_consistent - not enough memory\n",
+-			__func__);
++	ttusb->iso_buffer = kcalloc(FRAMES_PER_ISO_BUF * ISO_BUF_COUNT,
++			ISO_FRAME_SIZE, GFP_KERNEL);
++	if (!ttusb->iso_buffer)
+ 		return -ENOMEM;
+-	}
+ 
+ 	for (i = 0; i < ISO_BUF_COUNT; i++) {
+ 		struct urb *urb;
+-- 
+2.14.2
