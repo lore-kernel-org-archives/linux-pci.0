@@ -1,100 +1,135 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 9 Jan 2018 16:14:36 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 3/7] PCI: aardvark: set host and device to the same
- MAX payload size
-Message-ID: <20180109221436.GE31640@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
- <20170928125838.11887-4-thomas.petazzoni@free-electrons.com>
- <20171005173102.GR25517@bhelgaas-glaptop.roam.corp.google.com>
- <20180109163918.5e46c1a1@windsurf.lan>
-MIME-Version: 1.0
-In-Reply-To: <20180109163918.5e46c1a1@windsurf.lan>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
- Hanna Hawa <hannah@marvell.com>, Nadav Haklai <nadavh@marvell.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@free-electrons.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Antoine Tenart <antoine.tenart@free-electrons.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Kong Lai <kong.lai@tundra.com>, linux-pci@vger.kernel.org,
+        linux-media@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 4/4] PCI: Remove NULL device handling from PCI DMA API
+Date: Wed, 10 Jan 2018 19:03:22 +0100
+Message-Id: <20180110180322.30186-5-hch@lst.de>
+In-Reply-To: <20180110180322.30186-1-hch@lst.de>
+References: <20180110180322.30186-1-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo, who maintains this area now]
+Historically some ISA drivers used the old PCI DMA API with a NULL pdev
+argument, but these days this isn't used and not too useful due to the
+per-device DMA ops, so remove it.
 
-On Tue, Jan 09, 2018 at 04:39:18PM +0100, Thomas Petazzoni wrote:
-> Hello Bjorn,
-> 
-> On Thu, 5 Oct 2017 12:31:02 -0500, Bjorn Helgaas wrote:
-> > On Thu, Sep 28, 2017 at 02:58:34PM +0200, Thomas Petazzoni wrote:
-> > > From: Victor Gu <xigu@marvell.com>
-> > > 
-> > > Since the Aardvark does not implement a PCIe root bus,   
-> > 
-> > What exactly do you mean by "does not implement a PCIe root bus"?  I
-> > assume there is still a hierarchy of PCI buses, and I assume the
-> > hierarchy has a top-most ("root") bus.
-> > 
-> > Maybe there's no Root Port?  There are other systems that don't have
-> > Root Ports, and we've made changes to accommodate that, e.g.,
-> > 
-> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=1b8a6079015f
-> 
-> I'm trying to get back (finally) to this topic. Unfortunately, your
-> branch has been rebased, and this commit no longer exists. Do you have
-> an updated pointer about what you suggest to use for systems that don't
-> have Root Ports ?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/linux/pci-dma-compat.h | 27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
 
-Sorry, about that; here's the upstream commit, FWIW:
-
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=ee8bdfb6568d
-
-If the OS sees no Root Port (I haven't seen the full lspci or kernel
-enumeration log, so I don't know what the topology actually is), I
-assume you probably have some Endpoints that have valid Link
-Capabilities, Control, and Status registers.  Those refer to the
-downstream end of the Link, and the Root Port would normally have
-corresponding registers that refer to the upstream end.
-
-The lack of the Root Port means we can't do any management of those
-top-level Links, so no ASPM, no MPS, no link width/speed management,
-etc.
-
-I see that advk_pcie_probe() calls pcie_bus_configure_settings() like
-all other drivers, and ideally we would try to make that work just
-like it does on other platforms.  The code is:
-
-  pci_scan_root_bus_bridge(bridge);
-  bus = bridge->bus;
-  list_for_each_entry(child, &bus->children, node)
-    pcie_bus_configure_settings(child);
-
-This MPS setting is all strictly in the PCIe domain (it's not in the
-Aardvark domain and shouldn't have any Aardvark dependencies), so I
-would expect the core code to just work, modulo some possible
-confusion if it expects to find a Root Port but doesn't.
-
-Can you collect "lspci -vv" output and details about what currently
-goes wrong?  Then we'd have something more concrete to talk about.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/include/linux/pci-dma-compat.h b/include/linux/pci-dma-compat.h
+index d1f9fdade1e0..0dd1a3f7b309 100644
+--- a/include/linux/pci-dma-compat.h
++++ b/include/linux/pci-dma-compat.h
+@@ -17,91 +17,90 @@ static inline void *
+ pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
+ 		     dma_addr_t *dma_handle)
+ {
+-	return dma_alloc_coherent(hwdev == NULL ? NULL : &hwdev->dev, size, dma_handle, GFP_ATOMIC);
++	return dma_alloc_coherent(&hwdev->dev, size, dma_handle, GFP_ATOMIC);
+ }
+ 
+ static inline void *
+ pci_zalloc_consistent(struct pci_dev *hwdev, size_t size,
+ 		      dma_addr_t *dma_handle)
+ {
+-	return dma_zalloc_coherent(hwdev == NULL ? NULL : &hwdev->dev,
+-				   size, dma_handle, GFP_ATOMIC);
++	return dma_zalloc_coherent(&hwdev->dev, size, dma_handle, GFP_ATOMIC);
+ }
+ 
+ static inline void
+ pci_free_consistent(struct pci_dev *hwdev, size_t size,
+ 		    void *vaddr, dma_addr_t dma_handle)
+ {
+-	dma_free_coherent(hwdev == NULL ? NULL : &hwdev->dev, size, vaddr, dma_handle);
++	dma_free_coherent(&hwdev->dev, size, vaddr, dma_handle);
+ }
+ 
+ static inline dma_addr_t
+ pci_map_single(struct pci_dev *hwdev, void *ptr, size_t size, int direction)
+ {
+-	return dma_map_single(hwdev == NULL ? NULL : &hwdev->dev, ptr, size, (enum dma_data_direction)direction);
++	return dma_map_single(&hwdev->dev, ptr, size, (enum dma_data_direction)direction);
+ }
+ 
+ static inline void
+ pci_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr,
+ 		 size_t size, int direction)
+ {
+-	dma_unmap_single(hwdev == NULL ? NULL : &hwdev->dev, dma_addr, size, (enum dma_data_direction)direction);
++	dma_unmap_single(&hwdev->dev, dma_addr, size, (enum dma_data_direction)direction);
+ }
+ 
+ static inline dma_addr_t
+ pci_map_page(struct pci_dev *hwdev, struct page *page,
+ 	     unsigned long offset, size_t size, int direction)
+ {
+-	return dma_map_page(hwdev == NULL ? NULL : &hwdev->dev, page, offset, size, (enum dma_data_direction)direction);
++	return dma_map_page(&hwdev->dev, page, offset, size, (enum dma_data_direction)direction);
+ }
+ 
+ static inline void
+ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
+ 	       size_t size, int direction)
+ {
+-	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
++	dma_unmap_page(&hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
+ }
+ 
+ static inline int
+ pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
+ 	   int nents, int direction)
+ {
+-	return dma_map_sg(hwdev == NULL ? NULL : &hwdev->dev, sg, nents, (enum dma_data_direction)direction);
++	return dma_map_sg(&hwdev->dev, sg, nents, (enum dma_data_direction)direction);
+ }
+ 
+ static inline void
+ pci_unmap_sg(struct pci_dev *hwdev, struct scatterlist *sg,
+ 	     int nents, int direction)
+ {
+-	dma_unmap_sg(hwdev == NULL ? NULL : &hwdev->dev, sg, nents, (enum dma_data_direction)direction);
++	dma_unmap_sg(&hwdev->dev, sg, nents, (enum dma_data_direction)direction);
+ }
+ 
+ static inline void
+ pci_dma_sync_single_for_cpu(struct pci_dev *hwdev, dma_addr_t dma_handle,
+ 		    size_t size, int direction)
+ {
+-	dma_sync_single_for_cpu(hwdev == NULL ? NULL : &hwdev->dev, dma_handle, size, (enum dma_data_direction)direction);
++	dma_sync_single_for_cpu(&hwdev->dev, dma_handle, size, (enum dma_data_direction)direction);
+ }
+ 
+ static inline void
+ pci_dma_sync_single_for_device(struct pci_dev *hwdev, dma_addr_t dma_handle,
+ 		    size_t size, int direction)
+ {
+-	dma_sync_single_for_device(hwdev == NULL ? NULL : &hwdev->dev, dma_handle, size, (enum dma_data_direction)direction);
++	dma_sync_single_for_device(&hwdev->dev, dma_handle, size, (enum dma_data_direction)direction);
+ }
+ 
+ static inline void
+ pci_dma_sync_sg_for_cpu(struct pci_dev *hwdev, struct scatterlist *sg,
+ 		int nelems, int direction)
+ {
+-	dma_sync_sg_for_cpu(hwdev == NULL ? NULL : &hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
++	dma_sync_sg_for_cpu(&hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
+ }
+ 
+ static inline void
+ pci_dma_sync_sg_for_device(struct pci_dev *hwdev, struct scatterlist *sg,
+ 		int nelems, int direction)
+ {
+-	dma_sync_sg_for_device(hwdev == NULL ? NULL : &hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
++	dma_sync_sg_for_device(&hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
+ }
+ 
+ static inline int
+-- 
+2.14.2
