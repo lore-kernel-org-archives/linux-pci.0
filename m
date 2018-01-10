@@ -1,117 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52552 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751170AbeABRAe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:00:34 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 2/6] PCI: Handle FLR failure and allow other reset types
-Date: Tue,  2 Jan 2018 12:00:19 -0500
-Message-Id: <1514912423-13341-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
-References: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
+Received: from foss.arm.com ([217.140.101.70]:46232 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965932AbeAJRP3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Jan 2018 12:15:29 -0500
+Date: Wed, 10 Jan 2018 17:15:21 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: thierry.reding@gmail.com, bhelgaas@google.com, cyndis@kapsi.fi,
+        jonathanh@nvidia.com, robh+dt@kernel.org, frowand.list@gmail.com,
+        rjw@rjwysocki.net, tglx@linutronix.de, vidyas@nvidia.com,
+        kthota@nvidia.com, linux-tegra@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: Re: [PATCH V5 0/7] Add loadable kernel module and power management
+ support
+Message-ID: <20180110171521.GA26960@e107981-ln.cambridge.arm.com>
+References: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_flr_wait() and pci_af_flr() functions assume graceful return even
-though the device is inaccessible under error conditions.
+On Tue, Jan 09, 2018 at 02:49:30PM +0530, Manikanta Maddireddy wrote:
+> This series of patches adds loadable kernel module and power management
+> support to Tegra PCIe host controller driver. irq_set_msi_desc() and
+> tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
+> set of patches.
+> 
+> These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
+> are the verification details.
+> 	- Multiple module insert & remove
+> 	- PCIe device functionality after module insert
+> 	- Free clock, resets, regulators, powergate, iomem and interrupt
+> 	resources after module remove
+> 	- PCIe device functionality after resume from RAM
+> 
+> V2: PM QoS fix is dropped in V2 from this series because the fix is
+> incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
+> latency framework")'. Update commit message of few patches in V2.
+> 
+> V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_use()
+> are dropped based on review comments. These symbols will be addressed in next
+> series. Took care of few other review comments.
+> 
+> V4: Dropped pci_find_host_bridge() export patch and added new patch to use
+> bus->sysdata for private data.
+> 
+> V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
+> on top of linux-next
+> 
+> Manikanta Maddireddy (7):
+>   of: Export of_pci_range_to_resource()
+>   PCI: tegra: Use bus->sysdata to store and get host private data
+>   PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for Tegra PCIe
+>   PCI: tegra: Free resources on probe failure
+>   PCI: tegra: Add loadable kernel module support
+>   PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
+>   PCI: tegra: Add power management support
+> 
+>  drivers/of/address.c         |   1 +
+>  drivers/pci/host/Kconfig     |   2 +-
+>  drivers/pci/host/pci-tegra.c | 333 ++++++++++++++++++++++++++++++++-----------
+>  3 files changed, 253 insertions(+), 83 deletions(-)
 
-Return -ENOTTY in error cases so that __pci_reset_function_locked() can
-try other reset types if AF_FLR/FLR reset fails.
+Can I ask you please to rebase this series against my pci/tegra branch ?
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/pci.c   | 18 ++++++++++--------
- include/linux/pci.h |  2 +-
- 2 files changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 463b32d..ef15162 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3945,7 +3945,7 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_wait_for_pending_transaction);
- 
--static void pci_flr_wait(struct pci_dev *dev)
-+static int pci_flr_wait(struct pci_dev *dev)
- {
- 	int delay = 1, timeout = 60000;
- 	u32 id;
-@@ -3974,7 +3974,7 @@ static void pci_flr_wait(struct pci_dev *dev)
- 		if (delay > timeout) {
- 			dev_warn(&dev->dev, "not ready %dms after FLR; giving up\n",
- 				 100 + delay - 1);
--			return;
-+			return -ENOTTY;
- 		}
- 
- 		if (delay > 1000)
-@@ -3988,6 +3988,8 @@ static void pci_flr_wait(struct pci_dev *dev)
- 
- 	if (delay > 1000)
- 		dev_info(&dev->dev, "ready %dms after FLR\n", 100 + delay - 1);
-+
-+	return 0;
- }
- 
- /**
-@@ -4016,13 +4018,13 @@ static bool pcie_has_flr(struct pci_dev *dev)
-  * device supports FLR before calling this function, e.g. by using the
-  * pcie_has_flr() helper.
-  */
--void pcie_flr(struct pci_dev *dev)
-+int pcie_flr(struct pci_dev *dev)
- {
- 	if (!pci_wait_for_pending_transaction(dev))
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
- 
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
--	pci_flr_wait(dev);
-+	return pci_flr_wait(dev);
- }
- EXPORT_SYMBOL_GPL(pcie_flr);
- 
-@@ -4055,8 +4057,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
- 
- 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
--	pci_flr_wait(dev);
--	return 0;
-+	return pci_flr_wait(dev);
- }
- 
- /**
-@@ -4307,8 +4308,9 @@ int __pci_reset_function_locked(struct pci_dev *dev)
- 	if (rc != -ENOTTY)
- 		return rc;
- 	if (pcie_has_flr(dev)) {
--		pcie_flr(dev);
--		return 0;
-+		rc = pcie_flr(dev);
-+		if (rc != -ENOTTY)
-+			return rc;
- 	}
- 	rc = pci_af_flr(dev, 0);
- 	if (rc != -ENOTTY)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 66cca1c..0c1335a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1081,7 +1081,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
- int pcie_set_mps(struct pci_dev *dev, int mps);
- int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
--void pcie_flr(struct pci_dev *dev);
-+int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
- int pci_reset_function_locked(struct pci_dev *dev);
--- 
-1.9.1
+Thanks,
+Lorenzo
