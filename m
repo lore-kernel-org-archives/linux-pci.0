@@ -1,89 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60880 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755289AbeASLKh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 06:10:37 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v6 5/7] PCI/AER: Unify aer error defines at single space
-Date: Fri, 19 Jan 2018 16:40:02 +0530
-Message-Id: <1516360204-1586-6-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1516360204-1586-1-git-send-email-poza@codeaurora.org>
-References: <1516360204-1586-1-git-send-email-poza@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:52580 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751486AbeAJUhv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Jan 2018 15:37:51 -0500
+Date: Wed, 10 Jan 2018 14:37:46 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: christian.koenig@amd.com
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        David Airlie <airlied@linux.ie>
+Subject: Re: [PATCH 2/2] x86/PCI: limit the size of the 64bit window to 256GB
+ v2
+Message-ID: <20180110203746.GA241460@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180110122551.1637-1-christian.koenig@amd.com>
+ <20180110122551.1637-2-christian.koenig@amd.com>
+ <20180110180230.GA227910@bhelgaas-glaptop.roam.corp.google.com>
+ <2382e9b9-aa03-a845-4d67-c01fe52004bf@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <2382e9b9-aa03-a845-4d67-c01fe52004bf@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch moves AER error defines to drivers/pci/pci.h.
-So that it unifies the error repotting codes at single place along with dpc
+On Wed, Jan 10, 2018 at 07:14:56PM +0100, Christian König wrote:
+> Am 10.01.2018 um 19:02 schrieb Bjorn Helgaas:
+> >[+cc linux-pci, previous cc list]
+> >
+> >On Wed, Jan 10, 2018 at 01:25:51PM +0100, Christian König wrote:
+> >>Avoid problems with BIOS implementations which don't report all used
+> >>resources to the OS by only allocating a 256GB window directly below the
+> >>hardware limit.
+> >>
+> >>v2: cleanup code a bit more, update comment and explain the hw limit
+> >Fixes a silent reboot loop reported by Aaro Koskinen
+> ><aaro.koskinen@iki.fi> on an AMD-based MSI MS-7699/760GA-P43(FX)
+> >system.
+> >
+> >Link: https://lkml.kernel.org/r/20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi
+> >Reported-by: Aaro Koskinen <aaro.koskinen@iki.fi>
+> >
+> >>Signed-off-by: Christian König <christian.koenig@amd.com>
+> >>---
+> >>  arch/x86/pci/fixup.c | 19 +++++++++----------
+> >>  1 file changed, 9 insertions(+), 10 deletions(-)
+> >>
+> >>diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> >>index a91280da2ea1..9c1c98d7e3a7 100644
+> >>--- a/arch/x86/pci/fixup.c
+> >>+++ b/arch/x86/pci/fixup.c
+> >>@@ -662,10 +662,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
+> >>   */
+> >>  static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+> >>  {
+> >>-	unsigned i;
+> >>  	u32 base, limit, high;
+> >>-	struct resource *res, *conflict;
+> >>  	struct pci_dev *other;
+> >>+	struct resource *res;
+> >>+	unsigned i;
+> >>+	int r;
+> >>  	if (!(pci_probe & PCI_BIG_ROOT_WINDOW))
+> >>  		return;
+> >>@@ -702,19 +703,17 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+> >>  	if (!res)
+> >>  		return;
+> >>+	/* Allocate a 256GB window directly below the 0xfd00000000 hw limit */
+> >Can you include a citation for the hardware limit in the changelog?
+> >I'll try to dig it up myself if you don't beat me to it.
+> 
+> Sure, no problem. The first one in the series is ok as it is?
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Yeah, I think so, although it would be good to add doc as Randy suggests.
+Can you cc the folks involved (in particular, linux-pci) next time, too?
 
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index 6402f7f..216ee47 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -56,6 +56,7 @@
- #include <ras/ras_event.h>
- 
- #include "apei-internal.h"
-+#include "../../pci/pci.h"
- 
- #define GHES_PFX	"GHES: "
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3b79593..2e19953 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -343,7 +343,11 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- void pci_enable_acs(struct pci_dev *dev);
- 
- /* PCI error reporting and recovery */
--#define DPC_FATAL	4
-+#define AER_NONFATAL		0
-+#define AER_FATAL		1
-+#define AER_CORRECTABLE		2
-+
-+#define DPC_FATAL		4
- 
- void pci_do_recovery(struct pci_dev *dev, int severity);
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 54c4b69..cd3ad55 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -22,6 +22,7 @@
- #include <linux/cper.h>
- 
- #include "aerdrv.h"
-+#include "../../pci.h"
- #include <ras/ras_event.h>
- 
- #define AER_AGENT_RECEIVER		0
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 8f87bbe..3eac8ed 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -11,10 +11,6 @@
- #include <linux/errno.h>
- #include <linux/types.h>
- 
--#define AER_NONFATAL			0
--#define AER_FATAL			1
--#define AER_CORRECTABLE			2
--
- struct pci_dev;
- 
- struct aer_header_log_regs {
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> >>  	res->name = "PCI Bus 0000:00";
+> >>  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+> >>  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+> >>-	res->start = 0x100000000ull;
+> >>+	res->start = 0xbd00000000ull;
+> >>  	res->end = 0xfd00000000ull - 1;
+> >>-	/* Just grab the free area behind system memory for this */
+> >>-	while ((conflict = request_resource_conflict(&iomem_resource, res))) {
+> >>-		if (conflict->end >= res->end) {
+> >>-			kfree(res);
+> >>-			return;
+> >>-		}
+> >>-		res->start = conflict->end + 1;
+> >>+	r = request_resource(&iomem_resource, res);
+> >>+	if (r) {
+> >>+		kfree(res);
+> >>+		return;
+> >>  	}
+> >>  	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
+> >>-- 
+> >>2.11.0
+> >>
+> 
