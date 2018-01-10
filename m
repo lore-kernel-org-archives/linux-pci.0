@@ -1,122 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:39240 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752923AbeADTCG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 14:02:06 -0500
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  4 Jan 2018 12:01:35 -0700
-Message-Id: <20180104190137.7654-11-logang@deltatee.com>
-In-Reply-To: <20180104190137.7654-1-logang@deltatee.com>
-References: <20180104190137.7654-1-logang@deltatee.com>
-Subject: [PATCH 10/12] nvme-pci: Add support for P2P memory in requests
+Received: from 8.mo179.mail-out.ovh.net ([46.105.75.26]:42715 "EHLO
+        8.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752755AbeAJW4f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 17:56:35 -0500
+Received: from player690.ha.ovh.net (b7.ovh.net [213.186.33.57])
+        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 12D66902FF
+        for <linux-pci@vger.kernel.org>; Wed, 10 Jan 2018 23:48:44 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v3 3/6] PCI: Add generic function to probe PCI host controllers
+Date: Wed, 10 Jan 2018 23:47:32 +0100
+Message-Id: <690e48265a12291f12ce3f46c328eb45ffd9fb09.1515621150.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For P2P requests we must use the pci_p2pmem_[un]map_sg() functions
-instead of the dma_map_sg functions.
+This patchs moves generic source code from
+drivers/pci/host/pci-host-common.c into drivers/pci/probe.c.
 
-With that, we can then indicate PCI_P2P support in the request queue.
-For this, we create an NVME_F_PCI_P2P flag which tells the core to
-set QUEUE_FLAG_PCI_P2P in the request queue.
+Indeed the extracted lines of code were duplicated by many host
+controller drivers. Regrouping them into a generic function gives a
+change to properly share this code without introducing a useless
+dependency to PCI_HOST_COMMON, which selects PCI_ECAM when not needed by
+most host controller drivers.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+We also add a missing call of pci_free_resource_list() from
+pci_host_common_probe() when probing fails, as done inside gen_pci_init()
+when this later function fails.
+
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
 ---
- drivers/nvme/host/core.c |  4 ++++
- drivers/nvme/host/nvme.h |  1 +
- drivers/nvme/host/pci.c  | 18 ++++++++++++++----
- 3 files changed, 19 insertions(+), 4 deletions(-)
+ drivers/pci/host/pci-host-common.c | 25 +++----------------------
+ drivers/pci/probe.c                | 33 +++++++++++++++++++++++++++++++++
+ include/linux/pci.h                |  1 +
+ 3 files changed, 37 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 1e46e60b8f10..8a7caaa5ee49 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -2861,7 +2861,11 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
- 	ns->queue = blk_mq_init_queue(ctrl->tagset);
- 	if (IS_ERR(ns->queue))
- 		goto out_free_ns;
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index a613ea310e76..df25b4a4edaf 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -72,7 +72,6 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	const char *type;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+-	struct pci_bus *bus, *child;
+ 	struct pci_host_bridge *bridge;
+ 	struct pci_config_window *cfg;
+ 	struct list_head resources;
+@@ -107,29 +106,11 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	bridge->map_irq = of_irq_parse_and_map_pci;
+ 	bridge->swizzle_irq = pci_common_swizzle;
+ 
+-	ret = pci_scan_root_bus_bridge(bridge);
+-	if (ret < 0) {
+-		dev_err(dev, "Scanning root bridge failed");
++	ret = pci_host_probe(bridge);
++	if (ret) {
++		pci_free_resource_list(&resources);
+ 		return ret;
+ 	}
+ 
+-	bus = bridge->bus;
+-
+-	/*
+-	 * We insert PCI resources into the iomem_resource and
+-	 * ioport_resource trees in either pci_bus_claim_resources()
+-	 * or pci_bus_assign_resources().
+-	 */
+-	if (pci_has_flag(PCI_PROBE_ONLY)) {
+-		pci_bus_claim_resources(bus);
+-	} else {
+-		pci_bus_size_bridges(bus);
+-		pci_bus_assign_resources(bus);
+-
+-		list_for_each_entry(child, &bus->children, node)
+-			pcie_bus_configure_settings(child);
+-	}
+-
+-	pci_bus_add_devices(bus);
+ 	return 0;
+ }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 1360db508035..178328d06a32 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2685,6 +2685,39 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL_GPL(pci_create_root_bus);
+ 
++int pci_host_probe(struct pci_host_bridge *bridge)
++{
++	struct pci_bus *bus, *child;
++	int ret;
 +
- 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, ns->queue);
-+	if (ctrl->ops->flags & NVME_F_PCI_P2P)
-+		queue_flag_set_unlocked(QUEUE_FLAG_PCI_P2P, ns->queue);
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret < 0) {
++		dev_err(bridge->dev.parent, "Scanning root bridge failed");
++		return ret;
++	}
 +
- 	ns->queue->queuedata = ns;
- 	ns->ctrl = ctrl;
- 
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index ea1aa5283e8e..ae1453238250 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -286,6 +286,7 @@ struct nvme_ctrl_ops {
- 	unsigned int flags;
- #define NVME_F_FABRICS			(1 << 0)
- #define NVME_F_METADATA_SUPPORTED	(1 << 1)
-+#define NVME_F_PCI_P2P			(1 << 2)
- 	int (*reg_read32)(struct nvme_ctrl *ctrl, u32 off, u32 *val);
- 	int (*reg_write32)(struct nvme_ctrl *ctrl, u32 off, u32 val);
- 	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 71893babb982..29ef3fd24938 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -792,6 +792,7 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
- 	enum dma_data_direction dma_dir = rq_data_dir(req) ?
- 			DMA_TO_DEVICE : DMA_FROM_DEVICE;
- 	blk_status_t ret = BLK_STS_IOERR;
-+	int nents;
- 
- 	sg_init_table(iod->sg, blk_rq_nr_phys_segments(req));
- 	iod->nents = blk_rq_map_sg(q, req, iod->sg);
-@@ -799,8 +800,13 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
- 		goto out;
- 
- 	ret = BLK_STS_RESOURCE;
--	if (!dma_map_sg_attrs(dev->dev, iod->sg, iod->nents, dma_dir,
--				DMA_ATTR_NO_WARN))
++	bus = bridge->bus;
 +
-+	if (REQ_IS_PCI_P2P(req))
-+		nents = pci_p2pmem_map_sg(iod->sg, iod->nents);
-+	else
-+		nents = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents,
-+					 dma_dir, DMA_ATTR_NO_WARN);
-+	if (!nents)
- 		goto out;
- 
- 	if (nvme_pci_use_sgls(dev, req))
-@@ -844,7 +850,11 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
- 			DMA_TO_DEVICE : DMA_FROM_DEVICE;
- 
- 	if (iod->nents) {
--		dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
-+		if (REQ_IS_PCI_P2P(req))
-+			pci_p2pmem_unmap_sg(iod->sg, iod->nents);
-+		else
-+			dma_unmap_sg(dev->dev, iod->sg, iod->nents, dma_dir);
++	/*
++	 * We insert PCI resources into the iomem_resource and
++	 * ioport_resource trees in either pci_bus_claim_resources()
++	 * or pci_bus_assign_resources().
++	 */
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		pci_bus_claim_resources(bus);
++	} else {
++		pci_bus_size_bridges(bus);
++		pci_bus_assign_resources(bus);
 +
- 		if (blk_integrity_rq(req)) {
- 			if (req_op(req) == REQ_OP_READ)
- 				nvme_dif_remap(req, nvme_dif_complete);
-@@ -2417,7 +2427,7 @@ static int nvme_pci_reg_read64(struct nvme_ctrl *ctrl, u32 off, u64 *val)
- static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
- 	.name			= "pcie",
- 	.module			= THIS_MODULE,
--	.flags			= NVME_F_METADATA_SUPPORTED,
-+	.flags			= NVME_F_METADATA_SUPPORTED | NVME_F_PCI_P2P,
- 	.reg_read32		= nvme_pci_reg_read32,
- 	.reg_write32		= nvme_pci_reg_write32,
- 	.reg_read64		= nvme_pci_reg_read64,
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++	}
++
++	pci_bus_add_devices(bus);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_host_probe);
++
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+ 	struct resource *res = &b->busn_res;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a1b0672fd38a..0ca261fda900 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -879,6 +879,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++int pci_host_probe(struct pci_host_bridge *bridge);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
 -- 
 2.11.0
