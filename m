@@ -1,46 +1,45 @@
-Return-Path: <SRS0=UFJ4=EG=gmail.com=alexander.duyck@kernel.org>
-Return-Path: <SRS0=UFJ4=EG=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 11 Jan 2018 20:04:16 +0100
+From: Borislav Petkov <bp@suse.de>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Ghannam, Yazen" <Yazen.Ghannam@amd.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI/ACPI: Disable AER when _OSC control bit is clear.
+Message-ID: <20180111190415.3jd4uffpp6weshzf@pd.tnic>
+References: <20180111150316.19951-1-Yazen.Ghannam@amd.com>
+ <CAJZ5v0gU6var3gNQsp2GkSujbR=vB2Zj4dZHKNOzfAtC76jFbA@mail.gmail.com>
+ <DM5PR12MB191612888094C4794951FAE4F8160@DM5PR12MB1916.namprd12.prod.outlook.com>
+ <CAJZ5v0ie_FntO=TO1X_tX9xzz-t6Q_yeWvTfhqufTbYBdwMGJg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180110233515.GI241460@bhelgaas-glaptop.roam.corp.google.com>
-References: <1513170333-19102-1-git-send-email-mheyne@amazon.de> <20180110233515.GI241460@bhelgaas-glaptop.roam.corp.google.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Wed, 10 Jan 2018 16:05:44 -0800
-Message-ID: <CAKgT0Uf28XKcAiU=URR8H3xJnOdmfeKRDdVNCzrTbH_ao-mvVA@mail.gmail.com>
-Subject: Re: [PATCH] pci-stub: enable SR-IOV configuration through sysfs
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Maximilian Heyne <mheyne@amazon.de>, linux-pci@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Liang-Min Wang <liang-min.wang@intel.com>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAJZ5v0ie_FntO=TO1X_tX9xzz-t6Q_yeWvTfhqufTbYBdwMGJg@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry for top-posting but I am just going to throw a recap of the
-discussions as I recall them on top of this since the code itself
-isn't so much the subject of review.
+On Thu, Jan 11, 2018 at 07:03:23PM +0100, Rafael J. Wysocki wrote:
+> >> > +       if (!(requested & control & OSC_PCI_EXPRESS_AER_CONTROL))
+> >>
+> >> One of the operators above needs to be a && I suppose?
+> >>
+> >
+> > It's a 3-way bitwise AND to check that OSC_PCI_EXPRESS_AER_CONTROL is
+> > set in both "requested" and "control".
+> >
+> > IOW, we check if AER was requested by the OS and that the platform
+> > granted the request.
+> 
+> OK
 
-I would imagine this has the same issues that we were talking about
-for the VFIO or UIO solutions for this. Basically the discussion all
-came down to the fact that doing this potentially exposes the kernel
-to a possible security issue since the PF might be managed by an
-untrusted source. I believe the last discussion we had about the VFIO
-based solution ended in us needing to have a way to make it so that
-the auto-probe value could be changed and be restored after the
-user-space managed PF driver was unloaded and/or SR-IOV was disabled.
-Basically we can't risk tainting the kernel by auto-loading the VF
-drivers on the kernel when the PF is managed by an unknown entity or
-user space.
+This definitely needs a comment - people will keep tripping over this.
 
-- Alexander
+-- 
+Regards/Gruss,
+    Boris.
 
-On Wed, Jan 10, 2018 at 3:35 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> [+cc Alex, Alex, Jeff, Liang-Min, kvm, LKML]
->
-> Anybody else have any thoughts on this?
->
-> On Wed, Dec 13, 2017 at 02:05:33PM +0100, Maximilian Heyne wrote:
->> Currently, SR-IOV VFs can only be configured through sysfs, if a driver
->> is loaded for the device. Sometimes we don't care about the PF, but only
->> want to assign VFs to guests, which is now possible with this patch.
->>
->> Signed-off-by: Maximilian Heyne <mheyne@amazon.de>
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
