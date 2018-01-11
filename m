@@ -1,57 +1,80 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V3 4/6] PCI: Wait device ready after pci_pm_reset()
-Date: Tue,  2 Jan 2018 12:00:21 -0500
-Message-Id: <1514912423-13341-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
-References: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 11 Jan 2018 12:09:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yazen Ghannam <Yazen.Ghannam@amd.com>
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, rjw@rjwysocki.net, lenb@kernel.org,
+        bhelgaas@google.com, bp@suse.de
+Subject: Re: [PATCH] PCI/ACPI: Disable AER when _OSC control bit is clear.
+Message-ID: <20180111180905.GK241460@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180111150316.19951-1-Yazen.Ghannam@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180111150316.19951-1-Yazen.Ghannam@amd.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rev 3.1 Sec 2.3.1 Request Handling Rules says a device can issue CRS
-following a D3hot->D0 transition. Add pci_dev_wait() call to see if
-device is available before returning.
+On Thu, Jan 11, 2018 at 09:03:16AM -0600, Yazen Ghannam wrote:
+> From: Yazen Ghannam <yazen.ghannam@amd.com>
+> 
+> Currently, aer_service_init() checks if AER is available and that
+> Firmware First handling is not enabled. The _OSC request for AER is
+> not taken into account when deciding to enable AER in Linux.
+> 
+> We should check that the _OSC control for AER is set. If it's not
+> then AER should be disabled.
+> 
+> The _OSC control for AER is not requested when APEI Firmware First is
+> used, so the same condition applies.
+> 
+> Mark AER as disabled if the _OSC request was not made or accepted.
+> 
+> Remove redunant check for aer_acpi_firmware_first() when calling
+> aer_service_init(), since this is check is already included when
+> checking the _OSC control.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+s/redunant/redundant/
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 736d809..09eae93 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4116,7 +4116,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
- 	pci_dev_d3_sleep(dev);
- 
--	return 0;
-+	return pci_dev_wait(dev, "PM D3->D0", PCIE_RESET_READY_POLL_MS);
- }
- 
- void pci_reset_secondary_bus(struct pci_dev *dev)
--- 
-1.9.1
+The concept seems right to me.  Please add a citation to the relevant spec
+section.  I think this is somewhere in the PCI Firmware spec.
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
+> ---
+>  drivers/acpi/pci_root.c       | 3 +++
+>  drivers/pci/pcie/aer/aerdrv.c | 2 +-
+>  2 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 6fc204a52493..19a625ed8de9 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -512,6 +512,9 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+>  		 */
+>  		*no_aspm = 1;
+>  	}
+> +
+> +	if (!(requested & control & OSC_PCI_EXPRESS_AER_CONTROL))
+> +		pci_no_aer();
+>  }
+>  
+>  static int acpi_pci_root_add(struct acpi_device *device,
+> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> index 6ff5f5b4f5e6..39bb059777d0 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.c
+> +++ b/drivers/pci/pcie/aer/aerdrv.c
+> @@ -374,7 +374,7 @@ static void aer_error_resume(struct pci_dev *dev)
+>   */
+>  static int __init aer_service_init(void)
+>  {
+> -	if (!pci_aer_available() || aer_acpi_firmware_first())
+> +	if (!pci_aer_available())
+>  		return -ENXIO;
+>  	return pcie_port_service_register(&aerdriver);
+>  }
+> -- 
+> 2.14.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
