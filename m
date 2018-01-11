@@ -1,45 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33790 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751031AbeAVXdz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jan 2018 18:33:55 -0500
-Date: Mon, 22 Jan 2018 15:33:52 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Ladislav Michl <ladis@linux-mips.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] PCI: Move managed resource alloc to devres
-Message-ID: <20180122233352.li5ns3h5bbtfcejf@dtor-ws>
-References: <20180121211432.GA15151@lenoch>
- <20180121211538.GC15151@lenoch>
+Return-Path: <SRS0=pCDf=EG=google.com=rajatja@kernel.org>
+Return-Path: <SRS0=pCDf=EG=google.com=rajatja@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180121211538.GC15151@lenoch>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180111175916.GB2860@localhost.localdomain>
+References: <20171214184701.GA6322@libmpq.org> <20171215002155.GR30595@bhelgaas-glaptop.roam.corp.google.com>
+ <CACK8Z6HyBgNdav_Atzpxe1RGvpviJF2vsLhkgATjL2B7GnYnwg@mail.gmail.com>
+ <20171215190126.GI19904@libmpq.org> <20180111175040.GJ1377@libmpq.org> <20180111175916.GB2860@localhost.localdomain>
+From: Rajat Jain <rajatja@google.com>
+Date: Thu, 11 Jan 2018 12:22:26 -0800
+Message-ID: <CACK8Z6HgywQVD5RH+Bzg3G7c8XfMjekuc7hGGaBRNF0qqP00Kg@mail.gmail.com>
+Subject: Re: ASPM powersupersave change NVMe SSD Samsung 960 PRO capacity to 0
+ and read-only
+To: Keith Busch <keith.busch@intel.com>
+Cc: Maik Broemme <mbroemme@libmpq.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 21, 2018 at 10:15:39PM +0100, Ladislav Michl wrote:
-> devm_pci_remap_cfgspace() is using devm_ioremap_release()
-> devres release function. Move it to devres along with
-> similar PCI functions to allow hiding devm_ioremap_release()
-> from public.
+On Thu, Jan 11, 2018 at 9:59 AM, Keith Busch <keith.busch@intel.com> wrote:
+> On Thu, Jan 11, 2018 at 06:50:40PM +0100, Maik Broemme wrote:
+>> I've re-run the test with 4.15rc7.r111.g5f615b97cdea and the following
+>> patches from Keith:
+>>
+>> [PATCH 1/4] PCI/AER: Return approrpiate value when AER is not supported
+>> [PATCH 2/4] PCI/AER: Provide API for getting AER information
+>> [PATCH 3/4] PCI/DPC: Enable DPC in conjuction with AER
+>> [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
+>>
+>> The issue is still the same. Additionally to the output before I see now:
+>>
+>> Jan 11 18:34:45 server.theraso.int kernel: dpc 0000:00:10.0:pcie010: DPC containment event, status:0x1f09 source:0x0000
+>> Jan 11 18:34:45 server.theraso.int kernel: dpc 0000:00:10.0:pcie010: DPC unmasked uncorrectable error detected, remove downstream devices
+>> Jan 11 18:34:45 server.theraso.int kernel: pcieport 0000:00:10.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0080(Receiver ID)
+>> Jan 11 18:34:45 server.theraso.int kernel: pcieport 0000:00:10.0:   device [8086:19aa] error status/mask=00000020/00000000
+>> Jan 11 18:34:45 server.theraso.int kernel: pcieport 0000:00:10.0:    [ 5] Surprise Down Error    (First)
+>> Jan 11 18:34:46 server.theraso.int kernel: nvme0n1: detected capacity change from 1024209543168 to 0
+>
+> Okay, so that series wasn't going to fix anything, but at least it gets
+> some visibility into what's happened. The DPC was triggered due to a
+> Surprise Down uncorrectable error, so the power settting is causing the
+> link to fail.
+>
+> The NVMe driver has quirks specifically for this vendor's devices to
+> fence off NVMe specific automated power settings. Your observations
+> appear to align with the same issues.
 
-So we are sharing this function:
+Agree.
 
-void devm_ioremap_release(struct device *dev, void *res)
-{
-	iounmap(*(void __iomem **)res);
-}
+                /*
+                 * Samsung SSD 960 EVO drops off the PCIe bus after system
+                 * suspend on a Ryzen board, ASUS PRIME B350M-A.
+                 */
+                if (dmi_match(DMI_BOARD_VENDOR, "ASUSTeK COMPUTER INC.") &&
+                    dmi_match(DMI_BOARD_NAME, "PRIME B350M-A"))
+                        return NVME_QUIRK_NO_APST;
 
-and we want to hide it, and for that we are moving a lot of PCI-specific
-stuff into lib/devres.c. If anything, I'd say we should move more PCI
-stuff _out_ of lib/devres.c, and if we wait to make local copy and call
-it devm_pci_cfgspace_release() that woudl be fine with me.
+It seems that the attempt to save extrapower using  ASPM L1 substates
+is causing it to fall off. Sorry but I suspect that it may be
+difficult to debug without a pcie analyzer, some debugging directions
+can be:
 
-Anyway, up to the maintainers.
-
-Thanks.
-
--- 
-Dmitry
+- Assuming this is a hotpluggable device, try with another NVMe to
+verify if the issue is specific to this device.
+- Can you please try switch the ASPM policy back from "powersupersave"
+-> powersave, and potentially do a rescan (echo 1 >
+/sys/bus/pci/rescan), and see if the device comes back (and goes away
+again when you switch back to supersave)?
+- May be put some debug prints in pcie_config_aspm_l1ss() to see
+writing to which register causes the device to fall off (most likely
+this would be the last statement, but just throwing ideas).
+- May be dump the timing parameters link->l1ss.ctl1 and
+link->l1ss.ctl2 from aspm_calc_l1ss_info(), and try to play with them
+a little.
