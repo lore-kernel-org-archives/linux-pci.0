@@ -1,35 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37891 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751932AbeAJSD0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 13:03:26 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Kong Lai <kong.lai@tundra.com>, linux-pci@vger.kernel.org,
-        linux-media@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: remove pci_dma_* abuses and workarounds V2
-Date: Wed, 10 Jan 2018 19:03:18 +0100
-Message-Id: <20180110180322.30186-1-hch@lst.de>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:32879 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753660AbeAKIbP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 03:31:15 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, <kishon@ti.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <nsekhar@ti.com>, Robin Murphy <robin.murphy@arm.com>,
+        Rob Herring <robh@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v3] PCI: endpoint: Use EPC's device in dma_alloc_coherent/dma_free_coherent
+Date: Thu, 11 Jan 2018 14:00:57 +0530
+Message-ID: <20180111083057.1134-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Back before the dawn of time pci_dma_* with a NULL pci_dev argument
-was used for all kinds of things, e.g. dma mapping for non-PCI
-devices.  All this has been long removed, but it turns out we
-still care for a NULL pci_dev in the wrappers, and we still have
-two odd USB drivers that use pci_dma_alloc_consistent for allocating
-memory while ignoring the dma_addr_t entirely, and a network driver
-mixing the already wrong usage of dma_* with a NULL device with a
-single call to pci_free_consistent.
+After commit 723288836628bc1c08 ("of: restrict DMA configuration"),
+of_dma_configure doesn't configure the coherent_dma_mask/dma_mask
+of endpoint function device (since it doesn't have a dt node associated
+with and hence no dma-ranges property), resulting in dma_alloc_coherent
+(used in pci_epf_alloc_space) to fail.
 
-This series switches the two usb drivers to use plain kzalloc, the
-net driver to properly use the dma API and then removes the handling
-of the NULL pci_dev in the pci_dma_* wrappers.
+Fix it by making dma_alloc_coherent use EPC's device for allocating
+memory address.
 
-Changes since V1:
- - remove allocation failure printks
- - use kcalloc
- - fix tsi108_eth
- - improve changelogs
+Link: http://lkml.kernel.org/r/64d63468-d28f-8fcd-a6f3-cf2a6401c8cb@ti.com
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Tested-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+---
+Changes from v2:
+No change in patch. Added "Link", "Reviewed-by" and "Tested-by" tags
+
+Changes from v1:
+No change in patch. Only added "Tested-by" of Cyrille Pitchen.
+
+ drivers/pci/endpoint/pci-epc-core.c | 10 ----------
+ drivers/pci/endpoint/pci-epf-core.c |  4 ++--
+ 2 files changed, 2 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 42c2a1156325..cd7d4788b94d 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -18,7 +18,6 @@
+  */
+ 
+ #include <linux/device.h>
+-#include <linux/dma-mapping.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/of_device.h>
+@@ -371,7 +370,6 @@ EXPORT_SYMBOL_GPL(pci_epc_write_header);
+ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+ {
+ 	unsigned long flags;
+-	struct device *dev = epc->dev.parent;
+ 
+ 	if (epf->epc)
+ 		return -EBUSY;
+@@ -383,12 +381,6 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+ 		return -EINVAL;
+ 
+ 	epf->epc = epc;
+-	if (dev->of_node) {
+-		of_dma_configure(&epf->dev, dev->of_node);
+-	} else {
+-		dma_set_coherent_mask(&epf->dev, epc->dev.coherent_dma_mask);
+-		epf->dev.dma_mask = epc->dev.dma_mask;
+-	}
+ 
+ 	spin_lock_irqsave(&epc->lock, flags);
+ 	list_add_tail(&epf->list, &epc->pci_epf);
+@@ -503,9 +495,7 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
+ 	INIT_LIST_HEAD(&epc->pci_epf);
+ 
+ 	device_initialize(&epc->dev);
+-	dma_set_coherent_mask(&epc->dev, dev->coherent_dma_mask);
+ 	epc->dev.class = pci_epc_class;
+-	epc->dev.dma_mask = dev->dma_mask;
+ 	epc->dev.parent = dev;
+ 	epc->ops = ops;
+ 
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index ae1611a62808..95ccc4b8a0a2 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -99,7 +99,7 @@ EXPORT_SYMBOL_GPL(pci_epf_bind);
+  */
+ void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar)
+ {
+-	struct device *dev = &epf->dev;
++	struct device *dev = epf->epc->dev.parent;
+ 
+ 	if (!addr)
+ 		return;
+@@ -122,7 +122,7 @@ EXPORT_SYMBOL_GPL(pci_epf_free_space);
+ void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
+ {
+ 	void *space;
+-	struct device *dev = &epf->dev;
++	struct device *dev = epf->epc->dev.parent;
+ 	dma_addr_t phys_addr;
+ 
+ 	if (size < 128)
+-- 
+2.11.0
