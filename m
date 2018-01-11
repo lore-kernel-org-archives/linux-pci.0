@@ -1,83 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 8 Jan 2018 15:36:20 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH 5/7] PM: i2c-designware-platdrv: Use
- DPM_FLAG_SMART_PREPARE
-Message-ID: <20180108143620.45lqfnqjqiv4ehuu@katana>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
- <2436726.ykYRzVD45y@aspire.rjw.lan>
- <1780798.HpLBO7aPyI@aspire.rjw.lan>
- <8924de22-96f5-0e10-7aaf-29b5a490afe2@linux.intel.com>
+Return-Path: <SRS0=2hxQ=EG=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=2hxQ=EG=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 11 Jan 2018 17:15:02 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org, Rafal Milecki <rafal@milecki.pl>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: iproc: Fix NULL pointer dereference for BCMA
+Message-ID: <20180111171450.GA12148@red-moon>
+References: <1515527140-24964-1-git-send-email-ray.jui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="nfcbzpdksdfleslb"
-In-Reply-To: <8924de22-96f5-0e10-7aaf-29b5a490afe2@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1515527140-24964-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jan 09, 2018 at 11:45:40AM -0800, Ray Jui wrote:
+> With the inbound DMA mapping supported added, the iProc PCIe driver
+> parses DT property "dma-ranges" through call to
+> "of_pci_dma_range_parser_init". In the case of BCMA, this results in a
+> NULL pointer deference due to a missing of_node.
+> 
+> Fix this by adding a guard in pcie-iproc-platform.c to only enable the
+> inbound DMA mapping logic when DT property "dma-ranges" is present
+> 
+> fixes: dd9d4e7498de3 ("PCI: iproc: Add inbound DMA mapping support")
 
---nfcbzpdksdfleslb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+s/fixes/Fixes
 
-On Mon, Jan 08, 2018 at 04:31:49PM +0200, Jarkko Nikula wrote:
-> On 01/03/2018 02:35 AM, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >=20
-> > Modify i2c-designware-platdrv to set DPM_FLAG_SMART_PREPARE for its
-> > devices and return 0 from the system suspend ->prepare callback
-> > if the device has an ACPI companion object in order to tell the PM
-> > core and middle layers to avoid skipping system suspend/resume
-> > callbacks for the device in that case (which may be problematic,
-> > because the device may be accessed during suspend and resume of
-> > other devices via I2C operation regions then).
-> >=20
-> > Also the pm_runtime_suspended() check in dw_i2c_plat_prepare()
-> > is not necessary any more, because the core does it when setting
-> > power.direct_complete for the device, so drop it.
-> >=20
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >   drivers/i2c/busses/i2c-designware-platdrv.c |   10 +++++++++-
-> >   1 file changed, 9 insertions(+), 1 deletion(-)
-> >=20
-> Acked-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+> Reported-by: Rafał Miłecki <rafal@milecki.pl>
+> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> Tested-by: Rafał Miłecki <rafal@milecki.pl>
+> Cc: <stable@vger.kernel.org> # 4.10+
+> ---
+>  drivers/pci/host/pcie-iproc-platform.c | 3 +++
+>  drivers/pci/host/pcie-iproc.c          | 8 +++++---
+>  drivers/pci/host/pcie-iproc.h          | 2 ++
+>  3 files changed, 10 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+> index a5073a9..235c545 100644
+> --- a/drivers/pci/host/pcie-iproc-platform.c
+> +++ b/drivers/pci/host/pcie-iproc-platform.c
+> @@ -92,6 +92,9 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+>  		pcie->need_ob_cfg = true;
+>  	}
+>  
+> +	if (of_property_read_bool(np, "dma-ranges"))
+> +		pcie->need_ib_cfg = true;
 
-Acked-by: Wolfram Sang <wsa@the-dreams.de>
+Nit:
+	pci->need_ib_cfg = of_property_read_bool(np, "dma-ranges"));
 
+will do. Add a comment to it to explain why it is needed.
 
---nfcbzpdksdfleslb
-Content-Type: application/pgp-signature; name="signature.asc"
+Please update the patch, send a v2 and I will merge it.
 
------BEGIN PGP SIGNATURE-----
+Thanks,
+Lorenzo
 
-iQIzBAABCAAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlpTgeQACgkQFA3kzBSg
-KbZ0kA//cCPWMuiNnbOMM37736Uix7V3PigI6Uh7ZuMicNsfrDViEuD1ALN81y7/
-CzbgZefPWNlBYXB0DVwNPHduWsT9syvT1lA1Ojl/JNZ9K2FbxSaj4OUb5PJS4dUg
-FmrOXwo2HKQiwAFT/6OrGSl+0JtOOIl8AMrCnbOWjc2/1Ec64OrCwxPFaAcXvjBy
-DeZixQCXmGZ/XiQoPVQL23uinFGrbEZAPrBMNNc6krdrtNmF56A/inzARcsWqLUR
-m3HH533pzawZmOM4uyme1iLKvu5ZxIbw8xGO26llXf29tJdrtVRhe4oWcPWyMCW9
-byDZ8Ekw4ks3Pc+QsBFgEfNYEwIoSbUlEEhlY3tTqALWWRA6jTsbhHxMbTzqjKwr
-CUoNui5GpmChaouawcQTyrkYlA1e3FaCnD1D48XjvWZhHfp0NhXXT4TaiPGmPJkI
-HKYTtROqnD4OtsvZDi5WXmwD9ETG4z4XZ76Dc3JLALjMNhvggpywn5RWzfn0usLo
-pFJPA+fDC3xg3jNfi5mu0Z1QjurDvQUfCRlTVqZLj5qXun8tWlSQfUh7xyIcOooA
-KyrzLdn9Dx5jTnKC3E3XVgZAL7RP0RIgpHE16+Qr0YoumStI/leV5kNY0KvL/uOe
-1ChDnUjJhuio9goGGHAKPQraiUHvCAlSpMbCS6QRb7vhyUzUGo4=
-=GdDV
------END PGP SIGNATURE-----
-
---nfcbzpdksdfleslb--
+> +
+>  	/* PHY use is optional */
+>  	pcie->phy = devm_phy_get(dev, "pcie-phy");
+>  	if (IS_ERR(pcie->phy)) {
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index 935909b..7583606 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -1378,9 +1378,11 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  		}
+>  	}
+>  
+> -	ret = iproc_pcie_map_dma_ranges(pcie);
+> -	if (ret && ret != -ENOENT)
+> -		goto err_power_off_phy;
+> +	if (pcie->need_ib_cfg) {
+> +		ret = iproc_pcie_map_dma_ranges(pcie);
+> +		if (ret && ret != -ENOENT)
+> +			goto err_power_off_phy;
+> +	}
+>  
+>  #ifdef CONFIG_ARM
+>  	pcie->sysdata.private_data = pcie;
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> index a6b55ce..4ac6282 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -74,6 +74,7 @@ struct iproc_msi;
+>   * @ob: outbound mapping related parameters
+>   * @ob_map: outbound mapping related parameters specific to the controller
+>   *
+> + * @need_ib_cfg: indicates SW needs to configure the inbound mapping window
+>   * @ib: inbound mapping related parameters
+>   * @ib_map: outbound mapping region related parameters
+>   *
+> @@ -101,6 +102,7 @@ struct iproc_pcie {
+>  	struct iproc_pcie_ob ob;
+>  	const struct iproc_pcie_ob_map *ob_map;
+>  
+> +	bool need_ib_cfg;
+>  	struct iproc_pcie_ib ib;
+>  	const struct iproc_pcie_ib_map *ib_map;
+>  
+> -- 
+> 2.1.4
+> 
