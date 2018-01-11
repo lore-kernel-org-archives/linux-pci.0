@@ -1,208 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51668 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751863AbeAZW43 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 Jan 2018 17:56:29 -0500
-Subject: [PATCH 6/8] PCI/DPC: Consolidate RP PIO get/print functions
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
-Date: Fri, 26 Jan 2018 16:56:22 -0600
-Message-ID: <20180126225622.58614.24127.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:13322 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750892AbeAKGIT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 01:08:19 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V6 0/7] Add loadable kernel module and power management support
+Date: Thu, 11 Jan 2018 11:38:01 +0530
+Message-ID: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+This series of patches adds loadable kernel module and power management
+support to Tegra PCIe host controller driver. irq_set_msi_desc() and
+tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
+set of patches.
 
-Previously we defined a structure for RP PIO log information, allocated it
-on the stack, called one function to fill it in from DPC registers, and
-called another to print it out.
+These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
+are the verification details.
+	- Multiple module insert & remove
+	- PCIe device functionality after module insert
+	- Free clock, resets, regulators, powergate, iomem and interrupt
+	resources after module remove
+	- PCIe device functionality after resume from RAM
 
-Simplify this by dropping the structure and printing the error information
-as soon as we read it from the DPC capability.  This way we don't need a
-structure, there's one function instead of four, and everything we do with
-the register information is in one place instead of being split between
-functions.
+V2: PM QoS fix is dropped in V2 from this series because the fix is
+incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
+latency framework")'. Update commit message of few patches in V2.
 
-No functional change intended.
+V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_use()
+are dropped based on review comments. These symbols will be addressed in next
+series. Took care of few other review comments.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/pcie-dpc.c |  132 +++++++++++++------------------------------
- 1 file changed, 39 insertions(+), 93 deletions(-)
+V4: Dropped pci_find_host_bridge() export patch and added new patch to use
+bus->sysdata for private data.
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index a6b8d1496322..06d3af112580 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -17,26 +17,6 @@
- #include "../pci.h"
- #include "aer/aerdrv.h"
- 
--struct rp_pio_header_log_regs {
--	u32 dw0;
--	u32 dw1;
--	u32 dw2;
--	u32 dw3;
--};
--
--struct dpc_rp_pio_regs {
--	u32 status;
--	u32 mask;
--	u32 severity;
--	u32 syserror;
--	u32 exception;
--
--	struct rp_pio_header_log_regs header_log;
--	u32 impspec_log;
--	u32 tlp_prefix_log[4];
--	u16 first_error;
--};
--
- struct dpc_dev {
- 	struct pcie_device	*dev;
- 	struct work_struct	work;
-@@ -142,100 +122,66 @@ static void dpc_work(struct work_struct *work)
- 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
- }
- 
--static void dpc_rp_pio_print_tlp_header(struct device *dev,
--					struct rp_pio_header_log_regs *t)
--{
--	dev_err(dev, "TLP Header: %#010x %#010x %#010x %#010x\n",
--		t->dw0, t->dw1, t->dw2, t->dw3);
--}
--
--static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
--				   struct dpc_rp_pio_regs *rp_pio)
-+static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- {
- 	struct device *dev = &dpc->dev->device;
-+	struct pci_dev *pdev = dpc->dev->port;
-+	u16 cap = dpc->cap_pos;
-+	u32 status, mask;
-+	u32 sev, syserr, exc;
-+	u16 dpc_status, first_error;
- 	int i;
--	u32 status;
-+	u32 dw0, dw1, dw2, dw3;
-+	u32 log;
-+	u32 prefix;
- 
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS, &status);
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK, &mask);
- 	dev_err(dev, "rp_pio_status: %#010x, rp_pio_mask: %#010x\n",
--		rp_pio->status, rp_pio->mask);
-+		status, mask);
- 
-+	dpc->rp_pio_status = status;
-+
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY, &sev);
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR, &syserr);
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION, &exc);
- 	dev_err(dev, "RP PIO severity=%#010x, syserror=%#010x, exception=%#010x\n",
--		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
-+		sev, syserr, exc);
- 
--	status = (rp_pio->status & ~rp_pio->mask);
-+	/* Get First Error Pointer */
-+	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &dpc_status);
-+	first_error = (dpc_status & 0x1f00) >> 8;
- 
-+	status &= ~mask;
- 	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
--		if (!(status & (1 << i)))
--			continue;
--
--		dev_err(dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
--			rp_pio->first_error == i ? " (First)" : "");
-+		if (status & (1 << i))
-+			dev_err(dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
-+				first_error == i ? " (First)" : "");
- 	}
- 
--	dpc_rp_pio_print_tlp_header(dev, &rp_pio->header_log);
--	if (dpc->rp_log_size == 4)
--		return;
--
--	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", rp_pio->impspec_log);
--
--	for (i = 0; i < dpc->rp_log_size - 5; i++)
--		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i,
--			rp_pio->tlp_prefix_log[i]);
--}
--
--static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
--				struct dpc_rp_pio_regs *rp_pio)
--{
--	struct pci_dev *pdev = dpc->dev->port;
--	int i;
--	u16 cap = dpc->cap_pos, status;
--
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
--			      &rp_pio->status);
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK,
--			      &rp_pio->mask);
--
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY,
--			      &rp_pio->severity);
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR,
--			      &rp_pio->syserror);
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION,
--			      &rp_pio->exception);
--
--	/* Get First Error Pointer */
--	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
--	rp_pio->first_error = (status & 0x1f00) >> 8;
--
- 	if (dpc->rp_log_size < 4)
- 		return;
--
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
--			      &rp_pio->header_log.dw0);
-+			      &dw0);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
--			      &rp_pio->header_log.dw1);
-+			      &dw1);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
--			      &rp_pio->header_log.dw2);
-+			      &dw2);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
--			      &rp_pio->header_log.dw3);
--	if (dpc->rp_log_size == 4)
-+			      &dw3);
-+	dev_err(dev, "TLP Header: %#010x %#010x %#010x %#010x\n",
-+		dw0, dw1, dw2, dw3);
-+
-+	if (dpc->rp_log_size < 5)
- 		return;
-+	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG, &log);
-+	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", log);
- 
--	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
--			      &rp_pio->impspec_log);
--	for (i = 0; i < dpc->rp_log_size - 5; i++)
-+	for (i = 0; i < dpc->rp_log_size - 5; i++) {
- 		pci_read_config_dword(pdev,
--			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
--			&rp_pio->tlp_prefix_log[i]);
--}
--
--static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
--{
--	struct dpc_rp_pio_regs rp_pio_regs;
--
--	dpc_rp_pio_get_info(dpc, &rp_pio_regs);
--	dpc_rp_pio_print_error(dpc, &rp_pio_regs);
--
--	dpc->rp_pio_status = rp_pio_regs.status;
-+			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG, &prefix);
-+		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i, prefix);
-+	}
- }
- 
- static irqreturn_t dpc_irq(int irq, void *context)
+V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
+on top of linux-next
+
+V6: Rebased on lpieralisi/pci/tegra branch
+
+Manikanta Maddireddy (7):
+  of: Export of_pci_range_to_resource()
+  PCI: tegra: Use bus->sysdata to store and get host private data
+  PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for Tegra PCIe
+  PCI: tegra: Free resources on probe failure
+  PCI: tegra: Add loadable kernel module support
+  PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
+  PCI: tegra: Add power management support
+
+ drivers/of/address.c         |   1 +
+ drivers/pci/host/Kconfig     |   2 +-
+ drivers/pci/host/pci-tegra.c | 333 ++++++++++++++++++++++++++++++++-----------
+ 3 files changed, 253 insertions(+), 83 deletions(-)
+
+-- 
+2.1.4
