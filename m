@@ -1,81 +1,62 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Rui Wang <rui.y.wang@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>, tony.luck@intel.com,
-        linux-pci@vger.kernel.org, rjw@rjwysocki.net,
-        linux-acpi@vger.kernel.org, bhelgaas@google.com,
-        Ingo Molnar <mingo@kernel.org>, Joerg Roedel <jroedel@suse.de>
-Subject: [PATCH 4.4 26/74] x86/ioapic: Fix incorrect pointers in ioapic_setup_resources()
-Date: Mon, 29 Jan 2018 13:56:31 +0100
-Message-Id: <20180129123848.802267981@linuxfoundation.org>
-In-Reply-To: <20180129123847.507563674@linuxfoundation.org>
-References: <20180129123847.507563674@linuxfoundation.org>
+From: "Ghannam, Yazen" <Yazen.Ghannam@amd.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        "Bjorn Helgaas" <bhelgaas@google.com>, Borislav Petkov <bp@suse.de>
+Subject: RE: [PATCH] PCI/ACPI: Disable AER when _OSC control bit is clear.
+Date: Thu, 11 Jan 2018 17:48:21 +0000
+Message-ID: <DM5PR12MB191612888094C4794951FAE4F8160@DM5PR12MB1916.namprd12.prod.outlook.com>
+References: <20180111150316.19951-1-Yazen.Ghannam@amd.com>
+ <CAJZ5v0gU6var3gNQsp2GkSujbR=vB2Zj4dZHKNOzfAtC76jFbA@mail.gmail.com>
+In-Reply-To: <CAJZ5v0gU6var3gNQsp2GkSujbR=vB2Zj4dZHKNOzfAtC76jFbA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4.4-stable review patch.  If anyone has any objections, please let me know.
-
-------------------
-
-From: Rui Wang <rui.y.wang@intel.com>
-
-commit 9d98bcec731756b8688b59ec998707924d716d7b upstream.
-
-On a 4-socket Brickland system, hot-removing one ioapic is fine.
-Hot-removing the 2nd one causes panic in mp_unregister_ioapic()
-while calling release_resource().
-
-It is because the iomem_res pointer has already been released
-when removing the first ioapic.
-
-To explain the use of &res[num] here: res is assigned to ioapic_resources,
-and later in ioapic_insert_resources() we do:
-
-	struct resource *r = ioapic_resources;
-
-        for_each_ioapic(i) {
-                insert_resource(&iomem_resource, r);
-                r++;
-        }
-
-Here 'r' is treated as an arry of 'struct resource', and the r++ ensures
-that each element of the array is inserted separately. Thus we should call
-release_resouce() on each element at &res[num].
-
-Fix it by assigning the correct pointers to ioapics[i].iomem_res in
-ioapic_setup_resources().
-
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: tony.luck@intel.com
-Cc: linux-pci@vger.kernel.org
-Cc: rjw@rjwysocki.net
-Cc: linux-acpi@vger.kernel.org
-Cc: bhelgaas@google.com
-Link: http://lkml.kernel.org/r/1465369193-4816-3-git-send-email-rui.y.wang@intel.com
-Signed-off-by: Ingo Molnar <mingo@kernel.org>
-Acked-by: Joerg Roedel <jroedel@suse.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- arch/x86/kernel/apic/io_apic.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2592,8 +2592,8 @@ static struct resource * __init ioapic_s
- 		res[num].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
- 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
- 		mem += IOAPIC_RESOURCE_NAME_SIZE;
-+		ioapics[i].iomem_res = &res[num];
- 		num++;
--		ioapics[i].iomem_res = res;
- 	}
- 
- 	ioapic_resources = res;
-
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiByand5c29ja2lAZ21haWwuY29t
+IFttYWlsdG86cmp3eXNvY2tpQGdtYWlsLmNvbV0gT24gQmVoYWxmIE9mDQo+IFJhZmFlbCBKLiBX
+eXNvY2tpDQo+IFNlbnQ6IFRodXJzZGF5LCBKYW51YXJ5IDExLCAyMDE4IDEyOjM5IFBNDQo+IFRv
+OiBHaGFubmFtLCBZYXplbiA8WWF6ZW4uR2hhbm5hbUBhbWQuY29tPg0KPiBDYzogQUNQSSBEZXZl
+bCBNYWxpbmcgTGlzdCA8bGludXgtYWNwaUB2Z2VyLmtlcm5lbC5vcmc+OyBMaW51eCBLZXJuZWwg
+TWFpbGluZw0KPiBMaXN0IDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgTGludXggUENJ
+IDxsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnPjsNCj4gUmFmYWVsIEouIFd5c29ja2kgPHJqd0By
+and5c29ja2kubmV0PjsgTGVuIEJyb3duIDxsZW5iQGtlcm5lbC5vcmc+OyBCam9ybg0KPiBIZWxn
+YWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsgQm9yaXNsYXYgUGV0a292IDxicEBzdXNlLmRlPg0K
+PiBTdWJqZWN0OiBSZTogW1BBVENIXSBQQ0kvQUNQSTogRGlzYWJsZSBBRVIgd2hlbiBfT1NDIGNv
+bnRyb2wgYml0IGlzIGNsZWFyLg0KPiANCj4gT24gVGh1LCBKYW4gMTEsIDIwMTggYXQgNDowMyBQ
+TSwgWWF6ZW4gR2hhbm5hbQ0KPiA8WWF6ZW4uR2hhbm5hbUBhbWQuY29tPiB3cm90ZToNCj4gPiBG
+cm9tOiBZYXplbiBHaGFubmFtIDx5YXplbi5naGFubmFtQGFtZC5jb20+DQo+ID4NCj4gPiBDdXJy
+ZW50bHksIGFlcl9zZXJ2aWNlX2luaXQoKSBjaGVja3MgaWYgQUVSIGlzIGF2YWlsYWJsZSBhbmQg
+dGhhdA0KPiA+IEZpcm13YXJlIEZpcnN0IGhhbmRsaW5nIGlzIG5vdCBlbmFibGVkLiBUaGUgX09T
+QyByZXF1ZXN0IGZvciBBRVIgaXMNCj4gPiBub3QgdGFrZW4gaW50byBhY2NvdW50IHdoZW4gZGVj
+aWRpbmcgdG8gZW5hYmxlIEFFUiBpbiBMaW51eC4NCj4gPg0KPiA+IFdlIHNob3VsZCBjaGVjayB0
+aGF0IHRoZSBfT1NDIGNvbnRyb2wgZm9yIEFFUiBpcyBzZXQuIElmIGl0J3Mgbm90DQo+ID4gdGhl
+biBBRVIgc2hvdWxkIGJlIGRpc2FibGVkLg0KPiA+DQo+ID4gVGhlIF9PU0MgY29udHJvbCBmb3Ig
+QUVSIGlzIG5vdCByZXF1ZXN0ZWQgd2hlbiBBUEVJIEZpcm13YXJlIEZpcnN0IGlzDQo+ID4gdXNl
+ZCwgc28gdGhlIHNhbWUgY29uZGl0aW9uIGFwcGxpZXMuDQo+ID4NCj4gPiBNYXJrIEFFUiBhcyBk
+aXNhYmxlZCBpZiB0aGUgX09TQyByZXF1ZXN0IHdhcyBub3QgbWFkZSBvciBhY2NlcHRlZC4NCj4g
+Pg0KPiA+IFJlbW92ZSByZWR1bmFudCBjaGVjayBmb3IgYWVyX2FjcGlfZmlybXdhcmVfZmlyc3Qo
+KSB3aGVuIGNhbGxpbmcNCj4gPiBhZXJfc2VydmljZV9pbml0KCksIHNpbmNlIHRoaXMgaXMgY2hl
+Y2sgaXMgYWxyZWFkeSBpbmNsdWRlZCB3aGVuDQo+ID4gY2hlY2tpbmcgdGhlIF9PU0MgY29udHJv
+bC4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFlhemVuIEdoYW5uYW0gPHlhemVuLmdoYW5uYW1A
+YW1kLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9hY3BpL3BjaV9yb290LmMgICAgICAgfCAz
+ICsrKw0KPiA+ICBkcml2ZXJzL3BjaS9wY2llL2Flci9hZXJkcnYuYyB8IDIgKy0NCj4gPiAgMiBm
+aWxlcyBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4gPg0KPiA+IGRp
+ZmYgLS1naXQgYS9kcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYyBiL2RyaXZlcnMvYWNwaS9wY2lfcm9v
+dC5jDQo+ID4gaW5kZXggNmZjMjA0YTUyNDkzLi4xOWE2MjVlZDhkZTkgMTAwNjQ0DQo+ID4gLS0t
+IGEvZHJpdmVycy9hY3BpL3BjaV9yb290LmMNCj4gPiArKysgYi9kcml2ZXJzL2FjcGkvcGNpX3Jv
+b3QuYw0KPiA+IEBAIC01MTIsNiArNTEyLDkgQEAgc3RhdGljIHZvaWQgbmVnb3RpYXRlX29zX2Nv
+bnRyb2woc3RydWN0DQo+IGFjcGlfcGNpX3Jvb3QgKnJvb3QsIGludCAqbm9fYXNwbSkNCj4gPiAg
+ICAgICAgICAgICAgICAgICovDQo+ID4gICAgICAgICAgICAgICAgICpub19hc3BtID0gMTsNCj4g
+PiAgICAgICAgIH0NCj4gPiArDQo+ID4gKyAgICAgICBpZiAoIShyZXF1ZXN0ZWQgJiBjb250cm9s
+ICYgT1NDX1BDSV9FWFBSRVNTX0FFUl9DT05UUk9MKSkNCj4gDQo+IE9uZSBvZiB0aGUgb3BlcmF0
+b3JzIGFib3ZlIG5lZWRzIHRvIGJlIGEgJiYgSSBzdXBwb3NlPw0KPiANCg0KSXQncyBhIDMtd2F5
+IGJpdHdpc2UgQU5EIHRvIGNoZWNrIHRoYXQgT1NDX1BDSV9FWFBSRVNTX0FFUl9DT05UUk9MIGlz
+DQpzZXQgaW4gYm90aCAicmVxdWVzdGVkIiBhbmQgImNvbnRyb2wiLg0KDQpJT1csIHdlIGNoZWNr
+IGlmIEFFUiB3YXMgcmVxdWVzdGVkIGJ5IHRoZSBPUyBhbmQgdGhhdCB0aGUgcGxhdGZvcm0NCmdy
+YW50ZWQgdGhlIHJlcXVlc3QuDQoNClRoYW5rcywNCllhemVuDQo=
