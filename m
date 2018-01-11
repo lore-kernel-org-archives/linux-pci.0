@@ -1,113 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:51216 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751870AbeAZQfx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jan 2018 11:35:53 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v6 9/9] PCI: dwc: Expand maximum number of IRQs from 32 to 256
-Date: Fri, 26 Jan 2018 16:35:44 +0000
-Message-Id: <2737e233b2ad3022f7efcf3c35f7ed38a7337f54.1516984229.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=/bLX=EG=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=/bLX=EG=broadcom.com=ray.jui@kernel.org>
+Subject: Re: [PATCH] PCI: iproc: Fix NULL pointer dereference for BCMA
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, Rafal Milecki <rafal@milecki.pl>,
+ stable@vger.kernel.org
+References: <1515527140-24964-1-git-send-email-ray.jui@broadcom.com>
+ <20180111171450.GA12148@red-moon>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <576164e1-fffd-7ba0-5e35-9f0dd501df8e@broadcom.com>
+Date: Thu, 11 Jan 2018 12:37:28 -0800
+MIME-Version: 1.0
+In-Reply-To: <20180111171450.GA12148@red-moon>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-The Synopsys PCIe Root Complex supports up to 256 IRQs distributed by 8
-controller registers.
+Hi Lorenzo,
 
-Having this in mind, the number of the maximum number of IRQs was changed
-to 256 and now the number of controllers is calculated based on the number
-of vectors used by the specific SoC driver.
+On 1/11/2018 9:15 AM, Lorenzo Pieralisi wrote:
+> On Tue, Jan 09, 2018 at 11:45:40AM -0800, Ray Jui wrote:
+>> With the inbound DMA mapping supported added, the iProc PCIe driver
+>> parses DT property "dma-ranges" through call to
+>> "of_pci_dma_range_parser_init". In the case of BCMA, this results in a
+>> NULL pointer deference due to a missing of_node.
+>>
+>> Fix this by adding a guard in pcie-iproc-platform.c to only enable the
+>> inbound DMA mapping logic when DT property "dma-ranges" is present
+>>
+>> fixes: dd9d4e7498de3 ("PCI: iproc: Add inbound DMA mapping support")
+> 
+> s/fixes/Fixes >
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- New patch file.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Patch renamed from v3-0009 to v4-0010.
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
-Change v5->v6:
-- Nothing changed, just to follow the patch set version.
+Will fix.
 
- drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
- drivers/pci/dwc/pcie-designware.h      | 10 +++-------
- 2 files changed, 11 insertions(+), 11 deletions(-)
+>> Reported-by: Rafał Miłecki <rafal@milecki.pl>
+>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+>> Tested-by: Rafał Miłecki <rafal@milecki.pl>
+>> Cc: <stable@vger.kernel.org> # 4.10+
+>> ---
+>>   drivers/pci/host/pcie-iproc-platform.c | 3 +++
+>>   drivers/pci/host/pcie-iproc.c          | 8 +++++---
+>>   drivers/pci/host/pcie-iproc.h          | 2 ++
+>>   3 files changed, 10 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+>> index a5073a9..235c545 100644
+>> --- a/drivers/pci/host/pcie-iproc-platform.c
+>> +++ b/drivers/pci/host/pcie-iproc-platform.c
+>> @@ -92,6 +92,9 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+>>   		pcie->need_ob_cfg = true;
+>>   	}
+>>   
+>> +	if (of_property_read_bool(np, "dma-ranges"))
+>> +		pcie->need_ib_cfg = true;
+> 
+> Nit:
+> 	pci->need_ib_cfg = of_property_read_bool(np, "dma-ranges"));
+> 
+> will do. Add a comment to it to explain why it is needed.
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 9309055..1daf591 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -79,11 +79,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
- /* MSI int handler */
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- {
--	u32 val;
- 	int i, pos, irq;
-+	u32 val, num_ctrls;
- 	irqreturn_t ret = IRQ_NONE;
- 
--	for (i = 0; i < MAX_MSI_CTRLS; i++) {
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
-+	for (i = 0; i < num_ctrls; i++) {
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
- 				    &val);
- 		if (!val)
-@@ -644,13 +646,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
- 
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
--	u32 val, ctrl;
-+	u32 val, ctrl, num_ctrls;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
- 	dw_pcie_setup(pci);
- 
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
- 	/* Initialize IRQ Status array */
--	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
-+	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
- 				    &pp->irq_status[ctrl]);
- 	/* setup RC BARs */
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index c77c2e0..074bd14 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -110,13 +110,9 @@
- #define MSI_MESSAGE_DATA_32		0x58
- #define MSI_MESSAGE_DATA_64		0x5C
- 
--/*
-- * Maximum number of MSI IRQs can be 256 per controller. But keep
-- * it 32 as of now. Probably we will never need more than 32. If needed,
-- * then increment it in multiple of 32.
-- */
--#define MAX_MSI_IRQS			32
--#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
-+#define MAX_MSI_IRQS			256
-+#define MAX_MSI_IRQS_PER_CTRL		32
-+#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
--- 
-2.7.4
+Will fix.
+
+> 
+> Please update the patch, send a v2 and I will merge it.
+
+Okay will send out v2 with comments from you addressed. Thanks!
+
+> 
+> Thanks,
+> Lorenzo
+> 
