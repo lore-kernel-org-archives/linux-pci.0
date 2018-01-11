@@ -1,40 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46454 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753614AbeAQQqB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jan 2018 11:46:01 -0500
-Subject: Re: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
-To: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>
-References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
- <1516185438-31556-4-git-send-email-poza@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <298df660-1f7d-85ab-51db-11dc5d80cc75@codeaurora.org>
-Date: Wed, 17 Jan 2018 11:45:57 -0500
+Return-Path: <SRS0=/bLX=EG=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=/bLX=EG=broadcom.com=ray.jui@kernel.org>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Rafal Milecki <rafal@milecki.pl>,
+	Ray Jui <ray.jui@broadcom.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH v2] PCI: iproc: Fix NULL pointer dereference for BCMA
+Date: Thu, 11 Jan 2018 12:36:16 -0800
+Message-Id: <1515702976-29275-1-git-send-email-ray.jui@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1516185438-31556-4-git-send-email-poza@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/17/2018 5:37 AM, Oza Pawandeep wrote:
-> +		driver = pci_find_dpc_service(udev);
-> +#endif
->  #if IS_ENABLED(CONFIG_PCIEAER)
-> -	/* Use the aer driver of the component firstly */
-> -	driver = pci_find_aer_service(udev);
+With the inbound DMA mapping supported added, the iProc PCIe driver
+parses DT property "dma-ranges" through call to
+"of_pci_dma_range_parser_init". In the case of BCMA, this results in a
+NULL pointer deference due to a missing of_node.
 
-I think we need a pci_find_service function that unifies these two.
+Fix this by adding a guard in pcie-iproc-platform.c to only enable the
+inbound DMA mapping logic when DT property "dma-ranges" is present
 
+Fixes: dd9d4e7498de3 ("PCI: iproc: Add inbound DMA mapping support")
+Reported-by: Rafał Miłecki <rafal@milecki.pl>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Tested-by: Rafał Miłecki <rafal@milecki.pl>
+cc: <stable@vger.kernel.org> # 4.10+
+---
+ drivers/pci/host/pcie-iproc-platform.c | 7 +++++++
+ drivers/pci/host/pcie-iproc.c          | 8 +++++---
+ drivers/pci/host/pcie-iproc.h          | 2 ++
+ 3 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index a5073a9..32228d4 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -92,6 +92,13 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 		pcie->need_ob_cfg = true;
+ 	}
+ 
++	/*
++	 * DT nodes are not used by all platforms that use the iProc PCIe
++	 * core driver. For platforms that require explict inbound mapping
++	 * configuration, "dma-ranges" would have been present in DT
++	 */
++	pcie->need_ib_cfg = of_property_read_bool(np, "dma-ranges");
++
+ 	/* PHY use is optional */
+ 	pcie->phy = devm_phy_get(dev, "pcie-phy");
+ 	if (IS_ERR(pcie->phy)) {
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 935909b..7583606 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -1378,9 +1378,11 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		}
+ 	}
+ 
+-	ret = iproc_pcie_map_dma_ranges(pcie);
+-	if (ret && ret != -ENOENT)
+-		goto err_power_off_phy;
++	if (pcie->need_ib_cfg) {
++		ret = iproc_pcie_map_dma_ranges(pcie);
++		if (ret && ret != -ENOENT)
++			goto err_power_off_phy;
++	}
+ 
+ #ifdef CONFIG_ARM
+ 	pcie->sysdata.private_data = pcie;
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index a6b55ce..4ac6282 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -74,6 +74,7 @@ struct iproc_msi;
+  * @ob: outbound mapping related parameters
+  * @ob_map: outbound mapping related parameters specific to the controller
+  *
++ * @need_ib_cfg: indicates SW needs to configure the inbound mapping window
+  * @ib: inbound mapping related parameters
+  * @ib_map: outbound mapping region related parameters
+  *
+@@ -101,6 +102,7 @@ struct iproc_pcie {
+ 	struct iproc_pcie_ob ob;
+ 	const struct iproc_pcie_ob_map *ob_map;
+ 
++	bool need_ib_cfg;
+ 	struct iproc_pcie_ib ib;
+ 	const struct iproc_pcie_ib_map *ib_map;
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.1.4
