@@ -1,39 +1,139 @@
-Return-Path: <SRS0=vRdu=EZ=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=vRdu=EZ=intel.com=keith.busch@kernel.org>
-Date: Tue, 30 Jan 2018 12:43:50 -0700
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-	Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v2 11/14] PCI/DPC: Remove unnecessary RP PIO register
- structs
-Message-ID: <20180130194349.GD27205@localhost.localdomain>
-References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180130182648.106875.32803.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180130185758.GC27205@localhost.localdomain>
- <20180130191100.GH232763@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:5277 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753771AbeAKGIn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 01:08:43 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V6 5/7] PCI: tegra: Add loadable kernel module support
+Date: Thu, 11 Jan 2018 11:38:06 +0530
+Message-ID: <1515650888-9459-6-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180130191100.GH232763@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 30, 2018 at 01:11:00PM -0600, Bjorn Helgaas wrote:
-> On Tue, Jan 30, 2018 at 11:57:58AM -0700, Keith Busch wrote:
-> > On Tue, Jan 30, 2018 at 12:26:48PM -0600, Bjorn Helgaas wrote:
-> > > +	u16 cap = dpc->cap_pos;
-> > > +	u32 status, mask;
-> > > +	u32 sev, syserr, exc;
-> > > +	u16 dpc_status, first_error;
-> > > +	u32 dw0, dw1, dw2, dw3;
-> > > +	u32 log;
-> > > +	u32 prefix;
-> > 
-> > Minor nit, could you squash the declarations of the same type?
-> 
-> I did it that way so it matches the order of the chunks of code where
-> they're used.  But I guess we don't really do that elsewhere in the
-> file, so I did.  Here's the result:
+Implement remove callback function for Tegra PCIe driver to add
+loadable kernel module support. Change PCI_TEGRA config to tristate to
+allow pci-tegra driver to be build as a module.
 
-Thanks! That's all I had on this series. Looks good to me!
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V2:
+* no change in this patch
+V3:
+* use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_init()
+V4:
+* no change in this patch
+V5:
+* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
+rebased on linux-next
+V6:
+* no change in this patch
 
-Reviewed-by: Keith Busch <keith.busch@intel.com>
+ drivers/pci/host/Kconfig     |  2 +-
+ drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
+ 2 files changed, 32 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 38d12980db0f..6fd2a5937804 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -34,7 +34,7 @@ config PCI_FTPCI100
+ 	default ARCH_GEMINI
+ 
+ config PCI_TEGRA
+-	bool "NVIDIA Tegra PCIe controller"
++	tristate "NVIDIA Tegra PCIe controller"
+ 	depends on ARCH_TEGRA
+ 	help
+ 	  Say Y here if you want support for the PCIe host controller found
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index e68507f658d8..981f126b14d6 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -35,6 +35,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -2276,6 +2277,12 @@ static const struct file_operations tegra_pcie_ports_ops = {
+ 	.release = seq_release,
+ };
+ 
++static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
++{
++	debugfs_remove_recursive(pcie->debugfs);
++	pcie->debugfs = NULL;
++}
++
+ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+ {
+ 	struct dentry *file;
+@@ -2292,8 +2299,7 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+ 	return 0;
+ 
+ remove:
+-	debugfs_remove_recursive(pcie->debugfs);
+-	pcie->debugfs = NULL;
++	tegra_pcie_debugfs_exit(pcie);
+ 	return -ENOMEM;
+ }
+ 
+@@ -2311,6 +2317,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	pcie = pci_host_bridge_priv(host);
+ 	host->sysdata = pcie;
++	platform_set_drvdata(pdev, pcie);
+ 
+ 	pcie->soc = of_device_get_match_data(dev);
+ 	INIT_LIST_HEAD(&pcie->ports);
+@@ -2388,6 +2395,25 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++static int tegra_pcie_remove(struct platform_device *pdev)
++{
++	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++
++	if (IS_ENABLED(CONFIG_DEBUG_FS))
++		tegra_pcie_debugfs_exit(pcie);
++	pci_stop_root_bus(host->bus);
++	pci_remove_root_bus(host->bus);
++	tegra_pcie_disable_ports(pcie);
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		tegra_pcie_disable_msi(pcie);
++	tegra_pcie_free_resources(pcie);
++	tegra_pcie_disable_controller(pcie);
++	tegra_pcie_put_resources(pcie);
++
++	return 0;
++}
++
+ static struct platform_driver tegra_pcie_driver = {
+ 	.driver = {
+ 		.name = "tegra-pcie",
+@@ -2395,5 +2421,7 @@ static struct platform_driver tegra_pcie_driver = {
+ 		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = tegra_pcie_probe,
++	.remove = tegra_pcie_remove,
+ };
+-builtin_platform_driver(tegra_pcie_driver);
++module_platform_driver(tegra_pcie_driver);
++MODULE_LICENSE("GPL");
+-- 
+2.1.4
