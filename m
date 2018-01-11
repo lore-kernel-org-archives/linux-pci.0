@@ -1,78 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:55348 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751636AbeAOKnT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 05:43:19 -0500
-Date: Mon, 15 Jan 2018 11:43:16 +0100
-From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Ian Ray <ian.ray@ge.com>, Nandor Han <nandor.han@ge.com>
-Subject: Re: Regression due to "PCI: Do not allocate more buses than
- available in parent"
-Message-ID: <20180115104316.k7xsu3qnnmzvlkpd@earth.universe>
-References: <20180112150744.sjntmpas5noaub6g@earth.universe>
- <CAOMZO5BpJDoeZVaD+c600ci5rmEJ0kh_er1voJxsyXR4BdjFpw@mail.gmail.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:13342 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751017AbeAKGI2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 01:08:28 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V6 2/7] PCI: tegra: Use bus->sysdata to store and get host private data
+Date: Thu, 11 Jan 2018 11:38:03 +0530
+Message-ID: <1515650888-9459-3-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="ngn6m3bj3rwuclms"
-In-Reply-To: <CAOMZO5BpJDoeZVaD+c600ci5rmEJ0kh_er1voJxsyXR4BdjFpw@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Tegra host driver is using pci_find_host_bridge() to get private data,
+however pci_find_host_bridge() is causing module build failure because
+it is not exported. pci_find_host_bridge() can be avoided by using
+bus->sysdata to store and get private data.
 
---ngn6m3bj3rwuclms
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+---
+V4:
+* new patch in V4
+V5:
+* Rebase on top of linux-next
+V6:
+* no change in this patch
 
-Hi Fabio,
+ drivers/pci/host/pci-tegra.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-On Fri, Jan 12, 2018 at 01:17:26PM -0200, Fabio Estevam wrote:
-> Hi Sebastian,
->=20
-> On Fri, Jan 12, 2018 at 1:07 PM, Sebastian Reichel
-> <sebastian.reichel@collabora.co.uk> wrote:
-> > Hi,
-> >
-> > I have an ARM/DT based system [0], that no longer finds its ethernet ca=
-rds
-> > behind a PCIe switch. I bisected the problem and ended up on
-> > a20c7f36bd3d. I tried providing some space using the suggested "pci=3Dh=
-pbussize=3D<N>",
-> > but it does not seem to work.
-> >
-> > I added dmesg for working, broken and broken + parameter below. At
-> > the moment I would say this is a regression and the commit should be
-> > reverted.
->=20
-> Does this patch fix the problem?
-> https://patchwork.ozlabs.org/patch/857566/
-
-Yes, that fixes the issue. Thanks for the hint.
-
--- Sebastian
-
---ngn6m3bj3rwuclms
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAlpchcAACgkQ2O7X88g7
-+pqV3w//blFbcgZ9oXiVkb6kh4vEPTdaZSNR7Jw0QO8iatrGqyBZ4HlWEpJMF8TE
-Sebga+F12AIgAnrBkmRvpvrB5Vws11u18PrxxE3bIoxTPzAzRT1maqBfompM+aQN
-FmAFU/Rl2IK0VOuz+mP3GeXVsN/6qCrsvkF28whMgGrn8tC2oYvWWSxrrEk2Kasp
-W/feDDu590XHMVT03CYnF1Cd1oSgthjw8Yd1AHNGT2Xld8WeIeMZEA3VDX1XFw2W
-bSA1a0OUh3C7BAadep7EDQGA4shMLRfEqPqZABxNZsdDmBWGSpMJeszg843806Cz
-93VlDSGDNLmqvjt83v93l2qDIriSsCowz2sX8i4M32s3rDFLxy63rNRGnQqp2ylc
-GPuyC3YobL485914YNi1nrlO2OwpNT7UTJTwSl0HcPHbgaVX8gfZUECR7VEnLjXy
-w7Td7ZHQsWvErNg4v+1tmEQTZc23YWRnjwlbZUrt0RZ+pXf/3jhHq7workRqNlir
-OuKc1YDphjKyEISxCOugbRXlj77HwKJFs1dEau1JQnxoxx7aXrZdqJ/8O76DQSS4
-9BoTgq0N7cMyQQ6rt9zcL0ypzLelCHhgEoz5gW4VUxXXQPIbn6w1zMMzb4Y0Q1g7
-Hy35EqH/jo+KJ51bIHP2TxwxjtVwIM1iRbRprb+5e25mCQizZuk=
-=s2tQ
------END PGP SIGNATURE-----
-
---ngn6m3bj3rwuclms--
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 4c105fbda777..059aa73d5f76 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -379,8 +379,7 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+ 					unsigned int devfn,
+ 					int where)
+ {
+-	struct pci_host_bridge *host = pci_find_host_bridge(bus);
+-	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
++	struct tegra_pcie *pcie = bus->sysdata;
+ 	void __iomem *addr = NULL;
+ 
+ 	if (bus->number == 0) {
+@@ -573,8 +572,7 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
+ 
+ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+-	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
+-	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
++	struct tegra_pcie *pcie = pdev->bus->sysdata;
+ 	int irq;
+ 
+ 	tegra_cpuidle_pcie_irqs_in_use();
+@@ -2258,6 +2256,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	pcie = pci_host_bridge_priv(host);
++	host->sysdata = pcie;
+ 
+ 	pcie->soc = of_device_get_match_data(dev);
+ 	INIT_LIST_HEAD(&pcie->ports);
+-- 
+2.1.4
