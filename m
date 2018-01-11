@@ -1,132 +1,85 @@
-Return-Path: <SRS0=nf4x=ET=memblaze.com=ron.yuan@kernel.org>
-Return-Path: <SRS0=nf4x=ET=memblaze.com=ron.yuan@kernel.org>
-From: Ron Yuan <ron.yuan@memblaze.com>
-To: Myron Stowe <myron.stowe@gmail.com>, Radjendirane Codandaramane
-	<radjendirane.codanda@microsemi.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Bo Chen <bo.chen@memblaze.com>, "William
- Huang" <william.huang@memblaze.com>, Fengming Wu <fengming.wu@memblaze.com>,
-	Jason Jiang <jason.jiang@microsemi.com>, Ramyakanth Edupuganti
-	<Ramyakanth.Edupuganti@microsemi.com>, William Cheng
-	<william.cheng@microsemi.com>, "Kim Helper (khelper)" <khelper@micron.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: RE: One Question About PCIe BUS Config Type with pcie_bus_safe or
- pcie_bus_perf On NVMe Device
-Date: Wed, 24 Jan 2018 17:59:47 +0000
-Message-ID: <SHAPR01MB173CF7E7EA0CDB85D2D7454FEE20@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
-References: <0ce08a91-fc38-1288-7683-836fcbbbdf3c@codeaurora.org>
- <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
- <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
- <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
- <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
- <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
- <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
- <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
- <09bd3f5c-4671-d9dd-fa39-4d7619ee5860@codeaurora.org>
- <SHAPR01MB173EFAB42A8838DC3D52FD1FEE30@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
- <20180123143839.GE5317@bhelgaas-glaptop.roam.corp.google.com>
- <b93a4fb1ec42480596b8d1a2b525e8f1@microsemi.com>
- <CAL-B5D1bjmOCe3bCwEyq4Mpsaasss4GeL6E2B1RoRhY9uC6_Ew@mail.gmail.com>
-In-Reply-To: <CAL-B5D1bjmOCe3bCwEyq4Mpsaasss4GeL6E2B1RoRhY9uC6_Ew@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:5506 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750892AbeAKGQG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 01:16:06 -0500
+Subject: Re: [PATCH V5 0/7] Add loadable kernel module and power management
+ support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <cyndis@kapsi.fi>, <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>
+References: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
+ <20180110171521.GA26960@e107981-ln.cambridge.arm.com>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <a33a045c-0384-64fc-5ae5-1a150081d262@nvidia.com>
+Date: Thu, 11 Jan 2018 11:45:46 +0530
 MIME-Version: 1.0
+In-Reply-To: <20180110171521.GA26960@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Qmpvcm4sIA0KDQpJIGdvIGJhY2sgcmVhZGluZyB5b3VyIGVhcmxpZXIgcmVwbHkgY2FyZWZ1bGx5
-IGFuZCBmaW5hbGx5IHVuZGVyc3RhbmQgdGhhdCB5b3VyIGV4YW1wbGUgdGhlIFJQIG1heSByZXBs
-eSAyNTZCIFRMUCBiZWNhdXNlIG9mIGl0cyBvd24gbGFyZ2VyIE1QUyBzZXR0aW5nLiBUaGlzIGlz
-IGVhc2lseSBvdmVybG9va2VkIHNpbmNlIHVzdWFsbHkgTVBTIGlzIHN5bmMgb24gdGhlIHdob2xl
-IHBhdGggYXQgdGhlIGJlZ2lubmluZywgSSBhbG1vc3QgdGFrZSBpdCBmb3IgZ3JhbnRlZC4gVGhh
-bmsgeW91ISAgDQoNCkhlcmUgaXMgbXkgdW5kZXJzdGFuZGluZzogDQpJZiBNUFMgaXMgc2FtZSBv
-biBhIHBhdGgsIE1SUlMgaXMgbm90IG5lY2Vzc2FyeSB0byBiZSBwYXJ0IG9mIE1QUyBjb250cm9s
-LiAtPiB3aGljaCBoZWxwIG1lIGluIE5WTWUgY2FzZSwgTVBTPTI1NkIgYXJlIHN1cHBvcnRlZCBm
-b3IgYm90aCBSUCBhbmQgRVAuDQpPbmx5IGlmIE1QUyBpcyBub3QgdGhlIHNhbWUgb24gYSBwYXRo
-IChpbiB0aGUgZXhhbXBsZSBSUCBhbmQgRVAxKSwgTVJSUyBzaG91bGQgYmUgc2V0IHRvIHNhbWUg
-YXMgTVBTIHRvIGF2b2lkIHJlY2VpdmluZyBsYXJnZXIgY29tcGxldGlvbiBUTFAgdGhhbiBpdHMg
-TVBTLiBQZXJoYXBzIHRoZSBjb2RlIGNhbiBjaGVjayBhbGwgdXBzdHJlYW0gZGV2aWNlcycgTVBT
-IGFuZCBkZXRlcm1pbmUgaWYgaXQgbmVlZHMgdG8gYXBwbHkgYSBNUlJTIGxpbWl0YXRpb24uIA0K
-DQpCdHcsIEkgYWxzbyBmb3VuZCBmb2xsb3dpbmcgc3RhdGVtZW50IGZyb20gUENJRSBzcGVjLCB3
-aGljaCBtaWdodCBiZSB0aGUgb3JpZ2luYWwgcmVhc29uIG9mIHRoZSBjb2RlIGF0IHRoZSBiZWdp
-bm5pbmcuIA0KUGFnZSA1MDAsIFNlY3Rpb24gNi4zLjQuMSBSdWxlcyBmb3IgU29mdHdhcmUgQ29u
-ZmlndXJhdGlvbg0KIlNvZnR3YXJlIG11c3Qgc2V0IE1heF9SZWFkX1JlcXVlc3RfU2l6ZSBvZiBh
-biBpc29jaHJvbm91cy1jb25maWd1cmVkIGRldmljZSB3aXRoIGEgdmFsdWUgdGhhdCBkb2VzIG5v
-dCBleGNlZWQgdGhlIE1heF9QYXlsb2FkX1NpemUgc2V0IGZvciB0aGUgZGV2aWNlLiINCg0KDQpS
-b24NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IE15cm9uIFN0b3dlIFttYWls
-dG86bXlyb24uc3Rvd2VAZ21haWwuY29tXSANClNlbnQ6IDIwMTjlubQx5pyIMjXml6UgMDozMA0K
-VG86IFJhZGplbmRpcmFuZSBDb2RhbmRhcmFtYW5lIDxyYWRqZW5kaXJhbmUuY29kYW5kYUBtaWNy
-b3NlbWkuY29tPg0KQ2M6IEJqb3JuIEhlbGdhYXMgPGhlbGdhYXNAa2VybmVsLm9yZz47IFJvbiBZ
-dWFuIDxyb24ueXVhbkBtZW1ibGF6ZS5jb20+OyBTaW5hbiBLYXlhIDxva2F5YUBjb2RlYXVyb3Jh
-Lm9yZz47IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+OyBCbyBDaGVuIDxiby5j
-aGVuQG1lbWJsYXplLmNvbT47IFdpbGxpYW0gSHVhbmcgPHdpbGxpYW0uaHVhbmdAbWVtYmxhemUu
-Y29tPjsgRmVuZ21pbmcgV3UgPGZlbmdtaW5nLnd1QG1lbWJsYXplLmNvbT47IEphc29uIEppYW5n
-IDxqYXNvbi5qaWFuZ0BtaWNyb3NlbWkuY29tPjsgUmFteWFrYW50aCBFZHVwdWdhbnRpIDxSYW15
-YWthbnRoLkVkdXB1Z2FudGlAbWljcm9zZW1pLmNvbT47IFdpbGxpYW0gQ2hlbmcgPHdpbGxpYW0u
-Y2hlbmdAbWljcm9zZW1pLmNvbT47IEtpbSBIZWxwZXIgKGtoZWxwZXIpIDxraGVscGVyQG1pY3Jv
-bi5jb20+OyBMaW51eCBQQ0kgPGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc+DQpTdWJqZWN0OiBS
-ZTogT25lIFF1ZXN0aW9uIEFib3V0IFBDSWUgQlVTIENvbmZpZyBUeXBlIHdpdGggcGNpZV9idXNf
-c2FmZSBvciBwY2llX2J1c19wZXJmIE9uIE5WTWUgRGV2aWNlDQoNClJhZGplbmRpcmFuZSwNCg0K
-SSd2ZSBzdHJ1Z2dsZWQgd2l0aCBhIHJlc3BvbnNlIHRvIHlvdXIgbGF0ZXN0IHBvc3RpbmcgYWxs
-IG5pZ2h0LiAgSSBkb24ndCB3YW50IHRvIGNvbWUgb2ZmIGFzIG9mZmVuc2l2ZSBvciB0ZXJzZSBh
-cyBoYXBwZW5zIGFsbCB0b28gb2Z0ZW4gb24gbGludXggbWFpbCBsaXN0cywgYWxsIHRoYXQgZG9l
-cyBpcyBzaHV0IHRoaW5ncyBkb3duIHVubmVjZXNzYXJseSB3aXRob3V0IHJlbGF5aW5nIGFueSBp
-bmZvcm1hdGlvbiB0aGF0IGlzIGJlaW5nIHNvdWdodC4NCg0KQmpvcm4gaXMganVzdCBvbmUgcGVy
-c29uIHRyeWluZyB0byBrZWVwIHVwIHdpdGggdGhpcyBlbnRpcmUgbGlzdC4gIE9uIHRoaXMgcGFy
-dGljdWxhciB0b3BpYyBoZSBoYXMgdGFrZW4gY29uc2lkZXJhYmxlIHRpbWUgZXhwbGFpbmluZywg
-YW5kIGFuc3dlcmluZyBwZW9wbGVzIHNwZWNpZmljIHF1ZXN0aW9ucywgYXMgdG8gaG93IExpbnV4
-IGN1cnJlbnRseSBoYW5kbGVzIFBDSWUgTVBTIGFuZCBNUlJTIHNldHRpbmdzLiAgQXMgc3VjaCwg
-aXQgd2FzIHF1aXRlIHN1cnByaXNpbmcgdG8gc2VlIHlvdXIgbGF0ZXN0IHBvc3RpbmcgYXMgdGhl
-IG1ham9yaXR5IG9mIHRoZSBjb250ZW50IGhhZCBhbHJlYWR5IGJlZW4gY292ZXJlZCAtIHRoZSBl
-eGFjdCBzYW1lIHF1ZXN0aW9ucy9wb2ludHMgLSBpbiBncmVhdCBkZXRhaWwuDQoNCldlIHNob3Vs
-ZCByZXNwZWN0IEJqb3JuJ3MgdGltZSBhcyBtdWNoIGFzIHBvc3NpYmxlIGFuZCAiZG8gb3VyIGhv
-bWV3b3JrIjsgaW4gdGhpcyBzcGVjaWZpYyBjYXNlLCB0YWtlIHRoZSB0aW1lIHRvIHJlYWQgdGhl
-IGVudGlyZSB0aHJlYWQsIGNhcmVmdWxseSwgYXMgdGhhdCB3b3VsZCBoYXZlIGNpcmN1bXZlbnRl
-ZCB0aGlzIGF3a3dhcmQgYW5kIGZydXN0cmF0aW5nIHNpdHVhdGlvbi4gIElmIHRoZXJlIGFyZSBz
-dGlsbCBxdWVzdGlvbnMgb24gY292ZXJlZCB0b3BpY3MsIHRoZW4gYXNrIHRoZSBxdWVzdGlvbnMg
-YXQgdGhhdCBwb2ludCAoaS5lLiB1c2UgcHJvcGVyIHJlc3BvbnNlIHRlY2huaXF1ZXMgdG8gcHJl
-c2VydmUgY29udGV4dCBmb3IgYWxsOyBkb24ndCBqdXN0IHJlcGVhdCBhIHF1ZXN0aW9uIG11Y2gg
-bGF0ZXIgaW4gdGhlIHRocmVhZCB0aGF0IGhhcyBhbHJlYWR5IGJlZW4gZGlzY3Vzc2VkKS4NCg0K
-QWdhaW4sIEknbSBub3QgdHJ5aW5nIHRvIHNodXQgeW91IGRvd24uDQoNCg0KQXMgU2luYW4gcG9p
-bnRlZCBvdXQgaW4gdGhlIHRocmVhZCdzIGluY2VwdGlvbjoNCiAgIlBsZWFzZSB1c2UgbWFpbGlu
-ZyBsaXN0IGVtYWlsIHN5bnRheCBtb3ZpbmcgZm9yd2FyZC4gKGlubGluZSBhbmQgNzUNCiAgY2hh
-cmFjdGVycyBwZXIgbGluZSkiLg0KDQpPbiBUdWUsIEphbiAyMywgMjAxOCBhdCA0OjUwIFBNLCBS
-YWRqZW5kaXJhbmUgQ29kYW5kYXJhbWFuZSA8cmFkamVuZGlyYW5lLmNvZGFuZGFAbWljcm9zZW1p
-LmNvbT4gd3JvdGU6DQo+IEhpIEJqb3JuZSwNCg0KQmpvcm4NCg0KPg0KPiBDZWlsaW5nIHRoZSBN
-UlJTIHRvIHRoZSBNUFMgdmFsdWUgaW4gb3JkZXIgdG8gZ3VhcmFudGVlIHRoZSBpbnRlcm9wZXJh
-YmlsaXR5IGluIHBjaWVfYnVzX3BlcmYgbW9kZSBkb2VzIG5vdCBtYWtlIHNlbnNlLiBBIGRldmlj
-ZSBjYW4gbWFrZSBhIG1lbXJkIHJlcXVlc3QgYWNjb3JkaW5nIHRvIHRoZSBNUlJTIHNldHRpbmcg
-KHdoaWNoIGNhbiBiZSBoaWdoZXIgdGhhbiBpdHMgTVBTKSwgYnV0IHRoZSBjb21wbGV0ZXIgaGFz
-IHRvIHJlc3BlY3QgdGhlIE1QUyBhbmQgc2VuZCBjb21wbGV0aW9ucyBhY2NvcmRpbmdseS4gQXMg
-YW4gZXhhbXBsZSwgc3lzdGVtIGNhbiBjb25maWd1cmUgTVBTPTEyOEIgYW5kIE1SUlM9NEssIHdo
-ZXJlIGFuIGVuZHBvaW50IGNhbiBhIG1ha2UgNEsgTWVtUmQgcmVxdWVzdCwgYnV0IHRoZSBjb21w
-bGV0ZXIgaGFzIHRvIHNlbmQgY29tcGxldGlvbnMgYXMgMTI4QiBUTFBzLCBieSByZXNwZWN0aW5n
-IHRoZSBNUFMgc2V0dGluZy4gTVJSUyBkb2VzIG5vdCBmb3JjZSBhIGRldmljZSB0byB1c2UgaGln
-aGVyIE1QUyB2YWx1ZSB0aGFuIGl0IGlzIGNvbmZpZ3VyZWQgdG8uDQoNClRoaXMgd2FzIGNvdmVy
-ZWQgYnkgdGhlIHZlcnkgZmlyc3QgdG9waWMgaW4gQmpvcm4ncyBmaXJzdCByZXBseSB3aXRoaW4g
-dGhlIHRocmVhZC4uLg0KDQo+DQo+IEFub3RoZXIgZmFjdG9yIHRoYXQgbmVlZCB0byBiZSBjb25z
-aWRlcmVkIGZvciBzdG9yYWdlIGRldmljZXMgaXMgdGhhdCBzdXBwb3J0IG9mIFQxMCBQcm90ZWN0
-aW9uIEluZm9ybWF0aW9uIChESUYpLiBGb3IgZXZlcnkgNTEyQiBvciA0S0IsIGEgOEIgUEkgaXMg
-Y29tcHV0ZWQgYW5kIGluc2VydGVkIG9yIHZlcmlmaWVkLCB3aGljaCByZXF1aXJlIHRoZSA1MTJC
-IG9mIGRhdGEgdG8gYXJyaXZlIGluIHNlcXVlbmNlLiBJZiB0aGUgTVJSUyBpcyA8IDUxMkIsIHRo
-aXMgbWlnaHQgcG9zZSBvdXQgb2Ygb3JkZXIgY29tcGxldGlvbnMgdG8gdGhlIHN0b3JhZ2UgZGV2
-aWNlLCBpZiB0aGUgRVAgaGFzIHRvIHN1Ym1pdCBtdWx0aXBsZSBvdXRzdGFuZGluZyByZWFkIHJl
-cXVlc3RzIGluIG9yZGVyIHRvIGFjaGlldmUgaGlnaGVyIHBlcmZvcm1hbmNlLiBUaGlzIHdvdWxk
-IGJlIGEgY2hhbGxlbmdlIGZvciB0aGUgc3RvcmFnZSBlbmRwb2ludHMgdGhhdCBwcm9jZXNzIHRo
-ZSBUMTAgUEkgaW5saW5lIHdpdGggdGhlIHRyYW5zZmVyLCBub3cgdGhleSBoYXZlIHRvIHN0b3Jl
-IGFuZCBwcm9jZXNzIHRoZSA1MTJCIHNlY3RvcnMgb25jZSB0aGV5IHJlY2VpdmUgYWxsIHRoZSBU
-TFBzIGZvciB0aGF0IHNlY3Rvci4NCg0KVGhlICJUMTAiIGFzcGVjdHMgYXJlIG5ldyBhbmQgSSd2
-ZSBub3QgaGVhcmQgYWJvdXQgdGhlbSBiZWZvcmUuICBPbiB0aGUgc3VyZmFjZSB0aGV5IHNlZW0g
-dG8gYmUgc3RvcmFnZSBkZXZpY2Ugc3BlY2lmaWMuICBJZiB0aGF0IGlzIGluZGVlZCB0aGUgY2Fz
-ZSB0aGVuIHRoZXJlIHNlZW1zIHRvIGJlIHNvbWUgbWl4aW5nIG9mIHR3bywgZGlzdGluY3RseSBk
-aWZmZXJlbnQsIHRoaW5ncy4gIFBDSWUgVExQcywgTVBTLCBNUlJTLCAuLi4sIGFyZSBhbGwgUENJ
-ZSBkZWZpbmVkIGl0ZW1zIHRoYXQgYXJlIGNvdmVyZWQgYnkgaXRzIHNwZWNpZmljYXRpb24uICBF
-eHBlY3RpbmcgdGhhdCBUMTAgc3BlY2lmaWNzIGNhbiBiZSBpbnRlcm1peGVkIHdpdGhpbiBQQ0ll
-J3MgcHJvdG9jb2wgZG9lc24ndCBtYWtlIGFueSBzZW5zZSBhbmQgc291bmRzIG11Y2ggbW9yZSBs
-aWtlIHNvbWV0aGluZyB0aGF0IHdpbGwgaGF2ZSB0byBiZSB0YWtlbiBjYXJlIG9mIGF0IHRoZSBj
-b250cm9sbGVyJ3MNCmxldmVsLiAgIFBlcmhhcHMgSSdtICB3YXkgb2ZmIGJhc2UgaGVyZSwgd2Un
-bGwgaGF2ZSB0byBoZWFyIG1vcmUgYWJvdXQgdGhpcw0KdG8gY29tZSB0byBzb21lIHVuZGVyc3Rh
-bmRpbmcuDQoNCj4NCj4gU28sIGl0IGlzIGJldHRlciB0byBkZWNvdXBsZSB0aGUgTVJSUyBhbmQg
-TVBTIGluIHBjaWVfYnVzX3BlcmYgbW9kZS4gTGlrZSBzdGF0ZWQgZWFybGllciBpbiB0aGUgdGhy
-ZWFkLCBwcm92aWRlIGFuIG9wdGlvbiB0byBjb25maWd1cmUgTVJSUyBzZXBhcmF0ZWx5IGluIHBj
-aWVfYnVzX3BlcmYgbW9kZS4NCg0KVGhpcyBhbHNvIGhhcyBiZWVuIGJyb3VnaHQgdXAgdHdpY2Ug
-YWxyZWFkeSwgYW5kIGNvdmVyZWQgaW4gdGhlIHByaW9yIHJlc3BvbnNlcy4uLg0KDQo+DQo+IFJl
-Z2FyZHMsDQo+IFJhZGouDQo=
+
+
+On 10-Jan-18 10:45 PM, Lorenzo Pieralisi wrote:
+> On Tue, Jan 09, 2018 at 02:49:30PM +0530, Manikanta Maddireddy wrote:
+>> This series of patches adds loadable kernel module and power management
+>> support to Tegra PCIe host controller driver. irq_set_msi_desc() and
+>> tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
+>> set of patches.
+>>
+>> These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
+>> are the verification details.
+>> 	- Multiple module insert & remove
+>> 	- PCIe device functionality after module insert
+>> 	- Free clock, resets, regulators, powergate, iomem and interrupt
+>> 	resources after module remove
+>> 	- PCIe device functionality after resume from RAM
+>>
+>> V2: PM QoS fix is dropped in V2 from this series because the fix is
+>> incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
+>> latency framework")'. Update commit message of few patches in V2.
+>>
+>> V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_use()
+>> are dropped based on review comments. These symbols will be addressed in next
+>> series. Took care of few other review comments.
+>>
+>> V4: Dropped pci_find_host_bridge() export patch and added new patch to use
+>> bus->sysdata for private data.
+>>
+>> V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
+>> on top of linux-next
+>>
+>> Manikanta Maddireddy (7):
+>>   of: Export of_pci_range_to_resource()
+>>   PCI: tegra: Use bus->sysdata to store and get host private data
+>>   PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for Tegra PCIe
+>>   PCI: tegra: Free resources on probe failure
+>>   PCI: tegra: Add loadable kernel module support
+>>   PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
+>>   PCI: tegra: Add power management support
+>>
+>>  drivers/of/address.c         |   1 +
+>>  drivers/pci/host/Kconfig     |   2 +-
+>>  drivers/pci/host/pci-tegra.c | 333 ++++++++++++++++++++++++++++++++-----------
+>>  3 files changed, 253 insertions(+), 83 deletions(-)
+> 
+> Can I ask you please to rebase this series against my pci/tegra branch ?
+> 
+> Thanks,
+> Lorenzo
+> 
+Hi Lorenzo,
+
+I rebased this series on lpieralisi/pci/tegra and published V6.
+V5 patch https://patchwork.ozlabs.org/patch/857318/ cherry-pick is failing,
+because of missing change "7153884c088a ("PCI: Remove PCI_REASSIGN_ALL_RSRC use on arm and arm64")"
+in lpieralisi/pci/tegra branch. This information might come in
+handy when doing remote branch merge of 'lorenzo/pci/tegra' into next
+
+Thanks,
+Manikanta
