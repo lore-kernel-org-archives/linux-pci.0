@@ -1,70 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 9 Jan 2018 17:45:15 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        linux-pci@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] media/ttusb-budget: remove pci_zalloc_coherent abuse
-Message-ID: <20180109234515.GA153924@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180109203939.5930-1-hch@lst.de>
- <20180109203939.5930-2-hch@lst.de>
+Return-Path: <SRS0=t91B=EG=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=t91B=EG=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Reply-To: christian.koenig@amd.com
+Subject: Re: [PATCH 2/2] x86/PCI: limit the size of the 64bit window to 256GB
+ v3
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, torvalds@linux-foundation.org,
+ aaro.koskinen@iki.fi, andy.shevchenko@gmail.com, boris.ostrovsky@oracle.com,
+ jgross@suse.com, alexander.deucher@amd.com, airlied@linux.ie
+References: <20180111132330.2682-1-christian.koenig@amd.com>
+ <20180111132330.2682-2-christian.koenig@amd.com>
+ <20180111142141.GA3672@bhelgaas-glaptop.roam.corp.google.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
+Message-ID: <12f934df-3a5b-08fb-d313-9c7b9734c361@gmail.com>
+Date: Thu, 11 Jan 2018 15:51:45 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180109203939.5930-2-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180111142141.GA3672@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 09, 2018 at 09:39:37PM +0100, Christoph Hellwig wrote:
-> Switch to a plain kzalloc instea of pci_zalloc_coherent to allocate
-> memory for the USB DMA.
+Am 11.01.2018 um 15:21 schrieb Bjorn Helgaas:
+> On Thu, Jan 11, 2018 at 02:23:30PM +0100, Christian König wrote:
+>> Avoid problems with BIOS implementations which don't report all used
+>> resources to the OS by only allocating a 256GB window directly below the
+>> hardware limit.
+>>
+>> For the full hardware documentation see:
+>> https://support.amd.com/TechDocs/49125_15h_Models_30h-3Fh_BKDG.pdf
+> If you can supply a section number, I'll add it here.  That spec is 700
+> pages, so a hint would be useful.
 
-s/instea/instead/
+Sorry, had to search for that as well. That is noted in section "2.4.6 
+System Address Map".
 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c | 13 +++----------
->  1 file changed, 3 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c b/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
-> index a142b9dc0feb..b8619fb23351 100644
-> --- a/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
-> +++ b/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
-> @@ -102,7 +102,6 @@ struct ttusb {
->  	unsigned int isoc_in_pipe;
->  
->  	void *iso_buffer;
-> -	dma_addr_t iso_dma_handle;
->  
->  	struct urb *iso_urb[ISO_BUF_COUNT];
->  
-> @@ -792,21 +791,15 @@ static void ttusb_free_iso_urbs(struct ttusb *ttusb)
->  
->  	for (i = 0; i < ISO_BUF_COUNT; i++)
->  		usb_free_urb(ttusb->iso_urb[i]);
-> -
-> -	pci_free_consistent(NULL,
-> -			    ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF *
-> -			    ISO_BUF_COUNT, ttusb->iso_buffer,
-> -			    ttusb->iso_dma_handle);
-> +	kfree(ttusb->iso_buffer);
->  }
->  
->  static int ttusb_alloc_iso_urbs(struct ttusb *ttusb)
->  {
->  	int i;
->  
-> -	ttusb->iso_buffer = pci_zalloc_consistent(NULL,
-> -						  ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF * ISO_BUF_COUNT,
-> -						  &ttusb->iso_dma_handle);
-> -
-> +	ttusb->iso_buffer = kzalloc(ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF *
-> +			ISO_BUF_COUNT, GFP_KERNEL);
->  	if (!ttusb->iso_buffer) {
->  		dprintk("%s: pci_alloc_consistent - not enough memory\n",
->  			__func__);
-> -- 
-> 2.14.2
-> 
+Do you want to add that or should I resend the patch?
+
+Regards,
+Christian.
+
+>
+>> Fixes a silent reboot loop reported by Aaro Koskinen <aaro.koskinen@iki.fi> on
+>> an AMD-based MSI MS-7699/760GA-P43(FX) system.
+>>
+>> v2: cleanup code a bit more, update comment and explain the hw limit
+>> v3: improve commit message
+>>
+>> Link: https://lkml.kernel.org/r/20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi
+>> Reported-by: Aaro Koskinen <aaro.koskinen@iki.fi>
+>> Signed-off-by: Christian König <christian.koenig@amd.com>
+>> ---
+>>   arch/x86/pci/fixup.c | 19 +++++++++----------
+>>   1 file changed, 9 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+>> index a91280da2ea1..9c1c98d7e3a7 100644
+>> --- a/arch/x86/pci/fixup.c
+>> +++ b/arch/x86/pci/fixup.c
+>> @@ -662,10 +662,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
+>>    */
+>>   static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>>   {
+>> -	unsigned i;
+>>   	u32 base, limit, high;
+>> -	struct resource *res, *conflict;
+>>   	struct pci_dev *other;
+>> +	struct resource *res;
+>> +	unsigned i;
+>> +	int r;
+>>   
+>>   	if (!(pci_probe & PCI_BIG_ROOT_WINDOW))
+>>   		return;
+>> @@ -702,19 +703,17 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>>   	if (!res)
+>>   		return;
+>>   
+>> +	/* Allocate a 256GB window directly below the 0xfd00000000 hw limit */
+>>   	res->name = "PCI Bus 0000:00";
+>>   	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+>>   		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+>> -	res->start = 0x100000000ull;
+>> +	res->start = 0xbd00000000ull;
+>>   	res->end = 0xfd00000000ull - 1;
+>>   
+>> -	/* Just grab the free area behind system memory for this */
+>> -	while ((conflict = request_resource_conflict(&iomem_resource, res))) {
+>> -		if (conflict->end >= res->end) {
+>> -			kfree(res);
+>> -			return;
+>> -		}
+>> -		res->start = conflict->end + 1;
+>> +	r = request_resource(&iomem_resource, res);
+>> +	if (r) {
+>> +		kfree(res);
+>> +		return;
+>>   	}
+>>   
+>>   	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
+>> -- 
+>> 2.11.0
+>>
