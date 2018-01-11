@@ -1,68 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:61715 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbeACAkn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 19:40:43 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@the-dreams.de>
-Subject: [PATCH 4/7] PM / mfd: intel-lpss: Use DPM_FLAG_SMART_SUSPEND
-Date: Wed, 03 Jan 2018 01:34:53 +0100
-Message-ID: <3548517.xcdEzff6pU@aspire.rjw.lan>
-In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan> <2436726.ykYRzVD45y@aspire.rjw.lan>
+Received: from mail.kernel.org ([198.145.29.99]:50900 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933141AbeAKS1F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Jan 2018 13:27:05 -0500
+Date: Thu, 11 Jan 2018 12:27:03 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
+        thierry.reding@gmail.com, cyndis@kapsi.fi, jonathanh@nvidia.com,
+        robh+dt@kernel.org, frowand.list@gmail.com, rjw@rjwysocki.net,
+        tglx@linutronix.de, vidyas@nvidia.com, kthota@nvidia.com,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH V5 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for
+ Tegra PCIe
+Message-ID: <20180111182703.GL241460@bhelgaas-glaptop.roam.corp.google.com>
+References: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
+ <1515489577-2197-4-git-send-email-mmaddireddy@nvidia.com>
+ <20180111134925.GA10168@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180111134925.GA10168@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Jan 11, 2018 at 01:49:25PM +0000, Lorenzo Pieralisi wrote:
+> Hi Bjorn,
+> 
+> On Tue, Jan 09, 2018 at 02:49:33PM +0530, Manikanta Maddireddy wrote:
+> > Primary, secondary and subordinate default bus numbers are 0 in Tegra and
+> > it is expecting SW to program these numbers in configration space.
+> > 
+> > pci_scan_bridge_extend() function programs these numbers in configuration
+> > space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_BUS
+> > flag is set. Since secondary & subordinate default bus numbers are 0,
+> > PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
+> > 
+> > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > Acked-by: Thierry Reding <treding@nvidia.com>
+> 
+> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> Would you mind applying this patch (NB: it is the patch in the v5
+> version - this patch - not the one in v6 that is a rebased version):
+> 
+> https://patchwork.ozlabs.org/patch/857318/
+> 
+> to your pci/resource branch please (there is a dependency) ?
+> 
+> This would allow me to apply the rest of the patches in the series
+> that I consider mergeable independently of your tree branches, to
+> simplify the dependency.
 
-Make the intel-lpss driver set DPM_FLAG_SMART_SUSPEND for its
-devices which will allow them to stay in runtime suspend during
-system suspend unless they need to be reconfigured for some reason.
+Applied to pci/resource for v4.16, thanks!
 
-Also make it avoid resuming its child devices if they have
-DPM_FLAG_SMART_SUSPEND set to allow them to remain in runtime
-suspend during system suspend.
+I'd love to remove more of these.  Every one helps.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-for-MFD-by: Lee Jones <lee.jones@linaro.org>
----
- drivers/mfd/intel-lpss.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-Index: linux-pm/drivers/mfd/intel-lpss.c
-===================================================================
---- linux-pm.orig/drivers/mfd/intel-lpss.c
-+++ linux-pm/drivers/mfd/intel-lpss.c
-@@ -450,6 +450,8 @@ int intel_lpss_probe(struct device *dev,
- 	if (ret)
- 		goto err_remove_ltr;
- 
-+	dev_pm_set_driver_flags(dev, DPM_FLAG_SMART_SUSPEND);
-+
- 	return 0;
- 
- err_remove_ltr:
-@@ -478,7 +480,9 @@ EXPORT_SYMBOL_GPL(intel_lpss_remove);
- 
- static int resume_lpss_device(struct device *dev, void *data)
- {
--	pm_runtime_resume(dev);
-+	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND))
-+		pm_runtime_resume(dev);
-+
- 	return 0;
- }
- 
+> > ---
+> > V3:
+> > * new patch in V3
+> > V4:
+> > * no change in this patch
+> > V5:
+> > * no change in this patch
+> > 
+> >  drivers/pci/host/pci-tegra.c | 1 -
+> >  1 file changed, 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> > index d790a26ad87e..e4b47ebc91fe 100644
+> > --- a/drivers/pci/host/pci-tegra.c
+> > +++ b/drivers/pci/host/pci-tegra.c
+> > @@ -2293,7 +2293,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+> >  
+> >  	tegra_pcie_enable_ports(pcie);
+> >  
+> > -	pci_add_flags(PCI_REASSIGN_ALL_BUS);
+> >  	host->busnr = pcie->busn.start;
+> >  	host->dev.parent = &pdev->dev;
+> >  	host->ops = &tegra_pcie_ops;
+> > -- 
+> > 2.1.4
+> > 
