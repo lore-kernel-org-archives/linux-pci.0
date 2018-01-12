@@ -1,142 +1,47 @@
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v3 2/7] powerpc/kernel: Add uevents in EEH error/resume
-Date: Wed,  3 Jan 2018 11:16:28 -0600
-In-Reply-To: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20180103171633.94499-3-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:46443 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933917AbeALPMI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jan 2018 10:12:08 -0500
+Date: Fri, 12 Jan 2018 16:12:06 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: Regression (sort of): PCI/portdrv: Turn off PCIe services during
+ shutdown
+Message-ID: <20180112151206.GA18736@wunner.de>
+References: <20180112104929.GA10599@wunner.de>
+ <ece49947-e75a-baff-9c4a-6f47bd154642@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ece49947-e75a-baff-9c4a-6f47bd154642@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Devices can go offline when EEH is reported. This patch adds
-a change to the kernel object and lets udev know of error.
-When device resumes a change is also set reporting device as
-online. Therefore, EEH events are better propagated to user
-space for devices in powerpc arch.
+On Fri, Jan 12, 2018 at 09:26:48AM -0500, Sinan Kaya wrote:
+> On 1/12/2018 5:49 AM, Lukas Wunner wrote:
+> I wonder if we can separate remove from shutdown and just disable the IRQs
+> in shutdown case rather than turning off the slot power etc.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/eeh_driver.c   |  8 ++++++--
- drivers/pci/pcie/aer/aerdrv_core.c |  3 +++
- include/linux/pci.h                | 36 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 45 insertions(+), 2 deletions(-)
+But don't we risk "IRQ xx: nobody cared" splats if we do that?
 
-diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-index 3c0fa99c5533..c2945b91b628 100644
---- a/arch/powerpc/kernel/eeh_driver.c
-+++ b/arch/powerpc/kernel/eeh_driver.c
-@@ -228,6 +228,7 @@ static void *eeh_report_error(void *data, void *userdata)
- 
- 	edev->in_error = true;
- 	eeh_pcid_put(dev);
-+	pci_uevent_ers(dev, PCI_ERS_RESULT_NONE);
- 	return NULL;
- }
- 
-@@ -379,8 +380,11 @@ static void *eeh_report_resume(void *data, void *userdata)
- 	}
- 
- 	driver->err_handler->resume(dev);
--
- 	eeh_pcid_put(dev);
-+	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
-+#ifdef CONFIG_PCI_IOV
-+	eeh_ops->notify_resume(eeh_dev_to_pdn(edev));
-+#endif
- 	return NULL;
- }
- 
-@@ -414,8 +418,8 @@ static void *eeh_report_failure(void *data, void *userdata)
- 	}
- 
- 	driver->err_handler->error_detected(dev, pci_channel_io_perm_failure);
--
- 	eeh_pcid_put(dev);
-+	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
- 	return NULL;
- }
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 744805232155..8d7448063fd1 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -278,6 +278,7 @@ static int report_error_detected(struct pci_dev *dev, void *data)
- 	} else {
- 		err_handler = dev->driver->err_handler;
- 		vote = err_handler->error_detected(dev, result_data->state);
-+		pci_uevent_ers(dev, PCI_ERS_RESULT_NONE);
- 	}
- 
- 	result_data->result = merge_result(result_data->result, vote);
-@@ -341,6 +342,7 @@ static int report_resume(struct pci_dev *dev, void *data)
- 
- 	err_handler = dev->driver->err_handler;
- 	err_handler->resume(dev);
-+	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
- out:
- 	device_unlock(&dev->dev);
- 	return 0;
-@@ -541,6 +543,7 @@ static void do_recovery(struct pci_dev *dev, int severity)
- 	return;
- 
- failed:
-+	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
- 	/* TODO: Should kernel panic here? */
- 	dev_info(&dev->dev, "AER: Device recovery failed\n");
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e3e94467687a..405630441b74 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2277,6 +2277,42 @@ static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
- 	return false;
- }
- 
-+/**
-+ * pci_uevent_ers - emit a uevent during recovery path of pci device
-+ * @pdev: pci device to check
-+ * @err_type: type of error event
-+ *
-+ */
-+static inline void pci_uevent_ers(struct pci_dev *pdev,
-+				  enum  pci_ers_result err_type)
-+{
-+	int idx = 0;
-+	char *envp[3];
-+
-+	switch (err_type) {
-+	case PCI_ERS_RESULT_NONE:
-+	case PCI_ERS_RESULT_CAN_RECOVER:
-+		envp[idx++] = "ERROR_EVENT=BEGIN_RECOVERY";
-+		envp[idx++] = "DEVICE_ONLINE=0";
-+		break;
-+	case PCI_ERS_RESULT_RECOVERED:
-+		envp[idx++] = "ERROR_EVENT=SUCCESSFUL_RECOVERY";
-+		envp[idx++] = "DEVICE_ONLINE=1";
-+		break;
-+	case PCI_ERS_RESULT_DISCONNECT:
-+		envp[idx++] = "ERROR_EVENT=FAILED_RECOVERY";
-+		envp[idx++] = "DEVICE_ONLINE=0";
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (idx > 0) {
-+		envp[idx++] = NULL;
-+		kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, envp);
-+	}
-+}
-+
- /* provide the legacy pci_dma_* API */
- #include <linux/pci-dma-compat.h>
- 
--- 
-2.14.3 (Apple Git-98)
+Not sure if just disabling the IRQ without telling the hotplug port
+not to send interrupts is safe.
+
+The issue that Command Complete events are falsely claimed to be
+supported needs to be adressed regardless because whenever a
+Thunderbolt device is unplugged, the same 2 second delay occurs.
+So if you unplug a daisy chain of, say 6 devices, it takes 12
+seconds until they're all removed from the system.
+
+By now I've found out that Falcon Ridge (Thunderbolt 2) is not affected,
+I'm not yet sure if Redwood Ridge is, but it seems the issue is contrained
+to Thunderbolt 1 controllers only, probably an erratum.
+
+Thanks,
+
+Lukas
