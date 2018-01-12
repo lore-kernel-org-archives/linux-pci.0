@@ -1,54 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33236 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965291AbeAMAEU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Jan 2018 19:04:20 -0500
-Date: Fri, 12 Jan 2018 18:04:14 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: linux-pci@vger.kernel.org, linuxarm@huawei.com,
-        zhouyupeng1@huawei.com, tangyongqian@huawei.com,
-        bruce.feng@huawei.com, stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix MSI disabled for HiSilicon Hip06/Hip07 EP mode
-Message-ID: <20180113000414.GC205469@bhelgaas-glaptop.roam.corp.google.com>
-References: <1514454812-101846-1-git-send-email-liudongdong3@huawei.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:35160 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934152AbeALO0v (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jan 2018 09:26:51 -0500
+Subject: Re: Regression (sort of): PCI/portdrv: Turn off PCIe services during
+ shutdown
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        linux-pci@vger.kernel.org
+References: <20180112104929.GA10599@wunner.de>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <ece49947-e75a-baff-9c4a-6f47bd154642@codeaurora.org>
+Date: Fri, 12 Jan 2018 09:26:48 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1514454812-101846-1-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <20180112104929.GA10599@wunner.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 28, 2017 at 05:53:32PM +0800, Dongdong Liu wrote:
-> HiSilicon Hip06/Hip07 can work as RC mode and EP mode. The PCIe Root Port
-> in Hip06/Hip07 SoCs advertises an MSI capability, but it can not generate
-> MSIs. It can generate MSIs When it works as EP mode, but the vendor id and
-> device id of RP and EP are the same. Current code also disable MSI for EP
-> mode, we only need to disable MSI for Root Port.
-> 
-> Cc: <stable@vger.kernel.org>
-> Fixes: 72f2ff0deb87 ("PCI: Disable MSI for HiSilicon Hip06/Hip07 Root Ports")
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Hi Lukas,
 
-Applied with Zhou's reviewed-by to pci/msi for v4.16, thanks!
+On 1/12/2018 5:49 AM, Lukas Wunner wrote:
+> Hi Sinan,
+> 
+> I updated to 4.15 this week and noticed a regression (if one may call it
+> that, it's more like a very noticeable annoyance) affecting machines
+> with Thunderbolt controllers wherein a reboot or shutdown is delayed by
+> 8 seconds, caused by
 
-> ---
->  drivers/pci/quirks.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 10684b1..d22750e 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -1636,8 +1636,8 @@ static void quirk_pcie_mch(struct pci_dev *pdev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7520_MCH,	quirk_pcie_mch);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7320_MCH,	quirk_pcie_mch);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7525_MCH,	quirk_pcie_mch);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI,	0x1610,	quirk_pcie_mch);
->  
-> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1610, PCI_CLASS_BRIDGE_PCI, 8, quirk_pcie_mch);
->  
->  /*
->   * It's possible for the MSI to get corrupted if shpc and acpi
-> -- 
-> 1.9.1
-> 
+Sorry for that.
+
+I wonder if we can separate remove from shutdown and just disable the IRQs
+in shutdown case rather than turning off the slot power etc.
+
+Let me see if I can come up with a quick patch.
+
+> On the one hand, your commit message sounds as though the change merely
+> addresses a *potential* issue, so one could argue that if it causes
+> *real* issues such as delayed reboots, it's probably not a good idea.
+> On the other hand I do see your point since a user might surprise-remove
+> a device from a hotplug slot during shutdown, and we clearly wouldn't want
+> to act on that.
+
+We are seeing the problem on our platform (QDF2400). It is just sporadic. 
+That's why, the commit message was loosely worded.
+
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
