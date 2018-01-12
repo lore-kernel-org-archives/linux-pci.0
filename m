@@ -1,134 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0079.outbound.protection.outlook.com ([104.47.40.79]:35855
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S964998AbeAITbc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 9 Jan 2018 14:31:32 -0500
-Subject: Re: [BISECTED] v4.15-rc: Boot regression on x86_64/AMD
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>
-References: <20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi>
- <CA+55aFxCSWCG7ZvHW3AkLPzMPMAuG1BhL8fNgC0-JPYU4LZVow@mail.gmail.com>
- <CAErSpo7dOfabXk9rpZr=B87wK4_Ao9_moK89Ze0cyi6Mqb0Z+Q@mail.gmail.com>
- <628e2b58-b16b-5792-b4ef-88bec15ab779@amd.com>
- <CA+55aFxbpNHpiZdtddq8DqfChFwho0OWw5SAZkkwEpwPS4-QYg@mail.gmail.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <5d794f18-f54c-3ca6-3869-5f5e2825b1ad@amd.com>
-Date: Tue, 9 Jan 2018 20:31:14 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 12 Jan 2018 13:39:59 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 3/7] PCI: aardvark: set host and device to the same
+ MAX payload size
+Message-ID: <20180112193959.GA205469@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+ <20170928125838.11887-4-thomas.petazzoni@free-electrons.com>
+ <20171005173102.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+ <20180109163918.5e46c1a1@windsurf.lan>
+ <20180109221436.GE31640@bhelgaas-glaptop.roam.corp.google.com>
+ <20180112111448.00feb9f8@windsurf.lan>
+ <20180112144024.GB113206@bhelgaas-glaptop.roam.corp.google.com>
+ <20180112164644.5611fe3b@windsurf.lan>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFxbpNHpiZdtddq8DqfChFwho0OWw5SAZkkwEpwPS4-QYg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180112164644.5611fe3b@windsurf.lan>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+ Hanna Hawa <hannah@marvell.com>, Nadav Haklai <nadavh@marvell.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ Victor Gu <xigu@marvell.com>,
+ =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@free-electrons.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Antoine Tenart <antoine.tenart@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 09.01.2018 um 20:18 schrieb Linus Torvalds:
-> On Tue, Jan 9, 2018 at 2:37 AM, Christian König
-> <christian.koenig@amd.com> wrote:
->> I tested a bit with Aaro and came up with the attached patch, it adds a 16GB
->> guard between the end of memory and the new window for the PCIe root hub.
->> But I agree with you that this is just a hack and not a real solution.
-> Guys, that last statement makes no sense.
->
-> The *real* hack was that original patch that caused problems.
->
-> I mean, just look at it. It has a completely made up - and bad -
-> default start, and then it tries to forcibly just create the maximum
-> window it possibly can. Well, not quite, but almost.
->
-> Now *THAT* is hacky, and fragile, and a bad idea. It's a fundamentally
-> bad idea exactly because it assumes
->
->   (a) we have perfect knowledge
->
->   (b) that window that wasn't even enabled or configured in the first
-> place should be the maximum window.
->
-> both of those assumptions seem completely bogus, and seem to have no
-> actual reason.
->
-> This comment in that code really does say it all:
->
->          /* Just grab the free area behind system memory for this */
->
-> very lackadaisical.
->
-> I agree that the 16GB guard is _also_ random, but it's certainly not
-> less random or hacky.
->
-> But I really wonder why you want to be that close to memory at all.
+On Fri, Jan 12, 2018 at 04:46:44PM +0100, Thomas Petazzoni wrote:
+> On Fri, 12 Jan 2018 08:40:24 -0600, Bjorn Helgaas wrote:
 
-Actually I don't want to be close to the end of memory at all. It's just 
-what I found a certain other OS is doing and I thought: Hey, that has 
-the best chance of working...
+> > The Device Control MPS field defaults to 128 bytes.  Generic software
+> > can only change that default if it knows that every element that might
+> > receive a packet from the device can handle it.  In this case, we have
+> > no information about what the invisible Root Port can handle, so I
+> > would argue that we cannot change MPS.
+> > 
+> > In the lspci above, MPS is set to 256 bytes.  If that was done by
+> > firmware, it might be safe because it knows things about the Root Port
+> > that Linux doesn't.  But I don't think the Linux PCI core could set it
+> > to 256.
+> 
+> So you're suspecting that the firmware/bootloader has configured the
+> MPS on the E1000E device to 256 bytes ?
 
-But yeah, thinking about it I agree with you that this was probably not 
-a good idea.
+I didn't word that very well.  It looks like *something* set it to
+256, but I don't know what.  It's possible Linux did, but I think that
+would be a bug and should be fixed.  We'd have to instrument the code
+or analyze it more closely than I have.
 
-> What was wrong with the patch thgat just put it the hell out of any
-> normal memory range, and just changed the default start from one
-> random (and clearly bad) value to _another_ random but at least
-> out-of-the-way value?
+> Isn't it dangerous for the kernel to rely on the firmware/bootloader
+> configuration ? Indeed, the firmware/bootloader might have configured
+> MPS to X bytes on the endpoint, but when the kernel boots and
+> initializes the PCIe controller, its sets the PCIe controller MPS to Y
+> bytes, with Y > X.
+> 
+> > ASPM L0s is similar.  We should only enable L0s if we can tell that
+> > both ends of the link support it.  If there's no Root Port, we don't
+> > have any ASPM capability information for the upstream end of the link,
+> > so we shouldn't enable ASPM at all.
+> 
+> Well, even without the Root Port, we are able to use the endpoint
+> configuration space to figure out whether it supports L0s, and adjust
+> the root complex configuration accordingly. This is what our patch is
+> doing for MPS, and which could be done similarly for L0s, no?
 
-Well Bjorn didn't liked it because I couldn't come up with a good 
-explanation why 256GB is a good value in general (it is a good value for 
-our particular use case).
+Yes, this is where it would get machine-specific.  I don't know how
+that should be structured, or even whether it's really worthwhile.  I
+think the core should make it *work* with the least-common-denominator
+approach, but I'm not convinced that a lot of effort should be put
+into optimizing a topology that doesn't follow the spec.  A driver
+could do this outside the core, but I think it would be better to put
+the effort into making the topology more standard.
 
-> IOW, this change
->
-> -       res->start = 0x100000000ull;
-> +       res->start = 0xbd00000000ull;
->
-> really has a relatively solid explanation for it: "pick a high address
-> that is likely out of the way". That's *much* better than "pick an
-> address that is right after memory".
->
-> Now, could there be a better high address to pick? Probably. It would
-> be really nice to have a *reason* for the address to be picked.
->
-> But honestly, even "it doesn't break Aaro's machine" is a better
-> reason than many, in the absence of other reasons.
->
-> For example, was there a reason for that random 756GB address? Is the
-> limit of the particular AMD 64-bit bar perhaps at the 1TB mark (and
-> that "res->end" value is because "close to it, but not at the top")?
+Why exactly *doesn't* Aardvark expose the Root Port?  I assume it does
+actually exist, since there is actually a link leading to the slot,
+and there has to be *something* at the upstream end of that link.
 
-That is actually a hardware limit documented in the BIOS and Kernel 
-developers guide for AMD CPUs 
-(https://support.amd.com/TechDocs/49125_15h_Models_30h-3Fh_BKDG.pdf).
+> > I had the impression that these patches were required for correct
+> > functionality, not just to improve performance.  But maybe I
+> > misunderstood?
+> 
+> I don't myself have the device that wasn't working, and that this patch
+> got to work, so I can't double check myself. However, indeed, I was
+> told that without this fix, some devices would not work.
+> 
+> One question: is it valid/working to have the root complex configured
+> with MPS = 128 bytes but the endpoint configured with MPS = 256 or 512
+> bytes ? Or should the MPS value be strictly equal on both sides ?
 
-I should probably add a comment explaining this.
+Per PCIe r4.0, sec 2.2.2, a device cannot transmit a TLP with a
+payload larger than its MPS.  A device receiving a TLP with a payload
+larger than its MPS must treat the TLP as malformed.
 
-> So I think "just above RAM" is a _horrible_ default starting point.
-> The random 16GB guard is _better_, but it honestly doesn't seem any
-> better than the simpler original patch.
->
-> A starting point like "halfway to from the hardware limit" would
-> actually be a better reason. Or just "we picked an end-point, let's
-> pick a starting point that gives us a _sufficient_ - but not excessive
-> - window".
+I think that means MPS really should be set the same on both sides so
+the device can do both DMA reads and writes safely.
 
-Well that is exactly what the 256GB patch was doing.
+> Depending on your answer, there are two options:
+> 
+>  - It is a valid situation to have a root complex MPS lower than the
+>    endpoint MPS. In this case, we could for now simply unconditionally
+>    set the MPS to 128 bytes in the root complex, as a fix to get all
+>    devices working. And then separately, work on improving performance
+>    by increasing the MPS according to the endpoint capabilities.
+> 
+>  - It is not valid for the root complex MPS to be different than the
+>    endpoint MPS. In this case, then I don't see how we can do things
+>    differently than the proposed patch: we have to see what the
+>    endpoint MPS is, and adjust the root complex MPS accordingly.
+>    Indeed, the bootloader/firmware might have changed the endpoint MPS
+>    so that it is no longer the default of 128 bytes.
 
-So as long as you are fine with that I'm perfectly fine to use that one.
+All devices are guaranteed to support MPS = 128 bytes, so if you set
+the Root Port to that in the driver, we should be able to make the PCI
+core leave (or set, if necessary) all devices with MPS = 128.
 
-Christian.
+I think we should start with that first, then worry about performance
+optimizations separately.  I guess I'm still just shaking my head over
+the invisible Root Port mystery.  I think the other cases I know about
+are related to virtualization, where I can sort of understand why the
+Root Port is missing, but I don't think that's the situation here.
 
-> Or any number of other possible starting points. Almost _anything_ is
-> better than "end of RAM".
->
-> That "above end of RAM" might be a worst-case fall-back value (and in
-> fact, I think that _is_ pretty close to what the PCI code uses for the
-> case of "we don't have any parent at all, so we'll just have to assume
-> it's a transparent bridge"), but I don't think it's necessarily what
-> you should _strive_ for.
->
-> So the hackyness of whatever the fix is really should be balanced with
-> the hackyness of the original patch that introduced this problem.
->
->               Linus
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
