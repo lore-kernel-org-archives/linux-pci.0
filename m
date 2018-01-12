@@ -1,67 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:46408 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752063AbeAESTj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Jan 2018 13:19:39 -0500
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-10-logang@deltatee.com>
- <20180105181152.GA10657@localhost.localdomain>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <6c89e4b4-1854-c251-a5ec-7e54bc8085fc@deltatee.com>
-Date: Fri, 5 Jan 2018 11:19:28 -0700
+Received: from mailout2.hostsharing.net ([83.223.90.233]:39921 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754624AbeALKtc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jan 2018 05:49:32 -0500
+Date: Fri, 12 Jan 2018 11:49:29 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        linux-pci@vger.kernel.org
+Subject: Regression (sort of): PCI/portdrv: Turn off PCIe services during
+ shutdown
+Message-ID: <20180112104929.GA10599@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20180105181152.GA10657@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH 09/12] nvme-pci: Use PCI p2pmem subsystem to manage the
- CMB
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Sinan,
 
+I updated to 4.15 this week and noticed a regression (if one may call it
+that, it's more like a very noticeable annoyance) affecting machines
+with Thunderbolt controllers wherein a reboot or shutdown is delayed by
+8 seconds, caused by
 
-On 05/01/18 11:11 AM, Keith Busch wrote:
-> On Thu, Jan 04, 2018 at 12:01:34PM -0700, Logan Gunthorpe wrote:
->> Register the CMB buffer as p2pmem and use the appropriate allocation
->> functions to create and destroy the IO SQ.
->>
->> If the CMB supports WDS and RDS, publish it for use as p2p memory
->> by other devices.
-> 
-> <>
-> 
->> +	if (qid && dev->cmb_use_sqes) {
->> +		nvmeq->sq_cmds = pci_alloc_p2pmem(pdev, SQ_SIZE(depth));
-> 
->> +		nvmeq->sq_dma_addr = pci_p2pmem_virt_to_bus(pdev,
->> +							    nvmeq->sq_cmds);
->> +		nvmeq->sq_cmds_is_io = true;
->> +	}
-> 
-> This gets into some spec type trouble for creating an IO submission
-> queue. We use the sq_dma_addr as the PRP entry to the Create I/O
-> SQ command, which has some requirements:
-> 
->    "the PRP Entry shall have an offset of 0h."
-> 
-> So this has to be 4k aligned, but pci_alloc_p2pmem doesn't guarantee
-> that. I doubt the spec's intention was to require such alignment for
-> CMB SQs, but there may be controllers enforcing the rule as written.
+    commit cc27b735ad3a75574a6ab1a66ed6b09385e77e5e
+    Author: Sinan Kaya <okaya@codeaurora.org>
+    Date:   Wed Oct 25 15:01:02 2017 -0400
 
-Although it is not explicitly stated anywhere, pci_alloc_p2pmem() should 
-always be at least 4k aligned. This is because the gen_pool that 
-implements it is created with PAGE_SHIFT for its min_alloc_order.
+    PCI/portdrv: Turn off PCIe services during shutdown
 
-Logan
+    Some of the PCIe services such as AER are being left enabled during
+    shutdown. This might cause spurious AER errors while SOC is being
+    powered down.
+
+    Clean up the PCIe services gracefully during shutdown to clear these
+    false positives.
+
+The reason is that Thunderbolt controllers claim to support Command
+Complete interrupts (value of 0b in the No Command Completed Support
+field of the Slot Capabilities register), but in reality never bother
+to send the interrupt.  Your commit causes pcie_shutdown_notification()
+to be called on ->shutdown, which calls pcie_write_cmd(), which calls
+pcie_wait_cmd() twice, each invocation causing a delay of 1 second.
+Because Thunderbolt controllers typically have 4 hotplug bridges,
+this adds up to 8 seconds.
+
+The 1 second delay comes from PCIe base spec r2.1 sec. 6.7.3.2:
+
+    If command completed events are supported, then software must wait
+    for a command to complete before issuing the next command. However,
+    if the status field is not set after the 1 second limit on command
+    execution, software is permitted to repeat the command or to issue
+    the next command.
+
+I'm not sure which Thunderbolt controllers fake the ability to send
+CC interrupts but my old Light Ridge is definitely affected and I recall
+seeing logs of newer Cactus Ridge and Falcon Ridge (Thunderbolt 2)
+controllers which also had this issue.  I'm cc'ing Intel folks in the
+hope that they may know the details.  I believe Mika has a MacBookPro13,3
+with Alpine Ridge (Thunderbolt 3) and could verify if that also has
+this issue. These MacBook Pros have two Thunderbolt controllers,
+so if affected, the commit would delay reboot by 16 seconds.
+
+On the one hand, your commit message sounds as though the change merely
+addresses a *potential* issue, so one could argue that if it causes
+*real* issues such as delayed reboots, it's probably not a good idea.
+On the other hand I do see your point since a user might surprise-remove
+a device from a hotplug slot during shutdown, and we clearly wouldn't want
+to act on that.
+
+The Thunderbolt hotplug slots aren't "real" slots that you insert cards
+into, but rather "virtual" hotplug slots implemented in silicon.  Devices
+appear beyond those slots once a PCI tunnel is established on top of
+the Thunderbolt switching infrastructure.  So I'm wondering if we have
+to wait for command completion at all in this case.  We could add a bit
+to struct pci_dev_flags indicating that command completion need not be
+awaited, and bail out of pcie_wait_cmd() if the bit is set.  The bit
+could be set in set_pcie_hotplug_bridge() or in a PCI quirk.
+
+However I'm not sure if it would be safe.  Maybe one of the Intel devs
+can comment on whether any delay must be observed after issuing a command
+to the Slot Control Register on Thunderbolt controllers?  Surely 1 second
+seems excessive.
+
+Thanks,
+
+Lukas
