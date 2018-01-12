@@ -1,112 +1,81 @@
-Return-Path: <SRS0=NDM9=EA=ozlabs.ru=aik@kernel.org>
-Return-Path: <SRS0=NDM9=EA=ozlabs.ru=aik@kernel.org>
-Subject: Re: [PATCH v3 3/7] platforms/pseries: Set eeh_pe of EEH_PE_VF type
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
- paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
- alex.williamson@redhat.com, helgaas@kernel.org, ruscur@russell.cc,
- linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com
-References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
- <20180103171633.94499-4-bryantly@linux.vnet.ibm.com>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <c468850c-369e-2eca-fcb2-3cb3a7992eae@ozlabs.ru>
-Date: Fri, 5 Jan 2018 12:24:30 +1100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:57422 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965277AbeALXDM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Jan 2018 18:03:12 -0500
+Date: Fri, 12 Jan 2018 17:03:03 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Maik Broemme <mbroemme@libmpq.org>
+Subject: Re: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
+Message-ID: <20180112230303.GB205469@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171219210643.24615-4-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180103171633.94499-4-bryantly@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171219210643.24615-4-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/01/18 04:16, Bryant G. Ly wrote:
-> To correctly use EEH code one has to make
-> sure that the EEH_PE_VF is set for dynamic created
-> VFs. Therefore this patch allocates an eeh_pe of
-> eeh type EEH_PE_VF and associates PE with parent.
+Hi Keith,
+
+On Tue, Dec 19, 2017 at 02:06:43PM -0700, Keith Busch wrote:
+> A DPC enabled device will suppress sending ERR_FATAL and ERR_NONFATAL,
+> which prevents the AER handler from reporting the details of the
+> error. This patch will have the DPC driver get the AER status registers
+> from the downstream port that detected the uncorrectable error, and
+> print out additional information.
 > 
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 > ---
->  arch/powerpc/include/asm/pci-bridge.h        |  5 ++++-
->  arch/powerpc/platforms/pseries/eeh_pseries.c | 14 +++++++++++++-
->  2 files changed, 17 insertions(+), 2 deletions(-)
+>  drivers/pci/pcie/pcie-dpc.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index 9f66ddebb799..16d70740a76f 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -211,7 +211,10 @@ struct pci_dn {
->  	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
->  	bool    m64_single_mode;	/* Use M64 BAR in Single Mode */
->  #define IODA_INVALID_M64        (-1)
-> -	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
-> +	union {
-> +		int     (*m64_map)[PCI_SRIOV_NUM_BARS]; /*Only used in powernv */
-> +		int     last_allow_rc;	/* Only used in pSeries */
-> +	};
->  #endif /* CONFIG_PCI_IOV */
->  	int	mps;			/* Maximum Payload Size */
->  	struct list_head child_list;
-> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> index a671ef4f57f5..686e9c7feab5 100644
-> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> @@ -58,6 +58,8 @@ static int ibm_configure_pe;
->  void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
->  {
->  	struct pci_dn *pdn = pci_get_pdn(pdev);
-> +	struct pci_dn *physfn_pdn;
-> +	struct eeh_dev *edev;
+> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> index ef71a472592c..aefc4fbdcef0 100644
+> --- a/drivers/pci/pcie/pcie-dpc.c
+> +++ b/drivers/pci/pcie/pcie-dpc.c
+> @@ -44,6 +44,7 @@ struct dpc_dev {
+>  	int			cap_pos;
+>  	bool			rp;
+>  	u32			rp_pio_status;
+> +	struct aer_err_info	info;
+>  };
 >  
->  	if (!pdev->is_virtfn)
->  		return;
-> @@ -65,6 +67,14 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
->  	pdn->device_id  =  pdev->device;
->  	pdn->vendor_id  =  pdev->vendor;
->  	pdn->class_code =  pdev->class;
-> +	/* Last allow unfreeze return code used for retrieval
-> +	 * by user space in eeh-sysfs to show the last command
-> +	 * completion from platform
-> +	 */
-> +	pdn->last_allow_rc =  0;
-
-
-Fails to compile without CONFIG_IOV:
-
-/home/aik/p/guest-kernel/arch/powerpc/platforms/pseries/eeh_pseries.c: In
-function ‘pseries_pcibios_bus_add_device’:
-/home/aik/p/guest-kernel/arch/powerpc/platforms/pseries/eeh_pseries.c:74:5:
-error: ‘struct pci_dn’ has no member named ‘last_allow_rc’
-  pdn->last_allow_rc =  0;
-     ^
-
-
-There are more actually, you try and see.
-
-
-> +	physfn_pdn      =  pci_get_pdn(pdev->physfn);
-> +	pdn->pe_number  =  physfn_pdn->pe_num_map[pdn->vf_index];
-> +	edev = pdn_to_eeh_dev(pdn);
+>  static const char * const rp_pio_error_string[] = {
+> @@ -111,6 +112,9 @@ static void interrupt_event_handler(struct work_struct *work)
+>  	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+>  	struct pci_bus *parent = pdev->subordinate;
 >  
->  	/*
->  	 * The following operations will fail if VF's sysfs files
-> @@ -72,8 +82,10 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
->  	 */
->  	eeh_add_device_early(pdn);
->  	eeh_add_device_late(pdev);
-> +	edev->pe_config_addr =  (pdn->busno << 16) | (pdn->devfn << 8);
-> +	eeh_rmv_from_parent_pe(edev); /* Remove as it is adding to bus pe */
-> +	eeh_add_to_parent_pe(edev);   /* Add as VF PE type */
->  	eeh_sysfs_add_device(pdev);
-> -
+> +	if (aer_get_device_error_info(pdev, &dpc->info))
+> +		aer_print_error(pdev, &dpc->info);
 
-While we are here - unrelated empty line removal here and in other patches
-of this patchset.
+I'm confused about this.  "pdev" is the DPC-enabled Port, i.e., the
+Port that received an ERR_FATAL or ERR_NONFATAL Message.  The Message
+was generated by something below "pdev", and that's where the
+interesting AER logging would have been done.
 
->  }
+This patch suggests that the DPC port itself would have something
+interesting logged in its AER capability.  Is that really true?  I see
+in sec 6.2.10 (PCIe r4.0) that the DPC port should log the Trigger
+Reason and the Error Source ID from the Message, but I don't see
+anything about logging anything in its AER registers.
+
+>  	pci_lock_rescan_remove();
+>  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+>  					 bus_list) {
+> @@ -275,6 +279,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
+>  		/* show RP PIO error detail information */
+>  		if (reason == 3 && ext_reason == 0)
+>  			dpc_process_rp_pio_error(dpc);
+> +		if (reason == 2)
+> +			dpc->info.severity = AER_FATAL;
+> +		else
+> +			dpc->info.severity = AER_NONFATAL;
 >  
->  /*
+>  		schedule_work(&dpc->work);
+>  	}
+> -- 
+> 2.13.6
 > 
-
-
--- 
-Alexey
