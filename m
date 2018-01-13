@@ -1,204 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0076.outbound.protection.outlook.com ([104.47.42.76]:32062
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753262AbeADWSB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 17:18:01 -0500
-From: Felix Kuehling <Felix.Kuehling@amd.com>
-To: amd-gfx@lists.freedesktop.org, oded.gabbay@gmail.com
-Cc: Felix Kuehling <Felix.Kuehling@amd.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 8/9] drm/amdkfd: Add dGPU device IDs and device info
-Date: Thu,  4 Jan 2018 17:17:47 -0500
-Message-Id: <1515104268-25087-9-git-send-email-Felix.Kuehling@amd.com>
-In-Reply-To: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
-References: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:43815 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751163AbeAMHcU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 13 Jan 2018 02:32:20 -0500
+Date: Sat, 13 Jan 2018 08:32:18 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: Regression (sort of): PCI/portdrv: Turn off PCIe services during
+ shutdown
+Message-ID: <20180113073218.GB14854@wunner.de>
+References: <20180112104929.GA10599@wunner.de>
+ <ece49947-e75a-baff-9c4a-6f47bd154642@codeaurora.org>
+ <20180112151206.GA18736@wunner.de>
+ <f7c48320-fe01-2c02-8639-269b81b1cc7d@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f7c48320-fe01-2c02-8639-269b81b1cc7d@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CC: linux-pci@vger.kernel.org
-Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
----
- drivers/gpu/drm/amd/amdkfd/kfd_device.c | 153 +++++++++++++++++++++++++++++++-
- 1 file changed, 151 insertions(+), 2 deletions(-)
+On Fri, Jan 12, 2018 at 10:31:12AM -0500, Sinan Kaya wrote:
+> On 1/12/2018 10:12 AM, Lukas Wunner wrote:
+> > On Fri, Jan 12, 2018 at 09:26:48AM -0500, Sinan Kaya wrote:
+> >> On 1/12/2018 5:49 AM, Lukas Wunner wrote:
+> >> I wonder if we can separate remove from shutdown and just disable the IRQs
+> >> in shutdown case rather than turning off the slot power etc.
+> > 
+> > But don't we risk "IRQ xx: nobody cared" splats if we do that?
+> 
+> I assumed code was turning off the slot power etc. aggressively.
+> 
+> After looking at the code some more time, it seems to be doing the
+> right thing and telling pcie controller not to generate interrupts for
+> hotplug.
+> 
+> I think this is what is failing for you probably because by the time you are
+> shutting down there is nobody to issue the command completion. This would
+> repeat for each hotplug capable pcie slot.
 
-diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_device.c b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
-index 6dd50cc..612afaf 100644
---- a/drivers/gpu/drm/amd/amdkfd/kfd_device.c
-+++ b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
-@@ -63,12 +63,118 @@ static const struct kfd_device_info carrizo_device_info = {
- };
- #endif
- 
-+static const struct kfd_device_info hawaii_device_info = {
-+	.asic_family = CHIP_HAWAII,
-+	.max_pasid_bits = 16,
-+	/* max num of queues for KV.TODO should be a dynamic value */
-+	.max_no_of_hqd	= 24,
-+	.ih_ring_entry_size = 4 * sizeof(uint32_t),
-+	.event_interrupt_class = &event_interrupt_class_cik,
-+	.num_of_watch_points = 4,
-+	.mqd_size_aligned = MQD_SIZE_ALIGNED,
-+	.supports_cwsr = false,
-+	.needs_iommu_device = false,
-+	.needs_pci_atomics = false,
-+};
-+
-+static const struct kfd_device_info tonga_device_info = {
-+	.asic_family = CHIP_TONGA,
-+	.max_pasid_bits = 16,
-+	.max_no_of_hqd  = 24,
-+	.ih_ring_entry_size = 4 * sizeof(uint32_t),
-+	.event_interrupt_class = &event_interrupt_class_cik,
-+	.num_of_watch_points = 4,
-+	.mqd_size_aligned = MQD_SIZE_ALIGNED,
-+	.supports_cwsr = false,
-+	.needs_iommu_device = false,
-+	.needs_pci_atomics = true,
-+};
-+
-+static const struct kfd_device_info tonga_vf_device_info = {
-+	.asic_family = CHIP_TONGA,
-+	.max_pasid_bits = 16,
-+	.max_no_of_hqd  = 24,
-+	.ih_ring_entry_size = 4 * sizeof(uint32_t),
-+	.event_interrupt_class = &event_interrupt_class_cik,
-+	.num_of_watch_points = 4,
-+	.mqd_size_aligned = MQD_SIZE_ALIGNED,
-+	.supports_cwsr = false,
-+	.needs_iommu_device = false,
-+	.needs_pci_atomics = false,
-+};
-+
-+static const struct kfd_device_info fiji_device_info = {
-+	.asic_family = CHIP_FIJI,
-+	.max_pasid_bits = 16,
-+	.max_no_of_hqd  = 24,
-+	.ih_ring_entry_size = 4 * sizeof(uint32_t),
-+	.event_interrupt_class = &event_interrupt_class_cik,
-+	.num_of_watch_points = 4,
-+	.mqd_size_aligned = MQD_SIZE_ALIGNED,
-+	.supports_cwsr = true,
-+	.needs_iommu_device = false,
-+	.needs_pci_atomics = true,
-+};
-+
-+static const struct kfd_device_info fiji_vf_device_info = {
-+	.asic_family = CHIP_FIJI,
-+	.max_pasid_bits = 16,
-+	.max_no_of_hqd  = 24,
-+	.ih_ring_entry_size = 4 * sizeof(uint32_t),
-+	.event_interrupt_class = &event_interrupt_class_cik,
-+	.num_of_watch_points = 4,
-+	.mqd_size_aligned = MQD_SIZE_ALIGNED,
-+	.supports_cwsr = true,
-+	.needs_iommu_device = false,
-+	.needs_pci_atomics = false,
-+};
-+
-+
-+static const struct kfd_device_info polaris10_device_info = {
-+	.asic_family = CHIP_POLARIS10,
-+	.max_pasid_bits = 16,
-+	.max_no_of_hqd  = 24,
-+	.ih_ring_entry_size = 4 * sizeof(uint32_t),
-+	.event_interrupt_class = &event_interrupt_class_cik,
-+	.num_of_watch_points = 4,
-+	.mqd_size_aligned = MQD_SIZE_ALIGNED,
-+	.supports_cwsr = true,
-+	.needs_iommu_device = false,
-+	.needs_pci_atomics = true,
-+};
-+
-+static const struct kfd_device_info polaris10_vf_device_info = {
-+	.asic_family = CHIP_POLARIS10,
-+	.max_pasid_bits = 16,
-+	.max_no_of_hqd  = 24,
-+	.ih_ring_entry_size = 4 * sizeof(uint32_t),
-+	.event_interrupt_class = &event_interrupt_class_cik,
-+	.num_of_watch_points = 4,
-+	.mqd_size_aligned = MQD_SIZE_ALIGNED,
-+	.supports_cwsr = true,
-+	.needs_iommu_device = false,
-+	.needs_pci_atomics = false,
-+};
-+
-+static const struct kfd_device_info polaris11_device_info = {
-+	.asic_family = CHIP_POLARIS11,
-+	.max_pasid_bits = 16,
-+	.max_no_of_hqd  = 24,
-+	.ih_ring_entry_size = 4 * sizeof(uint32_t),
-+	.event_interrupt_class = &event_interrupt_class_cik,
-+	.num_of_watch_points = 4,
-+	.mqd_size_aligned = MQD_SIZE_ALIGNED,
-+	.supports_cwsr = true,
-+	.needs_iommu_device = false,
-+	.needs_pci_atomics = true,
-+};
-+
-+
- struct kfd_deviceid {
- 	unsigned short did;
- 	const struct kfd_device_info *device_info;
- };
- 
--/* Please keep this sorted by increasing device id. */
- static const struct kfd_deviceid supported_devices[] = {
- #if defined(CONFIG_AMD_IOMMU_V2_MODULE) || defined(CONFIG_AMD_IOMMU_V2)
- 	{ 0x1304, &kaveri_device_info },	/* Kaveri */
-@@ -97,8 +203,51 @@ static const struct kfd_deviceid supported_devices[] = {
- 	{ 0x9874, &carrizo_device_info },	/* Carrizo */
- 	{ 0x9875, &carrizo_device_info },	/* Carrizo */
- 	{ 0x9876, &carrizo_device_info },	/* Carrizo */
--	{ 0x9877, &carrizo_device_info }	/* Carrizo */
-+	{ 0x9877, &carrizo_device_info },	/* Carrizo */
- #endif
-+	{ 0x67A0, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67A1, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67A2, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67A8, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67A9, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67AA, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67B0, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67B1, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67B8, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67B9, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67BA, &hawaii_device_info },	/* Hawaii */
-+	{ 0x67BE, &hawaii_device_info },	/* Hawaii */
-+	{ 0x6920, &tonga_device_info },		/* Tonga */
-+	{ 0x6921, &tonga_device_info },		/* Tonga */
-+	{ 0x6928, &tonga_device_info },		/* Tonga */
-+	{ 0x6929, &tonga_device_info },		/* Tonga */
-+	{ 0x692B, &tonga_device_info },		/* Tonga */
-+	{ 0x692F, &tonga_vf_device_info },	/* Tonga vf */
-+	{ 0x6938, &tonga_device_info },		/* Tonga */
-+	{ 0x6939, &tonga_device_info },		/* Tonga */
-+	{ 0x7300, &fiji_device_info },		/* Fiji */
-+	{ 0x730F, &fiji_vf_device_info },	/* Fiji vf*/
-+	{ 0x67C0, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67C1, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67C2, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67C4, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67C7, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67C8, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67C9, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67CA, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67CC, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67CF, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67D0, &polaris10_vf_device_info },	/* Polaris10 vf*/
-+	{ 0x67DF, &polaris10_device_info },	/* Polaris10 */
-+	{ 0x67E0, &polaris11_device_info },	/* Polaris11 */
-+	{ 0x67E1, &polaris11_device_info },	/* Polaris11 */
-+	{ 0x67E3, &polaris11_device_info },	/* Polaris11 */
-+	{ 0x67E7, &polaris11_device_info },	/* Polaris11 */
-+	{ 0x67E8, &polaris11_device_info },	/* Polaris11 */
-+	{ 0x67E9, &polaris11_device_info },	/* Polaris11 */
-+	{ 0x67EB, &polaris11_device_info },	/* Polaris11 */
-+	{ 0x67EF, &polaris11_device_info },	/* Polaris11 */
-+	{ 0x67FF, &polaris11_device_info },	/* Polaris11 */
- };
- 
- static int kfd_gtt_sa_init(struct kfd_dev *kfd, unsigned int buf_size,
--- 
-2.7.4
+You mean we disable Command Completed interrupts and thus the port
+can't notify that the command was completed?  It seems the code
+accommodates to that by polling the PCI_EXP_SLTSTA_CC bit:
+
+	if (ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE &&
+	    ctrl->slot_ctrl & PCI_EXP_SLTCTL_CCIE)
+		rc = wait_event_timeout(ctrl->queue, !ctrl->cmd_busy, timeout);
+	else
+		rc = pcie_poll_cmd(ctrl, jiffies_to_msecs(timeout));
+
+The problem is that these Thunderbolt controllers never seem to set
+the PCI_EXP_SLTSTA_CC bit, resulting in "Timeout on hotplug command"
+messages.
+
+The pciehp code is okay, we just need a workaround for the broken
+Thunderbolt 1 chips.  This has been a pain point all along, but
+your patch made the brokenness visible enough that investigating
+and fixing it became unavoidable.  So don't worry about your patch,
+it's all fine. ;-)
+
+Thanks,
+
+Lukas
