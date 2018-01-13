@@ -1,53 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 19 Jan 2018 13:20:26 -0600
-From: Rob Herring <robh@kernel.org>
-To: Jim Quinlan <jim2101024@gmail.com>
-Subject: Re: [PATCH v4 2/8] dt-bindings: pci: Add DT docs for Brcmstb PCIe
- device
-Message-ID: <20180119192026.b3bhiercl45u2mga@rob-hp-laptop>
-References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
- <1516058925-46522-3-git-send-email-jim2101024@gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <1516058925-46522-3-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Florian Fainelli <f.fainelli@gmail.com>, linux-mips@linux-mips.org,
- linux-pci@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
- Kevin Cernekee <cernekee@gmail.com>, Will Deacon <will.deacon@arm.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Russell King <rmk+kernel@armlinux.org.uk>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
- Jonas Gorski <jonas.gorski@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:37005 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965242AbeAMB3F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jan 2018 20:29:05 -0500
+Received: by mail-ot0-f196.google.com with SMTP id a24so6558375otd.4
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jan 2018 17:29:05 -0800 (PST)
+From: Frederick Lawler <fred@fredlawl.com>
+To: linux-pci@vger.kernel.org
+Cc: Frederick Lawler <fred@fredlawl.com>
+Subject: [PATCH v2 0/2] PCI: Add and use pci_<level>: dev_<level> equivalents
+Date: Fri, 12 Jan 2018 19:28:48 -0600
+Message-Id: <1515806930-2935-1-git-send-email-fred@fredlawl.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 15, 2018 at 06:28:39PM -0500, Jim Quinlan wrote:
-> The DT bindings description of the Brcmstb PCIe device is described.  This
-> node can be used by almost all Broadcom settop box chips, using
-> ARM, ARM64, or MIPS CPU architectures.
-> 
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> ---
->  .../devicetree/bindings/pci/brcmstb-pcie.txt       | 59 ++++++++++++++++++++++
->  1 file changed, 59 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
+Replace current uses of dev_<level> with pci_<level> by adding and using
+PCI specific fuctions. 
 
-I acked v3. Please add acks when posting new versions.
+V2:
+* Replace static inline varadic functions with macros instead
+* Convert hotplug, AER, ASPM, PME, PTM
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Frederick Lawler (2):
+  PCI: Create  minor pci_dev log wrapper functions
+  PCI: Replace calls from dev_<level> to pci_<level>
+
+ drivers/pci/access.c                   |   8 +-
+ drivers/pci/bus.c                      |   4 +-
+ drivers/pci/hotplug/cpqphp_core.c      |   2 +-
+ drivers/pci/hotplug/pnv_php.c          |  40 +++----
+ drivers/pci/hotplug/sgi_hotplug.c      |  36 +++---
+ drivers/pci/hotplug/shpchp.h           |   8 +-
+ drivers/pci/hotplug/shpchp_core.c      |   2 +-
+ drivers/pci/iov.c                      |  10 +-
+ drivers/pci/irq.c                      |   7 +-
+ drivers/pci/msi.c                      |   7 +-
+ drivers/pci/pci-acpi.c                 |   2 +-
+ drivers/pci/pci-stub.c                 |   2 +-
+ drivers/pci/pci-sysfs.c                |  10 +-
+ drivers/pci/pci.c                      |  82 +++++++-------
+ drivers/pci/pcie/aer/aer_inject.c      |  15 +--
+ drivers/pci/pcie/aer/aerdrv.c          |   2 +-
+ drivers/pci/pcie/aer/aerdrv_core.c     |  21 ++--
+ drivers/pci/pcie/aer/aerdrv_errprint.c |  22 ++--
+ drivers/pci/pcie/aspm.c                |   9 +-
+ drivers/pci/pcie/pme.c                 |   6 +-
+ drivers/pci/pcie/ptm.c                 |   2 +-
+ drivers/pci/probe.c                    |  75 ++++++-------
+ drivers/pci/quirks.c                   | 200 ++++++++++++++++-----------------
+ drivers/pci/rom.c                      |   4 +-
+ drivers/pci/setup-bus.c                |  44 ++++----
+ drivers/pci/setup-irq.c                |   4 +-
+ drivers/pci/setup-res.c                |  40 ++++---
+ drivers/pci/vc.c                       |  18 ++-
+ drivers/pci/xen-pcifront.c             |  19 ++--
+ include/linux/pci.h                    |  27 +++++
+ 30 files changed, 363 insertions(+), 365 deletions(-)
+
+-- 
+2.7.4
