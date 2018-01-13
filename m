@@ -1,70 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4665 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756363AbeARNyY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Jan 2018 08:54:24 -0500
-From: Wei Yongjun <weiyongjun1@huawei.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Wei Yongjun <weiyongjun1@huawei.com>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
-Date: Thu, 18 Jan 2018 14:00:37 +0000
-Message-ID: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail.kernel.org ([198.145.29.99]:45142 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752635AbeAMURN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 13 Jan 2018 15:17:13 -0500
+Date: Sat, 13 Jan 2018 14:17:09 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Subject: Re: pci/setup-bus: Delete an error message for a failed memory
+ allocation in add_to_list()
+Message-ID: <20180113201709.GF205469@bhelgaas-glaptop.roam.corp.google.com>
+References: <fd9d212e-e8da-1aa7-be7f-7bf6d8f1e15f@users.sourceforge.net>
+ <20180113000839.GD205469@bhelgaas-glaptop.roam.corp.google.com>
+ <03f4a55c-3bc3-0f15-bfc4-73049861edc4@users.sourceforge.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <03f4a55c-3bc3-0f15-bfc4-73049861edc4@users.sourceforge.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-platform_get_resource_byname() may fail and return NULL, so we should
-better check it's return value to avoid a NULL pointer dereference a
-bit later in the code.
+On Sat, Jan 13, 2018 at 07:15:04AM +0100, SF Markus Elfring wrote:
+> >> Omit an extra message for a memory allocation failure in this function.
+> > 
+> > If this is an "extra" message, I assume there's some other message?
+> > Can you mention where that is in the changelog?
+> 
+> * Would you like to get a more detailed commit description?
 
-This is detected by Coccinelle semantic patch.
+Your commit message says "omit an extra message", which suggests that
+there are currently two messages about the memory allocation failure,
+and that your patch removes one of them.
 
-@@
-expression pdev, res, n, t, e, e1, e2;
-@@
+If that's the case, it would be nice to know where the other message
+is.
 
-res = platform_get_resource_byname(pdev, t, n);
-+ if (!res)
-+   return -EINVAL;
-... when != res == NULL
-e = devm_ioremap(e1, res->start, e2);
+If your patch removes the *only* message about the memory allocation
+failure, that might be worth doing, but the changelog should be clear
+about that and say "I don't think the error message is worthwhile
+because the function already returns failure" or something similar.
 
-Fixes: 608793e27b33 ("PCI: dwc: dra7xx: Add EP mode support")
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
----
- drivers/pci/dwc/pci-dra7xx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+> * Are you looking for a reminder on the Linux allocation failure report?
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 8bf7c27..aafded8 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -409,11 +409,15 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
- 	ep->ops = &pcie_ep_ops;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
-+	if (!res)
-+		return -EINVAL;
- 	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
- 	if (!pci->dbi_base)
- 		return -ENOMEM;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
-+	if (!res)
-+		return -EINVAL;
- 	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
- 	if (!pci->dbi_base2)
- 		return -ENOMEM;
-@@ -462,6 +466,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 		return ret;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
-+	if (!res)
-+		return -EINVAL;
- 	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
- 	if (!pci->dbi_base)
- 		return -ENOMEM;
+I don't know what the "Linux allocation failure report" is.
+
+> > Also, please squash all the drivers/pci patches into one.
+> 
+> To which other change possibilities do you refer here?
+
+You posted two patches that remove error messages about memory
+allocation failures:
+
+  http://lkml.kernel.org/r/dc3922b4-50f6-e7fa-482f-18e6ff5d905f@users.sourceforge.net
+  http://lkml.kernel.org/r/fd9d212e-e8da-1aa7-be7f-7bf6d8f1e15f@users.sourceforge.net
+
+These are doing the same thing and could be combined into one patch.
+
+Bjorn
