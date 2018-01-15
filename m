@@ -1,205 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:50568 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751149AbeAULgS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 21 Jan 2018 06:36:18 -0500
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
-        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
-        <dann.frazier@canonical.com>
-CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-        Zhichang Yuan <yuanzhichang@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: [PATCH v11 5/9] OF: Add missing I/O range exception for indirect-IO devices
-Date: Sun, 21 Jan 2018 20:27:23 +0800
-Message-ID: <1516537647-50553-6-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1516537647-50553-1-git-send-email-john.garry@huawei.com>
-References: <1516537647-50553-1-git-send-email-john.garry@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Russell King <rmk+kernel@armlinux.org.uk>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Jonas Gorski <jonas.gorski@gmail.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v4 0/8] PCI: brcmstb: Add Broadcom Settopbox PCIe support
+Date: Mon, 15 Jan 2018 18:28:37 -0500
+Message-Id: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
+ Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Zhichang Yuan <yuanzhichang@hisilicon.com>
+This patch series adds support for the Broadcom Settopbox PCIe host
+controller.  It is targeted to Broadcom Settopbox chips running on
+ARM, ARM64, and MIPS platforms.
 
-There are some special ISA/LPC devices that work on a specific I/O range
-where it is not correct to specify a 'ranges' property in DTS parent node
-as cpu addresses translated from DTS node are only for memory space on
-some architectures, such as Arm64. Without the parent 'ranges' property,
-current of_translate_address() return an error.
-Here we add special handlings for this case.
-During the OF address translation, some checkings will be perfromed to
-identify whether the device node is registered as indirect-IO. If yes,
-the I/O translation will be done in a different way from that one of PCI
-MMIO. In this way, the I/O 'reg' property of the special ISA/LPC devices
-will be parsed correctly.
+V4 Changes:
+  - Merged all BrcmSTB PCIe controller files into a single file.
+  - All new files now have the SPDX identifier.
+  - Removed the list of PCIe controllers.
+  - Removed "link-up" race.
+  - Removed probe of msi psuedo-device.
+  - Multiple comment text changes, as requested.
+  - "SSC" => "Spread Spectrum Clocking".
+  - Set 'memc' variable.
+  - Unnecessary variable initializations removed (eg rc_bar2_size).
+  - Added comment on "L23" link state.
+  - Removed use of "__refdata".
+  - Formatting of structure elements.
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>    #earlier draft
-Acked-by: Rob Herring <robh@kernel.org>
----
- drivers/of/address.c | 91 +++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 75 insertions(+), 16 deletions(-)
+V3 Changes:
+  - Fold pcie-brcmstb-msi.c into pcie-brcmstb.c
+  - Use PCI_XXX constants for PCIe capability registers
+  - Removal of any unused constants
+  - Change s/pci/pcie/ for filenames, comment text
+  - Config space access now uses 8/16/32 read/writes
+  - Use proper multi-line comment style
+  - Use function names, structure that are common in other host drivers
+  - DT binding 'brcm,ssc' is now 'brcm,enable-ssc'
+  - Dropped DT binding 'xyz-supply'
+  - Not setting CRS support as Linux does it if it is advertised.
+  - Removed code that was considered "debug code".
+  - Use of_get_pcie_domain_nr()
+  - Variable 'bridge_setup_done' removed.
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 85975fe..2cca626 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -564,9 +564,14 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
-  * that translation is impossible (that is we are not dealing with a value
-  * that can be mapped to a cpu physical address). This is not really specified
-  * that way, but this is traditionally the way IBM at least do things
-+ *
-+ * Whenever the translation fails, the *host pointer will be set to the
-+ * device that had registered logical PIO mapping, and the return code is
-+ * relative to that node.
-  */
- static u64 __of_translate_address(struct device_node *dev,
--				  const __be32 *in_addr, const char *rprop)
-+				  const __be32 *in_addr, const char *rprop,
-+				  struct device_node **host)
- {
- 	struct device_node *parent = NULL;
- 	struct of_bus *bus, *pbus;
-@@ -579,6 +584,7 @@ static u64 __of_translate_address(struct device_node *dev,
- 	/* Increase refcount at current level */
- 	of_node_get(dev);
- 
-+	*host = NULL;
- 	/* Get parent & match bus type */
- 	parent = of_get_parent(dev);
- 	if (parent == NULL)
-@@ -599,6 +605,8 @@ static u64 __of_translate_address(struct device_node *dev,
- 
- 	/* Translate */
- 	for (;;) {
-+		struct logic_pio_hwaddr *iorange;
-+
- 		/* Switch to parent bus */
- 		of_node_put(dev);
- 		dev = parent;
-@@ -611,6 +619,19 @@ static u64 __of_translate_address(struct device_node *dev,
- 			break;
- 		}
- 
-+		/*
-+		 * For indirectIO device which has no ranges property, get
-+		 * the address from reg directly.
-+		 */
-+		iorange = find_io_range_by_fwnode(&dev->fwnode);
-+		if (iorange && (iorange->flags != PIO_CPU_MMIO)) {
-+			result = of_read_number(addr + 1, na - 1);
-+			pr_debug("indirectIO matched(%s) 0x%llx\n",
-+					of_node_full_name(dev), result);
-+			*host = of_node_get(dev);
-+			break;
-+		}
-+
- 		/* Get new parent bus and counts */
- 		pbus = of_match_bus(parent);
- 		pbus->count_cells(dev, &pna, &pns);
-@@ -642,13 +663,32 @@ static u64 __of_translate_address(struct device_node *dev,
- 
- u64 of_translate_address(struct device_node *dev, const __be32 *in_addr)
- {
--	return __of_translate_address(dev, in_addr, "ranges");
-+	struct device_node *host;
-+	u64 ret;
-+
-+	ret = __of_translate_address(dev, in_addr, "ranges", &host);
-+	if (host) {
-+		of_node_put(host);
-+		return OF_BAD_ADDR;
-+	}
-+
-+	return ret;
- }
- EXPORT_SYMBOL(of_translate_address);
- 
- u64 of_translate_dma_address(struct device_node *dev, const __be32 *in_addr)
- {
--	return __of_translate_address(dev, in_addr, "dma-ranges");
-+	struct device_node *host;
-+	u64 ret;
-+
-+	ret = __of_translate_address(dev, in_addr, "dma-ranges", &host);
-+
-+	if (host) {
-+		of_node_put(host);
-+		return OF_BAD_ADDR;
-+	}
-+
-+	return ret;
- }
- EXPORT_SYMBOL(of_translate_dma_address);
- 
-@@ -690,29 +730,48 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
- }
- EXPORT_SYMBOL(of_get_address);
- 
-+static u64 of_translate_ioport(struct device_node *dev, const __be32 *in_addr,
-+			u64 size)
-+{
-+	u64 taddr;
-+	unsigned long port;
-+	struct device_node *host;
-+
-+	taddr = __of_translate_address(dev, in_addr, "ranges", &host);
-+	if (host) {
-+		/* host specific port access */
-+		port = logic_pio_trans_hwaddr(&host->fwnode, taddr, size);
-+		of_node_put(host);
-+	} else {
-+		/* memory mapped I/O range */
-+		port = pci_address_to_pio(taddr);
-+	}
-+
-+	if (port == (unsigned long)-1)
-+		return OF_BAD_ADDR;
-+
-+	return port;
-+}
-+
- static int __of_address_to_resource(struct device_node *dev,
- 		const __be32 *addrp, u64 size, unsigned int flags,
- 		const char *name, struct resource *r)
- {
- 	u64 taddr;
- 
--	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
-+	if (flags & IORESOURCE_MEM)
-+		taddr = of_translate_address(dev, addrp);
-+	else if (flags & IORESOURCE_IO)
-+		taddr = of_translate_ioport(dev, addrp, size);
-+	else
- 		return -EINVAL;
--	taddr = of_translate_address(dev, addrp);
-+
- 	if (taddr == OF_BAD_ADDR)
- 		return -EINVAL;
- 	memset(r, 0, sizeof(struct resource));
--	if (flags & IORESOURCE_IO) {
--		unsigned long port;
--		port = pci_address_to_pio(taddr);
--		if (port == (unsigned long)-1)
--			return -EINVAL;
--		r->start = port;
--		r->end = port + size - 1;
--	} else {
--		r->start = taddr;
--		r->end = taddr + size - 1;
--	}
-+
-+	r->start = taddr;
-+	r->end = taddr + size - 1;
- 	r->flags = flags;
- 	r->name = name ? name : dev->full_name;
- 
+V2 Changes:
+* Patch brcmstb-add-memory-API:
+  - fix DT_PROP_DATA_TO_U32 macro.
+  - dropped one EXPORT_SYMBOL, changed the other to GPL.
+* Patch DT-docs-for-Brcmstb-PCIe:
+  - change 'brcm,gen' prop to standard 'max-link-speed'.
+  - rewrite bindings commit to omit standard prop defs.
+  - change props "supplies", "supply-names" to "xyz-supply"
+* Patch removed: export-symbol-arch_setup_dma_ops [4/9]
+* Patch brcmstb-add-dma-ranges:
+  - use get_dma_ops(); also use a const dma_map_ops structure.
+  - rewrite map_sg(), unmap_sg(), other calls like syng_sg_*()
+  - omit brcm_mapping_error(), but added code in brcm_dma_supported()
+  - put all of the notifier code in one compilation unit.
+
+Florian Fainelli (1):
+  SOC: brcmstb: add memory API
+
+Jim Quinlan (7):
+  dt-bindings: pci: Add DT docs for Brcmstb PCIe device
+  PCI: brcmstb: Add Broadcom STB PCIe host controller driver
+  PCI: brcmstb: Add dma-range mapping for inbound traffic
+  PCI/MSI: Enable PCI_MSI_IRQ_DOMAIN support for MIPS
+  PCI: brcmstb: Add MSI capability
+  MIPS: BMIPS: Add PCI bindings for 7425, 7435
+  MIPS: BMIPS: Enable PCI
+
+ .../devicetree/bindings/pci/brcmstb-pcie.txt       |   59 +
+ arch/mips/Kconfig                                  |    3 +
+ arch/mips/boot/dts/brcm/bcm7425.dtsi               |   26 +
+ arch/mips/boot/dts/brcm/bcm7435.dtsi               |   27 +
+ arch/mips/boot/dts/brcm/bcm97425svmb.dts           |    4 +
+ arch/mips/boot/dts/brcm/bcm97435svmb.dts           |    4 +
+ arch/mips/include/asm/Kbuild                       |    1 +
+ drivers/pci/Kconfig                                |    2 +-
+ drivers/pci/host/Kconfig                           |    9 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pcie-brcmstb.c                    | 1830 ++++++++++++++++++++
+ drivers/soc/bcm/brcmstb/Makefile                   |    2 +-
+ drivers/soc/bcm/brcmstb/memory.c                   |  158 ++
+ include/soc/brcmstb/memory_api.h                   |   25 +
+ 14 files changed, 2149 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-brcmstb.c
+ create mode 100644 drivers/soc/bcm/brcmstb/memory.c
+ create mode 100644 include/soc/brcmstb/memory_api.h
+
 -- 
-1.9.1
+1.9.0.138.g2de3478
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
