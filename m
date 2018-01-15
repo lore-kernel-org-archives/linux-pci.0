@@ -1,181 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:1608 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753876AbeAKGIs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 01:08:48 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V6 6/7] PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
-Date: Thu, 11 Jan 2018 11:38:07 +0530
-Message-ID: <1515650888-9459-7-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1515650888-9459-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mga05.intel.com ([192.55.52.43]:34765 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752308AbeAOLJo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Jan 2018 06:09:44 -0500
+Date: Mon, 15 Jan 2018 13:09:40 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Assume NoCompl+ for Thunderbolt ports
+Message-ID: <20180115110940.GD27654@lahna.fi.intel.com>
+References: <d0ac15a21de9e47157588a96b7d2f407295e358b.1515825290.git.lukas@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d0ac15a21de9e47157588a96b7d2f407295e358b.1515825290.git.lukas@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per PCIe r3.0, sec 5.3.3.2.1, PCIe root port shoould broadcast PME_Turn_Off
-message before PCIe link goes to L2. PME_Turn_Off broadcast mechanism is
-implemented in AFI module. Each Tegra PCIe root port has its own
-PME_Turn_Off and PME_TO_Ack bitmap in AFI_PME register, program this
-register to broadcast PME_Turn_Off message.
+On Sat, Jan 13, 2018 at 07:38:39AM +0100, Lukas Wunner wrote:
+> Certain Thunderbolt 1 controllers claim to support Command Completed
+> events (value of 0b in the No Command Completed Support field of the
+> Slot Capabilities register) but in reality neither set the Command
+> Completed bit in the Slot Status register nor signal a Command
+> Completed interrupt.
+> 
+> As a result, every call to pcie_write_cmd() takes 2 seconds (1 second
+> for each invocation of pcie_wait_cmd()).  pcie_write_cmd() is called on
+> ->remove via pcie_disable_notification(), so after such a Thunderbolt
+> device is unplugged, 2 seconds elapse until pciehp is unbound:
+> 
+> [  337.942727] pciehp 0000:0a:00.0:pcie204: Timeout on hotplug command 0x1038 (issued 21176 msec ago)
+> [  340.014735] pciehp 0000:0a:00.0:pcie204: Timeout on hotplug command 0x0000 (issued 2072 msec ago)
+> 
+> That by itself has always been unpleasant, but the situation has become
+> worse with commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services
+> during shutdown"):  Now pciehp is unbound on ->shutdown.  Because
+> Thunderbolt controllers typically have 4 hotplug ports, every reboot and
+> shutdown is now delayed by 8 seconds, plus another 2 seconds for every
+> attached Thunderbolt 1 device.
+> 
+> By testing with my own equipment and by googling I was able to ascertain
+> that at least the following chips are affected by this erratum:
+> 8086:1513  CV82524 Thunderbolt Controller [Light Ridge 4C  2010]
+> 8086:1547  DSL3510 Thunderbolt Controller [Cactus Ridge 4C 2012]
+> 8086:1549  DSL2210 Thunderbolt Controller [Port Ridge 1C   2011]
+> 
+> The following newer chips are not affected as they have NoCompl+ in the
+> Slot Capabilities register:
+> 8086:156d  DSL5520 Thunderbolt 2 Bridge [Falcon Ridge 4C   2013]
+> 8086:1578  DSL6540 Thunderbolt 3 Bridge [Alpine Ridge 4C   2015]
+> 
+> Thunderbolt hotplug slots are not physical slots that one inserts cards
+> into, but rather logical hotplug slots implemented in silicon.  Devices
+> appear beyond those logical slots once a PCI tunnel is established on
+> top of the Thunderbolt Converged I/O switch.  One would expect that
+> commands written to the Slot Control register are executed pretty much
+> immediately by the silicon, without requiring a delay, so the NoCompl+
+> on newer chips makes sense.  It is unclear whether the older chips
+> likewise do not require observing a delay or how long that delay needs
+> to be.  There is still no public spec or errata sheet for Thunderbolt
+> controllers.
+> 
+> I checked what macOS does:
+> https://opensource.apple.com/source/IOPCIFamily/IOPCIFamily-320.1.1/IOPCIBridge.cpp.auto.html
+> 
+> They do not enable Command Completed events:
+> 	// data link change, hot plug, presence detect change
+> 	kSlotControlEnables = ((1 << 12) | (1 << 5) | (1 << 3))
+> 
+> They also do not call IODelay() or check the Command Completed bit after
+> writing to the Slot Control register:
+> 	fBridgeDevice->configWrite16( fBridgeDevice->reserved->expressCapability + 0x18, ...);
+> 
+> Do the same and assume NoCompl+ for any Thunderbolt hotplug port.
+> 
+> I've stress-tested this by alternatingly binding and unbinding pciehp to
+> a Port Ridge hotplug bridge in an endless loop for a few minutes (by
+> enabling/disabling slot power via sysfs), which causes rapid writes to
+> the Slot Control register.  pciehp never missed a beat.
+> 
+> Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
+> Cc: Sinan Kaya <okaya@codeaurora.org>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
-V3:
-* add PME bitmap in soc data instead of using compatible string
-* replace while loop with readl_poll_timeout() for polling
-* commit log correction
-V4:
-* no change in this patch
-V5:
-* Rebased on linux-next
-V6:
-* no change in this patch
+We asked from the hardware people and indeed in the legacy controllers
+before RR this bit was incorrectly set to 0.
 
- drivers/pci/host/pci-tegra.c | 45 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 45 insertions(+)
+I also tested on Macbook with Cactus Ridge (1st generation controller)
+and without the patch I see command timeouts and reboot takes that ~8
+seconds. With this patch applied reboot works immediately.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 981f126b14d6..cc33fc0fb300 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -31,6 +31,7 @@
- #include <linux/delay.h>
- #include <linux/export.h>
- #include <linux/interrupt.h>
-+#include <linux/iopoll.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-@@ -153,6 +154,8 @@
- #define  AFI_INTR_EN_FPCI_TIMEOUT	(1 << 7)
- #define  AFI_INTR_EN_PRSNT_SENSE	(1 << 8)
- 
-+#define AFI_PCIE_PME		0xf0
-+
- #define AFI_PCIE_CONFIG					0x0f8
- #define  AFI_PCIE_CONFIG_PCIE_DISABLE(x)		(1 << ((x) + 1))
- #define  AFI_PCIE_CONFIG_PCIE_DISABLE_ALL		0xe
-@@ -233,6 +236,8 @@
- #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
- #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
- 
-+#define PME_ACK_TIMEOUT 10000
-+
- struct tegra_msi {
- 	struct msi_controller chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-@@ -251,6 +256,8 @@ struct tegra_pcie_soc {
- 	u32 tx_ref_sel;
- 	u32 pads_refclk_cfg0;
- 	u32 pads_refclk_cfg1;
-+	u8 pme_turnoff_bit[3];
-+	u8 pme_ack_bit[3];
- 	bool has_pex_clkreq_en;
- 	bool has_pex_bias_ctrl;
- 	bool has_intr_prsnt_sense;
-@@ -1358,6 +1365,31 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_pme_turnoff(struct tegra_pcie_port *port)
-+{
-+	struct tegra_pcie *pcie = port->pcie;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	int err;
-+	u32 val;
-+
-+	val = afi_readl(pcie, AFI_PCIE_PME);
-+	val |= (0x1 << soc->pme_turnoff_bit[port->index]);
-+	afi_writel(pcie, val, AFI_PCIE_PME);
-+
-+	err = readl_poll_timeout(pcie->afi + AFI_PCIE_PME, val,
-+				 val & (0x1 << soc->pme_ack_bit[port->index]),
-+				 1, PME_ACK_TIMEOUT);
-+	if (err)
-+		dev_err(pcie->dev, "PME Ack is not received on port: %d\n",
-+			port->index);
-+
-+	usleep_range(10000, 11000);
-+
-+	val = afi_readl(pcie, AFI_PCIE_PME);
-+	val &= ~(0x1 << soc->pme_turnoff_bit[port->index]);
-+	afi_writel(pcie, val, AFI_PCIE_PME);
-+}
-+
- static int tegra_msi_alloc(struct tegra_msi *chip)
- {
- 	int msi;
-@@ -2109,6 +2141,8 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
- 	.pads_refclk_cfg0 = 0xfa5cfa5c,
-+	.pme_turnoff_bit = {0, 8},
-+	.pme_ack_bit = {5, 10},
- 	.has_pex_clkreq_en = false,
- 	.has_pex_bias_ctrl = false,
- 	.has_intr_prsnt_sense = false,
-@@ -2125,6 +2159,8 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
- 	.pads_refclk_cfg0 = 0xfa5cfa5c,
- 	.pads_refclk_cfg1 = 0xfa5cfa5c,
-+	.pme_turnoff_bit = {0, 8, 16},
-+	.pme_ack_bit = {5, 10, 18},
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
-@@ -2140,6 +2176,8 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
- 	.pads_refclk_cfg0 = 0x44ac44ac,
-+	.pme_turnoff_bit = {0, 8},
-+	.pme_ack_bit = {5, 10},
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
-@@ -2155,6 +2193,8 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
- 	.pads_refclk_cfg0 = 0x90b890b8,
-+	.pme_turnoff_bit = {0, 8},
-+	.pme_ack_bit = {5, 10},
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
-@@ -2171,6 +2211,8 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
- 	.pads_refclk_cfg0 = 0x80b880b8,
- 	.pads_refclk_cfg1 = 0x000480b8,
-+	.pme_turnoff_bit = {0, 8, 12},
-+	.pme_ack_bit = {5, 10, 14},
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
-@@ -2399,11 +2441,14 @@ static int tegra_pcie_remove(struct platform_device *pdev)
- {
- 	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
- 	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct tegra_pcie_port *port, *tmp;
- 
- 	if (IS_ENABLED(CONFIG_DEBUG_FS))
- 		tegra_pcie_debugfs_exit(pcie);
- 	pci_stop_root_bus(host->bus);
- 	pci_remove_root_bus(host->bus);
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-+		tegra_pcie_pme_turnoff(port);
- 	tegra_pcie_disable_ports(pcie);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_disable_msi(pcie);
--- 
-2.1.4
+Feel free to add my,
+
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+
+Thanks!
