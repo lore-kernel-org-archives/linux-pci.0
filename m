@@ -1,46 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26207 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751090AbeAQFSx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jan 2018 00:18:53 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Maik Broemme <mbroemme@libmpq.org>,
-        Pawandeep Oza <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 1/6] PCI/AER: Return correct value when AER is not supported
-Date: Tue, 16 Jan 2018 22:22:01 -0700
-Message-Id: <20180117052206.7703-2-keith.busch@intel.com>
-In-Reply-To: <20180117052206.7703-1-keith.busch@intel.com>
-References: <20180117052206.7703-1-keith.busch@intel.com>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59366 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S965588AbeAOPgK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 10:36:10 -0500
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V1 5/7] net/mlx4_core: Report PCI properties using dedicated function
+Date: Mon, 15 Jan 2018 17:35:39 +0200
+Message-Id: <1516030541-6626-6-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Getting the AER information is documented to return 0 when it failed to
-get the information. If called using a device that does not support AER,
-it may cause erroneous data to be logged.
+Change mlx4 method of checking and reporting PCI status and
+maximum capabilities to use the pci driver functions instead
+of implementing them in the driver code.
 
-There should not be a case this currently fails, but this patch is
-preparing for additional use cases.
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
 ---
- drivers/pci/pcie/aer/aerdrv_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/ethernet/mellanox/mlx4/main.c | 81 +------------------------------
+ 1 file changed, 1 insertion(+), 80 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 744805232155..ea0dc1cc7fc7 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -660,7 +660,7 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+index 4d84cab..30cacac 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/main.c
++++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+@@ -623,85 +623,6 @@ static int mlx4_dev_cap(struct mlx4_dev *dev, struct mlx4_dev_cap *dev_cap)
+ 	return 0;
+ }
  
- 	/* The device might not support AER */
- 	if (!pos)
--		return 1;
-+		return 0;
+-static int mlx4_get_pcie_dev_link_caps(struct mlx4_dev *dev,
+-				       enum pci_bus_speed *speed,
+-				       enum pcie_link_width *width)
+-{
+-	u32 lnkcap1, lnkcap2;
+-	int err1, err2;
+-
+-#define  PCIE_MLW_CAP_SHIFT 4	/* start of MLW mask in link capabilities */
+-
+-	*speed = PCI_SPEED_UNKNOWN;
+-	*width = PCIE_LNK_WIDTH_UNKNOWN;
+-
+-	err1 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP,
+-					  &lnkcap1);
+-	err2 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP2,
+-					  &lnkcap2);
+-	if (!err2 && lnkcap2) { /* PCIe r3.0-compliant */
+-		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+-			*speed = PCIE_SPEED_8_0GT;
+-		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
+-			*speed = PCIE_SPEED_5_0GT;
+-		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
+-			*speed = PCIE_SPEED_2_5GT;
+-	}
+-	if (!err1) {
+-		*width = (lnkcap1 & PCI_EXP_LNKCAP_MLW) >> PCIE_MLW_CAP_SHIFT;
+-		if (!lnkcap2) { /* pre-r3.0 */
+-			if (lnkcap1 & PCI_EXP_LNKCAP_SLS_5_0GB)
+-				*speed = PCIE_SPEED_5_0GT;
+-			else if (lnkcap1 & PCI_EXP_LNKCAP_SLS_2_5GB)
+-				*speed = PCIE_SPEED_2_5GT;
+-		}
+-	}
+-
+-	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN) {
+-		return err1 ? err1 :
+-			err2 ? err2 : -EINVAL;
+-	}
+-	return 0;
+-}
+-
+-static void mlx4_check_pcie_caps(struct mlx4_dev *dev)
+-{
+-	enum pcie_link_width width, width_cap;
+-	enum pci_bus_speed speed, speed_cap;
+-	int err;
+-
+-#define PCIE_SPEED_STR(speed) \
+-	(speed == PCIE_SPEED_8_0GT ? "8.0GT/s" : \
+-	 speed == PCIE_SPEED_5_0GT ? "5.0GT/s" : \
+-	 speed == PCIE_SPEED_2_5GT ? "2.5GT/s" : \
+-	 "Unknown")
+-
+-	err = mlx4_get_pcie_dev_link_caps(dev, &speed_cap, &width_cap);
+-	if (err) {
+-		mlx4_warn(dev,
+-			  "Unable to determine PCIe device BW capabilities\n");
+-		return;
+-	}
+-
+-	err = pcie_get_minimum_link(dev->persist->pdev, &speed, &width);
+-	if (err || speed == PCI_SPEED_UNKNOWN ||
+-	    width == PCIE_LNK_WIDTH_UNKNOWN) {
+-		mlx4_warn(dev,
+-			  "Unable to determine PCI device chain minimum BW\n");
+-		return;
+-	}
+-
+-	if (width != width_cap || speed != speed_cap)
+-		mlx4_warn(dev,
+-			  "PCIe BW is different than device's capability\n");
+-
+-	mlx4_info(dev, "PCIe link speed is %s, device supports %s\n",
+-		  PCIE_SPEED_STR(speed), PCIE_SPEED_STR(speed_cap));
+-	mlx4_info(dev, "PCIe link width is x%d, device supports x%d\n",
+-		  width, width_cap);
+-	return;
+-}
+-
+ /*The function checks if there are live vf, return the num of them*/
+ static int mlx4_how_many_lives_vf(struct mlx4_dev *dev)
+ {
+@@ -3475,7 +3396,7 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
+ 	 * express device capabilities are under-satisfied by the bus.
+ 	 */
+ 	if (!mlx4_is_slave(dev))
+-		mlx4_check_pcie_caps(dev);
++		pcie_print_link_status(dev->persist->pdev);
  
- 	if (info->severity == AER_CORRECTABLE) {
- 		pci_read_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 	/* In master functions, the communication channel must be initialized
+ 	 * after obtaining its address from fw */
 -- 
-2.13.6
+1.8.3.1
