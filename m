@@ -1,55 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V4 23/26] video: fbdev: nvidia: deprecate
- pci_get_bus_and_slot()
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-24-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <6a6b51ff-42d5-29cc-167e-f4ed74d7ac36@codeaurora.org>
-Date: Tue, 2 Jan 2018 08:38:03 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:55348 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751636AbeAOKnT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 05:43:19 -0500
+Date: Mon, 15 Jan 2018 11:43:16 +0100
+From: Sebastian Reichel <sebastian.reichel@collabora.co.uk>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Ian Ray <ian.ray@ge.com>, Nandor Han <nandor.han@ge.com>
+Subject: Re: Regression due to "PCI: Do not allocate more buses than
+ available in parent"
+Message-ID: <20180115104316.k7xsu3qnnmzvlkpd@earth.universe>
+References: <20180112150744.sjntmpas5noaub6g@earth.universe>
+ <CAOMZO5BpJDoeZVaD+c600ci5rmEJ0kh_er1voJxsyXR4BdjFpw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1513661883-28662-24-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:NVIDIA \(rivafb and nvidiafb\) FRAMEBUFFER DRIVER"
- <linux-fbdev@vger.kernel.org>, Antonino Daplas <adaplas@gmail.com>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="ngn6m3bj3rwuclms"
+In-Reply-To: <CAOMZO5BpJDoeZVaD+c600ci5rmEJ0kh_er1voJxsyXR4BdjFpw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/19/2017 12:37 AM, Sinan Kaya wrote:
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Getting ready to remove pci_get_bus_and_slot() function in favor of
-> pci_get_domain_bus_and_slot().
-> 
-> struct nvidia_par has a pointer to struct pci_dev. Use the pci_dev
-> member to extract the domain information and pass it to
-> pci_get_domain_bus_and_slot() function.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-Any feedback here ? most of the remaining patches have the ACK except these.
+--ngn6m3bj3rwuclms
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Hi Fabio,
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Fri, Jan 12, 2018 at 01:17:26PM -0200, Fabio Estevam wrote:
+> Hi Sebastian,
+>=20
+> On Fri, Jan 12, 2018 at 1:07 PM, Sebastian Reichel
+> <sebastian.reichel@collabora.co.uk> wrote:
+> > Hi,
+> >
+> > I have an ARM/DT based system [0], that no longer finds its ethernet ca=
+rds
+> > behind a PCIe switch. I bisected the problem and ended up on
+> > a20c7f36bd3d. I tried providing some space using the suggested "pci=3Dh=
+pbussize=3D<N>",
+> > but it does not seem to work.
+> >
+> > I added dmesg for working, broken and broken + parameter below. At
+> > the moment I would say this is a regression and the commit should be
+> > reverted.
+>=20
+> Does this patch fix the problem?
+> https://patchwork.ozlabs.org/patch/857566/
+
+Yes, that fixes the issue. Thanks for the hint.
+
+-- Sebastian
+
+--ngn6m3bj3rwuclms
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAlpchcAACgkQ2O7X88g7
++pqV3w//blFbcgZ9oXiVkb6kh4vEPTdaZSNR7Jw0QO8iatrGqyBZ4HlWEpJMF8TE
+Sebga+F12AIgAnrBkmRvpvrB5Vws11u18PrxxE3bIoxTPzAzRT1maqBfompM+aQN
+FmAFU/Rl2IK0VOuz+mP3GeXVsN/6qCrsvkF28whMgGrn8tC2oYvWWSxrrEk2Kasp
+W/feDDu590XHMVT03CYnF1Cd1oSgthjw8Yd1AHNGT2Xld8WeIeMZEA3VDX1XFw2W
+bSA1a0OUh3C7BAadep7EDQGA4shMLRfEqPqZABxNZsdDmBWGSpMJeszg843806Cz
+93VlDSGDNLmqvjt83v93l2qDIriSsCowz2sX8i4M32s3rDFLxy63rNRGnQqp2ylc
+GPuyC3YobL485914YNi1nrlO2OwpNT7UTJTwSl0HcPHbgaVX8gfZUECR7VEnLjXy
+w7Td7ZHQsWvErNg4v+1tmEQTZc23YWRnjwlbZUrt0RZ+pXf/3jhHq7workRqNlir
+OuKc1YDphjKyEISxCOugbRXlj77HwKJFs1dEau1JQnxoxx7aXrZdqJ/8O76DQSS4
+9BoTgq0N7cMyQQ6rt9zcL0ypzLelCHhgEoz5gW4VUxXXQPIbn6w1zMMzb4Y0Q1g7
+Hy35EqH/jo+KJ51bIHP2TxwxjtVwIM1iRbRprb+5e25mCQizZuk=
+=s2tQ
+-----END PGP SIGNATURE-----
+
+--ngn6m3bj3rwuclms--
