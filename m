@@ -1,150 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8.mo179.mail-out.ovh.net ([46.105.75.26]:42715 "EHLO
-        8.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752755AbeAJW4f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jan 2018 17:56:35 -0500
-Received: from player690.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 12D66902FF
-        for <linux-pci@vger.kernel.org>; Wed, 10 Jan 2018 23:48:44 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v3 3/6] PCI: Add generic function to probe PCI host controllers
-Date: Wed, 10 Jan 2018 23:47:32 +0100
-Message-Id: <690e48265a12291f12ce3f46c328eb45ffd9fb09.1515621150.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59300 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S965476AbeAOPgI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 10:36:08 -0500
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V1 1/7] PCI: Add a query function for PCI device's speed cap
+Date: Mon, 15 Jan 2018 17:35:35 +0200
+Message-Id: <1516030541-6626-2-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchs moves generic source code from
-drivers/pci/host/pci-host-common.c into drivers/pci/probe.c.
+pcie_get_speed_cap() implements the logic for querying a PCI device's
+maximum speed capability. Change max_link_speed_show() function to
+use pcie_get_speed_cap().
 
-Indeed the extracted lines of code were duplicated by many host
-controller drivers. Regrouping them into a generic function gives a
-change to properly share this code without introducing a useless
-dependency to PCI_HOST_COMMON, which selects PCI_ECAM when not needed by
-most host controller drivers.
-
-We also add a missing call of pci_free_resource_list() from
-pci_host_common_probe() when probing fails, as done inside gen_pci_init()
-when this later function fails.
-
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
 ---
- drivers/pci/host/pci-host-common.c | 25 +++----------------------
- drivers/pci/probe.c                | 33 +++++++++++++++++++++++++++++++++
- include/linux/pci.h                |  1 +
- 3 files changed, 37 insertions(+), 22 deletions(-)
+ drivers/pci/pci-sysfs.c | 22 +++++-----------------
+ drivers/pci/pci.c       | 42 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h     |  7 +++++++
+ 3 files changed, 54 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index a613ea310e76..df25b4a4edaf 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -72,7 +72,6 @@ int pci_host_common_probe(struct platform_device *pdev,
- 	const char *type;
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
--	struct pci_bus *bus, *child;
- 	struct pci_host_bridge *bridge;
- 	struct pci_config_window *cfg;
- 	struct list_head resources;
-@@ -107,29 +106,11 @@ int pci_host_common_probe(struct platform_device *pdev,
- 	bridge->map_irq = of_irq_parse_and_map_pci;
- 	bridge->swizzle_irq = pci_common_swizzle;
- 
--	ret = pci_scan_root_bus_bridge(bridge);
--	if (ret < 0) {
--		dev_err(dev, "Scanning root bridge failed");
-+	ret = pci_host_probe(bridge);
-+	if (ret) {
-+		pci_free_resource_list(&resources);
- 		return ret;
- 	}
- 
--	bus = bridge->bus;
--
--	/*
--	 * We insert PCI resources into the iomem_resource and
--	 * ioport_resource trees in either pci_bus_claim_resources()
--	 * or pci_bus_assign_resources().
--	 */
--	if (pci_has_flag(PCI_PROBE_ONLY)) {
--		pci_bus_claim_resources(bus);
--	} else {
--		pci_bus_size_bridges(bus);
--		pci_bus_assign_resources(bus);
--
--		list_for_each_entry(child, &bus->children, node)
--			pcie_bus_configure_settings(child);
--	}
--
--	pci_bus_add_devices(bus);
- 	return 0;
- }
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 1360db508035..178328d06a32 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2685,6 +2685,39 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL_GPL(pci_create_root_bus);
- 
-+int pci_host_probe(struct pci_host_bridge *bridge)
-+{
-+	struct pci_bus *bus, *child;
-+	int ret;
-+
-+	ret = pci_scan_root_bus_bridge(bridge);
-+	if (ret < 0) {
-+		dev_err(bridge->dev.parent, "Scanning root bridge failed");
-+		return ret;
-+	}
-+
-+	bus = bridge->bus;
-+
-+	/*
-+	 * We insert PCI resources into the iomem_resource and
-+	 * ioport_resource trees in either pci_bus_claim_resources()
-+	 * or pci_bus_assign_resources().
-+	 */
-+	if (pci_has_flag(PCI_PROBE_ONLY)) {
-+		pci_bus_claim_resources(bus);
-+	} else {
-+		pci_bus_size_bridges(bus);
-+		pci_bus_assign_resources(bus);
-+
-+		list_for_each_entry(child, &bus->children, node)
-+			pcie_bus_configure_settings(child);
-+	}
-+
-+	pci_bus_add_devices(bus);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_host_probe);
-+
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index ccc0e28..14fce9d 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -159,29 +159,17 @@ static ssize_t max_link_speed_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
  {
- 	struct resource *res = &b->busn_res;
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	u32 linkcap;
++	enum pci_bus_speed speed;
++	const char *speed_str;
+ 	int err;
+-	const char *speed;
+ 
+-	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
++	err = pcie_get_speed_cap(pci_dev, &speed);
+ 	if (err)
+ 		return -EINVAL;
+ 
+-	switch (linkcap & PCI_EXP_LNKCAP_SLS) {
+-	case PCI_EXP_LNKCAP_SLS_8_0GB:
+-		speed = "8 GT/s";
+-		break;
+-	case PCI_EXP_LNKCAP_SLS_5_0GB:
+-		speed = "5 GT/s";
+-		break;
+-	case PCI_EXP_LNKCAP_SLS_2_5GB:
+-		speed = "2.5 GT/s";
+-		break;
+-	default:
+-		speed = "Unknown speed";
+-	}
++	speed_str = PCIE_SPEED2STR(speed);
+ 
+-	return sprintf(buf, "%s\n", speed);
++	return sprintf(buf, "%s\n", speed_str);
+ }
+ static DEVICE_ATTR_RO(max_link_speed);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4a7c686..05fb356 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5050,6 +5050,48 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ EXPORT_SYMBOL(pcie_get_minimum_link);
+ 
+ /**
++ * pcie_get_speed_cap - queries for the PCI device's link speed capability
++ * @dev: PCI device to query
++ * @speed: storage for link speed
++ *
++ * This function queries the PCI device speed capability.
++ */
++int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed)
++{
++	u32 lnkcap;
++	int err1, err2;
++
++	*speed = PCI_SPEED_UNKNOWN;
++
++	err1 = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP,
++					  &lnkcap);
++	if (!err1 && lnkcap) {
++		if (lnkcap & PCI_EXP_LNKCAP_SLS_8_0GB)
++			*speed = PCIE_SPEED_8_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
++			*speed = PCIE_SPEED_5_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
++			*speed = PCIE_SPEED_2_5GT;
++		return 0;
++	}
++
++	err2 = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2,
++					  &lnkcap);
++	if (!err2 && lnkcap) { /* PCIe r3.0-compliant */
++		if (lnkcap & PCI_EXP_LNKCAP2_SLS_8_0GB)
++			*speed = PCIE_SPEED_8_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP2_SLS_5_0GB)
++			*speed = PCIE_SPEED_5_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP2_SLS_2_5GB)
++			*speed = PCIE_SPEED_2_5GT;
++		return 0;
++	}
++
++	return err1 ? err1 : err2;
++}
++EXPORT_SYMBOL(pcie_get_speed_cap);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a1b0672fd38a..0ca261fda900 100644
+index 978aad7..7ff9d46 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -879,6 +879,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
-+int pci_host_probe(struct pci_host_bridge *bridge);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
+@@ -259,6 +259,12 @@ enum pci_bus_speed {
+ 	PCI_SPEED_UNKNOWN		= 0xff,
+ };
+ 
++#define PCIE_SPEED2STR(speed) \
++	((speed) == PCIE_SPEED_8_0GT ? "8 GT/s" : \
++	 (speed) == PCIE_SPEED_5_0GT ? "5 GT/s" : \
++	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
++	 "Unknown speed")
++
+ struct pci_cap_saved_data {
+ 	u16		cap_nr;
+ 	bool		cap_extended;
+@@ -1080,6 +1086,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
++int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
+ void pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
 -- 
-2.11.0
+1.8.3.1
