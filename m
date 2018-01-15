@@ -1,39 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:30662 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932287AbeAaQYn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 31 Jan 2018 11:24:43 -0500
-Date: Wed, 31 Jan 2018 09:28:26 -0700
-From: Keith Busch <keith.busch@intel.com>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Wei Zhang <wzhang@fb.com>, Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH] PCI/DPC: Fix INT legacy interrupt in dpc_irq
-Message-ID: <20180131162826.GD27735@localhost.localdomain>
-References: <1517415535-21850-1-git-send-email-poza@codeaurora.org>
+Return-Path: <SRS0=RD7r=EK=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=RD7r=EK=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH] PCI: Fix MSI disabled for HiSilicon Hip06/Hip07 EP mode
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1514454812-101846-1-git-send-email-liudongdong3@huawei.com>
+ <20180113000414.GC205469@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+	<zhouyupeng1@huawei.com>, <tangyongqian@huawei.com>, <bruce.feng@huawei.com>,
+	<stable@vger.kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <e2ec400e-7db6-1858-1767-4c2bf52c6bc6@huawei.com>
+Date: Mon, 15 Jan 2018 09:01:02 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1517415535-21850-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180113000414.GC205469@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 31, 2018 at 09:48:55PM +0530, Oza Pawandeep wrote:
-> Current dpc driver acknowledge the interrupt in deferred work, which works
-> okay since LPI are edge triggered.
-> But when RP does not have MSI support, port service driver falls back to
-> legacy GIC SPI interrupts, and with current code we do not acknowledge the
-> interrupt and we get dpc interrupt storm.
-> This patch acknowledges the interrupt in interrupt handler.
-> 
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Hi Bjorn
+在 2018/1/13 8:04, Bjorn Helgaas 写道:
+> On Thu, Dec 28, 2017 at 05:53:32PM +0800, Dongdong Liu wrote:
+>> HiSilicon Hip06/Hip07 can work as RC mode and EP mode. The PCIe Root Port
+>> in Hip06/Hip07 SoCs advertises an MSI capability, but it can not generate
+>> MSIs. It can generate MSIs When it works as EP mode, but the vendor id and
+>> device id of RP and EP are the same. Current code also disable MSI for EP
+>> mode, we only need to disable MSI for Root Port.
+>>
+>> Cc: <stable@vger.kernel.org>
+>> Fixes: 72f2ff0deb87 ("PCI: Disable MSI for HiSilicon Hip06/Hip07 Root Ports")
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>
+> Applied with Zhou's reviewed-by to pci/msi for v4.16, thanks!
 
-Thanks, looks good to me.
+Many thanks for applying the patch.
 
-Reviewed-by: Keith Busch <keith.busch@intel.com>
+Thanks,
+Dongdong
