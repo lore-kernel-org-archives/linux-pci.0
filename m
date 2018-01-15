@@ -1,78 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:2427 "EHLO
-        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751173AbeAWMnZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:43:25 -0500
-Date: Tue, 23 Jan 2018 18:13:26 +0530
-From: Ganesh Goudar <ganeshgr@chelsio.com>
-To: Arjun Vynipadath <arjun@chelsio.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, davem@davemloft.net,
-        netdev@vger.kernel.org, leedom@chelsio.com, santosh@chelsio.com,
-        nirranjan@chelsio.com, kumaras@chelsio.com,
-        swise@opengridcomputing.com, hare@suse.de
-Subject: Re: [REGRESSION, bisect] pci: cxgb4 probe fails after commit
- 104daa71b3961434 ("PCI: Determine actual VPD size on first access")
-Message-ID: <20180123124323.GA21413@chelsio.com>
-References: <1516710549-26660-1-git-send-email-arjun@chelsio.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:41876 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933300AbeAOOnZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 09:43:25 -0500
+Subject: Re: [PATCH 3/4] PCI/DPC: Enable DPC in conjuction with AER
+To: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Maik Broemme <mbroemme@libmpq.org>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171219210643.24615-3-keith.busch@intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <0fb4494a-bd74-8ff9-f4d6-04409965cf58@codeaurora.org>
+Date: Mon, 15 Jan 2018 09:43:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1516710549-26660-1-git-send-email-arjun@chelsio.com>
+In-Reply-To: <20171219210643.24615-3-keith.busch@intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+Hannes Reinecke
+On 12/19/2017 4:06 PM, Keith Busch wrote:
+> @@ -289,6 +290,9 @@ static int dpc_probe(struct pcie_device *dev)
+>  	int status;
+>  	u16 ctl, cap;
+>  
+> +	if (pcie_aer_get_firmware_first(pdev))
+> +		return -ENOTSUPP;
+> +
 
-On Tuesday, January 01/23/18, 2018 at 17:59:09 +0530, Arjun Vynipadath wrote:
-> Sending on behalf of "Casey Leedom <leedom@chelsio.com>"
-> 
-> Way back on April 11, 2016 we reported a regression in Linux kernel 4.6-rc2 
-> brought on by kernel.org commit 104daa71b396. This commit calculates the 
-> size of a PCI Device's VPD area by parsing the VPD Structure at offset 0x000, 
-> and restricts accesses to the VPD to that computed size.
-> 
-> Our devices have a second VPD structure which is located starting at offset 
-> 0x400 which is the "real" VPD[1].  The 104daa71b396 commit (plus a follow on 
-> commit 408641e93aa5) caused efforts to read past the end of that computed 
-> length of the VPD to return silently without error leaving stack junk in the 
-> VPD read buffers.
-> 
-> We introduced kernel.org commit cb92148b to allow a driver to tell the 
-> kernel how large the VPD area really is, introducing a new API 
-> pci_set_vpd_size() for this purpose.
-> 
-> Now we've discovered a new subtlety to the problem.
-> 
-> We have a KVM Hypervisor running a 4.9.70 kernel.  So it has all of the 
-> above commits.  When we attach our Physical Function 4 to a Virtual Machine 
-> and attempt to run cxgb4 in that VM, we see the problem again.  The issue is 
-> that all of the VM Guest OS's efforts to access the PCIe VPD Capability are 
-> trapped into the KVM 4.9.70 kernel and executed there, with the results 
-> routed back to the VM Guest OS.  The cxgb4 driver in the VM Guest OS uses 
-> the new pci_set_vpd_size() to notify the OS of the true size of the VPD, but 
-> that information of course is never sent to the KVM 4.9.70 Hypervisor. 
-> (And, truth be told, if the Guest OS were older than 4.6, it wouldn't even 
-> know that it needed to do this.)  The result is that again we get silent VPD 
-> read failures with random stack garbage in the VPD read buffers. (sigh) 
-> 
-> It strikes me that the only way to handle this issue is to have KVM 
-> circumvent the VPD-Size Restricted logic which was added in kernel.org 
-> commits 104daa71b396 and 408641e93aa5.  Maybe via a __pci_read_vpd() or 
-> similar API.  But we are open to other suggestions.
-> 
-> Thoughts?
-> 
-> Casey.
-> 
-> [1] Chelsio adapters actually have two VPD structures stored in the VPD.  An
->     abbreviated on at Offset 0x0 and the complete VPD at Offset 0x400.  The
->     abbreviated one only contains the PN, SN and EC Keywords, while the
->     complete VPD contains those plus various adapter constants contained in
->     V0, V1, etc.  And it also contains the Base Ethernet MAC Address in the
->     "NA" Keyword which the cxgb4 driver needs when it can't contact the
->     adapter firmware.  (We don't have the "NA" Keyword in the VPD Structure
->     at Offset 0x000 because that's not an allowed VPD Keyword in the PCI-E
->     3.0 specification.)
-> 
->     Note that two other drivers look like they may also do something
->     similar, the Broadcom bnx2x and tg3.
+There are two ways to support firmware first handling along with DPC.
+
+The first one is to tie DPC handling to the firmware first enable.
+
+The second one is to enable DPC ERR_COR signalling so that firmware
+gets notified on each DPC event occurrence.
+
+While the first one gives more control to the firmware, I think it beats
+the purpose of the DPC. The first approach requires firmware to do some
+"pre-processing" before notifying operating system of a failure.
+
+The goal of the DPC is to put hardware into safe state when a PCIe error
+happens. The best software recovery following this is to notify endpoint
+drivers of failures and shutdown threads/processes accessing the hardware
+as quick as possible.
+
+The firmware-first event notification is through ACPI GHES and firmware injects
+an artifical uncorrected AER error to the operating system. Once OS gets
+notified, it tries to recover drivers through AER fatal error recovery mechanism.
+
+While the semantics of this path is clearly defined in ACPI, it is also known
+to be slow as well. During the time firmware does its business, operating
+system still could be trying to access the endpoint address space.
+
+My suggestion is to enable ERR_COR signalling so firmware gets a notification
+on each DPC event for logging purposes. 
+
+OS handles DPC natively and tries to recover hardware without any external
+influence.
+
+Sinan
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
