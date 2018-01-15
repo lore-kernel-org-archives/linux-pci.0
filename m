@@ -1,135 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26073 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752894AbeA3Qpn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Jan 2018 11:45:43 -0500
-Date: Tue, 30 Jan 2018 09:45:42 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "mj@ucw.cz" <mj@ucw.cz>
-Subject: Re: [PATCH] Fix Vector table and PBA addresses print output
-Message-ID: <20180130094542.1457e2fd@w520.home>
-In-Reply-To: <80372960-864f-0f7d-db04-c2cb49631f63@synopsys.com>
-References: <998ca55d1a2b9a7f6912dcff69bc57d31b690fb0.1517308416.git.gustavo.pimentel@synopsys.com>
-        <20180130070718.335deb52@w520.home>
-        <80372960-864f-0f7d-db04-c2cb49631f63@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59350 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S965476AbeAOPgK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 10:36:10 -0500
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V1 4/7] PCI: Print PCI device link status in kernel log
+Date: Mon, 15 Jan 2018 17:35:38 +0200
+Message-Id: <1516030541-6626-5-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 30 Jan 2018 16:08:07 +0000
-Gustavo Pimentel <gustavo.pimentel@synopsys.com> wrote:
+Add pcie_print_link_status() function for querying and verifying
+a PCI device link status. The PCI speed and width are reported
+in kernel log. In case the PCI device BW is limited somewhere in
+the PCI chain a warning would be reported in kernel log.
 
-> Hi Alex,
-> 
-> On 30/01/2018 14:07, Alex Williamson wrote:
-> > On Tue, 30 Jan 2018 10:34:08 +0000
-> > Gustavo Pimentel <gustavo.pimentel@synopsys.com> wrote:
-> >   
-> >> Lack of 3-bit rotation to the right was leading to erroneous display of the
-> >> vector table and PBA.
-> >>
-> >> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> >> ---
-> >>  ls-caps.c | 4 ++--
-> >>  1 file changed, 2 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/ls-caps.c b/ls-caps.c
-> >> index 507771a..cd13a37 100644
-> >> --- a/ls-caps.c
-> >> +++ b/ls-caps.c
-> >> @@ -1104,10 +1104,10 @@ cap_msix(struct device *d, int where, int cap)
-> >>  
-> >>    off = get_conf_long(d, where + PCI_MSIX_TABLE);
-> >>    printf("\t\tVector table: BAR=%d offset=%08x\n",
-> >> -	 off & PCI_MSIX_BIR, off & ~PCI_MSIX_BIR);
-> >> +	 off & PCI_MSIX_BIR, (off & ~PCI_MSIX_BIR) >> 3);
-> >>    off = get_conf_long(d, where + PCI_MSIX_PBA);
-> >>    printf("\t\tPBA: BAR=%d offset=%08x\n",
-> >> -	 off & PCI_MSIX_BIR, off & ~PCI_MSIX_BIR);
-> >> +	 off & PCI_MSIX_BIR, (off & ~PCI_MSIX_BIR) >> 3);
-> >>  }
-> >>  
-> >>  static void  
-> > 
-> > 
-> > The code is correct as is, the register contains bits 31:3 of the
-> > offset.  The spec states (PCI rev 3.0, 6.8.2.4, 6.8.2.5):  
-> 
-> I have just downloaded now the rev 3.0 (PCI_Express_Base_r3.0_10Nov10.pdf,
-> November 10, 2010) from PCI-SIG and the chapters that you refer don't match with
-> the downloaded version, can you confirm the doc date?
+This provides a unified method for all PCI devices to
+report status and issues, instead of each device reporting in a
+different way, using different code.
 
-I'm referencing the PCI Local Bus Specification Rev 3.0, Feb 3, 2004.
-MSI-X is compatible between PCI and PCIe, in fact my copy of the PCIe
-3.1a spec refers to the PCI spec for these registers.
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+---
+ drivers/pci/pci.c   | 67 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 68 insertions(+)
 
-> > 
-> >   The lower 3 Table BIR bits are masked off (set to zero) by software
-> >   to form a 32-bit QWORD -aligned offset.
-> > 
-> >   The lower 3 PBA BIR bits are masked off (set to zero) by software to
-> >   form a 32-bit QWORD-aligned offset.
-> >  
-> 
-> Yes, I understand the meaning but for the user the value printed should not
-> include (in my perspective) the offset provide by the Table BIR field or the PBA
-> BIR field.
-
-The offset is the value with the BIR field masked, shifting the value
-results in the (offset/8), which is not a useful thing.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f0c60dc..35873cc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5140,6 +5140,73 @@ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
+ EXPORT_SYMBOL(pcie_get_width_cap);
  
-> > Shifting is incorrect, the mask operation fills the lower 3 bits.  
-> The spec defines:
->        | 31         24 | 23         16 | 15         8 | 7        3 | 2     0 |
->   +00h |           Msg Ctrl Reg        |    PNext ID  |       CapID          |
->   +04h |                        Table offset                       | Tb BIR  |
->   +08h |                        PBA offset                         | PBA BIR |
->   +0Ch |            Reserved           |         Msg Data Reg                |
-> 
-> Let's apply a real example here, using the info from config space:
->        | 31         24 | 23         16 | 15         8 | 7                  0 |
-> 0b+00h |      00       |      20       |      00      |         11           |
-> 0b+04h |      00       |      00       |      00      |         00           |
-> 0b+08h |      00       |      00       |      18      |         00           |
-> 0b+0Ch |      00       |      00       |      00      |         00           |
-> 
-> If I decode manually the info from config space, I get for each field the
-> following value:
-> 
-> Msg Ctrl Reg = 0x20
-> PNext ID = 0x0
-> CapID = 0x11
-> Table offset = 0x0
-> Table BIR = 0x0
-> Table offset = 0x300
-
-Correction, Table offset[31:3] = 0x300, the actual offset is 0x1800
-
-> Table BIR = 0x0
-> Msg Data Reg = 0x0
-> 
-> Using lspci, I get:
-> ...
->     Capabilities: [b0] MSI-X: Enable+ Count=33 Masked-
->         Vector table: BAR=0 offset=00000000
->         PBA: BAR=0 offset=00001800
-
-Which is correct
-
-> ...
-> In my perspective should be like:
-> 
->     Capabilities: [b0] MSI-X: Enable+ Count=33 Masked-
->         Vector table: BAR=0 offset=00000000
->         PBA: BAR=0 offset=00000300
-
-Which is a meaningless and misleading value.  The PBA lives at offset
-0x1800 into BAR0 MMIO space, why is anything other than that relevant
-to present to the user?  By your logic we should also present
-count as 32 and let the user figure out that it's encoded as N-1.
-Thanks,
-
-Alex
+ /**
++ * pcie_print_link_status - Reports the PCI device's link speed and width.
++ * @dev: PCI device to query
++ *
++ * This function checks whether the PCI device current speed and width are equal
++ * to the maximum PCI device capabilities and that available BW equals to BW capability.
++ * It issues a warning in cases there's a BW limitation in the PCI chain.
++ */
++void pcie_print_link_status(struct pci_dev *dev)
++{
++	enum pcie_link_width width, width_cap;
++	enum pci_bus_speed speed, speed_cap;
++	int bw, bw_cap;
++	int err;
++
++	err = pcie_get_speed_cap(dev, &speed_cap);
++	if (err) {
++		dev_warn(&dev->dev,
++			 "Warning: unable to determine PCIe device speed capability (err = %d)\n",
++			 err);
++		return;
++	}
++
++	err = pcie_get_width_cap(dev, &width_cap);
++	if (err) {
++		dev_warn(&dev->dev,
++			 "Warning: unable to determine PCIe device width capability (err = %d)\n",
++			 err);
++		return;
++	}
++
++	err = pcie_get_link_limits(dev, &speed, &width, &bw);
++	if (err) {
++		dev_warn(&dev->dev,
++			 "Warning: unable to determine PCIe device chain minimum BW (err = %d)\n",
++			 err);
++		return;
++	}
++
++	if (speed == PCI_SPEED_UNKNOWN)
++		dev_warn(&dev->dev,
++			 "Warning: unable to determine PCIe device chain minimum speed\n");
++
++	if (width == PCIE_LNK_WIDTH_UNKNOWN)
++		dev_warn(&dev->dev,
++			 "Warning: unable to determine PCIe device chain minimum width\n");
++
++	bw_cap = width_cap * PCIE_SPEED2MBS(speed_cap);
++	if (!bw_cap)
++		dev_warn(&dev->dev,
++			 "Warning: unable to determine max PCIe chain BW\n");
++
++	if (bw_cap && bw < bw_cap) {
++		dev_warn(&dev->dev,
++			 "Warning: PCIe BW (%dGb/s) is lower than device's capability (%dGb/s)\n",
++			 bw / 1000, bw_cap / 1000);
++		dev_info(&dev->dev,
++			 "If device status is at max capabilities, might be due to a narrow part down the chain\n");
++	}
++
++	dev_info(&dev->dev, "PCIe link speed is %s, device supports %s\n",
++		 PCIE_SPEED2STR(speed), PCIE_SPEED2STR(speed_cap));
++	dev_info(&dev->dev, "PCIe link width is x%d, device supports x%d\n",
++		 width, width_cap);
++}
++EXPORT_SYMBOL(pcie_print_link_status);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 88e23eb..321cf22 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1096,6 +1096,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
+ int pcie_get_link_limits(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			 enum pcie_link_width *width, int *bw);
++void pcie_print_link_status(struct pci_dev *dev);
+ void pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.8.3.1
