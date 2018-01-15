@@ -1,219 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:40979 "EHLO
-        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752841AbeAaPVQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jan 2018 10:21:16 -0500
-Received: by mail-vk0-f65.google.com with SMTP id g186so9227419vkd.8
-        for <linux-pci@vger.kernel.org>; Wed, 31 Jan 2018 07:21:16 -0800 (PST)
+Return-Path: <SRS0=ouxe=EK=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=ouxe=EK=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
+To: Keith Busch <keith.busch@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Maik Broemme <mbroemme@libmpq.org>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171219210643.24615-4-keith.busch@intel.com>
+ <20180112230303.GB205469@bhelgaas-glaptop.roam.corp.google.com>
+ <20180114013517.GA12167@localhost.localdomain>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <667d35b4-ded0-ec30-305f-d378bd2e3b2f@codeaurora.org>
+Date: Mon, 15 Jan 2018 09:32:59 -0500
 MIME-Version: 1.0
-In-Reply-To: <1515104268-25087-9-git-send-email-Felix.Kuehling@amd.com>
-References: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com> <1515104268-25087-9-git-send-email-Felix.Kuehling@amd.com>
-From: Oded Gabbay <oded.gabbay@gmail.com>
-Date: Wed, 31 Jan 2018 17:20:45 +0200
-Message-ID: <CAFCwf139atQQouUbFabUwWs8qX=QHwS4KVm5E8fqqf667JH8Eg@mail.gmail.com>
-Subject: Re: [PATCH 8/9] drm/amdkfd: Add dGPU device IDs and device info
-To: Felix Kuehling <Felix.Kuehling@amd.com>
-Cc: amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180114013517.GA12167@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 5, 2018 at 12:17 AM, Felix Kuehling <Felix.Kuehling@amd.com> wrote:
-> CC: linux-pci@vger.kernel.org
-> Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
-> ---
->  drivers/gpu/drm/amd/amdkfd/kfd_device.c | 153 +++++++++++++++++++++++++++++++-
->  1 file changed, 151 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_device.c b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
-> index 6dd50cc..612afaf 100644
-> --- a/drivers/gpu/drm/amd/amdkfd/kfd_device.c
-> +++ b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
-> @@ -63,12 +63,118 @@ static const struct kfd_device_info carrizo_device_info = {
->  };
->  #endif
->
-> +static const struct kfd_device_info hawaii_device_info = {
-> +       .asic_family = CHIP_HAWAII,
-> +       .max_pasid_bits = 16,
-> +       /* max num of queues for KV.TODO should be a dynamic value */
-> +       .max_no_of_hqd  = 24,
-> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
-> +       .event_interrupt_class = &event_interrupt_class_cik,
-> +       .num_of_watch_points = 4,
-> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
-> +       .supports_cwsr = false,
-> +       .needs_iommu_device = false,
-> +       .needs_pci_atomics = false,
-> +};
-> +
-> +static const struct kfd_device_info tonga_device_info = {
-> +       .asic_family = CHIP_TONGA,
-> +       .max_pasid_bits = 16,
-> +       .max_no_of_hqd  = 24,
-> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
-> +       .event_interrupt_class = &event_interrupt_class_cik,
-Is there any point in keeping the name event_interrupt_class_cik?
-maybe just rename to event_interrupt_class ?
-What will happen in vega ? If its the same I think removing the _cik
-makes the code more consistent.
+On 1/13/2018 8:35 PM, Keith Busch wrote:
+> On Fri, Jan 12, 2018 at 05:03:03PM -0600, Bjorn Helgaas wrote:
+>> Hi Keith,
+>>
+>> On Tue, Dec 19, 2017 at 02:06:43PM -0700, Keith Busch wrote:
+>>> A DPC enabled device will suppress sending ERR_FATAL and ERR_NONFATAL,
+>>> which prevents the AER handler from reporting the details of the
+>>> error. This patch will have the DPC driver get the AER status registers
+>>> from the downstream port that detected the uncorrectable error, and
+>>> print out additional information.
+>>>
+>>> Signed-off-by: Keith Busch <keith.busch@intel.com>
+>>> ---
+>>>  drivers/pci/pcie/pcie-dpc.c | 8 ++++++++
+>>>  1 file changed, 8 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+>>> index ef71a472592c..aefc4fbdcef0 100644
+>>> --- a/drivers/pci/pcie/pcie-dpc.c
+>>> +++ b/drivers/pci/pcie/pcie-dpc.c
+>>> @@ -44,6 +44,7 @@ struct dpc_dev {
+>>>  	int			cap_pos;
+>>>  	bool			rp;
+>>>  	u32			rp_pio_status;
+>>> +	struct aer_err_info	info;
+>>>  };
+>>>  
+>>>  static const char * const rp_pio_error_string[] = {
+>>> @@ -111,6 +112,9 @@ static void interrupt_event_handler(struct work_struct *work)
+>>>  	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+>>>  	struct pci_bus *parent = pdev->subordinate;
+>>>  
+>>> +	if (aer_get_device_error_info(pdev, &dpc->info))
+>>> +		aer_print_error(pdev, &dpc->info);
+>>
+>> I'm confused about this.  "pdev" is the DPC-enabled Port, i.e., the
+>> Port that received an ERR_FATAL or ERR_NONFATAL Message.  The Message
+>> was generated by something below "pdev", and that's where the
+>> interesting AER logging would have been done.
+>>
+>> This patch suggests that the DPC port itself would have something
+>> interesting logged in its AER capability.  Is that really true?  I see
+>> in sec 6.2.10 (PCIe r4.0) that the DPC port should log the Trigger
+>> Reason and the Error Source ID from the Message, but I don't see
+>> anything about logging anything in its AER registers.
+> 
+> If the trigger reason is "unmasked uncorrectable error", then the DPC
+> AER register has useful information. All other reasons would not provide
+> useful data in the AER register.
+> 
+> 
+> I would assume that aer_get_device_error_info would return false if
+> it's one of other reasons, but I can fix this up to check the trigger
+> reasoning rather than unconditionally reading the AER status
+> 
 
-Oded
+https://pcisig.com/sites/default/files/specification_documents/ECN_DPC_2012-02-09_finalized.pdf
+
+If you look at figure 6-2, AER errors are always logged regardless of the DPC
+presence.
+
+That's why, I was suggesting Keith that code should also clear the AER information
+when such an event happens. Otherwise, same event won't trigger again.
 
 
-> +       .num_of_watch_points = 4,
-> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
-> +       .supports_cwsr = false,
-> +       .needs_iommu_device = false,
-> +       .needs_pci_atomics = true,
-> +};
-> +
-> +static const struct kfd_device_info tonga_vf_device_info = {
-> +       .asic_family = CHIP_TONGA,
-> +       .max_pasid_bits = 16,
-> +       .max_no_of_hqd  = 24,
-> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
-> +       .event_interrupt_class = &event_interrupt_class_cik,
-> +       .num_of_watch_points = 4,
-> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
-> +       .supports_cwsr = false,
-> +       .needs_iommu_device = false,
-> +       .needs_pci_atomics = false,
-> +};
-> +
-> +static const struct kfd_device_info fiji_device_info = {
-> +       .asic_family = CHIP_FIJI,
-> +       .max_pasid_bits = 16,
-> +       .max_no_of_hqd  = 24,
-> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
-> +       .event_interrupt_class = &event_interrupt_class_cik,
-> +       .num_of_watch_points = 4,
-> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
-> +       .supports_cwsr = true,
-> +       .needs_iommu_device = false,
-> +       .needs_pci_atomics = true,
-> +};
-> +
-> +static const struct kfd_device_info fiji_vf_device_info = {
-> +       .asic_family = CHIP_FIJI,
-> +       .max_pasid_bits = 16,
-> +       .max_no_of_hqd  = 24,
-> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
-> +       .event_interrupt_class = &event_interrupt_class_cik,
-> +       .num_of_watch_points = 4,
-> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
-> +       .supports_cwsr = true,
-> +       .needs_iommu_device = false,
-> +       .needs_pci_atomics = false,
-> +};
-> +
-> +
-> +static const struct kfd_device_info polaris10_device_info = {
-> +       .asic_family = CHIP_POLARIS10,
-> +       .max_pasid_bits = 16,
-> +       .max_no_of_hqd  = 24,
-> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
-> +       .event_interrupt_class = &event_interrupt_class_cik,
-> +       .num_of_watch_points = 4,
-> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
-> +       .supports_cwsr = true,
-> +       .needs_iommu_device = false,
-> +       .needs_pci_atomics = true,
-> +};
-> +
-> +static const struct kfd_device_info polaris10_vf_device_info = {
-> +       .asic_family = CHIP_POLARIS10,
-> +       .max_pasid_bits = 16,
-> +       .max_no_of_hqd  = 24,
-> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
-> +       .event_interrupt_class = &event_interrupt_class_cik,
-> +       .num_of_watch_points = 4,
-> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
-> +       .supports_cwsr = true,
-> +       .needs_iommu_device = false,
-> +       .needs_pci_atomics = false,
-> +};
-> +
-> +static const struct kfd_device_info polaris11_device_info = {
-> +       .asic_family = CHIP_POLARIS11,
-> +       .max_pasid_bits = 16,
-> +       .max_no_of_hqd  = 24,
-> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
-> +       .event_interrupt_class = &event_interrupt_class_cik,
-> +       .num_of_watch_points = 4,
-> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
-> +       .supports_cwsr = true,
-> +       .needs_iommu_device = false,
-> +       .needs_pci_atomics = true,
-> +};
-> +
-> +
->  struct kfd_deviceid {
->         unsigned short did;
->         const struct kfd_device_info *device_info;
->  };
->
-> -/* Please keep this sorted by increasing device id. */
->  static const struct kfd_deviceid supported_devices[] = {
->  #if defined(CONFIG_AMD_IOMMU_V2_MODULE) || defined(CONFIG_AMD_IOMMU_V2)
->         { 0x1304, &kaveri_device_info },        /* Kaveri */
-> @@ -97,8 +203,51 @@ static const struct kfd_deviceid supported_devices[] = {
->         { 0x9874, &carrizo_device_info },       /* Carrizo */
->         { 0x9875, &carrizo_device_info },       /* Carrizo */
->         { 0x9876, &carrizo_device_info },       /* Carrizo */
-> -       { 0x9877, &carrizo_device_info }        /* Carrizo */
-> +       { 0x9877, &carrizo_device_info },       /* Carrizo */
->  #endif
-> +       { 0x67A0, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67A1, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67A2, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67A8, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67A9, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67AA, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67B0, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67B1, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67B8, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67B9, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67BA, &hawaii_device_info },        /* Hawaii */
-> +       { 0x67BE, &hawaii_device_info },        /* Hawaii */
-> +       { 0x6920, &tonga_device_info },         /* Tonga */
-> +       { 0x6921, &tonga_device_info },         /* Tonga */
-> +       { 0x6928, &tonga_device_info },         /* Tonga */
-> +       { 0x6929, &tonga_device_info },         /* Tonga */
-> +       { 0x692B, &tonga_device_info },         /* Tonga */
-> +       { 0x692F, &tonga_vf_device_info },      /* Tonga vf */
-> +       { 0x6938, &tonga_device_info },         /* Tonga */
-> +       { 0x6939, &tonga_device_info },         /* Tonga */
-> +       { 0x7300, &fiji_device_info },          /* Fiji */
-> +       { 0x730F, &fiji_vf_device_info },       /* Fiji vf*/
-> +       { 0x67C0, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67C1, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67C2, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67C4, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67C7, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67C8, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67C9, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67CA, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67CC, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67CF, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67D0, &polaris10_vf_device_info },  /* Polaris10 vf*/
-> +       { 0x67DF, &polaris10_device_info },     /* Polaris10 */
-> +       { 0x67E0, &polaris11_device_info },     /* Polaris11 */
-> +       { 0x67E1, &polaris11_device_info },     /* Polaris11 */
-> +       { 0x67E3, &polaris11_device_info },     /* Polaris11 */
-> +       { 0x67E7, &polaris11_device_info },     /* Polaris11 */
-> +       { 0x67E8, &polaris11_device_info },     /* Polaris11 */
-> +       { 0x67E9, &polaris11_device_info },     /* Polaris11 */
-> +       { 0x67EB, &polaris11_device_info },     /* Polaris11 */
-> +       { 0x67EF, &polaris11_device_info },     /* Polaris11 */
-> +       { 0x67FF, &polaris11_device_info },     /* Polaris11 */
->  };
->
->  static int kfd_gtt_sa_init(struct kfd_dev *kfd, unsigned int buf_size,
-> --
-> 2.7.4
->
-
-Other then the note above, This patch is:
-Reviewed-by: Oded Gabbay <oded.gabbay@gmail.com>
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
