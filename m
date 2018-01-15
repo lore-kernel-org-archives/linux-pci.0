@@ -1,51 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51500 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751409AbeAZWzm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 Jan 2018 17:55:42 -0500
-Subject: [PATCH 1/8] PCI/DPC: Rename interrupt_event_handler() to dpc_work()
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
-Date: Fri, 26 Jan 2018 16:55:40 -0600
-Message-ID: <20180126225540.58614.41354.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59320 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S965520AbeAOPgI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 10:36:08 -0500
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V1 2/7] PCI: Add a query function for PCI device's width cap
+Date: Mon, 15 Jan 2018 17:35:36 +0200
+Message-Id: <1516030541-6626-3-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+pcie_get_width_cap() implements the logic for querying a PCI device's
+maximum width capability. Change max_link_width_show() function to
+use pcie_get_width_cap().
 
-Rename interrupt_event_handler() to dpc_work() so there's more useful
-information in stack traces and similar situations.  No functional change
-intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
 ---
- drivers/pci/pcie/pcie-dpc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/pci-sysfs.c |  6 +++---
+ drivers/pci/pci.c       | 23 +++++++++++++++++++++++
+ include/linux/pci.h     |  1 +
+ 3 files changed, 27 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 0515abd20a48..48e1e3f8dd69 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -105,7 +105,7 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- 		dev_warn(dev, "Link state not disabled for DPC event\n");
- }
- 
--static void interrupt_event_handler(struct work_struct *work)
-+static void dpc_work(struct work_struct *work)
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 14fce9d..16213d3 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -177,14 +177,14 @@ static ssize_t max_link_width_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
  {
- 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
- 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
-@@ -319,7 +319,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	u32 linkcap;
++	enum pcie_link_width width;
+ 	int err;
  
- 	dpc->cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
- 	dpc->dev = dev;
--	INIT_WORK(&dpc->work, interrupt_event_handler);
-+	INIT_WORK(&dpc->work, dpc_work);
- 	set_service_data(dev, dpc);
+-	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
++	err = pcie_get_width_cap(pci_dev, &width);
+ 	if (err)
+ 		return -EINVAL;
  
- 	status = devm_request_irq(device, dev->irq, dpc_irq, IRQF_SHARED,
+-	return sprintf(buf, "%u\n", (linkcap & PCI_EXP_LNKCAP_MLW) >> 4);
++	return sprintf(buf, "%u\n", width);
+ }
+ static DEVICE_ATTR_RO(max_link_width);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 05fb356..cf0401d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5092,6 +5092,29 @@ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed)
+ EXPORT_SYMBOL(pcie_get_speed_cap);
+ 
+ /**
++ * pcie_get_width_cap - queries for the PCI device's link width capability.
++ * @dev: PCI device to query
++ * @width: storage for link width
++ *
++ * This function queries the PCI device width capability.
++ */
++int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
++{
++	u32 lnkcap;
++	int err;
++
++	*width = PCIE_LNK_WIDTH_UNKNOWN;
++
++	err = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
++	if (!err && lnkcap)
++		/* Shift start of width mask by 4 to get actual speed cap */
++		*width = (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
++
++	return err;
++}
++EXPORT_SYMBOL(pcie_get_width_cap);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7ff9d46..27dc070 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1087,6 +1087,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
++int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
+ void pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.8.3.1
