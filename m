@@ -1,91 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yazen Ghannam <Yazen.Ghannam@amd.com>
-To: linux-acpi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-        bp@suse.de, Yazen Ghannam <yazen.ghannam@amd.com>
-Subject: [PATCH v2] PCI/ACPI: Disable AER when _OSC control bit is clear.
-Date: Mon, 15 Jan 2018 10:20:06 -0600
-Message-Id: <20180115162006.45553-1-Yazen.Ghannam@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59368 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S965478AbeAOPgK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 10:36:10 -0500
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V1 7/7] net/mlx5e: Use generic PCI function for BW calculation
+Date: Mon, 15 Jan 2018 17:35:41 +0200
+Message-Id: <1516030541-6626-8-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yazen Ghannam <yazen.ghannam@amd.com>
+Newly introduced pcie_get_link_limits() function calculates
+maximum available BW through the PCI chain. We can use this
+value for mlx5e_get_pci_bw() instead of calculating ourselves.
 
-Currently, aer_service_init() checks if AER is available and that
-Firmware First handling is not enabled. The _OSC request for AER is not
-taken into account when deciding to enable AER in Linux.
-
->From ACPI 6.2 Section 6.2.11.3, "If any bits in the Control Field are
-returned cleared (masked to zero) by the _OSC control method, the
-respective feature is designated unsupported by the platform and must
-not be enabled by the OS."
-
-The OS and the Platform should agree that the OS can have control of AER
-otherwise we should disable AER in the OS.
-
-Mark AER as disabled if the _OSC request was not made or accepted.
-
-This covers two cases where the OS and Platform disagree:
-1) The OS requests AER control and Platform denies the request.
-2) The OS does not request AER control but the Platform returns the AER
-   control bit set, possibly due to a Firmware bug.
-
-The _OSC control for AER is not requested when APEI Firmware First is
-used, so the same condition applies from case 2 above.
-
-Remove redundant check for aer_acpi_firmware_first() when calling
-aer_service_init(), since this check is already included when checking
-the _OSC control.
-
-Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
 ---
-Link:
-https://lkml.kernel.org/r/20180111150316.19951-1-Yazen.Ghannam@amd.com
+ drivers/net/ethernet/mellanox/mlx5/core/en_main.c | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
 
-v1->v2:
-* Expand commit message.
-* Add Spec reference to commit message.
-* Fix spelling error in commit message.
-* Add comment for 3-way bitwise AND.
-
- drivers/acpi/pci_root.c       | 7 +++++++
- drivers/pci/pcie/aer/aerdrv.c | 2 +-
- 2 files changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 6fc204a52493..ab0192fd24c7 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -512,6 +512,13 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 		 */
- 		*no_aspm = 1;
- 	}
-+
-+	/*
-+	 * We can use a 3-way bitwise AND to check that the AER control bit is
-+	 * both requested by the OS and granted by the Platform.
-+	 */
-+	if (!(requested & control & OSC_PCI_EXPRESS_AER_CONTROL))
-+		pci_no_aer();
- }
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+index d2b057a..d1d7427 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+@@ -3971,27 +3971,16 @@ static int mlx5e_get_pci_bw(struct mlx5_core_dev *mdev, u32 *pci_bw)
+ 	enum pcie_link_width width;
+ 	enum pci_bus_speed speed;
+ 	int err = 0;
++	int bw;
  
- static int acpi_pci_root_add(struct acpi_device *device,
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 6ff5f5b4f5e6..39bb059777d0 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -374,7 +374,7 @@ static void aer_error_resume(struct pci_dev *dev)
-  */
- static int __init aer_service_init(void)
- {
--	if (!pci_aer_available() || aer_acpi_firmware_first())
-+	if (!pci_aer_available())
- 		return -ENXIO;
- 	return pcie_port_service_register(&aerdriver);
+-	err = pcie_get_minimum_link(mdev->pdev, &speed, &width);
++	err = pcie_get_link_limits(mdev->pdev, &speed, &width, &bw);
+ 	if (err)
+ 		return err;
+ 
+ 	if (speed == PCI_SPEED_UNKNOWN || width == PCIE_LNK_WIDTH_UNKNOWN)
+ 		return -EINVAL;
+ 
+-	switch (speed) {
+-	case PCIE_SPEED_2_5GT:
+-		*pci_bw = 2500 * width;
+-		break;
+-	case PCIE_SPEED_5_0GT:
+-		*pci_bw = 5000 * width;
+-		break;
+-	case PCIE_SPEED_8_0GT:
+-		*pci_bw = 8000 * width;
+-		break;
+-	default:
+-		return -EINVAL;
+-	}
++	*pci_bw = bw;
+ 
+ 	return 0;
  }
 -- 
-2.14.1
-
+1.8.3.1
