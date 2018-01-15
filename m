@@ -1,183 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:42204 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752051AbeACPYv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jan 2018 10:24:51 -0500
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tal Gilboa <talgi@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Tariq Toukan <tariqt@mellanox.com>
-Subject: [PATCH next 1/3] pci: Report PCI device link status
-Date: Wed,  3 Jan 2018 17:24:20 +0200
-Message-Id: <1514993062-7328-2-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1514993062-7328-1-git-send-email-talgi@mellanox.com>
-References: <1514993062-7328-1-git-send-email-talgi@mellanox.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:43754 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755131AbeAOJgt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 04:36:49 -0500
+Received: by mail-wm0-f65.google.com with SMTP id g1so481865wmg.2
+        for <linux-pci@vger.kernel.org>; Mon, 15 Jan 2018 01:36:48 -0800 (PST)
+From: Koen Vandeputte <koen.vandeputte@ncentric.com>
+To: linux-pci@vger.kernel.org
+Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v2] PCI: dwc: fix enumeration end when reaching root subordinate
+Date: Mon, 15 Jan 2018 10:36:08 +0100
+Message-Id: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a function for querying and verifying a PCI device link
-status. The PCI speed and width are reported in kernel log.
-In case the PCI device went up with non-maximized speed/width,
-a warning would be reported in kernel log.
+The subordinate value indicates the highest bus number which can be
+reached downstream though a certain device.
 
-This would allow for a generic way for all PCI devices to
-report status and issues in the same manner, instead of each
-device reporting in a different place, using different code.
+Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+parent")
+ensures that downstream devices cannot assign busnumbers higher than the
+upstream device subordinate number, which was indeed illogical.
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Signed-off-by: Tariq Toukan <tariqt@mellanox.com>
-Signed-off-by: Saeed Mahameed <saeedm@mellanox.com>
+By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
+value of 0x01.
+
+Due to this combined with above commit, enumeration stops digging deeper
+downstream as soon as bus num 0x01 has been assigned, which is always
+the case for a bridge device.
+
+This results in all devices behind a bridge bus to remain undetected, as
+these would be connected to bus 0x02 or higher.
+
+Fix this by initializing the RC to a subordinate value of 0xff, which is
+not altering hardware behaviour in any way, but informs probing
+function pci_scan_bridge() later on which reads this value back from
+register.
+
+Following nasty errors during boot are also fixed by this:
+
+[    0.459145] pci_bus 0000:02: busn_res: can not insert [bus 02-ff]
+under [bus 01] (conflicts with (null) [bus 01])
+...
+[    0.464515] pci_bus 0000:03: [bus 03] partially hidden behind bridge
+0000:01 [bus 01]
+...
+[    0.464892] pci_bus 0000:04: [bus 04] partially hidden behind bridge
+0000:01 [bus 01]
+...
+[    0.466488] pci_bus 0000:05: [bus 05] partially hidden behind bridge
+0000:01 [bus 01]
+[    0.466506] pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to
+05
+[    0.466517] pci_bus 0000:02: busn_res: can not insert [bus 02-05]
+under [bus 01] (conflicts with (null) [bus 01])
+[    0.466534] pci_bus 0000:02: [bus 02-05] partially hidden behind
+bridge 0000:01 [bus 01]
+
+Fixes: a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+parent")
+Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Binghui Wang <wangbinghui@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jesper Nilsson <jesper.nilsson@axis.com>
+Cc: Jianguo Sun <sunjianguo1@huawei.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Minghuan Lian <minghuan.Lian@freescale.com>
+Cc: Mingkai Hu <mingkai.hu@freescale.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: Roy Zang <tie-fei.zang@freescale.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Xiaowei Song <songxiaowei@hisilicon.com>
+Cc: Zhou Wang <wangzhou1@hisilicon.com>
 ---
- drivers/pci/pci.c             | 107 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h           |   3 ++
- include/uapi/linux/pci_regs.h |   1 +
- 3 files changed, 111 insertions(+)
+ drivers/pci/dwc/pcie-designware-host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4a7c686..f8499ba 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5050,6 +5050,113 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- EXPORT_SYMBOL(pcie_get_minimum_link);
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index bf558df5b7b3..2b5470173196 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -616,7 +616,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	/* setup bus numbers */
+ 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
+ 	val &= 0xff000000;
+-	val |= 0x00010100;
++	val |= 0x00ff0100;
+ 	dw_pcie_writel_dbi(pci, PCI_PRIMARY_BUS, val);
  
- /**
-+ * pcie_get_link_caps - queries for the PCI device's link speed and width
-+ *			capabilities.
-+ * @dev: PCI device to query
-+ * @speed: storage for link speed
-+ * @width: storage for link width
-+ *
-+ * This function queries the PCI device speed and width capabilities.
-+ */
-+int pcie_get_link_caps(struct pci_dev *dev, enum pci_bus_speed *speed,
-+		       enum pcie_link_width *width)
-+{
-+	u32 lnkcap1, lnkcap2;
-+	int err1, err2;
-+
-+	*speed = PCI_SPEED_UNKNOWN;
-+	*width = PCIE_LNK_WIDTH_UNKNOWN;
-+
-+	err1 = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP,
-+					  &lnkcap1);
-+	err2 = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2,
-+					  &lnkcap2);
-+
-+	if (err1 && err2)
-+		return err1;
-+
-+	if (!err2 && lnkcap2) { /* PCIe r3.0-compliant */
-+		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
-+			*speed = PCIE_SPEED_8_0GT;
-+		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
-+			*speed = PCIE_SPEED_5_0GT;
-+		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
-+			*speed = PCIE_SPEED_2_5GT;
-+	}
-+	if (!err1 && lnkcap1) {
-+		*width = (lnkcap1 & PCI_EXP_LNKCAP_MLW) >>
-+				PCI_EXP_LNKCAP_MLW_SHIFT;
-+		if (*speed == PCI_SPEED_UNKNOWN) { /* pre-r3.0 */
-+			if (lnkcap1 & PCI_EXP_LNKCAP_SLS_8_0GB)
-+				*speed = PCIE_SPEED_8_0GT;
-+			else if (lnkcap1 & PCI_EXP_LNKCAP_SLS_5_0GB)
-+				*speed = PCIE_SPEED_5_0GT;
-+			else if (lnkcap1 & PCI_EXP_LNKCAP_SLS_2_5GB)
-+				*speed = PCIE_SPEED_2_5GT;
-+		}
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(pcie_get_link_caps);
-+
-+/**
-+ * pcie_print_link_status - Reports the PCI device's link speed and width.
-+ * @dev: PCI device to query
-+ *
-+ * This function will check the PCI device current speed and width are equal
-+ * to the maximum PCI device capabilities. Will issue a warning in cases
-+ * there's a mismatch between current status and maximum capabilities.
-+ */
-+void pcie_print_link_status(struct pci_dev *dev)
-+{
-+	enum pcie_link_width width, width_cap;
-+	enum pci_bus_speed speed, speed_cap;
-+	int err;
-+
-+	err = pcie_get_link_caps(dev, &speed_cap, &width_cap);
-+	if (err) {
-+		dev_warn(&dev->dev,
-+			 "Warning: unable to determine PCIe device BW capabilities (err = %d)\n",
-+			 err);
-+		return;
-+	}
-+
-+	err = pcie_get_minimum_link(dev, &speed, &width);
-+	if (err) {
-+		dev_warn(&dev->dev,
-+			 "Warning: unable to determine PCIe device chain minimum BW (err = %d)\n",
-+			 err);
-+		return;
-+	}
-+
-+	if (speed == PCI_SPEED_UNKNOWN)
-+		dev_warn(&dev->dev,
-+			 "Warning: unable to determine PCIe device chain minimum speed\n");
-+	else if (speed != speed_cap)
-+		dev_warn(&dev->dev,
-+			 "Warning: PCIe speed is slower than device's capability\n");
-+
-+	if (width == PCIE_LNK_WIDTH_UNKNOWN)
-+		dev_warn(&dev->dev,
-+			 "Warning: unable to determine PCIe device chain minimum width\n");
-+	else if (width != width_cap)
-+		dev_warn(&dev->dev,
-+			 "Warning: PCIe width is lower than device's capability\n");
-+
-+#define PCIE_SPEED2STR(speed) \
-+	(speed == PCIE_SPEED_8_0GT ? "8.0GT/s" : \
-+	 speed == PCIE_SPEED_5_0GT ? "5.0GT/s" : \
-+	 speed == PCIE_SPEED_2_5GT ? "2.5GT/s" : \
-+	 "Unknown")
-+	dev_info(&dev->dev, "PCIe link speed is %s, device supports %s\n",
-+		 PCIE_SPEED2STR(speed), PCIE_SPEED2STR(speed_cap));
-+	dev_info(&dev->dev, "PCIe link width is x%d, device supports x%d\n",
-+		 width, width_cap);
-+}
-+EXPORT_SYMBOL(pcie_print_link_status);
-+
-+/**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-  * @flags: resource type mask to be selected
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 978aad7..51845fc 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1080,6 +1080,9 @@ static inline int pci_is_managed(struct pci_dev *pdev)
- int pcie_set_mps(struct pci_dev *dev, int mps);
- int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
-+int pcie_get_link_caps(struct pci_dev *dev, enum pci_bus_speed *speed,
-+		       enum pcie_link_width *width);
-+void pcie_print_link_status(struct pci_dev *dev);
- void pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 70c2b2a..a5f9aed 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -521,6 +521,7 @@
- #define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
- #define  PCI_EXP_LNKCAP_SLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
- #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
-+#define  PCI_EXP_LNKCAP_MLW_SHIFT 4	   /* Start of MLW mask in link capabilities */
- #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
- #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
- #define  PCI_EXP_LNKCAP_L1EL	0x00038000 /* L1 Exit Latency */
+ 	/* setup command register */
 -- 
-1.8.3.1
+2.7.4
