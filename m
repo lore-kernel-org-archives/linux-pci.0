@@ -1,68 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp5-g21.free.fr ([212.27.42.5]:29314 "EHLO smtp5-g21.free.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757183AbeAHM3C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Jan 2018 07:29:02 -0500
-Subject: Re: [PATCH 1/8] arch/sh: add sh7786_mm_sel() function
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
- <20171204150907.24345-2-thomas.petazzoni@free-electrons.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <a306b914-e95a-4199-60de-39e88782ac05@free.fr>
-Date: Mon, 8 Jan 2018 13:28:42 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Russell King <rmk+kernel@armlinux.org.uk>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Jonas Gorski <jonas.gorski@gmail.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v4 5/8] PCI/MSI: Enable PCI_MSI_IRQ_DOMAIN support for MIPS
+Date: Mon, 15 Jan 2018 18:28:42 -0500
+Message-Id: <1516058925-46522-6-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
+References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
+ Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20171204150907.24345-2-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/2017 16:09, Thomas Petazzoni wrote:
+Add MIPS as an arch that supports PCI_MSI_IRQ_DOMAIN and add
+generation of msi.h in the MIPS arch.
 
-> The SH7786 has different physical memory layout configurations,
-> configurable through the MMSELR register. The configuration is
-> typically defined by the bootloader, so Linux generally doesn't care.
-> 
-> Except that depending on the configuration, some PCI MEM areas may or
-> may not be available. This commit adds a helper function that allows
-> to retrieve the current physical memory layout configuration. It will
-> be used in a following patch to exclude unusable PCI MEM areas during
-> the PCI initialization.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  arch/sh/include/cpu-sh4/cpu/sh7786.h | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/arch/sh/include/cpu-sh4/cpu/sh7786.h b/arch/sh/include/cpu-sh4/cpu/sh7786.h
-> index 0df09e638f09..96b8cb1f754a 100644
-> --- a/arch/sh/include/cpu-sh4/cpu/sh7786.h
-> +++ b/arch/sh/include/cpu-sh4/cpu/sh7786.h
-> @@ -14,6 +14,8 @@
->  #ifndef __CPU_SH7786_H__
->  #define __CPU_SH7786_H__
->  
-> +#include <linux/io.h>
-> +
->  enum {
->  	/* PA */
->  	GPIO_PA7, GPIO_PA6, GPIO_PA5, GPIO_PA4,
-> @@ -131,4 +133,9 @@ enum {
->  	GPIO_FN_IRL7, GPIO_FN_IRL6, GPIO_FN_IRL5, GPIO_FN_IRL4,
->  };
->  
-> +static inline u32 sh7786_mm_sel(void)
-> +{
-> +	return __raw_readl(0xFC400020) & 0x7;
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+---
+ arch/mips/include/asm/Kbuild | 1 +
+ drivers/pci/Kconfig          | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-I thought we were never supposed to use __raw_readl(), rather use readl_relaxed() instead?
+diff --git a/arch/mips/include/asm/Kbuild b/arch/mips/include/asm/Kbuild
+index b1f6669..92028be 100644
+--- a/arch/mips/include/asm/Kbuild
++++ b/arch/mips/include/asm/Kbuild
+@@ -9,6 +9,7 @@ generic-y += irq_work.h
+ generic-y += local64.h
+ generic-y += mcs_spinlock.h
+ generic-y += mm-arch-hooks.h
++generic-y += msi.h
+ generic-y += parport.h
+ generic-y += percpu.h
+ generic-y += preempt.h
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index bda1517..717616f 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -25,7 +25,7 @@ config PCI_MSI
+ 	   If you don't know what to do here, say Y.
+ 
+ config PCI_MSI_IRQ_DOMAIN
+-	def_bool ARC || ARM || ARM64 || X86
++	def_bool ARC || ARM || ARM64 || MIPS || X86
+ 	depends on PCI_MSI
+ 	select GENERIC_MSI_IRQ_DOMAIN
+ 
+-- 
+1.9.0.138.g2de3478
 
-The difference is that readl_relaxed() takes care of endianness, which would seem relevant
-since you have both endianness. Am I missing something?
 
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
