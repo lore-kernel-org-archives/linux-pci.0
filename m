@@ -1,89 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:65218 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751856AbeA2V2G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jan 2018 16:28:06 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 2/6] PCI/DPC: Leave interrupts enabled while handling event
-Date: Mon, 29 Jan 2018 14:31:41 -0700
-Message-Id: <20180129213145.26068-2-keith.busch@intel.com>
-In-Reply-To: <20180129213145.26068-1-keith.busch@intel.com>
-References: <20180129213145.26068-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Hiraku Toyooka <hiraku.toyooka@cybertrust.co.jp>
+To: bhelgaas@google.com
+Subject: [PATCH 1/1] PCI/MSI: add NULL check before use of msi_desc
+Date: Tue, 16 Jan 2018 18:15:47 +0900
+Message-Id: <1516094147-4597-2-git-send-email-hiraku.toyooka@cybertrust.co.jp>
+In-Reply-To: <1516094147-4597-1-git-send-email-hiraku.toyooka@cybertrust.co.jp>
+References: <1516094147-4597-1-git-send-email-hiraku.toyooka@cybertrust.co.jp>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Hiraku Toyooka <hiraku.toyooka@cybertrust.co.jp>, Joao.Pinto@synopsys.com,
+ hongxing.zhu@nxp.com, linux-pci@vger.kernel.org, will.deacon@arm.com,
+ linux-kernel@vger.kernel.org, linux@armlinux.org.uk, lorenzo.pieralisi@arm.com,
+ jingoohan1@gmail.com, linux-arm-kernel@lists.infradead.org,
+ l.stach@pengutronix.de
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The control register was being abused as a way to know if a shared
-interrupt is notifying the driver of a new DPC event. A DPC capable port
-can not trigger a second interrupt until the host acknowledges the first,
-and since DPC handles events in a deferred work queue, we don't need to
-use the config register to know if the DPC driver needs to handle the
-interrupt. We just need to make sure we don't schedule the same work
-multiple times.
+On starting kdump kernel in arm, arm64 and powerpc, chip->irq_mask() is
+called for each irq_data to mask interrupts. For MSI irqs,
+pci_msi_mask_irq() is called even when the irq_data doesn't have a link
+to msi_desc. This results in a NULL pointer dereference.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+This patch fixes the above error by avoiding NULL msi_desc use.
+
+Signed-off-by: Hiraku Toyooka <hiraku.toyooka@cybertrust.co.jp>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Will Deacon <will.deacon@arm.com>
 ---
- drivers/pci/pcie/pcie-dpc.c | 23 +++++------------------
- 1 file changed, 5 insertions(+), 18 deletions(-)
+ drivers/pci/msi.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index ecdb76bc7b56..cf0398ccaeb6 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -89,7 +89,7 @@ static void dpc_work(struct work_struct *work)
- 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
- 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
- 	struct pci_bus *parent = pdev->subordinate;
--	u16 cap = dpc->cap_pos, ctl, status, source, reason, ext_reason;
-+	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
- 
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
-@@ -135,10 +135,6 @@ static void dpc_work(struct work_struct *work)
- 
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
--
--	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
--	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
--			      ctl | PCI_EXP_DPC_CTL_INT_EN);
- }
- 
- static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
-@@ -207,16 +203,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index e066071..a6ee274 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
  {
- 	struct dpc_dev *dpc = (struct dpc_dev *)context;
- 	struct pci_dev *pdev = dpc->dev->port;
--	u16 cap = dpc->cap_pos, ctl, status;
--
--	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
--
--	if (!(ctl & PCI_EXP_DPC_CTL_INT_EN) || ctl == (u16)(~0))
--		return IRQ_NONE;
-+	u16 cap = dpc->cap_pos, status;
+ 	struct msi_desc *desc = irq_data_get_msi_desc(data);
  
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
--
--	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT))
-+	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT) || status == (u16)(~0))
- 		return IRQ_NONE;
- 
- 	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
-@@ -225,11 +215,8 @@ static irqreturn_t dpc_irq(int irq, void *context)
- 		return IRQ_HANDLED;
- 	}
- 
--	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
--			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);
--
--	schedule_work(&dpc->work);
--
-+	if (!work_busy(&dpc->work))
-+		schedule_work(&dpc->work);
- 	return IRQ_HANDLED;
- }
- 
++	if (!desc)
++		return;
++
+ 	if (desc->msi_attrib.is_msix) {
+ 		msix_mask_irq(desc, flag);
+ 		readl(desc->mask_base);		/* Flush write to device */
 -- 
-2.14.3
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
