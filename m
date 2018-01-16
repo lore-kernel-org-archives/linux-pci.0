@@ -1,61 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51474 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:44528 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751409AbeAZWzf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 Jan 2018 17:55:35 -0500
-Subject: [PATCH 0/8] PCI/DPC: Simplify RP PIO logging
+        id S1750861AbeAPR4u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 16 Jan 2018 12:56:50 -0500
+Date: Tue, 16 Jan 2018 11:56:44 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
-Date: Fri, 26 Jan 2018 16:55:30 -0600
-Message-ID: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Christian =?iso-8859-1?Q?K=F6nig?=
+        <ckoenig.leichtzumerken@gmail.com>
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: apply the AMD window fixup on resume as well
+Message-ID: <20180116175644.GB10860@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180116094317.1603-1-christian.koenig@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180116094317.1603-1-christian.koenig@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These are almost all just cleanups.  
+On Tue, Jan 16, 2018 at 10:43:17AM +0100, Christian König wrote:
+> We need to reprogram the register content during resume.
+> 
+> Signed-off-by: Christian König <christian.koenig@amd.com>
+> Reported-by: Tom St Denis <tom.stdenis@amd.com>
 
-The only behavior change I intend is this: If a port does not support
-the "RP Extensions for DPC" and it reports an "RP PIO error", we
-previously read the RP PIO log registers.  I don't know if that's a
-legal situation, but I couldn't find an explicit prohibition in the
-spec.
+Applied to for-linus for v4.15, thanks.
 
-Anyway, the rest is all cleanups and simplifications that are not
-intended to change any behavior.
-
-These are currently on my pci/dpc branch [1] on top of patches 3 and 5
-from your v2 series [2], Keith:
-
-  6b9045b34b57 PCI/DPC: Fix interrupt message number print
-  eed85ff4c0da PCI/DPC: Enable DPC only if AER is available
-
-Your patch 1 ("PCI/AER: Return correct value when AER is not
-supported") is on pci/aer.  Patches 2 and 4 go together and I think
-you're still working on those.
-
-You don't need to worry about integrating your work with these
-patches; I'm just kibbitzing and will drop these completely if you
-don't like them, or I'll take care of putting the pieces back together
-if you do.
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/dpc
-[2] https://lkml.kernel.org/r/20180117052206.7703-1-keith.busch@intel.com
-
----
-
-Bjorn Helgaas (8):
-      PCI/DPC: Rename interrupt_event_handler() to dpc_work()
-      PCI/DPC: Add local variable for DPC capability offset
-      PCI/DPC: Rename struct dpc_dev.rp to rp_extensions
-      PCI/DPC: Read RP PIO Log Size once at probe
-      PCI/DPC: Process RP PIO details only if RP PIO extensions supported
-      PCI/DPC: Consolidate RP PIO get/print functions
-      PCI/DPC: Add and use DPC Status register field definitions
-      PCI/DPC: Reformat DPC register definitions
-
-
- drivers/pci/pcie/pcie-dpc.c   |  214 +++++++++++++++--------------------------
- include/uapi/linux/pci_regs.h |   24 ++---
- 2 files changed, 91 insertions(+), 147 deletions(-)
+> ---
+>  arch/x86/pci/fixup.c | 32 ++++++++++++++++++++------------
+>  1 file changed, 20 insertions(+), 12 deletions(-)
+> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index f6a26e3cb476..8f3b1a6278e6 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -662,11 +662,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
+>   */
+>  static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>  {
+> +	static const char *name = "PCI Bus 0000:00";
+> +	struct resource *res, *conflict;
+>  	u32 base, limit, high;
+>  	struct pci_dev *other;
+> -	struct resource *res;
+>  	unsigned i;
+> -	int r;
+>  
+>  	if (!(pci_probe & PCI_BIG_ROOT_WINDOW))
+>  		return;
+> @@ -707,21 +707,26 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>  	 * Allocate a 256GB window directly below the 0xfd00000000 hardware
+>  	 * limit (see AMD Family 15h Models 30h-3Fh BKDG, sec 2.4.6).
+>  	 */
+> -	res->name = "PCI Bus 0000:00";
+> +	res->name = name;
+>  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+>  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+>  	res->start = 0xbd00000000ull;
+>  	res->end = 0xfd00000000ull - 1;
+>  
+> -	r = request_resource(&iomem_resource, res);
+> -	if (r) {
+> +	conflict = request_resource_conflict(&iomem_resource, res);
+> +	if (conflict) {
+>  		kfree(res);
+> -		return;
+> -	}
+> +		if (conflict->name != name)
+> +			return;
+>  
+> -	dev_info(&dev->dev, "adding root bus resource %pR (tainting kernel)\n",
+> -		 res);
+> -	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+> +		/* We are resuming from suspend, just reprogram the regs. */
+> +		res = conflict;
+> +	} else {
+> +		dev_info(&dev->dev, "adding root bus resource %pR (tainting kernel)\n",
+> +			 res);
+> +		add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+> +		pci_bus_add_resource(dev->bus, res, 0);
+> +	}
+>  
+>  	base = ((res->start >> 8) & AMD_141b_MMIO_BASE_MMIOBASE_MASK) |
+>  		AMD_141b_MMIO_BASE_RE_MASK | AMD_141b_MMIO_BASE_WE_MASK;
+> @@ -733,13 +738,16 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>  	pci_write_config_dword(dev, AMD_141b_MMIO_HIGH(i), high);
+>  	pci_write_config_dword(dev, AMD_141b_MMIO_LIMIT(i), limit);
+>  	pci_write_config_dword(dev, AMD_141b_MMIO_BASE(i), base);
+> -
+> -	pci_bus_add_resource(dev->bus, res, 0);
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1401, pci_amd_enable_64bit_bar);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1571, pci_amd_enable_64bit_bar);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15b1, pci_amd_enable_64bit_bar);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1401, pci_amd_enable_64bit_bar);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1571, pci_amd_enable_64bit_bar);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x15b1, pci_amd_enable_64bit_bar);
+> +DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
+>  
+>  #endif
+> -- 
+> 2.11.0
+> 
