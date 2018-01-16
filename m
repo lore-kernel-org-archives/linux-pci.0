@@ -1,59 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:46967 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751228AbeAWMZn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:43 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v5 0/9] PCI: dwc: MSI-X feature
-Date: Tue, 23 Jan 2018 12:25:23 +0000
-Message-Id: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=0kCF=EL=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=0kCF=EL=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 16 Jan 2018 10:09:19 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Marek Behun <marek.behun@nic.cz>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	marc.zyngier@arm.com
+Subject: Re: pci-aardvark ath9k arm64 issues
+Message-ID: <20180116100919.GA12032@red-moon>
+References: <20180113002234.0ae646d6@nic.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180113002234.0ae646d6@nic.cz>
 List-ID: <linux-pci.vger.kernel.org>
 
-Replaces the use of IRQ domain hierarchy by the IRQ chained used by
-pcie-designware and each SoC specific driver in order to allow new and
-complex features like MSI-X.
+[+cc Marc, for his information]
 
-Adds Synopsys Root Complex support for MSI-X feature.
+On Sat, Jan 13, 2018 at 12:22:34AM +0100, Marek Behun wrote:
+> Hello,
+> 
+> we are having a CPU stall issue with ath9k driver on pci-aardvark
+> (Marvell Armada 3720 (arm64)).
+> 
+> The ath9k driver loads correctly and the interface connects and for
+> some time it works correctly, but then CPU stalls and kernel dumps
+> self-detected stall on CPU.
+> 
+> I don't know if this is issue with aardvark or whole arm64 (someone had
+> a similar problem, see
+> https://www.spinics.net/lists/linux-wireless/msg157038.html ), but
+> ath10k doesn't have this problem.
+> 
+> I am attaching the rcu_sched stall detection backtrace (although I
+> don't know if contains needed information).
+> 
+> Can you please point me how to debug/solve this issue?
 
-Expands the maximum number of IRQs from 32 to 256 distributed by
-a maximum of 8 controller registers.
+I do not think this is arm64 related - IMO it is host bridge related
+and I do not have HW to test this (and Marvell Armada 3720 datasheets).
 
-The patch set was made against the Bjorn's next branch.
+I think pci-aardvark is another host bridge that needs IRQ handling
+updates according to:
 
-Gustavo Pimentel (9):
-  PCI: dwc: Add IRQ chained API support
-  PCI: dwc: exynos: Switch to use the IRQ chained API
-  PCI: dwc: imx6: Switch to use the IRQ chained API
-  PCI: dwc: artpec6: Switch to use the IRQ chained API
-  PCI: dwc: designware: Switch to use the IRQ chained API
-  PCI: dwc: qcom: Switch to use the IRQ chained API
-  PCI: dwc: keystone: Switch to use the IRQ chained API
-  PCI: dwc: Remove IRQ domain hierarchy API support
-  PCI: dwc: Expand maximum number of IRQs from 32 to 256
+https://marc.info/?l=linux-pci&m=151517416712010&w=2
 
- drivers/pci/dwc/pci-exynos.c           |  18 --
- drivers/pci/dwc/pci-imx6.c             |  18 --
- drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
- drivers/pci/dwc/pci-keystone.c         |   1 +
- drivers/pci/dwc/pci-keystone.h         |   4 +-
- drivers/pci/dwc/pci-layerscape.c       |   3 +-
- drivers/pci/dwc/pcie-artpec6.c         |  18 --
- drivers/pci/dwc/pcie-designware-host.c | 402 +++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware-plat.c |  16 --
- drivers/pci/dwc/pcie-designware.h      |  30 ++-
- drivers/pci/dwc/pcie-qcom.c            |  16 --
- 11 files changed, 260 insertions(+), 357 deletions(-)
+The sooner we convert the host bridges to use the right API the
+better, at least we will be able to fix these bugs more quickly.
 
--- 
-2.7.4
+I hope Thomas can help you have a look into this.
+
+Thanks,
+Lorenzo
+
+> Thank you.
+> 
+> Marek Behun
+
+> [  265.283187] INFO: rcu_sched self-detected stall on CPU
+> [  265.288346]  0-...: (2100 ticks this GP) idle=c1e/2/0 softirq=3408/3408 fqs=0 
+> [  265.295896]   (t=2100 jiffies g=846 c=845 q=8)
+> [  265.300492] rcu_sched kthread starved for 2100 jiffies! g846 c845 f0x0 RCU_GP_WAIT_FQS(3) ->state=0x402 ->cpu=0
+> [  265.310932] rcu_sched       I    0     8      2 0x00000000
+> [  265.316333] Call trace:
+> [  265.319134] [<ffffff8008084e94>] __switch_to+0x84/0x98
+> [  265.324168] [<ffffff8008687948>] __schedule+0x1f0/0x4c0
+> [  265.329565] [<ffffff8008687c44>] schedule+0x2c/0x88
+> [  265.334694] [<ffffff800868aed4>] schedule_timeout+0x134/0x288
+> [  265.340454] [<ffffff80080f7154>] rcu_gp_kthread+0x434/0x728
+> [  265.346303] [<ffffff80080be874>] kthread+0xfc/0x128
+> [  265.351434] [<ffffff80080842f0>] ret_from_fork+0x10/0x18
+> [  265.356927] Task dump for CPU 0:
+> [  265.360340] swapper/0       R  running task        0     0      0 0x00000002
+> [  265.367450] Call trace:
+> [  265.369885] [<ffffff8008086fd0>] dump_backtrace+0x0/0x380
+> [  265.375820] [<ffffff8008087364>] show_stack+0x14/0x20
+> [  265.380954] [<ffffff80080c861c>] sched_show_task+0x13c/0x160
+> [  265.386892] [<ffffff80080c9028>] dump_cpu_task+0x40/0x50
+> [  265.392024] [<ffffff80080f84b0>] rcu_dump_cpu_stacks+0x98/0xd8
+> [  265.398500] [<ffffff80080f7e6c>] rcu_check_callbacks+0x61c/0x7e0
+> [  265.404628] [<ffffff80080fafe4>] update_process_times+0x2c/0x58
+> [  265.410481] [<ffffff800810986c>] tick_sched_handle.isra.5+0x34/0x50
+> [  265.417316] [<ffffff80081098c8>] tick_sched_timer+0x40/0x90
+> [  265.422723] [<ffffff80080fba40>] __hrtimer_run_queues+0xe8/0x160
+> [  265.428934] [<ffffff80080fbcd0>] hrtimer_interrupt+0xa0/0x220
+> [  265.435142] [<ffffff8008532548>] arch_timer_handler_phys+0x30/0x40
+> [  265.441173] [<ffffff80080ec590>] handle_percpu_devid_irq+0x78/0x128
+> [  265.447922] [<ffffff80080e6ec4>] generic_handle_irq+0x24/0x38
+> [  265.453863] [<ffffff80080e754c>] __handle_domain_irq+0x5c/0xb8
+> [  265.460074] [<ffffff8008080dfc>] gic_handle_irq+0xfc/0x1c4
+> [  265.465660] Exception stack(0xffffff8008003d80 to 0xffffff8008003ec0)
+> [  265.472324] 3d80: 0000000000000000 ffffff80089b7c00 00000000ffffea38 000000401776b000
+> [  265.480066] 3da0: 000000000000001f ffffff8008a10000 000000002974debf 0000000000000000
+> [  265.488342] 3dc0: 0000000000000040 ffffff8008943e80 0000000000000880 0000000000000000
+> [  265.496529] 3de0: 0000000000000001 0000000000000000 0000000000000000 0000000000000010
+> [  265.504718] 3e00: ffffff80081a5708 0000007f9431e328 000000000000001c ffffff8008945000
+> [  265.512728] 3e20: fffffffffffffff8 ffffff80088584b0 0000000000000001 ffffff80089b7c00
+> [  265.520649] 3e40: 000000000000003d ffffff8008857000 ffffff8008857000 0000000000000040
+> [  265.529015] 3e60: ffffff8008950800 ffffff8008003ec0 ffffff80080a73f8 ffffff8008003ec0
+> [  265.537111] 3e80: ffffff8008080f74 0000000040000145 0000000000000001 ffffffc01e9e8600
+> [  265.545120] 3ea0: 0000008000000000 0000000000000001 ffffff8008003ec0 ffffff8008080f74
+> [  265.553310] [<ffffff80080828f0>] el1_irq+0xb0/0x140
+> [  265.558264] [<ffffff8008080f74>] __do_softirq+0xac/0x208
+> [  265.563665] [<ffffff80080a73f8>] irq_exit+0xc8/0x100
+> [  265.568704] [<ffffff80080e7550>] __handle_domain_irq+0x60/0xb8
+> [  265.574911] [<ffffff8008080dfc>] gic_handle_irq+0xfc/0x1c4
+> [  265.580759] Exception stack(0xffffff8008943dd0 to 0xffffff8008943f10)
+> [  265.587153] 3dc0:                                   0000000000000000 0000000000000000
+> [  265.595431] 3de0: 0000000000000001 0000000000000000 ffffff8008943f10 000000401776b000
+> [  265.603083] 3e00: 0000000000000001 ffffff80089484e0 0000000000000000 ffffff8008943e80
+> [  265.611270] 3e20: 0000000000000880 0000000000000000 0000000000000001 0000000000000000
+> [  265.619815] 3e40: 0000000000000000 0000000000000010 ffffff80081a5708 0000007f9431e328
+> [  265.627651] 3e60: 000000000000001c ffffff8008857000 ffffff8008949930 ffffff8008949000
+> [  265.636017] 3e80: ffffff800885ea88 0000000000000000 0000000000000000 ffffff8008950800
+> [  265.644030] 3ea0: 0000000000000000 000000001ff26364 0000000000820018 ffffff8008943f10
+> [  265.651953] 3ec0: ffffff8008084a64 ffffff8008943f10 ffffff8008084a68 0000000060000145
+> [  265.660054] 3ee0: ffffffc01ffffb00 ffffff800884f028 ffffffffffffffff 0000000000000000
+> [  265.668420] 3f00: ffffff8008943f10 ffffff8008084a68
+> [  265.673020] [<ffffff80080828f0>] el1_irq+0xb0/0x140
+> [  265.678238] [<ffffff8008084a68>] arch_cpu_idle+0x10/0x18
+> [  265.683640] [<ffffff80080da43c>] do_idle+0x10c/0x1a0
+> [  265.688678] [<ffffff80080da64c>] cpu_startup_entry+0x24/0x28
+> [  265.694887] [<ffffff800868719c>] rest_init+0xac/0xb8
+> [  265.700107] [<ffffff8008820b98>] start_kernel+0x390/0x3a4
