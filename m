@@ -1,131 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47214 "EHLO mail.kernel.org"
+Received: from mga05.intel.com ([192.55.52.43]:12197 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752555AbeA3SZ5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Jan 2018 13:25:57 -0500
-Subject: [PATCH v2 04/14] PCI/DPC: Read RP PIO Log Size once at probe
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Tue, 30 Jan 2018 12:25:52 -0600
-Message-ID: <20180130182552.106875.52336.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1750852AbeAPBaC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Jan 2018 20:30:02 -0500
+Date: Mon, 15 Jan 2018 18:33:15 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Maik Broemme <mbroemme@libmpq.org>
+Subject: Re: [PATCH 3/4] PCI/DPC: Enable DPC in conjuction with AER
+Message-ID: <20180116013315.GC32369@localhost.localdomain>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171219210643.24615-3-keith.busch@intel.com>
+ <0fb4494a-bd74-8ff9-f4d6-04409965cf58@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0fb4494a-bd74-8ff9-f4d6-04409965cf58@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Mon, Jan 15, 2018 at 09:43:22AM -0500, Sinan Kaya wrote:
+> On 12/19/2017 4:06 PM, Keith Busch wrote:
+> > @@ -289,6 +290,9 @@ static int dpc_probe(struct pcie_device *dev)
+> >  	int status;
+> >  	u16 ctl, cap;
+> >  
+> > +	if (pcie_aer_get_firmware_first(pdev))
+> > +		return -ENOTSUPP;
+> > +
+> 
+> There are two ways to support firmware first handling along with DPC.
+> 
+> The first one is to tie DPC handling to the firmware first enable.
+> 
+> The second one is to enable DPC ERR_COR signalling so that firmware
+> gets notified on each DPC event occurrence.
+> 
+> While the first one gives more control to the firmware, I think it beats
+> the purpose of the DPC. The first approach requires firmware to do some
+> "pre-processing" before notifying operating system of a failure.
+> 
+> The goal of the DPC is to put hardware into safe state when a PCIe error
+> happens. The best software recovery following this is to notify endpoint
+> drivers of failures and shutdown threads/processes accessing the hardware
+> as quick as possible.
+> 
+> The firmware-first event notification is through ACPI GHES and firmware injects
+> an artifical uncorrected AER error to the operating system. Once OS gets
+> notified, it tries to recover drivers through AER fatal error recovery mechanism.
+> 
+> While the semantics of this path is clearly defined in ACPI, it is also known
+> to be slow as well. During the time firmware does its business, operating
+> system still could be trying to access the endpoint address space.
+> 
+> My suggestion is to enable ERR_COR signalling so firmware gets a notification
+> on each DPC event for logging purposes. 
+> 
+> OS handles DPC natively and tries to recover hardware without any external
+> influence.
 
-The RP PIO Log Size is a read-only field in the DPC Capability, so it is
-constant and known at probe-time, but previously we read it every time we
-processed an RP PIO error.
-
-Read it once in dpc_probe() (if the RP Extensions for DPC are supported)
-and remember the size in struct dpc_dev.  No functional change intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/pcie-dpc.c |   29 ++++++++++++++++-------------
- 1 file changed, 16 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 0bbdf513067a..17f60bd4ea5f 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -34,7 +34,6 @@ struct dpc_rp_pio_regs {
- 	struct rp_pio_header_log_regs header_log;
- 	u32 impspec_log;
- 	u32 tlp_prefix_log[4];
--	u32 log_size;
- 	u16 first_error;
- };
- 
-@@ -44,6 +43,7 @@ struct dpc_dev {
- 	u16			cap_pos;
- 	bool			rp_extensions;
- 	u32			rp_pio_status;
-+	u8			rp_log_size;
- };
- 
- static const char * const rp_pio_error_string[] = {
-@@ -173,11 +173,12 @@ static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
- 	}
- 
- 	dpc_rp_pio_print_tlp_header(dev, &rp_pio->header_log);
--	if (rp_pio->log_size == 4)
-+	if (dpc->rp_log_size == 4)
- 		return;
-+
- 	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", rp_pio->impspec_log);
- 
--	for (i = 0; i < rp_pio->log_size - 5; i++)
-+	for (i = 0; i < dpc->rp_log_size - 5; i++)
- 		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i,
- 			rp_pio->tlp_prefix_log[i]);
- }
-@@ -186,7 +187,6 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
- 				struct dpc_rp_pio_regs *rp_pio)
- {
- 	struct pci_dev *pdev = dpc->dev->port;
--	struct device *dev = &dpc->dev->device;
- 	int i;
- 	u16 cap = dpc->cap_pos, status;
- 
-@@ -206,13 +206,8 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
- 	rp_pio->first_error = (status & 0x1f00) >> 8;
- 
--	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
--	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
--	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
--		dev_err(dev, "RP PIO log size %u is invalid\n",
--			rp_pio->log_size);
-+	if (dpc->rp_log_size < 4)
- 		return;
--	}
- 
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
- 			      &rp_pio->header_log.dw0);
-@@ -222,12 +217,12 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
- 			      &rp_pio->header_log.dw2);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
- 			      &rp_pio->header_log.dw3);
--	if (rp_pio->log_size == 4)
-+	if (dpc->rp_log_size == 4)
- 		return;
- 
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
- 			      &rp_pio->impspec_log);
--	for (i = 0; i < rp_pio->log_size - 5; i++)
-+	for (i = 0; i < dpc->rp_log_size - 5; i++)
- 		pci_read_config_dword(pdev,
- 			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
- 			&rp_pio->tlp_prefix_log[i]);
-@@ -327,6 +322,14 @@ static int dpc_probe(struct pcie_device *dev)
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
- 
- 	dpc->rp_extensions = (cap & PCI_EXP_DPC_CAP_RP_EXT);
-+	if (dpc->rp_extensions) {
-+		dpc->rp_log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
-+		if (dpc->rp_log_size < 4 || dpc->rp_log_size > 9) {
-+			dev_err(device, "RP PIO log size %u is invalid\n",
-+				dpc->rp_log_size);
-+			dpc->rp_log_size = 0;
-+		}
-+	}
- 
- 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
-@@ -334,7 +337,7 @@ static int dpc_probe(struct pcie_device *dev)
- 	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
- 		cap & PCI_EXP_DPC_IRQ, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
- 		FLAG(cap, PCI_EXP_DPC_CAP_POISONED_TLP),
--		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), (cap >> 8) & 0xf,
-+		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), dpc->rp_log_size,
- 		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
- 	return status;
- }
+I see what you're saying, but if a device has a firmware first policy,
+doesn't that mean firmware owns the DPC Control register? The OS shouldn't
+be mucking with it in that case, right?
