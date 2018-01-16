@@ -1,32 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([148.251.95.138]:42650 "EHLO
-        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755949AbeASSDk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 13:03:40 -0500
-Date: Fri, 19 Jan 2018 19:03:10 +0100
-From: Ladislav Michl <ladis@linux-mips.org>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Wolfram Sang <w.sang@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 0/2] Fix double mem region release
-Message-ID: <20180119180310.GA31540@lenoch>
+Return-Path: <SRS0=fLq0=EL=free-electrons.com=thomas.petazzoni@kernel.org>
+Return-Path: <SRS0=fLq0=EL=free-electrons.com=thomas.petazzoni@kernel.org>
+Date: Tue, 16 Jan 2018 11:21:53 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Marek Behun <marek.behun@nic.cz>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
+ <helgaas@kernel.org>, linux-pci@vger.kernel.org, =?UTF-8?B?R3LDqWdvcnk=?=
+ Clement <gregory.clement@free-electrons.com>, Antoine =?UTF-8?B?VMOpbmFy?=
+ =?UTF-8?B?dA==?= <antoine.tenart@free-electrons.com>, =?UTF-8?B?TWlxdcOo?=
+ =?UTF-8?B?bA==?= Raynal <miquel.raynal@free-electrons.com>
+Subject: Re: pci-aardvark ath9k arm64 issues
+Message-ID: <20180116112153.5cd06eb0@windsurf>
+In-Reply-To: <20180113002234.0ae646d6@nic.cz>
+References: <20180113002234.0ae646d6@nic.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Two one-liners for the same issue, second bug occurrence is just
-a copy&pasted mistake from 2011...
+Hello Marek,
 
-Ladislav Michl (2):
-  devres: Fix double mem region release in devm_ioremap_resource()
-  PCI: Fix double mem region release in devm_pci_remap_cfg_resource()
+Thanks for your bug report!
 
- drivers/pci/pci.c | 1 -
- lib/devres.c      | 1 -
- 2 files changed, 2 deletions(-)
+On Sat, 13 Jan 2018 00:22:34 +0100, Marek Behun wrote:
 
+> we are having a CPU stall issue with ath9k driver on pci-aardvark
+> (Marvell Armada 3720 (arm64)).
+> 
+> The ath9k driver loads correctly and the interface connects and for
+> some time it works correctly, but then CPU stalls and kernel dumps
+> self-detected stall on CPU.
+> 
+> I don't know if this is issue with aardvark or whole arm64 (someone had
+> a similar problem, see
+> https://www.spinics.net/lists/linux-wireless/msg157038.html ), but
+> ath10k doesn't have this problem.
+> 
+> I am attaching the rcu_sched stall detection backtrace (although I
+> don't know if contains needed information).
+> 
+> Can you please point me how to debug/solve this issue?
+
+Could you try to apply the following patches ?
+
+  https://patchwork.ozlabs.org/patch/819586/
+  https://patchwork.ozlabs.org/patch/819589/
+  https://patchwork.ozlabs.org/patch/819587/
+  https://patchwork.ozlabs.org/patch/819592/
+  https://patchwork.ozlabs.org/patch/819590/
+  https://patchwork.ozlabs.org/patch/819591/
+  https://patchwork.ozlabs.org/patch/819588/
+
+And see if it helps? If it does help, could you try with just
+https://patchwork.ozlabs.org/patch/819592/ applied ?
+
+Thanks!
+
+Thomas
 -- 
-2.15.1
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
