@@ -1,140 +1,156 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:39200 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752822AbeADTCD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 14:02:03 -0500
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  4 Jan 2018 12:01:28 -0700
-Message-Id: <20180104190137.7654-4-logang@deltatee.com>
-In-Reply-To: <20180104190137.7654-1-logang@deltatee.com>
-References: <20180104190137.7654-1-logang@deltatee.com>
-Subject: [PATCH 03/12] pci-p2p: Add PCI p2pmem dma mappings to adjust the bus offset
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 16 Jan 2018 15:25:21 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
+        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 3/6] PCI: Add generic function to probe PCI host
+ controllers
+Message-ID: <20180116152521.GB17237@red-moon>
+References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+ <690e48265a12291f12ce3f46c328eb45ffd9fb09.1515621150.git.cyrille.pitchen@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <690e48265a12291f12ce3f46c328eb45ffd9fb09.1515621150.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The DMA address used when mapping PCI P2P memory must be the PCI bus
-address. Thus, introduce pci_p2pmem_[un]map_sg() to map the correct
-addresses when using P2P memory.
+On Wed, Jan 10, 2018 at 11:47:32PM +0100, Cyrille Pitchen wrote:
+> This patchs moves generic source code from
+> drivers/pci/host/pci-host-common.c into drivers/pci/probe.c.
+> 
+> Indeed the extracted lines of code were duplicated by many host
+> controller drivers. Regrouping them into a generic function gives a
+> change to properly share this code without introducing a useless
+> dependency to PCI_HOST_COMMON, which selects PCI_ECAM when not needed by
+> most host controller drivers.
+> 
+> We also add a missing call of pci_free_resource_list() from
+> pci_host_common_probe() when probing fails, as done inside gen_pci_init()
+I have to ask you to split this change into another patch.
 
-For this, we assume that an SGL passed to these functions contain all
-p2p memory or no p2p memory.
+First add the missing pci_free_resource_list() then add this patch.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/pci/p2p.c        | 43 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/memremap.h |  1 +
- include/linux/pci-p2p.h  |  9 +++++++++
- 3 files changed, 53 insertions(+)
+Do you have time to respin quickly ? I would like to merge this
+series for v4.16.
 
-diff --git a/drivers/pci/p2p.c b/drivers/pci/p2p.c
-index 03330c7b5e6d..87cec87b02e3 100644
---- a/drivers/pci/p2p.c
-+++ b/drivers/pci/p2p.c
-@@ -184,6 +184,8 @@ int pci_p2pmem_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 	pgmap->res.end = pgmap->res.start + size - 1;
- 	pgmap->ref = &pdev->p2p->devmap_ref;
- 	pgmap->type = MEMORY_DEVICE_PCI_P2P;
-+	pgmap->pci_p2p_bus_offset = pci_bus_address(pdev, bar) -
-+		pci_resource_start(pdev, bar);
- 
- 	addr = devm_memremap_pages(&pdev->dev, pgmap);
- 	if (IS_ERR(addr))
-@@ -598,3 +600,44 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
- 	pdev->p2p->published = publish;
- }
- EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
-+
-+/*
-+ * pci_p2pmem_map_sg - map a pci p2p sg for dma
-+ * @sg:scatter list to map
-+ * @nents:elements in the scatter list
-+ *
-+ * Returns the number of sgls mapped
-+ */
-+int pci_p2pmem_map_sg(struct scatterlist *sg, int nents)
-+{
-+	struct dev_pagemap *pgmap;
-+	struct scatterlist *s;
-+	phys_addr_t paddr;
-+	int i;
-+
-+	for_each_sg(sg, s, nents, i) {
-+		pgmap = sg_page(s)->pgmap;
-+		paddr = sg_phys(s);
-+
-+		s->dma_address = paddr - pgmap->pci_p2p_bus_offset;
-+		sg_dma_len(s) = s->length;
-+	}
-+
-+	return nents;
-+}
-+EXPORT_SYMBOL_GPL(pci_p2pmem_map_sg);
-+
-+/**
-+ * pci_p2pmem_unmap_sg - unmap a pci p2p sg for dma
-+ * @sg:scatter list to map
-+ * @nents:elements in the scatter list
-+ */
-+void pci_p2pmem_unmap_sg(struct scatterlist *sg, int nents)
-+{
-+	struct scatterlist *s;
-+	int i;
-+
-+	for_each_sg(sg, s, nents, i)
-+		dma_mark_clean(phys_to_virt(sg_phys(s)), sg_dma_len(s));
-+}
-+EXPORT_SYMBOL_GPL(pci_p2pmem_unmap_sg);
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index c17a6d167d48..a792f87b9dc3 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -125,6 +125,7 @@ struct dev_pagemap {
- 	struct device *dev;
- 	void *data;
- 	enum memory_type type;
-+	u64 pci_p2p_bus_offset;
- };
- 
- #ifdef CONFIG_ZONE_DEVICE
-diff --git a/include/linux/pci-p2p.h b/include/linux/pci-p2p.h
-index f811c97a5886..154c39905fc9 100644
---- a/include/linux/pci-p2p.h
-+++ b/include/linux/pci-p2p.h
-@@ -34,6 +34,8 @@ int pci_p2pmem_alloc_sgl(struct pci_dev *pdev, struct scatterlist **sgl,
- void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl,
- 		unsigned int nents);
- void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
-+int pci_p2pmem_map_sg(struct scatterlist *sg, int nents);
-+void pci_p2pmem_unmap_sg(struct scatterlist *sg, int nents);
- #else /* CONFIG_PCI_P2P */
- static inline int pci_p2pmem_add_resource(struct pci_dev *pdev, int bar,
- 		size_t size, u64 offset)
-@@ -81,5 +83,12 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
- static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
- {
- }
-+static inline int pci_p2pmem_map_sg(struct scatterlist *sg, int nents)
-+{
-+	return -ENODEV;
-+}
-+static inline void pci_p2pmem_unmap_sg(struct scatterlist *sg, int nents)
-+{
-+}
- #endif /* CONFIG_PCI_P2P */
- #endif /* _LINUX_PCI_P2P_H */
--- 
-2.11.0
+Thanks,
+Lorenzo
+
+> when this later function fails.
+> 
+> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+> ---
+>  drivers/pci/host/pci-host-common.c | 25 +++----------------------
+>  drivers/pci/probe.c                | 33 +++++++++++++++++++++++++++++++++
+>  include/linux/pci.h                |  1 +
+>  3 files changed, 37 insertions(+), 22 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+> index a613ea310e76..df25b4a4edaf 100644
+> --- a/drivers/pci/host/pci-host-common.c
+> +++ b/drivers/pci/host/pci-host-common.c
+> @@ -72,7 +72,6 @@ int pci_host_common_probe(struct platform_device *pdev,
+>  	const char *type;
+>  	struct device *dev = &pdev->dev;
+>  	struct device_node *np = dev->of_node;
+> -	struct pci_bus *bus, *child;
+>  	struct pci_host_bridge *bridge;
+>  	struct pci_config_window *cfg;
+>  	struct list_head resources;
+> @@ -107,29 +106,11 @@ int pci_host_common_probe(struct platform_device *pdev,
+>  	bridge->map_irq = of_irq_parse_and_map_pci;
+>  	bridge->swizzle_irq = pci_common_swizzle;
+>  
+> -	ret = pci_scan_root_bus_bridge(bridge);
+> -	if (ret < 0) {
+> -		dev_err(dev, "Scanning root bridge failed");
+> +	ret = pci_host_probe(bridge);
+> +	if (ret) {
+> +		pci_free_resource_list(&resources);
+>  		return ret;
+>  	}
+>  
+> -	bus = bridge->bus;
+> -
+> -	/*
+> -	 * We insert PCI resources into the iomem_resource and
+> -	 * ioport_resource trees in either pci_bus_claim_resources()
+> -	 * or pci_bus_assign_resources().
+> -	 */
+> -	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> -		pci_bus_claim_resources(bus);
+> -	} else {
+> -		pci_bus_size_bridges(bus);
+> -		pci_bus_assign_resources(bus);
+> -
+> -		list_for_each_entry(child, &bus->children, node)
+> -			pcie_bus_configure_settings(child);
+> -	}
+> -
+> -	pci_bus_add_devices(bus);
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 1360db508035..178328d06a32 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2685,6 +2685,39 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  }
+>  EXPORT_SYMBOL_GPL(pci_create_root_bus);
+>  
+> +int pci_host_probe(struct pci_host_bridge *bridge)
+> +{
+> +	struct pci_bus *bus, *child;
+> +	int ret;
+> +
+> +	ret = pci_scan_root_bus_bridge(bridge);
+> +	if (ret < 0) {
+> +		dev_err(bridge->dev.parent, "Scanning root bridge failed");
+> +		return ret;
+> +	}
+> +
+> +	bus = bridge->bus;
+> +
+> +	/*
+> +	 * We insert PCI resources into the iomem_resource and
+> +	 * ioport_resource trees in either pci_bus_claim_resources()
+> +	 * or pci_bus_assign_resources().
+> +	 */
+> +	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> +		pci_bus_claim_resources(bus);
+> +	} else {
+> +		pci_bus_size_bridges(bus);
+> +		pci_bus_assign_resources(bus);
+> +
+> +		list_for_each_entry(child, &bus->children, node)
+> +			pcie_bus_configure_settings(child);
+> +	}
+> +
+> +	pci_bus_add_devices(bus);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_host_probe);
+> +
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+>  {
+>  	struct resource *res = &b->busn_res;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index a1b0672fd38a..0ca261fda900 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -879,6 +879,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  				    struct pci_ops *ops, void *sysdata,
+>  				    struct list_head *resources);
+> +int pci_host_probe(struct pci_host_bridge *bridge);
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+>  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+>  void pci_bus_release_busn_res(struct pci_bus *b);
+> -- 
+> 2.11.0
+> 
