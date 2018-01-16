@@ -1,44 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52766 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751354AbeABRAi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:00:38 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 6/6] PCI: Add device wait after slot and bus reset
-Date: Tue,  2 Jan 2018 12:00:23 -0500
-Message-Id: <1514912423-13341-7-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
-References: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:56556 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750905AbeAPPIa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 16 Jan 2018 10:08:30 -0500
+Date: Tue, 16 Jan 2018 15:09:31 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 6/6] PCI: cadence: Add host driver for Cadence PCIe
+ controller
+Message-ID: <20180116150931.GA17237@red-moon>
+References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+ <990730f5c1156b3bb15f56fa877719941f219016.1515621150.git.cyrille.pitchen@free-electrons.com>
+ <e3d88d5b-e770-d2e5-20b2-62551d5f4f8f@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e3d88d5b-e770-d2e5-20b2-62551d5f4f8f@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rev 3.1 Sec 2.3.1 Request Handling Rules indicates that a device can issue
-CRS following secondary bus reset. Handle device presence gracefully.
+On Tue, Jan 16, 2018 at 04:46:12PM +0530, Kishon Vijay Abraham I wrote:
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[...]
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index eae04aa..2c9e9a9 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4161,7 +4161,7 @@ int pci_reset_bridge_secondary_bus(struct pci_dev *dev)
- {
- 	pcibios_reset_secondary_bus(dev);
- 
--	return 0;
-+	return pci_dev_wait(dev, "bus reset", PCIE_RESET_READY_POLL_MS);
- }
- EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
- 
--- 
-1.9.1
+> > +static struct platform_driver cdns_pcie_host_driver = {
+> > +	.driver = {
+> > +		.name = "cdns-pcie-host",
+> > +		.of_match_table = cdns_pcie_host_of_match,
+> > +	},
+> > +	.probe = cdns_pcie_host_probe,
+> > +};
+> 
+> In the case of DWC, designware core is modeled as a library which has
+> API's to be invoked by various platform specific glue drivers.
+> 
+> But with the cadence approach we'll have two separate drivers: the
+> cadence core driver and the platform specific glue drivers. Is this
+> approach chosen for a specific reason?
+
+That's a fair point but I do not think that's a concern at the moment.
+
+If/when other platform drivers are built around the generic IP we just
+have to refactor this driver and turn into a core library + a PCI host
+bridge driver like dwc does, at the moment I do not necessarily see the
+reason for splitting them.
+
+Cyrille ?
+
+Thanks,
+Lorenzo
