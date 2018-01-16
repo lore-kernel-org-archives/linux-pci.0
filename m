@@ -1,82 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:46999 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751161AbeAWMZo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:44 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v5 2/9] PCI: dwc: exynos: Switch to use the IRQ chained API
-Date: Tue, 23 Jan 2018 12:25:25 +0000
-Message-Id: <5526d39226e948d3be46297725522badfe63d024.1516701516.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+Received: from mga01.intel.com ([192.55.52.88]:31215 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750964AbeAPCo2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Jan 2018 21:44:28 -0500
+Date: Mon, 15 Jan 2018 19:47:41 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Maik Broemme <mbroemme@libmpq.org>,
+        Pawandeep Oza <poza@codeaurora.org>
+Subject: Re: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
+Message-ID: <20180116024740.GA32639@localhost.localdomain>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171219210643.24615-4-keith.busch@intel.com>
+ <35445e86-e7b6-3fed-f26a-954a0f8d5e8a@codeaurora.org>
+ <20171221051256.GA15276@localhost.localdomain>
+ <ea609f8a-1d79-c2fe-e9e5-5993e418f9cc@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ea609f8a-1d79-c2fe-e9e5-5993e418f9cc@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes Exynos SoC specific driver to use the IRQ chained API available in
-pcie-designware.
+On Wed, Jan 10, 2018 at 10:52:23AM -0500, Sinan Kaya wrote:
+> Since the AER status is set when we observe DPC event and nobody is clearing these
+> we won't observe another DPC event until somebody clears these. We can say that
+> we are resetting the endpoints as part of the DPC but we are not touching the
+> switch downstream port or the root port registers.
+> 
+> Somebody still needs to clear these in addition to printing whatever information
+> is available in the AER registers.
+> 
+> Do you agree?
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
-
- drivers/pci/dwc/pci-exynos.c | 18 ------------------
- 1 file changed, 18 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-index 56f32ae..0a6b283d 100644
---- a/drivers/pci/dwc/pci-exynos.c
-+++ b/drivers/pci/dwc/pci-exynos.c
-@@ -297,15 +297,6 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
--static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct exynos_pcie *ep = arg;
--	struct dw_pcie *pci = ep->pci;
--	struct pcie_port *pp = &pci->pp;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static void exynos_pcie_msi_init(struct exynos_pcie *ep)
- {
- 	struct dw_pcie *pci = ep->pci;
-@@ -431,15 +422,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
- 			dev_err(dev, "failed to get msi irq\n");
- 			return pp->msi_irq;
- 		}
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--					exynos_pcie_msi_irq_handler,
--					IRQF_SHARED | IRQF_NO_THREAD,
--					"exynos-pcie", ep);
--		if (ret) {
--			dev_err(dev, "failed to request msi irq\n");
--			return ret;
--		}
- 	}
- 
- 	pp->root_bus_nr = -1;
--- 
-2.7.4
+We should clear the downstream port's AER uncorrectable status register if
+the trigger reason is of that type, but DPC definitely does not require
+we clear it in order to observe a new event.
