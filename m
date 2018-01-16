@@ -1,83 +1,180 @@
-Return-Path: <SRS0=2slI=EZ=free-electrons.com=cyrille.pitchen@kernel.org>
-Return-Path: <SRS0=2slI=EZ=free-electrons.com=cyrille.pitchen@kernel.org>
-Subject: Re: [PATCH v5 00/11] PCI: Add support to the Cadence PCIe controller
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
- adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
- kgopi@cadence.com, eandrews@cadence.com,
- thomas.petazzoni@free-electrons.com, sureshp@cadence.com, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org
-References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
- <20180128214741.GA232763@bhelgaas-glaptop.roam.corp.google.com>
- <20180130114155.GA12009@e107981-ln.cambridge.arm.com>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Message-ID: <8cec81b2-85c4-d7bf-4171-9e94a745eab0@free-electrons.com>
-Date: Tue, 30 Jan 2018 22:12:36 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180130114155.GA12009@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57640 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750816AbeAPJ7Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jan 2018 04:59:16 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v4 5/5] PCI/DPC: Enumerate the devices after DPC trigger event
+Date: Tue, 16 Jan 2018 15:28:43 +0530
+Message-Id: <1516096723-8013-6-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
+References: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo, Bjorn,
+Implement error_resume callback in DPC so, after DPC trigger event
+enumerates the devices beneath.
 
-Le 30/01/2018 à 12:41, Lorenzo Pieralisi a écrit :
-> On Sun, Jan 28, 2018 at 03:47:41PM -0600, Bjorn Helgaas wrote:
->> On Sun, Jan 28, 2018 at 09:40:14PM +0100, Cyrille Pitchen wrote:
->>> Hi all,
->>>
->>> this series of patches adds support to the Cadence PCIe controller.
->>> It was tested on a ARM64 platform emulated by a Palladium running the
->>> pci-next kernel.
->>>
->>> The host mode was tested with some PCIe devices connected to the Palladium
->>> through a speed-bridge. Some of those devices were a USB host controller
->>> and a SATA controller. The PCIe host controller was also tested with a
->>> second controller configured in endpoint mode and connected back to back
->>> to the first controller.
->>>
->>> The EndPoint Controller (EPC) driver was tested with 2 PCI functions, both
->>> handled by the pci-epf-test driver, using the pcitest userspace program.
->>> I used the "-D" optional command line parameter to select the proper PCI
->>> function.
->>>
->>> Best regards,
->>>
->>> Cyrille
->>>
->>> ChangeLog
->>>
->>> v4 -> v5:
->>> - rebase on today's (20180128) linux-pci/next
->>
->> Don't bother rebasing onto linux-pci/next.
->>
->> If your patches actually *depend* on something that has already been
->> merged onto a PCI topic branch, you should mention that and say which
->> branch.
-> 
-> Yes - Cyrille please advise which branch(es) this series depends on,
-> it does not apply cleanly to -rc4.
-> 
-> Merge window is open and I do not know what we can do with this series
-> for v4.16 but please let me know.
->
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-I've just sent v6. No change from v5 except that the series has been
-rebased onto linux-pci/master (v4.15-rc4) and tested on the Palladium.
-I've cherry-picked one Kishon's patch from linux-pci/next to test the
-endpoint mode.
-
-Best regards,
-
-Cyrille
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 31799f6..185dbc6 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -162,6 +162,43 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 		dev_warn(dev, "Link state not disabled for DPC event\n");
+ }
  
-> Thanks,
-> Lorenzo
-> 
-
-
++static bool dpc_wait_link_active(struct pci_dev *pdev)
++{
++	unsigned long timeout = jiffies + HZ;
++	u16 lnk_status;
++	bool ret = true;
++
++	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++
++	while (!(lnk_status & PCI_EXP_LNKSTA_DLLLA) &&
++					!time_after(jiffies, timeout)) {
++		msleep(10);
++		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++	}
++
++	if (!(lnk_status & PCI_EXP_LNKSTA_DLLLA)) {
++		dev_warn(&pdev->dev, "Link state not enabled after DPC event\n");
++		ret = false;
++	}
++
++	return ret;
++}
++
++/**
++ * dpc_error_resume - enumerate the devices beneath
++ * @dev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver during nonfatal recovery.
++ */
++static void dpc_error_resume(struct pci_dev *pdev)
++{
++	if (dpc_wait_link_active(pdev)) {
++		pci_lock_rescan_remove();
++		pci_rescan_bus(pdev->bus);
++		pci_unlock_rescan_remove();
++	}
++}
++
+ /**
+  * dpc_reset_link - reset link DPC  routine
+  * @dev: pointer to Root Port's pci_dev data structure
+@@ -420,6 +457,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.error_resume	= dpc_error_resume,
+ 	.reset_link     = dpc_reset_link,
+ };
+ 
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index 14b9153..95950f6 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -236,6 +236,7 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
+  * @state: error state
+  * @error_mesg: message to print
+  * @cb: callback to be broadcasted
++ * @severity: error severity
+  *
+  * Invoked during error recovery process. Once being invoked, the content
+  * of error severity will be broadcasted to all downstream drivers in a
+@@ -244,7 +245,8 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
+ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
+ 	enum pci_channel_state state,
+ 	char *error_mesg,
+-	int (*cb)(struct pci_dev *, void *))
++	int (*cb)(struct pci_dev *, void *),
++	int severity)
+ {
+ 	struct pci_err_broadcast_data result_data;
+ 
+@@ -256,6 +258,15 @@ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
+ 		result_data.result = PCI_ERS_RESULT_RECOVERED;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		/* If DPC is triggered, call resume error hanlder
++		 * because, at this point we can safely assume that
++		 * link recovery has happened.
++		 */
++		if ((severity == PCI_ERR_DPC_FATAL) &&
++			(cb == pci_report_resume)) {
++			cb(dev, NULL);
++			return PCI_ERS_RESULT_RECOVERED;
++		}
+ 		/*
+ 		 * If the error is reported by a bridge, we think this error
+ 		 * is related to the downstream link of the bridge, so we
+@@ -305,7 +316,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	status = pci_broadcast_error_message(dev,
+ 			state,
+ 			"error_detected",
+-			pci_report_error_detected);
++			pci_report_error_detected,
++			severity);
+ 
+ 	if ((severity == PCI_ERR_AER_FATAL) ||
+ 	    (severity == PCI_ERR_DPC_FATAL)) {
+@@ -314,11 +326,15 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 			goto failed;
+ 	}
+ 
++	if (severity == PCI_ERR_DPC_FATAL)
++		goto resume;
++
+ 	if (status == PCI_ERS_RESULT_CAN_RECOVER)
+ 		status = pci_broadcast_error_message(dev,
+ 				state,
+ 				"mmio_enabled",
+-				pci_report_mmio_enabled);
++				pci_report_mmio_enabled,
++				severity);
+ 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+ 		/*
+@@ -329,19 +345,22 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 		status = pci_broadcast_error_message(dev,
+ 				state,
+ 				"slot_reset",
+-				pci_report_slot_reset);
++				pci_report_slot_reset,
++				severity);
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+ 		goto failed;
+ 
++resume:
+ 	pci_broadcast_error_message(dev,
+ 				state,
+ 				"resume",
+-				pci_report_resume);
++				pci_report_resume,
++				severity);
+ 
+-	dev_info(&dev->dev, "Device recovery successful\n");
+ 	mutex_unlock(&pci_err_recovery_lock);
++	dev_info(&dev->dev, "Device recovery successful\n");
+ 	return;
+ 
+ failed:
 -- 
-Cyrille Pitchen, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
