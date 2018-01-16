@@ -1,65 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60798 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755883AbeAIUjt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 15:39:49 -0500
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] media/ttusb-budget: remove pci_zalloc_coherent abuse
-Date: Tue,  9 Jan 2018 21:39:37 +0100
-Message-Id: <20180109203939.5930-2-hch@lst.de>
-In-Reply-To: <20180109203939.5930-1-hch@lst.de>
-References: <20180109203939.5930-1-hch@lst.de>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53448 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751823AbeAPLxL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 16 Jan 2018 06:53:11 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-alpha@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Mikulas Patocka <mpatocka@redhat.com>,
+        Meelis Roos <mroos@linux.ee>, Matt Turner <mattst88@gmail.com>
+Subject: [PATCH] alpha/PCI: Fix noname IRQ level detection
+Date: Tue, 16 Jan 2018 11:52:59 +0000
+Message-Id: <20180116115259.31861-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Switch to a plain kzalloc instea of pci_zalloc_coherent to allocate
-memory for the USB DMA.
+The conversion of the alpha architecture PCI host bridge legacy IRQ
+mapping/swizzling to the new PCI host bridge map/swizzle hooks carried
+out through:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+commit 0e4c2eeb758a ("alpha/PCI: Replace pci_fixup_irqs() call with
+host bridge IRQ mapping hooks")
+
+implies that IRQ for devices are now allocated through pci_assign_irq()
+function in pci_device_probe() that is called when a driver matching a
+device is found in order to probe the device through the device driver.
+
+Alpha noname platforms required IRQ level programming to be executed
+in sio_fixup_irq_levels(), that is called in noname_init_pci(), a
+platform hook called within a subsys_initcall.
+
+In noname_init_pci(), present IRQs are detected through
+sio_collect_irq_levels() that check the struct pci_dev->irq number
+to detect if an IRQ has been allocated for the device.
+
+By the time sio_collect_irq_levels() is called, some devices may still
+have not a matching driver loaded to match them (eg loadable module)
+therefore their IRQ allocation is still pending - which means that
+sio_collect_irq_levels() does not programme the correct IRQ level for
+those devices, causing their IRQ handling to be broken when the device
+driver is actually loaded and the device is probed.
+
+Fix the issue by adding code in the noname map_irq() function
+(noname_map_irq()) that, whilst mapping/swizzling the IRQ line, it also
+ensures that the correct IRQ level programming is executed at platform
+level, fixing the issue.
+
+Fixes: 0e4c2eeb758a ("alpha/PCI: Replace pci_fixup_irqs() call with
+host bridge IRQ mapping hooks")
+Reported-by: Mikulas Patocka <mpatocka@redhat.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: stable@vger.kernel.org # 4.14
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Henderson <rth@twiddle.net>
+Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+Cc: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Meelis Roos <mroos@linux.ee>
+Cc: Matt Turner <mattst88@gmail.com>
 ---
- drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+ arch/alpha/kernel/sys_sio.c | 35 +++++++++++++++++++++++++++++------
+ 1 file changed, 29 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c b/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
-index a142b9dc0feb..b8619fb23351 100644
---- a/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
-+++ b/drivers/media/usb/ttusb-budget/dvb-ttusb-budget.c
-@@ -102,7 +102,6 @@ struct ttusb {
- 	unsigned int isoc_in_pipe;
- 
- 	void *iso_buffer;
--	dma_addr_t iso_dma_handle;
- 
- 	struct urb *iso_urb[ISO_BUF_COUNT];
- 
-@@ -792,21 +791,15 @@ static void ttusb_free_iso_urbs(struct ttusb *ttusb)
- 
- 	for (i = 0; i < ISO_BUF_COUNT; i++)
- 		usb_free_urb(ttusb->iso_urb[i]);
--
--	pci_free_consistent(NULL,
--			    ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF *
--			    ISO_BUF_COUNT, ttusb->iso_buffer,
--			    ttusb->iso_dma_handle);
-+	kfree(ttusb->iso_buffer);
+diff --git a/arch/alpha/kernel/sys_sio.c b/arch/alpha/kernel/sys_sio.c
+index 37bd6d9b8eb9..a6bdc1da47ad 100644
+--- a/arch/alpha/kernel/sys_sio.c
++++ b/arch/alpha/kernel/sys_sio.c
+@@ -102,6 +102,15 @@ sio_pci_route(void)
+ 				   alpha_mv.sys.sio.route_tab);
  }
  
- static int ttusb_alloc_iso_urbs(struct ttusb *ttusb)
++static bool sio_pci_dev_irq_needs_level(const struct pci_dev *dev)
++{
++	if ((dev->class >> 16 == PCI_BASE_CLASS_BRIDGE) &&
++	    (dev->class >> 8 != PCI_CLASS_BRIDGE_PCMCIA))
++		return false;
++
++	return true;
++}
++
+ static unsigned int __init
+ sio_collect_irq_levels(void)
  {
- 	int i;
+@@ -110,8 +119,7 @@ sio_collect_irq_levels(void)
  
--	ttusb->iso_buffer = pci_zalloc_consistent(NULL,
--						  ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF * ISO_BUF_COUNT,
--						  &ttusb->iso_dma_handle);
--
-+	ttusb->iso_buffer = kzalloc(ISO_FRAME_SIZE * FRAMES_PER_ISO_BUF *
-+			ISO_BUF_COUNT, GFP_KERNEL);
- 	if (!ttusb->iso_buffer) {
- 		dprintk("%s: pci_alloc_consistent - not enough memory\n",
- 			__func__);
+ 	/* Iterate through the devices, collecting IRQ levels.  */
+ 	for_each_pci_dev(dev) {
+-		if ((dev->class >> 16 == PCI_BASE_CLASS_BRIDGE) &&
+-		    (dev->class >> 8 != PCI_CLASS_BRIDGE_PCMCIA))
++		if (!sio_pci_dev_irq_needs_level(dev))
+ 			continue;
+ 
+ 		if (dev->irq)
+@@ -120,8 +128,7 @@ sio_collect_irq_levels(void)
+ 	return level_bits;
+ }
+ 
+-static void __init
+-sio_fixup_irq_levels(unsigned int level_bits)
++static void __sio_fixup_irq_levels(unsigned int level_bits, bool reset)
+ {
+ 	unsigned int old_level_bits;
+ 
+@@ -139,12 +146,21 @@ sio_fixup_irq_levels(unsigned int level_bits)
+ 	 */
+ 	old_level_bits = inb(0x4d0) | (inb(0x4d1) << 8);
+ 
+-	level_bits |= (old_level_bits & 0x71ff);
++	if (reset)
++		old_level_bits &= 0x71ff;
++
++	level_bits |= old_level_bits;
+ 
+ 	outb((level_bits >> 0) & 0xff, 0x4d0);
+ 	outb((level_bits >> 8) & 0xff, 0x4d1);
+ }
+ 
++static inline void
++sio_fixup_irq_levels(unsigned int level_bits)
++{
++	__sio_fixup_irq_levels(level_bits, true);
++}
++
+ static inline int
+ noname_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+@@ -181,7 +197,14 @@ noname_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	const long min_idsel = 6, max_idsel = 14, irqs_per_slot = 5;
+ 	int irq = COMMON_TABLE_LOOKUP, tmp;
+ 	tmp = __kernel_extbl(alpha_mv.sys.sio.route_tab, irq);
+-	return irq >= 0 ? tmp : -1;
++
++	irq = irq >= 0 ? tmp : -1;
++
++	/* Fixup IRQ level if an actual IRQ mapping is detected */
++	if (sio_pci_dev_irq_needs_level(dev) && irq >= 0)
++		__sio_fixup_irq_levels(1 << irq, false);
++
++	return irq;
+ }
+ 
+ static inline int
 -- 
-2.14.2
+2.15.0
