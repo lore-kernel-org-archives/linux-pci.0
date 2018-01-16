@@ -1,292 +1,275 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43698 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753188AbeADV5Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 16:57:25 -0500
-Date: Thu, 4 Jan 2018 15:57:21 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client devices
-Message-ID: <20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-5-logang@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180104190137.7654-5-logang@deltatee.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57542 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750868AbeAPJ7M (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jan 2018 04:59:12 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v4 4/5] PCI/DPC: Unify and plumb error handling into DPC
+Date: Tue, 16 Jan 2018 15:28:42 +0530
+Message-Id: <1516096723-8013-5-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
+References: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex]
+Current DPC driver does not do recovery, e.g. calling end-point's driver's
+callbacks, which sanitize the sw.
 
-On Thu, Jan 04, 2018 at 12:01:29PM -0700, Logan Gunthorpe wrote:
-> When the ACS P2P flags are set in the downstream port of the switch,
-> any P2P TLPs will be sent back to the root complex. The whole point of
-> the P2P work is to have TLPs avoid the RC seeing it may not support
-> P2P transactions or, at best, it will perform poorly. So we clear these
+DPC driver implements link_reset callback, and calls pci_do_recovery.
 
-"It will perform poorly" seems like an empirical statement about the
-hardware you've seen, not something that's driven by the spec.  So I'm
-not sure it adds information that will be useful long-term.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-> flags for all devices involved in transactions with the p2pmem.
-
-I'm not sure how this coordinates with other uses of ACS, e.g., VFIO.
-I think that should be addressed here somehow.
-
-> A count of the number of requests to disable the flags is maintained.
-> When the count transitions from 1 to 0, the old flags are restored.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->  drivers/pci/p2p.c   | 144 ++++++++++++++++++++++++++++++++++++++++++++++++++--
->  include/linux/pci.h |   2 +
->  2 files changed, 143 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/p2p.c b/drivers/pci/p2p.c
-> index 87cec87b02e3..617adaa905d2 100644
-> --- a/drivers/pci/p2p.c
-> +++ b/drivers/pci/p2p.c
-> @@ -227,6 +227,89 @@ static struct pci_dev *find_parent_pci_dev(struct device *dev)
->  }
->  
->  /*
-> + * The ACS flags for P2P Request Redirect and P2P Completion Redirect need
-> + * to be disabled in the downstream port of each device in order for
-> + * the TLPs to not be forwarded up to the RC.
-> + */
-> +#define PCI_P2P_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR)
-> +
-> +static int pci_p2pmem_disable_acs(struct pci_dev *pdev)
-> +{
-> +	int pos;
-> +	u16 ctrl;
-> +	struct pci_dev *downstream;
-> +
-> +	downstream = pci_dev_get(pci_upstream_bridge(pdev));
-> +	if (!downstream) {
-> +		dev_err(&pdev->dev, "could not find downstream port\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	device_lock(&downstream->dev);
-> +	if (downstream->p2p_acs_requests++)
-> +		goto unlock_and_return;
-> +
-> +	pos = pci_find_ext_capability(downstream, PCI_EXT_CAP_ID_ACS);
-> +	if (!pos)
-> +		goto unlock_and_return;
-> +
-> +	pci_read_config_word(downstream, pos + PCI_ACS_CTRL, &ctrl);
-> +
-> +	downstream->p2p_old_acs_flags = ctrl & PCI_P2P_ACS_FLAGS;
-> +
-> +	if (downstream->p2p_old_acs_flags)
-> +		dev_info(&pdev->dev, "disabling p2p acs flags: %x\n", ctrl);
-> +
-> +	ctrl &= ~PCI_P2P_ACS_FLAGS;
-> +
-> +	pci_write_config_word(downstream, pos + PCI_ACS_CTRL, ctrl);
-> +
-> +unlock_and_return:
-> +	device_unlock(&downstream->dev);
-> +	pci_dev_put(downstream);
-> +	return 0;
-> +}
-> +
-> +static int pci_p2pmem_reset_acs(struct pci_dev *pdev)
-> +{
-> +	int pos;
-> +	u16 ctrl;
-> +	struct pci_dev *downstream;
-> +
-> +	downstream = pci_dev_get(pci_upstream_bridge(pdev));
-> +	if (!downstream)
-> +		return -ENODEV;
-> +
-> +	device_lock(&downstream->dev);
-> +
-> +	/* Only actually reset the flags on a 1->0 transition */
-> +	if (!downstream->p2p_acs_requests)
-> +		goto unlock_and_return;
-> +
-> +	if (--downstream->p2p_acs_requests)
-> +		goto unlock_and_return;
-> +
-> +	pos = pci_find_ext_capability(downstream, PCI_EXT_CAP_ID_ACS);
-> +	if (!pos)
-> +		goto unlock_and_return;
-> +
-> +	pci_read_config_word(downstream, pos + PCI_ACS_CTRL, &ctrl);
-> +
-> +	ctrl &= ~PCI_P2P_ACS_FLAGS;
-> +	ctrl |= downstream->p2p_old_acs_flags;
-> +
-> +	if (downstream->p2p_old_acs_flags)
-> +		dev_info(&pdev->dev, "resetting p2p acs flags: %x\n", ctrl);
-> +
-> +	pci_write_config_word(downstream, pos + PCI_ACS_CTRL, ctrl);
-> +
-> +unlock_and_return:
-> +	device_unlock(&downstream->dev);
-> +	pci_dev_put(downstream);
-> +	return 0;
-> +}
-> +
-> +/*
->   * If a device is behind a switch, we try to find the upstream bridge
->   * port of the switch. This requires two calls to pci_upstream_bridge:
->   * one for the upstream port on the switch, one on the upstream port
-> @@ -340,6 +423,10 @@ int pci_p2pmem_add_client(struct list_head *head, struct device *dev)
->  			ret = -EXDEV;
->  			goto put_client;
->  		}
-> +
-> +		ret = pci_p2pmem_disable_acs(client);
-> +		if (!ret)
-> +			goto put_client;
->  	}
->  
->  	new_item = kzalloc(sizeof(*new_item), GFP_KERNEL);
-> @@ -363,6 +450,9 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_add_client);
->  
->  static void pci_p2pmem_client_free(struct pci_p2pmem_client *item)
->  {
-> +	if (item->p2pmem)
-> +		pci_p2pmem_reset_acs(item->client);
-> +
->  	list_del(&item->list);
->  	pci_dev_put(item->client);
->  	pci_dev_put(item->p2pmem);
-> @@ -383,6 +473,7 @@ void pci_p2pmem_remove_client(struct list_head *head, struct device *dev)
->  {
->  	struct pci_p2pmem_client *pos, *tmp;
->  	struct pci_dev *pdev;
-> +	struct pci_dev *p2pmem = NULL;
->  
->  	pdev = find_parent_pci_dev(dev);
->  	if (!pdev)
-> @@ -392,9 +483,16 @@ void pci_p2pmem_remove_client(struct list_head *head, struct device *dev)
->  		if (pos->client != pdev)
->  			continue;
->  
-> +		if (!p2pmem)
-> +			p2pmem = pci_dev_get(pos->p2pmem);
-> +
->  		pci_p2pmem_client_free(pos);
->  	}
->  
-> +	if (p2pmem && list_empty(head))
-> +		pci_p2pmem_reset_acs(p2pmem);
-> +
-> +	pci_dev_put(p2pmem);
->  	pci_dev_put(pdev);
->  }
->  EXPORT_SYMBOL_GPL(pci_p2pmem_remove_client);
-> @@ -412,6 +510,10 @@ void pci_p2pmem_client_list_free(struct list_head *head)
->  {
->  	struct pci_p2pmem_client *pos, *tmp;
->  
-> +	pos = list_first_entry_or_null(head, struct pci_p2pmem_client, list);
-> +	if (pos && pos->p2pmem)
-> +		pci_p2pmem_reset_acs(pos->p2pmem);
-> +
->  	list_for_each_entry_safe(pos, tmp, head, list)
->  		pci_p2pmem_client_free(pos);
->  }
-> @@ -440,6 +542,40 @@ static bool upstream_bridges_match_list(struct pci_dev *pdev,
->  	return ret;
->  }
->  
-> +static int bind_clients(struct pci_dev *p2pmem, struct list_head *clients)
-> +{
-> +	int ret;
-> +	struct pci_p2pmem_client *pos, *unwind_pos;
-> +
-> +	ret = pci_p2pmem_disable_acs(p2pmem);
-> +	if (ret)
-> +		return ret;
-> +
-> +	list_for_each_entry(pos, clients, list) {
-> +		ret = pci_p2pmem_disable_acs(pos->client);
-> +		if (ret)
-> +			goto unwind;
-> +
-> +		pos->p2pmem = pci_dev_get(p2pmem);
-> +	}
-> +
-> +	return 0;
-> +
-> +unwind:
-> +	list_for_each_entry(unwind_pos, clients, list) {
-> +		if (pos == unwind_pos)
-> +			break;
-> +
-> +		pci_p2pmem_reset_acs(unwind_pos->client);
-> +		pci_dev_put(unwind_pos->p2pmem);
-> +		unwind_pos->p2pmem = NULL;
-> +	}
-> +
-> +	pci_p2pmem_reset_acs(p2pmem);
-> +
-> +	return ret;
-> +}
-> +
->  /**
->   * pci_p2pmem_find - find a p2p mem device compatible with the specified device
->   * @dev: list of device to check (NULL-terminated)
-> @@ -450,11 +586,13 @@ static bool upstream_bridges_match_list(struct pci_dev *pdev,
->   *
->   * Returns a pointer to the PCI device with a reference taken (use pci_dev_put
->   * to return the reference) or NULL if no compatible device is found.
-> + *
-> + * The P2P ACS flags on all applicable PCI devices will be cleared and
-> + * reset when the client is removed from the list.
->   */
->  struct pci_dev *pci_p2pmem_find(struct list_head *clients)
->  {
->  	struct pci_dev *pdev = NULL;
-> -	struct pci_p2pmem_client *pos;
->  
->  	while ((pdev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, pdev))) {
->  		if (!pdev->p2p || !pdev->p2p->published)
-> @@ -463,8 +601,8 @@ struct pci_dev *pci_p2pmem_find(struct list_head *clients)
->  		if (!upstream_bridges_match_list(pdev, clients))
->  			continue;
->  
-> -		list_for_each_entry(pos, clients, list)
-> -			pos->p2pmem = pdev;
-> +		if (bind_clients(pdev, clients))
-> +			continue;
->  
->  		return pdev;
->  	}
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 047aea679e87..cdd4d3c3e562 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -435,6 +435,8 @@ struct pci_dev {
->  #endif
->  #ifdef CONFIG_PCI_P2P
->  	struct pci_p2p *p2p;
-> +	unsigned int p2p_acs_requests;
-> +	u16 p2p_old_acs_flags;
->  #endif
->  	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
->  	size_t romlen; /* Length of ROM if it's not from the BAR */
-> -- 
-> 2.11.0
-> 
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 2d976a6..31799f6 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -13,8 +13,12 @@
+ #include <linux/interrupt.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/pci_err.h>
+ #include <linux/pcieport_if.h>
+ #include "../pci.h"
++#include "portdrv.h"
++
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
+ 
+ struct rp_pio_header_log_regs {
+ 	u32 dw0;
+@@ -67,6 +71,60 @@ struct dpc_dev {
+ 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+ };
+ 
++static int find_dpc_dev_iter(struct device *device, void *data)
++{
++	struct pcie_port_service_driver *service_driver;
++	struct device **dev;
++
++	dev = (struct device **) data;
++
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		service_driver = to_service_driver(device->driver);
++		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
++			*dev = device;
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++static struct device *pci_find_dpc_dev(struct pci_dev *pdev)
++{
++	struct device *dev = NULL;
++
++	device_for_each_child(&pdev->dev, &dev, find_dpc_dev_iter);
++
++	return dev;
++}
++
++static int find_dpc_service_iter(struct device *device, void *data)
++{
++	struct pcie_port_service_driver *service_driver, **drv;
++
++	drv = (struct pcie_port_service_driver **) data;
++
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		service_driver = to_service_driver(device->driver);
++		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
++			*drv = service_driver;
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev)
++{
++	struct pcie_port_service_driver *drv = NULL;
++
++	device_for_each_child(&dev->dev, &drv, find_dpc_service_iter);
++
++	return drv;
++}
++EXPORT_SYMBOL(pci_find_dpc_service);
++
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ {
+ 	unsigned long timeout = jiffies + HZ;
+@@ -104,11 +162,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 		dev_warn(dev, "Link state not disabled for DPC event\n");
+ }
+ 
+-static void interrupt_event_handler(struct work_struct *work)
++/**
++ * dpc_reset_link - reset link DPC  routine
++ * @dev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver when performing link reset at Root Port.
++ */
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ {
+-	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+-	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
++	struct pci_dev *dev, *temp;
++	struct dpc_dev *dpc;
++	struct pcie_device *pciedev;
++	struct device *devdpc;
++
++	devdpc = pci_find_dpc_dev(pdev);
++	pciedev = to_pcie_device(devdpc);
++	dpc = get_service_data(pciedev);
+ 
+ 	pci_lock_rescan_remove();
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+@@ -125,7 +195,7 @@ static void interrupt_event_handler(struct work_struct *work)
+ 
+ 	dpc_wait_link_inactive(dpc);
+ 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
+-		return;
++		return PCI_ERS_RESULT_DISCONNECT;
+ 	if (dpc->rp && dpc->rp_pio_status) {
+ 		pci_write_config_dword(pdev,
+ 				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+@@ -135,6 +205,17 @@ static void interrupt_event_handler(struct work_struct *work)
+ 
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
++
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
++static void interrupt_event_handler(struct work_struct *work)
++{
++	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
++	struct pci_dev *pdev = dpc->dev->port;
++
++	/* From DPC point of view error is always FATAL. */
++	pci_do_recovery(pdev, PCI_ERR_DPC_FATAL);
+ }
+ 
+ static void dpc_rp_pio_print_tlp_header(struct device *dev,
+@@ -339,6 +420,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.reset_link     = dpc_reset_link,
+ };
+ 
+ static int __init dpc_service_init(void)
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index 63566b1..14b9153 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -21,6 +21,8 @@
+ #include <linux/pcieport_if.h>
+ #include "portdrv.h"
+ 
++static DEFINE_MUTEX(pci_err_recovery_lock);
++
+ struct pci_err_broadcast_data {
+ 	enum pci_channel_state state;
+ 	enum pci_ers_result result;
+@@ -180,7 +182,7 @@ static pci_ers_result_t pci_default_reset_link(struct pci_dev *dev)
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+-pci_ers_result_t pci_reset_link(struct pci_dev *dev)
++pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
+ {
+ 	struct pci_dev *udev;
+ 	pci_ers_result_t status;
+@@ -194,9 +196,17 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev)
+ 		udev = dev->bus->self;
+ 	}
+ 
++
++	/* Use the service driver of the component firstly */
++#if IS_ENABLED(CONFIG_PCIE_DPC)
++	if (severity == PCI_ERR_DPC_FATAL)
++		driver = pci_find_dpc_service(udev);
++#endif
+ #if IS_ENABLED(CONFIG_PCIEAER)
+-	/* Use the aer driver of the component firstly */
+-	driver = pci_find_aer_service(udev);
++	if ((severity == PCI_ERR_AER_FATAL) ||
++	    (severity == PCI_ERR_AER_NONFATAL) ||
++	    (severity == PCI_ERR_AER_CORRECTABLE))
++		driver = pci_find_aer_service(udev);
+ #endif
+ 
+ 	if (driver && driver->reset_link) {
+@@ -284,7 +294,10 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+ 
+-	if (severity == PCI_ERR_AER_FATAL)
++	mutex_lock(&pci_err_recovery_lock);
++
++	if ((severity == PCI_ERR_AER_FATAL) ||
++	    (severity == PCI_ERR_DPC_FATAL))
+ 		state = pci_channel_io_frozen;
+ 	else
+ 		state = pci_channel_io_normal;
+@@ -294,8 +307,9 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 			"error_detected",
+ 			pci_report_error_detected);
+ 
+-	if (severity == PCI_ERR_AER_FATAL) {
+-		result = pci_reset_link(dev);
++	if ((severity == PCI_ERR_AER_FATAL) ||
++	    (severity == PCI_ERR_DPC_FATAL)) {
++		result = pci_reset_link(dev, severity);
+ 		if (result != PCI_ERS_RESULT_RECOVERED)
+ 			goto failed;
+ 	}
+@@ -327,9 +341,11 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 				pci_report_resume);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ 	return;
+ 
+ failed:
+ 	/* TODO: Should kernel panic here? */
++	mutex_unlock(&pci_err_recovery_lock);
+ 	dev_info(&dev->dev, "Device recovery failed\n");
+ }
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 4f1992d..b013e24 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -80,4 +80,5 @@ static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
+ #endif /* !CONFIG_ACPI */
+ 
+ struct pcie_port_service_driver *pci_find_aer_service(struct pci_dev *dev);
++struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev);
+ #endif /* _PORTDRV_H_ */
+diff --git a/include/linux/pci_err.h b/include/linux/pci_err.h
+index 3710759..e253126 100644
+--- a/include/linux/pci_err.h
++++ b/include/linux/pci_err.h
+@@ -7,5 +7,7 @@
+ #define PCI_ERR_AER_FATAL		1
+ #define PCI_ERR_AER_CORRECTABLE		2
+ 
++#define PCI_ERR_DPC_FATAL		4
++
+ void pci_do_recovery(struct pci_dev *dev, int severity);
+ #endif /* _PCI_ERR_H_ */
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
