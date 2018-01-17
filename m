@@ -1,121 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
- Brian Norris <computersforpeace@gmail.com>,
- Russell King <rmk+kernel@armlinux.org.uk>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- Florian Fainelli <f.fainelli@gmail.com>,
- Jonas Gorski <jonas.gorski@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v4 0/8] PCI: brcmstb: Add Broadcom Settopbox PCIe support
-Date: Mon, 15 Jan 2018 18:28:37 -0500
-Message-Id: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
- Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
- Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
- Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52796 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750830AbeAQUMt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jan 2018 15:12:49 -0500
+Date: Wed, 17 Jan 2018 14:12:47 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Frederick Lawler <fred@fredlawl.com>, Joe Perches <joe@perches.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] PCI: Create  minor pci_dev log wrapper functions
+Message-ID: <20180117201239.GC7039@bhelgaas-glaptop.roam.corp.google.com>
+References: <1515819518-6501-1-git-send-email-fred@fredlawl.com>
+ <1515819518-6501-2-git-send-email-fred@fredlawl.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1515819518-6501-2-git-send-email-fred@fredlawl.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds support for the Broadcom Settopbox PCIe host
-controller.  It is targeted to Broadcom Settopbox chips running on
-ARM, ARM64, and MIPS platforms.
+[+to Joe]
 
-V4 Changes:
-  - Merged all BrcmSTB PCIe controller files into a single file.
-  - All new files now have the SPDX identifier.
-  - Removed the list of PCIe controllers.
-  - Removed "link-up" race.
-  - Removed probe of msi psuedo-device.
-  - Multiple comment text changes, as requested.
-  - "SSC" => "Spread Spectrum Clocking".
-  - Set 'memc' variable.
-  - Unnecessary variable initializations removed (eg rc_bar2_size).
-  - Added comment on "L23" link state.
-  - Removed use of "__refdata".
-  - Formatting of structure elements.
+On Fri, Jan 12, 2018 at 10:58:36PM -0600, Frederick Lawler wrote:
+> Add PCI-specific dev_printk() wrappers so we can do:
+> 
+>   pci_info(dev, "message\n");
+> 
+> instead of
+> 
+>   dev_info(&dev->dev, "message\n");
 
-V3 Changes:
-  - Fold pcie-brcmstb-msi.c into pcie-brcmstb.c
-  - Use PCI_XXX constants for PCIe capability registers
-  - Removal of any unused constants
-  - Change s/pci/pcie/ for filenames, comment text
-  - Config space access now uses 8/16/32 read/writes
-  - Use proper multi-line comment style
-  - Use function names, structure that are common in other host drivers
-  - DT binding 'brcm,ssc' is now 'brcm,enable-ssc'
-  - Dropped DT binding 'xyz-supply'
-  - Not setting CRS support as Linux does it if it is advertised.
-  - Removed code that was considered "debug code".
-  - Use of_get_pcie_domain_nr()
-  - Variable 'bridge_setup_done' removed.
+Hi Joe,
 
-V2 Changes:
-* Patch brcmstb-add-memory-API:
-  - fix DT_PROP_DATA_TO_U32 macro.
-  - dropped one EXPORT_SYMBOL, changed the other to GPL.
-* Patch DT-docs-for-Brcmstb-PCIe:
-  - change 'brcm,gen' prop to standard 'max-link-speed'.
-  - rewrite bindings commit to omit standard prop defs.
-  - change props "supplies", "supply-names" to "xyz-supply"
-* Patch removed: export-symbol-arch_setup_dma_ops [4/9]
-* Patch brcmstb-add-dma-ranges:
-  - use get_dma_ops(); also use a const dma_map_ops structure.
-  - rewrite map_sg(), unmap_sg(), other calls like syng_sg_*()
-  - omit brcm_mapping_error(), but added code in brcm_dma_supported()
-  - put all of the notifier code in one compilation unit.
+I proposed that Fred add pci_info(), pci_warn(), pci_err(), etc.
+You've done sort of similar things in the past:
 
-Florian Fainelli (1):
-  SOC: brcmstb: add memory API
+  256df2f3879e ("netdevice.h net/core/dev.c: Convert netdev_<level> logging macros to functions")
+  a9a79dfec239 ("ata: Convert ata_<foo>_printk(KERN_<LEVEL> to ata_<foo>_<level>")
 
-Jim Quinlan (7):
-  dt-bindings: pci: Add DT docs for Brcmstb PCIe device
-  PCI: brcmstb: Add Broadcom STB PCIe host controller driver
-  PCI: brcmstb: Add dma-range mapping for inbound traffic
-  PCI/MSI: Enable PCI_MSI_IRQ_DOMAIN support for MIPS
-  PCI: brcmstb: Add MSI capability
-  MIPS: BMIPS: Add PCI bindings for 7425, 7435
-  MIPS: BMIPS: Enable PCI
+Do you have any implementation advice for us?  Fred started with inline
+functions, but tripped over some issues with varargs in inlines, so
+switched to the simple #defines below.
 
- .../devicetree/bindings/pci/brcmstb-pcie.txt       |   59 +
- arch/mips/Kconfig                                  |    3 +
- arch/mips/boot/dts/brcm/bcm7425.dtsi               |   26 +
- arch/mips/boot/dts/brcm/bcm7435.dtsi               |   27 +
- arch/mips/boot/dts/brcm/bcm97425svmb.dts           |    4 +
- arch/mips/boot/dts/brcm/bcm97435svmb.dts           |    4 +
- arch/mips/include/asm/Kbuild                       |    1 +
- drivers/pci/Kconfig                                |    2 +-
- drivers/pci/host/Kconfig                           |    9 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-brcmstb.c                    | 1830 ++++++++++++++++++++
- drivers/soc/bcm/brcmstb/Makefile                   |    2 +-
- drivers/soc/bcm/brcmstb/memory.c                   |  158 ++
- include/soc/brcmstb/memory_api.h                   |   25 +
- 14 files changed, 2149 insertions(+), 2 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
- create mode 100644 drivers/pci/host/pcie-brcmstb.c
- create mode 100644 drivers/soc/bcm/brcmstb/memory.c
- create mode 100644 include/soc/brcmstb/memory_api.h
+I notice your commits above use either multiple non-inline functions
+(netdev) or a single non-inline *_printk() with macros to insert the
+loglevel (ata).
 
--- 
-1.9.0.138.g2de3478
+Would you recommend:
 
+  - simple #defines as below,
+  - multiple non-inline functions like netdev,
+  - single non-inline *_printk() with macros like ata,
+  - something else?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks for any advice!
+
+Bjorn
+
+> ---
+> V2:
+> * Replace static inline varadic functions with macros instead
+> V3:
+> * No changes to this file
+> 
+>  include/linux/pci.h | 27 +++++++++++++++++++++++++++
+>  1 file changed, 27 insertions(+)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index c170c92..7a5012b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -2281,4 +2281,31 @@ static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
+>  /* provide the legacy pci_dma_* API */
+>  #include <linux/pci-dma-compat.h>
+>  
+> +#define pci_printk(level, pdev, fmt, arg...)		\
+> +	dev_printk(level, &(pdev)->dev, fmt, ##arg)
+> +
+> +#define pci_emerg(pdev, fmt, arg...)			\
+> +	dev_emerg(&(pdev)->dev, fmt, ##arg)
+> +
+> +#define pci_crit(pdev, fmt, arg...)			\
+> +	dev_crit(&(pdev)->dev, fmt, ##arg)
+> +
+> +#define pci_alert(pdev, fmt, arg...)			\
+> +	dev_alert(&(pdev)->dev, fmt, ##arg)
+> +
+> +#define pci_err(pdev, fmt, arg...)			\
+> +	dev_err(&(pdev)->dev, fmt, ##arg)
+> +
+> +#define pci_notice(pdev, fmt, arg...)			\
+> +	dev_notice(&(pdev)->dev, fmt, ##arg)
+> +
+> +#define pci_warn(pdev, fmt, arg...)			\
+> +	dev_warn(&(pdev)->dev, fmt, ##arg)
+> +
+> +#define pci_info(pdev, fmt, arg...)			\
+> +	 dev_info(&(pdev)->dev, fmt, ##arg)
+> +
+> +#define pci_dbg(pdev, fmt, arg...)			\
+> +	dev_dbg(&(pdev)->dev, fmt, ##arg)
+> +
+>  #endif /* LINUX_PCI_H */
+> -- 
+> 2.7.4
+> 
