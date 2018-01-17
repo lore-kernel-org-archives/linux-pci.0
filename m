@@ -1,151 +1,619 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([1.203.163.81]:19586 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751083AbeAELwA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jan 2018 06:52:00 -0500
-Message-ID: <1515153107.25872.57.camel@mhfsdcap03>
-Subject: Re: [PATCH v5 1/2] PCI: mediatek: Clear IRQ status after IRQ
- dispatched to avoid reentry
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Date: Fri, 5 Jan 2018 19:51:47 +0800
-In-Reply-To: <88c84a3e-17ea-08f2-e5fc-4799b41de267@arm.com>
-References: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
-         <1514336394-17747-2-git-send-email-honghui.zhang@mediatek.com>
-         <20180104184040.GE12239@red-moon>
-         <88c84a3e-17ea-08f2-e5fc-4799b41de267@arm.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.kernel.org ([198.145.29.99]:55800 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752368AbeAQSQ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jan 2018 13:16:58 -0500
+Date: Wed, 17 Jan 2018 12:16:56 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Subject: Re: pci/setup-bus: Delete an error message for a failed memory
+ allocation in add_to_list()
+Message-ID: <20180117181656.GA7039@bhelgaas-glaptop.roam.corp.google.com>
+References: <fd9d212e-e8da-1aa7-be7f-7bf6d8f1e15f@users.sourceforge.net>
+ <20180113000839.GD205469@bhelgaas-glaptop.roam.corp.google.com>
+ <03f4a55c-3bc3-0f15-bfc4-73049861edc4@users.sourceforge.net>
+ <20180113201709.GF205469@bhelgaas-glaptop.roam.corp.google.com>
+ <f0a643f8-27f0-596b-a99d-671c6e0b3d97@users.sourceforge.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <f0a643f8-27f0-596b-a99d-671c6e0b3d97@users.sourceforge.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-01-04 at 19:04 +0000, Marc Zyngier wrote:
-> On 04/01/18 18:40, Lorenzo Pieralisi wrote:
-> > [+Marc]
+On Sat, Jan 13, 2018 at 10:08:43PM +0100, SF Markus Elfring wrote:
+> > Your commit message says "omit an extra message", which suggests that
+> > there are currently two messages about the memory allocation failure,
+> > and that your patch removes one of them.
+> 
+> Yes. - There is a general transformation pattern applied.
+> 
+> 
+> > If that's the case, it would be nice to know where the other message is.
+> 
+> Have you got any special experiences with backtraces?
+> 
+> 
+> 
+> > If your patch removes the *only* message about the memory allocation
+> > failure, that might be worth doing,
+> 
+> Thanks for a bit of positive feedback.
+> 
+> 
+> > but the changelog should be clear about that
+> 
+> Do you distinguish the “log” from a commit description?
+> 
+> 
+> > and say "I don't think the error message is worthwhile
+> > because the function already returns failure" or something similar.
+> 
+> Do you find the wording “WARNING: Possible unnecessary 'out of memory' message”
+> (from the script “checkpatch.pl”) more reasonable?
+> 
+> 
+> 
+> >> * Are you looking for a reminder on the Linux allocation failure report?
 > > 
-> > On Wed, Dec 27, 2017 at 08:59:53AM +0800, honghui.zhang@mediatek.com wrote:
-> >> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > I don't know what the "Linux allocation failure report" is.
+> 
+> This information seems to be “hidden” in source code.
+> 
+> https://elixir.free-electrons.com/linux/v4.15-rc7/source/include/linux/gfp.h#L191
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/linux/gfp.h?id=c92a9a461dff6140c539c61e457aa97df29517d6#n213
+> 
+> 
+> Are you familiar with the usage of the option “__GFP_NOWARN”?
+> 
+> 
+> 
+> >>> Also, please squash all the drivers/pci patches into one.
 > >>
-> >> There maybe a same IRQ reentry scenario after IRQ received in current
-> >> IRQ handle flow:
-> >> 	EP device		PCIe host driver	EP driver
-> >> 1. issue an IRQ
-> >> 			2. received IRQ
-> >> 			3. clear IRQ status
-> >> 			4. dispatch IRQ
-> >> 						5. clear IRQ source
-> >> The IRQ status was not successfully cleared at step 2 since the IRQ
-> >> source was not cleared yet. So the PCIe host driver may receive the
-> >> same IRQ after step 5. Then there's an IRQ reentry occurred.
-> >> Even worse, if the reentry IRQ was not an IRQ that EP driver expected,
-> >> it may not handle the IRQ. Then we may run into the infinite loop from
-> >> step 2 to step 4.
-> >> Clear the IRQ status after IRQ have been dispatched to avoid the IRQ
-> >> reentry.
-> >> This patch also fix another INTx IRQ issue by initialize the iterate
-> >> before the loop. If an INTx IRQ re-occurred while we are dispatching
-> >> the INTx IRQ, then iterate may start from PCI_NUM_INTX + INTX_SHIFT
-> >> instead of INTX_SHIFT for the second time entering the
-> >> for_each_set_bit_from() loop.
+> >> To which other change possibilities do you refer here?
 > > 
-> > This looks like two different issues that should be fixed with two
-> > patches.
+> > You posted two patches that remove error messages about memory
+> > allocation failures:
+> 
+> Yes. - Also for this software area …
+> 
+> 
+> >   http://lkml.kernel.org/r/dc3922b4-50f6-e7fa-482f-18e6ff5d905f@users.sourceforge.net
+> 
+> Is it safer to handle adjustments for the directory “drivers/pci/hotplug” separately?
+> 
+> 
+> >   http://lkml.kernel.org/r/fd9d212e-e8da-1aa7-be7f-7bf6d8f1e15f@users.sourceforge.net
+> > 
+> > These are doing the same thing and could be combined into one patch.
+> 
+> The final committer could perform such an operation if an other patch granularity
+> would be preferred (or if you would insist on patch squashing).
+> I guess that you do not need to wait on me to apply an adjusted software combination
+> in this case.
 
-Ok, I split this into two patches and figure out a more reasonable
-approach by using irq_chip solution.
+I applied the patch below to pci/misc for v4.16.  Thanks for the pointers.
 
-> > 
-> >> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> >> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
-> >> ---
-> >>  drivers/pci/host/pcie-mediatek.c | 11 ++++++-----
-> >>  1 file changed, 6 insertions(+), 5 deletions(-)
-> > 
-> > For the sake of uniformity, I first want to understand why this
-> > driver does not call:
-> > 
-> > chained_irq_enter/exit()
-> > 
-> > in the primary handler (mtk_pcie_intr_handler()).
-> > 
-> > With the GIC as a primary interrupt controller we have not
-> > even figured out how current code can actually work without
-> > calling the chained_* API.
-> > 
-> > I want to come up with a consistent handling of IRQ domains for
-> > all host bridges and any discrepancy should be explained.
-> 
-> That's because this driver is a huge hack, see below:
-> 
-> > 
-> >> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> >> index db93efd..fc29a9a 100644
-> >> --- a/drivers/pci/host/pcie-mediatek.c
-> >> +++ b/drivers/pci/host/pcie-mediatek.c
-> >> @@ -601,15 +601,16 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
-> 
-> This function is not a chained irqchip, but an interrupt handler...
-> 
-> >>  	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
-> >>  	unsigned long status;
-> >>  	u32 virq;
-> >> -	u32 bit = INTX_SHIFT;
-> >> +	u32 bit;
-> >>  
-> >>  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
-> >> +		bit = INTX_SHIFT;
-> >>  		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
-> >> -			/* Clear the INTx */
-> >> -			writel(1 << bit, port->base + PCIE_INT_STATUS);
-> >>  			virq = irq_find_mapping(port->irq_domain,
-> >>  						bit - INTX_SHIFT);
-> >>  			generic_handle_irq(virq);
-> 
-> and nonetheless, this calls into generic_handle_irq(). That's a complete
-> violation of the interrupt layering. Maybe there is a good reason for
-> it, but I'd like to know which one.
-> 
-> Which means that all of the ack/mask has to be done outside of the
-> irqchip framework too... Disgusting.
-> 
-> >> +			/* Clear the INTx */
-> >> +			writel(1 << bit, port->base + PCIE_INT_STATUS);
-> > 
-> > I think that these masking/acking should actually be done through
-> > the irq_chip hooks (see for instance pci-ftpci100.c) - that would
-> > make this kind of bugs much easier to prevent (because the IRQ
-> > layer does the sequencing for you).
-> 
-> +1.
-> 
 
-Thanks for your advice, I need to do some homework to have a better
-understanding of the irq_chip approach.
+commit c7abb2352c298e8ac2ccfd843f036ae5244d6f35
+Author: Markus Elfring <elfring@users.sourceforge.net>
+Date:   Fri Dec 29 12:15:16 2017 +0100
 
-> > Marc (CC'ed) has a more comprehensive view on this than me - I would
-> > like to get to a point where all host bridges uses a consistent
-> > approach for chained IRQ handling and I hope this bug fix can be
-> > a starting point.
-> 
-> +1 again. We definitely need to come up with some form of common
-> approach for all these host drivers, and maybe turn that into a library...
-> 
+    PCI: Remove unnecessary messages for memory allocation failures
+    
+    Per ebfdc40969f2 ("checkpatch: attempt to find unnecessary 'out of memory'
+    messages"), when a memory allocation fails, the memory subsystem emits
+    generic "out of memory" messages (see slab_out_of_memory() for some of this
+    logging).  Therefore, additional error messages in the caller don't add
+    much value.
+    
+    Remove messages that merely report "out of memory".
+    
+    This preserves some messages that report additional information, e.g.,
+    allocation failures that mean we drop hotplug events.
+    
+    This issue was detected by using the Coccinelle software.
+    
+    Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+    [bhelgaas: changelog, squash patches, make similar changes to acpiphp,
+    cpqphp, ibmphp, keep warning when dropping hotplug event]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Well, this is beyond my knowledge now, I guess I can figure out how to
-using irq_chip for the first step, then I may following this "common
-approach" after we have a solution for that?
-
-thanks.
-> Thanks,
-> 
-> 	M.
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 5db6f1839dad..96f5b986454a 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -811,10 +811,8 @@ void acpiphp_enumerate_slots(struct pci_bus *bus)
+ 
+ 	handle = adev->handle;
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+-	if (!bridge) {
+-		acpi_handle_err(handle, "No memory for bridge object\n");
++	if (!bridge)
+ 		return;
+-	}
+ 
+ 	INIT_LIST_HEAD(&bridge->slots);
+ 	kref_init(&bridge->ref);
+diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
+index 70967ac75265..d28992788eaa 100644
+--- a/drivers/pci/hotplug/cpqphp_core.c
++++ b/drivers/pci/hotplug/cpqphp_core.c
+@@ -883,7 +883,6 @@ static int cpqhpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	ctrl = kzalloc(sizeof(struct controller), GFP_KERNEL);
+ 	if (!ctrl) {
+-		err("%s : out of memory\n", __func__);
+ 		rc = -ENOMEM;
+ 		goto err_disable_device;
+ 	}
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 73cf84645c82..4f5c0b936797 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -603,10 +603,8 @@ int ibmphp_update_slot_info(struct slot *slot_cur)
+ 	u8 mode;
+ 
+ 	info = kmalloc(sizeof(struct hotplug_slot_info), GFP_KERNEL);
+-	if (!info) {
+-		err("out of system memory\n");
++	if (!info)
+ 		return -ENOMEM;
+-	}
+ 
+ 	info->power_status = SLOT_PWRGD(slot_cur->status);
+ 	info->attention_status = SLOT_ATTN(slot_cur->status,
+@@ -734,14 +732,12 @@ static u8 bus_structure_fixup(u8 busno)
+ 		return 1;
+ 
+ 	bus = kmalloc(sizeof(*bus), GFP_KERNEL);
+-	if (!bus) {
+-		err("%s - out of memory\n", __func__);
++	if (!bus)
+ 		return 1;
+-	}
++
+ 	dev = kmalloc(sizeof(*dev), GFP_KERNEL);
+ 	if (!dev) {
+ 		kfree(bus);
+-		err("%s - out of memory\n", __func__);
+ 		return 1;
+ 	}
+ 
+@@ -1101,7 +1097,6 @@ static int enable_slot(struct hotplug_slot *hs)
+ 	if (!slot_cur->func) {
+ 		/* We cannot do update_slot_info here, since no memory for
+ 		 * kmalloc n.e.ways, and update_slot_info allocates some */
+-		err("out of system memory\n");
+ 		rc = -ENOMEM;
+ 		goto error_power;
+ 	}
+@@ -1208,7 +1203,6 @@ int ibmphp_do_disable_slot(struct slot *slot_cur)
+ 		/* We need this for functions that were there on bootup */
+ 		slot_cur->func = kzalloc(sizeof(struct pci_func), GFP_KERNEL);
+ 		if (!slot_cur->func) {
+-			err("out of system memory\n");
+ 			rc = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -1306,7 +1300,6 @@ static int __init ibmphp_init(void)
+ 
+ 	ibmphp_pci_bus = kmalloc(sizeof(*ibmphp_pci_bus), GFP_KERNEL);
+ 	if (!ibmphp_pci_bus) {
+-		err("out of memory\n");
+ 		rc = -ENOMEM;
+ 		goto exit;
+ 	}
+diff --git a/drivers/pci/hotplug/ibmphp_pci.c b/drivers/pci/hotplug/ibmphp_pci.c
+index 25edd0b18b75..c7ce7d8cf998 100644
+--- a/drivers/pci/hotplug/ibmphp_pci.c
++++ b/drivers/pci/hotplug/ibmphp_pci.c
+@@ -167,10 +167,9 @@ int ibmphp_configure_card(struct pci_func *func, u8 slotno)
+ 						goto error;
+ 					}
+ 					newfunc = kzalloc(sizeof(*newfunc), GFP_KERNEL);
+-					if (!newfunc) {
+-						err("out of system memory\n");
++					if (!newfunc)
+ 						return -ENOMEM;
+-					}
++
+ 					newfunc->busno = cur_func->busno;
+ 					newfunc->device = device;
+ 					cur_func->next = newfunc;
+@@ -205,10 +204,9 @@ int ibmphp_configure_card(struct pci_func *func, u8 slotno)
+ 					for (i = 0; i < 32; i++) {
+ 						if (func->devices[i]) {
+ 							newfunc = kzalloc(sizeof(*newfunc), GFP_KERNEL);
+-							if (!newfunc) {
+-								err("out of system memory\n");
++							if (!newfunc)
+ 								return -ENOMEM;
+-							}
++
+ 							newfunc->busno = sec_number;
+ 							newfunc->device = (u8) i;
+ 							for (j = 0; j < 4; j++)
+@@ -233,10 +231,9 @@ int ibmphp_configure_card(struct pci_func *func, u8 slotno)
+ 					}
+ 
+ 					newfunc = kzalloc(sizeof(*newfunc), GFP_KERNEL);
+-					if (!newfunc) {
+-						err("out of system memory\n");
++					if (!newfunc)
+ 						return -ENOMEM;
+-					}
++
+ 					newfunc->busno = cur_func->busno;
+ 					newfunc->device = device;
+ 					for (j = 0; j < 4; j++)
+@@ -279,10 +276,9 @@ int ibmphp_configure_card(struct pci_func *func, u8 slotno)
+ 						if (func->devices[i]) {
+ 							debug("inside for loop, device is %x\n", i);
+ 							newfunc = kzalloc(sizeof(*newfunc), GFP_KERNEL);
+-							if (!newfunc) {
+-								err(" out of system memory\n");
++							if (!newfunc)
+ 								return -ENOMEM;
+-							}
++
+ 							newfunc->busno = sec_number;
+ 							newfunc->device = (u8) i;
+ 							for (j = 0; j < 4; j++)
+@@ -405,10 +401,9 @@ static int configure_device(struct pci_func *func)
+ 
+ 			io[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+ 
+-			if (!io[count]) {
+-				err("out of system memory\n");
++			if (!io[count])
+ 				return -ENOMEM;
+-			}
++
+ 			io[count]->type = IO;
+ 			io[count]->busno = func->busno;
+ 			io[count]->devfunc = PCI_DEVFN(func->device, func->function);
+@@ -442,10 +437,9 @@ static int configure_device(struct pci_func *func)
+ 				debug("len[count] in PFMEM %x, count %d\n", len[count], count);
+ 
+ 				pfmem[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+-				if (!pfmem[count]) {
+-					err("out of system memory\n");
++				if (!pfmem[count])
+ 					return -ENOMEM;
+-				}
++
+ 				pfmem[count]->type = PFMEM;
+ 				pfmem[count]->busno = func->busno;
+ 				pfmem[count]->devfunc = PCI_DEVFN(func->device,
+@@ -458,7 +452,6 @@ static int configure_device(struct pci_func *func)
+ 				} else {
+ 					mem_tmp = kzalloc(sizeof(*mem_tmp), GFP_KERNEL);
+ 					if (!mem_tmp) {
+-						err("out of system memory\n");
+ 						kfree(pfmem[count]);
+ 						return -ENOMEM;
+ 					}
+@@ -508,10 +501,9 @@ static int configure_device(struct pci_func *func)
+ 				debug("len[count] in Mem %x, count %d\n", len[count], count);
+ 
+ 				mem[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+-				if (!mem[count]) {
+-					err("out of system memory\n");
++				if (!mem[count])
+ 					return -ENOMEM;
+-				}
++
+ 				mem[count]->type = MEM;
+ 				mem[count]->busno = func->busno;
+ 				mem[count]->devfunc = PCI_DEVFN(func->device,
+@@ -674,7 +666,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
+ 			bus_io[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+ 
+ 			if (!bus_io[count]) {
+-				err("out of system memory\n");
+ 				retval = -ENOMEM;
+ 				goto error;
+ 			}
+@@ -706,7 +697,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
+ 
+ 				bus_pfmem[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+ 				if (!bus_pfmem[count]) {
+-					err("out of system memory\n");
+ 					retval = -ENOMEM;
+ 					goto error;
+ 				}
+@@ -722,7 +712,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
+ 				} else {
+ 					mem_tmp = kzalloc(sizeof(*mem_tmp), GFP_KERNEL);
+ 					if (!mem_tmp) {
+-						err("out of system memory\n");
+ 						retval = -ENOMEM;
+ 						goto error;
+ 					}
+@@ -763,7 +752,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
+ 
+ 				bus_mem[count] = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+ 				if (!bus_mem[count]) {
+-					err("out of system memory\n");
+ 					retval = -ENOMEM;
+ 					goto error;
+ 				}
+@@ -834,7 +822,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
+ 		io = kzalloc(sizeof(*io), GFP_KERNEL);
+ 
+ 		if (!io) {
+-			err("out of system memory\n");
+ 			retval = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -856,7 +843,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
+ 		debug("it wants %x memory behind the bridge\n", amount_needed->mem);
+ 		mem = kzalloc(sizeof(*mem), GFP_KERNEL);
+ 		if (!mem) {
+-			err("out of system memory\n");
+ 			retval = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -878,7 +864,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
+ 		debug("it wants %x pfmemory behind the bridge\n", amount_needed->pfmem);
+ 		pfmem = kzalloc(sizeof(*pfmem), GFP_KERNEL);
+ 		if (!pfmem) {
+-			err("out of system memory\n");
+ 			retval = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -893,7 +878,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
+ 		} else {
+ 			mem_tmp = kzalloc(sizeof(*mem_tmp), GFP_KERNEL);
+ 			if (!mem_tmp) {
+-				err("out of system memory\n");
+ 				retval = -ENOMEM;
+ 				goto error;
+ 			}
+@@ -924,7 +908,6 @@ static int configure_bridge(struct pci_func **func_passed, u8 slotno)
+ 		if (!bus) {
+ 			bus = kzalloc(sizeof(*bus), GFP_KERNEL);
+ 			if (!bus) {
+-				err("out of system memory\n");
+ 				retval = -ENOMEM;
+ 				goto error;
+ 			}
+@@ -1652,10 +1635,9 @@ static int add_new_bus(struct bus_node *bus, struct resource_node *io, struct re
+ 	}
+ 	if (io) {
+ 		io_range = kzalloc(sizeof(*io_range), GFP_KERNEL);
+-		if (!io_range) {
+-			err("out of system memory\n");
++		if (!io_range)
+ 			return -ENOMEM;
+-		}
++
+ 		io_range->start = io->start;
+ 		io_range->end = io->end;
+ 		io_range->rangeno = 1;
+@@ -1664,10 +1646,9 @@ static int add_new_bus(struct bus_node *bus, struct resource_node *io, struct re
+ 	}
+ 	if (mem) {
+ 		mem_range = kzalloc(sizeof(*mem_range), GFP_KERNEL);
+-		if (!mem_range) {
+-			err("out of system memory\n");
++		if (!mem_range)
+ 			return -ENOMEM;
+-		}
++
+ 		mem_range->start = mem->start;
+ 		mem_range->end = mem->end;
+ 		mem_range->rangeno = 1;
+@@ -1676,10 +1657,9 @@ static int add_new_bus(struct bus_node *bus, struct resource_node *io, struct re
+ 	}
+ 	if (pfmem) {
+ 		pfmem_range = kzalloc(sizeof(*pfmem_range), GFP_KERNEL);
+-		if (!pfmem_range) {
+-			err("out of system memory\n");
++		if (!pfmem_range)
+ 			return -ENOMEM;
+-		}
++
+ 		pfmem_range->start = pfmem->start;
+ 		pfmem_range->end = pfmem->end;
+ 		pfmem_range->rangeno = 1;
+diff --git a/drivers/pci/hotplug/ibmphp_res.c b/drivers/pci/hotplug/ibmphp_res.c
+index aee6e41001e1..b58a7a641e0e 100644
+--- a/drivers/pci/hotplug/ibmphp_res.c
++++ b/drivers/pci/hotplug/ibmphp_res.c
+@@ -56,10 +56,8 @@ static struct bus_node * __init alloc_error_bus(struct ebda_pci_rsrc *curr, u8 b
+ 	}
+ 
+ 	newbus = kzalloc(sizeof(struct bus_node), GFP_KERNEL);
+-	if (!newbus) {
+-		err("out of system memory\n");
++	if (!newbus)
+ 		return NULL;
+-	}
+ 
+ 	if (flag)
+ 		newbus->busno = busno;
+@@ -79,10 +77,9 @@ static struct resource_node * __init alloc_resources(struct ebda_pci_rsrc *curr)
+ 	}
+ 
+ 	rs = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+-	if (!rs) {
+-		err("out of system memory\n");
++	if (!rs)
+ 		return NULL;
+-	}
++
+ 	rs->busno = curr->bus_num;
+ 	rs->devfunc = curr->dev_fun;
+ 	rs->start = curr->start_addr;
+@@ -99,10 +96,9 @@ static int __init alloc_bus_range(struct bus_node **new_bus, struct range_node *
+ 
+ 	if (first_bus) {
+ 		newbus = kzalloc(sizeof(struct bus_node), GFP_KERNEL);
+-		if (!newbus) {
+-			err("out of system memory.\n");
++		if (!newbus)
+ 			return -ENOMEM;
+-		}
++
+ 		newbus->busno = curr->bus_num;
+ 	} else {
+ 		newbus = *new_bus;
+@@ -123,7 +119,6 @@ static int __init alloc_bus_range(struct bus_node **new_bus, struct range_node *
+ 	if (!newrange) {
+ 		if (first_bus)
+ 			kfree(newbus);
+-		err("out of system memory\n");
+ 		return -ENOMEM;
+ 	}
+ 	newrange->start = curr->start_addr;
+@@ -1707,10 +1702,9 @@ static int __init once_over(void)
+ 				bus_cur->firstPFMemFromMem = pfmem_cur;
+ 
+ 				mem = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+-				if (!mem) {
+-					err("out of system memory\n");
++				if (!mem)
+ 					return -ENOMEM;
+-				}
++
+ 				mem->type = MEM;
+ 				mem->busno = pfmem_cur->busno;
+ 				mem->devfunc = pfmem_cur->devfunc;
+@@ -1989,10 +1983,9 @@ static int __init update_bridge_ranges(struct bus_node **bus)
+ 
+ 						if ((start_address) && (start_address <= end_address)) {
+ 							range = kzalloc(sizeof(struct range_node), GFP_KERNEL);
+-							if (!range) {
+-								err("out of system memory\n");
++							if (!range)
+ 								return -ENOMEM;
+-							}
++
+ 							range->start = start_address;
+ 							range->end = end_address + 0xfff;
+ 
+@@ -2016,7 +2009,6 @@ static int __init update_bridge_ranges(struct bus_node **bus)
+ 								io = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+ 								if (!io) {
+ 									kfree(range);
+-									err("out of system memory\n");
+ 									return -ENOMEM;
+ 								}
+ 								io->type = IO;
+@@ -2038,10 +2030,9 @@ static int __init update_bridge_ranges(struct bus_node **bus)
+ 						if ((start_address) && (start_address <= end_address)) {
+ 
+ 							range = kzalloc(sizeof(struct range_node), GFP_KERNEL);
+-							if (!range) {
+-								err("out of system memory\n");
++							if (!range)
+ 								return -ENOMEM;
+-							}
++
+ 							range->start = start_address;
+ 							range->end = end_address + 0xfffff;
+ 
+@@ -2066,7 +2057,6 @@ static int __init update_bridge_ranges(struct bus_node **bus)
+ 								mem = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+ 								if (!mem) {
+ 									kfree(range);
+-									err("out of system memory\n");
+ 									return -ENOMEM;
+ 								}
+ 								mem->type = MEM;
+@@ -2092,10 +2082,9 @@ static int __init update_bridge_ranges(struct bus_node **bus)
+ 						if ((start_address) && (start_address <= end_address)) {
+ 
+ 							range = kzalloc(sizeof(struct range_node), GFP_KERNEL);
+-							if (!range) {
+-								err("out of system memory\n");
++							if (!range)
+ 								return -ENOMEM;
+-							}
++
+ 							range->start = start_address;
+ 							range->end = end_address + 0xfffff;
+ 
+@@ -2119,7 +2108,6 @@ static int __init update_bridge_ranges(struct bus_node **bus)
+ 								pfmem = kzalloc(sizeof(struct resource_node), GFP_KERNEL);
+ 								if (!pfmem) {
+ 									kfree(range);
+-									err("out of system memory\n");
+ 									return -ENOMEM;
+ 								}
+ 								pfmem->type = PFMEM;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 7bab0606f1a9..ed27635ec740 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -838,10 +838,9 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	struct pci_dev *pdev = dev->port;
+ 
+ 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
+-	if (!ctrl) {
+-		dev_err(&dev->device, "%s: Out of memory\n", __func__);
++	if (!ctrl)
+ 		goto abort;
+-	}
++
+ 	ctrl->pcie = dev;
+ 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
+ 
+diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+index 74f6a17e4614..318baa507364 100644
+--- a/drivers/pci/hotplug/pnv_php.c
++++ b/drivers/pci/hotplug/pnv_php.c
+@@ -266,7 +266,6 @@ static int pnv_php_add_devtree(struct pnv_php_slot *php_slot)
+ 	fdt1 = kzalloc(0x10000, GFP_KERNEL);
+ 	if (!fdt1) {
+ 		ret = -ENOMEM;
+-		dev_warn(&php_slot->pdev->dev, "Cannot alloc FDT blob\n");
+ 		goto out;
+ 	}
+ 
+@@ -280,8 +279,6 @@ static int pnv_php_add_devtree(struct pnv_php_slot *php_slot)
+ 	fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
+ 	if (!fdt) {
+ 		ret = -ENOMEM;
+-		dev_warn(&php_slot->pdev->dev, "Cannot %d bytes memory\n",
+-			 fdt_totalsize(fdt1));
+ 		goto free_fdt1;
+ 	}
+ 
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index 7bfb87bd2b7e..2f2b87acf179 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -305,10 +305,9 @@ static int shpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		return -ENODEV;
+ 
+ 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
+-	if (!ctrl) {
+-		dev_err(&pdev->dev, "%s: Out of memory\n", __func__);
++	if (!ctrl)
+ 		goto err_out_none;
+-	}
++
+ 	INIT_LIST_HEAD(&ctrl->slot_list);
+ 
+ 	rc = shpc_init(ctrl, pdev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b1ad466199ad..d131d29c4fdb 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -67,10 +67,8 @@ static int add_to_list(struct list_head *head,
+ 	struct pci_dev_resource *tmp;
+ 
+ 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
+-	if (!tmp) {
+-		pr_warn("add_to_list: kmalloc() failed!\n");
++	if (!tmp)
+ 		return -ENOMEM;
+-	}
+ 
+ 	tmp->res = res;
+ 	tmp->dev = dev;
