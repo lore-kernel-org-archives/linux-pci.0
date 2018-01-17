@@ -1,92 +1,278 @@
-Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
-Date: Thu, 4 Jan 2018 20:33:00 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
- Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
- <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
- <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
- <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
- Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client
- devices
-Message-ID: <20180104203300.79487c98@w520.home>
-In-Reply-To: <20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
-References: <20180104190137.7654-1-logang@deltatee.com>
-	<20180104190137.7654-5-logang@deltatee.com>
-	<20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
-	<20180104153551.3118f71b@t450s.home>
-	<20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
+Date: Wed, 17 Jan 2018 16:07:17 +0530
+Message-Id: <1516185438-31556-4-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
+References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 4 Jan 2018 17:00:47 -0700
-Logan Gunthorpe <logang@deltatee.com> wrote:
+Current DPC driver does not do recovery, e.g. calling end-point's driver's
+callbacks, which sanitize the sw.
 
-> On 04/01/18 03:35 PM, Alex Williamson wrote:
-> > Yep, flipping these ACS bits invalidates any IOMMU groups that depend
-> > on the isolation of that downstream port and I suspect also any peers
-> > within the same PCI slot of that port and their downstream devices.  The
-> > entire sub-hierarchy grouping needs to be re-evaluated.  This
-> > potentially affects running devices that depend on that isolation, so
-> > I'm not sure how that happens dynamically.  A boot option might be
-> > easier.  Thanks,  
-> 
-> I don't see how this is the case in current kernel code. It appears to 
-> only enable ACS globally if the IOMMU requests it.
+DPC driver implements link_reset callback, and calls pci_do_recovery.
 
-IOMMU groups don't exist unless the IOMMU is enabled and x86 and ARM
-both request ACS be enabled if an IOMMU is present, so I'm not sure
-what you're getting at here.  Also, in reply to your other email, if
-the IOMMU is enabled, every device handled by the IOMMU is a member of
-an IOMMU group, see struct device.iommu_group.  There's an
-iommu_group_get() accessor to get a reference to it.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 2d976a6..ed916765 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -13,8 +13,12 @@
+ #include <linux/interrupt.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/dpc.h>
+ #include <linux/pcieport_if.h>
+ #include "../pci.h"
++#include "portdrv.h"
++
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
  
-> I also don't see how turning off ACS isolation for a specific device is 
-> going to hurt anything. The IOMMU should still be able to keep going on 
-> unaware that anything has changed. The only worry is that a security 
-> hole may now be created if a user was relying on the isolation between 
-> two devices that are in different VMs or something. However, if a user 
-> was relying on this, they probably shouldn't have turned on P2P in the 
-> first place.
-
-That's exactly what IOMMU groups represent, the smallest set of devices
-which have DMA isolation from other devices.  By poking this hole, the
-IOMMU group is invalid.  We cannot turn off ACS only for a specific
-device, in order to enable p2p it needs to be disabled at every
-downstream port between the devices where we want to enable p2p.
-Depending on the topology, that could mean we're also enabling p2p for
-unrelated devices.  Those unrelated devices might be in active use and
-the p2p IOVAs now have a different destination which is no longer IOMMU
-translated.
+ struct rp_pio_header_log_regs {
+ 	u32 dw0;
+@@ -67,6 +71,60 @@ struct dpc_dev {
+ 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+ };
  
-> We started with a fairly unintelligent choice to simply disable ACS on 
-> any kernel that had CONFIG_PCI_P2P set. However, this did not seem like 
-> a good idea going forward. Instead, we now selectively disable the ACS 
-> bit only on the downstream ports that are involved in P2P transactions. 
-> This seems like the safest choice and still allows people to (carefully) 
-> use P2P adjacent to other devices that need to be isolated.
-
-I don't see that the code is doing much checking that adjacent devices
-are also affected by the p2p change and of course the IOMMU group is
-entirely invalid once the p2p holes start getting poked.
-
-> I don't think anyone wants another boot option that must be set in order 
-> to use this functionality (and only some hardware would require this). 
-> That's just a huge pain for users.
-
-No, but nor do we need IOMMU groups that no longer represent what
-they're intended to describe or runtime, unchecked routing changes
-through the topology for devices that might already be using
-conflicting IOVA ranges.  Maybe soft hotplugs are another possibility,
-designate a sub-hierarchy to be removed and re-scanned with ACS
-disabled.  Otherwise it seems like disabling and re-enabling ACS needs
-to also handle merging and splitting groups dynamically.  Thanks,
-
-Alex
++static int find_dpc_dev_iter(struct device *device, void *data)
++{
++	struct pcie_port_service_driver *service_driver;
++	struct device **dev;
++
++	dev = (struct device **) data;
++
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		service_driver = to_service_driver(device->driver);
++		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
++			*dev = device;
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++static struct device *pci_find_dpc_dev(struct pci_dev *pdev)
++{
++	struct device *dev = NULL;
++
++	device_for_each_child(&pdev->dev, &dev, find_dpc_dev_iter);
++
++	return dev;
++}
++
++static int find_dpc_service_iter(struct device *device, void *data)
++{
++	struct pcie_port_service_driver *service_driver, **drv;
++
++	drv = (struct pcie_port_service_driver **) data;
++
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		service_driver = to_service_driver(device->driver);
++		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
++			*drv = service_driver;
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev)
++{
++	struct pcie_port_service_driver *drv = NULL;
++
++	device_for_each_child(&dev->dev, &drv, find_dpc_service_iter);
++
++	return drv;
++}
++EXPORT_SYMBOL(pci_find_dpc_service);
++
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ {
+ 	unsigned long timeout = jiffies + HZ;
+@@ -104,11 +162,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 		dev_warn(dev, "Link state not disabled for DPC event\n");
+ }
+ 
+-static void interrupt_event_handler(struct work_struct *work)
++/**
++ * dpc_reset_link - reset link DPC  routine
++ * @dev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver when performing link reset at Root Port.
++ */
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ {
+-	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+-	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
++	struct pci_dev *dev, *temp;
++	struct dpc_dev *dpc;
++	struct pcie_device *pciedev;
++	struct device *devdpc;
++
++	devdpc = pci_find_dpc_dev(pdev);
++	pciedev = to_pcie_device(devdpc);
++	dpc = get_service_data(pciedev);
+ 
+ 	pci_lock_rescan_remove();
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+@@ -125,7 +195,7 @@ static void interrupt_event_handler(struct work_struct *work)
+ 
+ 	dpc_wait_link_inactive(dpc);
+ 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
+-		return;
++		return PCI_ERS_RESULT_DISCONNECT;
+ 	if (dpc->rp && dpc->rp_pio_status) {
+ 		pci_write_config_dword(pdev,
+ 				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+@@ -135,6 +205,17 @@ static void interrupt_event_handler(struct work_struct *work)
+ 
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
++
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
++static void interrupt_event_handler(struct work_struct *work)
++{
++	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
++	struct pci_dev *pdev = dpc->dev->port;
++
++	/* From DPC point of view error is always FATAL. */
++	pci_do_recovery(pdev, DPC_FATAL);
+ }
+ 
+ static void dpc_rp_pio_print_tlp_header(struct device *dev,
+@@ -339,6 +420,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.reset_link     = dpc_reset_link,
+ };
+ 
+ static int __init dpc_service_init(void)
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index a532fe0..8ce1de1 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -17,9 +17,12 @@
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/aer.h>
++#include <linux/dpc.h>
+ #include <linux/pcieport_if.h>
+ #include "portdrv.h"
+ 
++static DEFINE_MUTEX(pci_err_recovery_lock);
++
+ struct aer_broadcast_data {
+ 	enum pci_channel_state state;
+ 	enum pci_ers_result result;
+@@ -179,7 +182,7 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+-static pci_ers_result_t reset_link(struct pci_dev *dev)
++static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+ {
+ 	struct pci_dev *udev;
+ 	pci_ers_result_t status;
+@@ -193,9 +196,17 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 		udev = dev->bus->self;
+ 	}
+ 
++
++	/* Use the service driver of the component firstly */
++#if IS_ENABLED(CONFIG_PCIE_DPC)
++	if (severity == DPC_FATAL)
++		driver = pci_find_dpc_service(udev);
++#endif
+ #if IS_ENABLED(CONFIG_PCIEAER)
+-	/* Use the aer driver of the component firstly */
+-	driver = pci_find_aer_service(udev);
++	if ((severity == AER_FATAL) ||
++	    (severity == AER_NONFATAL) ||
++	    (severity == AER_CORRECTABLE))
++		driver = pci_find_aer_service(udev);
+ #endif
+ 
+ 	if (driver && driver->reset_link) {
+@@ -283,7 +294,10 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+ 
+-	if (severity == AER_FATAL)
++	mutex_lock(&pci_err_recovery_lock);
++
++	if ((severity == AER_FATAL) ||
++	    (severity == DPC_FATAL))
+ 		state = pci_channel_io_frozen;
+ 	else
+ 		state = pci_channel_io_normal;
+@@ -293,8 +307,9 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 			"error_detected",
+ 			report_error_detected);
+ 
+-	if (severity == AER_FATAL) {
+-		result = reset_link(dev);
++	if ((severity == AER_FATAL) ||
++	    (severity == DPC_FATAL)) {
++		result = reset_link(dev, severity);
+ 		if (result != PCI_ERS_RESULT_RECOVERED)
+ 			goto failed;
+ 	}
+@@ -326,9 +341,11 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 				report_resume);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ 	return;
+ 
+ failed:
+ 	/* TODO: Should kernel panic here? */
++	mutex_unlock(&pci_err_recovery_lock);
+ 	dev_info(&dev->dev, "Device recovery failed\n");
+ }
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 4f1992d..b013e24 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -80,4 +80,5 @@ static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
+ #endif /* !CONFIG_ACPI */
+ 
+ struct pcie_port_service_driver *pci_find_aer_service(struct pci_dev *dev);
++struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev);
+ #endif /* _PORTDRV_H_ */
+diff --git a/include/linux/dpc.h b/include/linux/dpc.h
+new file mode 100644
+index 0000000..2019ce4
+--- /dev/null
++++ b/include/linux/dpc.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
++#ifndef _DPC_H_
++#define _DPC_H_
++
++#define DPC_FATAL		4
++
++#endif //_DPC_H_
++
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
