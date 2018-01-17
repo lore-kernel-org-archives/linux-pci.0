@@ -1,129 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59366 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S965588AbeAOPgK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 10:36:10 -0500
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V1 5/7] net/mlx4_core: Report PCI properties using dedicated function
-Date: Mon, 15 Jan 2018 17:35:39 +0200
-Message-Id: <1516030541-6626-6-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
-References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=LMI9=EM=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=LMI9=EM=codeaurora.org=poza@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 17 Jan 2018 13:54:40 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
+ <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v4 2/5] PCI/ERR: Rename error reporting to generic pci
+ naming
+In-Reply-To: <20180117011624.GG10860@bhelgaas-glaptop.roam.corp.google.com>
+References: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
+ <1516096723-8013-3-git-send-email-poza@codeaurora.org>
+ <20180117011624.GG10860@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <553ef73a25bbbd6e0211c9bc6867a4a7@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Change mlx4 method of checking and reporting PCI status and
-maximum capabilities to use the pci driver functions instead
-of implementing them in the driver code.
+On 2018-01-17 06:46, Bjorn Helgaas wrote:
+> On Tue, Jan 16, 2018 at 03:28:40PM +0530, Oza Pawandeep wrote:
+>> This patch renames error reporting to generic function with pci prefix
+>> 
+>> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+>> 
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c 
+>> b/drivers/pci/pcie/aer/aerdrv_core.c
+>> index 4fda843..5ed9575 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>> @@ -285,7 +285,7 @@ static void handle_error_source(struct pcie_device 
+>> *aerdev,
+>>  			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+>>  					info->status);
+>>  	} else
+>> -		do_recovery(dev, info->severity);
+>> +		pci_do_recovery(dev, info->severity);
+>>  }
+>> 
+>>  #ifdef CONFIG_ACPI_APEI_PCIEAER
+>> @@ -349,7 +349,7 @@ static void aer_recover_work_func(struct 
+>> work_struct *work)
+>>  			continue;
+>>  		}
+>>  		cper_print_aer(pdev, entry.severity, entry.regs);
+>> -		do_recovery(pdev, entry.severity);
+>> +		pci_do_recovery(pdev, entry.severity);
+>>  		pci_dev_put(pdev);
+>>  	}
+>>  }
+>> diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+>> index 76e66bb..5792a9f 100644
+>> --- a/drivers/pci/pcie/pcie-err.c
+>> +++ b/drivers/pci/pcie/pcie-err.c
+>> @@ -20,12 +20,12 @@
+>>  #include <linux/pcieport_if.h>
+>>  #include "portdrv.h"
+>> 
+>> -struct aer_broadcast_data {
+>> +struct pci_err_broadcast_data {
+>>  	enum pci_channel_state state;
+>>  	enum pci_ers_result result;
+>>  };
+>> 
+>> -pci_ers_result_t merge_result(enum pci_ers_result orig,
+>> +pci_ers_result_t pci_merge_result(enum pci_ers_result orig,
+> 
+> Most of these functions started out static in aerdrv_core.c and should
+> remain static.  Therefore, they do not need to be renamed.  Same for
+> the struct aer_broadcast_data.
+> 
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 46fd243..babcd89 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1998,7 +1998,7 @@ static inline resource_size_t 
+>> pci_iov_resource_size(struct pci_dev *dev, int res
+>>  void pci_hp_remove_module_link(struct pci_slot *pci_slot);
+>>  #endif
+>> 
+>> -void do_recovery(struct pci_dev *dev, int severity);
+>> +void pci_do_recovery(struct pci_dev *dev, int severity);
+> 
+> This one started out static and now needs to be non-static so you can
+> call it both from aerdrv_core.c and pcie-dpc.c.
+> 
+> But it should not be exposed outside the PCI core, so the declaration
+> should go in drivers/pci/pcie/aer/aerdrv.h or at most
+> drivers/pci/pci.h.
+> 
+> The rename should happen before the move out of aerdrv_core.c, i.e.,
+> reorder patches 1 and 2.
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
----
- drivers/net/ethernet/mellanox/mlx4/main.c | 81 +------------------------------
- 1 file changed, 1 insertion(+), 80 deletions(-)
+ok so let me confirm. you would like to see renaming but that should 
+happen right in patch1.
+and then move all the error reporting to pcie_err.c
+is that correct ?
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-index 4d84cab..30cacac 100644
---- a/drivers/net/ethernet/mellanox/mlx4/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-@@ -623,85 +623,6 @@ static int mlx4_dev_cap(struct mlx4_dev *dev, struct mlx4_dev_cap *dev_cap)
- 	return 0;
- }
- 
--static int mlx4_get_pcie_dev_link_caps(struct mlx4_dev *dev,
--				       enum pci_bus_speed *speed,
--				       enum pcie_link_width *width)
--{
--	u32 lnkcap1, lnkcap2;
--	int err1, err2;
--
--#define  PCIE_MLW_CAP_SHIFT 4	/* start of MLW mask in link capabilities */
--
--	*speed = PCI_SPEED_UNKNOWN;
--	*width = PCIE_LNK_WIDTH_UNKNOWN;
--
--	err1 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP,
--					  &lnkcap1);
--	err2 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP2,
--					  &lnkcap2);
--	if (!err2 && lnkcap2) { /* PCIe r3.0-compliant */
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
--			*speed = PCIE_SPEED_8_0GT;
--		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
--			*speed = PCIE_SPEED_5_0GT;
--		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
--			*speed = PCIE_SPEED_2_5GT;
--	}
--	if (!err1) {
--		*width = (lnkcap1 & PCI_EXP_LNKCAP_MLW) >> PCIE_MLW_CAP_SHIFT;
--		if (!lnkcap2) { /* pre-r3.0 */
--			if (lnkcap1 & PCI_EXP_LNKCAP_SLS_5_0GB)
--				*speed = PCIE_SPEED_5_0GT;
--			else if (lnkcap1 & PCI_EXP_LNKCAP_SLS_2_5GB)
--				*speed = PCIE_SPEED_2_5GT;
--		}
--	}
--
--	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN) {
--		return err1 ? err1 :
--			err2 ? err2 : -EINVAL;
--	}
--	return 0;
--}
--
--static void mlx4_check_pcie_caps(struct mlx4_dev *dev)
--{
--	enum pcie_link_width width, width_cap;
--	enum pci_bus_speed speed, speed_cap;
--	int err;
--
--#define PCIE_SPEED_STR(speed) \
--	(speed == PCIE_SPEED_8_0GT ? "8.0GT/s" : \
--	 speed == PCIE_SPEED_5_0GT ? "5.0GT/s" : \
--	 speed == PCIE_SPEED_2_5GT ? "2.5GT/s" : \
--	 "Unknown")
--
--	err = mlx4_get_pcie_dev_link_caps(dev, &speed_cap, &width_cap);
--	if (err) {
--		mlx4_warn(dev,
--			  "Unable to determine PCIe device BW capabilities\n");
--		return;
--	}
--
--	err = pcie_get_minimum_link(dev->persist->pdev, &speed, &width);
--	if (err || speed == PCI_SPEED_UNKNOWN ||
--	    width == PCIE_LNK_WIDTH_UNKNOWN) {
--		mlx4_warn(dev,
--			  "Unable to determine PCI device chain minimum BW\n");
--		return;
--	}
--
--	if (width != width_cap || speed != speed_cap)
--		mlx4_warn(dev,
--			  "PCIe BW is different than device's capability\n");
--
--	mlx4_info(dev, "PCIe link speed is %s, device supports %s\n",
--		  PCIE_SPEED_STR(speed), PCIE_SPEED_STR(speed_cap));
--	mlx4_info(dev, "PCIe link width is x%d, device supports x%d\n",
--		  width, width_cap);
--	return;
--}
--
- /*The function checks if there are live vf, return the num of them*/
- static int mlx4_how_many_lives_vf(struct mlx4_dev *dev)
- {
-@@ -3475,7 +3396,7 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
- 	 * express device capabilities are under-satisfied by the bus.
- 	 */
- 	if (!mlx4_is_slave(dev))
--		mlx4_check_pcie_caps(dev);
-+		pcie_print_link_status(dev->persist->pdev);
- 
- 	/* In master functions, the communication channel must be initialized
- 	 * after obtaining its address from fw */
--- 
-1.8.3.1
+
+besides, I am thinking to move
+pci_do_recovery and removing everything from include/linux/pci.h  (which 
+you suggested already)
+but along with that....following defines will move in driver/pci/pci.h
+
+#define PCI_ERR_AER_NONFATAL           0
+#define PCI_ERR_AER_FATAL              1
+#define PCI_ERR_AER_CORRECTABLE        2
+#define PCI_ERR_DPC_NONFATAL           4
+
+because, error codes have to be unified at one place.
+
+will work on this and post the patch-set soon.
+
+Regards,
+Oza.
+
+> 
+>>  /**
+>>   * pci_pcie_cap - get the saved PCIe capability offset
+>> --
+>> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm 
+>> Technologies, Inc.,
+>> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+>> Linux Foundation Collaborative Project.
+>> 
