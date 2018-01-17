@@ -1,89 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45848 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754548AbeATGfu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jan 2018 01:35:50 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+Received: from mga09.intel.com ([134.134.136.24]:26209 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751131AbeAQFSz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jan 2018 00:18:55 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Maik Broemme <mbroemme@libmpq.org>,
+        Pawandeep Oza <poza@codeaurora.org>,
         Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v7 5/7] PCI/AER: Unify aer error defines at single space
-Date: Sat, 20 Jan 2018 12:05:17 +0530
-Message-Id: <1516430119-3825-6-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
-References: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 5/6] PCI/DPC: Fix interrupt message number print
+Date: Tue, 16 Jan 2018 22:22:05 -0700
+Message-Id: <20180117052206.7703-6-keith.busch@intel.com>
+In-Reply-To: <20180117052206.7703-1-keith.busch@intel.com>
+References: <20180117052206.7703-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch moves AER error defines to drivers/pci/pci.h.
-So that it unifies the error repoting codes at single place along with dpc
+The interrupt message number is the first 5 bits, but the driver was
+masking only the first 4 bits. This patch fixes that by using the
+existing define.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+This patch is also fixing the define formatting, as it wasn't aligned.
 
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index 6402f7f..216ee47 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -56,6 +56,7 @@
- #include <ras/ras_event.h>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/pcie-dpc.c   | 2 +-
+ include/uapi/linux/pci_regs.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 85350b00f251..5dfdb4935bac 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -351,7 +351,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
  
- #include "apei-internal.h"
-+#include "../../pci/pci.h"
+ 	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+-		cap & 0xf, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
++		cap & PCI_EXP_DPC_IRQ, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
+ 		FLAG(cap, PCI_EXP_DPC_CAP_POISONED_TLP),
+ 		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), (cap >> 8) & 0xf,
+ 		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 70c2b2ade048..295a5ebdf9e4 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -966,7 +966,7 @@
  
- #define GHES_PFX	"GHES: "
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3b79593..2e19953 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -343,7 +343,11 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- void pci_enable_acs(struct pci_dev *dev);
- 
- /* PCI error reporting and recovery */
--#define DPC_FATAL	4
-+#define AER_NONFATAL		0
-+#define AER_FATAL		1
-+#define AER_CORRECTABLE		2
-+
-+#define DPC_FATAL		4
- 
- void pci_do_recovery(struct pci_dev *dev, int severity);
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 54c4b69..cd3ad55 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -22,6 +22,7 @@
- #include <linux/cper.h>
- 
- #include "aerdrv.h"
-+#include "../../pci.h"
- #include <ras/ras_event.h>
- 
- #define AER_AGENT_RECEIVER		0
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 8f87bbe..3eac8ed 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -11,10 +11,6 @@
- #include <linux/errno.h>
- #include <linux/types.h>
- 
--#define AER_NONFATAL			0
--#define AER_FATAL			1
--#define AER_CORRECTABLE			2
--
- struct pci_dev;
- 
- struct aer_header_log_regs {
+ /* Downstream Port Containment */
+ #define PCI_EXP_DPC_CAP			4	/* DPC Capability */
+-#define PCI_EXP_DPC_IRQ			0x1f	/* DPC Interrupt Message Number */
++#define  PCI_EXP_DPC_IRQ		0x1f	/* DPC Interrupt Message Number */
+ #define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
+ #define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
+ #define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.13.6
