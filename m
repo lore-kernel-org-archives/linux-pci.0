@@ -1,68 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47164 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752602AbeA3SZr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Jan 2018 13:25:47 -0500
-Subject: [PATCH v2 03/14] PCI/DPC: Rename struct dpc_dev.rp to rp_extensions
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Tue, 30 Jan 2018 12:25:43 -0600
-Message-ID: <20180130182543.106875.1187.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=RduH=EM=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=RduH=EM=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
+To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Maik Broemme <mbroemme@libmpq.org>, Pawandeep Oza <poza@codeaurora.org>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171219210643.24615-4-keith.busch@intel.com>
+ <35445e86-e7b6-3fed-f26a-954a0f8d5e8a@codeaurora.org>
+ <20171221051256.GA15276@localhost.localdomain>
+ <ea609f8a-1d79-c2fe-e9e5-5993e418f9cc@codeaurora.org>
+ <20180116024740.GA32639@localhost.localdomain>
+ <20180117005559.GF10860@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <8b5c30c2-b770-131e-d56d-8b435600889b@codeaurora.org>
+Date: Wed, 17 Jan 2018 08:36:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180117005559.GF10860@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On 1/16/2018 7:56 PM, Bjorn Helgaas wrote:
+> I think Sinan is saying that if a DPC Port observes its own unmasked
+> uncorrectable error (i.e., not something it learned about by receiving
+> an ERR_* message), it will set a bit in an AER status register.
+> 
+> Since we do not set DPC ERR_COR Enable, the DPC Port does not generate
+> an ERR_COR Message, so the AER driver never learns about the error and
+> never clears the AER status register.  So we'll decode the AER status
+> (with your current patch), but we don't clear it, so if another error
+> occurs, the AER logging won't work correctly.
 
-"rp" is ambiguous: it might mean "this DPC device is a Root Port."  But in
-fact, it means "this DPC device is a Root Port *and* it supports a set of
-DPC Extensions."
+Yes, this is what I was meaning. I see that Keith took care of this in
+the new series.
 
-Rename "rp" to "rp_extensions" to make this more clear.  No functional
-change intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/pcie-dpc.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 52702f7b911a..0bbdf513067a 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -42,7 +42,7 @@ struct dpc_dev {
- 	struct pcie_device	*dev;
- 	struct work_struct	work;
- 	u16			cap_pos;
--	bool			rp;
-+	bool			rp_extensions;
- 	u32			rp_pio_status;
- };
- 
-@@ -126,9 +126,9 @@ static void dpc_work(struct work_struct *work)
- 	pci_unlock_rescan_remove();
- 
- 	dpc_wait_link_inactive(dpc);
--	if (dpc->rp && dpc_wait_rp_inactive(dpc))
-+	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
- 		return;
--	if (dpc->rp && dpc->rp_pio_status) {
-+	if (dpc->rp_extensions && dpc->rp_pio_status) {
- 		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
- 				       dpc->rp_pio_status);
- 		dpc->rp_pio_status = 0;
-@@ -326,7 +326,7 @@ static int dpc_probe(struct pcie_device *dev)
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
- 
--	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
-+	dpc->rp_extensions = (cap & PCI_EXP_DPC_CAP_RP_EXT);
- 
- 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
