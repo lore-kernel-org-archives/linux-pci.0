@@ -1,43 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37690 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:45060 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751683AbeA3Akr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jan 2018 19:40:47 -0500
-Subject: [PATCH] PCI: Add SPDX tag for s390_pci_hpc.c
+        id S1750750AbeAQA4D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 16 Jan 2018 19:56:03 -0500
+Date: Tue, 16 Jan 2018 18:56:00 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
-        Sebastian Ott <sebott@linux.vnet.ibm.com>,
-        linux-kernel@vger.kernel.org,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Gerald Schaefer <gerald.schaefer@de.ibm.com>
-Date: Mon, 29 Jan 2018 18:40:42 -0600
-Message-ID: <20180130003559.15416.18047.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Maik Broemme <mbroemme@libmpq.org>,
+        Pawandeep Oza <poza@codeaurora.org>
+Subject: Re: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
+Message-ID: <20180117005559.GF10860@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171219210643.24615-4-keith.busch@intel.com>
+ <35445e86-e7b6-3fed-f26a-954a0f8d5e8a@codeaurora.org>
+ <20171221051256.GA15276@localhost.localdomain>
+ <ea609f8a-1d79-c2fe-e9e5-5993e418f9cc@codeaurora.org>
+ <20180116024740.GA32639@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180116024740.GA32639@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I previously posted patches [1] to add SPDX tags to all drivers/pci files
-except drivers/pci/hotplug/s390_pci_hpc.c.  I omitted that one because it
-contained only a "License: GPL" comment, which I thought was ambiguous.
+On Mon, Jan 15, 2018 at 07:47:41PM -0700, Keith Busch wrote:
+> On Wed, Jan 10, 2018 at 10:52:23AM -0500, Sinan Kaya wrote:
+> > Since the AER status is set when we observe DPC event and nobody
+> > is clearing these we won't observe another DPC event until
+> > somebody clears these. We can say that we are resetting the
+> > endpoints as part of the DPC but we are not touching the switch
+> > downstream port or the root port registers.
+> > 
+> > Somebody still needs to clear these in addition to printing
+> > whatever information is available in the AER registers.
+> 
+> We should clear the downstream port's AER uncorrectable status
+> register if the trigger reason is of that type, but DPC definitely
+> does not require we clear it in order to observe a new event.
 
-However, I think it is actually unambiguous because the file was added with
-a 'MODULE_LICENSE("GPL")', and include/linux/module.h shows that means "GPL
-v2 or later".
+I don't quite understand this.  We don't need to clear the AER status
+in order to observe a new DPC event, but I think we *do* need to clear
+the AER status in order to log future AER events.  Don't we?
 
-So this patch adds the GPL-2.0+ tag to the file.  I plan to include this
-for v4.16 unless somebody objects.
+I think Sinan is saying that if a DPC Port observes its own unmasked
+uncorrectable error (i.e., not something it learned about by receiving
+an ERR_* message), it will set a bit in an AER status register.
 
-[1] https://lkml.kernel.org/r/20180126212536.31503.43805.stgit@bhelgaas-glaptop.roam.corp.google.com
+Since we do not set DPC ERR_COR Enable, the DPC Port does not generate
+an ERR_COR Message, so the AER driver never learns about the error and
+never clears the AER status register.  So we'll decode the AER status
+(with your current patch), but we don't clear it, so if another error
+occurs, the AER logging won't work correctly.
 
----
-
-Bjorn Helgaas (1):
-      PCI: Add SPDX GPL-2.0+ to replace implicit GPL v2 or later statement
-
-
- drivers/pci/hotplug/s390_pci_hpc.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Maybe we should be setting DPC ERR_COR Enable and letting the AER
+driver decode and clear the AER info?
