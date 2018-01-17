@@ -1,38 +1,81 @@
-Return-Path: <SRS0=eVNS=EY=codeaurora.org=kvalo@kernel.org>
-Return-Path: <SRS0=eVNS=EY=codeaurora.org=kvalo@kernel.org>
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tobias Schramm <tobleminer@gmail.com>,  <ath10k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>,  <bhelgaas@google.com>,  <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3 1/2] pci: Add vendor id of Ubiquiti Networks
-References: <20180125111340.17553-1-tobleminer@gmail.com>
-	<20180125111340.17553-2-tobleminer@gmail.com>
-	<20180129180349.GB232763@bhelgaas-glaptop.roam.corp.google.com>
-Date: Mon, 29 Jan 2018 20:41:07 +0200
-In-Reply-To: <20180129180349.GB232763@bhelgaas-glaptop.roam.corp.google.com>
-	(Bjorn Helgaas's message of "Mon, 29 Jan 2018 12:03:49 -0600")
-Message-ID: <87wp00qzi4.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50446 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751438AbeAQKha (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jan 2018 05:37:30 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v5 0/4] Address error and recovery for AER and DPC
+Date: Wed, 17 Jan 2018 16:07:14 +0530
+Message-Id: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+This patch set brings in error handling support for DPC
 
-> On Thu, Jan 25, 2018 at 12:13:39PM +0100, Tobias Schramm wrote:
->> Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> I see Kalle has already applied this, but if it's updated for any reason,
-> please add my ack and change the subject to:
->
->   PCI: Add Ubiquiti Networks vendor ID
->
-> i.e., match the style of previous changes.
+The current implementation of AER and error message broadcasting to the
+EP driver is tightly coupled and limited to AER service driver.
+It is important to factor out broadcasting and other link handling
+callbacks. So that not only when AER gets triggered, but also when DPC get
+triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
 
-I only applied it to my pending branch which I use for build testing
-etc. and I can easily change it, which I now did:
+DPC should enumerate the devices after recovering the link, which is
+achieved by implementing error_resume callback.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=3c4cdd0851bc114f8b6d9f9db0b0479737bbd2d8
+Changes since v4:
+	Bjorn's comments incorporated.
+		> Renamed only do_recovery.
+		> moved the things more locally to drivers/pci/pci.h
+Changes since v3:
+	Bjorn's comments incorporated.
+		> Made separate patch renaming generic pci_err.c
+		> Introduce pci_err.h to contain all the error types and recovery
+		> removed all the dependencies on pci.h
+Changes since v2:
+	Based on feedback from Keith:
+	"
+	When DPC is triggered due to receipt of an uncorrectable error Message,
+	the Requester ID from the Message is recorded in the DPC Error
+	Source ID register and that Message is discarded and not forwarded Upstream.
+	"
+	Removed the patch where AER checks if DPC service is active
+Changes since v1:
+	Kbuild errors fixed:
+		> pci_find_dpc_dev made static
+		> ras_event.h updated
+		> pci_find_aer_service call with CONFIG check
+		> pci_find_dpc_service call with CONFIG check
+
+Oza Pawandeep (4):
+  PCI/AER: factor out error reporting from AER
+  PCI/DPC/AER: Address Concurrency between AER and DPC
+  PCI/ERR: Do not do recovery if DPC service is active
+  PCI/DPC: Enumerate the devices after DPC trigger event
+
+ drivers/acpi/apei/ghes.c               |   2 +-
+ drivers/pci/pcie/Makefile              |   2 +-
+ drivers/pci/pcie/aer/aerdrv.h          |  30 ---
+ drivers/pci/pcie/aer/aerdrv_core.c     | 306 +------------------------
+ drivers/pci/pcie/aer/aerdrv_errprint.c |  27 ++-
+ drivers/pci/pcie/pcie-dpc.c            | 127 ++++++++++-
+ drivers/pci/pcie/pcie-err.c            | 399 +++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/portdrv.h             |   2 +
+ include/linux/aer.h                    |   4 -
+ include/linux/pci.h                    |  23 ++
+ include/ras/ras_event.h                |   6 +-
+ 11 files changed, 579 insertions(+), 349 deletions(-)
+ create mode 100644 drivers/pci/pcie/pcie-err.c
 
 -- 
-Kalle Valo
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
