@@ -1,87 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:4077 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751179AbeACQY1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jan 2018 11:24:27 -0500
-Subject: Re: [PATCH V4 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for
- Tegra PCIe
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thierry Reding <thierry.reding@gmail.com>
-CC: <cyndis@kapsi.fi>, <bhelgaas@google.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <rjw@rjwysocki.net>, <tglx@linutronix.de>, <vidyas@nvidia.com>,
-        <kthota@nvidia.com>, <linux-tegra@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-pm@vger.kernel.org>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
- <1512723493-865-4-git-send-email-mmaddireddy@nvidia.com>
- <20171215173643.GA1050@red-moon> <20171220193011.GA31757@ulmo>
- <20171221104630.GB24280@red-moon>
- <20180103155149.GA8929@e107981-ln.cambridge.arm.com>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <25d10221-67c8-59c4-46d1-9bff239bd6bd@nvidia.com>
-Date: Wed, 3 Jan 2018 21:54:03 +0530
+Received: from smtp-fw-4101.amazon.com ([72.21.198.25]:4017 "EHLO
+        smtp-fw-4101.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752368AbeAQTDG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jan 2018 14:03:06 -0500
+Subject: Re: [PATCH] pci: Do not read INTx PIN and LINE registers for virtual
+ functions
+To: Alex Williamson <alex.williamson@redhat.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-kernel@vger.kernel.org>,
+        "=?UTF-8?Q?Jan_H_._Sch=c3=b6nherr?=" <jschoenh@amazon.de>
+References: <1516213829-14844-1-git-send-email-karahmed@amazon.de>
+ <20180117114944.4835c296@w520.home>
+From: KarimAllah Ahmed <karahmed@amazon.com>
+Message-ID: <afe21e82-b75a-107c-05d4-b4037dfd22b7@amazon.com>
+Date: Wed, 17 Jan 2018 20:02:44 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180103155149.GA8929@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180117114944.4835c296@w520.home>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 03-Jan-18 9:21 PM, Lorenzo Pieralisi wrote:
-> On Thu, Dec 21, 2017 at 10:46:30AM +0000, Lorenzo Pieralisi wrote:
->> On Wed, Dec 20, 2017 at 08:30:11PM +0100, Thierry Reding wrote:
->>> On Fri, Dec 15, 2017 at 05:36:43PM +0000, Lorenzo Pieralisi wrote:
->>>> On Fri, Dec 08, 2017 at 02:28:09PM +0530, Manikanta Maddireddy wrote:
->>>>> Primary, secondary and subordinate default bus numbers are 0 in Tegra and
->>>>> it is expecting SW to program these numbers in configration space.
->>>>>
->>>>> pci_scan_bridge_extend() function programs these numbers in configuration
->>>>> space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_BUS
->>>>> flag is set. Since secondary & subordinate default bus numbers are 0,
->>>>> PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
->>>>>
->>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->>>>> ---
->>>>> V3:
->>>>> * new patch in V3
->>>>> V4:
->>>>> * no change in this patch
->>>>>
->>>>>  drivers/pci/host/pci-tegra.c | 1 -
->>>>>  1 file changed, 1 deletion(-)
->>>>>
->>>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->>>>> index a549c5899e26..0d91f1a3a6b4 100644
->>>>> --- a/drivers/pci/host/pci-tegra.c
->>>>> +++ b/drivers/pci/host/pci-tegra.c
->>>>> @@ -2604,7 +2604,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->>>>>  
->>>>>  	tegra_pcie_enable_ports(pcie);
->>>>>  
->>>>> -	pci_add_flags(PCI_REASSIGN_ALL_BUS);
->>>>
->>>> This looks obviously OK to me but I need Thierry's ACK to queue it.
->>>
->>> Just as an additional note: I think the real reason why this is okay to
->>> do is because we reset the PCI host controller in the kernel driver, so
->>> any bus assignments done by the firmware are reset as well.
->>>
->>> Acked-by: Thierry Reding <treding@nvidia.com>
->>
->> Thank you. This series needs rebasing, we should try to untangle
->> the dependencies between series so that I can actually apply some
->> of these patches that make sense on their own.
-> 
-> Manikanta, would you be able to decouple this series from:
-> 
-> https://patchwork.ozlabs.org/patch/832053/
-> 
-> so that we can make forward progress ? There are some patches in
-> this series that I could apply - if rebased.
-> 
-> Lorenzo
-> 
-
-Sure, I will decouple and send this series again.
+CgpPbiAwMS8xNy8yMDE4IDA3OjQ5IFBNLCBBbGV4IFdpbGxpYW1zb24gd3JvdGU6Cj4gT24gV2Vk
+LCAxNyBKYW4gMjAxOCAxOTozMDoyOSArMDEwMAo+IEthcmltQWxsYWggQWhtZWQgPGthcmFobWVk
+QGFtYXpvbi5kZT4gd3JvdGU6Cj4KPj4gLi4uIHNpbmNlIElOVHggaXMgbm90IHN1cHBvcnRlZCBi
+eS1zcGVjIGZvciB2aXJ0dWFsIGZ1bmN0aW9ucy4KPiBCdXQgdGhlIHNwZWMgYWxzbyBzdGF0ZXMg
+dGhhdCBWRnMgbXVzdCBpbXBsZW1lbnQgdGhlIGludGVycnVwdCBwaW4KPiByZWdpc3RlciBhcyBy
+ZWFkLW9ubHkgemVybywgc28gZWl0aGVyIHRoaXMgaXMgcmVkdW5kYW50IG9yIGl0J3MgYQo+IHdv
+cmthcm91bmQgZm9yIFZGcyB0aGF0IGFyZW4ndCBxdWl0ZSBjb21wbGlhbnQ/ICBUaGFua3MsCgpU
+aGUgZW5kIGdvYWwgZm9yIG1lIGlzIGp1c3QgdG8gTk9UIGRvIHRoZSByZWFkIGFjcm9zcyB0aGUg
+UENJIGJ1cyBmb3Igbm8gCmdvb2QgcmVhc29uLiBXZSBoYXZlIGRldmljZXMgd2l0aCB0aG91c2Fu
+ZHMgb2YgdmlydHVhbCBmdW5jdGlvbnMgYW5kIAp0aGlzIHJlYWQgaXMgc2ltcGx5IG5vdCB1c2Vm
+dWwgaW4gdGhpcyBjYXNlIGFuZCBjYW4gYmUgb3B0aW1pemVkIGFzIEkgCmRpZC4gU28gZnJvbSBh
+IGZ1bmN0aW9uYWxpdHkgcG9pbnQgb2YgdmlldyBwcm9iYWJseSB0aGUgcGF0Y2ggZG9lcyBub3Qg
+CmFkZCBhbnkgdmFsdWUgYXMgeW91IG1lbnRpb25lZCwgYnV0IGl0IGlzIHJlYWxseSB1c2VmdWwg
+YXMgYSAKbWljcm8tb3B0aW1pemF0aW9uLgoKPgo+IEFsZXgKPgo+PiBDYzogQmpvcm4gSGVsZ2Fh
+cyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4KPj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcK
+Pj4gQ2M6IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcKPj4gU2lnbmVkLW9mZi1ieTogS2Fy
+aW1BbGxhaCBBaG1lZCA8a2FyYWhtZWRAYW1hem9uLmRlPgo+PiBTaWduZWQtb2ZmLWJ5OiBKYW4g
+SC4gU2Now7ZuaGVyciA8anNjaG9lbmhAYW1hem9uLmRlPgo+PiAtLS0KPj4gICBkcml2ZXJzL3Bj
+aS9wcm9iZS5jIHwgNyArKysrKysrCj4+ICAgMSBmaWxlIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygr
+KQo+Pgo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcHJvYmUuYyBiL2RyaXZlcnMvcGNpL3By
+b2JlLmMKPj4gaW5kZXggNjUwOTlkMC4uNjEwMDJmYiAxMDA2NDQKPj4gLS0tIGEvZHJpdmVycy9w
+Y2kvcHJvYmUuYwo+PiArKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jCj4+IEBAIC0xMjMyLDYgKzEy
+MzIsMTMgQEAgc3RhdGljIHZvaWQgcGNpX3JlYWRfaXJxKHN0cnVjdCBwY2lfZGV2ICpkZXYpCj4+
+ICAgewo+PiAgIAl1bnNpZ25lZCBjaGFyIGlycTsKPj4gICAKPj4gKwkvKiBWaXJ0dWFsIGZ1bmN0
+aW9ucyBkbyBub3QgaGF2ZSBJTlR4IHN1cHBvcnQgKi8KPj4gKwlpZiAoZGV2LT5pc192aXJ0Zm4p
+IHsKPj4gKwkJZGV2LT5waW4gPSAwOwo+PiArCQlkZXYtPmlycSA9IDA7Cj4+ICsJCXJldHVybjsK
+Pj4gKwl9Cj4+ICsKPj4gICAJcGNpX3JlYWRfY29uZmlnX2J5dGUoZGV2LCBQQ0lfSU5URVJSVVBU
+X1BJTiwgJmlycSk7Cj4+ICAgCWRldi0+cGluID0gaXJxOwo+PiAgIAlpZiAoaXJxKQo+CgpBbWF6
+b24gRGV2ZWxvcG1lbnQgQ2VudGVyIEdlcm1hbnkgR21iSApCZXJsaW4gLSBEcmVzZGVuIC0gQWFj
+aGVuCm1haW4gb2ZmaWNlOiBLcmF1c2Vuc3RyLiAzOCwgMTAxMTcgQmVybGluCkdlc2NoYWVmdHNm
+dWVocmVyOiBEci4gUmFsZiBIZXJicmljaCwgQ2hyaXN0aWFuIFNjaGxhZWdlcgpVc3QtSUQ6IERF
+Mjg5MjM3ODc5CkVpbmdldHJhZ2VuIGFtIEFtdHNnZXJpY2h0IENoYXJsb3R0ZW5idXJnIEhSQiAx
+NDkxNzMgQgo=
