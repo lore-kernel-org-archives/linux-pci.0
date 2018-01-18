@@ -1,74 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:39402 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750959AbeADTWd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 14:22:33 -0500
-Received: by mail-wm0-f66.google.com with SMTP id i11so5209652wmf.4
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jan 2018 11:22:33 -0800 (PST)
-Date: Thu, 4 Jan 2018 12:22:25 -0700
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
- rdma_rw_ctx_[init|destroy]()
-Message-ID: <20180104192225.GS11348@ziepe.ca>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-7-logang@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180104190137.7654-7-logang@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v4 4/7] PCI: Add generic function to probe PCI host controllers
+Date: Thu, 18 Jan 2018 23:52:49 +0100
+Message-Id: <e3b3e853bee77366a2f66d03a9809ca24274141d.1516314953.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 04, 2018 at 12:01:31PM -0700, Logan Gunthorpe wrote:
->  
-> @@ -269,18 +270,24 @@ static int rdma_rw_init_single_wr(struct rdma_rw_ctx *ctx, struct ib_qp *qp,
->   * @remote_addr:remote address to read/write (relative to @rkey)
->   * @rkey:	remote key to operate on
->   * @dir:	%DMA_TO_DEVICE for RDMA WRITE, %DMA_FROM_DEVICE for RDMA READ
-> + * @flags:      any of the RDMA_RW_CTX_FLAG_* flags
->   *
->   * Returns the number of WQEs that will be needed on the workqueue if
->   * successful, or a negative error code.
->   */
->  int rdma_rw_ctx_init(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
->  		struct scatterlist *sg, u32 sg_cnt, u32 sg_offset,
-> -		u64 remote_addr, u32 rkey, enum dma_data_direction dir)
-> +		u64 remote_addr, u32 rkey, enum dma_data_direction dir,
-> +		unsigned int flags)
->  {
->  	struct ib_device *dev = qp->pd->device;
->  	int ret;
->  
-> -	ret = ib_dma_map_sg(dev, sg, sg_cnt, dir);
-> +	if (flags & RDMA_RW_CTX_FLAG_PCI_P2P)
-> +		ret = pci_p2pmem_map_sg(sg, sg_cnt);
-> +	else
-> +		ret = ib_dma_map_sg(dev, sg, sg_cnt, dir);
+This patchs moves generic source code from
+drivers/pci/host/pci-host-common.c into drivers/pci/probe.c.
 
-This seems really clunky since we are going to want to do this same
-logic all over the place.
+Indeed the extracted lines of code were duplicated by many host
+controller drivers. Regrouping them into a generic function gives a
+change to properly share this code without introducing a useless
+dependency to PCI_HOST_COMMON, which selects PCI_ECAM when not needed by
+most host controller drivers.
 
-I'd be much happier if dma_map_sg can tell the memory is P2P or not
-from the scatterlist or dir arguments and not require the callers to
-have this.
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ drivers/pci/host/pci-host-common.c | 22 +---------------------
+ drivers/pci/probe.c                | 33 +++++++++++++++++++++++++++++++++
+ include/linux/pci.h                |  1 +
+ 3 files changed, 35 insertions(+), 21 deletions(-)
 
-For instance adding DMA_TO_P2P_DEVICE and DMA_FROM_P2P_DEVICE, or
-adding another bit to the page flags in scatterlist.
-
-The signature of pci_p2pmem_map_sg also doesn't look very good, it
-should mirror the usual dma_map_sg, otherwise it needs more revision
-to extend this to do P2P through a root complex.
-
-Jason
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index 9f27e90f578c..756702d8dd10 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -72,7 +72,6 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	const char *type;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+-	struct pci_bus *bus, *child;
+ 	struct pci_host_bridge *bridge;
+ 	struct pci_config_window *cfg;
+ 	struct list_head resources;
+@@ -107,30 +106,11 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	bridge->map_irq = of_irq_parse_and_map_pci;
+ 	bridge->swizzle_irq = pci_common_swizzle;
+ 
+-	ret = pci_scan_root_bus_bridge(bridge);
++	ret = pci_host_probe(bridge);
+ 	if (ret < 0) {
+-		dev_err(dev, "Scanning root bridge failed");
+ 		pci_free_resource_list(&resources);
+ 		return ret;
+ 	}
+ 
+-	bus = bridge->bus;
+-
+-	/*
+-	 * We insert PCI resources into the iomem_resource and
+-	 * ioport_resource trees in either pci_bus_claim_resources()
+-	 * or pci_bus_assign_resources().
+-	 */
+-	if (pci_has_flag(PCI_PROBE_ONLY)) {
+-		pci_bus_claim_resources(bus);
+-	} else {
+-		pci_bus_size_bridges(bus);
+-		pci_bus_assign_resources(bus);
+-
+-		list_for_each_entry(child, &bus->children, node)
+-			pcie_bus_configure_settings(child);
+-	}
+-
+-	pci_bus_add_devices(bus);
+ 	return 0;
+ }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 1360db508035..178328d06a32 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2685,6 +2685,39 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL_GPL(pci_create_root_bus);
+ 
++int pci_host_probe(struct pci_host_bridge *bridge)
++{
++	struct pci_bus *bus, *child;
++	int ret;
++
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret < 0) {
++		dev_err(bridge->dev.parent, "Scanning root bridge failed");
++		return ret;
++	}
++
++	bus = bridge->bus;
++
++	/*
++	 * We insert PCI resources into the iomem_resource and
++	 * ioport_resource trees in either pci_bus_claim_resources()
++	 * or pci_bus_assign_resources().
++	 */
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		pci_bus_claim_resources(bus);
++	} else {
++		pci_bus_size_bridges(bus);
++		pci_bus_assign_resources(bus);
++
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++	}
++
++	pci_bus_add_devices(bus);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_host_probe);
++
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+ 	struct resource *res = &b->busn_res;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4a4cbd444e1e..83514b34742a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -879,6 +879,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++int pci_host_probe(struct pci_host_bridge *bridge);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+-- 
+2.11.0
