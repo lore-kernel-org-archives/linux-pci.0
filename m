@@ -1,62 +1,58 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:58598 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753433AbeARGEM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 01:04:12 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 18 Jan 2018 11:34:11 +0530
+From: poza@codeaurora.org
 To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V4 23/26] video: fbdev: nvidia: deprecate
- pci_get_bus_and_slot()
-Date: Wed, 03 Jan 2018 12:18:29 +0100
-Message-id: <1929987.3nUglloMgL@amdc3058>
-In-reply-to: <6a6b51ff-42d5-29cc-167e-f4ed74d7ac36@codeaurora.org>
-MIME-version: 1.0
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <CGME20180102133808epcas2p19c51f6f07fcdf3dee68f4edcb2686fda@epcas2p1.samsung.com>
- <6a6b51ff-42d5-29cc-167e-f4ed74d7ac36@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:NVIDIA \(rivafb and nvidiafb\)
- FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
- Antonino Daplas <adaplas@gmail.com>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
- "open list:FRAMEBUFFER
- LAYER" <dri-devel@lists.freedesktop.org>, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
+In-Reply-To: <d78da5a5465c7a1696db755385393519@codeaurora.org>
+References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
+ <1516185438-31556-4-git-send-email-poza@codeaurora.org>
+ <298df660-1f7d-85ab-51db-11dc5d80cc75@codeaurora.org>
+ <d78da5a5465c7a1696db755385393519@codeaurora.org>
+Message-ID: <4a68efd464e5debe81db8f7b4ddccc8f@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 02, 2018 08:38:03 AM Sinan Kaya wrote:
-> On 12/19/2017 12:37 AM, Sinan Kaya wrote:
-> > pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> > where a PCI device is present. This restricts the device drivers to be
-> > reused for other domain numbers.
-> > 
-> > Getting ready to remove pci_get_bus_and_slot() function in favor of
-> > pci_get_domain_bus_and_slot().
-> > 
-> > struct nvidia_par has a pointer to struct pci_dev. Use the pci_dev
-> > member to extract the domain information and pass it to
-> > pci_get_domain_bus_and_slot() function.
-> > 
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+On 2018-01-18 10:52, poza@codeaurora.org wrote:
+> On 2018-01-17 22:15, Sinan Kaya wrote:
+>> On 1/17/2018 5:37 AM, Oza Pawandeep wrote:
+>>> +		driver = pci_find_dpc_service(udev);
+>>> +#endif
+>>>  #if IS_ENABLED(CONFIG_PCIEAER)
+>>> -	/* Use the aer driver of the component firstly */
+>>> -	driver = pci_find_aer_service(udev);
+>> 
+>> I think we need a pci_find_service function that unifies these two.
 > 
-> Any feedback here ? most of the remaining patches have the ACK except these.
+> Right now, find_xxx_service are in their respective file and exporting 
+> it.
+> which makes sense no less than having generic function.
+> 
+> If I have to change pci_find_service(...., int service_name) then it
+> has to be somewhere in generic file.
+> probably portdrv_core.c
+> 
+> either way I am fine but just thinking out if its really required.
+> 
+> Regards,
+> Oza.
 
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Should I be doing in next patch-set series ?
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Oza.
