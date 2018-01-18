@@ -1,123 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35976 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751211AbeABRyL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:54:11 -0500
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH v17 0/4] Replace PCI pool by DMA pool API
-Date: Tue,  2 Jan 2018 18:53:52 +0100
-Message-Id: <20180102175356.7999-1-romain.perier@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38478 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933119AbeARQER (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Jan 2018 11:04:17 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robert Moore <robert.moore@intel.com>,
+        Lv Zheng <lv.zheng@intel.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, devel@acpica.org
+Subject: [PATCH 3/4] ACPI / scan: Use acpi_bus_get_status for initial status of ACPI_TYPE_DEVICE devs
+Date: Thu, 18 Jan 2018 17:03:58 +0100
+Message-Id: <20180118160359.29971-4-hdegoede@redhat.com>
+In-Reply-To: <20180118160359.29971-1-hdegoede@redhat.com>
+References: <20180118160359.29971-1-hdegoede@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current PCI pool API are simple macro functions direct expanded to
-the appropriate dma pool functions. The prototypes are almost the same
-and semantically, they are very similar. I propose to use the DMA pool
-API directly and get rid of the old API.
+The acpi_get_bus_status wrapper for acpi_bus_get_status_handle has some
+code to handle certain device quirks, in some cases we also need this
+quirk handling for the initial _STA call.
 
-This set of patches, replaces the old API by the dma pool API
-and remove the defines.
+Specifically on some devices calling _STA before all _DEP dependencies
+are met results in errors like these:
 
-Changes in v17:
-- Rebased series onto next-20180102
-- Added Acked-by tags by David S. Miller on patches 02/04
-  and 03/04
+[    0.123579] ACPI Error: No handler for Region [ECRM] (00000000ba9edc4c)
+               [GenericSerialBus] (20170831/evregion-166)
+[    0.123601] ACPI Error: Region GenericSerialBus (ID=9) has no handler
+               (20170831/exfldio-299)
+[    0.123618] ACPI Error: Method parse/execution failed
+               \_SB.I2C1.BAT1._STA, AE_NOT_EXIST (20170831/psparse-550)
 
-Changes in v16:
-- Rebased series onto next-20171215
-- I have fixed patch 04/04, so it can be applied
-- Added Acked-by for Bjorn Helgaas on patch 04/04
+acpi_get_bus_status already has code to avoid this, so by using it we
+also silence these errors from the initial _STA call.
 
-Changes in v15:
-- Rebased series onto next-20171120
-- Added patch 04/05 for mpt3sas scsi driver
+Note that in order for the acpi_get_bus_status handling for this to work,
+we initialize dep_unmet to 1 until acpi_device_dep_initialize gets called,
+this means that battery devices will be instantiated with an initial
+status of 0. This is not a problem, acpi_bus_attach will get called soon
+after the instantiation anyways and it will update the status as first
+point of order.
 
-Changes in v14:
-- Rebased series onto next-20171018
-- Rebased patch 03/05 on latest driver
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+Note if we were to:
+1) move the acpi_bus_init_power call from acpi_bus_get_power_flags to
+   acpi_bus_attach, which already calls acpi_bus_init_power for uninitialized
+   devices; and
+2) move the acpi_bus_get_wakeup_device_flags call from acpi_add_single_object
+   to acpi_bus_attach. This one is tricky, because acpi_device_add checks
+   wakeup.flags.valid which gets set by this. And the acpi_wakeup_gpe_init
+   call actually is the troublesome one because it uses acpi_match_device_ids
+   which relies on the status...
 
-Changes in v13:
-- Rebased series onto next-20170906
-- Added a new commit for the hinic ethernet driver
-- Remove previously merged patches
+Then we can entirely rely on the acpi_bus_get_status call in acpi_bus_attach
+and remove the acpi_bus_get_status call from the device-instantiation path.
+---
+ drivers/acpi/scan.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-Changes in v12:
-- Rebased series onto next-20170822
-
-Changes in v11:
-- Rebased series onto next-20170809
-- Removed patches 08-14, these have been merged.
-
-Changes in v10:
-- Rebased series onto next-20170706
-- I have fixed and improved patch "scsi: megaraid: Replace PCI pool old API"
-
-Changes in v9:
-- Rebased series onto next-20170522
-- I have fixed and improved the patch for lpfc driver
-
-Changes in v8:
-- Rebased series onto next-20170428
-
-Changes in v7:
-- Rebased series onto next-20170416
-- Added Acked-by, Tested-by and Reviwed-by tags
-
-Changes in v6:
-- Fixed an issue reported by kbuild test robot about changes in DAC960
-- Removed patches 15/19,16/19,17/19,18/19. They have been merged by Greg
-- Added Acked-by Tags
-
-Changes in v5:
-- Re-worded the cover letter (remove sentence about checkpatch.pl)
-- Rebased series onto next-20170308
-- Fix typos in commit message
-- Added Acked-by Tags
-
-Changes in v4:
-- Rebased series onto next-20170301
-- Removed patch 20/20: checks done by checkpath.pl, no longer required.
-  Thanks to Peter and Joe for their feedbacks.
-- Added Reviewed-by tags
-
-Changes in v3:
-- Rebased series onto next-20170224
-- Fix checkpath.pl reports for patch 11/20 and patch 12/20
-- Remove prefix RFC
-Changes in v2:
-- Introduced patch 18/20
-- Fixed cosmetic changes: spaces before brace, live over 80 characters
-- Removed some of the check for NULL pointers before calling dma_pool_destroy
-- Improved the regexp in checkpatch for pci_pool, thanks to Joe Perches
-- Added Tested-by and Acked-by tags
-
-Romain Perier (4):
-  block: DAC960: Replace PCI pool old API
-  net: e100: Replace PCI pool old API
-  hinic: Replace PCI pool old API
-  PCI: Remove PCI pool macro functions
-
- drivers/block/DAC960.c                            | 38 +++++++++++------------
- drivers/block/DAC960.h                            |  4 +--
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
- drivers/net/ethernet/intel/e100.c                 | 12 +++----
- include/linux/pci.h                               |  9 ------
- 6 files changed, 32 insertions(+), 43 deletions(-)
-
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index e0bd49b4c3f6..ffb64424771b 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1572,6 +1572,8 @@ void acpi_init_device_object(struct acpi_device *device, acpi_handle handle,
+ 	device_initialize(&device->dev);
+ 	dev_set_uevent_suppress(&device->dev, true);
+ 	acpi_init_coherency(device);
++	/* Assume there are unmet deps until acpi_device_dep_initialize runs */
++	device->dep_unmet = 1;
+ }
+ 
+ void acpi_device_add_finalize(struct acpi_device *device)
+@@ -1595,6 +1597,14 @@ static int acpi_add_single_object(struct acpi_device **child,
+ 	}
+ 
+ 	acpi_init_device_object(device, handle, type, sta);
++	/*
++	 * For ACPI_BUS_TYPE_DEVICE getting the status is delayed till here so
++	 * that we can call acpi_bus_get_status and use its quirk handling.
++	 * Note this must be done before the get power-/wakeup_dev-flags calls.
++	 */
++	if (type == ACPI_BUS_TYPE_DEVICE)
++		acpi_bus_get_status(device);
++
+ 	acpi_bus_get_power_flags(device);
+ 	acpi_bus_get_wakeup_device_flags(device);
+ 
+@@ -1667,9 +1677,11 @@ static int acpi_bus_type_and_status(acpi_handle handle, int *type,
+ 			return -ENODEV;
+ 
+ 		*type = ACPI_BUS_TYPE_DEVICE;
+-		status = acpi_bus_get_status_handle(handle, sta);
+-		if (ACPI_FAILURE(status))
+-			*sta = 0;
++		/*
++		 * acpi_add_single_object updates this once we've an acpi_device
++		 * so that acpi_bus_get_status' quirk handling can be used.
++		 */
++		*sta = 0;
+ 		break;
+ 	case ACPI_TYPE_PROCESSOR:
+ 		*type = ACPI_BUS_TYPE_PROCESSOR;
+@@ -1767,6 +1779,8 @@ static void acpi_device_dep_initialize(struct acpi_device *adev)
+ 	acpi_status status;
+ 	int i;
+ 
++	adev->dep_unmet = 0;
++
+ 	if (!acpi_has_method(adev->handle, "_DEP"))
+ 		return;
+ 
 -- 
-2.14.1
+2.14.3
