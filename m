@@ -1,91 +1,311 @@
-Return-Path: <SRS0=wG18=ER=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=wG18=ER=codeaurora.org=okaya@kernel.org>
-Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
- pcie_bus_perf On NVMe Device
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ron Yuan <ron.yuan@memblaze.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Bo Chen <bo.chen@memblaze.com>, William Huang <william.huang@memblaze.com>,
- Fengming Wu <fengming.wu@memblaze.com>,
- Jason Jiang <jason.jiang@microsemi.com>,
- Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>,
- Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
- William Cheng <william.cheng@microsemi.com>,
- "Kim Helper (khelper)" <khelper@micron.com>,
- Linux PCI <linux-pci@vger.kernel.org>
-References: <SH2PR01MB106A1E21DEB5FE3FFB3D61C83E90@SH2PR01MB106.CHNPR01.prod.partner.outlook.cn>
- <ef16a3cc-b641-a30d-644a-7940e340eb3e@codeaurora.org>
- <SHAPR01MB173A5EA1677C2138CB528F2FEE90@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
- <5727b0b1-f0d5-7c78-373e-fc9d1bd662d2@codeaurora.org>
- <CABhMZUU0643U-qVc9ymA+1PMZToSLFm2dg8-cu=iQ2LGw2Pi8Q@mail.gmail.com>
- <SHAPR01MB173A36104635A8BFF9A83E1FEE80@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
- <0ce08a91-fc38-1288-7683-836fcbbbdf3c@codeaurora.org>
- <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
- <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
- <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
-Date: Mon, 22 Jan 2018 17:04:03 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:46469 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753881AbeARXXm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 18:23:42 -0500
+Subject: Re: [PATCH v3 6/6] PCI: cadence: Add host driver for Cadence PCIe
+ controller
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
+        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org
+References: <cover.1515621150.git.cyrille.pitchen@free-electrons.com>
+ <990730f5c1156b3bb15f56fa877719941f219016.1515621150.git.cyrille.pitchen@free-electrons.com>
+ <20180116160733.GA3644@e107981-ln.cambridge.arm.com>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Message-ID: <652f7f35-cdf6-5205-6e96-24ea2988fbb8@free-electrons.com>
+Date: Fri, 19 Jan 2018 00:23:39 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180116160733.GA3644@e107981-ln.cambridge.arm.com>
 Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/22/2018 4:36 PM, Bjorn Helgaas wrote:
->>> That leaves Completions.  We limit the size of Completions by limiting
->>> MRRS.  If we set the endpoint's MRRS to its MPS (128 in this case), it
->>> will never request more than MPS bytes at a time, so it will never
->>> receive a Completion with more than MPS bytes.
->>>
->>> Therefore, we may be able to configure other devices in the fabric
->>> with MPS larger than 128, which may benefit those devices.
+Hi Lorenzo
 
-> Help me understand exactly what is problematic.  No matter what your
-> read/write mix is, a single device in isolation should get the best
-> performance with both MPS and MRRS at the highest possible settings.
+Le 16/01/2018 à 17:07, Lorenzo Pieralisi a écrit :
+> On Wed, Jan 10, 2018 at 11:47:35PM +0100, Cyrille Pitchen wrote:
+>> This patch adds support to the Cadence PCIe controller in host mode.
+>>
+>> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+>> ---
+>>  MAINTAINERS                             |   7 +
+>>  drivers/pci/Kconfig                     |   1 +
+>>  drivers/pci/Makefile                    |   1 +
+>>  drivers/pci/cadence/Kconfig             |  16 ++
+>>  drivers/pci/cadence/Makefile            |   3 +
+>>  drivers/pci/cadence/pcie-cadence-host.c | 336 ++++++++++++++++++++++++++++++++
+>>  drivers/pci/cadence/pcie-cadence.c      |  68 +++++++
+>>  drivers/pci/cadence/pcie-cadence.h      | 196 +++++++++++++++++++
+> 
+> [...]
+> 
+>> +void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
+>> +{
+>> +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR0(r), 0);
+>> +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(r), 0);
+>> +
+>> +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC0(r), 0);
+>> +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC1(r), 0);
+>> +
+>> +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), 0);
+>> +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), 0);
+>> +}
+> 
+> Unused function, please remove it.
 
-The performance approach is trying to maximize MPS while reducing MRRS
-value to MPS value. Meaning improving write performance while trading
-off read performance.
+done in v4.
 
 > 
-> Reducing MPS may be necessary if there are several devices in the
-> hierarchy and one requires a smaller MPS than the others.  That
-> obviously reduces the maximum read and write performance.
+>> diff --git a/drivers/pci/cadence/pcie-cadence.h b/drivers/pci/cadence/pcie-cadence.h
+>> new file mode 100644
+>> index 000000000000..3a15b4016352
+>> --- /dev/null
+>> +++ b/drivers/pci/cadence/pcie-cadence.h
+>> @@ -0,0 +1,196 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+>> +// Copyright (c) 2017 Cadence
+>> +// Cadence PCIe controller driver.
+>> +// Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+>> +
+>> +#ifndef _PCIE_CADENCE_H
+>> +#define _PCIE_CADENCE_H
+>> +
+>> +#include <linux/kernel.h>
+>> +#include <linux/pci.h>
+>> +
+>> +/*
+>> + * Local Management Registers
+>> + */
+>> +#define CDNS_PCIE_LM_BASE	0x00100000
+>> +
+>> +/* Vendor ID Register */
+>> +#define CDNS_PCIE_LM_ID		(CDNS_PCIE_LM_BASE + 0x0044)
+>> +#define  CDNS_PCIE_LM_ID_VENDOR_MASK	GENMASK(15, 0)
+>> +#define  CDNS_PCIE_LM_ID_VENDOR_SHIFT	0
+>> +#define  CDNS_PCIE_LM_ID_VENDOR(vid) \
+>> +	(((vid) << CDNS_PCIE_LM_ID_VENDOR_SHIFT) & CDNS_PCIE_LM_ID_VENDOR_MASK)
+>> +#define  CDNS_PCIE_LM_ID_SUBSYS_MASK	GENMASK(31, 16)
+>> +#define  CDNS_PCIE_LM_ID_SUBSYS_SHIFT	16
+>> +#define  CDNS_PCIE_LM_ID_SUBSYS(sub) \
+>> +	(((sub) << CDNS_PCIE_LM_ID_SUBSYS_SHIFT) & CDNS_PCIE_LM_ID_SUBSYS_MASK)
+>> +
+>> +/* Root Port Requestor ID Register */
+>> +#define CDNS_PCIE_LM_RP_RID	(CDNS_PCIE_LM_BASE + 0x0228)
+>> +#define  CDNS_PCIE_LM_RP_RID_MASK	GENMASK(15, 0)
+>> +#define  CDNS_PCIE_LM_RP_RID_SHIFT	0
+>> +#define  CDNS_PCIE_LM_RP_RID_(rid) \
+>> +	(((rid) << CDNS_PCIE_LM_RP_RID_SHIFT) & CDNS_PCIE_LM_RP_RID_MASK)
+>> +
+>> +/* Root Complex BAR Configuration Register */
+>> +#define CDNS_PCIE_LM_RC_BAR_CFG	(CDNS_PCIE_LM_BASE + 0x0300)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE_MASK	GENMASK(5, 0)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE(a) \
+>> +	(((a) << 0) & CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE_MASK)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL_MASK		GENMASK(8, 6)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL(c) \
+>> +	(((c) << 6) & CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL_MASK)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE_MASK	GENMASK(13, 9)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE(a) \
+>> +	(((a) << 9) & CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE_MASK)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL_MASK		GENMASK(16, 14)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL(c) \
+>> +	(((c) << 14) & CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL_MASK)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_ENABLE	BIT(17)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_32BITS	0
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_64BITS	BIT(18)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_ENABLE		BIT(19)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_16BITS		0
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_32BITS		BIT(20)
+>> +#define  CDNS_PCIE_LM_RC_BAR_CFG_CHECK_ENABLE		BIT(31)
+>> +
+>> +/* BAR control values applicable to both Endpoint Function and Root Complex */
+>> +#define  CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED		0x0
+>> +#define  CDNS_PCIE_LM_BAR_CFG_CTRL_IO_32BITS		0x1
+>> +#define  CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_32BITS		0x4
+>> +#define  CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_32BITS	0x5
+>> +#define  CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_64BITS		0x6
+>> +#define  CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_64BITS	0x7
+>> +
+>> +
+>> +/*
+>> + * Root Port Registers (PCI configuration space for the root port function)
+>> + */
+>> +#define CDNS_PCIE_RP_BASE	0x00200000
+>> +
+>> +
+>> +/*
+>> + * Address Translation Registers
+>> + */
+>> +#define CDNS_PCIE_AT_BASE	0x00400000
+>> +
+>> +/* Region r Outbound AXI to PCIe Address Translation Register 0 */
+>> +#define CDNS_PCIE_AT_OB_REGION_PCI_ADDR0(r) \
+>> +	(CDNS_PCIE_AT_BASE + 0x0000 + ((r) & 0x1f) * 0x0020)
+>> +#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS_MASK	GENMASK(5, 0)
+>> +#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(nbits) \
+>> +	(((nbits) - 1) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS_MASK)
+>> +#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK	GENMASK(19, 12)
+>> +#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN(devfn) \
+>> +	(((devfn) << 12) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK)
+>> +#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK	GENMASK(27, 20)
+>> +#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS(bus) \
+>> +	(((bus) << 20) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK)
+>> +
+>> +/* Region r Outbound AXI to PCIe Address Translation Register 1 */
+>> +#define CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(r) \
+>> +	(CDNS_PCIE_AT_BASE + 0x0004 + ((r) & 0x1f) * 0x0020)
+>> +
+>> +/* Region r Outbound PCIe Descriptor Register 0 */
+>> +#define CDNS_PCIE_AT_OB_REGION_DESC0(r) \
+>> +	(CDNS_PCIE_AT_BASE + 0x0008 + ((r) & 0x1f) * 0x0020)
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_MASK		GENMASK(3, 0)
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_MEM		0x2
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_IO		0x6
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0	0xa
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1	0xb
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_NORMAL_MSG	0xc
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_VENDOR_MSG	0xd
+>> +/* Bit 23 MUST be set in RC mode. */
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID	BIT(23)
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK	GENMASK(31, 24)
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN(devfn) \
+>> +	(((devfn) << 24) & CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK)
+>> +
+>> +/* Region r Outbound PCIe Descriptor Register 1 */
+>> +#define CDNS_PCIE_AT_OB_REGION_DESC1(r)	\
+>> +	(CDNS_PCIE_AT_BASE + 0x000c + ((r) & 0x1f) * 0x0020)
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC1_BUS_MASK	GENMASK(7, 0)
+>> +#define  CDNS_PCIE_AT_OB_REGION_DESC1_BUS(bus) \
+>> +	((bus) & CDNS_PCIE_AT_OB_REGION_DESC1_BUS_MASK)
+>> +
+>> +/* Region r AXI Region Base Address Register 0 */
+>> +#define CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r) \
+>> +	(CDNS_PCIE_AT_BASE + 0x0018 + ((r) & 0x1f) * 0x0020)
+>> +#define  CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS_MASK	GENMASK(5, 0)
+>> +#define  CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(nbits) \
+>> +	(((nbits) - 1) & CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS_MASK)
+>> +
+>> +/* Region r AXI Region Base Address Register 1 */
+>> +#define CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r) \
+>> +	(CDNS_PCIE_AT_BASE + 0x001c + ((r) & 0x1f) * 0x0020)
+>> +
+>> +/* Root Port BAR Inbound PCIe to AXI Address Translation Register */
+>> +#define CDNS_PCIE_AT_IB_RP_BAR_ADDR0(bar) \
+>> +	(CDNS_PCIE_AT_BASE + 0x0800 + (bar) * 0x0008)
+>> +#define  CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS_MASK	GENMASK(5, 0)
+>> +#define  CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS(nbits) \
+>> +	(((nbits) - 1) & CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS_MASK)
+>> +#define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
+>> +	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
+>> +
+>> +enum cdns_pcie_rp_bar {
+>> +	RP_BAR0,
+>> +	RP_BAR1,
+>> +	RP_NO_BAR
+>> +};
+>> +
+>> +/**
+>> + * struct cdns_pcie - private data for Cadence PCIe controller drivers
+>> + * @reg_base: IO mapped register base
+>> + * @mem_res: start/end offsets in the physical system memory to map PCI accesses
+>> + * @is_rc: tell whether the PCIe controller mode is Root Complex or Endpoint.
+>> + * @bus: In Root Complex mode, the bus number
+>> + */
+>> +struct cdns_pcie {
+>> +	void __iomem		*reg_base;
+>> +	struct resource		*mem_res;
+>> +	bool			is_rc;
+>> +	u8			bus;
+>> +};
+>> +
+>> +/* Register access */
+>> +static inline void cdns_pcie_writeb(struct cdns_pcie *pcie, u32 reg, u8 value)
+>> +{
+>> +	writeb(value, pcie->reg_base + reg);
+>> +}
+>> +
+>> +static inline void cdns_pcie_writew(struct cdns_pcie *pcie, u32 reg, u16 value)
+>> +{
+>> +	writew(value, pcie->reg_base + reg);
+>> +}
+>> +
+>> +static inline void cdns_pcie_writel(struct cdns_pcie *pcie, u32 reg, u32 value)
+>> +{
+>> +	writel(value, pcie->reg_base + reg);
+>> +}
+>> +
+>> +static inline u32 cdns_pcie_readl(struct cdns_pcie *pcie, u32 reg)
+>> +{
+>> +	return readl(pcie->reg_base + reg);
+>> +}
+>> +
+>> +/* Root Port register access */
+>> +static inline void cdns_pcie_rp_writeb(struct cdns_pcie *pcie,
+>> +				       u32 reg, u8 value)
+>> +{
+>> +	writeb(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg);
+>> +}
+>> +
+>> +static inline void cdns_pcie_rp_writew(struct cdns_pcie *pcie,
+>> +				       u32 reg, u16 value)
+>> +{
+>> +	writew(value, pcie->reg_base + CDNS_PCIE_RP_BASE + reg);
+>> +}
+>> +
+>> +void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u32 r, bool is_io,
+>> +				   u64 cpu_addr, u64 pci_addr, size_t size);
+>> +
+>> +void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r);
 > 
-> Reducing the MRRS may be useful to prevent one device from hogging a
-> link, but of course, it reduces read performance for that device
-> because we need more read requests.
+> Ditto. I understand it is hard to untangle code that was written with
+> both EP and host bridge support in mind but, as I state below every
+> patch has to make sense on its own.
+
+done in v4.
+
 > 
+>> +
+>> +#endif /* _PCIE_CADENCE_H */
+> 
+> Technically speaking, this 3-file (.c .h) split is not necessary and can
+> turn out unnecessary churn if we never merge the endpoint code -
+> actually you would not even need a special cadence directory, just a
+> host bridge driver file.
+> 
+> Bottom line, as you know: every patch has to be self contained.
+> 
+> It is already quite late -rc, I understand that changes this late
+> are error prone so I will accept that this file splitting is necessary
+> for "future" patches - if you manage to squash changes into a file I'd
+> appreciate though, it does not make sense to export functions that are
+> used in just one compilation unit (and some that are not used at all).
 
-Maybe, a picture could help.
+Sorry, I didn't have time to squash the 3 files into a single one. I
+can do it in v5 if you think it's better. I plan to work on the endpoint
+driver with multi-functions this week-end, hence I hope I will be able
+to add this driver back in v5.
 
-			root (MPS=256)
-			 |
-		 ------------------
-		/		   \
-	   bridge0 (MPS=256)      bridge1 (MPS=128)
-	    /				\
-	   EP0 (MPS=256)		EP1 (MPS=128)
+I've just been sending v4 anyway so at least you will have former patch 3
+from v3 split into new patches 3 and 4 in v4 as you requested.
+So if you want to merge at least the new generic patches [1 - 4] for v4.16,
+they are available :)
 
-If I understood this right, code allows the configuration above with
-the performance mode so that MPS doesn't have to be uniform across
-the tree. 
+Best regards,
 
-It just needs to be consistent between the root port and endpoints.
+Cyrille
 
-Why are we reducing MRRS in this case?
-
-Are we assuming that root bus cannot handle more than 256 bytes and bridge1
-would be starved while root bus is passing the completions to bridge0?
-
-If yes, the answer to the assumption depends on the architecture. One silicon
-could serve any completions in any speed. 
-
-It depends on how root bus was implemented. If it is a real one or an emulated one.
-I think most silicon emulate root bus.
+ 
+> 
+> Thanks,
+> Lorenzo
+> 
 
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Cyrille Pitchen, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
