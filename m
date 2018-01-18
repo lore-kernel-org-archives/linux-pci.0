@@ -1,102 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49452 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932970AbeAKSG6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Jan 2018 13:06:58 -0500
-Date: Thu, 11 Jan 2018 12:06:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: christian.koenig@amd.com
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, torvalds@linux-foundation.org,
-        aaro.koskinen@iki.fi, andy.shevchenko@gmail.com,
-        boris.ostrovsky@oracle.com, jgross@suse.com,
-        alexander.deucher@amd.com, airlied@linux.ie
-Subject: Re: [PATCH 2/2] x86/PCI: limit the size of the 64bit window to 256GB
- v3
-Message-ID: <20180111180656.GJ241460@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180111132330.2682-1-christian.koenig@amd.com>
- <20180111132330.2682-2-christian.koenig@amd.com>
- <20180111142141.GA3672@bhelgaas-glaptop.roam.corp.google.com>
- <12f934df-3a5b-08fb-d313-9c7b9734c361@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <12f934df-3a5b-08fb-d313-9c7b9734c361@gmail.com>
+Received: from 1.mo177.mail-out.ovh.net ([178.33.107.143]:54273 "EHLO
+        1.mo177.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932605AbeARXAk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 18:00:40 -0500
+Received: from player714.ha.ovh.net (b6.ovh.net [213.186.33.56])
+        by mo177.mail-out.ovh.net (Postfix) with ESMTP id 73B4299FB8
+        for <linux-pci@vger.kernel.org>; Thu, 18 Jan 2018 23:54:35 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v4 5/7] PCI: Add vendor ID for Cadence
+Date: Thu, 18 Jan 2018 23:52:50 +0100
+Message-Id: <4bb236b4512336d98501210884a6118ea72defa7.1516314953.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 11, 2018 at 03:51:45PM +0100, Christian König wrote:
-> Am 11.01.2018 um 15:21 schrieb Bjorn Helgaas:
-> >On Thu, Jan 11, 2018 at 02:23:30PM +0100, Christian König wrote:
-> >>Avoid problems with BIOS implementations which don't report all used
-> >>resources to the OS by only allocating a 256GB window directly below the
-> >>hardware limit.
-> >>
-> >>For the full hardware documentation see:
-> >>https://support.amd.com/TechDocs/49125_15h_Models_30h-3Fh_BKDG.pdf
-> >If you can supply a section number, I'll add it here.  That spec is 700
-> >pages, so a hint would be useful.
-> 
-> Sorry, had to search for that as well. That is noted in section
-> "2.4.6 System Address Map".
-> 
-> Do you want to add that or should I resend the patch?
+This patch adds a new PCI vendor ID for Cadence.
 
-I added it and put both patches on my for-linus branch for v4.15, thanks!
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> >>Fixes a silent reboot loop reported by Aaro Koskinen <aaro.koskinen@iki.fi> on
-> >>an AMD-based MSI MS-7699/760GA-P43(FX) system.
-> >>
-> >>v2: cleanup code a bit more, update comment and explain the hw limit
-> >>v3: improve commit message
-> >>
-> >>Link: https://lkml.kernel.org/r/20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi
-> >>Reported-by: Aaro Koskinen <aaro.koskinen@iki.fi>
-> >>Signed-off-by: Christian König <christian.koenig@amd.com>
-> >>---
-> >>  arch/x86/pci/fixup.c | 19 +++++++++----------
-> >>  1 file changed, 9 insertions(+), 10 deletions(-)
-> >>
-> >>diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> >>index a91280da2ea1..9c1c98d7e3a7 100644
-> >>--- a/arch/x86/pci/fixup.c
-> >>+++ b/arch/x86/pci/fixup.c
-> >>@@ -662,10 +662,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
-> >>   */
-> >>  static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-> >>  {
-> >>-	unsigned i;
-> >>  	u32 base, limit, high;
-> >>-	struct resource *res, *conflict;
-> >>  	struct pci_dev *other;
-> >>+	struct resource *res;
-> >>+	unsigned i;
-> >>+	int r;
-> >>  	if (!(pci_probe & PCI_BIG_ROOT_WINDOW))
-> >>  		return;
-> >>@@ -702,19 +703,17 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-> >>  	if (!res)
-> >>  		return;
-> >>+	/* Allocate a 256GB window directly below the 0xfd00000000 hw limit */
-> >>  	res->name = "PCI Bus 0000:00";
-> >>  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
-> >>  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-> >>-	res->start = 0x100000000ull;
-> >>+	res->start = 0xbd00000000ull;
-> >>  	res->end = 0xfd00000000ull - 1;
-> >>-	/* Just grab the free area behind system memory for this */
-> >>-	while ((conflict = request_resource_conflict(&iomem_resource, res))) {
-> >>-		if (conflict->end >= res->end) {
-> >>-			kfree(res);
-> >>-			return;
-> >>-		}
-> >>-		res->start = conflict->end + 1;
-> >>+	r = request_resource(&iomem_resource, res);
-> >>+	if (r) {
-> >>+		kfree(res);
-> >>+		return;
-> >>  	}
-> >>  	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-> >>-- 
-> >>2.11.0
-> >>
-> 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ab20dc5db423..eb13e84e1fef 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2381,6 +2381,8 @@
+ 
+ #define PCI_VENDOR_ID_LENOVO		0x17aa
+ 
++#define PCI_VENDOR_ID_CDNS		0x17cd
++
+ #define PCI_VENDOR_ID_ARECA		0x17d3
+ #define PCI_DEVICE_ID_ARECA_1110	0x1110
+ #define PCI_DEVICE_ID_ARECA_1120	0x1120
+-- 
+2.11.0
