@@ -1,175 +1,51 @@
-Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v4 4/7] powerpc/kernel Add EEH operations to notify resume
-Date: Fri,  5 Jan 2018 10:45:49 -0600
-In-Reply-To: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
-References: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20180105164552.36371-5-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37342 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750947AbeARFWr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 00:22:47 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 18 Jan 2018 10:52:46 +0530
+From: poza@codeaurora.org
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
+In-Reply-To: <298df660-1f7d-85ab-51db-11dc5d80cc75@codeaurora.org>
+References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
+ <1516185438-31556-4-git-send-email-poza@codeaurora.org>
+ <298df660-1f7d-85ab-51db-11dc5d80cc75@codeaurora.org>
+Message-ID: <d78da5a5465c7a1696db755385393519@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When pseries SR-IOV is enabled and after a PF driver
-has resumed from EEH, platform has to be notified
-of the event so the child VFs can be allowed to
-resume their normal recovery path.
+On 2018-01-17 22:15, Sinan Kaya wrote:
+> On 1/17/2018 5:37 AM, Oza Pawandeep wrote:
+>> +		driver = pci_find_dpc_service(udev);
+>> +#endif
+>>  #if IS_ENABLED(CONFIG_PCIEAER)
+>> -	/* Use the aer driver of the component firstly */
+>> -	driver = pci_find_aer_service(udev);
+> 
+> I think we need a pci_find_service function that unifies these two.
 
-This patch makes the EEH operation allow unfreeze
-platform dependent code and adds the call to
-pseries EEH code.
+Right now, find_xxx_service are in their respective file and exporting 
+it.
+which makes sense no less than having generic function.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |  1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c |  3 +-
- arch/powerpc/platforms/pseries/eeh_pseries.c | 96 +++++++++++++++++++++++++++-
- 3 files changed, 98 insertions(+), 2 deletions(-)
+If I have to change pci_find_service(...., int service_name) then it has 
+to be somewhere in generic file.
+probably portdrv_core.c
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 82829c65f31a..fd37cc101f4f 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -214,6 +214,7 @@ struct eeh_ops {
- 	int (*write_config)(struct pci_dn *pdn, int where, int size, u32 val);
- 	int (*next_error)(struct eeh_pe **pe);
- 	int (*restore_config)(struct pci_dn *pdn);
-+	int (*notify_resume)(struct pci_dn *pdn);
- };
- 
- extern int eeh_subsystem_flags;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 0665b6d03cb3..33c86c1a1720 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1704,7 +1704,8 @@ static struct eeh_ops pnv_eeh_ops = {
- 	.read_config            = pnv_eeh_read_config,
- 	.write_config           = pnv_eeh_write_config,
- 	.next_error		= pnv_eeh_next_error,
--	.restore_config		= pnv_eeh_restore_config
-+	.restore_config		= pnv_eeh_restore_config,
-+	.notify_resume		= NULL
- };
- 
- #ifdef CONFIG_PCI_IOV
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index ca6bbfd83701..898bb055cb19 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -749,6 +749,97 @@ static int pseries_eeh_restore_config(struct pci_dn *pdn)
- 	return ret;
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+int pseries_send_allow_unfreeze(struct pci_dn *pdn,
-+				u16 *vf_pe_array, int cur_vfs)
-+{
-+	int rc;
-+	int ibm_allow_unfreeze = rtas_token("ibm,open-sriov-allow-unfreeze");
-+	unsigned long buid, addr;
-+
-+	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
-+	buid = pdn->phb->buid;
-+	spin_lock(&rtas_data_buf_lock);
-+	memcpy(rtas_data_buf, vf_pe_array, RTAS_DATA_BUF_SIZE);
-+	rc = rtas_call(ibm_allow_unfreeze, 5, 1, NULL,
-+		       addr,
-+		       BUID_HI(buid),
-+		       BUID_LO(buid),
-+		       rtas_data_buf, cur_vfs * sizeof(u16));
-+	spin_unlock(&rtas_data_buf_lock);
-+	if (rc)
-+		pr_warn("%s: Failed to allow unfreeze for PHB#%x-PE#%lx, rc=%x\n",
-+			__func__,
-+			pdn->phb->global_number, addr, rc);
-+	return rc;
-+}
-+
-+static int pseries_call_allow_unfreeze(struct eeh_dev *edev)
-+{
-+	struct pci_dn *pdn, *tmp, *parent, *physfn_pdn;
-+	int cur_vfs = 0, rc = 0, vf_index, bus, devfn;
-+	u16 *vf_pe_array;
-+
-+	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
-+	if (!vf_pe_array)
-+		return -ENOMEM;
-+	if (pci_num_vf(edev->physfn ? edev->physfn : edev->pdev)) {
-+		if (edev->pdev->is_physfn) {
-+			cur_vfs = pci_num_vf(edev->pdev);
-+			pdn = eeh_dev_to_pdn(edev);
-+			parent = pdn->parent;
-+			for (vf_index = 0; vf_index < cur_vfs; vf_index++)
-+				vf_pe_array[vf_index] =
-+					cpu_to_be16(pdn->pe_num_map[vf_index]);
-+			rc = pseries_send_allow_unfreeze(pdn, vf_pe_array,
-+							 cur_vfs);
-+			pdn->last_allow_rc = rc;
-+			for (vf_index = 0; vf_index < cur_vfs; vf_index++) {
-+				list_for_each_entry_safe(pdn, tmp,
-+							 &parent->child_list,
-+							 list) {
-+					bus = pci_iov_virtfn_bus(edev->pdev,
-+								 vf_index);
-+					devfn = pci_iov_virtfn_devfn(edev->pdev,
-+								     vf_index);
-+					if (pdn->busno != bus ||
-+					    pdn->devfn != devfn)
-+						continue;
-+					pdn->last_allow_rc = rc;
-+				}
-+			}
-+		} else {
-+			pdn = pci_get_pdn(edev->pdev);
-+			vf_pe_array[0] = cpu_to_be16(pdn->pe_number);
-+			physfn_pdn = pci_get_pdn(edev->physfn);
-+			rc = pseries_send_allow_unfreeze(physfn_pdn,
-+							 vf_pe_array, 1);
-+			pdn->last_allow_rc = rc;
-+		}
-+	}
-+
-+	kfree(vf_pe_array);
-+	return rc;
-+}
-+
-+static int pseries_notify_resume(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+
-+	if (!edev)
-+		return -EEXIST;
-+
-+	if (rtas_token("ibm,open-sriov-allow-unfreeze")
-+	    == RTAS_UNKNOWN_SERVICE)
-+		return -EINVAL;
-+
-+	if (edev->pdev->is_physfn || edev->pdev->is_virtfn)
-+		return pseries_call_allow_unfreeze(edev);
-+
-+	return 0;
-+}
-+#endif
-+
- static struct eeh_ops pseries_eeh_ops = {
- 	.name			= "pseries",
- 	.init			= pseries_eeh_init,
-@@ -764,7 +855,10 @@ static struct eeh_ops pseries_eeh_ops = {
- 	.read_config		= pseries_eeh_read_config,
- 	.write_config		= pseries_eeh_write_config,
- 	.next_error		= NULL,
--	.restore_config		= pseries_eeh_restore_config
-+	.restore_config		= pseries_eeh_restore_config,
-+#ifdef CONFIG_PCI_IOV
-+	.notify_resume		= pseries_notify_resume
-+#endif
- };
- 
- /**
--- 
-2.14.3 (Apple Git-98)
+either way I am fine but just thinking out if its really required.
+
+Regards,
+Oza.
