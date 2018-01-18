@@ -1,85 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:5506 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750892AbeAKGQG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 01:16:06 -0500
-Subject: Re: [PATCH V5 0/7] Add loadable kernel module and power management
- support
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <cyndis@kapsi.fi>, <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>
-References: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
- <20180110171521.GA26960@e107981-ln.cambridge.arm.com>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <a33a045c-0384-64fc-5ae5-1a150081d262@nvidia.com>
-Date: Thu, 11 Jan 2018 11:45:46 +0530
+Received: from mail.kernel.org ([198.145.29.99]:55014 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755866AbeARTLN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Jan 2018 14:11:13 -0500
+Date: Thu, 18 Jan 2018 13:11:12 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robert Moore <robert.moore@intel.com>,
+        Lv Zheng <lv.zheng@intel.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, devel@acpica.org
+Subject: Re: ACPI: Do not call _STA on battery devices with unmet dependencies
+Message-ID: <20180118191112.GI53542@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180118160359.29971-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180110171521.GA26960@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180118160359.29971-1-hdegoede@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 10-Jan-18 10:45 PM, Lorenzo Pieralisi wrote:
-> On Tue, Jan 09, 2018 at 02:49:30PM +0530, Manikanta Maddireddy wrote:
->> This series of patches adds loadable kernel module and power management
->> support to Tegra PCIe host controller driver. irq_set_msi_desc() and
->> tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
->> set of patches.
->>
->> These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
->> are the verification details.
->> 	- Multiple module insert & remove
->> 	- PCIe device functionality after module insert
->> 	- Free clock, resets, regulators, powergate, iomem and interrupt
->> 	resources after module remove
->> 	- PCIe device functionality after resume from RAM
->>
->> V2: PM QoS fix is dropped in V2 from this series because the fix is
->> incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
->> latency framework")'. Update commit message of few patches in V2.
->>
->> V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_use()
->> are dropped based on review comments. These symbols will be addressed in next
->> series. Took care of few other review comments.
->>
->> V4: Dropped pci_find_host_bridge() export patch and added new patch to use
->> bus->sysdata for private data.
->>
->> V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
->> on top of linux-next
->>
->> Manikanta Maddireddy (7):
->>   of: Export of_pci_range_to_resource()
->>   PCI: tegra: Use bus->sysdata to store and get host private data
->>   PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for Tegra PCIe
->>   PCI: tegra: Free resources on probe failure
->>   PCI: tegra: Add loadable kernel module support
->>   PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
->>   PCI: tegra: Add power management support
->>
->>  drivers/of/address.c         |   1 +
->>  drivers/pci/host/Kconfig     |   2 +-
->>  drivers/pci/host/pci-tegra.c | 333 ++++++++++++++++++++++++++++++++-----------
->>  3 files changed, 253 insertions(+), 83 deletions(-)
+On Thu, Jan 18, 2018 at 05:03:55PM +0100, Hans de Goede wrote:
+> Hi All,
 > 
-> Can I ask you please to rebase this series against my pci/tegra branch ?
+> The ACPI code already contains quite a bit of code to not bind the
+> ACPI-battery until all deps for an ACPI battery device have been met,
+> but on some devices calling _STA before all deps are met is a problem
+> too because the _STA method uses an i2c OpRegion there.
 > 
-> Thanks,
-> Lorenzo
+> Here is the DSDT of the device I'm seeing this on:
+> https://fedorapeople.org/~jwrdegoede/toshiba-click-mini-dsdt.dsl
+
+This looks like interesting info, but (a) this link isn't mentioned in
+the actual patches, and (b) it's conceivable that fedorapeople.org
+could go away someday.  If this were a PCI series, I would suggest
+opening a report at bugzilla.kernel.org, attaching the DSL there, and
+including the link in the patch changelog.
+
+> This series modifies the kernel to not call _STA until all deps are met,
+> mirroring the binding behavior of the battery driver.
 > 
-Hi Lorenzo,
-
-I rebased this series on lpieralisi/pci/tegra and published V6.
-V5 patch https://patchwork.ozlabs.org/patch/857318/ cherry-pick is failing,
-because of missing change "7153884c088a ("PCI: Remove PCI_REASSIGN_ALL_RSRC use on arm and arm64")"
-in lpieralisi/pci/tegra branch. This information might come in
-handy when doing remote branch merge of 'lorenzo/pci/tegra' into next
-
-Thanks,
-Manikanta
+> Without this series a total of 32 ACPI errors get printend to the console
+> on boot, there are 4 errors per _STA call, 2 battery devices on this
+> system and 4 _STA calls per battery device.
+> 
+> The first commit is a preparation commit for making the ACPICA changes
+> in the 4th commit, this commit is necessary to not break things after
+> the ACPICA changes.
+> 
+> The second commit modifies acpi_bus_get_status to not call _STA on
+> battery devices until all deps are met. This fixes 2 of the 4 too early
+> _STA calls triggering these errors.
+> 
+> The third commit makes the device instantiation code use
+> acpi_bus_get_status instead of acpi_bus_get_status_handle so that the
+> code to get the initial status also does not makes 1 too early _STA call.
+> 
+> The fourth commit changes the ACPICA acpi_get_object_info function to not
+> call _STA. Only 1 user (which is fixed in the first commit) cares about
+> acpi_device_info.current_status. And the ACPICA code has this comment:
+> 
+>  * Note: This interface is intended to be used during the initial device
+>  * discovery namespace traversal. Therefore, no complex methods can be
+>  * executed, especially those that access operation regions. Therefore, do
+>  * not add any additional methods that could cause problems in this area.
+>  * Because of this reason support for the following methods has been removed:
+>  * this was the fate of the _SUB method which was found to cause such
+>  * problems and was removed (11/2015).
+> 
+> The described problems with the _SUB method clearly also apply to the _STA
+> method, so removing it from acpi_get_object_info seems like it is the right
+> thing to do here. This too fixes 1 too early _STA call, so that with all
+> 4 patches in place we've fixed all 4 too early _STA calls.
+> 
+> Regards,
+> 
+> Hans
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
