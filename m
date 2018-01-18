@@ -1,181 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0078.outbound.protection.outlook.com ([104.47.42.78]:32395
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752552AbeADWR5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 17:17:57 -0500
-From: Felix Kuehling <Felix.Kuehling@amd.com>
-To: amd-gfx@lists.freedesktop.org, oded.gabbay@gmail.com
-Cc: Jay Cornwall <Jay.Cornwall@amd.com>, linux-pci@vger.kernel.org,
-        Felix Kuehling <Felix.Kuehling@amd.com>
-Subject: [PATCH 1/9] PCI: Add pci_enable_atomic_ops_to_root
-Date: Thu,  4 Jan 2018 17:17:40 -0500
-Message-Id: <1515104268-25087-2-git-send-email-Felix.Kuehling@amd.com>
-In-Reply-To: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
-References: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
+Received: from foss.arm.com ([217.140.101.70]:55732 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756185AbeARNp2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Jan 2018 08:45:28 -0500
+Date: Thu, 18 Jan 2018 13:46:31 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>, vigneshr@ti.com, kishon@ti.com,
+        niklas.cassel@axis.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: dra7xx: add back CONFIG_PCI dependency for
+ endpoint
+Message-ID: <20180118134631.GA11777@red-moon>
+References: <20180118131612.871559-1-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180118131612.871559-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jay Cornwall <Jay.Cornwall@amd.com>
+On Thu, Jan 18, 2018 at 02:15:54PM +0100, Arnd Bergmann wrote:
+> It was a nice idea to split out the PCI host and endpoint mode configuration
+> into separate options. Unfortunately it doesn't build:
+> 
+> drivers/pci/dwc/pci-dra7xx.c:229:11: error: 'pci_irqd_intx_xlate' undeclared here (not in a function)
 
-The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be
-requested by, routed through and completed by PCIe components. Routing and
-completion do not require software support. Component support for each is
-detectable via the DEVCAP2 register.
+It is two series tripping over each others in my pci/dwc branch and the
+kbuild bot did not manage to test the merged result with a config that
+fails - so here we go.
 
-AtomicOp requests are permitted only if a component's
-DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot be
-detected but is a no-op if set on a component with no support. These
-requests can only be serviced if the upstream components support AtomicOp
-completion and/or routing to a component which does.
+Niklas, Vignesh, Kishon, is this the way you want to get this fixed ?
 
-A concrete example is the AMD Fiji-class GPU, which is specified to
-support AtomicOp requests, routed through a PLX 8747 switch (advertising
-AtomicOp routing) to a Haswell host bridge (advertising AtomicOp
-completion support). When AtomicOp requests are disabled the GPU logs
-attempts to initiate requests to an MMIO register for debugging.
+Otherwise please send a patch asap on top of my pci/dwc branch.
 
-Add pci_enable_atomic_ops_to_root for per-device control over AtomicOp
-requests. Upstream bridges are checked for AtomicOp routing capability and
-the call fails if any lack this capability. The root port is checked for
-AtomicOp completion capabilities and the call fails if it does not support
-any. Routes to other PCIe components are not checked for AtomicOp routing
-and completion capabilities.
+Thanks,
+Lorenzo
 
-v2: Check for AtomicOp route to root port with AtomicOp completion
-v3: Style fixes
-v4: Endpoint to root port only, check upstream egress blocking
-v5: Rebase, use existing PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK define
-v6: Add comp_caps param, fix upstream port detection, cosmetic/comments
-
-CC: linux-pci@vger.kernel.org
-Signed-off-by: Jay Cornwall <Jay.Cornwall@amd.com>
-Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
----
- drivers/pci/pci.c             | 80 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h           |  1 +
- include/uapi/linux/pci_regs.h |  4 ++-
- 3 files changed, 84 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4a7c686..9cea399 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3066,6 +3066,86 @@ int pci_rebar_set_size(struct pci_dev *pdev, int bar, int size)
- }
- 
- /**
-+ * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
-+ * @dev: the PCI device
-+ * @comp_caps: Caps required for atomic request completion
-+ *
-+ * Return 0 if all upstream bridges support AtomicOp routing, egress
-+ * blocking is disabled on all upstream ports, and the root port
-+ * supports the requested completion capabilities (32-bit, 64-bit
-+ * and/or 128-bit AtomicOp completion), or negative otherwise.
-+ */
-+int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 comp_caps)
-+{
-+	struct pci_bus *bus = dev->bus;
-+
-+	if (!pci_is_pcie(dev))
-+		return -EINVAL;
-+
-+	switch (pci_pcie_type(dev)) {
-+	/*
-+	 * PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
-+	 * to implement AtomicOp requester capabilities.
-+	 */
-+	case PCI_EXP_TYPE_ENDPOINT:
-+	case PCI_EXP_TYPE_LEG_END:
-+	case PCI_EXP_TYPE_RC_END:
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	while (bus->parent) {
-+		struct pci_dev *bridge = bus->self;
-+		u32 cap;
-+
-+		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
-+
-+		switch (pci_pcie_type(bridge)) {
-+		/*
-+		 * Upstream, downstream and root ports may implement AtomicOp
-+		 * routing capabilities. AtomicOp routing via a root port is
-+		 * not considered.
-+		 */
-+		case PCI_EXP_TYPE_UPSTREAM:
-+		case PCI_EXP_TYPE_DOWNSTREAM:
-+			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
-+				return -EINVAL;
-+			break;
-+
-+		/*
-+		 * Root ports are permitted to implement AtomicOp completion
-+		 * capabilities.
-+		 */
-+		case PCI_EXP_TYPE_ROOT_PORT:
-+			if ((cap & comp_caps) != comp_caps)
-+				return -EINVAL;
-+			break;
-+		}
-+
-+		/*
-+		 * Upstream ports may block AtomicOps on egress.
-+		 */
-+		if (!bridge->has_secondary_link) {
-+			u32 ctl2;
-+
-+			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
-+						   &ctl2);
-+			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
-+				return -EINVAL;
-+		}
-+
-+		bus = bus->parent;
-+	}
-+
-+	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(pci_enable_atomic_ops_to_root);
-+
-+/**
-  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
-  * @dev: the PCI device
-  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c170c92..52a17754 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2061,6 +2061,7 @@ void pci_request_acs(void);
- bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
- bool pci_acs_path_enabled(struct pci_dev *start,
- 			  struct pci_dev *end, u16 acs_flags);
-+int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 comp_caps);
- 
- #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
- #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 70c2b2a..f31b56b 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -624,7 +624,9 @@
- #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
- #define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
- #define  PCI_EXP_DEVCAP2_ATOMIC_ROUTE	0x00000040 /* Atomic Op routing */
--#define PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* Atomic 64-bit compare */
-+#define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
-+#define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
-+#define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion */
- #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
- #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
- #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
--- 
-2.7.4
+> This is certainly a fixable problem, but since it's clear that this
+> configuration was never tested, let's maybe revert back to the
+> dependency for now, until it can be done in a way that works
+> better.
+> 
+> Fixes: b052835c6385 ("PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep mode")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/pci/dwc/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 0fb96c7754de..540419527a92 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -36,7 +36,7 @@ config PCI_DRA7XX_HOST
+>  config PCI_DRA7XX_EP
+>  	bool "TI DRA7xx PCIe controller Endpoint Mode"
+>  	depends on SOC_DRA7XX || COMPILE_TEST
+> -	depends on PCI_ENDPOINT
+> +	depends on PCI && PCI_ENDPOINT
+>  	depends on OF && HAS_IOMEM && TI_PIPE3
+>  	select PCIE_DW_EP
+>  	select PCI_DRA7XX
+> -- 
+> 2.9.0
+> 
