@@ -1,100 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Benedikt Spranger <b.spranger@linutronix.de>
-Subject: [PATCH 2/6] pci: Scan all functions when probing while running over Jailhouse
-Date: Mon, 22 Jan 2018 07:12:46 +0100
-Message-Id: <66bfcfc6dc1832baa3fbd8e4879764d36aa9c1e7.1516601570.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
-References: <cover.1516601570.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
-References: <cover.1516601570.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:53220 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755160AbeARPEA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 10:04:00 -0500
+Date: Thu, 18 Jan 2018 16:03:57 +0100
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: dra7xx: add back CONFIG_PCI dependency for
+ endpoint
+Message-ID: <20180118150357.GA7544@axis.com>
+References: <20180118131612.871559-1-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180118131612.871559-1-arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On Thu, Jan 18, 2018 at 02:15:54PM +0100, Arnd Bergmann wrote:
+> It was a nice idea to split out the PCI host and endpoint mode configuration
+> into separate options. Unfortunately it doesn't build:
+> 
+> drivers/pci/dwc/pci-dra7xx.c:229:11: error: 'pci_irqd_intx_xlate' undeclared here (not in a function)
+> 
+> This is certainly a fixable problem, but since it's clear that this
+> configuration was never tested, let's maybe revert back to the
+> dependency for now, until it can be done in a way that works
+> better.
 
-PCI and PCIBIOS probing only scans devices at function number 0/8/16/...
-Subdevices (e.g. multiqueue) have function numbers which are not a
-multiple of 8.
+Hello Arnd,
 
-The simple hypervisor Jailhouse passes subdevices directly w/o providing
-a virtual PCI topology like KVM. As a consequence a PCI passthrough from
-Jailhouse to a guest will not be detected by Linux.
+That is not true :( I did test..
 
-Based on patch by Benedikt Spranger, adding Jailhouse probing to avoid
-changing the behavior in the absence of the hypervisor.
+git checkout b052835c6385
+disable CONFIG_PCI
+make
+works like a charm :P
 
-CC: Benedikt Spranger <b.spranger@linutronix.de>
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- arch/x86/pci/legacy.c | 4 +++-
- drivers/pci/probe.c   | 4 +++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+Commit 524d59f6e30a ("PCI: dra7xx: Fix legacy INTD IRQ handling"),
+which was merged after my commit, added a dependency towards
+pci_irqd_intx_xlate.
 
-diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-index 1cb01abcb1be..a7b0476b4f44 100644
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -5,6 +5,7 @@
- #include <linux/export.h>
- #include <linux/pci.h>
- #include <asm/pci_x86.h>
-+#include <asm/jailhouse_para.h>
+It might be a bit unfortunately that commit 489f8fe6aa71
+("PCI: dwc: dra7xx: Help compiler to remove unused code"),
+a commit that you helped me with Arnd, was placed after
+b052835c6385 ("PCI: dwc: dra7xx: Refactor Kconfig and Makefile
+handling for host/ep mode") instead of before, in my patch
+series order.
+
+However, since pci_irqd_intx_xlate is only defined inside
+CONFIG_PCI, even 489f8fe6aa71 will not help.
+
+Not completely sure about this, but perhaps a better fix is:
+
++++ b/include/linux/pci.h
+@@ -1686,6 +1686,12 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #define dev_is_pf(d) (false)
+ static inline bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ { return false; }
++static inline int pci_irqd_intx_xlate(struct irq_domain *d,
++                                     struct device_node *node,
++                                     const u32 *intspec,
++                                     unsigned int intsize,
++                                     unsigned long *out_hwirq,
++                                     unsigned int *out_type) { return 0; }
+ #endif /* CONFIG_PCI */
  
- /*
-  * Discover remaining PCI buses in case there are peer host bridges.
-@@ -34,13 +35,14 @@ int __init pci_legacy_init(void)
- 
- void pcibios_scan_specific_bus(int busn)
- {
-+	int stride = jailhouse_paravirt() ? 1 : 8;
- 	int devfn;
- 	u32 l;
- 
- 	if (pci_find_bus(0, busn))
- 		return;
- 
--	for (devfn = 0; devfn < 256; devfn += 8) {
-+	for (devfn = 0; devfn < 256; devfn += stride) {
- 		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
- 		    l != 0x0000 && l != 0xffff) {
- 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 14e0ea1ff38b..60ad14c8245f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -17,6 +17,7 @@
- #include <linux/acpi.h>
- #include <linux/irqdomain.h>
- #include <linux/pm_runtime.h>
-+#include <linux/hypervisor.h>
- #include "pci.h"
- 
- #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
-@@ -2454,6 +2455,7 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 					      unsigned int available_buses)
- {
- 	unsigned int used_buses, normal_bridges = 0, hotplug_bridges = 0;
-+	unsigned int stride = jailhouse_paravirt() ? 1 : 8;
- 	unsigned int start = bus->busn_res.start;
- 	unsigned int devfn, cmax, max = start;
- 	struct pci_dev *dev;
-@@ -2461,7 +2463,7 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 	dev_dbg(&bus->dev, "scanning bus\n");
- 
- 	/* Go find them, Rover! */
--	for (devfn = 0; devfn < 0x100; devfn += 8)
-+	for (devfn = 0; devfn < 0x100; devfn += stride)
- 		pci_scan_slot(bus, devfn);
- 
- 	/* Reserve buses for SR-IOV capability. */
--- 
-2.13.6
+ /* Include architecture-dependent settings and functions */
+
+
+And a 'Fixes:' tag that references 524d59f6e30a
+
+Regards,
+Niklas
+
+> 
+> Fixes: b052835c6385 ("PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep mode")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/pci/dwc/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 0fb96c7754de..540419527a92 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -36,7 +36,7 @@ config PCI_DRA7XX_HOST
+>  config PCI_DRA7XX_EP
+>  	bool "TI DRA7xx PCIe controller Endpoint Mode"
+>  	depends on SOC_DRA7XX || COMPILE_TEST
+> -	depends on PCI_ENDPOINT
+> +	depends on PCI && PCI_ENDPOINT
+>  	depends on OF && HAS_IOMEM && TI_PIPE3
+>  	select PCIE_DW_EP
+>  	select PCI_DRA7XX
+> -- 
+> 2.9.0
+> 
