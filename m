@@ -1,44 +1,61 @@
-Return-Path: <SRS0=S8NQ=EY=gmail.com=airlied@kernel.org>
-Return-Path: <SRS0=S8NQ=EY=gmail.com=airlied@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180129223821.GE232763@bhelgaas-glaptop.roam.corp.google.com>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-6-git-send-email-okaya@codeaurora.org> <9b3cf544-173e-2450-589c-4bf14af307f2@codeaurora.org>
- <CAPM=9tzWpgF3mtq+ztKJ=P1Nw3Vh8ZEUfYH8Ep=+fRDZTbTtUg@mail.gmail.com> <20180129223821.GE232763@bhelgaas-glaptop.roam.corp.google.com>
-From: Dave Airlie <airlied@gmail.com>
-Date: Tue, 30 Jan 2018 08:43:37 +1000
-Message-ID: <CAPM=9tzA19rHudfFWMpv_J9ctCs5QYU-o3BBooixLm_LyeV6zQ@mail.gmail.com>
-Subject: Re: [PATCH V4 05/26] agp: nvidia: deprecate pci_get_bus_and_slot()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, David Airlie <airlied@linux.ie>,
-	Linux PCI <linux-pci@vger.kernel.org>, timur@codeaurora.org,
-	open list <linux-kernel@vger.kernel.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46326 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933113AbeARQEM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Jan 2018 11:04:12 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robert Moore <robert.moore@intel.com>,
+        Lv Zheng <lv.zheng@intel.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, devel@acpica.org
+Subject: [PATCH 1/4] PCI: acpiphp_ibm: prepare for acpi_get_object_info no longer returning status
+Date: Thu, 18 Jan 2018 17:03:56 +0100
+Message-Id: <20180118160359.29971-2-hdegoede@redhat.com>
+In-Reply-To: <20180118160359.29971-1-hdegoede@redhat.com>
+References: <20180118160359.29971-1-hdegoede@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30 January 2018 at 08:38, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Tue, Jan 30, 2018 at 07:43:21AM +1000, Dave Airlie wrote:
->> On 3 January 2018 at 22:44, Sinan Kaya <okaya@codeaurora.org> wrote:
->> > On 12/19/2017 12:37 AM, Sinan Kaya wrote:
->> >> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
->> >> where a PCI device is present. This restricts the device drivers to be
->> >> reused for other domain numbers.
->>
->> So not a major problem, but it would be pretty much impossible for either
->> of these agp drivers to be used in any other domain ever.
->>
->> What does this buy us, maybe just rename pci_get_bus_and_slot to
->> pci_get_domain0_bus_and_slot as a helper, or just pass the pdev in
->> and have it do the right thing always.
->
-> I already have this patch on my "next" branch, planned for the v4.16
-> merge window, so it's done unless you have a major objection.
+acpi_get_object_info is intended for early probe usage and as such should
+not call any methods which may rely on OpRegions, but it used to also call
+_STA to get the status, which on some systems does rely on OpRegions, this
+behavior and the acpi_device_info.current_status member are being removed.
 
-Yeah I don't really care either way, I just can't seen the point in changing
-agp drivers that definitely will never see a domain, but if it gets
-rid of a dumb API,
-so be it.
+This commit prepares the acpiphp_ibm code for this by having it get the
+status itself using acpi_bus_get_status_handle. Note no error handling is
+necessary on any errors acpi_bus_get_status_handle leaves the value of
+the passed in current_status at its 0 initialization value.
 
-Dave.
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/pci/hotplug/acpiphp_ibm.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
+index 984c7e8cec5a..8472c4a27f70 100644
+--- a/drivers/pci/hotplug/acpiphp_ibm.c
++++ b/drivers/pci/hotplug/acpiphp_ibm.c
+@@ -399,6 +399,7 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
+ 		u32 lvl, void *context, void **rv)
+ {
+ 	acpi_handle *phandle = (acpi_handle *)context;
++	unsigned long long current_status = 0;
+ 	acpi_status status;
+ 	struct acpi_device_info *info;
+ 	int retval = 0;
+@@ -410,7 +411,9 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
+ 		return retval;
+ 	}
+ 
+-	if (info->current_status && (info->valid & ACPI_VALID_HID) &&
++	acpi_bus_get_status_handle(handle, &current_status);
++
++	if (current_status && (info->valid & ACPI_VALID_HID) &&
+ 			(!strcmp(info->hardware_id.string, IBM_HARDWARE_ID1) ||
+ 			 !strcmp(info->hardware_id.string, IBM_HARDWARE_ID2))) {
+ 		pr_debug("found hardware: %s, handle: %p\n",
+-- 
+2.14.3
