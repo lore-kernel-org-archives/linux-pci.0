@@ -1,18 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v5 1/2] PCI: mediatek: Clear IRQ status after IRQ
- dispatched to avoid reentry
-To: Honghui Zhang <honghui.zhang@mediatek.com>
-References: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
- <1514336394-17747-2-git-send-email-honghui.zhang@mediatek.com>
- <20180104184040.GE12239@red-moon>
- <88c84a3e-17ea-08f2-e5fc-4799b41de267@arm.com>
- <1515153107.25872.57.camel@mhfsdcap03>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <1de755e8-6654-b789-159f-248231fab7b0@arm.com>
-Date: Fri, 5 Jan 2018 17:42:27 +0000
+Date: Thu, 18 Jan 2018 07:09:23 -0800
+In-Reply-To: <20180118073123.GA15766@lst.de>
+References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
+ <1516058925-46522-5-git-send-email-jim2101024@gmail.com>
+ <CAL_JsqKpWNJXNpKS5qC99N0+H_P37DcRE-rN9HFwT5tVmRFCNw@mail.gmail.com>
+ <20180118073123.GA15766@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <1515153107.25872.57.camel@mhfsdcap03>
+Subject: Re: [PATCH v4 4/8] PCI: brcmstb: Add dma-range mapping for
+ inbound	traffic
+To: Christoph Hellwig <hch@lst.de>,Rob Herring <robh+dt@kernel.org>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <EDAEFB0F-BB7C-444A-B282-F178F5ADFCBF@gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,144 +19,44 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- linux-pci@vger.kernel.org, sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
- ryder.lee@mediatek.com, linux-mediatek@lists.infradead.org,
- yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
- eddie.huang@mediatek.com, linux-arm-kernel@lists.infradead.org
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Linux-MIPS <linux-mips@linux-mips.org>, linux-pci@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/01/18 11:51, Honghui Zhang wrote:
-> On Thu, 2018-01-04 at 19:04 +0000, Marc Zyngier wrote:
->> On 04/01/18 18:40, Lorenzo Pieralisi wrote:
->>> [+Marc]
->>>
->>> On Wed, Dec 27, 2017 at 08:59:53AM +0800, honghui.zhang@mediatek.com wrote:
->>>> From: Honghui Zhang <honghui.zhang@mediatek.com>
->>>>
->>>> There maybe a same IRQ reentry scenario after IRQ received in current
->>>> IRQ handle flow:
->>>> 	EP device		PCIe host driver	EP driver
->>>> 1. issue an IRQ
->>>> 			2. received IRQ
->>>> 			3. clear IRQ status
->>>> 			4. dispatch IRQ
->>>> 						5. clear IRQ source
->>>> The IRQ status was not successfully cleared at step 2 since the IRQ
->>>> source was not cleared yet. So the PCIe host driver may receive the
->>>> same IRQ after step 5. Then there's an IRQ reentry occurred.
->>>> Even worse, if the reentry IRQ was not an IRQ that EP driver expected,
->>>> it may not handle the IRQ. Then we may run into the infinite loop from
->>>> step 2 to step 4.
->>>> Clear the IRQ status after IRQ have been dispatched to avoid the IRQ
->>>> reentry.
->>>> This patch also fix another INTx IRQ issue by initialize the iterate
->>>> before the loop. If an INTx IRQ re-occurred while we are dispatching
->>>> the INTx IRQ, then iterate may start from PCI_NUM_INTX + INTX_SHIFT
->>>> instead of INTX_SHIFT for the second time entering the
->>>> for_each_set_bit_from() loop.
->>>
->>> This looks like two different issues that should be fixed with two
->>> patches.
-> 
-> Ok, I split this into two patches and figure out a more reasonable
-> approach by using irq_chip solution.
-> 
->>>
->>>> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
->>>> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
->>>> ---
->>>>  drivers/pci/host/pcie-mediatek.c | 11 ++++++-----
->>>>  1 file changed, 6 insertions(+), 5 deletions(-)
->>>
->>> For the sake of uniformity, I first want to understand why this
->>> driver does not call:
->>>
->>> chained_irq_enter/exit()
->>>
->>> in the primary handler (mtk_pcie_intr_handler()).
->>>
->>> With the GIC as a primary interrupt controller we have not
->>> even figured out how current code can actually work without
->>> calling the chained_* API.
->>>
->>> I want to come up with a consistent handling of IRQ domains for
->>> all host bridges and any discrepancy should be explained.
->>
->> That's because this driver is a huge hack, see below:
->>
->>>
->>>> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
->>>> index db93efd..fc29a9a 100644
->>>> --- a/drivers/pci/host/pcie-mediatek.c
->>>> +++ b/drivers/pci/host/pcie-mediatek.c
->>>> @@ -601,15 +601,16 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
->>
->> This function is not a chained irqchip, but an interrupt handler...
->>
->>>>  	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
->>>>  	unsigned long status;
->>>>  	u32 virq;
->>>> -	u32 bit = INTX_SHIFT;
->>>> +	u32 bit;
->>>>  
->>>>  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
->>>> +		bit = INTX_SHIFT;
->>>>  		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
->>>> -			/* Clear the INTx */
->>>> -			writel(1 << bit, port->base + PCIE_INT_STATUS);
->>>>  			virq = irq_find_mapping(port->irq_domain,
->>>>  						bit - INTX_SHIFT);
->>>>  			generic_handle_irq(virq);
->>
->> and nonetheless, this calls into generic_handle_irq(). That's a complete
->> violation of the interrupt layering. Maybe there is a good reason for
->> it, but I'd like to know which one.
->>
->> Which means that all of the ack/mask has to be done outside of the
->> irqchip framework too... Disgusting.
->>
->>>> +			/* Clear the INTx */
->>>> +			writel(1 << bit, port->base + PCIE_INT_STATUS);
->>>
->>> I think that these masking/acking should actually be done through
->>> the irq_chip hooks (see for instance pci-ftpci100.c) - that would
->>> make this kind of bugs much easier to prevent (because the IRQ
->>> layer does the sequencing for you).
->>
->> +1.
->>
-> 
-> Thanks for your advice, I need to do some homework to have a better
-> understanding of the irq_chip approach.
-> 
->>> Marc (CC'ed) has a more comprehensive view on this than me - I would
->>> like to get to a point where all host bridges uses a consistent
->>> approach for chained IRQ handling and I hope this bug fix can be
->>> a starting point.
->>
->> +1 again. We definitely need to come up with some form of common
->> approach for all these host drivers, and maybe turn that into a library...
->>
-> 
-> Well, this is beyond my knowledge now, I guess I can figure out how to
-> using irq_chip for the first step, then I may following this "common
-> approach" after we have a solution for that?
+On January 17, 2018 11:31:23 PM PST, Christoph Hellwig <hch@lst.de> wrote:
+>On Wed, Jan 17, 2018 at 08:15:33PM -0600, Rob Herring wrote:
+>> > (a) overriding/redefining the dma_to_phys() and phys_to_dma() calls
+>> > that are used by the dma_ops routines.  This is the approach of
+>> >
+>> >         arch/mips/cavium-octeon/dma-octeon.c
+>> 
+>> MIPS is rarely an example to follow. :)
+>
+>But in this case it actually is the example to follow as told
+>previously.
+>
+>NAK again for these chained dma ops that only create problems.
 
-We can help you with that at a later time indeed. the urgent thing is to
-fix this driver so that it does the right thing, and we can then look at
-using a common approach for a number of them.
+Care to explain what should be done instead?
 
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+Florian
 
 _______________________________________________
 linux-arm-kernel mailing list
