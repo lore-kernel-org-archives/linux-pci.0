@@ -1,53 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48704 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755136AbeARSDs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 13:03:48 -0500
-Subject: Re: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
-To: poza@codeaurora.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>
-References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
- <1516185438-31556-4-git-send-email-poza@codeaurora.org>
- <733abfcb-5b31-7394-ab62-19a0888d71c2@codeaurora.org>
- <c77a3302e34d55d557404d7bdc6892fc@codeaurora.org>
- <5cf7004e62a2979afb3c29e99d705c60@codeaurora.org>
- <35a9ce2b-156f-3235-c3b7-2c495fe9c52b@codeaurora.org>
- <64127dba1cebab196c88a160191ebee0@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <0ab49441-548e-a5bc-d76b-bdc6fa7495dc@codeaurora.org>
-Date: Thu, 18 Jan 2018 13:03:45 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 18 Jan 2018 08:31:23 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v4 4/8] PCI: brcmstb: Add dma-range mapping for inbound
+ traffic
+Message-ID: <20180118073123.GA15766@lst.de>
+References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
+ <1516058925-46522-5-git-send-email-jim2101024@gmail.com>
+ <CAL_JsqKpWNJXNpKS5qC99N0+H_P37DcRE-rN9HFwT5tVmRFCNw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <64127dba1cebab196c88a160191ebee0@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAL_JsqKpWNJXNpKS5qC99N0+H_P37DcRE-rN9HFwT5tVmRFCNw@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, Florian Fainelli <f.fainelli@gmail.com>,
+ Linux-MIPS <linux-mips@linux-mips.org>, linux-pci@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/18/2018 1:00 PM, poza@codeaurora.org wrote:
->> I think you would put into include/linux/pci.h only if there is an external
->> use of constant outside of drivers/pci directory. Otherwise, you should keep
->> the setting inside one of the header files in drivers/pci directory.
->>
->> I don't see any other subsystem caring about DPC_FATAL definition.
+On Wed, Jan 17, 2018 at 08:15:33PM -0600, Rob Herring wrote:
+> > (a) overriding/redefining the dma_to_phys() and phys_to_dma() calls
+> > that are used by the dma_ops routines.  This is the approach of
+> >
+> >         arch/mips/cavium-octeon/dma-octeon.c
 > 
-> ok so you are suggesting to move only DPC_FATAL ? so then AER can stay where it is.
+> MIPS is rarely an example to follow. :)
 
-Now that both AER and DPC handling is getting unified, I think it makes sense to
-keep all error codes (AER+DPC) together in drivers/pci/pci.h rather than having
-them split in aer.h and dpc.h.
+But in this case it actually is the example to follow as told previously.
 
-Otherwise, how would we avoid having a new error type defined with the existing values.
+NAK again for these chained dma ops that only create problems.
 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
