@@ -1,74 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:6438 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752064AbeAIJUY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 04:20:24 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V5 2/7] PCI: tegra: Use bus->sysdata to store and get host private data
-Date: Tue, 9 Jan 2018 14:49:32 +0530
-Message-ID: <1515489577-2197-3-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:49252 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756038AbeARSf1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Jan 2018 13:35:27 -0500
+Date: Thu, 18 Jan 2018 12:35:25 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ladislav Michl <ladis@linux-mips.org>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
+Message-ID: <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
+References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
+ <20180118145420.GA21163@lenoch>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180118145420.GA21163@lenoch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra host driver is using pci_find_host_bridge() to get private data,
-however pci_find_host_bridge() is causing module build failure because
-it is not exported. pci_find_host_bridge() can be avoided by using
-bus->sysdata to store and get private data.
+On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
+> On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
+> > platform_get_resource_byname() may fail and return NULL, so we should
+> > better check it's return value to avoid a NULL pointer dereference a
+> > bit later in the code.
+> > 
+> > This is detected by Coccinelle semantic patch.
+> > 
+> > @@
+> > expression pdev, res, n, t, e, e1, e2;
+> > @@
+> > 
+> > res = platform_get_resource_byname(pdev, t, n);
+> > + if (!res)
+> > +   return -EINVAL;
+> > ... when != res == NULL
+> > e = devm_ioremap(e1, res->start, e2);
+> 
+> Well, then it should be replaced with devm_ioremap_resource()
+> which already checks for NULL and the right resource type
+> (IORESOURCE_MEM).
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
----
-V4:
-* new patch in V4
-V5:
-* Rebase on top of linux-next
+That's probably a better idea.  Maybe we should add a comment like this
+to help avoid this in the future:
 
- drivers/pci/host/pci-tegra.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+--- a/lib/devres.c
++++ b/lib/devres.c
+@@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev, void *res, void *match_data)
+  * @size: Size of map
+  *
+  * Managed ioremap().  Map is automatically unmapped on driver detach.
++ *
++ * When possible, use devm_ioremap_resource() instead.
+  */
+ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+ 			   resource_size_t size)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index e126341fcb36..d790a26ad87e 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -379,8 +379,7 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
- 					unsigned int devfn,
- 					int where)
- {
--	struct pci_host_bridge *host = pci_find_host_bridge(bus);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-+	struct tegra_pcie *pcie = bus->sysdata;
- 	void __iomem *addr = NULL;
- 
- 	if (bus->number == 0) {
-@@ -573,8 +572,7 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- {
--	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
--	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-+	struct tegra_pcie *pcie = pdev->bus->sysdata;
- 	int irq;
- 
- 	tegra_cpuidle_pcie_irqs_in_use();
-@@ -2258,6 +2256,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	pcie = pci_host_bridge_priv(host);
-+	host->sysdata = pcie;
- 
- 	pcie->soc = of_device_get_match_data(dev);
- 	INIT_LIST_HEAD(&pcie->ports);
--- 
-2.1.4
+> > Fixes: 608793e27b33 ("PCI: dwc: dra7xx: Add EP mode support")
+> > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> > ---
+> >  drivers/pci/dwc/pci-dra7xx.c | 6 ++++++
+> >  1 file changed, 6 insertions(+)
+> > 
+> > diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> > index 8bf7c27..aafded8 100644
+> > --- a/drivers/pci/dwc/pci-dra7xx.c
+> > +++ b/drivers/pci/dwc/pci-dra7xx.c
+> > @@ -409,11 +409,15 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+> >  	ep->ops = &pcie_ep_ops;
+> >  
+> >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
+> > +	if (!res)
+> > +		return -EINVAL;
+> >  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+> >  	if (!pci->dbi_base)
+> >  		return -ENOMEM;
+> >  
+> >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
+> > +	if (!res)
+> > +		return -EINVAL;
+> >  	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+> >  	if (!pci->dbi_base2)
+> >  		return -ENOMEM;
+> > @@ -462,6 +466,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+> >  		return ret;
+> >  
+> >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+> > +	if (!res)
+> > +		return -EINVAL;
+> >  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+> >  	if (!pci->dbi_base)
+> >  		return -ENOMEM;
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
