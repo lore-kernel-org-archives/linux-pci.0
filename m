@@ -1,81 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0049.outbound.protection.outlook.com ([104.47.38.49]:35920
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751495AbeAEO0i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Jan 2018 09:26:38 -0500
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
+Return-Path: <SRS0=w8ZT=EN=linux-mips.org=ladis@kernel.org>
+Return-Path: <SRS0=w8ZT=EN=linux-mips.org=ladis@kernel.org>
+Date: Thu, 18 Jan 2018 22:34:17 +0100
+Sender: Ladislav Michl <ladis@linux-mips.org>
+From: Ladislav Michl <ladis@linux-mips.org>
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        "Jim Quinlan" <jim2101024@gmail.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
-        "linux-rockchip@lists.infradead.org"
-        <linux-rockchip@lists.infradead.org>
-Subject: RE: Why do we check for "link-up" in *_pcie_valid_device()?
-Date: Fri, 5 Jan 2018 14:26:34 +0000
-Message-ID: <BLUPR0201MB1505659A7B1DDA658EFB7049A51C0@BLUPR0201MB1505.namprd02.prod.outlook.com>
-References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
- <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
- <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Cc: Wei Yongjun <weiyongjun1@huawei.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
+Message-ID: <20180118213417.GA30723@lenoch>
+References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
+ <20180118145420.GA21163@lenoch>
+ <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada wrote:
-> Bjorn wrote:
->> In the PCI config access path, the *_pcie_valid_device() functions in=20
->> the dwc, altera, rockchip, and xilinx drivers all check whether the=20
->> link is up.
->>=20
->> I think this is racy because the link may go down after we check but=20
->> before we perform the config access.
->>=20
->> What would blow up if we removed the *_pcie_link_up() checks?
->>=20
->> I'd like to either remove the checks or add comments about why the=20
->> race is acceptable.  If we've covered this before, I apologize.
->> Adding a comment will keep me from pestering you about this again in=20
->> the future.
+On Thu, Jan 18, 2018 at 12:35:25PM -0600, Bjorn Helgaas wrote:
+> On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
+> > On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
+> > > platform_get_resource_byname() may fail and return NULL, so we should
+> > > better check it's return value to avoid a NULL pointer dereference a
+> > > bit later in the code.
+> > > 
+> > > This is detected by Coccinelle semantic patch.
+> > > 
+> > > @@
+> > > expression pdev, res, n, t, e, e1, e2;
+> > > @@
+> > > 
+> > > res = platform_get_resource_byname(pdev, t, n);
+> > > + if (!res)
+> > > +   return -EINVAL;
+> > > ... when != res == NULL
+> > > e = devm_ioremap(e1, res->start, e2);
+> > 
+> > Well, then it should be replaced with devm_ioremap_resource()
+> > which already checks for NULL and the right resource type
+> > (IORESOURCE_MEM).
+> 
+> That's probably a better idea.  Maybe we should add a comment like this
+> to help avoid this in the future:
+> 
+> --- a/lib/devres.c
+> +++ b/lib/devres.c
+> @@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev, void *res, void *match_data)
+>   * @size: Size of map
+>   *
+>   * Managed ioremap().  Map is automatically unmapped on driver detach.
+> + *
+> + * When possible, use devm_ioremap_resource() instead.
+>   */
+>  void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+>  			   resource_size_t size)
 
-> In both Xilinx driver cases when link is down, hardware responds by=20
-> AXI DECERR/SLVERR status which causes an exception, synchronous=20
-> external abort to CPU.  This causes system to hang, so we need this=20
-> check for both of our drivers.  We will add comments.
+Yes, please. It would be nice first patch in the serie converting existing
+users of devm_ioremap into devm_ioremap_resource:
+find drivers -name "*.c" | xargs grep "devm_ioremap(" | grep resource_size | wc -l
+82
+I know, that was dumb, Coccinelle would certainly do better job.
+And from a quick look a lot of
+if (!res) {
+	print error
+	return -EINVAL;
+}
+code blocks could be deleted (and many cases where check for NULL resource
+is missing fixed).
 
-This is a problem, and checking whether the link is up is a workaround but =
-not a real solution.  That means your system may hang if the link happens t=
-o go down at the wrong time.
-
-A real solution would be to handle the synchronous external abort so it doe=
-sn't cause a system hang.
-
-Yes, I agree that this is workaround. For pcie-xilinx.c for arm32, we can h=
-ave fault handling similar to "imx6q_pcie_abort_handler" in drivers/pci/dwc=
-/pci-imx6.c.
-Since this driver is same for Microblaze architecture also, it requires sep=
-arate handling.
-
-For pcie-xilinx-nwl.c ARM64 as per link [1], linux kernel will hang for the=
- above AXI responses.=20
-As of now arm64 RAS is still work in progress [2]. =20
-
-[1] https://www.spinics.net/lists/arm-kernel/msg624203.html
-
-[2] https://patchwork.kernel.org/patch/9973967/
-
-The check can be removed, if above issues were addressed.
-
-Regards,
-Bharat
-
-
-
-=20
+> > > Fixes: 608793e27b33 ("PCI: dwc: dra7xx: Add EP mode support")
+> > > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> > > ---
+> > >  drivers/pci/dwc/pci-dra7xx.c | 6 ++++++
+> > >  1 file changed, 6 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> > > index 8bf7c27..aafded8 100644
+> > > --- a/drivers/pci/dwc/pci-dra7xx.c
+> > > +++ b/drivers/pci/dwc/pci-dra7xx.c
+> > > @@ -409,11 +409,15 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+> > >  	ep->ops = &pcie_ep_ops;
+> > >  
+> > >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
+> > > +	if (!res)
+> > > +		return -EINVAL;
+> > >  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+> > >  	if (!pci->dbi_base)
+> > >  		return -ENOMEM;
+> > >  
+> > >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
+> > > +	if (!res)
+> > > +		return -EINVAL;
+> > >  	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+> > >  	if (!pci->dbi_base2)
+> > >  		return -ENOMEM;
+> > > @@ -462,6 +466,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+> > >  		return ret;
+> > >  
+> > >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+> > > +	if (!res)
+> > > +		return -EINVAL;
+> > >  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+> > >  	if (!pci->dbi_base)
+> > >  		return -ENOMEM;
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
