@@ -1,73 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34860 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751598AbeAWRsX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jan 2018 12:48:23 -0500
-Date: Tue, 23 Jan 2018 11:48:21 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ron Yuan <ron.yuan@memblaze.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Hans de Goede <hdegoede@redhat.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Bo Chen <bo.chen@memblaze.com>,
-        William Huang <william.huang@memblaze.com>,
-        Fengming Wu <fengming.wu@memblaze.com>,
-        Jason Jiang <jason.jiang@microsemi.com>,
-        Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>,
-        Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
-        William Cheng <william.cheng@microsemi.com>,
-        "Kim Helper (khelper)" <khelper@micron.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
- pcie_bus_perf On NVMe Device
-Message-ID: <20180123174821.GF5317@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
- <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
- <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
- <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
- <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
- <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
- <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
- <09bd3f5c-4671-d9dd-fa39-4d7619ee5860@codeaurora.org>
- <SHAPR01MB173EFAB42A8838DC3D52FD1FEE30@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
- <SHAPR01MB173D186666EBAFEC5367AACFEE30@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <SHAPR01MB173D186666EBAFEC5367AACFEE30@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
-Sender: linux-pci-owner@vger.kernel.org
+        Robert Moore <robert.moore@intel.com>,
+        Lv Zheng <lv.zheng@intel.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, devel@acpica.org
+Subject: [PATCH 4/4] ACPICA: Remove calling of _STA from acpi_get_object_info
+Date: Thu, 18 Jan 2018 17:03:59 +0100
+Message-Id: <20180118160359.29971-5-hdegoede@redhat.com>
+In-Reply-To: <20180118160359.29971-1-hdegoede@redhat.com>
+References: <20180118160359.29971-1-hdegoede@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 23, 2018 at 02:01:27PM +0000, Ron Yuan wrote:
-> Just got the log, see attachment. Kernel is under "perf" mode.
-> SSD and Ethernet controller are both set to 256B MRRS. 
+As the comment above it indicates, acpi_get_object_info is intended for
+early probe usage and as such should not call any methods which may rely
+on OpRegions, before this commit it was also calling _STA, which on some
+systems does rely on OpRegions.
 
-Here's what I see from lspci:
+Calling _STA before things are ready leads to errors such as these:
 
-  3a:00.0 Root Port to 3b     MPS_cap=256 MPS=256 MRRS=128
-  3b:00.0 NIC Endpoint        MPS_cap=512 MPS=256 MRRS=256
-  3b:00.1 NIC Endpoint        MPS_cap=512 MPS=256 MRRS=256
+[    0.123579] ACPI Error: No handler for Region [ECRM] (00000000ba9edc4c)
+               [GenericSerialBus] (20170831/evregion-166)
+[    0.123601] ACPI Error: Region GenericSerialBus (ID=9) has no handler
+               (20170831/exfldio-299)
+[    0.123618] ACPI Error: Method parse/execution failed
+               \_SB.I2C1.BAT1._STA, AE_NOT_EXIST (20170831/psparse-550)
 
-Here, the NICs support up to MPS=512 but the Root Port only supports
-MPS=256.  We must set MPS=256 for the NICs.  Otherwise, the NICs could
-do 512-byte DMA writes to system memory, and the Root Port would treat
-those TLPs as malformed.
+End 2015 support for the _SUB method was removed for exactly the same
+reason. Removing current_status from struct acpi_device_info only has
+a limit impact. Within ACPICA it is only used by 2 debug messages, both
+of which are modified to no longer print it with this commit.
 
-There is no need to limit MRRS because there are no other devices
-under this Root Port.  We can't tell from lspci what the maximum MRRS
-is, but if the NICs support MRRS=4096, we could use that.
+Outside of ACPICA, for Linux there is only one user. For which a patch to
+remove the dependency on the current_status field is available.
 
-  ae:00.0 Root Port to af     MPS_cap=256 MPS=256 MRRS=128
-  ae:01.0 Root Port to b0     MPS_cap=256 MPS=256 MRRS=128
-  af:00.0 SSD Endpoint        MPS_cap=256 MPS=256 MRRS=256
-  b0:00.0 SSD Endpoint        MPS_cap=256 MPS=256 MRRS=256
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/acpi/acpica/dbdisply.c |  5 ++---
+ drivers/acpi/acpica/nsdumpdv.c |  5 ++---
+ drivers/acpi/acpica/nsxfname.c | 19 ++++---------------
+ include/acpi/actypes.h         |  2 --
+ 4 files changed, 8 insertions(+), 23 deletions(-)
 
-Everything here supports MPS=256, so that's what we should use.
+diff --git a/drivers/acpi/acpica/dbdisply.c b/drivers/acpi/acpica/dbdisply.c
+index 5a606eac0c22..7b5eb33fe962 100644
+--- a/drivers/acpi/acpica/dbdisply.c
++++ b/drivers/acpi/acpica/dbdisply.c
+@@ -642,9 +642,8 @@ void acpi_db_display_object_type(char *object_arg)
+ 		return;
+ 	}
+ 
+-	acpi_os_printf("ADR: %8.8X%8.8X, STA: %8.8X, Flags: %X\n",
+-		       ACPI_FORMAT_UINT64(info->address),
+-		       info->current_status, info->flags);
++	acpi_os_printf("ADR: %8.8X%8.8X, Flags: %X\n",
++		       ACPI_FORMAT_UINT64(info->address), info->flags);
+ 
+ 	acpi_os_printf("S1D-%2.2X S2D-%2.2X S3D-%2.2X S4D-%2.2X\n",
+ 		       info->highest_dstates[0], info->highest_dstates[1],
+diff --git a/drivers/acpi/acpica/nsdumpdv.c b/drivers/acpi/acpica/nsdumpdv.c
+index 5026594763ea..573a5f36f01a 100644
+--- a/drivers/acpi/acpica/nsdumpdv.c
++++ b/drivers/acpi/acpica/nsdumpdv.c
+@@ -88,10 +88,9 @@ acpi_ns_dump_one_device(acpi_handle obj_handle,
+ 		}
+ 
+ 		ACPI_DEBUG_PRINT_RAW((ACPI_DB_TABLES,
+-				      "    HID: %s, ADR: %8.8X%8.8X, Status: %X\n",
++				      "    HID: %s, ADR: %8.8X%8.8X\n",
+ 				      info->hardware_id.value,
+-				      ACPI_FORMAT_UINT64(info->address),
+-				      info->current_status));
++				      ACPI_FORMAT_UINT64(info->address));
+ 		ACPI_FREE(info);
+ 	}
+ 
+diff --git a/drivers/acpi/acpica/nsxfname.c b/drivers/acpi/acpica/nsxfname.c
+index 106966235805..0a9c600c2599 100644
+--- a/drivers/acpi/acpica/nsxfname.c
++++ b/drivers/acpi/acpica/nsxfname.c
+@@ -241,7 +241,7 @@ static char *acpi_ns_copy_device_id(struct acpi_pnp_device_id *dest,
+  *              namespace node and possibly by running several standard
+  *              control methods (Such as in the case of a device.)
+  *
+- * For Device and Processor objects, run the Device _HID, _UID, _CID, _STA,
++ * For Device and Processor objects, run the Device _HID, _UID, _CID,
+  * _CLS, _ADR, _sx_w, and _sx_d methods.
+  *
+  * Note: Allocates the return buffer, must be freed by the caller.
+@@ -250,8 +250,9 @@ static char *acpi_ns_copy_device_id(struct acpi_pnp_device_id *dest,
+  * discovery namespace traversal. Therefore, no complex methods can be
+  * executed, especially those that access operation regions. Therefore, do
+  * not add any additional methods that could cause problems in this area.
+- * this was the fate of the _SUB method which was found to cause such
+- * problems and was removed (11/2015).
++ * Because of this reason support for the following methods has been removed:
++ * 1) _SUB method was removed (11/2015)
++ * 2) _STA method was removed (01/2018)
+  *
+  ******************************************************************************/
+ 
+@@ -374,20 +375,8 @@ acpi_get_object_info(acpi_handle handle,
+ 		 * Notes: none of these methods are required, so they may or may
+ 		 * not be present for this device. The Info->Valid bitfield is used
+ 		 * to indicate which methods were found and run successfully.
+-		 *
+-		 * For _STA, if the method does not exist, then (as per the ACPI
+-		 * specification), the returned current_status flags will indicate
+-		 * that the device is present/functional/enabled. Otherwise, the
+-		 * current_status flags reflect the value returned from _STA.
+ 		 */
+ 
+-		/* Execute the Device._STA method */
+-
+-		status = acpi_ut_execute_STA(node, &info->current_status);
+-		if (ACPI_SUCCESS(status)) {
+-			valid |= ACPI_VALID_STA;
+-		}
+-
+ 		/* Execute the Device._ADR method */
+ 
+ 		status = acpi_ut_evaluate_numeric_object(METHOD_NAME__ADR, node,
+diff --git a/include/acpi/actypes.h b/include/acpi/actypes.h
+index 4f077edb9b81..220ef8674763 100644
+--- a/include/acpi/actypes.h
++++ b/include/acpi/actypes.h
+@@ -1191,7 +1191,6 @@ struct acpi_device_info {
+ 	u8 flags;		/* Miscellaneous info */
+ 	u8 highest_dstates[4];	/* _sx_d values: 0xFF indicates not valid */
+ 	u8 lowest_dstates[5];	/* _sx_w values: 0xFF indicates not valid */
+-	u32 current_status;	/* _STA value */
+ 	u64 address;	/* _ADR value */
+ 	struct acpi_pnp_device_id hardware_id;	/* _HID value */
+ 	struct acpi_pnp_device_id unique_id;	/* _UID value */
+@@ -1205,7 +1204,6 @@ struct acpi_device_info {
+ 
+ /* Flags for Valid field above (acpi_get_object_info) */
+ 
+-#define ACPI_VALID_STA                  0x0001
+ #define ACPI_VALID_ADR                  0x0002
+ #define ACPI_VALID_HID                  0x0004
+ #define ACPI_VALID_UID                  0x0008
+-- 
+2.14.3
 
-As with the NICs, there's no need to limit MRRS here.  We don't know
-what MRRS the endpoints support, but PERFORMANCE mode is being
-unnecessarily conservative when it limits MRRS to the MPS (256 in this
-case).
-
-It's not as simple as just removing the "set MRRS=MPS" part because we
-do rely on that in some topologies.  There are interesting topologies
-where we *don't* need it, like both of the ones above, and we need to
-make Linux smart enough to recognize them.
