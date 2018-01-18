@@ -1,69 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37857 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755418AbeAHS5p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Jan 2018 13:57:45 -0500
-Date: Mon, 8 Jan 2018 19:57:43 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgg@ziepe.ca>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
-        rdma_rw_ctx_[init|destroy]()
-Message-ID: <20180108185743.GA15936@lst.de>
-References: <20180104190137.7654-7-logang@deltatee.com> <20180104192225.GS11348@ziepe.ca> <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com> <20180104221337.GV11348@ziepe.ca> <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com> <20180105045031.GX11348@ziepe.ca> <20180108145901.GA10743@lst.de> <20180108180917.GF11348@ziepe.ca> <20180108183434.GA15549@lst.de> <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cffacbee-477a-fbe9-19cc-373cd2ec6fef@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 18 Jan 2018 11:02:24 +0530
+From: poza@codeaurora.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Wei Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v5 4/4] PCI/DPC: Enumerate the devices after DPC trigger
+ event
+In-Reply-To: <20180118025615.GF7562@localhost.localdomain>
+References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
+ <1516185438-31556-5-git-send-email-poza@codeaurora.org>
+ <b255864b-1272-0626-f448-db2d9c3710c5@codeaurora.org>
+ <20180118025615.GF7562@localhost.localdomain>
+Message-ID: <153733e36c151d2a549b814e4232c0df@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 08, 2018 at 11:44:41AM -0700, Logan Gunthorpe wrote:
->> Think about what the dma mapping routines do:
->>
->>   (a) translate from host address to bus addresses
->>
->> and
->>
->>   (b) flush caches (in non-coherent architectures)
->>
->> Both are obviously not needed for P2P transfers, as they never reach
->> the host.
->
-> Isn't pci_p2pdma_map_sg doing (a)? It's just translating from a host 
-> address to a PCI bus address.
+On 2018-01-18 08:26, Keith Busch wrote:
+> On Wed, Jan 17, 2018 at 08:27:39AM -0800, Sinan Kaya wrote:
+>> On 1/17/2018 5:37 AM, Oza Pawandeep wrote:
+>> > +static bool dpc_wait_link_active(struct pci_dev *pdev)
+>> > +{
+>> 
+>> I think you can also make this function common instead of making 
+>> another copy here.
+>> Of course, this would be another patch.
+> 
+> It is actually very similar to __pcie_wait_link_active in pciehp_hpc.c,
+> so there's some opprotunity to make even more common code.
 
-It does, sort of - but in a different way then the normal DMA map
-ops.  And only to work around the fact that we need to map our
-P2P space into struct pages.  Without that we could just pass the
-bus address around, but the Linux stack and VM isn't anywhere near
-ready for something that advanced.
+in that case there has to be a generic function in
+drives/pci.c
 
->>> Very long term the IOMMUs under the ops will need to care about this,
->>> so the wrapper is not an optimal place to put it - but I wouldn't
->>> object if it gets it out of RDMA :)
->>
->> Unless you have an IOMMU on your PCIe switch and not before/inside
->> the root complex that is not correct.
->
-> Per the ACS discussion, in the future we might want to implement "ACS 
-> Direct Translated P2P" as Alex described. I expect it would be the IOMMU 
-> that needs to set that up. So, I think, we also have the dma_map 
-> implementations also doing something like:
->
-> (c) setup/manage any security permissions on mappings
-> Which P2P may at some point be concerned with.
+which addresses folowing functions from
 
-Maybe once root complexes with iommus actually support P2P.  But until
-then we have a lot more more important problems to solve.
+pcie-dpc.c:
+dpc_wait_link_inactive
+dpc_wait_link_active
+
+drivers/pci/hotplug/pciehp_hpc.c
+pcie_wait_link_active
+
+
+all aboe making one generic function to be moved to drives/pci.c
+
+please let me know if this is okay.
+
+Regards,
+Oza.
