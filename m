@@ -1,71 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56016 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:39244 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752641AbeAQSVv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jan 2018 13:21:51 -0500
-Date: Wed, 17 Jan 2018 12:21:49 -0600
+        id S1753208AbeARAIX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Jan 2018 19:08:23 -0500
+Date: Wed, 17 Jan 2018 18:08:18 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Luis de Bethencourt <luisbg@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Joe Perches <joe@perches.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH] PCI / PM: Fix trailing semicolon
-Message-ID: <20180117182149.GB7039@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180117103321.24414-1-luisbg@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kong Lai <kong.lai@tundra.com>, linux-pci@vger.kernel.org,
+        linux-media@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 3/4] tsi108_eth: use dma API properly
+Message-ID: <20180118000818.GD53542@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180110180322.30186-1-hch@lst.de>
+ <20180110180322.30186-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180117103321.24414-1-luisbg@kernel.org>
+In-Reply-To: <20180110180322.30186-4-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael]
+[+cc David, FYI, I plan to merge this via PCI along with the rest of
+Christoph's series]
 
-On Wed, Jan 17, 2018 at 10:33:21AM +0000, Luis de Bethencourt wrote:
-> The trailing semicolon is an empty statement that does no operation.
-> Removing it since it doesn't do anything.
+On Wed, Jan 10, 2018 at 07:03:21PM +0100, Christoph Hellwig wrote:
+> We need to pass a struct device to the dma API, even if some
+> architectures still support that for legacy reasons, and should not mix
+> it with the old PCI dma API.
 > 
-> Signed-off-by: Luis de Bethencourt <luisbg@kernel.org>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Rafael, I have nothing queued for pci-driver.c, and you've merged most
-of the recent changes there.  If you have any pending changes to it,
-feel free to merge this one.  Otherwise, I'll be happy to pick it up.
-
-I would change the subject to:
-
-  PCI / PM: Remove spurious semicolon
-
+> Note that the driver also seems to never actually unmap its dma mappings,
+> but to fix that we'll need someone more familar with the driver.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
+>  drivers/net/ethernet/tundra/tsi108_eth.c | 36 ++++++++++++++++++--------------
+>  1 file changed, 20 insertions(+), 16 deletions(-)
 > 
-> Hi,
-> 
-> After fixing the same thing in drivers/staging/rtl8723bs/, Joe Perches
-> suggested I fix it treewide [0].
-> 
-> Best regards 
-> Luis
-> 
-> 
-> [0] http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/2018-January/115410.html
-> [1] http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/2018-January/115390.html
-> 
->  drivers/pci/pci-driver.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index d79dbc377b9c..5958c8dda4e3 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -968,7 +968,7 @@ static int pci_pm_freeze_late(struct device *dev)
->  	if (dev_pm_smart_suspend_and_suspended(dev))
->  		return 0;
+> diff --git a/drivers/net/ethernet/tundra/tsi108_eth.c b/drivers/net/ethernet/tundra/tsi108_eth.c
+> index 0624b71ab5d4..edcd1e60b30d 100644
+> --- a/drivers/net/ethernet/tundra/tsi108_eth.c
+> +++ b/drivers/net/ethernet/tundra/tsi108_eth.c
+> @@ -152,6 +152,8 @@ struct tsi108_prv_data {
+>  	u32 msg_enable;			/* debug message level */
+>  	struct mii_if_info mii_if;
+>  	unsigned int init_media;
+> +
+> +	struct platform_device *pdev;
+>  };
 >  
-> -	return pm_generic_freeze_late(dev);;
-> +	return pm_generic_freeze_late(dev);
->  }
+>  /* Structure for a device driver */
+> @@ -703,17 +705,18 @@ static int tsi108_send_packet(struct sk_buff * skb, struct net_device *dev)
+>  		data->txskbs[tx] = skb;
 >  
->  static int pci_pm_freeze_noirq(struct device *dev)
+>  		if (i == 0) {
+> -			data->txring[tx].buf0 = dma_map_single(NULL, skb->data,
+> -					skb_headlen(skb), DMA_TO_DEVICE);
+> +			data->txring[tx].buf0 = dma_map_single(&data->pdev->dev,
+> +					skb->data, skb_headlen(skb),
+> +					DMA_TO_DEVICE);
+>  			data->txring[tx].len = skb_headlen(skb);
+>  			misc |= TSI108_TX_SOF;
+>  		} else {
+>  			const skb_frag_t *frag = &skb_shinfo(skb)->frags[i - 1];
+>  
+> -			data->txring[tx].buf0 = skb_frag_dma_map(NULL, frag,
+> -								 0,
+> -								 skb_frag_size(frag),
+> -								 DMA_TO_DEVICE);
+> +			data->txring[tx].buf0 =
+> +				skb_frag_dma_map(&data->pdev->dev, frag,
+> +						0, skb_frag_size(frag),
+> +						DMA_TO_DEVICE);
+>  			data->txring[tx].len = skb_frag_size(frag);
+>  		}
+>  
+> @@ -808,9 +811,9 @@ static int tsi108_refill_rx(struct net_device *dev, int budget)
+>  		if (!skb)
+>  			break;
+>  
+> -		data->rxring[rx].buf0 = dma_map_single(NULL, skb->data,
+> -							TSI108_RX_SKB_SIZE,
+> -							DMA_FROM_DEVICE);
+> +		data->rxring[rx].buf0 = dma_map_single(&data->pdev->dev,
+> +				skb->data, TSI108_RX_SKB_SIZE,
+> +				DMA_FROM_DEVICE);
+>  
+>  		/* Sometimes the hardware sets blen to zero after packet
+>  		 * reception, even though the manual says that it's only ever
+> @@ -1308,15 +1311,15 @@ static int tsi108_open(struct net_device *dev)
+>  		       data->id, dev->irq, dev->name);
+>  	}
+>  
+> -	data->rxring = dma_zalloc_coherent(NULL, rxring_size, &data->rxdma,
+> -					   GFP_KERNEL);
+> +	data->rxring = dma_zalloc_coherent(&data->pdev->dev, rxring_size,
+> +			&data->rxdma, GFP_KERNEL);
+>  	if (!data->rxring)
+>  		return -ENOMEM;
+>  
+> -	data->txring = dma_zalloc_coherent(NULL, txring_size, &data->txdma,
+> -					   GFP_KERNEL);
+> +	data->txring = dma_zalloc_coherent(&data->pdev->dev, txring_size,
+> +			&data->txdma, GFP_KERNEL);
+>  	if (!data->txring) {
+> -		pci_free_consistent(NULL, rxring_size, data->rxring,
+> +		dma_free_coherent(&data->pdev->dev, rxring_size, data->rxring,
+>  				    data->rxdma);
+>  		return -ENOMEM;
+>  	}
+> @@ -1428,10 +1431,10 @@ static int tsi108_close(struct net_device *dev)
+>  		dev_kfree_skb(skb);
+>  	}
+>  
+> -	dma_free_coherent(0,
+> +	dma_free_coherent(&data->pdev->dev,
+>  			    TSI108_RXRING_LEN * sizeof(rx_desc),
+>  			    data->rxring, data->rxdma);
+> -	dma_free_coherent(0,
+> +	dma_free_coherent(&data->pdev->dev,
+>  			    TSI108_TXRING_LEN * sizeof(tx_desc),
+>  			    data->txring, data->txdma);
+>  
+> @@ -1576,6 +1579,7 @@ tsi108_init_one(struct platform_device *pdev)
+>  	printk("tsi108_eth%d: probe...\n", pdev->id);
+>  	data = netdev_priv(dev);
+>  	data->dev = dev;
+> +	data->pdev = pdev;
+>  
+>  	pr_debug("tsi108_eth%d:regs:phyresgs:phy:irq_num=0x%x:0x%x:0x%x:0x%x\n",
+>  			pdev->id, einfo->regs, einfo->phyregs,
 > -- 
-> 2.15.1
+> 2.14.2
 > 
