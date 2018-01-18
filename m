@@ -1,60 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:58666 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751701AbeACMib (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Jan 2018 07:38:31 -0500
-Subject: Re: [PATCH 04/12] PCI: qcom: account for const type of
- of_device_id.data
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1514899688-27844-1-git-send-email-Julia.Lawall@lip6.fr>
- <1514899688-27844-5-git-send-email-Julia.Lawall@lip6.fr>
- <20180103122237.GD26554@red-moon>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <d2b54ccb-436a-69a8-b966-d65172d01c0f@mm-sol.com>
-Date: Wed, 3 Jan 2018 14:38:26 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180103122237.GD26554@red-moon>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v4 6/7] dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host controller
+Date: Thu, 18 Jan 2018 23:52:51 +0100
+Message-Id: <17def7dd98a0be2d359bd10aafe4394f17dd113e.1516314953.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1516314953.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+From: Scott Telford <stelford@cadence.com>
 
-On 01/03/2018 02:22 PM, Lorenzo Pieralisi wrote:
-> On Tue, Jan 02, 2018 at 02:28:00PM +0100, Julia Lawall wrote:
->> This driver creates various const structures that it stores in the
->> data field of an of_device_id array.
->>
->> Adding const to the declaration of the location that receives the
->> const value from the data field ensures that the compiler will
->> continue to check that the value is not modified.  Furthermore, the
->> const-discarding cast on the extraction from the data field is no
->> longer needed.
->>
->> Done using Coccinelle.
->>
->> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->>
->> ---
->>  drivers/pci/dwc/pcie-qcom.c |    4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> Hi Julia,
+This patch adds documentation for the DT bindings of the Cadence PCIe
+controller when configured in host (Root Complex) mode.
 
-Probably that is addressed to me :)
+Signed-off-by: Scott Telford <stelford@cadence.com>
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ .../bindings/pci/cdns,cdns-pcie-host.txt           | 60 ++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
 
-> 
-> I am happy to take this patch through the PCI tree unless you see a
-> problem with that, please let me know.
-
-The patch looks fine.
-
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+new file mode 100644
+index 000000000000..20a33f38f69d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+@@ -0,0 +1,60 @@
++* Cadence PCIe host controller
++
++This PCIe controller inherits the base properties defined in
++host-generic-pci.txt.
++
++Required properties:
++- compatible: Should contain "cdns,cdns-pcie-host" to identify the IP used.
++- reg: Should contain the controller register base address, PCIe configuration
++  window base address, and AXI interface region base address respectively.
++- reg-names: Must be "reg", "cfg" and "mem" respectively.
++- #address-cells: Set to <3>
++- #size-cells: Set to <2>
++- device_type: Set to "pci"
++- ranges: Ranges for the PCI memory and I/O regions
++- #interrupt-cells: Set to <1>
++- interrupt-map-mask and interrupt-map: Standard PCI properties to define the
++  mapping of the PCIe interface to interrupt numbers.
++
++Optional properties:
++- cdns,max-outbound-regions: Set to maximum number of outbound regions
++  (default 32)
++- cdns,no-bar-match-nbits: Set into the no BAR match register to configure the
++  number of least significant bits kept during inbound (PCIe -> AXI) address
++  translations (default 32)
++- vendor-id: The PCI vendor ID (16 bits, default is design dependent)
++- device-id: The PCI device ID (16 bits, default is design dependent)
++
++Example:
++
++pcie@fb000000 {
++	compatible = "cdns,cdns-pcie-host";
++	device_type = "pci";
++	#address-cells = <3>;
++	#size-cells = <2>;
++	bus-range = <0x0 0xff>;
++	linux,pci-domain = <0>;
++	cdns,max-outbound-regions = <16>;
++	cdns,no-bar-match-nbits = <32>;
++	vendor-id = /bits/ 16 <0x17cd>;
++	device-id = /bits/ 16 <0x0200>;
++
++	reg = <0x0 0xfb000000  0x0 0x01000000>,
++	      <0x0 0x41000000  0x0 0x00001000>,
++	      <0x0 0x40000000  0x0 0x04000000>;
++	reg-names = "reg", "cfg", "mem";
++
++	ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
++		 <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
++
++	#interrupt-cells = <0x1>;
++
++	interrupt-map = <0x0 0x0 0x0  0x1  &gic  0x0 0x0 0x0 14 0x1
++			 0x0 0x0 0x0  0x2  &gic  0x0 0x0 0x0 15 0x1
++			 0x0 0x0 0x0  0x3  &gic  0x0 0x0 0x0 16 0x1
++			 0x0 0x0 0x0  0x4  &gic  0x0 0x0 0x0 17 0x1>;
++
++	interrupt-map-mask = <0x0 0x0 0x0  0x7>;
++
++	msi-parent = <&its_pci>;
++};
 -- 
-regards,
-Stan
+2.11.0
