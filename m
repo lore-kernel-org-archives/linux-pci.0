@@ -1,70 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:44671 "EHLO
-        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751086AbeAWMJs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:09:48 -0500
-From: Arjun Vynipadath <arjun@chelsio.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, davem@davemloft.net,
-        netdev@vger.kernel.org
-Cc: arjun@chelsio.com, leedom@chelsio.com, santosh@chelsio.com,
-        ganeshgr@chelsio.com, nirranjan@chelsio.com, kumaras@chelsio.com,
-        swise@opengridcomputing.com
-Subject: [REGRESSION, bisect] pci: cxgb4 probe fails after commit 104daa71b3961434 ("PCI: Determine actual VPD size on first access")
-Date: Tue, 23 Jan 2018 17:59:09 +0530
-Message-Id: <1516710549-26660-1-git-send-email-arjun@chelsio.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=5WU8=EO=linux-mips.org=ladis@kernel.org>
+Return-Path: <SRS0=5WU8=EO=linux-mips.org=ladis@kernel.org>
+Date: Fri, 19 Jan 2018 10:58:57 +0100
+Sender: Ladislav Michl <ladis@linux-mips.org>
+From: Ladislav Michl <ladis@linux-mips.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
+Message-ID: <20180119095857.GA26765@lenoch>
+References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
+ <20180118145420.GA21163@lenoch>
+ <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Sending on behalf of "Casey Leedom <leedom@chelsio.com>"
+On Thu, Jan 18, 2018 at 12:35:25PM -0600, Bjorn Helgaas wrote:
+> On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
+> > On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
+> > > platform_get_resource_byname() may fail and return NULL, so we should
+> > > better check it's return value to avoid a NULL pointer dereference a
+> > > bit later in the code.
+> > > 
+> > > This is detected by Coccinelle semantic patch.
+> > > 
+> > > @@
+> > > expression pdev, res, n, t, e, e1, e2;
+> > > @@
+> > > 
+> > > res = platform_get_resource_byname(pdev, t, n);
+> > > + if (!res)
+> > > +   return -EINVAL;
+> > > ... when != res == NULL
+> > > e = devm_ioremap(e1, res->start, e2);
+> > 
+> > Well, then it should be replaced with devm_ioremap_resource()
+> > which already checks for NULL and the right resource type
+> > (IORESOURCE_MEM).
+> 
+> That's probably a better idea.  Maybe we should add a comment like this
+> to help avoid this in the future:
 
-Way back on April 11, 2016 we reported a regression in Linux kernel 4.6-rc2 
-brought on by kernel.org commit 104daa71b396. This commit calculates the 
-size of a PCI Device's VPD area by parsing the VPD Structure at offset 0x000, 
-and restricts accesses to the VPD to that computed size.
+That seems to spot another a bit more serious problem (given how late
+release cycle is now).
 
-Our devices have a second VPD structure which is located starting at offset 
-0x400 which is the "real" VPD[1].  The 104daa71b396 commit (plus a follow on 
-commit 408641e93aa5) caused efforts to read past the end of that computed 
-length of the VPD to return silently without error leaving stack junk in the 
-VPD read buffers.
+Both devm_ioremap() and devm_ioremap_resource() shares the same release
+function: devm_ioremap_release(). However this function is not aware of
+memory region previously requested by devm_request_mem_region() called
+from devm_ioremap_resource().
 
-We introduced kernel.org commit cb92148b to allow a driver to tell the 
-kernel how large the VPD area really is, introducing a new API 
-pci_set_vpd_size() for this purpose.
+Bellow is just a quick hack, even untested as looking at devm_ioremap,
+devm_ioremap_wc and devm_ioremap_wc, there is some room for optimization.
 
-Now we've discovered a new subtlety to the problem.
+diff --git a/lib/devres.c b/lib/devres.c
+index 5f2aedd58bc5..6315b07a608f 100644
+--- a/lib/devres.c
++++ b/lib/devres.c
+@@ -10,6 +10,15 @@ void devm_ioremap_release(struct device *dev, void *res)
+ 	iounmap(*(void __iomem **)res);
+ }
+ 
++void devm_ioremap_release_region(struct device *dev, void *res)
++{
++	resource_size_t offset = ((struct resource *)res)->start;
++	resource_size_t size = resource_size((struct resource *)res);
++
++	iounmap(*(void __iomem **)res);
++	devm_release_mem_region(dev, offset, size);
++}
++
+ static int devm_ioremap_match(struct device *dev, void *res, void *match_data)
+ {
+ 	return *(void **)res == match_data;
+@@ -136,7 +145,7 @@ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
+ {
+ 	resource_size_t size;
+ 	const char *name;
+-	void __iomem *dest_ptr;
++	void __iomem *addr, **ptr;
+ 
+ 	BUG_ON(!dev);
+ 
+@@ -153,14 +162,25 @@ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
+ 		return IOMEM_ERR_PTR(-EBUSY);
+ 	}
+ 
+-	dest_ptr = devm_ioremap(dev, res->start, size);
+-	if (!dest_ptr) {
++	ptr = devres_alloc(devm_ioremap_release_region, sizeof(*ptr), GFP_KERNEL);
++	if (!ptr) {
++		dev_err(dev, "malloc failed for resource %pR\n", res);
++		devm_release_mem_region(dev, res->start, size);
++		return IOMEM_ERR_PTR(-ENOMEM);
++	}
++
++	addr = ioremap(res->start, size);
++	if (addr) {
++		*ptr = addr;
++		devres_add(dev, ptr);
++	} else {
+ 		dev_err(dev, "ioremap failed for resource %pR\n", res);
+ 		devm_release_mem_region(dev, res->start, size);
+-		dest_ptr = IOMEM_ERR_PTR(-ENOMEM);
++		devres_free(ptr);
++		addr = IOMEM_ERR_PTR(-ENOMEM);
+ 	}
+ 
+-	return dest_ptr;
++	return addr;
+ }
+ EXPORT_SYMBOL(devm_ioremap_resource);
+ 
 
-We have a KVM Hypervisor running a 4.9.70 kernel.  So it has all of the 
-above commits.  When we attach our Physical Function 4 to a Virtual Machine 
-and attempt to run cxgb4 in that VM, we see the problem again.  The issue is 
-that all of the VM Guest OS's efforts to access the PCIe VPD Capability are 
-trapped into the KVM 4.9.70 kernel and executed there, with the results 
-routed back to the VM Guest OS.  The cxgb4 driver in the VM Guest OS uses 
-the new pci_set_vpd_size() to notify the OS of the true size of the VPD, but 
-that information of course is never sent to the KVM 4.9.70 Hypervisor. 
-(And, truth be told, if the Guest OS were older than 4.6, it wouldn't even 
-know that it needed to do this.)  The result is that again we get silent VPD 
-read failures with random stack garbage in the VPD read buffers. (sigh) 
-
-It strikes me that the only way to handle this issue is to have KVM 
-circumvent the VPD-Size Restricted logic which was added in kernel.org 
-commits 104daa71b396 and 408641e93aa5.  Maybe via a __pci_read_vpd() or 
-similar API.  But we are open to other suggestions.
-
-Thoughts?
-
-Casey.
-
-[1] Chelsio adapters actually have two VPD structures stored in the VPD.  An
-    abbreviated on at Offset 0x0 and the complete VPD at Offset 0x400.  The
-    abbreviated one only contains the PN, SN and EC Keywords, while the
-    complete VPD contains those plus various adapter constants contained in
-    V0, V1, etc.  And it also contains the Base Ethernet MAC Address in the
-    "NA" Keyword which the cxgb4 driver needs when it can't contact the
-    adapter firmware.  (We don't have the "NA" Keyword in the VPD Structure
-    at Offset 0x000 because that's not an allowed VPD Keyword in the PCI-E
-    3.0 specification.)
-
-    Note that two other drivers look like they may also do something
-    similar, the Broadcom bnx2x and tg3.
+> --- a/lib/devres.c
+> +++ b/lib/devres.c
+> @@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev, void *res, void *match_data)
+>   * @size: Size of map
+>   *
+>   * Managed ioremap().  Map is automatically unmapped on driver detach.
+> + *
+> + * When possible, use devm_ioremap_resource() instead.
+>   */
+>  void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+>  			   resource_size_t size)
+> 
+> > > Fixes: 608793e27b33 ("PCI: dwc: dra7xx: Add EP mode support")
+> > > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> > > ---
+> > >  drivers/pci/dwc/pci-dra7xx.c | 6 ++++++
+> > >  1 file changed, 6 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> > > index 8bf7c27..aafded8 100644
+> > > --- a/drivers/pci/dwc/pci-dra7xx.c
+> > > +++ b/drivers/pci/dwc/pci-dra7xx.c
+> > > @@ -409,11 +409,15 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+> > >  	ep->ops = &pcie_ep_ops;
+> > >  
+> > >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
+> > > +	if (!res)
+> > > +		return -EINVAL;
+> > >  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+> > >  	if (!pci->dbi_base)
+> > >  		return -ENOMEM;
+> > >  
+> > >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
+> > > +	if (!res)
+> > > +		return -EINVAL;
+> > >  	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+> > >  	if (!pci->dbi_base2)
+> > >  		return -ENOMEM;
+> > > @@ -462,6 +466,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+> > >  		return ret;
+> > >  
+> > >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+> > > +	if (!res)
+> > > +		return -EINVAL;
+> > >  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+> > >  	if (!pci->dbi_base)
+> > >  		return -ENOMEM;
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
