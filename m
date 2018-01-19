@@ -1,64 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:11026 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752501AbeA3FYa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 00:24:30 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V7  0/4] Add loadable kernel module and power management support
-Date: Tue, 30 Jan 2018 10:54:07 +0530
-Message-ID: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 19 Jan 2018 13:20:26 -0600
+From: Rob Herring <robh@kernel.org>
+To: Jim Quinlan <jim2101024@gmail.com>
+Subject: Re: [PATCH v4 2/8] dt-bindings: pci: Add DT docs for Brcmstb PCIe
+ device
+Message-ID: <20180119192026.b3bhiercl45u2mga@rob-hp-laptop>
+References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
+ <1516058925-46522-3-git-send-email-jim2101024@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1516058925-46522-3-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Florian Fainelli <f.fainelli@gmail.com>, linux-mips@linux-mips.org,
+ linux-pci@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
+ Kevin Cernekee <cernekee@gmail.com>, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+ Russell King <rmk+kernel@armlinux.org.uk>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
+ Jonas Gorski <jonas.gorski@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series of patches adds loadable kernel module and power management
-support to Tegra PCIe host controller driver. irq_set_msi_desc() and
-tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
-set of patches.
+On Mon, Jan 15, 2018 at 06:28:39PM -0500, Jim Quinlan wrote:
+> The DT bindings description of the Brcmstb PCIe device is described.  This
+> node can be used by almost all Broadcom settop box chips, using
+> ARM, ARM64, or MIPS CPU architectures.
+> 
+> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> ---
+>  .../devicetree/bindings/pci/brcmstb-pcie.txt       | 59 ++++++++++++++++++++++
+>  1 file changed, 59 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
 
-These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
-are the verification details.
-	- Multiple module insert & remove
-	- PCIe device functionality after module insert
-	- Free clock, resets, regulators, powergate, iomem and interrupt
-	resources after module remove
-	- PCIe device functionality after resume from RAM
+I acked v3. Please add acks when posting new versions.
 
-V2: PM QoS fix is dropped in V2 from this series because the fix is
-incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
-latency framework")'. Update commit message of few patches in V2.
-
-V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_use()
-are dropped based on review comments. These symbols will be addressed in next
-series. Took care of few other review comments.
-
-V4: Dropped pci_find_host_bridge() export patch and added new patch to use
-bus->sysdata for private data.
-
-V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
-on top of linux-next
-
-V6: Rebased on lpieralisi/pci/tegra branch
-
-V7: Addressed comments on patch: 6 and 7 in V6
-Limiting this series to linux-tegra & linux-pci since patches for other 
-subsystem are merged or dropped
-
-Manikanta Maddireddy (4):
-  PCI: tegra: Free resources on probe failure
-  PCI: tegra: Add loadable kernel module support
-  PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
-  PCI: tegra: Add power management support
-
- drivers/pci/host/Kconfig     |   2 +-
- drivers/pci/host/pci-tegra.c | 347 +++++++++++++++++++++++++++++++++----------
- 2 files changed, 272 insertions(+), 77 deletions(-)
-
--- 
-2.1.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
