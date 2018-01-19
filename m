@@ -1,55 +1,101 @@
-Return-Path: <SRS0=dPij=ET=gmail.com=linus971@kernel.org>
-Return-Path: <SRS0=dPij=ET=gmail.com=linus971@kernel.org>
+Return-Path: <SRS0=6Ogi=EO=lip6.fr=julia.lawall@kernel.org>
+Return-Path: <SRS0=6Ogi=EO=lip6.fr=julia.lawall@kernel.org>
+Date: Fri, 19 Jan 2018 06:56:55 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: "weiyongjun (A)" <weiyongjun1@huawei.com>
+cc: Ladislav Michl <ladis@linux-mips.org>, Bjorn Helgaas <helgaas@kernel.org>,
+    Kishon Vijay Abraham I <kishon@ti.com>,
+    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+    Bjorn Helgaas <bhelgaas@google.com>,
+    "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+    "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+    "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: RE: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
+In-Reply-To: <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
+Message-ID: <alpine.DEB.2.20.1801190655080.3505@hadrien>
+References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com> <20180118145420.GA21163@lenoch> <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com> <20180118213417.GA30723@lenoch>
+ <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
 MIME-Version: 1.0
-Sender: linus971@gmail.com
-In-Reply-To: <20180124162027.GI5317@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180123195644.GA92112@bhelgaas-glaptop.roam.corp.google.com>
- <CA+55aFxFp_rjSviLUEH-uZ1U=x_g-xiAFKoEQqOOxZQs4xV11A@mail.gmail.com>
- <20180124004603.GH5317@bhelgaas-glaptop.roam.corp.google.com>
- <CA+55aFwpmqZUnD=3U23c-r89XmyncoXQzK7+b8AyuQ9+soC19g@mail.gmail.com> <20180124162027.GI5317@bhelgaas-glaptop.roam.corp.google.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 24 Jan 2018 08:40:50 -0800
-Message-ID: <CA+55aFzLwPDYz2dEM_X8Ase7+tLJDGU=ChasesP0ZGii4-D7Ow@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI fixes for v4.15
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Peter Grayson <jpgrayson@gmail.com>, Catalin Marinas <catalin.marinas@gmail.com>,
-	linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>, Juergen Gross <jgross@suse.com>,
-	Alex Deucher <alexander.deucher@amd.com>, David Airlie <airlied@linux.ie>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 24, 2018 at 8:20 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> Bjorn, maybe you can send Catalin an example mbox?
+
+
+On Fri, 19 Jan 2018, weiyongjun (A) wrote:
+
+> > On Thu, Jan 18, 2018 at 12:35:25PM -0600, Bjorn Helgaas wrote:
+> > > On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
+> > > > On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
+> > > > > platform_get_resource_byname() may fail and return NULL, so we
+> > should
+> > > > > better check it's return value to avoid a NULL pointer dereference a
+> > > > > bit later in the code.
+> > > > >
+> > > > > This is detected by Coccinelle semantic patch.
+> > > > >
+> > > > > @@
+> > > > > expression pdev, res, n, t, e, e1, e2;
+> > > > > @@
+> > > > >
+> > > > > res = platform_get_resource_byname(pdev, t, n);
+> > > > > + if (!res)
+> > > > > +   return -EINVAL;
+> > > > > ... when != res == NULL
+> > > > > e = devm_ioremap(e1, res->start, e2);
+> > > >
+> > > > Well, then it should be replaced with devm_ioremap_resource()
+> > > > which already checks for NULL and the right resource type
+> > > > (IORESOURCE_MEM).
+> > >
+> > > That's probably a better idea.  Maybe we should add a comment like this
+> > > to help avoid this in the future:
 >
-> Attaching the one I used above.
+> Not all of the place using devm_ioremap() can be replaced with
+> devm_ioremap_resource(), devices share the memory resource for example.
+>
+> So maybe you should also add an exception list to the comment, otherwise
+> many people still not know how to use devm_ioremap_resource() or devm_ioremap().
 
-Heh. That's a mess. It has
+I believe that there is a semantic patch in the kernel to remove the test
+when devm_ioremap_reource is used.  Maybe that should be extended or
+another one should be added to ensure that there is a test when
+devm_ioremap is used, since there seems to be a potential for confusion.
 
-    Content-Type: text/plain; charset=UTF-8
+julia
 
-but then the name in the body is actually Latin1-encoded if I read it correctly.
-
-Git will auto-convert invalid utf-8 by assuming it is latin1, so it
-all ends up working, but Christian did something wrong in his mailer
-too.
-
-I suspect that the reason stgit screws up is the quoting of the name:
-
-   From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
-
-maybe stgit thinks that quoting means "no charset translation".
-
-But I'll leave it to Catalin & co to figure out. The last stgit commit
-was just a few days ago, so it seems to be maintained.
-
-Bjorn: it might be worth it trying to the very latest stgit:
-
-    git://repo.or.cz/stgit.git
-
-because there are _some_ locale changes in there.
-
-                 Linus
+>
+> > >
+> > > --- a/lib/devres.c
+> > > +++ b/lib/devres.c
+> > > @@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev,
+> > void *res, void *match_data)
+> > >   * @size: Size of map
+> > >   *
+> > >   * Managed ioremap().  Map is automatically unmapped on driver detach.
+> > > + *
+> > > + * When possible, use devm_ioremap_resource() instead.
+> > >   */
+> > >  void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+> > >  			   resource_size_t size)
+> >
+> > Yes, please. It would be nice first patch in the serie converting existing
+> > users of devm_ioremap into devm_ioremap_resource:
+> > find drivers -name "*.c" | xargs grep "devm_ioremap(" | grep resource_size
+> > | wc -l
+> > 82
+> > I know, that was dumb, Coccinelle would certainly do better job.
+> > And from a quick look a lot of
+> > if (!res) {
+> > 	print error
+> > 	return -EINVAL;
+> > }
+> > code blocks could be deleted (and many cases where check for NULL
+> > resource
+> > is missing fixed).
+> >
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
