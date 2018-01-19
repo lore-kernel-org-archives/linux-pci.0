@@ -1,60 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([148.251.95.138]:39738 "EHLO
-        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751047AbeAUVQG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 21 Jan 2018 16:16:06 -0500
-Received: (from localhost user: 'ladis' uid#1021 fake: STDIN
-        (ladis@eddie.linux-mips.org)) by eddie.linux-mips.org
-        id S23992521AbeAUVQFPNoFG (ORCPT <rfc822;linux-pci@vger.kernel.org>
-        + 1 other); Sun, 21 Jan 2018 22:16:05 +0100
-Date: Sun, 21 Jan 2018 22:16:04 +0100
-From: Ladislav Michl <ladis@linux-mips.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: [PATCH 3/5] devres: Make devm_ioremap_release() static
-Message-ID: <20180121211604.GD15151@lenoch>
-References: <20180121211432.GA15151@lenoch>
+Return-Path: <SRS0=UnzJ=EO=redhat.com=hdegoede@kernel.org>
+Return-Path: <SRS0=UnzJ=EO=redhat.com=hdegoede@kernel.org>
+Subject: Re: [PATCH 1/4] PCI: acpiphp_ibm: prepare for acpi_get_object_info no
+ longer returning status
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Robert Moore <robert.moore@intel.com>,
+ Lv Zheng <lv.zheng@intel.com>, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, devel@acpica.org
+References: <20180118160359.29971-1-hdegoede@redhat.com>
+ <20180118160359.29971-2-hdegoede@redhat.com>
+ <20180118191326.GJ53542@bhelgaas-glaptop.roam.corp.google.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <ba3f9498-6f38-b95d-15c7-dc910b027eec@redhat.com>
+Date: Fri, 19 Jan 2018 12:38:37 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180121211432.GA15151@lenoch>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180118191326.GJ53542@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-devm_ioremap_release() is an implementation detail and shouldn't
-be public.
+Hi,
 
-Signed-off-by: Ladislav Michl <ladis@linux-mips.org>
----
- include/linux/device.h | 1 -
- lib/devres.c           | 2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
+On 01/18/2018 08:13 PM, Bjorn Helgaas wrote:
+> On Thu, Jan 18, 2018 at 05:03:56PM +0100, Hans de Goede wrote:
+>> acpi_get_object_info is intended for early probe usage and as such should
+>> not call any methods which may rely on OpRegions, but it used to also call
+>> _STA to get the status, which on some systems does rely on OpRegions, this
+>> behavior and the acpi_device_info.current_status member are being removed.
+>>
+>> This commit prepares the acpiphp_ibm code for this by having it get the
+>> status itself using acpi_bus_get_status_handle. Note no error handling is
+>> necessary on any errors acpi_bus_get_status_handle leaves the value of
+>> the passed in current_status at its 0 initialization value.
+>>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> 
+> Please add "()" after function names above, then
 
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 91f508edb266..e99d41a6190b 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -734,7 +734,6 @@ void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
- void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res);
- 
- void devm_iounmap(struct device *dev, void __iomem *addr);
--void devm_ioremap_release(struct device *dev, void *res);
- 
- void *devm_memremap(struct device *dev, resource_size_t offset,
- 		size_t size, unsigned long flags);
-diff --git a/lib/devres.c b/lib/devres.c
-index f2f80c233aa4..e9aad136f667 100644
---- a/lib/devres.c
-+++ b/lib/devres.c
-@@ -5,7 +5,7 @@
- #include <linux/gfp.h>
- #include <linux/export.h>
- 
--void devm_ioremap_release(struct device *dev, void *res)
-+static void devm_ioremap_release(struct device *dev, void *res)
- {
- 	iounmap(*(void __iomem **)res);
- }
--- 
-2.15.1
+Fixed in my local tree (I will send out a new version when the other patches
+have been reviewed).
+
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Thanks.
+
+Regards,
+
+Hans
+
+
+> 
+> I assume this will be merged by Rafael along with the rest of the series.
+> 
+> It would be nice to fix the run-on sentences in the changelog as well.
+> 
+>> ---
+>>   drivers/pci/hotplug/acpiphp_ibm.c | 5 ++++-
+>>   1 file changed, 4 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
+>> index 984c7e8cec5a..8472c4a27f70 100644
+>> --- a/drivers/pci/hotplug/acpiphp_ibm.c
+>> +++ b/drivers/pci/hotplug/acpiphp_ibm.c
+>> @@ -399,6 +399,7 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
+>>   		u32 lvl, void *context, void **rv)
+>>   {
+>>   	acpi_handle *phandle = (acpi_handle *)context;
+>> +	unsigned long long current_status = 0;
+>>   	acpi_status status;
+>>   	struct acpi_device_info *info;
+>>   	int retval = 0;
+>> @@ -410,7 +411,9 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
+>>   		return retval;
+>>   	}
+>>   
+>> -	if (info->current_status && (info->valid & ACPI_VALID_HID) &&
+>> +	acpi_bus_get_status_handle(handle, &current_status);
+>> +
+>> +	if (current_status && (info->valid & ACPI_VALID_HID) &&
+>>   			(!strcmp(info->hardware_id.string, IBM_HARDWARE_ID1) ||
+>>   			 !strcmp(info->hardware_id.string, IBM_HARDWARE_ID2))) {
+>>   		pr_debug("found hardware: %s, handle: %p\n",
+>> -- 
+>> 2.14.3
+>>
