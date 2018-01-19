@@ -1,82 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55864 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933926AbeALPbP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jan 2018 10:31:15 -0500
-Subject: Re: Regression (sort of): PCI/portdrv: Turn off PCIe services during
- shutdown
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        linux-pci@vger.kernel.org
-References: <20180112104929.GA10599@wunner.de>
- <ece49947-e75a-baff-9c4a-6f47bd154642@codeaurora.org>
- <20180112151206.GA18736@wunner.de>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <f7c48320-fe01-2c02-8639-269b81b1cc7d@codeaurora.org>
-Date: Fri, 12 Jan 2018 10:31:12 -0500
+Return-Path: <SRS0=5WU8=EO=linux-mips.org=ladis@kernel.org>
+Return-Path: <SRS0=5WU8=EO=linux-mips.org=ladis@kernel.org>
+Date: Fri, 19 Jan 2018 08:03:38 +0100
+Sender: Ladislav Michl <ladis@linux-mips.org>
+From: Ladislav Michl <ladis@linux-mips.org>
+To: "weiyongjun (A)" <weiyongjun1@huawei.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
+Message-ID: <20180119070337.GA6079@lenoch>
+References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
+ <20180118145420.GA21163@lenoch>
+ <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
+ <20180118213417.GA30723@lenoch>
+ <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20180112151206.GA18736@wunner.de>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/12/2018 10:12 AM, Lukas Wunner wrote:
-> On Fri, Jan 12, 2018 at 09:26:48AM -0500, Sinan Kaya wrote:
->> On 1/12/2018 5:49 AM, Lukas Wunner wrote:
->> I wonder if we can separate remove from shutdown and just disable the IRQs
->> in shutdown case rather than turning off the slot power etc.
+On Fri, Jan 19, 2018 at 01:54:58AM +0000, weiyongjun (A) wrote:
+> > On Thu, Jan 18, 2018 at 12:35:25PM -0600, Bjorn Helgaas wrote:
+> > > On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
+> > > > On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
+> > > > > platform_get_resource_byname() may fail and return NULL, so we
+> > should
+> > > > > better check it's return value to avoid a NULL pointer dereference a
+> > > > > bit later in the code.
+> > > > >
+> > > > > This is detected by Coccinelle semantic patch.
+> > > > >
+> > > > > @@
+> > > > > expression pdev, res, n, t, e, e1, e2;
+> > > > > @@
+> > > > >
+> > > > > res = platform_get_resource_byname(pdev, t, n);
+> > > > > + if (!res)
+> > > > > +   return -EINVAL;
+> > > > > ... when != res == NULL
+> > > > > e = devm_ioremap(e1, res->start, e2);
+> > > >
+> > > > Well, then it should be replaced with devm_ioremap_resource()
+> > > > which already checks for NULL and the right resource type
+> > > > (IORESOURCE_MEM).
+> > >
+> > > That's probably a better idea.  Maybe we should add a comment like this
+> > > to help avoid this in the future:
 > 
-> But don't we risk "IRQ xx: nobody cared" splats if we do that?
+> Not all of the place using devm_ioremap() can be replaced with
+> devm_ioremap_resource(), devices share the memory resource for example.
 
-I assumed code was turning off the slot power etc. aggressively.
+That's probably what "when possible" means. Also, how does sharing memory
+resource changes that? As long as 'struct resource' is an argument to
+devm_ioremap, devm_ioremap_resource can be used.
 
-After looking at the code some more time, it seems to be doing the
-right thing and telling pcie controller not to generate interrupts for
-hotplug.
+> So maybe you should also add an exception list to the comment, otherwise
+> many people still not know how to use devm_ioremap_resource() or devm_ioremap().
 
-I think this is what is failing for you probably because by the time you are
-shutting down there is nobody to issue the command completion. This would
-repeat for each hotplug capable pcie slot.
+Care to elaborate how should such an exception list look like?
 
-static void pcie_disable_notification(struct controller *ctrl)
-{
-	u16 mask;
+Thank you.
 
-	mask = (PCI_EXP_SLTCTL_PDCE | PCI_EXP_SLTCTL_ABPE |
-		PCI_EXP_SLTCTL_MRLSCE | PCI_EXP_SLTCTL_PFDE |
-		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
-		PCI_EXP_SLTCTL_DLLSCE);
-	pcie_write_cmd(ctrl, 0, mask);
-	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
-		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
-} 
-
-Can you confirm this?
-
-> 
-> Not sure if just disabling the IRQ without telling the hotplug port
-> not to send interrupts is safe.
-> 
-> The issue that Command Complete events are falsely claimed to be
-> supported needs to be adressed regardless because whenever a
-> Thunderbolt device is unplugged, the same 2 second delay occurs.
-> So if you unplug a daisy chain of, say 6 devices, it takes 12
-> seconds until they're all removed from the system.
-> 
-> By now I've found out that Falcon Ridge (Thunderbolt 2) is not affected,
-> I'm not yet sure if Redwood Ridge is, but it seems the issue is contrained
-> to Thunderbolt 1 controllers only, probably an erratum
-> 
-> Thanks,
-> 
-> Lukas
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> > >
+> > > --- a/lib/devres.c
+> > > +++ b/lib/devres.c
+> > > @@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev,
+> > void *res, void *match_data)
+> > >   * @size: Size of map
+> > >   *
+> > >   * Managed ioremap().  Map is automatically unmapped on driver detach.
+> > > + *
+> > > + * When possible, use devm_ioremap_resource() instead.
+> > >   */
+> > >  void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+> > >  			   resource_size_t size)
+> > 
+> > Yes, please. It would be nice first patch in the serie converting existing
+> > users of devm_ioremap into devm_ioremap_resource:
+> > find drivers -name "*.c" | xargs grep "devm_ioremap(" | grep resource_size
+> > | wc -l
+> > 82
+> > I know, that was dumb, Coccinelle would certainly do better job.
+> > And from a quick look a lot of
+> > if (!res) {
+> > 	print error
+> > 	return -EINVAL;
+> > }
+> > code blocks could be deleted (and many cases where check for NULL
+> > resource
+> > is missing fixed).
+> > 
