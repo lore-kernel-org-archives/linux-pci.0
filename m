@@ -1,59 +1,41 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V4 24/26] video: fbdev: riva: deprecate
- pci_get_bus_and_slot()
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-25-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <04f4cf20-9b57-3eff-79b6-abfda1258174@codeaurora.org>
-Date: Tue, 2 Jan 2018 08:37:32 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eddie.linux-mips.org ([148.251.95.138]:37218 "EHLO
+        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754339AbeASXgK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 18:36:10 -0500
+Date: Sat, 20 Jan 2018 00:36:06 +0100
+From: Ladislav Michl <ladis@linux-mips.org>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 0/2] Fix double mem region release
+Message-ID: <20180119233606.GA18837@lenoch>
+References: <20180119180310.GA31540@lenoch>
 MIME-Version: 1.0
-In-Reply-To: <1513661883-28662-25-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:NVIDIA \(rivafb and nvidiafb\) FRAMEBUFFER DRIVER"
- <linux-fbdev@vger.kernel.org>, Antonino Daplas <adaplas@gmail.com>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180119180310.GA31540@lenoch>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/19/2017 12:38 AM, Sinan Kaya wrote:
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
+On Fri, Jan 19, 2018 at 07:03:10PM +0100, Ladislav Michl wrote:
+> Two one-liners for the same issue, second bug occurrence is just
+> a copy&pasted mistake from 2011...
 > 
-> Getting ready to remove pci_get_bus_and_slot() function in favor of
-> pci_get_domain_bus_and_slot().
-> 
-> struct riva_par has a pointer to struct pci_dev. Use the pci_dev member
-> to extract the domain information.
-> 
-> Change the function signature for CalcStateExt and RivaGetConfig to pass
-> in struct pci_dev in addition to RIVA_HW_INST so that code inside the
-> riva_hw.c can also calculate domain number and pass it to
-> pci_get_domain_bus_and_slot().
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Ladislav Michl (2):
+>   devres: Fix double mem region release in devm_ioremap_resource()
+>   PCI: Fix double mem region release in devm_pci_remap_cfg_resource()
 
-Any feedback here, most of the remaining patches have the ACK except these?
+Hmm, that is really shame :-/ My test setup triggered "Trying to free
+nonexistent resource" warning, but dissasembly of lib/devres.o shows
+no call to devres_destroy, which seems that WARN_ON in
+__devm_release_region() is optimized out. Strange. So far sorry
+for the noise, I'll try figure out what broke after weekend.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  drivers/pci/pci.c | 1 -
+>  lib/devres.c      | 1 -
+>  2 files changed, 2 deletions(-)
+> 
+> -- 
+> 2.15.1
+> 
