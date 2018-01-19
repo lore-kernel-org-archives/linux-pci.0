@@ -1,69 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Hiraku Toyooka <hiraku.toyooka@cybertrust.co.jp>
-To: bhelgaas@google.com
-Subject: [PATCH 1/1] PCI/MSI: add NULL check before use of msi_desc
-Date: Tue, 16 Jan 2018 18:15:47 +0900
-Message-Id: <1516094147-4597-2-git-send-email-hiraku.toyooka@cybertrust.co.jp>
-In-Reply-To: <1516094147-4597-1-git-send-email-hiraku.toyooka@cybertrust.co.jp>
-References: <1516094147-4597-1-git-send-email-hiraku.toyooka@cybertrust.co.jp>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Hiraku Toyooka <hiraku.toyooka@cybertrust.co.jp>, Joao.Pinto@synopsys.com,
- hongxing.zhu@nxp.com, linux-pci@vger.kernel.org, will.deacon@arm.com,
- linux-kernel@vger.kernel.org, linux@armlinux.org.uk, lorenzo.pieralisi@arm.com,
- jingoohan1@gmail.com, linux-arm-kernel@lists.infradead.org,
- l.stach@pengutronix.de
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:50638 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754771AbeASJjX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 04:39:23 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: lorenzo.pieralisi@arm.com, Bjorn Helgaas <bhelgaas@google.com>
+Cc: arnd@arndb.de, kishon@ti.com, Niklas Cassel <niklass@axis.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: Add dummy pci_irqd_intx_xlate() for CONFIG_PCI=n build
+Date: Fri, 19 Jan 2018 10:39:06 +0100
+Message-Id: <20180119093906.27670-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On starting kdump kernel in arm, arm64 and powerpc, chip->irq_mask() is
-called for each irq_data to mask interrupts. For MSI irqs,
-pci_msi_mask_irq() is called even when the irq_data doesn't have a link
-to msi_desc. This results in a NULL pointer dereference.
+If CONFIG_PCI=n and CONFIG_PCI_DRA7XX_EP=y, the build fails with:
 
-This patch fixes the above error by avoiding NULL msi_desc use.
+  drivers/pci/dwc/pci-dra7xx.c:229:11: error: 'pci_irqd_intx_xlate'
+  undeclared here (not in a function)
 
-Signed-off-by: Hiraku Toyooka <hiraku.toyooka@cybertrust.co.jp>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Will Deacon <will.deacon@arm.com>
+When building drivers/pci/dwc/pci-dra7xx.c without CONFIG_PCI,
+gcc is usually smart enough to realize that RC specific code
+is unreachable and can thus be eliminated.
+
+However, gcc cannot do this if there is a function that isn't
+even declared.
+
+Hence fix the issue by introducing a dummy for pci_irqd_intx_xlate().
+
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/msi.c | 3 +++
- 1 file changed, 3 insertions(+)
+ include/linux/pci.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index e066071..a6ee274 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
- {
- 	struct msi_desc *desc = irq_data_get_msi_desc(data);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 83299833a6ce..41c676a011f4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1675,6 +1675,13 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #define dev_is_pf(d) (false)
+ static inline bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ { return false; }
++static inline int pci_irqd_intx_xlate(struct irq_domain *d,
++				      struct device_node *node,
++				      const u32 *intspec,
++				      unsigned int intsize,
++				      unsigned long *out_hwirq,
++				      unsigned int *out_type)
++{ return -EINVAL; }
+ #endif /* CONFIG_PCI */
  
-+	if (!desc)
-+		return;
-+
- 	if (desc->msi_attrib.is_msix) {
- 		msix_mask_irq(desc, flag);
- 		readl(desc->mask_base);		/* Flush write to device */
+ /* Include architecture-dependent settings and functions */
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.2
