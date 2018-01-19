@@ -1,82 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:46982 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751240AbeAWMZo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:44 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v5 4/9] PCI: dwc: artpec6: Switch to use the IRQ chained API
-Date: Tue, 23 Jan 2018 12:25:27 +0000
-Message-Id: <ef9a05c9f223e8a48d7e518d592f518dd0cfbe9f.1516701516.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60058 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751212AbeASLKR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 06:10:17 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v6 0/7] Address error and recovery for AER and DPC
+Date: Fri, 19 Jan 2018 16:39:57 +0530
+Message-Id: <1516360204-1586-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes ARTPEC-6 SoC specific driver to use the IRQ chained API available
-in pcie-designware.
+This patch set brings in error handling support for DPC
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
+The current implementation of AER and error message broadcasting to the
+EP driver is tightly coupled and limited to AER service driver.
+It is important to factor out broadcasting and other link handling
+callbacks. So that not only when AER gets triggered, but also when DPC get
+triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
 
- drivers/pci/dwc/pcie-artpec6.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+DPC should enumerate the devices after recovering the link, which is
+achieved by implementing error_resume callback.
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index b1e9820..5ec02ed 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -386,15 +386,6 @@ static const struct dw_pcie_host_ops artpec6_pcie_host_ops = {
- 	.host_init = artpec6_pcie_host_init,
- };
- 
--static irqreturn_t artpec6_pcie_msi_handler(int irq, void *arg)
--{
--	struct artpec6_pcie *artpec6_pcie = arg;
--	struct dw_pcie *pci = artpec6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
- 				 struct platform_device *pdev)
- {
-@@ -409,15 +400,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
- 			dev_err(dev, "failed to get MSI irq\n");
- 			return pp->msi_irq;
- 		}
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       artpec6_pcie_msi_handler,
--				       IRQF_SHARED | IRQF_NO_THREAD,
--				       "artpec6-pcie-msi", artpec6_pcie);
--		if (ret) {
--			dev_err(dev, "failed to request MSI irq\n");
--			return ret;
--		}
- 	}
- 
- 	pp->root_bus_nr = -1;
+Changes since v5:
+    Sinan's and Keith's comments incorporated.
+        > made separate patch for mutex
+        > unified error repotting codes into driver/pci/pci.h
+        > got rid of wait link active/inactive and
+          made generic function in driver/pci/pci.c
+Changes since v4:
+    Bjorn's comments incorporated.
+        > Renamed only do_recovery.
+        > moved the things more locally to drivers/pci/pci.h
+Changes since v3:
+    Bjorn's comments incorporated.
+        > Made separate patch renaming generic pci_err.c
+        > Introduce pci_err.h to contain all the error types and recovery
+        > removed all the dependencies on pci.h
+Changes since v2:
+    Based on feedback from Keith:
+    "
+    When DPC is triggered due to receipt of an uncorrectable error Message,
+    the Requester ID from the Message is recorded in the DPC Error
+    Source ID register and that Message is discarded and not forwarded Upstream.
+    "
+    Removed the patch where AER checks if DPC service is active
+Changes since v1:
+    Kbuild errors fixed:
+        > pci_find_dpc_dev made static
+        > ras_event.h updated
+        > pci_find_aer_service call with CONFIG check
+        > pci_find_dpc_service call with CONFIG check
+
+Oza Pawandeep (7):
+  PCI/AER: Rename error recovery to generic pci naming
+  PCI/AER: factor out error reporting from AER
+  PCI/ERR: add mutex to synchronize recovery
+  PCI/DPC: Unify and plumb error handling into DPC
+  PCI/AER: Unify aer error defines at single space
+  PCI/DPC: Enumerate the devices after DPC trigger event
+  PCI: Unify wait for link active into generic pci
+
+ drivers/acpi/apei/ghes.c               |   1 +
+ drivers/pci/hotplug/pciehp_hpc.c       |  21 +-
+ drivers/pci/pci.c                      |  39 +++-
+ drivers/pci/pci.h                      |  11 +
+ drivers/pci/pcie/Makefile              |   2 +-
+ drivers/pci/pcie/aer/aerdrv.h          |  30 ---
+ drivers/pci/pcie/aer/aerdrv_core.c     | 293 +-------------------------
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   1 +
+ drivers/pci/pcie/pcie-dpc.c            | 115 ++++++++++-
+ drivers/pci/pcie/pcie-err.c            | 366 +++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/portdrv.h             |   2 +
+ include/linux/aer.h                    |   4 -
+ include/linux/pci.h                    |   1 +
+ 13 files changed, 534 insertions(+), 352 deletions(-)
+ create mode 100644 drivers/pci/pcie/pcie-err.c
+
 -- 
-2.7.4
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
