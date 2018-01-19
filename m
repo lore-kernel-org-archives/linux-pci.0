@@ -1,251 +1,73 @@
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v3 1/7] platform/pseries: Update VF config space after EEH
-Date: Wed,  3 Jan 2018 11:16:27 -0600
-In-Reply-To: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20180103171633.94499-2-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38942 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750757AbeASEol (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 23:44:41 -0500
+Subject: Re: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
+To: poza@codeaurora.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Timur Tabi <timur@codeaurora.org>
+References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
+ <1516185438-31556-4-git-send-email-poza@codeaurora.org>
+ <733abfcb-5b31-7394-ab62-19a0888d71c2@codeaurora.org>
+ <c77a3302e34d55d557404d7bdc6892fc@codeaurora.org>
+ <5cf7004e62a2979afb3c29e99d705c60@codeaurora.org>
+ <35a9ce2b-156f-3235-c3b7-2c495fe9c52b@codeaurora.org>
+ <64127dba1cebab196c88a160191ebee0@codeaurora.org>
+ <0ab49441-548e-a5bc-d76b-bdc6fa7495dc@codeaurora.org>
+ <c773081eadb89c4b4317d0a709a06a7d@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <f2356b95-1562-287a-95b9-d5e2c7c7ef56@codeaurora.org>
+Date: Thu, 18 Jan 2018 23:44:38 -0500
+MIME-Version: 1.0
+In-Reply-To: <c773081eadb89c4b4317d0a709a06a7d@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add EEH platform operations for pseries to update VF
-config space. With this change after EEH, the VF
-will have updated config space for pseries platform.
+On 1/18/2018 11:23 PM, poza@codeaurora.org wrote:
+> On 2018-01-18 23:33, Sinan Kaya wrote:
+>> On 1/18/2018 1:00 PM, poza@codeaurora.org wrote:
+>>>> I think you would put into include/linux/pci.h only if there is an external
+>>>> use of constant outside of drivers/pci directory. Otherwise, you should keep
+>>>> the setting inside one of the header files in drivers/pci directory.
+>>>>
+>>>> I don't see any other subsystem caring about DPC_FATAL definition.
+>>>
+>>> ok so you are suggesting to move only DPC_FATAL ? so then AER can stay where it is.
+>>
+>> Now that both AER and DPC handling is getting unified, I think it makes sense to
+>> keep all error codes (AER+DPC) together in drivers/pci/pci.h rather than having
+>> them split in aer.h and dpc.h.
+>>
+>> Otherwise, how would we avoid having a new error type defined with the
+>> existing values.
+> 
+> I agree, its is just that drivers/acpi/apet/ghes.c has to do
+> #include ../../pci/pci.h
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |  1 +
- arch/powerpc/kernel/eeh.c                    | 59 +++++++++++++++++++++++++
- arch/powerpc/platforms/powernv/eeh-powernv.c | 65 ++--------------------------
- arch/powerpc/platforms/pseries/eeh_pseries.c | 26 ++++++++++-
- 4 files changed, 88 insertions(+), 63 deletions(-)
+That's bad. I was just thinking about the DPC error code only. I didn't realize
+AER error codes are being referenced from ghes.c.
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 5161c37dd039..82829c65f31a 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -297,6 +297,7 @@ int eeh_pe_reset(struct eeh_pe *pe, int option);
- int eeh_pe_configure(struct eeh_pe *pe);
- int eeh_pe_inject_err(struct eeh_pe *pe, int type, int func,
- 		      unsigned long addr, unsigned long mask);
-+int eeh_restore_vf_config(struct pci_dn *pdn);
- 
- /**
-  * EEH_POSSIBLE_ERROR() -- test for possible MMIO failure.
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index cbca0a667682..cc649809885e 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -740,6 +740,65 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
- 	return NULL;
- }
- 
-+int eeh_restore_vf_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 devctl, cmd, cap2, aer_capctl;
-+	int old_mps;
-+
-+	if (edev->pcie_cap) {
-+		/* Restore MPS */
-+		old_mps = (ffs(pdn->mps) - 8) << 5;
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+		devctl |= old_mps;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+
-+		/* Disable Completion Timeout */
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
-+				     4, &cap2);
-+		if (cap2 & 0x10) {
-+			eeh_ops->read_config(pdn,
-+					     edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					     4, &cap2);
-+			cap2 |= 0x10;
-+			eeh_ops->write_config(pdn,
-+					      edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					      4, cap2);
-+		}
-+	}
-+
-+	/* Enable SERR and parity checking */
-+	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
-+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
-+
-+	/* Enable report various errors */
-+	if (edev->pcie_cap) {
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_CERE;
-+		devctl |= (PCI_EXP_DEVCTL_NFERE |
-+			   PCI_EXP_DEVCTL_FERE |
-+			   PCI_EXP_DEVCTL_URRE);
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+	}
-+
-+	/* Enable ECRC generation and check */
-+	if (edev->pcie_cap && edev->aer_cap) {
-+		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				     4, &aer_capctl);
-+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-+		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				      4, aer_capctl);
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * pcibios_set_pcie_reset_state - Set PCI-E reset state
-  * @dev: pci device struct
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 961e64115d92..0665b6d03cb3 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1655,70 +1655,11 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
- 	return ret;
- }
- 
--static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
--{
--	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
--	u32 devctl, cmd, cap2, aer_capctl;
--	int old_mps;
--
--	if (edev->pcie_cap) {
--		/* Restore MPS */
--		old_mps = (ffs(pdn->mps) - 8) << 5;
--		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				     2, &devctl);
--		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
--		devctl |= old_mps;
--		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				      2, devctl);
--
--		/* Disable Completion Timeout */
--		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
--				     4, &cap2);
--		if (cap2 & 0x10) {
--			eeh_ops->read_config(pdn,
--					     edev->pcie_cap + PCI_EXP_DEVCTL2,
--					     4, &cap2);
--			cap2 |= 0x10;
--			eeh_ops->write_config(pdn,
--					      edev->pcie_cap + PCI_EXP_DEVCTL2,
--					      4, cap2);
--		}
--	}
--
--	/* Enable SERR and parity checking */
--	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
--	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
--	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
--
--	/* Enable report various errors */
--	if (edev->pcie_cap) {
--		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				     2, &devctl);
--		devctl &= ~PCI_EXP_DEVCTL_CERE;
--		devctl |= (PCI_EXP_DEVCTL_NFERE |
--			   PCI_EXP_DEVCTL_FERE |
--			   PCI_EXP_DEVCTL_URRE);
--		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				      2, devctl);
--	}
--
--	/* Enable ECRC generation and check */
--	if (edev->pcie_cap && edev->aer_cap) {
--		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
--				     4, &aer_capctl);
--		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
--		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
--				      4, aer_capctl);
--	}
--
--	return 0;
--}
--
- static int pnv_eeh_restore_config(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
- 	struct pnv_phb *phb;
--	s64 ret;
-+	s64 ret = 0;
- 	int config_addr = (pdn->busno << 8) | (pdn->devfn);
- 
- 	if (!edev)
-@@ -1732,7 +1673,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 	 * to be exported by firmware in extendible way.
- 	 */
- 	if (edev->physfn) {
--		ret = pnv_eeh_restore_vf_config(pdn);
-+		ret = eeh_restore_vf_config(pdn);
- 	} else {
- 		phb = pdn->phb->private_data;
- 		ret = opal_pci_reinit(phb->opal_id,
-@@ -1745,7 +1686,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 		return -EIO;
- 	}
- 
--	return 0;
-+	return ret;
- }
- 
- static struct eeh_ops pnv_eeh_ops = {
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index 2295f117e2d3..a671ef4f57f5 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -708,6 +708,30 @@ static int pseries_eeh_write_config(struct pci_dn *pdn, int where, int size, u32
- 	return rtas_write_config(pdn, where, size, val);
- }
- 
-+static int pseries_eeh_restore_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	s64 ret = 0;
-+
-+	if (!edev)
-+		return -EEXIST;
-+
-+	/*
-+	 * FIXME: The MPS, error routing rules, timeout setting are worthy
-+	 * to be exported by firmware in extendible way.
-+	 */
-+	if (edev->physfn)
-+		ret = eeh_restore_vf_config(pdn);
-+
-+	if (ret) {
-+		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
-+			__func__, edev->pe_config_addr, ret);
-+		return -EIO;
-+	}
-+
-+	return ret;
-+}
-+
- static struct eeh_ops pseries_eeh_ops = {
- 	.name			= "pseries",
- 	.init			= pseries_eeh_init,
-@@ -723,7 +747,7 @@ static struct eeh_ops pseries_eeh_ops = {
- 	.read_config		= pseries_eeh_read_config,
- 	.write_config		= pseries_eeh_write_config,
- 	.next_error		= NULL,
--	.restore_config		= NULL
-+	.restore_config		= pseries_eeh_restore_config
- };
- 
- /**
+> 
+> but thats okay I think.  let me move error codes to drivers/pci/pci.h.
+
+It is better if error codes move to include/linux/pci.h and keep them together.
+
+> 
+> Regards,
+> Oza.
+> 
+
+
 -- 
-2.14.3 (Apple Git-98)
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
