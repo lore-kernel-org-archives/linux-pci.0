@@ -1,114 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:43232 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751293AbeAWBE6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jan 2018 20:04:58 -0500
-Received: by mail-pg0-f66.google.com with SMTP id n17so8459142pgf.10
-        for <linux-pci@vger.kernel.org>; Mon, 22 Jan 2018 17:04:58 -0800 (PST)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, project-aspen-dev@linaro.org,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Shawn Guo <shawn.guo@linaro.org>
-Subject: [PATCH] PCI: histb: add power control GPIO for PCIe slot
-Date: Tue, 23 Jan 2018 09:04:37 +0800
-Message-Id: <1516669477-20151-1-git-send-email-shawn.guo@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to and
+ from devices
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+ iommu@lists.linux-foundation.org
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-6-jean-philippe.brucker@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <0772e71e-4861-1e7b-f248-88aaba8bf2fc@codeaurora.org>
+Date: Thu, 18 Jan 2018 23:52:03 -0500
+MIME-Version: 1.0
+In-Reply-To: <20171006133203.22803-6-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, xieyisheng1@huawei.com, gabriele.paoloni@huawei.com,
+ catalin.marinas@arm.com, will.deacon@arm.com, yi.l.liu@intel.com,
+ lorenzo.pieralisi@arm.com, ashok.raj@intel.com, tn@semihalf.com,
+ joro@8bytes.org, rfranz@cavium.com, lenb@kernel.org,
+ jacob.jun.pan@linux.intel.com, alex.williamson@redhat.com, robh+dt@kernel.org,
+ thunder.leizhen@huawei.com, bhelgaas@google.com, dwmw2@infradead.org,
+ liubo95@huawei.com, rjw@rjwysocki.net, robdclark@gmail.com,
+ hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com,
+ nwatters@codeaurora.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jianguo Sun <sunjianguo1@huawei.com>
+Hi Jean-Philippe,
 
-Besides the GPIO for controlling reset, there is also possibly another
-GPIO for turning on/off the power of PCIe slot.  Let's add the support
-for that with another optional device tree property 'power-gpios'.
+On 10/6/2017 9:31 AM, Jean-Philippe Brucker wrote:
+>  /**
+> + * iommu_process_bind_device - Bind a process address space to a device
+> + * @dev: the device
+> + * @task: the process to bind
+> + * @pasid: valid address where the PASID will be stored
+> + * @flags: bond properties (IOMMU_PROCESS_BIND_*)
+> + *
+> + * Create a bond between device and task, allowing the device to access the
+> + * process address space using the returned PASID.
+> + *
+> + * On success, 0 is returned and @pasid contains a valid ID. Otherwise, an error
+> + * is returned.
+> + */
+> +int iommu_process_bind_device(struct device *dev, struct task_struct *task,
+> +			      int *pasid, int flags)
 
-Signed-off-by: Jianguo Sun <sunjianguo1@huawei.com>
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
----
- .../bindings/pci/hisilicon-histb-pcie.txt          |  1 +
- drivers/pci/dwc/pcie-histb.c                       | 28 +++++++++++++++++++---
- 2 files changed, 26 insertions(+), 3 deletions(-)
+This API doesn't play nice with endpoint device drivers that have PASID limitations.
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-index c84bc027930b..597397a048f8 100644
---- a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-@@ -33,6 +33,7 @@ Required properties
-   "bus": bus reset.
- 
- Optional properties:
-+- power-gpios: The gpio to control the power of PCIe slot.
- - reset-gpios: The gpio to generate PCIe PERST# assert and deassert signal.
- - phys: List of phandle and phy mode specifier, should be 0.
- - phy-names: Must be "phy".
-diff --git a/drivers/pci/dwc/pcie-histb.c b/drivers/pci/dwc/pcie-histb.c
-index 33b01b734d7d..2a6b18619b25 100644
---- a/drivers/pci/dwc/pcie-histb.c
-+++ b/drivers/pci/dwc/pcie-histb.c
-@@ -63,6 +63,7 @@ struct histb_pcie {
- 	struct reset_control *sys_reset;
- 	struct reset_control *bus_reset;
- 	void __iomem *ctrl;
-+	int power_gpio;
- 	int reset_gpio;
- };
- 
-@@ -230,6 +231,8 @@ static void histb_pcie_host_disable(struct histb_pcie *hipcie)
- 
- 	if (gpio_is_valid(hipcie->reset_gpio))
- 		gpio_set_value_cansleep(hipcie->reset_gpio, 0);
-+	if (gpio_is_valid(hipcie->power_gpio))
-+		gpio_set_value_cansleep(hipcie->power_gpio, 0);
- }
- 
- static int histb_pcie_host_enable(struct pcie_port *pp)
-@@ -240,8 +243,14 @@ static int histb_pcie_host_enable(struct pcie_port *pp)
- 	int ret;
- 
- 	/* power on PCIe device if have */
--	if (gpio_is_valid(hipcie->reset_gpio))
-+	if (gpio_is_valid(hipcie->power_gpio))
-+		gpio_set_value_cansleep(hipcie->power_gpio, 1);
-+
-+	if (gpio_is_valid(hipcie->reset_gpio)) {
-+		gpio_set_value_cansleep(hipcie->reset_gpio, 0);
-+		mdelay(10);
- 		gpio_set_value_cansleep(hipcie->reset_gpio, 1);
-+	}
- 
- 	ret = clk_prepare_enable(hipcie->bus_clk);
- 	if (ret) {
-@@ -335,15 +344,28 @@ static int histb_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(pci->dbi_base);
- 	}
- 
-+	hipcie->power_gpio = of_get_named_gpio_flags(np,
-+				"power-gpios", 0, &of_flags);
-+	if (of_flags & OF_GPIO_ACTIVE_LOW)
-+		flag |= GPIOF_ACTIVE_LOW;
-+	if (gpio_is_valid(hipcie->power_gpio)) {
-+		ret = devm_gpio_request_one(dev, hipcie->power_gpio,
-+				flag, "PCIe device power control");
-+		if (ret) {
-+			dev_err(dev, "unable to request power gpio\n");
-+			return ret;
-+		}
-+	}
-+
- 	hipcie->reset_gpio = of_get_named_gpio_flags(np,
- 				"reset-gpios", 0, &of_flags);
- 	if (of_flags & OF_GPIO_ACTIVE_LOW)
- 		flag |= GPIOF_ACTIVE_LOW;
- 	if (gpio_is_valid(hipcie->reset_gpio)) {
- 		ret = devm_gpio_request_one(dev, hipcie->reset_gpio,
--				flag, "PCIe device power control");
-+				flag, "PCIe device reset control");
- 		if (ret) {
--			dev_err(dev, "unable to request gpio\n");
-+			dev_err(dev, "unable to request reset gpio\n");
- 			return ret;
- 		}
- 	}
+The AMD driver seems to have PASID limitations per product that are not being
+advertised in the PCI capability.
+
+device_iommu_pasid_init()
+{
+        pasid_limit = min_t(unsigned int,
+                        (unsigned int)(1 << kfd->device_info->max_pasid_bits),
+                        iommu_info.max_pasids);
+        /*
+         * last pasid is used for kernel queues doorbells
+         * in the future the last pasid might be used for a kernel thread.
+         */
+        pasid_limit = min_t(unsigned int,
+                                pasid_limit,
+                                kfd->doorbell_process_limit - 1);
+}
+
+kfd->device_info->max_pasid_bits seems to contain per device limitations.
+
+Would you be willing to extend the API so that the requester can impose some limit
+on the PASID value that is getting allocated.
+
+Sinan
+
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
