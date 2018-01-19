@@ -1,315 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:39796 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751272AbeABTIW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:08:22 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v4 09/10] PCI: dwc: Remove IRQ domain hierarchy API support
-Date: Fri, 29 Dec 2017 14:21:41 +0000
-Message-Id: <41e974aa66608c7f81698cd768ab129011b78bd9.1514524551.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=5WU8=EO=linux-mips.org=ladis@kernel.org>
+Return-Path: <SRS0=5WU8=EO=linux-mips.org=ladis@kernel.org>
+Date: Fri, 19 Jan 2018 10:16:04 +0100
+Sender: Ladislav Michl <ladis@linux-mips.org>
+From: Ladislav Michl <ladis@linux-mips.org>
+To: "weiyongjun (A)" <weiyongjun1@huawei.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
+Message-ID: <20180119091604.GA21195@lenoch>
+References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
+ <20180118145420.GA21163@lenoch>
+ <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
+ <20180118213417.GA30723@lenoch>
+ <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
+ <20180119070337.GA6079@lenoch>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180119070337.GA6079@lenoch>
 List-ID: <linux-pci.vger.kernel.org>
 
-Removes the unused IRQ domain hierarchy API support from pcie-designware.
+On Fri, Jan 19, 2018 at 08:03:38AM +0100, Ladislav Michl wrote:
+> On Fri, Jan 19, 2018 at 01:54:58AM +0000, weiyongjun (A) wrote:
+> > > On Thu, Jan 18, 2018 at 12:35:25PM -0600, Bjorn Helgaas wrote:
+> > > > On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
+> > > > > On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
+> > > > > > platform_get_resource_byname() may fail and return NULL, so we
+> > > should
+> > > > > > better check it's return value to avoid a NULL pointer dereference a
+> > > > > > bit later in the code.
+> > > > > >
+> > > > > > This is detected by Coccinelle semantic patch.
+> > > > > >
+> > > > > > @@
+> > > > > > expression pdev, res, n, t, e, e1, e2;
+> > > > > > @@
+> > > > > >
+> > > > > > res = platform_get_resource_byname(pdev, t, n);
+> > > > > > + if (!res)
+> > > > > > +   return -EINVAL;
+> > > > > > ... when != res == NULL
+> > > > > > e = devm_ioremap(e1, res->start, e2);
+> > > > >
+> > > > > Well, then it should be replaced with devm_ioremap_resource()
+> > > > > which already checks for NULL and the right resource type
+> > > > > (IORESOURCE_MEM).
+> > > >
+> > > > That's probably a better idea.  Maybe we should add a comment like this
+> > > > to help avoid this in the future:
+> > 
+> > Not all of the place using devm_ioremap() can be replaced with
+> > devm_ioremap_resource(), devices share the memory resource for example.
+> 
+> That's probably what "when possible" means. Also, how does sharing memory
+> resource changes that? As long as 'struct resource' is an argument to
+> devm_ioremap, devm_ioremap_resource can be used.
+> 
+> > So maybe you should also add an exception list to the comment, otherwise
+> > many people still not know how to use devm_ioremap_resource() or devm_ioremap().
+> 
+> Care to elaborate how should such an exception list look like?
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Patch renamed from v3-0008 to v4-0009.
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
+What about:
+"When possible (for example when memory region was not already requested),
+use devm_ioremap_resource() instead."?
 
- drivers/pci/dwc/pci-keystone-dw.c      |   2 +-
- drivers/pci/dwc/pci-keystone.h         |   3 +-
- drivers/pci/dwc/pci-layerscape.c       |   3 +-
- drivers/pci/dwc/pcie-designware-host.c | 190 +--------------------------------
- drivers/pci/dwc/pcie-designware.h      |   2 +-
- 5 files changed, 5 insertions(+), 195 deletions(-)
+And here I would propose something like devm_ioremap_resource_norequest()
+To be honest, such a name looks too long for me, so suggestions welcome :)
 
-diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
-index 0390478..c48ef38 100644
---- a/drivers/pci/dwc/pci-keystone-dw.c
-+++ b/drivers/pci/dwc/pci-keystone-dw.c
-@@ -162,7 +162,7 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
- 			 BIT(bit_pos));
- }
- 
--int ks_dw_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
-+int ks_dw_pcie_msi_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
-diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
-index aed3c73..8ac2f12 100644
---- a/drivers/pci/dwc/pci-keystone.h
-+++ b/drivers/pci/dwc/pci-keystone.h
-@@ -57,6 +57,5 @@ void ks_dw_pcie_msi_irq_ack(int i, struct pcie_port *pp);
- void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp);
--int ks_dw_pcie_msi_host_init(struct pcie_port *pp,
--		struct msi_controller *chip);
-+int ks_dw_pcie_msi_host_init(struct pcie_port *pp);
- int ks_dw_pcie_link_up(struct dw_pcie *pci);
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 8f34c2f..e77ff65 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -185,8 +185,7 @@ static int ls1021_pcie_host_init(struct pcie_port *pp)
- 	return ls_pcie_host_init(pp);
- }
- 
--static int ls_pcie_msi_host_init(struct pcie_port *pp,
--				 struct msi_controller *chip)
-+static int ls_pcie_msi_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct device *dev = pci->dev;
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 631d665..7d12ce3 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -46,14 +46,6 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	return dw_pcie_write(pci->dbi_base + where, size, val);
- }
- 
--static struct irq_chip dw_msi_irq_chip = {
--	.name = "PCI-MSI",
--	.irq_enable = pci_msi_unmask_irq,
--	.irq_disable = pci_msi_mask_irq,
--	.irq_mask = pci_msi_mask_irq,
--	.irq_unmask = pci_msi_unmask_irq,
--};
--
- static void dw_pci_ack_irq(struct irq_data *d)
- {
- 	struct msi_desc *msi = irq_data_get_msi_desc(d);
-@@ -320,186 +312,6 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 			    upper_32_bits(msi_target));
- }
- 
--static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
--{
--	unsigned int res, bit, ctrl;
--
--	ctrl = irq / 32;
--	res = ctrl * 12;
--	bit = irq % 32;
--	pp->irq_status[ctrl] &= ~(1 << bit);
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
--			    pp->irq_status[ctrl]);
--}
--
--static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
--			    unsigned int nvec, unsigned int pos)
--{
--	unsigned int i;
--
--	for (i = 0; i < nvec; i++) {
--		irq_set_msi_desc_off(irq_base, i, NULL);
--		/* Disable corresponding interrupt on MSI controller */
--		if (pp->ops->msi_clear_irq)
--			pp->ops->msi_clear_irq(pp, pos + i);
--		else
--			dw_pcie_msi_clear_irq(pp, pos + i);
--	}
--
--	bitmap_release_region(pp->msi_irq_in_use, pos, order_base_2(nvec));
--}
--
--static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
--{
--	unsigned int res, bit, ctrl;
--
--	ctrl = irq / 32;
--	res = ctrl * 12;
--	bit = irq % 32;
--	pp->irq_status[ctrl] |= 1 << bit;
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
--			    pp->irq_status[ctrl]);
--}
--
--static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
--{
--	int irq, pos0, i;
--	struct pcie_port *pp;
--
--	pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
--	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
--				       order_base_2(no_irqs));
--	if (pos0 < 0)
--		goto no_valid_irq;
--
--	irq = irq_find_mapping(pp->irq_domain, pos0);
--	if (!irq)
--		goto no_valid_irq;
--
--	/*
--	 * irq_create_mapping (called from dw_pcie_host_init) pre-allocates
--	 * descs so there is no need to allocate descs here. We can therefore
--	 * assume that if irq_find_mapping above returns non-zero, then the
--	 * descs are also successfully allocated.
--	 */
--
--	for (i = 0; i < no_irqs; i++) {
--		if (irq_set_msi_desc_off(irq, i, desc) != 0) {
--			clear_irq_range(pp, irq, i, pos0);
--			goto no_valid_irq;
--		}
--		/*Enable corresponding interrupt in MSI interrupt controller */
--		if (pp->ops->msi_set_irq)
--			pp->ops->msi_set_irq(pp, pos0 + i);
--		else
--			dw_pcie_msi_set_irq(pp, pos0 + i);
--	}
--
--	*pos = pos0;
--	desc->nvec_used = no_irqs;
--	desc->msi_attrib.multiple = order_base_2(no_irqs);
--
--	return irq;
--
--no_valid_irq:
--	*pos = pos0;
--	return -ENOSPC;
--}
--
--static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
--{
--	struct msi_msg msg;
--	u64 msi_target;
--
--	if (pp->ops->get_msi_addr)
--		msi_target = pp->ops->get_msi_addr(pp);
--	else
--		msi_target = (u64)pp->msi_data;
--
--	msg.address_lo = (u32)(msi_target & 0xffffffff);
--	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
--
--	if (pp->ops->get_msi_data)
--		msg.data = pp->ops->get_msi_data(pp, pos);
--	else
--		msg.data = pos;
--
--	pci_write_msi_msg(irq, &msg);
--}
--
--static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
--			    struct msi_desc *desc)
--{
--	int irq, pos;
--	struct pcie_port *pp = pdev->bus->sysdata;
--
--	if (desc->msi_attrib.is_msix)
--		return -EINVAL;
--
--	irq = assign_irq(1, desc, &pos);
--	if (irq < 0)
--		return irq;
--
--	dw_msi_setup_msg(pp, irq, pos);
--
--	return 0;
--}
--
--static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
--			     int nvec, int type)
--{
--#ifdef CONFIG_PCI_MSI
--	int irq, pos;
--	struct msi_desc *desc;
--	struct pcie_port *pp = pdev->bus->sysdata;
--
--	/* MSI-X interrupts are not supported */
--	if (type == PCI_CAP_ID_MSIX)
--		return -EINVAL;
--
--	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
--	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
--
--	irq = assign_irq(nvec, desc, &pos);
--	if (irq < 0)
--		return irq;
--
--	dw_msi_setup_msg(pp, irq, pos);
--
--	return 0;
--#else
--	return -EINVAL;
--#endif
--}
--
--static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
--{
--	struct irq_data *data = irq_get_irq_data(irq);
--	struct msi_desc *msi = irq_data_get_msi_desc(data);
--	struct pcie_port *pp = (struct pcie_port *)msi_desc_to_pci_sysdata(msi);
--
--	clear_irq_range(pp, irq, 1, data->hwirq);
--}
--
--static struct msi_controller dw_pcie_msi_chip = {
--	.setup_irq = dw_msi_setup_irq,
--	.setup_irqs = dw_msi_setup_irqs,
--	.teardown_irq = dw_msi_teardown_irq,
--};
--
--static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
--			   irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops msi_domain_ops = {
--	.map = dw_pcie_msi_map,
--};
--
- int dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -639,7 +451,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 							    dw_chained_msi_isr,
- 							    pp);
- 		} else {
--			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
-+			ret = pp->ops->msi_host_init(pp);
- 			if (ret < 0)
- 				goto error;
- 		}
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index b603e88..c77c2e0 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -154,7 +154,7 @@ struct dw_pcie_host_ops {
- 	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
- 	void (*scan_bus)(struct pcie_port *pp);
- 	void (*set_num_vectors)(struct pcie_port *pp);
--	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
-+	int (*msi_host_init)(struct pcie_port *pp);
- 	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
- };
- 
--- 
-2.7.4
+> Thank you.
+> 
+> > > >
+> > > > --- a/lib/devres.c
+> > > > +++ b/lib/devres.c
+> > > > @@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev,
+> > > void *res, void *match_data)
+> > > >   * @size: Size of map
+> > > >   *
+> > > >   * Managed ioremap().  Map is automatically unmapped on driver detach.
+> > > > + *
+> > > > + * When possible, use devm_ioremap_resource() instead.
+> > > >   */
+> > > >  void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+> > > >  			   resource_size_t size)
+> > > 
+> > > Yes, please. It would be nice first patch in the serie converting existing
+> > > users of devm_ioremap into devm_ioremap_resource:
+> > > find drivers -name "*.c" | xargs grep "devm_ioremap(" | grep resource_size
+> > > | wc -l
+> > > 82
+> > > I know, that was dumb, Coccinelle would certainly do better job.
+> > > And from a quick look a lot of
+> > > if (!res) {
+> > > 	print error
+> > > 	return -EINVAL;
+> > > }
+> > > code blocks could be deleted (and many cases where check for NULL
+> > > resource
+> > > is missing fixed).
+> > > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
