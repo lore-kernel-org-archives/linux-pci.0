@@ -1,91 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45988 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754891AbeASJDN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 04:03:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46166 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755132AbeATCk0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Jan 2018 21:40:26 -0500
+Date: Fri, 19 Jan 2018 20:40:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, arnd@arndb.de,
+        kishon@ti.com, Niklas Cassel <niklass@axis.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add dummy pci_irqd_intx_xlate() for CONFIG_PCI=n
+ build
+Message-ID: <20180120024005.GC160618@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180119093906.27670-1-niklas.cassel@axis.com>
+ <20180119111859.GA24300@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Fri, 19 Jan 2018 14:33:12 +0530
-From: poza@codeaurora.org
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <f2356b95-1562-287a-95b9-d5e2c7c7ef56@codeaurora.org>
-References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
- <1516185438-31556-4-git-send-email-poza@codeaurora.org>
- <733abfcb-5b31-7394-ab62-19a0888d71c2@codeaurora.org>
- <c77a3302e34d55d557404d7bdc6892fc@codeaurora.org>
- <5cf7004e62a2979afb3c29e99d705c60@codeaurora.org>
- <35a9ce2b-156f-3235-c3b7-2c495fe9c52b@codeaurora.org>
- <64127dba1cebab196c88a160191ebee0@codeaurora.org>
- <0ab49441-548e-a5bc-d76b-bdc6fa7495dc@codeaurora.org>
- <c773081eadb89c4b4317d0a709a06a7d@codeaurora.org>
- <f2356b95-1562-287a-95b9-d5e2c7c7ef56@codeaurora.org>
-Message-ID: <3f4e3cf0c9dee97894948b5cc9451d7e@codeaurora.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180119111859.GA24300@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-19 10:14, Sinan Kaya wrote:
-> On 1/18/2018 11:23 PM, poza@codeaurora.org wrote:
->> On 2018-01-18 23:33, Sinan Kaya wrote:
->>> On 1/18/2018 1:00 PM, poza@codeaurora.org wrote:
->>>>> I think you would put into include/linux/pci.h only if there is an 
->>>>> external
->>>>> use of constant outside of drivers/pci directory. Otherwise, you 
->>>>> should keep
->>>>> the setting inside one of the header files in drivers/pci 
->>>>> directory.
->>>>> 
->>>>> I don't see any other subsystem caring about DPC_FATAL definition.
->>>> 
->>>> ok so you are suggesting to move only DPC_FATAL ? so then AER can 
->>>> stay where it is.
->>> 
->>> Now that both AER and DPC handling is getting unified, I think it 
->>> makes sense to
->>> keep all error codes (AER+DPC) together in drivers/pci/pci.h rather 
->>> than having
->>> them split in aer.h and dpc.h.
->>> 
->>> Otherwise, how would we avoid having a new error type defined with 
->>> the
->>> existing values.
->> 
->> I agree, its is just that drivers/acpi/apet/ghes.c has to do
->> #include ../../pci/pci.h
+On Fri, Jan 19, 2018 at 11:18:59AM +0000, Lorenzo Pieralisi wrote:
+> On Fri, Jan 19, 2018 at 10:39:06AM +0100, Niklas Cassel wrote:
+> > If CONFIG_PCI=n and CONFIG_PCI_DRA7XX_EP=y, the build fails with:
+> > 
+> >   drivers/pci/dwc/pci-dra7xx.c:229:11: error: 'pci_irqd_intx_xlate'
+> >   undeclared here (not in a function)
+> > 
+> > When building drivers/pci/dwc/pci-dra7xx.c without CONFIG_PCI,
+> > gcc is usually smart enough to realize that RC specific code
+> > is unreachable and can thus be eliminated.
+> > 
+> > However, gcc cannot do this if there is a function that isn't
+> > even declared.
+> > 
+> > Hence fix the issue by introducing a dummy for pci_irqd_intx_xlate().
+> > 
+> > Acked-by: Arnd Bergmann <arnd@arndb.de>
+> > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 > 
-> That's bad. I was just thinking about the DPC error code only. I didn't 
-> realize
-> AER error codes are being referenced from ghes.c.
+> Thanks for the patch.
 > 
->> 
->> but thats okay I think.  let me move error codes to drivers/pci/pci.h.
-> 
-> It is better if error codes move to include/linux/pci.h and keep them 
-> together.
-> 
+> I think the commit log should be rewritten (when you write it think at
+> someone reading it in some time - what you wrote won't probably make
+> any sense) but first, Bjorn are you picking this up ? It does not make
+> much sense to squash it in one of my pci/dwc branch commits - therefore
+> I am asking, just let me know.
 
-The problem with moving them to include/linux/pci.h, it falls into 
-global scope, besides
-they have to be renamed to/prefixed with PCI_ERR_xxx
+I did apply this, as follows.  I don't know if the commit log makes
+any more sense; a lot of the sense is in the eye of the author :)
 
-the use of AER_FATAL, DPC_FATAL etc.. is very limited in entire linux. 
-and likely to be so.
-I think moving them to drivers/pci/pci.h would be more restricted/local
+But anyway, I put this on pci/misc and re-merged my "next" branch so
+this is applied before the dra7xx changes, so there shouldn't be any
+bisection issue.
 
-let me make patch-set based on that, and see how it looks like. we can 
-arrive at some consensus then.
 
->> 
->> Regards,
->> Oza.
->> 
+commit 80db6f08b7af93eddc9487535e6150b220262637
+Author: Niklas Cassel <niklas.cassel@axis.com>
+Date:   Fri Jan 19 10:39:06 2018 +0100
+
+    PCI: Add dummy pci_irqd_intx_xlate() for CONFIG_PCI=n build
+    
+    Some hardware can operate in either "host" or "endpoint" mode, which means
+    there can be both a host bridge driver and an endpoint driver for the same
+    device.  Those drivers share a lot of code, so sometimes they live in the
+    same source file.
+    
+    The host bridge driver requires CONFIG_PCI=y because it enumerates PCI
+    devices below the bridge using the PCI core.  The endpoint driver does not
+    require CONFIG_PCI=y because it runs in an embedded kernel on the other
+    side of the device, e.g., on an adapter card.
+    
+    pci-dra7xx.c contains both host and endpoint drivers.  If we select only
+    the endpoint driver (CONFIG_PCI=n and CONFIG_PCI_DRA7XX_EP=y), the unneeded
+    host driver is still compiled.  It references pci_irqd_intx_xlate(), which
+    is not present when CONFIG_PCI=n, which causes this error:
+    
+      drivers/pci/dwc/pci-dra7xx.c:229:11: error: 'pci_irqd_intx_xlate' undeclared here (not in a function)
+    
+    Add a dummy pci_irqd_intx_xlate() for the CONFIG_PCI=n case.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Arnd Bergmann <arnd@arndb.de>
+    Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6079ab46191f..febe7f653689 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1686,6 +1686,13 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #define dev_is_pf(d) (false)
+ static inline bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ { return false; }
++static inline int pci_irqd_intx_xlate(struct irq_domain *d,
++				      struct device_node *node,
++				      const u32 *intspec,
++				      unsigned int intsize,
++				      unsigned long *out_hwirq,
++				      unsigned int *out_type)
++{ return -EINVAL; }
+ #endif /* CONFIG_PCI */
+ 
+ /* Include architecture-dependent settings and functions */
