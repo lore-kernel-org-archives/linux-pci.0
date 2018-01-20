@@ -1,115 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 8 Jan 2018 15:36:33 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46024 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754735AbeATGfy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jan 2018 01:35:54 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH 6/7] PM: i2c-designware-platdrv: Optimize power management
-Message-ID: <20180108143633.rtnc3jagelybdfnn@katana>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
- <2436726.ykYRzVD45y@aspire.rjw.lan>
- <6243259.Xh4soKtjBb@aspire.rjw.lan>
- <bb17c593-d8ab-ace6-4127-249da0b8af54@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="o5jmihrbbyvkzvwd"
-In-Reply-To: <bb17c593-d8ab-ace6-4127-249da0b8af54@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v7 6/7] PCI: Unify wait for link active into generic pci
+Date: Sat, 20 Jan 2018 12:05:18 +0530
+Message-Id: <1516430119-3825-7-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
+References: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Clients such as pciehp, dpc are using pcie_wait_link_active, which waits
+till the link becomes active or inactive.
 
---o5jmihrbbyvkzvwd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Made generic function and moved it to drivers/pci/pci.c
 
-On Mon, Jan 08, 2018 at 04:31:58PM +0200, Jarkko Nikula wrote:
-> On 01/03/2018 02:37 AM, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >=20
-> > Optimize the power management in i2c-designware-platdrv by making it
-> > set the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED which
-> > allows some code to be dropped from its PM callbacks.
-> >=20
-> > First, setting DPM_FLAG_SMART_SUSPEND causes the intel-lpss driver
-> > to avoid resuming i2c-designware-platdrv devices in its ->prepare
-> > callback, so they can stay in runtime suspend after that point even
-> > if the direct-complete feature is not used for them.
-> >=20
-> > It also causes the ACPI PM domain and the PM core to avoid invoking
-> > "late" and "noirq" suspend callbacks for these devices if they are
-> > in runtime suspend at the beginning of the "late" phase of device
-> > suspend during system suspend.  That guarantees dw_i2c_plat_suspend()
-> > to be called for a device only if it is not in runtime suspend.
-> >=20
-> > Moreover, it causes the device's runtime PM status to be set to
-> > "active" after calling dw_i2c_plat_resume() for it, so the
-> > driver doesn't need internal flags to avoid invoking either
-> > dw_i2c_plat_suspend() or dw_i2c_plat_resume() twice in a row.
-> >=20
-> > Second, setting DPM_FLAG_LEAVE_SUSPENDED enables the optimization
-> > allowing the device to stay suspended after system resume under
-> > suitable conditions, so again the driver doesn't need to take
-> > care of that by itself.
-> >=20
-> > Accordingly, the internal "suspended" and "skip_resume" flags
-> > used by the driver are not necessary any more, so drop them and
-> > simplify the driver's PM callbacks.
-> >=20
-> > Additionally, notice that dw_i2c_plat_complete() only needs to
-> > schedule runtime PM resume for the device if platform firmware
-> > has been involved in resuming the system, so make it call
-> > pm_resume_via_firmware() to check that.  Also make it check the
-> > runtime PM status of the device instead of its direct_complete
-> > flag which also works if the device remained suspended due to
-> > the DPM_FLAG_LEAVE_SUSPENDED driver flag.
-> >=20
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >   drivers/i2c/busses/i2c-designware-core.h    |    2 -
-> >   drivers/i2c/busses/i2c-designware-platdrv.c |   31 ++++++++++--------=
-----------
-> >   2 files changed, 12 insertions(+), 21 deletions(-)
-> >=20
-> This doesn't apply to linux-next due 0326f9f801b2 ("i2c: designware: rena=
-me
-> i2c_dw_plat_prepare_clk to i2c_dw_prepare_clk"). It was trivial to fix wh=
-ich
-> I did locally for testing.
->=20
-> Acked-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Acked-by: Wolfram Sang <wsa@the-dreams.de>
-
-
---o5jmihrbbyvkzvwd
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlpTgfEACgkQFA3kzBSg
-KbZ6zA//YAuzRvfpd0Ga5+Y/PCEFp0ZZUu3Jrp3GgGYUOxl/gvL2cgg8Dj635Cmk
-Dg4AX+gfQ/fxz7rQ6NNkQUKmA6HcqpAXhnaMcI+lAt0oE0gCmsr/vI5VTrAUKRi6
-mT8Dfw3Ja7kravQVnKBT+pd2YXTaDRKa0SfxUzAIvdrg9mulsE7DRkB7qoR/CKEg
-PPcouVDk04SVcQyYRirAKKRG1yQTUr1HcspSNNnLNWioSaLrgCSh0uFwrUD7iV2G
-mKPFVXemZKSxwPaohOcI4jx91LHK1Q4/wjwY8MA7RRduAYNuXBu5RDfSgzG4E+jp
-CW7ut0e/HwICxDQ5QYH40OHLncTfdTwvnS5b5NvC3jrK4I28RZbp2G24POyc/RJr
-gKm+qIZ7pZqug5ZEFAhg+rixSR/6wqpX651CqJ9sopjcr/DDmzUEVqGxT6BMU2Po
-KrLVQ5ySgCQNwBFi1UHAyl7S55RScdoLrj0EfwpaH05ZJUHiKU2P3Hbdnyb6oNC8
-PxnPbQvnuRdJSI5R2SzRN+kyDrodVHLflulx699U97J5xMHA1s9RrXvwt6y2PI3r
-9IczwyhVhr25vVhPnSIxiOdembyf4zUJoHalTHaAO3dgutNb9YrcxLhtA/oZ/t2u
-8TMPHiuhfQhh4nAMDJr+klTw1nrAZXgnT/dO80k9uA5ErXyBNCE=
-=v7u5
------END PGP SIGNATURE-----
-
---o5jmihrbbyvkzvwd--
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 7bab060..26afeff 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -245,25 +245,12 @@ bool pciehp_check_link_active(struct controller *ctrl)
+ 	return ret;
+ }
+ 
+-static void __pcie_wait_link_active(struct controller *ctrl, bool active)
++static bool pcie_wait_link_active(struct controller *ctrl)
+ {
+-	int timeout = 1000;
+-
+-	if (pciehp_check_link_active(ctrl) == active)
+-		return;
+-	while (timeout > 0) {
+-		msleep(10);
+-		timeout -= 10;
+-		if (pciehp_check_link_active(ctrl) == active)
+-			return;
+-	}
+-	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
+-			active ? "set" : "cleared");
+-}
++	struct pci_dev *pdev = ctrl_dev(ctrl);
++	bool active = true;
+ 
+-static void pcie_wait_link_active(struct controller *ctrl)
+-{
+-	__pcie_wait_link_active(ctrl, true);
++	return pci_wait_for_link(pdev, active);
+ }
+ 
+ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4a7c686..5e7e588 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4079,6 +4079,41 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++/**
++ * pci__wait_for_link - Wait for link till its active/inactive
++ * @dev: Bridge device
++ * @active: waiting for active or inactive ?
++ *
++ * Use this to wait till link becomes active or inactive.
++ */
++
++bool pci_wait_for_link(struct pci_dev *pdev, bool active)
++{
++	int timeout = 1000;
++	bool ret;
++	u16 lnk_status;
++
++	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++	ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++
++	while ((ret != active) && (timeout > 0)) {
++		msleep(10);
++		timeout -= 10;
++		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++	}
++
++	if (ret == active)
++		return true;
++	
++	dev_printk(KERN_DEBUG, &pdev->dev,
++		   "Data Link Layer Link Active not %s in 1000 msec\n",
++		   active ? "set" : "cleared");
++
++	return false;
++}
++EXPORT_SYMBOL(pci_wait_for_link);
++
+ void pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index b5c9fbd..7838b02 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -150,15 +150,9 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	struct device *dev = &dpc->dev->device;
+ 	u16 lnk_status;
++	bool active = false;
+ 
+-	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
+-					!time_after(jiffies, timeout)) {
+-		msleep(10);
+-		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-	}
+-	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
+-		dev_warn(dev, "Link state not disabled for DPC event\n");
++	pci_wait_for_link(pdev, active);
+ }
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c170c92..f9f6a3d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1201,6 +1201,7 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
+ int pci_request_selected_regions(struct pci_dev *, int, const char *);
+ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+ void pci_release_selected_regions(struct pci_dev *, int);
++bool pci_wait_for_link(struct pci_dev *pdev, bool active);
+ 
+ /* drivers/pci/bus.c */
+ struct pci_bus *pci_bus_get(struct pci_bus *bus);
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
