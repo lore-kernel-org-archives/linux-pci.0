@@ -1,59 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35630 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751740AbeAZOvA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jan 2018 09:51:00 -0500
-Received: by mail-wm0-f67.google.com with SMTP id r78so21758346wme.0
-        for <linux-pci@vger.kernel.org>; Fri, 26 Jan 2018 06:50:59 -0800 (PST)
-Subject: Re: [PATCH v2 1/5] ACPI: export acpi_bus_get_status_handle()
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Lv Zheng <lv.zheng@intel.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>, devel@acpica.org
-References: <20180122085135.16732-1-hdegoede@redhat.com>
- <20180122085135.16732-2-hdegoede@redhat.com>
- <CAJZ5v0g7KppXpk_jRWjKz8-ncdJQHg-QU7oGrgPiBtczgf+gfQ@mail.gmail.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <cf75e876-80b2-8f5d-bb17-11f6f3a1635a@redhat.com>
-Date: Fri, 26 Jan 2018 15:50:57 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0g7KppXpk_jRWjKz8-ncdJQHg-QU7oGrgPiBtczgf+gfQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from smtp.codeaurora.org ([198.145.29.96]:45848 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754548AbeATGfu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jan 2018 01:35:50 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v7 5/7] PCI/AER: Unify aer error defines at single space
+Date: Sat, 20 Jan 2018 12:05:17 +0530
+Message-Id: <1516430119-3825-6-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
+References: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+This patch moves AER error defines to drivers/pci/pci.h.
+So that it unifies the error repoting codes at single place along with dpc
 
-On 01/23/2018 12:55 AM, Rafael J. Wysocki wrote:
-> On Mon, Jan 22, 2018 at 9:51 AM, Hans de Goede <hdegoede@redhat.com> wrote:
->> Some modular drivers need this, export it.
->>
->> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->> ---
->> Changes in v2:
->> -This is a new patch in v2 of this patch-set
->> ---
->>   drivers/acpi/bus.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
->> index 4d0979e02a28..db0c05997cc2 100644
->> --- a/drivers/acpi/bus.c
->> +++ b/drivers/acpi/bus.c
->> @@ -108,6 +108,7 @@ acpi_status acpi_bus_get_status_handle(acpi_handle handle,
->>          }
->>          return status;
->>   }
->> +EXPORT_SYMBOL(acpi_bus_get_status_handle);
-> 
-> EXPORT_SYMBOL_GPL(), please.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Ok, v3 with this fixed coming up.
-
-Regards,
-
-Hans
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index 6402f7f..216ee47 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -56,6 +56,7 @@
+ #include <ras/ras_event.h>
+ 
+ #include "apei-internal.h"
++#include "../../pci/pci.h"
+ 
+ #define GHES_PFX	"GHES: "
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 3b79593..2e19953 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -343,7 +343,11 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ void pci_enable_acs(struct pci_dev *dev);
+ 
+ /* PCI error reporting and recovery */
+-#define DPC_FATAL	4
++#define AER_NONFATAL		0
++#define AER_FATAL		1
++#define AER_CORRECTABLE		2
++
++#define DPC_FATAL		4
+ 
+ void pci_do_recovery(struct pci_dev *dev, int severity);
+ 
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 54c4b69..cd3ad55 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -22,6 +22,7 @@
+ #include <linux/cper.h>
+ 
+ #include "aerdrv.h"
++#include "../../pci.h"
+ #include <ras/ras_event.h>
+ 
+ #define AER_AGENT_RECEIVER		0
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 8f87bbe..3eac8ed 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -11,10 +11,6 @@
+ #include <linux/errno.h>
+ #include <linux/types.h>
+ 
+-#define AER_NONFATAL			0
+-#define AER_FATAL			1
+-#define AER_CORRECTABLE			2
+-
+ struct pci_dev;
+ 
+ struct aer_header_log_regs {
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
