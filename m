@@ -1,80 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40586 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751695AbeAMR6y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 13 Jan 2018 12:58:54 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: ACPI: Do not call _STA on battery devices with unmet dependencies
+To: "Schmauss, Erik" <erik.schmauss@intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Moore, Robert" <robert.moore@intel.com>,
+        "Zheng, Lv" <lv.zheng@intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@acpica.org" <devel@acpica.org>
+References: <20180118160359.29971-1-hdegoede@redhat.com>
+ <20180118191112.GI53542@bhelgaas-glaptop.roam.corp.google.com>
+ <CF6A88132359CE47947DB4C6E1709ED5396D2A4C@ORSMSX110.amr.corp.intel.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <03b11c2d-0c17-89d2-daa2-d48f4ea656d5@redhat.com>
+Date: Sat, 20 Jan 2018 13:48:25 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Sat, 13 Jan 2018 12:58:53 -0500
-From: okaya@codeaurora.org
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: Regression (sort of): PCI/portdrv: Turn off PCIe services during
- shutdown
-In-Reply-To: <20180113073218.GB14854@wunner.de>
-References: <20180112104929.GA10599@wunner.de>
- <ece49947-e75a-baff-9c4a-6f47bd154642@codeaurora.org>
- <20180112151206.GA18736@wunner.de>
- <f7c48320-fe01-2c02-8639-269b81b1cc7d@codeaurora.org>
- <20180113073218.GB14854@wunner.de>
-Message-ID: <0134d7603402079fd4f3a7b15406bd26@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CF6A88132359CE47947DB4C6E1709ED5396D2A4C@ORSMSX110.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-13 02:32, Lukas Wunner wrote:
-> On Fri, Jan 12, 2018 at 10:31:12AM -0500, Sinan Kaya wrote:
->> On 1/12/2018 10:12 AM, Lukas Wunner wrote:
->> > On Fri, Jan 12, 2018 at 09:26:48AM -0500, Sinan Kaya wrote:
->> >> On 1/12/2018 5:49 AM, Lukas Wunner wrote:
->> >> I wonder if we can separate remove from shutdown and just disable the IRQs
->> >> in shutdown case rather than turning off the slot power etc.
->> >
->> > But don't we risk "IRQ xx: nobody cared" splats if we do that?
->> 
->> I assumed code was turning off the slot power etc. aggressively.
->> 
->> After looking at the code some more time, it seems to be doing the
->> right thing and telling pcie controller not to generate interrupts for
->> hotplug.
->> 
->> I think this is what is failing for you probably because by the time 
->> you are
->> shutting down there is nobody to issue the command completion. This 
->> would
->> repeat for each hotplug capable pcie slot.
+Hi,
+
+On 19-01-18 22:03, Schmauss, Erik wrote:
 > 
-> You mean we disable Command Completed interrupts and thus the port
-> can't notify that the command was completed?  It seems the code
-> accommodates to that by polling the PCI_EXP_SLTSTA_CC bit:
+>> -----Original Message-----
+>> From: linux-acpi-owner@vger.kernel.org [mailto:linux-acpi-
+>> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
+>> Sent: Thursday, January 18, 2018 11:11 AM
+>> To: Hans de Goede <hdegoede@redhat.com>
+>> Cc: Rafael J . Wysocki <rjw@rjwysocki.net>; Len Brown <lenb@kernel.org>;
+>> Bjorn Helgaas <bhelgaas@google.com>; Moore, Robert
+>> <robert.moore@intel.com>; Zheng, Lv <lv.zheng@intel.com>; linux-
+>> acpi@vger.kernel.org; linux-pci@vger.kernel.org; devel@acpica.org
+>> Subject: Re: ACPI: Do not call _STA on battery devices with unmet dependencies
+>>
+>> On Thu, Jan 18, 2018 at 05:03:55PM +0100, Hans de Goede wrote:
 > 
-> 	if (ctrl->slot_ctrl & PCI_EXP_SLTCTL_HPIE &&
-> 	    ctrl->slot_ctrl & PCI_EXP_SLTCTL_CCIE)
-> 		rc = wait_event_timeout(ctrl->queue, !ctrl->cmd_busy, timeout);
-> 	else
-> 		rc = pcie_poll_cmd(ctrl, jiffies_to_msecs(timeout));
+> Hi Hans,
 > 
-> The problem is that these Thunderbolt controllers never seem to set
-> the PCI_EXP_SLTSTA_CC bit, resulting in "Timeout on hotplug command"
-> messages.
+>>> Hi All,
+>>>
+>>> The ACPI code already contains quite a bit of code to not bind the
+>>> ACPI-battery until all deps for an ACPI battery device have been met,
+>>> but on some devices calling _STA before all deps are met is a problem
+>>> too because the _STA method uses an i2c OpRegion there.
+> 
+> Could you explain why _STA method using an I2C OpRegion is problematic?
+
+It is problematic if we call the _STA method before the handler for
+the OpRegion has been installed, this series delays / avoids calling
+_STA before the OpRegion has been installed.
+
+Regards,
+
+Hans
 
 
-I waa thinking of using nowait variant of write function in notification 
-disable function in order to not introduce new behavior for existing 
-silicon.
-
-
-> 
-> The pciehp code is okay, we just need a workaround for the broken
-> Thunderbolt 1 chips.  This has been a pain point all along, but
-> your patch made the brokenness visible enough that investigating
-> and fixing it became unavoidable.  So don't worry about your patch,
-> it's all fine. ;-)
 > 
 > Thanks,
+> Erik
 > 
-> Lukas
+>>>
+>>> Here is the DSDT of the device I'm seeing this on:
+>>> https://fedorapeople.org/~jwrdegoede/toshiba-click-mini-dsdt.dsl
+>>
+>> This looks like interesting info, but (a) this link isn't mentioned in the actual
+>> patches, and (b) it's conceivable that fedorapeople.org could go away someday.
+>> If this were a PCI series, I would suggest opening a report at bugzilla.kernel.org,
+>> attaching the DSL there, and including the link in the patch changelog.
+>>
+>>> This series modifies the kernel to not call _STA until all deps are
+>>> met, mirroring the binding behavior of the battery driver.
+>>>
+>>> Without this series a total of 32 ACPI errors get printend to the
+>>> console on boot, there are 4 errors per _STA call, 2 battery devices
+>>> on this system and 4 _STA calls per battery device.
+>>>
+>>> The first commit is a preparation commit for making the ACPICA changes
+>>> in the 4th commit, this commit is necessary to not break things after
+>>> the ACPICA changes.
+>>>
+>>> The second commit modifies acpi_bus_get_status to not call _STA on
+>>> battery devices until all deps are met. This fixes 2 of the 4 too
+>>> early _STA calls triggering these errors.
+>>>
+>>> The third commit makes the device instantiation code use
+>>> acpi_bus_get_status instead of acpi_bus_get_status_handle so that the
+>>> code to get the initial status also does not makes 1 too early _STA call.
+>>>
+>>> The fourth commit changes the ACPICA acpi_get_object_info function to
+>>> not call _STA. Only 1 user (which is fixed in the first commit) cares
+>>> about acpi_device_info.current_status. And the ACPICA code has this
+>> comment:
+>>>
+>>>   * Note: This interface is intended to be used during the initial
+>>> device
+>>>   * discovery namespace traversal. Therefore, no complex methods can be
+>>>   * executed, especially those that access operation regions.
+>>> Therefore, do
+>>>   * not add any additional methods that could cause problems in this area.
+>>>   * Because of this reason support for the following methods has been
+>> removed:
+>>>   * this was the fate of the _SUB method which was found to cause such
+>>>   * problems and was removed (11/2015).
+>>>
+>>> The described problems with the _SUB method clearly also apply to the
+>>> _STA method, so removing it from acpi_get_object_info seems like it is
+>>> the right thing to do here. This too fixes 1 too early _STA call, so
+>>> that with all
+>>> 4 patches in place we've fixed all 4 too early _STA calls.
+>>>
+>>> Regards,
+>>>
+>>> Hans
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-acpi"
+>>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>>> info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in the body of
+>> a message to majordomo@vger.kernel.org More majordomo info at
+>> http://vger.kernel.org/majordomo-info.html
