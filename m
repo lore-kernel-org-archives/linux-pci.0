@@ -1,35 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:42265 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751530AbeAWPp4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 10:45:56 -0500
-Received: by mail-pg0-f67.google.com with SMTP id q67so538060pga.9
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jan 2018 07:45:56 -0800 (PST)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
-        Fabio Estevam <festevam@gmail.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        project-aspen-dev@linaro.org, Shawn Guo <shawn.guo@linaro.org>
-Subject: [PATCH v2 0/2] Add power control for pcie-histb driver
-Date: Tue, 23 Jan 2018 23:45:35 +0800
-Message-Id: <1516722337-1533-1-git-send-email-shawn.guo@linaro.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45472 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754051AbeATGfm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jan 2018 01:35:42 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v7 3/7] PCI/ERR: add mutex to synchronize recovery
+Date: Sat, 20 Jan 2018 12:05:15 +0530
+Message-Id: <1516430119-3825-4-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
+References: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The first patch is a small fix which is useful for the second one.
-This version basically follows Fabio's suggestion to reimplement the
-first version patch, using a regulator that can be backed by GPIO to
-control the power to PCIe port.
+This patch protects pci_do_recovery with mutex.
 
-Shawn Guo (2):
-  PCI: histb: fix error path of histb_pcie_host_enable()
-  PCI: histb: add an optional regulator for PCIe port power control
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
- .../bindings/pci/hisilicon-histb-pcie.txt          |  1 +
- drivers/pci/dwc/pcie-histb.c                       | 28 ++++++++++++++++++----
- 2 files changed, 25 insertions(+), 4 deletions(-)
-
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index a532fe0..8318c84 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -20,6 +20,8 @@
+ #include <linux/pcieport_if.h>
+ #include "portdrv.h"
+ 
++static DEFINE_MUTEX(pci_err_recovery_lock);
++
+ struct aer_broadcast_data {
+ 	enum pci_channel_state state;
+ 	enum pci_ers_result result;
+@@ -283,6 +285,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+ 
++	mutex_lock(&pci_err_recovery_lock);
++
+ 	if (severity == AER_FATAL)
+ 		state = pci_channel_io_frozen;
+ 	else
+@@ -326,9 +330,11 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 				report_resume);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ 	return;
+ 
+ failed:
+ 	/* TODO: Should kernel panic here? */
+ 	dev_info(&dev->dev, "Device recovery failed\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ }
 -- 
-1.9.1
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
