@@ -1,101 +1,361 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49252 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756038AbeARSf1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Jan 2018 13:35:27 -0500
-Date: Thu, 18 Jan 2018 12:35:25 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ladislav Michl <ladis@linux-mips.org>
-Cc: Wei Yongjun <weiyongjun1@huawei.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
-Message-ID: <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
-References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
- <20180118145420.GA21163@lenoch>
+Return-Path: <SRS0=HSSc=EP=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=HSSc=EP=codeaurora.org=okaya@kernel.org>
+Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
+ pcie_bus_perf On NVMe Device
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ron Yuan <ron.yuan@memblaze.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Bo Chen <bo.chen@memblaze.com>, William Huang <william.huang@memblaze.com>,
+ Fengming Wu <fengming.wu@memblaze.com>,
+ Jason Jiang <jason.jiang@microsemi.com>,
+ Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>,
+ Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
+ William Cheng <william.cheng@microsemi.com>,
+ "Kim Helper (khelper)" <khelper@micron.com>,
+ Linux PCI <linux-pci@vger.kernel.org>
+References: <SH2PR01MB106A1E21DEB5FE3FFB3D61C83E90@SH2PR01MB106.CHNPR01.prod.partner.outlook.cn>
+ <ef16a3cc-b641-a30d-644a-7940e340eb3e@codeaurora.org>
+ <SHAPR01MB173A5EA1677C2138CB528F2FEE90@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
+ <5727b0b1-f0d5-7c78-373e-fc9d1bd662d2@codeaurora.org>
+ <CABhMZUU0643U-qVc9ymA+1PMZToSLFm2dg8-cu=iQ2LGw2Pi8Q@mail.gmail.com>
+ <SHAPR01MB173A36104635A8BFF9A83E1FEE80@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
+ <0ce08a91-fc38-1288-7683-836fcbbbdf3c@codeaurora.org>
+ <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
+Date: Sat, 20 Jan 2018 14:20:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180118145420.GA21163@lenoch>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
-> On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
-> > platform_get_resource_byname() may fail and return NULL, so we should
-> > better check it's return value to avoid a NULL pointer dereference a
-> > bit later in the code.
-> > 
-> > This is detected by Coccinelle semantic patch.
-> > 
-> > @@
-> > expression pdev, res, n, t, e, e1, e2;
-> > @@
-> > 
-> > res = platform_get_resource_byname(pdev, t, n);
-> > + if (!res)
-> > +   return -EINVAL;
-> > ... when != res == NULL
-> > e = devm_ioremap(e1, res->start, e2);
+On 1/19/2018 3:51 PM, Bjorn Helgaas wrote:
+> On Thu, Jan 18, 2018 at 11:24:52AM -0500, Sinan Kaya wrote:
+>> On 1/18/2018 1:21 AM, Ron Yuan wrote:
+>>> we do understand that BIOS have full control of MRRS. But the
+>>> problem is once kernel boot with pcie_bus_perf, MRRS setting would
+>>> be overwritten by the code we complained.  Btw, the reason we need
+>>> to use pcie_bus_perf is because Intel white paper indicated system
+>>> should use pcie_bus_perf to support NVMe SSD hot plug,
+>>> specifically for a correct MPS to be set. 
+>>>
+>>> So I think at the moment back to the code, we should 
+>>> 1. when we don’t agree on what's the best value to set, at least
+>>> remove the code MRRS=MPS, leave MRRS to default value instead of
+>>> changing it incorrectly. The setting is for one device, hence the
+>>> device should be responsible for itself, choosing a suitable value
+>>> as default.  
+>>
+>> As I indicated below, MRRS is not a value that a PCIe endpoint
+>> device can choose.  It depends on the root complex silicon. Some
+>> chip internal bus may handle 4k writes poorly; whereas, another one
+>> can handle it better.
+>>
+>> Also, according to the spec; the default value of MRRS is 512 not
+>> 4096. 
+>>
+>> Coming back to why MRRS=MPS? I think this is because of a
+>> isochronous device statement in the spec.
+>>
+>> "Software must limit the Max_Payload_Size for each path that
+>> supports isochronous to meet the isochronous latency. For example,
+>> all traffic flowing on a path from an isochronous capable device to
+>> the Root Complex should be limited to packets that do not exceed the
+>> Max_Payload_Size required to meet the isochronous latency
+>> requirements."
+>>
+>> This is again a hefty price to pay for some specific PCIE endpoint
+>> type that not everybody cares about.
 > 
-> Well, then it should be replaced with devm_ioremap_resource()
-> which already checks for NULL and the right resource type
-> (IORESOURCE_MEM).
+> In PCIE_BUS_PERFORMANCE mode, pcie_write_mrrs() does try to set
+> MRRS=MPS, but the reason is not to support isochronous.  The reason is
+> to allow us to use larger MPS settings than we otherwise would.
+>
 
-That's probably a better idea.  Maybe we should add a comment like this
-to help avoid this in the future:
+OK. I didn't know the history behind the change. I was looking at MPS
+and MRRS references in the spec.
+ 
+> Consider a switch leading to an endpoint that supports only MPS=128.
+> The simplest approach would be to configure every device in the fabric
+> with MPS=128.  That guarantees the endpoint will never receive a TLP
+> with a payload larger than 128 bytes.
+> 
+> Here's my understanding of how PCIE_BUS_PERFORMANCE works:
+> 
+> There are two ways an endpoint may receive TLPs with data payloads:
+> (1) Memory Write Requests that target the endpoint, and (2)
+> Completions with Data in response to Memory Read Requests generated by
+> the endpoint.
+> 
+> In PCIE_BUS_PERFORMANCE mode, we assume Memory Write Requests are not
+> an issue because:
+> 
+>   - We assume a CPU Memory Write Request is never larger than MPS (128
+>     bytes in this case).  This is fairly safe because CPUs generally
+>     can't write more than a cache line in one request, and most CPUs
+>     have cache lines of 128 bytes or less.
+> 
 
---- a/lib/devres.c
-+++ b/lib/devres.c
-@@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev, void *res, void *match_data)
-  * @size: Size of map
-  *
-  * Managed ioremap().  Map is automatically unmapped on driver detach.
-+ *
-+ * When possible, use devm_ioremap_resource() instead.
-  */
- void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
- 			   resource_size_t size)
+Fair assumption.
 
-> > Fixes: 608793e27b33 ("PCI: dwc: dra7xx: Add EP mode support")
-> > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-> > ---
-> >  drivers/pci/dwc/pci-dra7xx.c | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> > 
-> > diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> > index 8bf7c27..aafded8 100644
-> > --- a/drivers/pci/dwc/pci-dra7xx.c
-> > +++ b/drivers/pci/dwc/pci-dra7xx.c
-> > @@ -409,11 +409,15 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
-> >  	ep->ops = &pcie_ep_ops;
-> >  
-> >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
-> > +	if (!res)
-> > +		return -EINVAL;
-> >  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
-> >  	if (!pci->dbi_base)
-> >  		return -ENOMEM;
-> >  
-> >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
-> > +	if (!res)
-> > +		return -EINVAL;
-> >  	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
-> >  	if (!pci->dbi_base2)
-> >  		return -ENOMEM;
-> > @@ -462,6 +466,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
-> >  		return ret;
-> >  
-> >  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
-> > +	if (!res)
-> > +		return -EINVAL;
-> >  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
-> >  	if (!pci->dbi_base)
-> >  		return -ENOMEM;
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-omap" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   - We assume there's no peer-to-peer DMA, so other devices in the
+>     fabric will never send Memory Write Requests to the endpoint, so
+>     we don't need to limit their MPS settings.
+> 
+> That leaves Completions.  We limit the size of Completions by limiting
+> MRRS.  If we set the endpoint's MRRS to its MPS (128 in this case), it
+> will never request more than MPS bytes at a time, so it will never
+> receive a Completion with more than MPS bytes.
+> 
+> Therefore, we may be able to configure other devices in the fabric
+> with MPS larger than 128, which may benefit those devices.
+> 
+
+This is still problematic. One application may be doing a lot of writes
+compared to reads. We prefer maximizing endpoint write performance compared
+to read performance by reducing the MRRS setting.
+
+>>> 2. try to get a common understanding what is the best performance
+>>> for MRRS, maybe try largest MRRS supported by the system/device,
+>>> or have additional command line input. 
+>>>
+>>> Item 1 is something we should do as first step.  For item 2, we
+>>> need bigger group of experienced PCIe engineers to discuss.  
+>>
+>> We need to understand that MPS and MRRS have much broader impact.
+>> All silicon is different.
+>>
+>> I don't think there is a common solution to this and my preference
+>> is for these parameters to be specified along with the perf option.
+>> Then, we can adjust things accordingly.
+>>
+>> Let's see what others think about this.
+>>
+>>> Here is one link for your reference:
+>>> https://www.xilinx.com/support/documentation/white_papers/wp350.pdf 
+> 
+>>> On Wed, Jan 17, 2018 at 7:30 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>>> On 1/17/2018 12:04 AM, Ron Yuan wrote:
+>>>>> The code we refer to is
+>>>>> static void pcie_write_mrrs(struct pci_dev *dev) { ...
+>>>>>     /* For Max performance, the MRRS must be set to the largest supported
+>>>>>      * value.  However, it cannot be configured larger than the MPS the
+>>>>>      * device or the bus can support.  This should already be properly
+>>>>>      * configured by a prior call to pcie_write_mps.
+>>>>>      */
+>>>>>     mrrs = pcie_get_mps(dev);
+>>>>> ...
+>>>>> }
+>>>>>
+>>>>> Here the statement " However, it cannot be configured larger
+>>>>> than the MPS the device or the bus can support." is obviously
+>>>>> incorrect.  A simple against statement is from PCIe spec, which
+>>>>> define default MPS to 128B, and *default MRRS to 512B*.  From HW
+>>>>> understanding, MRRS is multiple of MPS in the system, it must be
+>>>>> no less than MPS.
+>>>>
+>>>> Yeah, I mentioned it in my presentation too. MPS is not equal to
+>>>> MRRS. The only requirement is for MRRS to be a multiple of MPS.
+> 
+>>From a hardware point of view, I do not think there is any requirement
+> that MRRS be related to MPS.  PCIe r4.0, sec 7.5.3.4 does not mention
+> any constraints on MRRS.
+> 
+>>From sec 2.2.2, MPS sets the maximum TLP payload size for a function:
+>   - A function never generates a TLP larger than its MPS
+>   - A function treats received TLPs larger than its MPS as malformed
+> 
+> MPS applies to TLPs with data payloads.  These are either Memory Write
+> Requests that carry data directly, or Completions with Data in
+> response to a Memory Read Request> 
+> MRRS sets the maximum Read Request size a function will generate.  A
+> Memory Read Request itself contains no data payload and MPS doesn't
+> apply to the request.
+
+Agreed, MRRS has an indirect effect on the completions. It determines the
+number of completions that endpoint will receive. As the ratio of MPS/MRRS
+gets closer to 0, the overhead becomes more significant.
+
+> 
+> The completer of the Read Request will generate Completion TLPs
+> carrying the requested data.  The payload size of these Completion
+> TLPs is determined by the completer's MPS setting, and it is
+> software's responsibility to ensure that the completer's MPS is
+> smaller than or equal to the requester's MPS.
+> 
+> The requester's MRRS indirectly affects the payload size because the
+> completer will not generate a payload larger than the read request
+> size.
+> 
+> Consider the case where a function has MPS=256 and MRRS=1024: if the
+> function generates a 1024-byte read request, it should receive 4
+> completions, each with a 256-byte data payload.
+> 
+> Or, consider the case where MPS=1024 and MRRS=256: if the function
+> generates a 256-byte read request, it should receive 1 completion with
+> a 256-byte data payload.
+> 
+> In this case, the function *could* receive a Memory Write Request with
+> a 1024-byte data payload.  CPUs normally write at most a cacheline,
+> which is probably smaller than 1024 bytes, so these large writes would
+> most likely be peer-to-peer DMA writes.
+
+Why do you think that CPU is involved in fetching a memory read response
+to a read request?
+
+If an endpoint tries to read 4k from system memory, this would be typically
+done by SOC internal fabric not by the CPU. How fast a fabric can feed 1k
+to the endpoint depends on the capability of the fabric. Some fabric might
+do better with 1k, others could be better with 256 bytes.
+
+CPU would be only involved if it was doing a memory write to the endpoint by
+itself. Then, mostly cache line or CPU write instruction size is in effect.
+
+> 
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=b03e7495a862
+> 
+>>>>> Look at the code of
+>>>>> Pcie_bus_safe/Pcie_bus_perf/Pcie_bus_peer2peer, it is not
+>>>>> handling MRRS correctly.  Peer2peer mode should actually use the
+>>>>> smallest 128B for MRRS, which is also discussed in
+>>>>> https://patchwork.kernel.org/patch/8747521/
+>>>>> Safe mode may be better match MRRS to MDS for safety reason.
+>>>>> Perf mode should set MRRS to largest accepted value, 4k for
+>>>>> example.
+>>>>
+>>>> I don't disagree.
+>>>>
+>>>> Choosing 4k is problematic. It could be 1k for one person and 2k
+>>>> for another person. We can have some configuration around this via
+>>>> kernel command line if Bjorn agrees.
+> 
+> In peer-to-peer mode, we currently set MPS=128 for all devices and we
+> don't touch MRRS.  Why do you think we should set MRRS=128?
+> 
+> As far as I can tell, that is not required by spec.  Limiting MRRS may
+> prevent a device from monopolizing bandwidth, and that may be
+> worthwhile to do, but it is not specifically a peer-to-peer issue and
+> I don't want to artificially tie it to MPS.
+> 
+> I try to avoid command-line parameters because they're hard for users
+> and distros to deal with.  In this case particularly, the issues are
+> hard to understand so I want to untangle them a bit before we add more
+> knobs.
+
+OK.
+
+> 
+>>>>> Your reply says some hw logic may have poorer performance with
+>>>>> larger MRRS sounds new to me, some HW engineer may have better
+>>>>> look.  Then in this case, "leave device recommended MRRS
+>>>>> untouched" is more appropriate for performance purpose.
+>>>>> Currently I can see a lot of device is using 256B MPS, and force
+>>>>> downgrade default 4k/512B MRRS to 256B is actually getting
+>>>>> poorer performance.
+>>>>
+>>>> Most BIOS allows you to choose the MPS and MRRS settings. If your
+>>>> BIOS does, then I recommend you to use that option at this moment
+>>>> for tuning your system along with the safe boot option.
+>>>>
+>>>>> Thanks again for your time!
+>>>>>
+>>>>> Ron
+>>>>> Beijing Memblaze Technology
+>>>>>
+>>>>> -----Original Message-----
+>>>>> From: Sinan Kaya [mailto:okaya@codeaurora.org]
+>>>>> Sent: 2018年1月17日 12:21
+>>>>> To: Bo Chen <bo.chen@memblaze.com>
+>>>>> Cc: Ron Yuan <ron.yuan@memblaze.com>; William Huang 
+>>>>> <william.huang@memblaze.com>; Fengming Wu <fengming.wu@memblaze.com>; 
+>>>>> Bjorn Helgaas <helgaas@kernel.org>
+>>>>> Subject: Re: One Question About PCIe BUS Config Type with 
+>>>>> pcie_bus_safe or pcie_bus_perf On NVMe Device
+>>>>>
+>>>>> +Bjorn,
+>>>>>
+>>>>> Hi Bo,
+>>>>>
+>>>>> On 1/16/2018 9:58 PM, Bo Chen wrote:
+>>>>>> Hi Sinan,
+>>>>>>
+>>>>>> We went through linux pci related code found that nvme device
+>>>>>> has different performance when kernel boot with pcie_bus_safe
+>>>>>> or pcie_bus_perf.  For details, when boot with pcie_bus_safe
+>>>>>> (eg: nvme device A: MaxPayload 128B, MaxReadReq 4096B), after
+>>>>>> pci bus init and enumerate, device A devCtl remains 128B for
+>>>>>> MaxPayload and 4096B for MaxReadReq.
+>>>>>
+>>>>> pcie_bus_safe option is used to balance the maximum payload size
+>>>>> setting across the bus. The goal is to make sure that maximum
+>>>>> payload size is consistent. That's why, it is called safe.  It
+>>>>> also honors the maximum read request size setting done by the
+>>>>> BIOS. It does not touch the MRRS setting.
+>>>>>
+>>>>>> While boot with pcie_bus_perf, we found pcie_write_mrrs set the
+>>>>>> read request size to the same with MPS. For nvme device A, it
+>>>>>> means both MaxPayload and MaxReadReq are set to 128B so that we
+>>>>>> observed it has limited device performance in read req.
+>>>>>>
+>>>>>> >From our point of view on nvme device, the setting of
+>>>>>>> pcie_bus_perf has lower performance compared with setting with
+>>>>>>> pcie_bus_safe.
+>>>>>>
+>>>>>> Is there any consideration for pcie_bus_perf to set MaxReadReq
+>>>>>> the same value with pcie_bus_safe? Is there any risk when we
+>>>>>> boot with pcie_bus_perf for nvme device?
+> 
+> Correct me if I'm wrong:
+> 
+>   - The NVMe device has a maximum MPS of 128
+>   - The NVMe device supports MRRS of 4096
+>   - In SAFE mode, Linux sets MPS=128 and doesn't touch MRRS, so the
+>     BIOS setting of MRRS=4096 remains
+>   - In PERFORMANCE mode, Linux sets MPS=128 and MRRS=128
+> 
+> In SAFE mode, if Linux sets MPS=128, it means there's some device that
+> doesn't support MPS larger than 128.  That's obvious in this case
+> because the NVMe device only supports MPS=128.
+> 
+> In PERFORMANCE mode, Linux tries to keep larger MPS settings above the
+> NVMe endpoint and sets MRRS as described above to make this safe.
+> However, in this case, we apparently can't use larger MPS settings
+> anywhere else, so all we did is reduce MRRS, which reduces your
+> performance.
+> 
+> We should be able to be smarter about this, but I don't have a patch
+> to propose.  Maybe we can work on this during the next cycle.
+> 
+
+Sure, I was planning to work on this once the CRS change gets merged. I
+was doing feasibility analysis in the meantime.
+
+>>>>>       /*
+>>>>>        * If using the "performance" PCIe config, we clamp the
+>>>>>        * read rq size to the max packet size to prevent the
+>>>>>        * host bridge generating requests larger than we can
+>>>>>        * cope with
+>>>>>        */
+>>>>>
+>>>>> I found this comment in the code that seems to match the
+>>>>> behavior you are seeing.
+>>>>>
+>>>>> Problem with maximum read request size is that there is no
+>>>>> one-size-fits-all solution. It depends on the bus-fabric of the
+>>>>> silicon you are using. An MRRS of 4k might behave slower than
+>>>>> 1k. 1k might behave better than 512 bytes.
+>>>>>
+>>>>> The recommendation is for these settings to be adjustable in
+>>>>> BIOS and tweak it according to the application.
+>>>>>
+>>>>> I was planning to make a change in this area but I was warned by
+>>>>> our hardware engineers that performance does not always scale
+>>>>> with MRRS setting.
+> 
+> Bjorn
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
