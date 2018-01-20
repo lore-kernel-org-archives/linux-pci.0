@@ -1,67 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53440 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752368AbeARS7J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Jan 2018 13:59:09 -0500
-Date: Thu, 18 Jan 2018 12:59:07 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Frederick Lawler <fred@fredlawl.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 0/3] PCI: Add and use pci_<level>: dev_<level>
- equivalents
-Message-ID: <20180118185907.GH53542@bhelgaas-glaptop.roam.corp.google.com>
-References: <1515819518-6501-1-git-send-email-fred@fredlawl.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1515819518-6501-1-git-send-email-fred@fredlawl.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46224 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754791AbeATGf6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 20 Jan 2018 01:35:58 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v7 7/7] PCI/DPC: Enumerate the devices after DPC trigger event
+Date: Sat, 20 Jan 2018 12:05:19 +0530
+Message-Id: <1516430119-3825-8-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
+References: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 12, 2018 at 10:58:35PM -0600, Frederick Lawler wrote:
-> Replace current uses of dev_<level> with pci_<level> by adding and using
-> PCI specific fuctions. 
-> 
-> V2:
-> * Replace static inline varadic functions with macros instead
-> * Convert hotplug, AER, ASPM, PME, PTM
-> V3:
-> * Split updates for hotplug, AER, ASPM, PME, PTM into new patch
-> 
-> Frederick Lawler (3):
->   PCI: Create  minor pci_dev log wrapper functions
->   PCI: Replace calls from dev_<level> to pci_<level>
->   PCI: Replace calls from dev_<level> to pci_<level> in pcie and hotplug
-> 
->  drivers/pci/access.c                   |   8 +-
->  drivers/pci/bus.c                      |   4 +-
->  drivers/pci/hotplug/cpqphp_core.c      |   2 +-
->  drivers/pci/hotplug/pnv_php.c          |  40 +++----
->  drivers/pci/hotplug/sgi_hotplug.c      |  36 +++---
->  drivers/pci/hotplug/shpchp.h           |   8 +-
->  drivers/pci/hotplug/shpchp_core.c      |   2 +-
->  drivers/pci/iov.c                      |  10 +-
->  drivers/pci/irq.c                      |   7 +-
->  drivers/pci/msi.c                      |   7 +-
->  drivers/pci/pci-acpi.c                 |   2 +-
->  drivers/pci/pci-stub.c                 |   2 +-
->  drivers/pci/pci-sysfs.c                |  10 +-
->  drivers/pci/pci.c                      |  82 +++++++-------
->  drivers/pci/pcie/aer/aer_inject.c      |  15 +--
->  drivers/pci/pcie/aer/aerdrv.c          |   2 +-
->  drivers/pci/pcie/aer/aerdrv_core.c     |  21 ++--
->  drivers/pci/pcie/aer/aerdrv_errprint.c |  22 ++--
->  drivers/pci/pcie/aspm.c                |   9 +-
->  drivers/pci/pcie/pme.c                 |   6 +-
->  drivers/pci/pcie/ptm.c                 |   2 +-
->  drivers/pci/probe.c                    |  75 ++++++-------
->  drivers/pci/quirks.c                   | 200 ++++++++++++++++-----------------
->  drivers/pci/rom.c                      |   4 +-
->  drivers/pci/setup-bus.c                |  44 ++++----
->  drivers/pci/setup-irq.c                |   4 +-
->  drivers/pci/setup-res.c                |  40 ++++---
->  drivers/pci/vc.c                       |  18 ++-
->  drivers/pci/xen-pcifront.c             |  19 ++--
->  include/linux/pci.h                    |  27 +++++
->  30 files changed, 363 insertions(+), 365 deletions(-)
+Implement error_resume callback in DPC so, after DPC trigger event
+enumerates the devices beneath.
 
-Applied to pci/misc for v4.16, thanks!
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 7838b02..352f7f0 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -146,16 +146,30 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ 
+ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ {
+-	unsigned long timeout = jiffies + HZ;
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	struct device *dev = &dpc->dev->device;
+-	u16 lnk_status;
+ 	bool active = false;
+ 
+ 	pci_wait_for_link(pdev, active);
+ }
+ 
+ /**
++ * dpc_error_resume - enumerate the devices beneath
++ * @dev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver during nonfatal recovery.
++ */
++static void dpc_error_resume(struct pci_dev *pdev)
++{
++	bool active = true;
++
++	if (pci_wait_for_link(pdev, active)) {
++		pci_lock_rescan_remove();
++		pci_rescan_bus(pdev->bus);
++		pci_unlock_rescan_remove();
++	}
++}
++
++/**
+  * dpc_reset_link - reset link DPC  routine
+  * @dev: pointer to Root Port's pci_dev data structure
+  *
+@@ -413,6 +427,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.error_resume	= dpc_error_resume,
+ 	.reset_link     = dpc_reset_link,
+ };
+ 
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index 05385c0..c4876ab 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -236,6 +236,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+  * @state: error state
+  * @error_mesg: message to print
+  * @cb: callback to be broadcasted
++ * @severity: error severity
+  *
+  * Invoked during error recovery process. Once being invoked, the content
+  * of error severity will be broadcasted to all downstream drivers in a
+@@ -244,7 +245,8 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 	enum pci_channel_state state,
+ 	char *error_mesg,
+-	int (*cb)(struct pci_dev *, void *))
++	int (*cb)(struct pci_dev *, void *),
++	int severity)
+ {
+ 	struct aer_broadcast_data result_data;
+ 
+@@ -256,6 +258,15 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 		result_data.result = PCI_ERS_RESULT_RECOVERED;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		/* If DPC is triggered, call resume error hanlder
++		 * because, at this point we can safely assume that
++		 * link recovery has happened.
++		 */
++		if ((severity == DPC_FATAL) &&
++			(cb == report_resume)) {
++			cb(dev, NULL);
++			return PCI_ERS_RESULT_RECOVERED;
++		}
+ 		/*
+ 		 * If the error is reported by a bridge, we think this error
+ 		 * is related to the downstream link of the bridge, so we
+@@ -305,7 +316,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	status = broadcast_error_message(dev,
+ 			state,
+ 			"error_detected",
+-			report_error_detected);
++			report_error_detected,
++			severity);
+ 
+ 	if ((severity == AER_FATAL) ||
+ 	    (severity == DPC_FATAL)) {
+@@ -318,7 +330,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 		status = broadcast_error_message(dev,
+ 				state,
+ 				"mmio_enabled",
+-				report_mmio_enabled);
++				report_mmio_enabled,
++				severity);
+ 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+ 		/*
+@@ -329,7 +342,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 		status = broadcast_error_message(dev,
+ 				state,
+ 				"slot_reset",
+-				report_slot_reset);
++				report_slot_reset,
++				severity);
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+@@ -338,7 +352,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	broadcast_error_message(dev,
+ 				state,
+ 				"resume",
+-				report_resume);
++				report_resume,
++				severity);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
+ 	mutex_unlock(&pci_err_recovery_lock);
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
