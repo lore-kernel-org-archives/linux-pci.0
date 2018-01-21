@@ -1,65 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 4 Jan 2018 16:41:31 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: JeffyChen <jeffy.chen@rock-chips.com>, tony@atomide.com,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
-        dianders@chromium.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
- signal for OF
-Message-ID: <20180105004130.GA151625@google.com>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
- <9593014.U0c2JQdoEZ@aspire.rjw.lan>
- <5A41A0A7.5070605@rock-chips.com>
- <5491520.JsEYlZiECc@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eddie.linux-mips.org ([148.251.95.138]:39738 "EHLO
+        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751047AbeAUVQc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 21 Jan 2018 16:16:32 -0500
+Received: (from localhost user: 'ladis' uid#1021 fake: STDIN
+        (ladis@eddie.linux-mips.org)) by eddie.linux-mips.org
+        id S23992604AbeAUVQbD8pcG (ORCPT <rfc822;linux-pci@vger.kernel.org>
+        + 1 other); Sun, 21 Jan 2018 22:16:31 +0100
+Date: Sun, 21 Jan 2018 22:16:29 +0100
+From: Ladislav Michl <ladis@linux-mips.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: [PATCH 4/5] devres: Add devm_ioremap_shared_resource()
+Message-ID: <20180121211629.GE15151@lenoch>
+References: <20180121211432.GA15151@lenoch>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5491520.JsEYlZiECc@aspire.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180121211432.GA15151@lenoch>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Implement managed ioremap function for shared resources.
 
-Trying to catch up on this thread...
+Signed-off-by: Ladislav Michl <ladis@linux-mips.org>
+---
+ include/linux/device.h |  9 ++++++++-
+ lib/devres.c           | 22 ++++++++++++++--------
+ 2 files changed, 22 insertions(+), 9 deletions(-)
 
-On Wed, Dec 27, 2017 at 01:57:07AM +0100, Rafael J. Wysocki wrote:
-> On Tuesday, December 26, 2017 2:06:47 AM CET JeffyChen wrote:
-> > Hi Rafael,
-> > 
-> > Thanks for your reply :)
-> > 
-> > On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
-> > >> >+
-> > >> >+	dn = pci_device_to_OF_node(ppdev);
-> > >> >+	if (!dn)
-> > >> >+		return 0;
-> > >> >+
-> > >> >+	irq = of_irq_get_byname(dn, "wakeup");
-> > > Why is this a property of the bridge and not of the device itself?
-
-Wait, isn't 'dn' the port node, not the bridge node?
-
-> > That is suggested by Brian, because in that way, the wakeup pin would 
-> > not "tied to what exact device is installed (or no device, if it's a slot)."
-
-I believe my thinking has evolved a bit over time, and I definitely am
-not the one true authority on this. I'll explain my main concerns, and
-whatever solution resolves these concerns is fine with me.
-
-* I was primarily interested in avoiding handling WAKE# in the endpoint
-  drivers (e.g., as mwifiex is today).
-* I was also interested in not having to redefine a new DT device
-  node (with new "pciABCD,1234" compatible property) for each new device
-  attached. That just won't work for removable cards.
-
-I need to reread the rest of this thread a few times to really
-understand what Rafael and Tony are discussing. But I feel like some of
-this is still moving away from the second point above.
-
-> But I don't think it works when there are two devices using different WAKE#
-> interrupt lines under the same bridge.  Or how does it work then?
-
-Brian
+diff --git a/include/linux/device.h b/include/linux/device.h
+index e99d41a6190b..a35247a5f578 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -731,7 +731,14 @@ void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+ 				   resource_size_t size);
+ void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
+ 				   resource_size_t size);
+-void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res);
++
++#define devm_ioremap_resource(dev, res) \
++	__devm_ioremap_resource(dev, res, false)
++#define devm_ioremap_shared_resource(dev, res) \
++	__devm_ioremap_resource(dev, res, true)
++
++void __iomem *__devm_ioremap_resource(struct device *dev, struct resource *res,
++				      bool shared);
+ 
+ void devm_iounmap(struct device *dev, void __iomem *addr);
+ 
+diff --git a/lib/devres.c b/lib/devres.c
+index e9aad136f667..9fa15816cb83 100644
+--- a/lib/devres.c
++++ b/lib/devres.c
+@@ -22,6 +22,9 @@ static int devm_ioremap_match(struct device *dev, void *res, void *match_data)
+  * @size: Size of map
+  *
+  * Managed ioremap().  Map is automatically unmapped on driver detach.
++ *
++ * When possible, use devm_ioremap_resource() or
++ * devm_ioremap_shared_resource() instead.
+  */
+ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+ 			   resource_size_t size)
+@@ -116,13 +119,14 @@ void devm_iounmap(struct device *dev, void __iomem *addr)
+ EXPORT_SYMBOL(devm_iounmap);
+ 
+ /**
+- * devm_ioremap_resource() - check, request region, and ioremap resource
++ * __devm_ioremap_resource() - check, request region, and ioremap resource
+  * @dev: generic device to handle the resource for
+  * @res: resource to be handled
++ * @shared: region is not requested when true
+  *
+- * Checks that a resource is a valid memory region, requests the memory
+- * region and ioremaps it. All operations are managed and will be undone
+- * on driver detach.
++ * Checks that a resource is a valid memory region, eventually requests the
++ * memory region and ioremaps it. All operations are managed and will be
++ * undone on driver detach.
+  *
+  * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
+  * on failure. Usage example:
+@@ -132,7 +136,8 @@ EXPORT_SYMBOL(devm_iounmap);
+  *	if (IS_ERR(base))
+  *		return PTR_ERR(base);
+  */
+-void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
++void __iomem *__devm_ioremap_resource(struct device *dev, struct resource *res,
++				      bool shared)
+ {
+ 	resource_size_t size;
+ 	const char *name;
+@@ -148,7 +153,7 @@ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
+ 	size = resource_size(res);
+ 	name = res->name ?: dev_name(dev);
+ 
+-	if (!devm_request_mem_region(dev, res->start, size, name)) {
++	if (!shared && !devm_request_mem_region(dev, res->start, size, name)) {
+ 		dev_err(dev, "can't request region for resource %pR\n", res);
+ 		return IOMEM_ERR_PTR(-EBUSY);
+ 	}
+@@ -156,13 +161,14 @@ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
+ 	dest_ptr = devm_ioremap(dev, res->start, size);
+ 	if (!dest_ptr) {
+ 		dev_err(dev, "ioremap failed for resource %pR\n", res);
+-		devm_release_mem_region(dev, res->start, size);
++		if (!shared)
++			devm_release_mem_region(dev, res->start, size);
+ 		dest_ptr = IOMEM_ERR_PTR(-ENOMEM);
+ 	}
+ 
+ 	return dest_ptr;
+ }
+-EXPORT_SYMBOL(devm_ioremap_resource);
++EXPORT_SYMBOL(__devm_ioremap_resource);
+ 
+ #ifdef CONFIG_HAS_IOPORT_MAP
+ /*
+-- 
+2.15.1
