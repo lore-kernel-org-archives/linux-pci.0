@@ -1,96 +1,211 @@
-Return-Path: <SRS0=5WU8=EO=linux-mips.org=ladis@kernel.org>
-Return-Path: <SRS0=5WU8=EO=linux-mips.org=ladis@kernel.org>
-Date: Fri, 19 Jan 2018 08:03:38 +0100
-Sender: Ladislav Michl <ladis@linux-mips.org>
-From: Ladislav Michl <ladis@linux-mips.org>
-To: "weiyongjun (A)" <weiyongjun1@huawei.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
-Message-ID: <20180119070337.GA6079@lenoch>
-References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
- <20180118145420.GA21163@lenoch>
- <20180118183525.GG53542@bhelgaas-glaptop.roam.corp.google.com>
- <20180118213417.GA30723@lenoch>
- <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga07-in.huawei.com ([45.249.212.35]:50537 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751150AbeAULgT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 21 Jan 2018 06:36:19 -0500
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
+        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
+        <dann.frazier@canonical.com>
+CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
+        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v11 0/9] LPC: legacy ISA I/O support
+Date: Sun, 21 Jan 2018 20:27:18 +0800
+Message-ID: <1516537647-50553-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6AADFAC011213A4C87B956458587ADB401337E23@dggemi507-mbx.china.huawei.com>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 19, 2018 at 01:54:58AM +0000, weiyongjun (A) wrote:
-> > On Thu, Jan 18, 2018 at 12:35:25PM -0600, Bjorn Helgaas wrote:
-> > > On Thu, Jan 18, 2018 at 03:54:20PM +0100, Ladislav Michl wrote:
-> > > > On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
-> > > > > platform_get_resource_byname() may fail and return NULL, so we
-> > should
-> > > > > better check it's return value to avoid a NULL pointer dereference a
-> > > > > bit later in the code.
-> > > > >
-> > > > > This is detected by Coccinelle semantic patch.
-> > > > >
-> > > > > @@
-> > > > > expression pdev, res, n, t, e, e1, e2;
-> > > > > @@
-> > > > >
-> > > > > res = platform_get_resource_byname(pdev, t, n);
-> > > > > + if (!res)
-> > > > > +   return -EINVAL;
-> > > > > ... when != res == NULL
-> > > > > e = devm_ioremap(e1, res->start, e2);
-> > > >
-> > > > Well, then it should be replaced with devm_ioremap_resource()
-> > > > which already checks for NULL and the right resource type
-> > > > (IORESOURCE_MEM).
-> > >
-> > > That's probably a better idea.  Maybe we should add a comment like this
-> > > to help avoid this in the future:
-> 
-> Not all of the place using devm_ioremap() can be replaced with
-> devm_ioremap_resource(), devices share the memory resource for example.
+This patchset supports the IPMI-bt device attached to the Low-Pin-Count
+interface implemented on Hisilicon Hip06/Hip07 SoC.
+                        -----------
+                        | LPC host|
+                        |         |
+                        -----------
+                             |
+                _____________V_______________LPC
+                  |                       |
+                  V                       V
+                                     ------------
+                                     |  BT(ipmi)|
+                                     ------------
 
-That's probably what "when possible" means. Also, how does sharing memory
-resource changes that? As long as 'struct resource' is an argument to
-devm_ioremap, devm_ioremap_resource can be used.
+When master accesses those peripherals beneath the Hip06/Hip07 LPC, a specific
+LPC driver is needed to make LPC host generate the standard LPC I/O cycles with
+the target peripherals'I/O port addresses. But on curent arm64 world, there is
+no real I/O accesses. All the I/O operations through in/out accessors are based
+on MMIO ranges; on Hip06/Hip07 LPC the I/O accesses are performed through driver
+specific accessors rather than MMIO.
+To solve this issue and keep the relevant existing peripherals' drivers untouched,
+this patchset:
+   - introduces a generic I/O space management framework, LIBIO, to support I/O
+     operations on host controllers operating either on MMIO buses or on buses
+     requiring specific driver I/O accessors;
+   - redefines the in/out accessors to provide a unified interface for both MMIO
+     and driver specific I/O operations. Using LIBIO, th call of in/out() from
+     the host children drivers, such as ipmi-si, will be redirected to the
+     corresponding device-specific I/O hooks to perform the I/O accesses.
 
-> So maybe you should also add an exception list to the comment, otherwise
-> many people still not know how to use devm_ioremap_resource() or devm_ioremap().
+Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC peripherals can
+be supported without any changes on the existing ipmi-si driver.
 
-Care to elaborate how should such an exception list look like?
+The whole patchset has been tested on Hip07 D05 board both using DTB and ACPI.
 
-Thank you.
+Differences to v10:
+    - dropped CONFIG_LOGIC_PIO. Reason is that CONFIG_PCI
+      depends on this, and CONFIG_PCI is a per-arch CONFIG.
+      So we would require all arch's kconfig to select this.
+    - Addressed Dann Frazier's comments on LPC driver, and
+      sopme other cleanup
+    - Moved logic_pio.h to be included in generic asm io.h
+    - Fixed ACPI indirect IO host setup to handle >1 child
+    - Relocated ACPI indirect IO host setup code to
+      drivers/acpi
+    - Rebased to linux next-20180118
 
-> > >
-> > > --- a/lib/devres.c
-> > > +++ b/lib/devres.c
-> > > @@ -22,6 +22,8 @@ static int devm_ioremap_match(struct device *dev,
-> > void *res, void *match_data)
-> > >   * @size: Size of map
-> > >   *
-> > >   * Managed ioremap().  Map is automatically unmapped on driver detach.
-> > > + *
-> > > + * When possible, use devm_ioremap_resource() instead.
-> > >   */
-> > >  void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
-> > >  			   resource_size_t size)
-> > 
-> > Yes, please. It would be nice first patch in the serie converting existing
-> > users of devm_ioremap into devm_ioremap_resource:
-> > find drivers -name "*.c" | xargs grep "devm_ioremap(" | grep resource_size
-> > | wc -l
-> > 82
-> > I know, that was dumb, Coccinelle would certainly do better job.
-> > And from a quick look a lot of
-> > if (!res) {
-> > 	print error
-> > 	return -EINVAL;
-> > }
-> > code blocks could be deleted (and many cases where check for NULL
-> > resource
-> > is missing fixed).
-> > 
+Changes from v9:
+  - patch 2 has been split into 3 patches according to Bjorn comments on
+    v9 thread
+  - patch 1 has been reworked accordign to Bjorn comments on v9
+  - now logic_pio_trans_hwaddr() has a sanity check to make sure the resource
+    size fits into the assigned range
+  - in patch 5 the MFD framework has been used to probe the LPC children
+    according to the suggestion from Mika Westerberg
+  - Maintaner has changed to Huawei Linuxarm mailing list
+
+Changes from v8:
+  - Simplified LIB IO framewrok
+  - Moved INDIRECT PIO ACPI framework under acpi/arm64
+  - Renamed occurrences of "lib io" and "indirect io" to "lib pio" and
+    "indirect pio" to keep the patchset nomenclature consistent
+  - Removed Alignment reuqirements
+  - Moved LPC specific code out of ACPI common framework
+  - Now PIO indirect HW ranges can overlap
+  - Changed HiSilicon LPC driver maintainer (Gabriele Paoloni now) and split
+    maintaner file modifications in a separate commit
+  - Removed the commit with the DT nodes support for hip06 and hip07 (to be
+    pushed separately)
+  - Added a checking on ioport_map() not to break that function as Arnd points
+    out in V7 review thread;
+  - fixed the compile issues on alpha, m68k;
+
+Changes from V7:
+  - Based on Arnd's comment, rename the LIBIO as LOGIC_PIO;
+  - Improved the mapping process in LOGIC_PIO to gain better efficiency when
+    redirecting the I/O accesses to right device driver;
+  - To reduce the impact on PCI MMIO to a minimum, add a new
+    CONFIG_INDIRECT_PIO for indirect-IO hosts/devices;
+  - Added a new ACPI handler for indirect-IO hosts/devices;
+  - Fixed the compile issues on V6;
+
+Changes from V6:
+  - According to the comments from Bjorn and Alex, merge PCI IO and indirect-IO
+    into a generic I/O space management, LIBIO;
+  - Adopted the '_DEP' to replace the platform bus notifier. In this way, we can
+    ensure the LPC peripherals' I/O resources had been translated to logical IO
+    before the LPC peripheral enumeration;
+  - Replaced the rwlock with rcu list based on Alex's suggestion;
+  - Applied relaxed write/read to LPC driver;
+  - Some bugs fixing and some optimazations based on the comments of V6;
+
+Changes from V5:
+  - Made the extio driver more generic and locate in lib/;
+  - Supported multiple indirect-IO bus instances;
+  - Extended the pci_register_io_range() to support indirect-IO, then dropped
+  the I/O reservation used in previous patchset;
+  - Reimplemented the ACPI LPC support;
+  - Fixed some bugs, including the compile error on other archs, the module
+  building failure found by Ming Lei, etc;
+
+Changes from V4:
+  - Some revises based on the comments from Bjorn, Rob on V4;
+  - Fixed the compile error on some platforms, such as openrisc;
+
+Changes from V3:
+  - UART support deferred to a separate patchset; This patchset only support
+  ipmi device under LPC;
+  - LPC bus I/O range is fixed to 0 ~ (PCIBIOS_MIN_IO - 1), which is separeted
+  from PCI/PCIE PIO space;
+  - Based on Arnd's remarks, removed the ranges property from Hip06 lpc dts and
+  added a new fixup function, of_isa_indirect_io(), to get the I/O address
+  directly from LPC dts configurations;
+  - Support in(w,l)/out(w,l) for Hip06 lpc I/O;
+  - Decouple the header file dependency on the gerenic io.h by defining in/out
+  as normal functions in c file;
+  - removed unused macro definitions in the LPC driver;
+
+Changes from V2:
+  - Support the PIO retrieval from the linux PIO generated by
+  pci_address_to_pio. This method replace the 4K PIO reservation in V2;
+  - Support the flat-tree earlycon;
+  - Some revises based on Arnd's remarks;
+  - Make sure the linux PIO range allocated to Hip06 LPC peripherals starts
+  from non-ZERO;
+
+Changes from V1:
+  - Support the ACPI LPC device;
+  - Optimize the dts LPC driver in ISA compatible mode;
+  - Reserve the IO range below 4K in avoid the possible conflict with PCI host
+  IO ranges;
+  - Support the LPC uart and relevant earlycon;
+
+V110 thread here: https://lkml.org/lkml/2017/10/27/465
+V9 thread here: https://lkml.org/lkml/2017/5/25/263
+V8 thread here: https://lkml.org/lkml/2017/3/30/619
+V7 thread here: https://lkml.org/lkml/2017/3/12/279
+v6 thread here: https://lkml.org/lkml/2017/1/24/25
+v5 thread here: https://lkml.org/lkml/2016/11/7/955
+v4 thread here: https://lkml.org/lkml/2016/10/20/149
+v3 thread here: https://lkml.org/lkml/2016/9/14/326
+v2 thread here: https://lkml.org/lkml/2016/9/7/356
+v1 thread here: https://lkml.org/lkml/2015/12/29/154
+
+
+Gabriele Paoloni (3):
+  PCI: Remove unused __weak attribute in pci_register_io_range()
+  PCI: Add fwnode handler as input param of pci_register_io_range()
+  PCI: Apply the new generic I/O management on PCI IO hosts
+
+John Garry (3):
+  ACPI: Translate the I/O range of non-MMIO devices before scanning
+  LPC, ACPI: Add the HISI LPC ACPI support
+  MAINTAINERS: Add maintainer for HiSilicon LPC driver
+
+Zhichang Yuan (3):
+  LIB: Introduce a generic PIO mapping method
+  OF: Add missing I/O range exception for indirect-IO devices
+  LPC: Support the LPC host on Hip06/Hip07 with DT bindings
+
+ .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
+ MAINTAINERS                                        |   7 +
+ drivers/acpi/arm64/Makefile                        |   1 +
+ drivers/acpi/arm64/acpi_indirectio.c               | 282 +++++++++++
+ drivers/acpi/internal.h                            |   5 +
+ drivers/acpi/pci_root.c                            |   8 +-
+ drivers/acpi/scan.c                                |   1 +
+ drivers/bus/Kconfig                                |   8 +
+ drivers/bus/Makefile                               |   1 +
+ drivers/bus/hisi_lpc.c                             | 541 +++++++++++++++++++++
+ drivers/of/address.c                               |  95 +++-
+ drivers/pci/pci.c                                  |  98 +---
+ include/asm-generic/io.h                           |   4 +-
+ include/linux/logic_pio.h                          | 141 ++++++
+ include/linux/pci.h                                |   3 +-
+ lib/Kconfig                                        |  15 +
+ lib/Makefile                                       |   2 +
+ lib/logic_pio.c                                    | 286 +++++++++++
+ 18 files changed, 1430 insertions(+), 101 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
+ create mode 100644 drivers/acpi/arm64/acpi_indirectio.c
+ create mode 100644 drivers/bus/hisi_lpc.c
+ create mode 100644 include/linux/logic_pio.h
+ create mode 100644 lib/logic_pio.c
+
+-- 
+1.9.1
