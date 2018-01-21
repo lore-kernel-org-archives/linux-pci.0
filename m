@@ -1,117 +1,201 @@
-Return-Path: <SRS0=QGVH=D7=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=QGVH=D7=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] PCI: designware: move dw_pcie_iatu_unroll_enabled to
- pcie-designware.c
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Pankaj Dubey
-	<pankaj.dubey@samsung.com>
-References: <CGME20171012044055epcas1p44b2e6b7cc21d42319529a518197aca9f@epcas1p4.samsung.com>
- <1507783268-9022-1-git-send-email-pankaj.dubey@samsung.com>
- <20171020174108.GK6332@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas
-	<bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto
-	<Joao.Pinto@synopsys.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <e89e3ed8-ebb3-8195-44a8-84e6c24d8268@ti.com>
-Date: Thu, 4 Jan 2018 14:33:44 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eddie.linux-mips.org ([148.251.95.138]:39738 "EHLO
+        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751047AbeAUVPM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 21 Jan 2018 16:15:12 -0500
+Received: (from localhost user: 'ladis' uid#1021 fake: STDIN
+        (ladis@eddie.linux-mips.org)) by eddie.linux-mips.org
+        id S23992618AbeAUVPLAueDG (ORCPT <rfc822;linux-pci@vger.kernel.org>
+        + 1 other); Sun, 21 Jan 2018 22:15:11 +0100
+Date: Sun, 21 Jan 2018 22:15:08 +0100
+From: Ladislav Michl <ladis@linux-mips.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: [PATCH 1/5] devres: Move managed io function declarations into
+ device.h
+Message-ID: <20180121211508.GB15151@lenoch>
+References: <20180121211432.GA15151@lenoch>
 MIME-Version: 1.0
-In-Reply-To: <20171020174108.GK6332@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180121211432.GA15151@lenoch>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Pankaj,
+Moving managed io function declarations into device.h allows
+removing forward struct device and resource definitions from
+io(port).h
 
-On Friday 20 October 2017 11:11 PM, Bjorn Helgaas wrote:
-> On Thu, Oct 12, 2017 at 10:11:08AM +0530, Pankaj Dubey wrote:
->> IATU unroll feature can be enabled in EP mode as well, so we need to
->> have this check in pcie-designware-ep.c, so instead of making this
->> function as static in pcie-desigware-host.c, let's move this in
->> pcie-designware.c so that both pcie-designware-host.c and
->> pcie-designware-ep.c can use it.
->>
->> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> 
-> This is fine with me but I'm looking for an ack from Jingoo and/or Joao.
+Signed-off-by: Ladislav Michl <ladis@linux-mips.org>
+---
+ include/linux/device.h | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/io.h     | 39 ----------------------------------
+ include/linux/ioport.h | 23 --------------------
+ 3 files changed, 57 insertions(+), 62 deletions(-)
 
-Since you are planning to send a new version, I have one comment below..
-> 
->> ---
->>  drivers/pci/dwc/pcie-designware-ep.c   |  4 ++++
->>  drivers/pci/dwc/pcie-designware-host.c | 11 -----------
->>  drivers/pci/dwc/pcie-designware.c      | 11 +++++++++++
->>  drivers/pci/dwc/pcie-designware.h      |  1 +
->>  4 files changed, 16 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
->> index d53d5f1..64803a9 100644
->> --- a/drivers/pci/dwc/pcie-designware-ep.c
->> +++ b/drivers/pci/dwc/pcie-designware-ep.c
->> @@ -314,6 +314,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
->>  	if (ep->ops->ep_init)
->>  		ep->ops->ep_init(ep);
->>  
->> +	pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
->> +	dev_dbg(dev, "iATU unroll: %s\n",
->> +		pci->iatu_unroll_enabled ? "enabled" : "disabled");
->> +
-
-IMO this should be moved to dw_pcie_setup() in
-drivers/pci/dwc/pcie-designware.c which is common to both RC and EP.
->>  	epc = devm_pci_epc_create(dev, &epc_ops);
->>  	if (IS_ERR(epc)) {
->>  		dev_err(dev, "failed to create epc device\n");
->> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
->> index 81e2157..d3f579e 100644
->> --- a/drivers/pci/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/dwc/pcie-designware-host.c
->> @@ -574,17 +574,6 @@ static struct pci_ops dw_pcie_ops = {
->>  	.write = dw_pcie_wr_conf,
->>  };
->>  
->> -static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
->> -{
->> -	u32 val;
->> -
->> -	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
->> -	if (val == 0xffffffff)
->> -		return 1;
->> -
->> -	return 0;
->> -}
->> -
->>  void dw_pcie_setup_rc(struct pcie_port *pp)
->>  {
->>  	u32 val;
->> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
->> index 88abddd..f15da90 100644
->> --- a/drivers/pci/dwc/pcie-designware.c
->> +++ b/drivers/pci/dwc/pcie-designware.c
->> @@ -92,6 +92,17 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
->>  		dev_err(pci->dev, "write DBI address failed\n");
->>  }
->>  
->> +u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
-> 
-> I know this is just moved verbatim, but it's more conventional to simply
-> return an int (or possibly bool) for a predicate like this.  There's really
-> no point in going out of your way to specify "u8" for the return type.
-> 
->> +{
->> +	u32 val;
->> +
->> +	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
->> +	if (val == 0xffffffff)
->> +		return 1;
-
-Not directly related to this patch but IMO iatu_unroll should be enabled for
-all designware core version 4.80?? IMO comparing value in ATU_VIEWPORT to
-0xffffffff is not a good indication of whether the platform support iatu unroll
-or not.
-If this is specific to 4.80, then glue drivers should just pass the designware
-core version and if it is 4.80, then iatu unroll should be enabled?
-
-Thanks
-Kishon
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 4d88b6b9cda9..91f508edb266 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -683,8 +683,65 @@ extern unsigned long devm_get_free_pages(struct device *dev,
+ 					 gfp_t gfp_mask, unsigned int order);
+ extern void devm_free_pages(struct device *dev, unsigned long addr);
+ 
++/* managed resource interface */
++extern int devm_request_resource(struct device *dev, struct resource *root,
++				 struct resource *new);
++extern void devm_release_resource(struct device *dev, struct resource *new);
++
++#define devm_request_region(dev,start,n,name) \
++	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
++#define devm_request_mem_region(dev,start,n,name) \
++	__devm_request_region(dev, &iomem_resource, (start), (n), (name))
++
++extern struct resource * __devm_request_region(struct device *dev,
++				struct resource *parent, resource_size_t start,
++				resource_size_t n, const char *name);
++
++#define devm_release_region(dev, start, n) \
++	__devm_release_region(dev, &ioport_resource, (start), (n))
++#define devm_release_mem_region(dev, start, n) \
++	__devm_release_region(dev, &iomem_resource, (start), (n))
++
++extern void __devm_release_region(struct device *dev, struct resource *parent,
++				  resource_size_t start, resource_size_t n);
++
++/* managed iomap interface */
++#ifdef CONFIG_HAS_IOPORT_MAP
++void __iomem * devm_ioport_map(struct device *dev, unsigned long port,
++			       unsigned int nr);
++void devm_ioport_unmap(struct device *dev, void __iomem *addr);
++#else
++static inline void __iomem *devm_ioport_map(struct device *dev,
++					     unsigned long port,
++					     unsigned int nr)
++{
++	return NULL;
++}
++
++static inline void devm_ioport_unmap(struct device *dev, void __iomem *addr)
++{
++}
++#endif
++
++#define IOMEM_ERR_PTR(err) (__force void __iomem *)ERR_PTR(err)
++
++void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
++			   resource_size_t size);
++void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
++				   resource_size_t size);
++void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
++				   resource_size_t size);
+ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res);
+ 
++void devm_iounmap(struct device *dev, void __iomem *addr);
++void devm_ioremap_release(struct device *dev, void *res);
++
++void *devm_memremap(struct device *dev, resource_size_t offset,
++		size_t size, unsigned long flags);
++void devm_memunmap(struct device *dev, void *addr);
++
++void *__devm_memremap_pages(struct device *dev, struct resource *res);
++
+ /* allows to add/remove a custom action to devres stack */
+ int devm_add_action(struct device *dev, void (*action)(void *), void *data);
+ void devm_remove_action(struct device *dev, void (*action)(void *), void *data);
+diff --git a/include/linux/io.h b/include/linux/io.h
+index 32e30e8fb9db..58554147ccdb 100644
+--- a/include/linux/io.h
++++ b/include/linux/io.h
+@@ -25,9 +25,6 @@
+ #include <asm/io.h>
+ #include <asm/page.h>
+ 
+-struct device;
+-struct resource;
+-
+ __visible void __iowrite32_copy(void __iomem *to, const void *from, size_t count);
+ void __ioread32_copy(void *to, const void __iomem *from, size_t count);
+ void __iowrite64_copy(void __iomem *to, const void *from, size_t count);
+@@ -51,44 +48,8 @@ int arch_ioremap_pmd_supported(void);
+ static inline void ioremap_huge_init(void) { }
+ #endif
+ 
+-/*
+- * Managed iomap interface
+- */
+-#ifdef CONFIG_HAS_IOPORT_MAP
+-void __iomem * devm_ioport_map(struct device *dev, unsigned long port,
+-			       unsigned int nr);
+-void devm_ioport_unmap(struct device *dev, void __iomem *addr);
+-#else
+-static inline void __iomem *devm_ioport_map(struct device *dev,
+-					     unsigned long port,
+-					     unsigned int nr)
+-{
+-	return NULL;
+-}
+-
+-static inline void devm_ioport_unmap(struct device *dev, void __iomem *addr)
+-{
+-}
+-#endif
+-
+-#define IOMEM_ERR_PTR(err) (__force void __iomem *)ERR_PTR(err)
+-
+-void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
+-			   resource_size_t size);
+-void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+-				   resource_size_t size);
+-void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
+-				   resource_size_t size);
+-void devm_iounmap(struct device *dev, void __iomem *addr);
+ int check_signature(const volatile void __iomem *io_addr,
+ 			const unsigned char *signature, int length);
+-void devm_ioremap_release(struct device *dev, void *res);
+-
+-void *devm_memremap(struct device *dev, resource_size_t offset,
+-		size_t size, unsigned long flags);
+-void devm_memunmap(struct device *dev, void *addr);
+-
+-void *__devm_memremap_pages(struct device *dev, struct resource *res);
+ 
+ #ifdef CONFIG_PCI
+ /*
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index da0ebaec25f0..dc43f2f52416 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -241,29 +241,6 @@ extern int release_mem_region_adjustable(struct resource *, resource_size_t,
+ 				resource_size_t);
+ #endif
+ 
+-/* Wrappers for managed devices */
+-struct device;
+-
+-extern int devm_request_resource(struct device *dev, struct resource *root,
+-				 struct resource *new);
+-extern void devm_release_resource(struct device *dev, struct resource *new);
+-
+-#define devm_request_region(dev,start,n,name) \
+-	__devm_request_region(dev, &ioport_resource, (start), (n), (name))
+-#define devm_request_mem_region(dev,start,n,name) \
+-	__devm_request_region(dev, &iomem_resource, (start), (n), (name))
+-
+-extern struct resource * __devm_request_region(struct device *dev,
+-				struct resource *parent, resource_size_t start,
+-				resource_size_t n, const char *name);
+-
+-#define devm_release_region(dev, start, n) \
+-	__devm_release_region(dev, &ioport_resource, (start), (n))
+-#define devm_release_mem_region(dev, start, n) \
+-	__devm_release_region(dev, &iomem_resource, (start), (n))
+-
+-extern void __devm_release_region(struct device *dev, struct resource *parent,
+-				  resource_size_t start, resource_size_t n);
+ extern int iomem_map_sanity_check(resource_size_t addr, unsigned long size);
+ extern bool iomem_is_exclusive(u64 addr);
+ 
+-- 
+2.15.1
