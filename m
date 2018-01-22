@@ -1,50 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42468 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751607AbeAJXZW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Jan 2018 18:25:22 -0500
-Date: Wed, 10 Jan 2018 17:25:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Frederick Lawler <fred@fredlawl.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: Add and use pci_<level>: dev_<level> equivalents
-Message-ID: <20180110232519.GF241460@bhelgaas-glaptop.roam.corp.google.com>
-References: <1513646174-2269-1-git-send-email-fred@fredlawl.com>
+Received: from eddie.linux-mips.org ([148.251.95.138]:50148 "EHLO
+        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750909AbeAVWL0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jan 2018 17:11:26 -0500
+Received: (from localhost user: 'ladis' uid#1021 fake: STDIN
+        (ladis@eddie.linux-mips.org)) by eddie.linux-mips.org
+        id S23992781AbeAVVvBG1wxV (ORCPT <rfc822;linux-pci@vger.kernel.org>
+        + 1 other); Mon, 22 Jan 2018 22:51:01 +0100
+Date: Mon, 22 Jan 2018 22:50:57 +0100
+From: Ladislav Michl <ladis@linux-mips.org>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/5] devres: Move managed io function declarations into
+ device.h
+Message-ID: <20180122215056.GA27905@lenoch>
+References: <20180121211432.GA15151@lenoch>
+ <20180121211508.GB15151@lenoch>
+ <20180122174903.z5ijxouq5bw2s36r@dtor-ws>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1513646174-2269-1-git-send-email-fred@fredlawl.com>
+In-Reply-To: <20180122174903.z5ijxouq5bw2s36r@dtor-ws>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 18, 2017 at 07:16:12PM -0600, Frederick Lawler wrote:
-> Replace current uses of dev_<level> with pci_<level> by adding and using
-> PCI specific fuctions. 
+On Mon, Jan 22, 2018 at 09:49:03AM -0800, Dmitry Torokhov wrote:
+> On Sun, Jan 21, 2018 at 10:15:08PM +0100, Ladislav Michl wrote:
+> > Moving managed io function declarations into device.h allows
+> > removing forward struct device and resource definitions from
+> > io(port).h
 > 
-> Frederick Lawler (2):
->   PCI: Create  minor pci_dev log wrapper functions
->   PCI: Replace calls from dev_<level> to pci_<level>
-> 
->  drivers/pci/access.c       |   6 +-
->  drivers/pci/bus.c          |   4 +-
->  drivers/pci/iov.c          |  10 +--
->  drivers/pci/irq.c          |   6 +-
->  drivers/pci/msi.c          |   6 +-
->  drivers/pci/pci-acpi.c     |   2 +-
->  drivers/pci/pci-stub.c     |   2 +-
->  drivers/pci/pci-sysfs.c    |  10 +--
->  drivers/pci/pci.c          |  76 ++++++++---------
->  drivers/pci/probe.c        |  74 ++++++++---------
->  drivers/pci/quirks.c       | 198 ++++++++++++++++++++++-----------------------
->  drivers/pci/rom.c          |   4 +-
->  drivers/pci/setup-bus.c    |  44 +++++-----
->  drivers/pci/setup-irq.c    |   4 +-
->  drivers/pci/setup-res.c    |  38 ++++-----
->  drivers/pci/vc.c           |  16 ++--
->  drivers/pci/xen-pcifront.c |  16 ++--
->  include/linux/pci.h        |  91 +++++++++++++++++++++
->  18 files changed, 349 insertions(+), 258 deletions(-)
+> In the face of it, what is the issue with forward declarations of device
+> and resource structures? device.h is supposed to be about Linux device
+> model, not hardware. You would not want all devm_* functions to go into
+> device.h (clock, regulator, input, rtc, hwmon, etc, etc devm API),
+> right? Why would we want ioport there?
 
-Applied to pci/misc for v4.16, thanks!
+Allright, point taken. Then I would assume devm_ioremap_resource should
+be moved from device.h into io.h, to get some consistency, right?
+Any other comment (mainly to devm_ioremap_shared_resource) before v2?
 
-I also updated a few more files in hotplug, AER, ASPM, PME, and PTM,
-so if it breaks, it's probably my fault.
+Thank you,
+	ladis
