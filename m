@@ -1,28 +1,63 @@
-Return-Path: <SRS0=e0LY=EZ=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=e0LY=EZ=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH v2 00/14] PCI/DPC: Simplify RP PIO logging
-To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
-References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <4366c202-558e-89a0-71c0-160da531b37a@codeaurora.org>
-Date: Tue, 30 Jan 2018 15:25:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Hans de Goede <hdegoede@redhat.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robert Moore <robert.moore@intel.com>,
+        Lv Zheng <lv.zheng@intel.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, devel@acpica.org
+Subject: [PATCH v2 2/5] PCI: acpiphp_ibm: prepare for acpi_get_object_info() no longer returning status
+Date: Mon, 22 Jan 2018 09:51:32 +0100
+Message-Id: <20180122085135.16732-3-hdegoede@redhat.com>
+In-Reply-To: <20180122085135.16732-1-hdegoede@redhat.com>
+References: <20180122085135.16732-1-hdegoede@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/30/2018 1:25 PM, Bjorn Helgaas wrote:
-> Changes from v1 to v2:
->   - Split up the "Consolidate RP PIO get/print functions" patch to
->     make it more reviewable.  The resulting git diff is empty except
->     for a trival local variable declaration.
+acpi_get_object_info() is intended for early probe usage and as such should
+not call any methods which may rely on OpRegions, but it used to also call
+_STA to get the status, which on some systems does rely on OpRegions, this
+behavior and the acpi_device_info.current_status member are being removed.
 
-Thanks v2 looks good to me too.
+This commit prepares the acpiphp_ibm code for this by having it get the
+status itself using acpi_bus_get_status_handle(). Note no error handling is
+necessary on any errors acpi_bus_get_status_handle() leaves the value of
+the passed in current_status at its 0 initialization value.
 
-Reviewed-by: Sinan Kaya <okaya@codeaurora.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+Changes in v2:
+-Use () after function names in commit message
+-Add  Bjorn's Acked-by
+---
+ drivers/pci/hotplug/acpiphp_ibm.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
+index 984c7e8cec5a..8472c4a27f70 100644
+--- a/drivers/pci/hotplug/acpiphp_ibm.c
++++ b/drivers/pci/hotplug/acpiphp_ibm.c
+@@ -399,6 +399,7 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
+ 		u32 lvl, void *context, void **rv)
+ {
+ 	acpi_handle *phandle = (acpi_handle *)context;
++	unsigned long long current_status = 0;
+ 	acpi_status status;
+ 	struct acpi_device_info *info;
+ 	int retval = 0;
+@@ -410,7 +411,9 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
+ 		return retval;
+ 	}
+ 
+-	if (info->current_status && (info->valid & ACPI_VALID_HID) &&
++	acpi_bus_get_status_handle(handle, &current_status);
++
++	if (current_status && (info->valid & ACPI_VALID_HID) &&
+ 			(!strcmp(info->hardware_id.string, IBM_HARDWARE_ID1) ||
+ 			 !strcmp(info->hardware_id.string, IBM_HARDWARE_ID2))) {
+ 		pr_debug("found hardware: %s, handle: %p\n",
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.14.3
+
