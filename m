@@ -3,9 +3,9 @@ Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 From: Sinan Kaya <okaya@codeaurora.org>
 To: linux-pci@vger.kernel.org,
 	timur@codeaurora.org
-Subject: [PATCH] PCI/ASPM: Suppress common clock mode setting failure
-Date: Mon, 22 Jan 2018 12:28:00 -0500
-Message-Id: <1516642093-15633-1-git-send-email-okaya@codeaurora.org>
+Subject: [PATCH V2] PCI/ASPM: Suppress common clock mode setting failure
+Date: Mon, 22 Jan 2018 15:12:01 -0500
+Message-Id: <1516651924-21820-1-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,8 +16,9 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
 Cc: Kees Cook <keescook@chromium.org>,
  Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-arm-msm@vger.kernel.org,
  open list <linux-kernel@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
- Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, Rajat Jain <rajatja@google.com>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
  Yinghai Lu <yinghai@kernel.org>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -33,25 +34,38 @@ pci 0004:00:00.0: ASPM: Could not configure common clock
 
 Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/pcie/aspm.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/pci/pcie/aspm.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
 diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 9783e10..072178a 100644
+index 9783e10..913b90d 100644
 --- a/drivers/pci/pcie/aspm.c
 +++ b/drivers/pci/pcie/aspm.c
-@@ -253,6 +253,11 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
+@@ -240,6 +240,24 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
+ 	if (!(reg16 & PCI_EXP_LNKSTA_SLC))
+ 		same_clock = 0;
  
- 	/* Configure upstream component */
- 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &reg16);
-+
 +	/* Port might be already in common clock mode */
-+	if ((same_clock) && (reg16 & PCI_EXP_LNKCTL_CCC))
-+		return;
++	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &reg16);
++	if (same_clock && (reg16 & PCI_EXP_LNKCTL_CCC)) {
++		bool consistent = true;
 +
- 	parent_reg = reg16;
- 	if (same_clock)
- 		reg16 |= PCI_EXP_LNKCTL_CCC;
++		list_for_each_entry(child, &linkbus->devices, bus_list) {
++			pcie_capability_read_word(child, PCI_EXP_LNKCTL,
++						  &reg16);
++			if (!(reg16 & PCI_EXP_LNKCTL_CCC)) {
++				consistent = false;
++				break;
++			}
++		}
++		if (consistent)
++			return;
++		dev_warn(&parent->dev, "ASPM: current common clock configuration is broken, reconfiguring\n");
++	}
++
+ 	/* Configure downstream component, all functions */
+ 	list_for_each_entry(child, &linkbus->devices, bus_list) {
+ 		pcie_capability_read_word(child, PCI_EXP_LNKCTL, &reg16);
 -- 
 1.9.1
 
