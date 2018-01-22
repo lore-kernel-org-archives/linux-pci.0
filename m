@@ -1,72 +1,101 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 18 Jan 2018 13:13:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Lv Zheng <lv.zheng@intel.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, devel@acpica.org
-Subject: Re: [PATCH 1/4] PCI: acpiphp_ibm: prepare for acpi_get_object_info
- no longer returning status
-Message-ID: <20180118191326.GJ53542@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180118160359.29971-1-hdegoede@redhat.com>
- <20180118160359.29971-2-hdegoede@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180118160359.29971-2-hdegoede@redhat.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [PATCH 1/6] jailhouse: Provide detection for non-x86 systems
+Date: Mon, 22 Jan 2018 07:12:45 +0100
+Message-Id: <5541843651e0232ac90f347f638e486d2ddda237.1516601570.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
+References: <cover.1516601570.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
+References: <cover.1516601570.git.jan.kiszka@siemens.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 18, 2018 at 05:03:56PM +0100, Hans de Goede wrote:
-> acpi_get_object_info is intended for early probe usage and as such should
-> not call any methods which may rely on OpRegions, but it used to also call
-> _STA to get the status, which on some systems does rely on OpRegions, this
-> behavior and the acpi_device_info.current_status member are being removed.
-> 
-> This commit prepares the acpiphp_ibm code for this by having it get the
-> status itself using acpi_bus_get_status_handle. Note no error handling is
-> necessary on any errors acpi_bus_get_status_handle leaves the value of
-> the passed in current_status at its 0 initialization value.
-> 
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Please add "()" after function names above, then
+Implement jailhouse_paravirt() via device tree probing on architectures
+!= x86. Will be used by the PCI core.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Mark Rutland <mark.rutland@arm.com>
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
+ arch/x86/include/asm/jailhouse_para.h           |  2 +-
+ include/linux/hypervisor.h                      | 17 +++++++++++++++--
+ 3 files changed, 24 insertions(+), 3 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
 
-I assume this will be merged by Rafael along with the rest of the series.
-
-It would be nice to fix the run-on sentences in the changelog as well.
-
-> ---
->  drivers/pci/hotplug/acpiphp_ibm.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
-> index 984c7e8cec5a..8472c4a27f70 100644
-> --- a/drivers/pci/hotplug/acpiphp_ibm.c
-> +++ b/drivers/pci/hotplug/acpiphp_ibm.c
-> @@ -399,6 +399,7 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
->  		u32 lvl, void *context, void **rv)
->  {
->  	acpi_handle *phandle = (acpi_handle *)context;
-> +	unsigned long long current_status = 0;
->  	acpi_status status;
->  	struct acpi_device_info *info;
->  	int retval = 0;
-> @@ -410,7 +411,9 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
->  		return retval;
->  	}
->  
-> -	if (info->current_status && (info->valid & ACPI_VALID_HID) &&
-> +	acpi_bus_get_status_handle(handle, &current_status);
-> +
-> +	if (current_status && (info->valid & ACPI_VALID_HID) &&
->  			(!strcmp(info->hardware_id.string, IBM_HARDWARE_ID1) ||
->  			 !strcmp(info->hardware_id.string, IBM_HARDWARE_ID2))) {
->  		pr_debug("found hardware: %s, handle: %p\n",
-> -- 
-> 2.14.3
-> 
+diff --git a/Documentation/devicetree/bindings/jailhouse.txt b/Documentation/devicetree/bindings/jailhouse.txt
+new file mode 100644
+index 000000000000..2901c25ff340
+--- /dev/null
++++ b/Documentation/devicetree/bindings/jailhouse.txt
+@@ -0,0 +1,8 @@
++Jailhouse non-root cell device tree bindings
++--------------------------------------------
++
++When running in a non-root Jailhouse cell (partition), the device tree of this
++platform shall have a top-level "hypervisor" node with the following
++properties:
++
++- compatible = "jailhouse,cell"
+diff --git a/arch/x86/include/asm/jailhouse_para.h b/arch/x86/include/asm/jailhouse_para.h
+index 875b54376689..b885a961a150 100644
+--- a/arch/x86/include/asm/jailhouse_para.h
++++ b/arch/x86/include/asm/jailhouse_para.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: GPL2.0 */
+ 
+ /*
+- * Jailhouse paravirt_ops implementation
++ * Jailhouse paravirt detection
+  *
+  * Copyright (c) Siemens AG, 2015-2017
+  *
+diff --git a/include/linux/hypervisor.h b/include/linux/hypervisor.h
+index b19563f9a8eb..fc08b433c856 100644
+--- a/include/linux/hypervisor.h
++++ b/include/linux/hypervisor.h
+@@ -8,15 +8,28 @@
+  */
+ 
+ #ifdef CONFIG_X86
++
++#include <asm/jailhouse_para.h>
+ #include <asm/x86_init.h>
++
+ static inline void hypervisor_pin_vcpu(int cpu)
+ {
+ 	x86_platform.hyper.pin_vcpu(cpu);
+ }
+-#else
++
++#else /* !CONFIG_X86 */
++
++#include <linux/of.h>
++
+ static inline void hypervisor_pin_vcpu(int cpu)
+ {
+ }
+-#endif
++
++static inline bool jailhouse_paravirt(void)
++{
++	return of_find_compatible_node(NULL, NULL, "jailhouse,cell");
++}
++
++#endif /* !CONFIG_X86 */
+ 
+ #endif /* __LINUX_HYPEVISOR_H */
+-- 
+2.13.6
