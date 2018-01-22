@@ -1,52 +1,59 @@
-Return-Path: <SRS0=C7Kg=EO=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=C7Kg=EO=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Frank Rowand <frowand.list@gmail.com>, linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/3] PCI: move DT PCI functions to PCI core
-In-Reply-To: <20180117235555.GC53542@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180104211215.11344-1-robh@kernel.org> <20180117235555.GC53542@bhelgaas-glaptop.roam.corp.google.com>
-Date: Fri, 19 Jan 2018 22:16:59 +1100
-Message-ID: <87h8riayj8.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: exynos: fix the potential null pointer dereference
+Date: Mon, 22 Jan 2018 11:28:54 +0900
+Message-id: <20180122022854.3634-1-jh80.chung@samsung.com>
+References: <CGME20180122022856epcas1p494a9efeae478b299e3e8006adad71e6a@epcas1p4.samsung.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-samsung-soc@vger.kernel.org, jingoohan1@gmail.com, krzk@kernel.org,
+ Jaehoon Chung <jh80.chung@samsung.com>, kgene@kernel.org,
+ lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+Before calling the callback function, it needs to check whether
+init_clk_resources is assigned or not.
+Otherwise, it can be occurred the NULL pointer dereference when
+init_clk_resources is not assigned.
 
-> On Thu, Jan 04, 2018 at 03:12:12PM -0600, Rob Herring wrote:
->> Most subsystem specific functions have been moved into the respective
->> subsystems. Only PCI and networking remain. This series moves most of the
->> PCI related code to drivers/pci/of.c. Some bus address functions for PCI
->> remain in of/address.c because we don't have infrastructure to split up
->> the per bus helper functions.
->> 
->> I expect Bjorn to take this series, so PPC maintainers please ack.
->> 
->> Rob
->> 
->> Rob Herring (3):
->>   PCI: move OF related PCI functions into PCI core
->>   powerpc/pci: use of_irq_parse_and_map_pci helper
->>   PCI: make of_irq_parse_pci static
->> 
->>  arch/arm/mach-mvebu/Kconfig      |   1 -
->>  arch/powerpc/kernel/pci-common.c |   8 +-
->>  drivers/of/Kconfig               |  16 --
->>  drivers/of/Makefile              |   2 -
->>  drivers/of/address.c             |   8 +-
->>  drivers/of/of_pci.c              | 384 -----------------------------
->>  drivers/of/of_pci_irq.c          | 131 ----------
->>  drivers/pci/of.c                 | 505 +++++++++++++++++++++++++++++++++++++++
->>  include/linux/of_pci.h           |   8 +-
->>  9 files changed, 510 insertions(+), 553 deletions(-)
->>  delete mode 100644 drivers/of/of_pci.c
->>  delete mode 100644 drivers/of/of_pci_irq.c
->
-> Applied to pci/dt-resources for v4.16, thanks!
->
-> I'll update this if necessary if PPC maintainers comment.
+Even though init_clk_resources is assigned now, it needs to prevent the
+potential NULL pointer dereference in future.
 
-Thanks. Seems fine, fingers crossed :)
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+---
+ drivers/pci/dwc/pci-exynos.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-cheers
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 56f32aeebd0a..39f08881f9a4 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -499,7 +499,8 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 			return ret;
+ 	}
+ 
+-	if (ep->ops && ep->ops->get_clk_resources) {
++	if (ep->ops && ep->ops->get_clk_resources &&
++			ep->ops->init_clk_resources) {
+ 		ret = ep->ops->get_clk_resources(ep);
+ 		if (ret)
+ 			return ret;
+-- 
+2.15.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
