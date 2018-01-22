@@ -1,63 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34472 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750757AbeASEXw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 23:23:52 -0500
+Return-Path: <SRS0=wG18=ER=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=wG18=ER=codeaurora.org=okaya@kernel.org>
+Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
+ pcie_bus_perf On NVMe Device
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ron Yuan <ron.yuan@memblaze.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Bo Chen <bo.chen@memblaze.com>, William Huang <william.huang@memblaze.com>,
+ Fengming Wu <fengming.wu@memblaze.com>,
+ Jason Jiang <jason.jiang@microsemi.com>,
+ Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>,
+ Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
+ William Cheng <william.cheng@microsemi.com>,
+ "Kim Helper (khelper)" <khelper@micron.com>,
+ Linux PCI <linux-pci@vger.kernel.org>
+References: <ef16a3cc-b641-a30d-644a-7940e340eb3e@codeaurora.org>
+ <SHAPR01MB173A5EA1677C2138CB528F2FEE90@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
+ <5727b0b1-f0d5-7c78-373e-fc9d1bd662d2@codeaurora.org>
+ <CABhMZUU0643U-qVc9ymA+1PMZToSLFm2dg8-cu=iQ2LGw2Pi8Q@mail.gmail.com>
+ <SHAPR01MB173A36104635A8BFF9A83E1FEE80@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
+ <0ce08a91-fc38-1288-7683-836fcbbbdf3c@codeaurora.org>
+ <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
+ <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
+ <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
+ <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
+ <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
+Date: Mon, 22 Jan 2018 18:24:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 19 Jan 2018 09:53:50 +0530
-From: poza@codeaurora.org
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <0ab49441-548e-a5bc-d76b-bdc6fa7495dc@codeaurora.org>
-References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
- <1516185438-31556-4-git-send-email-poza@codeaurora.org>
- <733abfcb-5b31-7394-ab62-19a0888d71c2@codeaurora.org>
- <c77a3302e34d55d557404d7bdc6892fc@codeaurora.org>
- <5cf7004e62a2979afb3c29e99d705c60@codeaurora.org>
- <35a9ce2b-156f-3235-c3b7-2c495fe9c52b@codeaurora.org>
- <64127dba1cebab196c88a160191ebee0@codeaurora.org>
- <0ab49441-548e-a5bc-d76b-bdc6fa7495dc@codeaurora.org>
-Message-ID: <c773081eadb89c4b4317d0a709a06a7d@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-18 23:33, Sinan Kaya wrote:
-> On 1/18/2018 1:00 PM, poza@codeaurora.org wrote:
->>> I think you would put into include/linux/pci.h only if there is an 
->>> external
->>> use of constant outside of drivers/pci directory. Otherwise, you 
->>> should keep
->>> the setting inside one of the header files in drivers/pci directory.
->>> 
->>> I don't see any other subsystem caring about DPC_FATAL definition.
->> 
->> ok so you are suggesting to move only DPC_FATAL ? so then AER can stay 
->> where it is.
+On 1/22/2018 5:51 PM, Bjorn Helgaas wrote:
+> On Mon, Jan 22, 2018 at 05:04:03PM -0500, Sinan Kaya wrote:
+>> On 1/22/2018 4:36 PM, Bjorn Helgaas wrote:
+
+>>> Reducing MPS may be necessary if there are several devices in the
+>>> hierarchy and one requires a smaller MPS than the others.  That
+>>> obviously reduces the maximum read and write performance.
+>>>
+>>> Reducing the MRRS may be useful to prevent one device from hogging
+>>> a link, but of course, it reduces read performance for that device
+>>> because we need more read requests.
+>>
+>> Maybe, a picture could help.
+>>
+>>                root (MPS=256)
+>>                  |
+>>          ------------------
+>>         /                  \
+>>    bridge0 (MPS=256)      bridge1 (MPS=128)
+>>       /                       \
+>>     EP0 (MPS=256)            EP1 (MPS=128)
+>>
+>> If I understood this right, code allows the configuration above with
+>> the performance mode so that MPS doesn't have to be uniform across
+>> the tree. 
 > 
-> Now that both AER and DPC handling is getting unified, I think it makes 
-> sense to
-> keep all error codes (AER+DPC) together in drivers/pci/pci.h rather 
-> than having
-> them split in aer.h and dpc.h.
+> Yes.  In PERFORMANCE mode, we will set EP1's MRRS=128 and
+> EP0's MRRS=256, just as you show.
 > 
-> Otherwise, how would we avoid having a new error type defined with the
-> existing values.
+>> It just needs to be consistent between the root port and endpoints.
+> 
+> No, it doesn't need to be consistent.  In PERFORMANCE mode, we'll set
+> the root's MPS=256 and EP1's MPS=128.
+> 
+> (I'm not actually 100% convinced that the PERFORMANCE mode approach of
+> reducing MRRS is safe, necessary, and maintainable.  I suspect that in
+> many of the interesting cases, the device we care about is the only
+> one below a Root Port, and we can get the performance we need by
+> maximizing MPS and MRRS for that Root Port and its children,
+> independent of the rest of the system.)
 
-I agree, its is just that drivers/acpi/apet/ghes.c has to do
-#include ../../pci/pci.h
+Maybe, I started seeing more and more NVMe devices behind a switch every
+day. That's why, I'm concerned.
 
-but thats okay I think.  let me move error codes to drivers/pci/pci.h.
+> 
+>> Why are we reducing MRRS in this case?
+> 
+> We have to set EP1's MRRS=128 so it will never receive a completion
+> larger than 128 bytes.  If we set EP1's MRRS=256, it could receive
+> 256-byte TLPs, which it would treat as malformed.  (We also assume no
+> peer-to-peer DMA that targets EP1.)
 
-Regards,
-Oza.
+What if we were to keep root port MPS as 128? and not touch the BIOS
+configured MRRS (4k) ?
+
+Everybody should be happy, right?
+
+I know there is a rule to check the completions against MPS. Root port
+could generate transactions that is a multiple of 128 bytes for reads.
+
+Is there any rule against checking incoming writes?
+
+> 
+>> Are we assuming that root bus cannot handle more than 256 bytes and
+>> bridge1 would be starved while root bus is passing the completions
+>> to bridge0?
+> 
+> We don't have to assume.  Every device tells us via Dev Cap what size
+> TLPs it can handle.  In your example, I assume the root's Dev Cap
+> tells us it supports 256-byte TLPs.
+> 
+> PERFORMANCE mode reduces MRRS not because of a starvation issue, but
+> because reducing EP1's MRRS allows EP0 to use a larger MPS.
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
