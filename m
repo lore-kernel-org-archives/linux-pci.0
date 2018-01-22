@@ -1,171 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0069.outbound.protection.outlook.com ([104.47.41.69]:43916
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754947AbeAIKiP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 9 Jan 2018 05:38:15 -0500
-Subject: Re: [BISECTED] v4.15-rc: Boot regression on x86_64/AMD
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>
-References: <20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi>
- <CA+55aFxCSWCG7ZvHW3AkLPzMPMAuG1BhL8fNgC0-JPYU4LZVow@mail.gmail.com>
- <CAErSpo7dOfabXk9rpZr=B87wK4_Ao9_moK89Ze0cyi6Mqb0Z+Q@mail.gmail.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <628e2b58-b16b-5792-b4ef-88bec15ab779@amd.com>
-Date: Tue, 9 Jan 2018 11:37:55 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7dOfabXk9rpZr=B87wK4_Ao9_moK89Ze0cyi6Mqb0Z+Q@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------292CEB6B2E472794B49E0431"
+Received: from mx1.redhat.com ([209.132.183.28]:60214 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753016AbeAVIvt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Jan 2018 03:51:49 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robert Moore <robert.moore@intel.com>,
+        Lv Zheng <lv.zheng@intel.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, devel@acpica.org
+Subject: [PATCH v2 4/5] ACPI / scan: Use acpi_bus_get_status for initial status of ACPI_TYPE_DEVICE devs
+Date: Mon, 22 Jan 2018 09:51:34 +0100
+Message-Id: <20180122085135.16732-5-hdegoede@redhat.com>
+In-Reply-To: <20180122085135.16732-1-hdegoede@redhat.com>
+References: <20180122085135.16732-1-hdegoede@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------292CEB6B2E472794B49E0431
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+The acpi_get_bus_status wrapper for acpi_bus_get_status_handle has some
+code to handle certain device quirks, in some cases we also need this
+quirk handling for the initial _STA call.
 
-Am 09.01.2018 um 00:23 schrieb Bjorn Helgaas:
-> [+cc Boris, Juergen, linux-pci]
->
-> On Fri, Jan 5, 2018 at 6:00 PM, Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
->> On Fri, Jan 5, 2018 at 2:04 PM, Aaro Koskinen <aaro.koskinen@iki.fi> wrote:
->>> After v4.14, I've been unable to boot my AMD compilation box with the
->>> v4.15-rc mainline Linux. It just ends up in a silent reboot loop.
->>>
->>> I bisected this to:
->>>
->>> commit fa564ad9636651fd11ec2c79c48dee844066f73a
->>> Author: Christian König <christian.koenig@amd.com>
->>> Date:   Tue Oct 24 14:40:29 2017 -0500
->>>
->>>      x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 00-1f, 30-3f, 60-7f)
->> Hmm. That was reported to break boot earlier already.
->>
->> The breakage was supposedly fixed by three patches from Christian:
->>
->>    a19e2696135e: "x86/PCI: Only enable a 64bit BAR on single-socket AMD
->> Family 15h"
->>
->>    470195f82e4e:  "x86/PCI: Fix infinite loop in search for 64bit BAR placement"
->>
->> and a third one that was apparently never applied.
->>
->> I'm not sure why that third patch was never applied, I'm including it here.
->>
->> Does the system work for you if you apply that patch (instead of
->> reverting all of them)?
->>
->> I wonder why that patch wasn't applied, but if it doesn't fix things,
->> I think we do need to revert it all.
->>
->> Christian? Bjorn?
-> I didn't apply the third patch ("x86/PCI: limit the size of the 64bit
-> BAR to 256GB") because (a) we thought it was optional ("just a
-> precaution against eventual problems"), (b) we didn't have a good
-> explanation of why 256GB was the correct number, and (c)  it seemed to
-> be a workaround for a Xen issue that we hoped to fix in a better way.
+Specifically on some devices calling _STA before all _DEP dependencies
+are met results in errors like these:
 
-Just for the record completely agree on that.
+[    0.123579] ACPI Error: No handler for Region [ECRM] (00000000ba9edc4c)
+               [GenericSerialBus] (20170831/evregion-166)
+[    0.123601] ACPI Error: Region GenericSerialBus (ID=9) has no handler
+               (20170831/exfldio-299)
+[    0.123618] ACPI Error: Method parse/execution failed
+               \_SB.I2C1.BAT1._STA, AE_NOT_EXIST (20170831/psparse-550)
 
-> It does apparently make Aaro's system work, but I still hesitate to
-> apply it because it's magical -- avoiding the address space from
-> 0x1_00000000 to 0xbd_00000000 makes things work, but we don't know
-> why.  I assume there's some unreported device in that area, but I
-> don't think we have any real assurance that the
-> 0xbd_00000000-0xfd_00000000 area we now use is any safer.
+acpi_get_bus_status already has code to avoid this, so by using it we
+also silence these errors from the initial _STA call.
 
-Well, I knew why it's not working. The BIOS is not telling us the truth 
-about how much memory is installed.
+Note that in order for the acpi_get_bus_status handling for this to work,
+we initialize dep_unmet to 1 until acpi_device_dep_initialize gets called,
+this means that battery devices will be instantiated with an initial
+status of 0. This is not a problem, acpi_bus_attach will get called soon
+after the instantiation anyways and it will update the status as first
+point of order.
 
-A device above 4GB would actually be handled correctly by the code (see 
-the check when we walk over all the existing IO regions).
-
-I tested a bit with Aaro and came up with the attached patch, it adds a 
-16GB guard between the end of memory and the new window for the PCIe 
-root hub. But I agree with you that this is just a hack and not a real 
-solution.
-
-> I would feel better about this if we made it opt-in via a kernel
-> parameter and/or some kind of whitelist.  I still don't really *like*
-> it, since ACPI does provide a mechanism (_PRS/_SRS) for doing this
-> safely, and we could just say "if you want to use big BARs, the BIOS
-> should enable big windows or at least make them available via ACPI
-> resources."  The only problem is that BIOSes don't do that and we
-> don't yet have Linux support for _PRS/_SRS for host bridges.
-
-Well that is the point I disagree on. When the memory map we get from 
-the BIOS is not correct it makes no difference if we enable the window 
-with the BIOS or by direct programming the hardware.
-
-I will work with Aaron some more to come up with a solution which reads 
-the memory map directly from the hardware as well and checks if that is 
-valid before doing anything else.
-
-> I'll prepare a revert as a back-up plan in case we don't come up with
-> a better solution.
-
-Either that or only enable it when pci=add-root-window is given on the 
-kernel commandline.
-
-Just let me know what you prefer and I will hack a patch for this 
-together today.
-
-Christian.
-
-> Bjorn
-
-
---------------292CEB6B2E472794B49E0431
-Content-Type: text/x-patch;
- name="0001-x86-PCI-add-16GB-guard-between-end-of-memory-and-new.patch"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment;
- filename*0="0001-x86-PCI-add-16GB-guard-between-end-of-memory-and-new.pa";
- filename*1="tch"
-
->From 101e157babcef10b91edf91e7e6f03826c2f8ade Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
-Date: Tue, 28 Nov 2017 10:02:35 +0100
-Subject: [PATCH] x86/PCI: add 16GB guard between end of memory and new PCI
- window
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-Add a workaround for buggy BIOS implementations who steal memory for
-iGPUs from the OS without reporting it as reserved.
-
-Signed-off-by: Christian König <christian.koenig@amd.com>
-Tested-by: Aaro Koskinen <aaro.koskinen@iki.fi>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- arch/x86/pci/fixup.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Note if we were to:
+1) move the acpi_bus_init_power call from acpi_bus_get_power_flags to
+   acpi_bus_attach, which already calls acpi_bus_init_power for uninitialized
+   devices; and
+2) move the acpi_bus_get_wakeup_device_flags call from acpi_add_single_object
+   to acpi_bus_attach. This one is tricky, because acpi_device_add checks
+   wakeup.flags.valid which gets set by this. And the acpi_wakeup_gpe_init
+   call actually is the troublesome one because it uses acpi_match_device_ids
+   which relies on the status...
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index e663d6bf1328..e1bdae2cebb6 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -713,6 +713,10 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- 		}
- 		res->start = conflict->end + 1;
- 	}
-+	/* Add 16GB guard between end of memory and new PCI window to work
-+	 * around buggy BIOS implementations.
-+	 */
-+	res->start += 0x400000000ull;
+Then we can entirely rely on the acpi_bus_get_status call in acpi_bus_attach
+and remove the acpi_bus_get_status call from the device-instantiation path.
+---
+ drivers/acpi/scan.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index e0bd49b4c3f6..ffb64424771b 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1572,6 +1572,8 @@ void acpi_init_device_object(struct acpi_device *device, acpi_handle handle,
+ 	device_initialize(&device->dev);
+ 	dev_set_uevent_suppress(&device->dev, true);
+ 	acpi_init_coherency(device);
++	/* Assume there are unmet deps until acpi_device_dep_initialize runs */
++	device->dep_unmet = 1;
+ }
  
- 	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
+ void acpi_device_add_finalize(struct acpi_device *device)
+@@ -1595,6 +1597,14 @@ static int acpi_add_single_object(struct acpi_device **child,
+ 	}
+ 
+ 	acpi_init_device_object(device, handle, type, sta);
++	/*
++	 * For ACPI_BUS_TYPE_DEVICE getting the status is delayed till here so
++	 * that we can call acpi_bus_get_status and use its quirk handling.
++	 * Note this must be done before the get power-/wakeup_dev-flags calls.
++	 */
++	if (type == ACPI_BUS_TYPE_DEVICE)
++		acpi_bus_get_status(device);
++
+ 	acpi_bus_get_power_flags(device);
+ 	acpi_bus_get_wakeup_device_flags(device);
+ 
+@@ -1667,9 +1677,11 @@ static int acpi_bus_type_and_status(acpi_handle handle, int *type,
+ 			return -ENODEV;
+ 
+ 		*type = ACPI_BUS_TYPE_DEVICE;
+-		status = acpi_bus_get_status_handle(handle, sta);
+-		if (ACPI_FAILURE(status))
+-			*sta = 0;
++		/*
++		 * acpi_add_single_object updates this once we've an acpi_device
++		 * so that acpi_bus_get_status' quirk handling can be used.
++		 */
++		*sta = 0;
+ 		break;
+ 	case ACPI_TYPE_PROCESSOR:
+ 		*type = ACPI_BUS_TYPE_PROCESSOR;
+@@ -1767,6 +1779,8 @@ static void acpi_device_dep_initialize(struct acpi_device *adev)
+ 	acpi_status status;
+ 	int i;
+ 
++	adev->dep_unmet = 0;
++
+ 	if (!acpi_has_method(adev->handle, "_DEP"))
+ 		return;
  
 -- 
-2.11.0
-
-
---------------292CEB6B2E472794B49E0431--
+2.14.3
