@@ -8,9 +8,9 @@ Cc: x86@kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 3/6] x86/jailhouse: Enable PCI mmconfig access in inmates
-Date: Mon, 22 Jan 2018 07:12:47 +0100
-Message-Id: <3c087d2882c83b70c29c5f84f36414a51b13802c.1516601570.git.jan.kiszka@siemens.com>
+Subject: [PATCH 4/6] x86: Consolidate PCI_MMCONFIG configs
+Date: Mon, 22 Jan 2018 07:12:48 +0100
+Message-Id: <5dcaec50bb59140c1cb63c35ce566ccc02188bcb.1516601570.git.jan.kiszka@siemens.com>
 In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
 References: <cover.1516601570.git.jan.kiszka@siemens.com>
 In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
@@ -18,65 +18,43 @@ References: <cover.1516601570.git.jan.kiszka@siemens.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Otavio Pontes <otavio.pontes@intel.com>
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Use the PCI mmconfig base address exported by jailhouse in boot
-parameters in order to access the memory mapped PCI configuration space.
+Not sure if those two worked by design or just by chance so far. In any
+case, it's at least cleaner and clearer to express this in a single
+config statement.
 
-Signed-off-by: Otavio Pontes <otavio.pontes@intel.com>
-[Jan: rebased, fixed !CONFIG_PCI_MMCONFIG]
 Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
- arch/x86/include/asm/pci_x86.h | 2 ++
- arch/x86/kernel/jailhouse.c    | 7 +++++++
- arch/x86/pci/mmconfig-shared.c | 4 ++--
- 3 files changed, 11 insertions(+), 2 deletions(-)
+ arch/x86/Kconfig | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index eb66fa9cd0fc..959d618dbb17 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -151,6 +151,8 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			       phys_addr_t addr);
- extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
- extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
-+extern struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
-+							int end, u64 addr);
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 423e4b64e683..f2038417a590 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2595,8 +2595,9 @@ config PCI_DIRECT
+ 	depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC || PCI_GOMMCONFIG))
  
- extern struct list_head pci_mmcfg_list;
+ config PCI_MMCONFIG
+-	def_bool y
+-	depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
++	bool "Support mmconfig PCI config space access" if X86_64
++	default y
++	depends on PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY || X86_64)
  
-diff --git a/arch/x86/kernel/jailhouse.c b/arch/x86/kernel/jailhouse.c
-index b68fd895235a..7fe2a73da0b3 100644
---- a/arch/x86/kernel/jailhouse.c
-+++ b/arch/x86/kernel/jailhouse.c
-@@ -124,6 +124,13 @@ static int __init jailhouse_pci_arch_init(void)
- 	if (pcibios_last_bus < 0)
- 		pcibios_last_bus = 0xff;
+ config PCI_OLPC
+ 	def_bool y
+@@ -2611,10 +2612,6 @@ config PCI_DOMAINS
+ 	def_bool y
+ 	depends on PCI
  
-+#ifdef CONFIG_PCI_MMCONFIG
-+	if (setup_data.pci_mmconfig_base) {
-+		pci_mmconfig_add(0, 0, 0xff, setup_data.pci_mmconfig_base);
-+		pci_mmcfg_arch_init();
-+	}
-+#endif
-+
- 	return 0;
- }
- 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 96684d0adcf9..0e590272366b 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -94,8 +94,8 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
- 	return new;
- }
- 
--static struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
--							int end, u64 addr)
-+struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
-+						 int end, u64 addr)
- {
- 	struct pci_mmcfg_region *new;
- 
+-config PCI_MMCONFIG
+-	bool "Support mmconfig PCI config space access"
+-	depends on X86_64 && PCI && ACPI
+-
+ config PCI_CNB20LE_QUIRK
+ 	bool "Read CNB20LE Host Bridge Windows" if EXPERT
+ 	depends on PCI
 -- 
 2.13.6
