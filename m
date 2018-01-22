@@ -1,34 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:32778 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752385AbeA3GGm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 01:06:42 -0500
-From: Victor Gu <xigu@marvell.com>
-To: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "pratyush.anand@gmail.com" <pratyush.anand@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Wilson Ding <dingwei@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Designware 64bit PCIe bus address support
-Date: Tue, 30 Jan 2018 06:06:37 +0000
-Message-ID: <c3a54516e4004323bdc5be30971f40f8@SC-EXCH04.marvell.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Hans de Goede <hdegoede@redhat.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robert Moore <robert.moore@intel.com>,
+        Lv Zheng <lv.zheng@intel.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, devel@acpica.org
+Subject: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices with unmet dependencies
+Date: Mon, 22 Jan 2018 09:51:30 +0100
+Message-Id: <20180122085135.16732-1-hdegoede@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo and Pratyush,
+Hi All,
 
-I am Victor Gu, SW RD from Marvell.
+Here is v2 of this set, new in v2 is the addressing of Bjorn's comments
+to the "PCI: acpiphp_ibm: prepare for acpi_get_object_info no longer
+returning status" patch and a new patch (the first patch in v2) which
+exports acpi_bus_get_status_handle() for use in modules as acpiphp_ibm
+will now depend on it.
 
-During the testing we found the designware PCIe works well with 64 bit CPU address and 32 bit PCIe bus address(translated by ATU).
-But cannot access the PCIe EP if both of them use the 64 bit CPU address, such as 0x800000000.
+Here is the old coverletter from v1 (adjusted for the new patch):
 
-Do you know if the designware PCIe IP supports 64 bit PCIe bus address?
-And if the designware PCIe Linux driver supports 64 bit PCIe bus address?
+The ACPI code already contains quite a bit of code to not bind the
+ACPI-battery until all deps for an ACPI battery device have been met,
+but on some devices calling _STA before all deps are met is a problem
+too because the _STA method uses an i2c OpRegion there.
 
-Thank you for the help!
+Here is the DSDT of the device I'm seeing this on:
+https://fedorapeople.org/~jwrdegoede/toshiba-click-mini-dsdt.dsl
 
-Best Regards,
-Victor Gu
+This series modifies the kernel to not call _STA until all deps are met,
+mirroring the binding behavior of the battery driver.
+
+Without this series a total of 32 ACPI errors get printend to the console
+on boot, there are 4 errors per _STA call, 2 battery devices on this
+system and 4 _STA calls per battery device.
+
+The first 2 commits are preparation commits for making the ACPICA changes
+in the 4th commit, these commits are necessary to not break things after
+the ACPICA changes.
+
+The 3th commit modifies acpi_bus_get_status to not call _STA on
+battery devices until all deps are met. This fixes 2 of the 4 too early
+_STA calls triggering these errors.
+
+The 4th commit makes the device instantiation code use
+acpi_bus_get_status instead of acpi_bus_get_status_handle so that the
+code to get the initial status also does not makes 1 too early _STA call.
+
+The 5th commit changes the ACPICA acpi_get_object_info function to not
+call _STA. Only 1 user (which is fixed in the first commit) cares about
+acpi_device_info.current_status. And the ACPICA code has this comment:
+
+ * Note: This interface is intended to be used during the initial device
+ * discovery namespace traversal. Therefore, no complex methods can be
+ * executed, especially those that access operation regions. Therefore, do
+ * not add any additional methods that could cause problems in this area.
+ * Because of this reason support for the following methods has been removed:
+ * this was the fate of the _SUB method which was found to cause such
+ * problems and was removed (11/2015).
+
+The described problems with the _SUB method clearly also apply to the _STA
+method, so removing it from acpi_get_object_info seems like it is the right
+thing to do here. This too fixes 1 too early _STA call, so that with all
+5 patches in place we've fixed all 4 too early _STA calls.
+
+Regards,
+
+Hans
