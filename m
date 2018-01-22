@@ -1,53 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54400 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751072AbeA2SDy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Jan 2018 13:03:54 -0500
-Date: Mon, 29 Jan 2018 12:03:49 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tobias Schramm <tobleminer@gmail.com>
-Cc: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] pci: Add vendor id of Ubiquiti Networks
-Message-ID: <20180129180349.GB232763@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180125111340.17553-1-tobleminer@gmail.com>
- <20180125111340.17553-2-tobleminer@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180125111340.17553-2-tobleminer@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180122085135.16732-2-hdegoede@redhat.com>
+References: <20180122085135.16732-1-hdegoede@redhat.com> <20180122085135.16732-2-hdegoede@redhat.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 23 Jan 2018 00:55:33 +0100
+Message-ID: <CAJZ5v0g7KppXpk_jRWjKz8-ncdJQHg-QU7oGrgPiBtczgf+gfQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/5] ACPI: export acpi_bus_get_status_handle()
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Robert Moore <robert.moore@intel.com>,
+        Lv Zheng <lv.zheng@intel.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>, devel@acpica.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 25, 2018 at 12:13:39PM +0100, Tobias Schramm wrote:
-> Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-I see Kalle has already applied this, but if it's updated for any reason,
-please add my ack and change the subject to:
-
-  PCI: Add Ubiquiti Networks vendor ID
-
-i.e., match the style of previous changes.
-
+On Mon, Jan 22, 2018 at 9:51 AM, Hans de Goede <hdegoede@redhat.com> wrote:
+> Some modular drivers need this, export it.
+>
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 > ---
->  include/linux/pci_ids.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index ab20dc5db423..35871adfdc86 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -149,6 +149,8 @@
->  #define PCI_VENDOR_ID_DYNALINK		0x0675
->  #define PCI_DEVICE_ID_DYNALINK_IS64PH	0x1702
->  
-> +#define PCI_VENDOR_ID_UBIQUITI		0x0777
-> +
->  #define PCI_VENDOR_ID_BERKOM			0x0871
->  #define PCI_DEVICE_ID_BERKOM_A1T		0xffa1
->  #define PCI_DEVICE_ID_BERKOM_T_CONCEPT		0xffa2
-> -- 
-> 2.16.0
-> 
+> Changes in v2:
+> -This is a new patch in v2 of this patch-set
+> ---
+>  drivers/acpi/bus.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+> index 4d0979e02a28..db0c05997cc2 100644
+> --- a/drivers/acpi/bus.c
+> +++ b/drivers/acpi/bus.c
+> @@ -108,6 +108,7 @@ acpi_status acpi_bus_get_status_handle(acpi_handle handle,
+>         }
+>         return status;
+>  }
+> +EXPORT_SYMBOL(acpi_bus_get_status_handle);
+
+EXPORT_SYMBOL_GPL(), please.
+
+>
+>  int acpi_bus_get_status(struct acpi_device *device)
+>  {
+> --
