@@ -1,59 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26209 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751238AbeAQFS4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jan 2018 00:18:56 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Maik Broemme <mbroemme@libmpq.org>,
-        Pawandeep Oza <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 6/6] PCI/DPC: Enable ERR_COR
-Date: Tue, 16 Jan 2018 22:22:06 -0700
-Message-Id: <20180117052206.7703-7-keith.busch@intel.com>
-In-Reply-To: <20180117052206.7703-1-keith.busch@intel.com>
-References: <20180117052206.7703-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v11 2/9] PCI: Remove unused __weak attribute in
+ pci_register_io_range()
+To: <bhelgaas@google.com>
+References: <1516537647-50553-1-git-send-email-john.garry@huawei.com>
+ <1516537647-50553-3-git-send-email-john.garry@huawei.com>
+CC: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <robh+dt@kernel.org>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <hanjun.guo@linaro.org>,
+        <dann.frazier@canonical.com>, <benh@kernel.crashing.org>,
+        <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linuxarm@huawei.com>, <linux-pci@vger.kernel.org>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <6816e715-df0f-ddff-d19d-de2d0f3101c7@huawei.com>
+Date: Mon, 22 Jan 2018 11:59:20 +0000
+MIME-Version: 1.0
+In-Reply-To: <1516537647-50553-3-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A DPC port may be configured to send ERR_COR message when the
-triggered. This patch enables this feature so additional notification
-of the event is possible.
+On 21/01/2018 12:27, John Garry wrote:
+> From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>
+> Currently pci_register_io_range() has only one definition;
+> therefore there is no use of the __weak attribute.
+>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/pcie-dpc.c   | 5 ++++-
- include/uapi/linux/pci_regs.h | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+Hi Bjorn,
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 5dfdb4935bac..b7b327367588 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -347,7 +347,10 @@ static int dpc_probe(struct pcie_device *dev)
- 
- 	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
- 
--	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
-+	ctl = (ctl & 0xfff4) |
-+		PCI_EXP_DPC_CTL_EN_NONFATAL |
-+		PCI_EXP_DPC_CTL_INT_EN |
-+		PCI_EXP_DPC_CTL_ERR_COR;
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
- 
- 	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 295a5ebdf9e4..0bee9a99dae1 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -976,6 +976,7 @@
- #define PCI_EXP_DPC_CTL			6	/* DPC control */
- #define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x02	/* Enable trigger on ERR_NONFATAL message */
- #define  PCI_EXP_DPC_CTL_INT_EN 	0x08	/* DPC Interrupt Enable */
-+#define  PCI_EXP_DPC_CTL_ERR_COR 	0x10	/* DPC ERR_COR Enable */
- 
- #define PCI_EXP_DPC_STATUS		8	/* DPC Status */
- #define  PCI_EXP_DPC_STATUS_TRIGGER	0x01	/* Trigger Status */
--- 
-2.13.6
+So I will need to respin this series again (and it still requires many 
+more SOB tags), so do you want to pick up this minor patch in isolation 
+now? It would save me carrying it, and save people receiving it in future.
+
+Thanks,
+John
+
+>  drivers/pci/pci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 764ca7b..d8357ff 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3383,7 +3383,7 @@ struct io_range {
+>   * Record the PCI IO range (expressed as CPU physical address + size).
+>   * Return a negative value if an error has occured, zero otherwise
+>   */
+> -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> +int pci_register_io_range(phys_addr_t addr, resource_size_t size)
+>  {
+>  	int err = 0;
+>
+>
+
+
