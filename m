@@ -1,100 +1,82 @@
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v3 5/7] powerpc/kernel: Add EEH notify resume sysfs
-Date: Wed,  3 Jan 2018 11:16:31 -0600
-In-Reply-To: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20180103171633.94499-6-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: [PATCH 3/6] x86/jailhouse: Enable PCI mmconfig access in inmates
+Date: Mon, 22 Jan 2018 07:12:47 +0100
+Message-Id: <3c087d2882c83b70c29c5f84f36414a51b13802c.1516601570.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
+References: <cover.1516601570.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
+References: <cover.1516601570.git.jan.kiszka@siemens.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a method for notify resume to be
-called from sysfs. In this patch one can
-now call notify resume from sysfs when
-is supported by platform.
+From: Otavio Pontes <otavio.pontes@intel.com>
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+Use the PCI mmconfig base address exported by jailhouse in boot
+parameters in order to access the memory mapped PCI configuration space.
+
+Signed-off-by: Otavio Pontes <otavio.pontes@intel.com>
+[Jan: rebased, fixed !CONFIG_PCI_MMCONFIG]
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
- arch/powerpc/kernel/eeh_sysfs.c | 46 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 45 insertions(+), 1 deletion(-)
+ arch/x86/include/asm/pci_x86.h | 2 ++
+ arch/x86/kernel/jailhouse.c    | 7 +++++++
+ arch/x86/pci/mmconfig-shared.c | 4 ++--
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/kernel/eeh_sysfs.c b/arch/powerpc/kernel/eeh_sysfs.c
-index 797549289798..344e7607f2e0 100644
---- a/arch/powerpc/kernel/eeh_sysfs.c
-+++ b/arch/powerpc/kernel/eeh_sysfs.c
-@@ -90,6 +90,38 @@ static ssize_t eeh_pe_state_store(struct device *dev,
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index eb66fa9cd0fc..959d618dbb17 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -151,6 +151,8 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			       phys_addr_t addr);
+ extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
++extern struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
++							int end, u64 addr);
  
- static DEVICE_ATTR_RW(eeh_pe_state);
+ extern struct list_head pci_mmcfg_list;
  
-+#ifdef CONFIG_PCI_IOV
-+static ssize_t eeh_notify_resume_show(struct device *dev,
-+				      struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct eeh_dev *edev = pci_dev_to_eeh_dev(pdev);
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+
-+	if (!edev || !edev->pe)
-+		return -ENODEV;
-+
-+	pdn = pci_get_pdn(pdev);
-+	return sprintf(buf, "%d\n", pdn->last_allow_rc);
-+}
-+
-+static ssize_t eeh_notify_resume_store(struct device *dev,
-+				       struct device_attribute *attr,
-+				       const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct eeh_dev *edev = pci_dev_to_eeh_dev(pdev);
-+
-+	if (!edev || !edev->pe)
-+		return -ENODEV;
-+
-+	if (eeh_ops->notify_resume(pci_get_pdn(pdev)))
-+		return -EIO;
-+	return count;
-+}
-+static DEVICE_ATTR_RW(eeh_notify_resume);
+diff --git a/arch/x86/kernel/jailhouse.c b/arch/x86/kernel/jailhouse.c
+index b68fd895235a..7fe2a73da0b3 100644
+--- a/arch/x86/kernel/jailhouse.c
++++ b/arch/x86/kernel/jailhouse.c
+@@ -124,6 +124,13 @@ static int __init jailhouse_pci_arch_init(void)
+ 	if (pcibios_last_bus < 0)
+ 		pcibios_last_bus = 0xff;
+ 
++#ifdef CONFIG_PCI_MMCONFIG
++	if (setup_data.pci_mmconfig_base) {
++		pci_mmconfig_add(0, 0, 0xff, setup_data.pci_mmconfig_base);
++		pci_mmcfg_arch_init();
++	}
 +#endif
 +
- void eeh_sysfs_add_device(struct pci_dev *pdev)
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 96684d0adcf9..0e590272366b 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -94,8 +94,8 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+ 	return new;
+ }
+ 
+-static struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
+-							int end, u64 addr)
++struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
++						 int end, u64 addr)
  {
- 	struct eeh_dev *edev = pci_dev_to_eeh_dev(pdev);
-@@ -104,7 +136,13 @@ void eeh_sysfs_add_device(struct pci_dev *pdev)
- 	rc += device_create_file(&pdev->dev, &dev_attr_eeh_mode);
- 	rc += device_create_file(&pdev->dev, &dev_attr_eeh_pe_config_addr);
- 	rc += device_create_file(&pdev->dev, &dev_attr_eeh_pe_state);
--
-+#ifdef CONFIG_PCI_IOV
-+	if (of_get_property(pci_device_to_OF_node
-+			    ((pdev->is_physfn ? pdev : pdev->physfn)),
-+			    "ibm,is-open-sriov-pf", NULL))
-+		rc += device_create_file(&pdev->dev,
-+					 &dev_attr_eeh_notify_resume);
-+#endif
- 	if (rc)
- 		pr_warn("EEH: Unable to create sysfs entries\n");
- 	else if (edev)
-@@ -128,6 +166,12 @@ void eeh_sysfs_remove_device(struct pci_dev *pdev)
- 	device_remove_file(&pdev->dev, &dev_attr_eeh_mode);
- 	device_remove_file(&pdev->dev, &dev_attr_eeh_pe_config_addr);
- 	device_remove_file(&pdev->dev, &dev_attr_eeh_pe_state);
-+#ifdef CONFIG_PCI_IOV
-+	if (of_get_property(pci_device_to_OF_node
-+			    ((pdev->is_physfn ? pdev : pdev->physfn)),
-+			    "ibm,is-open-sriov-pf", NULL))
-+		device_remove_file(&pdev->dev, &dev_attr_eeh_notify_resume);
-+#endif
+ 	struct pci_mmcfg_region *new;
  
- 	if (edev)
- 		edev->mode &= ~EEH_DEV_SYSFS;
 -- 
-2.14.3 (Apple Git-98)
+2.13.6
