@@ -1,87 +1,317 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Subject: [PATCH 5/6] x86/jailhouse: Allow to use PCI_MMCONFIG without ACPI
-Date: Mon, 22 Jan 2018 07:12:49 +0100
-Message-Id: <825040fe16c7d19b7fb48ed90c5e133412d55cc3.1516601570.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
-References: <cover.1516601570.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
-References: <cover.1516601570.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:59742 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751173AbeAWMZn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:43 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v5 8/9] PCI: dwc: Remove IRQ domain hierarchy API support
+Date: Tue, 23 Jan 2018 12:25:31 +0000
+Message-Id: <2e13af4582771c00dee53a02c44f4c55efab2eed.1516701516.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+Removes the unused IRQ domain hierarchy API support from pcie-designware.
 
-Jailhouse does not use ACPI, but it does support MMCONFIG. Make sure the
-latter can be built without having to enable ACPI as well. Primarily, we
-need to make the AMD mmconf-fam10h_64 depend upon MMCONFIG and ACPI,
-instead of just the former.
-
-Saves some bytes in the Jailhouse non-root kernel.
-
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- arch/x86/Kconfig          | 6 +++++-
- arch/x86/kernel/Makefile  | 2 +-
- arch/x86/kernel/cpu/amd.c | 2 +-
- 3 files changed, 7 insertions(+), 3 deletions(-)
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Patch renamed from v3-0008 to v4-0009.
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index f2038417a590..77ba0eb0a258 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2597,7 +2597,7 @@ config PCI_DIRECT
- config PCI_MMCONFIG
- 	bool "Support mmconfig PCI config space access" if X86_64
- 	default y
--	depends on PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY || X86_64)
-+	depends on PCI && (ACPI || SFI || JAILHOUSE_GUEST) && (PCI_GOMMCONFIG || PCI_GOANY || X86_64)
+ drivers/pci/dwc/pci-keystone-dw.c      |   2 +-
+ drivers/pci/dwc/pci-keystone.h         |   3 +-
+ drivers/pci/dwc/pci-layerscape.c       |   3 +-
+ drivers/pci/dwc/pcie-designware-host.c | 190 +--------------------------------
+ drivers/pci/dwc/pcie-designware.h      |   2 +-
+ 5 files changed, 5 insertions(+), 195 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+index ace498e..7705814 100644
+--- a/drivers/pci/dwc/pci-keystone-dw.c
++++ b/drivers/pci/dwc/pci-keystone-dw.c
+@@ -161,7 +161,7 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+ 			 BIT(bit_pos));
+ }
  
- config PCI_OLPC
- 	def_bool y
-@@ -2612,6 +2612,10 @@ config PCI_DOMAINS
- 	def_bool y
- 	depends on PCI
- 
-+config MMCONF_FAM10H
-+	def_bool y
-+	depends on PCI_MMCONFIG && ACPI
-+
- config PCI_CNB20LE_QUIRK
- 	bool "Read CNB20LE Host Bridge Windows" if EXPERT
- 	depends on PCI
-diff --git a/arch/x86/kernel/Makefile b/arch/x86/kernel/Makefile
-index aed9296dccd3..b2c9e230e2fe 100644
---- a/arch/x86/kernel/Makefile
-+++ b/arch/x86/kernel/Makefile
-@@ -143,6 +143,6 @@ ifeq ($(CONFIG_X86_64),y)
- 	obj-$(CONFIG_GART_IOMMU)	+= amd_gart_64.o aperture_64.o
- 	obj-$(CONFIG_CALGARY_IOMMU)	+= pci-calgary_64.o tce_64.o
- 
--	obj-$(CONFIG_PCI_MMCONFIG)	+= mmconf-fam10h_64.o
-+	obj-$(CONFIG_MMCONF_FAM10H)	+= mmconf-fam10h_64.o
- 	obj-y				+= vsmp_64.o
- endif
-diff --git a/arch/x86/kernel/cpu/amd.c b/arch/x86/kernel/cpu/amd.c
-index ea831c858195..47edf599f6fd 100644
---- a/arch/x86/kernel/cpu/amd.c
-+++ b/arch/x86/kernel/cpu/amd.c
-@@ -690,7 +690,7 @@ static void init_amd_k8(struct cpuinfo_x86 *c)
- 
- static void init_amd_gh(struct cpuinfo_x86 *c)
+-int ks_dw_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
++int ks_dw_pcie_msi_host_init(struct pcie_port *pp)
  {
--#ifdef CONFIG_X86_64
-+#ifdef CONFIG_MMCONF_FAM10H
- 	/* do this for boot cpu */
- 	if (c == &boot_cpu_data)
- 		check_enable_amd_mmconf_dmi();
+ 	return dw_pcie_allocate_domains(pp);
+ }
+diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
+index aed3c73..8ac2f12 100644
+--- a/drivers/pci/dwc/pci-keystone.h
++++ b/drivers/pci/dwc/pci-keystone.h
+@@ -57,6 +57,5 @@ void ks_dw_pcie_msi_irq_ack(int i, struct pcie_port *pp);
+ void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq);
+ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq);
+ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp);
+-int ks_dw_pcie_msi_host_init(struct pcie_port *pp,
+-		struct msi_controller *chip);
++int ks_dw_pcie_msi_host_init(struct pcie_port *pp);
+ int ks_dw_pcie_link_up(struct dw_pcie *pci);
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 8f34c2f..e77ff65 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -185,8 +185,7 @@ static int ls1021_pcie_host_init(struct pcie_port *pp)
+ 	return ls_pcie_host_init(pp);
+ }
+ 
+-static int ls_pcie_msi_host_init(struct pcie_port *pp,
+-				 struct msi_controller *chip)
++static int ls_pcie_msi_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct device *dev = pci->dev;
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 6554475..df5c90f 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -46,14 +46,6 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	return dw_pcie_write(pci->dbi_base + where, size, val);
+ }
+ 
+-static struct irq_chip dw_msi_irq_chip = {
+-	.name = "PCI-MSI",
+-	.irq_enable = pci_msi_unmask_irq,
+-	.irq_disable = pci_msi_mask_irq,
+-	.irq_mask = pci_msi_mask_irq,
+-	.irq_unmask = pci_msi_unmask_irq,
+-};
+-
+ static void dw_msi_ack_irq(struct irq_data *d)
+ {
+ 	irq_chip_ack_parent(d);
+@@ -325,186 +317,6 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 			    upper_32_bits(msi_target));
+ }
+ 
+-static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+-{
+-	unsigned int res, bit, ctrl;
+-
+-	ctrl = irq / 32;
+-	res = ctrl * 12;
+-	bit = irq % 32;
+-	pp->irq_status[ctrl] &= ~(1 << bit);
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+-			    pp->irq_status[ctrl]);
+-}
+-
+-static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
+-			    unsigned int nvec, unsigned int pos)
+-{
+-	unsigned int i;
+-
+-	for (i = 0; i < nvec; i++) {
+-		irq_set_msi_desc_off(irq_base, i, NULL);
+-		/* Disable corresponding interrupt on MSI controller */
+-		if (pp->ops->msi_clear_irq)
+-			pp->ops->msi_clear_irq(pp, pos + i);
+-		else
+-			dw_pcie_msi_clear_irq(pp, pos + i);
+-	}
+-
+-	bitmap_release_region(pp->msi_irq_in_use, pos, order_base_2(nvec));
+-}
+-
+-static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+-{
+-	unsigned int res, bit, ctrl;
+-
+-	ctrl = irq / 32;
+-	res = ctrl * 12;
+-	bit = irq % 32;
+-	pp->irq_status[ctrl] |= 1 << bit;
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+-			    pp->irq_status[ctrl]);
+-}
+-
+-static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+-{
+-	int irq, pos0, i;
+-	struct pcie_port *pp;
+-
+-	pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
+-	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
+-				       order_base_2(no_irqs));
+-	if (pos0 < 0)
+-		goto no_valid_irq;
+-
+-	irq = irq_find_mapping(pp->irq_domain, pos0);
+-	if (!irq)
+-		goto no_valid_irq;
+-
+-	/*
+-	 * irq_create_mapping (called from dw_pcie_host_init) pre-allocates
+-	 * descs so there is no need to allocate descs here. We can therefore
+-	 * assume that if irq_find_mapping above returns non-zero, then the
+-	 * descs are also successfully allocated.
+-	 */
+-
+-	for (i = 0; i < no_irqs; i++) {
+-		if (irq_set_msi_desc_off(irq, i, desc) != 0) {
+-			clear_irq_range(pp, irq, i, pos0);
+-			goto no_valid_irq;
+-		}
+-		/*Enable corresponding interrupt in MSI interrupt controller */
+-		if (pp->ops->msi_set_irq)
+-			pp->ops->msi_set_irq(pp, pos0 + i);
+-		else
+-			dw_pcie_msi_set_irq(pp, pos0 + i);
+-	}
+-
+-	*pos = pos0;
+-	desc->nvec_used = no_irqs;
+-	desc->msi_attrib.multiple = order_base_2(no_irqs);
+-
+-	return irq;
+-
+-no_valid_irq:
+-	*pos = pos0;
+-	return -ENOSPC;
+-}
+-
+-static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+-{
+-	struct msi_msg msg;
+-	u64 msi_target;
+-
+-	if (pp->ops->get_msi_addr)
+-		msi_target = pp->ops->get_msi_addr(pp);
+-	else
+-		msi_target = (u64)pp->msi_data;
+-
+-	msg.address_lo = (u32)(msi_target & 0xffffffff);
+-	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+-
+-	if (pp->ops->get_msi_data)
+-		msg.data = pp->ops->get_msi_data(pp, pos);
+-	else
+-		msg.data = pos;
+-
+-	pci_write_msi_msg(irq, &msg);
+-}
+-
+-static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+-			    struct msi_desc *desc)
+-{
+-	int irq, pos;
+-	struct pcie_port *pp = pdev->bus->sysdata;
+-
+-	if (desc->msi_attrib.is_msix)
+-		return -EINVAL;
+-
+-	irq = assign_irq(1, desc, &pos);
+-	if (irq < 0)
+-		return irq;
+-
+-	dw_msi_setup_msg(pp, irq, pos);
+-
+-	return 0;
+-}
+-
+-static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+-			     int nvec, int type)
+-{
+-#ifdef CONFIG_PCI_MSI
+-	int irq, pos;
+-	struct msi_desc *desc;
+-	struct pcie_port *pp = pdev->bus->sysdata;
+-
+-	/* MSI-X interrupts are not supported */
+-	if (type == PCI_CAP_ID_MSIX)
+-		return -EINVAL;
+-
+-	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
+-	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
+-
+-	irq = assign_irq(nvec, desc, &pos);
+-	if (irq < 0)
+-		return irq;
+-
+-	dw_msi_setup_msg(pp, irq, pos);
+-
+-	return 0;
+-#else
+-	return -EINVAL;
+-#endif
+-}
+-
+-static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+-{
+-	struct irq_data *data = irq_get_irq_data(irq);
+-	struct msi_desc *msi = irq_data_get_msi_desc(data);
+-	struct pcie_port *pp = (struct pcie_port *)msi_desc_to_pci_sysdata(msi);
+-
+-	clear_irq_range(pp, irq, 1, data->hwirq);
+-}
+-
+-static struct msi_controller dw_pcie_msi_chip = {
+-	.setup_irq = dw_msi_setup_irq,
+-	.setup_irqs = dw_msi_setup_irqs,
+-	.teardown_irq = dw_msi_teardown_irq,
+-};
+-
+-static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+-			   irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-
+-	return 0;
+-}
+-
+-static const struct irq_domain_ops msi_domain_ops = {
+-	.map = dw_pcie_msi_map,
+-};
+-
+ int dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -644,7 +456,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 							    dw_chained_msi_isr,
+ 							    pp);
+ 		} else {
+-			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
++			ret = pp->ops->msi_host_init(pp);
+ 			if (ret < 0)
+ 				goto error;
+ 		}
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index b603e88..c77c2e0 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -154,7 +154,7 @@ struct dw_pcie_host_ops {
+ 	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
+ 	void (*scan_bus)(struct pcie_port *pp);
+ 	void (*set_num_vectors)(struct pcie_port *pp);
+-	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
++	int (*msi_host_init)(struct pcie_port *pp);
+ 	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
+ };
+ 
 -- 
-2.13.6
+2.7.4
