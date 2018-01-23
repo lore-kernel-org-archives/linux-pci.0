@@ -1,68 +1,96 @@
-Return-Path: <SRS0=dPij=ET=gmail.com=linus971@kernel.org>
-Return-Path: <SRS0=dPij=ET=gmail.com=linus971@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ns.mm-sol.com ([37.157.136.199]:46130 "EHLO extserv.mm-sol.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751154AbeAWJXy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Jan 2018 04:23:54 -0500
+Subject: Re: [PATCH] PCI: qcom: add missing supplies required for msm8996
+To: srinivas.kandagatla@linaro.org, stanimir.varbanov@linaro.org,
+        linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        robh+dt@kernel.org, devicetree@vger.kernel.org
+References: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <65e01829-198e-f549-174d-c8368c5ee193@mm-sol.com>
+Date: Tue, 23 Jan 2018 11:23:45 +0200
 MIME-Version: 1.0
-Sender: linus971@gmail.com
-In-Reply-To: <20180124202501.yoy65ubq2zqumehn@chibold.localdomain>
-References: <20180123195644.GA92112@bhelgaas-glaptop.roam.corp.google.com>
- <CA+55aFxFp_rjSviLUEH-uZ1U=x_g-xiAFKoEQqOOxZQs4xV11A@mail.gmail.com>
- <20180124004603.GH5317@bhelgaas-glaptop.roam.corp.google.com>
- <CA+55aFwpmqZUnD=3U23c-r89XmyncoXQzK7+b8AyuQ9+soC19g@mail.gmail.com>
- <20180124162027.GI5317@bhelgaas-glaptop.roam.corp.google.com>
- <CA+55aFzLwPDYz2dEM_X8Ase7+tLJDGU=ChasesP0ZGii4-D7Ow@mail.gmail.com> <20180124202501.yoy65ubq2zqumehn@chibold.localdomain>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 24 Jan 2018 12:48:25 -0800
-Message-ID: <CA+55aFxf6ALo=1ODt76rN6FMM7RN12v_RHM-XB-hD1f9oqq1TQ@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI fixes for v4.15
-To: Peter Grayson <jpgrayson@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Catalin Marinas <catalin.marinas@gmail.com>,
-	linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>, Juergen Gross <jgross@suse.com>,
-	Alex Deucher <alexander.deucher@amd.com>, David Airlie <airlied@linux.ie>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 24, 2018 at 12:25 PM, Peter Grayson <jpgrayson@gmail.com> wrote:
->
-> The latest stgit release (v0.18) ignores any mis-encoding of the email
-> body. However, stgit master now decodes email bodies and is thus exposed
-> to this kind of stray latin-1 character in a UTF-8 body.
->
-> I believe stgit's goal should be to identify and repair this kind of
-> issue as git does. I will be working on that.
+Hey Srini,
 
-Yes, good. The "latin1 vs utf-8" confusion is sadly still somewhat
-common in Western Europe, from personal experience. People just got
-used to Latin1 working almost by accident without any explicit
-encoding, possibly _because_ it also acts as the first 256 bytes of
-unicode.
+As there are no comments I'd propose to change the endpoint supplies to
+more generic names.
 
-I suspect the old 8-bit DOS character set (aka "code page 437") is
-perhaps even more commonly seen in some situations, just not in unix
-development contexts.. And it lacks a number of the (admittedly rarer)
-European accented characters anyway.
+On 12/08/2017 11:20 AM, srinivas.kandagatla@linaro.org wrote:
+> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> 
+> This patch adds supplies that are required for msm8996. Two of them vdda
+> and vdda-1p8 are analog supplies that go in to controller, and the rest
+> of the two vddpe's are supplies to PCIe endpoints.
+> 
+> Without these supplies PCIe endpoints which require power supplies are
+> not enumerated at all, as there is no one to power it up.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> ---
+>  .../devicetree/bindings/pci/qcom,pcie.txt          | 16 +++++++++++++
+>  drivers/pci/dwc/pcie-qcom.c                        | 28 ++++++++++++++++++++--
+>  2 files changed, 42 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> index 3c9d321b3d3b..045102cb3e12 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> @@ -179,6 +179,11 @@
+>  	Value type: <phandle>
+>  	Definition: A phandle to the core analog power supply
+>  
+> +- vdda-1p8-supply:
+> +	Usage: required for msm8996
+> +	Value type: <phandle>
+> +	Definition: A phandle to the 1.8v analog power supply
+> +
 
-So git basically first does a conversion according to the stated
-encoding, but after that conversion it will then do another pass to
-actually verify that the end result is valid utf-8, and if not, do the
-(trivial) latin1 -> utf-8 conversion.
+This should be dropped, because it is part of the phy.
 
-And part of the reason for that latin1 special case is very much the
-whole "it's trivial" part. So it's not _just_ about "common error in
-western emails", it's also simply that Latin1 really is special in the
-Unicode domain.
+>  - vdda_phy-supply:
+>  	Usage: required for ipq/apq8064
+>  	Value type: <phandle>
+> @@ -189,6 +194,15 @@
+>  	Value type: <phandle>
+>  	Definition: A phandle to the analog power supply for IC which generates
+>  		    reference clock
+> +- vddpe-supply:
+> +	Usage: optional
+> +	Value type: <phandle>
+> +	Definition: A phandle to the PCIe endpoint power supply
 
-No other character set has that trivial conversion into utf-8.
+vddpe_3v3-supply
 
-See verify_utf8() in commit.c in the git code.
+> +
+> +- vddpe1-supply:
+> +	Usage: optional
+> +	Value type: <phandle>
+> +	Definition: A phandle to the PCIe endpoint power supply 1
 
-> Unfortunately, the head of stgit master does not yet solve this issue. I
-> am working to remedy that.
+vddpe_1v5-supply
 
-Thanks. We used to be *horrible* about getting "complex" names right
-in the kernel logs, but I've tried to make sure that we actually get
-this right and have proper names for the last many years.
+>  
+>  - phys:
+>  	Usage: required for apq8084
+> @@ -205,6 +219,8 @@
+>  	Value type: <prop-encoded-array>
+>  	Definition: List of phandle and GPIO specifier pairs. Should contain
+>  			- "perst-gpios"	PCIe endpoint reset signal line
+> +			- "pe_en-gpios"	PCIe endpoint enable signal line
+> +			- "pe_en1-gpios" PCIe endpoint enable1 signal line
 
-              Linus
+We don't need those gpios, the regulator driver will manipulate these
+gpios when we call regulator_enable/disable.
+
+
+-- 
+regards,
+Stan
