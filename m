@@ -1,50 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 17 Jan 2018 14:02:31 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V4 11/26] iommu/amd: deprecate pci_get_bus_and_slot()
-Message-ID: <20180117130231.GP28161@8bytes.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-12-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1513661883-28662-12-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>,
- "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:59731 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751161AbeAWMZn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:43 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v5 9/9] PCI: dwc: Expand maximum number of IRQs from 32 to 256
+Date: Tue, 23 Jan 2018 12:25:32 +0000
+Message-Id: <bd521cc018506a872fac2a47a482aeb554e071af.1516701516.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 19, 2017 at 12:37:47AM -0500, Sinan Kaya wrote:
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Getting ready to remove pci_get_bus_and_slot() function in favor of
-> pci_get_domain_bus_and_slot().
-> 
-> Hard-code the domain number as 0 for the AMD IOMMU driver.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/iommu/amd_iommu.c      | 3 ++-
->  drivers/iommu/amd_iommu_init.c | 9 +++++----
->  drivers/iommu/amd_iommu_v2.c   | 3 ++-
->  3 files changed, 9 insertions(+), 6 deletions(-)
+The Synopsys PCIe Root Complex supports up to 256 IRQs distributed by 8
+controller registers.
 
-Acked-by: Joerg Roedel <jroedel@suse.de>
+Having this in mind, the number of the maximum number of IRQs was changed
+to 256 and now the number of controllers is calculated based on the number
+of vectors used by the specific SoC driver.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- New patch file.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Patch renamed from v3-0009 to v4-0010.
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
+
+ drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
+ drivers/pci/dwc/pcie-designware.h      | 10 +++-------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index df5c90f..fb1e821 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -79,11 +79,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+ /* MSI int handler */
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ {
+-	u32 val;
+ 	int i, pos, irq;
++	u32 val, num_ctrls;
+ 	irqreturn_t ret = IRQ_NONE;
+ 
+-	for (i = 0; i < MAX_MSI_CTRLS; i++) {
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
++	for (i = 0; i < num_ctrls; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+ 				    &val);
+ 		if (!val)
+@@ -644,13 +646,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+-	u32 val, ctrl;
++	u32 val, ctrl, num_ctrls;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 
+ 	dw_pcie_setup(pci);
+ 
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
+ 	/* Initialize IRQ Status array */
+-	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
++	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+ 				    &pp->irq_status[ctrl]);
+ 	/* setup RC BARs */
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index c77c2e0..074bd14 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -110,13 +110,9 @@
+ #define MSI_MESSAGE_DATA_32		0x58
+ #define MSI_MESSAGE_DATA_64		0x5C
+ 
+-/*
+- * Maximum number of MSI IRQs can be 256 per controller. But keep
+- * it 32 as of now. Probably we will never need more than 32. If needed,
+- * then increment it in multiple of 32.
+- */
+-#define MAX_MSI_IRQS			32
+-#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
++#define MAX_MSI_IRQS			256
++#define MAX_MSI_IRQS_PER_CTRL		32
++#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+ #define MSI_DEF_NUM_VECTORS		32
+ 
+ /* Maximum number of inbound/outbound iATUs */
+-- 
+2.7.4
