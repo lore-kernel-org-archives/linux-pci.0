@@ -1,81 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:23967 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757886AbeAHOcB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Jan 2018 09:32:01 -0500
-Subject: Re: [PATCH 6/7] PM: i2c-designware-platdrv: Optimize power management
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@the-dreams.de>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
- <2436726.ykYRzVD45y@aspire.rjw.lan> <6243259.Xh4soKtjBb@aspire.rjw.lan>
-From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Message-ID: <bb17c593-d8ab-ace6-4127-249da0b8af54@linux.intel.com>
-Date: Mon, 8 Jan 2018 16:31:58 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
+        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
+        <dann.frazier@canonical.com>
+CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
+        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+        <rdunlap@infradead.org>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: [PATCH v12 3/9] PCI: Add fwnode handler as input param of pci_register_io_range()
+Date: Wed, 24 Jan 2018 00:36:19 +0800
+Message-ID: <1516725385-24535-4-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
+References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <6243259.Xh4soKtjBb@aspire.rjw.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/03/2018 02:37 AM, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Optimize the power management in i2c-designware-platdrv by making it
-> set the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED which
-> allows some code to be dropped from its PM callbacks.
-> 
-> First, setting DPM_FLAG_SMART_SUSPEND causes the intel-lpss driver
-> to avoid resuming i2c-designware-platdrv devices in its ->prepare
-> callback, so they can stay in runtime suspend after that point even
-> if the direct-complete feature is not used for them.
-> 
-> It also causes the ACPI PM domain and the PM core to avoid invoking
-> "late" and "noirq" suspend callbacks for these devices if they are
-> in runtime suspend at the beginning of the "late" phase of device
-> suspend during system suspend.  That guarantees dw_i2c_plat_suspend()
-> to be called for a device only if it is not in runtime suspend.
-> 
-> Moreover, it causes the device's runtime PM status to be set to
-> "active" after calling dw_i2c_plat_resume() for it, so the
-> driver doesn't need internal flags to avoid invoking either
-> dw_i2c_plat_suspend() or dw_i2c_plat_resume() twice in a row.
-> 
-> Second, setting DPM_FLAG_LEAVE_SUSPENDED enables the optimization
-> allowing the device to stay suspended after system resume under
-> suitable conditions, so again the driver doesn't need to take
-> care of that by itself.
-> 
-> Accordingly, the internal "suspended" and "skip_resume" flags
-> used by the driver are not necessary any more, so drop them and
-> simplify the driver's PM callbacks.
-> 
-> Additionally, notice that dw_i2c_plat_complete() only needs to
-> schedule runtime PM resume for the device if platform firmware
-> has been involved in resuming the system, so make it call
-> pm_resume_via_firmware() to check that.  Also make it check the
-> runtime PM status of the device instead of its direct_complete
-> flag which also works if the device remained suspended due to
-> the DPM_FLAG_LEAVE_SUSPENDED driver flag.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->   drivers/i2c/busses/i2c-designware-core.h    |    2 -
->   drivers/i2c/busses/i2c-designware-platdrv.c |   31 ++++++++++------------------
->   2 files changed, 12 insertions(+), 21 deletions(-)
-> 
-This doesn't apply to linux-next due 0326f9f801b2 ("i2c: designware: 
-rename i2c_dw_plat_prepare_clk to i2c_dw_prepare_clk"). It was trivial 
-to fix which I did locally for testing.
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-Acked-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+In preparation for having the PCI MMIO helpers to use the new generic
+I/O space management(LOGIC_PIO) we need to add the fwnode handler as
+extra input parameter.
+This patch changes the signature of pci_register_io_range() and of
+its callers as needed.
+
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/acpi/pci_root.c | 8 +++++---
+ drivers/of/address.c    | 4 +++-
+ drivers/pci/pci.c       | 3 ++-
+ include/linux/pci.h     | 3 ++-
+ 4 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 6fc204a..1213479 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -729,7 +729,8 @@ static void acpi_pci_root_validate_resources(struct device *dev,
+ 	}
+ }
+ 
+-static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
++static void acpi_pci_root_remap_iospace(struct fwnode_handle *fwnode,
++			struct resource_entry *entry)
+ {
+ #ifdef PCI_IOBASE
+ 	struct resource *res = entry->res;
+@@ -738,7 +739,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
+ 	resource_size_t length = resource_size(res);
+ 	unsigned long port;
+ 
+-	if (pci_register_io_range(cpu_addr, length))
++	if (pci_register_io_range(fwnode, cpu_addr, length))
+ 		goto err;
+ 
+ 	port = pci_address_to_pio(cpu_addr);
+@@ -780,7 +781,8 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ 	else {
+ 		resource_list_for_each_entry_safe(entry, tmp, list) {
+ 			if (entry->res->flags & IORESOURCE_IO)
+-				acpi_pci_root_remap_iospace(entry);
++				acpi_pci_root_remap_iospace(&device->fwnode,
++						entry);
+ 
+ 			if (entry->res->flags & IORESOURCE_DISABLED)
+ 				resource_list_destroy_entry(entry);
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index c6c410b..85975fe 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -2,6 +2,7 @@
+ #define pr_fmt(fmt)	"OF: " fmt
+ 
+ #include <linux/device.h>
++#include <linux/fwnode.h>
+ #include <linux/io.h>
+ #include <linux/ioport.h>
+ #include <linux/module.h>
+@@ -335,7 +336,8 @@ int of_pci_range_to_resource(struct of_pci_range *range,
+ 
+ 	if (res->flags & IORESOURCE_IO) {
+ 		unsigned long port;
+-		err = pci_register_io_range(range->cpu_addr, range->size);
++		err = pci_register_io_range(&np->fwnode, range->cpu_addr,
++				range->size);
+ 		if (err)
+ 			goto invalid_range;
+ 		port = pci_address_to_pio(range->cpu_addr);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d8357ff..d60f0a3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3383,7 +3383,8 @@ struct io_range {
+  * Record the PCI IO range (expressed as CPU physical address + size).
+  * Return a negative value if an error has occured, zero otherwise
+  */
+-int pci_register_io_range(phys_addr_t addr, resource_size_t size)
++int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
++			resource_size_t	size)
+ {
+ 	int err = 0;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8329983..1b70732 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1225,7 +1225,8 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 			void *alignf_data);
+ 
+ 
+-int pci_register_io_range(phys_addr_t addr, resource_size_t size);
++int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
++			resource_size_t size);
+ unsigned long pci_address_to_pio(phys_addr_t addr);
+ phys_addr_t pci_pio_to_address(unsigned long pio);
+ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+-- 
+1.9.1
+
