@@ -1,183 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:39338 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751836AbeABOM2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Jan 2018 09:12:28 -0500
-Date: Tue, 2 Jan 2018 14:13:21 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, robh@kernel.org,
-        devicetree@vger.kernel.org, Mingkai Hu <mingkai.hu@nxp.com>,
-        Peter W Newton <peter.newton@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Raj Raina <rajesh.raina@nxp.com>,
-        Rajan Kapoor <rajan.kapoor@nxp.com>,
-        Prabhjot Singh <prabhjot.singh@nxp.com>
-Subject: Re: [PATCH v5 2/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
- driver
-Message-ID: <20180102141321.GE10536@red-moon>
-References: <1513181317-19914-1-git-send-email-l.subrahmanya@mobiveil.co.in>
- <20171220170307.GC1709@red-moon>
- <CAFZiPx1VVLii9hnTZCih8tu5cxvzX4ENgVGy9-WwpaG7vWyUWg@mail.gmail.com>
+Received: from ale.deltatee.com ([207.54.116.67]:55606 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751188AbeAWQgL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Jan 2018 11:36:11 -0500
+To: Wei Yongjun <weiyongjun1@huawei.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-ntb@googlegroups.com,
+        kernel-janitors@vger.kernel.org
+References: <1516673361-170397-1-git-send-email-weiyongjun1@huawei.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <14b5eb05-c152-6a30-d590-881600a8a72f@deltatee.com>
+Date: Tue, 23 Jan 2018 09:35:52 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFZiPx1VVLii9hnTZCih8tu5cxvzX4ENgVGy9-WwpaG7vWyUWg@mail.gmail.com>
+In-Reply-To: <1516673361-170397-1-git-send-email-weiyongjun1@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH -next] ntb_hw_switchtec: Make function
+ switchtec_ntb_remove() static
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 22, 2017 at 01:29:00PM +0530, Subrahmanya Lingappa wrote:
+Looks good, thanks.
 
-[...]
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
-> > > +static void mobiveil_pcie_isr(struct irq_desc *desc)
-> > > +{
-> > > +     struct irq_chip *chip = irq_desc_get_chip(desc);
-> > > +     struct mobiveil_pcie *pcie = irq_desc_get_handler_data(desc);
-> > > +     struct device *dev = &pcie->pdev->dev;
-> > > +     u32 intr_status;
-> > > +     unsigned long shifted_status;
-> >
-> > Why not u32 ?
-> >
-> for_each_set_bit() api warns about the variable not being unsigned
-> long. So used the same to take out the warning.
+Logan
+
+
+On 22/01/18 07:09 PM, Wei Yongjun wrote:
+> Fixes the following sparse warnings:
 > 
+> drivers/ntb/hw/mscc/ntb_hw_switchtec.c:1552:6: warning:
+>   symbol 'switchtec_ntb_remove' was not declared. Should it be static?
 > 
-> > > +     u32 bit, virq;
-> > > +     u32 val, mask;
-> > > +
-> > > +     chained_irq_enter(chip, desc);
-> > > +
-> > > +     /* read INTx status */
-> > > +     val = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
-> > > +     mask = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
-> > > +     intr_status = val & mask;
-> > > +
-> > > +     /*
-> > Handle INTx */
-> > > +     if (intr_status & PAB_INTP_INTX_MASK) {
-> > > +             shifted_status = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
-> >
-> > Why can't you reuse val to read the status and create shifted_status
-> > from it ?
-> >
-> > eg
-> >
-> > shifted_status = val << PAB_INTA_POS;
-> > csr_writel(pcie, shifted_status, PAB_INTP_AMBA_MISC_STAT);
-> >
-> > Just a hint to make the loop more readable. BTW, I do not think that
-> > writing shifted_status into that register is OK, see below.
-> >
-> > > +             do {
-> > > +                     for_each_set_bit(bit, &shifted_status, PCI_NUM_INTX) {
-> > > +
-> > > +                             /* clear interrupts */
-> > > +                             csr_writel(pcie, shifted_status <<
-> > PAB_INTA_POS,
-> > > +
-> > PAB_INTP_AMBA_MISC_STAT);
-> >
-> > Should not you clear just the interrupt you are about to handle ?
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> ---
+>   drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> PAB_INTP_AMBA_MISC_STAT register has INTA, INTB, INTC, INTD status
-> bits at positions 5,6,7 and 8,
-> they are RW1C bits, so writing 1 to this bit clears the status.
-> So here the status read was written back to it to clear.
-
-Understood - the point is that IIUC you should clear just the IRQ (bit)
-that you are handling at each iteration not all at once.
-
-What do PAB_INTP_AMBA_MISC_STAT[4:0] represent then ?
-
-> > > +                             virq = irq_find_mapping(pcie->intx_domain,
-> > > +                                     bit + 1);
-> > > +                             if (virq)
-> > > +
-> > generic_handle_irq(virq);
-> > > +                             else
-> > > +                                     dev_err_ratelimited(dev,
-> > > +                                             "unexpected IRQ, INT%d\n",
-> > > +                                             bit);
-> > > +
-> > > +                     }
-> > > +
-> > > +                     shifted_status = csr_readl(pcie,
-> > > +                                             PAB_INTP_AMBA_MISC_STAT);
-> > > +
-> > > +             } while ((shifted_status >>  PAB_INTA_POS) != 0);
-> >
-> > I do not understand this. Can you explain to me how the
-> > register at:
-> >
-> > PAB_INTP_AMBA_MISC_STAT
-> >
-> > works ?
-> >
-> just repeating what explained before, to ease the readablility.
-> PAB_INTP_AMBA_MISC_STAT register has INTA, INTB, INTC, INTD status
-> bits at positions 5,6,7 and 8,
-> they are RW1C bits, so writing 1 to this bit clears the status.
+> diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+> index a1d547b6..f624ae2 100644
+> --- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+> +++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+> @@ -1549,8 +1549,8 @@ static int switchtec_ntb_add(struct device *dev,
+>   	return rc;
+>   }
+>   
+> -void switchtec_ntb_remove(struct device *dev,
+> -			  struct class_interface *class_intf)
+> +static void switchtec_ntb_remove(struct device *dev,
+> +				 struct class_interface *class_intf)
+>   {
+>   	struct switchtec_dev *stdev = to_stdev(dev);
+>   	struct switchtec_ntb *sndev = stdev->sndev;
 > 
-> >
-> > A patch for mediatek has been posted:
-> >
-> > https://patchwork.ozlabs.org/patch/851181/
-> >
-> > It looks like this loop may suffer from the same issue, so please do
-> > have a look.
-> >
-> I will clear the the interrupt after
-> 
-> its hadled by generic_handle_irq()
-> .
-> right ?
-
-Where ? Can you explain please what every bit in
-
-PAB_INTP_AMBA_MISC_STAT
-
-represent ?
-
-> > On top of that, most of the operations you are carrying out here
-> > can be done automatically by making them part of the struct irq_chip
-> > methods (ie acking IRQs, masking IRQs, etc, see below).
-> >
-> Any side effects of keeping this code as is ?
-
-Yes, that it will take us more effort to convert it to the usage
-I describe above - which is how it is expected to be written.
-
-[...]
-
-> > > +/* routine to setup the INTx related data */
-> > > +static int mobiveil_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-> > > +             irq_hw_number_t hwirq)
-> > > +{
-> > > +     irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-> >
-> > IIUC, the host bridge acts as an INTX/MSI controller/multiplexer.
-> >
-> > So, instead of relying on
-> > dummy_irq_chip, you should create your own
-> > irq_chip with the methods that you require (eg irq_ack(), irq_mask(),
-> > irq_compose_msi_msg()) and use that as bottom irq_chip for both
-> > INTX and MSI domains.
-> >
-> > That's why I asked you to have a look at pcie-tango.c (except that there
-> > INTX aren't supported but the basic idea does not change) and implement
-> > IRQ domains handling like that same driver.
-> >
-> are there any disadvantages of keeping dummy_irq_chip, as I see quite
-> a few host bridge
-> 
-> drivers including
-> otehr two major soft IP drivers from altera and xilinx with similar
-> MSI implementaion.
-
-See above, this is a new driver, the existing IP drivers will have to
-be converted eventually, new code should set an example not add more
-burden to code refactoring.
-
-Lorenzo
