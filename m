@@ -1,58 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36020 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbeARFRd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 00:17:33 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 18 Jan 2018 10:47:32 +0530
-From: poza@codeaurora.org
+Received: from mail.kernel.org ([198.145.29.99]:47794 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751128AbeAWAQi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Jan 2018 19:16:38 -0500
+Date: Mon, 22 Jan 2018 18:16:34 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
 To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <733abfcb-5b31-7394-ab62-19a0888d71c2@codeaurora.org>
-References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
- <1516185438-31556-4-git-send-email-poza@codeaurora.org>
- <733abfcb-5b31-7394-ab62-19a0888d71c2@codeaurora.org>
-Message-ID: <c77a3302e34d55d557404d7bdc6892fc@codeaurora.org>
+Cc: Ron Yuan <ron.yuan@memblaze.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bo Chen <bo.chen@memblaze.com>,
+        William Huang <william.huang@memblaze.com>,
+        Fengming Wu <fengming.wu@memblaze.com>,
+        Jason Jiang <jason.jiang@microsemi.com>,
+        Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>,
+        Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
+        William Cheng <william.cheng@microsemi.com>,
+        "Kim Helper (khelper)" <khelper@micron.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
+ pcie_bus_perf On NVMe Device
+Message-ID: <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
+References: <5727b0b1-f0d5-7c78-373e-fc9d1bd662d2@codeaurora.org>
+ <CABhMZUU0643U-qVc9ymA+1PMZToSLFm2dg8-cu=iQ2LGw2Pi8Q@mail.gmail.com>
+ <SHAPR01MB173A36104635A8BFF9A83E1FEE80@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
+ <0ce08a91-fc38-1288-7683-836fcbbbdf3c@codeaurora.org>
+ <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
+ <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
+ <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
+ <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
+ <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
+ <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-17 22:16, Sinan Kaya wrote:
-> On 1/17/2018 5:37 AM, Oza Pawandeep wrote:
->> +++ b/include/linux/dpc.h
->> @@ -0,0 +1,9 @@
->> +/* SPDX-License-Identifier: GPL-2.0 */
->> +
->> +#ifndef _DPC_H_
->> +#define _DPC_H_
->> +
->> +#define DPC_FATAL		4
->> +
->> +#endif //_DPC_H_
->> +
+On Mon, Jan 22, 2018 at 06:24:22PM -0500, Sinan Kaya wrote:
+> On 1/22/2018 5:51 PM, Bjorn Helgaas wrote:
+> > On Mon, Jan 22, 2018 at 05:04:03PM -0500, Sinan Kaya wrote:
+> >> On 1/22/2018 4:36 PM, Bjorn Helgaas wrote:
 > 
-> can you keep this in drivers/pci.h and get rid of this file?
+> >>> Reducing MPS may be necessary if there are several devices in the
+> >>> hierarchy and one requires a smaller MPS than the others.  That
+> >>> obviously reduces the maximum read and write performance.
+> >>>
+> >>> Reducing the MRRS may be useful to prevent one device from hogging
+> >>> a link, but of course, it reduces read performance for that device
+> >>> because we need more read requests.
+> >>
+> >> Maybe, a picture could help.
+> >>
+> >>                root (MPS=256)
+> >>                  |
+> >>          ------------------
+> >>         /                  \
+> >>    bridge0 (MPS=256)      bridge1 (MPS=128)
+> >>       /                       \
+> >>     EP0 (MPS=256)            EP1 (MPS=128)
+> >>
+> >> If I understood this right, code allows the configuration above with
+> >> the performance mode so that MPS doesn't have to be uniform across
+> >> the tree. 
+> > 
+> > Yes.  In PERFORMANCE mode, we will set EP1's MRRS=128 and
+> > EP0's MRRS=256, just as you show.
+> > 
+> >> It just needs to be consistent between the root port and endpoints.
+> > 
+> > No, it doesn't need to be consistent.  In PERFORMANCE mode, we'll set
+> > the root's MPS=256 and EP1's MPS=128.
+> > 
+> > (I'm not actually 100% convinced that the PERFORMANCE mode approach of
+> > reducing MRRS is safe, necessary, and maintainable.  I suspect that in
+> > many of the interesting cases, the device we care about is the only
+> > one below a Root Port, and we can get the performance we need by
+> > maximizing MPS and MRRS for that Root Port and its children,
+> > independent of the rest of the system.)
+> 
+> Maybe, I started seeing more and more NVMe devices behind a switch every
+> day. That's why, I'm concerned.
 
-I thought about this, but if I keep it in drivers/pci.h,
-then AER's defines have to be in that as well. (for unification)
+Are there a mix of devices that support large MPS and those that only
+support a smaller MPS behind the same switch?
 
-and then all the dependent files who are using AER_FATAL such as 
-drivers/acpi/apei/ghees.c
-have to go on including this drivers file which is odd way of doing it.
+I don't have any actual data about topologies of interest.  I'm just
+guessing that high-performance devices will often have their own root
+port, without being mixed in with low-speed devices.  It's OK to have
+switches in the path; it's the mixing high-speed with low-speed
+devices that causes the problems.
 
-So I am not very sure about this....since AER_FATAL are in aer.h, I have 
-made dpc.h
+> >> Why are we reducing MRRS in this case?
+> > 
+> > We have to set EP1's MRRS=128 so it will never receive a completion
+> > larger than 128 bytes.  If we set EP1's MRRS=256, it could receive
+> > 256-byte TLPs, which it would treat as malformed.  (We also assume no
+> > peer-to-peer DMA that targets EP1.)
+> 
+> What if we were to keep root port MPS as 128? and not touch the BIOS
+> configured MRRS (4k) ?
+> 
+> Everybody should be happy, right?
 
+No.  In your picture (which helps a lot, thank you!), if you set the
+root's MPS=128, EP1 will be fine no matter what its MRRS is because
+the entire path has MPS=128.
 
-Regards,
-Oza.
+But if EP0's MRRS is larger than 128, it's in trouble because it may
+issue a 256-byte DMA write, which the root port will treat as
+malformed.  The root port, as the receiver of that Memory Write
+Request, is required to check the TLP against the MPS in its Device
+Control (not Device Capability) register (this is in PCIe r4.0, sec
+2.2.2).
+
+> I know there is a rule to check the completions against MPS. 
+
+Sec 2.2.2 says a receiver must check "data payloads".  I think that
+includes both Completions and Memory Writes.
+
+> Root port could generate transactions that is a multiple of 128
+> bytes for reads.
+
+If the root port generates a 256-byte Memory Read request to EP1,
+that's fine because EP1 will only respond with 128-byte completions.
+If it sends that 256-byte Memory Read to EP0, we have a problem
+because EP0 may generate a 256-byte completion, which will cause an
+error if the root port has MPS=128.
+
+> Is there any rule against checking incoming writes?
+
+Sec 2.2.2 says a receiver *must* check the payload size of incoming
+Memory Write requests.
