@@ -1,134 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 5.mo68.mail-out.ovh.net ([46.105.62.179]:41306 "EHLO
-        5.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752092AbeA1UxF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jan 2018 15:53:05 -0500
-Received: from player776.ha.ovh.net (b7.ovh.net [213.186.33.57])
-        by mo68.mail-out.ovh.net (Postfix) with ESMTP id 49560B85F1
-        for <linux-pci@vger.kernel.org>; Sun, 28 Jan 2018 21:43:16 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v5 09/11] PCI: endpoint: Fix EPF device name to support multi-function devices
-Date: Sun, 28 Jan 2018 21:40:23 +0100
-Message-Id: <0c9ae7445f9900f96c62f78e91810dd906bab14f.1517170521.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34421 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751721AbeAWPqF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 10:46:05 -0500
+Received: by mail-pg0-f67.google.com with SMTP id r19so549705pgn.1
+        for <linux-pci@vger.kernel.org>; Tue, 23 Jan 2018 07:46:05 -0800 (PST)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>,
+        Fabio Estevam <festevam@gmail.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        project-aspen-dev@linaro.org, Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v2 2/2] PCI: histb: add an optional regulator for PCIe port power control
+Date: Tue, 23 Jan 2018 23:45:37 +0800
+Message-Id: <1516722337-1533-3-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <1516722337-1533-1-git-send-email-shawn.guo@linaro.org>
+References: <1516722337-1533-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix the pci_epf_make() function so it can now bind many EPF devices to the
-same EPF driver.
+The power supply to PCIe port are often controlled by GPIO on some board
+designs.  Let's add an optional regulator which can be backed by GPIO to
+control the power.
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
 ---
- drivers/pci/endpoint/pci-ep-cfs.c | 46 +++++++++++++++++++++++++++++++++++++--
- 1 file changed, 44 insertions(+), 2 deletions(-)
+ .../bindings/pci/hisilicon-histb-pcie.txt           |  1 +
+ drivers/pci/dwc/pcie-histb.c                        | 21 +++++++++++++++++++++
+ 2 files changed, 22 insertions(+)
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index c9a2fb9dd49d..9ec28be1e378 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -18,18 +18,22 @@
-  */
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+index c84bc027930b..f995664e6d7f 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+@@ -34,6 +34,7 @@ Required properties
  
- #include <linux/module.h>
-+#include <linux/idr.h>
- #include <linux/slab.h>
+ Optional properties:
+ - reset-gpios: The gpio to generate PCIe PERST# assert and deassert signal.
++- vpcie-supply: Should specify the regulator in charge of PCIe port power.
+ - phys: List of phandle and phy mode specifier, should be 0.
+ - phy-names: Must be "phy".
  
- #include <linux/pci-epc.h>
- #include <linux/pci-epf.h>
- #include <linux/pci-ep-cfs.h>
- 
-+static DEFINE_IDR(functions_idr);
-+static DEFINE_MUTEX(functions_mutex);
- static struct config_group *functions_group;
- static struct config_group *controllers_group;
- 
- struct pci_epf_group {
- 	struct config_group group;
- 	struct pci_epf *epf;
-+	int index;
+diff --git a/drivers/pci/dwc/pcie-histb.c b/drivers/pci/dwc/pcie-histb.c
+index 6395394be5b4..8eb3028432b3 100644
+--- a/drivers/pci/dwc/pcie-histb.c
++++ b/drivers/pci/dwc/pcie-histb.c
+@@ -64,6 +64,7 @@ struct histb_pcie {
+ 	struct reset_control *bus_reset;
+ 	void __iomem *ctrl;
+ 	int reset_gpio;
++	struct regulator *vpcie;
  };
  
- struct pci_epc_group {
-@@ -354,6 +358,9 @@ static void pci_epf_release(struct config_item *item)
- {
- 	struct pci_epf_group *epf_group = to_pci_epf_group(item);
+ static u32 histb_pcie_readl(struct histb_pcie *histb_pcie, u32 reg)
+@@ -230,6 +231,9 @@ static void histb_pcie_host_disable(struct histb_pcie *hipcie)
  
-+	mutex_lock(&functions_mutex);
-+	idr_remove(&functions_idr, epf_group->index);
-+	mutex_unlock(&functions_mutex);
- 	pci_epf_destroy(epf_group->epf);
- 	kfree(epf_group);
+ 	if (gpio_is_valid(hipcie->reset_gpio))
+ 		gpio_set_value_cansleep(hipcie->reset_gpio, 0);
++
++	if (hipcie->vpcie)
++		regulator_disable(hipcie->vpcie);
  }
-@@ -373,22 +380,57 @@ static struct config_group *pci_epf_make(struct config_group *group,
- {
- 	struct pci_epf_group *epf_group;
- 	struct pci_epf *epf;
-+	char *epf_name;
-+	int index, err;
  
- 	epf_group = kzalloc(sizeof(*epf_group), GFP_KERNEL);
- 	if (!epf_group)
- 		return ERR_PTR(-ENOMEM);
+ static int histb_pcie_host_enable(struct pcie_port *pp)
+@@ -240,6 +244,14 @@ static int histb_pcie_host_enable(struct pcie_port *pp)
+ 	int ret;
  
-+	mutex_lock(&functions_mutex);
-+	index = idr_alloc(&functions_idr, epf_group, 0, 0, GFP_KERNEL);
-+	mutex_unlock(&functions_mutex);
-+	if (index < 0) {
-+		err = index;
-+		goto free_group;
+ 	/* power on PCIe device if have */
++	if (hipcie->vpcie) {
++		ret = regulator_enable(hipcie->vpcie);
++		if (ret) {
++			dev_err(dev, "failed to enable regulator: %d\n", ret);
++			return ret;
++		}
 +	}
 +
-+	epf_group->index = index;
-+
- 	config_group_init_type_name(&epf_group->group, name, &pci_epf_type);
+ 	if (gpio_is_valid(hipcie->reset_gpio))
+ 		gpio_set_value_cansleep(hipcie->reset_gpio, 1);
  
--	epf = pci_epf_create(group->cg_item.ci_name);
-+	epf_name = kasprintf(GFP_KERNEL, "%s.%d",
-+			     group->cg_item.ci_name, epf_group->index);
-+	if (!epf_name) {
-+		err = -ENOMEM;
-+		goto remove_idr;
-+	}
-+
-+	epf = pci_epf_create(epf_name);
- 	if (IS_ERR(epf)) {
- 		pr_err("failed to create endpoint function device\n");
--		return ERR_PTR(-EINVAL);
-+		err = -EINVAL;
-+		goto free_name;
+@@ -285,6 +297,8 @@ static int histb_pcie_host_enable(struct pcie_port *pp)
+ err_sys_clk:
+ 	clk_disable_unprepare(hipcie->bus_clk);
+ err_bus_clk:
++	if (hipcie->vpcie)
++		regulator_disable(hipcie->vpcie);
+ 
+ 	return ret;
+ }
+@@ -334,6 +348,13 @@ static int histb_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pci->dbi_base);
  	}
  
- 	epf_group->epf = epf;
- 
-+	kfree(epf_name);
++	hipcie->vpcie = devm_regulator_get_optional(dev, "vpcie");
++	if (IS_ERR(hipcie->vpcie)) {
++		if (PTR_ERR(hipcie->vpcie) == -EPROBE_DEFER)
++			return -EPROBE_DEFER;
++		hipcie->vpcie = NULL;
++	}
 +
- 	return &epf_group->group;
-+
-+free_name:
-+	kfree(epf_name);
-+
-+remove_idr:
-+	mutex_lock(&functions_mutex);
-+	idr_remove(&functions_idr, epf_group->index);
-+	mutex_unlock(&functions_mutex);
-+
-+free_group:
-+	kfree(epf_group);
-+
-+	return ERR_PTR(err);
- }
- 
- static void pci_epf_drop(struct config_group *group, struct config_item *item)
+ 	hipcie->reset_gpio = of_get_named_gpio_flags(np,
+ 				"reset-gpios", 0, &of_flags);
+ 	if (of_flags & OF_GPIO_ACTIVE_LOW)
 -- 
-2.11.0
+1.9.1
