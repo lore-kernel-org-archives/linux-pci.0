@@ -1,173 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:53363 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750907AbeACGmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Jan 2018 01:42:31 -0500
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-To: christophe leroy <christophe.leroy@c-s.fr>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Greg KH <gregkh@linuxfoundation.org>, <starvik@axis.com>,
-        <jesper.nilsson@axis.com>, <tony.luck@intel.com>,
-        <fenghua.yu@intel.com>, <jonas@southpole.se>, <shorne@gmail.com>,
-        <dhowells@redhat.com>
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134831.GB10103@kroah.com>
- <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
- <c28ac0bc-8bd2-3dce-3167-8c0f80ec601e@c-s.fr>
- <6c0ade63-f4d3-d44d-c622-b091eb2ba902@huawei.com>
-CC: <linux-kernel@vger.kernel.org>, <ysxie@foxmail.com>,
-        <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
-        <boris.brezillon@free-electrons.com>, <richard@nod.at>,
-        <marek.vasut@gmail.com>, <cyrille.pitchen@wedev4u.fr>,
-        <linux-mtd@lists.infradead.org>, <alsa-devel@alsa-project.org>,
-        <wim@iguana.be>, <linux-watchdog@vger.kernel.org>,
-        <b.zolnierkie@samsung.com>, <linux-fbdev@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <linux-gpio@vger.kernel.org>,
-        <ralf@linux-mips.org>, <linux-mips@linux-mips.org>,
-        <lgirdwood@gmail.com>, <broonie@kernel.org>, <tglx@linutronix.de>,
-        <jason@lakedaemon.net>, <marc.zyngier@arm.com>, <arnd@arndb.de>,
-        <andriy.shevchenko@linux.intel.com>,
-        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
-        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
-        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
-        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
-        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
-        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
-        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
-        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
-        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <dvhart@infradead.org>, <andy@infradead.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
-        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
-        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
-        <dmaengine@vger.kernel.org>, <jslaby@suse.com>,
-        <linux-cris-kernel@axis.com>, <linux-ia64@vger.kernel.org>,
-        <openrisc@lists.librecores.org>, <linux-am33-list@redhat.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <e9f6805c-2dd7-f9c6-d615-5e25cff241a3@huawei.com>
-Date: Wed, 3 Jan 2018 14:42:14 +0800
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:40799 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751249AbeAWKdQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 05:33:16 -0500
+Received: by mail-wm0-f46.google.com with SMTP id v123so834612wmd.5
+        for <linux-pci@vger.kernel.org>; Tue, 23 Jan 2018 02:33:15 -0800 (PST)
+Subject: Re: [PATCH] PCI: qcom: add missing supplies required for msm8996
+To: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        robh+dt@kernel.org, devicetree@vger.kernel.org
+References: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
+ <65e01829-198e-f549-174d-c8368c5ee193@mm-sol.com>
+ <92e2808b-4b2d-8591-9ed7-6600d7a3357b@linaro.org>
+ <1a3cc92e-545e-a703-7130-6a9c58854e03@mm-sol.com>
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Message-ID: <5f43164a-4d84-12be-7f69-f7bbaaf1d64c@linaro.org>
+Date: Tue, 23 Jan 2018 10:33:13 +0000
 MIME-Version: 1.0
-In-Reply-To: <6c0ade63-f4d3-d44d-c622-b091eb2ba902@huawei.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1a3cc92e-545e-a703-7130-6a9c58854e03@mm-sol.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+ cris/ia64/mn10300/openrisc maintainers
 
-On 2017/12/25 9:09, Yisheng Xie wrote:
-> hi Christophe and Greg,
+
+On 23/01/18 10:14, Stanimir Varbanov wrote:
+> Hi,
 > 
-> On 2017/12/24 16:55, christophe leroy wrote:
+> On 01/23/2018 11:46 AM, Srinivas Kandagatla wrote:
 >>
 >>
->> Le 23/12/2017 à 16:57, Guenter Roeck a écrit :
->>> On 12/23/2017 05:48 AM, Greg KH wrote:
->>>> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->>>>> Hi all,
->>>>>
->>>>> When I tried to use devm_ioremap function and review related code, I found
->>>>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
->>>>> except one use ioremap while the other use ioremap_nocache.
->>>>
->>>> For all arches?  Really?  Look at MIPS, and x86, they have different
->>>> functions.
->>>>
+>> On 23/01/18 09:23, Stanimir Varbanov wrote:
+>>> Hey Srini,
 >>>
->>> Both mips and x86 end up mapping the same function, but other arches don't.
->>> mn10300 is one where ioremap and ioremap_nocache are definitely different.
->>
->> alpha: identical
->> arc: identical
->> arm: identical
->> arm64: identical
->> cris: different        <==
->> frv: identical
->> hexagone: identical
->> ia64: different        <==
->> m32r: identical
->> m68k: identical
->> metag: identical
->> microblaze: identical
->> mips: identical
->> mn10300: different     <==
->> nios: identical
->> openrisc: different    <==
->> parisc: identical
->> riscv: identical
->> s390: identical
->> sh: identical
->> sparc: identical
->> tile: identical
->> um: rely on asm/generic
->> unicore32: identical
->> x86: identical
->> asm/generic (no mmu): identical
-> 
-> Wow, that's correct, sorry for I have just checked the main archs, I means
-> x86,arm, arm64, mips.
-> 
-> However, I stall have no idea about why these 4 archs want different ioremap
-> function with others. Drivers seems cannot aware this? If driver call ioremap
-> want he really want for there 4 archs, cache or nocache?
-
-Could you please help about this? it is out of my knowledge.
-
-Thanks
-Yisheng
-
-> 
->>
->> So 4 among all arches seems to have ioremap() and ioremap_nocache() being different.
->>
->> Could we have a define set by the 4 arches on which ioremap() and ioremap_nocache() are different, something like HAVE_DIFFERENT_IOREMAP_NOCACHE ?
-> 
-> Then, what the HAVE_DIFFERENT_IOREMAP_NOCACHE is uesed for ?
-> 
-> Thanks
-> Yisheng
->>
->> Christophe
+>>> As there are no comments I'd propose to change the endpoint supplies to
+>>> more generic names.
+>>>
+>> Sure, I will respin this with your suggestions, except the 3v3 and 1v5
+>> suffix due to the reasons below:
+>>>> +- vdda-1p8-supply:
+>>>> +    Usage: required for msm8996
+>>>> +    Value type: <phandle>
+>>>> +    Definition: A phandle to the 1.8v analog power supply
+>>>> +
+>>>
+>>> This should be dropped, because it is part of the phy.
+>> Yep.
 >>
 >>>
->>> Guenter
+>>>>    - vdda_phy-supply:
+>>>>        Usage: required for ipq/apq8064
+>>>>        Value type: <phandle>
+>>>> @@ -189,6 +194,15 @@
+>>>>        Value type: <phandle>
+>>>>        Definition: A phandle to the analog power supply for IC which
+>>>> generates
+>>>>                reference clock
+>>>> +- vddpe-supply:
+>>>> +    Usage: optional
+>>>> +    Value type: <phandle>
+>>>> +    Definition: A phandle to the PCIe endpoint power supply
 >>>
->>>>> While ioremap's
->>>>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
->>>>> same function with devm_ioremap, which can just be killed to reduce the size
->>>>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
->>>>>
->>>>> I have posted two versions, which use macro instead of function for
->>>>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->>>>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
->>>>> thing. So here comes v3 and please help to review.
->>>>
->>>> I don't think this can be done, what am I missing?  These functions are
->>>> not identical, sorry for missing that before.
+>>> vddpe_3v3-supply
+>> Why do we need suffix here? AFAIU, It does not add any value, instead it
+>> would confuse the users.
 > 
-> Never mind, I should checked all the arches, sorry about that.
+> vddpe and vddpe1 is already confusing as well.
+
+I partly agree with you.
+
+How would you represent if there are two power 3v3 supplies for the 
+endpoint?
+
 > 
->>>>
->>>> thanks,
->>>>
->>>> greg k-h
->>>>
->>>
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe linux-watchdog" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> ---
->> L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
->> https://www.avast.com/antivirus
->>
->>
->> .
->>
+> Lets imagine that powering up the endpointX needs some specific sequence
+> between 3v3 and 1v5 and endpointY (which could be connected on the same
+> PCIe lane) has different power sequence, how we would handle that in the
+> qcom pcie host driver?
+
+power sequencing is all together a different issue, that is not 
+addressed in this patch. Am hoping that this will be fixed as part of 
+making pwrseq interface more generic. Not sure where it endedup now!!
+
+--srini
+
+
 > 
+>>
+>> These are power supplies for endpoint which could be of any voltage. In
 > 
-> .
+> I don't think that could be any values see PCIe mini card
+> electromechanical specification. There on the connector are provided 3v3
+> and 1v5.
+> 
+>> this case both endpoint supplies are 3v3, these could be 1.8 or 5v or
+>> 12v in some other cases.
+> 
+> If we see hw designs with 5v and 12v we could extend the binding and the
+> driver with support for them. I want to be exact in the names and
+> voltages in the driver and bindings.
+
 > 
