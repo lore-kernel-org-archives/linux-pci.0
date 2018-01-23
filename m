@@ -1,111 +1,363 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35149 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755094AbeAHSJZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jan 2018 13:09:25 -0500
-Received: by mail-wm0-f67.google.com with SMTP id a79so15872641wma.0
-        for <linux-pci@vger.kernel.org>; Mon, 08 Jan 2018 10:09:24 -0800 (PST)
-Date: Mon, 8 Jan 2018 11:09:17 -0700
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
- rdma_rw_ctx_[init|destroy]()
-Message-ID: <20180108180917.GF11348@ziepe.ca>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-7-logang@deltatee.com>
- <20180104192225.GS11348@ziepe.ca>
- <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com>
- <20180104221337.GV11348@ziepe.ca>
- <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com>
- <20180105045031.GX11348@ziepe.ca>
- <20180108145901.GA10743@lst.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
+        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
+        <dann.frazier@canonical.com>
+CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
+        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+        <rdunlap@infradead.org>, John Garry <john.garry@huawei.com>,
+        Zhichang Yuan <yuanzhichang@hisilicon.com>,
+        "Gabriele Paoloni" <gabriele.paoloni@huawei.com>
+Subject: [PATCH v12 7/9] ACPI: Translate the I/O range of non-MMIO devices before scanning
+Date: Wed, 24 Jan 2018 00:36:23 +0800
+Message-ID: <1516725385-24535-8-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
+References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180108145901.GA10743@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 08, 2018 at 03:59:01PM +0100, Christoph Hellwig wrote:
-> On Thu, Jan 04, 2018 at 09:50:31PM -0700, Jason Gunthorpe wrote:
-> > Well that argument applies equally to the RDMA RW API wrappers around
-> > the DMA API. I think it is fine if sgl are defined to only have P2P or
-> > not, and that debugging support seemed reasonable to me..
-> > 
-> > > It's also very difficult to add similar functionality to dma_map_page seeing
-> > > dma_unmap_page won't have any way to know what it's dealing with. It just
-> > > seems confusing to support P2P in the SG version and not the page version.
-> > 
-> > Well, this proposal is to support P2P in only some RDMA APIs and not
-> > others, so it seems about as confusing to me..
-> 
-> As usual we implement what actually has a consumer.  On top of that the
-> R/W API is the only core RDMA API that actually does DMA mapping for the
-> ULP at the moment.
+On some platforms(such as Hip06/Hip07), the legacy ISA/LPC devices access
+I/O with some special host-local I/O ports known on x86. As their I/O space
+are not memory mapped like PCI/PCIE MMIO host bridges, this patch is meant
+to support a new class of I/O host controllers where the local IO ports of
+the children devices are translated into the Indirect I/O address space.
 
-Well again the same can be said for dma_map_page vs dma_map_sg...
+Through the handler attach callback, all the I/O translations are done
+before starting the enumeration on children devices and the translated
+addresses are replaced in the children resources.
 
-> For SENDs and everything else dma maps are done by the ULP (I'd like
-> to eventually change that, though - e.g. sends through that are
-> inline to the workqueue don't need a dma map to start with).
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ drivers/acpi/arm64/Makefile          |   1 +
+ drivers/acpi/arm64/acpi_indirectio.c | 273 +++++++++++++++++++++++++++++++++++
+ drivers/acpi/internal.h              |   5 +
+ drivers/acpi/scan.c                  |   1 +
+ 4 files changed, 280 insertions(+)
+ create mode 100644 drivers/acpi/arm64/acpi_indirectio.c
 
+diff --git a/drivers/acpi/arm64/Makefile b/drivers/acpi/arm64/Makefile
+index 1017def..f4a7f46 100644
+--- a/drivers/acpi/arm64/Makefile
++++ b/drivers/acpi/arm64/Makefile
+@@ -1,2 +1,3 @@
+ obj-$(CONFIG_ACPI_IORT) 	+= iort.o
+ obj-$(CONFIG_ACPI_GTDT) 	+= gtdt.o
++obj-$(CONFIG_INDIRECT_PIO)	+= acpi_indirectio.o
+diff --git a/drivers/acpi/arm64/acpi_indirectio.c b/drivers/acpi/arm64/acpi_indirectio.c
+new file mode 100644
+index 0000000..2649f57
+--- /dev/null
++++ b/drivers/acpi/arm64/acpi_indirectio.c
+@@ -0,0 +1,273 @@
++/*
++ * ACPI support for indirect-IO bus.
++ *
++ * Copyright (C) 2017 HiSilicon Limited, All Rights Reserved.
++ * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
++ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
++ * Author: John Garry <john.garry@huawei.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/acpi.h>
++#include <linux/logic_pio.h>
++#include <linux/mfd/core.h>
++#include <linux/platform_device.h>
++
++ACPI_MODULE_NAME("indirect IO");
++
++#define ACPI_INDIRECTIO_NAME_LENGTH 255
++
++#define INDIRECT_IO_INFO(desc) ((unsigned long)&desc)
++
++struct acpi_indirectio_mfd_cell {
++	struct mfd_cell_acpi_match acpi_match;
++	char name[ACPI_INDIRECTIO_NAME_LENGTH];
++	char pnpid[ACPI_INDIRECTIO_NAME_LENGTH];
++};
++
++struct acpi_indirectio_host_data {
++	resource_size_t io_size;
++	resource_size_t io_start;
++};
++
++struct acpi_indirectio_device_desc {
++	struct acpi_indirectio_host_data pdata; /* device relevant info data */
++	int (*pre_setup)(struct acpi_device *adev,
++			 struct acpi_indirectio_host_data *pdata);
++};
++
++static int acpi_translate_logicio_res(struct acpi_device *adev,
++		struct acpi_device *host, struct resource *resource)
++{
++	unsigned long sys_port;
++	struct device *dev = &adev->dev;
++	resource_size_t length = resource->end - resource->start;
++
++	sys_port = logic_pio_trans_hwaddr(&host->fwnode, resource->start,
++					length);
++
++	if (sys_port == -1) {
++		dev_err(dev, "translate bus-addr(0x%llx) fail!\n",
++			resource->start);
++		return -EFAULT;
++	}
++
++	resource->start = sys_port;
++	resource->end = sys_port + length;
++
++	return 0;
++}
++
++/*
++ * update/set the current I/O resource of the designated device node.
++ * after this calling, the enumeration can be started as the I/O resource
++ * had been translated to logicial I/O from bus-local I/O.
++ *
++ * @child: the device node to be updated the I/O resource;
++ * @hostdev: the device node where 'adev' is attached, which can be not
++ *  the parent of 'adev';
++ * @res: double pointer to be set to the address of the updated resources
++ * @num_res: address of the variable to contain the number of updated resources
++ *
++ * return 0 when successful, negative is for failure.
++ */
++int acpi_indirectio_set_logicio_res(struct device *child,
++					 struct device *hostdev,
++					 const struct resource **res,
++					 int *num_res)
++{
++	struct acpi_device *adev;
++	struct acpi_device *host;
++	struct resource_entry *rentry;
++	LIST_HEAD(resource_list);
++	struct resource *resources = NULL;
++	int count;
++	int i;
++	int ret = -EIO;
++
++	if (!child || !hostdev)
++		return -EINVAL;
++
++	host = to_acpi_device(hostdev);
++	adev = to_acpi_device(child);
++
++	/* check the device state */
++	if (!adev->status.present) {
++		dev_info(child, "ACPI: device is not present!\n");
++		return 0;
++	}
++	/* whether the child had been enumerated? */
++	if (acpi_device_enumerated(adev)) {
++		dev_info(child, "ACPI: had been enumerated!\n");
++		return 0;
++	}
++
++	count = acpi_dev_get_resources(adev, &resource_list, NULL, NULL);
++	if (count <= 0) {
++		dev_err(&adev->dev, "failed to get ACPI resources\n");
++		return count ? count : -EIO;
++	}
++
++	resources = kcalloc(count, sizeof(struct resource), GFP_KERNEL);
++	if (!resources) {
++		acpi_dev_free_resource_list(&resource_list);
++		return -ENOMEM;
++	}
++	count = 0;
++	list_for_each_entry(rentry, &resource_list, node)
++		resources[count++] = *rentry->res;
++
++	acpi_dev_free_resource_list(&resource_list);
++
++	/* translate the I/O resources */
++	for (i = 0; i < count; i++) {
++		if (resources[i].flags & IORESOURCE_IO) {
++			ret = acpi_translate_logicio_res(adev, host,
++							&resources[i]);
++			if (ret) {
++				kfree(resources);
++				dev_err(child,
++					"Translate I/O range failed (%d)!\n",
++					ret);
++				return ret;
++			}
++		}
++	}
++	*res = resources;
++	*num_res = count;
++
++	return ret;
++}
++
++int
++acpi_indirectio_pre_setup(struct acpi_device *adev,
++			  struct acpi_indirectio_host_data *pdata)
++{
++	struct platform_device *pdev;
++	struct mfd_cell *mfd_cells;
++	struct logic_pio_hwaddr *range;
++	struct acpi_device *child;
++	struct acpi_indirectio_mfd_cell *acpi_indirectio_mfd_cells;
++	int size, ret, count = 0, cell_num = 0;
++
++	range = kzalloc(sizeof(*range), GFP_KERNEL);
++	if (!range)
++		return -ENOMEM;
++	range->fwnode = &adev->fwnode;
++	range->flags = PIO_INDIRECT;
++	range->size = pdata->io_size;
++	range->hw_start = pdata->io_start;
++
++	ret = logic_pio_register_range(range);
++	if (ret)
++		goto free_range;
++
++	list_for_each_entry(child, &adev->children, node)
++		cell_num++;
++
++	/* allocate the mfd cells */
++	size = sizeof(*mfd_cells) + sizeof(*acpi_indirectio_mfd_cells);
++	mfd_cells = kcalloc(cell_num, size, GFP_KERNEL);
++	if (!mfd_cells) {
++		ret = -ENOMEM;
++		goto free_range;
++	}
++
++	acpi_indirectio_mfd_cells = (struct acpi_indirectio_mfd_cell *)
++					&mfd_cells[cell_num];
++	/* Only consider the children of the host */
++	list_for_each_entry(child, &adev->children, node) {
++		struct mfd_cell *mfd_cell = &mfd_cells[count];
++		struct acpi_indirectio_mfd_cell *acpi_indirectio_mfd_cell =
++					&acpi_indirectio_mfd_cells[count];
++		const struct mfd_cell_acpi_match *acpi_match =
++					&acpi_indirectio_mfd_cell->acpi_match;
++		char *name = &acpi_indirectio_mfd_cell[count].name[0];
++		char *pnpid = &acpi_indirectio_mfd_cell[count].pnpid[0];
++		struct mfd_cell_acpi_match match = {
++				.pnpid = pnpid,
++		};
++
++		snprintf(name, ACPI_INDIRECTIO_NAME_LENGTH, "indirect-io-%s",
++			 acpi_device_hid(child));
++		snprintf(pnpid, ACPI_INDIRECTIO_NAME_LENGTH, "%s",
++			 acpi_device_hid(child));
++
++		memcpy((void *)acpi_match, (void *)&match, sizeof(*acpi_match));
++		mfd_cell->name = name;
++		mfd_cell->acpi_match = acpi_match;
++
++		ret =
++		acpi_indirectio_set_logicio_res(&child->dev,
++						&adev->dev,
++						&mfd_cell->resources,
++						&mfd_cell->num_resources);
++		if (ret) {
++			dev_err(&child->dev, "set resource failed (%d)\n", ret);
++			goto free_mfd_res;
++		}
++		count++;
++	}
++
++	pdev = acpi_create_platform_device(adev, NULL);
++	if (IS_ERR_OR_NULL(pdev)) {
++		dev_err(&adev->dev, "Create platform device for host failed!\n");
++		ret = PTR_ERR(pdev);
++		goto free_mfd_res;
++	}
++	acpi_device_set_enumerated(adev);
++
++	ret = mfd_add_devices(&pdev->dev, PLATFORM_DEVID_NONE,
++			mfd_cells, cell_num, NULL, 0, NULL);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to add mfd cells (%d)\n", ret);
++		goto free_mfd_res;
++	}
++
++	return ret;
++
++free_mfd_res:
++	while (cell_num--)
++		kfree(mfd_cells[cell_num].resources);
++	kfree(mfd_cells);
++free_range:
++	kfree(range);
++
++	return ret;
++}
++
++/* All the host devices which apply indirect-IO can be listed here. */
++static const struct acpi_device_id acpi_indirect_host_id[] = {
++	{""},
++};
++
++static int acpi_indirectio_attach(struct acpi_device *adev,
++				const struct acpi_device_id *id)
++{
++	struct acpi_indirectio_device_desc *hostdata;
++	int ret;
++
++	hostdata = (struct acpi_indirectio_device_desc *)id->driver_data;
++	if (!hostdata || !hostdata->pre_setup)
++		return -EINVAL;
++
++	ret = hostdata->pre_setup(adev, &hostdata->pdata);
++
++	if (ret < 0)
++		return ret;
++
++	return 1;
++}
++
++static struct acpi_scan_handler acpi_indirect_handler = {
++	.ids = acpi_indirect_host_id,
++	.attach = acpi_indirectio_attach,
++};
++
++void __init acpi_indirectio_scan_init(void)
++{
++	acpi_scan_add_handler(&acpi_indirect_handler);
++}
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 1d0a501..d6b1a95 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -31,6 +31,11 @@
+ void acpi_platform_init(void);
+ void acpi_pnp_init(void);
+ void acpi_int340x_thermal_init(void);
++#ifdef CONFIG_INDIRECT_PIO
++void acpi_indirectio_scan_init(void);
++#else
++static inline void acpi_indirectio_scan_init(void) {}
++#endif
+ #ifdef CONFIG_ARM_AMBA
+ void acpi_amba_init(void);
+ #else
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index b0fe527..8ea6f69 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -2141,6 +2141,7 @@ int __init acpi_scan_init(void)
+ 	acpi_amba_init();
+ 	acpi_watchdog_init();
+ 	acpi_init_lpit();
++	acpi_indirectio_scan_init();
+ 
+ 	acpi_scan_add_handler(&generic_device_handler);
+ 
+-- 
+1.9.1
 
-> That's because the initial design was to let the ULPs do the DMA
-> mappings, which fundamentally is wrong.  I've fixed it for the R/W
-> API when adding it, but no one has started work on SENDs and atomics.
-
-Well, you know why it is like this, and it is very complicated to
-unwind - the HW driver does not have enough information during CQ
-processing to properly do any unmaps, let alone serious error tear
-down unmaps, so we'd need a bunch of new APIs developed first, like RW
-did. :\
-
-> > And on that topic, does this scheme work with HFI?
-> 
-> No, and I guess we need an opt-out.  HFI generally seems to be
-> extremely weird.
-
-This series needs some kind of fix so HFI, QIB, rxe, etc don't get
-broken, and it shouldn't be 'fixed' at the RDMA level.
-
-> > This is why P2P must fit in to the common DMA framework somehow, we
-> > rely on these abstractions to work properly and fully in RDMA.
-> 
-> Moving P2P up to common RDMA code isn't going to fix this.  For that
-> we need to stop preting that something that isn't DMA can abuse the
-> dma mapping framework, and until then opt them out of behavior that
-> assumes actual DMA like P2P.
-
-It could, if we had a DMA op for p2p then the drivers that provide
-their own ops can implement it appropriately or not at all.
-
-Eg the correct implementation for rxe to support p2p memory is
-probably somewhat straightfoward.
-
-> > I think you should consider pushing this directly into the dma_ops
-> > implementations. Add a p2p_supported flag to struct dma_map_ops, and
-> > only if it is true can a caller pass a homogeneous SGL to ops->map_sg.
-> > Only map_sg would be supported for P2P. Upgraded implementations can
-> > call the helper function.
-> 
-> If at all it should be in the dma_map* wrappers, but for that we'd need
-> a good identifier.  And it still would not solve the whole fake dma
-> ops issue.
-
-Very long term the IOMMUs under the ops will need to care about this,
-so the wrapper is not an optimal place to put it - but I wouldn't
-object if it gets it out of RDMA :)
-
-Jason
