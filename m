@@ -1,91 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50624 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964950AbeALSWB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Jan 2018 13:22:01 -0500
-Date: Fri, 12 Jan 2018 18:23:02 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Koen Vandeputte <koen.vandeputte@ncentric.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
-        niklas.cassel@axis.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH] PCI: dwc: fix enumeration end when reaching root
- subordinate
-Message-ID: <20180112182302.GF26438@red-moon>
-References: <1515508941-20055-1-git-send-email-koen.vandeputte@ncentric.com>
- <20180109152550.GA16285@red-moon>
- <4bf872a4-ce26-aca6-eacd-db25673fb8c6@ncentric.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4bf872a4-ce26-aca6-eacd-db25673fb8c6@ncentric.com>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:46967 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751228AbeAWMZn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:43 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v5 0/9] PCI: dwc: MSI-X feature
+Date: Tue, 23 Jan 2018 12:25:23 +0000
+Message-Id: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 12, 2018 at 04:56:33PM +0100, Koen Vandeputte wrote:
-> Hi Lorenzo,
-> 
-> Apologies for the late reply, It's been really busy over here.
-> 
-> 
-> On 2018-01-09 16:25, Lorenzo Pieralisi wrote:
-> ><snip>
-> >>Fix this by initializing the RC to a subordinate value of 0xff, meaning
-> >>that all busses [0x00-0xff] are reachable through this RC.
-> >This is not a correct description of the problem. AFAICS all busses
-> >are reachable through this RC _regardless_ of whatever subordinate
-> >bus number value you programme into it.
-> Noted.
-> 
-> This was written meaning: "as seen be the probing functions below"
-> I'll try harder in V2 to actually include the message that it's not
-> a HW related problem or influencing HW in any way, but really
-> "tricking" the probing functions below
+Replaces the use of IRQ domain hierarchy by the IRQ chained used by
+pcie-designware and each SoC specific driver in order to allow new and
+complex features like MSI-X.
 
-Ok, add it to the log please.
+Adds Synopsys Root Complex support for MSI-X feature.
 
-> >You should extend the CC list to all dwc host submaintainers so
-> >that you can actually get it tested.
-> How to figure out who to include? (& please provide who to include)
-> Reading online manuals on "how to send patches" only demo's
-> "get_maintainer.pl" script
+Expands the maximum number of IRQs from 32 to 256 distributed by
+a maximum of 8 controller registers.
 
-Well, you can do it manually, by checking all pci/dwc submaintainers
-in MAINTAINERS.
+The patch set was made against the Bjorn's next branch.
 
-There are other ways of course but it is simple enough.
+Gustavo Pimentel (9):
+  PCI: dwc: Add IRQ chained API support
+  PCI: dwc: exynos: Switch to use the IRQ chained API
+  PCI: dwc: imx6: Switch to use the IRQ chained API
+  PCI: dwc: artpec6: Switch to use the IRQ chained API
+  PCI: dwc: designware: Switch to use the IRQ chained API
+  PCI: dwc: qcom: Switch to use the IRQ chained API
+  PCI: dwc: keystone: Switch to use the IRQ chained API
+  PCI: dwc: Remove IRQ domain hierarchy API support
+  PCI: dwc: Expand maximum number of IRQs from 32 to 256
 
-> >><snip>
-> >>---
-> >>
-> >>Will send separate patches to stable as this file got moved/renamed
-> >Fixes: commit appeared at v4.15-rc1 (and v4.15 has not been released
-> >yet) - there is no separate patch to be sent.
-> This is something typical which is hard to learn/understand by just
-> reading "how to send patches" docs available everywhere. (like I did
-> before sending this one over ;-) )
-> 
-> 2 questions basically:
-> - As the commit causing it was included in 4.15-*RC1*,  do I need to
-> add a "Fixes; bla bla" at all?
+ drivers/pci/dwc/pci-exynos.c           |  18 --
+ drivers/pci/dwc/pci-imx6.c             |  18 --
+ drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
+ drivers/pci/dwc/pci-keystone.c         |   1 +
+ drivers/pci/dwc/pci-keystone.h         |   4 +-
+ drivers/pci/dwc/pci-layerscape.c       |   3 +-
+ drivers/pci/dwc/pcie-artpec6.c         |  18 --
+ drivers/pci/dwc/pcie-designware-host.c | 402 +++++++++++++++++++--------------
+ drivers/pci/dwc/pcie-designware-plat.c |  16 --
+ drivers/pci/dwc/pcie-designware.h      |  30 ++-
+ drivers/pci/dwc/pcie-qcom.c            |  16 --
+ 11 files changed, 260 insertions(+), 357 deletions(-)
 
-Yes.
-
-> - As the commit causing it was backported to 4.9, (how) should I
-> send a separate patch in order to get it fixed there? [0]
-
-So submitting a stable tag does make sense, sorry I missed that.
-
-Or we can send to stable kernel specific backports.
-
-> Probably annoying questions triggering a 'sigh' .. but I'm lacking
-> experience here ..
-
-No way, thank you for fixing it !
-
-> Thanks for your time & patience so far,
-> Highly appreciated,
-
-Same here, thank you.
-
-Lorenzo
+-- 
+2.7.4
