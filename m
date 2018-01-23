@@ -1,105 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52796 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750830AbeAQUMt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Jan 2018 15:12:49 -0500
-Date: Wed, 17 Jan 2018 14:12:47 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Frederick Lawler <fred@fredlawl.com>, Joe Perches <joe@perches.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] PCI: Create  minor pci_dev log wrapper functions
-Message-ID: <20180117201239.GC7039@bhelgaas-glaptop.roam.corp.google.com>
-References: <1515819518-6501-1-git-send-email-fred@fredlawl.com>
- <1515819518-6501-2-git-send-email-fred@fredlawl.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1515819518-6501-2-git-send-email-fred@fredlawl.com>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:46999 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751161AbeAWMZo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:44 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v5 2/9] PCI: dwc: exynos: Switch to use the IRQ chained API
+Date: Tue, 23 Jan 2018 12:25:25 +0000
+Message-Id: <5526d39226e948d3be46297725522badfe63d024.1516701516.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+to Joe]
+Changes Exynos SoC specific driver to use the IRQ chained API available in
+pcie-designware.
 
-On Fri, Jan 12, 2018 at 10:58:36PM -0600, Frederick Lawler wrote:
-> Add PCI-specific dev_printk() wrappers so we can do:
-> 
->   pci_info(dev, "message\n");
-> 
-> instead of
-> 
->   dev_info(&dev->dev, "message\n");
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
 
-Hi Joe,
+ drivers/pci/dwc/pci-exynos.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-I proposed that Fred add pci_info(), pci_warn(), pci_err(), etc.
-You've done sort of similar things in the past:
-
-  256df2f3879e ("netdevice.h net/core/dev.c: Convert netdev_<level> logging macros to functions")
-  a9a79dfec239 ("ata: Convert ata_<foo>_printk(KERN_<LEVEL> to ata_<foo>_<level>")
-
-Do you have any implementation advice for us?  Fred started with inline
-functions, but tripped over some issues with varargs in inlines, so
-switched to the simple #defines below.
-
-I notice your commits above use either multiple non-inline functions
-(netdev) or a single non-inline *_printk() with macros to insert the
-loglevel (ata).
-
-Would you recommend:
-
-  - simple #defines as below,
-  - multiple non-inline functions like netdev,
-  - single non-inline *_printk() with macros like ata,
-  - something else?
-
-Thanks for any advice!
-
-Bjorn
-
-> ---
-> V2:
-> * Replace static inline varadic functions with macros instead
-> V3:
-> * No changes to this file
-> 
->  include/linux/pci.h | 27 +++++++++++++++++++++++++++
->  1 file changed, 27 insertions(+)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index c170c92..7a5012b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -2281,4 +2281,31 @@ static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
->  /* provide the legacy pci_dma_* API */
->  #include <linux/pci-dma-compat.h>
->  
-> +#define pci_printk(level, pdev, fmt, arg...)		\
-> +	dev_printk(level, &(pdev)->dev, fmt, ##arg)
-> +
-> +#define pci_emerg(pdev, fmt, arg...)			\
-> +	dev_emerg(&(pdev)->dev, fmt, ##arg)
-> +
-> +#define pci_crit(pdev, fmt, arg...)			\
-> +	dev_crit(&(pdev)->dev, fmt, ##arg)
-> +
-> +#define pci_alert(pdev, fmt, arg...)			\
-> +	dev_alert(&(pdev)->dev, fmt, ##arg)
-> +
-> +#define pci_err(pdev, fmt, arg...)			\
-> +	dev_err(&(pdev)->dev, fmt, ##arg)
-> +
-> +#define pci_notice(pdev, fmt, arg...)			\
-> +	dev_notice(&(pdev)->dev, fmt, ##arg)
-> +
-> +#define pci_warn(pdev, fmt, arg...)			\
-> +	dev_warn(&(pdev)->dev, fmt, ##arg)
-> +
-> +#define pci_info(pdev, fmt, arg...)			\
-> +	 dev_info(&(pdev)->dev, fmt, ##arg)
-> +
-> +#define pci_dbg(pdev, fmt, arg...)			\
-> +	dev_dbg(&(pdev)->dev, fmt, ##arg)
-> +
->  #endif /* LINUX_PCI_H */
-> -- 
-> 2.7.4
-> 
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 56f32ae..0a6b283d 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -297,15 +297,6 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct exynos_pcie *ep = arg;
+-	struct dw_pcie *pci = ep->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static void exynos_pcie_msi_init(struct exynos_pcie *ep)
+ {
+ 	struct dw_pcie *pci = ep->pci;
+@@ -431,15 +422,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+ 			dev_err(dev, "failed to get msi irq\n");
+ 			return pp->msi_irq;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					exynos_pcie_msi_irq_handler,
+-					IRQF_SHARED | IRQF_NO_THREAD,
+-					"exynos-pcie", ep);
+-		if (ret) {
+-			dev_err(dev, "failed to request msi irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.7.4
