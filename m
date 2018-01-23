@@ -1,154 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.hostfission.com ([139.99.139.48]:55918 "EHLO
-        mail1.hostfission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752314AbeAXILp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jan 2018 03:11:45 -0500
-Received: from www1.hostfission.com (www1.hostfission.com [139.99.139.52])
-        by mail1.hostfission.com (Postfix) with ESMTP id B36D943BA8
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jan 2018 19:02:33 +1100 (AEDT)
-To: linux-pci@vger.kernel.org
-Subject: [PATCH] Restore PCI bridge configuration space on bridge reset
+Received: from bastet.se.axis.com ([195.60.68.11]:57917 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752040AbeAWOyh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 09:54:37 -0500
+Date: Tue, 23 Jan 2018 15:54:31 +0100
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, linux-pci@vger.kernel.org,
+        m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, jespern@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com, nsekhar@ti.com
+Subject: Re: [PATCH v5 1/9] PCI: dwc: Add IRQ chained API support
+Message-ID: <20180123145431.GB7813@axis.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+ <d50ec3ee207fe51f82917f13adc7f2010e9345dc.1516701516.git.gustavo.pimentel@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 24 Jan 2018 19:02:33 +1100
-From: geoff@hostfission.com
-Message-ID: <0986ad77b71f3b8e0a17f79e238d1ebc@hostfission.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d50ec3ee207fe51f82917f13adc7f2010e9345dc.1516701516.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to PCI-to-PCI Bridge Architecture Specification 3.2.5.17
+Hello Gustavo
 
-> The bridge’s secondary bus interface and any buffers between
-> the two interfaces (primary and secondary) must be initialized
-> back to their default state whenever this bit is set.
+On Tue, Jan 23, 2018 at 12:25:24PM +0000, Gustavo Pimentel wrote:
+> Adds a IRQ chained API to pcie-designware, that aims to replace the current
+> IRQ domain hierarchy API implemented.
+> 
+> Although the IRQ domain hierarchy API is still available, pcie-designware
+> will use now the IRQ chained API.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+> Change v1->v2:
+> - num_vectors is now not configurable by the Device Tree. Now it is 32 by
+> default and can be overridden by any specific SoC driver.
+> Change v2->v3:
+> - Nothing changed, just to follow the patch set version.
+> Change v3->v4:
+> - Moved Kishon's fixes (PCI end point error and a dra7xx warning) from
+> v3-0007 patch file to here.
+> - Undo the change of the function signature to be more coherent with the
+> host mode specific functions (Thanks Kishon).
+> - Refactor the added functions in order to used host_data so that getting
+> pp again back from pci could be avoided. (Thanks Kishon)
+> - Changed summary line to match the drivers/PCI convention and changelog to
+> maintain the consistency (thanks Bjorn).
+> Change v4->v5:
+> - Implemented Kishon MSI multiple messages fix (thanks Kishon).
+> 
+>  drivers/pci/dwc/pcie-designware-host.c | 296 +++++++++++++++++++++++++++++----
+>  drivers/pci/dwc/pcie-designware.h      |  18 ++
+>  2 files changed, 286 insertions(+), 28 deletions(-)
+> 
 
-Failure to observe this causes inability to access devices on the 
-secondary bus
-on the AMD Threadripper platform after device reset when the device is 
-being
-used for PCI passthrough with KVM.
 
-The following patch corrects this by saving the pci state and restoring 
-it after
-the bus has been reset.
+> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> +{
+> +	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	u64 msi_target;
+> +
+> +	if (pp->ops->get_msi_addr)
+> +		msi_target = pp->ops->get_msi_addr(pp);
+> +	else
+> +		msi_target = virt_to_phys((void *)pp->msi_data);
 
---Signed-off-by: Geoffrey McRae<geoff@hostfission.com>
+The assignment in the else clause should be:
+    msi_target = (u64)pp->msi_data;
 
---- ./drivers/pci/pci.c.orig	2018-01-24 18:30:23.913953332 +1100
-+++ ./drivers/pci/pci.c	2018-01-24 18:46:31.752819451 +1100
-@@ -1112,12 +1112,12 @@ int pci_save_state(struct pci_dev *dev)
-  EXPORT_SYMBOL(pci_save_state);
+See my commit 111111a72e67 ("PCI: dwc: Use the DMA-API to get the MSI address").
 
-  static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
--				     u32 saved_val, int retry)
-+				     u32 saved_val, int retry, int force)
-  {
-  	u32 val;
+Since this patch set was originally posted in June last year,
+you probably missed this when you recently rebased your patch set.
 
-  	pci_read_config_dword(pdev, offset, &val);
--	if (val == saved_val)
-+	if (!force && val == saved_val)
-  		return;
+Since you introduce new functions and remove the old functions,
+I can see why you didn't get a merge conflict.
+It might be worthwile to look at the commits made in the old functions
+since the original patch submission (June last year), to see if there
+has been any other fixes that needs to be applied in your new functions
+as well.
 
-  	for (;;) {
-@@ -1136,33 +1136,29 @@ static void pci_restore_config_dword(str
-  }
+However, good news. With this small change Kishon's pci_epf_test
+passes on ARTPEC-6 :)
 
-  static void pci_restore_config_space_range(struct pci_dev *pdev,
--					   int start, int end, int retry)
-+					   int start, int end, int retry, int force)
-  {
-  	int index;
+Will do some testing with a E1000E PCIe card to see if MSI-X also
+works, if it works, I will add a Tested-by tag.
 
-  	for (index = end; index >= start; index--)
-  		pci_restore_config_dword(pdev, 4 * index,
-  					 pdev->saved_config_space[index],
--					 retry);
-+					 retry, force);
-  }
+Regards,
+Niklas
 
--static void pci_restore_config_space(struct pci_dev *pdev)
-+static void pci_restore_config_space(struct pci_dev *pdev, int force)
-  {
-  	if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
--		pci_restore_config_space_range(pdev, 10, 15, 0);
-+		pci_restore_config_space_range(pdev, 10, 15, 0, force);
-  		/* Restore BARs before the command register. */
--		pci_restore_config_space_range(pdev, 4, 9, 10);
--		pci_restore_config_space_range(pdev, 0, 3, 0);
-+		pci_restore_config_space_range(pdev, 4, 9, 10, force);
-+		pci_restore_config_space_range(pdev, 0, 3, 0, force);
-  	} else {
--		pci_restore_config_space_range(pdev, 0, 15, 0);
-+		pci_restore_config_space_range(pdev, 0, 15, 0, force);
-  	}
-  }
-
--/**
-- * pci_restore_state - Restore the saved state of a PCI device
-- * @dev: - PCI device that we're dealing with
-- */
--void pci_restore_state(struct pci_dev *dev)
-+static void _pci_restore_state(struct pci_dev *dev, int force)
-  {
-  	if (!dev->state_saved)
-  		return;
-@@ -1176,7 +1172,7 @@ void pci_restore_state(struct pci_dev *d
-
-  	pci_cleanup_aer_error_status_regs(dev);
-
--	pci_restore_config_space(dev);
-+	pci_restore_config_space(dev, force);
-
-  	pci_restore_pcix_state(dev);
-  	pci_restore_msi_state(dev);
-@@ -1187,6 +1183,15 @@ void pci_restore_state(struct pci_dev *d
-
-  	dev->state_saved = false;
-  }
-+
-+/**
-+ * pci_restore_state - Restore the saved state of a PCI device
-+ * @dev: - PCI device that we're dealing with
-+ */
-+void pci_restore_state(struct pci_dev *dev)
-+{
-+	_pci_restore_state(dev, 0);
-+}
-  EXPORT_SYMBOL(pci_restore_state);
-
-  struct pci_saved_state {
-@@ -4083,6 +4088,8 @@ void pci_reset_secondary_bus(struct pci_
-  {
-  	u16 ctrl;
-
-+  pci_save_state(dev);
-+
-  	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
-  	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-  	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-@@ -4092,10 +4099,23 @@ void pci_reset_secondary_bus(struct pci_
-  	 */
-  	msleep(2);
-
-+	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
-  	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-  	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-
-  	/*
-+	 * According to PCI-to-PCI Bridge Architecture Specification 3.2.5.17
-+	 *
-+	 * "The bridge’s secondary bus interface and any buffers between
-+	 * the two interfaces (primary and secondary) must be initialized
-+	 * back to their default state whenever this bit is set."
-+	 *
-+	 * Failure to observe this causes inability to access devices on the
-+	 * secondary bus on the AMD Threadripper platform.
-+	 */
-+	_pci_restore_state(dev, 1);
-+
-+	/*
-  	 * Trhfa for conventional PCI is 2^25 clock cycles.
-  	 * Assuming a minimum 33MHz clock this results in a 1s
-  	 * delay before we can consider subordinate devices to
+> +
+> +	msg->address_lo = lower_32_bits(msi_target);
+> +	msg->address_hi = upper_32_bits(msi_target);
+> +
+> +	if (pp->ops->get_msi_data)
+> +		msg->data = pp->ops->get_msi_data(pp, data->hwirq);
+> +	else
+> +		msg->data = data->hwirq;
+> +
+> +	dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
+> +		(int)data->hwirq, msg->address_hi, msg->address_lo);
+> +}
