@@ -1,75 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:63263 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750938AbeACAkm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 19:40:42 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@the-dreams.de>
-Subject: [PATCH 5/7] PM: i2c-designware-platdrv: Use DPM_FLAG_SMART_PREPARE
-Date: Wed, 03 Jan 2018 01:35:54 +0100
-Message-ID: <1780798.HpLBO7aPyI@aspire.rjw.lan>
-In-Reply-To: <2436726.ykYRzVD45y@aspire.rjw.lan>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan> <2436726.ykYRzVD45y@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:43232 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751293AbeAWBE6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jan 2018 20:04:58 -0500
+Received: by mail-pg0-f66.google.com with SMTP id n17so8459142pgf.10
+        for <linux-pci@vger.kernel.org>; Mon, 22 Jan 2018 17:04:58 -0800 (PST)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, project-aspen-dev@linaro.org,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH] PCI: histb: add power control GPIO for PCIe slot
+Date: Tue, 23 Jan 2018 09:04:37 +0800
+Message-Id: <1516669477-20151-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+From: Jianguo Sun <sunjianguo1@huawei.com>
 
-Modify i2c-designware-platdrv to set DPM_FLAG_SMART_PREPARE for its
-devices and return 0 from the system suspend ->prepare callback
-if the device has an ACPI companion object in order to tell the PM
-core and middle layers to avoid skipping system suspend/resume
-callbacks for the device in that case (which may be problematic,
-because the device may be accessed during suspend and resume of
-other devices via I2C operation regions then).
+Besides the GPIO for controlling reset, there is also possibly another
+GPIO for turning on/off the power of PCIe slot.  Let's add the support
+for that with another optional device tree property 'power-gpios'.
 
-Also the pm_runtime_suspended() check in dw_i2c_plat_prepare()
-is not necessary any more, because the core does it when setting
-power.direct_complete for the device, so drop it.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Jianguo Sun <sunjianguo1@huawei.com>
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
 ---
- drivers/i2c/busses/i2c-designware-platdrv.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ .../bindings/pci/hisilicon-histb-pcie.txt          |  1 +
+ drivers/pci/dwc/pcie-histb.c                       | 28 +++++++++++++++++++---
+ 2 files changed, 26 insertions(+), 3 deletions(-)
 
-Index: linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
-===================================================================
---- linux-pm.orig/drivers/i2c/busses/i2c-designware-platdrv.c
-+++ linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
-@@ -372,6 +372,8 @@ static int dw_i2c_plat_probe(struct plat
- 	ACPI_COMPANION_SET(&adap->dev, ACPI_COMPANION(&pdev->dev));
- 	adap->dev.of_node = pdev->dev.of_node;
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+index c84bc027930b..597397a048f8 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+@@ -33,6 +33,7 @@ Required properties
+   "bus": bus reset.
  
-+	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_SMART_PREPARE);
-+
- 	/* The code below assumes runtime PM to be disabled. */
- 	WARN_ON(pm_runtime_enabled(&pdev->dev));
+ Optional properties:
++- power-gpios: The gpio to control the power of PCIe slot.
+ - reset-gpios: The gpio to generate PCIe PERST# assert and deassert signal.
+ - phys: List of phandle and phy mode specifier, should be 0.
+ - phy-names: Must be "phy".
+diff --git a/drivers/pci/dwc/pcie-histb.c b/drivers/pci/dwc/pcie-histb.c
+index 33b01b734d7d..2a6b18619b25 100644
+--- a/drivers/pci/dwc/pcie-histb.c
++++ b/drivers/pci/dwc/pcie-histb.c
+@@ -63,6 +63,7 @@ struct histb_pcie {
+ 	struct reset_control *sys_reset;
+ 	struct reset_control *bus_reset;
+ 	void __iomem *ctrl;
++	int power_gpio;
+ 	int reset_gpio;
+ };
  
-@@ -435,7 +437,13 @@ MODULE_DEVICE_TABLE(of, dw_i2c_of_match)
- #ifdef CONFIG_PM_SLEEP
- static int dw_i2c_plat_prepare(struct device *dev)
- {
--	return pm_runtime_suspended(dev);
-+	/*
-+	 * If the ACPI companion device object is present for this device, it
-+	 * may be accessed during suspend and resume of other devices via I2C
-+	 * operation regions, so tell the PM core and middle layers to avoid
-+	 * skipping system suspend/resume callbacks for it in that case.
-+	 */
-+	return !has_acpi_companion(dev);
+@@ -230,6 +231,8 @@ static void histb_pcie_host_disable(struct histb_pcie *hipcie)
+ 
+ 	if (gpio_is_valid(hipcie->reset_gpio))
+ 		gpio_set_value_cansleep(hipcie->reset_gpio, 0);
++	if (gpio_is_valid(hipcie->power_gpio))
++		gpio_set_value_cansleep(hipcie->power_gpio, 0);
  }
  
- static void dw_i2c_plat_complete(struct device *dev)
+ static int histb_pcie_host_enable(struct pcie_port *pp)
+@@ -240,8 +243,14 @@ static int histb_pcie_host_enable(struct pcie_port *pp)
+ 	int ret;
+ 
+ 	/* power on PCIe device if have */
+-	if (gpio_is_valid(hipcie->reset_gpio))
++	if (gpio_is_valid(hipcie->power_gpio))
++		gpio_set_value_cansleep(hipcie->power_gpio, 1);
++
++	if (gpio_is_valid(hipcie->reset_gpio)) {
++		gpio_set_value_cansleep(hipcie->reset_gpio, 0);
++		mdelay(10);
+ 		gpio_set_value_cansleep(hipcie->reset_gpio, 1);
++	}
+ 
+ 	ret = clk_prepare_enable(hipcie->bus_clk);
+ 	if (ret) {
+@@ -335,15 +344,28 @@ static int histb_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pci->dbi_base);
+ 	}
+ 
++	hipcie->power_gpio = of_get_named_gpio_flags(np,
++				"power-gpios", 0, &of_flags);
++	if (of_flags & OF_GPIO_ACTIVE_LOW)
++		flag |= GPIOF_ACTIVE_LOW;
++	if (gpio_is_valid(hipcie->power_gpio)) {
++		ret = devm_gpio_request_one(dev, hipcie->power_gpio,
++				flag, "PCIe device power control");
++		if (ret) {
++			dev_err(dev, "unable to request power gpio\n");
++			return ret;
++		}
++	}
++
+ 	hipcie->reset_gpio = of_get_named_gpio_flags(np,
+ 				"reset-gpios", 0, &of_flags);
+ 	if (of_flags & OF_GPIO_ACTIVE_LOW)
+ 		flag |= GPIOF_ACTIVE_LOW;
+ 	if (gpio_is_valid(hipcie->reset_gpio)) {
+ 		ret = devm_gpio_request_one(dev, hipcie->reset_gpio,
+-				flag, "PCIe device power control");
++				flag, "PCIe device reset control");
+ 		if (ret) {
+-			dev_err(dev, "unable to request gpio\n");
++			dev_err(dev, "unable to request reset gpio\n");
+ 			return ret;
+ 		}
+ 	}
+-- 
+1.9.1
