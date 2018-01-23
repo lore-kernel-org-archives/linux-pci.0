@@ -1,53 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0046.outbound.protection.outlook.com ([104.47.41.46]:58474
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750913AbeACWao (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Jan 2018 17:30:44 -0500
-From: Veerasenareddy Burru <vburru@caviumnetworks.com>
-To: linux-pci@vger.kernel.org
-Cc: satananda.burla@cavium.com, vburru@caviumnetworks.com,
-        mpanicker@caviumnetworks.com
-Subject: [PATCH] pciutils: Extend pci_generic_scan() to scan all 256 buses.
-Date: Wed,  3 Jan 2018 14:30:04 -0800
-Message-Id: <1515018604-13008-1-git-send-email-vburru@caviumnetworks.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
+        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
+        <dann.frazier@canonical.com>
+CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
+        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+        <rdunlap@infradead.org>, John Garry <john.garry@huawei.com>
+Subject: [PATCH v12 9/9] MAINTAINERS: Add maintainer for HiSilicon LPC driver
+Date: Wed, 24 Jan 2018 00:36:25 +0800
+Message-ID: <1516725385-24535-10-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
+References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pci_generic_scan() scans only bus 0 and its subordinate buses.
-Due to this, 'lspci -H1' does not list the devices that are not under
-root bus not 0 as shown below:
-[root@caliobm11 pciutils]# lspci -n -s 84:00.0
-84:00.0 0200: 177d:9702 (rev 02)
-[root@caliobm11 pciutils]# lspci -H1 -n -s 84:00.0
-[root@caliobm11 pciutils]#
+Added maintainer for drivers/bus/hisi_lpc.c
 
-Signed-off-by: Veerasenareddy Burru <vburru@caviumnetworks.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- lib/generic.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/lib/generic.c b/lib/generic.c
-index c219592..9c5e267 100644
---- a/lib/generic.c
-+++ b/lib/generic.c
-@@ -69,9 +69,14 @@ void
- pci_generic_scan(struct pci_access *a)
- {
-   byte busmap[256];
-+  int bus;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index f1e3ee6..ab09908 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6386,6 +6386,13 @@ W:	http://www.hisilicon.com
+ S:	Maintained
+ F:	drivers/net/ethernet/hisilicon/hns3/
  
-   memset(busmap, 0, sizeof(busmap));
--  pci_generic_scan_bus(a, busmap, 0);
-+  for (bus=0; bus<256; bus++)
-+    {
-+      if (!busmap[bus])
-+        pci_generic_scan_bus(a, busmap, bus);
-+    }
- }
- 
- int
++HISILICON LPC BUS DRIVER
++M:	john.garry@huawei.com
++W:	http://www.hisilicon.com
++S:	Maintained
++F:	drivers/bus/hisi_lpc.c
++F:	Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
++
+ HISILICON NETWORK SUBSYSTEM DRIVER
+ M:	Yisen Zhuang <yisen.zhuang@huawei.com>
+ M:	Salil Mehta <salil.mehta@huawei.com>
 -- 
-1.8.3.1
+1.9.1
