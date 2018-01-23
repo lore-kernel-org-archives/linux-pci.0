@@ -1,36 +1,35 @@
-Return-Path: <SRS0=RD7r=EK=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=RD7r=EK=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH] PCI: Fix MSI disabled for HiSilicon Hip06/Hip07 EP mode
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1514454812-101846-1-git-send-email-liudongdong3@huawei.com>
- <20180113000414.GC205469@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
-	<zhouyupeng1@huawei.com>, <tangyongqian@huawei.com>, <bruce.feng@huawei.com>,
-	<stable@vger.kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <e2ec400e-7db6-1858-1767-4c2bf52c6bc6@huawei.com>
-Date: Mon, 15 Jan 2018 09:01:02 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f174.google.com ([74.125.82.174]:45253 "EHLO
+        mail-ot0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751285AbeAWBMp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jan 2018 20:12:45 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180113000414.GC205469@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <1516669477-20151-1-git-send-email-shawn.guo@linaro.org>
+References: <1516669477-20151-1-git-send-email-shawn.guo@linaro.org>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Mon, 22 Jan 2018 23:12:44 -0200
+Message-ID: <CAOMZO5DFR=qJ_Q9ag+6Ov92VMZL3wiLSQJee=nKUJFtZ1mW1RQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: histb: add power control GPIO for PCIe slot
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+        <devicetree@vger.kernel.org>, project-aspen-dev@linaro.org,
+        Jianguo Sun <sunjianguo1@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
-在 2018/1/13 8:04, Bjorn Helgaas 写道:
-> On Thu, Dec 28, 2017 at 05:53:32PM +0800, Dongdong Liu wrote:
->> HiSilicon Hip06/Hip07 can work as RC mode and EP mode. The PCIe Root Port
->> in Hip06/Hip07 SoCs advertises an MSI capability, but it can not generate
->> MSIs. It can generate MSIs When it works as EP mode, but the vendor id and
->> device id of RP and EP are the same. Current code also disable MSI for EP
->> mode, we only need to disable MSI for Root Port.
->>
->> Cc: <stable@vger.kernel.org>
->> Fixes: 72f2ff0deb87 ("PCI: Disable MSI for HiSilicon Hip06/Hip07 Root Ports")
->> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Hi Shawn,
+
+On Mon, Jan 22, 2018 at 11:04 PM, Shawn Guo <shawn.guo@linaro.org> wrote:
+> From: Jianguo Sun <sunjianguo1@huawei.com>
 >
-> Applied with Zhou's reviewed-by to pci/msi for v4.16, thanks!
+> Besides the GPIO for controlling reset, there is also possibly another
+> GPIO for turning on/off the power of PCIe slot.  Let's add the support
+> for that with another optional device tree property 'power-gpios'.
 
-Many thanks for applying the patch.
+It seems that a better approach would be to add regulator support
+instead as it is more general.
 
-Thanks,
-Dongdong
+We do this in drivers/pci/dwc/pci-imx6.c.
