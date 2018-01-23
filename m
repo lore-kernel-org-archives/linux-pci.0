@@ -1,573 +1,150 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v5 08/11] PCI: endpoint: Add the function number as argument to EPC ops
-Date: Sun, 28 Jan 2018 21:40:22 +0100
-Message-Id: <221dfb69e51ea1a43a5ff90d60227204150facf2.1517170521.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=MpAE=ES=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=MpAE=ES=codeaurora.org=okaya@kernel.org>
+Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
+ pcie_bus_perf On NVMe Device
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ron Yuan <ron.yuan@memblaze.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Bo Chen <bo.chen@memblaze.com>, William Huang <william.huang@memblaze.com>,
+ Fengming Wu <fengming.wu@memblaze.com>,
+ Jason Jiang <jason.jiang@microsemi.com>,
+ Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>,
+ Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
+ William Cheng <william.cheng@microsemi.com>,
+ "Kim Helper (khelper)" <khelper@micron.com>,
+ Linux PCI <linux-pci@vger.kernel.org>
+References: <5727b0b1-f0d5-7c78-373e-fc9d1bd662d2@codeaurora.org>
+ <CABhMZUU0643U-qVc9ymA+1PMZToSLFm2dg8-cu=iQ2LGw2Pi8Q@mail.gmail.com>
+ <SHAPR01MB173A36104635A8BFF9A83E1FEE80@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
+ <0ce08a91-fc38-1288-7683-836fcbbbdf3c@codeaurora.org>
+ <20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com>
+ <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
+ <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
+ <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
+ <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
+ <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
+ <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <09bd3f5c-4671-d9dd-fa39-4d7619ee5860@codeaurora.org>
+Date: Mon, 22 Jan 2018 21:27:13 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch updates the prototype of most handlers from 'struct
-pci_epc_ops' so the EPC library can now support multi-function devices.
+On 1/22/2018 7:16 PM, Bjorn Helgaas wrote:
+> On Mon, Jan 22, 2018 at 06:24:22PM -0500, Sinan Kaya wrote:
+>> On 1/22/2018 5:51 PM, Bjorn Helgaas wrote:
+>>> On Mon, Jan 22, 2018 at 05:04:03PM -0500, Sinan Kaya wrote:
+>>>> On 1/22/2018 4:36 PM, Bjorn Helgaas wrote:
+>>
+>>>>> Reducing MPS may be necessary if there are several devices in the
+>>>>> hierarchy and one requires a smaller MPS than the others.  That
+>>>>> obviously reduces the maximum read and write performance.
+>>>>>
+>>>>> Reducing the MRRS may be useful to prevent one device from hogging
+>>>>> a link, but of course, it reduces read performance for that device
+>>>>> because we need more read requests.
+>>>>
+>>>> Maybe, a picture could help.
+>>>>
+>>>>                root (MPS=256)
+>>>>                  |
+>>>>          ------------------
+>>>>         /                  \
+>>>>    bridge0 (MPS=256)      bridge1 (MPS=128)
+>>>>       /                       \
+>>>>     EP0 (MPS=256)            EP1 (MPS=128)
+>>>>
+>>>> If I understood this right, code allows the configuration above with
+>>>> the performance mode so that MPS doesn't have to be uniform across
+>>>> the tree. 
+>>>
+>>> Yes.  In PERFORMANCE mode, we will set EP1's MRRS=128 and
+>>> EP0's MRRS=256, just as you show.
+>>>
+>>>> It just needs to be consistent between the root port and endpoints.
+>>>
+>>> No, it doesn't need to be consistent.  In PERFORMANCE mode, we'll set
+>>> the root's MPS=256 and EP1's MPS=128.
+>>>
+>>> (I'm not actually 100% convinced that the PERFORMANCE mode approach of
+>>> reducing MRRS is safe, necessary, and maintainable.  I suspect that in
+>>> many of the interesting cases, the device we care about is the only
+>>> one below a Root Port, and we can get the performance we need by
+>>> maximizing MPS and MRRS for that Root Port and its children,
+>>> independent of the rest of the system.)
+>>
+>> Maybe, I started seeing more and more NVMe devices behind a switch every
+>> day. That's why, I'm concerned.
+> 
+> Are there a mix of devices that support large MPS and those that only
+> support a smaller MPS behind the same switch?
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
----
- drivers/pci/dwc/pcie-designware-ep.c          | 20 +++++----
- drivers/pci/endpoint/functions/pci-epf-test.c | 41 ++++++++++--------
- drivers/pci/endpoint/pci-epc-core.c           | 62 ++++++++++++++++-----------
- include/linux/pci-epc.h                       | 43 +++++++++++--------
- 4 files changed, 96 insertions(+), 70 deletions(-)
+I guess we should understand the environment from Ron Yuan. Can we see
+lspci -vvv output of your system?
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 51344794a0e6..cf5c4b4688ae 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -41,7 +41,7 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- 	dw_pcie_dbi_ro_wr_dis(pci);
- }
- 
--static int dw_pcie_ep_write_header(struct pci_epc *epc,
-+static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
- 				   struct pci_epf_header *hdr)
- {
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-@@ -114,7 +114,8 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- 	return 0;
- }
- 
--static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
-+static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
-+				 enum pci_barno bar)
- {
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-@@ -126,7 +127,8 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
- 	clear_bit(atu_index, ep->ib_window_map);
- }
- 
--static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
-+static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
-+			      enum pci_barno bar,
- 			      dma_addr_t bar_phys, size_t size, int flags)
- {
- 	int ret;
-@@ -167,7 +169,8 @@ static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
- 	return -EINVAL;
- }
- 
--static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
-+static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no,
-+				  phys_addr_t addr)
- {
- 	int ret;
- 	u32 atu_index;
-@@ -182,7 +185,8 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
- 	clear_bit(atu_index, ep->ob_window_map);
- }
- 
--static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
-+static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
-+			       phys_addr_t addr,
- 			       u64 pci_addr, size_t size)
- {
- 	int ret;
-@@ -198,7 +202,7 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
- 	return 0;
- }
- 
--static int dw_pcie_ep_get_msi(struct pci_epc *epc)
-+static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
- {
- 	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-@@ -212,7 +216,7 @@ static int dw_pcie_ep_get_msi(struct pci_epc *epc)
- 	return val;
- }
- 
--static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
-+static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
- {
- 	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-@@ -228,7 +232,7 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
- 	return 0;
- }
- 
--static int dw_pcie_ep_raise_irq(struct pci_epc *epc,
-+static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
- 				enum pci_epc_irq_type type, u8 interrupt_num)
- {
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index f9308c2f22e6..7bacca8daec6 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -104,7 +104,8 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 		goto err;
- 	}
- 
--	ret = pci_epc_map_addr(epc, src_phys_addr, reg->src_addr, reg->size);
-+	ret = pci_epc_map_addr(epc, epf->func_no, src_phys_addr, reg->src_addr,
-+			       reg->size);
- 	if (ret) {
- 		dev_err(dev, "failed to map source address\n");
- 		reg->status = STATUS_SRC_ADDR_INVALID;
-@@ -119,7 +120,8 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 		goto err_src_map_addr;
- 	}
- 
--	ret = pci_epc_map_addr(epc, dst_phys_addr, reg->dst_addr, reg->size);
-+	ret = pci_epc_map_addr(epc, epf->func_no, dst_phys_addr, reg->dst_addr,
-+			       reg->size);
- 	if (ret) {
- 		dev_err(dev, "failed to map destination address\n");
- 		reg->status = STATUS_DST_ADDR_INVALID;
-@@ -128,13 +130,13 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 
- 	memcpy(dst_addr, src_addr, reg->size);
- 
--	pci_epc_unmap_addr(epc, dst_phys_addr);
-+	pci_epc_unmap_addr(epc, epf->func_no, dst_phys_addr);
- 
- err_dst_addr:
- 	pci_epc_mem_free_addr(epc, dst_phys_addr, dst_addr, reg->size);
- 
- err_src_map_addr:
--	pci_epc_unmap_addr(epc, src_phys_addr);
-+	pci_epc_unmap_addr(epc, epf->func_no, src_phys_addr);
- 
- err_src_addr:
- 	pci_epc_mem_free_addr(epc, src_phys_addr, src_addr, reg->size);
-@@ -164,7 +166,8 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
- 		goto err;
- 	}
- 
--	ret = pci_epc_map_addr(epc, phys_addr, reg->src_addr, reg->size);
-+	ret = pci_epc_map_addr(epc, epf->func_no, phys_addr, reg->src_addr,
-+			       reg->size);
- 	if (ret) {
- 		dev_err(dev, "failed to map address\n");
- 		reg->status = STATUS_SRC_ADDR_INVALID;
-@@ -186,7 +189,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
- 	kfree(buf);
- 
- err_map_addr:
--	pci_epc_unmap_addr(epc, phys_addr);
-+	pci_epc_unmap_addr(epc, epf->func_no, phys_addr);
- 
- err_addr:
- 	pci_epc_mem_free_addr(epc, phys_addr, src_addr, reg->size);
-@@ -215,7 +218,8 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 		goto err;
- 	}
- 
--	ret = pci_epc_map_addr(epc, phys_addr, reg->dst_addr, reg->size);
-+	ret = pci_epc_map_addr(epc, epf->func_no, phys_addr, reg->dst_addr,
-+			       reg->size);
- 	if (ret) {
- 		dev_err(dev, "failed to map address\n");
- 		reg->status = STATUS_DST_ADDR_INVALID;
-@@ -242,7 +246,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 	kfree(buf);
- 
- err_map_addr:
--	pci_epc_unmap_addr(epc, phys_addr);
-+	pci_epc_unmap_addr(epc, epf->func_no, phys_addr);
- 
- err_addr:
- 	pci_epc_mem_free_addr(epc, phys_addr, dst_addr, reg->size);
-@@ -260,11 +264,11 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
- 	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
- 
- 	reg->status |= STATUS_IRQ_RAISED;
--	msi_count = pci_epc_get_msi(epc);
-+	msi_count = pci_epc_get_msi(epc, epf->func_no);
- 	if (irq > msi_count || msi_count <= 0)
--		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-+		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_LEGACY, 0);
- 	else
--		pci_epc_raise_irq(epc, PCI_EPC_IRQ_MSI, irq);
-+		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
- }
- 
- static void pci_epf_test_cmd_handler(struct work_struct *work)
-@@ -291,7 +295,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 
- 	if (command & COMMAND_RAISE_LEGACY_IRQ) {
- 		reg->status = STATUS_IRQ_RAISED;
--		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-+		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_LEGACY, 0);
- 		goto reset_handler;
- 	}
- 
-@@ -326,11 +330,11 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 	}
- 
- 	if (command & COMMAND_RAISE_MSI_IRQ) {
--		msi_count = pci_epc_get_msi(epc);
-+		msi_count = pci_epc_get_msi(epc, epf->func_no);
- 		if (irq > msi_count || msi_count <= 0)
- 			goto reset_handler;
- 		reg->status = STATUS_IRQ_RAISED;
--		pci_epc_raise_irq(epc, PCI_EPC_IRQ_MSI, irq);
-+		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
- 		goto reset_handler;
- 	}
- 
-@@ -358,7 +362,7 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
- 		if (epf_test->reg[bar]) {
- 			pci_epf_free_space(epf, epf_test->reg[bar], bar);
--			pci_epc_clear_bar(epc, bar);
-+			pci_epc_clear_bar(epc, epf->func_no, bar);
- 		}
- 	}
- }
-@@ -380,7 +384,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
- 		epf_bar = &epf->bar[bar];
--		ret = pci_epc_set_bar(epc, bar, epf_bar->phys_addr,
-+		ret = pci_epc_set_bar(epc, epf->func_no, bar,
-+				      epf_bar->phys_addr,
- 				      epf_bar->size, flags);
- 		if (ret) {
- 			pci_epf_free_space(epf, epf_test->reg[bar], bar);
-@@ -433,7 +438,7 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 	if (WARN_ON_ONCE(!epc))
- 		return -EINVAL;
- 
--	ret = pci_epc_write_header(epc, header);
-+	ret = pci_epc_write_header(epc, epf->func_no, header);
- 	if (ret) {
- 		dev_err(dev, "configuration header write failed\n");
- 		return ret;
-@@ -447,7 +452,7 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 	if (ret)
- 		return ret;
- 
--	ret = pci_epc_set_msi(epc, epf->msi_interrupts);
-+	ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index cd7d4788b94d..5bb1852b8e1c 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -141,25 +141,26 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
- /**
-  * pci_epc_raise_irq() - interrupt the host system
-  * @epc: the EPC device which has to interrupt the host
-+ * @func_no: the endpoint function number in the EPC device
-  * @type: specify the type of interrupt; legacy or MSI
-  * @interrupt_num: the MSI interrupt number
-  *
-  * Invoke to raise an MSI or legacy interrupt
-  */
--int pci_epc_raise_irq(struct pci_epc *epc, enum pci_epc_irq_type type,
--		      u8 interrupt_num)
-+int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
-+		      enum pci_epc_irq_type type, u8 interrupt_num)
- {
- 	int ret;
- 	unsigned long flags;
- 
--	if (IS_ERR(epc))
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
- 		return -EINVAL;
- 
- 	if (!epc->ops->raise_irq)
- 		return 0;
- 
- 	spin_lock_irqsave(&epc->lock, flags);
--	ret = epc->ops->raise_irq(epc, type, interrupt_num);
-+	ret = epc->ops->raise_irq(epc, func_no, type, interrupt_num);
- 	spin_unlock_irqrestore(&epc->lock, flags);
- 
- 	return ret;
-@@ -169,22 +170,23 @@ EXPORT_SYMBOL_GPL(pci_epc_raise_irq);
- /**
-  * pci_epc_get_msi() - get the number of MSI interrupt numbers allocated
-  * @epc: the EPC device to which MSI interrupts was requested
-+ * @func_no: the endpoint function number in the EPC device
-  *
-  * Invoke to get the number of MSI interrupts allocated by the RC
-  */
--int pci_epc_get_msi(struct pci_epc *epc)
-+int pci_epc_get_msi(struct pci_epc *epc, u8 func_no)
- {
- 	int interrupt;
- 	unsigned long flags;
- 
--	if (IS_ERR(epc))
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
- 		return 0;
- 
- 	if (!epc->ops->get_msi)
- 		return 0;
- 
- 	spin_lock_irqsave(&epc->lock, flags);
--	interrupt = epc->ops->get_msi(epc);
-+	interrupt = epc->ops->get_msi(epc, func_no);
- 	spin_unlock_irqrestore(&epc->lock, flags);
- 
- 	if (interrupt < 0)
-@@ -199,17 +201,18 @@ EXPORT_SYMBOL_GPL(pci_epc_get_msi);
- /**
-  * pci_epc_set_msi() - set the number of MSI interrupt numbers required
-  * @epc: the EPC device on which MSI has to be configured
-+ * @func_no: the endpoint function number in the EPC device
-  * @interrupts: number of MSI interrupts required by the EPF
-  *
-  * Invoke to set the required number of MSI interrupts.
-  */
--int pci_epc_set_msi(struct pci_epc *epc, u8 interrupts)
-+int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- {
- 	int ret;
- 	u8 encode_int;
- 	unsigned long flags;
- 
--	if (IS_ERR(epc))
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
- 		return -EINVAL;
- 
- 	if (!epc->ops->set_msi)
-@@ -218,7 +221,7 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 interrupts)
- 	encode_int = order_base_2(interrupts);
- 
- 	spin_lock_irqsave(&epc->lock, flags);
--	ret = epc->ops->set_msi(epc, encode_int);
-+	ret = epc->ops->set_msi(epc, func_no, encode_int);
- 	spin_unlock_irqrestore(&epc->lock, flags);
- 
- 	return ret;
-@@ -228,22 +231,24 @@ EXPORT_SYMBOL_GPL(pci_epc_set_msi);
- /**
-  * pci_epc_unmap_addr() - unmap CPU address from PCI address
-  * @epc: the EPC device on which address is allocated
-+ * @func_no: the endpoint function number in the EPC device
-  * @phys_addr: physical address of the local system
-  *
-  * Invoke to unmap the CPU address from PCI address.
-  */
--void pci_epc_unmap_addr(struct pci_epc *epc, phys_addr_t phys_addr)
-+void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no,
-+			phys_addr_t phys_addr)
- {
- 	unsigned long flags;
- 
--	if (IS_ERR(epc))
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
- 		return;
- 
- 	if (!epc->ops->unmap_addr)
- 		return;
- 
- 	spin_lock_irqsave(&epc->lock, flags);
--	epc->ops->unmap_addr(epc, phys_addr);
-+	epc->ops->unmap_addr(epc, func_no, phys_addr);
- 	spin_unlock_irqrestore(&epc->lock, flags);
- }
- EXPORT_SYMBOL_GPL(pci_epc_unmap_addr);
-@@ -251,26 +256,27 @@ EXPORT_SYMBOL_GPL(pci_epc_unmap_addr);
- /**
-  * pci_epc_map_addr() - map CPU address to PCI address
-  * @epc: the EPC device on which address is allocated
-+ * @func_no: the endpoint function number in the EPC device
-  * @phys_addr: physical address of the local system
-  * @pci_addr: PCI address to which the physical address should be mapped
-  * @size: the size of the allocation
-  *
-  * Invoke to map CPU address with PCI address.
-  */
--int pci_epc_map_addr(struct pci_epc *epc, phys_addr_t phys_addr,
--		     u64 pci_addr, size_t size)
-+int pci_epc_map_addr(struct pci_epc *epc, u8 func_no,
-+		     phys_addr_t phys_addr, u64 pci_addr, size_t size)
- {
- 	int ret;
- 	unsigned long flags;
- 
--	if (IS_ERR(epc))
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
- 		return -EINVAL;
- 
- 	if (!epc->ops->map_addr)
- 		return 0;
- 
- 	spin_lock_irqsave(&epc->lock, flags);
--	ret = epc->ops->map_addr(epc, phys_addr, pci_addr, size);
-+	ret = epc->ops->map_addr(epc, func_no, phys_addr, pci_addr, size);
- 	spin_unlock_irqrestore(&epc->lock, flags);
- 
- 	return ret;
-@@ -280,22 +286,23 @@ EXPORT_SYMBOL_GPL(pci_epc_map_addr);
- /**
-  * pci_epc_clear_bar() - reset the BAR
-  * @epc: the EPC device for which the BAR has to be cleared
-+ * @func_no: the endpoint function number in the EPC device
-  * @bar: the BAR number that has to be reset
-  *
-  * Invoke to reset the BAR of the endpoint device.
-  */
--void pci_epc_clear_bar(struct pci_epc *epc, int bar)
-+void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, int bar)
- {
- 	unsigned long flags;
- 
--	if (IS_ERR(epc))
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
- 		return;
- 
- 	if (!epc->ops->clear_bar)
- 		return;
- 
- 	spin_lock_irqsave(&epc->lock, flags);
--	epc->ops->clear_bar(epc, bar);
-+	epc->ops->clear_bar(epc, func_no, bar);
- 	spin_unlock_irqrestore(&epc->lock, flags);
- }
- EXPORT_SYMBOL_GPL(pci_epc_clear_bar);
-@@ -303,26 +310,27 @@ EXPORT_SYMBOL_GPL(pci_epc_clear_bar);
- /**
-  * pci_epc_set_bar() - configure BAR in order for host to assign PCI addr space
-  * @epc: the EPC device on which BAR has to be configured
-+ * @func_no: the endpoint function number in the EPC device
-  * @bar: the BAR number that has to be configured
-  * @size: the size of the addr space
-  * @flags: specify memory allocation/io allocation/32bit address/64 bit address
-  *
-  * Invoke to configure the BAR of the endpoint device.
-  */
--int pci_epc_set_bar(struct pci_epc *epc, enum pci_barno bar,
-+int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, enum pci_barno bar,
- 		    dma_addr_t bar_phys, size_t size, int flags)
- {
- 	int ret;
- 	unsigned long irq_flags;
- 
--	if (IS_ERR(epc))
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
- 		return -EINVAL;
- 
- 	if (!epc->ops->set_bar)
- 		return 0;
- 
- 	spin_lock_irqsave(&epc->lock, irq_flags);
--	ret = epc->ops->set_bar(epc, bar, bar_phys, size, flags);
-+	ret = epc->ops->set_bar(epc, func_no, bar, bar_phys, size, flags);
- 	spin_unlock_irqrestore(&epc->lock, irq_flags);
- 
- 	return ret;
-@@ -332,6 +340,7 @@ EXPORT_SYMBOL_GPL(pci_epc_set_bar);
- /**
-  * pci_epc_write_header() - write standard configuration header
-  * @epc: the EPC device to which the configuration header should be written
-+ * @func_no: the endpoint function number in the EPC device
-  * @header: standard configuration header fields
-  *
-  * Invoke to write the configuration header to the endpoint controller. Every
-@@ -339,19 +348,20 @@ EXPORT_SYMBOL_GPL(pci_epc_set_bar);
-  * configuration header would be written. The callback function should write
-  * the header fields to this dedicated location.
-  */
--int pci_epc_write_header(struct pci_epc *epc, struct pci_epf_header *header)
-+int pci_epc_write_header(struct pci_epc *epc, u8 func_no,
-+			 struct pci_epf_header *header)
- {
- 	int ret;
- 	unsigned long flags;
- 
--	if (IS_ERR(epc))
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
- 		return -EINVAL;
- 
- 	if (!epc->ops->write_header)
- 		return 0;
- 
- 	spin_lock_irqsave(&epc->lock, flags);
--	ret = epc->ops->write_header(epc, header);
-+	ret = epc->ops->write_header(epc, func_no, header);
- 	spin_unlock_irqrestore(&epc->lock, flags);
- 
- 	return ret;
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index f7a04e1af112..e58e2de8936b 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -39,17 +39,20 @@ enum pci_epc_irq_type {
-  * @owner: the module owner containing the ops
-  */
- struct pci_epc_ops {
--	int	(*write_header)(struct pci_epc *pci_epc,
-+	int	(*write_header)(struct pci_epc *epc, u8 func_no,
- 				struct pci_epf_header *hdr);
--	int	(*set_bar)(struct pci_epc *epc, enum pci_barno bar,
-+	int	(*set_bar)(struct pci_epc *epc, u8 func_no,
-+			   enum pci_barno bar,
- 			   dma_addr_t bar_phys, size_t size, int flags);
--	void	(*clear_bar)(struct pci_epc *epc, enum pci_barno bar);
--	int	(*map_addr)(struct pci_epc *epc, phys_addr_t addr,
--			    u64 pci_addr, size_t size);
--	void	(*unmap_addr)(struct pci_epc *epc, phys_addr_t addr);
--	int	(*set_msi)(struct pci_epc *epc, u8 interrupts);
--	int	(*get_msi)(struct pci_epc *epc);
--	int	(*raise_irq)(struct pci_epc *pci_epc,
-+	void	(*clear_bar)(struct pci_epc *epc, u8 func_no,
-+			     enum pci_barno bar);
-+	int	(*map_addr)(struct pci_epc *epc, u8 func_no,
-+			    phys_addr_t addr, u64 pci_addr, size_t size);
-+	void	(*unmap_addr)(struct pci_epc *epc, u8 func_no,
-+			      phys_addr_t addr);
-+	int	(*set_msi)(struct pci_epc *epc, u8 func_no, u8 interrupts);
-+	int	(*get_msi)(struct pci_epc *epc, u8 func_no);
-+	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
- 			     enum pci_epc_irq_type type, u8 interrupt_num);
- 	int	(*start)(struct pci_epc *epc);
- 	void	(*stop)(struct pci_epc *epc);
-@@ -124,17 +127,21 @@ void pci_epc_destroy(struct pci_epc *epc);
- int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf);
- void pci_epc_linkup(struct pci_epc *epc);
- void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf);
--int pci_epc_write_header(struct pci_epc *epc, struct pci_epf_header *hdr);
--int pci_epc_set_bar(struct pci_epc *epc, enum pci_barno bar,
-+int pci_epc_write_header(struct pci_epc *epc, u8 func_no,
-+			 struct pci_epf_header *hdr);
-+int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
-+		    enum pci_barno bar,
- 		    dma_addr_t bar_phys, size_t size, int flags);
--void pci_epc_clear_bar(struct pci_epc *epc, int bar);
--int pci_epc_map_addr(struct pci_epc *epc, phys_addr_t phys_addr,
-+void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, int bar);
-+int pci_epc_map_addr(struct pci_epc *epc, u8 func_no,
-+		     phys_addr_t phys_addr,
- 		     u64 pci_addr, size_t size);
--void pci_epc_unmap_addr(struct pci_epc *epc, phys_addr_t phys_addr);
--int pci_epc_set_msi(struct pci_epc *epc, u8 interrupts);
--int pci_epc_get_msi(struct pci_epc *epc);
--int pci_epc_raise_irq(struct pci_epc *epc, enum pci_epc_irq_type type,
--		      u8 interrupt_num);
-+void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no,
-+			phys_addr_t phys_addr);
-+int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts);
-+int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
-+int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
-+		      enum pci_epc_irq_type type, u8 interrupt_num);
- int pci_epc_start(struct pci_epc *epc);
- void pci_epc_stop(struct pci_epc *epc);
- struct pci_epc *pci_epc_get(const char *epc_name);
+We could maybe detect coexistence of slow and fast device condition and
+put some suggestions like moving the card to another slot as a best effort
+solution.
+
+> 
+> I don't have any actual data about topologies of interest.  I'm just
+> guessing that high-performance devices will often have their own root
+> port, without being mixed in with low-speed devices.  It's OK to have
+> switches in the path; it's the mixing high-speed with low-speed
+> devices that causes the problems.
+
+Agreed. Mine was just a general rant. I was curious if we could make it better.
+
+> 
+>>>> Why are we reducing MRRS in this case?
+>>>
+>>> We have to set EP1's MRRS=128 so it will never receive a completion
+>>> larger than 128 bytes.  If we set EP1's MRRS=256, it could receive
+>>> 256-byte TLPs, which it would treat as malformed.  (We also assume no
+>>> peer-to-peer DMA that targets EP1.)
+>>
+>> What if we were to keep root port MPS as 128? and not touch the BIOS
+>> configured MRRS (4k) ?
+>>
+>> Everybody should be happy, right?
+> 
+> No.  In your picture (which helps a lot, thank you!), if you set the
+> root's MPS=128, EP1 will be fine no matter what its MRRS is because
+> the entire path has MPS=128.
+> 
+> But if EP0's MRRS is larger than 128, it's in trouble because it may
+> issue a 256-byte DMA write, which the root port will treat as
+> malformed.  The root port, as the receiver of that Memory Write
+> Request, is required to check the TLP against the MPS in its Device
+> Control (not Device Capability) register (this is in PCIe r4.0, sec
+> 2.2.2).
+
+Yeah, this breaks my theory.
+
+> 
+>> I know there is a rule to check the completions against MPS. 
+> 
+> Sec 2.2.2 says a receiver must check "data payloads".  I think that
+> includes both Completions and Memory Writes.
+> 
+>> Root port could generate transactions that is a multiple of 128
+>> bytes for reads.
+> 
+> If the root port generates a 256-byte Memory Read request to EP1,
+> that's fine because EP1 will only respond with 128-byte completions.
+> If it sends that 256-byte Memory Read to EP0, we have a problem
+> because EP0 may generate a 256-byte completion, which will cause an
+> error if the root port has MPS=128.
+> 
+>> Is there any rule against checking incoming writes?
+> 
+> Sec 2.2.2 says a receiver *must* check the payload size of incoming
+> Memory Write requests.
+> 
+
+
 -- 
-2.11.0
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
