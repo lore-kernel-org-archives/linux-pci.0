@@ -1,96 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53222 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754252AbeAKOVq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Jan 2018 09:21:46 -0500
-Date: Thu, 11 Jan 2018 08:21:41 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?=
-        <ckoenig.leichtzumerken@gmail.com>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, torvalds@linux-foundation.org,
-        aaro.koskinen@iki.fi, andy.shevchenko@gmail.com,
-        boris.ostrovsky@oracle.com, jgross@suse.com,
-        alexander.deucher@amd.com, airlied@linux.ie
-Subject: Re: [PATCH 2/2] x86/PCI: limit the size of the 64bit window to 256GB
- v3
-Message-ID: <20180111142141.GA3672@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180111132330.2682-1-christian.koenig@amd.com>
- <20180111132330.2682-2-christian.koenig@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180111132330.2682-2-christian.koenig@amd.com>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:42265 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751530AbeAWPp4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 10:45:56 -0500
+Received: by mail-pg0-f67.google.com with SMTP id q67so538060pga.9
+        for <linux-pci@vger.kernel.org>; Tue, 23 Jan 2018 07:45:56 -0800 (PST)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>,
+        Fabio Estevam <festevam@gmail.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        project-aspen-dev@linaro.org, Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v2 0/2] Add power control for pcie-histb driver
+Date: Tue, 23 Jan 2018 23:45:35 +0800
+Message-Id: <1516722337-1533-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 11, 2018 at 02:23:30PM +0100, Christian König wrote:
-> Avoid problems with BIOS implementations which don't report all used
-> resources to the OS by only allocating a 256GB window directly below the
-> hardware limit.
-> 
-> For the full hardware documentation see:
-> https://support.amd.com/TechDocs/49125_15h_Models_30h-3Fh_BKDG.pdf
+The first patch is a small fix which is useful for the second one.
+This version basically follows Fabio's suggestion to reimplement the
+first version patch, using a regulator that can be backed by GPIO to
+control the power to PCIe port.
 
-If you can supply a section number, I'll add it here.  That spec is 700
-pages, so a hint would be useful.
+Shawn Guo (2):
+  PCI: histb: fix error path of histb_pcie_host_enable()
+  PCI: histb: add an optional regulator for PCIe port power control
 
-> Fixes a silent reboot loop reported by Aaro Koskinen <aaro.koskinen@iki.fi> on
-> an AMD-based MSI MS-7699/760GA-P43(FX) system.
-> 
-> v2: cleanup code a bit more, update comment and explain the hw limit
-> v3: improve commit message
-> 
-> Link: https://lkml.kernel.org/r/20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi
-> Reported-by: Aaro Koskinen <aaro.koskinen@iki.fi>
-> Signed-off-by: Christian König <christian.koenig@amd.com>
-> ---
->  arch/x86/pci/fixup.c | 19 +++++++++----------
->  1 file changed, 9 insertions(+), 10 deletions(-)
-> 
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index a91280da2ea1..9c1c98d7e3a7 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -662,10 +662,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
->   */
->  static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
->  {
-> -	unsigned i;
->  	u32 base, limit, high;
-> -	struct resource *res, *conflict;
->  	struct pci_dev *other;
-> +	struct resource *res;
-> +	unsigned i;
-> +	int r;
->  
->  	if (!(pci_probe & PCI_BIG_ROOT_WINDOW))
->  		return;
-> @@ -702,19 +703,17 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
->  	if (!res)
->  		return;
->  
-> +	/* Allocate a 256GB window directly below the 0xfd00000000 hw limit */
->  	res->name = "PCI Bus 0000:00";
->  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
->  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-> -	res->start = 0x100000000ull;
-> +	res->start = 0xbd00000000ull;
->  	res->end = 0xfd00000000ull - 1;
->  
-> -	/* Just grab the free area behind system memory for this */
-> -	while ((conflict = request_resource_conflict(&iomem_resource, res))) {
-> -		if (conflict->end >= res->end) {
-> -			kfree(res);
-> -			return;
-> -		}
-> -		res->start = conflict->end + 1;
-> +	r = request_resource(&iomem_resource, res);
-> +	if (r) {
-> +		kfree(res);
-> +		return;
->  	}
->  
->  	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-> -- 
-> 2.11.0
-> 
+ .../bindings/pci/hisilicon-histb-pcie.txt          |  1 +
+ drivers/pci/dwc/pcie-histb.c                       | 28 ++++++++++++++++++----
+ 2 files changed, 25 insertions(+), 4 deletions(-)
+
+-- 
+1.9.1
