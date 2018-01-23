@@ -1,128 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0085.outbound.protection.outlook.com ([104.47.33.85]:31104
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751654AbeAJRzw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Jan 2018 12:55:52 -0500
-From: "Kalderon, Michal" <Michal.Kalderon@cavium.com>
-To: "Felix.Kuehling@amd.com" <Felix.Kuehling@amd.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "helgaas@kernel.org" <helgaas@kernel.org>
-CC: "oded.gabbay@gmail.com" <oded.gabbay@gmail.com>,
-        "Jay.Cornwall@amd.com" <Jay.Cornwall@amd.com>,
-        "Amrani, Ram" <Ram.Amrani@cavium.com>,
-        Doug Ledford <dledford@redhat.com>,
-        "Elior, Ariel" <Ariel.Elior@cavium.com>
-Subject: RE: [PATCH 2/2] RDMA/qedr: Use pci_enable_atomic_ops_to_root
-Date: Wed, 10 Jan 2018 17:55:48 +0000
-Message-ID: <CY1PR0701MB2012CD5C4AF64EBB676AB58F88110@CY1PR0701MB2012.namprd07.prod.outlook.com>
-References: <1515113100-4718-1-git-send-email-Felix.Kuehling@amd.com>
- <1515113100-4718-2-git-send-email-Felix.Kuehling@amd.com>
- <BN3PR07MB257831D393762213E1E440DAF8100@BN3PR07MB2578.namprd07.prod.outlook.com>
-In-Reply-To: <BN3PR07MB257831D393762213E1E440DAF8100@BN3PR07MB2578.namprd07.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from bastet.se.axis.com ([195.60.68.11]:50645 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751259AbeAWRyD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 12:54:03 -0500
+Date: Tue, 23 Jan 2018 18:53:58 +0100
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, linux-pci@vger.kernel.org,
+        m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, jespern@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com, nsekhar@ti.com
+Subject: Re: [PATCH v5 1/9] PCI: dwc: Add IRQ chained API support
+Message-ID: <20180123175358.GC7813@axis.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+ <d50ec3ee207fe51f82917f13adc7f2010e9345dc.1516701516.git.gustavo.pimentel@synopsys.com>
+ <20180123145431.GB7813@axis.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180123145431.GB7813@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Felix Kuehling [mailto:Felix.Kuehling@amd.com]
-> Sent: Friday, January 05, 2018 2:45 AM
->
-> Use common helper function pci_enable_atomic_ops_to_root to enable
-> atomic capability.
->
-> CC: Bjorn Helgaas <helgaas@kernel.org>
-> CC: Ram Amrani <Ram.Amrani@cavium.com>
-> CC: Doug Ledford <dledford@redhat.com>
-> Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
-> ---
->  drivers/infiniband/hw/qedr/main.c | 59
-> ++++++---------------------------------
->  1 file changed, 8 insertions(+), 51 deletions(-)
->
-> diff --git a/drivers/infiniband/hw/qedr/main.c
-> b/drivers/infiniband/hw/qedr/main.c
-> index 50812b3..b378647 100644
-> --- a/drivers/infiniband/hw/qedr/main.c
-> +++ b/drivers/infiniband/hw/qedr/main.c
-> @@ -430,59 +430,16 @@ static void qedr_remove_sysfiles(struct qedr_dev
-> *dev)
->
->  static void qedr_pci_set_atomic(struct qedr_dev *dev, struct pci_dev
-> *pdev)  {
-> -	struct pci_dev *bridge;
-> -	u32 ctl2, cap2;
-> -	u16 flags;
-> -	int rc;
-> -
-> -	bridge =3D pdev->bus->self;
-> -	if (!bridge)
-> -		goto disable;
-> -
-> -	/* Check atomic routing support all the way to root complex */
-> -	while (bridge->bus->parent) {
-> -		rc =3D pcie_capability_read_word(bridge, PCI_EXP_FLAGS,
-&flags);
-> -		if (rc || ((flags & PCI_EXP_FLAGS_VERS) < 2))
-> -			goto disable;
-> -
-> -		rc =3D pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2,
-&cap2);
-> -		if (rc)
-> -			goto disable;
-> +	int rc =3D pci_enable_atomic_ops_to_root(pdev,
-> +
-PCI_EXP_DEVCAP2_ATOMIC_COMP64);
->
-> -		rc =3D pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
-> &ctl2);
-> -		if (rc)
-> -			goto disable;
-> -
-> -		if (!(cap2 & PCI_EXP_DEVCAP2_ATOMIC_ROUTE) ||
-> -		    (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK))
-> -			goto disable;
-> -		bridge =3D bridge->bus->parent->self;
-> +	if (rc) {
-> +		dev->atomic_cap =3D IB_ATOMIC_NONE;
-> +		DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability
-disabled\n");
-> +	} else {
-> +		dev->atomic_cap =3D IB_ATOMIC_GLOB;
-> +		DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability
-enabled\n");
->  	}
-> -
-> -	rc =3D pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
-> -	if (rc || ((flags & PCI_EXP_FLAGS_VERS) < 2))
-> -		goto disable;
-> -
-> -	rc =3D pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap2);
-> -	if (rc || !(cap2 & PCI_EXP_DEVCAP2_ATOMIC_COMP64))
-> -		goto disable;
-> -
-> -	/* Set atomic operations */
-> -	pcie_capability_set_word(pdev, PCI_EXP_DEVCTL2,
-> -				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
-> -	dev->atomic_cap =3D IB_ATOMIC_GLOB;
-> -
-> -	DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability enabled\n");
-> -
-> -	return;
-> -
-> -disable:
-> -	pcie_capability_clear_word(pdev, PCI_EXP_DEVCTL2,
-> -				   PCI_EXP_DEVCTL2_ATOMIC_REQ);
-> -	dev->atomic_cap =3D IB_ATOMIC_NONE;
-> -
-> -	DP_DEBUG(dev, QEDR_MSG_INIT, "Atomic capability disabled\n");
-> -
->  }
->
->  static const struct qed_rdma_ops *qed_ops;
-> --
-> 2.7.4
+On Tue, Jan 23, 2018 at 03:54:31PM +0100, Niklas Cassel wrote:
+> Hello Gustavo
+> 
+> On Tue, Jan 23, 2018 at 12:25:24PM +0000, Gustavo Pimentel wrote:
+> > Adds a IRQ chained API to pcie-designware, that aims to replace the current
+> > IRQ domain hierarchy API implemented.
+> > 
+> > Although the IRQ domain hierarchy API is still available, pcie-designware
+> > will use now the IRQ chained API.
+> > 
+> > Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> > ---
+> > Change v1->v2:
+> > - num_vectors is now not configurable by the Device Tree. Now it is 32 by
+> > default and can be overridden by any specific SoC driver.
+> > Change v2->v3:
+> > - Nothing changed, just to follow the patch set version.
+> > Change v3->v4:
+> > - Moved Kishon's fixes (PCI end point error and a dra7xx warning) from
+> > v3-0007 patch file to here.
+> > - Undo the change of the function signature to be more coherent with the
+> > host mode specific functions (Thanks Kishon).
+> > - Refactor the added functions in order to used host_data so that getting
+> > pp again back from pci could be avoided. (Thanks Kishon)
+> > - Changed summary line to match the drivers/PCI convention and changelog to
+> > maintain the consistency (thanks Bjorn).
+> > Change v4->v5:
+> > - Implemented Kishon MSI multiple messages fix (thanks Kishon).
+> > 
+> >  drivers/pci/dwc/pcie-designware-host.c | 296 +++++++++++++++++++++++++++++----
+> >  drivers/pci/dwc/pcie-designware.h      |  18 ++
+> >  2 files changed, 286 insertions(+), 28 deletions(-)
+> > 
+> 
+> 
+> > +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> > +{
+> > +	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
+> > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> > +	u64 msi_target;
+> > +
+> > +	if (pp->ops->get_msi_addr)
+> > +		msi_target = pp->ops->get_msi_addr(pp);
+> > +	else
+> > +		msi_target = virt_to_phys((void *)pp->msi_data);
+> 
+> The assignment in the else clause should be:
+>     msi_target = (u64)pp->msi_data;
+> 
 
-Thanks,
+Kishon's pci_epf_test works, and also an Intel e1000e PCIe card with MSI-X
+(added some debug prints in the e1000e driver to verify that MSI-X is
+actually used). The intel e1000e network card appears to function properly
+with different ping sizes.
 
-Acked-by: Michal Kalderon <michal.kalderon@cavium.com>
+Nice!
+
+With the one liner fix above:
+Tested-by: Niklas Cassel <niklas.cassel@axis.com>
