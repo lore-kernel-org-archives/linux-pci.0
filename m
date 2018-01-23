@@ -1,80 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:51346 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751300AbeABTIY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 14:08:24 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v4 03/10] PCI: dwc: imx6: Switch to use the IRQ chained API
-Date: Fri, 29 Dec 2017 14:21:35 +0000
-Message-Id: <9e3fee4c8b7097878b42211ef7540ff4b59c8efb.1514524551.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
-References: <cover.1514524551.git.gustavo.pimentel@synopsys.com>
+Received: from stargate.chelsio.com ([12.32.117.8]:44671 "EHLO
+        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751086AbeAWMJs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:09:48 -0500
+From: Arjun Vynipadath <arjun@chelsio.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, davem@davemloft.net,
+        netdev@vger.kernel.org
+Cc: arjun@chelsio.com, leedom@chelsio.com, santosh@chelsio.com,
+        ganeshgr@chelsio.com, nirranjan@chelsio.com, kumaras@chelsio.com,
+        swise@opengridcomputing.com
+Subject: [REGRESSION, bisect] pci: cxgb4 probe fails after commit 104daa71b3961434 ("PCI: Determine actual VPD size on first access")
+Date: Tue, 23 Jan 2018 17:59:09 +0530
+Message-Id: <1516710549-26660-1-git-send-email-arjun@chelsio.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes iMX6 SoC specific driver to use the IRQ chained API available in
-pcie-designware.
+Sending on behalf of "Casey Leedom <leedom@chelsio.com>"
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
+Way back on April 11, 2016 we reported a regression in Linux kernel 4.6-rc2 
+brought on by kernel.org commit 104daa71b396. This commit calculates the 
+size of a PCI Device's VPD area by parsing the VPD Structure at offset 0x000, 
+and restricts accesses to the VPD to that computed size.
 
- drivers/pci/dwc/pci-imx6.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+Our devices have a second VPD structure which is located starting at offset 
+0x400 which is the "real" VPD[1].  The 104daa71b396 commit (plus a follow on 
+commit 408641e93aa5) caused efforts to read past the end of that computed 
+length of the VPD to return silently without error leaving stack junk in the 
+VPD read buffers.
 
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index b734835..d2314cb 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -545,15 +545,6 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
- 	return -EINVAL;
- }
- 
--static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
--{
--	struct imx6_pcie *imx6_pcie = arg;
--	struct dw_pcie *pci = imx6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- {
- 	struct dw_pcie *pci = imx6_pcie->pci;
-@@ -677,15 +668,6 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- 			dev_err(dev, "failed to get MSI irq\n");
- 			return -ENODEV;
- 		}
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       imx6_pcie_msi_handler,
--				       IRQF_SHARED | IRQF_NO_THREAD,
--				       "mx6-pcie-msi", imx6_pcie);
--		if (ret) {
--			dev_err(dev, "failed to request MSI irq\n");
--			return ret;
--		}
- 	}
- 
- 	pp->root_bus_nr = -1;
--- 
-2.7.4
+We introduced kernel.org commit cb92148b to allow a driver to tell the 
+kernel how large the VPD area really is, introducing a new API 
+pci_set_vpd_size() for this purpose.
+
+Now we've discovered a new subtlety to the problem.
+
+We have a KVM Hypervisor running a 4.9.70 kernel.  So it has all of the 
+above commits.  When we attach our Physical Function 4 to a Virtual Machine 
+and attempt to run cxgb4 in that VM, we see the problem again.  The issue is 
+that all of the VM Guest OS's efforts to access the PCIe VPD Capability are 
+trapped into the KVM 4.9.70 kernel and executed there, with the results 
+routed back to the VM Guest OS.  The cxgb4 driver in the VM Guest OS uses 
+the new pci_set_vpd_size() to notify the OS of the true size of the VPD, but 
+that information of course is never sent to the KVM 4.9.70 Hypervisor. 
+(And, truth be told, if the Guest OS were older than 4.6, it wouldn't even 
+know that it needed to do this.)  The result is that again we get silent VPD 
+read failures with random stack garbage in the VPD read buffers. (sigh) 
+
+It strikes me that the only way to handle this issue is to have KVM 
+circumvent the VPD-Size Restricted logic which was added in kernel.org 
+commits 104daa71b396 and 408641e93aa5.  Maybe via a __pci_read_vpd() or 
+similar API.  But we are open to other suggestions.
+
+Thoughts?
+
+Casey.
+
+[1] Chelsio adapters actually have two VPD structures stored in the VPD.  An
+    abbreviated on at Offset 0x0 and the complete VPD at Offset 0x400.  The
+    abbreviated one only contains the PN, SN and EC Keywords, while the
+    complete VPD contains those plus various adapter constants contained in
+    V0, V1, etc.  And it also contains the Base Ethernet MAC Address in the
+    "NA" Keyword which the cxgb4 driver needs when it can't contact the
+    adapter firmware.  (We don't have the "NA" Keyword in the VPD Structure
+    at Offset 0x000 because that's not an allowed VPD Keyword in the PCI-E
+    3.0 specification.)
+
+    Note that two other drivers look like they may also do something
+    similar, the Broadcom bnx2x and tg3.
