@@ -1,53 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0062.outbound.protection.outlook.com ([104.47.41.62]:27328
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751100AbeAEAYD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 19:24:03 -0500
-Subject: Re: [PATCH 1/9] PCI: Add pci_enable_atomic_ops_to_root
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: amd-gfx@lists.freedesktop.org, oded.gabbay@gmail.com,
-        Jay Cornwall <Jay.Cornwall@amd.com>, linux-pci@vger.kernel.org,
-        Ram Amrani <Ram.Amrani@cavium.com>,
-        Doug Ledford <dledford@redhat.com>
-References: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
- <1515104268-25087-2-git-send-email-Felix.Kuehling@amd.com>
- <20180105001725.GL189897@bhelgaas-glaptop.roam.corp.google.com>
-From: Felix Kuehling <felix.kuehling@amd.com>
-Message-ID: <2a1cb1fb-9b7c-5357-f1a3-4dbaf19f442c@amd.com>
-Date: Thu, 4 Jan 2018 19:23:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180105001725.GL189897@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Received: from smtprelay.synopsys.com ([198.182.47.9]:47003 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751173AbeAWMZo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:44 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v5 6/9] PCI: dwc: qcom: Switch to use the IRQ chained API
+Date: Tue, 23 Jan 2018 12:25:29 +0000
+Message-Id: <cc9b17f069c4cf5a9e37e7cb3882969ff34f9e51.1516701516.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-04 07:17 PM, Bjorn Helgaas wrote:
-> @@ -3066,6 +3066,86 @@ int pci_rebar_set_size(struct pci_dev *pdev,
-> int bar, int size)
->>  }
->>  
->>  /**
->> + * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
->> + * @dev: the PCI device
->> + * @comp_caps: Caps required for atomic request completion
->> + *
->> + * Return 0 if all upstream bridges support AtomicOp routing, egress
->> + * blocking is disabled on all upstream ports, and the root port
->> + * supports the requested completion capabilities (32-bit, 64-bit
->> + * and/or 128-bit AtomicOp completion), or negative otherwise.
->> + */
->> +int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 comp_caps)
-> I still want to see this used to replace qedr_pci_set_atomic() if
-> that's possible.  I'm not convinced yet that they need to be
-> different.
+Changes QCOM SoC specific driver to use the IRQ chained API available in
+pcie-designware.
 
-I agree. This should be possible now. I've convinced myself that the
-functions do the same thing. But I have no way of testing it. I'd also
-do this in a separate patch. Maybe Ram or Doug could test it.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
 
-Regards,
-  Felix
+ drivers/pci/dwc/pcie-qcom.c | 16 ----------------
+ 1 file changed, 16 deletions(-)
 
->
-> Bjorn
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index b3adc10..6e70073 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -188,13 +188,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+ 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+ }
+ 
+-static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+@@ -1270,15 +1263,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       qcom_pcie_msi_irq_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "qcom-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "cannot request msi irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	ret = phy_init(pcie->phy);
+-- 
+2.7.4
