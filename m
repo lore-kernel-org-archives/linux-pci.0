@@ -1,54 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:64196 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753890AbeAIAbE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jan 2018 19:31:04 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@the-dreams.de>
-Subject: Re: [PATCH 0/7] PM / core: Direct handling of DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED
-Date: Tue, 09 Jan 2018 01:29:52 +0100
-Message-ID: <2583612.BQJmMQYPBC@aspire.rjw.lan>
-In-Reply-To: <0c8bf7c3-1aa4-e5fb-74e4-7117d6d43444@linux.intel.com>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan> <2436726.ykYRzVD45y@aspire.rjw.lan> <0c8bf7c3-1aa4-e5fb-74e4-7117d6d43444@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=hiyV=ET=russell.cc=ruscur@kernel.org>
+Return-Path: <SRS0=hiyV=ET=russell.cc=ruscur@kernel.org>
+Message-ID: <1516756684.7983.0.camel@russell.cc>
+Subject: Re: [PATCH v4 0/7] SR-IOV Enablement on PowerVM
+From: Russell Currey <ruscur@russell.cc>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+ alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+ linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ bodong@mellanox.com,  eli@mellanox.com, saeedm@mellanox.com
+Date: Wed, 24 Jan 2018 12:18:04 +1100
+In-Reply-To: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
+References: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 8, 2018 3:33:07 PM CET Jarkko Nikula wrote:
-> On 01/03/2018 02:29 AM, Rafael J. Wysocki wrote:
-> > Resending the original series (except for the first patch that has been
-> > applied already) along with some driver code changes based on them as
-> > requested by Ulf.
-> > 
-> > The driver patches are an intel-lpss change (already reviewed), two
-> > modifications of i2c-designware-platdrv (posted previously but slightly
-> > changed since then) and a PCIe port driver change.
-> > 
-> > At this point patches [1-3/7] are pretty much on the way in and the driver
-> > material depends on review comments (it is pointless to apply [4/7] without
-> > [5-6/7], so it depends on them in my view).
-> > 
-> > I'm sending this from a system running with all of the series applied, although
-> > admittedly not using i2c-designware-platdrv.  However, one of my test machines
-> > has this one and I haven't seen any adverse effects of these changes on it so
-> > far.
-> > 
-> Both i2cdetect and hexdump from touchscreen and touchpad devices were 
-> working fine. I used linux-next next-20180108 and patches 4-7/7.
+On Fri, 2018-01-05 at 10:45 -0600, Bryant G. Ly wrote:
+> This patch series will enable SR-IOV on PowerVM. A specific set of
+> lids for PFW/PHYP is required. They are planned to release with
+> 920 at the moment.
 > 
-> Tested-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+> For IBM internal testers let me know of a system you want to test on
+> and we can put on the lids required or we can provide a system to run
+> the tests.
+> 
+> This patch depends on the three patches:
+> 988fc3ba5653278a8c14d6ccf687371775930d2b
+> dae7253f9f78a731755ca20c66b2d2c40b86baea
+> 608c0d8804ef3ca4cda8ec6ad914e47deb283d7b
+> 
+> v1 - Initial Patch
+> v2 - Addressed Alexey and Russell's comments
+> v3 - Unify the call of .error_detected()
+> v4 - Fixed subject and change log per Bjorn's comments and
+>      fixed Alexey's comments
 
-Thank you!
+For the whole series:
+
+Acked-by: Russell Currey <ruscur@russell.cc>
