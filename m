@@ -1,75 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58340 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755837AbeAHHzT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jan 2018 02:55:19 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v3 0/4] Address error and recovery for AER and DPC
-Date: Mon,  8 Jan 2018 13:25:02 +0530
-Message-Id: <1515398105-10329-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Bunl=ET=ellerman.id.au=mpe@kernel.org>
+Return-Path: <SRS0=Bunl=ET=ellerman.id.au=mpe@kernel.org>
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org, paulus@samba.org
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com, alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru, ruscur@russell.cc, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 3/7] platforms/pseries: Set eeh_pe of EEH_PE_VF type
+In-Reply-To: <20180105164552.36371-4-bryantly@linux.vnet.ibm.com>
+References: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com> <20180105164552.36371-4-bryantly@linux.vnet.ibm.com>
+Date: Wed, 24 Jan 2018 12:14:08 +1100
+Message-ID: <87shawukgv.fsf@concordia.ellerman.id.au>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set brings in error handling support for DPC
+"Bryant G. Ly" <bryantly@linux.vnet.ibm.com> writes:
 
-The current implementation of AER and error message broadcasting to the
-EP driver is tightly coupled and limited to AER service driver.
-It is important to factor out broadcasting and other link handling
-callbacks. So that not only when AER gets triggered, but also when DPC get
-triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+> To correctly use EEH code one has to make
+> sure that the EEH_PE_VF is set for dynamic created
+> VFs. Therefore this patch allocates an eeh_pe of
+> eeh type EEH_PE_VF and associates PE with parent.
+>
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/pci-bridge.h        |  5 ++++-
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 17 +++++++++++++++++
+>  2 files changed, 21 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 9f66ddebb799..16d70740a76f 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -211,7 +211,10 @@ struct pci_dn {
+>  	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
+>  	bool    m64_single_mode;	/* Use M64 BAR in Single Mode */
+>  #define IODA_INVALID_M64        (-1)
+> -	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
+> +	union {
+> +		int     (*m64_map)[PCI_SRIOV_NUM_BARS]; /*Only used in powernv */
+> +		int     last_allow_rc;	/* Only used in pSeries */
+> +	};
+>  #endif /* CONFIG_PCI_IOV */
+>  	int	mps;			/* Maximum Payload Size */
+>  	struct list_head child_list;
 
-DPC should enumerate the devices after recovering the link, which is
-achieved by implementing error_resume callback.
+I don't see the point of using a union to save 4 bytes.
 
-Changes since v2:
-	Based on feedback from Keith:
+And if you look at the current layout of the struct there's actually a 4
+byte hole after mps, so it doesn't actually save any space at all.
 
-	"
-	When DPC is triggered due to receipt of an uncorrectable error Message,
-	the Requester ID from the Message is recorded in the DPC Error
-	Source ID register and that Message is discarded and not forwarded Upstream.
-	"
+I can remove it before applying, unless there's some compelling reason
+for it I'm not seeing.
 
-	Removed the patch where AER checks if DPC service is active
-Changes since v1:
-	Kbuild errors fixed:
-		> pci_find_dpc_dev made static
-		> ras_event.h updated
-		> pci_find_aer_service call with CONFIG check
-		> pci_find_dpc_service call with CONFIG check
-
-Oza Pawandeep (4):
-  PCI/AER: factor out error reporting from AER
-  PCI/DPC/AER: Address Concurrency between AER and DPC
-  PCI/ERR: Do not do recovery if DPC service is active
-  PCI/DPC: Enumerate the devices after DPC trigger event
-
- drivers/acpi/apei/ghes.c               |   2 +-
- drivers/pci/pcie/Makefile              |   2 +-
- drivers/pci/pcie/aer/aerdrv.h          |  30 ---
- drivers/pci/pcie/aer/aerdrv_core.c     | 306 +------------------------
- drivers/pci/pcie/aer/aerdrv_errprint.c |  27 ++-
- drivers/pci/pcie/pcie-dpc.c            | 127 ++++++++++-
- drivers/pci/pcie/pcie-err.c            | 399 +++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.h             |   2 +
- include/linux/aer.h                    |   4 -
- include/linux/pci.h                    |  23 ++
- include/ras/ras_event.h                |   6 +-
- 11 files changed, 579 insertions(+), 349 deletions(-)
- create mode 100644 drivers/pci/pcie/pcie-err.c
-
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+cheers
