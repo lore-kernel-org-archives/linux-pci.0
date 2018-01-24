@@ -1,76 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51742 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:56994 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752398AbeAZW4p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 Jan 2018 17:56:45 -0500
-Subject: [PATCH 8/8] PCI/DPC: Reformat DPC register definitions
+        id S1752705AbeAXAqK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Jan 2018 19:46:10 -0500
+Date: Tue, 23 Jan 2018 18:46:03 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
-Date: Fri, 26 Jan 2018 16:56:42 -0600
-Message-ID: <20180126225642.58614.5202.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        David Airlie <airlied@linux.ie>
+Subject: Re: [GIT PULL] PCI fixes for v4.15
+Message-ID: <20180124004603.GH5317@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180123195644.GA92112@bhelgaas-glaptop.roam.corp.google.com>
+ <CA+55aFxFp_rjSviLUEH-uZ1U=x_g-xiAFKoEQqOOxZQs4xV11A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CA+55aFxFp_rjSviLUEH-uZ1U=x_g-xiAFKoEQqOOxZQs4xV11A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Tue, Jan 23, 2018 at 12:49:22PM -0800, Linus Torvalds wrote:
+> On Tue, Jan 23, 2018 at 11:56 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> >   - fix AMD regression due to not re-enabling the big window on resume
+> >     (Christian König)
+> 
+> Bjorn, I think you need to look at your email habits.
+> 
+> I suspect you're editing your mailbox, or you're using some broken
+> mailer setup, or something (using some broken "export" function?),
+> because you're corrupting Christian's name all the time:
+> 
+> > =?UTF-8?q?Christian=20K=C3=B6nig?= (1):
+> >       x86/PCI: Enable AMD 64-bit window on resume
+> 
+> and I'm pretty sure git gets this right if actually fed a real mbox,
+> but I suspect that you have some other workflow going on..
 
-Reformat DPC register definitions to follow the convention that register
-field masks indicate the register width, e.g., a field of a 16-bit register
-uses a mask of 4 hex digits, with leading zeros included as needed.
-No functional change intended.
+I'm not editing my mailbox, but I am using stgit.  The "From:" header
+uses encoded-word syntax for Christian's name, and I think stgit is
+not decoding that when applying the patch.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/uapi/linux/pci_regs.h |   26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+When I save the patch email message from mutt (or gmail, for that
+matter), I see:
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 970a0dc535c4..66d71461d2f0 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -966,28 +966,28 @@
- 
- /* Downstream Port Containment */
- #define PCI_EXP_DPC_CAP			4	/* DPC Capability */
--#define PCI_EXP_DPC_IRQ			0x1f	/* DPC Interrupt Message Number */
--#define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
--#define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
--#define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
--#define  PCI_EXP_DPC_RP_PIO_LOG_SIZE	0xF00	/* RP PIO log size */
-+#define PCI_EXP_DPC_IRQ			0x001F	/* Interrupt Message Number */
-+#define  PCI_EXP_DPC_CAP_RP_EXT		0x0020	/* Root Port Extensions */
-+#define  PCI_EXP_DPC_CAP_POISONED_TLP	0x0040	/* Poisoned TLP Egress Blocking Supported */
-+#define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x0080	/* Software Triggering Supported */
-+#define  PCI_EXP_DPC_RP_PIO_LOG_SIZE	0x0F00	/* RP PIO Log Size */
- #define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
- 
- #define PCI_EXP_DPC_CTL			6	/* DPC control */
--#define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x02	/* Enable trigger on ERR_NONFATAL message */
--#define  PCI_EXP_DPC_CTL_INT_EN 	0x08	/* DPC Interrupt Enable */
-+#define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x0002	/* Enable trigger on ERR_NONFATAL message */
-+#define  PCI_EXP_DPC_CTL_INT_EN 	0x0008	/* DPC Interrupt Enable */
- 
- #define PCI_EXP_DPC_STATUS		8	/* DPC Status */
--#define  PCI_EXP_DPC_STATUS_TRIGGER	0x01	/* Trigger Status */
--#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN	0x06	/* Trigger Reason */
--#define  PCI_EXP_DPC_STATUS_INTERRUPT	0x08	/* Interrupt Status */
--#define  PCI_EXP_DPC_RP_BUSY		0x10	/* Root Port Busy */
--#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT 0x60 /* Trig Reason Extension */
-+#define  PCI_EXP_DPC_STATUS_TRIGGER	    0x0001 /* Trigger Status */
-+#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN	    0x0006 /* Trigger Reason */
-+#define  PCI_EXP_DPC_STATUS_INTERRUPT	    0x0008 /* Interrupt Status */
-+#define  PCI_EXP_DPC_RP_BUSY		    0x0010 /* Root Port Busy */
-+#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT 0x0060 /* Trig Reason Extension */
- 
- #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
- 
- #define PCI_EXP_DPC_RP_PIO_STATUS	 0x0C	/* RP PIO Status */
--#define PCI_EXP_DPC_RP_PIO_MASK		 0x10	/* RP PIO MASK */
-+#define PCI_EXP_DPC_RP_PIO_MASK		 0x10	/* RP PIO Mask */
- #define PCI_EXP_DPC_RP_PIO_SEVERITY	 0x14	/* RP PIO Severity */
- #define PCI_EXP_DPC_RP_PIO_SYSERROR	 0x18	/* RP PIO SysError */
- #define PCI_EXP_DPC_RP_PIO_EXCEPTION	 0x1C	/* RP PIO Exception */
+  From: "=?UTF-8?q?Christian=20K=C3=B6nig?="  ...
+
+Applying that patch with "git am" results in the correct
+
+  Author: Christian König <ckoenig.leichtzumerken@gmail.com
+
+Applying the identical patch with "stg import -M" results in
+
+  Author: =?UTF-8?q?Christian=20K=C3=B6nig?= <ckoenig.leichtzumerken@gmail.com>
+
+Some of Christian's PCI patches came out OK (8bb705e3e79d,
+276b738deb5b, cb21bc9469c4).  I don't remember specifically, but I
+suspect I fixed those manually.
+
+I don't know if there's some stg configuration I could do to fix this.
+I looked a little bit but haven't found anything yet.
+
+Thanks for pointing this out.  I'll try to fix this one way or another
+in the future.
+
+Bjorn
