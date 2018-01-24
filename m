@@ -1,51 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37342 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbeARFWr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 00:22:47 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 18 Jan 2018 10:52:46 +0530
-From: poza@codeaurora.org
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v5 3/4] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <298df660-1f7d-85ab-51db-11dc5d80cc75@codeaurora.org>
-References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
- <1516185438-31556-4-git-send-email-poza@codeaurora.org>
- <298df660-1f7d-85ab-51db-11dc5d80cc75@codeaurora.org>
-Message-ID: <d78da5a5465c7a1696db755385393519@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=08Wt=ET=linux.intel.com=andriy.shevchenko@kernel.org>
+Return-Path: <SRS0=08Wt=ET=linux.intel.com=andriy.shevchenko@kernel.org>
+Message-ID: <1516778261.7000.1213.camel@linux.intel.com>
+Subject: Re: [GIT PULL] PCI fixes for v4.15
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>, Bjorn Helgaas
+	 <helgaas@kernel.org>, Peter Grayson <jpgrayson@gmail.com>, Catalin Marinas
+	 <catalin.marinas@gmail.com>
+Cc: linux-pci@vger.kernel.org, Linux Kernel Mailing List
+ <linux-kernel@vger.kernel.org>, Lorenzo Pieralisi
+ <lorenzo.pieralisi@arm.com>,  Christian =?ISO-8859-1?Q?K=F6nig?=
+ <christian.koenig@amd.com>, Aaro Koskinen <aaro.koskinen@iki.fi>, Boris
+ Ostrovsky <boris.ostrovsky@oracle.com>, Juergen Gross <jgross@suse.com>,
+ Alex Deucher <alexander.deucher@amd.com>, David Airlie <airlied@linux.ie>
+Date: Wed, 24 Jan 2018 09:17:41 +0200
+In-Reply-To: <CA+55aFwpmqZUnD=3U23c-r89XmyncoXQzK7+b8AyuQ9+soC19g@mail.gmail.com>
+References: <20180123195644.GA92112@bhelgaas-glaptop.roam.corp.google.com>
+	 <CA+55aFxFp_rjSviLUEH-uZ1U=x_g-xiAFKoEQqOOxZQs4xV11A@mail.gmail.com>
+	 <20180124004603.GH5317@bhelgaas-glaptop.roam.corp.google.com>
+	 <CA+55aFwpmqZUnD=3U23c-r89XmyncoXQzK7+b8AyuQ9+soC19g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-17 22:15, Sinan Kaya wrote:
-> On 1/17/2018 5:37 AM, Oza Pawandeep wrote:
->> +		driver = pci_find_dpc_service(udev);
->> +#endif
->>  #if IS_ENABLED(CONFIG_PCIEAER)
->> -	/* Use the aer driver of the component firstly */
->> -	driver = pci_find_aer_service(udev);
+On Tue, 2018-01-23 at 17:04 -0800, Linus Torvalds wrote:
+> On Tue, Jan 23, 2018 at 4:46 PM, Bjorn Helgaas <helgaas@kernel.org>
+> wrote:
+
+> > Applying the identical patch with "stg import -M" results in
+> > 
+> >   Author: =?UTF-8?q?Christian=20K=C3=B6nig?= <ckoenig.leichtzumerken
+> > @gmail.com>
+
+> Oddly, stgit seems to even have a *testcase* for this:
 > 
-> I think we need a pci_find_service function that unifies these two.
+>  - t/t1800-import/email-qp:
+> 
+>         From: Inge =?utf-8?q?Str=C3=B6m?= <inge@power.com>
+> 
+> and that test-case harkens back to 2006. I wonder why it doesn't seem
+> to work for you and Christian.
 
-Right now, find_xxx_service are in their respective file and exporting 
-it.
-which makes sense no less than having generic function.
+I see two subtle differences:
+- test case starts with letters followed by quoted-printable encoding
+- test case has utf-8 while in example we have UTF-8 (should it matter?)
 
-If I have to change pci_find_service(...., int service_name) then it has 
-to be somewhere in generic file.
-probably portdrv_core.c
-
-either way I am fine but just thinking out if its really required.
-
-Regards,
-Oza.
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
