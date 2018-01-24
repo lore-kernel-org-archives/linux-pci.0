@@ -1,149 +1,137 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Hans de Goede <hdegoede@redhat.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59250 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964826AbeAXSBX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Jan 2018 13:01:23 -0500
+Date: Wed, 24 Jan 2018 12:01:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>
+Cc: Ron Yuan <ron.yuan@memblaze.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Lv Zheng <lv.zheng@intel.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, devel@acpica.org
-Subject: [PATCH v2 5/5] ACPICA: Remove calling of _STA from acpi_get_object_info
-Date: Mon, 22 Jan 2018 09:51:35 +0100
-Message-Id: <20180122085135.16732-6-hdegoede@redhat.com>
-In-Reply-To: <20180122085135.16732-1-hdegoede@redhat.com>
-References: <20180122085135.16732-1-hdegoede@redhat.com>
-Sender: linux-acpi-owner@vger.kernel.org
+        Bo Chen <bo.chen@memblaze.com>,
+        William Huang <william.huang@memblaze.com>,
+        Fengming Wu <fengming.wu@memblaze.com>,
+        Jason Jiang <jason.jiang@microsemi.com>,
+        Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
+        William Cheng <william.cheng@microsemi.com>,
+        "Kim Helper (khelper)" <khelper@micron.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
+ pcie_bus_perf On NVMe Device
+Message-ID: <20180124180118.GJ5317@bhelgaas-glaptop.roam.corp.google.com>
+References: <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
+ <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
+ <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
+ <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
+ <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
+ <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
+ <09bd3f5c-4671-d9dd-fa39-4d7619ee5860@codeaurora.org>
+ <SHAPR01MB173EFAB42A8838DC3D52FD1FEE30@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
+ <20180123143839.GE5317@bhelgaas-glaptop.roam.corp.google.com>
+ <b93a4fb1ec42480596b8d1a2b525e8f1@microsemi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b93a4fb1ec42480596b8d1a2b525e8f1@microsemi.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As the comment above it indicates, acpi_get_object_info is intended for
-early probe usage and as such should not call any methods which may rely
-on OpRegions, before this commit it was also calling _STA, which on some
-systems does rely on OpRegions.
+On Tue, Jan 23, 2018 at 11:50:30PM +0000, Radjendirane Codandaramane wrote:
+> Hi Bjorne,
 
-Calling _STA before things are ready leads to errors such as these:
+s/Bjorne/Bjorn/
 
-[    0.123579] ACPI Error: No handler for Region [ECRM] (00000000ba9edc4c)
-               [GenericSerialBus] (20170831/evregion-166)
-[    0.123601] ACPI Error: Region GenericSerialBus (ID=9) has no handler
-               (20170831/exfldio-299)
-[    0.123618] ACPI Error: Method parse/execution failed
-               \_SB.I2C1.BAT1._STA, AE_NOT_EXIST (20170831/psparse-550)
+Also, the convention on Linux mailing lists is to use interleaved
+reply style [1] because it makes it easier to follow the conversation.
 
-End 2015 support for the _SUB method was removed for exactly the same
-reason. Removing current_status from struct acpi_device_info only has
-a limit impact. Within ACPICA it is only used by 2 debug messages, both
-of which are modified to no longer print it with this commit.
+> Ceiling the MRRS to the MPS value in order to guarantee the
+> interoperability in pcie_bus_perf mode does not make sense.
 
-Outside of ACPICA, for Linux there is only one user. For which a patch to
-remove the dependency on the current_status field is available.
+I disagree with this part.  The Linux pcie_bus_perf mode isn't my
+favorite approach, but given the assumptions it makes, it does make
+sense.  I laid out the explanation in [2]; if you disagree with
+something there, please be specific about what's wrong.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/acpi/acpica/dbdisply.c |  5 ++---
- drivers/acpi/acpica/nsdumpdv.c |  5 ++---
- drivers/acpi/acpica/nsxfname.c | 19 ++++---------------
- include/acpi/actypes.h         |  2 --
- 4 files changed, 8 insertions(+), 23 deletions(-)
+> A device can make a memrd request according to the MRRS setting
+> (which can be higher than its MPS), but the completer has to respect
+> the MPS and send completions accordingly. As an example, system can
+> configure MPS=128B and MRRS=4K, where an endpoint can a make 4K
+> MemRd request, but the completer has to send completions as 128B
+> TLPs, by respecting the MPS setting. MRRS does not force a device to
+> use higher MPS value than it is configured to.
 
-diff --git a/drivers/acpi/acpica/dbdisply.c b/drivers/acpi/acpica/dbdisply.c
-index 5a606eac0c22..7b5eb33fe962 100644
---- a/drivers/acpi/acpica/dbdisply.c
-+++ b/drivers/acpi/acpica/dbdisply.c
-@@ -642,9 +642,8 @@ void acpi_db_display_object_type(char *object_arg)
- 		return;
- 	}
- 
--	acpi_os_printf("ADR: %8.8X%8.8X, STA: %8.8X, Flags: %X\n",
--		       ACPI_FORMAT_UINT64(info->address),
--		       info->current_status, info->flags);
-+	acpi_os_printf("ADR: %8.8X%8.8X, Flags: %X\n",
-+		       ACPI_FORMAT_UINT64(info->address), info->flags);
- 
- 	acpi_os_printf("S1D-%2.2X S2D-%2.2X S3D-%2.2X S4D-%2.2X\n",
- 		       info->highest_dstates[0], info->highest_dstates[1],
-diff --git a/drivers/acpi/acpica/nsdumpdv.c b/drivers/acpi/acpica/nsdumpdv.c
-index 5026594763ea..573a5f36f01a 100644
---- a/drivers/acpi/acpica/nsdumpdv.c
-+++ b/drivers/acpi/acpica/nsdumpdv.c
-@@ -88,10 +88,9 @@ acpi_ns_dump_one_device(acpi_handle obj_handle,
- 		}
- 
- 		ACPI_DEBUG_PRINT_RAW((ACPI_DB_TABLES,
--				      "    HID: %s, ADR: %8.8X%8.8X, Status: %X\n",
-+				      "    HID: %s, ADR: %8.8X%8.8X\n",
- 				      info->hardware_id.value,
--				      ACPI_FORMAT_UINT64(info->address),
--				      info->current_status));
-+				      ACPI_FORMAT_UINT64(info->address));
- 		ACPI_FREE(info);
- 	}
- 
-diff --git a/drivers/acpi/acpica/nsxfname.c b/drivers/acpi/acpica/nsxfname.c
-index 106966235805..0a9c600c2599 100644
---- a/drivers/acpi/acpica/nsxfname.c
-+++ b/drivers/acpi/acpica/nsxfname.c
-@@ -241,7 +241,7 @@ static char *acpi_ns_copy_device_id(struct acpi_pnp_device_id *dest,
-  *              namespace node and possibly by running several standard
-  *              control methods (Such as in the case of a device.)
-  *
-- * For Device and Processor objects, run the Device _HID, _UID, _CID, _STA,
-+ * For Device and Processor objects, run the Device _HID, _UID, _CID,
-  * _CLS, _ADR, _sx_w, and _sx_d methods.
-  *
-  * Note: Allocates the return buffer, must be freed by the caller.
-@@ -250,8 +250,9 @@ static char *acpi_ns_copy_device_id(struct acpi_pnp_device_id *dest,
-  * discovery namespace traversal. Therefore, no complex methods can be
-  * executed, especially those that access operation regions. Therefore, do
-  * not add any additional methods that could cause problems in this area.
-- * this was the fate of the _SUB method which was found to cause such
-- * problems and was removed (11/2015).
-+ * Because of this reason support for the following methods has been removed:
-+ * 1) _SUB method was removed (11/2015)
-+ * 2) _STA method was removed (01/2018)
-  *
-  ******************************************************************************/
- 
-@@ -374,20 +375,8 @@ acpi_get_object_info(acpi_handle handle,
- 		 * Notes: none of these methods are required, so they may or may
- 		 * not be present for this device. The Info->Valid bitfield is used
- 		 * to indicate which methods were found and run successfully.
--		 *
--		 * For _STA, if the method does not exist, then (as per the ACPI
--		 * specification), the returned current_status flags will indicate
--		 * that the device is present/functional/enabled. Otherwise, the
--		 * current_status flags reflect the value returned from _STA.
- 		 */
- 
--		/* Execute the Device._STA method */
--
--		status = acpi_ut_execute_STA(node, &info->current_status);
--		if (ACPI_SUCCESS(status)) {
--			valid |= ACPI_VALID_STA;
--		}
--
- 		/* Execute the Device._ADR method */
- 
- 		status = acpi_ut_evaluate_numeric_object(METHOD_NAME__ADR, node,
-diff --git a/include/acpi/actypes.h b/include/acpi/actypes.h
-index 4f077edb9b81..220ef8674763 100644
---- a/include/acpi/actypes.h
-+++ b/include/acpi/actypes.h
-@@ -1191,7 +1191,6 @@ struct acpi_device_info {
- 	u8 flags;		/* Miscellaneous info */
- 	u8 highest_dstates[4];	/* _sx_d values: 0xFF indicates not valid */
- 	u8 lowest_dstates[5];	/* _sx_w values: 0xFF indicates not valid */
--	u32 current_status;	/* _STA value */
- 	u64 address;	/* _ADR value */
- 	struct acpi_pnp_device_id hardware_id;	/* _HID value */
- 	struct acpi_pnp_device_id unique_id;	/* _UID value */
-@@ -1205,7 +1204,6 @@ struct acpi_device_info {
- 
- /* Flags for Valid field above (acpi_get_object_info) */
- 
--#define ACPI_VALID_STA                  0x0001
- #define ACPI_VALID_ADR                  0x0002
- #define ACPI_VALID_HID                  0x0004
- #define ACPI_VALID_UID                  0x0008
--- 
-2.14.3
+This part is certainly true.  I used a very similar example in [2]:
 
+  Consider the case where a function has MPS=256 and MRRS=1024: if the
+  function generates a 1024-byte read request, it should receive 4
+  completions, each with a 256-byte data payload.
+
+> Another factor that need to be considered for storage devices is
+> that support of T10 Protection Information (DIF). For every 512B or
+> 4KB, a 8B PI is computed and inserted or verified, which require the
+> 512B of data to arrive in sequence. 
+
+MPS and MRRS are parts of the PCIe TLP protocol.  I'm not aware of any
+connection between the PCIe protocol and the T10 Protection
+Information/DIF stuff.  I assume the T10/DIF stuff is content being
+carried by PCIe, and PCIe doesn't care at all about the content it
+carries.  Can you clarify what the connection is here?
+
+> If the MRRS is < 512B, this might pose out of order completions to
+> the storage device, if the EP has to submit multiple outstanding
+> read requests in order to achieve higher performance. 
+
+If I understand correctly, this is exactly the situation described in
+the implementation note in PCIe r4.0, sec 2.4.1: completions for a
+single memory read request are always returned in order (Table 2-39,
+entry D5b), but completions for multiple read requests may be returned
+in any order because completions may pass each other (entry D5a).  The
+note doesn't mention this, but I think even the multiple outstanding
+read requests themselves can pass each other (entry B3).
+
+So I agree that if the function generates multiple outstanding read
+requests, the completions for those requests may come back out of
+order.  For example, if the function generates req-A and req-B,
+completions for req-A will be in order and completions for req-B will
+be in order, but it might receive cmpl-B1, cmpl-A1, cmpl-B2, cmpl-B3,
+cmpl-A2, cmpl-A3, cmpl-A4, cmpl-B4.
+
+This reordering may happen no matter what the MRRS setting is.  The
+only way to avoid it is to avoid multiple outstanding read requests.
+
+> This would be a challenge for the storage endpoints that process the
+> T10 PI inline with the transfer, now they have to store and process
+> the 512B sectors once they receive all the TLPs for that sector.
+
+Are you saying these endpoints depend on MRRS >= 512 for correct
+operation?
+
+I don't think think that would be legal, per sec 7.5.3.4, which says
+"the Function must not generate Read Requests with a size exceeding
+the set [MRRS] value."  That doesn't leave the function any wiggle
+room -- if the OS programs MRRS=128, the function has to deal with it.
+There's no provision for the function to say "I can only support
+MRRS > X".
+
+But you probably mean the endpoints will function correctly even with
+MRRS=128, but performance will be poor.  That's certainly a concern
+for all devices; reducing MRRS increases overhead, so we should use
+the largest possible MRRS, subject to the constraints of any MPS/MRRS
+design (like pcie_bus_perf) and concerns about bandwidth allocation
+(see the implementation note in sec 7.5.3.4).
+
+> So, it is better to decouple the MRRS and MPS in pcie_bus_perf mode.
+> Like stated earlier in the thread, provide an option to configure
+> MRRS separately in pcie_bus_perf mode.
+
+If you read [2] again, it will be obvious why the Linux pcie_bus_perf
+mode requires the use of MRRS in addition to MPS.  At the very end of
+that email and in [3], I pointed out that the current Linux
+implementation is unnecessarily conservative in some cases, and there
+is room for fixing that, which should improve performance in some
+cases.  But given the design of pcie_bus_perf, it's impossible to
+completely decouple MRRS and MPS in that mode.
+
+[1] https://en.wikipedia.org/wiki/Posting_style#Interleaved_style
+[2] https://lkml.kernel.org/r/20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com
+[3] https://lkml.kernel.org/r/20180123174821.GF5317@bhelgaas-glaptop.roam.corp.google.com
