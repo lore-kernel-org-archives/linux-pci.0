@@ -1,553 +1,110 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
-        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
-        <dann.frazier@canonical.com>
-CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-        Zhichang Yuan <yuanzhichang@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v11 1/9] LIB: Introduce a generic PIO mapping method
-Date: Sun, 21 Jan 2018 20:27:19 +0800
-Message-ID: <1516537647-50553-2-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1516537647-50553-1-git-send-email-john.garry@huawei.com>
-References: <1516537647-50553-1-git-send-email-john.garry@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 4/8] PCI: brcmstb: Add dma-range mapping for inbound
+ traffic
+To: Christoph Hellwig <hch@lst.de>
+References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
+ <1516058925-46522-5-git-send-email-jim2101024@gmail.com>
+ <CAL_JsqKpWNJXNpKS5qC99N0+H_P37DcRE-rN9HFwT5tVmRFCNw@mail.gmail.com>
+ <20180118073123.GA15766@lst.de>
+ <EDAEFB0F-BB7C-444A-B282-F178F5ADFCBF@gmail.com>
+ <20180118152331.GA24461@lst.de>
+ <d62226a2-a92c-cdcb-4a9b-e69ab677bc60@broadcom.com>
+ <20180123132033.GA21438@lst.de>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <f746f9d5-b12d-9ffc-83e3-3851b4de6e52@gmail.com>
+Date: Wed, 24 Jan 2018 12:04:58 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180123132033.GA21438@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Linux-MIPS <linux-mips@linux-mips.org>, linux-pci@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Ralf Baechle <ralf@linux-mips.org>, Gregory Fong <gregory.0xf0@gmail.com>,
+ Jonas Gorski <jonas.gorski@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Zhichang Yuan <yuanzhichang@hisilicon.com>
+On 01/23/2018 05:20 AM, Christoph Hellwig wrote:
+> On Fri, Jan 19, 2018 at 11:47:54AM -0800, Florian Fainelli wrote:
+>> How can this work well in the context of a loadable module for instance?
+>> For MIPS, this would mean that we have to override phys_to_dma() and
+>> dma_to_phys() in the platform that is *susceptible* to use this PCIe
+>> controller (arch/mips/bmips) which is fine, but there, we essentially
+>> need to find a way to make this dynamic based on whether the PCIe
+>> controller is loaded or not.
+>>
+>> As you might have seen from this patch, what needs to be done is highly
+>> dependent on the processor architecture and its memory controller
+>> physical memory map, so I don't see how we are in any better situation
+>> if we need to replicate 3 times across MIPS, ARM and ARM64 how the
+>> addresses need to be mangled.
+>>
+>> Are you suggesting we somehow decouple the memory mangling part into a
+>> portion that can be built into the kernel image (so phys_to_dma() and
+>> dma_to_phys() is resolved at vmlinux link time) and can be selected by
+>> different architectures that need it? If so, yikes.
+> 
+> On architectures with crazy PCIe controllers (this seems to include
+> mips, arm, arm64 and x86 thanks to the weird SOCs) we will need a
+> a few different memory maps, yes.  Take a look at
+> arch/x86/pci/sta2x11-fixup.c, preferably from a tree where the worst
+> issues are fixed:
+> 
+> http://git.infradead.org/users/hch/misc.git/blob/refs/heads/dma-direct-all:/arch/x86/pci/sta2x11-fixup.c
+> 
+> Overriding phys_to_dma and dma_to_phys is required if you need to
+> support swiotlb, and chances are with a broken PCIe controller on
+> arm64 or mips64 you eventuall will.
+> 
+> This sta2x11 code should probably be lifted to common code in
+> one form or another eventually, althought it will need another
+> fair round of cleanups for now.
 
-In commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
-pci_pio_to_address()"), a new I/O space management was supported. With
-that driver, the I/O ranges configured for PCI/PCIe hosts on some
-architectures can be mapped to logical PIO, converted easily between
-CPU address and the corresponding logicial PIO. Based on this, PCI
-I/O devices can be accessed in a memory read/write way through the
-unified in/out accessors.
+This looks nicer than the current shape, but this still requires to
+register a PCI fixup to override phys_to_dma() and dma_to_phys(), and it
+would appear that you have dodged my question about how this is supposed
+to fit with an entirely modular PCIe root complex driver? Are you
+suggesting that we split the module into a built-in part and a modular part?
 
-But on some archs/platforms, there are bus hosts which access I/O
-peripherals with host-local I/O port addresses rather than memory
-addresses after memory-mapped.
+> 
+>> I can see value in having a generic mechanism, ala X86_DMA_REMAP
+>> allowing architectures to have the ability to override phys_to_dma() and
+>> dma_to_phys() but right now, especially if we look at
+>> arch/x86/pci/sta2x11-fixup.c this really appears to be quite messy and
+>> equally ugly than stacking operations...
+>>
+>> What is the actual problem you want to avoid with the stacking of DMA
+>> operations, is it because it becomes harder to audit, or are there are
+>> other reasons?
+> 
+> Audit, consolidate into a single dma-direct implementation and properly
+> support swiotlb out of the box.
+> 
 
-To support those devices, a more generic I/O mapping method is introduced
-here. Through this patch, both the CPU addresses and the host-local port
-can be mapped into the logical PIO space with different logical/fake PIOs.
-After this, all the I/O accesses to either PCI MMIO devices or host-local
-I/O peripherals can be unified into the existing I/O accessors defined in
-asm-generic/io.h and be redirected to the right device-specific hooks
-based on the input logical PIO.
-
-Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- include/asm-generic/io.h  |   2 +
- include/linux/logic_pio.h | 141 +++++++++++++++++++++++
- lib/Kconfig               |  15 +++
- lib/Makefile              |   2 +
- lib/logic_pio.c           | 286 ++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 446 insertions(+)
- create mode 100644 include/linux/logic_pio.h
- create mode 100644 lib/logic_pio.c
-
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index b4531e3..b7996a79 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -351,6 +351,8 @@ static inline void writesq(volatile void __iomem *addr, const void *buffer,
- #define IO_SPACE_LIMIT 0xffff
- #endif
- 
-+#include <linux/logic_pio.h>
-+
- /*
-  * {in,out}{b,w,l}() access little endian I/O. {in,out}{b,w,l}_p() can be
-  * implemented on hardware that needs an additional delay for I/O accesses to
-diff --git a/include/linux/logic_pio.h b/include/linux/logic_pio.h
-new file mode 100644
-index 0000000..9545c77
---- /dev/null
-+++ b/include/linux/logic_pio.h
-@@ -0,0 +1,141 @@
-+/*
-+ * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
-+ * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#ifndef __LINUX_LOGIC_PIO_H
-+#define __LINUX_LOGIC_PIO_H
-+
-+#ifdef __KERNEL__
-+
-+#include <linux/fwnode.h>
-+
-+#define PIO_INDIRECT		0x01UL /* indirect IO flag */
-+#define PIO_CPU_MMIO		0x00UL /* memory mapped io flag */
-+
-+struct logic_pio_hwaddr {
-+	struct list_head list;
-+	struct fwnode_handle *fwnode;
-+	resource_size_t hw_start;
-+	resource_size_t io_start;
-+	resource_size_t size; /* range size populated */
-+	unsigned long flags;
-+
-+	void *devpara;	/* private parameter of the host device */
-+	struct hostio_ops *ops;	/* ops operating on this node */
-+};
-+
-+struct hostio_ops {
-+	u32 (*pfin)(void *devobj, unsigned long ptaddr,	size_t dlen);
-+	void (*pfout)(void *devobj, unsigned long ptaddr, u32 outval,
-+			size_t dlen);
-+	u32 (*pfins)(void *devobj, unsigned long ptaddr, void *inbuf,
-+			size_t dlen, unsigned int count);
-+	void (*pfouts)(void *devobj, unsigned long ptaddr,
-+			const void *outbuf, size_t dlen, unsigned int count);
-+};
-+
-+#ifdef CONFIG_INDIRECT_PIO
-+u8 logic_inb(unsigned long addr);
-+void logic_outb(u8 value, unsigned long addr);
-+void logic_outw(u16 value, unsigned long addr);
-+void logic_outl(u32 value, unsigned long addr);
-+u16 logic_inw(unsigned long addr);
-+u32 logic_inl(unsigned long addr);
-+void logic_outb(u8 value, unsigned long addr);
-+void logic_outw(u16 value, unsigned long addr);
-+void logic_outl(u32 value, unsigned long addr);
-+void logic_insb(unsigned long addr, void *buffer, unsigned int count);
-+void logic_insl(unsigned long addr, void *buffer, unsigned int count);
-+void logic_insw(unsigned long addr, void *buffer, unsigned int count);
-+void logic_outsb(unsigned long addr, const void *buffer, unsigned int count);
-+void logic_outsw(unsigned long addr, const void *buffer, unsigned int count);
-+void logic_outsl(unsigned long addr, const void *buffer, unsigned int count);
-+
-+#ifndef inb
-+#define inb logic_inb
-+#endif
-+
-+#ifndef inw
-+#define inw logic_inw
-+#endif
-+
-+#ifndef inl
-+#define inl logic_inl
-+#endif
-+
-+#ifndef outb
-+#define outb logic_outb
-+#endif
-+
-+#ifndef outw
-+#define outw logic_outw
-+#endif
-+
-+#ifndef outl
-+#define outl logic_outl
-+#endif
-+
-+#ifndef insb
-+#define insb logic_insb
-+#endif
-+
-+#ifndef insw
-+#define insw logic_insw
-+#endif
-+
-+#ifndef insl
-+#define insl logic_insl
-+#endif
-+
-+#ifndef outsb
-+#define outsb logic_outsb
-+#endif
-+
-+#ifndef outsw
-+#define outsw logic_outsw
-+#endif
-+
-+#ifndef outsl
-+#define outsl logic_outsl
-+#endif
-+
-+/*
-+ * Below we reserve 0x4000 bytes for Indirect IO as so far this library is only
-+ * used by Hisilicon LPC Host. If needed in future we may reserve a wider IO
-+ * area by redefining the macro below.
-+ */
-+#define PIO_INDIRECT_SIZE 0x4000
-+#define MMIO_UPPER_LIMIT (IO_SPACE_LIMIT - PIO_INDIRECT_SIZE)
-+#else
-+#define MMIO_UPPER_LIMIT IO_SPACE_LIMIT
-+#endif /* CONFIG_INDIRECT_PIO */
-+
-+
-+struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode);
-+
-+unsigned long logic_pio_trans_hwaddr(struct fwnode_handle *fwnode,
-+			resource_size_t hw_addr, resource_size_t size);
-+
-+int logic_pio_register_range(struct logic_pio_hwaddr *newrange);
-+
-+
-+extern resource_size_t logic_pio_to_hwaddr(unsigned long pio);
-+
-+extern unsigned long logic_pio_trans_cpuaddr(resource_size_t hw_addr);
-+
-+#endif /* __KERNEL__ */
-+#endif /* __LINUX_LOGIC_PIO_H */
-diff --git a/lib/Kconfig b/lib/Kconfig
-index e960894..7ad1e69 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -55,6 +55,21 @@ config ARCH_USE_CMPXCHG_LOCKREF
- config ARCH_HAS_FAST_MULTIPLIER
- 	bool
- 
-+config INDIRECT_PIO
-+	bool "Access I/O in non-MMIO mode"
-+	depends on ARM64
-+	help
-+	  On some platforms where no separate I/O space exists, there are I/O
-+	  hosts which can not be accessed in MMIO mode. Using the logical PIO
-+	  mechanism, the host-local I/O resource can be mapped into system
-+	  logic PIO space shared with MMIO hosts, such as PCI/PCIE, then the
-+	  system can access the I/O devices with the mapped logic PIO through
-+	  I/O accessors.
-+	  This way has a relatively little I/O performance cost. Please make
-+	  sure your devices really need this configure item enabled.
-+
-+	  When in doubt, say N.
-+
- config CRC_CCITT
- 	tristate "CRC-CCITT functions"
- 	help
-diff --git a/lib/Makefile b/lib/Makefile
-index a90d4fc..4a9eacd 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -81,6 +81,8 @@ obj-$(CONFIG_HAS_IOMEM) += iomap_copy.o devres.o
- obj-$(CONFIG_CHECK_SIGNATURE) += check_signature.o
- obj-$(CONFIG_DEBUG_LOCKING_API_SELFTESTS) += locking-selftest.o
- 
-+obj-y += logic_pio.o
-+
- obj-$(CONFIG_GENERIC_HWEIGHT) += hweight.o
- 
- obj-$(CONFIG_BTREE) += btree.o
-diff --git a/lib/logic_pio.c b/lib/logic_pio.c
-new file mode 100644
-index 0000000..adc22bd
---- /dev/null
-+++ b/lib/logic_pio.c
-@@ -0,0 +1,286 @@
-+/*
-+ * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
-+ * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/of.h>
-+#include <linux/io.h>
-+#include <linux/logic_pio.h>
-+#include <linux/mm.h>
-+#include <linux/rculist.h>
-+#include <linux/sizes.h>
-+#include <linux/slab.h>
-+
-+/* The unique hardware address list. */
-+static LIST_HEAD(io_range_list);
-+static DEFINE_MUTEX(io_range_mutex);
-+
-+/*
-+ * register a new io range node in the io range list.
-+ *
-+ * @newrange: pointer to the io range to be registered.
-+ *
-+ * returns 0 on success, the error code in case of failure
-+ */
-+int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
-+{
-+	struct logic_pio_hwaddr *range;
-+	int ret = 0;
-+	resource_size_t start = new_range->hw_start;
-+	resource_size_t end = new_range->hw_start + new_range->size;
-+	resource_size_t allocated_mmio_size = 0;
-+	resource_size_t allocated_iio_size = MMIO_UPPER_LIMIT;
-+
-+	if (!new_range || !new_range->fwnode || !new_range->size)
-+		return -EINVAL;
-+
-+	mutex_lock(&io_range_mutex);
-+	list_for_each_entry_rcu(range, &io_range_list, list) {
-+
-+		if (range->fwnode == new_range->fwnode) {
-+			/* range already there */
-+			ret = -EFAULT;
-+			goto end_register;
-+		}
-+		if (range->flags == PIO_CPU_MMIO &&
-+				new_range->flags == PIO_CPU_MMIO) {
-+			/* for MMIO ranges we need to check for overlap */
-+			if (start >= range->hw_start + range->size ||
-+				end < range->hw_start)
-+				allocated_mmio_size += range->size;
-+			else {
-+				ret = -EFAULT;
-+				goto end_register;
-+			}
-+		} else if (range->flags == PIO_INDIRECT &&
-+				new_range->flags == PIO_INDIRECT) {
-+			allocated_iio_size += range->size;
-+		}
-+	}
-+
-+	/* range not registered yet, check for available space */
-+	if (new_range->flags == PIO_CPU_MMIO) {
-+
-+		if (allocated_mmio_size + new_range->size - 1 >
-+			MMIO_UPPER_LIMIT) {
-+			/* if it's too big check if 64K space can be reserved */
-+			if (allocated_mmio_size + SZ_64K - 1 >
-+			MMIO_UPPER_LIMIT) {
-+				ret = -E2BIG;
-+				goto end_register;
-+			}
-+			new_range->size = SZ_64K;
-+			pr_warn("Requested IO range too big, new size set to 64K\n");
-+		}
-+
-+		new_range->io_start = allocated_mmio_size;
-+
-+	} else if (new_range->flags == PIO_INDIRECT) {
-+
-+		if (allocated_iio_size + new_range->size - 1 >
-+		IO_SPACE_LIMIT) {
-+			ret = -E2BIG;
-+			goto end_register;
-+		}
-+		new_range->io_start = allocated_iio_size;
-+
-+	} else {
-+		/* invalid flag */
-+		ret = -EINVAL;
-+		goto end_register;
-+	}
-+
-+	list_add_tail_rcu(&new_range->list, &io_range_list);
-+
-+end_register:
-+	mutex_unlock(&io_range_mutex);
-+	return ret;
-+}
-+
-+/*
-+ * traverse the io_range_list to find the registered node whose device node
-+ * and/or physical IO address match to.
-+ */
-+struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode)
-+{
-+	struct logic_pio_hwaddr *range;
-+
-+	list_for_each_entry_rcu(range, &io_range_list, list) {
-+		if (range->fwnode == fwnode)
-+			return range;
-+	}
-+	return NULL;
-+}
-+
-+/* return a registered range given an input PIO token */
-+static struct logic_pio_hwaddr *find_io_range(unsigned long pio)
-+{
-+	struct logic_pio_hwaddr *range;
-+
-+	list_for_each_entry_rcu(range, &io_range_list, list) {
-+		if (pio >= range->io_start &&
-+				pio < range->io_start + range->size)
-+			return range;
-+	}
-+	pr_err("PIO entry token invalid\n");
-+	return NULL;
-+}
-+
-+/*
-+ * Translate the input logical pio to the corresponding hardware address.
-+ * The input pio should be unique in the whole logical PIO space.
-+ */
-+resource_size_t logic_pio_to_hwaddr(unsigned long pio)
-+{
-+	struct logic_pio_hwaddr *range;
-+	resource_size_t hwaddr = -1;
-+
-+	range = find_io_range(pio);
-+	if (range)
-+		hwaddr = range->hw_start + pio - range->io_start;
-+
-+	return hwaddr;
-+}
-+
-+/*
-+ * This function is generic for translating a hardware address to logical PIO.
-+ * @hw_addr: the hardware address of host, can be CPU address or host-local
-+ *		address;
-+ */
-+unsigned long
-+logic_pio_trans_hwaddr(struct fwnode_handle *fwnode, resource_size_t addr,
-+		       resource_size_t size)
-+{
-+	struct logic_pio_hwaddr *range;
-+
-+	range = find_io_range_by_fwnode(fwnode);
-+	if (!range || range->flags == PIO_CPU_MMIO) {
-+		pr_err("range not found or invalid\n");
-+		return -1;
-+	}
-+	if (range->size < size) {
-+		pr_err("resource size 0x%llx cannot fit in IO range size 0x%llx\n",
-+		       size, range->size);
-+		return -1;
-+	}
-+	return addr - range->hw_start + range->io_start;
-+}
-+
-+unsigned long
-+logic_pio_trans_cpuaddr(resource_size_t addr)
-+{
-+	struct logic_pio_hwaddr *range;
-+
-+	list_for_each_entry_rcu(range, &io_range_list, list) {
-+		if (range->flags != PIO_CPU_MMIO)
-+			continue;
-+		if (addr >= range->hw_start &&
-+			addr < range->hw_start + range->size)
-+			return addr - range->hw_start +
-+				range->io_start;
-+	}
-+	pr_err("addr not registered in io_range_list\n");
-+	return -1;
-+}
-+
-+#if defined(CONFIG_INDIRECT_PIO) && defined(PCI_IOBASE)
-+#define BUILD_LOGIC_IO(bw, type)					\
-+type logic_in##bw(unsigned long addr)					\
-+{									\
-+	type ret = -1;							\
-+									\
-+	if (addr < MMIO_UPPER_LIMIT) {					\
-+		ret = read##bw(PCI_IOBASE + addr);			\
-+	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) { \
-+		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-+									\
-+		if (entry && entry->ops)				\
-+			ret = entry->ops->pfin(entry->devpara,		\
-+					addr, sizeof(type));		\
-+		else							\
-+			WARN_ON_ONCE(1);				\
-+	}								\
-+	return ret;							\
-+}									\
-+									\
-+void logic_out##bw(type value, unsigned long addr)			\
-+{									\
-+	if (addr < MMIO_UPPER_LIMIT) {					\
-+		write##bw(value, PCI_IOBASE + addr);			\
-+	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) {	\
-+		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-+									\
-+		if (entry && entry->ops)				\
-+			entry->ops->pfout(entry->devpara,		\
-+					addr, value, sizeof(type));	\
-+		else							\
-+			WARN_ON_ONCE(1);				\
-+	}								\
-+}									\
-+									\
-+void logic_ins##bw(unsigned long addr, void *buffer, unsigned int count)\
-+{									\
-+	if (addr < MMIO_UPPER_LIMIT) {					\
-+		reads##bw(PCI_IOBASE + addr, buffer, count);		\
-+	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) {	\
-+		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-+									\
-+		if (entry && entry->ops)				\
-+			entry->ops->pfins(entry->devpara,		\
-+				addr, buffer, sizeof(type), count);	\
-+		else							\
-+			WARN_ON_ONCE(1);				\
-+	}								\
-+									\
-+}									\
-+									\
-+void logic_outs##bw(unsigned long addr, const void *buffer,		\
-+		    unsigned int count)					\
-+{									\
-+	if (addr < MMIO_UPPER_LIMIT) {					\
-+		writes##bw(PCI_IOBASE + addr, buffer, count);		\
-+	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) {	\
-+		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-+									\
-+		if (entry && entry->ops)				\
-+			entry->ops->pfouts(entry->devpara,		\
-+				addr, buffer, sizeof(type), count);	\
-+		else							\
-+			WARN_ON_ONCE(1);				\
-+	}								\
-+}
-+
-+BUILD_LOGIC_IO(b, u8)
-+
-+EXPORT_SYMBOL(logic_inb);
-+EXPORT_SYMBOL(logic_outb);
-+EXPORT_SYMBOL(logic_insb);
-+EXPORT_SYMBOL(logic_outsb);
-+
-+BUILD_LOGIC_IO(w, u16)
-+
-+EXPORT_SYMBOL(logic_inw);
-+EXPORT_SYMBOL(logic_outw);
-+EXPORT_SYMBOL(logic_insw);
-+EXPORT_SYMBOL(logic_outsw);
-+
-+BUILD_LOGIC_IO(l, u32)
-+
-+EXPORT_SYMBOL(logic_inl);
-+EXPORT_SYMBOL(logic_outl);
-+EXPORT_SYMBOL(logic_insl);
-+EXPORT_SYMBOL(logic_outsl);
-+#endif /* CONFIG_INDIRECT_PIO && PCI_IOBASE */
+OK.
 -- 
-1.9.1
+Florian
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
