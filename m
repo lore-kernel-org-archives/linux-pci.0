@@ -1,96 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:18693 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752616AbeAaHmB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jan 2018 02:42:01 -0500
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Frank Rowand <frowand.list@gmail.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 2/2] dt-bindings: PCI: MediaTek: Correct the interrupt-map properties
-Date: Wed, 31 Jan 2018 15:41:50 +0800
-Message-ID: <9d247a4fba54ba90d07df32fd89a8bb2c8bdb0f9.1516961656.git.ryder.lee@mediatek.com>
-In-Reply-To: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
-References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+Received: from mail1.hostfission.com ([139.99.139.48]:33642 "EHLO
+        mail1.hostfission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932072AbeAXW3B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jan 2018 17:29:01 -0500
+To: Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH] Restore PCI bridge configuration space on bridge reset
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 25 Jan 2018 09:28:59 +1100
+From: geoff@hostfission.com
+Cc: linux-pci@vger.kernel.org, suravee.suthikulpanit@amd.com,
+        Gary R Hook <gary.hook@amd.com>
+In-Reply-To: <20180124141051.733f7b28@w520.home>
+References: <0986ad77b71f3b8e0a17f79e238d1ebc@hostfission.com>
+ <20180124141051.733f7b28@w520.home>
+Message-ID: <745998038463da91584ef51dfc8ffcac@hostfission.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move the interrupt-map properties from the child nodes to the root node
-and update each entry accordingly.
+On 2018-01-25 08:10, Alex Williamson wrote:
+> On Wed, 24 Jan 2018 19:02:33 +1100
+> geoff@hostfission.com wrote:
+> 
+>> According to PCI-to-PCI Bridge Architecture Specification 3.2.5.17
+> 
+> Correction, rev 1.2 section 3.2.5.18, in reference to the secondary bus
+> reset bit in the bridge control register.
+> 
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- .../devicetree/bindings/pci/mediatek-pcie.txt      | 28 ++++++++++++----------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+Thanks, I will make this correction if the patch is deemed valid re 
+below.
+Please excuse any confusing terminology/wording, I am still coming to
+terms with how PCI operates.
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-index 3a6ce55..b15ea2d 100644
---- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -89,10 +89,21 @@ Examples for MT7623:
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		#interrupt-cells = <1>;
--		interrupt-map-mask = <0xf800 0 0 0>;
--		interrupt-map = <0x0000 0 0 0 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
--				<0x0800 0 0 0 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
--				<0x1000 0 0 0 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
-+		interrupt-map-mask = <0xf800 0 0 7>;
-+		interrupt-map = <0x0000 0 0 1 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW
-+				0x0000 0 0 2 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW
-+				0x0000 0 0 3 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW
-+				0x0000 0 0 4 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW
-+
-+				0x0800 0 0 1 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW
-+				0x0800 0 0 2 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW
-+				0x0800 0 0 3 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW
-+				0x0800 0 0 4 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW
-+
-+				0x1000 0 0 1 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW
-+				0x1000 0 0 2 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW
-+				0x1000 0 0 3 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW
-+				0x1000 0 0 4 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
- 		clocks = <&topckgen CLK_TOP_ETHIF_SEL>,
- 			 <&hifsys CLK_HIFSYS_PCIE0>,
- 			 <&hifsys CLK_HIFSYS_PCIE1>,
-@@ -115,9 +126,6 @@ Examples for MT7623:
- 			reg = <0x0000 0 0 0 0>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
--			#interrupt-cells = <1>;
--			interrupt-map-mask = <0 0 0 0>;
--			interrupt-map = <0 0 0 0 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>;
- 			ranges;
- 			num-lanes = <1>;
- 		};
-@@ -127,9 +135,6 @@ Examples for MT7623:
- 			reg = <0x0800 0 0 0 0>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
--			#interrupt-cells = <1>;
--			interrupt-map-mask = <0 0 0 0>;
--			interrupt-map = <0 0 0 0 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>;
- 			ranges;
- 			num-lanes = <1>;
- 		};
-@@ -139,9 +144,6 @@ Examples for MT7623:
- 			reg = <0x1000 0 0 0 0>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
--			#interrupt-cells = <1>;
--			interrupt-map-mask = <0 0 0 0>;
--			interrupt-map = <0 0 0 0 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
- 			ranges;
- 			num-lanes = <1>;
- 		};
--- 
-1.9.1
+>> > The bridge’s secondary bus interface and any buffers between
+>> > the two interfaces (primary and secondary) must be initialized
+>> > back to their default state whenever this bit is set.
+>> 
+>> Failure to observe this causes inability to access devices on the
+>> secondary bus
+>> on the AMD Threadripper platform after device reset when the device is
+>> being
+>> used for PCI passthrough with KVM.
+>> 
+>> The following patch corrects this by saving the pci state and 
+>> restoring
+>> it after
+>> the bus has been reset.
+> 
+> How do configuration registers on the primary bus interface fall into
+> this requirement?  It's not very clear from the spec what these
+> "buffers" are and the secondary interface has no configuration
+> registers itself.  Figure 1-2 shows Transaction/Data Buffers which are
+> clearly separate from the Primary Interface Configuration Registers.
+> I'd tend to say this excerpt of the spec is describing a hardware
+> requirement, not a software requirement.
+
+These are not the configuration registers on the primary bus but on the
+secondary bus, in the case of a TR system a "PCIe GPP Bridge" device is
+created and the PCI device is placed under it. It is this bridge that
+needs it's configuration space rewritten.
+
+Unless I am mistaken, currently pci.c is inconsistent with secondary bus
+resets as it is. In `pci_reset_bus` the bus configuration space is saved
+via `pci_bus_save_and_disable`, the bus is reset, and then the 
+configuration
+is reloaded using `pci_bus_restore`.
+
+`pci_try_reset_bus` is different again, in that it calls
+`pci_reset_bridge_secondary_bus` also.
+
+In short, it is already happening under certain circumstances, but 
+because
+on TR the CPU view of the PCI configuration space seems to be cached, it 
+is
+unable to determine the changes and thus a blind re-write is required.
+
+> 
+> I know that people have found that re-writing bridge registers on
+> threadripper solves the reset problem, but this seems like a bit of a
+> stretch to attribute it to this spec statement.  Maybe it can be
+> handled via a quirk if AMD isn't planning to release firmware that
+> resolves this issue?  AMD...  Thanks,
+> 
+
+I'd love to see this fixed in firmware/bios/microcode, etc... but as the
+spec reads, it is unclear if this is a software or hardware requirement, 
+IMO
+it is a software requirement to reconfigure the configuration space of 
+the
+secondary bus, but my understanding of PCI at this time is quite new so 
+I
+am ready to accept a final decision by someone with more experience.
