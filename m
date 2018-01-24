@@ -1,72 +1,154 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Hans de Goede <hdegoede@redhat.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Lv Zheng <lv.zheng@intel.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, devel@acpica.org
-Subject: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices with unmet dependencies
-Date: Mon, 22 Jan 2018 09:51:30 +0100
-Message-Id: <20180122085135.16732-1-hdegoede@redhat.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail1.hostfission.com ([139.99.139.48]:55918 "EHLO
+        mail1.hostfission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752314AbeAXILp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jan 2018 03:11:45 -0500
+Received: from www1.hostfission.com (www1.hostfission.com [139.99.139.52])
+        by mail1.hostfission.com (Postfix) with ESMTP id B36D943BA8
+        for <linux-pci@vger.kernel.org>; Wed, 24 Jan 2018 19:02:33 +1100 (AEDT)
+To: linux-pci@vger.kernel.org
+Subject: [PATCH] Restore PCI bridge configuration space on bridge reset
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 24 Jan 2018 19:02:33 +1100
+From: geoff@hostfission.com
+Message-ID: <0986ad77b71f3b8e0a17f79e238d1ebc@hostfission.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+According to PCI-to-PCI Bridge Architecture Specification 3.2.5.17
 
-Here is v2 of this set, new in v2 is the addressing of Bjorn's comments
-to the "PCI: acpiphp_ibm: prepare for acpi_get_object_info no longer
-returning status" patch and a new patch (the first patch in v2) which
-exports acpi_bus_get_status_handle() for use in modules as acpiphp_ibm
-will now depend on it.
+> The bridge’s secondary bus interface and any buffers between
+> the two interfaces (primary and secondary) must be initialized
+> back to their default state whenever this bit is set.
 
-Here is the old coverletter from v1 (adjusted for the new patch):
+Failure to observe this causes inability to access devices on the 
+secondary bus
+on the AMD Threadripper platform after device reset when the device is 
+being
+used for PCI passthrough with KVM.
 
-The ACPI code already contains quite a bit of code to not bind the
-ACPI-battery until all deps for an ACPI battery device have been met,
-but on some devices calling _STA before all deps are met is a problem
-too because the _STA method uses an i2c OpRegion there.
+The following patch corrects this by saving the pci state and restoring 
+it after
+the bus has been reset.
 
-Here is the DSDT of the device I'm seeing this on:
-https://fedorapeople.org/~jwrdegoede/toshiba-click-mini-dsdt.dsl
+--Signed-off-by: Geoffrey McRae<geoff@hostfission.com>
 
-This series modifies the kernel to not call _STA until all deps are met,
-mirroring the binding behavior of the battery driver.
+--- ./drivers/pci/pci.c.orig	2018-01-24 18:30:23.913953332 +1100
++++ ./drivers/pci/pci.c	2018-01-24 18:46:31.752819451 +1100
+@@ -1112,12 +1112,12 @@ int pci_save_state(struct pci_dev *dev)
+  EXPORT_SYMBOL(pci_save_state);
 
-Without this series a total of 32 ACPI errors get printend to the console
-on boot, there are 4 errors per _STA call, 2 battery devices on this
-system and 4 _STA calls per battery device.
+  static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
+-				     u32 saved_val, int retry)
++				     u32 saved_val, int retry, int force)
+  {
+  	u32 val;
 
-The first 2 commits are preparation commits for making the ACPICA changes
-in the 4th commit, these commits are necessary to not break things after
-the ACPICA changes.
+  	pci_read_config_dword(pdev, offset, &val);
+-	if (val == saved_val)
++	if (!force && val == saved_val)
+  		return;
 
-The 3th commit modifies acpi_bus_get_status to not call _STA on
-battery devices until all deps are met. This fixes 2 of the 4 too early
-_STA calls triggering these errors.
+  	for (;;) {
+@@ -1136,33 +1136,29 @@ static void pci_restore_config_dword(str
+  }
 
-The 4th commit makes the device instantiation code use
-acpi_bus_get_status instead of acpi_bus_get_status_handle so that the
-code to get the initial status also does not makes 1 too early _STA call.
+  static void pci_restore_config_space_range(struct pci_dev *pdev,
+-					   int start, int end, int retry)
++					   int start, int end, int retry, int force)
+  {
+  	int index;
 
-The 5th commit changes the ACPICA acpi_get_object_info function to not
-call _STA. Only 1 user (which is fixed in the first commit) cares about
-acpi_device_info.current_status. And the ACPICA code has this comment:
+  	for (index = end; index >= start; index--)
+  		pci_restore_config_dword(pdev, 4 * index,
+  					 pdev->saved_config_space[index],
+-					 retry);
++					 retry, force);
+  }
 
- * Note: This interface is intended to be used during the initial device
- * discovery namespace traversal. Therefore, no complex methods can be
- * executed, especially those that access operation regions. Therefore, do
- * not add any additional methods that could cause problems in this area.
- * Because of this reason support for the following methods has been removed:
- * this was the fate of the _SUB method which was found to cause such
- * problems and was removed (11/2015).
+-static void pci_restore_config_space(struct pci_dev *pdev)
++static void pci_restore_config_space(struct pci_dev *pdev, int force)
+  {
+  	if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL) {
+-		pci_restore_config_space_range(pdev, 10, 15, 0);
++		pci_restore_config_space_range(pdev, 10, 15, 0, force);
+  		/* Restore BARs before the command register. */
+-		pci_restore_config_space_range(pdev, 4, 9, 10);
+-		pci_restore_config_space_range(pdev, 0, 3, 0);
++		pci_restore_config_space_range(pdev, 4, 9, 10, force);
++		pci_restore_config_space_range(pdev, 0, 3, 0, force);
+  	} else {
+-		pci_restore_config_space_range(pdev, 0, 15, 0);
++		pci_restore_config_space_range(pdev, 0, 15, 0, force);
+  	}
+  }
 
-The described problems with the _SUB method clearly also apply to the _STA
-method, so removing it from acpi_get_object_info seems like it is the right
-thing to do here. This too fixes 1 too early _STA call, so that with all
-5 patches in place we've fixed all 4 too early _STA calls.
+-/**
+- * pci_restore_state - Restore the saved state of a PCI device
+- * @dev: - PCI device that we're dealing with
+- */
+-void pci_restore_state(struct pci_dev *dev)
++static void _pci_restore_state(struct pci_dev *dev, int force)
+  {
+  	if (!dev->state_saved)
+  		return;
+@@ -1176,7 +1172,7 @@ void pci_restore_state(struct pci_dev *d
 
-Regards,
+  	pci_cleanup_aer_error_status_regs(dev);
 
-Hans
+-	pci_restore_config_space(dev);
++	pci_restore_config_space(dev, force);
+
+  	pci_restore_pcix_state(dev);
+  	pci_restore_msi_state(dev);
+@@ -1187,6 +1183,15 @@ void pci_restore_state(struct pci_dev *d
+
+  	dev->state_saved = false;
+  }
++
++/**
++ * pci_restore_state - Restore the saved state of a PCI device
++ * @dev: - PCI device that we're dealing with
++ */
++void pci_restore_state(struct pci_dev *dev)
++{
++	_pci_restore_state(dev, 0);
++}
+  EXPORT_SYMBOL(pci_restore_state);
+
+  struct pci_saved_state {
+@@ -4083,6 +4088,8 @@ void pci_reset_secondary_bus(struct pci_
+  {
+  	u16 ctrl;
+
++  pci_save_state(dev);
++
+  	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
+  	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+  	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
+@@ -4092,10 +4099,23 @@ void pci_reset_secondary_bus(struct pci_
+  	 */
+  	msleep(2);
+
++	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
+  	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+  	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
+
+  	/*
++	 * According to PCI-to-PCI Bridge Architecture Specification 3.2.5.17
++	 *
++	 * "The bridge’s secondary bus interface and any buffers between
++	 * the two interfaces (primary and secondary) must be initialized
++	 * back to their default state whenever this bit is set."
++	 *
++	 * Failure to observe this causes inability to access devices on the
++	 * secondary bus on the AMD Threadripper platform.
++	 */
++	_pci_restore_state(dev, 1);
++
++	/*
+  	 * Trhfa for conventional PCI is 2^25 clock cycles.
+  	 * Assuming a minimum 33MHz clock this results in a 1s
+  	 * delay before we can consider subordinate devices to
