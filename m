@@ -1,39 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59832 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753762AbeAQQ1n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jan 2018 11:27:43 -0500
-Subject: Re: [PATCH v5 4/4] PCI/DPC: Enumerate the devices after DPC trigger
- event
-To: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>
-References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
- <1516185438-31556-5-git-send-email-poza@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <b255864b-1272-0626-f448-db2d9c3710c5@codeaurora.org>
-Date: Wed, 17 Jan 2018 11:27:39 -0500
+Return-Path: <SRS0=AKBn=ET=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=AKBn=ET=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v4 3/7] platforms/pseries: Set eeh_pe of EEH_PE_VF type
+To: Michael Ellerman <mpe@ellerman.id.au>, benh@kernel.crashing.org,
+        paulus@samba.org
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com
+References: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
+ <20180105164552.36371-4-bryantly@linux.vnet.ibm.com>
+ <87shawukgv.fsf@concordia.ellerman.id.au>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Wed, 24 Jan 2018 08:53:28 -0600
 MIME-Version: 1.0
-In-Reply-To: <1516185438-31556-5-git-send-email-poza@codeaurora.org>
+In-Reply-To: <87shawukgv.fsf@concordia.ellerman.id.au>
 Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Message-Id: <1059d399-60f8-99db-c498-c4222725712f@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/17/2018 5:37 AM, Oza Pawandeep wrote:
-> +static bool dpc_wait_link_active(struct pci_dev *pdev)
-> +{
 
-I think you can also make this function common instead of making another copy here.
-Of course, this would be another patch.
+On 1/23/18 7:14 PM, Michael Ellerman wrote:
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> "Bryant G. Ly" <bryantly@linux.vnet.ibm.com> writes:
+>
+>> To correctly use EEH code one has to make
+>> sure that the EEH_PE_VF is set for dynamic created
+>> VFs. Therefore this patch allocates an eeh_pe of
+>> eeh type EEH_PE_VF and associates PE with parent.
+>>
+>> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+>> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/include/asm/pci-bridge.h        |  5 ++++-
+>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 17 +++++++++++++++++
+>>  2 files changed, 21 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>> index 9f66ddebb799..16d70740a76f 100644
+>> --- a/arch/powerpc/include/asm/pci-bridge.h
+>> +++ b/arch/powerpc/include/asm/pci-bridge.h
+>> @@ -211,7 +211,10 @@ struct pci_dn {
+>>  	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
+>>  	bool    m64_single_mode;	/* Use M64 BAR in Single Mode */
+>>  #define IODA_INVALID_M64        (-1)
+>> -	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
+>> +	union {
+>> +		int     (*m64_map)[PCI_SRIOV_NUM_BARS]; /*Only used in powernv */
+>> +		int     last_allow_rc;	/* Only used in pSeries */
+>> +	};
+>>  #endif /* CONFIG_PCI_IOV */
+>>  	int	mps;			/* Maximum Payload Size */
+>>  	struct list_head child_list;
+> I don't see the point of using a union to save 4 bytes.
+>
+> And if you look at the current layout of the struct there's actually a 4
+> byte hole after mps, so it doesn't actually save any space at all.
+>
+> I can remove it before applying, unless there's some compelling reason
+> for it I'm not seeing.
+>
+> cheers
+
+No specific reason for the union, you can go ahead and remove it before applying. 
+
+Thanks!
+
+Bryant
