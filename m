@@ -1,59 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:57130 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751436AbeAZQfw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jan 2018 11:35:52 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v6 0/9] PCI: dwc: MSI-X feature
-Date: Fri, 26 Jan 2018 16:35:35 +0000
-Message-Id: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:44992 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751296AbeAYXgP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jan 2018 18:36:15 -0500
+Received: by mail-pg0-f66.google.com with SMTP id m20so6079150pgc.11
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jan 2018 15:36:15 -0800 (PST)
+From: Feng Kan <fkan@apm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        alex.williamson@redhat.com, bhelgaas@google.com
+Cc: Feng Kan <fkan@apm.com>
+Subject: [PATCH] pci: quirk: adding Ampere vendor id to ACS quirk list
+Date: Thu, 25 Jan 2018 15:36:07 -0800
+Message-Id: <1516923367-28197-1-git-send-email-fkan@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replaces the use of IRQ domain hierarchy by the IRQ chained used by
-pcie-designware and each SoC specific driver in order to allow new and
-complex features like MSI-X.
+Adding Ampere Computing vendor id to the ACS quirk list.
 
-Adds Synopsys Root Complex support for MSI-X feature.
+Signed-off-by: Feng Kan <fkan@apm.com>
+---
+ Tanmay is no longer with us. After the email system is rebranded
+ to the new company. We will clean up the remaining legacy items.
 
-Expands the maximum number of IRQs from 32 to 256 distributed by
-a maximum of 8 controller registers.
+ drivers/pci/quirks.c    | 9 +++++++++
+ include/linux/pci_ids.h | 1 +
+ 2 files changed, 10 insertions(+)
 
-The patch set was made against the Bjorn's next branch.
-
-Gustavo Pimentel (9):
-  PCI: dwc: Add IRQ chained API support
-  PCI: dwc: exynos: Switch to use the IRQ chained API
-  PCI: dwc: imx6: Switch to use the IRQ chained API
-  PCI: dwc: artpec6: Switch to use the IRQ chained API
-  PCI: dwc: designware: Switch to use the IRQ chained API
-  PCI: dwc: qcom: Switch to use the IRQ chained API
-  PCI: dwc: keystone: Switch to use the IRQ chained API
-  PCI: dwc: Remove IRQ domain hierarchy API support
-  PCI: dwc: Expand maximum number of IRQs from 32 to 256
-
- drivers/pci/dwc/pci-exynos.c           |  18 --
- drivers/pci/dwc/pci-imx6.c             |  18 --
- drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
- drivers/pci/dwc/pci-keystone.c         |   1 +
- drivers/pci/dwc/pci-keystone.h         |   4 +-
- drivers/pci/dwc/pci-layerscape.c       |   3 +-
- drivers/pci/dwc/pcie-artpec6.c         |  18 --
- drivers/pci/dwc/pcie-designware-host.c | 402 +++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware-plat.c |  16 --
- drivers/pci/dwc/pcie-designware.h      |  30 ++-
- drivers/pci/dwc/pcie-qcom.c            |  16 --
- 11 files changed, 260 insertions(+), 357 deletions(-)
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 10684b1..45d9187 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4512,6 +4512,15 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+ 	/* APM X-Gene */
+ 	{ PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_xgene_acs },
++	/* Ampere Computing */
++	{ PCI_VENDOR_ID_AMPERE, 0xE005, pci_quirk_xgene_acs },
++	{ PCI_VENDOR_ID_AMPERE, 0xE006, pci_quirk_xgene_acs },
++	{ PCI_VENDOR_ID_AMPERE, 0xE007, pci_quirk_xgene_acs },
++	{ PCI_VENDOR_ID_AMPERE, 0xE008, pci_quirk_xgene_acs },
++	{ PCI_VENDOR_ID_AMPERE, 0xE009, pci_quirk_xgene_acs },
++	{ PCI_VENDOR_ID_AMPERE, 0xE00A, pci_quirk_xgene_acs },
++	{ PCI_VENDOR_ID_AMPERE, 0xE00B, pci_quirk_xgene_acs },
++	{ PCI_VENDOR_ID_AMPERE, 0xE00C, pci_quirk_xgene_acs },
+ 	{ 0 }
+ };
+ 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ab20dc5..c21d1f8 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1331,6 +1331,7 @@
+ #define PCI_DEVICE_ID_IMS_TT3D		0x9135
+ 
+ #define PCI_VENDOR_ID_AMCC		0x10e8
++#define PCI_VENDOR_ID_AMPERE		0x1def
+ 
+ #define PCI_VENDOR_ID_INTERG		0x10ea
+ #define PCI_DEVICE_ID_INTERG_1682	0x1682
 -- 
 2.7.4
