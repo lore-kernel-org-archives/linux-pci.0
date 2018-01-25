@@ -1,128 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:46585 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751127AbeABSoc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 13:44:32 -0500
-Received: by mail-qk0-f193.google.com with SMTP id b132so32466205qkc.13
-        for <linux-pci@vger.kernel.org>; Tue, 02 Jan 2018 10:44:32 -0800 (PST)
-Subject: Re: Regression: NULL pointer dereference caused by
- iproc_pcie_map_dma_ranges
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Oza Oza <oza.oza@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Scott Branden <scott.branden@broadcom.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Hauke Mehrtens <hauke@hauke-m.de>
-References: <CACna6rxOBUfVhqrMZ2=-6NLrey7193Dtgf-DniSw8Y+qCD6kKA@mail.gmail.com>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <6707e532-7a5e-261c-4d5b-950d0ccc8f66@broadcom.com>
-Date: Tue, 2 Jan 2018 10:44:27 -0800
+Return-Path: <SRS0=8PhW=EU=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=8PhW=EU=intel.com=keith.busch@kernel.org>
+Date: Thu, 25 Jan 2018 14:15:21 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Maik Broemme <mbroemme@libmpq.org>,
+	Pawandeep Oza <poza@codeaurora.org>,
+	Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCHv2 4/6] PCI/DPC: Print AER status in DPC event handling
+Message-ID: <20180125211521.GB19484@localhost.localdomain>
+References: <20180117052206.7703-1-keith.busch@intel.com>
+ <20180117052206.7703-5-keith.busch@intel.com>
+ <20180125195512.GL5317@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rxOBUfVhqrMZ2=-6NLrey7193Dtgf-DniSw8Y+qCD6kKA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180125195512.GL5317@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafal,
-
-Can you please give the following patch a try to see if that fixes the 
-issue? Thanks.
-
- From f91de124bc8fb5645d7dbbfd68a9a68617955749 Mon Sep 17 00:00:00 2001
-From: Ray Jui <ray.jui@broadcom.com>
-Date: Tue, 2 Jan 2018 10:36:03 -0800
-Subject: [PATCH] PCI: iproc: Fix NULL pointer dereference for BCMA
-
-With the inbound DMA mapping supported added, the iProc PCIe driver
-parses DT property "dma-ranges" through call to
-"of_pci_dma_range_parser_init". In the case of BCMA, this results in a
-NULL pointer deference due to a missing of_node.
-
-Fix this by adding a guard in pcie-iproc-platform.c to only enable the
-inbound DMA mapping logic when DT property "dma-ranges" is present
-
-fixes: dd9d4e7498de3 ("PCI: iproc: Add inbound DMA mapping support")
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
----
-  drivers/pci/host/pcie-iproc-platform.c | 3 +++
-  drivers/pci/host/pcie-iproc.c          | 8 +++++---
-  drivers/pci/host/pcie-iproc.h          | 2 ++
-  3 files changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-iproc-platform.c 
-b/drivers/pci/host/pcie-iproc-platform.c
-index a5073a9..235c545 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -92,6 +92,9 @@ static int iproc_pcie_pltfm_probe(struct 
-platform_device *pdev)
-  		pcie->need_ob_cfg = true;
-  	}
-
-+	if (of_property_read_bool(np, "dma-ranges"))
-+		pcie->need_ib_cfg = true;
-+
-  	/* PHY use is optional */
-  	pcie->phy = devm_phy_get(dev, "pcie-phy");
-  	if (IS_ERR(pcie->phy)) {
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 935909b..7583606 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -1378,9 +1378,11 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, 
-struct list_head *res)
-  		}
-  	}
-
--	ret = iproc_pcie_map_dma_ranges(pcie);
--	if (ret && ret != -ENOENT)
--		goto err_power_off_phy;
-+	if (pcie->need_ib_cfg) {
-+		ret = iproc_pcie_map_dma_ranges(pcie);
-+		if (ret && ret != -ENOENT)
-+			goto err_power_off_phy;
-+	}
-
-  #ifdef CONFIG_ARM
-  	pcie->sysdata.private_data = pcie;
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index a6b55ce..4ac6282 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -74,6 +74,7 @@ struct iproc_msi;
-   * @ob: outbound mapping related parameters
-   * @ob_map: outbound mapping related parameters specific to the controller
-   *
-+ * @need_ib_cfg: indicates SW needs to configure the inbound mapping window
-   * @ib: inbound mapping related parameters
-   * @ib_map: outbound mapping region related parameters
-   *
-@@ -101,6 +102,7 @@ struct iproc_pcie {
-  	struct iproc_pcie_ob ob;
-  	const struct iproc_pcie_ob_map *ob_map;
-
-+	bool need_ib_cfg;
-  	struct iproc_pcie_ib ib;
-  	const struct iproc_pcie_ib_map *ib_map;
-
--- 
-2.1.4
-
-
-On 12/29/2017 2:34 PM, Rafał Miłecki wrote:
-> Hi, I just updated from kernel 4.9 to 4.14 and found a NULL pointer
-> dereference caused by the iproc driver.
+On Thu, Jan 25, 2018 at 01:55:12PM -0600, Bjorn Helgaas wrote:
+> On Tue, Jan 16, 2018 at 10:22:04PM -0700, Keith Busch wrote:
+> >  
+> >  	schedule_work(&dpc->work);
+> >  
+> > +	if (reason == 0)
+> > +		dpc->info.severity = AER_NONFATAL;
+> > +	else
+> > +		dpc->info.severity = AER_CORRECTABLE;
 > 
-> 1) For bcma case pcie->dev->of_node can be NULL
-> 2) iproc_pcie_map_dma_ranges calls pci_dma_range_parser_init
-> 3) pci_dma_range_parser_init calls of_n_addr_cells(node) (node is NULL)
+> This looks wrong because we call schedule_work() before we set
+> dpc->info.severity.  I think that's racy because
+> interrupt_event_handler() might read dpc->info.severity before
+> dpc_irq() sets it.
+
+You're right, my mistake.
+ 
+> That raises the question of how we pass information from dpc_irq() to
+> interrupt_event_handler().  I think interrupt_event_handler() is a
+> work item because it removes devices and might need to sleep.  That
+> makes sense.
+>
+> But we pass dpc->info and dpc->rp_pio_status from dpc_irq() to
+> interrupt_event_handler() via the single struct dpc_dev.  That doesn't
+> make sense in general because dpc_irq() may be invoked several times
+> for each invocation of interrupt_event_handler().  I think the general
+> purpose solution for passing information from interrupt context to
+> process context would be a queue.
 > 
-> This is caused by a commit dd9d4e7498de3 ("PCI: iproc: Add inbound DMA
-> mapping support").
-> 
-> I believe that new DMA mapping code should be optional.
-> 
-> Would you find a moment to fix that, please?
-> 
+> It looks like we side-step that issue by disabling interrupts in
+> dpc_irq() and re-enabling them in interrupt_event_handler().  That
+> probably does work, but it's strange and requires extra config
+> accesses.  The fact that we clear PCI_EXP_DPC_STATUS_INTERRUPT at the
+> end of interrupt_event_handler() should be enough -- sec 6.2.10.1 says
+> we should only get a new MSI when the logical AND of things including
+> PCI_EXP_DPC_STATUS_INTERRUPT transitions from FALSE to TRUE.
+
+Yes, that's true. We could get the same interrupt for non-DPC related
+events, and the interrupt config setting was something Alex proposed to
+make sure we don't note the same events multiple times. Using these
+config registers seems a bit overkill, though.
+ 
+> I think all the log registers (Error Source ID and RP PIO Logs) are
+> latched when DPC Trigger Status is set, so I think all the dmesg
+> logging and dpc_process_rp_pio_error() stuff *could* be done in
+> interrupt_event_handler().  Then it would be together with the
+> PCI_EXP_DPC_STATUS write that clears DPC Trigger Status (and clears
+> the latched log registers) and we wouldn't have the question about
+> what belongs on dpc_irq() and what belongs in
+> interrupt_event_handler().
+
+That sounds great. If we defer all logging and containment handling
+to the work-queue, that should even fix up the issues the interrupt
+disable/enabling was trying to solve.
+
+That doesn't even sound difficult to code. Let me send you a proposal
+instead of this series, maybe by tomorrow.
+
+> After we clear PCI_EXP_DPC_STATUS_TRIGGER, we're supposed to "honor
+> timing requirements ... with respect to the first Configuration Read
+> following a Conventional Reset" (PCIe r4.0, sec 7.9.15.4).  Where does
+> that happen?
+
+That is referring to reading the downstream port, and that is not
+handled by the DPC driver. The expectation is that the link is down on a
+DPC event, and the Link Up is handled by the pciehp driver, which
+should be honoring those timing requirements.
