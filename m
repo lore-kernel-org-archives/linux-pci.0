@@ -1,50 +1,34 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
-        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
-        <dann.frazier@canonical.com>
-CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v11 9/9] MAINTAINERS: Add maintainer for HiSilicon LPC driver
-Date: Sun, 21 Jan 2018 20:27:27 +0800
-Message-ID: <1516537647-50553-10-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1516537647-50553-1-git-send-email-john.garry@huawei.com>
-References: <1516537647-50553-1-git-send-email-john.garry@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f179.google.com ([209.85.216.179]:46427 "EHLO
+        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750769AbeAYLKg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jan 2018 06:10:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <5A69B646.30501@broadcom.com>
+References: <20180125074131.30622-1-tobleminer@gmail.com> <20180125074131.30622-3-tobleminer@gmail.com>
+ <5A69B646.30501@broadcom.com>
+From: Tobias Schramm <tobleminer@gmail.com>
+Date: Thu, 25 Jan 2018 12:10:35 +0100
+Message-ID: <CAM6qAzqwJY2jf-TkAhJoNYuW7yOyq=siyB061xnYJwVNN63VQQ@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] ath10k: Add support for Uiquiti rebranded QCA988X v2
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added maintainer for drivers/bus/hisi_lpc.c
+True, I'll fix it in v3
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f1e3ee6..ab09908 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6386,6 +6386,13 @@ W:	http://www.hisilicon.com
- S:	Maintained
- F:	drivers/net/ethernet/hisilicon/hns3/
- 
-+HISILICON LPC BUS DRIVER
-+M:	john.garry@huawei.com
-+W:	http://www.hisilicon.com
-+S:	Maintained
-+F:	drivers/bus/hisi_lpc.c
-+F:	Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
-+
- HISILICON NETWORK SUBSYSTEM DRIVER
- M:	Yisen Zhuang <yisen.zhuang@huawei.com>
- M:	Salil Mehta <salil.mehta@huawei.com>
--- 
-1.9.1
-
+2018-01-25 11:49 GMT+01:00 Arend van Spriel <arend.vanspriel@broadcom.com>:
+> On 1/25/2018 8:41 AM, Tobias Schramm wrote:
+>>
+>> Some modern Ubiquiti devices contain a rebranded QCA988X rev2 with
+>
+>
+> You dropped a 'b' in the subject, ie. Uiquiti.
+>
+> Regards,
+> Arend
+>
