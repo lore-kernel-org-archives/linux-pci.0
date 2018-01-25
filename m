@@ -1,96 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:46130 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751154AbeAWJXy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jan 2018 04:23:54 -0500
-Subject: Re: [PATCH] PCI: qcom: add missing supplies required for msm8996
-To: srinivas.kandagatla@linaro.org, stanimir.varbanov@linaro.org,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh+dt@kernel.org, devicetree@vger.kernel.org
-References: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <65e01829-198e-f549-174d-c8368c5ee193@mm-sol.com>
-Date: Tue, 23 Jan 2018 11:23:45 +0200
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:35180 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751065AbeAYQyY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jan 2018 11:54:24 -0500
 MIME-Version: 1.0
-In-Reply-To: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180125164010.GG4180@atomide.com>
+References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+ <5491520.JsEYlZiECc@aspire.rjw.lan> <20180105004130.GA151625@google.com>
+ <2806186.IK6EZBC0cX@aspire.rjw.lan> <20180125012148.lcgnxi3uwcjzue7o@ban.mtv.corp.google.com>
+ <20180125164010.GG4180@atomide.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 25 Jan 2018 17:54:23 +0100
+Message-ID: <CAJZ5v0h7JvEFTV1mbqxtK8P0aoums2Cvjy3uU1gK4E26_rtZ5g@mail.gmail.com>
+Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+To: Tony Lindgren <tony@atomide.com>
+Cc: Brian Norris <briannorris@chromium.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        JeffyChen <jeffy.chen@rock-chips.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Doug Anderson <dianders@chromium.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Srini,
+On Thu, Jan 25, 2018 at 5:40 PM, Tony Lindgren <tony@atomide.com> wrote:
+> * Brian Norris <briannorris@chromium.org> [180125 01:22]:
+>> On Fri, Jan 05, 2018 at 02:13:33AM +0100, Rafael J. Wysocki wrote:
+>> > The "wakeup-interrupt" property at the bridge level basically has to be defined
+>> > as the wakeup interrupt for all devices on the bus under the bridge.
+>>
+>> The only thing I'm at a loss for is whether this goes in (referring to
+>> rk3399-gru.dtsi) &pcie or &pci_rootport. I think some versions of this
+>> series have been aiming for the former, and some the latter.
+>
+> I'd keep the wakeup interrupt property at the rootport level. That way
+> it can work with whatever pcie card that might be plugged into that
+> slot. That is in case it's just a slot and not hardwired pcie device :)
 
-As there are no comments I'd propose to change the endpoint supplies to
-more generic names.
-
-On 12/08/2017 11:20 AM, srinivas.kandagatla@linaro.org wrote:
-> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> 
-> This patch adds supplies that are required for msm8996. Two of them vdda
-> and vdda-1p8 are analog supplies that go in to controller, and the rest
-> of the two vddpe's are supplies to PCIe endpoints.
-> 
-> Without these supplies PCIe endpoints which require power supplies are
-> not enumerated at all, as there is no one to power it up.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> ---
->  .../devicetree/bindings/pci/qcom,pcie.txt          | 16 +++++++++++++
->  drivers/pci/dwc/pcie-qcom.c                        | 28 ++++++++++++++++++++--
->  2 files changed, 42 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> index 3c9d321b3d3b..045102cb3e12 100644
-> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> @@ -179,6 +179,11 @@
->  	Value type: <phandle>
->  	Definition: A phandle to the core analog power supply
->  
-> +- vdda-1p8-supply:
-> +	Usage: required for msm8996
-> +	Value type: <phandle>
-> +	Definition: A phandle to the 1.8v analog power supply
-> +
-
-This should be dropped, because it is part of the phy.
-
->  - vdda_phy-supply:
->  	Usage: required for ipq/apq8064
->  	Value type: <phandle>
-> @@ -189,6 +194,15 @@
->  	Value type: <phandle>
->  	Definition: A phandle to the analog power supply for IC which generates
->  		    reference clock
-> +- vddpe-supply:
-> +	Usage: optional
-> +	Value type: <phandle>
-> +	Definition: A phandle to the PCIe endpoint power supply
-
-vddpe_3v3-supply
-
-> +
-> +- vddpe1-supply:
-> +	Usage: optional
-> +	Value type: <phandle>
-> +	Definition: A phandle to the PCIe endpoint power supply 1
-
-vddpe_1v5-supply
-
->  
->  - phys:
->  	Usage: required for apq8084
-> @@ -205,6 +219,8 @@
->  	Value type: <prop-encoded-array>
->  	Definition: List of phandle and GPIO specifier pairs. Should contain
->  			- "perst-gpios"	PCIe endpoint reset signal line
-> +			- "pe_en-gpios"	PCIe endpoint enable signal line
-> +			- "pe_en1-gpios" PCIe endpoint enable1 signal line
-
-We don't need those gpios, the regulator driver will manipulate these
-gpios when we call regulator_enable/disable.
-
-
--- 
-regards,
-Stan
+Do I understand correctly that &pcie is the device and the
+&pci_rootport is the port that device is connected to?
