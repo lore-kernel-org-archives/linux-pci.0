@@ -1,61 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48768 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751603AbeA3OHT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Jan 2018 09:07:19 -0500
-Date: Tue, 30 Jan 2018 07:07:18 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: linux-pci@vger.kernel.org, mj@ucw.cz
-Subject: Re: [PATCH] Fix Vector table and PBA addresses print output
-Message-ID: <20180130070718.335deb52@w520.home>
-In-Reply-To: <998ca55d1a2b9a7f6912dcff69bc57d31b690fb0.1517308416.git.gustavo.pimentel@synopsys.com>
-References: <998ca55d1a2b9a7f6912dcff69bc57d31b690fb0.1517308416.git.gustavo.pimentel@synopsys.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:38768 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750972AbeAYKsk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jan 2018 05:48:40 -0500
+Received: by mail-wm0-f67.google.com with SMTP id 141so13967253wme.3
+        for <linux-pci@vger.kernel.org>; Thu, 25 Jan 2018 02:48:40 -0800 (PST)
+Subject: Re: [PATCH v2 1/2] pci: Add vendor id of Ubiquiti Networks
+To: Tobias Schramm <tobleminer@gmail.com>, kvalo@qca.qualcomm.com,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+References: <20180125074131.30622-1-tobleminer@gmail.com>
+ <20180125074131.30622-2-tobleminer@gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5A69B605.60503@broadcom.com>
+Date: Thu, 25 Jan 2018 11:48:37 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20180125074131.30622-2-tobleminer@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 30 Jan 2018 10:34:08 +0000
-Gustavo Pimentel <gustavo.pimentel@synopsys.com> wrote:
-
-> Lack of 3-bit rotation to the right was leading to erroneous display of the
-> vector table and PBA.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+On 1/25/2018 8:41 AM, Tobias Schramm wrote:
+> Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
 > ---
->  ls-caps.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/ls-caps.c b/ls-caps.c
-> index 507771a..cd13a37 100644
-> --- a/ls-caps.c
-> +++ b/ls-caps.c
-> @@ -1104,10 +1104,10 @@ cap_msix(struct device *d, int where, int cap)
->  
->    off = get_conf_long(d, where + PCI_MSIX_TABLE);
->    printf("\t\tVector table: BAR=%d offset=%08x\n",
-> -	 off & PCI_MSIX_BIR, off & ~PCI_MSIX_BIR);
-> +	 off & PCI_MSIX_BIR, (off & ~PCI_MSIX_BIR) >> 3);
->    off = get_conf_long(d, where + PCI_MSIX_PBA);
->    printf("\t\tPBA: BAR=%d offset=%08x\n",
-> -	 off & PCI_MSIX_BIR, off & ~PCI_MSIX_BIR);
-> +	 off & PCI_MSIX_BIR, (off & ~PCI_MSIX_BIR) >> 3);
->  }
->  
->  static void
+>   include/linux/pci_ids.h | 2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index ab20dc5db423..6b01ac1e9bce 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -149,6 +149,8 @@
+>   #define PCI_VENDOR_ID_DYNALINK		0x0675
+>   #define PCI_DEVICE_ID_DYNALINK_IS64PH	0x1702
+>
+> +#define PCI_VENDOR_ID_UBNT		0x0777
 
+Guess this is the stock symbol, but that does not seem a common approach 
+here. Why not just PCI_VENDOR_ID_UBIQUITI?
 
-The code is correct as is, the register contains bits 31:3 of the
-offset.  The spec states (PCI rev 3.0, 6.8.2.4, 6.8.2.5):
-
-  The lower 3 Table BIR bits are masked off (set to zero) by software
-  to form a 32-bit QWORD -aligned offset.
-
-  The lower 3 PBA BIR bits are masked off (set to zero) by software to
-  form a 32-bit QWORD-aligned offset.
-
-Shifting is incorrect, the mask operation fills the lower 3 bits.
-Thanks,
-
-Alex
+Regards,
+Arend
