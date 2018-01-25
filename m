@@ -1,80 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:59752 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751182AbeAWMZn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 07:25:43 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v5 5/9] PCI: dwc: designware: Switch to use the IRQ chained API
-Date: Tue, 23 Jan 2018 12:25:28 +0000
-Message-Id: <5de4bf8b797816d7fb2c431ed220e8047cafc4de.1516701516.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-References: <cover.1516701516.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=8PhW=EU=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=8PhW=EU=intel.com=keith.busch@kernel.org>
+Date: Thu, 25 Jan 2018 14:19:49 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Maik Broemme <mbroemme@libmpq.org>,
+	Pawandeep Oza <poza@codeaurora.org>,
+	Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCHv2 4/6] PCI/DPC: Print AER status in DPC event handling
+Message-ID: <20180125211949.GA20258@localhost.localdomain>
+References: <20180117052206.7703-1-keith.busch@intel.com>
+ <20180117052206.7703-5-keith.busch@intel.com>
+ <20180125195512.GL5317@bhelgaas-glaptop.roam.corp.google.com>
+ <20180125211521.GB19484@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180125211521.GB19484@localhost.localdomain>
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes designware generic driver to use the IRQ chained API available in
-pcie-designware.
+On Thu, Jan 25, 2018 at 02:15:21PM -0700, Keith Busch wrote:
+> On Thu, Jan 25, 2018 at 01:55:12PM -0600, Bjorn Helgaas wrote:
+> 
+> > After we clear PCI_EXP_DPC_STATUS_TRIGGER, we're supposed to "honor
+> > timing requirements ... with respect to the first Configuration Read
+> > following a Conventional Reset" (PCIe r4.0, sec 7.9.15.4).  Where does
+> > that happen?
+> 
+> That is referring to reading the downstream port, and that is not
+> handled by the DPC driver. The expectation is that the link is down on a
+> DPC event, and the Link Up is handled by the pciehp driver, which
+> should be honoring those timing requirements.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
-
- drivers/pci/dwc/pcie-designware-plat.c | 16 ----------------
- 1 file changed, 16 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 168e238..c148152 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -28,13 +28,6 @@ struct dw_plat_pcie {
- 	struct dw_pcie		*pci;
- };
- 
--static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct pcie_port *pp = arg;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static int dw_plat_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -66,15 +59,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 		pp->msi_irq = platform_get_irq(pdev, 0);
- 		if (pp->msi_irq < 0)
- 			return pp->msi_irq;
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--					dw_plat_pcie_msi_irq_handler,
--					IRQF_SHARED | IRQF_NO_THREAD,
--					"dw-plat-pcie-msi", pp);
--		if (ret) {
--			dev_err(dev, "failed to request MSI IRQ\n");
--			return ret;
--		}
- 	}
- 
- 	pp->root_bus_nr = -1;
--- 
-2.7.4
+Sorry, I didn't mean "reading the downstream port". You can config read
+that anytime. I meant issuing a config read to the device connected
+downstream the contained port.
