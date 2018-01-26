@@ -1,85 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([148.251.95.138]:33246 "EHLO
-        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932321AbeAROyh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 09:54:37 -0500
-Date: Thu, 18 Jan 2018 15:54:20 +0100
-From: Ladislav Michl <ladis@linux-mips.org>
-To: Wei Yongjun <weiyongjun1@huawei.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH -next] PCI: dra7xx: Fix potential NULL dereference
-Message-ID: <20180118145420.GA21163@lenoch>
-References: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1516284037-81537-1-git-send-email-weiyongjun1@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55424 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752918AbeAZPDU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 Jan 2018 10:03:20 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Robert Moore <robert.moore@intel.com>,
+        Erik Schmauss <erik.schmauss@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
+        devel@acpica.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 3/5] ACPI / bus: Do not call _STA on battery devices with unmet dependencies
+Date: Fri, 26 Jan 2018 16:02:58 +0100
+Message-Id: <20180126150300.9691-3-hdegoede@redhat.com>
+In-Reply-To: <20180126150300.9691-1-hdegoede@redhat.com>
+References: <20180126150300.9691-1-hdegoede@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 18, 2018 at 02:00:37PM +0000, Wei Yongjun wrote:
-> platform_get_resource_byname() may fail and return NULL, so we should
-> better check it's return value to avoid a NULL pointer dereference a
-> bit later in the code.
-> 
-> This is detected by Coccinelle semantic patch.
-> 
-> @@
-> expression pdev, res, n, t, e, e1, e2;
-> @@
-> 
-> res = platform_get_resource_byname(pdev, t, n);
-> + if (!res)
-> +   return -EINVAL;
-> ... when != res == NULL
-> e = devm_ioremap(e1, res->start, e2);
+The battery code uses acpi_device->dep_unmet to check for unmet deps and
+if there are unmet deps it does not bind to the device to avoid errors
+about missing OpRegions when calling ACPI methods on the device.
 
-Well, then it should be replaced with devm_ioremap_resource()
-which already checks for NULL and the right resource type
-(IORESOURCE_MEM).
+The missing OpRegions when there are unmet deps problem also applies to
+the _STA method of some battery devices and calling it too early results
+in errors like these:
 
-	ladis
+[    0.123579] ACPI Error: No handler for Region [ECRM] (00000000ba9edc4c)
+               [GenericSerialBus] (20170831/evregion-166)
+[    0.123601] ACPI Error: Region GenericSerialBus (ID=9) has no handler
+               (20170831/exfldio-299)
+[    0.123618] ACPI Error: Method parse/execution failed
+               \_SB.I2C1.BAT1._STA, AE_NOT_EXIST (20170831/psparse-550)
 
-> Fixes: 608793e27b33 ("PCI: dwc: dra7xx: Add EP mode support")
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 8bf7c27..aafded8 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -409,11 +409,15 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
->  	ep->ops = &pcie_ep_ops;
->  
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
-> +	if (!res)
-> +		return -EINVAL;
->  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
->  	if (!pci->dbi_base)
->  		return -ENOMEM;
->  
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
-> +	if (!res)
-> +		return -EINVAL;
->  	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
->  	if (!pci->dbi_base2)
->  		return -ENOMEM;
-> @@ -462,6 +466,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->  		return ret;
->  
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
-> +	if (!res)
-> +		return -EINVAL;
->  	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
->  	if (!pci->dbi_base)
->  		return -ENOMEM;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This commit fixes these errors happening when acpi_get_bus_status gets
+called by checking dep_unmet for battery devices and reporting a status
+of 0 until all dependencies are met.
+
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/acpi/bus.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+index d44d2c287b91..433bb5a3f327 100644
+--- a/drivers/acpi/bus.c
++++ b/drivers/acpi/bus.c
+@@ -120,6 +120,12 @@ int acpi_bus_get_status(struct acpi_device *device)
+ 		return 0;
+ 	}
+ 
++	/* Battery devices must have their deps met before calling _STA */
++	if (acpi_device_is_battery(device) && device->dep_unmet) {
++		acpi_set_device_status(device, 0);
++		return 0;
++	}
++
+ 	status = acpi_bus_get_status_handle(device->handle, &sta);
+ 	if (ACPI_FAILURE(status))
+ 		return -ENODEV;
+-- 
+2.14.3
