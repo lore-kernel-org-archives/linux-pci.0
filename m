@@ -1,52 +1,84 @@
-Return-Path: <SRS0=7UQv=D5=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=7UQv=D5=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V2 3/7] PCI: make pci_flr_wait() generic and rename to
- pci_dev_wait()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
- <1511763628-11856-4-git-send-email-okaya@codeaurora.org>
- <20171213224304.GK30595@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <b3a575d2-b4dd-2d49-f78d-a76d88dfcd6e@codeaurora.org>
-Date: Tue, 2 Jan 2018 10:47:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171213224304.GK30595@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:51265 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751718AbeAZQfy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jan 2018 11:35:54 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v6 3/9] PCI: dwc: imx6: Switch to use the IRQ chained API
+Date: Fri, 26 Jan 2018 16:35:38 +0000
+Message-Id: <21c6e13ea064fef64a731ba6e89f8a693425eadf.1516984229.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/13/2017 5:43 PM, Bjorn Helgaas wrote:
->> +
->> +	/*
->> +	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
-> I think this should reference the "Advanced Capabilities for
-> Conventional PCI" ECN, shouldn't it?  The one I see is dated 13 April
-> 2006, updated 27 July 2006, and I don't see a PCI spec that includes
-> it.
+Changes iMX6 SoC specific driver to use the IRQ chained API available in
+pcie-designware.
 
-I'll add reference to PCI spec as well. Any other comments on the series?
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
+Change v5->v6:
+- Nothing changed, just to follow the patch set version.
 
-> 
->> +	 * 100ms, but may silently discard requests while the FLR is in
->> +	 * progress.  Wait 100ms before trying to access the device.
->> +	 */
->> +	msleep(100);
->> +
->> +	return pci_dev_wait(dev, "AF_FLR", PCIE_RESET_READY_POLL_MS);
-> CRS is not applicable to conventional PCI.  The ECN mentions waiting
-> 100ms.  I don't see anything about polling after that, but I guess it
-> probably doesn't hurt anything.
+ drivers/pci/dwc/pci-imx6.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-ok, I'll keep it as it is.
-
-> 
->>  }
-
-
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index b734835..d2314cb 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -545,15 +545,6 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
+ 	return -EINVAL;
+ }
+ 
+-static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
+-{
+-	struct imx6_pcie *imx6_pcie = arg;
+-	struct dw_pcie *pci = imx6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+@@ -677,15 +668,6 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+ 			dev_err(dev, "failed to get MSI irq\n");
+ 			return -ENODEV;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       imx6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "mx6-pcie-msi", imx6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.7.4
