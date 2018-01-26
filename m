@@ -1,47 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([148.251.95.138]:42650 "EHLO
-        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755949AbeASSEQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 13:04:16 -0500
-Date: Fri, 19 Jan 2018 19:04:08 +0100
-From: Ladislav Michl <ladis@linux-mips.org>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Wolfram Sang <w.sang@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 1/2] devres: Fix double mem region release in
- devm_ioremap_resource()
-Message-ID: <20180119180408.GB31540@lenoch>
-References: <20180119180310.GA31540@lenoch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180119180310.GA31540@lenoch>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:51260 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751906AbeAZQfy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jan 2018 11:35:54 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v6 5/9] PCI: dwc: designware: Switch to use the IRQ chained API
+Date: Fri, 26 Jan 2018 16:35:40 +0000
+Message-Id: <e9d744ae99804b5be1a1a98c278a2de76c81bde2.1516984229.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+References: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-devm_release_mem_region() is called explicitely in case
-devm_ioremap() fails, however the same release function
-is later called also as devres release of
-devm_request_mem_region() causing double resource free.
+Changes designware generic driver to use the IRQ chained API available in
+pcie-designware.
 
-Fixes: 72f8c0bfa0de ("lib: devres: add convenience function to remap a resource")
-Signed-off-by: Ladislav Michl <ladis@linux-mips.org>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- lib/devres.c | 1 -
- 1 file changed, 1 deletion(-)
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
+Change v5->v6:
+- Nothing changed, just to follow the patch set version.
 
-diff --git a/lib/devres.c b/lib/devres.c
-index 5f2aedd58bc5..584356a568d0 100644
---- a/lib/devres.c
-+++ b/lib/devres.c
-@@ -156,7 +156,6 @@ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
- 	dest_ptr = devm_ioremap(dev, res->start, size);
- 	if (!dest_ptr) {
- 		dev_err(dev, "ioremap failed for resource %pR\n", res);
--		devm_release_mem_region(dev, res->start, size);
- 		dest_ptr = IOMEM_ERR_PTR(-ENOMEM);
+ drivers/pci/dwc/pcie-designware-plat.c | 16 ----------------
+ 1 file changed, 16 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 168e238..c148152 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -28,13 +28,6 @@ struct dw_plat_pcie {
+ 	struct dw_pcie		*pci;
+ };
+ 
+-static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int dw_plat_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -66,15 +59,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 		pp->msi_irq = platform_get_irq(pdev, 0);
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					dw_plat_pcie_msi_irq_handler,
+-					IRQF_SHARED | IRQF_NO_THREAD,
+-					"dw-plat-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI IRQ\n");
+-			return ret;
+-		}
  	}
  
+ 	pp->root_bus_nr = -1;
 -- 
-2.15.1
+2.7.4
