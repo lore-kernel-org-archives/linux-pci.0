@@ -1,122 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:43754 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755131AbeAOJgt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jan 2018 04:36:49 -0500
-Received: by mail-wm0-f65.google.com with SMTP id g1so481865wmg.2
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jan 2018 01:36:48 -0800 (PST)
-From: Koen Vandeputte <koen.vandeputte@ncentric.com>
-To: linux-pci@vger.kernel.org
-Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v2] PCI: dwc: fix enumeration end when reaching root subordinate
-Date: Mon, 15 Jan 2018 10:36:08 +0100
-Message-Id: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <20180126075343.GB2356@lst.de>
+References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
+ <1516058925-46522-5-git-send-email-jim2101024@gmail.com>
+ <CAL_JsqKpWNJXNpKS5qC99N0+H_P37DcRE-rN9HFwT5tVmRFCNw@mail.gmail.com>
+ <20180118073123.GA15766@lst.de>
+ <EDAEFB0F-BB7C-444A-B282-F178F5ADFCBF@gmail.com>
+ <20180118152331.GA24461@lst.de>
+ <d62226a2-a92c-cdcb-4a9b-e69ab677bc60@broadcom.com>
+ <20180123132033.GA21438@lst.de>
+ <f746f9d5-b12d-9ffc-83e3-3851b4de6e52@gmail.com>
+ <20180126075343.GB2356@lst.de>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Fri, 26 Jan 2018 12:46:44 -0500
+Message-ID: <CANCKTBszKRp7gYKE=S3fA0=MoOVFFkO6PgmR476t3HAJ9US2gg@mail.gmail.com>
+Subject: Re: [PATCH v4 4/8] PCI: brcmstb: Add dma-range mapping for inbound
+ traffic
+To: Christoph Hellwig <hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, Florian Fainelli <f.fainelli@gmail.com>,
+ Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The subordinate value indicates the highest bus number which can be
-reached downstream though a certain device.
+On Fri, Jan 26, 2018 at 2:53 AM, Christoph Hellwig <hch@lst.de> wrote:
+> On Wed, Jan 24, 2018 at 12:04:58PM -0800, Florian Fainelli wrote:
+>> This looks nicer than the current shape, but this still requires to
+>> register a PCI fixup to override phys_to_dma() and dma_to_phys(), and it
+>> would appear that you have dodged my question about how this is supposed
+>> to fit with an entirely modular PCIe root complex driver? Are you
+>> suggesting that we split the module into a built-in part and a modular part?
+>
+> I don't think entirely modular PCI root bridges should be a focal point
+> for the design.  If we happen to support them by other design choices:
+> fine, but they should not be a priority.
 
-Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
-parent")
-ensures that downstream devices cannot assign busnumbers higher than the
-upstream device subordinate number, which was indeed illogical.
+I disagree.  If there is one common thing our customers request  it is
+the ability to remove (or control the insmod of after boot)  the pcie
+RC driver.  I didn't add this in as a "nice-to-have".
 
-By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
-value of 0x01.
+>
+> That being said if we have core dma mapping or PCIe code that has
+> a list of offsets and the root complex only populates them it should
+> work just fine.
 
-Due to this combined with above commit, enumeration stops digging deeper
-downstream as soon as bus num 0x01 has been assigned, which is always
-the case for a bridge device.
+I'm looking at arch/arm/include/asm/dma-mapping.h.  In addition to
+overriding dma_to_phsy() and phys_to_dma(), it looks like I may have
+to define __arch_pfn_to_dma(), __arch_dma_to_pfn(),
+__arch_dma_to_virt(), __arch_virt_to_dma().  Do  you agree or is this
+not necessary?  If it is, this seems more intrusive than our
+pcie-brcmstb-dma.c solution which  doesn't require tentacles into
+major include files and Kconfigs.
 
-This results in all devices behind a bridge bus to remain undetected, as
-these would be connected to bus 0x02 or higher.
+Another issue is that our function wrappers -- depending upon whether
+we are dealing with a pci device or not -- will have to possibly call
+the actual ARM and ARM64 definitions of these functions, which have
+been of course #ifdef'd out.  This means that our code must contain
+identical copies of these functions' code and that the code must
+somehow be kept in sync.  Do you see a solution to this?
 
-Fix this by initializing the RC to a subordinate value of 0xff, which is
-not altering hardware behaviour in any way, but informs probing
-function pci_scan_bridge() later on which reads this value back from
-register.
+Jim
 
-Following nasty errors during boot are also fixed by this:
-
-[    0.459145] pci_bus 0000:02: busn_res: can not insert [bus 02-ff]
-under [bus 01] (conflicts with (null) [bus 01])
-...
-[    0.464515] pci_bus 0000:03: [bus 03] partially hidden behind bridge
-0000:01 [bus 01]
-...
-[    0.464892] pci_bus 0000:04: [bus 04] partially hidden behind bridge
-0000:01 [bus 01]
-...
-[    0.466488] pci_bus 0000:05: [bus 05] partially hidden behind bridge
-0000:01 [bus 01]
-[    0.466506] pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to
-05
-[    0.466517] pci_bus 0000:02: busn_res: can not insert [bus 02-05]
-under [bus 01] (conflicts with (null) [bus 01])
-[    0.466534] pci_bus 0000:02: [bus 02-05] partially hidden behind
-bridge 0000:01 [bus 01]
-
-Fixes: a20c7f36bd3d ("PCI: Do not allocate more buses than available in
-parent")
-Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
-Tested-by: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Binghui Wang <wangbinghui@hisilicon.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesper Nilsson <jesper.nilsson@axis.com>
-Cc: Jianguo Sun <sunjianguo1@huawei.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Minghuan Lian <minghuan.Lian@freescale.com>
-Cc: Mingkai Hu <mingkai.hu@freescale.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Roy Zang <tie-fei.zang@freescale.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Xiaowei Song <songxiaowei@hisilicon.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>
----
- drivers/pci/dwc/pcie-designware-host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index bf558df5b7b3..2b5470173196 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -616,7 +616,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	/* setup bus numbers */
- 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
- 	val &= 0xff000000;
--	val |= 0x00010100;
-+	val |= 0x00ff0100;
- 	dw_pcie_writel_dbi(pci, PCI_PRIMARY_BUS, val);
- 
- 	/* setup command register */
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
