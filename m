@@ -1,95 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.hostfission.com ([139.99.139.48]:33642 "EHLO
-        mail1.hostfission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932072AbeAXW3B (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jan 2018 17:29:01 -0500
-To: Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] Restore PCI bridge configuration space on bridge reset
+Return-Path: <SRS0=1drt=EV=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=1drt=EV=intel.com=keith.busch@kernel.org>
+Date: Fri, 26 Jan 2018 16:15:58 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
+Subject: Re: [PATCH 0/8] PCI/DPC: Simplify RP PIO logging
+Message-ID: <20180126231558.GA21531@localhost.localdomain>
+References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Thu, 25 Jan 2018 09:28:59 +1100
-From: geoff@hostfission.com
-Cc: linux-pci@vger.kernel.org, suravee.suthikulpanit@amd.com,
-        Gary R Hook <gary.hook@amd.com>
-In-Reply-To: <20180124141051.733f7b28@w520.home>
-References: <0986ad77b71f3b8e0a17f79e238d1ebc@hostfission.com>
- <20180124141051.733f7b28@w520.home>
-Message-ID: <745998038463da91584ef51dfc8ffcac@hostfission.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-25 08:10, Alex Williamson wrote:
-> On Wed, 24 Jan 2018 19:02:33 +1100
-> geoff@hostfission.com wrote:
+On Fri, Jan 26, 2018 at 04:55:30PM -0600, Bjorn Helgaas wrote:
+> These are almost all just cleanups.  
 > 
->> According to PCI-to-PCI Bridge Architecture Specification 3.2.5.17
+> The only behavior change I intend is this: If a port does not support
+> the "RP Extensions for DPC" and it reports an "RP PIO error", we
+> previously read the RP PIO log registers.  I don't know if that's a
+> legal situation, but I couldn't find an explicit prohibition in the
+> spec.
 > 
-> Correction, rev 1.2 section 3.2.5.18, in reference to the secondary bus
-> reset bit in the bridge control register.
+> Anyway, the rest is all cleanups and simplifications that are not
+> intended to change any behavior.
 > 
-
-Thanks, I will make this correction if the patch is deemed valid re 
-below.
-Please excuse any confusing terminology/wording, I am still coming to
-terms with how PCI operates.
-
->> > The bridge’s secondary bus interface and any buffers between
->> > the two interfaces (primary and secondary) must be initialized
->> > back to their default state whenever this bit is set.
->> 
->> Failure to observe this causes inability to access devices on the
->> secondary bus
->> on the AMD Threadripper platform after device reset when the device is
->> being
->> used for PCI passthrough with KVM.
->> 
->> The following patch corrects this by saving the pci state and 
->> restoring
->> it after
->> the bus has been reset.
+> These are currently on my pci/dpc branch [1] on top of patches 3 and 5
+> from your v2 series [2], Keith:
 > 
-> How do configuration registers on the primary bus interface fall into
-> this requirement?  It's not very clear from the spec what these
-> "buffers" are and the secondary interface has no configuration
-> registers itself.  Figure 1-2 shows Transaction/Data Buffers which are
-> clearly separate from the Primary Interface Configuration Registers.
-> I'd tend to say this excerpt of the spec is describing a hardware
-> requirement, not a software requirement.
-
-These are not the configuration registers on the primary bus but on the
-secondary bus, in the case of a TR system a "PCIe GPP Bridge" device is
-created and the PCI device is placed under it. It is this bridge that
-needs it's configuration space rewritten.
-
-Unless I am mistaken, currently pci.c is inconsistent with secondary bus
-resets as it is. In `pci_reset_bus` the bus configuration space is saved
-via `pci_bus_save_and_disable`, the bus is reset, and then the 
-configuration
-is reloaded using `pci_bus_restore`.
-
-`pci_try_reset_bus` is different again, in that it calls
-`pci_reset_bridge_secondary_bus` also.
-
-In short, it is already happening under certain circumstances, but 
-because
-on TR the CPU view of the PCI configuration space seems to be cached, it 
-is
-unable to determine the changes and thus a blind re-write is required.
-
+>   6b9045b34b57 PCI/DPC: Fix interrupt message number print
+>   eed85ff4c0da PCI/DPC: Enable DPC only if AER is available
 > 
-> I know that people have found that re-writing bridge registers on
-> threadripper solves the reset problem, but this seems like a bit of a
-> stretch to attribute it to this spec statement.  Maybe it can be
-> handled via a quirk if AMD isn't planning to release firmware that
-> resolves this issue?  AMD...  Thanks,
+> Your patch 1 ("PCI/AER: Return correct value when AER is not
+> supported") is on pci/aer.  Patches 2 and 4 go together and I think
+> you're still working on those.
 > 
+> You don't need to worry about integrating your work with these
+> patches; I'm just kibbitzing and will drop these completely if you
+> don't like them, or I'll take care of putting the pieces back together
+> if you do.
 
-I'd love to see this fixed in firmware/bios/microcode, etc... but as the
-spec reads, it is unclear if this is a software or hardware requirement, 
-IMO
-it is a software requirement to reconfigure the configuration space of 
-the
-secondary bus, but my understanding of PCI at this time is quite new so 
-I
-am ready to accept a final decision by someone with more experience.
+No problem at all. I happened to pull your tree a few moments before you
+posted this series, so I had a head start reviewing it. I'm happy with
+the cleanups, and this doesn't trip up the updates I'm working on. I'm ok
+to base the remaining DPC updates on this if you want to move it forward:
+
+Reviewed-by: Keith Busch <keith.busch@intel.com>
+
+I do need to merge pci/dpc with pci/aer to complete the rest of my DPC
+updates, and there is a trivial merge conflict, but no biggie.
