@@ -1,55 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:47768 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752747AbeAKIcI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jan 2018 03:32:08 -0500
-Subject: Re: [PATCH v2] PCI: endpoint: Use EPC's device in
- dma_alloc_coherent/dma_free_coherent
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20171219083627.7904-1-kishon@ti.com>
- <20180110111130.GA27463@red-moon>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Rob Herring <robh@kernel.org>, Christoph Hellwig <hch@lst.de>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <8af4c0ae-e132-e56c-7e07-bbe4b78265bd@ti.com>
-Date: Thu, 11 Jan 2018 14:01:57 +0530
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: ACPI: Do not call _STA on battery devices with unmet dependencies
+To: "Schmauss, Erik" <erik.schmauss@intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Moore, Robert" <robert.moore@intel.com>,
+        "Zheng, Lv" <lv.zheng@intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@acpica.org" <devel@acpica.org>
+References: <20180118160359.29971-1-hdegoede@redhat.com>
+ <20180118191112.GI53542@bhelgaas-glaptop.roam.corp.google.com>
+ <CF6A88132359CE47947DB4C6E1709ED5396D2A4C@ORSMSX110.amr.corp.intel.com>
+ <03b11c2d-0c17-89d2-daa2-d48f4ea656d5@redhat.com>
+ <CF6A88132359CE47947DB4C6E1709ED5396D7178@ORSMSX110.amr.corp.intel.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <c4fcb0b6-fbcc-18e7-9053-3c73d83863cc@redhat.com>
+Date: Fri, 26 Jan 2018 16:46:31 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180110111130.GA27463@red-moon>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CF6A88132359CE47947DB4C6E1709ED5396D7178@ORSMSX110.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
-
-On Wednesday 10 January 2018 04:41 PM, Lorenzo Pieralisi wrote:
-> On Tue, Dec 19, 2017 at 02:06:27PM +0530, Kishon Vijay Abraham I wrote:
->> After commit 723288836628bc1c08 ("of: restrict DMA configuration"),
->> of_dma_configure doesn't configure the coherent_dma_mask/dma_mask
->> of endpoint function device (since it doesn't have a dt node associated
->> with and hence no dma-ranges property), resulting in dma_alloc_coherent
->> (used in pci_epf_alloc_space) to fail.
+On 01/23/2018 01:24 AM, Schmauss, Erik wrote:
+> Hi,
+>> -----Original Message-----
+>> From: Hans de Goede [mailto:hdegoede@redhat.com]
+>> Sent: Saturday, January 20, 2018 4:48 AM
+>> To: Schmauss, Erik <erik.schmauss@intel.com>
+>> Cc: Rafael J . Wysocki <rjw@rjwysocki.net>; Len Brown <lenb@kernel.org>;
+>> Bjorn Helgaas <bhelgaas@google.com>; Moore, Robert
+>> <robert.moore@intel.com>; Zheng, Lv <lv.zheng@intel.com>; linux-
+>> acpi@vger.kernel.org; linux-pci@vger.kernel.org; devel@acpica.org
+>> Subject: Re: ACPI: Do not call _STA on battery devices with unmet dependencies
 >>
->> Fix it by making dma_alloc_coherent use EPC's device for allocating
->> memory address as per discussion in [1]
+>> Hi,
 >>
->> [1] https://lkml.org/lkml/2017/10/24/26
-> 
-> Hi Kishon,
-> 
-> small nit, mind embedding the link [1] above in a lkml redirector
-> format - as described in:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst?h=v4.15-rc7
-> 
-> put it in a Link: tag to be added below - I think that's important
-> for the commit log to have.
-> 
-> Either send me the formatted link or send a v3 with it, I will merge
-> then.
+>> On 19-01-18 22:03, Schmauss, Erik wrote:
+>>>
+>>>> -----Original Message-----
+>>>> From: linux-acpi-owner@vger.kernel.org [mailto:linux-acpi-
+>>>> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
+>>>> Sent: Thursday, January 18, 2018 11:11 AM
+>>>> To: Hans de Goede <hdegoede@redhat.com>
+>>>> Cc: Rafael J . Wysocki <rjw@rjwysocki.net>; Len Brown
+>>>> <lenb@kernel.org>; Bjorn Helgaas <bhelgaas@google.com>; Moore, Robert
+>>>> <robert.moore@intel.com>; Zheng, Lv <lv.zheng@intel.com>; linux-
+>>>> acpi@vger.kernel.org; linux-pci@vger.kernel.org; devel@acpica.org
+>>>> Subject: Re: ACPI: Do not call _STA on battery devices with unmet
+>>>> dependencies
+>>>>
+>>>> On Thu, Jan 18, 2018 at 05:03:55PM +0100, Hans de Goede wrote:
+>>>
+>>> Hi Hans,
+>>>
+>>>>> Hi All,
+>>>>>
+>>>>> The ACPI code already contains quite a bit of code to not bind theFrom the acpi_get_object_info() documentation in drivers/acpi/acpica/nsxfname.c:
 
-sure, sent you a v3.
+  * Note: This interface is intended to be used during the initial device
+  * discovery namespace traversal. Therefore, no complex methods can be
+  * executed, especially those that access operation regions.
 
-Thanks
-Kishon
+>>>>> ACPI-battery until all deps for an ACPI battery device have been
+>>>>> met, but on some devices calling _STA before all deps are met is a
+>>>>> problem too because the _STA method uses an i2c OpRegion there.
+>>>
+>>> Could you explain why _STA method using an I2C OpRegion is problematic?
+>>
+>> It is problematic if we call the _STA method before the handler for the OpRegion
+>> has been installed, this series delays / avoids calling _STA before the OpRegion
+>> has been installed.
+> 
+> Thanks for the explanation.
+> I'm looking at the ACPI spec and from what it said about _STA, I gathered that _STA is allowed to have side-effects to named objects within the AML namespace. So removing _STA from acpi_get_object_info seems a little dangerous... Is there a reason why you cannot remove or delay the call to acpi_get_object_info instead? Chapter 6 section 1 of the ACPI spec also states that it's possible for _HID and _ADR to read from operation regions as well. Is it common convention that these _HID and _ADR objects do not access operation regions?
+
+ From the acpi_get_object_info() documentation in drivers/acpi/acpica/nsxfname.c:
+
+  * Note: This interface is intended to be used during the initial device
+  * discovery namespace traversal. Therefore, no complex methods can be
+  * executed, especially those that access operation regions.
+
+So if _STA can have side-effects then that seems like another reason to NOT
+call it from acpi_get_object_info().
+
+If something depends on the side-effects (which I doubt) then the code which
+depends on it should really call _STA explicitly itself.
+
+Regards,
+
+Hans
+
+
+
+>>>>> Here is the DSDT of the device I'm seeing this on:
+>>>>> https://fedorapeople.org/~jwrdegoede/toshiba-click-mini-dsdt.dsl
+>>>>
+>>>> This looks like interesting info, but (a) this link isn't mentioned
+>>>> in the actual patches, and (b) it's conceivable that fedorapeople.org could go
+>> away someday.
+>>>> If this were a PCI series, I would suggest opening a report at
+>>>> bugzilla.kernel.org, attaching the DSL there, and including the link in the
+>> patch changelog.
+>>>>
+>>>>> This series modifies the kernel to not call _STA until all deps are
+>>>>> met, mirroring the binding behavior of the battery driver.
+>>>>>
+>>>>> Without this series a total of 32 ACPI errors get printend to the
+>>>>> console on boot, there are 4 errors per _STA call, 2 battery devices
+>>>>> on this system and 4 _STA calls per battery device.
+>>>>>
+>>>>> The first commit is a preparation commit for making the ACPICA
+>>>>> changes in the 4th commit, this commit is necessary to not break
+>>>>> things after the ACPICA changes.
+>>>>>
+>>>>> The second commit modifies acpi_bus_get_status to not call _STA on
+>>>>> battery devices until all deps are met. This fixes 2 of the 4 too
+>>>>> early _STA calls triggering these errors.
+>>>>>
+>>>>> The third commit makes the device instantiation code use
+>>>>> acpi_bus_get_status instead of acpi_bus_get_status_handle so that
+>>>>> the code to get the initial status also does not makes 1 too early _STA call.
+>>>>>
+>>>>> The fourth commit changes the ACPICA acpi_get_object_info function
+>>>>> to not call _STA. Only 1 user (which is fixed in the first commit)
+>>>>> cares about acpi_device_info.current_status. And the ACPICA code has
+>>>>> this
+>>>> comment:
+>>>>>
+>>>>>    * Note: This interface is intended to be used during the initial
+>>>>> device
+>>>>>    * discovery namespace traversal. Therefore, no complex methods can be
+>>>>>    * executed, especially those that access operation regions.
+>>>>> Therefore, do
+>>>>>    * not add any additional methods that could cause problems in this area.
+>>>>>    * Because of this reason support for the following methods has
+>>>>> been
+>>>> removed:
+>>>>>    * this was the fate of the _SUB method which was found to cause such
+>>>>>    * problems and was removed (11/2015).
+>>>>>
+>>>>> The described problems with the _SUB method clearly also apply to
+>>>>> the _STA method, so removing it from acpi_get_object_info seems like
+>>>>> it is the right thing to do here. This too fixes 1 too early _STA
+>>>>> call, so that with all
+>>>>> 4 patches in place we've fixed all 4 too early _STA calls.
+>>>>>
+>>>>> Regards,
+>>>>>
+>>>>> Hans
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-acpi"
+>>>>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>>>>> info at  http://vger.kernel.org/majordomo-info.html
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-acpi"
+>>>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>>>> info at http://vger.kernel.org/majordomo-info.html
