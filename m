@@ -1,312 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57268 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751297AbeAPJ7E (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jan 2018 04:59:04 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v4 2/5] PCI/ERR: Rename error reporting to generic pci naming
-Date: Tue, 16 Jan 2018 15:28:40 +0530
-Message-Id: <1516096723-8013-3-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
-References: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:51600 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752328AbeAZW4J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 Jan 2018 17:56:09 -0500
+Subject: [PATCH 4/8] PCI/DPC: Read RP PIO Log Size once at probe
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
+Date: Fri, 26 Jan 2018 16:56:04 -0600
+Message-ID: <20180126225604.58614.39255.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch renames error reporting to generic function with pci prefix
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+The RP PIO Log Size is a read-only field in the DPC Capability, so it is
+constant and known at probe-time, but previously we read it every time we
+processed an RP PIO error.
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 4fda843..5ed9575 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -285,7 +285,7 @@ static void handle_error_source(struct pcie_device *aerdev,
- 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
- 					info->status);
- 	} else
--		do_recovery(dev, info->severity);
-+		pci_do_recovery(dev, info->severity);
- }
- 
- #ifdef CONFIG_ACPI_APEI_PCIEAER
-@@ -349,7 +349,7 @@ static void aer_recover_work_func(struct work_struct *work)
- 			continue;
- 		}
- 		cper_print_aer(pdev, entry.severity, entry.regs);
--		do_recovery(pdev, entry.severity);
-+		pci_do_recovery(pdev, entry.severity);
- 		pci_dev_put(pdev);
- 	}
- }
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 76e66bb..5792a9f 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -20,12 +20,12 @@
- #include <linux/pcieport_if.h>
- #include "portdrv.h"
- 
--struct aer_broadcast_data {
-+struct pci_err_broadcast_data {
- 	enum pci_channel_state state;
- 	enum pci_ers_result result;
+Read it once in dpc_probe() (if the RP Extensions for DPC are supported)
+and remember the size in struct dpc_dev.  No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/pcie-dpc.c |   29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 0bbdf513067a..17f60bd4ea5f 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -34,7 +34,6 @@ struct dpc_rp_pio_regs {
+ 	struct rp_pio_header_log_regs header_log;
+ 	u32 impspec_log;
+ 	u32 tlp_prefix_log[4];
+-	u32 log_size;
+ 	u16 first_error;
  };
  
--pci_ers_result_t merge_result(enum pci_ers_result orig,
-+pci_ers_result_t pci_merge_result(enum pci_ers_result orig,
- 				  enum pci_ers_result new)
- {
- 	if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
-@@ -50,13 +50,13 @@ pci_ers_result_t merge_result(enum pci_ers_result orig,
- 	return orig;
- }
+@@ -44,6 +43,7 @@ struct dpc_dev {
+ 	u16			cap_pos;
+ 	bool			rp_extensions;
+ 	u32			rp_pio_status;
++	u8			rp_log_size;
+ };
  
--int report_mmio_enabled(struct pci_dev *dev, void *data)
-+int pci_report_mmio_enabled(struct pci_dev *dev, void *data)
- {
- 	pci_ers_result_t vote;
- 	const struct pci_error_handlers *err_handler;
--	struct aer_broadcast_data *result_data;
-+	struct pci_err_broadcast_data *result_data;
- 
--	result_data = (struct aer_broadcast_data *) data;
-+	result_data = (struct pci_err_broadcast_data *) data;
- 
- 	device_lock(&dev->dev);
- 	if (!dev->driver ||
-@@ -66,19 +66,19 @@ int report_mmio_enabled(struct pci_dev *dev, void *data)
- 
- 	err_handler = dev->driver->err_handler;
- 	vote = err_handler->mmio_enabled(dev);
--	result_data->result = merge_result(result_data->result, vote);
-+	result_data->result = pci_merge_result(result_data->result, vote);
- out:
- 	device_unlock(&dev->dev);
- 	return 0;
- }
- 
--int report_slot_reset(struct pci_dev *dev, void *data)
-+int pci_report_slot_reset(struct pci_dev *dev, void *data)
- {
- 	pci_ers_result_t vote;
- 	const struct pci_error_handlers *err_handler;
--	struct aer_broadcast_data *result_data;
-+	struct pci_err_broadcast_data *result_data;
- 
--	result_data = (struct aer_broadcast_data *) data;
-+	result_data = (struct pci_err_broadcast_data *) data;
- 
- 	device_lock(&dev->dev);
- 	if (!dev->driver ||
-@@ -88,13 +88,13 @@ int report_slot_reset(struct pci_dev *dev, void *data)
- 
- 	err_handler = dev->driver->err_handler;
- 	vote = err_handler->slot_reset(dev);
--	result_data->result = merge_result(result_data->result, vote);
-+	result_data->result = pci_merge_result(result_data->result, vote);
- out:
- 	device_unlock(&dev->dev);
- 	return 0;
- }
- 
--int report_resume(struct pci_dev *dev, void *data)
-+int pci_report_resume(struct pci_dev *dev, void *data)
- {
- 	const struct pci_error_handlers *err_handler;
- 
-@@ -113,13 +113,13 @@ int report_resume(struct pci_dev *dev, void *data)
- 	return 0;
- }
- 
--int report_error_detected(struct pci_dev *dev, void *data)
-+int pci_report_error_detected(struct pci_dev *dev, void *data)
- {
- 	pci_ers_result_t vote;
- 	const struct pci_error_handlers *err_handler;
--	struct aer_broadcast_data *result_data;
-+	struct pci_err_broadcast_data *result_data;
- 
--	result_data = (struct aer_broadcast_data *) data;
-+	result_data = (struct pci_err_broadcast_data *) data;
- 
- 	device_lock(&dev->dev);
- 	dev->error_state = result_data->state;
-@@ -160,26 +160,26 @@ int report_error_detected(struct pci_dev *dev, void *data)
- 		vote = err_handler->error_detected(dev, result_data->state);
+ static const char * const rp_pio_error_string[] = {
+@@ -173,11 +173,12 @@ static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
  	}
  
--	result_data->result = merge_result(result_data->result, vote);
-+	result_data->result = pci_merge_result(result_data->result, vote);
- 	device_unlock(&dev->dev);
- 	return 0;
+ 	dpc_rp_pio_print_tlp_header(dev, &rp_pio->header_log);
+-	if (rp_pio->log_size == 4)
++	if (dpc->rp_log_size == 4)
+ 		return;
++
+ 	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", rp_pio->impspec_log);
+ 
+-	for (i = 0; i < rp_pio->log_size - 5; i++)
++	for (i = 0; i < dpc->rp_log_size - 5; i++)
+ 		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i,
+ 			rp_pio->tlp_prefix_log[i]);
  }
- 
- /**
-- * default_reset_link - default reset function
-+ * pci_default_reset_link - default reset function
-  * @dev: pointer to pci_dev data structure
-  *
-  * Invoked when performing link reset on a Downstream Port or a
-  * Root Port with no aer driver.
-  */
--static pci_ers_result_t default_reset_link(struct pci_dev *dev)
-+static pci_ers_result_t pci_default_reset_link(struct pci_dev *dev)
+@@ -186,7 +187,6 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 				struct dpc_rp_pio_regs *rp_pio)
  {
- 	pci_reset_bridge_secondary_bus(dev);
- 	dev_printk(KERN_DEBUG, &dev->dev, "downstream link has been reset\n");
- 	return PCI_ERS_RESULT_RECOVERED;
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	struct device *dev = &dpc->dev->device;
+ 	int i;
+ 	u16 cap = dpc->cap_pos, status;
+ 
+@@ -206,13 +206,8 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	rp_pio->first_error = (status & 0x1f00) >> 8;
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+-	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
+-	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
+-		dev_err(dev, "RP PIO log size %u is invalid\n",
+-			rp_pio->log_size);
++	if (dpc->rp_log_size < 4)
+ 		return;
+-	}
+ 
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
+ 			      &rp_pio->header_log.dw0);
+@@ -222,12 +217,12 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 			      &rp_pio->header_log.dw2);
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
+ 			      &rp_pio->header_log.dw3);
+-	if (rp_pio->log_size == 4)
++	if (dpc->rp_log_size == 4)
+ 		return;
+ 
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
+ 			      &rp_pio->impspec_log);
+-	for (i = 0; i < rp_pio->log_size - 5; i++)
++	for (i = 0; i < dpc->rp_log_size - 5; i++)
+ 		pci_read_config_dword(pdev,
+ 			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
+ 			&rp_pio->tlp_prefix_log[i]);
+@@ -327,6 +322,14 @@ static int dpc_probe(struct pcie_device *dev)
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+ 
+ 	dpc->rp_extensions = (cap & PCI_EXP_DPC_CAP_RP_EXT);
++	if (dpc->rp_extensions) {
++		dpc->rp_log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
++		if (dpc->rp_log_size < 4 || dpc->rp_log_size > 9) {
++			dev_err(device, "RP PIO log size %u is invalid\n",
++				dpc->rp_log_size);
++			dpc->rp_log_size = 0;
++		}
++	}
+ 
+ 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+@@ -334,7 +337,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+ 		cap & PCI_EXP_DPC_IRQ, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
+ 		FLAG(cap, PCI_EXP_DPC_CAP_POISONED_TLP),
+-		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), (cap >> 8) & 0xf,
++		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), dpc->rp_log_size,
+ 		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
+ 	return status;
  }
- 
--pci_ers_result_t reset_link(struct pci_dev *dev)
-+pci_ers_result_t pci_reset_link(struct pci_dev *dev)
- {
- 	struct pci_dev *udev;
- 	pci_ers_result_t status;
-@@ -201,7 +201,7 @@ pci_ers_result_t reset_link(struct pci_dev *dev)
- 	if (driver && driver->reset_link) {
- 		status = driver->reset_link(udev);
- 	} else if (udev->has_secondary_link) {
--		status = default_reset_link(udev);
-+		status = pci_default_reset_link(udev);
- 	} else {
- 		dev_printk(KERN_DEBUG, &dev->dev,
- 			"no link-reset support at upstream device %s\n",
-@@ -220,7 +220,7 @@ pci_ers_result_t reset_link(struct pci_dev *dev)
- }
- 
- /**
-- * broadcast_error_message - handle message broadcast to downstream drivers
-+ * pci_broadcast_error_message - handle message broadcast to downstream drivers
-  * @dev: pointer to from where in a hierarchy message is broadcasted down
-  * @state: error state
-  * @error_mesg: message to print
-@@ -230,16 +230,16 @@ pci_ers_result_t reset_link(struct pci_dev *dev)
-  * of error severity will be broadcasted to all downstream drivers in a
-  * hierarchy in question.
-  */
--pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
-+pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 	enum pci_channel_state state,
- 	char *error_mesg,
- 	int (*cb)(struct pci_dev *, void *))
- {
--	struct aer_broadcast_data result_data;
-+	struct pci_err_broadcast_data result_data;
- 
- 	dev_printk(KERN_DEBUG, &dev->dev, "broadcast %s message\n", error_mesg);
- 	result_data.state = state;
--	if (cb == report_error_detected)
-+	if (cb == pci_report_error_detected)
- 		result_data.result = PCI_ERS_RESULT_CAN_RECOVER;
- 	else
- 		result_data.result = PCI_ERS_RESULT_RECOVERED;
-@@ -251,10 +251,10 @@ pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 		 * do error recovery on all subordinates of the bridge instead
- 		 * of the bridge and clear the error status of the bridge.
- 		 */
--		if (cb == report_error_detected)
-+		if (cb == pci_report_error_detected)
- 			dev->error_state = state;
- 		pci_walk_bus(dev->subordinate, cb, &result_data);
--		if (cb == report_resume) {
-+		if (cb == pci_report_resume) {
- 			pci_cleanup_aer_uncorrect_error_status(dev);
- 			dev->error_state = pci_channel_io_normal;
- 		}
-@@ -270,7 +270,7 @@ pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- }
- 
- /**
-- * do_recovery - handle nonfatal/fatal error recovery process
-+ * pci_do_recovery - handle nonfatal/fatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-  * @severity: error severity type
-  *
-@@ -278,7 +278,7 @@ pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
-  * error detected message to all downstream drivers within a hierarchy in
-  * question and return the returned code.
-  */
--void do_recovery(struct pci_dev *dev, int severity)
-+void pci_do_recovery(struct pci_dev *dev, int severity)
- {
- 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
- 	enum pci_channel_state state;
-@@ -288,22 +288,22 @@ void do_recovery(struct pci_dev *dev, int severity)
- 	else
- 		state = pci_channel_io_normal;
- 
--	status = broadcast_error_message(dev,
-+	status = pci_broadcast_error_message(dev,
- 			state,
- 			"error_detected",
--			report_error_detected);
-+			pci_report_error_detected);
- 
- 	if (severity == AER_FATAL) {
--		result = reset_link(dev);
-+		result = pci_reset_link(dev);
- 		if (result != PCI_ERS_RESULT_RECOVERED)
- 			goto failed;
- 	}
- 
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER)
--		status = broadcast_error_message(dev,
-+		status = pci_broadcast_error_message(dev,
- 				state,
- 				"mmio_enabled",
--				report_mmio_enabled);
-+				pci_report_mmio_enabled);
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
- 		/*
-@@ -311,19 +311,19 @@ void do_recovery(struct pci_dev *dev, int severity)
- 		 * functions to reset slot before calling
- 		 * drivers' slot_reset callbacks?
- 		 */
--		status = broadcast_error_message(dev,
-+		status = pci_broadcast_error_message(dev,
- 				state,
- 				"slot_reset",
--				report_slot_reset);
-+				pci_report_slot_reset);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
--	broadcast_error_message(dev,
-+	pci_broadcast_error_message(dev,
- 				state,
- 				"resume",
--				report_resume);
-+				pci_report_resume);
- 
- 	dev_info(&dev->dev, "Device recovery successful\n");
- 	return;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 46fd243..babcd89 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1998,7 +1998,7 @@ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int res
- void pci_hp_remove_module_link(struct pci_slot *pci_slot);
- #endif
- 
--void do_recovery(struct pci_dev *dev, int severity);
-+void pci_do_recovery(struct pci_dev *dev, int severity);
- 
- /**
-  * pci_pcie_cap - get the saved PCIe capability offset
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
