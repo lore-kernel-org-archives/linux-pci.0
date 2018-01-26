@@ -1,63 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Hans de Goede <hdegoede@redhat.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35630 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751740AbeAZOvA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jan 2018 09:51:00 -0500
+Received: by mail-wm0-f67.google.com with SMTP id r78so21758346wme.0
+        for <linux-pci@vger.kernel.org>; Fri, 26 Jan 2018 06:50:59 -0800 (PST)
+Subject: Re: [PATCH v2 1/5] ACPI: export acpi_bus_get_status_handle()
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Robert Moore <robert.moore@intel.com>,
-        Erik Schmauss <erik.schmauss@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org,
-        devel@acpica.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 2/5] PCI: acpiphp_ibm: prepare for acpi_get_object_info() no longer returning status
-Date: Fri, 26 Jan 2018 16:02:57 +0100
-Message-Id: <20180126150300.9691-2-hdegoede@redhat.com>
-In-Reply-To: <20180126150300.9691-1-hdegoede@redhat.com>
-References: <20180126150300.9691-1-hdegoede@redhat.com>
-Sender: linux-acpi-owner@vger.kernel.org
+        Lv Zheng <lv.zheng@intel.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>, devel@acpica.org
+References: <20180122085135.16732-1-hdegoede@redhat.com>
+ <20180122085135.16732-2-hdegoede@redhat.com>
+ <CAJZ5v0g7KppXpk_jRWjKz8-ncdJQHg-QU7oGrgPiBtczgf+gfQ@mail.gmail.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <cf75e876-80b2-8f5d-bb17-11f6f3a1635a@redhat.com>
+Date: Fri, 26 Jan 2018 15:50:57 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0g7KppXpk_jRWjKz8-ncdJQHg-QU7oGrgPiBtczgf+gfQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-acpi_get_object_info() is intended for early probe usage and as such should
-not call any methods which may rely on OpRegions, but it used to also call
-_STA to get the status, which on some systems does rely on OpRegions, this
-behavior and the acpi_device_info.current_status member are being removed.
+Hi,
 
-This commit prepares the acpiphp_ibm code for this by having it get the
-status itself using acpi_bus_get_status_handle(). Note no error handling is
-necessary on any errors acpi_bus_get_status_handle() leaves the value of
-the passed in current_status at its 0 initialization value.
+On 01/23/2018 12:55 AM, Rafael J. Wysocki wrote:
+> On Mon, Jan 22, 2018 at 9:51 AM, Hans de Goede <hdegoede@redhat.com> wrote:
+>> Some modular drivers need this, export it.
+>>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>> Changes in v2:
+>> -This is a new patch in v2 of this patch-set
+>> ---
+>>   drivers/acpi/bus.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+>> index 4d0979e02a28..db0c05997cc2 100644
+>> --- a/drivers/acpi/bus.c
+>> +++ b/drivers/acpi/bus.c
+>> @@ -108,6 +108,7 @@ acpi_status acpi_bus_get_status_handle(acpi_handle handle,
+>>          }
+>>          return status;
+>>   }
+>> +EXPORT_SYMBOL(acpi_bus_get_status_handle);
+> 
+> EXPORT_SYMBOL_GPL(), please.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
-Changes in v2:
--Use () after function names in commit message
--Add  Bjorn's Acked-by
----
- drivers/pci/hotplug/acpiphp_ibm.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Ok, v3 with this fixed coming up.
 
-diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
-index 984c7e8cec5a..8472c4a27f70 100644
---- a/drivers/pci/hotplug/acpiphp_ibm.c
-+++ b/drivers/pci/hotplug/acpiphp_ibm.c
-@@ -399,6 +399,7 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
- 		u32 lvl, void *context, void **rv)
- {
- 	acpi_handle *phandle = (acpi_handle *)context;
-+	unsigned long long current_status = 0;
- 	acpi_status status;
- 	struct acpi_device_info *info;
- 	int retval = 0;
-@@ -410,7 +411,9 @@ static acpi_status __init ibm_find_acpi_device(acpi_handle handle,
- 		return retval;
- 	}
- 
--	if (info->current_status && (info->valid & ACPI_VALID_HID) &&
-+	acpi_bus_get_status_handle(handle, &current_status);
-+
-+	if (current_status && (info->valid & ACPI_VALID_HID) &&
- 			(!strcmp(info->hardware_id.string, IBM_HARDWARE_ID1) ||
- 			 !strcmp(info->hardware_id.string, IBM_HARDWARE_ID2))) {
- 		pr_debug("found hardware: %s, handle: %p\n",
--- 
-2.14.3
+Regards,
 
+Hans
