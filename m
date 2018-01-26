@@ -1,137 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:6453 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751872AbeAIJUu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 04:20:50 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V5 5/7] PCI: tegra: Add loadable kernel module support
-Date: Tue, 9 Jan 2018 14:49:35 +0530
-Message-ID: <1515489577-2197-6-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:51526 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751409AbeAZWzv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 Jan 2018 17:55:51 -0500
+Subject: [PATCH 2/8] PCI/DPC: Add local variable for DPC capability offset
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
+Date: Fri, 26 Jan 2018 16:55:47 -0600
+Message-ID: <20180126225547.58614.9423.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement remove callback function for Tegra PCIe driver to add
-loadable kernel module support. Change PCI_TEGRA config to tristate to
-allow pci-tegra driver to be build as a module.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Add a local variable for DPC capability offset and replace repeated use of
+"dpc->cap_pos" with simply "cap".  No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-V2:
-* no change in this patch
-V3:
-* use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_init()
-V4:
-* no change in this patch
-V5:
-* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-rebased on linux-next
+ drivers/pci/pcie/pcie-dpc.c |   65 +++++++++++++++++++------------------------
+ 1 file changed, 29 insertions(+), 36 deletions(-)
 
- drivers/pci/host/Kconfig     |  2 +-
- drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
- 2 files changed, 32 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 38d12980db0f..6fd2a5937804 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -34,7 +34,7 @@ config PCI_FTPCI100
- 	default ARCH_GEMINI
- 
- config PCI_TEGRA
--	bool "NVIDIA Tegra PCIe controller"
-+	tristate "NVIDIA Tegra PCIe controller"
- 	depends on ARCH_TEGRA
- 	help
- 	  Say Y here if you want support for the PCIe host controller found
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index e68507f658d8..981f126b14d6 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -35,6 +35,7 @@
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -2276,6 +2277,12 @@ static const struct file_operations tegra_pcie_ports_ops = {
- 	.release = seq_release,
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 48e1e3f8dd69..52702f7b911a 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -41,7 +41,7 @@ struct dpc_rp_pio_regs {
+ struct dpc_dev {
+ 	struct pcie_device	*dev;
+ 	struct work_struct	work;
+-	int			cap_pos;
++	u16			cap_pos;
+ 	bool			rp;
+ 	u32			rp_pio_status;
  };
+@@ -73,13 +73,13 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ 	unsigned long timeout = jiffies + HZ;
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	struct device *dev = &dpc->dev->device;
+-	u16 status;
++	u16 cap = dpc->cap_pos, status;
  
-+static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
-+{
-+	debugfs_remove_recursive(pcie->debugfs);
-+	pcie->debugfs = NULL;
-+}
-+
- static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
- {
- 	struct dentry *file;
-@@ -2292,8 +2299,7 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
- 	return 0;
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	while (status & PCI_EXP_DPC_RP_BUSY &&
+ 					!time_after(jiffies, timeout)) {
+ 		msleep(10);
+-		pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++		pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	}
+ 	if (status & PCI_EXP_DPC_RP_BUSY) {
+ 		dev_warn(dev, "DPC root port still busy\n");
+@@ -110,7 +110,7 @@ static void dpc_work(struct work_struct *work)
+ 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+ 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
+-	u16 ctl;
++	u16 cap = dpc->cap_pos, ctl;
  
- remove:
--	debugfs_remove_recursive(pcie->debugfs);
--	pcie->debugfs = NULL;
-+	tegra_pcie_debugfs_exit(pcie);
- 	return -ENOMEM;
+ 	pci_lock_rescan_remove();
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+@@ -129,17 +129,16 @@ static void dpc_work(struct work_struct *work)
+ 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
+ 		return;
+ 	if (dpc->rp && dpc->rp_pio_status) {
+-		pci_write_config_dword(pdev,
+-				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+-				      dpc->rp_pio_status);
++		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
++				       dpc->rp_pio_status);
+ 		dpc->rp_pio_status = 0;
+ 	}
+ 
+-	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
++	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+-	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL,
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
++	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+ 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
  }
  
-@@ -2311,6 +2317,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+@@ -189,23 +188,22 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	struct device *dev = &dpc->dev->device;
+ 	int i;
+-	u16 cap;
+-	u16 status;
++	u16 cap = dpc->cap_pos, status;
  
- 	pcie = pci_host_bridge_priv(host);
- 	host->sysdata = pcie;
-+	platform_set_drvdata(pdev, pcie);
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+ 			      &rp_pio->status);
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK,
+ 			      &rp_pio->mask);
  
- 	pcie->soc = of_device_get_match_data(dev);
- 	INIT_LIST_HEAD(&pcie->ports);
-@@ -2388,6 +2395,25 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	return err;
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY,
+ 			      &rp_pio->severity);
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR,
+ 			      &rp_pio->syserror);
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION,
+ 			      &rp_pio->exception);
+ 
+ 	/* Get First Error Pointer */
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	rp_pio->first_error = (status & 0x1f00) >> 8;
+ 
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+@@ -216,27 +214,22 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 		return;
+ 	}
+ 
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
+ 			      &rp_pio->header_log.dw0);
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
+ 			      &rp_pio->header_log.dw1);
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
+ 			      &rp_pio->header_log.dw2);
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
+ 			      &rp_pio->header_log.dw3);
+ 	if (rp_pio->log_size == 4)
+ 		return;
+ 
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
+ 			      &rp_pio->impspec_log);
+ 	for (i = 0; i < rp_pio->log_size - 5; i++)
+ 		pci_read_config_dword(pdev,
+-			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
++			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
+ 			&rp_pio->tlp_prefix_log[i]);
  }
  
-+static int tegra_pcie_remove(struct platform_device *pdev)
-+{
-+	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+
-+	if (IS_ENABLED(CONFIG_DEBUG_FS))
-+		tegra_pcie_debugfs_exit(pcie);
-+	pci_stop_root_bus(host->bus);
-+	pci_remove_root_bus(host->bus);
-+	tegra_pcie_disable_ports(pcie);
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		tegra_pcie_disable_msi(pcie);
-+	tegra_pcie_free_resources(pcie);
-+	tegra_pcie_disable_controller(pcie);
-+	tegra_pcie_put_resources(pcie);
-+
-+	return 0;
-+}
-+
- static struct platform_driver tegra_pcie_driver = {
- 	.driver = {
- 		.name = "tegra-pcie",
-@@ -2395,5 +2421,7 @@ static struct platform_driver tegra_pcie_driver = {
- 		.suppress_bind_attrs = true,
- 	},
- 	.probe = tegra_pcie_probe,
-+	.remove = tegra_pcie_remove,
- };
--builtin_platform_driver(tegra_pcie_driver);
-+module_platform_driver(tegra_pcie_driver);
-+MODULE_LICENSE("GPL");
--- 
-2.1.4
+@@ -255,28 +248,28 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 	struct dpc_dev *dpc = (struct dpc_dev *)context;
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	struct device *dev = &dpc->dev->device;
+-	u16 ctl, status, source, reason, ext_reason;
++	u16 cap = dpc->cap_pos, ctl, status, source, reason, ext_reason;
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+ 
+ 	if (!(ctl & PCI_EXP_DPC_CTL_INT_EN) || ctl == (u16)(~0))
+ 		return IRQ_NONE;
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 
+ 	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT))
+ 		return IRQ_NONE;
+ 
+ 	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
+-		pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
++		pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 				      PCI_EXP_DPC_STATUS_INTERRUPT);
+ 		return IRQ_HANDLED;
+ 	}
+ 
+-	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL,
++	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+ 			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_SOURCE_ID,
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID,
+ 			     &source);
+ 
+ 	dev_info(dev, "DPC containment event, status:%#06x source:%#06x\n",
