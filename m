@@ -1,36 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 17 Jan 2018 19:56:15 -0700
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Wei Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v5 4/4] PCI/DPC: Enumerate the devices after DPC trigger
- event
-Message-ID: <20180118025615.GF7562@localhost.localdomain>
-References: <1516185438-31556-1-git-send-email-poza@codeaurora.org>
- <1516185438-31556-5-git-send-email-poza@codeaurora.org>
- <b255864b-1272-0626-f448-db2d9c3710c5@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51718 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752516AbeAZW4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 Jan 2018 17:56:37 -0500
+Subject: [PATCH 7/8] PCI/DPC: Add and use DPC Status register field
+ definitions
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
+Date: Fri, 26 Jan 2018 16:56:34 -0600
+Message-ID: <20180126225634.58614.82697.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b255864b-1272-0626-f448-db2d9c3710c5@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 17, 2018 at 08:27:39AM -0800, Sinan Kaya wrote:
-> On 1/17/2018 5:37 AM, Oza Pawandeep wrote:
-> > +static bool dpc_wait_link_active(struct pci_dev *pdev)
-> > +{
-> 
-> I think you can also make this function common instead of making another copy here.
-> Of course, this would be another patch.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-It is actually very similar to __pcie_wait_link_active in pciehp_hpc.c,
-so there's some opprotunity to make even more common code.
+Add definitions for DPC Status register fields and use them in the code.
+No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/pcie-dpc.c   |    4 ++--
+ include/uapi/linux/pci_regs.h |    2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 06d3af112580..014f6590cd79 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -216,8 +216,8 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 	dev_info(dev, "DPC containment event, status:%#06x source:%#06x\n",
+ 		status, source);
+ 
+-	reason = (status >> 1) & 0x3;
+-	ext_reason = (status >> 5) & 0x3;
++	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
++	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
+ 
+ 	dev_warn(dev, "DPC %s detected, remove downstream devices\n",
+ 		 (reason == 0) ? "unmasked uncorrectable error" :
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 70c2b2ade048..970a0dc535c4 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -979,8 +979,10 @@
+ 
+ #define PCI_EXP_DPC_STATUS		8	/* DPC Status */
+ #define  PCI_EXP_DPC_STATUS_TRIGGER	0x01	/* Trigger Status */
++#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN	0x06	/* Trigger Reason */
+ #define  PCI_EXP_DPC_STATUS_INTERRUPT	0x08	/* Interrupt Status */
+ #define  PCI_EXP_DPC_RP_BUSY		0x10	/* Root Port Busy */
++#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT 0x60 /* Trig Reason Extension */
+ 
+ #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
+ 
