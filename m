@@ -1,41 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f49.google.com ([74.125.83.49]:34592 "EHLO
-        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751234AbeAWKyl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jan 2018 05:54:41 -0500
-Received: by mail-pg0-f49.google.com with SMTP id r19so32585pgn.1
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jan 2018 02:54:41 -0800 (PST)
-Date: Tue, 23 Jan 2018 18:54:25 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
-        <devicetree@vger.kernel.org>, project-aspen-dev@linaro.org,
-        Jianguo Sun <sunjianguo1@huawei.com>
-Subject: Re: [PATCH] PCI: histb: add power control GPIO for PCIe slot
-Message-ID: <20180123105424.GB23797@dragon>
-References: <1516669477-20151-1-git-send-email-shawn.guo@linaro.org>
- <CAOMZO5DFR=qJ_Q9ag+6Ov92VMZL3wiLSQJee=nKUJFtZ1mW1RQ@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:51742 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752398AbeAZW4p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 Jan 2018 17:56:45 -0500
+Subject: [PATCH 8/8] PCI/DPC: Reformat DPC register definitions
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>
+Date: Fri, 26 Jan 2018 16:56:42 -0600
+Message-ID: <20180126225642.58614.5202.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180126225043.58614.99920.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOMZO5DFR=qJ_Q9ag+6Ov92VMZL3wiLSQJee=nKUJFtZ1mW1RQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 22, 2018 at 11:12:44PM -0200, Fabio Estevam wrote:
-> Hi Shawn,
-> 
-> On Mon, Jan 22, 2018 at 11:04 PM, Shawn Guo <shawn.guo@linaro.org> wrote:
-> > From: Jianguo Sun <sunjianguo1@huawei.com>
-> >
-> > Besides the GPIO for controlling reset, there is also possibly another
-> > GPIO for turning on/off the power of PCIe slot.  Let's add the support
-> > for that with another optional device tree property 'power-gpios'.
-> 
-> It seems that a better approach would be to add regulator support
-> instead as it is more general.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-It's a sensible suggestion.  I will take it in v2.  Thanks, Fabio.
+Reformat DPC register definitions to follow the convention that register
+field masks indicate the register width, e.g., a field of a 16-bit register
+uses a mask of 4 hex digits, with leading zeros included as needed.
+No functional change intended.
 
-Shawn
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/uapi/linux/pci_regs.h |   26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 970a0dc535c4..66d71461d2f0 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -966,28 +966,28 @@
+ 
+ /* Downstream Port Containment */
+ #define PCI_EXP_DPC_CAP			4	/* DPC Capability */
+-#define PCI_EXP_DPC_IRQ			0x1f	/* DPC Interrupt Message Number */
+-#define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
+-#define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
+-#define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
+-#define  PCI_EXP_DPC_RP_PIO_LOG_SIZE	0xF00	/* RP PIO log size */
++#define PCI_EXP_DPC_IRQ			0x001F	/* Interrupt Message Number */
++#define  PCI_EXP_DPC_CAP_RP_EXT		0x0020	/* Root Port Extensions */
++#define  PCI_EXP_DPC_CAP_POISONED_TLP	0x0040	/* Poisoned TLP Egress Blocking Supported */
++#define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x0080	/* Software Triggering Supported */
++#define  PCI_EXP_DPC_RP_PIO_LOG_SIZE	0x0F00	/* RP PIO Log Size */
+ #define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
+ 
+ #define PCI_EXP_DPC_CTL			6	/* DPC control */
+-#define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x02	/* Enable trigger on ERR_NONFATAL message */
+-#define  PCI_EXP_DPC_CTL_INT_EN 	0x08	/* DPC Interrupt Enable */
++#define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x0002	/* Enable trigger on ERR_NONFATAL message */
++#define  PCI_EXP_DPC_CTL_INT_EN 	0x0008	/* DPC Interrupt Enable */
+ 
+ #define PCI_EXP_DPC_STATUS		8	/* DPC Status */
+-#define  PCI_EXP_DPC_STATUS_TRIGGER	0x01	/* Trigger Status */
+-#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN	0x06	/* Trigger Reason */
+-#define  PCI_EXP_DPC_STATUS_INTERRUPT	0x08	/* Interrupt Status */
+-#define  PCI_EXP_DPC_RP_BUSY		0x10	/* Root Port Busy */
+-#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT 0x60 /* Trig Reason Extension */
++#define  PCI_EXP_DPC_STATUS_TRIGGER	    0x0001 /* Trigger Status */
++#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN	    0x0006 /* Trigger Reason */
++#define  PCI_EXP_DPC_STATUS_INTERRUPT	    0x0008 /* Interrupt Status */
++#define  PCI_EXP_DPC_RP_BUSY		    0x0010 /* Root Port Busy */
++#define  PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT 0x0060 /* Trig Reason Extension */
+ 
+ #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
+ 
+ #define PCI_EXP_DPC_RP_PIO_STATUS	 0x0C	/* RP PIO Status */
+-#define PCI_EXP_DPC_RP_PIO_MASK		 0x10	/* RP PIO MASK */
++#define PCI_EXP_DPC_RP_PIO_MASK		 0x10	/* RP PIO Mask */
+ #define PCI_EXP_DPC_RP_PIO_SEVERITY	 0x14	/* RP PIO Severity */
+ #define PCI_EXP_DPC_RP_PIO_SYSERROR	 0x18	/* RP PIO SysError */
+ #define PCI_EXP_DPC_RP_PIO_EXCEPTION	 0x1C	/* RP PIO Exception */
