@@ -1,88 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54148 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752098AbeAaVTR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 31 Jan 2018 16:19:17 -0500
-Subject: [PATCH] lspci: Make DevCtl, DevSta, and AER decoding more consistent
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org
-Date: Wed, 31 Jan 2018 15:19:13 -0600
-Message-ID: <20180131211913.66990.27599.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v5 10/11] dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe endpoint controller
+Date: Sun, 28 Jan 2018 21:40:24 +0100
+Message-Id: <2f0827c48a04fccb61e7c65437283795c907def8.1517170521.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+This patch documents the DT bindings for the Cadence PCIe controller
+when configured in endpoint mode.
 
-Change DevCtl error reporting enables so they match the corresponding
-DevSta bits:
-
--  DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-+  DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
-
-PCIe r4.0, sec 6.2.2, classifies errors as Correctable or Uncorrectable.
-Uncorrectable includes both Non-Fatal and Fatal errors.  Decode the DevSta
-"Non-Fatal Error Detected" bit as "NonFatalErr", not "UncorrErr":
-
--  DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-+  DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr- TransPend-
-
-Change the "Unsupported" and "UnsuppReq" labels in DevCtl and DevSta to
-match the "UnsupReq" used in AER.
-
-The Correctable error category doesn't include Non-Fatal errors, so change
-the AER Correctable Error Status "Advisory Non-Fatal Error Status" from
-"NonFatalErr" to "AdvNonFatalErr":
-
--  CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-+  CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
-
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- ls-caps.c  |    4 ++--
- ls-ecaps.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
 
-diff --git a/ls-caps.c b/ls-caps.c
-index d4aebc8..158ac38 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -686,7 +686,7 @@ static void cap_express_dev(struct device *d, int where, int type)
-   printf("\n");
- 
-   w = get_conf_word(d, where + PCI_EXP_DEVCTL);
--  printf("\t\tDevCtl:\tReport errors: Correctable%c Non-Fatal%c Fatal%c Unsupported%c\n",
-+  printf("\t\tDevCtl:\tCorrErr%c NonFatalErr%c FatalErr%c UnsupReq%c\n",
- 	FLAG(w, PCI_EXP_DEVCTL_CERE),
- 	FLAG(w, PCI_EXP_DEVCTL_NFERE),
- 	FLAG(w, PCI_EXP_DEVCTL_FERE),
-@@ -707,7 +707,7 @@ static void cap_express_dev(struct device *d, int where, int type)
- 	128 << ((w & PCI_EXP_DEVCTL_READRQ) >> 12));
- 
-   w = get_conf_word(d, where + PCI_EXP_DEVSTA);
--  printf("\t\tDevSta:\tCorrErr%c UncorrErr%c FatalErr%c UnsuppReq%c AuxPwr%c TransPend%c\n",
-+  printf("\t\tDevSta:\tCorrErr%c NonFatalErr%c FatalErr%c UnsupReq%c AuxPwr%c TransPend%c\n",
- 	FLAG(w, PCI_EXP_DEVSTA_CED),
- 	FLAG(w, PCI_EXP_DEVSTA_NFED),
- 	FLAG(w, PCI_EXP_DEVSTA_FED),
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 634db21..800a032 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -124,11 +124,11 @@ cap_aer(struct device *d, int where, int type)
- 	FLAG(l, PCI_ERR_UNC_UNX_COMP), FLAG(l, PCI_ERR_UNC_RX_OVER), FLAG(l, PCI_ERR_UNC_MALF_TLP),
- 	FLAG(l, PCI_ERR_UNC_ECRC), FLAG(l, PCI_ERR_UNC_UNSUP), FLAG(l, PCI_ERR_UNC_ACS_VIOL));
-   l = get_conf_long(d, where + PCI_ERR_COR_STATUS);
--  printf("\t\tCESta:\tRxErr%c BadTLP%c BadDLLP%c Rollover%c Timeout%c NonFatalErr%c\n",
-+  printf("\t\tCESta:\tRxErr%c BadTLP%c BadDLLP%c Rollover%c Timeout%c AdvNonFatalErr%c\n",
- 	FLAG(l, PCI_ERR_COR_RCVR), FLAG(l, PCI_ERR_COR_BAD_TLP), FLAG(l, PCI_ERR_COR_BAD_DLLP),
- 	FLAG(l, PCI_ERR_COR_REP_ROLL), FLAG(l, PCI_ERR_COR_REP_TIMER), FLAG(l, PCI_ERR_COR_REP_ANFE));
-   l = get_conf_long(d, where + PCI_ERR_COR_MASK);
--  printf("\t\tCEMsk:\tRxErr%c BadTLP%c BadDLLP%c Rollover%c Timeout%c NonFatalErr%c\n",
-+  printf("\t\tCEMsk:\tRxErr%c BadTLP%c BadDLLP%c Rollover%c Timeout%c AdvNonFatalErr%c\n",
- 	FLAG(l, PCI_ERR_COR_RCVR), FLAG(l, PCI_ERR_COR_BAD_TLP), FLAG(l, PCI_ERR_COR_BAD_DLLP),
- 	FLAG(l, PCI_ERR_COR_REP_ROLL), FLAG(l, PCI_ERR_COR_REP_TIMER), FLAG(l, PCI_ERR_COR_REP_ANFE));
-   l = get_conf_long(d, where + PCI_ERR_CAP);
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+new file mode 100644
+index 000000000000..9a305237fa6e
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+@@ -0,0 +1,22 @@
++* Cadence PCIe endpoint controller
++
++Required properties:
++- compatible: Should contain "cdns,cdns-pcie-ep" to identify the IP used.
++- reg: Should contain the controller register base address and AXI interface
++  region base address respectively.
++- reg-names: Must be "reg" and "mem" respectively.
++- cdns,max-outbound-regions: Set to maximum number of outbound regions
++
++Optional properties:
++- max-functions: Maximum number of functions that can be configured (default 1).
++
++Example:
++
++pcie@fc000000 {
++	compatible = "cdns,cdns-pcie-ep";
++	reg = <0x0 0xfc000000 0x0 0x01000000>,
++	      <0x0 0x80000000 0x0 0x40000000>;
++	reg-names = "reg", "mem";
++	cdns,max-outbound-regions = <16>;
++	max-functions = /bits/ 8 <8>;
++};
+-- 
+2.11.0
