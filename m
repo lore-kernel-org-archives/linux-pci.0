@@ -1,185 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0089.outbound.protection.outlook.com ([104.47.32.89]:18368
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751108AbeAEAJd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Jan 2018 19:09:33 -0500
-Subject: Re: [PATCH 29/37] PCI: Add pci_enable_atomic_ops_to_root
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jay Cornwall <Jay.Cornwall@amd.com>, oded.gabbay@gmail.com,
-        amd-gfx@lists.freedesktop.org, linux-pci@vger.kernel.org,
-        Ram Amrani <Ram.Amrani@cavium.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Michal Kalderon <Michal.Kalderon@cavium.com>,
-        Ariel Elior <Ariel.Elior@cavium.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
-References: <1512792555-26042-1-git-send-email-Felix.Kuehling@amd.com>
- <1512792555-26042-30-git-send-email-Felix.Kuehling@amd.com>
- <20171212232707.GF53955@bhelgaas-glaptop.roam.corp.google.com>
- <564f4514-58a6-08b0-81c3-175238a9e828@amd.com>
- <20180104234035.GK189897@bhelgaas-glaptop.roam.corp.google.com>
-From: Felix Kuehling <felix.kuehling@amd.com>
-Message-ID: <bc32c18f-9a6a-379f-bd04-6acba440c9d8@amd.com>
-Date: Thu, 4 Jan 2018 19:09:23 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180104234035.GK189897@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Received: from 4.mo68.mail-out.ovh.net ([46.105.59.63]:58144 "EHLO
+        4.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751997AbeA1Usj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jan 2018 15:48:39 -0500
+Received: from player776.ha.ovh.net (b7.ovh.net [213.186.33.57])
+        by mo68.mail-out.ovh.net (Postfix) with ESMTP id DC099BC40C
+        for <linux-pci@vger.kernel.org>; Sun, 28 Jan 2018 21:42:24 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v5 06/11] dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host controller
+Date: Sun, 28 Jan 2018 21:40:20 +0100
+Message-Id: <7179a04aa55d145a509d383f9581890ca11ab544.1517170521.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+From: Scott Telford <stelford@cadence.com>
 
-I figured it out. The difference between the functions is whether they
-use struct pci_bus * or struct pci_dev * as cursor. I found that the
-functions are in fact equivalent. The last loop iteration in
-pci_enable_atomic_ops_to_root is equivalent to the code after the loop
-in qedr_pci_set_atomic. Both handle the root port.
+This patch adds documentation for the DT bindings of the Cadence PCIe
+controller when configured in host (Root Complex) mode.
 
-I think my confusion was based on an incorrect assumption that
-bridge->bus->self is the same as bridge. But brigde->bus is in fact the
-parent bus.
+Signed-off-by: Scott Telford <stelford@cadence.com>
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ .../bindings/pci/cdns,cdns-pcie-host.txt           | 60 ++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
 
-I sent out an updated patch that addresses your comments to the previous
-version. This should be general enough that it can replace
-qedr_pci_set_atomic.
-
-Regards,
-  Felix
-
-
-On 2018-01-04 06:40 PM, Bjorn Helgaas wrote:
-> On Tue, Jan 02, 2018 at 06:41:17PM -0500, Felix Kuehling wrote:
->> On 2017-12-12 06:27 PM, Bjorn Helgaas wrote:
->>> [+cc Ram, Michal, Ariel, Doug, Jason]
->>>
->>> The [29/37] in the subject makes it look like this is part of a larger
->>> series, but I can't find the rest of it on linux-pci or linux-kernel.
->>>
->>> I don't want to merge a new interface unless there's an in-tree user
->>> of it.  I assume the rest of the series includes a user.
->>>
->>> On Fri, Dec 08, 2017 at 11:09:07PM -0500, Felix Kuehling wrote:
->> [snip]
->>>> + * all upstream bridges support AtomicOp routing, egress blocking is disabled
->>>> + * on all upstream ports, and the root port supports 32-bit, 64-bit and/or
->>>> + * 128-bit AtomicOp completion, or negative otherwise.
->>>> + */
->>>> +int pci_enable_atomic_ops_to_root(struct pci_dev *dev)
->>>> +{
->>>> +	struct pci_bus *bus = dev->bus;
->>>> +
->>>> +	if (!pci_is_pcie(dev))
->>>> +		return -EINVAL;
->>>> +
->>>> +	switch (pci_pcie_type(dev)) {
->>>> +	/*
->>>> +	 * PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
->>>> +	 * to implement AtomicOp requester capabilities.
->>>> +	 */
->>>> +	case PCI_EXP_TYPE_ENDPOINT:
->>>> +	case PCI_EXP_TYPE_LEG_END:
->>>> +	case PCI_EXP_TYPE_RC_END:
->>>> +		break;
->>>> +	default:
->>>> +		return -EINVAL;
->>>> +	}
->>>> +
->>>> +	while (bus->parent) {
->>>> +		struct pci_dev *bridge = bus->self;
->>>> +		u32 cap;
->>>> +
->>>> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
->>>> +
->>>> +		switch (pci_pcie_type(bridge)) {
->>>> +		/*
->>>> +		 * Upstream, downstream and root ports may implement AtomicOp
->>>> +		 * routing capabilities. AtomicOp routing via a root port is
->>>> +		 * not considered.
->>>> +		 */
->>>> +		case PCI_EXP_TYPE_UPSTREAM:
->>>> +		case PCI_EXP_TYPE_DOWNSTREAM:
->>>> +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
->>>> +				return -EINVAL;
->>>> +			break;
->>>> +
->>>> +		/*
->>>> +		 * Root ports are permitted to implement AtomicOp completion
->>>> +		 * capabilities.
->>>> +		 */
->>>> +		case PCI_EXP_TYPE_ROOT_PORT:
->>>> +			if (!(cap & (PCI_EXP_DEVCAP2_ATOMIC_COMP32 |
->>>> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP64 |
->>>> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP128)))
->>>> +				return -EINVAL;
->>>> +			break;
->>>> +		}
->>> IIUC, you want to enable an endpoint, e.g., an AMD Fiji-class GPU, to
->>> initiate AtomicOps that target system memory.  This interface
->>> (pci_enable_atomic_ops_to_root()) doesn't specify what size operations
->>> the driver wants to do.  If the GPU requests a 128-bit op and the Root
->>> Port doesn't support it, I think we'll see an Unsupported Request
->>> error.
->>>
->>> Do you need to extend this interface so the driver can specify what
->>> sizes it wants?
->>>
->>> The existing code in qedr_pci_set_atomic() is very similar.  We should
->>> make this new interface work for both places, then actually use it in
->>> qedr_pci_set_atomic().
->> Hi Bjorn, Doug, Ram,
->>
->> I just discussed this with Jay, and he noticed that qedr_pci_set_atomic
->> seems to use a different criteria to find the completer for atomic
->> requests. Jay's function expects the root port to have a parent, which
->> was the case on the systems he tested. But Ram's function looks for a
->> bridge without a parent and checks completion capabilities on that. Jay
->> believes that to be a root complex, not a root port.
-> By "Ram's function", I guess you mean qedr_pci_set_atomic()?
->
-> That starts with a PCIe device ("pdev"; it assumes but does not check
-> that this is a PCIe device), and traverses through all the bridges
-> leading to it.  Usually this will be:
->
->   endpoint -> root port
->   endpoint -> switch downstream port -> switch upstream port -> root port
->
-> Or there may be additional switches in the middle.  The code is
-> actually not quite correct because it is legal to have this:
->
->   endpoint -> PCI-to-PCIe bridge -> conventional PCI bridge -> ...
->
-> and qedr_pci_set_atomic() will traverse up through the conventional
-> part of the hierarchy, where there is no PCI_EXP_DEVCAP2.
->
-> In general, a Root Port is the root of a PCIe hierarchy and there is
-> no parent device.  E.g., on my laptop:
->
->   00:1c.0 Intel Root Port (bridge to [bus 02])
->   00:1c.2 Intel Root Port (bridge to [bus 04])
->
-> What sort of parent do you expect?  As I mentioned, it's legal to have
-> a PCI/PCI-X to PCIe bridge inside a conventional PCI hierarchy, but
-> that's a little unusual.
->
->> According to the spec, "Root ports are permitted to implement AtomicOp
->> completion capabilities." It talks about a root port, not a root complex.
->>
->> Can you help us understand, which interpretation is correct? And how to
->> correctly identify the root port for checking completion capabilities?
-> If you start with a PCIe device and traverse upstream, you should
-> eventually reach a Root Port or a PCI/PCI-X to PCIe bridge.
->
->> Are there valid topologies where a root port does not have a parent?
-> I don't understand this because Root Ports normally do not have
-> parents.
->
-> PCIe devices other than Root Ports normally have a Root Port (or
-> PCI/PCI-X to PCIe bridge) at the root of the PCIe hierarchy, but there
-> are definitely exceptions.
->
-> For example, there some systems where the Root Port is not visible to
-> Linux, e.g.,
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=ee8bdfb6568d
-> On systems like that, I don't think you can safely use AtomicOps.
->
-> Bjorn
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+new file mode 100644
+index 000000000000..20a33f38f69d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+@@ -0,0 +1,60 @@
++* Cadence PCIe host controller
++
++This PCIe controller inherits the base properties defined in
++host-generic-pci.txt.
++
++Required properties:
++- compatible: Should contain "cdns,cdns-pcie-host" to identify the IP used.
++- reg: Should contain the controller register base address, PCIe configuration
++  window base address, and AXI interface region base address respectively.
++- reg-names: Must be "reg", "cfg" and "mem" respectively.
++- #address-cells: Set to <3>
++- #size-cells: Set to <2>
++- device_type: Set to "pci"
++- ranges: Ranges for the PCI memory and I/O regions
++- #interrupt-cells: Set to <1>
++- interrupt-map-mask and interrupt-map: Standard PCI properties to define the
++  mapping of the PCIe interface to interrupt numbers.
++
++Optional properties:
++- cdns,max-outbound-regions: Set to maximum number of outbound regions
++  (default 32)
++- cdns,no-bar-match-nbits: Set into the no BAR match register to configure the
++  number of least significant bits kept during inbound (PCIe -> AXI) address
++  translations (default 32)
++- vendor-id: The PCI vendor ID (16 bits, default is design dependent)
++- device-id: The PCI device ID (16 bits, default is design dependent)
++
++Example:
++
++pcie@fb000000 {
++	compatible = "cdns,cdns-pcie-host";
++	device_type = "pci";
++	#address-cells = <3>;
++	#size-cells = <2>;
++	bus-range = <0x0 0xff>;
++	linux,pci-domain = <0>;
++	cdns,max-outbound-regions = <16>;
++	cdns,no-bar-match-nbits = <32>;
++	vendor-id = /bits/ 16 <0x17cd>;
++	device-id = /bits/ 16 <0x0200>;
++
++	reg = <0x0 0xfb000000  0x0 0x01000000>,
++	      <0x0 0x41000000  0x0 0x00001000>,
++	      <0x0 0x40000000  0x0 0x04000000>;
++	reg-names = "reg", "cfg", "mem";
++
++	ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
++		 <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
++
++	#interrupt-cells = <0x1>;
++
++	interrupt-map = <0x0 0x0 0x0  0x1  &gic  0x0 0x0 0x0 14 0x1
++			 0x0 0x0 0x0  0x2  &gic  0x0 0x0 0x0 15 0x1
++			 0x0 0x0 0x0  0x3  &gic  0x0 0x0 0x0 16 0x1
++			 0x0 0x0 0x0  0x4  &gic  0x0 0x0 0x0 17 0x1>;
++
++	interrupt-map-mask = <0x0 0x0 0x0  0x7>;
++
++	msi-parent = <&its_pci>;
++};
+-- 
+2.11.0
