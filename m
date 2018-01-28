@@ -1,79 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56970 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750812AbeAPJ6z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jan 2018 04:58:55 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v4 0/4] Address error and recovery for AER and DPC
-Date: Tue, 16 Jan 2018 15:28:38 +0530
-Message-Id: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 28 Jan 2018 15:47:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, adouglas@cadence.com,
+        stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
+        eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
+        sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+        robh@kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 00/11] PCI: Add support to the Cadence PCIe controller
+Message-ID: <20180128214741.GA232763@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set brings in error handling support for DPC
+On Sun, Jan 28, 2018 at 09:40:14PM +0100, Cyrille Pitchen wrote:
+> Hi all,
+> 
+> this series of patches adds support to the Cadence PCIe controller.
+> It was tested on a ARM64 platform emulated by a Palladium running the
+> pci-next kernel.
+> 
+> The host mode was tested with some PCIe devices connected to the Palladium
+> through a speed-bridge. Some of those devices were a USB host controller
+> and a SATA controller. The PCIe host controller was also tested with a
+> second controller configured in endpoint mode and connected back to back
+> to the first controller.
+> 
+> The EndPoint Controller (EPC) driver was tested with 2 PCI functions, both
+> handled by the pci-epf-test driver, using the pcitest userspace program.
+> I used the "-D" optional command line parameter to select the proper PCI
+> function.
+> 
+> Best regards,
+> 
+> Cyrille
+> 
+> ChangeLog
+> 
+> v4 -> v5:
+> - rebase on today's (20180128) linux-pci/next
 
-The current implementation of AER and error message broadcasting to the
-EP driver is tightly coupled and limited to AER service driver.
-It is important to factor out broadcasting and other link handling
-callbacks. So that not only when AER gets triggered, but also when DPC get
-triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+Don't bother rebasing onto linux-pci/next.
 
-DPC should enumerate the devices after recovering the link, which is
-achieved by implementing error_resume callback.
+If your patches actually *depend* on something that has already been
+merged onto a PCI topic branch, you should mention that and say which
+branch.
 
-Changes since v3:
-	Bjorn's comments incorporated.
-		> Made separate patch renaming generic pci_err.c
-		> Introduce pci_err.h to contain all the error types and recovery
-		> removed all the dependencies on pci.h
-Changes since v2:
-	Based on feedback from Keith:
+But otherwise, it's easiest if they are based on linux-pci/master,
+because that's how Lorenzo and I apply them.
 
-	"
-	When DPC is triggered due to receipt of an uncorrectable error Message,
-	the Requester ID from the Message is recorded in the DPC Error
-	Source ID register and that Message is discarded and not forwarded Upstream.
-	"
+linux-pci/next is ephemeral and I frequently rebuild it to fix errors,
+add acks, etc.
 
-	Removed the patch where AER checks if DPC service is active
-Changes since v1:
-	Kbuild errors fixed:
-		> pci_find_dpc_dev made static
-		> ras_event.h updated
-		> pci_find_aer_service call with CONFIG check
-		> pci_find_dpc_service call with CONFIG check
+It doesn't *hurt* that you rebased, but it doesn't help anything
+either, and it's a little needless work for you.
 
-Oza Pawandeep (4):
-  PCI/AER: factor out error reporting from AER
-  PCI/DPC/AER: Address Concurrency between AER and DPC
-  PCI/ERR: Do not do recovery if DPC service is active
-  PCI/DPC: Enumerate the devices after DPC trigger event
-
- drivers/acpi/apei/ghes.c               |   2 +-
- drivers/pci/pcie/Makefile              |   2 +-
- drivers/pci/pcie/aer/aerdrv.h          |  30 ---
- drivers/pci/pcie/aer/aerdrv_core.c     | 306 +------------------------
- drivers/pci/pcie/aer/aerdrv_errprint.c |  27 ++-
- drivers/pci/pcie/pcie-dpc.c            | 127 ++++++++++-
- drivers/pci/pcie/pcie-err.c            | 399 +++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.h             |   2 +
- include/linux/aer.h                    |   4 -
- include/linux/pci.h                    |  23 ++
- include/ras/ras_event.h                |   6 +-
- 11 files changed, 579 insertions(+), 349 deletions(-)
- create mode 100644 drivers/pci/pcie/pcie-err.c
-
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Bjorn
