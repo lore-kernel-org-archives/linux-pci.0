@@ -1,119 +1,134 @@
-Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=cyPF=EA=redhat.com=alex.williamson@kernel.org>
-Date: Fri, 5 Jan 2018 08:41:08 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Jerome Glisse <jglisse@redhat.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas
- <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
- Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
- <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
- <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
- <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>, Benjamin
- Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client
- devices
-Message-ID: <20180105084108.47a45561@t450s.home>
-In-Reply-To: <20180105064547.GA3212@redhat.com>
-References: <20180104190137.7654-1-logang@deltatee.com>
-	<20180104190137.7654-5-logang@deltatee.com>
-	<20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
-	<20180104153551.3118f71b@t450s.home>
-	<20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
-	<20180104203300.79487c98@w520.home>
-	<20180105064547.GA3212@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 5.mo68.mail-out.ovh.net ([46.105.62.179]:41306 "EHLO
+        5.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752092AbeA1UxF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jan 2018 15:53:05 -0500
+Received: from player776.ha.ovh.net (b7.ovh.net [213.186.33.57])
+        by mo68.mail-out.ovh.net (Postfix) with ESMTP id 49560B85F1
+        for <linux-pci@vger.kernel.org>; Sun, 28 Jan 2018 21:43:16 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v5 09/11] PCI: endpoint: Fix EPF device name to support multi-function devices
+Date: Sun, 28 Jan 2018 21:40:23 +0100
+Message-Id: <0c9ae7445f9900f96c62f78e91810dd906bab14f.1517170521.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 5 Jan 2018 01:47:01 -0500
-Jerome Glisse <jglisse@redhat.com> wrote:
+Fix the pci_epf_make() function so it can now bind many EPF devices to the
+same EPF driver.
 
-> On Thu, Jan 04, 2018 at 08:33:00PM -0700, Alex Williamson wrote:
-> > On Thu, 4 Jan 2018 17:00:47 -0700
-> > Logan Gunthorpe <logang@deltatee.com> wrote:
-> >   
-> > > On 04/01/18 03:35 PM, Alex Williamson wrote:  
-> > > > Yep, flipping these ACS bits invalidates any IOMMU groups that depend
-> > > > on the isolation of that downstream port and I suspect also any peers
-> > > > within the same PCI slot of that port and their downstream devices.  The
-> > > > entire sub-hierarchy grouping needs to be re-evaluated.  This
-> > > > potentially affects running devices that depend on that isolation, so
-> > > > I'm not sure how that happens dynamically.  A boot option might be
-> > > > easier.  Thanks,    
-> > > 
-> > > I don't see how this is the case in current kernel code. It appears to 
-> > > only enable ACS globally if the IOMMU requests it.  
-> > 
-> > IOMMU groups don't exist unless the IOMMU is enabled and x86 and ARM
-> > both request ACS be enabled if an IOMMU is present, so I'm not sure
-> > what you're getting at here.  Also, in reply to your other email, if
-> > the IOMMU is enabled, every device handled by the IOMMU is a member of
-> > an IOMMU group, see struct device.iommu_group.  There's an
-> > iommu_group_get() accessor to get a reference to it.
-> >    
-> > > I also don't see how turning off ACS isolation for a specific device is 
-> > > going to hurt anything. The IOMMU should still be able to keep going on 
-> > > unaware that anything has changed. The only worry is that a security 
-> > > hole may now be created if a user was relying on the isolation between 
-> > > two devices that are in different VMs or something. However, if a user 
-> > > was relying on this, they probably shouldn't have turned on P2P in the 
-> > > first place.  
-> > 
-> > That's exactly what IOMMU groups represent, the smallest set of devices
-> > which have DMA isolation from other devices.  By poking this hole, the
-> > IOMMU group is invalid.  We cannot turn off ACS only for a specific
-> > device, in order to enable p2p it needs to be disabled at every
-> > downstream port between the devices where we want to enable p2p.
-> > Depending on the topology, that could mean we're also enabling p2p for
-> > unrelated devices.  Those unrelated devices might be in active use and
-> > the p2p IOVAs now have a different destination which is no longer IOMMU
-> > translated.
-> >    
-> > > We started with a fairly unintelligent choice to simply disable ACS on 
-> > > any kernel that had CONFIG_PCI_P2P set. However, this did not seem like 
-> > > a good idea going forward. Instead, we now selectively disable the ACS 
-> > > bit only on the downstream ports that are involved in P2P transactions. 
-> > > This seems like the safest choice and still allows people to (carefully) 
-> > > use P2P adjacent to other devices that need to be isolated.  
-> > 
-> > I don't see that the code is doing much checking that adjacent devices
-> > are also affected by the p2p change and of course the IOMMU group is
-> > entirely invalid once the p2p holes start getting poked.
-> >   
-> > > I don't think anyone wants another boot option that must be set in order 
-> > > to use this functionality (and only some hardware would require this). 
-> > > That's just a huge pain for users.  
-> > 
-> > No, but nor do we need IOMMU groups that no longer represent what
-> > they're intended to describe or runtime, unchecked routing changes
-> > through the topology for devices that might already be using
-> > conflicting IOVA ranges.  Maybe soft hotplugs are another possibility,
-> > designate a sub-hierarchy to be removed and re-scanned with ACS
-> > disabled.  Otherwise it seems like disabling and re-enabling ACS needs
-> > to also handle merging and splitting groups dynamically.  Thanks,
-> >   
-> 
-> Dumb question, can we use a PCI bar address of one device into the
-> IOMMU page table of another address ie like we would DMA map a
-> regular system page ?
-> 
-> It would be much better in my view to follow down such path if that
-> is at all possible from hardware point of view (i am not sure where
-> to dig in the specification to answer my above question).
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ drivers/pci/endpoint/pci-ep-cfs.c | 46 +++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 44 insertions(+), 2 deletions(-)
 
-Yes, we can bounce device MMIO through the IOMMU, or at least vfio does
-enable these mappings to allow p2p between devices assigned to the same
-VM and we've seen evidence that they work, but like p2p in general,
-there are likely platform dependencies.  For Logan this doesn't really
-solve the problem unless the device and downstream port support ATS and
-ACS Direct Translated P2P is enable.  That would allow the device to do
-p2p with addresses pre-translated by the IOMMU and cached by ATS on the
-device without the transaction needing to traverse all the way to the
-IOMMU on the root bus.  The security of ATS is pretty questionable in
-general, but that would likely be a solution that wouldn't require
-manipulating the groupings.  Thanks,
-
-Alex
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index c9a2fb9dd49d..9ec28be1e378 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -18,18 +18,22 @@
+  */
+ 
+ #include <linux/module.h>
++#include <linux/idr.h>
+ #include <linux/slab.h>
+ 
+ #include <linux/pci-epc.h>
+ #include <linux/pci-epf.h>
+ #include <linux/pci-ep-cfs.h>
+ 
++static DEFINE_IDR(functions_idr);
++static DEFINE_MUTEX(functions_mutex);
+ static struct config_group *functions_group;
+ static struct config_group *controllers_group;
+ 
+ struct pci_epf_group {
+ 	struct config_group group;
+ 	struct pci_epf *epf;
++	int index;
+ };
+ 
+ struct pci_epc_group {
+@@ -354,6 +358,9 @@ static void pci_epf_release(struct config_item *item)
+ {
+ 	struct pci_epf_group *epf_group = to_pci_epf_group(item);
+ 
++	mutex_lock(&functions_mutex);
++	idr_remove(&functions_idr, epf_group->index);
++	mutex_unlock(&functions_mutex);
+ 	pci_epf_destroy(epf_group->epf);
+ 	kfree(epf_group);
+ }
+@@ -373,22 +380,57 @@ static struct config_group *pci_epf_make(struct config_group *group,
+ {
+ 	struct pci_epf_group *epf_group;
+ 	struct pci_epf *epf;
++	char *epf_name;
++	int index, err;
+ 
+ 	epf_group = kzalloc(sizeof(*epf_group), GFP_KERNEL);
+ 	if (!epf_group)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	mutex_lock(&functions_mutex);
++	index = idr_alloc(&functions_idr, epf_group, 0, 0, GFP_KERNEL);
++	mutex_unlock(&functions_mutex);
++	if (index < 0) {
++		err = index;
++		goto free_group;
++	}
++
++	epf_group->index = index;
++
+ 	config_group_init_type_name(&epf_group->group, name, &pci_epf_type);
+ 
+-	epf = pci_epf_create(group->cg_item.ci_name);
++	epf_name = kasprintf(GFP_KERNEL, "%s.%d",
++			     group->cg_item.ci_name, epf_group->index);
++	if (!epf_name) {
++		err = -ENOMEM;
++		goto remove_idr;
++	}
++
++	epf = pci_epf_create(epf_name);
+ 	if (IS_ERR(epf)) {
+ 		pr_err("failed to create endpoint function device\n");
+-		return ERR_PTR(-EINVAL);
++		err = -EINVAL;
++		goto free_name;
+ 	}
+ 
+ 	epf_group->epf = epf;
+ 
++	kfree(epf_name);
++
+ 	return &epf_group->group;
++
++free_name:
++	kfree(epf_name);
++
++remove_idr:
++	mutex_lock(&functions_mutex);
++	idr_remove(&functions_idr, epf_group->index);
++	mutex_unlock(&functions_mutex);
++
++free_group:
++	kfree(epf_group);
++
++	return ERR_PTR(err);
+ }
+ 
+ static void pci_epf_drop(struct config_group *group, struct config_item *item)
+-- 
+2.11.0
