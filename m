@@ -1,526 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:41905 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751211AbeABRtF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:49:05 -0500
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
-        "'Jaehoon Chung'" <jh80.chung@samsung.com>
-Cc: <linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <bhelgaas@kernel.org>, <robh+dt@kernel.org>, <krzk@kernel.org>,
-        <mark.rutland@arm.com>, <kgene@kernel.org>
-References: <CGME20171227094329epcas1p2a7b0a0f6130db4361592d8966d5ecb85@epcas1p2.samsung.com> <20171227094327.5671-1-jh80.chung@samsung.com> <20180102163407.GA9887@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20180102163407.GA9887@e107981-ln.cambridge.arm.com>
-Subject: Re: [PATCH] PCI: exynos: remove the deprecated phy codes
-Date: Tue, 2 Jan 2018 12:49:01 -0500
-Message-ID: <000001d383f1$f9ff4710$edfdd530$@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
+Received: from 1.mo68.mail-out.ovh.net ([46.105.41.146]:58483 "EHLO
+        1.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752169AbeA1Ur5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 28 Jan 2018 15:47:57 -0500
+Received: from player776.ha.ovh.net (b7.ovh.net [213.186.33.57])
+        by mo68.mail-out.ovh.net (Postfix) with ESMTP id 101A1BBEBA
+        for <linux-pci@vger.kernel.org>; Sun, 28 Jan 2018 21:40:59 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v5 01/11] PCI: Regroup all PCI related entries into drivers/pci/Makefile
+Date: Sun, 28 Jan 2018 21:40:15 +0100
+Message-Id: <974a5595d6462861cb0f58b4f6303462b8ba7c91.1517170521.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 2, 2018 11:34 AM, Lorenzo Pieralisi wrote:
-> On Wed, Dec 27, 2017 at 06:43:27PM +0900, Jaehoon Chung wrote:
-> > pci-exynos had updated to use the PHY framework.
-> > (drivers/phy/samsung/phy-exynos-pcie.c)
-> > Removed the depreccated codes relevant to phy in pci-exynos.c.
-> > Instead, use the phy-exynos-pcie.c file.
-> >
-> > Modified the binding documentation.
-> >
-> > Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> > ---
-> >  .../bindings/pci/samsung,exynos5440-pcie.txt       |  58 ++----
-> >  drivers/pci/dwc/pci-exynos.c                       | 219
-++-----------------
-> --
-> >  2 files changed, 22 insertions(+), 255 deletions(-)
-> 
-> I have updated the commit log to the patch below, please
-> check before I push it out.
+Clean up drivers/Makefile by moving the pci/endpoint and pci/dwc entries
+from drivers/Makefile into drivers/pci/Makefile.
 
-I think that the commit message looks good.
-Thank you.
+Since we don't want to introduce any dependency between CONFIG_PCI and
+CONFIG_PCI_ENDPOINT, we now always execute drivers/pci/Makefile.
 
-Best regards,
-Jingoo Han
+Hence all Makefiles in drivers/pci/ were updated accordingly so no file is
+compiled when CONFIG_PCI is not defined.
 
-> 
-> Lorenzo
-> 
-> -- >8 --
-> Subject: [PATCH] PCI: exynos: Remove deprecated PHY initialization code
-> 
-> Exynos platforms have a PCI PHY driver in the PHY framework that can be
-> used by the PCI host bridge drivers to initialize and manage the PHY.
-> 
-> Remove the deprecated PHY initialization code in the Exynos PCI host
-> bridge driver by updating the driver to use the PHY framework API;
-> modify the DT binding documentation accordingly.
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> [lorenzo.pieralisi@arm.com: updated commit log]
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Acked-by: Jingoo Han <jingoohan1@gmail.com>
-> Reviewed-by: Rob Herring <robh@kernel.org>
-> ---
->  .../bindings/pci/samsung,exynos5440-pcie.txt       |  58 ++----
->  drivers/pci/dwc/pci-exynos.c                       | 219
-++------------------
-> -
->  2 files changed, 22 insertions(+), 255 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-
-> pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-
-> pcie.txt
-> index 34a11bfbfb60..651d957d1051 100644
-> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-> @@ -6,9 +6,6 @@ and thus inherits all the common properties defined in
-> designware-pcie.txt.
->  Required properties:
->  - compatible: "samsung,exynos5440-pcie"
->  - reg: base addresses and lengths of the PCIe controller,
-> -	the PHY controller, additional register for the PHY controller.
-> -	(Registers for the PHY controller are DEPRECATED.
-> -	 Use the PHY framework.)
->  - reg-names : First name should be set to "elbi".
->  	And use the "config" instead of getting the configuration address
-> space
->  	from "ranges".
-> @@ -23,49 +20,8 @@ For other common properties, refer to
-> 
->  Example:
-> 
-> -SoC-specific DT Entry:
-> +SoC-specific DT Entry (with using PHY framework):
-> 
-> -	pcie@290000 {
-> -		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
-> -		reg = <0x290000 0x1000
-> -			0x270000 0x1000
-> -			0x271000 0x40>;
-> -		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-> -		clocks = <&clock 28>, <&clock 27>;
-> -		clock-names = "pcie", "pcie_bus";
-> -		#address-cells = <3>;
-> -		#size-cells = <2>;
-> -		device_type = "pci";
-> -		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000
-> /* configuration space */
-> -			  0x81000000 0 0	  0x40001000 0 0x00010000
-/*
-> downstream I/O */
-> -			  0x82000000 0 0x40011000 0x40011000 0 0x1ffef000>;
-/*
-> non-prefetchable memory */
-> -		#interrupt-cells = <1>;
-> -		interrupt-map-mask = <0 0 0 0>;
-> -		interrupt-map = <0 0 0 0 &gic GIC_SPI 21
-> IRQ_TYPE_LEVEL_HIGH>;
-> -		num-lanes = <4>;
-> -	};
-> -
-> -	pcie@2a0000 {
-> -		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
-> -		reg = <0x2a0000 0x1000
-> -			0x272000 0x1000
-> -			0x271040 0x40>;
-> -		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
-> -		clocks = <&clock 29>, <&clock 27>;
-> -		clock-names = "pcie", "pcie_bus";
-> -		#address-cells = <3>;
-> -		#size-cells = <2>;
-> -		device_type = "pci";
-> -		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000
-> /* configuration space */
-> -			  0x81000000 0 0	  0x60001000 0 0x00010000
-/*
-> downstream I/O */
-> -			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>;
-/*
-> non-prefetchable memory */
-> -		#interrupt-cells = <1>;
-> -		interrupt-map-mask = <0 0 0 0>;
-> -		interrupt-map = <0 0 0 0 &gic GIC_SPI 24
-> IRQ_TYPE_LEVEL_HIGH>;
-> -		num-lanes = <4>;
-> -	};
-> -
-> -With using PHY framework:
->  	pcie_phy0: pcie-phy@270000 {
->  		...
->  		reg = <0x270000 0x1000>, <0x271000 0x40>;
-> @@ -74,13 +30,21 @@ With using PHY framework:
->  	};
-> 
->  	pcie@290000 {
-> -		...
-> +		compatible = "samsung,exynos5440-pcie", "snps,dw-pcie";
->  		reg = <0x290000 0x1000>, <0x40000000 0x1000>;
->  		reg-names = "elbi", "config";
-> +		clocks = <&clock 28>, <&clock 27>;
-> +		clock-names = "pcie", "pcie_bus";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
->  		phys = <&pcie_phy0>;
->  		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000
->  			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>;
-> -		...
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0>;
-> +		interrupt-map = <0 0 0 0 &gic GIC_SPI 21
-> IRQ_TYPE_LEVEL_HIGH>;
-> +		num-lanes = <4>;
->  	};
-> 
->  Board-specific DT Entry:
-> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-> index 5596fdedbb94..56f32aeebd0a 100644
-> --- a/drivers/pci/dwc/pci-exynos.c
-> +++ b/drivers/pci/dwc/pci-exynos.c
-> @@ -55,49 +55,8 @@
->  #define PCIE_ELBI_SLV_ARMISC		0x120
->  #define PCIE_ELBI_SLV_DBI_ENABLE	BIT(21)
-> 
-> -/* PCIe Purple registers */
-> -#define PCIE_PHY_GLOBAL_RESET		0x000
-> -#define PCIE_PHY_COMMON_RESET		0x004
-> -#define PCIE_PHY_CMN_REG		0x008
-> -#define PCIE_PHY_MAC_RESET		0x00c
-> -#define PCIE_PHY_PLL_LOCKED		0x010
-> -#define PCIE_PHY_TRSVREG_RESET		0x020
-> -#define PCIE_PHY_TRSV_RESET		0x024
-> -
-> -/* PCIe PHY registers */
-> -#define PCIE_PHY_IMPEDANCE		0x004
-> -#define PCIE_PHY_PLL_DIV_0		0x008
-> -#define PCIE_PHY_PLL_BIAS		0x00c
-> -#define PCIE_PHY_DCC_FEEDBACK		0x014
-> -#define PCIE_PHY_PLL_DIV_1		0x05c
-> -#define PCIE_PHY_COMMON_POWER		0x064
-> -#define PCIE_PHY_COMMON_PD_CMN		BIT(3)
-> -#define PCIE_PHY_TRSV0_EMP_LVL		0x084
-> -#define PCIE_PHY_TRSV0_DRV_LVL		0x088
-> -#define PCIE_PHY_TRSV0_RXCDR		0x0ac
-> -#define PCIE_PHY_TRSV0_POWER		0x0c4
-> -#define PCIE_PHY_TRSV0_PD_TSV		BIT(7)
-> -#define PCIE_PHY_TRSV0_LVCC		0x0dc
-> -#define PCIE_PHY_TRSV1_EMP_LVL		0x144
-> -#define PCIE_PHY_TRSV1_RXCDR		0x16c
-> -#define PCIE_PHY_TRSV1_POWER		0x184
-> -#define PCIE_PHY_TRSV1_PD_TSV		BIT(7)
-> -#define PCIE_PHY_TRSV1_LVCC		0x19c
-> -#define PCIE_PHY_TRSV2_EMP_LVL		0x204
-> -#define PCIE_PHY_TRSV2_RXCDR		0x22c
-> -#define PCIE_PHY_TRSV2_POWER		0x244
-> -#define PCIE_PHY_TRSV2_PD_TSV		BIT(7)
-> -#define PCIE_PHY_TRSV2_LVCC		0x25c
-> -#define PCIE_PHY_TRSV3_EMP_LVL		0x2c4
-> -#define PCIE_PHY_TRSV3_RXCDR		0x2ec
-> -#define PCIE_PHY_TRSV3_POWER		0x304
-> -#define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
-> -#define PCIE_PHY_TRSV3_LVCC		0x31c
-> -
->  struct exynos_pcie_mem_res {
->  	void __iomem *elbi_base;   /* DT 0th resource: PCIe CTRL */
-> -	void __iomem *phy_base;    /* DT 1st resource: PHY CTRL */
-> -	void __iomem *block_base;  /* DT 2nd resource: PHY ADDITIONAL CTRL
-> */
->  };
-> 
->  struct exynos_pcie_clk_res {
-> @@ -112,8 +71,6 @@ struct exynos_pcie {
->  	const struct exynos_pcie_ops	*ops;
->  	int				reset_gpio;
-> 
-> -	/* For Generic PHY Framework */
-> -	bool				using_phy;
->  	struct phy			*phy;
->  };
-> 
-> @@ -141,20 +98,6 @@ static int exynos5440_pcie_get_mem_resources(struct
-> platform_device *pdev,
->  	if (IS_ERR(ep->mem_res->elbi_base))
->  		return PTR_ERR(ep->mem_res->elbi_base);
-> 
-> -	/* If using the PHY framework, doesn't need to get other resource
-> */
-> -	if (ep->using_phy)
-> -		return 0;
-> -
-> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> -	ep->mem_res->phy_base = devm_ioremap_resource(dev, res);
-> -	if (IS_ERR(ep->mem_res->phy_base))
-> -		return PTR_ERR(ep->mem_res->phy_base);
-> -
-> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
-> -	ep->mem_res->block_base = devm_ioremap_resource(dev, res);
-> -	if (IS_ERR(ep->mem_res->block_base))
-> -		return PTR_ERR(ep->mem_res->block_base);
-> -
->  	return 0;
->  }
-> 
-> @@ -279,111 +222,6 @@ static void exynos_pcie_deassert_core_reset(struct
-> exynos_pcie *ep)
->  	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_NONSTICKY_RESET);
->  	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_APP_INIT_RESET);
->  	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_APP_INIT_RESET);
-> -	exynos_pcie_writel(ep->mem_res->block_base, 1, PCIE_PHY_MAC_RESET);
-> -}
-> -
-> -static void exynos_pcie_assert_phy_reset(struct exynos_pcie *ep)
-> -{
-> -	exynos_pcie_writel(ep->mem_res->block_base, 0, PCIE_PHY_MAC_RESET);
-> -	exynos_pcie_writel(ep->mem_res->block_base, 1,
-> PCIE_PHY_GLOBAL_RESET);
-> -}
-> -
-> -static void exynos_pcie_deassert_phy_reset(struct exynos_pcie *ep)
-> -{
-> -	exynos_pcie_writel(ep->mem_res->block_base, 0,
-> PCIE_PHY_GLOBAL_RESET);
-> -	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_PWR_RESET);
-> -	exynos_pcie_writel(ep->mem_res->block_base, 0,
-> PCIE_PHY_COMMON_RESET);
-> -	exynos_pcie_writel(ep->mem_res->block_base, 0, PCIE_PHY_CMN_REG);
-> -	exynos_pcie_writel(ep->mem_res->block_base, 0,
-> PCIE_PHY_TRSVREG_RESET);
-> -	exynos_pcie_writel(ep->mem_res->block_base, 0, PCIE_PHY_TRSV_RESET);
-> -}
-> -
-> -static void exynos_pcie_power_on_phy(struct exynos_pcie *ep)
-> -{
-> -	u32 val;
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_COMMON_POWER);
-> -	val &= ~PCIE_PHY_COMMON_PD_CMN;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_COMMON_POWER);
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_TRSV0_POWER);
-> -	val &= ~PCIE_PHY_TRSV0_PD_TSV;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_TRSV0_POWER);
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_TRSV1_POWER);
-> -	val &= ~PCIE_PHY_TRSV1_PD_TSV;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_TRSV1_POWER);
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_TRSV2_POWER);
-> -	val &= ~PCIE_PHY_TRSV2_PD_TSV;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_TRSV2_POWER);
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_TRSV3_POWER);
-> -	val &= ~PCIE_PHY_TRSV3_PD_TSV;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_TRSV3_POWER);
-> -}
-> -
-> -static void exynos_pcie_power_off_phy(struct exynos_pcie *ep)
-> -{
-> -	u32 val;
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_COMMON_POWER);
-> -	val |= PCIE_PHY_COMMON_PD_CMN;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_COMMON_POWER);
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_TRSV0_POWER);
-> -	val |= PCIE_PHY_TRSV0_PD_TSV;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_TRSV0_POWER);
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_TRSV1_POWER);
-> -	val |= PCIE_PHY_TRSV1_PD_TSV;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_TRSV1_POWER);
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_TRSV2_POWER);
-> -	val |= PCIE_PHY_TRSV2_PD_TSV;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_TRSV2_POWER);
-> -
-> -	val = exynos_pcie_readl(ep->mem_res->phy_base,
-> PCIE_PHY_TRSV3_POWER);
-> -	val |= PCIE_PHY_TRSV3_PD_TSV;
-> -	exynos_pcie_writel(ep->mem_res->phy_base, val,
-> PCIE_PHY_TRSV3_POWER);
-> -}
-> -
-> -static void exynos_pcie_init_phy(struct exynos_pcie *ep)
-> -{
-> -	/* DCC feedback control off */
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x29,
-> PCIE_PHY_DCC_FEEDBACK);
-> -
-> -	/* set TX/RX impedance */
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0xd5, PCIE_PHY_IMPEDANCE);
-> -
-> -	/* set 50Mhz PHY clock */
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x14, PCIE_PHY_PLL_DIV_0);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x12, PCIE_PHY_PLL_DIV_1);
-> -
-> -	/* set TX Differential output for lane 0 */
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x7f,
-> PCIE_PHY_TRSV0_DRV_LVL);
-> -
-> -	/* set TX Pre-emphasis Level Control for lane 0 to minimum */
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x0,
-> PCIE_PHY_TRSV0_EMP_LVL);
-> -
-> -	/* set RX clock and data recovery bandwidth */
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0xe7, PCIE_PHY_PLL_BIAS);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x82,
-> PCIE_PHY_TRSV0_RXCDR);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x82,
-> PCIE_PHY_TRSV1_RXCDR);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x82,
-> PCIE_PHY_TRSV2_RXCDR);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x82,
-> PCIE_PHY_TRSV3_RXCDR);
-> -
-> -	/* change TX Pre-emphasis Level Control for lanes */
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x39,
-> PCIE_PHY_TRSV0_EMP_LVL);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x39,
-> PCIE_PHY_TRSV1_EMP_LVL);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x39,
-> PCIE_PHY_TRSV2_EMP_LVL);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x39,
-> PCIE_PHY_TRSV3_EMP_LVL);
-> -
-> -	/* set LVCC */
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0x20,
-> PCIE_PHY_TRSV0_LVCC);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0xa0,
-> PCIE_PHY_TRSV1_LVCC);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0xa0,
-> PCIE_PHY_TRSV2_LVCC);
-> -	exynos_pcie_writel(ep->mem_res->phy_base, 0xa0,
-> PCIE_PHY_TRSV3_LVCC);
->  }
-> 
->  static void exynos_pcie_assert_reset(struct exynos_pcie *ep)
-> @@ -401,7 +239,6 @@ static int exynos_pcie_establish_link(struct
-> exynos_pcie *ep)
->  	struct dw_pcie *pci = ep->pci;
->  	struct pcie_port *pp = &pci->pp;
->  	struct device *dev = pci->dev;
-> -	u32 val;
-> 
->  	if (dw_pcie_link_up(pci)) {
->  		dev_err(dev, "Link already up\n");
-> @@ -410,32 +247,13 @@ static int exynos_pcie_establish_link(struct
-> exynos_pcie *ep)
-> 
->  	exynos_pcie_assert_core_reset(ep);
-> 
-> -	if (ep->using_phy) {
-> -		phy_reset(ep->phy);
-> -
-> -		exynos_pcie_writel(ep->mem_res->elbi_base, 1,
-> -				PCIE_PWR_RESET);
-> -
-> -		phy_power_on(ep->phy);
-> -		phy_init(ep->phy);
-> -	} else {
-> -		exynos_pcie_assert_phy_reset(ep);
-> -		exynos_pcie_deassert_phy_reset(ep);
-> -		exynos_pcie_power_on_phy(ep);
-> -		exynos_pcie_init_phy(ep);
-> -
-> -		/* pulse for common reset */
-> -		exynos_pcie_writel(ep->mem_res->block_base, 1,
-> -					PCIE_PHY_COMMON_RESET);
-> -		udelay(500);
-> -		exynos_pcie_writel(ep->mem_res->block_base, 0,
-> -					PCIE_PHY_COMMON_RESET);
-> -	}
-> +	phy_reset(ep->phy);
-> 
-> -	/* pulse for common reset */
-> -	exynos_pcie_writel(ep->mem_res->block_base, 1,
-> PCIE_PHY_COMMON_RESET);
-> -	udelay(500);
-> -	exynos_pcie_writel(ep->mem_res->block_base, 0,
-> PCIE_PHY_COMMON_RESET);
-> +	exynos_pcie_writel(ep->mem_res->elbi_base, 1,
-> +			PCIE_PWR_RESET);
-> +
-> +	phy_power_on(ep->phy);
-> +	phy_init(ep->phy);
-> 
->  	exynos_pcie_deassert_core_reset(ep);
->  	dw_pcie_setup_rc(pp);
-> @@ -449,18 +267,7 @@ static int exynos_pcie_establish_link(struct
-> exynos_pcie *ep)
->  	if (!dw_pcie_wait_for_link(pci))
->  		return 0;
-> 
-> -	if (ep->using_phy) {
-> -		phy_power_off(ep->phy);
-> -		return -ETIMEDOUT;
-> -	}
-> -
-> -	while (exynos_pcie_readl(ep->mem_res->phy_base,
-> -				PCIE_PHY_PLL_LOCKED) == 0) {
-> -		val = exynos_pcie_readl(ep->mem_res->block_base,
-> -				PCIE_PHY_PLL_LOCKED);
-> -		dev_info(dev, "PLL Locked: 0x%x\n", val);
-> -	}
-> -	exynos_pcie_power_off_phy(ep);
-> +	phy_power_off(ep->phy);
->  	return -ETIMEDOUT;
->  }
-> 
-> @@ -678,16 +485,13 @@ static int __init exynos_pcie_probe(struct
-> platform_device *pdev)
-> 
->  	ep->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> 
-> -	/* Assume that controller doesn't use the PHY framework */
-> -	ep->using_phy = false;
-> -
->  	ep->phy = devm_of_phy_get(dev, np, NULL);
->  	if (IS_ERR(ep->phy)) {
->  		if (PTR_ERR(ep->phy) == -EPROBE_DEFER)
->  			return PTR_ERR(ep->phy);
-> -		dev_warn(dev, "Use the 'phy' property. Current DT of pci-
-> exynos was deprecated!!\n");
-> -	} else
-> -		ep->using_phy = true;
-> +
-> +		ep->phy = NULL;
-> +	}
-> 
->  	if (ep->ops && ep->ops->get_mem_resources) {
->  		ret = ep->ops->get_mem_resources(pdev, ep);
-> @@ -713,8 +517,7 @@ static int __init exynos_pcie_probe(struct
-> platform_device *pdev)
->  	return 0;
-> 
->  fail_probe:
-> -	if (ep->using_phy)
-> -		phy_exit(ep->phy);
-> +	phy_exit(ep->phy);
-> 
->  	if (ep->ops && ep->ops->deinit_clk_resources)
->  		ep->ops->deinit_clk_resources(ep);
-> --
-> 2.15.0
+Also, we add a comment to reinforce that EPC and EPF libraries must be
+initialized before their users. Hence built-in EPC drivers, such as
+those of Designware, are linked after the endpoint core libraries.
+
+Finally, we add another comment to explain why obj-y has been chosen
+instead of obj-$(CONFIG_PCIE_DW) to parse the dwc/ sub-folder.
+
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ drivers/Makefile          |  5 +----
+ drivers/pci/Kconfig       |  1 +
+ drivers/pci/Makefile      | 13 ++++++++++---
+ drivers/pci/dwc/Makefile  |  2 ++
+ drivers/pci/host/Makefile |  2 ++
+ 5 files changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/Makefile b/drivers/Makefile
+index e06f7f633f73..8189b1edec00 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -16,10 +16,7 @@ obj-$(CONFIG_PINCTRL)		+= pinctrl/
+ obj-$(CONFIG_GPIOLIB)		+= gpio/
+ obj-y				+= pwm/
+ 
+-obj-$(CONFIG_PCI)		+= pci/
+-obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
+-# PCI dwc controller drivers
+-obj-y				+= pci/dwc/
++obj-y				+= pci/
+ 
+ obj-$(CONFIG_PARISC)		+= parisc/
+ obj-$(CONFIG_RAPIDIO)		+= rapidio/
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index bda151788f3f..7eeb969ab86a 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -125,6 +125,7 @@ config PCI_PASID
+ 
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
++	depends on PCI
+ 	select NLS
+ 
+ config PCI_HYPERV
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index c7819b973df7..ddb5aa6640d7 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -3,12 +3,15 @@
+ # Makefile for the PCI bus specific drivers.
+ #
+ 
+-obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
++obj-$(CONFIG_PCI)	+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
+ 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+ 			irq.o vpd.o setup-bus.o vc.o mmap.o setup-irq.o
+ 
++ifdef CONFIG_PCI
+ obj-$(CONFIG_PROC_FS) += proc.o
+ obj-$(CONFIG_SYSFS) += slot.o
++obj-$(CONFIG_OF) += of.o
++endif
+ 
+ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
+ 
+@@ -44,10 +47,14 @@ obj-$(CONFIG_PCI_ECAM) += ecam.o
+ 
+ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ 
+-obj-$(CONFIG_OF) += of.o
+-
+ ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
+ 
+ # PCI host controller drivers
+ obj-y += host/
+ obj-y += switch/
++
++obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
++
++# Endpoint library must be initialized before its users
++# pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
++obj-y				+= dwc/
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index a9d8a6fb48e3..5d2ce72c7a52 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -25,4 +25,6 @@ obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
+ # ARM64 and use internal ifdefs to only build the pieces we need
+ # depending on whether ACPI, the DT driver, or both are enabled.
+ 
++ifdef CONFIG_PCI
+ obj-$(CONFIG_ARM64) += pcie-hisi.o
++endif
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 34ec1d88f961..3b1059190867 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -34,6 +34,8 @@ obj-$(CONFIG_VMD) += vmd.o
+ # ARM64 and use internal ifdefs to only build the pieces we need
+ # depending on whether ACPI, the DT driver, or both are enabled.
+ 
++ifdef CONFIG_PCI
+ obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
+ obj-$(CONFIG_ARM64) += pci-thunder-pem.o
+ obj-$(CONFIG_ARM64) += pci-xgene.o
++endif
+-- 
+2.11.0
