@@ -1,104 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:53220 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755160AbeARPEA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jan 2018 10:04:00 -0500
-Date: Thu, 18 Jan 2018 16:03:57 +0100
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: dra7xx: add back CONFIG_PCI dependency for
- endpoint
-Message-ID: <20180118150357.GA7544@axis.com>
-References: <20180118131612.871559-1-arnd@arndb.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180118131612.871559-1-arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <08f2a8aa-1510-3b78-4fa7-bf0ae194ccb0@redhat.com>
+References: <20180126150300.9691-1-hdegoede@redhat.com> <20180126150300.9691-5-hdegoede@redhat.com>
+ <94F2FBAB4432B54E8AACC7DFDE6C92E3B75696BC@ORSMSX110.amr.corp.intel.com> <08f2a8aa-1510-3b78-4fa7-bf0ae194ccb0@redhat.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 29 Jan 2018 04:07:30 +0100
+Message-ID: <CAJZ5v0gDLrDtgFKo5mUBuGWfAmv_3n1HEUTjnE3J8DSrRUbTCQ@mail.gmail.com>
+Subject: Re: [PATCH v3 5/5] ACPICA: Remove calling of _STA from acpi_get_object_info
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: "Moore, Robert" <robert.moore@intel.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        "Schmauss, Erik" <erik.schmauss@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devel@acpica.org" <devel@acpica.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 18, 2018 at 02:15:54PM +0100, Arnd Bergmann wrote:
-> It was a nice idea to split out the PCI host and endpoint mode configuration
-> into separate options. Unfortunately it doesn't build:
-> 
-> drivers/pci/dwc/pci-dra7xx.c:229:11: error: 'pci_irqd_intx_xlate' undeclared here (not in a function)
-> 
-> This is certainly a fixable problem, but since it's clear that this
-> configuration was never tested, let's maybe revert back to the
-> dependency for now, until it can be done in a way that works
-> better.
+On Sat, Jan 27, 2018 at 3:02 PM, Hans de Goede <hdegoede@redhat.com> wrote:
+> Hi,
+>
+> On 26-01-18 21:42, Moore, Robert wrote:
+>>
+>> For ACPICA, this is a change to a published public interface. A change to
+>> this will potentially affect many operating systems, so we would be very
+>> hesitant to change it in the core ACPICA code.
+>
+>
+> From the acpi_get_object_info() documentation in
+> drivers/acpi/acpica/nsxfname.c:
+>
+>  * Note: This interface is intended to be used during the initial device
+>  * discovery namespace traversal. Therefore, no complex methods can be
+>  * executed, especially those that access operation regions.
+>
+> Since _STA can call Opregions, IMHO it does not belong in
+> acpi_get_object_info()
+> and as Erik mentioned _STA can have side-effects then that seems like
+> another
+> reason to NOT call it from acpi_get_object_info().
+>
+> But I can understand that you don't want to outright change the behavior of
+> acpi_get_object_info() to call _STA since it has always done this, still
+> calling _STA can be a problem in some cases.
+>
+> Perhaps we can give acpi_get_object_info() a flags argument, or if you want
+> to
+> preserve the current interface ad a new acpi_get_object_info_no_sta() call
+> (and
+> use flags under the hood so that we still have only 1 implementation) ?
 
-Hello Arnd,
+Let's first get the [1-4/5] from this series in (as the last patch
+depends on them AFAICS) and then we'll see.
 
-That is not true :( I did test..
-
-git checkout b052835c6385
-disable CONFIG_PCI
-make
-works like a charm :P
-
-Commit 524d59f6e30a ("PCI: dra7xx: Fix legacy INTD IRQ handling"),
-which was merged after my commit, added a dependency towards
-pci_irqd_intx_xlate.
-
-It might be a bit unfortunately that commit 489f8fe6aa71
-("PCI: dwc: dra7xx: Help compiler to remove unused code"),
-a commit that you helped me with Arnd, was placed after
-b052835c6385 ("PCI: dwc: dra7xx: Refactor Kconfig and Makefile
-handling for host/ep mode") instead of before, in my patch
-series order.
-
-However, since pci_irqd_intx_xlate is only defined inside
-CONFIG_PCI, even 489f8fe6aa71 will not help.
-
-Not completely sure about this, but perhaps a better fix is:
-
-+++ b/include/linux/pci.h
-@@ -1686,6 +1686,12 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- #define dev_is_pf(d) (false)
- static inline bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
- { return false; }
-+static inline int pci_irqd_intx_xlate(struct irq_domain *d,
-+                                     struct device_node *node,
-+                                     const u32 *intspec,
-+                                     unsigned int intsize,
-+                                     unsigned long *out_hwirq,
-+                                     unsigned int *out_type) { return 0; }
- #endif /* CONFIG_PCI */
- 
- /* Include architecture-dependent settings and functions */
-
-
-And a 'Fixes:' tag that references 524d59f6e30a
-
-Regards,
-Niklas
-
-> 
-> Fixes: b052835c6385 ("PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep mode")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/pci/dwc/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index 0fb96c7754de..540419527a92 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -36,7 +36,7 @@ config PCI_DRA7XX_HOST
->  config PCI_DRA7XX_EP
->  	bool "TI DRA7xx PCIe controller Endpoint Mode"
->  	depends on SOC_DRA7XX || COMPILE_TEST
-> -	depends on PCI_ENDPOINT
-> +	depends on PCI && PCI_ENDPOINT
->  	depends on OF && HAS_IOMEM && TI_PIPE3
->  	select PCIE_DW_EP
->  	select PCI_DRA7XX
-> -- 
-> 2.9.0
-> 
+Thanks,
+Rafael
