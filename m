@@ -1,133 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43132 "EHLO mail.kernel.org"
+Received: from mga01.intel.com ([192.55.52.88]:65218 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752273AbeAJXad (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Jan 2018 18:30:33 -0500
-Date: Wed, 10 Jan 2018 17:30:29 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: alex.williamson@redhat.com,
-        Liang-Min Wang <liang-min.wang@intel.com>, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com, alexander.h.duyck@intel.com
-Subject: Re: [PATCH v2] Enable SR-IOV instantiation through /sys file
-Message-ID: <20180110233029.GH241460@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171208214758.6959-1-jeffrey.t.kirsher@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171208214758.6959-1-jeffrey.t.kirsher@intel.com>
+        id S1751856AbeA2V2G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Jan 2018 16:28:06 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 2/6] PCI/DPC: Leave interrupts enabled while handling event
+Date: Mon, 29 Jan 2018 14:31:41 -0700
+Message-Id: <20180129213145.26068-2-keith.busch@intel.com>
+In-Reply-To: <20180129213145.26068-1-keith.busch@intel.com>
+References: <20180129213145.26068-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 08, 2017 at 01:47:58PM -0800, Jeff Kirsher wrote:
-> From: Liang-Min Wang <liang-min.wang@intel.com>
-> 
-> When a SR-IOV capable device is bound with vfio-pci, the
-> device loses capability of creating SR-IOV instances through /sy/bus/
-> pci/devices/.../sriov_numvfs. This patch re-activates this capability
-> for a PCIe device that is SR-IOV capable and is bound with vfio-pci.ko.
-> This patch also disables drivers_autoprobe attribute of SR-IOV devices
-> created from vfio-pci bound device by default, so user-space PF device
-> can coordinate the bring-up of SR-IOV devices
+The control register was being abused as a way to know if a shared
+interrupt is notifying the driver of a new DPC event. A DPC capable port
+can not trigger a second interrupt until the host acknowledges the first,
+and since DPC handles events in a deferred work queue, we don't need to
+use the config register to know if the DPC driver needs to handle the
+interrupt. We just need to make sure we don't schedule the same work
+multiple times.
 
-Seems like the discussion here petered out without a real conclusion,
-so I'm going to drop this one for now and wait for another try.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/pcie-dpc.c | 23 +++++------------------
+ 1 file changed, 5 insertions(+), 18 deletions(-)
 
-> Signed-off-by: Liang-Min Wang <liang-min.wang@intel.com>
-> ---
->  drivers/pci/pci-driver.c    | 12 ++++++++++++
->  drivers/vfio/pci/vfio_pci.c | 22 ++++++++++++++++++++++
->  include/linux/pci.h         |  1 +
->  3 files changed, 35 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 7f47bb7..19522fe 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1467,6 +1467,18 @@ void pci_dev_put(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL(pci_dev_put);
->  
-> +/**
-> + * pci_dev_sriov_autoprobe_set - set device sriov driver autoprobe
-> + * @dev: device with which sriov autoprobe will be set
-> + *
-> + */
-> +void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool autoprobe)
-> +{
-> +	if (dev && dev->sriov)
-> +		dev->sriov->drivers_autoprobe = autoprobe;
-> +}
-> +EXPORT_SYMBOL(pci_dev_sriov_autoprobe_set);
-> +
->  static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
->  {
->  	struct pci_dev *pdev;
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index f041b1a..004836c 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -1213,6 +1213,8 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  		return -ENOMEM;
->  	}
->  
-> +	/* disable sriov automatic driver attachment */
-> +	pci_dev_sriov_autoprobe_set(pdev, false);
->  	vdev->pdev = pdev;
->  	vdev->irq_type = VFIO_PCI_NUM_IRQS;
->  	mutex_init(&vdev->igate);
-> @@ -1256,6 +1258,7 @@ static void vfio_pci_remove(struct pci_dev *pdev)
->  	if (!vdev)
->  		return;
->  
-> +	pci_disable_sriov(pdev);
->  	vfio_iommu_group_put(pdev->dev.iommu_group, &pdev->dev);
->  	kfree(vdev->region);
->  	kfree(vdev);
-> @@ -1303,12 +1306,31 @@ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
->  	.error_detected = vfio_pci_aer_err_detected,
->  };
->  
-> +static int vfio_sriov_configure(struct pci_dev *pdev, int num_vfs)
-> +{
-> +	int status;
-> +
-> +	if (!num_vfs) {
-> +		pci_disable_sriov(pdev);
-> +		return 0;
-> +	}
-> +
-> +	status = pci_enable_sriov(pdev, num_vfs);
-> +	if (!status) {
-> +		pr_crit("Created %d SR-IOV from a user-space driver based upon vfio-pci\n", num_vfs);
-> +		add_taint(TAINT_USER, LOCKDEP_STILL_OK);
-> +	}
-> +
-> +	return status;
-> +}
-> +
->  static struct pci_driver vfio_pci_driver = {
->  	.name		= "vfio-pci",
->  	.id_table	= NULL, /* only dynamic ids */
->  	.probe		= vfio_pci_probe,
->  	.remove		= vfio_pci_remove,
->  	.err_handler	= &vfio_err_handlers,
-> +	.sriov_configure = vfio_sriov_configure,
->  };
->  
->  struct vfio_devices {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 0403894..e04b69d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -921,6 +921,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
->  struct pci_dev *pci_dev_get(struct pci_dev *dev);
->  void pci_dev_put(struct pci_dev *dev);
->  void pci_remove_bus(struct pci_bus *b);
-> +void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool autoprobe);
->  void pci_stop_and_remove_bus_device(struct pci_dev *dev);
->  void pci_stop_and_remove_bus_device_locked(struct pci_dev *dev);
->  void pci_stop_root_bus(struct pci_bus *bus);
-> -- 
-> 1.9.1
-> 
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index ecdb76bc7b56..cf0398ccaeb6 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -89,7 +89,7 @@ static void dpc_work(struct work_struct *work)
+ 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+ 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
+-	u16 cap = dpc->cap_pos, ctl, status, source, reason, ext_reason;
++	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
+ 
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
+@@ -135,10 +135,6 @@ static void dpc_work(struct work_struct *work)
+ 
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+-
+-	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+-	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+-			      ctl | PCI_EXP_DPC_CTL_INT_EN);
+ }
+ 
+ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+@@ -207,16 +203,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ {
+ 	struct dpc_dev *dpc = (struct dpc_dev *)context;
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	u16 cap = dpc->cap_pos, ctl, status;
+-
+-	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+-
+-	if (!(ctl & PCI_EXP_DPC_CTL_INT_EN) || ctl == (u16)(~0))
+-		return IRQ_NONE;
++	u16 cap = dpc->cap_pos, status;
+ 
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+-
+-	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT))
++	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT) || status == (u16)(~0))
+ 		return IRQ_NONE;
+ 
+ 	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
+@@ -225,11 +215,8 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 		return IRQ_HANDLED;
+ 	}
+ 
+-	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+-			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);
+-
+-	schedule_work(&dpc->work);
+-
++	if (!work_busy(&dpc->work))
++		schedule_work(&dpc->work);
+ 	return IRQ_HANDLED;
+ }
+ 
+-- 
+2.14.3
