@@ -1,112 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4683 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751615AbeAWPpf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jan 2018 10:45:35 -0500
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
-        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
-        <dann.frazier@canonical.com>
-CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-        <rdunlap@infradead.org>, John Garry <john.garry@huawei.com>,
-        Zhichang Yuan <yuanzhichang@hisilicon.com>,
-        "Gabriele Paoloni" <gabriele.paoloni@huawei.com>
-Subject: [PATCH v12 8/9] LPC, ACPI: Add the HISI LPC ACPI support
-Date: Wed, 24 Jan 2018 00:36:24 +0800
-Message-ID: <1516725385-24535-9-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
-References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 29 Jan 2018 17:10:10 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Subject: Re: [PATCH] PCI: exynos: fix the potential null pointer dereference
+Message-ID: <20180129171010.GA23955@e107981-ln.cambridge.arm.com>
+References: <CGME20180122022856epcas1p494a9efeae478b299e3e8006adad71e6a@epcas1p4.samsung.com>
+ <20180122022854.3634-1-jh80.chung@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180122022854.3634-1-jh80.chung@samsung.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ krzk@kernel.org, kgene@kernel.org, jingoohan1@gmail.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Based on the previous patches, this patch supports the LPC host on
-Hip06/Hip07 for ACPI FW.
+On Mon, Jan 22, 2018 at 11:28:54AM +0900, Jaehoon Chung wrote:
+> Before calling the callback function, it needs to check whether
+> init_clk_resources is assigned or not.
+> Otherwise, it can be occurred the NULL pointer dereference when
+> init_clk_resources is not assigned.
+> 
+> Even though init_clk_resources is assigned now, it needs to prevent the
+> potential NULL pointer dereference in future.
+> 
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> ---
+>  drivers/pci/dwc/pci-exynos.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+> index 56f32aeebd0a..39f08881f9a4 100644
+> --- a/drivers/pci/dwc/pci-exynos.c
+> +++ b/drivers/pci/dwc/pci-exynos.c
+> @@ -499,7 +499,8 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+>  			return ret;
+>  	}
+>  
+> -	if (ep->ops && ep->ops->get_clk_resources) {
+> +	if (ep->ops && ep->ops->get_clk_resources &&
+> +			ep->ops->init_clk_resources) {
+>  		ret = ep->ops->get_clk_resources(ep);
+>  		if (ret)
+>  			return ret;
+> -- 
+> 2.15.1
 
-Signed-off-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Tested-by: Dann Frazier <dann.frazier@canonical.com>
----
- drivers/acpi/arm64/acpi_indirectio.c | 11 ++++++++++-
- drivers/bus/hisi_lpc.c               | 17 ++++++++++++++++-
- 2 files changed, 26 insertions(+), 2 deletions(-)
+I applied it to pci/dwc for 4.16.
 
-diff --git a/drivers/acpi/arm64/acpi_indirectio.c b/drivers/acpi/arm64/acpi_indirectio.c
-index 2649f57..6403f84 100644
---- a/drivers/acpi/arm64/acpi_indirectio.c
-+++ b/drivers/acpi/arm64/acpi_indirectio.c
-@@ -142,7 +142,7 @@ int acpi_indirectio_set_logicio_res(struct device *child,
- 	return ret;
- }
- 
--int
-+static int
- acpi_indirectio_pre_setup(struct acpi_device *adev,
- 			  struct acpi_indirectio_host_data *pdata)
- {
-@@ -239,8 +239,17 @@ int acpi_indirectio_set_logicio_res(struct device *child,
- 	return ret;
- }
- 
-+const struct acpi_indirectio_device_desc hisi_lpc_host_desc = {
-+	.pdata = {
-+		.io_size = PIO_INDIRECT_SIZE,
-+		.io_start = 0,
-+	},
-+	.pre_setup = acpi_indirectio_pre_setup,
-+};
-+
- /* All the host devices which apply indirect-IO can be listed here. */
- static const struct acpi_device_id acpi_indirect_host_id[] = {
-+	{"HISI0191", INDIRECT_IO_INFO(hisi_lpc_host_desc)},
- 	{""},
- };
- 
-diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
-index 4ce089a..9cabb84 100644
---- a/drivers/bus/hisi_lpc.c
-+++ b/drivers/bus/hisi_lpc.c
-@@ -457,7 +457,13 @@ static int hisilpc_probe(struct platform_device *pdev)
- 	}
- 
- 	/* register the LPC host PIO resources */
--	{
-+	if (has_acpi_companion(dev)) {
-+		lpcdev->io_host = find_io_range_by_fwnode(dev->fwnode);
-+		if (!lpcdev->io_host) {
-+			dev_err(dev, "range not registered!\n");
-+			return -EFAULT;
-+		}
-+	} else {
- 		struct logic_pio_hwaddr *range;
- 
- 		range = devm_kzalloc(dev, sizeof(*range), GFP_KERNEL);
-@@ -515,10 +521,19 @@ static int hisilpc_probe(struct platform_device *pdev)
- 	{},
- };
- 
-+#ifdef CONFIG_ACPI
-+static const struct acpi_device_id hisilpc_acpi_match[] = {
-+	{"HISI0191", },
-+	{},
-+};
-+
-+#endif
-+
- static struct platform_driver hisilpc_driver = {
- 	.driver = {
- 		.name           = "hisi_lpc",
- 		.of_match_table = hisilpc_of_match,
-+		.acpi_match_table = ACPI_PTR(hisilpc_acpi_match),
- 	},
- 	.probe = hisilpc_probe,
- };
--- 
-1.9.1
+Thanks,
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
