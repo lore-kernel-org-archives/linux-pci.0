@@ -1,51 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46248 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753332AbeASOR0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 09:17:26 -0500
-Subject: Re: [PATCH v6 7/7] PCI: Unify wait for link active into generic pci
-To: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>
-References: <1516360204-1586-1-git-send-email-poza@codeaurora.org>
- <1516360204-1586-8-git-send-email-poza@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <10da80a3-e058-1a21-7af2-405c99b7991e@codeaurora.org>
-Date: Fri, 19 Jan 2018 09:17:23 -0500
-MIME-Version: 1.0
-In-Reply-To: <1516360204-1586-8-git-send-email-poza@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Received: from mga01.intel.com ([192.55.52.88]:65218 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751693AbeA2V2F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Jan 2018 16:28:05 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 1/6] PCI/DPC: Defer all event handling to work queue
+Date: Mon, 29 Jan 2018 14:31:40 -0700
+Message-Id: <20180129213145.26068-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1/19/2018 6:10 AM, Oza Pawandeep wrote:
-> +++ b/drivers/pci/pcie/pcie-dpc.c
-> @@ -150,37 +150,9 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
->  	struct pci_dev *pdev = dpc->dev->port;
->  	struct device *dev = &dpc->dev->device;
->  	u16 lnk_status;
-> +	bool active = false;
->  
-> -	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-> -	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
-> -					!time_after(jiffies, timeout)) {
-> -		msleep(10);
-> -		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-> -	}
-> -	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
-> -		dev_warn(dev, "Link state not disabled for DPC event\n");
-> -}
+This moves all event handling to the existing work queue, which will
+make passing event information easier for the actual handler.
 
-I think you should reorder 6 and 7 to eliminate this.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/pcie-dpc.c | 47 +++++++++++++++++++++++----------------------
+ 1 file changed, 24 insertions(+), 23 deletions(-)
 
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index e53e1fa82e9d..ecdb76bc7b56 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -45,6 +45,8 @@ static const char * const rp_pio_error_string[] = {
+ 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+ };
+ 
++static void dpc_process_rp_pio_error(struct dpc_dev *dpc);
++
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ {
+ 	unsigned long timeout = jiffies + HZ;
+@@ -87,7 +89,27 @@ static void dpc_work(struct work_struct *work)
+ 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+ 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
+-	u16 cap = dpc->cap_pos, ctl;
++	u16 cap = dpc->cap_pos, ctl, status, source, reason, ext_reason;
++
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
++
++	dev_info(&pdev->dev, "DPC containment event, status:%#06x source:%#06x\n",
++		status, source);
++
++	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
++	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
++
++	dev_warn(&pdev->dev, "DPC %s detected, remove downstream devices\n",
++		 (reason == 0) ? "unmasked uncorrectable error" :
++		 (reason == 1) ? "ERR_NONFATAL" :
++		 (reason == 2) ? "ERR_FATAL" :
++		 (ext_reason == 0) ? "RP PIO error" :
++		 (ext_reason == 1) ? "software trigger" :
++				     "reserved error");
++
++	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
++		dpc_process_rp_pio_error(dpc);
+ 
+ 	pci_lock_rescan_remove();
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+@@ -185,8 +207,7 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ {
+ 	struct dpc_dev *dpc = (struct dpc_dev *)context;
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	struct device *dev = &dpc->dev->device;
+-	u16 cap = dpc->cap_pos, ctl, status, source, reason, ext_reason;
++	u16 cap = dpc->cap_pos, ctl, status;
+ 
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+ 
+@@ -207,26 +228,6 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+ 			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);
+ 
+-	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID,
+-			     &source);
+-
+-	dev_info(dev, "DPC containment event, status:%#06x source:%#06x\n",
+-		status, source);
+-
+-	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
+-	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
+-
+-	dev_warn(dev, "DPC %s detected, remove downstream devices\n",
+-		 (reason == 0) ? "unmasked uncorrectable error" :
+-		 (reason == 1) ? "ERR_NONFATAL" :
+-		 (reason == 2) ? "ERR_FATAL" :
+-		 (ext_reason == 0) ? "RP PIO error" :
+-		 (ext_reason == 1) ? "software trigger" :
+-				     "reserved error");
+-	/* show RP PIO error detail information */
+-	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
+-		dpc_process_rp_pio_error(dpc);
+-
+ 	schedule_work(&dpc->work);
+ 
+ 	return IRQ_HANDLED;
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.14.3
