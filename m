@@ -1,133 +1,39 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: Ilya Ledvich <ilya@compulab.co.il>, Lucas Stach <l.stach@pengutronix.de>
-Subject: RE: [PATCH v3] PCI: imx6: Add PHY reference clock source support
-Date: Mon, 8 Jan 2018 03:13:17 +0000
-Message-ID: <AM5PR0402MB28504F53E80037167C8B22EE8C130@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-References: <CAOMZO5AFC9dxhsQjmRrDA7Z3KMkEemryKOBmQhXm19NXKxHkKQ@mail.gmail.com>
- <1515073977-10153-1-git-send-email-ilya@compulab.co.il>
-In-Reply-To: <1515073977-10153-1-git-send-email-ilya@compulab.co.il>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59106 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751547AbeA2OpE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jan 2018 09:45:04 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Subject: Re: [v3,2/2] ath10k: Add support for Ubiquiti rebranded QCA988X v2
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20180125111340.17553-3-tobleminer@gmail.com>
+References: <20180125111340.17553-3-tobleminer@gmail.com>
+To: Tobias Schramm <tobleminer@gmail.com>
+Cc: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, Tobias Schramm <tobleminer@gmail.com>
+Message-Id: <20180129144503.6A5B4609EF@smtp.codeaurora.org>
+Date: Mon, 29 Jan 2018 14:45:03 +0000 (UTC)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Tobias Schramm <tobleminer@gmail.com> wrote:
 
+> Some modern Ubiquiti devices contain a rebranded QCA988X rev2 with
+> a custom Ubiquiti vendor and device id. This patch adds support for
+> those devices, treating them as a QCA988X v2.
+> 
+> Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
+> [kvalo@codeaurora.org: rebase, add missing fields in hw_params, fix a long line in pci.c:61]
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Best Regards
-hongxing zhu
-Linux BSP team
-Office: 86-21-28937189
-Email: hongxing.zhu@nxp.com
+This didn't apply to ath.git so I rebased it and it did some other modifications
+(list in the commit log):
 
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=4037b395c946f94ee05ddc652421cdbd35567a3e
 
-> -----Original Message-----
-> From: Ilya Ledvich [mailto:ilya@compulab.co.il]
-> Sent: Thursday, January 04, 2018 9:53 PM
-> To: Richard Zhu <hongxing.zhu@nxp.com>; Lucas Stach
-> <l.stach@pengutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>; Rob Herring
-> <robh+dt@kernel.org>; linux-pci@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
-> devicetree@vger.kernel.org; Ilya Ledvich <ilya@compulab.co.il>
-> Subject: [PATCH v3] PCI: imx6: Add PHY reference clock source support
-> 
-> i.MX7D variant of the IP can use either Crystal Oscillator input or internal
-> clock input as a Reference Clock input for PCIe PHY.
-> Add support for an optional property 'fsl,pcie-phy-refclk-internal'.
-> If present then an internal clock input is used as PCIe PHY reference clock
-> source. By default an external oscillator input is still used.
-> 
-> Verified on Compulab SBC-iMX7 Single Board Computer.
-> 
-> Signed-off-by: Ilya Ledvich <ilya@compulab.co.il>
-Acked-by: Richard Zhu <hongxing.zhu@nxp.com >
+-- 
+https://patchwork.kernel.org/patch/10183909/
 
-Thanks.
-Best Regards
-Richard
-
-> ---
-> changes since V2:
-> 	add a vendor prefix 'fsl' to a new property
-> 
->  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 5 +++++
->  drivers/pci/dwc/pci-imx6.c                               | 8 +++++++-
->  2 files changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index 7b1e48b..1591a6a 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -50,6 +50,11 @@ Additional required properties for imx7d-pcie:
->  	       - "pciephy"
->  	       - "apps"
-> 
-> +Additional optional properties for imx7d-pcie:
-> +- fsl,pcie-phy-refclk-internal: If present then an internal PLL input
-> +is used
-> +  as PCIe PHY reference clock source. By default an external oscillator
-> +input
-> +  is used.
-> +
->  Example:
-> 
->  	pcie@0x01000000 {
-> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c index
-> b734835..36812d3 100644
-> --- a/drivers/pci/dwc/pci-imx6.c
-> +++ b/drivers/pci/dwc/pci-imx6.c
-> @@ -61,6 +61,7 @@ struct imx6_pcie {
->  	u32			tx_swing_low;
->  	int			link_gen;
->  	struct regulator	*vpcie;
-> +	bool			pciephy_refclk_sel;
->  };
-> 
->  /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */ @@ -
-> 474,7 +475,9 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
->  	switch (imx6_pcie->variant) {
->  	case IMX7D:
->  		regmap_update_bits(imx6_pcie->iomuxc_gpr,
-> IOMUXC_GPR12,
-> -				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
-> +				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
-> +				   imx6_pcie->pciephy_refclk_sel ?
-> +				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL : 0);
->  		break;
->  	case IMX6SX:
->  		regmap_update_bits(imx6_pcie->iomuxc_gpr,
-> IOMUXC_GPR12, @@ -840,6 +843,9 @@ static int imx6_pcie_probe(struct
-> platform_device *pdev)
->  		imx6_pcie->vpcie = NULL;
->  	}
-> 
-> +	imx6_pcie->pciephy_refclk_sel =
-> +		of_property_read_bool(node, "fsl,pcie-phy-refclk-internal");
-> +
->  	platform_set_drvdata(pdev, imx6_pcie);
-> 
->  	ret = imx6_add_pcie_port(imx6_pcie, pdev);
-> --
-> 1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
