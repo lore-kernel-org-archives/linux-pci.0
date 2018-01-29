@@ -1,76 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20180111150316.19951-1-Yazen.Ghannam@amd.com>
-References: <20180111150316.19951-1-Yazen.Ghannam@amd.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 11 Jan 2018 18:38:34 +0100
-Message-ID: <CAJZ5v0gU6var3gNQsp2GkSujbR=vB2Zj4dZHKNOzfAtC76jFbA@mail.gmail.com>
-Subject: Re: [PATCH] PCI/ACPI: Disable AER when _OSC control bit is clear.
-To: Yazen Ghannam <Yazen.Ghannam@amd.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Borislav Petkov <bp@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <9b3cf544-173e-2450-589c-4bf14af307f2@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <1513661883-28662-6-git-send-email-okaya@codeaurora.org>
+ <9b3cf544-173e-2450-589c-4bf14af307f2@codeaurora.org>
+From: Dave Airlie <airlied@gmail.com>
+Date: Tue, 30 Jan 2018 07:43:21 +1000
+Message-ID: <CAPM=9tzWpgF3mtq+ztKJ=P1Nw3Vh8ZEUfYH8Ep=+fRDZTbTtUg@mail.gmail.com>
+Subject: Re: [PATCH V4 05/26] agp: nvidia: deprecate pci_get_bus_and_slot()
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ David Airlie <airlied@linux.ie>, Linux PCI <linux-pci@vger.kernel.org>,
+ timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
+ linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 11, 2018 at 4:03 PM, Yazen Ghannam <Yazen.Ghannam@amd.com> wrote:
-> From: Yazen Ghannam <yazen.ghannam@amd.com>
->
-> Currently, aer_service_init() checks if AER is available and that
-> Firmware First handling is not enabled. The _OSC request for AER is
-> not taken into account when deciding to enable AER in Linux.
->
-> We should check that the _OSC control for AER is set. If it's not
-> then AER should be disabled.
->
-> The _OSC control for AER is not requested when APEI Firmware First is
-> used, so the same condition applies.
->
-> Mark AER as disabled if the _OSC request was not made or accepted.
->
-> Remove redunant check for aer_acpi_firmware_first() when calling
-> aer_service_init(), since this is check is already included when
-> checking the _OSC control.
->
-> Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
-> ---
->  drivers/acpi/pci_root.c       | 3 +++
->  drivers/pci/pcie/aer/aerdrv.c | 2 +-
->  2 files changed, 4 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 6fc204a52493..19a625ed8de9 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -512,6 +512,9 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->                  */
->                 *no_aspm = 1;
->         }
-> +
-> +       if (!(requested & control & OSC_PCI_EXPRESS_AER_CONTROL))
+On 3 January 2018 at 22:44, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 12/19/2017 12:37 AM, Sinan Kaya wrote:
+>> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+>> where a PCI device is present. This restricts the device drivers to be
+>> reused for other domain numbers.
 
-One of the operators above needs to be a && I suppose?
+So not a major problem, but it would be pretty much impossible for either
+of these agp drivers to be used in any other domain ever.
 
-> +               pci_no_aer();
->  }
+What does this buy us, maybe just rename pci_get_bus_and_slot to
+pci_get_domain0_bus_and_slot as a helper, or just pass the pdev in
+and have it do the right thing always.
+
+Dave.
+
+>>
+>> Getting ready to remove pci_get_bus_and_slot() function in favor of
+>> pci_get_domain_bus_and_slot().
+>>
+>> Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
+>> and extract the domain number from struct pci_dev.
+>>
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>  drivers/char/agp/nvidia-agp.c | 12 +++++++++---
+>>  drivers/char/agp/sworks-agp.c |  3 ++-
+>>  2 files changed, 11 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/char/agp/nvidia-agp.c b/drivers/char/agp/nvidia-agp.c
+>> index 828b344..623205b 100644
+>> --- a/drivers/char/agp/nvidia-agp.c
+>> +++ b/drivers/char/agp/nvidia-agp.c
+>> @@ -340,11 +340,17 @@ static int agp_nvidia_probe(struct pci_dev *pdev,
+>>       u8 cap_ptr;
+>>
+>>       nvidia_private.dev_1 =
+>> -             pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 1));
+>> +             pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
+>> +                                         (unsigned int)pdev->bus->number,
+>> +                                         PCI_DEVFN(0, 1));
+>>       nvidia_private.dev_2 =
+>> -             pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 2));
+>> +             pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
+>> +                                         (unsigned int)pdev->bus->number,
+>> +                                         PCI_DEVFN(0, 2));
+>>       nvidia_private.dev_3 =
+>> -             pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(30, 0));
+>> +             pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
+>> +                                         (unsigned int)pdev->bus->number,
+>> +                                         PCI_DEVFN(30, 0));
+>>
+>>       if (!nvidia_private.dev_1 || !nvidia_private.dev_2 || !nvidia_private.dev_3) {
+>>               printk(KERN_INFO PFX "Detected an NVIDIA nForce/nForce2 "
+>> diff --git a/drivers/char/agp/sworks-agp.c b/drivers/char/agp/sworks-agp.c
+>> index 03be4ac..4dbdd3b 100644
+>> --- a/drivers/char/agp/sworks-agp.c
+>> +++ b/drivers/char/agp/sworks-agp.c
+>> @@ -474,7 +474,8 @@ static int agp_serverworks_probe(struct pci_dev *pdev,
+>>       }
+>>
+>>       /* Everything is on func 1 here so we are hardcoding function one */
+>> -     bridge_dev = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
+>> +     bridge_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
+>> +                     (unsigned int)pdev->bus->number,
+>>                       PCI_DEVFN(0, 1));
+>>       if (!bridge_dev) {
+>>               dev_info(&pdev->dev, "can't find secondary device\n");
+>>
 >
->  static int acpi_pci_root_add(struct acpi_device *device,
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 6ff5f5b4f5e6..39bb059777d0 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -374,7 +374,7 @@ static void aer_error_resume(struct pci_dev *dev)
->   */
->  static int __init aer_service_init(void)
->  {
-> -       if (!pci_aer_available() || aer_acpi_firmware_first())
-> +       if (!pci_aer_available())
->                 return -ENXIO;
->         return pcie_port_service_register(&aerdriver);
->  }
+> Any feedback here? most of the remaining patches have the ACK except these.
+>
+>
 > --
+> Sinan Kaya
+> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
