@@ -1,200 +1,44 @@
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v3 6/7] pseries/pci: Associate PEs to VFs in configure SR-IOV
-Date: Wed,  3 Jan 2018 11:16:32 -0600
-In-Reply-To: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20180103171633.94499-7-bryantly@linux.vnet.ibm.com>
+Return-Path: <SRS0=S8NQ=EY=gmail.com=airlied@kernel.org>
+Return-Path: <SRS0=S8NQ=EY=gmail.com=airlied@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20180129223821.GE232763@bhelgaas-glaptop.roam.corp.google.com>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <1513661883-28662-6-git-send-email-okaya@codeaurora.org> <9b3cf544-173e-2450-589c-4bf14af307f2@codeaurora.org>
+ <CAPM=9tzWpgF3mtq+ztKJ=P1Nw3Vh8ZEUfYH8Ep=+fRDZTbTtUg@mail.gmail.com> <20180129223821.GE232763@bhelgaas-glaptop.roam.corp.google.com>
+From: Dave Airlie <airlied@gmail.com>
+Date: Tue, 30 Jan 2018 08:43:37 +1000
+Message-ID: <CAPM=9tzA19rHudfFWMpv_J9ctCs5QYU-o3BBooixLm_LyeV6zQ@mail.gmail.com>
+Subject: Re: [PATCH V4 05/26] agp: nvidia: deprecate pci_get_bus_and_slot()
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, David Airlie <airlied@linux.ie>,
+	Linux PCI <linux-pci@vger.kernel.org>, timur@codeaurora.org,
+	open list <linux-kernel@vger.kernel.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-After initial validation of SR-IOV resources, firmware will
-associate PEs to the dynamic VFs created within this call. This
-patch adds the association of PEs to the PF array of PE numbers
-indexed by VF.
+On 30 January 2018 at 08:38, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Tue, Jan 30, 2018 at 07:43:21AM +1000, Dave Airlie wrote:
+>> On 3 January 2018 at 22:44, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> > On 12/19/2017 12:37 AM, Sinan Kaya wrote:
+>> >> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+>> >> where a PCI device is present. This restricts the device drivers to be
+>> >> reused for other domain numbers.
+>>
+>> So not a major problem, but it would be pretty much impossible for either
+>> of these agp drivers to be used in any other domain ever.
+>>
+>> What does this buy us, maybe just rename pci_get_bus_and_slot to
+>> pci_get_domain0_bus_and_slot as a helper, or just pass the pdev in
+>> and have it do the right thing always.
+>
+> I already have this patch on my "next" branch, planned for the v4.16
+> merge window, so it's done unless you have a major objection.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/pseries/pci.c | 151 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 148 insertions(+), 3 deletions(-)
+Yeah I don't really care either way, I just can't seen the point in changing
+agp drivers that definitely will never see a domain, but if it gets
+rid of a dumb API,
+so be it.
 
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index 48d3af026f90..00e6475004ff 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -57,18 +57,163 @@ void pcibios_name_device(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
- #endif
--
- #ifdef CONFIG_PCI_IOV
-+#define MAX_VFS_FOR_MAP_PE 256
-+struct pe_map_bar_entry {
-+	__be64     bar;       /* Input:  Virtual Function BAR */
-+	__be16     rid;       /* Input:  Virtual Function Router ID */
-+	__be16     pe_num;    /* Output: Virtual Function PE Number */
-+	__be32     reserved;  /* Reserved Space */
-+};
-+
-+int pseries_send_map_pe(struct pci_dev *pdev,
-+			u16 num_vfs,
-+			struct pe_map_bar_entry *vf_pe_array)
-+{
-+	struct pci_dn *pdn;
-+	int rc;
-+	unsigned long buid, addr;
-+	int ibm_map_pes = rtas_token("ibm,open-sriov-map-pe-number");
-+
-+	if (ibm_map_pes == RTAS_UNKNOWN_SERVICE)
-+		return -EINVAL;
-+
-+	pdn = pci_get_pdn(pdev);
-+	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
-+	buid = pdn->phb->buid;
-+	spin_lock(&rtas_data_buf_lock);
-+	memcpy(rtas_data_buf, vf_pe_array,
-+	       RTAS_DATA_BUF_SIZE);
-+	rc = rtas_call(ibm_map_pes, 5, 1, NULL, addr,
-+		       BUID_HI(buid), BUID_LO(buid),
-+		       rtas_data_buf,
-+		       num_vfs * sizeof(struct pe_map_bar_entry));
-+	memcpy(vf_pe_array, rtas_data_buf, RTAS_DATA_BUF_SIZE);
-+	spin_unlock(&rtas_data_buf_lock);
-+
-+	if (rc)
-+		dev_err(&pdev->dev,
-+			"%s: Failed to associate pes PE#%lx, rc=%x\n",
-+			__func__,  addr, rc);
-+
-+	return rc;
-+}
-+
-+void pseries_set_pe_num(struct pci_dev *pdev, u16 vf_index, __be16 pe_num)
-+{
-+	struct pci_dn *pdn;
-+
-+	pdn = pci_get_pdn(pdev);
-+	pdn->pe_num_map[vf_index] = be16_to_cpu(pe_num);
-+	dev_dbg(&pdev->dev, "VF %04x:%02x:%02x.%x associated with PE#%x\n",
-+		pci_domain_nr(pdev->bus),
-+		pdev->bus->number,
-+		PCI_SLOT(pci_iov_virtfn_devfn(pdev, vf_index)),
-+		PCI_FUNC(pci_iov_virtfn_devfn(pdev, vf_index)),
-+		pdn->pe_num_map[vf_index]);
-+}
-+
-+int pseries_associate_pes(struct pci_dev *pdev, u16 num_vfs)
-+{
-+	struct pci_dn *pdn;
-+	int i, rc, vf_index;
-+	struct pe_map_bar_entry *vf_pe_array;
-+	struct resource *res;
-+	u64 size;
-+
-+	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
-+	if (!vf_pe_array)
-+		return -ENOMEM;
-+
-+	pdn = pci_get_pdn(pdev);
-+	/* create firmware structure to associate pes */
-+	for (vf_index = 0; vf_index < num_vfs; vf_index++) {
-+		pdn->pe_num_map[vf_index] = IODA_INVALID_PE;
-+		for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+			res = &pdev->resource[i + PCI_IOV_RESOURCES];
-+			if (!res->parent)
-+				continue;
-+			size = pcibios_iov_resource_alignment(pdev, i +
-+					PCI_IOV_RESOURCES);
-+			vf_pe_array[vf_index].bar =
-+				cpu_to_be64(res->start + size * vf_index);
-+			vf_pe_array[vf_index].rid =
-+				cpu_to_be16((pci_iov_virtfn_bus(pdev, vf_index)
-+					    << 8) | pci_iov_virtfn_devfn(pdev,
-+					    vf_index));
-+			vf_pe_array[vf_index].pe_num =
-+				cpu_to_be16(IODA_INVALID_PE);
-+		}
-+	}
-+
-+	rc = pseries_send_map_pe(pdev, num_vfs, vf_pe_array);
-+	/* Only zero is success */
-+	if (!rc)
-+		for (vf_index = 0; vf_index < num_vfs; vf_index++)
-+			pseries_set_pe_num(pdev, vf_index,
-+					   vf_pe_array[vf_index].pe_num);
-+
-+	kfree(vf_pe_array);
-+	return rc;
-+}
-+
-+int pseries_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-+{
-+	struct pci_dn         *pdn;
-+	int                    rc;
-+	const int *max_vfs;
-+	int max_config_vfs;
-+	struct device_node *dn = pci_device_to_OF_node(pdev);
-+
-+	max_vfs = of_get_property(dn, "ibm,number-of-configurable-vfs", NULL);
-+
-+	if (!max_vfs)
-+		return -EINVAL;
-+
-+	/* First integer stores max config */
-+	max_config_vfs = of_read_number(&max_vfs[0], 1);
-+	if (max_config_vfs < num_vfs && num_vfs > MAX_VFS_FOR_MAP_PE) {
-+		dev_err(&pdev->dev,
-+			"Num VFs %x > %x Configurable VFs\n",
-+			num_vfs, (num_vfs > MAX_VFS_FOR_MAP_PE) ?
-+			MAX_VFS_FOR_MAP_PE : max_config_vfs);
-+		return -EINVAL;
-+	}
-+
-+	pdn = pci_get_pdn(pdev);
-+	pdn->pe_num_map = kmalloc_array(num_vfs,
-+					sizeof(*pdn->pe_num_map),
-+					GFP_KERNEL);
-+	if (!pdn->pe_num_map)
-+		return -ENOMEM;
-+
-+	rc = pseries_associate_pes(pdev, num_vfs);
-+
-+	/* Anything other than zero is failure */
-+	if (rc) {
-+		dev_err(&pdev->dev, "Failure to enable sriov: %x\n", rc);
-+		kfree(pdn->pe_num_map);
-+	} else {
-+		pci_vf_drivers_autoprobe(pdev, false);
-+	}
-+
-+	return rc;
-+}
-+
- int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- {
- 	/* Allocate PCI data */
- 	add_dev_pci_data(pdev);
--	pci_vf_drivers_autoprobe(pdev, false);
--	return 0;
-+	return pseries_pci_sriov_enable(pdev, num_vfs);
- }
- 
- int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
- {
-+	struct pci_dn         *pdn;
-+
-+	pdn = pci_get_pdn(pdev);
-+	/* Releasing pe_num_map */
-+	kfree(pdn->pe_num_map);
- 	/* Release PCI data */
- 	remove_dev_pci_data(pdev);
- 	pci_vf_drivers_autoprobe(pdev, true);
--- 
-2.14.3 (Apple Git-98)
+Dave.
