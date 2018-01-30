@@ -1,86 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:36604 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.29.99]:47164 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932121AbeAHO7E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Jan 2018 09:59:04 -0500
-Date: Mon, 8 Jan 2018 15:59:01 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 06/12] IB/core: Add optional PCI P2P flag to
-        rdma_rw_ctx_[init|destroy]()
-Message-ID: <20180108145901.GA10743@lst.de>
-References: <20180104190137.7654-1-logang@deltatee.com> <20180104190137.7654-7-logang@deltatee.com> <20180104192225.GS11348@ziepe.ca> <1f8fb3fb-e3dc-94d3-e837-0cd942cf5b87@deltatee.com> <20180104221337.GV11348@ziepe.ca> <3e8391a9-8924-be6d-8c43-162a360d75b6@deltatee.com> <20180105045031.GX11348@ziepe.ca>
+        id S1752602AbeA3SZr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Jan 2018 13:25:47 -0500
+Subject: [PATCH v2 03/14] PCI/DPC: Rename struct dpc_dev.rp to rp_extensions
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Tue, 30 Jan 2018 12:25:43 -0600
+Message-ID: <20180130182543.106875.1187.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180105045031.GX11348@ziepe.ca>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 04, 2018 at 09:50:31PM -0700, Jason Gunthorpe wrote:
-> Well that argument applies equally to the RDMA RW API wrappers around
-> the DMA API. I think it is fine if sgl are defined to only have P2P or
-> not, and that debugging support seemed reasonable to me..
-> 
-> > It's also very difficult to add similar functionality to dma_map_page seeing
-> > dma_unmap_page won't have any way to know what it's dealing with. It just
-> > seems confusing to support P2P in the SG version and not the page version.
-> 
-> Well, this proposal is to support P2P in only some RDMA APIs and not
-> others, so it seems about as confusing to me..
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-As usual we implement what actually has a consumer.  On top of that the
-R/W API is the only core RDMA API that actually does DMA mapping for the
-ULP at the moment.  For SENDs and everything else dma maps are done by
-the ULP (I'd like to eventually change that, though - e.g. sends through
-that are inline to the workqueue don't need a dma map to start with).
+"rp" is ambiguous: it might mean "this DPC device is a Root Port."  But in
+fact, it means "this DPC device is a Root Port *and* it supports a set of
+DPC Extensions."
 
-> Well, it is more than very nice. We have to keep RDMA working after
-> all, and if you make it even more special things become harder for us.
-> 
-> It is already the case that DMA in RDMA is very strange. We have
-> drivers that provide their own DMA ops, for instance.
+Rename "rp" to "rp_extensions" to make this more clear.  No functional
+change intended.
 
-That's because the initial design was to let the ULPs do the DMA
-mappings, which fundamentally is wrong.  I've fixed it for the R/W
-API when adding it, but no one has started work on SENDs and atomics.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/pcie-dpc.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-> And on that topic, does this scheme work with HFI?
-
-No, and I guess we need an opt-out.  HFI generally seems to be
-extremely weird.
-
-> This is why P2P must fit in to the common DMA framework somehow, we
-> rely on these abstractions to work properly and fully in RDMA.
-
-Moving P2P up to common RDMA code isn't going to fix this.  For that
-we need to stop preting that something that isn't DMA can abuse the
-dma mapping framework, and until then opt them out of behavior that
-assumes actual DMA like P2P.
-
-> I think you should consider pushing this directly into the dma_ops
-> implementations. Add a p2p_supported flag to struct dma_map_ops, and
-> only if it is true can a caller pass a homogeneous SGL to ops->map_sg.
-> Only map_sg would be supported for P2P. Upgraded implementations can
-> call the helper function.
-
-If at all it should be in the dma_map* wrappers, but for that we'd need
-a good identifier.  And it still would not solve the whole fake dma
-ops issue.
-
-So for now I'd much prefer to let the drivers handle it, and once usage
-grows and we know usage patterns better (and I make progress refactoring
-both the dma-mapping subsystem itself and the RDMA dma map code to not
-be a complete mess) we can move it to the core.
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 52702f7b911a..0bbdf513067a 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -42,7 +42,7 @@ struct dpc_dev {
+ 	struct pcie_device	*dev;
+ 	struct work_struct	work;
+ 	u16			cap_pos;
+-	bool			rp;
++	bool			rp_extensions;
+ 	u32			rp_pio_status;
+ };
+ 
+@@ -126,9 +126,9 @@ static void dpc_work(struct work_struct *work)
+ 	pci_unlock_rescan_remove();
+ 
+ 	dpc_wait_link_inactive(dpc);
+-	if (dpc->rp && dpc_wait_rp_inactive(dpc))
++	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
+ 		return;
+-	if (dpc->rp && dpc->rp_pio_status) {
++	if (dpc->rp_extensions && dpc->rp_pio_status) {
+ 		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+ 				       dpc->rp_pio_status);
+ 		dpc->rp_pio_status = 0;
+@@ -326,7 +326,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+ 
+-	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
++	dpc->rp_extensions = (cap & PCI_EXP_DPC_CAP_RP_EXT);
+ 
+ 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
