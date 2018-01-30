@@ -1,74 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56994 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752705AbeAXAqK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jan 2018 19:46:10 -0500
-Date: Tue, 23 Jan 2018 18:46:03 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        David Airlie <airlied@linux.ie>
-Subject: Re: [GIT PULL] PCI fixes for v4.15
-Message-ID: <20180124004603.GH5317@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180123195644.GA92112@bhelgaas-glaptop.roam.corp.google.com>
- <CA+55aFxFp_rjSviLUEH-uZ1U=x_g-xiAFKoEQqOOxZQs4xV11A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA+55aFxFp_rjSviLUEH-uZ1U=x_g-xiAFKoEQqOOxZQs4xV11A@mail.gmail.com>
+Received: from 5.mo179.mail-out.ovh.net ([46.105.43.140]:47810 "EHLO
+        5.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754164AbeA3VKG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 16:10:06 -0500
+Received: from player168.ha.ovh.net (b7.ovh.net [213.186.33.57])
+        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 5B96197410
+        for <linux-pci@vger.kernel.org>; Tue, 30 Jan 2018 22:00:23 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v6 10/11] dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe endpoint controller
+Date: Tue, 30 Jan 2018 21:56:58 +0100
+Message-Id: <ea57d2ffbf426d3fbaf5af8a90d6664d06fd617b.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 23, 2018 at 12:49:22PM -0800, Linus Torvalds wrote:
-> On Tue, Jan 23, 2018 at 11:56 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> >   - fix AMD regression due to not re-enabling the big window on resume
-> >     (Christian König)
-> 
-> Bjorn, I think you need to look at your email habits.
-> 
-> I suspect you're editing your mailbox, or you're using some broken
-> mailer setup, or something (using some broken "export" function?),
-> because you're corrupting Christian's name all the time:
-> 
-> > =?UTF-8?q?Christian=20K=C3=B6nig?= (1):
-> >       x86/PCI: Enable AMD 64-bit window on resume
-> 
-> and I'm pretty sure git gets this right if actually fed a real mbox,
-> but I suspect that you have some other workflow going on..
+This patch documents the DT bindings for the Cadence PCIe controller
+when configured in endpoint mode.
 
-I'm not editing my mailbox, but I am using stgit.  The "From:" header
-uses encoded-word syntax for Christian's name, and I think stgit is
-not decoding that when applying the patch.
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
 
-When I save the patch email message from mutt (or gmail, for that
-matter), I see:
-
-  From: "=?UTF-8?q?Christian=20K=C3=B6nig?="  ...
-
-Applying that patch with "git am" results in the correct
-
-  Author: Christian König <ckoenig.leichtzumerken@gmail.com
-
-Applying the identical patch with "stg import -M" results in
-
-  Author: =?UTF-8?q?Christian=20K=C3=B6nig?= <ckoenig.leichtzumerken@gmail.com>
-
-Some of Christian's PCI patches came out OK (8bb705e3e79d,
-276b738deb5b, cb21bc9469c4).  I don't remember specifically, but I
-suspect I fixed those manually.
-
-I don't know if there's some stg configuration I could do to fix this.
-I looked a little bit but haven't found anything yet.
-
-Thanks for pointing this out.  I'll try to fix this one way or another
-in the future.
-
-Bjorn
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+new file mode 100644
+index 000000000000..9a305237fa6e
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+@@ -0,0 +1,22 @@
++* Cadence PCIe endpoint controller
++
++Required properties:
++- compatible: Should contain "cdns,cdns-pcie-ep" to identify the IP used.
++- reg: Should contain the controller register base address and AXI interface
++  region base address respectively.
++- reg-names: Must be "reg" and "mem" respectively.
++- cdns,max-outbound-regions: Set to maximum number of outbound regions
++
++Optional properties:
++- max-functions: Maximum number of functions that can be configured (default 1).
++
++Example:
++
++pcie@fc000000 {
++	compatible = "cdns,cdns-pcie-ep";
++	reg = <0x0 0xfc000000 0x0 0x01000000>,
++	      <0x0 0x80000000 0x0 0x40000000>;
++	reg-names = "reg", "mem";
++	cdns,max-outbound-regions = <16>;
++	max-functions = /bits/ 8 <8>;
++};
+-- 
+2.11.0
