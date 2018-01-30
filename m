@@ -1,84 +1,254 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "=?UTF-8?q?Christian=20K=C3=B6nig?="
-        <ckoenig.leichtzumerken@gmail.com>
-To: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc: torvalds@linux-foundation.org, aaro.koskinen@iki.fi,
-        andy.shevchenko@gmail.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, alexander.deucher@amd.com, airlied@linux.ie
-Subject: [PATCH 2/2] x86/PCI: limit the size of the 64bit window to 256GB v3
-Date: Thu, 11 Jan 2018 14:23:30 +0100
-Message-Id: <20180111132330.2682-2-christian.koenig@amd.com>
-In-Reply-To: <20180111132330.2682-1-christian.koenig@amd.com>
-References: <20180111132330.2682-1-christian.koenig@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:8581 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752501AbeA3FYy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 00:24:54 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V7  1/4] PCI: tegra: Free resources on probe failure
+Date: Tue, 30 Jan 2018 10:54:08 +0530
+Message-ID: <1517289851-14111-2-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Avoid problems with BIOS implementations which don't report all used
-resources to the OS by only allocating a 256GB window directly below the
-hardware limit.
+tegra_pcie_probe() can fail in multiple instances, this patch takes care
+of freeing the resources which are allocated before probe fail.
 
-For the full hardware documentation see:
-https://support.amd.com/TechDocs/49125_15h_Models_30h-3Fh_BKDG.pdf
-
-Fixes a silent reboot loop reported by Aaro Koskinen <aaro.koskinen@iki.fi> on
-an AMD-based MSI MS-7699/760GA-P43(FX) system.
-
-v2: cleanup code a bit more, update comment and explain the hw limit
-v3: improve commit message
-
-Link: https://lkml.kernel.org/r/20180105220412.fzpwqe4zljdawr36@darkstar.musicnaut.iki.fi
-Reported-by: Aaro Koskinen <aaro.koskinen@iki.fi>
-Signed-off-by: Christian König <christian.koenig@amd.com>
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
 ---
- arch/x86/pci/fixup.c | 19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+V2:
+* no change in this patch
+V3:
+* change 'if check' to 'legacy_phy is true' for tegra_pcie_phys_put_legacy()
+* commit log correction
+V4:
+* no change in this patch
+V5:
+* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
+rebased on linux-next
+V6:
+* no change in this patch
+V7:
+* no change in this patch
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index a91280da2ea1..9c1c98d7e3a7 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -662,10 +662,11 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
-  */
- static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+ drivers/pci/host/pci-tegra.c | 99 +++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 79 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index e4b47ebc91fe..e68507f658d8 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -562,14 +562,25 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
+ 	pci_add_resource(windows, &pcie->busn);
+ 
+ 	err = devm_request_pci_bus_resources(dev, windows);
+-	if (err < 0)
++	if (err < 0) {
++		pci_free_resource_list(windows);
+ 		return err;
++	}
+ 
+ 	pci_remap_iospace(&pcie->pio, pcie->io.start);
+ 
+ 	return 0;
+ }
+ 
++static void tegra_pcie_free_resources(struct tegra_pcie *pcie)
++{
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct list_head *windows = &host->windows;
++
++	pci_unmap_iospace(&pcie->pio);
++	pci_free_resource_list(windows);
++}
++
+ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
  {
--	unsigned i;
- 	u32 base, limit, high;
--	struct resource *res, *conflict;
- 	struct pci_dev *other;
-+	struct resource *res;
-+	unsigned i;
-+	int r;
+ 	struct tegra_pcie *pcie = pdev->bus->sysdata;
+@@ -979,24 +990,35 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 	return 0;
+ }
  
- 	if (!(pci_probe & PCI_BIG_ROOT_WINDOW))
- 		return;
-@@ -702,19 +703,17 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- 	if (!res)
- 		return;
+-static void tegra_pcie_power_off(struct tegra_pcie *pcie)
++static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
+-	const struct tegra_pcie_soc *soc = pcie->soc;
+ 	int err;
  
-+	/* Allocate a 256GB window directly below the 0xfd00000000 hw limit */
- 	res->name = "PCI Bus 0000:00";
- 	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
- 		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
--	res->start = 0x100000000ull;
-+	res->start = 0xbd00000000ull;
- 	res->end = 0xfd00000000ull - 1;
+-	/* TODO: disable and unprepare clocks? */
++	reset_control_assert(pcie->pcie_xrst);
  
--	/* Just grab the free area behind system memory for this */
--	while ((conflict = request_resource_conflict(&iomem_resource, res))) {
--		if (conflict->end >= res->end) {
--			kfree(res);
--			return;
--		}
--		res->start = conflict->end + 1;
-+	r = request_resource(&iomem_resource, res);
-+	if (r) {
-+		kfree(res);
+-	if (soc->program_uphy) {
++	if (pcie->soc->program_uphy) {
+ 		err = tegra_pcie_phy_power_off(pcie);
+ 		if (err < 0)
+-			dev_err(dev, "failed to power off PHY(s): %d\n", err);
++			dev_err(pcie->dev, "failed to power off PHY(s): %d\n",
++				err);
+ 	}
++}
++
++static void tegra_pcie_power_off(struct tegra_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++	const struct tegra_pcie_soc *soc = pcie->soc;
++	int err;
+ 
+-	reset_control_assert(pcie->pcie_xrst);
+ 	reset_control_assert(pcie->afi_rst);
+ 	reset_control_assert(pcie->pex_rst);
+ 
++	clk_disable_unprepare(pcie->pll_e);
++	if (soc->has_cml_clk)
++		clk_disable_unprepare(pcie->cml_clk);
++	clk_disable_unprepare(pcie->afi_clk);
++	clk_disable_unprepare(pcie->pex_clk);
++
+ 	if (!dev->pm_domain)
+ 		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+ 
+@@ -1205,6 +1227,30 @@ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
++static void tegra_pcie_phys_put(struct tegra_pcie *pcie)
++{
++	struct tegra_pcie_port *port;
++	struct device *dev = pcie->dev;
++	int err, i;
++
++	if (pcie->legacy_phy) {
++		err = phy_exit(pcie->phy);
++		if (err < 0)
++			dev_err(dev, "failed to teardown PHY: %d\n", err);
 +		return;
++	}
++
++	list_for_each_entry(port, &pcie->ports, list) {
++		for (i = 0; i < port->lanes; i++) {
++			err = phy_exit(port->phys[i]);
++			if (err < 0)
++				dev_err(dev, "failed to teardown PHY#%u: %d\n",
++					i, err);
++		}
++	}
++}
++
++
+ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+@@ -1236,7 +1282,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 	err = tegra_pcie_power_on(pcie);
+ 	if (err) {
+ 		dev_err(dev, "failed to power up: %d\n", err);
+-		return err;
++		goto phys_put;
  	}
  
- 	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
+ 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
+@@ -1288,6 +1334,9 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 
+ 	return 0;
+ 
++phys_put:
++	if (soc->program_uphy)
++		tegra_pcie_phys_put(pcie);
+ poweroff:
+ 	tegra_pcie_power_off(pcie);
+ 	return err;
+@@ -1295,20 +1344,15 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 
+ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
+ 	const struct tegra_pcie_soc *soc = pcie->soc;
+-	int err;
+ 
+ 	if (pcie->irq > 0)
+ 		free_irq(pcie->irq, pcie);
+ 
+ 	tegra_pcie_power_off(pcie);
+ 
+-	if (soc->program_uphy) {
+-		err = phy_exit(pcie->phy);
+-		if (err < 0)
+-			dev_err(dev, "failed to teardown PHY: %d\n", err);
+-	}
++	if (soc->program_uphy)
++		tegra_pcie_phys_put(pcie);
+ 
+ 	return 0;
+ }
+@@ -2048,6 +2092,16 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ 	}
+ }
+ 
++static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
++{
++	struct tegra_pcie_port *port, *tmp;
++
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
++		tegra_pcie_port_disable(port);
++		tegra_pcie_port_free(port);
++	}
++}
++
+ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.num_ports = 2,
+ 	.msi_base_shift = 0,
+@@ -2278,7 +2332,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = tegra_pcie_request_resources(pcie);
+ 	if (err)
+-		goto put_resources;
++		goto disable_controller;
+ 
+ 	/* setup the AFI address translations */
+ 	tegra_pcie_setup_translations(pcie);
+@@ -2287,7 +2341,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 		err = tegra_pcie_enable_msi(pcie);
+ 		if (err < 0) {
+ 			dev_err(dev, "failed to enable MSI support: %d\n", err);
+-			goto put_resources;
++			goto free_resources;
+ 		}
+ 	}
+ 
+@@ -2302,7 +2356,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	err = pci_scan_root_bus_bridge(host);
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to register host: %d\n", err);
+-		goto disable_msi;
++		goto disable_ports;
+ 	}
+ 
+ 	pci_bus_size_bridges(host->bus);
+@@ -2321,9 +2375,14 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ 
+-disable_msi:
++disable_ports:
++	tegra_pcie_disable_ports(pcie);
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		tegra_pcie_disable_msi(pcie);
++free_resources:
++	tegra_pcie_free_resources(pcie);
++disable_controller:
++	tegra_pcie_disable_controller(pcie);
+ put_resources:
+ 	tegra_pcie_put_resources(pcie);
+ 	return err;
 -- 
-2.11.0
+2.1.4
