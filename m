@@ -1,47 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Subject: [PATCH 6/6] MAINTAINERS: Add entry for Jailhouse
-Date: Mon, 22 Jan 2018 07:12:50 +0100
-Message-Id: <193336379c1ff5f535f26bb1847510f205087715.1516601570.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
-References: <cover.1516601570.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1516601570.git.jan.kiszka@siemens.com>
-References: <cover.1516601570.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47048 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751452AbeA3SZW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Jan 2018 13:25:22 -0500
+Subject: [PATCH v2 00/14] PCI/DPC: Simplify RP PIO logging
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Tue, 30 Jan 2018 12:25:19 -0600
+Message-ID: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+These are almost all just cleanups.
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+The only behavior change I intend is this: If a port does not support
+the "RP Extensions for DPC" and it reports an "RP PIO error", we
+previously read the RP PIO log registers.  I don't know if that's a
+legal situation, but I couldn't find an explicit prohibition in the
+spec.
+
+Anyway, the rest is all cleanups and simplifications that are not
+intended to change any behavior.
+
+These are currently on my pci/dpc branch.
+
+Changes from v1 to v2:
+  - Split up the "Consolidate RP PIO get/print functions" patch to
+    make it more reviewable.  The resulting git diff is empty except
+    for a trival local variable declaration.
+
 ---
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 426ba037d943..dd51a2012b36 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7468,6 +7468,13 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
- S:	Maintained
- F:	drivers/media/dvb-frontends/ix2505v*
- 
-+JAILHOUSE HYPERVISOR INTERFACE
-+M:	Jan Kiszka <jan.kiszka@siemens.com>
-+L:	jailhouse-dev@googlegroups.com
-+S:	Maintained
-+F:	arch/x86/kernel/jailhouse.c
-+F:	arch/x86/include/asm/jailhouse_para.h
-+
- JC42.4 TEMPERATURE SENSOR DRIVER
- M:	Guenter Roeck <linux@roeck-us.net>
- L:	linux-hwmon@vger.kernel.org
--- 
-2.13.6
+Bjorn Helgaas (14):
+      PCI/DPC: Rename interrupt_event_handler() to dpc_work()
+      PCI/DPC: Add local variable for DPC capability offset
+      PCI/DPC: Rename struct dpc_dev.rp to rp_extensions
+      PCI/DPC: Read RP PIO Log Size once at probe
+      PCI/DPC: Process RP PIO details only if RP PIO extensions supported
+      PCI/DPC: Squash dpc_rp_pio_print_tlp_header() into dpc_rp_pio_print_error()
+      PCI/DPC: Rename local "status" to "dpc_status"
+      PCI/DPC: Make RP PIO log size check more generic
+      PCI/DPC: Squash dpc_rp_pio_print_error() into dpc_rp_pio_get_info()
+      PCI/DPC: Push dpc->rp_pio_status assignment into dpc_rp_pio_get_info()
+      PCI/DPC: Remove unnecessary RP PIO register structs
+      PCI/DPC: Squash dpc_rp_pio_get_info() into dpc_process_rp_pio_error()
+      PCI/DPC: Add and use DPC Status register field definitions
+      PCI/DPC: Reformat DPC register definitions
+
+
+ drivers/pci/pcie/pcie-dpc.c   |  214 +++++++++++++++--------------------------
+ include/uapi/linux/pci_regs.h |   24 ++---
+ 2 files changed, 91 insertions(+), 147 deletions(-)
