@@ -1,95 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:45802 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751283AbeABRyN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jan 2018 12:54:13 -0500
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v17 2/4] net: e100: Replace PCI pool old API
-Date: Tue,  2 Jan 2018 18:53:54 +0100
-Message-Id: <20180102175356.7999-3-romain.perier@gmail.com>
-In-Reply-To: <20180102175356.7999-1-romain.perier@gmail.com>
-References: <20180102175356.7999-1-romain.perier@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:47628 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752637AbeA3S0u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Jan 2018 13:26:50 -0500
+Subject: [PATCH v2 11/14] PCI/DPC: Remove unnecessary RP PIO register structs
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Tue, 30 Jan 2018 12:26:48 -0600
+Message-ID: <20180130182648.106875.32803.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+We read and immediately print the RP PIO log registers.  We don't save
+them, so there's no need to define structs for them.  Remove the structs
+and read the registers into local variables instead.  No functional change
+intended.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Acked-by: David S. Miller <davem@davemloft.net>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/net/ethernet/intel/e100.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/pcie/pcie-dpc.c |   87 +++++++++++++++----------------------------
+ 1 file changed, 30 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/e100.c b/drivers/net/ethernet/intel/e100.c
-index 44b3937f7e81..29486478836e 100644
---- a/drivers/net/ethernet/intel/e100.c
-+++ b/drivers/net/ethernet/intel/e100.c
-@@ -607,7 +607,7 @@ struct nic {
- 	struct mem *mem;
- 	dma_addr_t dma_addr;
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 7b96169a808c..daad9c4ae607 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -17,26 +17,6 @@
+ #include "../pci.h"
+ #include "aer/aerdrv.h"
  
--	struct pci_pool *cbs_pool;
-+	struct dma_pool *cbs_pool;
- 	dma_addr_t cbs_dma_addr;
- 	u8 adaptive_ifs;
- 	u8 tx_threshold;
-@@ -1892,7 +1892,7 @@ static void e100_clean_cbs(struct nic *nic)
- 			nic->cb_to_clean = nic->cb_to_clean->next;
- 			nic->cbs_avail++;
- 		}
--		pci_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
-+		dma_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
- 		nic->cbs = NULL;
- 		nic->cbs_avail = 0;
- 	}
-@@ -1910,7 +1910,7 @@ static int e100_alloc_cbs(struct nic *nic)
- 	nic->cb_to_use = nic->cb_to_send = nic->cb_to_clean = NULL;
- 	nic->cbs_avail = 0;
+-struct rp_pio_header_log_regs {
+-	u32 dw0;
+-	u32 dw1;
+-	u32 dw2;
+-	u32 dw3;
+-};
+-
+-struct dpc_rp_pio_regs {
+-	u32 status;
+-	u32 mask;
+-	u32 severity;
+-	u32 syserror;
+-	u32 exception;
+-
+-	struct rp_pio_header_log_regs header_log;
+-	u32 impspec_log;
+-	u32 tlp_prefix_log[4];
+-	u16 first_error;
+-};
+-
+ struct dpc_dev {
+ 	struct pcie_device	*dev;
+ 	struct work_struct	work;
+@@ -142,78 +122,71 @@ static void dpc_work(struct work_struct *work)
+ 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
+ }
  
--	nic->cbs = pci_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
-+	nic->cbs = dma_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
- 				   &nic->cbs_dma_addr);
- 	if (!nic->cbs)
- 		return -ENOMEM;
-@@ -2960,8 +2960,8 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		netif_err(nic, probe, nic->netdev, "Cannot register net device, aborting\n");
- 		goto err_out_free;
+-static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+-				struct dpc_rp_pio_regs *rp_pio)
++static void dpc_rp_pio_get_info(struct dpc_dev *dpc)
+ {
+ 	struct device *dev = &dpc->dev->device;
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	int i;
+-	u16 cap = dpc->cap_pos, dpc_status;
+-	u32 status;
+-
+-	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+-			      &rp_pio->status);
+-	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK,
+-			      &rp_pio->mask);
++	u16 cap = dpc->cap_pos;
++	u32 status, mask;
++	u32 sev, syserr, exc;
++	u16 dpc_status, first_error;
++	u32 dw0, dw1, dw2, dw3;
++	u32 log;
++	u32 prefix;
++
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS, &status);
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK, &mask);
+ 	dev_err(dev, "rp_pio_status: %#010x, rp_pio_mask: %#010x\n",
+-		rp_pio->status, rp_pio->mask);
++		status, mask);
+ 
+-	dpc->rp_pio_status = rp_pio->status;
++	dpc->rp_pio_status = status;
+ 
+-	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY,
+-			      &rp_pio->severity);
+-	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR,
+-			      &rp_pio->syserror);
+-	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION,
+-			      &rp_pio->exception);
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY, &sev);
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR, &syserr);
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION, &exc);
+ 	dev_err(dev, "RP PIO severity=%#010x, syserror=%#010x, exception=%#010x\n",
+-		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
++		sev, syserr, exc);
+ 
+ 	/* Get First Error Pointer */
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &dpc_status);
+-	rp_pio->first_error = (dpc_status & 0x1f00) >> 8;
++	first_error = (dpc_status & 0x1f00) >> 8;
+ 
+-	status = (rp_pio->status & ~rp_pio->mask);
++	status &= ~mask;
+ 	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
+ 		if (status & (1 << i))
+ 			dev_err(dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
+-				rp_pio->first_error == i ? " (First)" : "");
++				first_error == i ? " (First)" : "");
  	}
--	nic->cbs_pool = pci_pool_create(netdev->name,
--			   nic->pdev,
-+	nic->cbs_pool = dma_pool_create(netdev->name,
-+			   &nic->pdev->dev,
- 			   nic->params.cbs.max * sizeof(struct cb),
- 			   sizeof(u32),
- 			   0);
-@@ -3001,7 +3001,7 @@ static void e100_remove(struct pci_dev *pdev)
- 		unregister_netdev(netdev);
- 		e100_free(nic);
- 		pci_iounmap(pdev, nic->csr);
--		pci_pool_destroy(nic->cbs_pool);
-+		dma_pool_destroy(nic->cbs_pool);
- 		free_netdev(netdev);
- 		pci_release_regions(pdev);
- 		pci_disable_device(pdev);
--- 
-2.14.1
+ 
+ 	if (dpc->rp_log_size < 4)
+ 		return;
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
+-			      &rp_pio->header_log.dw0);
++			      &dw0);
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
+-			      &rp_pio->header_log.dw1);
++			      &dw1);
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
+-			      &rp_pio->header_log.dw2);
++			      &dw2);
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
+-			      &rp_pio->header_log.dw3);
++			      &dw3);
+ 	dev_err(dev, "TLP Header: %#010x %#010x %#010x %#010x\n",
+-		rp_pio->header_log.dw0, rp_pio->header_log.dw1,
+-		rp_pio->header_log.dw2, rp_pio->header_log.dw3);
++		dw0, dw1, dw2, dw3);
+ 
+ 	if (dpc->rp_log_size < 5)
+ 		return;
+-	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
+-			      &rp_pio->impspec_log);
+-	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", rp_pio->impspec_log);
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG, &log);
++	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", log);
+ 
+ 	for (i = 0; i < dpc->rp_log_size - 5; i++) {
+ 		pci_read_config_dword(pdev,
+-			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
+-			&rp_pio->tlp_prefix_log[i]);
+-		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i,
+-			rp_pio->tlp_prefix_log[i]);
++			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG, &prefix);
++		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i, prefix);
+ 	}
+ }
+ 
+ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+ {
+-	struct dpc_rp_pio_regs rp_pio_regs;
+-
+-	dpc_rp_pio_get_info(dpc, &rp_pio_regs);
++	dpc_rp_pio_get_info(dpc);
+ 
+ }
+ 
