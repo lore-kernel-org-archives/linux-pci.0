@@ -1,57 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47048 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751452AbeA3SZW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Jan 2018 13:25:22 -0500
-Subject: [PATCH v2 00/14] PCI/DPC: Simplify RP PIO logging
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Tue, 30 Jan 2018 12:25:19 -0600
-Message-ID: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=2slI=EZ=free-electrons.com=cyrille.pitchen@kernel.org>
+Return-Path: <SRS0=2slI=EZ=free-electrons.com=cyrille.pitchen@kernel.org>
+Subject: Re: [PATCH v5 00/11] PCI: Add support to the Cadence PCIe controller
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
+ adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+ kgopi@cadence.com, eandrews@cadence.com,
+ thomas.petazzoni@free-electrons.com, sureshp@cadence.com, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+ <20180128214741.GA232763@bhelgaas-glaptop.roam.corp.google.com>
+ <20180130114155.GA12009@e107981-ln.cambridge.arm.com>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Message-ID: <8cec81b2-85c4-d7bf-4171-9e94a745eab0@free-electrons.com>
+Date: Tue, 30 Jan 2018 22:12:36 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180130114155.GA12009@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-These are almost all just cleanups.
+Hi Lorenzo, Bjorn,
 
-The only behavior change I intend is this: If a port does not support
-the "RP Extensions for DPC" and it reports an "RP PIO error", we
-previously read the RP PIO log registers.  I don't know if that's a
-legal situation, but I couldn't find an explicit prohibition in the
-spec.
+Le 30/01/2018 à 12:41, Lorenzo Pieralisi a écrit :
+> On Sun, Jan 28, 2018 at 03:47:41PM -0600, Bjorn Helgaas wrote:
+>> On Sun, Jan 28, 2018 at 09:40:14PM +0100, Cyrille Pitchen wrote:
+>>> Hi all,
+>>>
+>>> this series of patches adds support to the Cadence PCIe controller.
+>>> It was tested on a ARM64 platform emulated by a Palladium running the
+>>> pci-next kernel.
+>>>
+>>> The host mode was tested with some PCIe devices connected to the Palladium
+>>> through a speed-bridge. Some of those devices were a USB host controller
+>>> and a SATA controller. The PCIe host controller was also tested with a
+>>> second controller configured in endpoint mode and connected back to back
+>>> to the first controller.
+>>>
+>>> The EndPoint Controller (EPC) driver was tested with 2 PCI functions, both
+>>> handled by the pci-epf-test driver, using the pcitest userspace program.
+>>> I used the "-D" optional command line parameter to select the proper PCI
+>>> function.
+>>>
+>>> Best regards,
+>>>
+>>> Cyrille
+>>>
+>>> ChangeLog
+>>>
+>>> v4 -> v5:
+>>> - rebase on today's (20180128) linux-pci/next
+>>
+>> Don't bother rebasing onto linux-pci/next.
+>>
+>> If your patches actually *depend* on something that has already been
+>> merged onto a PCI topic branch, you should mention that and say which
+>> branch.
+> 
+> Yes - Cyrille please advise which branch(es) this series depends on,
+> it does not apply cleanly to -rc4.
+> 
+> Merge window is open and I do not know what we can do with this series
+> for v4.16 but please let me know.
+>
 
-Anyway, the rest is all cleanups and simplifications that are not
-intended to change any behavior.
+I've just sent v6. No change from v5 except that the series has been
+rebased onto linux-pci/master (v4.15-rc4) and tested on the Palladium.
+I've cherry-picked one Kishon's patch from linux-pci/next to test the
+endpoint mode.
 
-These are currently on my pci/dpc branch.
+Best regards,
 
-Changes from v1 to v2:
-  - Split up the "Consolidate RP PIO get/print functions" patch to
-    make it more reviewable.  The resulting git diff is empty except
-    for a trival local variable declaration.
-
----
-
-Bjorn Helgaas (14):
-      PCI/DPC: Rename interrupt_event_handler() to dpc_work()
-      PCI/DPC: Add local variable for DPC capability offset
-      PCI/DPC: Rename struct dpc_dev.rp to rp_extensions
-      PCI/DPC: Read RP PIO Log Size once at probe
-      PCI/DPC: Process RP PIO details only if RP PIO extensions supported
-      PCI/DPC: Squash dpc_rp_pio_print_tlp_header() into dpc_rp_pio_print_error()
-      PCI/DPC: Rename local "status" to "dpc_status"
-      PCI/DPC: Make RP PIO log size check more generic
-      PCI/DPC: Squash dpc_rp_pio_print_error() into dpc_rp_pio_get_info()
-      PCI/DPC: Push dpc->rp_pio_status assignment into dpc_rp_pio_get_info()
-      PCI/DPC: Remove unnecessary RP PIO register structs
-      PCI/DPC: Squash dpc_rp_pio_get_info() into dpc_process_rp_pio_error()
-      PCI/DPC: Add and use DPC Status register field definitions
-      PCI/DPC: Reformat DPC register definitions
+Cyrille
+ 
+> Thanks,
+> Lorenzo
+> 
 
 
- drivers/pci/pcie/pcie-dpc.c   |  214 +++++++++++++++--------------------------
- include/uapi/linux/pci_regs.h |   24 ++---
- 2 files changed, 91 insertions(+), 147 deletions(-)
+-- 
+Cyrille Pitchen, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
