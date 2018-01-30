@@ -1,94 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:33015 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753497AbeAQPsn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jan 2018 10:48:43 -0500
-Message-Id: <a1332c590cfb8dc8cf8e9ff61af694299f14eccd.1516203379.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Wed, 17 Jan 2018 16:48:39 +0100
-Subject: [PATCH v2] PCI: pciehp: Assume NoCompl+ for Thunderbolt ports
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:60362 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751366AbeA3KeS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 05:34:18 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: linux-pci@vger.kernel.org
+Cc: mj@ucw.cz, Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH] Fix Vector table and PBA addresses print output
+Date: Tue, 30 Jan 2018 10:34:08 +0000
+Message-Id: <998ca55d1a2b9a7f6912dcff69bc57d31b690fb0.1517308416.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain Thunderbolt 1 controllers claim to support Command Completed events
-(value of 0b in the No Command Completed Support field of the Slot
-Capabilities register) but in reality neither set the Command Completed bit
-in the Slot Status register nor signal a Command Completed interrupt:
+Lack of 3-bit rotation to the right was leading to erroneous display of the
+vector table and PBA.
 
-8086:1513  CV82524  [Light Ridge 4C  2010]
-8086:151a  DSL2310  [Eagle Ridge 2C  2011]
-8086:151b  CVL2510  [Light Peak 2C   2010]
-8086:1547  DSL3510  [Cactus Ridge 4C 2012]
-8086:1548  DSL3310  [Cactus Ridge 2C 2012]
-8086:1549  DSL2210  [Port Ridge 1C   2011]
-
-All newer chips (Redwood Ridge and onwards) set the bit correctly to 1b.
-
-The user-visible impact is that after unplugging such a device, 2 seconds
-elapse until pciehp is unbound.  That's because on ->remove,
-pcie_write_cmd() is called via pcie_disable_notification() and every call
-to pcie_write_cmd() takes 2 seconds (1 second for each invocation of
-pcie_wait_cmd()):
-
-[  337.942727] pciehp 0000:0a:00.0:pcie204: Timeout on hotplug command 0x1038 (issued 21176 msec ago)
-[  340.014735] pciehp 0000:0a:00.0:pcie204: Timeout on hotplug command 0x0000 (issued 2072 msec ago)
-
-That by itself has always been unpleasant, but the situation has become
-worse with commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services
-during shutdown"):  Now pciehp is unbound on ->shutdown.  Because
-Thunderbolt controllers typically have 4 hotplug ports, every reboot and
-shutdown is now delayed by 8 seconds, plus another 2 seconds for every
-attached Thunderbolt 1 device.
-
-Thunderbolt hotplug slots are not physical slots that one inserts cards
-into, but rather logical hotplug slots implemented in silicon.  Devices
-appear beyond those logical slots once a PCI tunnel is established on top
-of the Thunderbolt Converged I/O switch.  One would expect commands written
-to the Slot Control register to be executed immediately by the silicon,
-so for simplicity we always assume NoCompl+ for Thunderbolt ports.
-
-Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: stable@vger.kernel.org # v4.12+
-Cc: Sinan Kaya <okaya@codeaurora.org>
-Cc: Yehezkel Bernat <yehezkel.bernat@intel.com>
-Cc: Michael Jamet <michael.jamet@intel.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
-Changes since v1:
-- Rephrase code comment for clarity. (Bjorn)
-- Amend commit message with info provided by Mika.
-- Adhere to "Make Bjorn's life easier" guide.
+ ls-caps.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- drivers/pci/hotplug/pciehp_hpc.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 7bab0606f1a9..a89d8b990228 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -848,6 +848,13 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	if (pdev->hotplug_user_indicators)
- 		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
+diff --git a/ls-caps.c b/ls-caps.c
+index 507771a..cd13a37 100644
+--- a/ls-caps.c
++++ b/ls-caps.c
+@@ -1104,10 +1104,10 @@ cap_msix(struct device *d, int where, int cap)
  
-+	/*
-+	 * We assume no Thunderbolt controllers support Command Complete events,
-+	 * but some controllers falsely claim they do.
-+	 */
-+	if (pdev->is_thunderbolt)
-+		slot_cap |= PCI_EXP_SLTCAP_NCCS;
-+
- 	ctrl->slot_cap = slot_cap;
- 	mutex_init(&ctrl->ctrl_lock);
- 	init_waitqueue_head(&ctrl->queue);
+   off = get_conf_long(d, where + PCI_MSIX_TABLE);
+   printf("\t\tVector table: BAR=%d offset=%08x\n",
+-	 off & PCI_MSIX_BIR, off & ~PCI_MSIX_BIR);
++	 off & PCI_MSIX_BIR, (off & ~PCI_MSIX_BIR) >> 3);
+   off = get_conf_long(d, where + PCI_MSIX_PBA);
+   printf("\t\tPBA: BAR=%d offset=%08x\n",
+-	 off & PCI_MSIX_BIR, off & ~PCI_MSIX_BIR);
++	 off & PCI_MSIX_BIR, (off & ~PCI_MSIX_BIR) >> 3);
+ }
+ 
+ static void
 -- 
-2.15.1
+2.7.4
