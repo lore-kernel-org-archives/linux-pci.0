@@ -1,56 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-fw-4101.amazon.com ([72.21.198.25]:4017 "EHLO
-        smtp-fw-4101.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752368AbeAQTDG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jan 2018 14:03:06 -0500
-Subject: Re: [PATCH] pci: Do not read INTx PIN and LINE registers for virtual
- functions
-To: Alex Williamson <alex.williamson@redhat.com>,
-        KarimAllah Ahmed <karahmed@amazon.de>
-CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-kernel@vger.kernel.org>,
-        "=?UTF-8?Q?Jan_H_._Sch=c3=b6nherr?=" <jschoenh@amazon.de>
-References: <1516213829-14844-1-git-send-email-karahmed@amazon.de>
- <20180117114944.4835c296@w520.home>
-From: KarimAllah Ahmed <karahmed@amazon.com>
-Message-ID: <afe21e82-b75a-107c-05d4-b4037dfd22b7@amazon.com>
-Date: Wed, 17 Jan 2018 20:02:44 +0100
+Received: from mail.kernel.org ([198.145.29.99]:47306 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752700AbeA3S0M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Jan 2018 13:26:12 -0500
+Subject: [PATCH v2 06/14] PCI/DPC: Squash dpc_rp_pio_print_tlp_header() into
+ dpc_rp_pio_print_error()
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Tue, 30 Jan 2018 12:26:09 -0600
+Message-ID: <20180130182609.106875.73041.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180117114944.4835c296@w520.home>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CgpPbiAwMS8xNy8yMDE4IDA3OjQ5IFBNLCBBbGV4IFdpbGxpYW1zb24gd3JvdGU6Cj4gT24gV2Vk
-LCAxNyBKYW4gMjAxOCAxOTozMDoyOSArMDEwMAo+IEthcmltQWxsYWggQWhtZWQgPGthcmFobWVk
-QGFtYXpvbi5kZT4gd3JvdGU6Cj4KPj4gLi4uIHNpbmNlIElOVHggaXMgbm90IHN1cHBvcnRlZCBi
-eS1zcGVjIGZvciB2aXJ0dWFsIGZ1bmN0aW9ucy4KPiBCdXQgdGhlIHNwZWMgYWxzbyBzdGF0ZXMg
-dGhhdCBWRnMgbXVzdCBpbXBsZW1lbnQgdGhlIGludGVycnVwdCBwaW4KPiByZWdpc3RlciBhcyBy
-ZWFkLW9ubHkgemVybywgc28gZWl0aGVyIHRoaXMgaXMgcmVkdW5kYW50IG9yIGl0J3MgYQo+IHdv
-cmthcm91bmQgZm9yIFZGcyB0aGF0IGFyZW4ndCBxdWl0ZSBjb21wbGlhbnQ/ICBUaGFua3MsCgpU
-aGUgZW5kIGdvYWwgZm9yIG1lIGlzIGp1c3QgdG8gTk9UIGRvIHRoZSByZWFkIGFjcm9zcyB0aGUg
-UENJIGJ1cyBmb3Igbm8gCmdvb2QgcmVhc29uLiBXZSBoYXZlIGRldmljZXMgd2l0aCB0aG91c2Fu
-ZHMgb2YgdmlydHVhbCBmdW5jdGlvbnMgYW5kIAp0aGlzIHJlYWQgaXMgc2ltcGx5IG5vdCB1c2Vm
-dWwgaW4gdGhpcyBjYXNlIGFuZCBjYW4gYmUgb3B0aW1pemVkIGFzIEkgCmRpZC4gU28gZnJvbSBh
-IGZ1bmN0aW9uYWxpdHkgcG9pbnQgb2YgdmlldyBwcm9iYWJseSB0aGUgcGF0Y2ggZG9lcyBub3Qg
-CmFkZCBhbnkgdmFsdWUgYXMgeW91IG1lbnRpb25lZCwgYnV0IGl0IGlzIHJlYWxseSB1c2VmdWwg
-YXMgYSAKbWljcm8tb3B0aW1pemF0aW9uLgoKPgo+IEFsZXgKPgo+PiBDYzogQmpvcm4gSGVsZ2Fh
-cyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4KPj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcK
-Pj4gQ2M6IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcKPj4gU2lnbmVkLW9mZi1ieTogS2Fy
-aW1BbGxhaCBBaG1lZCA8a2FyYWhtZWRAYW1hem9uLmRlPgo+PiBTaWduZWQtb2ZmLWJ5OiBKYW4g
-SC4gU2Now7ZuaGVyciA8anNjaG9lbmhAYW1hem9uLmRlPgo+PiAtLS0KPj4gICBkcml2ZXJzL3Bj
-aS9wcm9iZS5jIHwgNyArKysrKysrCj4+ICAgMSBmaWxlIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygr
-KQo+Pgo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcHJvYmUuYyBiL2RyaXZlcnMvcGNpL3By
-b2JlLmMKPj4gaW5kZXggNjUwOTlkMC4uNjEwMDJmYiAxMDA2NDQKPj4gLS0tIGEvZHJpdmVycy9w
-Y2kvcHJvYmUuYwo+PiArKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jCj4+IEBAIC0xMjMyLDYgKzEy
-MzIsMTMgQEAgc3RhdGljIHZvaWQgcGNpX3JlYWRfaXJxKHN0cnVjdCBwY2lfZGV2ICpkZXYpCj4+
-ICAgewo+PiAgIAl1bnNpZ25lZCBjaGFyIGlycTsKPj4gICAKPj4gKwkvKiBWaXJ0dWFsIGZ1bmN0
-aW9ucyBkbyBub3QgaGF2ZSBJTlR4IHN1cHBvcnQgKi8KPj4gKwlpZiAoZGV2LT5pc192aXJ0Zm4p
-IHsKPj4gKwkJZGV2LT5waW4gPSAwOwo+PiArCQlkZXYtPmlycSA9IDA7Cj4+ICsJCXJldHVybjsK
-Pj4gKwl9Cj4+ICsKPj4gICAJcGNpX3JlYWRfY29uZmlnX2J5dGUoZGV2LCBQQ0lfSU5URVJSVVBU
-X1BJTiwgJmlycSk7Cj4+ICAgCWRldi0+cGluID0gaXJxOwo+PiAgIAlpZiAoaXJxKQo+CgpBbWF6
-b24gRGV2ZWxvcG1lbnQgQ2VudGVyIEdlcm1hbnkgR21iSApCZXJsaW4gLSBEcmVzZGVuIC0gQWFj
-aGVuCm1haW4gb2ZmaWNlOiBLcmF1c2Vuc3RyLiAzOCwgMTAxMTcgQmVybGluCkdlc2NoYWVmdHNm
-dWVocmVyOiBEci4gUmFsZiBIZXJicmljaCwgQ2hyaXN0aWFuIFNjaGxhZWdlcgpVc3QtSUQ6IERF
-Mjg5MjM3ODc5CkVpbmdldHJhZ2VuIGFtIEFtdHNnZXJpY2h0IENoYXJsb3R0ZW5idXJnIEhSQiAx
-NDkxNzMgQgo=
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+Separating dpc_rp_pio_print_tlp_header() doesn't really provide any useful
+abstraction, so squash it into its caller, dpc_rp_pio_print_error().  No
+functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/pcie-dpc.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index a6b8d1496322..16019d1ecc2c 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -142,13 +142,6 @@ static void dpc_work(struct work_struct *work)
+ 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
+ }
+ 
+-static void dpc_rp_pio_print_tlp_header(struct device *dev,
+-					struct rp_pio_header_log_regs *t)
+-{
+-	dev_err(dev, "TLP Header: %#010x %#010x %#010x %#010x\n",
+-		t->dw0, t->dw1, t->dw2, t->dw3);
+-}
+-
+ static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
+ 				   struct dpc_rp_pio_regs *rp_pio)
+ {
+@@ -172,7 +165,9 @@ static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
+ 			rp_pio->first_error == i ? " (First)" : "");
+ 	}
+ 
+-	dpc_rp_pio_print_tlp_header(dev, &rp_pio->header_log);
++	dev_err(dev, "TLP Header: %#010x %#010x %#010x %#010x\n",
++		rp_pio->header_log.dw0, rp_pio->header_log.dw1,
++		rp_pio->header_log.dw2, rp_pio->header_log.dw3);
+ 	if (dpc->rp_log_size == 4)
+ 		return;
+ 
