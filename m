@@ -1,52 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:23958 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756263AbeAHObx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Jan 2018 09:31:53 -0500
-Subject: Re: [PATCH 5/7] PM: i2c-designware-platdrv: Use
- DPM_FLAG_SMART_PREPARE
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Kevin Hilman <khilman@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-i2c <linux-i2c@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@the-dreams.de>
-References: <7742130.AaJQIxeI1n@aspire.rjw.lan>
- <2436726.ykYRzVD45y@aspire.rjw.lan> <1780798.HpLBO7aPyI@aspire.rjw.lan>
-From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Message-ID: <8924de22-96f5-0e10-7aaf-29b5a490afe2@linux.intel.com>
-Date: Mon, 8 Jan 2018 16:31:49 +0200
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:11026 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752501AbeA3FYa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 00:24:30 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V7  0/4] Add loadable kernel module and power management support
+Date: Tue, 30 Jan 2018 10:54:07 +0530
+Message-ID: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <1780798.HpLBO7aPyI@aspire.rjw.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/03/2018 02:35 AM, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Modify i2c-designware-platdrv to set DPM_FLAG_SMART_PREPARE for its
-> devices and return 0 from the system suspend ->prepare callback
-> if the device has an ACPI companion object in order to tell the PM
-> core and middle layers to avoid skipping system suspend/resume
-> callbacks for the device in that case (which may be problematic,
-> because the device may be accessed during suspend and resume of
-> other devices via I2C operation regions then).
-> 
-> Also the pm_runtime_suspended() check in dw_i2c_plat_prepare()
-> is not necessary any more, because the core does it when setting
-> power.direct_complete for the device, so drop it.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->   drivers/i2c/busses/i2c-designware-platdrv.c |   10 +++++++++-
->   1 file changed, 9 insertions(+), 1 deletion(-)
-> 
-Acked-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+This series of patches adds loadable kernel module and power management
+support to Tegra PCIe host controller driver. irq_set_msi_desc() and
+tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
+set of patches.
+
+These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
+are the verification details.
+	- Multiple module insert & remove
+	- PCIe device functionality after module insert
+	- Free clock, resets, regulators, powergate, iomem and interrupt
+	resources after module remove
+	- PCIe device functionality after resume from RAM
+
+V2: PM QoS fix is dropped in V2 from this series because the fix is
+incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
+latency framework")'. Update commit message of few patches in V2.
+
+V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_use()
+are dropped based on review comments. These symbols will be addressed in next
+series. Took care of few other review comments.
+
+V4: Dropped pci_find_host_bridge() export patch and added new patch to use
+bus->sysdata for private data.
+
+V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
+on top of linux-next
+
+V6: Rebased on lpieralisi/pci/tegra branch
+
+V7: Addressed comments on patch: 6 and 7 in V6
+Limiting this series to linux-tegra & linux-pci since patches for other 
+subsystem are merged or dropped
+
+Manikanta Maddireddy (4):
+  PCI: tegra: Free resources on probe failure
+  PCI: tegra: Add loadable kernel module support
+  PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
+  PCI: tegra: Add power management support
+
+ drivers/pci/host/Kconfig     |   2 +-
+ drivers/pci/host/pci-tegra.c | 347 +++++++++++++++++++++++++++++++++----------
+ 2 files changed, 272 insertions(+), 77 deletions(-)
+
+-- 
+2.1.4
