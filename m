@@ -1,59 +1,49 @@
-Return-Path: <SRS0=A+B5=EI=fredlawl.com=fred@kernel.org>
-Return-Path: <SRS0=A+B5=EI=fredlawl.com=fred@kernel.org>
-From: Frederick Lawler <fred@fredlawl.com>
-To: linux-pci@vger.kernel.org
-Cc: helgaas@kernel.org,
-	Frederick Lawler <fred@fredlawl.com>
-Subject: [PATCH v3 0/3] PCI: Add and use pci_<level>: dev_<level> equivalents
-Date: Fri, 12 Jan 2018 22:58:35 -0600
-Message-Id: <1515819518-6501-1-git-send-email-fred@fredlawl.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 5.mo179.mail-out.ovh.net ([46.105.43.140]:43796 "EHLO
+        5.mo179.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753247AbeA3VFJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 16:05:09 -0500
+Received: from player168.ha.ovh.net (b7.ovh.net [213.186.33.57])
+        by mo179.mail-out.ovh.net (Postfix) with ESMTP id 9A1D79A673
+        for <linux-pci@vger.kernel.org>; Tue, 30 Jan 2018 21:58:08 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v6 03/11] PCI: generic: fix missing call of pci_free_resource_list()
+Date: Tue, 30 Jan 2018 21:56:51 +0100
+Message-Id: <19fc2c448cf8f19c47225450a375af657bd2c61a.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace current uses of dev_<level> with pci_<level> by adding and using
-PCI specific fuctions. 
+Call pci_free_resource_list() from pci_host_common_probe() when probing
+fails, as done inside gen_pci_init() when this later function fails.
 
-V2:
-* Replace static inline varadic functions with macros instead
-* Convert hotplug, AER, ASPM, PME, PTM
-V3:
-* Split updates for hotplug, AER, ASPM, PME, PTM into new patch
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ drivers/pci/host/pci-host-common.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Frederick Lawler (3):
-  PCI: Create  minor pci_dev log wrapper functions
-  PCI: Replace calls from dev_<level> to pci_<level>
-  PCI: Replace calls from dev_<level> to pci_<level> in pcie and hotplug
-
- drivers/pci/access.c                   |   8 +-
- drivers/pci/bus.c                      |   4 +-
- drivers/pci/hotplug/cpqphp_core.c      |   2 +-
- drivers/pci/hotplug/pnv_php.c          |  40 +++----
- drivers/pci/hotplug/sgi_hotplug.c      |  36 +++---
- drivers/pci/hotplug/shpchp.h           |   8 +-
- drivers/pci/hotplug/shpchp_core.c      |   2 +-
- drivers/pci/iov.c                      |  10 +-
- drivers/pci/irq.c                      |   7 +-
- drivers/pci/msi.c                      |   7 +-
- drivers/pci/pci-acpi.c                 |   2 +-
- drivers/pci/pci-stub.c                 |   2 +-
- drivers/pci/pci-sysfs.c                |  10 +-
- drivers/pci/pci.c                      |  82 +++++++-------
- drivers/pci/pcie/aer/aer_inject.c      |  15 +--
- drivers/pci/pcie/aer/aerdrv.c          |   2 +-
- drivers/pci/pcie/aer/aerdrv_core.c     |  21 ++--
- drivers/pci/pcie/aer/aerdrv_errprint.c |  22 ++--
- drivers/pci/pcie/aspm.c                |   9 +-
- drivers/pci/pcie/pme.c                 |   6 +-
- drivers/pci/pcie/ptm.c                 |   2 +-
- drivers/pci/probe.c                    |  75 ++++++-------
- drivers/pci/quirks.c                   | 200 ++++++++++++++++-----------------
- drivers/pci/rom.c                      |   4 +-
- drivers/pci/setup-bus.c                |  44 ++++----
- drivers/pci/setup-irq.c                |   4 +-
- drivers/pci/setup-res.c                |  40 ++++---
- drivers/pci/vc.c                       |  18 ++-
- drivers/pci/xen-pcifront.c             |  19 ++--
- include/linux/pci.h                    |  27 +++++
- 30 files changed, 363 insertions(+), 365 deletions(-)
-
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index efd904d93562..10e3f5b39499 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -110,6 +110,7 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	ret = pci_scan_root_bus_bridge(bridge);
+ 	if (ret < 0) {
+ 		dev_err(dev, "Scanning root bridge failed");
++		pci_free_resource_list(&resources);
+ 		return ret;
+ 	}
+ 
 -- 
-2.7.4
+2.11.0
