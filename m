@@ -1,151 +1,131 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V3 3/6] PCI: Make pci_flr_wait() generic and rename to
- pci_dev_wait()
-Date: Tue,  2 Jan 2018 12:00:20 -0500
-Message-Id: <1514912423-13341-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
-References: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47214 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752555AbeA3SZ5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Jan 2018 13:25:57 -0500
+Subject: [PATCH v2 04/14] PCI/DPC: Read RP PIO Log Size once at probe
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Tue, 30 Jan 2018 12:25:52 -0600
+Message-ID: <20180130182552.106875.52336.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rev 3.1 Sec 2.3.1 Request Handling Rules:
-Valid reset conditions after which a device is permitted to return CRS
-are:
-* Cold, Warm, and Hot Resets,
-* FLR
-* A reset initiated in response to a D3hot to D0 uninitialized
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Try to reuse FLR implementation towards other reset types.
+The RP PIO Log Size is a read-only field in the DPC Capability, so it is
+constant and known at probe-time, but previously we read it every time we
+processed an RP PIO error.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Read it once in dpc_probe() (if the RP Extensions for DPC are supported)
+and remember the size in struct dpc_dev.  No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/pci/pci.c | 48 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 31 insertions(+), 17 deletions(-)
+ drivers/pci/pcie/pcie-dpc.c |   29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ef15162..736d809 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -125,6 +125,9 @@ static int __init pcie_port_pm_setup(char *str)
- }
- __setup("pcie_port_pm=", pcie_port_pm_setup);
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 0bbdf513067a..17f60bd4ea5f 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -34,7 +34,6 @@ struct dpc_rp_pio_regs {
+ 	struct rp_pio_header_log_regs header_log;
+ 	u32 impspec_log;
+ 	u32 tlp_prefix_log[4];
+-	u32 log_size;
+ 	u16 first_error;
+ };
  
-+/* time to wait after a reset for device to become responsive */
-+#define PCIE_RESET_READY_POLL_MS 60000
-+
- /**
-  * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
-  * @bus: pointer to PCI bus structure to search
-@@ -3945,20 +3948,13 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+@@ -44,6 +43,7 @@ struct dpc_dev {
+ 	u16			cap_pos;
+ 	bool			rp_extensions;
+ 	u32			rp_pio_status;
++	u8			rp_log_size;
+ };
  
--static int pci_flr_wait(struct pci_dev *dev)
-+static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
- {
--	int delay = 1, timeout = 60000;
-+	int delay = 1;
- 	u32 id;
- 
- 	/*
--	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
--	 * 100ms, but may silently discard requests while the FLR is in
--	 * progress.  Wait 100ms before trying to access the device.
--	 */
--	msleep(100);
--
--	/*
--	 * After 100ms, the device should not silently discard config
-+	 * After reset, the device should not silently discard config
- 	 * requests, but it may still indicate that it needs more time by
- 	 * responding to them with CRS completions.  The Root Port will
- 	 * generally synthesize ~0 data to complete the read (except when
-@@ -3972,14 +3968,14 @@ static int pci_flr_wait(struct pci_dev *dev)
- 	pci_read_config_dword(dev, PCI_COMMAND, &id);
- 	while (id == ~0) {
- 		if (delay > timeout) {
--			dev_warn(&dev->dev, "not ready %dms after FLR; giving up\n",
--				 100 + delay - 1);
-+			dev_warn(&dev->dev, "not ready %dms after %s; giving up\n",
-+				 delay - 1, reset_type);
- 			return -ENOTTY;
- 		}
- 
- 		if (delay > 1000)
--			dev_info(&dev->dev, "not ready %dms after FLR; waiting\n",
--				 100 + delay - 1);
-+			dev_info(&dev->dev, "not ready %dms after %s; waiting\n",
-+				 delay - 1, reset_type);
- 
- 		msleep(delay);
- 		delay *= 2;
-@@ -3987,7 +3983,8 @@ static int pci_flr_wait(struct pci_dev *dev)
+ static const char * const rp_pio_error_string[] = {
+@@ -173,11 +173,12 @@ static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
  	}
  
- 	if (delay > 1000)
--		dev_info(&dev->dev, "ready %dms after FLR\n", 100 + delay - 1);
-+		dev_info(&dev->dev, "ready %dms after %s\n", delay - 1,
-+			 reset_type);
+ 	dpc_rp_pio_print_tlp_header(dev, &rp_pio->header_log);
+-	if (rp_pio->log_size == 4)
++	if (dpc->rp_log_size == 4)
+ 		return;
++
+ 	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", rp_pio->impspec_log);
  
- 	return 0;
+-	for (i = 0; i < rp_pio->log_size - 5; i++)
++	for (i = 0; i < dpc->rp_log_size - 5; i++)
+ 		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i,
+ 			rp_pio->tlp_prefix_log[i]);
  }
-@@ -4024,7 +4021,15 @@ int pcie_flr(struct pci_dev *dev)
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
+@@ -186,7 +187,6 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 				struct dpc_rp_pio_regs *rp_pio)
+ {
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	struct device *dev = &dpc->dev->device;
+ 	int i;
+ 	u16 cap = dpc->cap_pos, status;
  
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
--	return pci_flr_wait(dev);
-+
-+	/*
-+	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
-+	 * 100ms, but may silently discard requests while the FLR is in
-+	 * progress.  Wait 100ms before trying to access the device.
-+	 */
-+	msleep(100);
-+
-+	return pci_dev_wait(dev, "FLR", PCIE_RESET_READY_POLL_MS);
+@@ -206,13 +206,8 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	rp_pio->first_error = (status & 0x1f00) >> 8;
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+-	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
+-	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
+-		dev_err(dev, "RP PIO log size %u is invalid\n",
+-			rp_pio->log_size);
++	if (dpc->rp_log_size < 4)
+ 		return;
+-	}
+ 
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
+ 			      &rp_pio->header_log.dw0);
+@@ -222,12 +217,12 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 			      &rp_pio->header_log.dw2);
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
+ 			      &rp_pio->header_log.dw3);
+-	if (rp_pio->log_size == 4)
++	if (dpc->rp_log_size == 4)
+ 		return;
+ 
+ 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
+ 			      &rp_pio->impspec_log);
+-	for (i = 0; i < rp_pio->log_size - 5; i++)
++	for (i = 0; i < dpc->rp_log_size - 5; i++)
+ 		pci_read_config_dword(pdev,
+ 			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
+ 			&rp_pio->tlp_prefix_log[i]);
+@@ -327,6 +322,14 @@ static int dpc_probe(struct pcie_device *dev)
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+ 
+ 	dpc->rp_extensions = (cap & PCI_EXP_DPC_CAP_RP_EXT);
++	if (dpc->rp_extensions) {
++		dpc->rp_log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
++		if (dpc->rp_log_size < 4 || dpc->rp_log_size > 9) {
++			dev_err(device, "RP PIO log size %u is invalid\n",
++				dpc->rp_log_size);
++			dpc->rp_log_size = 0;
++		}
++	}
+ 
+ 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+@@ -334,7 +337,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+ 		cap & PCI_EXP_DPC_IRQ, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
+ 		FLAG(cap, PCI_EXP_DPC_CAP_POISONED_TLP),
+-		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), (cap >> 8) & 0xf,
++		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), dpc->rp_log_size,
+ 		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
+ 	return status;
  }
- EXPORT_SYMBOL_GPL(pcie_flr);
- 
-@@ -4057,7 +4062,16 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
- 
- 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
--	return pci_flr_wait(dev);
-+
-+	/*
-+	 * Per Advanced Capabilities for Conventional PCI ECN, 13 April 2006,
-+	 * updated 27 July 2006; a device must complete an FLR within
-+	 * 100ms, but may silently discard requests while the FLR is in
-+	 * progress.  Wait 100ms before trying to access the device.
-+	 */
-+	msleep(100);
-+
-+	return pci_dev_wait(dev, "AF_FLR", PCIE_RESET_READY_POLL_MS);
- }
- 
- /**
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
