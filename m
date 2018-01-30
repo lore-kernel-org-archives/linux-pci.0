@@ -1,67 +1,74 @@
-Return-Path: <SRS0=9jKw=D5=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=9jKw=D5=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 2 Jan 2018 11:37:50 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Jim Quinlan <jim2101024@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
-	"linux-rockchip@lists.infradead.org" <linux-rockchip@lists.infradead.org>
-Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
-Message-ID: <20180102113750.GC10536@red-moon>
-References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
- <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
- <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:55736 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751482AbeA3Gkg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 01:40:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171222172815.GA55396@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 30 Jan 2018 12:10:35 +0530
+From: poza@codeaurora.org
+To: Oza Pawandeep <oza.pawandeep@gmail.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH 2/6] PCI/DPC: Leave interrupts enabled while handling
+ event
+In-Reply-To: <f0afb7badc99dcfc3b6818cc2356250d@codeaurora.org>
+References: <20180129213145.26068-1-keith.busch@intel.com>
+ <20180129213145.26068-2-keith.busch@intel.com>
+ <56d77093-b630-148d-52ab-14dcb7714e6b@codeaurora.org>
+ <CAK1A=4w-uDm+gau6WdwM=ZrgO=bWDtDKqwabxWxm2EZZb+YoKw@mail.gmail.com>
+ <f0afb7badc99dcfc3b6818cc2356250d@codeaurora.org>
+Message-ID: <5ac89b178566eead0669b80c9813936a@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 22, 2017 at 11:28:15AM -0600, Bjorn Helgaas wrote:
-> On Fri, Dec 22, 2017 at 01:02:28PM +0000, Bharat Kumar Gogada wrote:
-> > Bjorn wrote:
-> >> In the PCI config access path, the *_pcie_valid_device() functions
-> >> in the dwc, altera, rockchip, and xilinx drivers all check whether
-> >> the link is up.
-> >> 
-> >> I think this is racy because the link may go down after we check but
-> >> before we perform the config access.
-> >> 
-> >> What would blow up if we removed the *_pcie_link_up() checks?
-> >> 
-> >> I'd like to either remove the checks or add comments about why the
-> >> race is acceptable.  If we've covered this before, I apologize.
-> >> Adding a comment will keep me from pestering you about this again in
-> >> the future.
+On 2018-01-30 12:04, poza@codeaurora.org wrote:
+> On 2018-01-30 11:59, Oza Pawandeep wrote:
+>> + Oza
+>> 
+>> On Tue, Jan 30, 2018 at 7:41 AM, Sinan Kaya <okaya@codeaurora.org> 
+>> wrote:
+>>> On 1/29/2018 4:31 PM, Keith Busch wrote:
+>>>> +     if (!work_busy(&dpc->work))
+>>>> +             schedule_work(&dpc->work);
+>>> 
+>>> Isn't there a race condition between the time that dpc_work() clears 
+>>> PCI_EXP_DPC_STATUS
+>>> register and when work actually completes by returning from 
+>>> dpc_work()?
+>>> 
+>>> If the interrupt arrives just in this window, this code will not 
+>>> schedule the work.
+>>> 
+>>> --
+>>> Sinan Kaya
+>>> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm 
+>>> Technologies, Inc.
+>>> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+>>> Linux Foundation Collaborative Project.
 > 
-> > In both Xilinx driver cases when link is down, hardware responds by
-> > AXI DECERR/SLVERR status which causes an exception, synchronous
-> > external abort to CPU.  This causes system to hang, so we need this
-> > check for both of our drivers.  We will add comments. 
+> besides, there is one more problem which I was debugging:
+> if RP doesnt support MSI, then legacy interrupts are not well handled
+> and we get interrupt storm.
+> this is because;
+> PCI_EXP_DPC_STATUS_INTERRUPT is being cleared in deferred work.
+> which should get cleared in dpc_irq interrupt handler.
+> I will post a patch for this, but I see there are lot of changes being
+> made in dpc and aer lately.
 > 
-> This is a problem, and checking whether the link is up is a workaround
-> but not a real solution.  That means your system may hang if the link
-> happens to go down at the wrong time.
+> Bjorn: Can you please help to review my AER/DPC series of patches so
+> that I do not have to keep rebasing and do manual merge ?
 > 
-> A real solution would be to handle the synchronous external abort
-> so it doesn't cause a system hang.
+> Regards,
+> Oza.
 
-I still have no idea why checking (in a broken way) that the link
-is up for _every_ given config access is a solution.
+the DPC code assumes that the interrupt will be edge triggered (MSI), 
+and clears interrupt in deferred work.
+but for SPI (level triggered) it should be cleared in dpc_irq.
 
-If, say, the link is down in xilinx_pcie_init_port(), what would bring
-it up or, worded differently, why checking that the link is up for every
-config access instead of host bridge probe time make this code any safer
-?
-
-It is not safe anyway, it would be good to understand though why the code
-was written this way so that we can change it appropriately.
-
-Thanks,
-Lorenzo
+Regards,
+Oza.
