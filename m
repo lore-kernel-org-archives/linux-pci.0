@@ -1,98 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47316 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755871AbeASP6c (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jan 2018 10:58:32 -0500
+Received: from mga04.intel.com ([192.55.52.120]:13100 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751257AbeA3Khv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Jan 2018 05:37:51 -0500
+Date: Tue, 30 Jan 2018 12:37:45 +0200
+From: Mika Westerberg <mika.westerberg@intel.com>
+To: Kai Heng Feng <kai.heng.feng@canonical.com>
+Cc: linux-pci@vger.kernel.org, Ethan Hsieh <ethan.hsieh@canonical.com>,
+        thunderbolt-software@lists.01.org
+Subject: Re: Thunderbolt PCIe card doesn't get enumerated at cold boot
+Message-ID: <20180130103745.GG27654@lahna.fi.intel.com>
+References: <8831781F-8027-4875-AF82-835FBE40F5F0@canonical.com>
+ <20180130102319.GE27654@lahna.fi.intel.com>
+ <C4051028-A6AD-4B78-97E2-AE1BC34694EB@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 19 Jan 2018 21:28:31 +0530
-From: poza@codeaurora.org
-To: Stefan Roese <sr@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v6 7/7] PCI: Unify wait for link active into generic pci
-In-Reply-To: <d8573bed-3517-bc9b-1e4a-c0107be9ea13@denx.de>
-References: <1516360204-1586-1-git-send-email-poza@codeaurora.org>
- <1516360204-1586-8-git-send-email-poza@codeaurora.org>
- <d8573bed-3517-bc9b-1e4a-c0107be9ea13@denx.de>
-Message-ID: <60704cf1854c539f514e859a1f8adc63@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <C4051028-A6AD-4B78-97E2-AE1BC34694EB@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-19 19:49, Stefan Roese wrote:
-> On 19.01.2018 12:10, Oza Pawandeep wrote:
->> Clients such as pciehp, dpc are using pcie_wait_link_active, which 
->> waits
->> till the link becomes active or inactive.
->> 
->> Made generic function and moved it to drivers/pci/pci.c
->> 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> 
->> diff --git a/drivers/pci/hotplug/pciehp_hpc.c 
->> b/drivers/pci/hotplug/pciehp_hpc.c
->> index 7bab060..26afeff 100644
->> --- a/drivers/pci/hotplug/pciehp_hpc.c
->> +++ b/drivers/pci/hotplug/pciehp_hpc.c
->> @@ -245,25 +245,12 @@ bool pciehp_check_link_active(struct controller 
->> *ctrl)
->>   	return ret;
->>   }
->> 
->> -static void __pcie_wait_link_active(struct controller *ctrl, bool 
->> active)
->> +static bool pcie_wait_link_active(struct controller *ctrl)
->>   {
->> -	int timeout = 1000;
->> -
->> -	if (pciehp_check_link_active(ctrl) == active)
->> -		return;
->> -	while (timeout > 0) {
->> -		msleep(10);
->> -		timeout -= 10;
->> -		if (pciehp_check_link_active(ctrl) == active)
->> -			return;
->> -	}
->> -	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
->> -			active ? "set" : "cleared");
->> -}
->> +	struct pci_dev *pdev = ctrl_dev(ctrl);
->> +	bool active = true;
->> 
->> -static void pcie_wait_link_active(struct controller *ctrl)
->> -{
->> -	__pcie_wait_link_active(ctrl, true);
->> +	return pci_wait_for_link(pdev, active);
->>   }
->> 
->>   static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 4a7c686..0de83ea 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -2805,7 +2805,7 @@ static void pci_std_enable_acs(struct pci_dev 
->> *dev)
->>   	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
->> 
->>   	/* Source Validation */
->> -	ctrl |= (cap & PCI_ACS_SV);
->> +//	ctrl |= (cap & PCI_ACS_SV);
+On Tue, Jan 30, 2018 at 06:29:56PM +0800, Kai Heng Feng wrote:
 > 
-> Could it be, that you missed to fix / clean something up here?
 > 
-> Thanks,
-> Stefan
+> > On 30 Jan 2018, at 6:23 PM, Mika Westerberg <mika.westerberg@intel.com> wrote:
+> > 
+> > On Tue, Jan 30, 2018 at 04:32:51PM +0800, Kai Heng Feng wrote:
+> >> Hi Mika,
+> >> 
+> >> Bother you again because you are the only TBT expert that I know of ;)
+> > 
+> > No problem. That's what I get paid for :-)
+> > 
+> >> We are enabling a new CFL desktop with TBT card.  The TBT card in
+> >> question doesn’t get enumerated at cold boot, so the card isn’t listed
+> >> under `lspci`.  Anything that does a PCI scan (# echo 1 >
+> >> /sys/bus/pci/rescan, S3, warmboot) can make the card gets detected
+> >> correctly.
+> >> 
+> >> The same TBT card doesn’t have the issue on a KBL desktop, so I not
+> >> sure if it’s a driver issue though.
+> > 
+> > By TBT "card" do you mean TBT host add-in-card? Is it Alpine Ridge?
+> 
+> Yes it is. It’s a PCIe add-in-card. It is Alpine Ridge.
+> 
+> Wondering if TBT requires special support from PCH or ACPI?
+> I am asking this because the very same card can’t get detected on a Ryzen
+> platform.
 
-yes, will correct this and re-post.
+Yes, it needs to have BIOS support and in addition you need to have
+those side band signals connected properly. BIOS support is needed for
+ACPI hotplug.
 
-Regards,
-Oza.
+Unless it is in native PCIe hotplug mode but even then you need to have
+BIOS support.
+
+> > 
+> >> Also, is there a more appropriate mailing list for TBT discussion?
+> > 
+> > I think you can use thunderbolt-software@lists.01.org as well.
+> 
+> Good to know ;)
+> 
+> Kai-Heng
