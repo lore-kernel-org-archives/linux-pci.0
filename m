@@ -1,60 +1,64 @@
-Return-Path: <SRS0=o8dQ=EA=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=o8dQ=EA=deltatee.com=logang@kernel.org>
-To: Alex Williamson <alex.williamson@redhat.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
- linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
- Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
- Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
- <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <20180104190137.7654-1-logang@deltatee.com>
- <20180104190137.7654-5-logang@deltatee.com>
- <20180104215721.GF189897@bhelgaas-glaptop.roam.corp.google.com>
- <20180104153551.3118f71b@t450s.home>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <20fdb5bb-0236-c093-ed53-e12664022f53@deltatee.com>
-Date: Thu, 4 Jan 2018 17:00:47 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH] PCI: Add SPDX GPL-2.0+ to replace implicit GPL v2 or later
+ statement
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
+        Sebastian Ott <sebott@linux.vnet.ibm.com>,
+        linux-kernel@vger.kernel.org,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Gerald Schaefer <gerald.schaefer@de.ibm.com>
+Date: Mon, 29 Jan 2018 18:40:52 -0600
+Message-ID: <20180130004051.15416.78620.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180130003559.15416.18047.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180130003559.15416.18047.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180104153551.3118f71b@t450s.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH 04/12] pci-p2p: Clear ACS P2P flags for all client devices
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Bjorn Helgaas <bhelgaas@google.com>
 
+7441b0627e22 ("s390/pci: PCI hotplug support via SCLP") added
+s390_pci_hpc.c, which included this license information:
 
-On 04/01/18 03:35 PM, Alex Williamson wrote:
-> Yep, flipping these ACS bits invalidates any IOMMU groups that depend
-> on the isolation of that downstream port and I suspect also any peers
-> within the same PCI slot of that port and their downstream devices.  The
-> entire sub-hierarchy grouping needs to be re-evaluated.  This
-> potentially affects running devices that depend on that isolation, so
-> I'm not sure how that happens dynamically.  A boot option might be
-> easier.  Thanks,
+  +MODULE_LICENSE("GPL");
 
-I don't see how this is the case in current kernel code. It appears to 
-only enable ACS globally if the IOMMU requests it.
+Based on "git show 7441b0627e22:include/linux/module.h", that "GPL" string
+means "GPL v2 or later":
 
-I also don't see how turning off ACS isolation for a specific device is 
-going to hurt anything. The IOMMU should still be able to keep going on 
-unaware that anything has changed. The only worry is that a security 
-hole may now be created if a user was relying on the isolation between 
-two devices that are in different VMs or something. However, if a user 
-was relying on this, they probably shouldn't have turned on P2P in the 
-first place.
+   *      "GPL"                           [GNU Public License v2 or later]
 
-We started with a fairly unintelligent choice to simply disable ACS on 
-any kernel that had CONFIG_PCI_P2P set. However, this did not seem like 
-a good idea going forward. Instead, we now selectively disable the ACS 
-bit only on the downstream ports that are involved in P2P transactions. 
-This seems like the safest choice and still allows people to (carefully) 
-use P2P adjacent to other devices that need to be isolated.
+0729dcf24832 ("s390: hotplug: make pci_hpc explicitly non-modular")
+subsequently replaced the MODULE_LICENSE() with a "License: GPL" comment.
 
-I don't think anyone wants another boot option that must be set in order 
-to use this functionality (and only some hardware would require this). 
-That's just a huge pain for users.
+Add SPDX GPL-2.0+ and remove the "License: GPL" comment, relying on the
+assertion in b24413180f56 ("License cleanup: add SPDX GPL-2.0 license
+identifier to files with no license") that the SPDX identifier may be used
+instead of the full boilerplate text.
 
-Logan
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/s390_pci_hpc.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/s390_pci_hpc.c b/drivers/pci/hotplug/s390_pci_hpc.c
+index 530d0e49f2ed..ffdc2977395d 100644
+--- a/drivers/pci/hotplug/s390_pci_hpc.c
++++ b/drivers/pci/hotplug/s390_pci_hpc.c
+@@ -1,3 +1,4 @@
++// SPDX-License-Identifier: GPL-2.0+
+ /*
+  * PCI Hot Plug Controller Driver for System z
+  *
+@@ -5,8 +6,6 @@
+  *
+  * Author(s):
+  *   Jan Glauber <jang@linux.vnet.ibm.com>
+- *
+- * License: GPL
+  */
+ 
+ #define KMSG_COMPONENT "zpci"
