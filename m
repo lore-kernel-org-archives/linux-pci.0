@@ -1,56 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33510 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932238AbeAXVKw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Jan 2018 16:10:52 -0500
-Date: Wed, 24 Jan 2018 14:10:51 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: geoff@hostfission.com
-Cc: linux-pci@vger.kernel.org, <suravee.suthikulpanit@amd.com>,
-        Gary R Hook <gary.hook@amd.com>
-Subject: Re: [PATCH] Restore PCI bridge configuration space on bridge reset
-Message-ID: <20180124141051.733f7b28@w520.home>
-In-Reply-To: <0986ad77b71f3b8e0a17f79e238d1ebc@hostfission.com>
-References: <0986ad77b71f3b8e0a17f79e238d1ebc@hostfission.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:54168 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751360AbeA3Gep (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 01:34:45 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 30 Jan 2018 12:04:44 +0530
+From: poza@codeaurora.org
+To: Oza Pawandeep <oza.pawandeep@gmail.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH 2/6] PCI/DPC: Leave interrupts enabled while handling
+ event
+In-Reply-To: <CAK1A=4w-uDm+gau6WdwM=ZrgO=bWDtDKqwabxWxm2EZZb+YoKw@mail.gmail.com>
+References: <20180129213145.26068-1-keith.busch@intel.com>
+ <20180129213145.26068-2-keith.busch@intel.com>
+ <56d77093-b630-148d-52ab-14dcb7714e6b@codeaurora.org>
+ <CAK1A=4w-uDm+gau6WdwM=ZrgO=bWDtDKqwabxWxm2EZZb+YoKw@mail.gmail.com>
+Message-ID: <f0afb7badc99dcfc3b6818cc2356250d@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 24 Jan 2018 19:02:33 +1100
-geoff@hostfission.com wrote:
-
-> According to PCI-to-PCI Bridge Architecture Specification 3.2.5.17
-
-Correction, rev 1.2 section 3.2.5.18, in reference to the secondary bus
-reset bit in the bridge control register.
- 
-> > The bridge’s secondary bus interface and any buffers between
-> > the two interfaces (primary and secondary) must be initialized
-> > back to their default state whenever this bit is set.  
+On 2018-01-30 11:59, Oza Pawandeep wrote:
+> + Oza
 > 
-> Failure to observe this causes inability to access devices on the 
-> secondary bus
-> on the AMD Threadripper platform after device reset when the device is 
-> being
-> used for PCI passthrough with KVM.
-> 
-> The following patch corrects this by saving the pci state and restoring 
-> it after
-> the bus has been reset.
+> On Tue, Jan 30, 2018 at 7:41 AM, Sinan Kaya <okaya@codeaurora.org> 
+> wrote:
+>> On 1/29/2018 4:31 PM, Keith Busch wrote:
+>>> +     if (!work_busy(&dpc->work))
+>>> +             schedule_work(&dpc->work);
+>> 
+>> Isn't there a race condition between the time that dpc_work() clears 
+>> PCI_EXP_DPC_STATUS
+>> register and when work actually completes by returning from 
+>> dpc_work()?
+>> 
+>> If the interrupt arrives just in this window, this code will not 
+>> schedule the work.
+>> 
+>> --
+>> Sinan Kaya
+>> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm 
+>> Technologies, Inc.
+>> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+>> Linux Foundation Collaborative Project.
 
-How do configuration registers on the primary bus interface fall into
-this requirement?  It's not very clear from the spec what these
-"buffers" are and the secondary interface has no configuration
-registers itself.  Figure 1-2 shows Transaction/Data Buffers which are
-clearly separate from the Primary Interface Configuration Registers.
-I'd tend to say this excerpt of the spec is describing a hardware
-requirement, not a software requirement.
+besides, there is one more problem which I was debugging:
+if RP doesnt support MSI, then legacy interrupts are not well handled 
+and we get interrupt storm.
+this is because;
+PCI_EXP_DPC_STATUS_INTERRUPT is being cleared in deferred work.
+which should get cleared in dpc_irq interrupt handler.
+I will post a patch for this, but I see there are lot of changes being 
+made in dpc and aer lately.
 
-I know that people have found that re-writing bridge registers on
-threadripper solves the reset problem, but this seems like a bit of a
-stretch to attribute it to this spec statement.  Maybe it can be
-handled via a quirk if AMD isn't planning to release firmware that
-resolves this issue?  AMD...  Thanks,
+Bjorn: Can you please help to review my AER/DPC series of patches so 
+that I do not have to keep rebasing and do manual merge ?
 
-Alex
+Regards,
+Oza.
