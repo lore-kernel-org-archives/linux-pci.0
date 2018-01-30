@@ -1,74 +1,138 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V3 1/6] PCI: Protect restore with device lock to be consistent
-Date: Tue,  2 Jan 2018 12:00:18 -0500
-Message-Id: <1514912423-13341-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
-References: <1514912423-13341-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v6 04/11] PCI: Add generic function to probe PCI host controllers
+Date: Tue, 30 Jan 2018 21:56:52 +0100
+Message-Id: <397a5919b77a2b1ed9f0fe46e830e4fbd355e869.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit b014e96d1abb ("PCI: Protect pci_error_handlers->reset_notify() usage
-with device_lock()") added protection around pci_dev_restore() function so
-that device specific remove callback does not cause a race condition
-against hotplug.
+This patchs moves generic source code from
+drivers/pci/host/pci-host-common.c into drivers/pci/probe.c.
 
-pci_dev_lock() usage has been forgotten in two different places in the
-code. Adding locks for pci_slot_restore() and moving pci_dev_restore()
-inside the locks for pci_try_reset_function().
+Indeed the extracted lines of code were duplicated by many host
+controller drivers. Regrouping them into a generic function gives a
+change to properly share this code without introducing a useless
+dependency to PCI_HOST_COMMON, which selects PCI_ECAM when not needed by
+most host controller drivers.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
 ---
- drivers/pci/pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/pci/host/pci-host-common.c | 22 +---------------------
+ drivers/pci/probe.c                | 33 +++++++++++++++++++++++++++++++++
+ include/linux/pci.h                |  1 +
+ 3 files changed, 35 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 764ca7b..463b32d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4448,9 +4448,9 @@ int pci_try_reset_function(struct pci_dev *dev)
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index 10e3f5b39499..160b3c1cb5a0 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -72,7 +72,6 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	const char *type;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+-	struct pci_bus *bus, *child;
+ 	struct pci_host_bridge *bridge;
+ 	struct pci_config_window *cfg;
+ 	struct list_head resources;
+@@ -107,30 +106,11 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	bridge->map_irq = of_irq_parse_and_map_pci;
+ 	bridge->swizzle_irq = pci_common_swizzle;
  
- 	pci_dev_save_and_disable(dev);
- 	rc = __pci_reset_function_locked(dev);
-+	pci_dev_restore(dev);
- 	pci_dev_unlock(dev);
- 
--	pci_dev_restore(dev);
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(pci_try_reset_function);
-@@ -4658,7 +4658,9 @@ static void pci_slot_restore(struct pci_slot *slot)
- 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
- 		if (!dev->slot || dev->slot != slot)
- 			continue;
-+		pci_dev_lock(dev);
- 		pci_dev_restore(dev);
-+		pci_dev_unlock(dev);
- 		if (dev->subordinate)
- 			pci_bus_restore(dev->subordinate);
+-	ret = pci_scan_root_bus_bridge(bridge);
++	ret = pci_host_probe(bridge);
+ 	if (ret < 0) {
+-		dev_err(dev, "Scanning root bridge failed");
+ 		pci_free_resource_list(&resources);
+ 		return ret;
  	}
+ 
+-	bus = bridge->bus;
+-
+-	/*
+-	 * We insert PCI resources into the iomem_resource and
+-	 * ioport_resource trees in either pci_bus_claim_resources()
+-	 * or pci_bus_assign_resources().
+-	 */
+-	if (pci_has_flag(PCI_PROBE_ONLY)) {
+-		pci_bus_claim_resources(bus);
+-	} else {
+-		pci_bus_size_bridges(bus);
+-		pci_bus_assign_resources(bus);
+-
+-		list_for_each_entry(child, &bus->children, node)
+-			pcie_bus_configure_settings(child);
+-	}
+-
+-	pci_bus_add_devices(bus);
+ 	return 0;
+ }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 14e0ea1ff38b..a42bbfc5f2ec 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2620,6 +2620,39 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL_GPL(pci_create_root_bus);
+ 
++int pci_host_probe(struct pci_host_bridge *bridge)
++{
++	struct pci_bus *bus, *child;
++	int ret;
++
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret < 0) {
++		dev_err(bridge->dev.parent, "Scanning root bridge failed");
++		return ret;
++	}
++
++	bus = bridge->bus;
++
++	/*
++	 * We insert PCI resources into the iomem_resource and
++	 * ioport_resource trees in either pci_bus_claim_resources()
++	 * or pci_bus_assign_resources().
++	 */
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		pci_bus_claim_resources(bus);
++	} else {
++		pci_bus_size_bridges(bus);
++		pci_bus_assign_resources(bus);
++
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++	}
++
++	pci_bus_add_devices(bus);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_host_probe);
++
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+ 	struct resource *res = &b->busn_res;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c7a701abbf17..db6700137bd2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -887,6 +887,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++int pci_host_probe(struct pci_host_bridge *bridge);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
