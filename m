@@ -1,173 +1,193 @@
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=tDEs=D6=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v3 4/7] powerpc/kernel Add EEH operations to notify resume
-Date: Wed,  3 Jan 2018 11:16:30 -0600
-In-Reply-To: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-References: <20180103171633.94499-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20180103171633.94499-5-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47112 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752299AbeA3SZi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Jan 2018 13:25:38 -0500
+Subject: [PATCH v2 02/14] PCI/DPC: Add local variable for DPC capability
+ offset
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>
+Date: Tue, 30 Jan 2018 12:25:35 -0600
+Message-ID: <20180130182535.106875.5954.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When pseries SR-IOV is enabled and after a PF driver
-has resumed from EEH, platform has to be notified
-of the event so the child VFs can be allowed to
-resume their normal recovery path.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-This patch makes the EEH operation allow unfreeze
-platform dependent code and adds the call to
-pseries EEH code.
+Add a local variable for DPC capability offset and replace repeated use of
+"dpc->cap_pos" with simply "cap".  No functional change intended.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
 ---
- arch/powerpc/include/asm/eeh.h               |  1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c |  3 +-
- arch/powerpc/platforms/pseries/eeh_pseries.c | 94 +++++++++++++++++++++++++++-
- 3 files changed, 96 insertions(+), 2 deletions(-)
+ drivers/pci/pcie/pcie-dpc.c |   65 +++++++++++++++++++------------------------
+ 1 file changed, 29 insertions(+), 36 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 82829c65f31a..fd37cc101f4f 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -214,6 +214,7 @@ struct eeh_ops {
- 	int (*write_config)(struct pci_dn *pdn, int where, int size, u32 val);
- 	int (*next_error)(struct eeh_pe **pe);
- 	int (*restore_config)(struct pci_dn *pdn);
-+	int (*notify_resume)(struct pci_dn *pdn);
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 48e1e3f8dd69..52702f7b911a 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -41,7 +41,7 @@ struct dpc_rp_pio_regs {
+ struct dpc_dev {
+ 	struct pcie_device	*dev;
+ 	struct work_struct	work;
+-	int			cap_pos;
++	u16			cap_pos;
+ 	bool			rp;
+ 	u32			rp_pio_status;
  };
+@@ -73,13 +73,13 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ 	unsigned long timeout = jiffies + HZ;
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	struct device *dev = &dpc->dev->device;
+-	u16 status;
++	u16 cap = dpc->cap_pos, status;
  
- extern int eeh_subsystem_flags;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 0665b6d03cb3..33c86c1a1720 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1704,7 +1704,8 @@ static struct eeh_ops pnv_eeh_ops = {
- 	.read_config            = pnv_eeh_read_config,
- 	.write_config           = pnv_eeh_write_config,
- 	.next_error		= pnv_eeh_next_error,
--	.restore_config		= pnv_eeh_restore_config
-+	.restore_config		= pnv_eeh_restore_config,
-+	.notify_resume		= NULL
- };
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	while (status & PCI_EXP_DPC_RP_BUSY &&
+ 					!time_after(jiffies, timeout)) {
+ 		msleep(10);
+-		pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++		pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	}
+ 	if (status & PCI_EXP_DPC_RP_BUSY) {
+ 		dev_warn(dev, "DPC root port still busy\n");
+@@ -110,7 +110,7 @@ static void dpc_work(struct work_struct *work)
+ 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+ 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
+-	u16 ctl;
++	u16 cap = dpc->cap_pos, ctl;
  
- #ifdef CONFIG_PCI_IOV
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index 686e9c7feab5..bdd7be52b12d 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -744,6 +744,97 @@ static int pseries_eeh_restore_config(struct pci_dn *pdn)
- 	return ret;
+ 	pci_lock_rescan_remove();
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+@@ -129,17 +129,16 @@ static void dpc_work(struct work_struct *work)
+ 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
+ 		return;
+ 	if (dpc->rp && dpc->rp_pio_status) {
+-		pci_write_config_dword(pdev,
+-				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+-				      dpc->rp_pio_status);
++		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
++				       dpc->rp_pio_status);
+ 		dpc->rp_pio_status = 0;
+ 	}
+ 
+-	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
++	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+-	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL,
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
++	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+ 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
  }
  
-+#ifdef CONFIG_PCI_IOV
-+int pseries_send_allow_unfreeze(struct pci_dn *pdn,
-+				u16 *vf_pe_array, int cur_vfs)
-+{
-+	int rc;
-+	int ibm_allow_unfreeze = rtas_token("ibm,open-sriov-allow-unfreeze");
-+	unsigned long buid, addr;
-+
-+	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
-+	buid = pdn->phb->buid;
-+	spin_lock(&rtas_data_buf_lock);
-+	memcpy(rtas_data_buf, vf_pe_array, RTAS_DATA_BUF_SIZE);
-+	rc = rtas_call(ibm_allow_unfreeze, 5, 1, NULL,
-+		       addr,
-+		       BUID_HI(buid),
-+		       BUID_LO(buid),
-+		       rtas_data_buf, cur_vfs * sizeof(u16));
-+	spin_unlock(&rtas_data_buf_lock);
-+	if (rc)
-+		pr_warn("%s: Failed to allow unfreeze for PHB#%x-PE#%lx, rc=%x\n",
-+			__func__,
-+			pdn->phb->global_number, addr, rc);
-+	return rc;
-+}
-+
-+static int pseries_call_allow_unfreeze(struct eeh_dev *edev)
-+{
-+	struct pci_dn *pdn, *tmp, *parent, *physfn_pdn;
-+	int cur_vfs = 0, rc = 0, vf_index, bus, devfn;
-+	u16 *vf_pe_array;
-+
-+	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
-+	if (!vf_pe_array)
-+		return -ENOMEM;
-+	if (pci_num_vf(edev->physfn ? edev->physfn : edev->pdev)) {
-+		if (edev->pdev->is_physfn) {
-+			cur_vfs = pci_num_vf(edev->pdev);
-+			pdn = eeh_dev_to_pdn(edev);
-+			parent = pdn->parent;
-+			for (vf_index = 0; vf_index < cur_vfs; vf_index++)
-+				vf_pe_array[vf_index] =
-+					cpu_to_be16(pdn->pe_num_map[vf_index]);
-+			rc = pseries_send_allow_unfreeze(pdn, vf_pe_array,
-+							 cur_vfs);
-+			pdn->last_allow_rc = rc;
-+			for (vf_index = 0; vf_index < cur_vfs; vf_index++) {
-+				list_for_each_entry_safe(pdn, tmp,
-+							 &parent->child_list,
-+							 list) {
-+					bus = pci_iov_virtfn_bus(edev->pdev,
-+								 vf_index);
-+					devfn = pci_iov_virtfn_devfn(edev->pdev,
-+								     vf_index);
-+					if (pdn->busno != bus ||
-+					    pdn->devfn != devfn)
-+						continue;
-+					pdn->last_allow_rc = rc;
-+				}
-+			}
-+		} else {
-+			pdn = pci_get_pdn(edev->pdev);
-+			vf_pe_array[0] = cpu_to_be16(pdn->pe_number);
-+			physfn_pdn = pci_get_pdn(edev->physfn);
-+			rc = pseries_send_allow_unfreeze(physfn_pdn,
-+							 vf_pe_array, 1);
-+			pdn->last_allow_rc = rc;
-+		}
-+	}
-+
-+	kfree(vf_pe_array);
-+	return rc;
-+}
-+
-+static int pseries_notify_resume(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+
-+	if (!edev)
-+		return -EEXIST;
-+
-+	if (rtas_token("ibm,open-sriov-allow-unfreeze")
-+	    == RTAS_UNKNOWN_SERVICE)
-+		return -EINVAL;
-+
-+	if (edev->pdev->is_physfn || edev->pdev->is_virtfn)
-+		return pseries_call_allow_unfreeze(edev);
-+
-+	return 0;
-+}
-+#endif
-+
- static struct eeh_ops pseries_eeh_ops = {
- 	.name			= "pseries",
- 	.init			= pseries_eeh_init,
-@@ -759,7 +850,8 @@ static struct eeh_ops pseries_eeh_ops = {
- 	.read_config		= pseries_eeh_read_config,
- 	.write_config		= pseries_eeh_write_config,
- 	.next_error		= NULL,
--	.restore_config		= pseries_eeh_restore_config
-+	.restore_config		= pseries_eeh_restore_config,
-+	.notify_resume		= pseries_notify_resume
- };
+@@ -189,23 +188,22 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	struct device *dev = &dpc->dev->device;
+ 	int i;
+-	u16 cap;
+-	u16 status;
++	u16 cap = dpc->cap_pos, status;
  
- /**
--- 
-2.14.3 (Apple Git-98)
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+ 			      &rp_pio->status);
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_MASK,
+ 			      &rp_pio->mask);
+ 
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY,
+ 			      &rp_pio->severity);
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR,
+ 			      &rp_pio->syserror);
+-	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION,
+ 			      &rp_pio->exception);
+ 
+ 	/* Get First Error Pointer */
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	rp_pio->first_error = (status & 0x1f00) >> 8;
+ 
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+@@ -216,27 +214,22 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+ 		return;
+ 	}
+ 
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
+ 			      &rp_pio->header_log.dw0);
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
+ 			      &rp_pio->header_log.dw1);
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
+ 			      &rp_pio->header_log.dw2);
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
+ 			      &rp_pio->header_log.dw3);
+ 	if (rp_pio->log_size == 4)
+ 		return;
+ 
+-	pci_read_config_dword(pdev,
+-			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
++	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
+ 			      &rp_pio->impspec_log);
+ 	for (i = 0; i < rp_pio->log_size - 5; i++)
+ 		pci_read_config_dword(pdev,
+-			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
++			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
+ 			&rp_pio->tlp_prefix_log[i]);
+ }
+ 
+@@ -255,28 +248,28 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 	struct dpc_dev *dpc = (struct dpc_dev *)context;
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	struct device *dev = &dpc->dev->device;
+-	u16 ctl, status, source, reason, ext_reason;
++	u16 cap = dpc->cap_pos, ctl, status, source, reason, ext_reason;
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+ 
+ 	if (!(ctl & PCI_EXP_DPC_CTL_INT_EN) || ctl == (u16)(~0))
+ 		return IRQ_NONE;
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 
+ 	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT))
+ 		return IRQ_NONE;
+ 
+ 	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
+-		pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
++		pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 				      PCI_EXP_DPC_STATUS_INTERRUPT);
+ 		return IRQ_HANDLED;
+ 	}
+ 
+-	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL,
++	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+ 			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);
+ 
+-	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_SOURCE_ID,
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID,
+ 			     &source);
+ 
+ 	dev_info(dev, "DPC containment event, status:%#06x source:%#06x\n",
