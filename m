@@ -1,66 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:48077 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751398AbeADGJB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jan 2018 01:09:01 -0500
-Subject: Re: [PATCH v2 1/2] PCI: dra7xx: Fix legacy INTD IRQ handling
-To: Vignesh R <vigneshr@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20171229114131.22296-1-vigneshr@ti.com>
- <20171229114131.22296-2-vigneshr@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <953c7aac-0429-8fc7-02ce-ace94aa735f3@ti.com>
-Date: Thu, 4 Jan 2018 11:38:53 +0530
-MIME-Version: 1.0
-In-Reply-To: <20171229114131.22296-2-vigneshr@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v6 05/11] PCI: Add vendor ID for Cadence
+Date: Tue, 30 Jan 2018 21:56:53 +0100
+Message-Id: <2e97970574b6526739805a59a6f59649946bb1c7.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch adds a new PCI vendor ID for Cadence.
 
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-On Friday 29 December 2017 05:11 PM, Vignesh R wrote:
-> Legacy INTD IRQ handling is broken on dra7xx due to fact that driver
-> uses hwirq in range of 1-4 for INTA, INTD whereas IRQ domain is of size
-> 4 which is numbered 0-3. Therefore when INTD IRQ line is used with
-> pci-dra7xx driver following warning is seen:
-> 
->        WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
->        error: hwirq 0x4 is too large for dummy
-> 
-> Fix this by using pci_irqd_intx_xlate() helper to translate the INTx 1-4
-> range into the 0-3 as done in other PCIe drivers.
-> 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
-> Signed-off-by: Vignesh R <vigneshr@ti.com>
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 58aed0896468..892f93910012 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -226,6 +226,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
->  
->  static const struct irq_domain_ops intx_domain_ops = {
->  	.map = dra7xx_pcie_intx_map,
-> +	.xlate = pci_irqd_intx_xlate,
->  };
->  
->  static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
-> @@ -269,7 +270,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
->  	case INTC:
->  	case INTD:
->  		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
-> -						    ffs(reg)));
-> +						    ffs(reg) - 1));
->  		break;
->  	}
->  
-> 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ab20dc5db423..eb13e84e1fef 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2381,6 +2381,8 @@
+ 
+ #define PCI_VENDOR_ID_LENOVO		0x17aa
+ 
++#define PCI_VENDOR_ID_CDNS		0x17cd
++
+ #define PCI_VENDOR_ID_ARECA		0x17d3
+ #define PCI_DEVICE_ID_ARECA_1110	0x1110
+ #define PCI_DEVICE_ID_ARECA_1120	0x1120
+-- 
+2.11.0
