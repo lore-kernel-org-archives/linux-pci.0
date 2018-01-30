@@ -1,242 +1,63 @@
-Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=4BPp=EA=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v4 7/7] pseries/setup: Add Initialization of VF Bars
-Date: Fri,  5 Jan 2018 10:45:52 -0600
-In-Reply-To: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
-References: <20180105164552.36371-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20180105164552.36371-8-bryantly@linux.vnet.ibm.com>
+Return-Path: <SRS0=mrDW=EZ=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=mrDW=EZ=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 30 Jan 2018 11:41:55 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+	bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
+	adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+	kgopi@cadence.com, eandrews@cadence.com,
+	thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+	nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 00/11] PCI: Add support to the Cadence PCIe controller
+Message-ID: <20180130114155.GA12009@e107981-ln.cambridge.arm.com>
+References: <cover.1517170521.git.cyrille.pitchen@free-electrons.com>
+ <20180128214741.GA232763@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180128214741.GA232763@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-When enabling SR-IOV in pseries platform,
-the VF bar properties for a PF are reported on
-the device node in the device tree.
+On Sun, Jan 28, 2018 at 03:47:41PM -0600, Bjorn Helgaas wrote:
+> On Sun, Jan 28, 2018 at 09:40:14PM +0100, Cyrille Pitchen wrote:
+> > Hi all,
+> > 
+> > this series of patches adds support to the Cadence PCIe controller.
+> > It was tested on a ARM64 platform emulated by a Palladium running the
+> > pci-next kernel.
+> > 
+> > The host mode was tested with some PCIe devices connected to the Palladium
+> > through a speed-bridge. Some of those devices were a USB host controller
+> > and a SATA controller. The PCIe host controller was also tested with a
+> > second controller configured in endpoint mode and connected back to back
+> > to the first controller.
+> > 
+> > The EndPoint Controller (EPC) driver was tested with 2 PCI functions, both
+> > handled by the pci-epf-test driver, using the pcitest userspace program.
+> > I used the "-D" optional command line parameter to select the proper PCI
+> > function.
+> > 
+> > Best regards,
+> > 
+> > Cyrille
+> > 
+> > ChangeLog
+> > 
+> > v4 -> v5:
+> > - rebase on today's (20180128) linux-pci/next
+> 
+> Don't bother rebasing onto linux-pci/next.
+> 
+> If your patches actually *depend* on something that has already been
+> merged onto a PCI topic branch, you should mention that and say which
+> branch.
 
-This patch adds the IOV Bar resources to Linux
-structures from the device tree for later use
-when configuring SR-IOV by PF driver.
+Yes - Cyrille please advise which branch(es) this series depends on,
+it does not apply cleanly to -rc4.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci.h         |   2 +
- arch/powerpc/kernel/pci_of_scan.c      |   2 +-
- arch/powerpc/platforms/pseries/setup.c | 164 +++++++++++++++++++++++++++++++++
- 3 files changed, 167 insertions(+), 1 deletion(-)
+Merge window is open and I do not know what we can do with this series
+for v4.16 but please let me know.
 
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index 8dc32eacc97c..d82802ff5088 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -121,6 +121,8 @@ extern int remove_phb_dynamic(struct pci_controller *phb);
- extern struct pci_dev *of_create_pci_dev(struct device_node *node,
- 					struct pci_bus *bus, int devfn);
- 
-+extern unsigned int pci_parse_of_flags(u32 addr0, int bridge);
-+
- extern void of_scan_pci_bridge(struct pci_dev *dev);
- 
- extern void of_scan_bus(struct device_node *node, struct pci_bus *bus);
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 0d790f8432d2..20ceec4a5f5e 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -38,7 +38,7 @@ static u32 get_int_prop(struct device_node *np, const char *name, u32 def)
-  * @addr0: value of 1st cell of a device tree PCI address.
-  * @bridge: Set this flag if the address is from a bridge 'ranges' property
-  */
--static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
-+unsigned int pci_parse_of_flags(u32 addr0, int bridge)
- {
- 	unsigned int flags = 0;
- 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 1d6e2de2445c..e8f523cb5526 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -459,6 +459,162 @@ static void __init find_and_init_phbs(void)
- 	of_pci_check_probe_only();
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+enum rtas_iov_fw_value_map {
-+	NUM_RES_PROPERTY  = 0, /* Number of Resources */
-+	LOW_INT           = 1, /* Lowest 32 bits of Address */
-+	START_OF_ENTRIES  = 2, /* Always start of entry */
-+	APERTURE_PROPERTY = 2, /* Start of entry+ to  Aperture Size */
-+	WDW_SIZE_PROPERTY = 4, /* Start of entry+ to Window Size */
-+	NEXT_ENTRY        = 7  /* Go to next entry on array */
-+};
-+
-+enum get_iov_fw_value_index {
-+	BAR_ADDRS     = 1,    /*  Get Bar Address */
-+	APERTURE_SIZE = 2,    /*  Get Aperture Size */
-+	WDW_SIZE      = 3     /*  Get Window Size */
-+};
-+
-+resource_size_t pseries_get_iov_fw_value(struct pci_dev *dev, int resno,
-+					 enum get_iov_fw_value_index value)
-+{
-+	const int *indexes;
-+	struct device_node *dn = pci_device_to_OF_node(dev);
-+	int i, num_res, ret = 0;
-+
-+	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-+	if (!indexes)
-+		return  0;
-+
-+	/*
-+	 * First element in the array is the number of Bars
-+	 * returned.  Search through the list to find the matching
-+	 * bar
-+	 */
-+	num_res = of_read_number(&indexes[NUM_RES_PROPERTY], 1);
-+	if (resno >= num_res)
-+		return 0; /* or an errror */
-+
-+	i = START_OF_ENTRIES + NEXT_ENTRY * resno;
-+	switch (value) {
-+	case BAR_ADDRS:
-+		ret = of_read_number(&indexes[i], 2);
-+		break;
-+	case APERTURE_SIZE:
-+		ret = of_read_number(&indexes[i + APERTURE_PROPERTY], 2);
-+		break;
-+	case WDW_SIZE:
-+		ret = of_read_number(&indexes[i + WDW_SIZE_PROPERTY], 2);
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
-+void of_pci_set_vf_bar_size(struct pci_dev *dev, const int *indexes)
-+{
-+	struct resource *res;
-+	resource_size_t base, size;
-+	int i, r, num_res;
-+
-+	num_res = of_read_number(&indexes[NUM_RES_PROPERTY], 1);
-+	num_res = min_t(int, num_res, PCI_SRIOV_NUM_BARS);
-+	for (i = START_OF_ENTRIES, r = 0; r < num_res && r < PCI_SRIOV_NUM_BARS;
-+	     i += NEXT_ENTRY, r++) {
-+		res = &dev->resource[r + PCI_IOV_RESOURCES];
-+		base = of_read_number(&indexes[i], 2);
-+		size = of_read_number(&indexes[i + APERTURE_PROPERTY], 2);
-+		res->flags = pci_parse_of_flags(of_read_number
-+						(&indexes[i + LOW_INT], 1), 0);
-+		res->flags |= (IORESOURCE_MEM_64 | IORESOURCE_PCI_FIXED);
-+		res->name = pci_name(dev);
-+		res->start = base;
-+		res->end = base + size - 1;
-+	}
-+}
-+
-+void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
-+{
-+	struct resource *res, *root, *conflict;
-+	resource_size_t base, size;
-+	int i, r, num_res;
-+
-+	/*
-+	 * First element in the array is the number of Bars
-+	 * returned.  Search through the list to find the matching
-+	 * bars assign them from firmware into resources structure.
-+	 */
-+	num_res = of_read_number(&indexes[NUM_RES_PROPERTY], 1);
-+	for (i = START_OF_ENTRIES, r = 0; r < num_res && r < PCI_SRIOV_NUM_BARS;
-+	     i += NEXT_ENTRY, r++) {
-+		res = &dev->resource[r + PCI_IOV_RESOURCES];
-+		base = of_read_number(&indexes[i], 2);
-+		size = of_read_number(&indexes[i + WDW_SIZE_PROPERTY], 2);
-+		res->name = pci_name(dev);
-+		res->start = base;
-+		res->end = base + size - 1;
-+		root = &iomem_resource;
-+		dev_dbg(&dev->dev,
-+			"pSeries IOV BAR %d: trying firmware assignment %pR\n",
-+			 r + PCI_IOV_RESOURCES, res);
-+		conflict = request_resource_conflict(root, res);
-+		if (conflict) {
-+			dev_info(&dev->dev,
-+				 "BAR %d: %pR conflicts with %s %pR\n",
-+				 r + PCI_IOV_RESOURCES, res,
-+				 conflict->name, conflict);
-+			res->flags |= IORESOURCE_UNSET;
-+		}
-+	}
-+}
-+
-+static void pseries_pci_fixup_resources(struct pci_dev *pdev)
-+{
-+	const int *indexes;
-+	struct device_node *dn = pci_device_to_OF_node(pdev);
-+
-+	/*Firmware must support open sriov otherwise dont configure*/
-+	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-+	if (!indexes)
-+		return;
-+	/* Assign the addresses from device tree*/
-+	of_pci_set_vf_bar_size(pdev, indexes);
-+}
-+
-+static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
-+{
-+	const int *indexes;
-+	struct device_node *dn = pci_device_to_OF_node(pdev);
-+
-+	if (!pdev->is_physfn || pdev->is_added)
-+		return;
-+	/*Firmware must support open sriov otherwise dont configure*/
-+	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-+	if (!indexes)
-+		return;
-+	/* Assign the addresses from device tree*/
-+	of_pci_parse_iov_addrs(pdev, indexes);
-+}
-+
-+static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
-+							  int resno)
-+{
-+	const __be32 *reg;
-+	struct device_node *dn = pci_device_to_OF_node(pdev);
-+
-+	/*Firmware must support open sriov otherwise report regular alignment*/
-+	reg = of_get_property(dn, "ibm,is-open-sriov-pf", NULL);
-+	if (!reg)
-+		return pci_iov_resource_size(pdev, resno);
-+
-+	if (!pdev->is_physfn)
-+		return 0;
-+	return pseries_get_iov_fw_value(pdev,
-+					resno - PCI_IOV_RESOURCES,
-+					APERTURE_SIZE);
-+}
-+#endif
-+
- static void __init pSeries_setup_arch(void)
- {
- 	set_arch_panic_timeout(10, ARCH_PANIC_TIMEOUT);
-@@ -490,6 +646,14 @@ static void __init pSeries_setup_arch(void)
- 		vpa_init(boot_cpuid);
- 		ppc_md.power_save = pseries_lpar_idle;
- 		ppc_md.enable_pmcs = pseries_lpar_enable_pmcs;
-+#ifdef CONFIG_PCI_IOV
-+		ppc_md.pcibios_fixup_resources =
-+			pseries_pci_fixup_resources;
-+		ppc_md.pcibios_fixup_sriov =
-+			pseries_pci_fixup_iov_resources;
-+		ppc_md.pcibios_iov_resource_alignment =
-+			pseries_pci_iov_resource_alignment;
-+#endif
- 	} else {
- 		/* No special idle routine */
- 		ppc_md.enable_pmcs = power4_enable_pmcs;
--- 
-2.14.3 (Apple Git-98)
+Thanks,
+Lorenzo
