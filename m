@@ -1,54 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:45177 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751085AbeAVH2L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Jan 2018 02:28:11 -0500
-Message-ID: <1516634888.2377.21.camel@intel.com>
-Subject: Re: [PATCH] PCI: altera: Fix bool initialization in tlp_read_packet
-From: Ley Foon Tan <ley.foon.tan@intel.com>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: rfi@lists.rocketboards.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Date: Mon, 22 Jan 2018 23:28:08 +0800
-In-Reply-To: <20180120032651.GA14512@embeddedgus>
-References: <20180120032651.GA14512@embeddedgus>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v6 09/11] PCI: endpoint: Fix EPF device name to support multi-function devices
+Date: Tue, 30 Jan 2018 21:56:57 +0100
+Message-Id: <def6e46d7ed3d1f7f601a39253db2a95c4e05c95.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-01-19 at 21:26 -0600, Gustavo A. R. Silva wrote:
-> Bool initializations should use true and false.
-> 
-> This issue was detected with the help of Coccinelle.
-> 
-> Fixes: eaa6111b70a7 ("PCI: altera: Add Altera PCIe host controller
-> driver")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
->  drivers/pci/host/pcie-altera.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-
-> altera.c
-> index 5cc4f59..f9ee090 100644
-> --- a/drivers/pci/host/pcie-altera.c
-> +++ b/drivers/pci/host/pcie-altera.c
-> @@ -156,7 +156,7 @@ static bool altera_pcie_valid_device(struct
-> altera_pcie *pcie,
->  static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
->  {
->         int i;
-> -       bool sop = 0;
-> +       bool sop = false;
->         u32 ctrl;
->         u32 reg0, reg1;
->         u32 comp_status = 1;
-> --
-> 2.7.4
+Fix the pci_epf_make() function so it can now bind many EPF devices to the
+same EPF driver.
 
-Acked-by: Ley Foon Tan <ley.foon.tan@intel.com>
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ drivers/pci/endpoint/pci-ep-cfs.c | 46 +++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 44 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index 4f74386c1ced..48a89dff0e7f 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -18,18 +18,22 @@
+  */
+ 
+ #include <linux/module.h>
++#include <linux/idr.h>
+ #include <linux/slab.h>
+ 
+ #include <linux/pci-epc.h>
+ #include <linux/pci-epf.h>
+ #include <linux/pci-ep-cfs.h>
+ 
++static DEFINE_IDR(functions_idr);
++static DEFINE_MUTEX(functions_mutex);
+ static struct config_group *functions_group;
+ static struct config_group *controllers_group;
+ 
+ struct pci_epf_group {
+ 	struct config_group group;
+ 	struct pci_epf *epf;
++	int index;
+ };
+ 
+ struct pci_epc_group {
+@@ -353,6 +357,9 @@ static void pci_epf_release(struct config_item *item)
+ {
+ 	struct pci_epf_group *epf_group = to_pci_epf_group(item);
+ 
++	mutex_lock(&functions_mutex);
++	idr_remove(&functions_idr, epf_group->index);
++	mutex_unlock(&functions_mutex);
+ 	pci_epf_destroy(epf_group->epf);
+ 	kfree(epf_group);
+ }
+@@ -372,22 +379,57 @@ static struct config_group *pci_epf_make(struct config_group *group,
+ {
+ 	struct pci_epf_group *epf_group;
+ 	struct pci_epf *epf;
++	char *epf_name;
++	int index, err;
+ 
+ 	epf_group = kzalloc(sizeof(*epf_group), GFP_KERNEL);
+ 	if (!epf_group)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	mutex_lock(&functions_mutex);
++	index = idr_alloc(&functions_idr, epf_group, 0, 0, GFP_KERNEL);
++	mutex_unlock(&functions_mutex);
++	if (index < 0) {
++		err = index;
++		goto free_group;
++	}
++
++	epf_group->index = index;
++
+ 	config_group_init_type_name(&epf_group->group, name, &pci_epf_type);
+ 
+-	epf = pci_epf_create(group->cg_item.ci_name);
++	epf_name = kasprintf(GFP_KERNEL, "%s.%d",
++			     group->cg_item.ci_name, epf_group->index);
++	if (!epf_name) {
++		err = -ENOMEM;
++		goto remove_idr;
++	}
++
++	epf = pci_epf_create(epf_name);
+ 	if (IS_ERR(epf)) {
+ 		pr_err("failed to create endpoint function device\n");
+-		return ERR_PTR(-EINVAL);
++		err = -EINVAL;
++		goto free_name;
+ 	}
+ 
+ 	epf_group->epf = epf;
+ 
++	kfree(epf_name);
++
+ 	return &epf_group->group;
++
++free_name:
++	kfree(epf_name);
++
++remove_idr:
++	mutex_lock(&functions_mutex);
++	idr_remove(&functions_idr, epf_group->index);
++	mutex_unlock(&functions_mutex);
++
++free_group:
++	kfree(epf_group);
++
++	return ERR_PTR(err);
+ }
+ 
+ static void pci_epf_drop(struct config_group *group, struct config_item *item)
+-- 
+2.11.0
