@@ -1,74 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55736 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751482AbeA3Gkg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 01:40:36 -0500
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:4445 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752501AbeA3FZB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jan 2018 00:25:01 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V7  2/4] PCI: tegra: Add loadable kernel module support
+Date: Tue, 30 Jan 2018 10:54:09 +0530
+Message-ID: <1517289851-14111-3-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 30 Jan 2018 12:10:35 +0530
-From: poza@codeaurora.org
-To: Oza Pawandeep <oza.pawandeep@gmail.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH 2/6] PCI/DPC: Leave interrupts enabled while handling
- event
-In-Reply-To: <f0afb7badc99dcfc3b6818cc2356250d@codeaurora.org>
-References: <20180129213145.26068-1-keith.busch@intel.com>
- <20180129213145.26068-2-keith.busch@intel.com>
- <56d77093-b630-148d-52ab-14dcb7714e6b@codeaurora.org>
- <CAK1A=4w-uDm+gau6WdwM=ZrgO=bWDtDKqwabxWxm2EZZb+YoKw@mail.gmail.com>
- <f0afb7badc99dcfc3b6818cc2356250d@codeaurora.org>
-Message-ID: <5ac89b178566eead0669b80c9813936a@codeaurora.org>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-01-30 12:04, poza@codeaurora.org wrote:
-> On 2018-01-30 11:59, Oza Pawandeep wrote:
->> + Oza
->> 
->> On Tue, Jan 30, 2018 at 7:41 AM, Sinan Kaya <okaya@codeaurora.org> 
->> wrote:
->>> On 1/29/2018 4:31 PM, Keith Busch wrote:
->>>> +     if (!work_busy(&dpc->work))
->>>> +             schedule_work(&dpc->work);
->>> 
->>> Isn't there a race condition between the time that dpc_work() clears 
->>> PCI_EXP_DPC_STATUS
->>> register and when work actually completes by returning from 
->>> dpc_work()?
->>> 
->>> If the interrupt arrives just in this window, this code will not 
->>> schedule the work.
->>> 
->>> --
->>> Sinan Kaya
->>> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm 
->>> Technologies, Inc.
->>> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
->>> Linux Foundation Collaborative Project.
-> 
-> besides, there is one more problem which I was debugging:
-> if RP doesnt support MSI, then legacy interrupts are not well handled
-> and we get interrupt storm.
-> this is because;
-> PCI_EXP_DPC_STATUS_INTERRUPT is being cleared in deferred work.
-> which should get cleared in dpc_irq interrupt handler.
-> I will post a patch for this, but I see there are lot of changes being
-> made in dpc and aer lately.
-> 
-> Bjorn: Can you please help to review my AER/DPC series of patches so
-> that I do not have to keep rebasing and do manual merge ?
-> 
-> Regards,
-> Oza.
+Implement remove callback function for Tegra PCIe driver to add
+loadable kernel module support. Change PCI_TEGRA config to tristate to
+allow pci-tegra driver to be build as a module.
 
-the DPC code assumes that the interrupt will be edge triggered (MSI), 
-and clears interrupt in deferred work.
-but for SPI (level triggered) it should be cleared in dpc_irq.
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+---
+V2:
+* no change in this patch
+V3:
+* use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_init()
+V4:
+* no change in this patch
+V5:
+* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
+rebased on linux-next
+V6:
+* no change in this patch
+V7:
+* no change in this patch
 
-Regards,
-Oza.
+ drivers/pci/host/Kconfig     |  2 +-
+ drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
+ 2 files changed, 32 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 38d12980db0f..6fd2a5937804 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -34,7 +34,7 @@ config PCI_FTPCI100
+ 	default ARCH_GEMINI
+ 
+ config PCI_TEGRA
+-	bool "NVIDIA Tegra PCIe controller"
++	tristate "NVIDIA Tegra PCIe controller"
+ 	depends on ARCH_TEGRA
+ 	help
+ 	  Say Y here if you want support for the PCIe host controller found
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index e68507f658d8..981f126b14d6 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -35,6 +35,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -2276,6 +2277,12 @@ static const struct file_operations tegra_pcie_ports_ops = {
+ 	.release = seq_release,
+ };
+ 
++static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
++{
++	debugfs_remove_recursive(pcie->debugfs);
++	pcie->debugfs = NULL;
++}
++
+ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+ {
+ 	struct dentry *file;
+@@ -2292,8 +2299,7 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+ 	return 0;
+ 
+ remove:
+-	debugfs_remove_recursive(pcie->debugfs);
+-	pcie->debugfs = NULL;
++	tegra_pcie_debugfs_exit(pcie);
+ 	return -ENOMEM;
+ }
+ 
+@@ -2311,6 +2317,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	pcie = pci_host_bridge_priv(host);
+ 	host->sysdata = pcie;
++	platform_set_drvdata(pdev, pcie);
+ 
+ 	pcie->soc = of_device_get_match_data(dev);
+ 	INIT_LIST_HEAD(&pcie->ports);
+@@ -2388,6 +2395,25 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++static int tegra_pcie_remove(struct platform_device *pdev)
++{
++	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++
++	if (IS_ENABLED(CONFIG_DEBUG_FS))
++		tegra_pcie_debugfs_exit(pcie);
++	pci_stop_root_bus(host->bus);
++	pci_remove_root_bus(host->bus);
++	tegra_pcie_disable_ports(pcie);
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		tegra_pcie_disable_msi(pcie);
++	tegra_pcie_free_resources(pcie);
++	tegra_pcie_disable_controller(pcie);
++	tegra_pcie_put_resources(pcie);
++
++	return 0;
++}
++
+ static struct platform_driver tegra_pcie_driver = {
+ 	.driver = {
+ 		.name = "tegra-pcie",
+@@ -2395,5 +2421,7 @@ static struct platform_driver tegra_pcie_driver = {
+ 		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = tegra_pcie_probe,
++	.remove = tegra_pcie_remove,
+ };
+-builtin_platform_driver(tegra_pcie_driver);
++module_platform_driver(tegra_pcie_driver);
++MODULE_LICENSE("GPL");
+-- 
+2.1.4
