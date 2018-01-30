@@ -1,179 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v3 3/3] PCI/DPC: Enumerate the devices after DPC trigger event
-Date: Mon,  8 Jan 2018 13:25:05 +0530
-Message-Id: <1515398105-10329-4-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1515398105-10329-1-git-send-email-poza@codeaurora.org>
-References: <1515398105-10329-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=vRdu=EZ=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=vRdu=EZ=intel.com=keith.busch@kernel.org>
+Date: Tue, 30 Jan 2018 12:43:50 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+	Dongdong Liu <liudongdong3@huawei.com>
+Subject: Re: [PATCH v2 11/14] PCI/DPC: Remove unnecessary RP PIO register
+ structs
+Message-ID: <20180130194349.GD27205@localhost.localdomain>
+References: <20180130182235.106875.70588.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20180130182648.106875.32803.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20180130185758.GC27205@localhost.localdomain>
+ <20180130191100.GH232763@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180130191100.GH232763@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement error_resume callback in DPC, which, after DPC trigger event
-enumerates the devices beneath.
+On Tue, Jan 30, 2018 at 01:11:00PM -0600, Bjorn Helgaas wrote:
+> On Tue, Jan 30, 2018 at 11:57:58AM -0700, Keith Busch wrote:
+> > On Tue, Jan 30, 2018 at 12:26:48PM -0600, Bjorn Helgaas wrote:
+> > > +	u16 cap = dpc->cap_pos;
+> > > +	u32 status, mask;
+> > > +	u32 sev, syserr, exc;
+> > > +	u16 dpc_status, first_error;
+> > > +	u32 dw0, dw1, dw2, dw3;
+> > > +	u32 log;
+> > > +	u32 prefix;
+> > 
+> > Minor nit, could you squash the declarations of the same type?
+> 
+> I did it that way so it matches the order of the chunks of code where
+> they're used.  But I guess we don't really do that elsewhere in the
+> file, so I did.  Here's the result:
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Thanks! That's all I had on this series. Looks good to me!
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 68296ec..4c6bef3 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -161,6 +161,43 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- 		dev_warn(dev, "Link state not disabled for DPC event\n");
- }
- 
-+static bool dpc_wait_link_active(struct pci_dev *pdev)
-+{
-+	unsigned long timeout = jiffies + HZ;
-+	u16 lnk_status;
-+	bool ret = true;
-+
-+	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+
-+	while (!(lnk_status & PCI_EXP_LNKSTA_DLLLA) &&
-+					!time_after(jiffies, timeout)) {
-+		msleep(10);
-+		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+	}
-+
-+	if (!(lnk_status & PCI_EXP_LNKSTA_DLLLA)) {
-+		dev_warn(&pdev->dev, "Link state not enabled after DPC event\n");
-+		ret = false;
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * dpc_error_resume - enumerate the devices beneath
-+ * @dev: pointer to Root Port's pci_dev data structure
-+ *
-+ * Invoked by Port Bus driver during nonfatal recovery.
-+ */
-+static void dpc_error_resume(struct pci_dev *pdev)
-+{
-+	if (dpc_wait_link_active(pdev)) {
-+		pci_lock_rescan_remove();
-+		pci_rescan_bus(pdev->bus);
-+		pci_unlock_rescan_remove();
-+	}
-+}
-+
- /**
-  * dpc_reset_link - reset link DPC  routine
-  * @dev: pointer to Root Port's pci_dev data structure
-@@ -419,6 +456,7 @@ static void dpc_remove(struct pcie_device *dev)
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
-+	.error_resume	= dpc_error_resume,
- 	.reset_link     = dpc_reset_link,
- };
- 
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 858c94c..7d1d20e 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -238,7 +238,8 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
- pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 	enum pci_channel_state state,
- 	char *error_mesg,
--	int (*cb)(struct pci_dev *, void *))
-+	int (*cb)(struct pci_dev *, void *),
-+	int severity)
- {
- 	struct pci_err_broadcast_data result_data;
- 
-@@ -250,6 +251,15 @@ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 		result_data.result = PCI_ERS_RESULT_RECOVERED;
- 
- 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		/* If DPC is triggered, call resume error hanlder
-+		 * because, at this point we can safely assume that
-+		 * link recovery has happened.
-+		 */
-+		if ((severity == PCI_ERR_DPC_FATAL) &&
-+			(cb == pci_report_resume)) {
-+			cb(dev, NULL);
-+			return PCI_ERS_RESULT_RECOVERED;
-+		}
- 		/*
- 		 * If the error is reported by a bridge, we think this error
- 		 * is related to the downstream link of the bridge, so we
-@@ -299,7 +309,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 	status = pci_broadcast_error_message(dev,
- 			state,
- 			"error_detected",
--			pci_report_error_detected);
-+			pci_report_error_detected,
-+			severity);
- 
- 	if ((severity == PCI_ERR_AER_FATAL) ||
- 	    (severity == PCI_ERR_DPC_FATAL)) {
-@@ -308,11 +319,15 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 			goto failed;
- 	}
- 
-+	if (severity == PCI_ERR_DPC_FATAL)
-+		goto resume;
-+
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER)
- 		status = pci_broadcast_error_message(dev,
- 				state,
- 				"mmio_enabled",
--				pci_report_mmio_enabled);
-+				pci_report_mmio_enabled,
-+				severity);
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
- 		/*
-@@ -323,16 +338,19 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 		status = pci_broadcast_error_message(dev,
- 				state,
- 				"slot_reset",
--				pci_report_slot_reset);
-+				pci_report_slot_reset,
-+				severity);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
-+resume:
- 	pci_broadcast_error_message(dev,
- 				state,
- 				"resume",
--				pci_report_resume);
-+				pci_report_resume,
-+				severity);
- 
- 	dev_info(&dev->dev, "Device recovery successful\n");
- 	mutex_unlock(&pci_err_recovery_lock);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 123ee15..46e2526 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2010,7 +2010,8 @@ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int res
- pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 					enum pci_channel_state state,
- 					char *error_mesg,
--					int (*cb)(struct pci_dev *, void *));
-+					int (*cb)(struct pci_dev *, void *),
-+					int severity);
- int pci_report_mmio_enabled(struct pci_dev *dev, void *data);
- int pci_report_slot_reset(struct pci_dev *dev, void *data);
- int pci_report_resume(struct pci_dev *dev, void *data);
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Reviewed-by: Keith Busch <keith.busch@intel.com>
