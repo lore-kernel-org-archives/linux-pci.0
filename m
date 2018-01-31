@@ -1,70 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46232 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965932AbeAJRP3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Jan 2018 12:15:29 -0500
-Date: Wed, 10 Jan 2018 17:15:21 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, bhelgaas@google.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, robh+dt@kernel.org, frowand.list@gmail.com,
-        rjw@rjwysocki.net, tglx@linutronix.de, vidyas@nvidia.com,
-        kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org
-Subject: Re: [PATCH V5 0/7] Add loadable kernel module and power management
- support
-Message-ID: <20180110171521.GA26960@e107981-ln.cambridge.arm.com>
-References: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1515489577-2197-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:37799 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751826AbeAaHhj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jan 2018 02:37:39 -0500
+Received: from mail-pf0-f199.google.com ([209.85.192.199])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1egmxe-0001AM-HI
+        for linux-pci@vger.kernel.org; Wed, 31 Jan 2018 07:37:38 +0000
+Received: by mail-pf0-f199.google.com with SMTP id s22so13728420pfh.21
+        for <linux-pci@vger.kernel.org>; Tue, 30 Jan 2018 23:37:38 -0800 (PST)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Subject: Re: Thunderbolt PCIe card doesn't get enumerated at cold boot
+From: Kai Heng Feng <kai.heng.feng@canonical.com>
+In-Reply-To: <20180130103745.GG27654@lahna.fi.intel.com>
+Date: Wed, 31 Jan 2018 15:37:32 +0800
+Cc: linux-pci@vger.kernel.org, Ethan Hsieh <ethan.hsieh@canonical.com>,
+        thunderbolt-software@lists.01.org
+Message-Id: <A4805FBC-E94C-4EA6-9DC3-290FE3BB43E9@canonical.com>
+References: <8831781F-8027-4875-AF82-835FBE40F5F0@canonical.com>
+ <20180130102319.GE27654@lahna.fi.intel.com>
+ <C4051028-A6AD-4B78-97E2-AE1BC34694EB@canonical.com>
+ <20180130103745.GG27654@lahna.fi.intel.com>
+To: Mika Westerberg <mika.westerberg@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 09, 2018 at 02:49:30PM +0530, Manikanta Maddireddy wrote:
-> This series of patches adds loadable kernel module and power management
-> support to Tegra PCIe host controller driver. irq_set_msi_desc() and
-> tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
-> set of patches.
-> 
-> These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
-> are the verification details.
-> 	- Multiple module insert & remove
-> 	- PCIe device functionality after module insert
-> 	- Free clock, resets, regulators, powergate, iomem and interrupt
-> 	resources after module remove
-> 	- PCIe device functionality after resume from RAM
-> 
-> V2: PM QoS fix is dropped in V2 from this series because the fix is
-> incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
-> latency framework")'. Update commit message of few patches in V2.
-> 
-> V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_use()
-> are dropped based on review comments. These symbols will be addressed in next
-> series. Took care of few other review comments.
-> 
-> V4: Dropped pci_find_host_bridge() export patch and added new patch to use
-> bus->sysdata for private data.
-> 
-> V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
-> on top of linux-next
-> 
-> Manikanta Maddireddy (7):
->   of: Export of_pci_range_to_resource()
->   PCI: tegra: Use bus->sysdata to store and get host private data
->   PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for Tegra PCIe
->   PCI: tegra: Free resources on probe failure
->   PCI: tegra: Add loadable kernel module support
->   PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
->   PCI: tegra: Add power management support
-> 
->  drivers/of/address.c         |   1 +
->  drivers/pci/host/Kconfig     |   2 +-
->  drivers/pci/host/pci-tegra.c | 333 ++++++++++++++++++++++++++++++++-----------
->  3 files changed, 253 insertions(+), 83 deletions(-)
 
-Can I ask you please to rebase this series against my pci/tegra branch ?
+> On 30 Jan 2018, at 6:37 PM, Mika Westerberg <mika.westerberg@intel.com> wrote:
+>> 
+>> Yes it is. It’s a PCIe add-in-card. It is Alpine Ridge.
+>> 
+>> Wondering if TBT requires special support from PCH or ACPI?
+>> I am asking this because the very same card can’t get detected on a Ryzen
+>> platform.
+> 
+> Yes, it needs to have BIOS support and in addition you need to have
+> those side band signals connected properly. BIOS support is needed for
+> ACPI hotplug.
 
-Thanks,
-Lorenzo
+Sounds like there are two different kind of supports:
+- Basic TBT support.
+- ACPI hotplug support in addition to basic support.
+
+What do I need to check if the motherboard fully support them?
+I guess there are special ACPI methods for them?
+
+> Unless it is in native PCIe hotplug mode but even then you need to have
+> BIOS support.
+
+How do I check this for the TBT add-in-card?
+
+Kai-Heng
