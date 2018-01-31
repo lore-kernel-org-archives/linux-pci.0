@@ -1,98 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180115162006.45553-1-Yazen.Ghannam@amd.com>
-References: <20180115162006.45553-1-Yazen.Ghannam@amd.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 15 Jan 2018 17:47:25 +0100
-Message-ID: <CAJZ5v0jDaxOV4k5Od4Ku0p=2wUcQefW-BHUev8gnP1RAP89Lmg@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI/ACPI: Disable AER when _OSC control bit is clear.
-To: Yazen Ghannam <Yazen.Ghannam@amd.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailgw01.mediatek.com ([210.61.82.183]:1495 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752534AbeAaHmA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jan 2018 02:42:00 -0500
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Borislav Petkov <bp@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+CC: Frank Rowand <frowand.list@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 1/2] of_pci_irq: add a check to fallback to standard device tree parsing
+Date: Wed, 31 Jan 2018 15:41:49 +0800
+Message-ID: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 15, 2018 at 5:20 PM, Yazen Ghannam <Yazen.Ghannam@amd.com> wrote:
-> From: Yazen Ghannam <yazen.ghannam@amd.com>
->
-> Currently, aer_service_init() checks if AER is available and that
-> Firmware First handling is not enabled. The _OSC request for AER is not
-> taken into account when deciding to enable AER in Linux.
->
-> From ACPI 6.2 Section 6.2.11.3, "If any bits in the Control Field are
-> returned cleared (masked to zero) by the _OSC control method, the
-> respective feature is designated unsupported by the platform and must
-> not be enabled by the OS."
->
-> The OS and the Platform should agree that the OS can have control of AER
-> otherwise we should disable AER in the OS.
->
-> Mark AER as disabled if the _OSC request was not made or accepted.
->
-> This covers two cases where the OS and Platform disagree:
-> 1) The OS requests AER control and Platform denies the request.
-> 2) The OS does not request AER control but the Platform returns the AER
->    control bit set, possibly due to a Firmware bug.
->
-> The _OSC control for AER is not requested when APEI Firmware First is
-> used, so the same condition applies from case 2 above.
->
-> Remove redundant check for aer_acpi_firmware_first() when calling
-> aer_service_init(), since this check is already included when checking
-> the _OSC control.
->
-> Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
+A root complex usually consist of a host bridge and multiple P2P bridges,
+and someone may express that in the form of a root node with many subnodes
+and list all four interrupts for each slot (child node) in the root node
+like this:
 
-Bjorn, what do you think?
+	pcie-controller {
+		...
+		interrupt-map-mask = <0xf800 0 0 7>;
+		interrupt-map = <0x0000 0 0 {INTx} &{interrupt parent} ...>
+				 0x0800 0 0 {INTx} &{interrupt parent} ...>;
 
-> ---
-> Link:
-> https://lkml.kernel.org/r/20180111150316.19951-1-Yazen.Ghannam@amd.com
->
-> v1->v2:
-> * Expand commit message.
-> * Add Spec reference to commit message.
-> * Fix spelling error in commit message.
-> * Add comment for 3-way bitwise AND.
->
->  drivers/acpi/pci_root.c       | 7 +++++++
->  drivers/pci/pcie/aer/aerdrv.c | 2 +-
->  2 files changed, 8 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 6fc204a52493..ab0192fd24c7 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -512,6 +512,13 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->                  */
->                 *no_aspm = 1;
->         }
-> +
-> +       /*
-> +        * We can use a 3-way bitwise AND to check that the AER control bit is
-> +        * both requested by the OS and granted by the Platform.
-> +        */
-> +       if (!(requested & control & OSC_PCI_EXPRESS_AER_CONTROL))
-> +               pci_no_aer();
->  }
->
->  static int acpi_pci_root_add(struct acpi_device *device,
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 6ff5f5b4f5e6..39bb059777d0 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -374,7 +374,7 @@ static void aer_error_resume(struct pci_dev *dev)
->   */
->  static int __init aer_service_init(void)
->  {
-> -       if (!pci_aer_available() || aer_acpi_firmware_first())
-> +       if (!pci_aer_available())
->                 return -ENXIO;
->         return pcie_port_service_register(&aerdriver);
->  }
-> --
+		pcie@0,0 {
+			reg = <0x0000 0 0 0 0>;
+			...
+		};
+
+		pcie@1,0 {
+			reg = <0x0800 0 0 0 0>;
+			...
+		};
+	};
+
+As shown above, we'd like to propagate IRQs from a root port to the devices
+in the hierarchy below it in this way.  However, it seems that the current
+parser couldn't handle such cases and will get something unexpected below:
+
+	pcieport 0000:00:01.0: assign IRQ: got 213
+	igb 0000:01:00.0: assign IRQ: got 212
+
+There is a device which is connected to 2nd slot, but the port doesn't share
+the same IRQ with its downstream devices.  The problem here is that, if the
+loop found a P2P bridge, it wouldn't check whether the reg property exists
+in ppnode or not but just pass the subordinate devfn to of_irq_parse_raw(),
+thus the subsequent flow couldn't correctly resolve them.
+
+Fix this by adding a check to fallback to standard device tree parsing.
+
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+Please refer to the previous discussion thread: https://patchwork.ozlabs.org/patch/829108/
+---
+ drivers/of/of_pci_irq.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+index 3a05568..e445866 100644
+--- a/drivers/of/of_pci_irq.c
++++ b/drivers/of/of_pci_irq.c
+@@ -86,8 +86,18 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
+ 	out_irq->np = ppnode;
+ 	out_irq->args_count = 1;
+ 	out_irq->args[0] = pin;
+-	laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
+-	laddr[1] = laddr[2] = cpu_to_be32(0);
++
++	if (!dn && ppnode) {
++		const __be32 *addr;
++
++		addr = of_get_property(ppnode, "reg", NULL);
++		if (addr)
++			memcpy(laddr, addr, 3);
++	} else {
++		laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
++		laddr[1] = laddr[2] = cpu_to_be32(0);
++	}
++
+ 	rc = of_irq_parse_raw(laddr, out_irq);
+ 	if (rc)
+ 		goto err;
+-- 
+1.9.1
