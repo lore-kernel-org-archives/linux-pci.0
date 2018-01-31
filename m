@@ -1,118 +1,229 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0040.outbound.protection.outlook.com ([104.47.36.40]:32708
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753976AbeAaQ3f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 31 Jan 2018 11:29:35 -0500
+Subject: Re: [PATCH 8/9] drm/amdkfd: Add dGPU device IDs and device info
+To: Oded Gabbay <oded.gabbay@gmail.com>
+Cc: amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        linux-pci@vger.kernel.org
+References: <1515104268-25087-1-git-send-email-Felix.Kuehling@amd.com>
+ <1515104268-25087-9-git-send-email-Felix.Kuehling@amd.com>
+ <CAFCwf139atQQouUbFabUwWs8qX=QHwS4KVm5E8fqqf667JH8Eg@mail.gmail.com>
+From: Felix Kuehling <felix.kuehling@amd.com>
+Message-ID: <842469e0-9003-c8c0-6d2a-5089f81354f1@amd.com>
+Date: Wed, 31 Jan 2018 11:29:29 -0500
 MIME-Version: 1.0
-In-Reply-To: <1516058925-46522-5-git-send-email-jim2101024@gmail.com>
-References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
- <1516058925-46522-5-git-send-email-jim2101024@gmail.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Wed, 17 Jan 2018 20:15:33 -0600
-Message-ID: <CAL_JsqKpWNJXNpKS5qC99N0+H_P37DcRE-rN9HFwT5tVmRFCNw@mail.gmail.com>
-Subject: Re: [PATCH v4 4/8] PCI: brcmstb: Add dma-range mapping for inbound
- traffic
-To: Jim Quinlan <jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>, Florian Fainelli <f.fainelli@gmail.com>,
- Linux-MIPS <linux-mips@linux-mips.org>, linux-pci@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
- Jonas Gorski <jonas.gorski@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAFCwf139atQQouUbFabUwWs8qX=QHwS4KVm5E8fqqf667JH8Eg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 15, 2018 at 5:28 PM, Jim Quinlan <jim2101024@gmail.com> wrote:
-> The Broadcom STB PCIe host controller is intimately related to the
-> memory subsystem.  This close relationship adds complexity to how cpu
-> system memory is mapped to PCIe memory.  Ideally, this mapping is an
-> identity mapping, or an identity mapping off by a constant.  Not so in
-> this case.
->
-> Consider the Broadcom reference board BCM97445LCC_4X8 which has 6 GB
-> of system memory.  Here is how the PCIe controller maps the
-> system memory to PCIe memory:
->
->   memc0-a@[        0....3fffffff] <=> pci@[        0....3fffffff]
->   memc0-b@[100000000...13fffffff] <=> pci@[ 40000000....7fffffff]
->   memc1-a@[ 40000000....7fffffff] <=> pci@[ 80000000....bfffffff]
->   memc1-b@[300000000...33fffffff] <=> pci@[ c0000000....ffffffff]
->   memc2-a@[ 80000000....bfffffff] <=> pci@[100000000...13fffffff]
->   memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
->
-> Although there are some "gaps" that can be added between the
-> individual mappings by software, the permutation of memory regions for
-> the most part is fixed by HW.  The solution of having something close
-> to an identity mapping is not possible.
->
-> The idea behind this HW design is that the same PCIe module can
-> act as an RC or EP, and if it acts as an EP it concatenates all
-> of system memory into a BAR so anything can be accessed.  Unfortunately,
-> when the PCIe block is in the role of an RC it also presents this
-> "BAR" to downstream PCIe devices, rather than offering an identity map
-> between its system memory and PCIe space.
->
-> Suppose that an endpoint driver allocs some DMA memory.  Suppose this
-> memory is located at 0x6000_0000, which is in the middle of memc1-a.
-> The driver wants a dma_addr_t value that it can pass on to the EP to
-> use.  Without doing any custom mapping, the EP will use this value for
-> DMA: the driver will get a dma_addr_t equal to 0x6000_0000.  But this
-> won't work; the device needs a dma_addr_t that reflects the PCIe space
-> address, namely 0xa000_0000.
->
-> So, essentially the solution to this problem must modify the
-> dma_addr_t returned by the DMA routines routines.  There are two
-> ways (I know of) of doing this:
->
-> (a) overriding/redefining the dma_to_phys() and phys_to_dma() calls
-> that are used by the dma_ops routines.  This is the approach of
->
->         arch/mips/cavium-octeon/dma-octeon.c
 
-MIPS is rarely an example to follow. :)
 
-> In ARM and ARM64 these two routines are defiend in asm/dma-mapping.h
-> as static inline functions.
+On 2018-01-31 10:20 AM, Oded Gabbay wrote:
+> On Fri, Jan 5, 2018 at 12:17 AM, Felix Kuehling <Felix.Kuehling@amd.com> wrote:
+>> CC: linux-pci@vger.kernel.org
+>> Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
+>> ---
+>>  drivers/gpu/drm/amd/amdkfd/kfd_device.c | 153 +++++++++++++++++++++++++++++++-
+>>  1 file changed, 151 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/gpu/drm/amd/amdkfd/kfd_device.c b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
+>> index 6dd50cc..612afaf 100644
+>> --- a/drivers/gpu/drm/amd/amdkfd/kfd_device.c
+>> +++ b/drivers/gpu/drm/amd/amdkfd/kfd_device.c
+>> @@ -63,12 +63,118 @@ static const struct kfd_device_info carrizo_device_info = {
+>>  };
+>>  #endif
+>>
+>> +static const struct kfd_device_info hawaii_device_info = {
+>> +       .asic_family = CHIP_HAWAII,
+>> +       .max_pasid_bits = 16,
+>> +       /* max num of queues for KV.TODO should be a dynamic value */
+>> +       .max_no_of_hqd  = 24,
+>> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
+>> +       .event_interrupt_class = &event_interrupt_class_cik,
+>> +       .num_of_watch_points = 4,
+>> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
+>> +       .supports_cwsr = false,
+>> +       .needs_iommu_device = false,
+>> +       .needs_pci_atomics = false,
+>> +};
+>> +
+>> +static const struct kfd_device_info tonga_device_info = {
+>> +       .asic_family = CHIP_TONGA,
+>> +       .max_pasid_bits = 16,
+>> +       .max_no_of_hqd  = 24,
+>> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
+>> +       .event_interrupt_class = &event_interrupt_class_cik,
+> Is there any point in keeping the name event_interrupt_class_cik?
+> maybe just rename to event_interrupt_class ?
+> What will happen in vega ? If its the same I think removing the _cik
+> makes the code more consistent.
+
+Vega10 has its own class because the interrupt ring packet format
+changed significantly.
+
+Regards,
+  Felix
+
 >
-> (b) Subscribe to a notifier that notifies when a device is added to a
-> bus.  When this happens, set_dma_ops() can be called for the device.
-> This method is mentioned in:
+> Oded
 >
->     http://lxr.free-electrons.com/source/drivers/of/platform.c?v=3.16#L152
-
-Why refer to an external website when you can just refer to the source
-of the project this patch applies to directly.
-
-> where it says as a comment
 >
->     "In case if platform code need to use own special DMA
->     configuration, it can use Platform bus notifier and
->     handle BUS_NOTIFY_ADD_DEVICE event to fix up DMA
->     configuration."
-
-In the current tree, this comment is in drivers/of/device.c.
-
-> Solution (b) is what this commit does.  It uses its own set of
-> dma_ops which are wrappers around the arch_dma_ops.  The
-> wrappers translate the dma addresses before/after invoking
-> the arch_dma_ops, as appropriate.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>> +       .num_of_watch_points = 4,
+>> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
+>> +       .supports_cwsr = false,
+>> +       .needs_iommu_device = false,
+>> +       .needs_pci_atomics = true,
+>> +};
+>> +
+>> +static const struct kfd_device_info tonga_vf_device_info = {
+>> +       .asic_family = CHIP_TONGA,
+>> +       .max_pasid_bits = 16,
+>> +       .max_no_of_hqd  = 24,
+>> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
+>> +       .event_interrupt_class = &event_interrupt_class_cik,
+>> +       .num_of_watch_points = 4,
+>> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
+>> +       .supports_cwsr = false,
+>> +       .needs_iommu_device = false,
+>> +       .needs_pci_atomics = false,
+>> +};
+>> +
+>> +static const struct kfd_device_info fiji_device_info = {
+>> +       .asic_family = CHIP_FIJI,
+>> +       .max_pasid_bits = 16,
+>> +       .max_no_of_hqd  = 24,
+>> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
+>> +       .event_interrupt_class = &event_interrupt_class_cik,
+>> +       .num_of_watch_points = 4,
+>> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
+>> +       .supports_cwsr = true,
+>> +       .needs_iommu_device = false,
+>> +       .needs_pci_atomics = true,
+>> +};
+>> +
+>> +static const struct kfd_device_info fiji_vf_device_info = {
+>> +       .asic_family = CHIP_FIJI,
+>> +       .max_pasid_bits = 16,
+>> +       .max_no_of_hqd  = 24,
+>> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
+>> +       .event_interrupt_class = &event_interrupt_class_cik,
+>> +       .num_of_watch_points = 4,
+>> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
+>> +       .supports_cwsr = true,
+>> +       .needs_iommu_device = false,
+>> +       .needs_pci_atomics = false,
+>> +};
+>> +
+>> +
+>> +static const struct kfd_device_info polaris10_device_info = {
+>> +       .asic_family = CHIP_POLARIS10,
+>> +       .max_pasid_bits = 16,
+>> +       .max_no_of_hqd  = 24,
+>> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
+>> +       .event_interrupt_class = &event_interrupt_class_cik,
+>> +       .num_of_watch_points = 4,
+>> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
+>> +       .supports_cwsr = true,
+>> +       .needs_iommu_device = false,
+>> +       .needs_pci_atomics = true,
+>> +};
+>> +
+>> +static const struct kfd_device_info polaris10_vf_device_info = {
+>> +       .asic_family = CHIP_POLARIS10,
+>> +       .max_pasid_bits = 16,
+>> +       .max_no_of_hqd  = 24,
+>> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
+>> +       .event_interrupt_class = &event_interrupt_class_cik,
+>> +       .num_of_watch_points = 4,
+>> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
+>> +       .supports_cwsr = true,
+>> +       .needs_iommu_device = false,
+>> +       .needs_pci_atomics = false,
+>> +};
+>> +
+>> +static const struct kfd_device_info polaris11_device_info = {
+>> +       .asic_family = CHIP_POLARIS11,
+>> +       .max_pasid_bits = 16,
+>> +       .max_no_of_hqd  = 24,
+>> +       .ih_ring_entry_size = 4 * sizeof(uint32_t),
+>> +       .event_interrupt_class = &event_interrupt_class_cik,
+>> +       .num_of_watch_points = 4,
+>> +       .mqd_size_aligned = MQD_SIZE_ALIGNED,
+>> +       .supports_cwsr = true,
+>> +       .needs_iommu_device = false,
+>> +       .needs_pci_atomics = true,
+>> +};
+>> +
+>> +
+>>  struct kfd_deviceid {
+>>         unsigned short did;
+>>         const struct kfd_device_info *device_info;
+>>  };
+>>
+>> -/* Please keep this sorted by increasing device id. */
+>>  static const struct kfd_deviceid supported_devices[] = {
+>>  #if defined(CONFIG_AMD_IOMMU_V2_MODULE) || defined(CONFIG_AMD_IOMMU_V2)
+>>         { 0x1304, &kaveri_device_info },        /* Kaveri */
+>> @@ -97,8 +203,51 @@ static const struct kfd_deviceid supported_devices[] = {
+>>         { 0x9874, &carrizo_device_info },       /* Carrizo */
+>>         { 0x9875, &carrizo_device_info },       /* Carrizo */
+>>         { 0x9876, &carrizo_device_info },       /* Carrizo */
+>> -       { 0x9877, &carrizo_device_info }        /* Carrizo */
+>> +       { 0x9877, &carrizo_device_info },       /* Carrizo */
+>>  #endif
+>> +       { 0x67A0, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67A1, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67A2, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67A8, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67A9, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67AA, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67B0, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67B1, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67B8, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67B9, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67BA, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x67BE, &hawaii_device_info },        /* Hawaii */
+>> +       { 0x6920, &tonga_device_info },         /* Tonga */
+>> +       { 0x6921, &tonga_device_info },         /* Tonga */
+>> +       { 0x6928, &tonga_device_info },         /* Tonga */
+>> +       { 0x6929, &tonga_device_info },         /* Tonga */
+>> +       { 0x692B, &tonga_device_info },         /* Tonga */
+>> +       { 0x692F, &tonga_vf_device_info },      /* Tonga vf */
+>> +       { 0x6938, &tonga_device_info },         /* Tonga */
+>> +       { 0x6939, &tonga_device_info },         /* Tonga */
+>> +       { 0x7300, &fiji_device_info },          /* Fiji */
+>> +       { 0x730F, &fiji_vf_device_info },       /* Fiji vf*/
+>> +       { 0x67C0, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67C1, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67C2, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67C4, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67C7, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67C8, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67C9, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67CA, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67CC, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67CF, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67D0, &polaris10_vf_device_info },  /* Polaris10 vf*/
+>> +       { 0x67DF, &polaris10_device_info },     /* Polaris10 */
+>> +       { 0x67E0, &polaris11_device_info },     /* Polaris11 */
+>> +       { 0x67E1, &polaris11_device_info },     /* Polaris11 */
+>> +       { 0x67E3, &polaris11_device_info },     /* Polaris11 */
+>> +       { 0x67E7, &polaris11_device_info },     /* Polaris11 */
+>> +       { 0x67E8, &polaris11_device_info },     /* Polaris11 */
+>> +       { 0x67E9, &polaris11_device_info },     /* Polaris11 */
+>> +       { 0x67EB, &polaris11_device_info },     /* Polaris11 */
+>> +       { 0x67EF, &polaris11_device_info },     /* Polaris11 */
+>> +       { 0x67FF, &polaris11_device_info },     /* Polaris11 */
+>>  };
+>>
+>>  static int kfd_gtt_sa_init(struct kfd_dev *kfd, unsigned int buf_size,
+>> --
+>> 2.7.4
+>>
+> Other then the note above, This patch is:
+> Reviewed-by: Oded Gabbay <oded.gabbay@gmail.com>
