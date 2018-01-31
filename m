@@ -1,70 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:50660 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758673AbeAIPVD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jan 2018 10:21:03 -0500
-Subject: Re: [PATCH -next] PCI: dwc: artpec6: Fix return value check in
- artpec6_add_pcie_ep()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>
-CC: Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>
-References: <1514964815-93190-1-git-send-email-weiyongjun1@huawei.com>
- <20180103114342.GB26554@red-moon>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <0a958e84-bb25-f217-9a27-ed8176e173e3@axis.com>
-Date: Tue, 9 Jan 2018 16:21:00 +0100
+Received: from mga03.intel.com ([134.134.136.65]:61955 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751899AbeAaJdh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 31 Jan 2018 04:33:37 -0500
+Date: Wed, 31 Jan 2018 11:33:33 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Kai Heng Feng <kai.heng.feng@canonical.com>
+Cc: linux-pci@vger.kernel.org, Ethan Hsieh <ethan.hsieh@canonical.com>
+Subject: Re: Thunderbolt PCIe card doesn't get enumerated at cold boot
+Message-ID: <20180131093333.GU27654@lahna.fi.intel.com>
+References: <8831781F-8027-4875-AF82-835FBE40F5F0@canonical.com>
+ <20180130102319.GE27654@lahna.fi.intel.com>
+ <C4051028-A6AD-4B78-97E2-AE1BC34694EB@canonical.com>
+ <20180130103745.GG27654@lahna.fi.intel.com>
+ <A4805FBC-E94C-4EA6-9DC3-290FE3BB43E9@canonical.com>
+ <20180131075347.GR27654@lahna.fi.intel.com>
+ <4D112585-48B0-4D6D-9176-A9768FD5AC7A@canonical.com>
+ <20180131085150.GS27654@lahna.fi.intel.com>
+ <DBAFD3AB-DB4F-4539-B69D-B4DFC449AD94@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <20180103114342.GB26554@red-moon>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <DBAFD3AB-DB4F-4539-B69D-B4DFC449AD94@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 03/01/18 12:43, Lorenzo Pieralisi wrote:
-> On Wed, Jan 03, 2018 at 07:33:35AM +0000, Wei Yongjun wrote:
->> In case of error, the function devm_ioremap() returns NULL pointer
->> not ERR_PTR(). The IS_ERR() test in the return value check should be
->> replaced with NULL test.
->>
->> Fixes: b5074ef6fe7d ("PCI: dwc: artpec6: Add support for endpoint mode")
->> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
->> ---
->>  drivers/pci/dwc/pcie-artpec6.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
+On Wed, Jan 31, 2018 at 05:26:21PM +0800, Kai Heng Feng wrote:
 > 
-> Applied to pci/dwc for v4.16, thanks.
+> > On 31 Jan 2018, at 4:51 PM, Mika Westerberg <mika.westerberg@linux.intel.com> wrote:
+> > 
+> > On Wed, Jan 31, 2018 at 04:23:21PM +0800, Kai Heng Feng wrote:
+> >> Now sure which string to grep, but looks like hotplug is supported.
+> >> Still attach dmesg to let you confirm it’s working.
+> > 
+> > This one:
+> > 
+> > [    0.197025] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]                                                                                                                         
+> > [    0.197222] acpi PNP0A08:00: _OSC: platform does not support [PCIeHotplug PME AER]                                                                                                                                
+> > [    0.197408] acpi PNP0A08:00: _OSC: OS now controls [PCIeCapability]            
 > 
-> Lorenzo
+> So seems like it’s _OSC instead of _OSI?
+
+Right, I always confuse the two.
+
+> > So native PCIe hotplug is disabled.
 > 
+> Sorry for asking this again… is this the root cause of this issue?
+> On another platform I can see the same message, but TBT card get enumerated at cold boot.
 
-Argh.. I must have mixed up the return value from devm_ioremap()
-with the return value from devm_ioremap_resource()
-(which is used in other places in the driver).
-
-However, dbi2 sets a bit to access the shadow registers,
-so we have to use devm_ioremap() here, so it is correct
-to fix the return handling.
-
-Thanks for fixing this!
-
-Acked-by: Niklas Cassel <niklas.cassel@axis.com>
-
->> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
->> index 312f21b..b1e9820 100644
->> --- a/drivers/pci/dwc/pcie-artpec6.c
->> +++ b/drivers/pci/dwc/pcie-artpec6.c
->> @@ -485,8 +485,8 @@ static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
->>  
->>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
->>  	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
->> -	if (IS_ERR(pci->dbi_base2))
->> -		return PTR_ERR(pci->dbi_base2);
->> +	if (!pci->dbi_base2)
->> +		return -ENOMEM;
->>  
->>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
->>  	if (!res)
->>
+No, I just wanted to check which hotplug the system is using. Now it is
+clear that it's using ACPI hotplug. So if possible try Windows first.
