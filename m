@@ -1,41 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36714 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751760AbeABK2A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Jan 2018 05:28:00 -0500
-Date: Tue, 2 Jan 2018 10:28:52 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Stephen Boyd <sboyd@codeaurora.org>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Gustavo.Pimentel@synopsys.com
-Subject: Re: [PATCH v2] PCI: dwc: Use {upper,lower}_32_bits() macros for
- clarity
-Message-ID: <20180102102852.GA10536@red-moon>
-References: <20171227232540.22341-1-sboyd@codeaurora.org>
- <f855815f-79a3-9be2-1513-2c9edc907079@synopsys.com>
- <20171228160955.GF7997@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171228160955.GF7997@codeaurora.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60818 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753310AbeAaQTK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jan 2018 11:19:10 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH] PCI/DPC: Fix INT legacy interrupt in dpc_irq
+Date: Wed, 31 Jan 2018 21:48:55 +0530
+Message-Id: <1517415535-21850-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 28, 2017 at 08:09:55AM -0800, Stephen Boyd wrote:
-> On 12/28, Joao Pinto wrote:
-> > >  	if (pp->ops->get_msi_data)
-> > >  		msg.data = pp->ops->get_msi_data(pp, pos);
-> > > 
-> > 
-> > Thanks for the patch.
-> > Gustavo' patch-set targeting the update of the Interrupt API for
-> > pcie-designware* already does this modification, so I would suggest that we wait
-> > for Gustavo' patch to be stable and get the same modification.
-> > 
-> 
-> Ok.
+Current dpc driver acknowledge the interrupt in deferred work, which works
+okay since LPI are edge triggered.
+But when RP does not have MSI support, port service driver falls back to
+legacy GIC SPI interrupts, and with current code we do not acknowledge the
+interrupt and we get dpc interrupt storm.
+This patch acknowledges the interrupt in interrupt handler.
 
-Ok, marked as superseded, thanks.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Lorenzo
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 2d976a6..570b561 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -134,7 +134,7 @@ static void interrupt_event_handler(struct work_struct *work)
+ 	}
+ 
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+-		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
++			      PCI_EXP_DPC_STATUS_TRIGGER);
+ }
+ 
+ static void dpc_rp_pio_print_tlp_header(struct device *dev,
+@@ -277,6 +277,8 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 
+ 		schedule_work(&dpc->work);
+ 	}
++	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
++			      PCI_EXP_DPC_STATUS_INTERRUPT);
+ 	return IRQ_HANDLED;
+ }
+ 
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
