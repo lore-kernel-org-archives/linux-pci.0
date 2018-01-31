@@ -1,127 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v6 09/11] PCI: endpoint: Fix EPF device name to support multi-function devices
-Date: Tue, 30 Jan 2018 21:56:57 +0100
-Message-Id: <def6e46d7ed3d1f7f601a39253db2a95c4e05c95.1517343502.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1517343502.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Wed, 31 Jan 2018 10:02:43 -0600
+Message-ID: <CAL_JsqLZqrxxpuEnoWEGkT2WCuyjqn0bM1DP8PdAwnQsso8kOA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] of_pci_irq: add a check to fallback to standard
+ device tree parsing
+To: Ryder Lee <ryder.lee@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix the pci_epf_make() function so it can now bind many EPF devices to the
-same EPF driver.
+On Wed, Jan 31, 2018 at 1:41 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> A root complex usually consist of a host bridge and multiple P2P bridges,
+> and someone may express that in the form of a root node with many subnodes
+> and list all four interrupts for each slot (child node) in the root node
+> like this:
+>
+>         pcie-controller {
+>                 ...
+>                 interrupt-map-mask = <0xf800 0 0 7>;
+>                 interrupt-map = <0x0000 0 0 {INTx} &{interrupt parent} ...>
+>                                  0x0800 0 0 {INTx} &{interrupt parent} ...>;
+>
+>                 pcie@0,0 {
+>                         reg = <0x0000 0 0 0 0>;
+>                         ...
+>                 };
+>
+>                 pcie@1,0 {
+>                         reg = <0x0800 0 0 0 0>;
+>                         ...
+>                 };
+>         };
+>
+> As shown above, we'd like to propagate IRQs from a root port to the devices
+> in the hierarchy below it in this way.  However, it seems that the current
+> parser couldn't handle such cases and will get something unexpected below:
+>
+>         pcieport 0000:00:01.0: assign IRQ: got 213
+>         igb 0000:01:00.0: assign IRQ: got 212
+>
+> There is a device which is connected to 2nd slot, but the port doesn't share
+> the same IRQ with its downstream devices.  The problem here is that, if the
+> loop found a P2P bridge, it wouldn't check whether the reg property exists
+> in ppnode or not but just pass the subordinate devfn to of_irq_parse_raw(),
+> thus the subsequent flow couldn't correctly resolve them.
+>
+> Fix this by adding a check to fallback to standard device tree parsing.
+>
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+> Please refer to the previous discussion thread: https://patchwork.ozlabs.org/patch/829108/
+> ---
+>  drivers/of/of_pci_irq.c | 14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+> index 3a05568..e445866 100644
+> --- a/drivers/of/of_pci_irq.c
+> +++ b/drivers/of/of_pci_irq.c
+> @@ -86,8 +86,18 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
+>         out_irq->np = ppnode;
+>         out_irq->args_count = 1;
+>         out_irq->args[0] = pin;
+> -       laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
+> -       laddr[1] = laddr[2] = cpu_to_be32(0);
+> +
+> +       if (!dn && ppnode) {
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
----
- drivers/pci/endpoint/pci-ep-cfs.c | 46 +++++++++++++++++++++++++++++++++++++--
- 1 file changed, 44 insertions(+), 2 deletions(-)
+I would think whether you have a child device in DT or not is
+irrelevant. If it's the bridge address you need to look at for
+resolving interrupts, that would be true regardless.
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 4f74386c1ced..48a89dff0e7f 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -18,18 +18,22 @@
-  */
- 
- #include <linux/module.h>
-+#include <linux/idr.h>
- #include <linux/slab.h>
- 
- #include <linux/pci-epc.h>
- #include <linux/pci-epf.h>
- #include <linux/pci-ep-cfs.h>
- 
-+static DEFINE_IDR(functions_idr);
-+static DEFINE_MUTEX(functions_mutex);
- static struct config_group *functions_group;
- static struct config_group *controllers_group;
- 
- struct pci_epf_group {
- 	struct config_group group;
- 	struct pci_epf *epf;
-+	int index;
- };
- 
- struct pci_epc_group {
-@@ -353,6 +357,9 @@ static void pci_epf_release(struct config_item *item)
- {
- 	struct pci_epf_group *epf_group = to_pci_epf_group(item);
- 
-+	mutex_lock(&functions_mutex);
-+	idr_remove(&functions_idr, epf_group->index);
-+	mutex_unlock(&functions_mutex);
- 	pci_epf_destroy(epf_group->epf);
- 	kfree(epf_group);
- }
-@@ -372,22 +379,57 @@ static struct config_group *pci_epf_make(struct config_group *group,
- {
- 	struct pci_epf_group *epf_group;
- 	struct pci_epf *epf;
-+	char *epf_name;
-+	int index, err;
- 
- 	epf_group = kzalloc(sizeof(*epf_group), GFP_KERNEL);
- 	if (!epf_group)
- 		return ERR_PTR(-ENOMEM);
- 
-+	mutex_lock(&functions_mutex);
-+	index = idr_alloc(&functions_idr, epf_group, 0, 0, GFP_KERNEL);
-+	mutex_unlock(&functions_mutex);
-+	if (index < 0) {
-+		err = index;
-+		goto free_group;
-+	}
-+
-+	epf_group->index = index;
-+
- 	config_group_init_type_name(&epf_group->group, name, &pci_epf_type);
- 
--	epf = pci_epf_create(group->cg_item.ci_name);
-+	epf_name = kasprintf(GFP_KERNEL, "%s.%d",
-+			     group->cg_item.ci_name, epf_group->index);
-+	if (!epf_name) {
-+		err = -ENOMEM;
-+		goto remove_idr;
-+	}
-+
-+	epf = pci_epf_create(epf_name);
- 	if (IS_ERR(epf)) {
- 		pr_err("failed to create endpoint function device\n");
--		return ERR_PTR(-EINVAL);
-+		err = -EINVAL;
-+		goto free_name;
- 	}
- 
- 	epf_group->epf = epf;
- 
-+	kfree(epf_name);
-+
- 	return &epf_group->group;
-+
-+free_name:
-+	kfree(epf_name);
-+
-+remove_idr:
-+	mutex_lock(&functions_mutex);
-+	idr_remove(&functions_idr, epf_group->index);
-+	mutex_unlock(&functions_mutex);
-+
-+free_group:
-+	kfree(epf_group);
-+
-+	return ERR_PTR(err);
- }
- 
- static void pci_epf_drop(struct config_group *group, struct config_item *item)
--- 
-2.11.0
+> +               const __be32 *addr;
+> +
+> +               addr = of_get_property(ppnode, "reg", NULL);
+> +               if (addr)
+> +                       memcpy(laddr, addr, 3);
+
+Can't you just adjust pdev to be ppdev in this case and then use the
+existing code to set laddr?
+
+Please copy the powerpc list on this. I worry that touching this
+function will break something.
+
+BTW, this code is moving to drivers/pci/ in 4.16.
+
+> +       } else {
+> +               laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
+> +               laddr[1] = laddr[2] = cpu_to_be32(0);
+> +       }
+> +
+>         rc = of_irq_parse_raw(laddr, out_irq);
+>         if (rc)
+>                 goto err;
+> --
+> 1.9.1
+>
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
