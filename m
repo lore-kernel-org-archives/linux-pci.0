@@ -1,107 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:39189 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750926AbeAMGin (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 13 Jan 2018 01:38:43 -0500
-Message-Id: <d0ac15a21de9e47157588a96b7d2f407295e358b.1515825290.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 13 Jan 2018 07:38:39 +0100
-Subject: [PATCH] PCI: pciehp: Assume NoCompl+ for Thunderbolt ports
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Andreas Noever <andreas.noever@gmail.com>
+Received: from mailgw01.mediatek.com ([210.61.82.183]:18693 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752616AbeAaHmB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jan 2018 02:42:01 -0500
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: Frank Rowand <frowand.list@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/2] dt-bindings: PCI: MediaTek: Correct the interrupt-map properties
+Date: Wed, 31 Jan 2018 15:41:50 +0800
+Message-ID: <9d247a4fba54ba90d07df32fd89a8bb2c8bdb0f9.1516961656.git.ryder.lee@mediatek.com>
+In-Reply-To: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain Thunderbolt 1 controllers claim to support Command Completed
-events (value of 0b in the No Command Completed Support field of the
-Slot Capabilities register) but in reality neither set the Command
-Completed bit in the Slot Status register nor signal a Command
-Completed interrupt.
+Move the interrupt-map properties from the child nodes to the root node
+and update each entry accordingly.
 
-As a result, every call to pcie_write_cmd() takes 2 seconds (1 second
-for each invocation of pcie_wait_cmd()).  pcie_write_cmd() is called on
-->remove via pcie_disable_notification(), so after such a Thunderbolt
-device is unplugged, 2 seconds elapse until pciehp is unbound:
-
-[  337.942727] pciehp 0000:0a:00.0:pcie204: Timeout on hotplug command 0x1038 (issued 21176 msec ago)
-[  340.014735] pciehp 0000:0a:00.0:pcie204: Timeout on hotplug command 0x0000 (issued 2072 msec ago)
-
-That by itself has always been unpleasant, but the situation has become
-worse with commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services
-during shutdown"):  Now pciehp is unbound on ->shutdown.  Because
-Thunderbolt controllers typically have 4 hotplug ports, every reboot and
-shutdown is now delayed by 8 seconds, plus another 2 seconds for every
-attached Thunderbolt 1 device.
-
-By testing with my own equipment and by googling I was able to ascertain
-that at least the following chips are affected by this erratum:
-8086:1513  CV82524 Thunderbolt Controller [Light Ridge 4C  2010]
-8086:1547  DSL3510 Thunderbolt Controller [Cactus Ridge 4C 2012]
-8086:1549  DSL2210 Thunderbolt Controller [Port Ridge 1C   2011]
-
-The following newer chips are not affected as they have NoCompl+ in the
-Slot Capabilities register:
-8086:156d  DSL5520 Thunderbolt 2 Bridge [Falcon Ridge 4C   2013]
-8086:1578  DSL6540 Thunderbolt 3 Bridge [Alpine Ridge 4C   2015]
-
-Thunderbolt hotplug slots are not physical slots that one inserts cards
-into, but rather logical hotplug slots implemented in silicon.  Devices
-appear beyond those logical slots once a PCI tunnel is established on
-top of the Thunderbolt Converged I/O switch.  One would expect that
-commands written to the Slot Control register are executed pretty much
-immediately by the silicon, without requiring a delay, so the NoCompl+
-on newer chips makes sense.  It is unclear whether the older chips
-likewise do not require observing a delay or how long that delay needs
-to be.  There is still no public spec or errata sheet for Thunderbolt
-controllers.
-
-I checked what macOS does:
-https://opensource.apple.com/source/IOPCIFamily/IOPCIFamily-320.1.1/IOPCIBridge.cpp.auto.html
-
-They do not enable Command Completed events:
-	// data link change, hot plug, presence detect change
-	kSlotControlEnables = ((1 << 12) | (1 << 5) | (1 << 3))
-
-They also do not call IODelay() or check the Command Completed bit after
-writing to the Slot Control register:
-	fBridgeDevice->configWrite16( fBridgeDevice->reserved->expressCapability + 0x18, ...);
-
-Do the same and assume NoCompl+ for any Thunderbolt hotplug port.
-
-I've stress-tested this by alternatingly binding and unbinding pciehp to
-a Port Ridge hotplug bridge in an endless loop for a few minutes (by
-enabling/disabling slot power via sysfs), which causes rapid writes to
-the Slot Control register.  pciehp never missed a beat.
-
-Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-Cc: Sinan Kaya <okaya@codeaurora.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Yehezkel Bernat <yehezkel.bernat@intel.com>
-Cc: Michael Jamet <michael.jamet@intel.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/pci/hotplug/pciehp_hpc.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../devicetree/bindings/pci/mediatek-pcie.txt      | 28 ++++++++++++----------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 7bab0606f1a9..1904f46a09e4 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -848,6 +848,10 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	if (pdev->hotplug_user_indicators)
- 		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
- 
-+	/* Thunderbolt 1 ports falsely advertise Command Completed support */
-+	if (pdev->is_thunderbolt)
-+		slot_cap |= PCI_EXP_SLTCAP_NCCS;
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+index 3a6ce55..b15ea2d 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+@@ -89,10 +89,21 @@ Examples for MT7623:
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		#interrupt-cells = <1>;
+-		interrupt-map-mask = <0xf800 0 0 0>;
+-		interrupt-map = <0x0000 0 0 0 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
+-				<0x0800 0 0 0 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
+-				<0x1000 0 0 0 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
++		interrupt-map-mask = <0xf800 0 0 7>;
++		interrupt-map = <0x0000 0 0 1 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW
++				0x0000 0 0 2 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW
++				0x0000 0 0 3 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW
++				0x0000 0 0 4 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW
 +
- 	ctrl->slot_cap = slot_cap;
- 	mutex_init(&ctrl->ctrl_lock);
- 	init_waitqueue_head(&ctrl->queue);
++				0x0800 0 0 1 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW
++				0x0800 0 0 2 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW
++				0x0800 0 0 3 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW
++				0x0800 0 0 4 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW
++
++				0x1000 0 0 1 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW
++				0x1000 0 0 2 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW
++				0x1000 0 0 3 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW
++				0x1000 0 0 4 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
+ 		clocks = <&topckgen CLK_TOP_ETHIF_SEL>,
+ 			 <&hifsys CLK_HIFSYS_PCIE0>,
+ 			 <&hifsys CLK_HIFSYS_PCIE1>,
+@@ -115,9 +126,6 @@ Examples for MT7623:
+ 			reg = <0x0000 0 0 0 0>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+-			#interrupt-cells = <1>;
+-			interrupt-map-mask = <0 0 0 0>;
+-			interrupt-map = <0 0 0 0 &sysirq GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>;
+ 			ranges;
+ 			num-lanes = <1>;
+ 		};
+@@ -127,9 +135,6 @@ Examples for MT7623:
+ 			reg = <0x0800 0 0 0 0>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+-			#interrupt-cells = <1>;
+-			interrupt-map-mask = <0 0 0 0>;
+-			interrupt-map = <0 0 0 0 &sysirq GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>;
+ 			ranges;
+ 			num-lanes = <1>;
+ 		};
+@@ -139,9 +144,6 @@ Examples for MT7623:
+ 			reg = <0x1000 0 0 0 0>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+-			#interrupt-cells = <1>;
+-			interrupt-map-mask = <0 0 0 0>;
+-			interrupt-map = <0 0 0 0 &sysirq GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
+ 			ranges;
+ 			num-lanes = <1>;
+ 		};
 -- 
-2.15.1
+1.9.1
