@@ -1,180 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57640 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750816AbeAPJ7Q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jan 2018 04:59:16 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v4 5/5] PCI/DPC: Enumerate the devices after DPC trigger event
-Date: Tue, 16 Jan 2018 15:28:43 +0530
-Message-Id: <1516096723-8013-6-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
-References: <1516096723-8013-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Qzba=E3=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=Qzba=E3=codeaurora.org=okaya@kernel.org>
+Subject: Re: One Question About PCIe BUS Config Type with pcie_bus_safe or
+ pcie_bus_perf On NVMe Device
+To: Myron Stowe <myron.stowe@gmail.com>, Ron Yuan <ron.yuan@memblaze.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Radjendirane Codandaramane <radjendirane.codanda@microsemi.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Bo Chen <bo.chen@memblaze.com>,
+ William Huang <william.huang@memblaze.com>,
+ Fengming Wu <fengming.wu@memblaze.com>,
+ Jason Jiang <jason.jiang@microsemi.com>,
+ Ramyakanth Edupuganti <Ramyakanth.Edupuganti@microsemi.com>,
+ William Cheng <william.cheng@microsemi.com>,
+ "Kim Helper (khelper)" <khelper@micron.com>,
+ Linux PCI <linux-pci@vger.kernel.org>
+References: <62d57a7c-b45d-3567-4dc6-5b0a0dba046f@codeaurora.org>
+ <20180122213630.GB5317@bhelgaas-glaptop.roam.corp.google.com>
+ <1e62a548-cc4c-d93e-6916-8ac695ebfdaa@codeaurora.org>
+ <20180122225127.GC5317@bhelgaas-glaptop.roam.corp.google.com>
+ <00b97a2a-981d-f1c7-abcd-b5ee686c5568@codeaurora.org>
+ <20180123001634.GD5317@bhelgaas-glaptop.roam.corp.google.com>
+ <09bd3f5c-4671-d9dd-fa39-4d7619ee5860@codeaurora.org>
+ <SHAPR01MB173EFAB42A8838DC3D52FD1FEE30@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
+ <20180123143839.GE5317@bhelgaas-glaptop.roam.corp.google.com>
+ <b93a4fb1ec42480596b8d1a2b525e8f1@microsemi.com>
+ <20180124180118.GJ5317@bhelgaas-glaptop.roam.corp.google.com>
+ <SHAPR01MB173F9910CA9B2651104E319FEFB0@SHAPR01MB173.CHNPR01.prod.partner.outlook.cn>
+ <CAL-B5D3rbY57UNANUcuguHy1X4CzhCSpGk0i9i-13RHEo9NQ6Q@mail.gmail.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <0c036431-ff08-693b-e406-34e42582c2f3@codeaurora.org>
+Date: Wed, 31 Jan 2018 19:13:56 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAL-B5D3rbY57UNANUcuguHy1X4CzhCSpGk0i9i-13RHEo9NQ6Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement error_resume callback in DPC so, after DPC trigger event
-enumerates the devices beneath.
+On 1/31/2018 7:01 PM, Myron Stowe wrote:
+>> I think from above examples:
+>> 1. perf mode is moving devices to 256 MPS as it can.
+>> 2. safe mode is setting to 128 MPS
+>> 3. perf mode set MRRS=MPS is a CORRECT call for device with MPSC lower than its parents.
+>> 4. perf mode set MRRS=MPS is not necessary for a device with SAME MPSC as its parents?
+>> 5. it is an interested point to me that slot/switch/root MRRS are always set to 128B, I have not found out why.
+> In Sinan's original posting, a reference to
+> https://www.xilinx.com/support/documentation/white_papers/wp350.pdf
+> was provided.  When I read that paper and got to the "Read Completion
+> Boundary" section I thought to myself: "If RCB can only be 64 or 128
+> bytes then what's the point of MPS (or MRRS) as all TLP completions
+> would be limited to 64 or 128 bytes? (see also the paper's 'Read
+> Completions with the RCB Set to 64 Bytes' figure)".  I brought this up
+> to a colleague and they surmised that possibly only _lower end_
+> (a.k.a. lazy) chipset implementations would truly have RCB limited
+> sized completions; higher end chipsets would of course have to comply
+> with RCB when communicating with the memory controller but could then
+> aggregate data into larger MPS (or MRRS) sized TLP completion packets.
+> Perhaps this might explain why you always saw slot/switch/root values
+> set at 128B?
+> 
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+I have looked at that paper before. It is plain wrong. Read Completion
+Boundary is about the alignment of addresses that an endpoint is sending
+in memory read packets according to the spec. It has nothing to do with
+the packet size.
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 31799f6..185dbc6 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -162,6 +162,43 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- 		dev_warn(dev, "Link state not disabled for DPC event\n");
- }
- 
-+static bool dpc_wait_link_active(struct pci_dev *pdev)
-+{
-+	unsigned long timeout = jiffies + HZ;
-+	u16 lnk_status;
-+	bool ret = true;
-+
-+	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+
-+	while (!(lnk_status & PCI_EXP_LNKSTA_DLLLA) &&
-+					!time_after(jiffies, timeout)) {
-+		msleep(10);
-+		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+	}
-+
-+	if (!(lnk_status & PCI_EXP_LNKSTA_DLLLA)) {
-+		dev_warn(&pdev->dev, "Link state not enabled after DPC event\n");
-+		ret = false;
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * dpc_error_resume - enumerate the devices beneath
-+ * @dev: pointer to Root Port's pci_dev data structure
-+ *
-+ * Invoked by Port Bus driver during nonfatal recovery.
-+ */
-+static void dpc_error_resume(struct pci_dev *pdev)
-+{
-+	if (dpc_wait_link_active(pdev)) {
-+		pci_lock_rescan_remove();
-+		pci_rescan_bus(pdev->bus);
-+		pci_unlock_rescan_remove();
-+	}
-+}
-+
- /**
-  * dpc_reset_link - reset link DPC  routine
-  * @dev: pointer to Root Port's pci_dev data structure
-@@ -420,6 +457,7 @@ static void dpc_remove(struct pcie_device *dev)
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
-+	.error_resume	= dpc_error_resume,
- 	.reset_link     = dpc_reset_link,
- };
- 
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 14b9153..95950f6 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -236,6 +236,7 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
-  * @state: error state
-  * @error_mesg: message to print
-  * @cb: callback to be broadcasted
-+ * @severity: error severity
-  *
-  * Invoked during error recovery process. Once being invoked, the content
-  * of error severity will be broadcasted to all downstream drivers in a
-@@ -244,7 +245,8 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
- pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 	enum pci_channel_state state,
- 	char *error_mesg,
--	int (*cb)(struct pci_dev *, void *))
-+	int (*cb)(struct pci_dev *, void *),
-+	int severity)
- {
- 	struct pci_err_broadcast_data result_data;
- 
-@@ -256,6 +258,15 @@ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 		result_data.result = PCI_ERS_RESULT_RECOVERED;
- 
- 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		/* If DPC is triggered, call resume error hanlder
-+		 * because, at this point we can safely assume that
-+		 * link recovery has happened.
-+		 */
-+		if ((severity == PCI_ERR_DPC_FATAL) &&
-+			(cb == pci_report_resume)) {
-+			cb(dev, NULL);
-+			return PCI_ERS_RESULT_RECOVERED;
-+		}
- 		/*
- 		 * If the error is reported by a bridge, we think this error
- 		 * is related to the downstream link of the bridge, so we
-@@ -305,7 +316,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 	status = pci_broadcast_error_message(dev,
- 			state,
- 			"error_detected",
--			pci_report_error_detected);
-+			pci_report_error_detected,
-+			severity);
- 
- 	if ((severity == PCI_ERR_AER_FATAL) ||
- 	    (severity == PCI_ERR_DPC_FATAL)) {
-@@ -314,11 +326,15 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 			goto failed;
- 	}
- 
-+	if (severity == PCI_ERR_DPC_FATAL)
-+		goto resume;
-+
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER)
- 		status = pci_broadcast_error_message(dev,
- 				state,
- 				"mmio_enabled",
--				pci_report_mmio_enabled);
-+				pci_report_mmio_enabled,
-+				severity);
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
- 		/*
-@@ -329,19 +345,22 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 		status = pci_broadcast_error_message(dev,
- 				state,
- 				"slot_reset",
--				pci_report_slot_reset);
-+				pci_report_slot_reset,
-+				severity);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
-+resume:
- 	pci_broadcast_error_message(dev,
- 				state,
- 				"resume",
--				pci_report_resume);
-+				pci_report_resume,
-+				severity);
- 
--	dev_info(&dev->dev, "Device recovery successful\n");
- 	mutex_unlock(&pci_err_recovery_lock);
-+	dev_info(&dev->dev, "Device recovery successful\n");
- 	return;
- 
- failed:
+The limitation on MRRS could be that device (switch) doesn't support it.
+A device is allowed to reject an MRRS set value.
+
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
