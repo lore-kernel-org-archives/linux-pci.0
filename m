@@ -1,60 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35336 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751079AbeBHPFw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Feb 2018 10:05:52 -0500
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w18F3Qtk104127
-        for <linux-pci@vger.kernel.org>; Thu, 8 Feb 2018 10:05:51 -0500
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2g0rs48fjg-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 08 Feb 2018 10:05:51 -0500
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
-        Thu, 8 Feb 2018 10:05:50 -0500
-Subject: Re: [PATCH] PCI/AER: Move pci_uevent_ers() out of pci.h
-To: Michael Ellerman <mpe@ellerman.id.au>, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-        torvalds@linux-foundation.org, ruscur@russell.cc,
-        jjalvare@linux.vnet.ibm.com
-References: <20180208122035.9305-1-mpe@ellerman.id.au>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Thu, 8 Feb 2018 09:05:45 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180208122035.9305-1-mpe@ellerman.id.au>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <dcfc6411-20cf-5b3f-20c5-14167de54700@linux.vnet.ibm.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:40558 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751881AbeBAQLd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Feb 2018 11:11:33 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] misc: pci_endpoint_test: Handle 64-bit BARs properly
+Date: Thu,  1 Feb 2018 17:11:18 +0100
+Message-Id: <20180201161119.3852-3-niklas.cassel@axis.com>
+In-Reply-To: <20180201161119.3852-1-niklas.cassel@axis.com>
+References: <20180201161119.3852-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+A 64-bit BAR uses the succeeding BAR for the upper bits,
+so we cannot simply call pci_ioremap_bar() on every single BAR.
 
-On 2/8/18 6:20 AM, Michael Ellerman wrote:
+Ignore BARs that does not have a valid resource length.
 
-> There's no reason pci_uevent_ers() needs to be inline in pci.h, so
-> move it out to a C file.
->
-> Given it's used by AER the obvious location would be somewhere in
-> drivers/pci/pcie/aer, but because it's also used by powerpc EEH code
-> unfortunately that doesn't work in the case where EEH is enabled but
-> PCIEPORTBUS is not.
->
-> So for now put it in pci-driver.c, next to pci_uevent(), with an
-> appropriate #ifdef so it's not built if AER and EEH are both disabled.
->
-> While we're moving it also fix up the kernel doc comment for @pdev to
-> be accurate.
->
-> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
-> ---
->  drivers/pci/pci-driver.c | 36 ++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h      | 38 +++-----------------------------------
->  2 files changed, 39 insertions(+), 35 deletions(-)
+pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
+pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
+pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
+pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
+pci-endpoint-test 0000:01:00.0: failed to read BAR1
+pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
+pci-endpoint-test 0000:01:00.0: failed to read BAR3
+pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
+pci-endpoint-test 0000:01:00.0: failed to read BAR5
 
-Looks good, thanks for fixing it!
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+Lorenzo/Bjorn: pci_resource_len() seems to fix my problem,
+but is it the correct function to use here?
+If BAR[x] is a 64-bit BAR, I'm assuming that pci_resource_len() on BAR[x+1]
+will always return 0 (since BAR[x+1] cannot have any prefetchable/type bits
+when BAR[x] is 64-bit).
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+ drivers/misc/pci_endpoint_test.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
--Bryant
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 320276f42653..3af31bfdcfdd 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -534,6 +534,8 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++) {
++		if (pci_resource_len(pdev, bar) == 0)
++			continue;
+ 		base = pci_ioremap_bar(pdev, bar);
+ 		if (!base) {
+ 			dev_err(dev, "failed to read BAR%d\n", bar);
+-- 
+2.14.2
