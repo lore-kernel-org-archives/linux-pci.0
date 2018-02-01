@@ -1,56 +1,48 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <76a05abd818c89032161585ba130511a5bd673f0.1519799691.git.jan.kiszka@siemens.com>
-References: <cover.1519799691.git.jan.kiszka@siemens.com> <76a05abd818c89032161585ba130511a5bd673f0.1519799691.git.jan.kiszka@siemens.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 28 Feb 2018 17:45:37 +0200
-Message-ID: <CAHp75Vf35N1Q0aVjKNwz5UMAVKR-q8PypoDhgr8bCbbiqVeSqQ@mail.gmail.com>
-Subject: Re: [PATCH v2 4/6] x86: Consolidate PCI_MMCONFIG configs
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] PCI: designware-ep: Return an error when requesting a too large BAR size
+Date: Thu,  1 Feb 2018 17:11:19 +0100
+Message-Id: <20180201161119.3852-4-niklas.cassel@axis.com>
+In-Reply-To: <20180201161119.3852-1-niklas.cassel@axis.com>
+References: <20180201161119.3852-1-niklas.cassel@axis.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 28, 2018 at 8:34 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
-> From: Jan Kiszka <jan.kiszka@siemens.com>
->
-> Not sure if those two worked by design or just by chance so far. In any
-> case, it's at least cleaner and clearer to express this in a single
-> config statement.
+pci_epc_set_bar() can be called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
+and can thus request a BAR size larger than 4 GB.
 
-I would add a reference to the commit which brought that in the first place.
+However, the pcie-designware-ep.c driver currently doesn't handle
+BAR sizes larger than 4 GB. (Since we are only writing the BAR_mask[x]
+register and not the BAR_mask[x+1] register.)
 
->
-> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
-> ---
->  arch/x86/Kconfig | 9 +++------
->  1 file changed, 3 insertions(+), 6 deletions(-)
->
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> index eb7f43f23521..63e85e7da12e 100644
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -2641,8 +2641,9 @@ config PCI_DIRECT
->         depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC || PCI_GOMMCONFIG))
->
->  config PCI_MMCONFIG
-> -       def_bool y
-> -       depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
-> +       bool "Support mmconfig PCI config space access" if X86_64
-> +       default y
-> +       depends on PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY || X86_64)
+For now, return an error when requesting a BAR size larger than 4 GB.
 
-Looking to the above context I would rather put it like
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-designware-ep.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-depends on PCI && (ACPI || SFI) && (X86_64 || (PCI_GOANY || PCI_GOMMCONFIG))
-
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 3a6feeff5f5b..4a0085ead1e3 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -126,6 +126,11 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+ 	enum dw_pcie_as_type as_type;
+ 	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+ 
++	if (size > 0x100000000ULL) {
++		dev_err(pci->dev, "can't handle BAR larger than 4GB\n");
++		return -EINVAL;
++	}
++
+ 	if (!(flags & PCI_BASE_ADDRESS_SPACE))
+ 		as_type = DW_PCIE_AS_MEM;
+ 	else
 -- 
-With Best Regards,
-Andy Shevchenko
+2.14.2
