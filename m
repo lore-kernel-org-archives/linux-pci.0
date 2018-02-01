@@ -1,44 +1,41 @@
-Return-Path: <SRS0=T4fo=FR=gmail.com=valmikibow@kernel.org>
-Return-Path: <SRS0=T4fo=FR=gmail.com=valmikibow@kernel.org>
-To: linux-pci <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, sbodomerle@gmail.com,
- rjui@broadcom.com
-From: valmiki <valmikibow@gmail.com>
-Subject: Affinity on non MSI-X interrupts
-Message-ID: <714a8d82-c4b0-9661-5b78-ed0d87a0a5fc@gmail.com>
-Date: Sat, 24 Feb 2018 00:47:00 +0530
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:40536 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751378AbeBAQLX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Feb 2018 11:11:23 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, linux-pci@vger.kernel.org
+Cc: Niklas Cassel <niklass@axis.com>, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/3] PCI endpoint 64-bit BAR fixes
+Date: Thu,  1 Feb 2018 17:11:16 +0100
+Message-Id: <20180201161119.3852-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-Does multi MSI interrupts will also be set and routed by affinity ?
-
-In drivers/pci/host/pcie-iproc-msi.c interrupt handler there is do while 
-loop.
-head = iproc_msi_read_reg(msi, IPROC_MSI_EQ_HEAD,
-				  eq) & IPROC_MSI_EQ_MASK;
-	do {
-		tail = iproc_msi_read_reg(msi, IPROC_MSI_EQ_TAIL,
-					  eq) & IPROC_MSI_EQ_MASK;
-
-		.....
-		}
-
-		
-		 */
-	} while (true);
-
-What happens if two multi MSI cards are connected and continuously 
-running traffic ? Will this handler ever come out? wont this stall CPU ?
-Will the interrupts be routed to different CPU's in this case also?
-
-Regards,
-Valmiki
+PCI endpoint fixes to improve the way 64-bit BARs are handled.
 
 
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+There are still future improvements that could be made:
+
+pci-epf-test.c always allocates space for
+6 BARs, even when using 64-bit BARs (which
+really only requires us to allocate 3 BARs).
+
+pcitest.sh will print "NOT OKAY" for BAR1,
+BAR3, and BAR5 when using 64-bit BARs.
+This could probably be improved to say
+something like "N/A (64-bit BAR)".
+
+Niklas Cassel (3):
+  PCI: endpoint: Handle 64-bit BARs properly
+  misc: pci_endpoint_test: Handle 64-bit BARs properly
+  PCI: designware-ep: Return an error when requesting a too large BAR
+    size
+
+ drivers/misc/pci_endpoint_test.c              | 2 ++
+ drivers/pci/dwc/pcie-designware-ep.c          | 5 +++++
+ drivers/pci/endpoint/functions/pci-epf-test.c | 2 ++
+ 3 files changed, 9 insertions(+)
+
+-- 
+2.14.2
