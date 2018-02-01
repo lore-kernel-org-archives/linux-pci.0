@@ -1,43 +1,101 @@
-Return-Path: <helgaas@kernel.org>
-Date: Tue, 13 Feb 2018 12:44:35 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kallol Biswas <ndprkm@gmail.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bjorn.helgaas@gmail.com>
-Subject: Re: enabling multiple MSI vectors for a DS port
-Message-ID: <20180213184435.GE75542@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAP8qiGCNN4xgfDAtQf7H2rpBLJuLyWet0z6rau5WG7kVBj_NTg@mail.gmail.com>
+Return-Path: <SRS0=frT5=E3=realsil.com.cn=rui_feng@kernel.org>
+Return-Path: <SRS0=frT5=E3=realsil.com.cn=rui_feng@kernel.org>
+From: =?utf-8?B?5Yav6ZSQ?= <rui_feng@realsil.com.cn>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "lee.jones@linaro.org" <lee.jones@linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Hans de Goede
+	<hdegoede@redhat.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IOetlOWkjTog562U5aSNOiBbUEFUQ0ggdjZdIG1m?= =?utf-8?Q?d:_Add_support_for_RTS5250S_power_saving?=
+Date: Thu, 1 Feb 2018 08:45:47 +0000
+Message-ID: <2A308283684ECD4B896628E09AF5361E01A8ACA4@RS-MBS01.realsil.com.cn>
+References: <1504772799-15173-1-git-send-email-rui_feng@realsil.com.cn>
+ <20171214222522.GL30595@bhelgaas-glaptop.roam.corp.google.com>
+ <2A308283684ECD4B896628E09AF5361E01A8150B@RS-MBS01.realsil.com.cn>
+ <20171215151522.GT30595@bhelgaas-glaptop.roam.corp.google.com>
+ <2A308283684ECD4B896628E09AF5361E01A8193C@RS-MBS01.realsil.com.cn>
+ <20171227233750.GB79892@bhelgaas-glaptop.roam.corp.google.com>
+ <20180117210121.GD7039@bhelgaas-glaptop.roam.corp.google.com>
+ <2A308283684ECD4B896628E09AF5361E01A8A102@RS-MBS01.realsil.com.cn>
+ <20180130191827.GI232763@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180130191827.GI232763@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAP8qiGCNN4xgfDAtQf7H2rpBLJuLyWet0z6rau5WG7kVBj_NTg@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kallol,
-
-On Tue, Feb 13, 2018 at 10:21:04AM -0800, Kallol Biswas wrote:
-> Hi Bjorn,
->             I am facing an interrupt generation issue when single MSI
-> is shared by both dpc and hotplug interrupt.
-> 
-> The DS port is multi-MSI capable. What I have noticed that if I move
-> the switch (with DS port) and OS disk to a different system multiple
-> MSI vectors are allocated and dpc isr and hotplug isr are on different
-> vectors.
-> 
-> It seems that BIOS controls allocation of MSI vectors. Is there anyway
-> to force linux kernel to allocate multiple vectors when port is
-> capable?
-
-BIOS doesn't control the allocation of MSI vectors.  That's done by
-Linux in pcie_init_service_irqs(), and it depends on many things: what
-services are supported by Linux (hotplug, PME, AER, DPC), which ones
-Linux is allowed to use (based on the ACPI _OSC method, so this part
-can be influenced by the BIOS), etc.
-
-If you can share the "lspci -vv" and dmesg output for these two
-systems, we can probably work out what's going on.
-
-Things should *work* even if DPC and hotplug need to share an
-interrupt.  If that doesn't work, that's a Linux bug that should be
-fixed.
-
-Bjorn
+PiANCj4gT24gRnJpLCBKYW4gMTksIDIwMTggYXQgMDc6Mzg6MjJBTSArMDAwMCwg5Yav6ZSQIHdy
+b3RlOg0KPiA+ID4gT24gV2VkLCBEZWMgMjcsIDIwMTcgYXQgMDU6Mzc6NTBQTSAtMDYwMCwgQmpv
+cm4gSGVsZ2FhcyB3cm90ZToNCj4gPiA+ID4gT24gVHVlLCBEZWMgMTksIDIwMTcgYXQgMDg6MTU6
+MjRBTSArMDAwMCwg5Yav6ZSQIHdyb3RlOg0KPiA+ID4gPiA+ID4gT24gRnJpLCBEZWMgMTUsIDIw
+MTcgYXQgMDk6NDI6NDVBTSArMDAwMCwg5Yav6ZSQIHdyb3RlOg0KPiA+ID4gPiA+ID4gPiA+IFsr
+Y2MgSGFucywgRGF2ZSwgbGludXgtcGNpXQ0KPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+
+ID4gT24gVGh1LCBTZXAgMDcsIDIwMTcgYXQgMDQ6MjY6MzlQTSArMDgwMCwNCj4gPiA+ID4gPiA+
+ID4gPiBydWlfZmVuZ0ByZWFsc2lsLmNvbS5jbg0KPiA+ID4gPiA+ID4gd3JvdGU6DQo+ID4gPiA+
+ID4gPiA+ID4gPiBGcm9tOiBSdWkgRmVuZyA8cnVpX2ZlbmdAcmVhbHNpbC5jb20uY24+DQo+ID4g
+PiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPiBJIHdpc2ggdGhpcyBoYWQgYmVlbiBwb3N0ZWQg
+dG8gbGludXgtcGNpIGJlZm9yZSBiZWluZyBtZXJnZWQuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+
+ID4gPiA+ID4gPiBJJ20gY29uY2VybmVkIGJlY2F1c2Ugc29tZSBvZiB0aGlzIGFwcGVhcnMgdG8g
+b3ZlcmxhcCBhbmQNCj4gPiA+ID4gPiA+ID4gPiBjb25mbGljdCB3aXRoIFBDSSBjb3JlIG1hbmFn
+ZW1lbnQgb2YgQVNQTS4NCj4gPiA+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gPiA+IEkgYXNzdW1l
+IHRoZXNlIGRldmljZXMgYWR2ZXJ0aXNlIEFTUE0gc3VwcG9ydCBpbiB0aGVpcg0KPiA+ID4gPiA+
+ID4gPiA+IExpbmsgQ2FwYWJpbGl0ZXMgcmVnaXN0ZXJzLCByaWdodD8gIElmIHNvLCB3aHkgaXNu
+J3QgdGhlDQo+ID4gPiA+ID4gPiA+ID4gZXhpc3RpbmcgUENJIGNvcmUgQVNQTSBzdXBwb3J0IHN1
+ZmZpY2llbnQ/DQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gV2hlbiBMMVNTIGlzIGNv
+bmZpZ3VyZWQsIHRoZSBkZXZpY2UoaGFyZHdhcmUpIGNhbid0IGVudGVyDQo+ID4gPiA+ID4gPiA+
+IEwxU1Mgc3RhdHVzIGF1dG9tYXRpY2FsbHksIGl0IG5lZWQgZHJpdmVyKHNvZnR3YXJlKSB0byBk
+bw0KPiA+ID4gPiA+ID4gPiBzb21lIHdvcmsgdG8gYWNoaWV2ZSB0aGUNCj4gPiA+ID4gPiA+IGZ1
+bmN0aW9uLg0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IFNvIHRoaXMgaXMgYSBoYXJkd2FyZSBk
+ZWZlY3QgaW4gdGhlIGRldmljZT8gIEFzIGZhciBhcyBJIGtub3csDQo+ID4gPiA+ID4gPiBBU1BN
+IGFuZCBMMVNTIGFyZSBzcGVjaWZpZWQgc3VjaCB0aGF0IHRoZXkgc2hvdWxkIHdvcmsgd2l0aG91
+dA0KPiA+ID4gPiA+ID4gc3BlY2lhbA0KPiA+ID4gZHJpdmVyIHN1cHBvcnQuDQo+ID4gPiA+ID4g
+Pg0KPiA+ID4gPiA+IFllcywgeW91IGNhbiBzYXkgdGhhdC4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+
+ID4gPiA+ID4gRW5hYmxlIHBvd2VyIHNhdmluZyBmb3IgUlRTNTI1MFMgYXMgZm9sbG93aW5nIHN0
+ZXBzOg0KPiA+ID4gPiA+ID4gPiA+ID4gMS5TZXQgMHhGRTU4IHRvIGVuYWJsZSBjbG9jayBwb3dl
+ciBtYW5hZ2VtZW50Lg0KPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+ID4gSXMgdGhpcyBj
+bG9jayBwb3dlciBtYW5hZ2VtZW50IHNvbWV0aGluZyBzcGVjaWZpYyB0bw0KPiA+ID4gPiA+ID4g
+PiA+IFJUUzUyNTBTLCBvciBpcyBpdCBzdGFuZGFyZCBQQ0llIGFyY2hpdGVjdGVkIHN0dWZmPw0K
+PiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+IDB4RkU1OCBpcyBzcGVjaWZpYyByZWdpc3Rl
+ciB0byBSVFM1MjUwUyBub3Qgc3RhbmRhcmQgUENJZQ0KPiA+ID4gPiA+ID4gPiBhcmNoaXRlY3Rl
+ZA0KPiA+ID4gc3R1ZmYuDQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gT0suICBJIGFza2VkIGJl
+Y2F1c2UgZGV2aWNlcyBvZnRlbiBtaXJyb3IgYXJjaGl0ZWN0ZWQgUENJZQ0KPiA+ID4gPiA+ID4g
+Y29uZmlnIHRoaW5ncyBpbiBkZXZpY2Utc3BlY2lmaWMgTU1JTyBzcGFjZSwgYW5kIGlmIEkgc3F1
+aW50DQo+ID4gPiA+ID4gPiBqdXN0IHJpZ2h0LCBJIGNhbiBzb3J0IG9mIG1hdGNoIHVwIHRoZSBy
+ZWdpc3RlciBiaXRzIHlvdSB1c2VkDQo+ID4gPiA+ID4gPiB3aXRoIHRoaW5ncyBpbiB0aGUgUENJ
+ZQ0KPiA+ID4gc3BlYy4NCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+ID4gPiAyLkNoZWNrIGNm
+ZyBzcGFjZSB3aGV0aGVyIHN1cHBvcnQgTDFTUyBvciBub3QuDQo+ID4gPiA+ID4gPiA+ID4NCj4g
+PiA+ID4gPiA+ID4gPiBUaGlzIHNvdW5kcyBsaWtlIHN0YW5kYXJkIFBDSWUgQVNQTSBMMSBTdWJz
+dGF0ZXMsIHJpZ2h0Pw0KPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+IFllcy4NCj4gPiA+
+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPiA+IDMuSWYgc3VwcG9ydCBMMVNTLCBzZXQgMHhGRjAz
+IHRvIGZyZWUgY2xrcmVxLg0KPiA+ID4gPiA+ID4gPiA+ID4gNC5XaGVuIGVudGVyaW5nIGlkbGUg
+c3RhdHVzLCBlbmFibGUgYXNwbQ0KPiA+ID4gPiA+ID4gPiA+ID4gICBhbmQgc2V0IHBhcmFtZXRl
+cnMgZm9yIEwxU1MgYW5kIExUUi4NCj4gPiA+ID4gPiA+ID4gPiA+IDUuV25lbiBlbnRlcmluZyBy
+dW4gc3RhdHVzLCBkaXNhYmxlIGFzcG0NCj4gPiA+ID4gPiA+ID4gPiA+ICAgYW5kIHNldCBwYXJh
+bWV0ZXJzIGZvciBMMVNTIGFuZCBMVFIuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4g
+PiBJbiBnZW5lcmFsLCBkcml2ZXJzIHNob3VsZCBub3QgY29uZmlndXJlIEFTUE0sIEwxU1MsIGFu
+ZA0KPiA+ID4gPiA+ID4gPiA+IExUUiB0aGVtc2VsdmVzOyB0aGUgUENJIGNvcmUgc2hvdWxkIGRv
+IHRoYXQuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPiBJZiBhIGRyaXZlciBuZWVk
+cyB0byB0d2VhayBBU1BNIGF0IHJ1bi10aW1lLCBpdCBzaG91bGQgdXNlDQo+ID4gPiA+ID4gPiA+
+ID4gaW50ZXJmYWNlcyBleHBvcnRlZCBieSB0aGUgUENJIGNvcmUgdG8gZG8gc28uDQo+ID4gPiA+
+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gV2hpY2ggaW50ZXJmYWNlIEkgY2FuIHVzZSB0byBzZXQg
+QVNQTT8gSSB1c2UNCj4gInBjaV93cml0ZV9jb25maWdfYnl0ZSINCj4gPiA+IG5vdy4NCj4gPiA+
+ID4gPiA+DQo+ID4gPiA+ID4gPiBXaGF0IGRvIHlvdSBuZWVkIHRvIGRvPyAgaW5jbHVkZS9saW51
+eC9wY2ktYXNwbS5oIGV4cG9ydHMNCj4gPiA+ID4gPiA+IHBjaV9kaXNhYmxlX2xpbmtfc3RhdGUo
+KSwgd2hpY2ggaXMgbWFpbmx5IHVzZWQgdG8gYXZvaWQgQVNQTQ0KPiA+ID4gPiA+ID4gc3RhdGVz
+IHRoYXQgaGF2ZSBoYXJkd2FyZSBlcnJhdGEuDQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+IEkgd2Fu
+dCB0byBlbmFibGUgQVNQTShMMCAtPiBMMSkgYW5kIGRpc2FibGUgQVNQTShMMSAtPiBMMCksDQo+
+ID4gPiA+ID4gd2hpY2ggaW50ZXJmYWNlIGNhbiBJIHVzZT8NCj4gPiA+ID4NCj4gPiA+ID4gWW91
+IGNhbiB1c2UgcGNpX2Rpc2FibGVfbGlua19zdGF0ZSgpIHRvIGRpc2FibGUgdXNhZ2Ugb2YgTDEu
+DQo+ID4gPiA+DQo+ID4gPiA+IEN1cnJlbnRseSB0aGVyZSBpcyBubyBjb3JyZXNwb25kaW5nIHBj
+aV9lbmFibGVfbGlua19zdGF0ZSgpLiAgV2hhdA0KPiA+ID4gPiBpZiB3ZSBhZGRlZCBzb21ldGhp
+bmcgbGlrZSB0aGUgZm9sbG93aW5nICh1bnRlc3RlZCk/ICBXb3VsZCB0aGF0DQo+ID4gPiA+IHdv
+cmsgZm9yIHlvdT8NCj4gPiA+DQo+ID4gPiBIaSBSdWksDQo+ID4gPg0KPiA+ID4gQW55IHRob3Vn
+aHRzIG9uIHRoZSBwYXRjaCBiZWxvdz8NCj4gPg0KPiA+IEknbSBidXN5IHdpdGggb3RoZXIgd29y
+aywgdGhlIHBhdGNoIHNlZW1zIG9rLCBJIHdpbGwgdGVzdCBpdCBsYXRlci4NCj4gDQo+IEFueSBp
+ZGVhIHdoZW4geW91IG1pZ2h0IGdldCBiYWNrIHRvIHRoaXM/DQo+IA0KPiBJZiB5b3UgY2FuJ3Qg
+ZG8gaXQsIEkgY2FuIHRyeSBkb2luZyBpdCBteXNlbGYsIGJ1dCBvZiBjb3Vyc2UsIEkgZG9uJ3Qg
+a25vdyB0aGUgZGV0YWlscw0KPiBhYm91dCB0aGUgZGV2aWNlIGVycmF0YSBhbmQgSSB3b3VsZG4n
+dCBiZSBhYmxlIHRvIHRlc3QgaXQuDQo+IA0KT2YgY291cnNlLCB5b3UgY2FuIGRvIGl0IGZpcnN0
+Lg0KDQo+IEJqb3JuDQo+IA0KPiAtLS0tLS1QbGVhc2UgY29uc2lkZXIgdGhlIGVudmlyb25tZW50
+IGJlZm9yZSBwcmludGluZyB0aGlzIGUtbWFpbC4NCg==
