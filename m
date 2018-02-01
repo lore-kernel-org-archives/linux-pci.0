@@ -1,53 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4680 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751606AbeAWPpY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jan 2018 10:45:24 -0500
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
-        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
-        <dann.frazier@canonical.com>
-CC: <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-        <rdunlap@infradead.org>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: [PATCH v12 2/9] PCI: Remove unused __weak attribute in pci_register_io_range()
-Date: Wed, 24 Jan 2018 00:36:18 +0800
-Message-ID: <1516725385-24535-3-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
-References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47990 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755903AbeBABMW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Jan 2018 20:12:22 -0500
+From: Victor Gu <xigu@marvell.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+CC: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Wilson Ding <dingwei@marvell.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: RE: Designware 64bit PCIe bus address support
+Date: Thu, 1 Feb 2018 01:12:10 +0000
+Message-ID: <4a2cdba9a8eb43dea1ee7c9995539c0b@SC-EXCH04.marvell.com>
+References: <c3a54516e4004323bdc5be30971f40f8@SC-EXCH04.marvell.com>
+ <CAHM4w1kLM2LtnOrKbGvbMpHnEAxqdv2KzE8HbwLDPMxOKM2OLQ@mail.gmail.com>
+In-Reply-To: <CAHM4w1kLM2LtnOrKbGvbMpHnEAxqdv2KzE8HbwLDPMxOKM2OLQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-
-Currently pci_register_io_range() has only one definition;
-therefore there is no use of the __weak attribute.
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 764ca7b..d8357ff 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3383,7 +3383,7 @@ struct io_range {
-  * Record the PCI IO range (expressed as CPU physical address + size).
-  * Return a negative value if an error has occured, zero otherwise
-  */
--int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+int pci_register_io_range(phys_addr_t addr, resource_size_t size)
- {
- 	int err = 0;
- 
--- 
-1.9.1
+SGkgUHJhdHl1c2gsDQoNClRoYW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHRoZSBjb21tZW50cy4NClBs
+ZWFzZSBzZWUgYmVsb3cuDQoNCkJlc3QgUmVnYXJkcywNClZpY3RvciBHdQ0KDQpGcm9tOiBQcmF0
+eXVzaCBBbmFuZCBbbWFpbHRvOnByYXR5dXNoLmFuYW5kQGdtYWlsLmNvbV0gDQpTZW50OiAyMDE4
+5bm0MeaciDMw5pelIDE1OjIxDQpUbzogVmljdG9yIEd1IDx4aWd1QG1hcnZlbGwuY29tPjsgS2lz
+aG9uIFZpamF5IEFicmFoYW0gSSA8a2lzaG9uQHRpLmNvbT47IEpvYW8gUGludG8gPEpvYW8uUGlu
+dG9Ac3lub3BzeXMuY29tPg0KQ2M6IGppbmdvb2hhbjFAZ21haWwuY29tOyBsaW51eC1wY2lAdmdl
+ci5rZXJuZWwub3JnOyBOYWRhdiBIYWtsYWkgPG5hZGF2aEBtYXJ2ZWxsLmNvbT47IFdpbHNvbiBE
+aW5nIDxkaW5nd2VpQG1hcnZlbGwuY29tPjsgVGhvbWFzIFBldGF6em9uaSA8dGhvbWFzLnBldGF6
+em9uaUBmcmVlLWVsZWN0cm9ucy5jb20+DQpTdWJqZWN0OiBSZTogRGVzaWdud2FyZSA2NGJpdCBQ
+Q0llIGJ1cyBhZGRyZXNzIHN1cHBvcnQNCg0KKyBLaXNob24sIEpvYW8NCg0KT24gVHVlLCBKYW4g
+MzAsIDIwMTggYXQgMTE6MzYgQU0sIFZpY3RvciBHdSA8eGlndUBtYXJ2ZWxsLmNvbT4gd3JvdGU6
+DQpIaSBKaW5nb28gYW5kIFByYXR5dXNoLA0KDQpJIGFtIFZpY3RvciBHdSwgU1cgUkQgZnJvbSBN
+YXJ2ZWxsLg0KDQpEdXJpbmcgdGhlIHRlc3Rpbmcgd2UgZm91bmQgdGhlIGRlc2lnbndhcmUgUENJ
+ZSB3b3JrcyB3ZWxsIHdpdGggNjQgYml0IENQVSBhZGRyZXNzIGFuZCAzMiBiaXQgUENJZSBidXMg
+YWRkcmVzcyh0cmFuc2xhdGVkIGJ5IEFUVSkuDQpCdXQgY2Fubm90IGFjY2VzcyB0aGUgUENJZSBF
+UCBpZiBib3RoIG9mIHRoZW0gdXNlIHRoZSA2NCBiaXQgQ1BVIGFkZHJlc3MsIHN1Y2ggYXMgMHg4
+MDAwMDAwMDAuDQoNCllvdSBtZWFuIHRoYXQgeW91IHdhbnQgdG8ga2VlcCBQQ0llIGJ1cyBhZGRy
+ZXNzwqAoQVRVIHRyYW5zbGF0ZWQgYWRkcmVzcynCoGFzIDY0IGJpdD8gSWYgeWVzLCB0aGF0IHNo
+b3VsZCBiZSBkb2FibGUuIEJ1dCwgYnVzIGFkZHJlc3MgYWx3YXlzIGRlcGVuZHMgb24gdGhlIGJ1
+cywgZGV2aWNlIGFuZCBmdW5jdGlvbsKgYWRkcmVzc8Kgb2YgRVAgdGhhdCB5b3Ugd2FudCB0byB0
+YXJnZXQuwqANCsKgSSBtZWFuIHRoZSBFQ0FNKG1lbW9yeSBtYXBwZWQgYWNjZXNzIGZyb20gaG9z
+dCBDUFUgdG8gUENJZSBFUCBkZXZpY2UpLCBub3QgdGhlIFBJTyBieSBidXMvZGV2aWNlL2Z1bmN0
+aW9uLg0KVGhlIFBDSWUgaG9zdCB3aWxsIGRlZmluZSB0aGUgbWVtb3J5IHJhbmdlIHVzZWQgZm9y
+IEJBUiBhbGxvY2F0aW9uLCBhZnRlciBCQVIgYWxsb2NhdGlvbiB0aGUgaG9zdCBDUFUgY2FuIHVz
+ZSB0aGUgQ1BVIGFkZHJlc3MgaW4gdGhlIG1lbW9yeSByYW5nZSB0byBhY2Nlc3MgdGhlIFBDSWUg
+RVAuDQpXZSB0ZXN0ZWQgdHdvIGNhc2VzIG9uIG91ciBkZXNpZ253YXJlIGJhc2VkIFNvQyB3aXRo
+IHRoZSBQQ0llIEVQIHdoaWNoIHN1cHBvcnRzIDY0Yml0IEJBUnMNCjEuIDY0Yml0KHZhbHVlID4g
+MzJiaXQpIENQVSBhZGRyZXNzIG1hcCB0byA2NGJpdCh2YWx1ZSA+IDMyYml0KSAgUENJIGJ1cyBh
+ZGRyZXNzOiA8MHg4MjAwMDAwMCAweDggMHgwMDAwMDAwMCAweDggIDB4MDAwMDAwMDAgMHgxIDB4
+MD47DQpJbiB0aGlzIGNhc2UsIHRoZSBtZW1vcnkgcmVzb3VyY2Ugc3RhcnRzIGZyb20gQ1BVIGFk
+ZHJlc3MgMHg4MDAwMDAwMDAsIGFuZCBQQ0llIGJ1cyBhZGRyZXNzIDB4ODAwMDAwMDAwLCBzaXpl
+IGlzIDB4MTAwMDAwMDAwDQpUaGUgQ1BVIGdldHMgbm90aGluZyB3aGVuIGFjY2VzcyBDUFUgYWRk
+cmVzcyAweDgwMDAwMDAwMA0KMi4gNjRiaXQodmFsdWUgPiAzMmJpdCkgQ1BVIGFkZHJlc3MgbWFw
+IHRvIDMyYml0KHZhbHVlIDwgMzJiaXQpICBQQ0kgYnVzIGFkZHJlc3M6IDwweDgyMDAwMDAwIDB4
+MCAweDAwMDAwMDAwIDB4OCAgMHgwMDAwMDAwMCAweDEgMHgwPjsNCkluIHRoaXMgY2FzZSwgdGhl
+IG1lbW9yeSByZXNvdXJjZXMgc3RpbGwgc3RhcnRzIGZyb20gQ1BVIGFkZHJlc3MgMHg4MDAwMDAw
+MDAsIGJ1dCB0aGUgUENJZSBidXMgYWRkcmVzcyBzdGFydCBmcm9tIDB4MCwgdGhlIGRlc2lnbndh
+cmUgQVRVIHdpbGwgdHJhbnNsYXRlIHRoZSBDUFUgYWRkcmVzcyB0byBQQ0llIGJ1cyBhZGRyZXNz
+Lg0KVGhlIENQVSBjYW4gZ2V0IHRoZSBjb3JyZWN0IHZhbHVlcyB3aGVuIGFjY2VzcyBDUFUgYWRk
+cmVzcyAweDgwMDAwMDAwMCBhZnRlciB0aGUgQkFSIGFsbG9jYXRpb24uDQoNCkRvIHlvdSBrbm93
+IGlmIHRoZSBkZXNpZ253YXJlIFBDSWUgSVAgc3VwcG9ydHMgNjQgYml0IFBDSWUgYnVzIGFkZHJl
+c3M/DQpBbmQgaWYgdGhlIGRlc2lnbndhcmUgUENJZSBMaW51eCBkcml2ZXIgc3VwcG9ydHMgNjQg
+Yml0IFBDSWUgYnVzIGFkZHJlc3M/DQoNCknCoHRoaW5rLCB0aGV5IHNob3VsZCB3b3JrLiBLaXNo
+b24gYW5kIEpvYW8gY2FuIGdpdmUgYmV0dGVyIGNvbW1lbnRzLg0KSGkgS2lzaG9uIGFuZCBKb2Fv
+LCBhbnkgaWRlYSBhYm91dCB0aGUgYWJvdmUgaXNzdWU/DQpJcyB0aGVyZSBhbnkgZGVzaWdud2Fy
+ZSBQQ0llIGJhc2VkIFNvQyBjYW4gc3VwcG9ydCB0aGUgNjQgYml0KHZhbHVlID4gMzJiaXQpIGJ1
+cyBhZGRyZXNzPw0KDQpUaGFuayB5b3UgZm9yIHRoZSBoZWxwIQ0KDQpCZXN0IFJlZ2FyZHMsDQpW
+aWN0b3IgR3UNCkBLaXNob24sIEBKb2FvLCBIaSBHdXlzIHdvdWxkIHlvdSBsaWtlIHRvIHRha2Ug
+b3ZlciBNYWludGFuaWVyc2hpcCBvZiB0aGUgZHJpdmVyLiBJIGRvIG5vdCBoYXZlIHN5bm9wc3lz
+IHBsYXRmb3JtLCBhbmQgbW9yZW92ZXIgSSBhbSBkb2luZyBzb21ldGhpbmcgZWxzZSBmb3IgcXVp
+dGUgc29tZSB0aW1lIG5vdy4NCg0KDQo=
