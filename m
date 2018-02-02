@@ -1,99 +1,126 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Subject: Re: [PATCH 03/37] iommu/sva: Manage process address spaces
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-References: <1519280641-30258-1-git-send-email-xieyisheng1@huawei.com>
- <1519280641-30258-3-git-send-email-xieyisheng1@huawei.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <kvm@vger.kernel.org>, <joro@8bytes.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        Catalin Marinas <Catalin.Marinas@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        "Lorenzo Pieralisi" <Lorenzo.Pieralisi@arm.com>,
-        <hanjun.guo@linaro.org>, Sudeep Holla <Sudeep.Holla@arm.com>,
-        <rjw@rjwysocki.net>, <lenb@kernel.org>,
-        Robin Murphy <Robin.Murphy@arm.com>, <bhelgaas@google.com>,
-        <alex.williamson@redhat.com>, <tn@semihalf.com>,
-        <liubo95@huawei.com>, <thunder.leizhen@huawei.com>,
-        <xuzaibo@huawei.com>, <ilias.apalodimas@linaro.org>,
-        <jonathan.cameron@huawei.com>, <shunyong.yang@hxt-semitech.com>,
-        <nwatters@codeaurora.org>, <okaya@codeaurora.org>,
-        <jcrouse@codeaurora.org>, <rfranz@cavium.com>,
-        <dwmw2@infradead.org>, <jacob.jun.pan@linux.intel.com>,
-        <yi.l.liu@intel.com>, <ashok.raj@intel.com>, <robdclark@gmail.com>,
-        <christian.koenig@amd.com>, <bharatku@xilinx.com>,
-        <robh@kernel.org>
-Message-ID: <63e4b545-c6e5-f4b4-3ba1-cf7a142b64ec@huawei.com>
-Date: Thu, 22 Feb 2018 17:03:41 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1517563970.24622.9.camel@mtkswgap22>
+Subject: Re: [PATCH 1/2] of_pci_irq: add a check to fallback to standard
+ device tree parsing
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Rob Herring <robh+dt@kernel.org>
+Date: Fri, 2 Feb 2018 17:32:50 +0800
+In-Reply-To: <CAL_JsqLZqrxxpuEnoWEGkT2WCuyjqn0bM1DP8PdAwnQsso8kOA@mail.gmail.com>
+References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+ <CAL_JsqLZqrxxpuEnoWEGkT2WCuyjqn0bM1DP8PdAwnQsso8kOA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1519280641-30258-3-git-send-email-xieyisheng1@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank
+ Rowand <frowand.list@gmail.com>, "moderated list:ARM/FREESCALE IMX / MXC ARM
+ ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
+On Wed, 2018-01-31 at 10:02 -0600, Rob Herring wrote:
+> On Wed, Jan 31, 2018 at 1:41 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> > A root complex usually consist of a host bridge and multiple P2P bridges,
+> > and someone may express that in the form of a root node with many subnodes
+> > and list all four interrupts for each slot (child node) in the root node
+> > like this:
+> >
+> >         pcie-controller {
+> >                 ...
+> >                 interrupt-map-mask = <0xf800 0 0 7>;
+> >                 interrupt-map = <0x0000 0 0 {INTx} &{interrupt parent} ...>
+> >                                  0x0800 0 0 {INTx} &{interrupt parent} ...>;
+> >
+> >                 pcie@0,0 {
+> >                         reg = <0x0000 0 0 0 0>;
+> >                         ...
+> >                 };
+> >
+> >                 pcie@1,0 {
+> >                         reg = <0x0800 0 0 0 0>;
+> >                         ...
+> >                 };
+> >         };
+> >
+> > As shown above, we'd like to propagate IRQs from a root port to the devices
+> > in the hierarchy below it in this way.  However, it seems that the current
+> > parser couldn't handle such cases and will get something unexpected below:
+> >
+> >         pcieport 0000:00:01.0: assign IRQ: got 213
+> >         igb 0000:01:00.0: assign IRQ: got 212
+> >
+> > There is a device which is connected to 2nd slot, but the port doesn't share
+> > the same IRQ with its downstream devices.  The problem here is that, if the
+> > loop found a P2P bridge, it wouldn't check whether the reg property exists
+> > in ppnode or not but just pass the subordinate devfn to of_irq_parse_raw(),
+> > thus the subsequent flow couldn't correctly resolve them.
+> >
+> > Fix this by adding a check to fallback to standard device tree parsing.
+> >
+> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> > ---
+> > Please refer to the previous discussion thread: https://patchwork.ozlabs.org/patch/829108/
+> > ---
+> >  drivers/of/of_pci_irq.c | 14 ++++++++++++--
+> >  1 file changed, 12 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+> > index 3a05568..e445866 100644
+> > --- a/drivers/of/of_pci_irq.c
+> > +++ b/drivers/of/of_pci_irq.c
+> > @@ -86,8 +86,18 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
+> >         out_irq->np = ppnode;
+> >         out_irq->args_count = 1;
+> >         out_irq->args[0] = pin;
+> > -       laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
+> > -       laddr[1] = laddr[2] = cpu_to_be32(0);
+> > +
+> > +       if (!dn && ppnode) {
+> 
+> I would think whether you have a child device in DT or not is
+> irrelevant. If it's the bridge address you need to look at for
+> resolving interrupts, that would be true regardless.
+> 
+> > +               const __be32 *addr;
+> > +
+> > +               addr = of_get_property(ppnode, "reg", NULL);
+> > +               if (addr)
+> > +                       memcpy(laddr, addr, 3);
+> 
+> Can't you just adjust pdev to be ppdev in this case and then use the
+> existing code to set laddr?
 
-On 2018/2/22 14:23, Jean-Philippe Brucker wrote:
-> @@ -129,7 +439,10 @@ int iommu_sva_device_shutdown(struct device *dev)
->  int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
->  			  unsigned long flags, void *drvdata)
->  {
-> +	int i, ret;
-> +	struct io_mm *io_mm = NULL;
->  	struct iommu_domain *domain;
-> +	struct iommu_bond *bond = NULL, *tmp;
->  	struct iommu_param *dev_param = dev->iommu_param;
->  
->  	domain = iommu_get_domain_for_dev(dev);
-> @@ -145,7 +458,42 @@ int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
->  	if (flags != (IOMMU_SVA_FEAT_PASID | IOMMU_SVA_FEAT_IOPF))
->  		return -EINVAL;
->  
-> -	return -ENOSYS; /* TODO */
-> +	/* If an io_mm already exists, use it */
-> +	spin_lock(&iommu_sva_lock);
-> +	idr_for_each_entry(&iommu_pasid_idr, io_mm, i) {
-> +		if (io_mm->mm != mm || !io_mm_get_locked(io_mm))
-> +			continue;
-> +
-> +		/* Is it already bound to this device? */
-> +		list_for_each_entry(tmp, &io_mm->devices, mm_head) {
-> +			if (tmp->dev != dev)
-> +				continue;
-> +
-> +			bond = tmp;
-> +			refcount_inc(&bond->refs);
-> +			io_mm_put_locked(io_mm);
+Okay, I will try it out and and see if the code gets better or worse.
+ 
+> Please copy the powerpc list on this. I worry that touching this
+> function will break something.
+> BTW, this code is moving to drivers/pci/ in 4.16.
 
-Should io_mm->pasid still be set to *pasid when the device already bond? so driver can
-always get the right pasid if it bond to a mm multi-times, without keeping the pasid itself?
+Sure. I will loop more people in next version.
 
 Thanks
-Yisheng
-> +			break;
-> +		}
-> +		break;
-> +	}
-> +	spin_unlock(&iommu_sva_lock);
-> +
-> +	if (bond)
-> +		return 0;
-> +
-> +	if (!io_mm) {
-> +		io_mm = io_mm_alloc(domain, dev, mm);
-> +		if (IS_ERR(io_mm))
-> +			return PTR_ERR(io_mm);
-> +	}
-> +
-> +	ret = io_mm_attach(domain, dev, io_mm, drvdata);
-> +	if (ret)
-> +		io_mm_put(io_mm);
-> +	else
-> +		*pasid = io_mm->pasid;
-> +
-> +	return ret;
->  }
->  EXPORT_SYMBOL_GPL(iommu_sva_bind_device);
 
+> _______________________________________________
+> Linux-mediatek mailing list
+> Linux-mediatek@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-mediatek
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
