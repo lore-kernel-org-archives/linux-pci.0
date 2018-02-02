@@ -1,42 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:33063 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753044AbeBAS5o (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Feb 2018 13:57:44 -0500
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:54267 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752018AbeBBNye (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Feb 2018 08:54:34 -0500
+Date: Fri, 2 Feb 2018 14:47:10 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Stefan Roese <sr@denx.de>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH] PCI: pciehp: Add module parameter to enable
+ debouncing of HP link events
+Message-ID: <20180202134710.GA24377@wunner.de>
+References: <20180130084121.18653-1-sr@denx.de>
+ <20180130102840.GF27654@lahna.fi.intel.com>
+ <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
 MIME-Version: 1.0
-In-Reply-To: <20180201161119.3852-4-niklas.cassel@axis.com>
-References: <20180201161119.3852-1-niklas.cassel@axis.com> <20180201161119.3852-4-niklas.cassel@axis.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 1 Feb 2018 20:57:42 +0200
-Message-ID: <CAHp75VdX5=kzKFunM-Kbw7KOBt3+xik_pxhX1EZdO9eA3QHrBQ@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: designware-ep: Return an error when requesting a
- too large BAR size
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 1, 2018 at 6:11 PM, Niklas Cassel <niklas.cassel@axis.com> wrote:
+On Fri, Feb 02, 2018 at 02:38:34PM +0100, Stefan Roese wrote:
+> > On Tue, Jan 30, 2018 at 09:41:21AM +0100, Stefan Roese wrote:
+> >> Hotplugging of some PCIe devices on our platform sometimes leads to a
+> >> bounce of link-up and link-down events, resulting in problems in the
+> >> corresponding PCI drivers.
+> >>
+> >> Here an example of such a hotplug event bounce for a AHCI PCIe card:
+> >> ...
+> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
+> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
+> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+> 
+> I'm open for other / better ideas on how to solve this situation, we
+> are seeing on our systems.
 
-include/linux/sizes.h:
+If a Link Up event is received and there is already a Link Up / Link Down
+pair in the queue, the Link Down event can be dequeued and the newly
+received Link Up event need not be queued.
 
-+SZ_4G  0x100000000ULL
+Same if a Link Down event is received and there is already a Link Down /
+Link Up pair in the queue.
 
-> +       if (size > 0x100000000ULL) {
+Thanks,
 
-#include <linux/sizes.h>
-
-if (size > SZ_4G) {
-
-?
-
--- 
-With Best Regards,
-Andy Shevchenko
+Lukas
