@@ -1,101 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37582 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752628AbeBVHqX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 02:46:23 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v9 0/7] Address error and recovery for AER and DPC
-Date: Thu, 22 Feb 2018 13:16:04 +0530
-Message-Id: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:42058 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752558AbeBBTVC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Feb 2018 14:21:02 -0500
+Date: Fri, 2 Feb 2018 13:20:45 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stefan Roese <sr@denx.de>
+Cc: Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH] PCI: pciehp: Add module parameter to enable
+ debouncing of HP link events
+Message-ID: <20180202192045.GA53759@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180130084121.18653-1-sr@denx.de>
+ <20180130102840.GF27654@lahna.fi.intel.com>
+ <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
+ <20180202134710.GA24377@wunner.de>
+ <fc56ecd5-7465-872b-48d7-c7eaf0dd779a@denx.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fc56ecd5-7465-872b-48d7-c7eaf0dd779a@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set brings in error handling support for DPC
+On Fri, Feb 02, 2018 at 03:44:21PM +0100, Stefan Roese wrote:
+> On 02.02.2018 14:47, Lukas Wunner wrote:
+> >On Fri, Feb 02, 2018 at 02:38:34PM +0100, Stefan Roese wrote:
+> >>>On Tue, Jan 30, 2018 at 09:41:21AM +0100, Stefan Roese wrote:
+> >>>>Hotplugging of some PCIe devices on our platform sometimes leads to a
+> >>>>bounce of link-up and link-down events, resulting in problems in the
+> >>>>corresponding PCI drivers.
+> >>>>
+> >>>>Here an example of such a hotplug event bounce for a AHCI PCIe card:
+> >>>>...
+> >>>>pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+> >>>>pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+> >>>>pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
+> >>>>pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
+> >>>>pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+> >>>>pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+> >>
+> >>I'm open for other / better ideas on how to solve this situation, we
+> >>are seeing on our systems.
 
-The current implementation of AER and error message broadcasting to the
-EP driver is tightly coupled and limited to AER service driver.
-It is important to factor out broadcasting and other link handling
-callbacks. So that not only when AER gets triggered, but also when DPC get
-triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+This is definitely a real problem that should be fixed somehow.
 
-DPC should enumerate the devices after recovering the link, which is
-achieved by implementing error_resume callback.
+But I don't like the idea of a new module parameter because it's not
+very user-friendly.  It would be very difficult for a user to identify
+the problem, discover the parameter, and figure out what debounce time
+to use.
 
-Changes since v8:
-    Fixed Kbuild errors.
-Changes since v7:
-    Rebased the code on pci master.
-	> https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
-Changes since v6:
-    Sinan's and Stefan's comments implemented.
-	> reordered patch 6 and 7
-	> cleaned up
-Changes since v5:
-    Sinan's and Keith's comments incorporated.
-        > made separate patch for mutex
-        > unified error repotting codes into driver/pci/pci.h
-        > got rid of wait link active/inactive and
-          made generic function in driver/pci/pci.c
-Changes since v4:
-    Bjorn's comments incorporated.
-        > Renamed only do_recovery.
-        > moved the things more locally to drivers/pci/pci.h
-Changes since v3:
-    Bjorn's comments incorporated.
-        > Made separate patch renaming generic pci_err.c
-        > Introduce pci_err.h to contain all the error types and recovery
-        > removed all the dependencies on pci.h
-Changes since v2:
-    Based on feedback from Keith:
-    "
-    When DPC is triggered due to receipt of an uncorrectable error Message,
-    the Requester ID from the Message is recorded in the DPC Error
-    Source ID register and that Message is discarded and not forwarded Upstream.
-    "
-    Removed the patch where AER checks if DPC service is active
-Changes since v1:
-    Kbuild errors fixed:
-        > pci_find_dpc_dev made static
-        > ras_event.h updated
-        > pci_find_aer_service call with CONFIG check
-        > pci_find_dpc_service call with CONFIG check
+> >If a Link Up event is received and there is already a Link Up / Link Down
+> >pair in the queue, the Link Down event can be dequeued and the newly
+> >received Link Up event need not be queued.
+> >
+> >Same if a Link Down event is received and there is already a Link Down /
+> >Link Up pair in the queue.
+> 
+> Makes sense. But I'm more often seeing this sequence here while
+> hot-plugging the PCIe card:
+> 
+> [   41.260667] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+> [   41.260731] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+> [   41.290650] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
+> [   41.295837] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+> [   41.320664] pciehp 0000:00:1c.1:pcie004: Slot(1): Card not present
+> [   41.330042] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+> [   41.330110] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+> [   41.375950] pci 0000:02:00.0: [1b4b:9215] type 00 class 0x010601
+> ...
+> 
+> So a link-down is following the link-up directly (~30ms here). Sometimes
+> a double link-up is also seen. But this one is more frequent in my test
+> cases.
 
-Oza Pawandeep (7):
-  PCI/AER: Rename error recovery to generic pci naming
-  PCI/AER: factor out error reporting from AER
-  PCI/ERR: add mutex to synchronize recovery
-  PCI/DPC: Unify and plumb error handling into DPC
-  PCI/AER: Unify aer error defines at single space
-  PCI/DPC: Enumerate the devices after DPC trigger event
-  PCI: Unify wait for link active into generic pci
+Unfortunately I don't have any easy ideas to offer.  I do think the
+pciehp interrupt handling is baroque and I suspect that if we could
+simplify and rationalize it, some of these issues would take care of
+themselves.
 
- drivers/acpi/apei/ghes.c               |   1 +
- drivers/pci/hotplug/pciehp_hpc.c       |  21 +-
- drivers/pci/pci.c                      |  39 +++-
- drivers/pci/pci.h                      |  11 +
- drivers/pci/pcie/Makefile              |   2 +-
- drivers/pci/pcie/aer/aerdrv.h          |  30 ---
- drivers/pci/pcie/aer/aerdrv_core.c     | 293 +-------------------------
- drivers/pci/pcie/aer/aerdrv_errprint.c |   1 +
- drivers/pci/pcie/pcie-dpc.c            | 115 ++++++++++-
- drivers/pci/pcie/pcie-err.c            | 366 +++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.h             |   2 +
- include/linux/aer.h                    |   4 -
- include/linux/pci.h                    |   1 +
- 13 files changed, 534 insertions(+), 352 deletions(-)
- create mode 100644 drivers/pci/pcie/pcie-err.c
-
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Bjorn
