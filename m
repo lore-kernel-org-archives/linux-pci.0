@@ -1,243 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0067.outbound.protection.outlook.com ([104.47.36.67]:10992
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753954AbeB0Poq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Feb 2018 10:44:46 -0500
-Subject: Re: MSI-X diagnostic problems
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>, <lorenzo.pieralisi@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        <nofooter@xilinx.com>
-References: <959dfbab-7d90-f10c-f4aa-7f0bf5a6af3e@synopsys.com>
- <2050bd39-12cd-4d21-3127-4282392c555f@arm.com>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Message-ID: <600c2590-693a-207b-a7fc-cabaa4e800fa@xilinx.com>
-Date: Tue, 27 Feb 2018 21:14:27 +0530
+Received: from mx1.mailbox.org ([80.241.60.212]:9502 "EHLO mx1.mailbox.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752183AbeBBOu7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Feb 2018 09:50:59 -0500
+Subject: Re: [RFC PATCH] PCI: pciehp: Add module parameter to enable
+ debouncing of HP link events
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+References: <20180130084121.18653-1-sr@denx.de>
+ <20180130102840.GF27654@lahna.fi.intel.com>
+ <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
+ <20180202135659.GN27654@lahna.fi.intel.com>
+From: Stefan Roese <sr@denx.de>
+Message-ID: <15ddf930-66e2-fae8-09c7-1d1ad7d5b07a@denx.de>
+Date: Fri, 2 Feb 2018 15:50:55 +0100
 MIME-Version: 1.0
-In-Reply-To: <2050bd39-12cd-4d21-3127-4282392c555f@arm.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <20180202135659.GN27654@lahna.fi.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gustavo,
+On 02.02.2018 14:56, Mika Westerberg wrote:
+> On Fri, Feb 02, 2018 at 02:38:34PM +0100, Stefan Roese wrote:
+>> Hi Mika,
+>>
+>> sorry for the late reply.
+>>
+>> On 30.01.2018 11:28, Mika Westerberg wrote:
+>>> On Tue, Jan 30, 2018 at 09:41:21AM +0100, Stefan Roese wrote:
+>>>> Hotplugging of some PCIe devices on our platform sometimes leads to a
+>>>> bounce of link-up and link-down events, resulting in problems in the
+>>>> corresponding PCI drivers.
+>>>>
+>>>> Here an example of such a hotplug event bounce for a AHCI PCIe card:
+>>>> ...
+>>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+>>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+>>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
+>>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
+>>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+>>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+>>>
+>>> It would be good to find out why this happens in the first place.
+>>> Perhaps there is some environmental interference or something causing
+>>> this?
+>>
+>> I'm seeing these link bounces in the following environments:
+>>
+>> a) Using a BayTrail SoC and hotplugging a standard Desktop PCIe SATA /
+>>     AHCI Controller (Marvell chip)
+>> b) Hotplugging (booting via SPI) an Altera / Intel FPGA which is connected
+>>     via PCIe to a PCIe switch
+>>
+>> In both cases, this link bouncing happens infrequently, approx. once out
+>> of 5 - 10 tries.
+>>
+>> Out of curiosity, has nobody else ever experienced such "link bouncing"
+>> with PCIe cards / devices getting hot-plugged?
+> 
+> I've seen it with some Thunderbolt devices from time to time.
+> 
+> I think it is entirely possible in real world that the link goes down
+> briefly for example because of some external interference so we should
+> make sure we can handle that properly.
+> 
+>>>> pci 0000:02:00.0: [1b4b:9215] type 00 class 0x010601
+>>>> pci 0000:02:00.0: reg 0x10: [io  0x8000-0x8007]
+>>>> ...
+>>>> ata3: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910100 irq 100
+>>>> ata4: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910180 irq 100
+>>>> ata5: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910200 irq 100
+>>>> ata6: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910280 irq 100
+>>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
+>>>> ahci 0000:02:00.0: PME# disabled
+>>>> ata3: SATA link down (SStatus 0 SControl 300)
+>>>> ata5: SATA link down (SStatus 0 SControl 300)
+>>>> ata4: SATA link down (SStatus 0 SControl 300)
+>>>> WARNING: CPU: 2 PID: 1162 at drivers/ata/libata-core.c:6620 ata_host_detach+0x125/0x130
+>>>
+>>> I think the AHCI driver should be fixed to cope with this.
+>>
+>> Yes, this can be discussed. But still the root-cause should be fixed,
+>> IMHO. Either in our environment (HW issue?) or by adding this de-bouncing
+>> feature.
+>>
+>>>> ata6: SATA link down (SStatus 0 SControl 300)
+>>>> Modules linked in:
+>>>> CPU: 2 PID: 1162 Comm: kworker/u8:5 Not tainted 4.15.0+ #26
+>>>> Hardware name: congatec conga-qeval20-qa3-e3845/conga-qeval20-qa3-e3845, BIOS 2018.01-00033-g0125f37185-dirty 01/18/2018
+>>>> Workqueue: pciehp-1 pciehp_power_thread
+>>>> ...
+>>>>
+>>>> This patch now adds the 'pciehp_debounce_time' module parameter, which
+>>>> can be used to drop all events for the specified time (in milliseconds)
+>>>> after a link-up event occurred. A value of ~100ms works fine in my tests
+>>>> to debounce all the link-up / link-down events in my tests.
+>>>
+>>> This sounds a bit "hackish". I would rather make sure we can handle
+>>> situations like this properly without passing additional parameters.
+>>
+>> I'm open for other / better ideas on how to solve this situation, we
+>> are seeing on our systems.
+> 
+> Well, I would start by fixing drivers that can't cope with surprise link
+> down (e.g disapearing PCI device, or suddenly reading 0xffffffff from
+> register).
 
-The xhci driver is requesting MSI-X vectors based on num_online_cpus.
-According to your /proc/interrupts you have only one CPU. This might be 
-the reason why only 2 interrupts are requested.
-You can confirm by checking value of HCS_MAX_INTRS(xhci->hcs_params1).
+I've already sent a patch regarding a libata problem while unplugging
+an AHCI controller:
 
-drivers/usb/host/xhci.c
-xhci->msix_count = min(num_online_cpus() + 1,
-                                 HCS_MAX_INTRS(xhci->hcs_params1));
+https://www.spinics.net/lists/linux-ide/msg55038.html
 
-         ret = pci_alloc_irq_vectors(pdev, xhci->msix_count, 
-xhci->msix_count,
-                         PCI_IRQ_MSIX);
+> BTW, have you checked whether presence detect actually toggles similarly
+> or is it only triggered when the link is fully up? Since currently we
+> prioritize link up/down higher than presence detect but it may be that
+> we should do the opposite.
+
+As seen in the log sent in my previous mail, presence detect also
+toggles. Here again:
+
+[   41.260667] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+[   41.260731] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+[   41.290650] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
+[   41.295837] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+[   41.320664] pciehp 0000:00:1c.1:pcie004: Slot(1): Card not present
+[   41.330042] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
+[   41.330110] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+[   41.375950] pci 0000:02:00.0: [1b4b:9215] type 00 class 0x010601
+...
+
+Even though I'm wondering, why we are seeing 3 times "Card present"
+and only one time "Card not present". I would expect to see 2
+"Card present" messages here. This does not seem to be balanced
+correctly.
 
 Thanks,
-Bharat
-
-On 2/27/2018 6:55 PM, Marc Zyngier wrote:
-> Hi Gustavo,
-> 
-> On 27/02/18 12:42, Gustavo Pimentel wrote:
->> Hi Marc,
->>
->> I'm having some problems in my setup related to MSI-X, maybe you could help me
->> debugging where could be the problem.
->>
->> Currently I have a RC (bridge) with 1 MSI-X interrupt and a commercial USB 3.0
->> EP capable of 8 MSI-X interrupts, however the xhci driver only uses 2 interrupts.
->>
->> I have posted below some debug info gathered during my tests.
->>
->>
->> # cat /proc/interrupts
->>             CPU0
->>    3:      10014  ARC In-core Intc   3  Timer0 (per-cpu-tick)
->>    4:          0  dw-apb-ictl   4  eth0
->>    8:          1  dw-apb-ictl   8  ehci_hcd:usb1, ohci_hcd:usb2
->>    9:         38  dw-apb-ictl   7  dw-mci
->>   14:          0  dw-apb-ictl  14  e001d000.i2c
->>   16:          0  dw-apb-ictl  16  e001f000.i2c
->>   19:       4065  dw-apb-ictl  19  ttyS3
->>   46:          0   PCI-MSI   0  aerdrv
->>   47:          1   PCI-MSI 524288  xhci_hcd
->>   48:          0   PCI-MSI 524289  xhci_hcd
->> #
->> #
->> # find /sys/ | grep msi
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_bus
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_irqs
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_irqs/46
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_bus
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs/48
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs/47
->> #
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/ms
->> i_bus
->> 1
->> #
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/ms
->> i_irqs/46
->> msix
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
->> 00:01:00.0/msi_bus
->> 1
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
->> 00:01:00.0/msi_irqs/48
->> msix
->> #
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
->> 00:01:00.0/msi_irqs/47
->> msix
->>
->>
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:dw_pcie_host_init:449) pp->num_vectors = 64
->> (GP:dw_pcie_host_init:453) dw_pcie_allocate_domains
->> (GP:dw_pcie_allocate_domains:277) pp->num_vectors = 64
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:pci_alloc_irq_vectors_affinity:1214) MSI-X
->> (GP:__pci_enable_msix_range:1132) min=1, max=32
->> (GP:__pci_enable_msix:975)
->> (GP:__pci_enable_msix:981) nr_entries = 1, nvec = 32
->> (GP:__pci_enable_msix_range:1145) rc=1
->> (GP:__pci_enable_msix:975)
->> (GP:__pci_enable_msix:981) nr_entries = 1, nvec = 1
->> (GP:__pci_enable_msix:987)
->> (GP:msix_capability_init:773)
->> (GP:msix_capability_init:777) Disable MSI-X
->> (GP:msix_capability_init:780) Control register 0x00000000
->> (GP:msix_map_region:682) Table offset = 0x00000000, bir = 0)
->> (GP:msix_map_region:685) phys_addr = 0xD0500000, nr_entries = 1, ENTRY_SIZE = 16
->> bytes, table size = 16 bytes)
->> (GP:msix_setup_entries:701) Allocate MSI entries 0/1
->> (GP:msix_setup_entries:719)
->> (GP:msix_setup_entries:725) dev->irq = 45, base = d0500000,
->> entry->msi_attrib.entry_nr = 0
->> (GP:pci_msi_setup_msi_irqs:53) msi_domain_alloc_irqs
->> (GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
->> (GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
->> (GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
->> (GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 46, bit + 0 = 0
->> (GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:__irq_domain_activate_irq:1521)
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:msi_domain_activate:107)
->> (GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000000, msg->address_hi = 0x9A228000,
->> msg->data = 0x00000000, hwirq = 0
->> (GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
->> 0x00000000, msg->data = 0x00000000
->> (GP:msix_capability_init:804) Mask all MSI-X and enable MSI-X
->> (GP:msix_program_entries:743)
->> (GP:msix_capability_init:810) Populating MSI sysfs
->> (GP:msix_capability_init:818) Unmask all MSI-X
->> (GP:__pci_enable_msix_range:1145) rc=0
->> (GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:xhci_setup_msix:264)
->> (GP:pci_alloc_irq_vectors_affinity:1214) MSI-X
->> (GP:__pci_enable_msix_range:1132) min=2, max=2
->> (GP:__pci_enable_msix:975)
->> (GP:__pci_enable_msix:981) nr_entries = 8, nvec = 2
->> (GP:__pci_enable_msix:987)
->> (GP:msix_capability_init:773)
->> (GP:msix_capability_init:777) Disable MSI-X
->> (GP:msix_capability_init:780) Control register 0x00000007
->> (GP:msix_map_region:682) Table offset = 0x00002000, bir = 0)
->> (GP:msix_map_region:685) phys_addr = 0xD0402000, nr_entries = 8, ENTRY_SIZE = 16
->> bytes, table size = 128 bytes)
->> (GP:msix_setup_entries:701) Allocate MSI entries 0/2
->> (GP:msix_setup_entries:719)
->> (GP:msix_setup_entries:725) dev->irq = 45, base = d0402000,
->> entry->msi_attrib.entry_nr = 0
->> (GP:msix_setup_entries:701) Allocate MSI entries 1/2
->> (GP:msix_setup_entries:719)
->> (GP:msix_setup_entries:725) dev->irq = 45, base = d0402000,
->> entry->msi_attrib.entry_nr = 1
->> (GP:pci_msi_setup_msi_irqs:53) msi_domain_alloc_irqs
->> (GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
->> (GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
->> (GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
->> (GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 47, bit + 0 = 1
->> (GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
->> (GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
->> (GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
->> (GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 48, bit + 0 = 2
->> (GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:__irq_domain_activate_irq:1521)
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:msi_domain_activate:107)
->> (GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000001, msg->address_hi = 0x9A228000,
->> msg->data = 0x00000000, hwirq = 1
->> (GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
->> 0x00000000, msg->data = 0x00000001
->> (GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:__irq_domain_activate_irq:1521)
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:msi_domain_activate:107)
->> (GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000002, msg->address_hi = 0x9A228000,
->> msg->data = 0x00000000, hwirq = 2
->> (GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
->> 0x00000000, msg->data = 0x00000002
->> (GP:msix_capability_init:804) Mask all MSI-X and enable MSI-X
->> (GP:msix_program_entries:743)
->> (GP:msix_capability_init:810) Populating MSI sysfs
->> (GP:msix_capability_init:818) Unmask all MSI-X
->> (GP:__pci_enable_msix_range:1145) rc=0
->> (GP:xhci_setup_msix:285) 0/2
->> (GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
->> (GP:xhci_setup_msix:285) 1/2
->> (GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->>
->> Me and João have looked to the sequence and this seems to be correct, however we
->> are not receiving any interrupts and that originates the xhci to abort...
->>
->> xhci_hcd 0000:01:00.0: Abort failed to stop command ring: -110
->> xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
->> xhci_hcd 0000:01:00.0: HC died; cleaning up
->> xhci_hcd 0000:01:00.0: Error while assigning device slot ID
->> xhci_hcd 0000:01:00.0: Max number of devices this xHCI host supports is 64.
->> usb usb3-port1: couldn't allocate usb_device
->>
->> Any clue? Thanks in advance.
-> It is hard to dig in such a trace. One thing that strikes me is that I
-> don't see any trace that suggest that the interrupts get unmasked. That
-> should happen when the driver issues a request_irq.
-> 
-> I'd suggest you investigate that area.
-> 
-> Thanks,
-> 
-> 	M.
-> 
+Stefan
