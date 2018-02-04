@@ -1,163 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:60184 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965042AbeB1XkZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 18:40:25 -0500
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Feb 2018 16:40:00 -0700
-Message-Id: <20180228234006.21093-5-logang@deltatee.com>
-In-Reply-To: <20180228234006.21093-1-logang@deltatee.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
-Subject: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices behind switches
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=rw+n=E6=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=rw+n=E6=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <CAJZ5v0jNVENRq-3QjF6nY9_5-0ff=6j_qneLqCQ57h6t1R4Fow@mail.gmail.com>
+References: <1516128664-23634-1-git-send-email-okaya@codeaurora.org>
+ <f508e749-2976-ec6f-681a-553b79c4ab76@codeaurora.org> <20180116214939.GC10860@bhelgaas-glaptop.roam.corp.google.com>
+ <fde756f4-eb74-4002-6ac4-a44405bad2da@codeaurora.org> <CAJZ5v0jNVENRq-3QjF6nY9_5-0ff=6j_qneLqCQ57h6t1R4Fow@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sun, 4 Feb 2018 10:03:33 +0100
+Message-ID: <CAJZ5v0gW7hHAAisSemyvgTyMxpqxmUTADLZTmpyERB+qSMoA=w@mail.gmail.com>
+Subject: Re: [PATCH] ACPI/PCI: pci_link: reduce verbosity when IRQ is enabled
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Timur Tabi <timur@codeaurora.org>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-arm-kernel@lists.infradead.org,
+	Linux PCI <linux-pci@vger.kernel.org>, Len Brown <lenb@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-For peer-to-peer transactions to work the downstream ports in each
-switch must not have the ACS flags set. At this time there is no way
-to dynamically change the flags and update the corresponding IOMMU
-groups so this is done at enumeration time before the the groups are
-assigned.
+On Thu, Feb 1, 2018 at 8:32 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Mon, Jan 29, 2018 at 8:01 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> Rafael,
+>>
+>> On 1/16/2018 4:49 PM, Bjorn Helgaas wrote:
+>>> On Tue, Jan 16, 2018 at 01:53:00PM -0500, Sinan Kaya wrote:
+>>>> Correcting linux-pci email.
+>>>>
+>>>> On 1/16/2018 1:51 PM, Sinan Kaya wrote:
+>>>>> When ACPI Link object is enabled, the message is printed with a warning
+>>>>> prefix. Some test tools are capturing warning and test error types as
+>>>>> errors. Let's reduce the verbosity of success case.
+>>>>>
+>>>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>
+>>> Looks like this was a result of 4d9391557b68 ("ACPI: add missing KERN_*
+>>> constants to printks"), which I think added the wrong level in this case.
+>>>
+>>
+>> Any chance of merging this for 4.16?
+>
+> There is.
 
-This effectively means that if CONFIG_PCI_P2PDMA is selected then
-all devices behind any switch will be in the same IOMMU group.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/pci/Kconfig        |  4 ++++
- drivers/pci/p2pdma.c       | 44 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c          |  4 ++++
- include/linux/pci-p2pdma.h |  5 +++++
- 4 files changed, 57 insertions(+)
-
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 840831418cbd..a430672f0ad4 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -138,6 +138,10 @@ config PCI_P2PDMA
- 	  it's hard to tell which support it with good performance, so
- 	  at this time you will need a PCIe switch.
- 
-+	  Enabling this option will also disable ACS on all ports behind
-+	  any PCIe switch. This effictively puts all devices behind any
-+	  switch into the same IOMMU group.
-+
- 	  If unsure, say N.
- 
- config PCI_LABEL
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 4e1c81f64b29..61af07acd21a 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -255,6 +255,50 @@ static struct pci_dev *get_upstream_bridge_port(struct pci_dev *pdev)
- 	return up2;
- }
- 
-+/*
-+ * pci_p2pdma_disable_acs - disable ACS flags for ports in PCI
-+ *	bridges/switches
-+ * @pdev: device to disable ACS flags for
-+ *
-+ * The ACS flags for P2P Request Redirect and P2P Completion Redirect need
-+ * to be disabled on any downstream port in any switch in order for
-+ * the TLPs to not be forwarded up to the RC which is not what we want
-+ * for P2P.
-+ *
-+ * This function is called when the devices are first enumerated and
-+ * will result in all devices behind any switch to be in the same IOMMU
-+ * group. At this time there is no way to "hotplug" IOMMU groups so we rely
-+ * on this largish hammer. If you need the devices to be in separate groups
-+ * don't enable CONFIG_PCI_P2PDMA.
-+ *
-+ * Returns 1 if the ACS bits for this device were cleared, otherwise 0.
-+ */
-+int pci_p2pdma_disable_acs(struct pci_dev *pdev)
-+{
-+	struct pci_dev *up;
-+	int pos;
-+	u16 ctrl;
-+
-+	up = get_upstream_bridge_port(pdev);
-+	if (!up)
-+		return 0;
-+	pci_dev_put(up);
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return 0;
-+
-+	dev_info(&pdev->dev, "disabling ACS flags for peer-to-peer DMA\n");
-+
-+	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR);
-+
-+	pci_write_config_word(pdev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	return 1;
-+}
-+
- static bool __upstream_bridges_match(struct pci_dev *upstream,
- 				     struct pci_dev *client)
- {
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd10d9b0..95ad3cf288c8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -16,6 +16,7 @@
- #include <linux/of.h>
- #include <linux/of_pci.h>
- #include <linux/pci.h>
-+#include <linux/pci-p2pdma.h>
- #include <linux/pm.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-@@ -2826,6 +2827,9 @@ static void pci_std_enable_acs(struct pci_dev *dev)
-  */
- void pci_enable_acs(struct pci_dev *dev)
- {
-+	if (pci_p2pdma_disable_acs(dev))
-+		return;
-+
- 	if (!pci_acs_enable)
- 		return;
- 
-diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-index 126eca697ab3..f537f521f60c 100644
---- a/include/linux/pci-p2pdma.h
-+++ b/include/linux/pci-p2pdma.h
-@@ -22,6 +22,7 @@ struct block_device;
- struct scatterlist;
- 
- #ifdef CONFIG_PCI_P2PDMA
-+int pci_p2pdma_disable_acs(struct pci_dev *pdev);
- int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 		u64 offset);
- int pci_p2pdma_add_client(struct list_head *head, struct device *dev);
-@@ -41,6 +42,10 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
- void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
- 			 enum dma_data_direction dir);
- #else /* CONFIG_PCI_P2PDMA */
-+static inline int pci_p2pdma_disable_acs(struct pci_dev *pdev)
-+{
-+	return 0;
-+}
- static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
- 		size_t size, u64 offset)
- {
--- 
-2.11.0
+This one is already there in the Linus' tree AFAICS.
