@@ -1,97 +1,68 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: Re: [PATCH v14 1/9] LIB: Introduce a generic PIO mapping method
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-References: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
- <1519062520-198902-2-git-send-email-john.garry@huawei.com>
- <CAHp75Vf102MDDZ8d9kXw2K0+0_WkhFMSq7o=Vz=KrzOM=NRW5A@mail.gmail.com>
-CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        "Rob Herring" <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Arnd Bergmann" <arnd@arndb.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Dann Frazier <dann.frazier@canonical.com>,
-        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>,
-        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <7197ce31-c4c2-d00e-be04-1edc14c3e721@huawei.com>
-Date: Tue, 20 Feb 2018 15:06:51 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:46995 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752925AbeBEPxR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Feb 2018 10:53:17 -0500
+Received: by mail-qk0-f193.google.com with SMTP id d125so12611217qkg.13
+        for <linux-pci@vger.kernel.org>; Mon, 05 Feb 2018 07:53:17 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAHp75Vf102MDDZ8d9kXw2K0+0_WkhFMSq7o=Vz=KrzOM=NRW5A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <20180205084025.52129a85@w520.home>
+References: <CAJ2oMhKRmSb-XFp2eeGEWqivL60C0uD22Yx1EdZ5ziAMOvmUUQ@mail.gmail.com>
+ <20180205084025.52129a85@w520.home>
+From: Ran Shalit <ranshalit@gmail.com>
+Date: Mon, 5 Feb 2018 17:53:16 +0200
+Message-ID: <CAJ2oMhLvugz1=-J+nBiOeD7_EKGTxWdtfZhrff55a1co=dkJ3A@mail.gmail.com>
+Subject: Re: Q: uio_pci_generic
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/02/2018 14:33, Andy Shevchenko wrote:
-> On Mon, Feb 19, 2018 at 7:48 PM, John Garry <john.garry@huawei.com> wrote:
->> From: Zhichang Yuan <yuanzhichang@hisilicon.com>
+On Mon, Feb 5, 2018 at 5:40 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Mon, 5 Feb 2018 15:58:22 +0200
+> Ran Shalit <ranshalit@gmail.com> wrote:
+>
+>> Hello,
 >>
->> In commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
->> pci_pio_to_address()"), a new I/O space management was supported. With
->> that driver, the I/O ranges configured for PCI/PCIe hosts on some
->> architectures can be mapped to logical PIO, converted easily between
->> CPU address and the corresponding logicial PIO. Based on this, PCI
->> I/O devices can be accessed in a memory read/write way through the
->> unified in/out accessors.
 >>
->> But on some archs/platforms, there are bus hosts which access I/O
->> peripherals with host-local I/O port addresses rather than memory
->> addresses after memory-mapped.
->>
->> To support those devices, a more generic I/O mapping method is introduced
->> here. Through this patch, both the CPU addresses and the host-local port
->> can be mapped into the logical PIO space with different logical/fake PIOs.
->> After this, all the I/O accesses to either PCI MMIO devices or host-local
->> I/O peripherals can be unified into the existing I/O accessors defined in
->> asm-generic/io.h and be redirected to the right device-specific hooks
->> based on the input logical PIO.
+>> I can't find in uio_pci_generic.c any usage of DMA.
+>> Is it that the driver does not use DMA in transactions between device
+>> and host ? If not - isn't it a sort disadvantage ?
 >
+> AIUI, uio_pci_generic doesn't officially support DMA because there's no
+> way that a userspace driver can safely support DMA without an IOMMU
+> isolating the device.  Otherwise the userspace driver can use the
+> device to read and write data anywhere it wants, which is also sort of
+> a disadvantage.  Of course this doesn't seem to stop anyone from doing
+> DMA with uio_pci_generic, but you're not likely to get much support for
+> such uses.  Instead, you might want to be looking at vfio, which does
+> make use of (and require) IOMMU support in order to more safely allow
+> userspace drivers to use DMA.  Thanks,
+>
+Thanks you very much Alex. I will check vfio.
+I would like to ask one mote thing on the issue of generic pci uio:
+I also did not find  in
+https://elixir.free-electrons.com/linux/v4.15.1/source/Documentation/ABI/testing/sysfs-bus-pci
+that there is "irq" for registering irq, only msi-irq, which I don't
+think it is the same.
+Yet, in code it seems to use irq.
+https://elixir.free-electrons.com/linux/v4.3/source/drivers/uio/uio_pci_generic.c
 
-Hi Andy,
+I also see in wiki guide & example that irq can be used in userspace
+(in the code example there is a wait for interrupt):
+https://www.kernel.org/doc/html/v4.12/driver-api/uio-howto.html
+Yet, unfortunately the same wiki did not show how to register irq from
+userspace.
+Is that possible ? How ?
+Should it be done with something like:
+echo "3" > /sys/bus/pci/drivers/uio_pci_generic/irq
 
->> +#define PIO_INDIRECT           0x01UL /* indirect IO flag */
->> +#define PIO_CPU_MMIO           0x00UL /* memory mapped io flag */
->
-> It looks like bitfield, but from use I don't see it.
->
 
-IIRC, the orignal intention was that this would be a bit value in a 
-bitfield.
 
-> Perhaps use enum instead?
+Thank you.
+Ran
 
-I'll change to enum to be clear.
 
->> +       resource_size_t hwaddr = -1;
->
->> +unsigned long
->> +               return -1;
->> +               return -1;
->
->> +unsigned long
->> +       return -1;
->
->> +type logic_in##bw(unsigned long addr)                                  \
->> +       type ret = -1;                                                  \
->
-> All types above are unsigned. I'm not sure it's the best approach to
-> use -1 implicitly casted to unsigned type.
->
-> I would rather use ~0UL or alike.
->
-
-Yes, I can change these.
-
-Much appreciated,
-John
+> Alex
