@@ -1,95 +1,70 @@
-Return-Path: <SRS0=ACWn=FH=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=ACWn=FH=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:42024 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751982AbeBECDa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 4 Feb 2018 21:03:30 -0500
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <CAJ=jquZtaLqZZQaAitPYLK4dGVXxw3U92NJB5KuP3oU-LFDudQ@mail.gmail.com>
-References: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
- <20180210010548.GC206223@bhelgaas-glaptop.roam.corp.google.com>
- <CAJZ5v0gBK8WmX4QYYBzVxdk8CaSBo5ckzmP49qr05+9DAYieqw@mail.gmail.com>
- <20180210153450.GD206223@bhelgaas-glaptop.roam.corp.google.com>
- <CAJZ5v0iNq2ni9ML=_6H0i99dUm5+Noh1MQ9AO4JCiqyXU1xW3Q@mail.gmail.com> <CAJ=jquZtaLqZZQaAitPYLK4dGVXxw3U92NJB5KuP3oU-LFDudQ@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 13 Feb 2018 09:49:31 +0100
-Message-ID: <CAJZ5v0hb3SBnKJm+EQaJk3dFp+_8kXHJ8SLH-QYrgR-bUiHwJg@mail.gmail.com>
-Subject: Re: [PATCH] ACPI/PCI: pci_link: change log level of no _PRS messages
-To: Alex Hung <alex.hung@canonical.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+In-Reply-To: <20180205012146.23981-21-ulfalizer@gmail.com>
+References: <20180205012146.23981-1-ulfalizer@gmail.com> <20180205012146.23981-21-ulfalizer@gmail.com>
+From: Ulf Magnusson <ulfalizer@gmail.com>
+Date: Mon, 5 Feb 2018 03:03:29 +0100
+Message-ID: <CAFkk2KRNMKEoArwi9XQryEDe-VMbbL0WySXh_ydLKchke6XQcw@mail.gmail.com>
+Subject: Re: [PATCH 20/20] x86/PCI: VMD: Fix malformed default
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Ley Foon Tan <lftan@altera.com>
+Cc: Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
+        tfiga@chromium.org, paul.burton@mips.com,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Hans-Christian Noren Egtvedt <egtvedt@samfundet.no>,
+        Linus Walleij <linus.walleij@linaro.org>, vgupta@synopsys.com,
+        mgorman@techsingularity.net, hch@lst.de, mina86@mina86.com,
+        robh@kernel.org, sboyd@codeaurora.org, paulus@ozlabs.org,
+        will.deacon@arm.com, Tony Lindgren <tony@atomide.com>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Ulf Magnusson <ulfalizer@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 13, 2018 at 5:03 AM, Alex Hung <alex.hung@canonical.com> wrote:
-> On Mon, Feb 12, 2018 at 12:51 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
->> On Sat, Feb 10, 2018 at 4:34 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>> On Sat, Feb 10, 2018 at 09:08:42AM +0100, Rafael J. Wysocki wrote:
->>>> On Sat, Feb 10, 2018 at 2:05 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>> > On Fri, Feb 09, 2018 at 02:56:43PM -0800, Alex Hung wrote:
->>>> >> In recent Intel hardware the IRQs become non-configurable after BIOS
->>>> >> initializes them in PEI phase and _PRS objects are no longer included in
->>>> >> ASL.
->>>> >>
->>>> >> This is the same as "static (non-configurable) devices do not
->>>> >> specify a _PRS object" in ACPI spec. As a result, error messages
->>>> >> saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
->>>> >> be in kernel messages all the time but only when debug is enabled.
->>>> >
->>>> > I agree and would even go further: _PRS is optional and I don't think
->>>> > there's a reason to log anything at all if it's absent.  A log message
->>>> > like "failed to evaluate _PRS" makes people think something is wrong
->>>> > when in fact nothing is wrong.
->>>>
->>>> _PRS is required if the link object is pointed to by a _PRT entry.
->>>
->>> The closest thing I see with a quick look is ACPI 6.0, sec 6.2.13:
->>>
->>>   These objects [PCI Interrupt Link Devices] have _PRS, _CRS, _SRS,
->>>   and _DIS control methods to allocate the interrupt.
->>>
->>> I don't read that as a requirement for _PRS in particular; I read it
->>> as saying that the interrupt link devices use the normal device
->>> configuration method, i.e., _CRS is required and _PRS and _SRS are
->>> optional and needed for configurable devices but not for static ones.
->>
->> Well, that's slightly out of context. :-)
->>
->> First of all, Section 6.2.13 says this: "Typically, the interrupt
->> input that a given PCI interrupt is on is configurable. [...]  In this
->> model, each interrupt is represented in the ACPI namespace as a PCI
->> Interrupt Link Device."  Then, it says the above.
->>
->> Now, if _PRS is not present, the IRQ represented by the link object
->> cannot be configured, so in fact the underlying assumption doesn't
->> apply to it, strictly speaking.  It follows from the last paragraph in
->> Section 6.2.13 that _PRT entries representing such IRQs should not
->> point to interrupt link device objects (there should be 0 in their
->> Source fields).
->>
->> Hence, if a _PRT entry points to an interrupt link device object in
->> the namespace, _PRS should be present under this object or at least it
->> is reasonable to expect that it will be present in there.
->>
->>> But this is just a drive-by comment and I'm really fine with whatever
->>> you decide to do.
->>
->> OK
->>
->> So I think that (a) the message should be printed using
->> acpi_handle_debug(), except that I would make it slightly more
->> neutral, something like "_PRS not present or invalid", and (b) 0
->> should be returned instead of -ENODEV when _PRS evaluation doesn't
->> succeed.
+On Mon, Feb 5, 2018 at 2:21 AM, Ulf Magnusson <ulfalizer@gmail.com> wrote:
+> 'default N' should be 'default n', though they happen to have the same
+> effect here, due to undefined symbols (N in this case) evaluating to n
+> in a tristate sense.
 >
-> Looks like we will do the following.
+> Remove the default from VMD instead of changing it. bool and tristate
+> symbols implicitly default to n.
 >
->         if (ACPI_FAILURE(status)) {
-> -               ACPI_EXCEPTION((AE_INFO, status, "Evaluating _PRS"));
-> -                return -ENODEV;
-> +               acpi_handle_debug(link->device->handle, "_PRS not
-> present or invalid");
-> +                return 0;
+> Discovered with the
+> https://github.com/ulfalizer/Kconfiglib/blob/master/examples/list_undefined.py
+> script.
+>
+> Signed-off-by: Ulf Magnusson <ulfalizer@gmail.com>
+> ---
+>  drivers/pci/host/Kconfig | 1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index a4ed7484d127..dc8a2a175f19 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -215,7 +215,6 @@ config PCIE_TANGO_SMP8759
+>  config VMD
+>         depends on PCI_MSI && X86_64 && SRCU
+>         tristate "Intel Volume Management Device Driver"
+> -       default N
+>         ---help---
+>           Adds support for the Intel Volume Management Device (VMD). VMD is a
+>           secondary PCI host bridge that allows PCI Express root ports,
+> --
+> 2.14.1
+>
 
-Yes, but this affects the caller.
+The PCIE_ALTERA symbol in this file also depends on the globally
+undefined symbol OF_PCI, which was removed in 4670d610d592 ("PCI: Move
+OF-related PCI functions into PCI core").
 
-Please make sure that everything will work correctly in there after this change.
+Cheers,
+Ulf
