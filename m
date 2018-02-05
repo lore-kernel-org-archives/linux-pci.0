@@ -1,76 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43164 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751129AbeBTXjh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Feb 2018 18:39:37 -0500
-Date: Tue, 20 Feb 2018 17:39:35 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Khalid Aziz <khalid.aziz@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-        David Ahern <david.ahern@oracle.com>, TJ <linux@iam.tj>
-Subject: Re: [PATCH v1 0/2] PCI: Sparc 64-bit resource fixups
-Message-ID: <20180220233935.GE32228@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180215151118.196756.99622.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:58221 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752972AbeBEQZW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Feb 2018 11:25:22 -0500
+Date: Mon, 5 Feb 2018 17:25:20 +0100
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>
+Cc: 'Andy Shevchenko' <andy.shevchenko@gmail.com>,
+        'Kishon Vijay Abraham I' <kishon@ti.com>,
+        'Joao Pinto' <Joao.Pinto@synopsys.com>,
+        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org,
+        'Linux Kernel Mailing List' <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/3] PCI: designware-ep: Return an error when requesting
+ a too large BAR size
+Message-ID: <20180205162519.GA3044@axis.com>
+References: <20180201161119.3852-1-niklas.cassel@axis.com>
+ <20180201161119.3852-4-niklas.cassel@axis.com>
+ <CAHp75VdX5=kzKFunM-Kbw7KOBt3+xik_pxhX1EZdO9eA3QHrBQ@mail.gmail.com>
+ <000601d39b8e$f58a76f0$e09f64d0$@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180215151118.196756.99622.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <000601d39b8e$f58a76f0$e09f64d0$@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc David Ahern, TJ]
-
-On Thu, Feb 15, 2018 at 09:17:58AM -0600, Bjorn Helgaas wrote:
-> I'm trying to make some progress on this old series from Yinghai [1].
-> There's a lot more to do than just these first two patches, but maybe a
-> tiny bit of incremental progress is better than none.
+On Thu, Feb 01, 2018 at 02:00:40PM -0500, Jingoo Han wrote:
+> On Thursday, February 1, 2018 1:58 PM, Andy Shevchenko wrote:
+> > 
+> > On Thu, Feb 1, 2018 at 6:11 PM, Niklas Cassel <niklas.cassel@axis.com>
+> > wrote:
+> > 
+> > include/linux/sizes.h:
+> > 
+> > +SZ_4G  0x100000000ULL
+> > 
+> > > +       if (size > 0x100000000ULL) {
+> > 
+> > #include <linux/sizes.h>
+> > 
+> > if (size > SZ_4G) {
 > 
-> The first patch ("Support arbitrary host bridge address offset") is
-> unchanged from Yinghai's posting except for the changelog.
+> I like this one for the readability.
+> Thank you.
 > 
-> I'm interested in feedback about the second ("Reserve System ROM and Video
-> ROM") patch because it changes something that *looks* wrong to me, but I
-> don't know anything about the Sparc address map.
-> 
-> If this is on the right track, I'd like to merge these via my PCI tree in
-> the hope that I can include more of Yinghai's patches as well.
-> 
-> [1] https://lkml.kernel.org/r/20170421050500.13957-1-yinghai@kernel.org
-> 
-> ---
-> 
-> Bjorn Helgaas (1):
->       sparc/PCI: Reserve System ROM and Video ROM outside of PCI space
-> 
-> Yinghai Lu (1):
->       sparc/PCI: Support arbitrary host bridge address offset
-> 
-> 
->  arch/sparc/kernel/pci.c        |    6 ++--
->  arch/sparc/kernel/pci_common.c |   54 +++++++++++++++++++---------------------
->  arch/sparc/kernel/pci_impl.h   |    4 +++
->  arch/sparc/mm/init_64.c        |   17 +++++++++++++
->  4 files changed, 50 insertions(+), 31 deletions(-)
 
-Both these patches are on my pci/sparc branch and appeared in the
-Feb 19 linux-next tree.
+I liked it too, however both variants
 
-Any testing and feedback (especially on the second patch, which should
-change /proc/iomem) would be great.
+if (size > 0x100000000ULL) {
 
-They're headed for v4.17 unless I hear about issues.
+if (size > SZ_4G) {
 
-It would be useful to hear about what's still broken so I can try to
-pull in the other patches.
+result in:
 
-IIUC, the first patch should fix something on T4.
+drivers/pci/dwc/pcie-designware-ep.c:131:11: warning:
+  comparison is always false due to limited range of data type [-Wtype-limits]
 
-I think patch 04/13 of the original series adds IORESOURCE_MEM_64 to
-host bridge windows.  We don't do that for other arches, so it's not
-clear to me why we need it for sparc.
+when compiling with W=1 on a platform with 32-bit size_t.
 
-Patch 09/13 of the original series fixes something on T5-8.  I haven't
-included that yet, so it's probably still broken.
 
-Bjorn
+The annoying thing here is that a BAR can be 64-bit,
+yet the parameter size is defined as a size_t,
+so the error will only show on 32-bit and not on 64-bit.
+
+What do you think about:
+
+if (upper_32_bits(size)) {
+	dev_err(pci->dev, "can't handle BAR larger than 4GB\n");
+	return -EINVAL;
+}
+
+That should compile without warnings for both
+32-bit size_t and 64-bit size_t.
+
+
+Regards,
+Niklas
