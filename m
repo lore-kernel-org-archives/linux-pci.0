@@ -1,67 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50252 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935105AbeB1WGr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 17:06:47 -0500
-Date: Wed, 28 Feb 2018 16:06:46 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: KarimAllah Ahmed <karahmed@amazon.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org,
-        Jan H =?iso-8859-1?Q?=2E_Sch=F6nherr?= <jschoenh@amazon.de>
-Subject: Re: [PATCH] pci: Do not read INTx PIN and LINE registers for virtual
- functions
-Message-ID: <20180228220645.GO127842@bhelgaas-glaptop.roam.corp.google.com>
-References: <1516213829-14844-1-git-send-email-karahmed@amazon.de>
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:35525 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752514AbeBFTCu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Feb 2018 14:02:50 -0500
+Received: by mail-qk0-f176.google.com with SMTP id 69so3691552qkz.2
+        for <linux-pci@vger.kernel.org>; Tue, 06 Feb 2018 11:02:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1516213829-14844-1-git-send-email-karahmed@amazon.de>
+From: Ran Shalit <ranshalit@gmail.com>
+Date: Tue, 6 Feb 2018 21:02:49 +0200
+Message-ID: <CAJ2oMhKJ5ECtr5-F1M_PjO+ev_8-UfpLu+jT9hG7XEwoDV0A_Q@mail.gmail.com>
+Subject: understanding DMA in PCI drivers
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 17, 2018 at 07:30:29PM +0100, KarimAllah Ahmed wrote:
-> ... since INTx is not supported by-spec for virtual functions.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: KarimAllah Ahmed <karahmed@amazon.de>
-> Signed-off-by: Jan H. Schönherr <jschoenh@amazon.de>
+Hello,
 
-Applied to pci/virtualization for v4.17, thanks!
+I write a pci linux driver, and after reviewing some examples in
+kernel, there is issue I am not sure about:
+DMA seems to follow the following steps in PCI:
+1.  driver allocate dma buffers and map them to BAR.
+2. driver initialize device to be familiar with dma addresses.
+3. tx from cpu to device: driver trigger dma, by writing into device BARs.
+4. rx from device to cpu: device is responsible for triggering DMA
+(driver does not do anything here)
+5. tx/rx completion: interrupt from DMA (in cpu)
+6. interrupt handler of section 5 above checks that device finished tx/rx.
 
-I tweaked the changelog to include the motivation:
+Is the above understanding correct ?
+1. As to 6, I am not sure about, is it that device knows that
+transaction is finished (DMA is in soc , not device) ?
+2. How does device triggers DMA from device to cpu, is it by simply
+writing to BAR ?
+3. How does device triggers DMA from cpu to device, is it by simply
+reading from BAR ?
 
-commit 16edf1c6345ab177ccf1e8b5ba3324ee01a50eb7
-Author: KarimAllah Ahmed <karahmed@amazon.de>
-Date:   Wed Jan 17 19:30:29 2018 +0100
-
-    PCI/IOV: Skip INTx config reads for VFs
-    
-    Per PCIe r4.0, sec 9.2.1.4, VFs can not implement INTX, and their Interrupt
-    Line and Interrupt Pin registers must be RO Zero.  Some devices have
-    thousands of VFs, so skip reading the registers as an optimization.
-    
-    Signed-off-by: KarimAllah Ahmed <karahmed@amazon.de>
-    Signed-off-by: Jan H. Schönherr <jschoenh@amazon.de>
-    [bhelgaas: changelog, comment]
-    Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 489660d0d384..a1cddca37793 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1230,6 +1230,13 @@ static void pci_read_irq(struct pci_dev *dev)
- {
- 	unsigned char irq;
- 
-+	/* VFs are not allowed to use INTx, so skip the config reads */
-+	if (dev->is_virtfn) {
-+		dev->pin = 0;
-+		dev->irq = 0;
-+		return;
-+	}
-+
- 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &irq);
- 	dev->pin = irq;
- 	if (irq)
+Thank you,
+Ran
