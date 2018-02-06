@@ -1,121 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:36089 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752395AbeB1Oxw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 09:53:52 -0500
-Date: Wed, 28 Feb 2018 15:53:50 +0100
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Gregory CLEMENT <gregory.clement@bootlin.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        =?UTF-8?B?TWlxdcOobA==?= Raynal <miquel.raynal@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Omri Itach <omrii@marvell.com>,
-        Hanna Hawa <hannah@marvell.com>,
-        Igal Liberman <igall@marvell.com>,
-        Marcin Wojtas <mw@semihalf.com>
-Subject: Re: [PATCH 2/2] PCI: armada8k: Fix clock resource by adding a
- register clock
-Message-ID: <20180228155350.0221a90f@windsurf.lan>
-In-Reply-To: <20180228144704.12947-3-gregory.clement@bootlin.com>
-References: <20180228144704.12947-1-gregory.clement@bootlin.com>
-        <20180228144704.12947-3-gregory.clement@bootlin.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <62634aa6-ad3c-93c2-e6fa-9e163d4004ca@huawei.com>
+References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
+ <1516725385-24535-8-git-send-email-john.garry@huawei.com> <0a30452f-34eb-d0b5-2001-ab6b866c53e2@huawei.com>
+ <CAHp75VfXoAHNH2BnfNLbFfdCqUk3rxU_QWfxTx7ZyLgV0qxotQ@mail.gmail.com> <62634aa6-ad3c-93c2-e6fa-9e163d4004ca@huawei.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 6 Feb 2018 21:44:35 +0200
+Message-ID: <CAHp75VdTKCq5Vxox2OPvr+BvVSduhaxs_sa7B9wskzjv8ZJLqw@mail.gmail.com>
+Subject: Re: [PATCH v12 7/9] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: John Garry <john.garry@huawei.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, linux-pci@vger.kernel.org,
+        Corey Minyard <minyard@acm.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Mon, Feb 5, 2018 at 4:25 PM, John Garry <john.garry@huawei.com> wrote:
+> On 05/02/2018 13:16, Andy Shevchenko wrote:
+>> On Thu, Feb 1, 2018 at 1:32 PM, John Garry <john.garry@huawei.com> wrote:
 
-On Wed, 28 Feb 2018 15:47:04 +0100, Gregory CLEMENT wrote:
-> On Armada 7K/8K we need to explicitly enable the register clock. This
-> clock is optional because not all the SoCs using this IP need it but at
-> least for Armada 7K/8K it is actually mandatory.
-> 
-> The binding documentation is updated accordingly.
-> 
-> Signed-off-by: Gregory CLEMENT <gregory.clement@bootlin.com>
-> ---
->  Documentation/devicetree/bindings/pci/pci-armada8k.txt |  6 +++++-
->  drivers/pci/dwc/pcie-armada8k.c                        | 11 +++++++++++
->  2 files changed, 16 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci-armada8k.txt b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-> index c1e4c3d10a74..9948b1e9a8e5 100644
-> --- a/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-> @@ -12,7 +12,11 @@ Required properties:
->     - "ctrl" for the control register region
->     - "config" for the config space region
->  - interrupts: Interrupt specifier for the PCIe controler
-> -- clocks: reference to the PCIe controller clock
-> +- clocks: reference to the PCIe controller clocks
-> +- clock-names: mandatory if there is a second clock, in this case the
-> +   name must be "core" for the first clock and "reg" for the second
-> +   one
-> +
+>> resource_size_t is dynamic width type, you will see a compiler
+>> warning. For this we have
+>> %pap specifier.
+>>
+>> Moreover, in some cases it's useful to print struct resource via %pR or
+>> %pr.
 
-Unneeded new line added here.
+> I have already fixed this up in my rework.
 
->  
->  Example:
->  
-> diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-> index f9b1aec25c5c..aa4e5cc4ab7b 100644
-> --- a/drivers/pci/dwc/pcie-armada8k.c
-> +++ b/drivers/pci/dwc/pcie-armada8k.c
-> @@ -28,6 +28,7 @@
->  struct armada8k_pcie {
->  	struct dw_pcie *pci;
->  	struct clk *clk;
-> +	struct clk *clk_reg;
->  };
->  
->  #define PCIE_VENDOR_REGS_OFFSET		0x8000
-> @@ -229,6 +230,15 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
->  	if (ret)
->  		return ret;
->  
-> +	if (IS_ERR(pcie->clk_reg) && PTR_ERR(pcie->clk_reg) == -EPROBE_DEFER) {
-> +		clk_disable_unprepare(pcie->clk);
-> +		return -EPROBE_DEFER;
-> +	}
-> +	if (!IS_ERR(pcie->clk_reg)) {
-> +		ret = clk_prepare_enable(pcie->clk_reg);
-> +		if (ret)
-> +			goto fail;
-> +	}
->  	/* Get the dw-pcie unit configuration/control registers base. */
+Good!
 
-Missing new line between the end of the block and the next comment.
+>>>> +/* All the host devices which apply indirect-IO can be listed here. */
+>>>> +static const struct acpi_device_id acpi_indirect_host_id[] = {
+>>>> +       {""},
+>>>> +};
+>>
+>>
+>> The idea of terminator is to be such (remove comma there). And it's
+>> basically redundant to have an empty string there. Moreover, it's a
+>> waste of resources in ro section.
+>
+>
+> OK, the comma should be removed. So what is the preferred acpi device id
+> array sentinel? I see {}, {"", 0}, and {""} used.
 
-Regarding the error handling, doesn't it make more sense to also use a
-goto label to disable pcie->clk when getting the second clock gets a
--EPROBE_DEFER ?
+The rule of thumb --- whatever has more entries in the kernel.
+In case of similarity I would prefer simple {} because it suits for
+termination slightly better (for my opinion, some cases might
+potentially have {"", non_null_vakue}).
 
->  	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
->  	pci->dbi_base = devm_pci_remap_cfg_resource(dev, base);
-> @@ -247,6 +257,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
->  	return 0;
->  
->  fail:
-> +	clk_disable_unprepare(pcie->clk_reg);
-
-So you are disabling/unpreparing the clock, which failed to
-prepare/enable ?
-
->  	clk_disable_unprepare(pcie->clk);
->  
->  	return ret;
-
-Thomas
 -- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-http://bootlin.com
+With Best Regards,
+Andy Shevchenko
