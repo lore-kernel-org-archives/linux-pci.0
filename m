@@ -1,235 +1,184 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: Re: [PATCH v13 4/9] PCI: Apply the new generic I/O management on PCI
- IO hosts
-To: dann frazier <dann.frazier@canonical.com>
-References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
- <1518543933-22456-5-git-send-email-john.garry@huawei.com>
- <20180213225721.GA22219@xps13.dannf>
-CC: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
-        <olof@lixom.net>, <andy.shevchenko@gmail.com>, <robh@kernel.org>,
-        <joe@perches.com>, <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <minyard@acm.org>, <devicetree@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <ffaf1c82-3738-86fd-8bc9-f76299f99a79@huawei.com>
-Date: Wed, 14 Feb 2018 15:42:15 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:34514 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752702AbeBFTIt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Feb 2018 14:08:49 -0500
+Date: Tue, 6 Feb 2018 13:08:44 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Scott Bauer <scott.bauer@intel.com>
+Subject: Re: [PATCH] vmd: Interrupt affinity pairing to child devices
+Message-ID: <20180206190844.GA98765@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180201222305.25066-1-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180213225721.GA22219@xps13.dannf>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180201222305.25066-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/02/2018 22:57, dann frazier wrote:
-> On Wed, Feb 14, 2018 at 01:45:28AM +0800, John Garry wrote:
->> From: Zhichang Yuan <yuanzhichang@hisilicon.com>
->>
->> After introducing the new generic I/O space management in logic pio, the
->> original PCI MMIO relevant helpers need to be updated based on the new
->> interfaces.
->> This patch adapts the corresponding code to match the changes introduced
->> by logic pio.
->>
->> Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> I saw that Bjorn Acked this back in v6, but it seems like the code in
-> pci.c was reworked a bit for v7 onwards and I didn't see a follow-up
-> review (apologies if I just missed it). In which case, maybe his Ack
-> should have the "#earlier draft" tag as well?
->
+$ git log --oneline drivers/pci/host/vmd.c
+46a6561b29cb PCI: vmd: Remove IRQ affinity so we can allocate more IRQs
+e2b1820bd5d0 PCI: vmd: Free up IRQs on suspend path
+f2586c678cb2 PCI: vmd: Assign vector zero to all bridges
+37d7f818a462 PCI: vmd: Reserve IRQ pre-vector for better affinity
+0cb259c47a4d PCI: vmd: Move SRCU cleanup after bus, child device removal
+575a144e7b30 PCI: vmd: Correct comment: VMD domains start at 0x10000, not 0x1000
 
-Hi Dann,
+Make yours match:
 
-I see Bjorn acked again later on in the series, here:
-https://lkml.org/lkml/2017/5/26/612
+  PCI: vmd: <verb> ...
 
->> ---
->>  drivers/pci/pci.c        | 95 +++++++++---------------------------------------
->>  include/asm-generic/io.h |  2 +-
->>  2 files changed, 18 insertions(+), 79 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 07290a3..8aa5c54 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -22,6 +22,7 @@
->>  #include <linux/spinlock.h>
->>  #include <linux/string.h>
->>  #include <linux/log2.h>
->> +#include <linux/logic_pio.h>
->>  #include <linux/pci-aspm.h>
->>  #include <linux/pm_wakeup.h>
->>  #include <linux/interrupt.h>
->> @@ -3440,17 +3441,6 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
->>  }
->>  EXPORT_SYMBOL(pci_request_regions_exclusive);
->>
->> -#ifdef PCI_IOBASE
->> -struct io_range {
->> -	struct list_head list;
->> -	phys_addr_t start;
->> -	resource_size_t size;
->> -};
->> -
->> -static LIST_HEAD(io_range_list);
->> -static DEFINE_SPINLOCK(io_range_lock);
->> -#endif
->> -
->>  /*
->>   * Record the PCI IO range (expressed as CPU physical address + size).
->>   * Return a negative value if an error has occured, zero otherwise
->> @@ -3458,51 +3448,28 @@ struct io_range {
->>  int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
->>  			resource_size_t	size)
->>  {
->> -	int err = 0;
->> -
->> +	int ret = 0;
->>  #ifdef PCI_IOBASE
->> -	struct io_range *range;
->> -	resource_size_t allocated_size = 0;
->> -
->> -	/* check if the range hasn't been previously recorded */
->> -	spin_lock(&io_range_lock);
->> -	list_for_each_entry(range, &io_range_list, list) {
->> -		if (addr >= range->start && addr + size <= range->start + size) {
->> -			/* range already registered, bail out */
->> -			goto end_register;
->> -		}
->> -		allocated_size += range->size;
->> -	}
->> +	struct logic_pio_hwaddr *range;
->>
->> -	/* range not registed yet, check for available space */
->> -	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
->> -		/* if it's too big check if 64K space can be reserved */
->> -		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
->> -			err = -E2BIG;
->> -			goto end_register;
->> -		}
->> -
->> -		size = SZ_64K;
->> -		pr_warn("Requested IO range too big, new size set to 64K\n");
->> -	}
->> +	if (!size || addr + size < addr)
->> +		return -EINVAL;
->>
->> -	/* add the range to the list */
->>  	range = kzalloc(sizeof(*range), GFP_ATOMIC);
->> -	if (!range) {
->> -		err = -ENOMEM;
->> -		goto end_register;
->> -	}
->> +	if (!range)
->> +		return -ENOMEM;
->>
->> -	range->start = addr;
->> +	range->fwnode = fwnode;
->>  	range->size = size;
->> +	range->hw_start = addr;
->> +	range->flags = PIO_CPU_MMIO;
->>
->> -	list_add_tail(&range->list, &io_range_list);
->> -
->> -end_register:
->> -	spin_unlock(&io_range_lock);
->> +	ret = logic_pio_register_range(range);
->> +	if (ret)
->> +		kfree(range);
->>  #endif
->>
->> -	return err;
->> +	return ret;
->>  }
->>
->>  phys_addr_t pci_pio_to_address(unsigned long pio)
->> @@ -3510,21 +3477,10 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
->>  	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
->>
->>  #ifdef PCI_IOBASE
->> -	struct io_range *range;
->> -	resource_size_t allocated_size = 0;
->> -
->> -	if (pio > IO_SPACE_LIMIT)
->> +	if (pio >= MMIO_UPPER_LIMIT)
->>  		return address;
->>
->> -	spin_lock(&io_range_lock);
->> -	list_for_each_entry(range, &io_range_list, list) {
->> -		if (pio >= allocated_size && pio < allocated_size + range->size) {
->> -			address = range->start + pio - allocated_size;
->> -			break;
->> -		}
->> -		allocated_size += range->size;
->> -	}
->> -	spin_unlock(&io_range_lock);
->> +	address = logic_pio_to_hwaddr(pio);
->>  #endif
->>
->>  	return address;
->> @@ -3533,25 +3489,8 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
->>  unsigned long __weak pci_address_to_pio(phys_addr_t address)
->>  {
->>  #ifdef PCI_IOBASE
->> -	struct io_range *res;
->> -	resource_size_t offset = 0;
->> -	unsigned long addr = -1;
->> -
->> -	spin_lock(&io_range_lock);
->> -	list_for_each_entry(res, &io_range_list, list) {
->> -		if (address >= res->start && address < res->start + res->size) {
->> -			addr = address - res->start + offset;
->> -			break;
->> -		}
->> -		offset += res->size;
->> -	}
->> -	spin_unlock(&io_range_lock);
->> -
->> -	return addr;
->> +	return logic_pio_trans_cpuaddr(address);
->>  #else
->> -	if (address > IO_SPACE_LIMIT)
->> -		return (unsigned long)-1;
->> -
->
-> Why is this check now safe to drop in the !PCI_IOBASE case?
-
-So I have been studying the (long) patchset history and I don't see the 
-reason for removing this check, and I think it can be reinstated.
-
-The address and pio are analogous here, and pio should not exceed the IO 
-space limit, so just a safety check.
-
->
->   -dann
->
->>  	return (unsigned long) address;
->>  #endif
->>  }
->> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
->> index b7996a79..5a59931 100644
->> --- a/include/asm-generic/io.h
->> +++ b/include/asm-generic/io.h
->> @@ -901,7 +901,7 @@ static inline void iounmap(void __iomem *addr)
->>  #define ioport_map ioport_map
->>  static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
->>  {
-
-Thanks,
-John
-
->> -	return PCI_IOBASE + (port & IO_SPACE_LIMIT);
->> +	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
->>  }
->>  #endif
->>
->
-> .
->
+On Thu, Feb 01, 2018 at 03:23:05PM -0700, Keith Busch wrote:
+> Performance for devices in VMD domains suffer in NUMA environments if
+> we're not respecting the desired IRQ CPU affinity. This patch fixes
+> that by creating managed affinity irq vectors for the VMD device, and
+> then drivers registering their chained interrupts will be assigned the
+> h/w irq that most closely matches its desired IRQ affinity. A tie is
+> awarded to the lesser used vector.
+> 
+> Note, this only works for drivers that allocate their vectors with
+> PCI_IRQ_AFFINITY. All other drivers will be assigned the least used
+> vector without consideration for affinity.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/host/vmd.c | 80 ++++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 65 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+> index 930a8fa08bd6..ac84676e79a4 100644
+> --- a/drivers/pci/host/vmd.c
+> +++ b/drivers/pci/host/vmd.c
+> @@ -166,10 +166,6 @@ static irq_hw_number_t vmd_get_hwirq(struct msi_domain_info *info,
+>  	return 0;
+>  }
+>  
+> -/*
+> - * XXX: We can be even smarter selecting the best IRQ once we solve the
+> - * affinity problem.
+> - */
+>  static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *desc)
+>  {
+>  	int i, best = 1;
+> @@ -188,24 +184,61 @@ static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *d
+>  	return &vmd->irqs[best];
+>  }
+>  
+> +static struct vmd_irq_list *vmd_next_affinity_irq(struct vmd_dev *vmd,  const struct cpumask *dest)
+> +{
+> +	struct vmd_irq_list *irq = NULL;
+> +	const struct cpumask *vmd_mask;
+> +	unsigned long flags, match;
+> +	int i, best = 0;
+> +
+> +	if (!dest || vmd->msix_count < 2)
+> +		return NULL;
+> +
+> +	raw_spin_lock_irqsave(&list_lock, flags);
+> +	for (i = 1; i < vmd->msix_count; i++) {
+> +		struct cpumask tmp;
+> +
+> +		vmd_mask = pci_irq_get_affinity(vmd->dev, i);
+> +		cpumask_and(&tmp, vmd_mask, dest);
+> +		match = cpumask_weight(&tmp);
+> +		if (match >= best) {
+> +			if (match == best && irq &&
+> +			    (vmd->irqs[i].count >= irq->count))
+> +				continue;
+> +			irq = &vmd->irqs[i];
+> +			best = match;
+> +		}
+> +	}
+> +	if (irq)
+> +		irq->count++;
+> +	raw_spin_unlock_irqrestore(&list_lock, flags);
+> +
+> +	return irq;
+> +}
+> +
+>  static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
+>  			unsigned int virq, irq_hw_number_t hwirq,
+>  			msi_alloc_info_t *arg)
+>  {
+> -	struct msi_desc *desc = arg->desc;
+> -	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(desc)->bus);
+> +	struct msi_desc *msidesc = arg->desc;
+> +	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(msidesc)->bus);
+>  	struct vmd_irq *vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
+> -	unsigned int index, vector;
+> +	struct irq_desc *desc = irq_to_desc(virq);
+> +	unsigned int vector;
+>  
+>  	if (!vmdirq)
+>  		return -ENOMEM;
+>  
+>  	INIT_LIST_HEAD(&vmdirq->node);
+> -	vmdirq->irq = vmd_next_irq(vmd, desc);
+> -	vmdirq->virq = virq;
+> -	index = index_from_irqs(vmd, vmdirq->irq);
+> -	vector = pci_irq_vector(vmd->dev, index);
+>  
+> +	if (desc && irqd_affinity_is_managed(&desc->irq_data))
+> +		vmdirq->irq = vmd_next_affinity_irq(vmd,
+> +					desc->irq_common_data.affinity);
+> +	if (vmdirq->irq == NULL)
+> +		vmdirq->irq = vmd_next_irq(vmd, msidesc);
+> +
+> +	vmdirq->virq = virq;
+> +	vector = pci_irq_vector(vmd->dev, index_from_irqs(vmd, vmdirq->irq));
+>  	irq_domain_set_info(domain, virq, vector, info->chip, vmdirq,
+>  			    handle_untracked_irq, vmd, NULL);
+>  	return 0;
+> @@ -233,9 +266,11 @@ static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+>  	struct vmd_dev *vmd = vmd_from_bus(pdev->bus);
+>  
+> -	if (nvec > vmd->msix_count)
+> +	if (nvec > vmd->msix_count) {
+> +		if (vmd->msix_count > 1)
+> +			return vmd->msix_count - 1;
+>  		return vmd->msix_count;
+> -
+> +	}
+>  	memset(arg, 0, sizeof(*arg));
+>  	return 0;
+>  }
+> @@ -663,6 +698,14 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  	struct vmd_dev *vmd;
+>  	int i, err;
+>  
+> +	/*
+> +	 * The first vector is reserved for special use, so start affinity at
+> +	 * the second vector.
+> +	 */
+> +	struct irq_affinity affd = {
+> +		.pre_vectors = 1,
+> +	};
+> +
+>  	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
+>  		return -ENOMEM;
+>  
+> @@ -688,8 +731,15 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  	if (vmd->msix_count < 0)
+>  		return -ENODEV;
+>  
+> -	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
+> -					PCI_IRQ_MSIX);
+> +	/*
+> +	 * Reserve remaining vectors that IRQ affinity won't be able to assign.
+> +	 */
+> +	if ((vmd->msix_count - 1) > cpumask_weight(cpu_present_mask))
+> +		affd.post_vectors = vmd->msix_count -
+> +					cpumask_weight(cpu_present_mask) - 1;
+> +
+> +	vmd->msix_count = pci_alloc_irq_vectors_affinity(dev, 1, vmd->msix_count,
+> +					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &affd);
+>  	if (vmd->msix_count < 0)
+>  		return vmd->msix_count;
+>  
+> -- 
+> 2.14.3
+> 
