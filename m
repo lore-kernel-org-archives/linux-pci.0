@@ -1,75 +1,148 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v3 0/5] PCI: Fixes for native PCIe and ACPI hotplug
-Date: Mon, 26 Feb 2018 16:21:07 +0300
-Message-Id: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1517895732.23319.21.camel@mtkswgap22>
+Subject: Re: [PATCH 1/2] of_pci_irq: add a check to fallback to standard
+ device tree parsing
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Tue, 6 Feb 2018 13:42:12 +0800
+In-Reply-To: <1517892624.2312.167.camel@kernel.crashing.org>
+References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+ <CAL_JsqLZqrxxpuEnoWEGkT2WCuyjqn0bM1DP8PdAwnQsso8kOA@mail.gmail.com>
+ <1517563970.24622.9.camel@mtkswgap22>
+ <1517866584.2312.140.camel@kernel.crashing.org>
+ <1517884738.16010.27.camel@mtkswgap22>
+ <1517889903.2312.151.camel@kernel.crashing.org>
+ <1517891471.20869.6.camel@mtkswgap22>
+ <1517892624.2312.167.camel@kernel.crashing.org>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, 2018-02-06 at 15:50 +1100, Benjamin Herrenschmidt wrote:
+> On Tue, 2018-02-06 at 12:31 +0800, Ryder Lee wrote:
+> > On Tue, 2018-02-06 at 15:05 +1100, Benjamin Herrenschmidt wrote:
+> > > On Tue, 2018-02-06 at 10:38 +0800, Ryder Lee wrote:
+> > > > 
+> > > > I think the code should look at the bridge address <0x0800 ...> we list
+> > > > in bindings for resolving interrupts in this case, but it seems like it
+> > > > use the 'pdev->defvn << 8' which is not really we want and will lead to
+> > > > mismatch.
+> > > > 
+> > > > 		interrupt-map-mask = <0xf800 0 0 7>;
+> > > > 		interrupt-map = <0x0000 0 0 1 ...>,
+> > > > 				<0x0000 0 0 2 ...>,
+> > > > 				<0x0000 0 0 3 ...>,
+> > > > 				<0x0000 0 0 4 ...>,
+> > > > 
+> > > > 				 0x0800 0 0 1 ...>,
+> > > > 				 0x0800 0 0 2 ...>,
+> > > > 				 0x0800 0 0 3 ...>,
+> > > > 				 0x0800 0 0 4 ...>;
+> > > > 		...
+> > > > 		pcie@1,0 {
+> > > > 			reg = <0x0800 0 0 0 0>;
+> > > > 			...
+> > > > 		};
+> > > > 
+> > > > 
+> > > > Or, alternatively, we could add a interrupt-map property in both child
+> > > > and root node to solve this. The below example is my original version as
+> > > > I don't want to change that function either.
+> > > 
+> > > The code looks at devfn because it's meant to work for PCI including
+> > > when the devices dont have a device node in the DT.
+> > > 
+> > > What I'm trying to figure out is what is it that your parent and
+> > > children are representing here. Which is/are the root complex ?
+> > 
+> > This is a single root complex with 2 root port (children in DT).
+> > 
+> > > What is the actual topology as visible on the PCIe bus (is lspci output
+> > > basically) and how does that map to your representation ?
+> > 
+> > # lspci
+> > 00:00.0 Class 0604: 14c3:0801 //1st slot - pcie@0,0
+> > 00:01.0 Class 0604: 14c3:0801 //2nd slot - pcie@1,0
+> > 
+> > 01:00.0 Class 0280: 14c3:7603 //A device which is connected to 1st slot
+> > 02:00.0 Class 0200: 8086:1521 //A 4 func device which is connected to
+> > 2nd slot
+> > 02:00.1 Class 0200: 8086:1521
+> > 02:00.2 Class 0200: 8086:1521
+> > 02:00.3 Class 0200: 8086:1521
+> 
+> Ok so that's a rather standard setup. The "devfn << 8" of your root
+> ports should be the exact same thing as their first reg property entry,
+> I'm not sure why you have a mismatch here.
 
-When Thunderbolt controller is configured to be in native enumeration mode
-it actually includes two slightly different modes. First there is non-RTD3
-mode where the Thunderbolt host controller is only present when there is a
-device connected. The second one is RTD3 mode where the controller is
-always present.
+I've added some log after 'for loop':
 
-In non-RTD3 mode the Thunderbolt host controller (NHI) and USB host (xHCI)
-controller are not hotplugged using native PCIe hotplug but instead they
-will be hotplugged via BIOS triggered ACPI Notify() to the root port. This
-is done to preserve resources since the NHI and xHCI only need 1 MB of MMIO
-space and no additional buses. Currently Linux does not support this very
-well and ends up failing the hotplug in one way or another. More detailed
-explanation is in changelog of patch [4/5].
+pr_err("busn=0x%x, devfn=0x%x, reg=0x%x\n", pdev->bus->number, pdev->devfn, of_pci_get_devfn(ppnode));
 
-This series fixes this issue and in addition includes fixes for few other
-issues found during testing on a system that has Thunderbolt controller in
-non-RTD3 native PCIe enumeration mode. However, the fixes here are not in
-any way Thunderbolt specific and should be applicable to other systems as
-well.
+and got these:
 
-The previous versions of the patch series can be found here:
+[    5.651836] busn=0x0, devfn=0x0, reg=0x0
+[    5.651936] pcieport 0000:00:00.0: assign IRQ: got 213
+...
+[    5.652398] busn=0x0, devfn=0x8, reg=0x0
+[    5.652487] pcieport 0000:00:01.0: assign IRQ: got 214
 
-  v2: https://www.spinics.net/lists/linux-pci/msg69186.html
-  v1: https://www.spinics.net/lists/linux-acpi/msg80607.html
+...
+[    5.653025] busn=0x2, devfn=0x0, reg=0x8
+[    5.653058] igb 0000:02:00.0: assign IRQ: got 213
 
-Changes from v2:
+[    5.724582] busn=0x2, devfn=0x1, reg=0x8
+[    5.724634] igb 0000:02:00.1: assign IRQ: got 213
 
-  - Added Rafael's tag to patch [1/5].
-  - Updated changelog of patch [1/5] to include more details about how the
-    problem can be observed from dmesg and lspci output.
+> However, that map only represents the INTA..D lines going to the root
+> ports, not how these get mapped to children of the root ports.
+> 
+> of_irq_parse_pci() will implement standard swizzling if you don't have
+> nodes for your devices at all. If you do, however, the code assumes
+> you have a correct and complete interrupt tree in the device-tree.
+> 
+> That means that you need in each "p2p bridge", including your root
+> ports, an interrupt-map that will map the children INTA...D of that
+> bridge to the parent INTA...D of that bridge.
+> 
+> Alternatively, you can make the maps in the root ports point directly
+> to the parent PIC. If you chose to do that, then the interrupt-map in
+> your root complex becomes only useful to represent the root ports own
+> interrutps (hotplug, AER,...) and could be replaced by just having
+> interrupt-parent & interrupts in those root port nodes.
+> 
 
-Changes from v1:
+Thanks for explanation.
 
-  - Drop 'cmax - max ?: 1' and use similar construct than we use in second
-    pass loop in patch [1/5].
-  - Drop unnecessary parentheses in patch [1/5].
-  - Added Rafael's tag to patches [2-5/5].
+So I guess the better way to achieve my aim - one IRQ per slot that is
+connected to all INTx and get propagated through the bridges (and for
+those root ports own interrupts (PME ..)} is to add interrupt-map
+properties in both parent and root port nodes.
 
-Mika Westerberg (5):
-  PCI: Make sure all bridges reserve at least one bus number
-  PCI: Take bridge window alignment into account when distributing resources
-  PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
-  ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
-  ACPI / hotplug / PCI: Mark stale PCI devices disconnected
+Something like this: https://patchwork.kernel.org/patch/9970923/ ,right?
 
- drivers/pci/hotplug/acpiphp.h      |  1 +
- drivers/pci/hotplug/acpiphp_glue.c | 78 ++++++++++++++++++++++++++++++--------
- drivers/pci/hotplug/pciehp.h       |  2 +-
- drivers/pci/hotplug/pciehp_core.c  |  2 +-
- drivers/pci/hotplug/pciehp_hpc.c   | 13 ++++++-
- drivers/pci/probe.c                | 11 ++++--
- drivers/pci/setup-bus.c            | 41 +++++++++++++++++++-
- 7 files changed, 126 insertions(+), 22 deletions(-)
+Ryder
 
--- 
-2.16.1
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
