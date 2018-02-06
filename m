@@ -1,41 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:45677 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933139AbeBVRMY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 12:12:24 -0500
-MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.20.1802221710110.1801@5HSWXM1.fritz.box>
-References: <20180221124707.26308-1-embedded24@evers-fischer.de>
- <20180221124707.26308-2-embedded24@evers-fischer.de> <CAHp75VfgqqkLq0PbC0SBMCyCLqqoNZcUW0xngjacEL0VtAskmg@mail.gmail.com>
- <alpine.LNX.2.20.1802221710110.1801@5HSWXM1.fritz.box>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 22 Feb 2018 19:12:23 +0200
-Message-ID: <CAHp75Vcp=OkkTcM+jey_YqCDo52BOFP0XH4cd8HWmReej=-5dQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] pci: endpoint: Free func_name after last usage
-To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+Received: from mail.kernel.org ([198.145.29.99]:34764 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752759AbeBFTLc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Feb 2018 14:11:32 -0500
+Date: Tue, 6 Feb 2018 13:11:26 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ulf Magnusson <ulfalizer@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org,
+        tfiga@chromium.org, paul.burton@mips.com, m.szyprowski@samsung.com,
+        egtvedt@samfundet.no, linus.walleij@linaro.org,
+        vgupta@synopsys.com, mgorman@techsingularity.net, hch@lst.de,
+        mina86@mina86.com, robh@kernel.org, sboyd@codeaurora.org,
+        paulus@ozlabs.org, will.deacon@arm.com, tony@atomide.com,
+        npiggin@gmail.com, yamada.masahiro@socionext.com,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Content-Type: text/plain; charset="UTF-8"
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 20/20] x86/PCI: VMD: Fix malformed default
+Message-ID: <20180206191126.GB98765@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180205012146.23981-1-ulfalizer@gmail.com>
+ <20180205012146.23981-21-ulfalizer@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180205012146.23981-21-ulfalizer@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 22, 2018 at 6:21 PM, Rolf Evers-Fischer
-<embedded24@evers-fischer.de> wrote:
-> On Wed, 21 Feb 2018, Andy Shevchenko wrote:
+> x86/PCI: VMD: Fix malformed default
 
->> This is a slow path and your change makes code slightly less readable
->> b/c of patterns used in the kernel.
->>
-> I see. It is probably not a good idea to free the
-> memory in the middle of the function.
-> If you don't mind, I will remove this patch and change the other
-> one accordingly.
+In the title, please include a clue about what default you're talking
+about, e.g., mention Kconfig somehow.
 
-Sounds good to me!
-
--- 
-With Best Regards,
-Andy Shevchenko
+On Mon, Feb 05, 2018 at 02:21:32AM +0100, Ulf Magnusson wrote:
+> 'default N' should be 'default n', though they happen to have the same
+> effect here, due to undefined symbols (N in this case) evaluating to n
+> in a tristate sense.
+> 
+> Remove the default from VMD instead of changing it. bool and tristate
+> symbols implicitly default to n.
+> 
+> Discovered with the
+> https://github.com/ulfalizer/Kconfiglib/blob/master/examples/list_undefined.py
+> script.
+> 
+> Signed-off-by: Ulf Magnusson <ulfalizer@gmail.com>
+> ---
+>  drivers/pci/host/Kconfig | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index a4ed7484d127..dc8a2a175f19 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -215,7 +215,6 @@ config PCIE_TANGO_SMP8759
+>  config VMD
+>  	depends on PCI_MSI && X86_64 && SRCU
+>  	tristate "Intel Volume Management Device Driver"
+> -	default N
+>  	---help---
+>  	  Adds support for the Intel Volume Management Device (VMD). VMD is a
+>  	  secondary PCI host bridge that allows PCI Express root ports,
+> -- 
+> 2.14.1
+> 
