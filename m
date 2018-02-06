@@ -1,180 +1,98 @@
-Return-Path: <SRS0=Pthi=FV=codeaurora.org=tbaicar@kernel.org>
-Return-Path: <SRS0=Pthi=FV=codeaurora.org=tbaicar@kernel.org>
-Subject: Re: [PATCH v2] PCI/AER: update AER status string print to match other
- AER logs
-To: helgaas@kernel.org
-References: <1518034285-3543-1-git-send-email-tbaicar@codeaurora.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-From: Tyler Baicar <tbaicar@codeaurora.org>
-Message-ID: <469cc694-405a-b9f3-5e92-f657e8dbda47@codeaurora.org>
-Date: Tue, 27 Feb 2018 14:33:51 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1517891471.20869.6.camel@mtkswgap22>
+Subject: Re: [PATCH 1/2] of_pci_irq: add a check to fallback to standard
+ device tree parsing
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Tue, 6 Feb 2018 12:31:11 +0800
+In-Reply-To: <1517889903.2312.151.camel@kernel.crashing.org>
+References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+ <CAL_JsqLZqrxxpuEnoWEGkT2WCuyjqn0bM1DP8PdAwnQsso8kOA@mail.gmail.com>
+ <1517563970.24622.9.camel@mtkswgap22>
+ <1517866584.2312.140.camel@kernel.crashing.org>
+ <1517884738.16010.27.camel@mtkswgap22>
+ <1517889903.2312.151.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <1518034285-3543-1-git-send-email-tbaicar@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+On Tue, 2018-02-06 at 15:05 +1100, Benjamin Herrenschmidt wrote:
+> On Tue, 2018-02-06 at 10:38 +0800, Ryder Lee wrote:
+> > 
+> > I think the code should look at the bridge address <0x0800 ...> we list
+> > in bindings for resolving interrupts in this case, but it seems like it
+> > use the 'pdev->defvn << 8' which is not really we want and will lead to
+> > mismatch.
+> > 
+> > 		interrupt-map-mask = <0xf800 0 0 7>;
+> > 		interrupt-map = <0x0000 0 0 1 ...>,
+> > 				<0x0000 0 0 2 ...>,
+> > 				<0x0000 0 0 3 ...>,
+> > 				<0x0000 0 0 4 ...>,
+> > 
+> > 				 0x0800 0 0 1 ...>,
+> > 				 0x0800 0 0 2 ...>,
+> > 				 0x0800 0 0 3 ...>,
+> > 				 0x0800 0 0 4 ...>;
+> > 		...
+> > 		pcie@1,0 {
+> > 			reg = <0x0800 0 0 0 0>;
+> > 			...
+> > 		};
+> > 
+> > 
+> > Or, alternatively, we could add a interrupt-map property in both child
+> > and root node to solve this. The below example is my original version as
+> > I don't want to change that function either.
+> 
+> The code looks at devfn because it's meant to work for PCI including
+> when the devices dont have a device node in the DT.
+> 
+> What I'm trying to figure out is what is it that your parent and
+> children are representing here. Which is/are the root complex ?
+
+This is a single root complex with 2 root port (children in DT).
+
+> What is the actual topology as visible on the PCIe bus (is lspci output
+> basically) and how does that map to your representation ?
+
+# lspci
+00:00.0 Class 0604: 14c3:0801 //1st slot - pcie@0,0
+00:01.0 Class 0604: 14c3:0801 //2nd slot - pcie@1,0
+
+01:00.0 Class 0280: 14c3:7603 //A device which is connected to 1st slot
+02:00.0 Class 0200: 8086:1521 //A 4 func device which is connected to
+2nd slot
+02:00.1 Class 0200: 8086:1521
+02:00.2 Class 0200: 8086:1521
+02:00.3 Class 0200: 8086:1521
+
+> _______________________________________________
+> Linux-mediatek mailing list
+> Linux-mediatek@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-mediatek
 
 
-On 2/7/2018 3:11 PM, Tyler Baicar wrote:
-> Currently the AER driver uses cper_print_bits() to print the AER status
-> string. This causes the status string to not include the proper PCI device
-> name prefix that the other AER prints include. Also, it has a different
-> print level than all the other AER prints, and there is a potential to
-> have multiple status prints based on string lengths.
->
-> Update the AER driver to print the AER status string with the proper string
-> prefix and proper print level, and abreviate the status strings similar to
-> lspci -vv prints so they can be printed on the same line.
->
-> Previous log example:
->
-> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
-> Receiver Error, Bad TLP
-> e1000e 0003:01:00.1: aer_layer=Physical Layer, aer_agent=Receiver ID
-> pcieport 0003:00:00.0: aer_status: 0x00001000, aer_mask: 0x0000e000
-> Replay Timer Timeout
-> pcieport 0003:00:00.0: aer_layer=Data Link Layer, aer_agent=Transmitter ID
->
-> New log:
->
-> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
-> e1000e 0003:01:00.1: RxErr, BadTLP
-> e1000e 0003:01:00.1: aer_layer=Physical Layer, aer_agent=Receiver ID
-> pcieport 0003:00:00.0: aer_status: 0x00001000, aer_mask: 0x0000e000
-> pcieport 0003:00:00.0: Timeout
-> pcieport 0003:00:00.0: aer_layer=Data Link Layer, aer_agent=Transmitter ID
-Do you think this is ready for merge now?
 
-Thanks,
-Tyler
->
-> Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
-> ---
->   drivers/pci/pcie/aer/aerdrv_errprint.c | 71 ++++++++++++++++++++++------------
->   1 file changed, 47 insertions(+), 24 deletions(-)
->
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index 6a352e6..bb68dd4 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -72,22 +72,22 @@
->   };
->   
->   static const char *aer_correctable_error_string[] = {
-> -	"Receiver Error",		/* Bit Position 0	*/
-> +	"RxErr",			/* Bit Position 0	*/
->   	NULL,
->   	NULL,
->   	NULL,
->   	NULL,
->   	NULL,
-> -	"Bad TLP",			/* Bit Position 6	*/
-> -	"Bad DLLP",			/* Bit Position 7	*/
-> -	"RELAY_NUM Rollover",		/* Bit Position 8	*/
-> +	"BadTLP",			/* Bit Position 6	*/
-> +	"BadDLLP",			/* Bit Position 7	*/
-> +	"Rollover",			/* Bit Position 8	*/
->   	NULL,
->   	NULL,
->   	NULL,
-> -	"Replay Timer Timeout",		/* Bit Position 12	*/
-> -	"Advisory Non-Fatal",		/* Bit Position 13	*/
-> -	"Corrected Internal Error",	/* Bit Position 14	*/
-> -	"Header Log Overflow",		/* Bit Position 15	*/
-> +	"Timeout",			/* Bit Position 12	*/
-> +	"NonFatalErr",			/* Bit Position 13	*/
-> +	"CorrIntErr",			/* Bit Position 14	*/
-> +	"HeaderOF",			/* Bit Position 15	*/
->   };
->   
->   static const char *aer_uncorrectable_error_string[] = {
-> @@ -95,28 +95,28 @@
->   	NULL,
->   	NULL,
->   	NULL,
-> -	"Data Link Protocol",		/* Bit Position 4	*/
-> -	"Surprise Down Error",		/* Bit Position 5	*/
-> +	"DLP",				/* Bit Position 4	*/
-> +	"SDES",				/* Bit Position 5	*/
->   	NULL,
->   	NULL,
->   	NULL,
->   	NULL,
->   	NULL,
->   	NULL,
-> -	"Poisoned TLP",			/* Bit Position 12	*/
-> -	"Flow Control Protocol",	/* Bit Position 13	*/
-> -	"Completion Timeout",		/* Bit Position 14	*/
-> -	"Completer Abort",		/* Bit Position 15	*/
-> -	"Unexpected Completion",	/* Bit Position 16	*/
-> -	"Receiver Overflow",		/* Bit Position 17	*/
-> -	"Malformed TLP",		/* Bit Position 18	*/
-> +	"TLP",				/* Bit Position 12	*/
-> +	"FCP",				/* Bit Position 13	*/
-> +	"CmpltTO",			/* Bit Position 14	*/
-> +	"CmpltAbrt",			/* Bit Position 15	*/
-> +	"UnxCmplt",			/* Bit Position 16	*/
-> +	"RxOF",				/* Bit Position 17	*/
-> +	"MalfTLP",			/* Bit Position 18	*/
->   	"ECRC",				/* Bit Position 19	*/
-> -	"Unsupported Request",		/* Bit Position 20	*/
-> -	"ACS Violation",		/* Bit Position 21	*/
-> -	"Uncorrectable Internal Error",	/* Bit Position 22	*/
-> -	"MC Blocked TLP",		/* Bit Position 23	*/
-> -	"AtomicOp Egress Blocked",	/* Bit Position 24	*/
-> -	"TLP Prefix Blocked Error",	/* Bit Position 25	*/
-> +	"UnsupReq",			/* Bit Position 20	*/
-> +	"ACSViol",			/* Bit Position 21	*/
-> +	"UncorrIntErr",			/* Bit Position 22	*/
-> +	"BlockedTLP",			/* Bit Position 23	*/
-> +	"AtomicOpBlocked",		/* Bit Position 24	*/
-> +	"TLPBlockedErr",		/* Bit Position 25	*/
->   };
->   
->   static const char *aer_agent_string[] = {
-> @@ -203,6 +203,29 @@ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
->   }
->   
->   #ifdef CONFIG_ACPI_APEI_PCIEAER
-> +
-> +#define MAX_PRINT_LENGTH		120
-> +
-> +void dev_print_bits(struct pci_dev *dev, unsigned int bits,
-> +		    const char * const strs[], unsigned int strs_size)
-> +{
-> +	unsigned int i;
-> +	char errs[MAX_PRINT_LENGTH];
-> +
-> +	errs[0] = '\0';
-> +
-> +	for (i = 0; i < strs_size; i++) {
-> +		if (!(bits & (1U << i)))
-> +			continue;
-> +		if (strs[i]) {
-> +			if (strlen(errs))
-> +				strlcat(errs, ", ", MAX_PRINT_LENGTH);
-> +			strlcat(errs, strs[i], MAX_PRINT_LENGTH);
-> +		}
-> +	}
-> +	dev_err(&dev->dev, "%s\n", errs);
-> +}
-> +
->   int cper_severity_to_aer(int cper_severity)
->   {
->   	switch (cper_severity) {
-> @@ -240,7 +263,7 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
->   	agent = AER_GET_AGENT(aer_severity, status);
->   
->   	pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
-> -	cper_print_bits("", status, status_strs, status_strs_size);
-> +	dev_print_bits(dev, status, status_strs, status_strs_size);
->   	pci_err(dev, "aer_layer=%s, aer_agent=%s\n",
->   		aer_error_layer[layer], aer_agent_string[agent]);
->   
-
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
