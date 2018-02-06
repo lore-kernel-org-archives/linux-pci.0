@@ -1,96 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.mailbox.org ([80.241.60.212]:36024 "EHLO mx1.mailbox.org"
+Received: from mga02.intel.com ([134.134.136.20]:35679 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751416AbeBBNii (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Feb 2018 08:38:38 -0500
-Subject: Re: [RFC PATCH] PCI: pciehp: Add module parameter to enable
- debouncing of HP link events
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-References: <20180130084121.18653-1-sr@denx.de>
- <20180130102840.GF27654@lahna.fi.intel.com>
-From: Stefan Roese <sr@denx.de>
-Message-ID: <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
-Date: Fri, 2 Feb 2018 14:38:34 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180130102840.GF27654@lahna.fi.intel.com>
-Content-Type: text/plain; charset=utf-8
+        id S1753028AbeBFUSu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Feb 2018 15:18:50 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Scott Bauer <scott.bauer@intel.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2] PCI: vmd: Use affinity to chain child device interrupts
+Date: Tue,  6 Feb 2018 13:22:25 -0700
+Message-Id: <20180206202225.1124-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mika,
+Performance for devices in VMD domains suffer in NUMA environments if
+we're not respecting the desired IRQ CPU affinity. This patch fixes
+that by creating managed affinity irq vectors for the VMD device, and
+then drivers registering their chained interrupts will be assigned the
+h/w irq that most closely matches its desired IRQ affinity. A tie is
+awarded to the lesser used vector.
 
-sorry for the late reply.
+Note, this only works for drivers that allocate their vectors with
+PCI_IRQ_AFFINITY. All other drivers will be assigned the least used
+vector without consideration for affinity.
 
-On 30.01.2018 11:28, Mika Westerberg wrote:
-> On Tue, Jan 30, 2018 at 09:41:21AM +0100, Stefan Roese wrote:
->> Hotplugging of some PCIe devices on our platform sometimes leads to a
->> bounce of link-up and link-down events, resulting in problems in the
->> corresponding PCI drivers.
->>
->> Here an example of such a hotplug event bounce for a AHCI PCIe card:
->> ...
->> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
->> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
->> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
->> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
->> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
->> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-> 
-> It would be good to find out why this happens in the first place.
-> Perhaps there is some environmental interference or something causing
-> this?
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+Acked-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+v1->v2:
 
-I'm seeing these link bounces in the following environments:
+  Added Jon's 'ack'.
 
-a) Using a BayTrail SoC and hotplugging a standard Desktop PCIe SATA /
-   AHCI Controller (Marvell chip)
-b) Hotplugging (booting via SPI) an Altera / Intel FPGA which is connected
-   via PCIe to a PCIe switch
+  Update changelog subject.
 
-In both cases, this link bouncing happens infrequently, approx. once out
-of 5 - 10 tries.
+ drivers/pci/host/vmd.c | 80 ++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 65 insertions(+), 15 deletions(-)
 
-Out of curiosity, has nobody else ever experienced such "link bouncing"
-with PCIe cards / devices getting hot-plugged?
-
->> pci 0000:02:00.0: [1b4b:9215] type 00 class 0x010601
->> pci 0000:02:00.0: reg 0x10: [io  0x8000-0x8007]
->> ...
->> ata3: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910100 irq 100
->> ata4: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910180 irq 100
->> ata5: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910200 irq 100
->> ata6: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910280 irq 100
->> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
->> ahci 0000:02:00.0: PME# disabled
->> ata3: SATA link down (SStatus 0 SControl 300)
->> ata5: SATA link down (SStatus 0 SControl 300)
->> ata4: SATA link down (SStatus 0 SControl 300)
->> WARNING: CPU: 2 PID: 1162 at drivers/ata/libata-core.c:6620 ata_host_detach+0x125/0x130
-> 
-> I think the AHCI driver should be fixed to cope with this.
-
-Yes, this can be discussed. But still the root-cause should be fixed,
-IMHO. Either in our environment (HW issue?) or by adding this de-bouncing
-feature.
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 930a8fa08bd6..ac84676e79a4 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -166,10 +166,6 @@ static irq_hw_number_t vmd_get_hwirq(struct msi_domain_info *info,
+ 	return 0;
+ }
  
->> ata6: SATA link down (SStatus 0 SControl 300)
->> Modules linked in:
->> CPU: 2 PID: 1162 Comm: kworker/u8:5 Not tainted 4.15.0+ #26
->> Hardware name: congatec conga-qeval20-qa3-e3845/conga-qeval20-qa3-e3845, BIOS 2018.01-00033-g0125f37185-dirty 01/18/2018
->> Workqueue: pciehp-1 pciehp_power_thread
->> ...
->>
->> This patch now adds the 'pciehp_debounce_time' module parameter, which
->> can be used to drop all events for the specified time (in milliseconds)
->> after a link-up event occurred. A value of ~100ms works fine in my tests
->> to debounce all the link-up / link-down events in my tests.
-> 
-> This sounds a bit "hackish". I would rather make sure we can handle
-> situations like this properly without passing additional parameters.
-
-I'm open for other / better ideas on how to solve this situation, we
-are seeing on our systems.
-
-Thanks,
-Stefan
+-/*
+- * XXX: We can be even smarter selecting the best IRQ once we solve the
+- * affinity problem.
+- */
+ static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *desc)
+ {
+ 	int i, best = 1;
+@@ -188,24 +184,61 @@ static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *d
+ 	return &vmd->irqs[best];
+ }
+ 
++static struct vmd_irq_list *vmd_next_affinity_irq(struct vmd_dev *vmd,  const struct cpumask *dest)
++{
++	struct vmd_irq_list *irq = NULL;
++	const struct cpumask *vmd_mask;
++	unsigned long flags, match;
++	int i, best = 0;
++
++	if (!dest || vmd->msix_count < 2)
++		return NULL;
++
++	raw_spin_lock_irqsave(&list_lock, flags);
++	for (i = 1; i < vmd->msix_count; i++) {
++		struct cpumask tmp;
++
++		vmd_mask = pci_irq_get_affinity(vmd->dev, i);
++		cpumask_and(&tmp, vmd_mask, dest);
++		match = cpumask_weight(&tmp);
++		if (match >= best) {
++			if (match == best && irq &&
++			    (vmd->irqs[i].count >= irq->count))
++				continue;
++			irq = &vmd->irqs[i];
++			best = match;
++		}
++	}
++	if (irq)
++		irq->count++;
++	raw_spin_unlock_irqrestore(&list_lock, flags);
++
++	return irq;
++}
++
+ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
+ 			unsigned int virq, irq_hw_number_t hwirq,
+ 			msi_alloc_info_t *arg)
+ {
+-	struct msi_desc *desc = arg->desc;
+-	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(desc)->bus);
++	struct msi_desc *msidesc = arg->desc;
++	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(msidesc)->bus);
+ 	struct vmd_irq *vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
+-	unsigned int index, vector;
++	struct irq_desc *desc = irq_to_desc(virq);
++	unsigned int vector;
+ 
+ 	if (!vmdirq)
+ 		return -ENOMEM;
+ 
+ 	INIT_LIST_HEAD(&vmdirq->node);
+-	vmdirq->irq = vmd_next_irq(vmd, desc);
+-	vmdirq->virq = virq;
+-	index = index_from_irqs(vmd, vmdirq->irq);
+-	vector = pci_irq_vector(vmd->dev, index);
+ 
++	if (desc && irqd_affinity_is_managed(&desc->irq_data))
++		vmdirq->irq = vmd_next_affinity_irq(vmd,
++					desc->irq_common_data.affinity);
++	if (vmdirq->irq == NULL)
++		vmdirq->irq = vmd_next_irq(vmd, msidesc);
++
++	vmdirq->virq = virq;
++	vector = pci_irq_vector(vmd->dev, index_from_irqs(vmd, vmdirq->irq));
+ 	irq_domain_set_info(domain, virq, vector, info->chip, vmdirq,
+ 			    handle_untracked_irq, vmd, NULL);
+ 	return 0;
+@@ -233,9 +266,11 @@ static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct vmd_dev *vmd = vmd_from_bus(pdev->bus);
+ 
+-	if (nvec > vmd->msix_count)
++	if (nvec > vmd->msix_count) {
++		if (vmd->msix_count > 1)
++			return vmd->msix_count - 1;
+ 		return vmd->msix_count;
+-
++	}
+ 	memset(arg, 0, sizeof(*arg));
+ 	return 0;
+ }
+@@ -663,6 +698,14 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	struct vmd_dev *vmd;
+ 	int i, err;
+ 
++	/*
++	 * The first vector is reserved for special use, so start affinity at
++	 * the second vector.
++	 */
++	struct irq_affinity affd = {
++		.pre_vectors = 1,
++	};
++
+ 	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
+ 		return -ENOMEM;
+ 
+@@ -688,8 +731,15 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	if (vmd->msix_count < 0)
+ 		return -ENODEV;
+ 
+-	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
+-					PCI_IRQ_MSIX);
++	/*
++	 * Reserve remaining vectors that IRQ affinity won't be able to assign.
++	 */
++	if ((vmd->msix_count - 1) > cpumask_weight(cpu_present_mask))
++		affd.post_vectors = vmd->msix_count -
++					cpumask_weight(cpu_present_mask) - 1;
++
++	vmd->msix_count = pci_alloc_irq_vectors_affinity(dev, 1, vmd->msix_count,
++					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &affd);
+ 	if (vmd->msix_count < 0)
+ 		return vmd->msix_count;
+ 
+-- 
+2.14.3
