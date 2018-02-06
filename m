@@ -1,61 +1,59 @@
-Return-Path: <SRS0=CFPC=FQ=gmail.com=ulfalizer@kernel.org>
-Return-Path: <SRS0=CFPC=FQ=gmail.com=ulfalizer@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180222230052.GA14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <0180206191126.GB98765@bhelgaas-glaptop.roam.corp.google.com>
- <20180206221106.16620-1-ulfalizer@gmail.com> <20180222230052.GA14632@bhelgaas-glaptop.roam.corp.google.com>
-From: Ulf Magnusson <ulfalizer@gmail.com>
-Date: Fri, 23 Feb 2018 00:42:28 +0100
-Message-ID: <CAFkk2KScFZE0sjZovi1vq2xBQ_-wx2XoSbWG6_qL2W0rR5B7YQ@mail.gmail.com>
-Subject: Re: [PATCH v2 20/20] x86/PCI: VMD: Fix malformed Kconfig default
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, Tomasz Figa <tfiga@chromium.org>,
-	Paul Burton <paul.burton@mips.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
-	Hans-Christian Noren Egtvedt <egtvedt@samfundet.no>, Linus Walleij <linus.walleij@linaro.org>,
-	Vineet Gupta <vgupta@synopsys.com>, Mel Gorman <mgorman@techsingularity.net>,
-	Christoph Hellwig <hch@lst.de>, Michal Nazarewicz <mina86@mina86.com>, Rob Herring <robh@kernel.org>,
-	Stephen Boyd <sboyd@codeaurora.org>, Paul Mackerras <paulus@ozlabs.org>,
-	Will Deacon <will.deacon@arm.com>, Tony Lindgren <tony@atomide.com>,
-	Nicholas Piggin <npiggin@gmail.com>, Masahiro Yamada <yamada.masahiro@socionext.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1517956309.2312.172.camel@kernel.crashing.org>
+Subject: Re: [PATCH 1/2] of_pci_irq: add a check to fallback to standard
+ device tree parsing
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Ryder Lee <ryder.lee@mediatek.com>
+Date: Wed, 07 Feb 2018 09:31:49 +1100
+In-Reply-To: <1517895732.23319.21.camel@mtkswgap22>
+References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+ <CAL_JsqLZqrxxpuEnoWEGkT2WCuyjqn0bM1DP8PdAwnQsso8kOA@mail.gmail.com>
+ <1517563970.24622.9.camel@mtkswgap22>
+ <1517866584.2312.140.camel@kernel.crashing.org>
+ <1517884738.16010.27.camel@mtkswgap22>
+ <1517889903.2312.151.camel@kernel.crashing.org>
+ <1517891471.20869.6.camel@mtkswgap22>
+ <1517892624.2312.167.camel@kernel.crashing.org>
+ <1517895732.23319.21.camel@mtkswgap22>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
+ "moderated list:ARM/FREESCALE IMX /
+ MXC ARM ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 23, 2018 at 12:00 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Tue, Feb 06, 2018 at 11:11:06PM +0100, Ulf Magnusson wrote:
->> 'default N' should be 'default n', though they happen to have the same
->> effect here, due to undefined symbols (N in this case) evaluating to n
->> in a tristate sense.
->>
->> Remove the default instead of changing it. bool and tristate symbols
->> implicitly default to n.
->
-> s/bool/Bool/
+On Tue, 2018-02-06 at 13:42 +0800, Ryder Lee wrote:
+> Thanks for explanation.
+> 
+> So I guess the better way to achieve my aim - one IRQ per slot that is
+> connected to all INTx and get propagated through the bridges (and for
+> those root ports own interrupts (PME ..)} is to add interrupt-map
+> properties in both parent and root port nodes.
+> 
+> Something like this: https://patchwork.kernel.org/patch/9970923// ,right?
 
-Not a great excuse, but I was thinking syntactically -- 'bool' and
-'tristate' symbols... :)
-
->
->> Discovered with the
->> https://github.com/ulfalizer/Kconfiglib/blob/master/examples/list_undefined.py
->> script.
->>
->> Signed-off-by: Ulf Magnusson <ulfalizer@gmail.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> Since only this patch was posted to linux-pci, I assume it will be merged
-> via some other tree.
-
-I didn't have a particular tree in mind for this patchset. I imagined
-people would pick up patches into the trees where they make the most
-sense, and only created the patchset to keep track of the patches more
-easily. Might have created some confusion in retrospect.
-
-I just did a --cc-cmd="scripts/get_maintainer.pl -i" for the
-individual patches by the way.
+Yup.
 
 Cheers,
-Ulf
+Ben.
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
