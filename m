@@ -1,110 +1,88 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
-To: Joerg Roedel <joro@8bytes.org>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-2-jean-philippe.brucker@arm.com>
- <20180215095909.r4nwqjhuijusssuy@8bytes.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <69405fb7-7453-8575-e020-2ded7b2b92f5@arm.com>
-Date: Thu, 15 Feb 2018 12:43:06 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:34969 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753066AbeBGIpc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Feb 2018 03:45:32 -0500
+Received: by mail-qk0-f182.google.com with SMTP id 69so128740qkz.2
+        for <linux-pci@vger.kernel.org>; Wed, 07 Feb 2018 00:45:31 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20180215095909.r4nwqjhuijusssuy@8bytes.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAJ2oMhKbYhbF28b=L1hhYs39oxJNA4whXv=D3eFfNnOdiTE+wg@mail.gmail.com>
+References: <CAJ2oMhKJ5ECtr5-F1M_PjO+ev_8-UfpLu+jT9hG7XEwoDV0A_Q@mail.gmail.com>
+ <CY4PR02MB3221824AF76CFC24FC7B9A99DAFC0@CY4PR02MB3221.namprd02.prod.outlook.com>
+ <CAJ2oMhKbYhbF28b=L1hhYs39oxJNA4whXv=D3eFfNnOdiTE+wg@mail.gmail.com>
+From: Ran Shalit <ranshalit@gmail.com>
+Date: Wed, 7 Feb 2018 10:45:30 +0200
+Message-ID: <CAJ2oMh+ku1DrW9zr_WEq_OOwtenP-4aiXRaLxM9VzRhQbCNXFA@mail.gmail.com>
+Subject: Re: understanding DMA in PCI drivers
+To: Ravikiran Gummaluri <rgummal@xilinx.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15/02/18 09:59, Joerg Roedel wrote:
-> On Mon, Feb 12, 2018 at 06:33:16PM +0000, Jean-Philippe Brucker wrote:
->   
->> +config IOMMU_SVA
->> +	bool "Shared Virtual Addressing API for the IOMMU"
->> +	select IOMMU_API
->> +	help
->> +	  Enable process address space management for the IOMMU API. In systems
->> +	  that support it, device drivers can bind process address spaces to
->> +	  devices and share their page tables using this API.
->> +
->> +	  If unsure, say N here.
-> 
-> I think this should be an option selected by IOMMU driver and not be
-> activly selectable by the user.
+On Wed, Feb 7, 2018 at 9:02 AM, Ran Shalit <ranshalit@gmail.com> wrote:
+> On Wed, Feb 7, 2018 at 8:12 AM, Ravikiran Gummaluri <rgummal@xilinx.com> wrote:
+>> I am assuming DMA as on Host side. In this case Host DMA will me master for all transactions(Tx or Rx).
+>>  Point 4 may be not relevant ,as DMA on host is responsible in RX also.
+>>  All this points will be relevant when DMA is working on memory mapped mode meaning transferring from Host memory to EP memory.
+>> In a simple example , Tx direction DMA descriptors will be programmed with Host buffer and BAR address. Host will program DMA register to trigger transfer. DMA on host will move Data from Host to EP.
+>> IN RX direction , DMA will be preprogrammed with host buffers, Host will program DMA registers to fetch data from EP to Host.
+>>
+>
 
-Ok
+Is it required to memory map dma bufferis in host even if dma is in device ?
+Is it that examples such as pci-skeleton.c assume DMA is in device ,
+and yet requires dma mapping ?
 
->> +/**
->> + * iommu_sva_device_shutdown() - Shutdown Shared Virtual Addressing for a device
->> + * @dev: the device
->> + *
->> + * Disable SVA. The device should not be performing any DMA while this function
->> + * is running.
-> 
-> Is this a good idea? How about devices that get hot-unplugged while
-> processes still use them and there is DMA going back and forth? This
-> function can be the point to shut down all ongoing stuff first and the
-> shutdown the device.
+Regards,
+Ran
 
-To be honest I don't know how hot-unplug works. But sva_device_shutdown()
-may be called, for instance, by the device driver before the device
-disappears, so it has to know how to stop DMA before calling it. The IOMMU
-driver can't really do anything more.
 
-For hot-unplug I guess that device_driver::remove() is called first,
-allowing it to stop all DMA and call sva_device_shutdown().
-
-Then the IOMMU gets a BUS_NOTIFY_REMOVED_DEVICE notification and calls
-iommu_ops::remove_device(), allowing to clean up SVA structure if the
-device driver didn't call unbind_device() and sva_device_shutdown(). But
-at that point we don't have a way to cooperate with the driver to stop DMA
-anymore.
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> I tried to check pci-skeleton.c as an example:
+> It allocates dma buffer in host, but triggering dma is done by writing
+> a register in EP memory (as if the endpoint is actually triggering the
+> dma transaction), so I'm a bit confused here. I think that it triggers
+> both tx and rx the same way (writing EP memory register).
+> Are you familiar with a simple example or tuturial which explains how
+> to operate host dma in PCI ? I am a bit confused with this topic of
+> dma in pci.
+>
+> Thank you,
+> Ran
+>
+>
+>
+> Thanks,
+> Ran
+>
+>
+>
+>>> -----Original Message-----
+>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>>> owner@vger.kernel.org] On Behalf Of Ran Shalit
+>>> Sent: Wednesday, February 7, 2018 12:33 AM
+>>> To: linux-pci@vger.kernel.org
+>>> Subject: understanding DMA in PCI drivers
+>>>
+>>> Hello,
+>>>
+>>> I write a pci linux driver, and after reviewing some examples in kernel, there
+>>> is issue I am not sure about:
+>>> DMA seems to follow the following steps in PCI:
+>>> 1.  driver allocate dma buffers and map them to BAR.
+>>> 2. driver initialize device to be familiar with dma addresses.
+>>> 3. tx from cpu to device: driver trigger dma, by writing into device BARs.
+>>> 4. rx from device to cpu: device is responsible for triggering DMA (driver does
+>>> not do anything here) 5. tx/rx completion: interrupt from DMA (in cpu) 6.
+>>> interrupt handler of section 5 above checks that device finished tx/rx.
+>>>
+>>> Is the above understanding correct ?
+>>> 1. As to 6, I am not sure about, is it that device knows that transaction is
+>>> finished (DMA is in soc , not device) ?
+>>> 2. How does device triggers DMA from device to cpu, is it by simply writing to
+>>> BAR ?
+>>> 3. How does device triggers DMA from cpu to device, is it by simply reading
+>>> from BAR ?
+>>>
+>>> Thank you,
+>>> Ran
