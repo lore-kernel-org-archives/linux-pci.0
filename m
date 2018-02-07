@@ -1,905 +1,867 @@
-Return-Path: <SRS0=dmwJ=FU=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=dmwJ=FU=codeaurora.org=poza@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 26 Feb 2018 11:02:50 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
- <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
- <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
- <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v11 2/7] PCI/AER: factor out error reporting from AER
-In-Reply-To: <20180223234232.GP14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
- <1519374244-20539-3-git-send-email-poza@codeaurora.org>
- <20180223234232.GP14632@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <3e536e31983d0bed397e10bb542f2a72@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.130]:57942 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752688AbeBGCzU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Feb 2018 21:55:20 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 5/6] PCI: rockchip: Add Endpoint controller driver for Rockchip PCIe controller
+Date: Wed,  7 Feb 2018 10:50:13 +0800
+Message-Id: <1517971813-65299-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-02-24 05:12, Bjorn Helgaas wrote:
-> On Fri, Feb 23, 2018 at 01:53:59PM +0530, Oza Pawandeep wrote:
->> This patch factors out error reporting callbacks, which are currently
->> tightly coupled with AER.
-> 
-> Add blank line between paragraphs.
-> 
->> DPC should be able to register callbacks and attmept recovery when DPC
->> trigger event occurs.
-> 
-> s/attmept/attempt/
-> 
-> This patch basically moves code from aerdrv_core.c to pcie-err.c.  Make 
-> it
-> do *only* that.
-> 
+This patch adds support to the Rockchip PCIe controller in endpoint mode
+which currently supports up to 32 regions, and each regions should at
+least be 1MB per TRM.
 
-sure.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> 
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index fcd8191..abc514e 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -342,6 +342,9 @@ static inline resource_size_t 
->> pci_resource_alignment(struct pci_dev *dev,
->> 
->>  void pci_enable_acs(struct pci_dev *dev);
->> 
->> +/* PCI error reporting and recovery */
->> +void pcie_do_recovery(struct pci_dev *dev, int severity);
-> 
-> Add this declaration in the first patch, the one where you rename the
-> function.
-> 
+ drivers/pci/rockchip/Kconfig            |  12 +
+ drivers/pci/rockchip/Makefile           |   1 +
+ drivers/pci/rockchip/pcie-rockchip-ep.c | 629 ++++++++++++++++++++++++++++++++
+ drivers/pci/rockchip/pcie-rockchip.c    |  20 +-
+ drivers/pci/rockchip/pcie-rockchip.h    |  92 +++++
+ 5 files changed, 748 insertions(+), 6 deletions(-)
+ create mode 100644 drivers/pci/rockchip/pcie-rockchip-ep.c
 
-done.
-
->>  #ifdef CONFIG_PCIEASPM
->>  void pcie_aspm_init_link_state(struct pci_dev *pdev);
->>  void pcie_aspm_exit_link_state(struct pci_dev *pdev);
->> diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
->> index 223e4c3..d669497 100644
->> --- a/drivers/pci/pcie/Makefile
->> +++ b/drivers/pci/pcie/Makefile
->> @@ -6,7 +6,7 @@
->>  # Build PCI Express ASPM if needed
->>  obj-$(CONFIG_PCIEASPM)		+= aspm.o
->> 
->> -pcieportdrv-y			:= portdrv_core.o portdrv_pci.o portdrv_bus.o
->> +pcieportdrv-y			:= portdrv_core.o portdrv_pci.o portdrv_bus.o 
->> pcie-err.o
-> 
-> Can we name this just "drivers/pci/pcie/err.c"?  I know we have
-> pcie-dpc.c already, but it does get a little repetitious to type
-> "pci" THREE times in that path.
-> 
-
-sure, will rename.
-
->>  pcieportdrv-$(CONFIG_ACPI)	+= portdrv_acpi.o
->> 
->>  obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
->> diff --git a/drivers/pci/pcie/aer/aerdrv.h 
->> b/drivers/pci/pcie/aer/aerdrv.h
->> index 5449e5c..bc9db53 100644
->> --- a/drivers/pci/pcie/aer/aerdrv.h
->> +++ b/drivers/pci/pcie/aer/aerdrv.h
->> @@ -76,36 +76,6 @@ struct aer_rpc {
->>  					 */
->>  };
->> 
->> -struct aer_broadcast_data {
->> -	enum pci_channel_state state;
->> -	enum pci_ers_result result;
->> -};
->> -
->> -static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
->> -		enum pci_ers_result new)
->> -{
->> -	if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
->> -		return PCI_ERS_RESULT_NO_AER_DRIVER;
->> -
->> -	if (new == PCI_ERS_RESULT_NONE)
->> -		return orig;
->> -
->> -	switch (orig) {
->> -	case PCI_ERS_RESULT_CAN_RECOVER:
->> -	case PCI_ERS_RESULT_RECOVERED:
->> -		orig = new;
->> -		break;
->> -	case PCI_ERS_RESULT_DISCONNECT:
->> -		if (new == PCI_ERS_RESULT_NEED_RESET)
->> -			orig = PCI_ERS_RESULT_NEED_RESET;
->> -		break;
->> -	default:
->> -		break;
->> -	}
->> -
->> -	return orig;
->> -}
->> -
->>  extern struct bus_type pcie_port_bus_type;
->>  void aer_isr(struct work_struct *work);
->>  void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
->> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c 
->> b/drivers/pci/pcie/aer/aerdrv_core.c
->> index aeb83a0..f60b1bb 100644
->> --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> @@ -23,6 +23,7 @@
->>  #include <linux/slab.h>
->>  #include <linux/kfifo.h>
->>  #include "aerdrv.h"
->> +#include "../../pci.h"
->> 
->>  #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE 
->> | \
->>  				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
->> @@ -230,191 +231,6 @@ static bool find_source_device(struct pci_dev 
->> *parent,
->>  	return true;
->>  }
->> 
->> -static int report_error_detected(struct pci_dev *dev, void *data)
->> -{
->> -	pci_ers_result_t vote;
->> -	const struct pci_error_handlers *err_handler;
->> -	struct aer_broadcast_data *result_data;
->> -	result_data = (struct aer_broadcast_data *) data;
->> -
->> -	device_lock(&dev->dev);
->> -	dev->error_state = result_data->state;
->> -
->> -	if (!dev->driver ||
->> -		!dev->driver->err_handler ||
->> -		!dev->driver->err_handler->error_detected) {
->> -		if (result_data->state == pci_channel_io_frozen &&
->> -			dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
->> -			/*
->> -			 * In case of fatal recovery, if one of down-
->> -			 * stream device has no driver. We might be
->> -			 * unable to recover because a later insmod
->> -			 * of a driver for this device is unaware of
->> -			 * its hw state.
->> -			 */
->> -			pci_printk(KERN_DEBUG, dev, "device has %s\n",
->> -				   dev->driver ?
->> -				   "no AER-aware driver" : "no driver");
->> -		}
->> -
->> -		/*
->> -		 * If there's any device in the subtree that does not
->> -		 * have an error_detected callback, returning
->> -		 * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
->> -		 * the subsequent mmio_enabled/slot_reset/resume
->> -		 * callbacks of "any" device in the subtree. All the
->> -		 * devices in the subtree are left in the error state
->> -		 * without recovery.
->> -		 */
->> -
->> -		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
->> -			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
->> -		else
->> -			vote = PCI_ERS_RESULT_NONE;
->> -	} else {
->> -		err_handler = dev->driver->err_handler;
->> -		vote = err_handler->error_detected(dev, result_data->state);
->> -		pci_uevent_ers(dev, PCI_ERS_RESULT_NONE);
->> -	}
->> -
->> -	result_data->result = merge_result(result_data->result, vote);
->> -	device_unlock(&dev->dev);
->> -	return 0;
->> -}
->> -
->> -static int report_mmio_enabled(struct pci_dev *dev, void *data)
->> -{
->> -	pci_ers_result_t vote;
->> -	const struct pci_error_handlers *err_handler;
->> -	struct aer_broadcast_data *result_data;
->> -	result_data = (struct aer_broadcast_data *) data;
->> -
->> -	device_lock(&dev->dev);
->> -	if (!dev->driver ||
->> -		!dev->driver->err_handler ||
->> -		!dev->driver->err_handler->mmio_enabled)
->> -		goto out;
->> -
->> -	err_handler = dev->driver->err_handler;
->> -	vote = err_handler->mmio_enabled(dev);
->> -	result_data->result = merge_result(result_data->result, vote);
->> -out:
->> -	device_unlock(&dev->dev);
->> -	return 0;
->> -}
->> -
->> -static int report_slot_reset(struct pci_dev *dev, void *data)
->> -{
->> -	pci_ers_result_t vote;
->> -	const struct pci_error_handlers *err_handler;
->> -	struct aer_broadcast_data *result_data;
->> -	result_data = (struct aer_broadcast_data *) data;
->> -
->> -	device_lock(&dev->dev);
->> -	if (!dev->driver ||
->> -		!dev->driver->err_handler ||
->> -		!dev->driver->err_handler->slot_reset)
->> -		goto out;
->> -
->> -	err_handler = dev->driver->err_handler;
->> -	vote = err_handler->slot_reset(dev);
->> -	result_data->result = merge_result(result_data->result, vote);
->> -out:
->> -	device_unlock(&dev->dev);
->> -	return 0;
->> -}
->> -
->> -static int report_resume(struct pci_dev *dev, void *data)
->> -{
->> -	const struct pci_error_handlers *err_handler;
->> -
->> -	device_lock(&dev->dev);
->> -	dev->error_state = pci_channel_io_normal;
->> -
->> -	if (!dev->driver ||
->> -		!dev->driver->err_handler ||
->> -		!dev->driver->err_handler->resume)
->> -		goto out;
->> -
->> -	err_handler = dev->driver->err_handler;
->> -	err_handler->resume(dev);
->> -	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
->> -out:
->> -	device_unlock(&dev->dev);
->> -	return 0;
->> -}
->> -
->> -/**
->> - * broadcast_error_message - handle message broadcast to downstream 
->> drivers
->> - * @dev: pointer to from where in a hierarchy message is broadcasted 
->> down
->> - * @state: error state
->> - * @error_mesg: message to print
->> - * @cb: callback to be broadcasted
->> - *
->> - * Invoked during error recovery process. Once being invoked, the 
->> content
->> - * of error severity will be broadcasted to all downstream drivers in 
->> a
->> - * hierarchy in question.
->> - */
->> -static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
->> -	enum pci_channel_state state,
->> -	char *error_mesg,
->> -	int (*cb)(struct pci_dev *, void *))
->> -{
->> -	struct aer_broadcast_data result_data;
->> -
->> -	pci_printk(KERN_DEBUG, dev, "broadcast %s message\n", error_mesg);
->> -	result_data.state = state;
->> -	if (cb == report_error_detected)
->> -		result_data.result = PCI_ERS_RESULT_CAN_RECOVER;
->> -	else
->> -		result_data.result = PCI_ERS_RESULT_RECOVERED;
->> -
->> -	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> -		/*
->> -		 * If the error is reported by a bridge, we think this error
->> -		 * is related to the downstream link of the bridge, so we
->> -		 * do error recovery on all subordinates of the bridge instead
->> -		 * of the bridge and clear the error status of the bridge.
->> -		 */
->> -		if (cb == report_error_detected)
->> -			dev->error_state = state;
->> -		pci_walk_bus(dev->subordinate, cb, &result_data);
->> -		if (cb == report_resume) {
->> -			pci_cleanup_aer_uncorrect_error_status(dev);
->> -			dev->error_state = pci_channel_io_normal;
->> -		}
->> -	} else {
->> -		/*
->> -		 * If the error is reported by an end point, we think this
->> -		 * error is related to the upstream link of the end point.
->> -		 */
->> -		if (state == pci_channel_io_normal)
->> -			/*
->> -			 * the error is non fatal so the bus is ok, just invoke
->> -			 * the callback for the function that logged the error.
->> -			 */
->> -			cb(dev, &result_data);
->> -		else
->> -			pci_walk_bus(dev->bus, cb, &result_data);
->> -	}
->> -
->> -	return result_data.result;
->> -}
->> -
->> -/**
->> - * default_reset_link - default reset function
->> - * @dev: pointer to pci_dev data structure
->> - *
->> - * Invoked when performing link reset on a Downstream Port or a
->> - * Root Port with no aer driver.
->> - */
->> -static pci_ers_result_t default_reset_link(struct pci_dev *dev)
->> -{
->> -	pci_reset_bridge_secondary_bus(dev);
->> -	pci_printk(KERN_DEBUG, dev, "downstream link has been reset\n");
->> -	return PCI_ERS_RESULT_RECOVERED;
->> -}
->> -
->>  static int find_aer_service_iter(struct device *device, void *data)
->>  {
->>  	struct pcie_port_service_driver *service_driver, **drv;
->> @@ -432,7 +248,7 @@ static int find_aer_service_iter(struct device 
->> *device, void *data)
->>  	return 0;
->>  }
->> 
->> -static struct pcie_port_service_driver *find_aer_service(struct 
->> pci_dev *dev)
->> +struct pcie_port_service_driver *pci_find_aer_service(struct pci_dev 
->> *dev)
-> 
-> Move this rename to a different patch.  The new name should probably
-> start with "pcie" like you did with pcie_do_recovery().
-> 
-
-sure, will do that.
-
->>  {
->>  	struct pcie_port_service_driver *drv = NULL;
->> 
->> @@ -440,107 +256,7 @@ static struct pcie_port_service_driver 
->> *find_aer_service(struct pci_dev *dev)
->> 
->>  	return drv;
->>  }
->> -
->> -static pci_ers_result_t reset_link(struct pci_dev *dev)
->> -{
->> -	struct pci_dev *udev;
->> -	pci_ers_result_t status;
->> -	struct pcie_port_service_driver *driver;
->> -
->> -	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> -		/* Reset this port for all subordinates */
->> -		udev = dev;
->> -	} else {
->> -		/* Reset the upstream component (likely downstream port) */
->> -		udev = dev->bus->self;
->> -	}
->> -
->> -	/* Use the aer driver of the component firstly */
->> -	driver = find_aer_service(udev);
->> -
->> -	if (driver && driver->reset_link) {
->> -		status = driver->reset_link(udev);
->> -	} else if (udev->has_secondary_link) {
->> -		status = default_reset_link(udev);
->> -	} else {
->> -		pci_printk(KERN_DEBUG, dev, "no link-reset support at upstream 
->> device %s\n",
->> -			pci_name(udev));
->> -		return PCI_ERS_RESULT_DISCONNECT;
->> -	}
->> -
->> -	if (status != PCI_ERS_RESULT_RECOVERED) {
->> -		pci_printk(KERN_DEBUG, dev, "link reset at upstream device %s 
->> failed\n",
->> -			pci_name(udev));
->> -		return PCI_ERS_RESULT_DISCONNECT;
->> -	}
->> -
->> -	return status;
->> -}
->> -
->> -/**
->> - * pcie_do_recovery - handle nonfatal/fatal error recovery process
->> - * @dev: pointer to a pci_dev data structure of agent detecting an 
->> error
->> - * @severity: error severity type
->> - *
->> - * Invoked when an error is nonfatal/fatal. Once being invoked, 
->> broadcast
->> - * error detected message to all downstream drivers within a 
->> hierarchy in
->> - * question and return the returned code.
->> - */
->> -static void pcie_do_recovery(struct pci_dev *dev, int severity)
->> -{
->> -	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
->> -	enum pci_channel_state state;
->> -
->> -	if (severity == AER_FATAL)
->> -		state = pci_channel_io_frozen;
->> -	else
->> -		state = pci_channel_io_normal;
->> -
->> -	status = broadcast_error_message(dev,
->> -			state,
->> -			"error_detected",
->> -			report_error_detected);
->> -
->> -	if (severity == AER_FATAL) {
->> -		result = reset_link(dev);
->> -		if (result != PCI_ERS_RESULT_RECOVERED)
->> -			goto failed;
->> -	}
->> -
->> -	if (status == PCI_ERS_RESULT_CAN_RECOVER)
->> -		status = broadcast_error_message(dev,
->> -				state,
->> -				"mmio_enabled",
->> -				report_mmio_enabled);
->> -
->> -	if (status == PCI_ERS_RESULT_NEED_RESET) {
->> -		/*
->> -		 * TODO: Should call platform-specific
->> -		 * functions to reset slot before calling
->> -		 * drivers' slot_reset callbacks?
->> -		 */
->> -		status = broadcast_error_message(dev,
->> -				state,
->> -				"slot_reset",
->> -				report_slot_reset);
->> -	}
->> -
->> -	if (status != PCI_ERS_RESULT_RECOVERED)
->> -		goto failed;
->> -
->> -	broadcast_error_message(dev,
->> -				state,
->> -				"resume",
->> -				report_resume);
->> -
->> -	pci_info(dev, "AER: Device recovery successful\n");
->> -	return;
->> -
->> -failed:
->> -	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
->> -	/* TODO: Should kernel panic here? */
->> -	pci_info(dev, "AER: Device recovery failed\n");
->> -}
->> +EXPORT_SYMBOL_GPL(pci_find_aer_service);
-> 
-> This is never called from a module, so I don't think you need to
-> export it at all.  If you do, it should be a separate patch, not
-> buried in the middle of this big one.
-> 
-
-got it, will see if its really required to be exported.
-but certainly, will remove it from this patch.
-
->>  /**
->>   * handle_error_source - handle logging error into an event log
->> diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
->> new file mode 100644
->> index 0000000..fcd5add
->> --- /dev/null
->> +++ b/drivers/pci/pcie/pcie-err.c
->> @@ -0,0 +1,334 @@
->> +// SPDX-License-Identifier: GPL-2.0
->> +/*
->> + * This file implements the error recovery as a core part of PCIe 
->> error reporting.
->> + * When a PCIe error is delivered, an error message will be collected 
->> and printed
->> + * to console, then, an error recovery procedure will be executed by 
->> following
->> + * the PCI error recovery rules.
-> 
-> Wrap this so it fits in 80 columns.
-
-I thought of keeping the way it was before (hence did not change it)
-I would change it now.
-
-> 
->> + * Copyright (C) 2006 Intel Corp.
->> + *	Tom Long Nguyen (tom.l.nguyen@intel.com)
->> + *	Zhang Yanmin (yanmin.zhang@intel.com)
->> + *
->> + */
->> +
->> +#include <linux/pci.h>
->> +#include <linux/module.h>
->> +#include <linux/pci.h>
->> +#include <linux/kernel.h>
->> +#include <linux/errno.h>
->> +#include <linux/aer.h>
->> +#include <linux/pcieport_if.h>
->> +#include "portdrv.h"
->> +
->> +struct aer_broadcast_data {
->> +	enum pci_channel_state state;
->> +	enum pci_ers_result result;
->> +};
->> +
->> +static pci_ers_result_t merge_result(enum pci_ers_result orig,
->> +				  enum pci_ers_result new)
->> +{
->> +	if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
->> +		return PCI_ERS_RESULT_NO_AER_DRIVER;
->> +
->> +	if (new == PCI_ERS_RESULT_NONE)
->> +		return orig;
->> +
->> +	switch (orig) {
->> +	case PCI_ERS_RESULT_CAN_RECOVER:
->> +	case PCI_ERS_RESULT_RECOVERED:
->> +		orig = new;
->> +		break;
->> +	case PCI_ERS_RESULT_DISCONNECT:
->> +		if (new == PCI_ERS_RESULT_NEED_RESET)
->> +			orig = PCI_ERS_RESULT_NEED_RESET;
->> +		break;
->> +	default:
->> +		break;
->> +	}
->> +
->> +	return orig;
->> +}
->> +
->> +static int report_mmio_enabled(struct pci_dev *dev, void *data)
->> +{
->> +	pci_ers_result_t vote;
->> +	const struct pci_error_handlers *err_handler;
->> +	struct aer_broadcast_data *result_data;
->> +
->> +	result_data = (struct aer_broadcast_data *) data;
->> +
->> +	device_lock(&dev->dev);
->> +	if (!dev->driver ||
->> +		!dev->driver->err_handler ||
->> +		!dev->driver->err_handler->mmio_enabled)
->> +		goto out;
->> +
->> +	err_handler = dev->driver->err_handler;
->> +	vote = err_handler->mmio_enabled(dev);
->> +	result_data->result = merge_result(result_data->result, vote);
->> +out:
->> +	device_unlock(&dev->dev);
->> +	return 0;
->> +}
->> +
->> +static int report_slot_reset(struct pci_dev *dev, void *data)
->> +{
->> +	pci_ers_result_t vote;
->> +	const struct pci_error_handlers *err_handler;
->> +	struct aer_broadcast_data *result_data;
->> +
->> +	result_data = (struct aer_broadcast_data *) data;
->> +
->> +	device_lock(&dev->dev);
->> +	if (!dev->driver ||
->> +		!dev->driver->err_handler ||
->> +		!dev->driver->err_handler->slot_reset)
->> +		goto out;
->> +
->> +	err_handler = dev->driver->err_handler;
->> +	vote = err_handler->slot_reset(dev);
->> +	result_data->result = merge_result(result_data->result, vote);
->> +out:
->> +	device_unlock(&dev->dev);
->> +	return 0;
->> +}
->> +
->> +static int report_resume(struct pci_dev *dev, void *data)
->> +{
->> +	const struct pci_error_handlers *err_handler;
->> +
->> +	device_lock(&dev->dev);
->> +	dev->error_state = pci_channel_io_normal;
->> +
->> +	if (!dev->driver ||
->> +		!dev->driver->err_handler ||
->> +		!dev->driver->err_handler->resume)
->> +		goto out;
->> +
->> +	err_handler = dev->driver->err_handler;
->> +	err_handler->resume(dev);
->> +out:
->> +	device_unlock(&dev->dev);
->> +	return 0;
->> +}
->> +
->> +static int report_error_detected(struct pci_dev *dev, void *data)
->> +{
->> +	pci_ers_result_t vote;
->> +	const struct pci_error_handlers *err_handler;
->> +	struct aer_broadcast_data *result_data;
->> +
->> +	result_data = (struct aer_broadcast_data *) data;
->> +
->> +	device_lock(&dev->dev);
->> +	dev->error_state = result_data->state;
->> +
->> +	if (!dev->driver ||
->> +		!dev->driver->err_handler ||
->> +		!dev->driver->err_handler->error_detected) {
->> +		if (result_data->state == pci_channel_io_frozen &&
->> +			dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
->> +			/*
->> +			 * In case of fatal recovery, if one of down-
->> +			 * stream device has no driver. We might be
->> +			 * unable to recover because a later insmod
->> +			 * of a driver for this device is unaware of
->> +			 * its hw state.
->> +			 */
->> +			dev_printk(KERN_DEBUG, &dev->dev, "device has %s\n",
->> +				   dev->driver ?
->> +				   "no error-aware driver" : "no driver");
-> 
-> This was a pci_printk() before you moved it and it should be the same 
-> here.
-> 
-
-sure, will correct this.
-
->> +		}
->> +
->> +		/*
->> +		 * If there's any device in the subtree that does not
->> +		 * have an error_detected callback, returning
->> +		 * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
->> +		 * the subsequent mmio_enabled/slot_reset/resume
->> +		 * callbacks of "any" device in the subtree. All the
->> +		 * devices in the subtree are left in the error state
->> +		 * without recovery.
->> +		 */
->> +
->> +		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
->> +			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
->> +		else
->> +			vote = PCI_ERS_RESULT_NONE;
->> +	} else {
->> +		err_handler = dev->driver->err_handler;
->> +		vote = err_handler->error_detected(dev, result_data->state);
->> +	}
->> +
->> +	result_data->result = merge_result(result_data->result, vote);
->> +	device_unlock(&dev->dev);
->> +	return 0;
->> +}
->> +
->> +/**
->> + * default_reset_link - default reset function
->> + * @dev: pointer to pci_dev data structure
->> + *
->> + * Invoked when performing link reset on a Downstream Port or a
->> + * Root Port with no aer driver.
->> + */
->> +static pci_ers_result_t default_reset_link(struct pci_dev *dev)
->> +{
->> +	pci_reset_bridge_secondary_bus(dev);
->> +	dev_printk(KERN_DEBUG, &dev->dev, "downstream link has been 
->> reset\n");
-> 
-> This should be a pci_printk() as it was before the move.  There are 
-> more
-> below.
-> 
-
-yes all will be corrected.
-thanks.
-
->> +	return PCI_ERS_RESULT_RECOVERED;
->> +}
->> +
->> +static pci_ers_result_t reset_link(struct pci_dev *dev)
->> +{
->> +	struct pci_dev *udev;
->> +	pci_ers_result_t status;
->> +	struct pcie_port_service_driver *driver = NULL;
->> +
->> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> +		/* Reset this port for all subordinates */
->> +		udev = dev;
->> +	} else {
->> +		/* Reset the upstream component (likely downstream port) */
->> +		udev = dev->bus->self;
->> +	}
->> +
->> +#if IS_ENABLED(CONFIG_PCIEAER)
-> 
-> AER can't be a module, so you can use just:
-> 
->   #ifdef CONFIG_PCIEAER
-> 
-> This ifdef should be added in the patch where you add a caller from 
-> non-AER
-> code.  This patch should only move code, not change it.
-
-ok, it can remain unchanged. but reset_link() is called by 
-pcie_do_recovery()
-and pcie_do_recovery can be called by various agents such as AER, DPC.
-so let us say if DPC calls pcie_do_recovery, then DPC has no way of 
-knowing that AER is enabled or not.
-in fact it should not know, but err.c/reset_link() should take care 
-somehow.
-
-I can make it a separate patch to do #ifdef CONFIG_PCIEAER inside 
-reset_link()
-or
-I can add severity parameter in reset_link() so based on severity it can 
-find the service.
-
-but I think you have comment to unify the find_aer_service and 
-find_dpc_service into a pcie_find_service (routine)
-so I will see how I can club and take care of this comment. [without the 
-need of #ifdef]
-
-> 
->> +	/* Use the aer driver of the component firstly */
->> +	driver = pci_find_aer_service(udev);
->> +#endif
->> +
->> +	if (driver && driver->reset_link) {
->> +		status = driver->reset_link(udev);
->> +	} else if (udev->has_secondary_link) {
->> +		status = default_reset_link(udev);
->> +	} else {
->> +		dev_printk(KERN_DEBUG, &dev->dev,
->> +			"no link-reset support at upstream device %s\n",
->> +			pci_name(udev));
->> +		return PCI_ERS_RESULT_DISCONNECT;
->> +	}
->> +
->> +	if (status != PCI_ERS_RESULT_RECOVERED) {
->> +		dev_printk(KERN_DEBUG, &dev->dev,
->> +			"link reset at upstream device %s failed\n",
->> +			pci_name(udev));
->> +		return PCI_ERS_RESULT_DISCONNECT;
->> +	}
->> +
->> +	return status;
->> +}
->> +
->> +/**
->> + * broadcast_error_message - handle message broadcast to downstream 
->> drivers
->> + * @dev: pointer to where in a hierarchy message is broadcasted down
->> + * @state: error state
->> + * @error_mesg: message to print
->> + * @cb: callback to be broadcast
->> + *
->> + * Invoked during error recovery process. Once being invoked, the 
->> content
->> + * of error severity will be broadcast to all downstream drivers in a
->> + * hierarchy in question.
->> + */
->> +static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
->> +	enum pci_channel_state state,
->> +	char *error_mesg,
->> +	int (*cb)(struct pci_dev *, void *))
->> +{
->> +	struct aer_broadcast_data result_data;
->> +
->> +	dev_printk(KERN_DEBUG, &dev->dev, "broadcast %s message\n", 
->> error_mesg);
->> +	result_data.state = state;
->> +	if (cb == report_error_detected)
->> +		result_data.result = PCI_ERS_RESULT_CAN_RECOVER;
->> +	else
->> +		result_data.result = PCI_ERS_RESULT_RECOVERED;
->> +
->> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> +		/*
->> +		 * If the error is reported by a bridge, we think this error
->> +		 * is related to the downstream link of the bridge, so we
->> +		 * do error recovery on all subordinates of the bridge instead
->> +		 * of the bridge and clear the error status of the bridge.
->> +		 */
->> +		if (cb == report_error_detected)
->> +			dev->error_state = state;
->> +		pci_walk_bus(dev->subordinate, cb, &result_data);
->> +		if (cb == report_resume) {
->> +			pci_cleanup_aer_uncorrect_error_status(dev);
->> +			dev->error_state = pci_channel_io_normal;
->> +		}
->> +	} else {
->> +		/*
->> +		 * If the error is reported by an end point, we think this
->> +		 * error is related to the upstream link of the end point.
->> +		 */
->> +		pci_walk_bus(dev->bus, cb, &result_data);
->> +	}
->> +
->> +	return result_data.result;
->> +}
->> +
->> +/**
->> + * pcie_do_recovery - handle nonfatal/fatal error recovery process
->> + * @dev: pointer to a pci_dev data structure of agent detecting an 
->> error
->> + * @severity: error severity type
->> + *
->> + * Invoked when an error is nonfatal/fatal. Once being invoked, 
->> broadcast
->> + * error detected message to all downstream drivers within a 
->> hierarchy in
->> + * question and return the returned code.
->> + */
->> +void pcie_do_recovery(struct pci_dev *dev, int severity)
->> +{
->> +	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
->> +	enum pci_channel_state state;
->> +
->> +	if (severity == AER_FATAL)
->> +		state = pci_channel_io_frozen;
->> +	else
->> +		state = pci_channel_io_normal;
->> +
->> +	status = broadcast_error_message(dev,
->> +			state,
->> +			"error_detected",
->> +			report_error_detected);
->> +
->> +	if (severity == AER_FATAL) {
->> +		result = reset_link(dev);
->> +		if (result != PCI_ERS_RESULT_RECOVERED)
->> +			goto failed;
->> +	}
->> +
->> +	if (status == PCI_ERS_RESULT_CAN_RECOVER)
->> +		status = broadcast_error_message(dev,
->> +				state,
->> +				"mmio_enabled",
->> +				report_mmio_enabled);
->> +
->> +	if (status == PCI_ERS_RESULT_NEED_RESET) {
->> +		/*
->> +		 * TODO: Should call platform-specific
->> +		 * functions to reset slot before calling
->> +		 * drivers' slot_reset callbacks?
->> +		 */
->> +		status = broadcast_error_message(dev,
->> +				state,
->> +				"slot_reset",
->> +				report_slot_reset);
->> +	}
->> +
->> +	if (status != PCI_ERS_RESULT_RECOVERED)
->> +		goto failed;
->> +
->> +	broadcast_error_message(dev,
->> +				state,
->> +				"resume",
->> +				report_resume);
->> +
->> +	dev_info(&dev->dev, "Device recovery successful\n");
->> +	return;
->> +
->> +failed:
->> +	/* TODO: Should kernel panic here? */
->> +	dev_info(&dev->dev, "Device recovery failed\n");
->> +}
->> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
->> index a854bc5..4f1992d 100644
->> --- a/drivers/pci/pcie/portdrv.h
->> +++ b/drivers/pci/pcie/portdrv.h
->> @@ -79,4 +79,5 @@ static inline void pcie_port_platform_notify(struct 
->> pci_dev *port, int *mask)
->>  static inline void pcie_port_platform_notify(struct pci_dev *port, 
->> int *mask){}
->>  #endif /* !CONFIG_ACPI */
->> 
->> +struct pcie_port_service_driver *pci_find_aer_service(struct pci_dev 
->> *dev);
-> 
-> Should be in a different patch, maybe the one where you rename it.
-> 
->>  #endif /* _PORTDRV_H_ */
->> --
->> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm 
->> Technologies, Inc.,
->> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
->> Linux Foundation Collaborative Project.
->> 
+diff --git a/drivers/pci/rockchip/Kconfig b/drivers/pci/rockchip/Kconfig
+index d655b77..668f850 100644
+--- a/drivers/pci/rockchip/Kconfig
++++ b/drivers/pci/rockchip/Kconfig
+@@ -17,4 +17,16 @@ config PCIE_ROCKCHIP_HOST
+ 	  There is 1 internal PCIe port available to support GEN2 with
+ 	  4 slots.
+ 
++config PCIE_ROCKCHIP_EP
++	bool "Rockchip PCIe endpoint controller"
++	depends on ARCH_ROCKCHIP || COMPILE_TEST
++	depends on OF
++	depends on PCI_ENDPOINT
++	select MFD_SYSCON
++	select PCIE_ROCKCHIP
++	help
++	  Say Y here if you want to support Rockchip PCIe controller in
++	  endpoint mode on Rockchip SoC. There is 1 internal PCIe port
++	  available to support GEN2 with 4 slots.
++
+ endmenu
+diff --git a/drivers/pci/rockchip/Makefile b/drivers/pci/rockchip/Makefile
+index 0af40db..8dce495 100644
+--- a/drivers/pci/rockchip/Makefile
++++ b/drivers/pci/rockchip/Makefile
+@@ -1,3 +1,4 @@
+ # SPDX-License-Identifier: GPL-2.0
+ obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
+ obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
++obj-$(CONFIG_PCIE_ROCKCHIP_EP) += pcie-rockchip-ep.o
+diff --git a/drivers/pci/rockchip/pcie-rockchip-ep.c b/drivers/pci/rockchip/pcie-rockchip-ep.c
+new file mode 100644
+index 0000000..d005e90
+--- /dev/null
++++ b/drivers/pci/rockchip/pcie-rockchip-ep.c
+@@ -0,0 +1,629 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Rockchip AXI PCIe endpoint controller driver
++ *
++ * Copyright (c) 2018 Rockchip, Inc.
++ *
++ * Author: Shawn Lin <shawn.lin@rock-chips.com>
++ *         Simon Xue <xxm@rock-chips.com>
++ *
++ * Bits taken from Cadence endpoint controller driver
++ */
++
++#include <linux/kernel.h>
++#include <linux/of.h>
++#include <linux/pci-epc.h>
++#include <linux/platform_device.h>
++#include <linux/sizes.h>
++#include <linux/delay.h>
++#include <linux/configfs.h>
++#include <linux/pci-epf.h>
++
++#include "pcie-rockchip.h"
++
++/**
++ * struct rockchip_pcie_ep - private data for PCIe endpoint controller driver
++ * @pcie: Rockchip PCIe controller
++ * @data: pointer to a 'struct rockchip_pcie_data'
++ * @ob_region_map: bitmask of mapped outbound regions
++ * @ob_addr: base addresses in the AXI bus where the outbound regions start
++ * @irq_phys_addr: base address on the AXI bus where the MSI/legacy IRQ
++ *		   dedicated outbound regions is mapped.
++ * @irq_cpu_addr: base address in the CPU space where a write access triggers
++ *		  the sending of a memory write (MSI) / normal message (legacy
++ *		  IRQ) TLP through the PCIe bus.
++ * @irq_pci_addr: used to save the current mapping of the MSI/legacy IRQ
++ *		  dedicated outbound region.
++ * @irq_pci_fn: the latest PCI function that has updated the mapping of
++ *		the MSI/legacy IRQ dedicated outbound region.
++ * @irq_pending: bitmask of asserted legacy IRQs.
++ * @max_regions: maximum number of regions supported by hardware
++ */
++struct rockchip_pcie_ep {
++	rockchip_pcie_epc	pcie;
++	struct pci_epc		*epc;
++	unsigned long		ob_region_map;
++	phys_addr_t			*ob_addr;
++	phys_addr_t			irq_phys_addr;
++	void __iomem		*irq_cpu_addr;
++	u64					irq_pci_addr;
++	u8					irq_pci_fn;
++	u8					irq_pending;
++	u32					max_regions;
++};
++
++void rockchip_pcie_prog_ep_ob_atu(struct rockchip_pcie *rockchip, u8 fn,
++				  u32 r, u32 type, u64 cpu_addr, u64 pci_addr,
++				  size_t size, bool is_clr)
++{
++	u64 sz = 1ULL << fls64(size - 1);
++	int num_pass_bits = ilog2(sz);
++	u32 addr0, addr1, desc0, desc1;
++	bool is_nor_msg = (type == AXI_WRAPPER_NOR_MSG);
++
++	if (is_clr) {
++		rockchip_pcie_write(rockchip, 0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0(r));
++		rockchip_pcie_write(rockchip, 0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR1(r));
++		rockchip_pcie_write(rockchip, 0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_DESC0(r));
++		rockchip_pcie_write(rockchip, 0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_DESC1(r));
++		rockchip_pcie_write(rockchip, 0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_CPU_ADDR0(r));
++		rockchip_pcie_write(rockchip, 0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_CPU_ADDR1(r));
++		return;
++	}
++
++	/* The minimal region size is 1MB */
++	if (num_pass_bits < 8)
++		num_pass_bits = 8;
++
++	cpu_addr -= rockchip->mem_res->start;
++	addr0 = ((is_nor_msg ? 0x10 : (num_pass_bits - 1)) &
++		PCIE_CORE_OB_REGION_ADDR0_NUM_BITS) |
++		(lower_32_bits(cpu_addr) & PCIE_CORE_OB_REGION_ADDR0_LO_ADDR);
++	addr1 = upper_32_bits(is_nor_msg ? cpu_addr : pci_addr);
++	desc0 = ROCKCHIP_PCIE_AT_OB_REGION_DESC0_DEVFN(fn) | type;
++	desc1 = 0;
++
++	if (is_nor_msg) {
++		rockchip_pcie_write(rockchip, 0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0(r));
++		rockchip_pcie_write(rockchip, 0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR1(r));
++		rockchip_pcie_write(rockchip, desc0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_DESC0(r));
++		rockchip_pcie_write(rockchip, desc1,
++				    ROCKCHIP_PCIE_AT_OB_REGION_DESC1(r));
++	} else {
++		/* PCI bus address region */
++		rockchip_pcie_write(rockchip, addr0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0(r));
++		rockchip_pcie_write(rockchip, addr1,
++				    ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR1(r));
++		rockchip_pcie_write(rockchip, desc0,
++				    ROCKCHIP_PCIE_AT_OB_REGION_DESC0(r));
++		rockchip_pcie_write(rockchip, desc1,
++				    ROCKCHIP_PCIE_AT_OB_REGION_DESC1(r));
++
++		addr0 =
++		    ((num_pass_bits - 1) & PCIE_CORE_OB_REGION_ADDR0_NUM_BITS) |
++		    (lower_32_bits(cpu_addr) &
++		     PCIE_CORE_OB_REGION_ADDR0_LO_ADDR);
++		addr1 = upper_32_bits(cpu_addr);
++	}
++
++	/* CPU bus address region */
++	rockchip_pcie_write(rockchip, addr0,
++			    ROCKCHIP_PCIE_AT_OB_REGION_CPU_ADDR0(r));
++	rockchip_pcie_write(rockchip, addr1,
++			    ROCKCHIP_PCIE_AT_OB_REGION_CPU_ADDR1(r));
++}
++
++static int rockchip_pcie_ep_write_header(struct pci_epc *epc, u8 fn,
++					 struct pci_epf_header *hdr)
++{
++	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
++	struct rockchip_pcie *rockchip = &ep->pcie;
++
++	/* All functions share the same vendor ID with function 0 */
++	if (fn == 0) {
++		u32 vid_regs = (hdr->vendorid & GENMASK(15, 0)) |
++			       (hdr->subsys_vendor_id & GENMASK(31, 16)) << 16;
++
++		rockchip_pcie_write(rockchip, vid_regs,
++				    PCIE_CORE_CONFIG_VENDOR);
++	}
++
++	rockchip_pcie_write(rockchip, hdr->deviceid << 16,
++			    ROCKCHIP_PCIE_EP_FUNC_BASE(fn) + PCI_VENDOR_ID);
++
++	rockchip_pcie_write(rockchip,
++			    hdr->revid |
++			    hdr->progif_code << 8 |
++			    hdr->subclass_code << 16 |
++			    hdr->baseclass_code << 24,
++			    ROCKCHIP_PCIE_EP_FUNC_BASE(fn) + PCI_REVISION_ID);
++	rockchip_pcie_write(rockchip, hdr->cache_line_size,
++			    ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++			    PCI_CACHE_LINE_SIZE);
++	rockchip_pcie_write(rockchip, hdr->subsys_id << 16,
++			    ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++			    PCI_SUBSYSTEM_VENDOR_ID);
++	rockchip_pcie_write(rockchip, hdr->interrupt_pin << 8,
++			    ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++			    PCI_INTERRUPT_LINE);
++
++	return 0;
++
++}
++
++static int rockchip_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
++				    enum pci_barno bar, dma_addr_t bar_phys,
++				    size_t size, int flags)
++{
++	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
++	struct rockchip_pcie *rockchip = &ep->pcie;
++	u32 addr0, addr1, reg, cfg, b, aperture, ctrl;
++	u64 sz;
++
++	/* BAR size is 2^(aperture + 7) */
++	sz = max_t(size_t, size, MIN_EP_APERTURE);
++
++	/*
++	 * roundup_pow_of_two() returns an unsigned long, which is not suited
++	 * for 64bit values.
++	 */
++	sz = 1ULL << fls64(sz - 1);
++	aperture = ilog2(sz) - 7; /* 128B -> 0, 256B -> 1, 512B -> 2, ... */
++
++	if ((flags & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_IO) {
++		ctrl = ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_IO_32BITS;
++	} else {
++		bool is_prefetch = !!(flags & PCI_BASE_ADDRESS_MEM_PREFETCH);
++		bool is_64bits = sz > SZ_2G;
++
++		if (is_64bits && (bar & 1))
++			return -EINVAL;
++
++		if (is_64bits && is_prefetch)
++			ctrl =
++			    ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_PREFETCH_MEM_64BITS;
++		else if (is_prefetch)
++			ctrl =
++			    ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_PREFETCH_MEM_32BITS;
++		else if (is_64bits)
++			ctrl = ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_MEM_64BITS;
++		else
++			ctrl = ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_MEM_32BITS;
++	}
++
++	if (bar < BAR_4) {
++		reg = ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG0(fn);
++		b = bar;
++	} else {
++		reg = ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG1(fn);
++		b = bar - BAR_4;
++	}
++
++	addr0 = lower_32_bits(bar_phys);
++	addr1 = upper_32_bits(bar_phys);
++
++	cfg = rockchip_pcie_read(rockchip, reg);
++	cfg &= ~(ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK(b) |
++		 ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b));
++	cfg |= (ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_APERTURE(b, aperture) |
++		ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_CTRL(b, ctrl));
++
++	rockchip_pcie_write(rockchip, cfg, reg);
++	rockchip_pcie_write(rockchip, addr0,
++			    ROCKCHIP_PCIE_AT_IB_EP_FUNC_BAR_ADDR0(fn, bar));
++	rockchip_pcie_write(rockchip, addr1,
++			    ROCKCHIP_PCIE_AT_IB_EP_FUNC_BAR_ADDR1(fn, bar));
++
++	return 0;
++}
++
++static void rockchip_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
++				       enum pci_barno bar)
++{
++	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
++	struct rockchip_pcie *rockchip = &ep->pcie;
++	u32 reg, cfg, b, ctrl;
++
++	if (bar < BAR_4) {
++		reg = ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG0(fn);
++		b = bar;
++	} else {
++		reg = ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG1(fn);
++		b = bar - BAR_4;
++	}
++
++	ctrl = ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_DISABLED;
++	cfg = rockchip_pcie_read(rockchip, reg);
++	cfg &= ~(ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK(b) |
++		 ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b));
++	cfg |= ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_CTRL(b, ctrl);
++
++	rockchip_pcie_write(rockchip, cfg, reg);
++	rockchip_pcie_write(rockchip, 0x0,
++			    ROCKCHIP_PCIE_AT_IB_EP_FUNC_BAR_ADDR0(fn, bar));
++	rockchip_pcie_write(rockchip, 0x0,
++			    ROCKCHIP_PCIE_AT_IB_EP_FUNC_BAR_ADDR1(fn, bar));
++
++}
++
++static int rockchip_pcie_ep_map_addr(struct pci_epc *epc, u8 fn,
++				     phys_addr_t addr, u64 pci_addr,
++				     size_t size)
++{
++	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
++	struct rockchip_pcie *pcie = &ep->pcie;
++	u32 r;
++
++	r = find_first_zero_bit(&ep->ob_region_map,
++				sizeof(ep->ob_region_map) * BITS_PER_LONG);
++	if (r >= ep->max_regions - 1) {
++		dev_err(&epc->dev, "no free outbound region\n");
++		return -EINVAL;
++	}
++
++	rockchip_pcie_prog_ep_ob_atu(pcie, fn, r, AXI_WRAPPER_MEM_WRITE, addr,
++				     pci_addr, size, false);
++
++	set_bit(r, &ep->ob_region_map);
++	ep->ob_addr[r] = addr;
++
++	return 0;
++
++}
++
++static void rockchip_pcie_ep_unmap_addr(struct pci_epc *epc, u8 fn,
++					phys_addr_t addr)
++{
++	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
++	struct rockchip_pcie *rockchip = &ep->pcie;
++	u32 r;
++
++	for (r = 0; r < ep->max_regions - 1; r++)
++		if (ep->ob_addr[r] == addr)
++			break;
++
++	if (r == ep->max_regions - 1)
++		return;
++
++	rockchip_pcie_prog_ep_ob_atu(rockchip, 0, 0, 0, 0, 0, 0, true);
++
++	ep->ob_addr[r] = 0;
++	clear_bit(r, &ep->ob_region_map);
++}
++
++static int rockchip_pcie_ep_set_msi(struct pci_epc *epc, u8 fn,
++				    u8 multi_msg_cap)
++{
++	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
++	struct rockchip_pcie *rockchip = &ep->pcie;
++	u16 flags;
++
++	flags = rockchip_pcie_read(rockchip,
++				   ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++				   ROCKCHIP_PCIE_EP_MSI_CTRL_REG);
++	flags &= ~ROCKCHIP_PCIE_EP_MSI_CTRL_MMC_MASK;
++	flags |=
++	   ((multi_msg_cap << 1) <<  ROCKCHIP_PCIE_EP_MSI_CTRL_MMC_OFFSET) |
++	   PCI_MSI_FLAGS_64BIT;
++	flags &= ~ROCKCHIP_PCIE_EP_MSI_CTRL_MASK_MSI_CAP;
++	rockchip_pcie_write(rockchip, flags,
++			    ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++			    ROCKCHIP_PCIE_EP_MSI_CTRL_REG);
++	return 0;
++}
++
++static int rockchip_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
++{
++	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
++	struct rockchip_pcie *rockchip = &ep->pcie;
++	u16 flags;
++
++	flags = rockchip_pcie_read(rockchip,
++				   ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++				   ROCKCHIP_PCIE_EP_MSI_CTRL_REG);
++	if (!(flags & ROCKCHIP_PCIE_EP_MSI_CTRL_ME))
++		return -EINVAL;
++
++	return ((flags & ROCKCHIP_PCIE_EP_MSI_CTRL_MME_MASK) >>
++			ROCKCHIP_PCIE_EP_MSI_CTRL_MME_OFFSET);
++}
++
++static void rockchip_pcie_ep_assert_intx(struct rockchip_pcie_ep *ep, u8 fn,
++					 u8 intx, bool is_asserted)
++{
++	struct rockchip_pcie *rockchip = &ep->pcie;
++	u32 r = ep->max_regions - 1;
++	u32 offset;
++	u16 status;
++	u8 msg_code;
++
++	if (unlikely(ep->irq_pci_addr != ROCKCHIP_PCIE_EP_PCI_LEGACY_IRQ_ADDR ||
++		     ep->irq_pci_fn != fn)) {
++		rockchip_pcie_prog_ep_ob_atu(rockchip, fn, r,
++					     AXI_WRAPPER_NOR_MSG,
++					     ep->irq_phys_addr, 0, 0, false);
++		ep->irq_pci_addr = ROCKCHIP_PCIE_EP_PCI_LEGACY_IRQ_ADDR;
++		ep->irq_pci_fn = fn;
++	}
++
++	intx &= 3;
++	if (is_asserted) {
++		ep->irq_pending |= BIT(intx);
++		msg_code = ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTA + intx;
++	} else {
++		ep->irq_pending &= ~BIT(intx);
++		msg_code = ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTA + intx;
++	}
++
++	status = rockchip_pcie_read(rockchip,
++				    ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++				    ROCKCHIP_PCIE_EP_CMD_STATUS);
++	status &= ROCKCHIP_PCIE_EP_CMD_STATUS_IS;
++
++	if ((status != 0) ^ (ep->irq_pending != 0)) {
++		status ^= ROCKCHIP_PCIE_EP_CMD_STATUS_IS;
++		rockchip_pcie_write(rockchip, status,
++				    ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++				    ROCKCHIP_PCIE_EP_CMD_STATUS);
++	}
++
++	offset =
++	   ROCKCHIP_PCIE_MSG_ROUTING(ROCKCHIP_PCIE_MSG_ROUTING_LOCAL_INTX) |
++	   ROCKCHIP_PCIE_MSG_CODE(msg_code) | ROCKCHIP_PCIE_MSG_NO_DATA;
++	writel(0, ep->irq_cpu_addr + offset);
++}
++
++static int rockchip_pcie_ep_send_legacy_irq(struct rockchip_pcie_ep *ep, u8 fn,
++					    u8 intx)
++{
++	u16 cmd;
++
++	cmd = rockchip_pcie_read(&ep->pcie,
++				 ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++				 ROCKCHIP_PCIE_EP_CMD_STATUS);
++
++	if (cmd & PCI_COMMAND_INTX_DISABLE)
++		return -EINVAL;
++
++	rockchip_pcie_ep_assert_intx(ep, fn, intx, true);
++	mdelay(1);
++	rockchip_pcie_ep_assert_intx(ep, fn, intx, false);
++	return 0;
++}
++
++static int rockchip_pcie_ep_send_msi_irq(struct rockchip_pcie_ep *ep, u8 fn,
++					 u8 interrupt_num)
++{
++	struct rockchip_pcie *rockchip = &ep->pcie;
++	u16 flags, mme, data, data_mask;
++	u8 msi_count;
++	u64 pci_addr, pci_addr_mask = 0xff;
++
++	/* Check MSI enable bit */
++	flags = rockchip_pcie_read(&ep->pcie,
++				   ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++				   ROCKCHIP_PCIE_EP_MSI_CTRL_REG);
++	if (!(flags & ROCKCHIP_PCIE_EP_MSI_CTRL_ME))
++		return -EINVAL;
++
++	/* Get MSI numbers from MME */
++	mme = ((flags & ROCKCHIP_PCIE_EP_MSI_CTRL_MME_MASK) >>
++			ROCKCHIP_PCIE_EP_MSI_CTRL_MME_OFFSET);
++	msi_count = 1 << mme;
++	if (!interrupt_num || interrupt_num > msi_count)
++		return -EINVAL;
++
++	/* Set MSI private data */
++	data_mask = msi_count - 1;
++	data = rockchip_pcie_read(rockchip,
++				  ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++				  ROCKCHIP_PCIE_EP_MSI_CTRL_REG +
++				  PCI_MSI_DATA_64);
++	data = (data & ~data_mask) | ((interrupt_num - 1) & data_mask);
++
++	/* Get MSI PCI address */
++	pci_addr = rockchip_pcie_read(rockchip,
++				      ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++				      ROCKCHIP_PCIE_EP_MSI_CTRL_REG +
++				      PCI_MSI_ADDRESS_HI);
++	pci_addr <<= 32;
++	pci_addr |= rockchip_pcie_read(rockchip,
++				       ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
++				       ROCKCHIP_PCIE_EP_MSI_CTRL_REG +
++				       PCI_MSI_ADDRESS_LO);
++	pci_addr &= GENMASK_ULL(63, 2);
++
++	/* Set the outbound region if needed. */
++	if (unlikely(ep->irq_pci_addr != (pci_addr & ~pci_addr_mask) ||
++		     ep->irq_pci_fn != fn)) {
++		rockchip_pcie_prog_ep_ob_atu(rockchip, fn, ep->max_regions - 1,
++					     AXI_WRAPPER_MEM_WRITE,
++					     ep->irq_phys_addr,
++					     pci_addr & ~pci_addr_mask,
++					     pci_addr_mask + 1, false);
++		ep->irq_pci_addr = (pci_addr & ~pci_addr_mask);
++		ep->irq_pci_fn = fn;
++	}
++
++	writew(data, ep->irq_cpu_addr + (pci_addr & pci_addr_mask));
++	return 0;
++}
++
++
++static int rockchip_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
++				      enum pci_epc_irq_type type,
++				      u8 interrupt_num)
++{
++	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
++
++	switch (type) {
++	case PCI_EPC_IRQ_LEGACY:
++		return rockchip_pcie_ep_send_legacy_irq(ep, fn, 0);
++	case PCI_EPC_IRQ_MSI:
++		return rockchip_pcie_ep_send_msi_irq(ep, fn, interrupt_num);
++	default:
++		return -EINVAL;
++	}
++}
++
++static int rockchip_pcie_ep_start(struct pci_epc *epc)
++{
++	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
++	struct rockchip_pcie *rockchip = &ep->pcie;
++	struct pci_epf *epf;
++	u32 cfg;
++
++	cfg = BIT(0);
++	list_for_each_entry(epf, &epc->pci_epf, list)
++		cfg |= BIT(epf->func_no);
++
++	rockchip_pcie_write(rockchip, cfg, PCIE_CORE_PHY_FUNC_CFG);
++
++	list_for_each_entry(epf, &epc->pci_epf, list)
++		pci_epf_linkup(epf);
++
++	return 0;
++}
++
++static const struct pci_epc_ops rockchip_pcie_epc_ops = {
++	.write_header	= rockchip_pcie_ep_write_header,
++	.set_bar	= rockchip_pcie_ep_set_bar,
++	.clear_bar	= rockchip_pcie_ep_clear_bar,
++	.map_addr	= rockchip_pcie_ep_map_addr,
++	.unmap_addr	= rockchip_pcie_ep_unmap_addr,
++	.set_msi	= rockchip_pcie_ep_set_msi,
++	.get_msi	= rockchip_pcie_ep_get_msi,
++	.raise_irq	= rockchip_pcie_ep_raise_irq,
++	.start		= rockchip_pcie_ep_start,
++};
++
++/**
++ * rockchip_pcie_parse_dt - Parse Device Tree
++ * @rockchip: PCIe port information
++ *
++ * Return: '0' on success and error value on failure
++ */
++static int rockchip_pcie_parse_ep_dt(struct rockchip_pcie *rockchip,
++				     struct rockchip_pcie_ep *ep)
++{
++	struct device *dev = rockchip->dev;
++	int err;
++
++	err = rockchip_pcie_parse_dt(rockchip);
++	if (err)
++		return err;
++
++	err = of_property_read_u32(dev->of_node,
++				   "rockchip,max-outbound-regions",
++				   &ep->max_regions);
++	if (err < 0 || ep->max_regions > MAX_REGION_LIMIT)
++		ep->max_regions = MAX_REGION_LIMIT;
++
++	err = of_property_read_u8(dev->of_node, "max-functions",
++				  &ep->epc->max_functions);
++	if (err < 0)
++		ep->epc->max_functions = 1;
++
++	return 0;
++}
++
++static const struct of_device_id rockchip_pcie_ep_of_match[] = {
++	{ .compatible = "rockchip,rk3399-pcie-ep"},
++	{},
++};
++
++static int rockchip_pcie_ep_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	const struct of_device_id *of_id;
++	struct rockchip_pcie_ep *ep;
++	rockchip_pcie_epc *rockchip;
++	struct pci_epc *epc;
++	size_t max_regions;
++	int err;
++
++	ep = devm_kzalloc(dev, sizeof(*ep), GFP_KERNEL);
++	if (!ep)
++		return -ENOMEM;
++
++	platform_set_drvdata(pdev, ep);
++
++	rockchip = &ep->pcie;
++	rockchip->is_rc = false;
++
++	of_id = of_match_node(rockchip_pcie_ep_of_match, np);
++
++	epc = devm_pci_epc_create(dev, &rockchip_pcie_epc_ops);
++	if (IS_ERR(epc)) {
++		dev_err(dev, "failed to create epc device\n");
++		return PTR_ERR(epc);
++	}
++
++	ep->epc = epc;
++	epc_set_drvdata(epc, ep);
++
++	err = rockchip_pcie_parse_ep_dt(rockchip, ep);
++	if (err)
++		return err;
++
++	err = rockchip_pcie_enable_clocks(rockchip);
++	if (err)
++		return err;
++
++	err = rockchip_pcie_init_port(rockchip);
++
++	/* Establish the link automatically */
++	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
++			    PCIE_CLIENT_CONFIG);
++
++	max_regions = ep->max_regions;
++	ep->ob_addr = devm_kzalloc(dev, max_regions * sizeof(*ep->ob_addr),
++				   GFP_KERNEL);
++
++	if (!ep->ob_addr)
++		return -ENOMEM;
++
++	/* Only enable function 0 by default */
++	rockchip_pcie_write(rockchip, BIT(0), PCIE_CORE_PHY_FUNC_CFG);
++
++
++	err = pci_epc_mem_init(epc, rockchip->mem_res->start,
++			       resource_size(rockchip->mem_res));
++	if (err < 0) {
++		dev_err(dev, "failed to initialize the memory space\n");
++		return err;
++	}
++
++	ep->irq_cpu_addr = pci_epc_mem_alloc_addr(epc, &ep->irq_phys_addr,
++						  SZ_128K);
++	if (!ep->irq_cpu_addr) {
++		dev_err(dev, "failed to reserve memory space for MSI\n");
++		pci_epc_mem_exit(epc);
++		return -ENOMEM;
++	}
++
++	ep->irq_pci_addr = ROCKCHIP_PCIE_EP_DUMMY_IRQ_ADDR;
++
++	return 0;
++}
++
++static struct platform_driver rockchip_pcie_ep_driver = {
++	.driver = {
++		.name = "rockchip-pcie-ep",
++		.of_match_table = rockchip_pcie_ep_of_match,
++	},
++	.probe = rockchip_pcie_ep_probe,
++};
++
++builtin_platform_driver(rockchip_pcie_ep_driver);
+diff --git a/drivers/pci/rockchip/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip.c
+index d03508c..f4aca00 100644
+--- a/drivers/pci/rockchip/pcie-rockchip.c
++++ b/drivers/pci/rockchip/pcie-rockchip.c
+@@ -36,12 +36,20 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 	if (IS_ERR(rockchip->reg_base))
+ 		return PTR_ERR(rockchip->reg_base);
+ 
+-	regs = platform_get_resource_byname(pdev,
+-					    IORESOURCE_MEM,
+-					    "apb-base");
+-	rockchip->apb_base = devm_ioremap_resource(dev, regs);
+-	if (IS_ERR(rockchip->apb_base))
+-		return PTR_ERR(rockchip->apb_base);
++	if (rockchip->is_rc) {
++		regs = platform_get_resource_byname(pdev,
++						    IORESOURCE_MEM,
++						    "apb-base");
++		rockchip->apb_base = devm_ioremap_resource(dev, regs);
++		if (IS_ERR(rockchip->apb_base))
++			return PTR_ERR(rockchip->apb_base);
++	} else {
++		rockchip->mem_res =
++			platform_get_resource_byname(pdev, IORESOURCE_MEM,
++						     "mem-base");
++		if (!rockchip->mem_res)
++			return -EINVAL;
++	}
+ 
+ 	err = rockchip_pcie_get_phys(rockchip);
+ 	if (err)
+diff --git a/drivers/pci/rockchip/pcie-rockchip.h b/drivers/pci/rockchip/pcie-rockchip.h
+index af3e74f..f4bfc22 100644
+--- a/drivers/pci/rockchip/pcie-rockchip.h
++++ b/drivers/pci/rockchip/pcie-rockchip.h
+@@ -23,6 +23,9 @@
+ 
+ #define ENCODE_LANES(x)			((((x) >> 1) & 3) << 4)
+ #define MAX_LANE_NUM			4
++#define MAX_REGION_LIMIT		32
++#define MIN_EP_APERTURE			28
++
+ 
+ #define PCIE_CLIENT_BASE		0x0
+ #define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
+@@ -109,7 +112,14 @@
+ #define   PCIE_CORE_INT_MMVC			BIT(19)
+ #define PCIE_CORE_CONFIG_VENDOR		(PCIE_CORE_CTRL_MGMT_BASE + 0x44)
+ #define PCIE_CORE_INT_MASK		(PCIE_CORE_CTRL_MGMT_BASE + 0x210)
++#define PCIE_CORE_PHY_FUNC_CFG	(PCIE_CORE_CTRL_MGMT_BASE + 0x2c0)
+ #define PCIE_RC_BAR_CONF		(PCIE_CORE_CTRL_MGMT_BASE + 0x300)
++#define ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_DISABLED			0x0
++#define ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_IO_32BITS			0x1
++#define ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_MEM_32BITS			0x4
++#define ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_PREFETCH_MEM_32BITS	0x5
++#define ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_MEM_64BITS			0x6
++#define ROCKCHIP_PCIE_CORE_BAR_CFG_CTRL_PREFETCH_MEM_64BITS	0x7
+ 
+ #define PCIE_CORE_INT \
+ 		(PCIE_CORE_INT_PRFPE | PCIE_CORE_INT_CRFPE | \
+@@ -120,6 +130,7 @@
+ 		 PCIE_CORE_INT_CT | PCIE_CORE_INT_UTC | \
+ 		 PCIE_CORE_INT_MMVC)
+ 
++#define PCIE_RC_RP_ATS_BASE			0x400000
+ #define PCIE_RC_CONFIG_NORMAL_BASE	0x800000
+ #define PCIE_RC_CONFIG_BASE		0xa00000
+ #define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
+@@ -188,6 +199,85 @@
+ #define RC_REGION_0_TYPE_MASK			GENMASK(3, 0)
+ #define MAX_AXI_WRAPPER_REGION_NUM		33
+ 
++
++#define ROCKCHIP_PCIE_MSG_ROUTING_TO_RC			0x0
++#define ROCKCHIP_PCIE_MSG_ROUTING_VIA_ADDR		0x1
++#define ROCKCHIP_PCIE_MSG_ROUTING_VIA_ID		0x2
++#define ROCKCHIP_PCIE_MSG_ROUTING_BROADCAST		0x3
++#define ROCKCHIP_PCIE_MSG_ROUTING_LOCAL_INTX		0x4
++#define ROCKCHIP_PCIE_MSG_ROUTING_PME_ACK		0x5
++#define ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTA		0x20
++#define ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTB		0x21
++#define ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTC		0x22
++#define ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTD		0x23
++#define ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTA		0x24
++#define ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTB		0x25
++#define ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTC		0x26
++#define ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTD		0x27
++#define ROCKCHIP_PCIE_MSG_ROUTING_MASK			GENMASK(7, 5)
++#define ROCKCHIP_PCIE_MSG_ROUTING(route) \
++	(((route) << 5) & ROCKCHIP_PCIE_MSG_ROUTING_MASK)
++#define ROCKCHIP_PCIE_MSG_CODE_MASK			GENMASK(15, 8)
++#define ROCKCHIP_PCIE_MSG_CODE(code) \
++	(((code) << 8) & ROCKCHIP_PCIE_MSG_CODE_MASK)
++#define ROCKCHIP_PCIE_MSG_NO_DATA			BIT(16)
++
++
++#define ROCKCHIP_PCIE_EP_CMD_STATUS			0x4
++#define   ROCKCHIP_PCIE_EP_CMD_STATUS_IS		BIT(19)
++#define ROCKCHIP_PCIE_EP_MSI_CTRL_REG			0x90
++#define   ROCKCHIP_PCIE_EP_MSI_CTRL_MMC_OFFSET		17
++#define   ROCKCHIP_PCIE_EP_MSI_CTRL_MMC_MASK		GENMASK(19, 17)
++#define   ROCKCHIP_PCIE_EP_MSI_CTRL_MME_OFFSET		20
++#define   ROCKCHIP_PCIE_EP_MSI_CTRL_MME_MASK		GENMASK(22, 20)
++#define   ROCKCHIP_PCIE_EP_MSI_CTRL_ME				BIT(16)
++#define   ROCKCHIP_PCIE_EP_MSI_CTRL_MASK_MSI_CAP	BIT(24)
++#define ROCKCHIP_PCIE_EP_DUMMY_IRQ_ADDR				0x1
++#define ROCKCHIP_PCIE_EP_PCI_LEGACY_IRQ_ADDR		0x3
++#define ROCKCHIP_PCIE_EP_FUNC_BASE(fn)	(((fn) << 12) & GENMASK(19, 12))
++#define ROCKCHIP_PCIE_AT_IB_EP_FUNC_BAR_ADDR0(fn, bar) \
++		(PCIE_RC_RP_ATS_BASE + 0x0840 + (fn) * 0x0040 + (bar) * 0x0008)
++#define ROCKCHIP_PCIE_AT_IB_EP_FUNC_BAR_ADDR1(fn, bar) \
++		(PCIE_RC_RP_ATS_BASE + 0x0844 + (fn) * 0x0040 + (bar) * 0x0008)
++#define ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0(r) \
++		(PCIE_RC_RP_ATS_BASE + 0x0000 + ((r) & 0x1f) * 0x0020)
++#define ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK	GENMASK(19, 12)
++#define ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN(devfn) \
++		(((devfn) << 12) & \
++		 ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK)
++#define ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK	GENMASK(27, 20)
++#define ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0_BUS(bus) \
++		(((bus) << 20) & ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK)
++#define ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR1(r) \
++		(PCIE_RC_RP_ATS_BASE + 0x0004 + ((r) & 0x1f) * 0x0020)
++#define ROCKCHIP_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID	BIT(23)
++#define ROCKCHIP_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK	GENMASK(31, 24)
++#define ROCKCHIP_PCIE_AT_OB_REGION_DESC0_DEVFN(devfn) \
++		(((devfn) << 24) & ROCKCHIP_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK)
++#define ROCKCHIP_PCIE_AT_OB_REGION_DESC0(r) \
++		(PCIE_RC_RP_ATS_BASE + 0x0008 + ((r) & 0x1f) * 0x0020)
++#define ROCKCHIP_PCIE_AT_OB_REGION_DESC1(r)	\
++		(PCIE_RC_RP_ATS_BASE + 0x000c + ((r) & 0x1f) * 0x0020)
++#define ROCKCHIP_PCIE_AT_OB_REGION_CPU_ADDR0(r) \
++		(PCIE_RC_RP_ATS_BASE + 0x0018 + ((r) & 0x1f) * 0x0020)
++#define ROCKCHIP_PCIE_AT_OB_REGION_CPU_ADDR1(r) \
++		(PCIE_RC_RP_ATS_BASE + 0x001c + ((r) & 0x1f) * 0x0020)
++
++#define ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG0(fn) \
++		(PCIE_CORE_CTRL_MGMT_BASE + 0x0240 + (fn) * 0x0008)
++#define ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG1(fn) \
++		(PCIE_CORE_CTRL_MGMT_BASE + 0x0244 + (fn) * 0x0008)
++#define ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK(b) \
++		(GENMASK(4, 0) << ((b) * 8))
++#define ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_APERTURE(b, a) \
++		(((a) << ((b) * 8)) & \
++		 ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK(b))
++#define ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b) \
++		(GENMASK(7, 5) << ((b) * 8))
++#define ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_CTRL(b, c) \
++		(((c) << ((b) * 8 + 5)) & \
++		 ROCKCHIP_PCIE_CORE_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b))
++
+ struct rockchip_pcie {
+ 	void	__iomem *reg_base;		/* DT axi-base */
+ 	void	__iomem *apb_base;		/* DT apb-base */
+@@ -225,8 +315,10 @@ struct rockchip_pcie {
+ 	phys_addr_t msg_bus_addr;
+ 	phys_addr_t mem_bus_addr;
+ 	bool is_rc;
++	struct resource *mem_res;
+ };
+ 
++typedef struct rockchip_pcie rockchip_pcie_epc;
+ 
+ static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+ {
+-- 
+1.9.1
