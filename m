@@ -1,42 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:43859 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033893AbeBPOMN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Feb 2018 09:12:13 -0500
-Subject: Re: [PATCH v2] PCI: qcom: use regulator bulk api for apq8064 supplies
-To: srinivas.kandagatla@linaro.org, stanimir.varbanov@linaro.org,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh+dt@kernel.org, devicetree@vger.kernel.org
-References: <20180215132637.5673-1-srinivas.kandagatla@linaro.org>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <9a1d3bba-6777-ff90-4af5-9a4e6a73b3c7@mm-sol.com>
-Date: Fri, 16 Feb 2018 16:12:06 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180215132637.5673-1-srinivas.kandagatla@linaro.org>
-Content-Type: text/plain; charset=utf-8
+Received: from lucky1.263xmail.com ([211.157.147.130]:35021 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752439AbeBGCww (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Feb 2018 21:52:52 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 0/6] Add endpoint driver for Rockchip PCIe controller
+Date: Wed,  7 Feb 2018 10:47:24 +0800
+Message-Id: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the patch!
 
-On 02/15/2018 03:26 PM, srinivas.kandagatla@linaro.org wrote:
-> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> 
-> This patch converts existing regulators to use regulator bulk apis,
-> to make it consistent with msm8996 changes also cut down some redundant code.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> ---
-> Changes since v1:
-> 	updated index correctly and use ARRAY_SIZE
-> 
->  drivers/pci/dwc/pcie-qcom.c | 52 +++++++++++++--------------------------------
->  1 file changed, 15 insertions(+), 37 deletions(-)
-> 
+Patch 1 firstly moves the whole Rockchip PCIe host driver from
+drivers/pci/host to a new folder, driver/pci/rockchip/, and renames
+pcie-rockchip.c to pcie-rockchip-host.c. It also updates the
+Kconfig/Makefile etc, to repect this change.
 
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+Then patch 2 and patch 3 are trying to spilt out some common code in
+preparation for adding endponit controller driver support.
+
+Patch 4 rename rockchip-pcie.txt to rockchip-pcie-host.txt and update
+the compatible of_device_id. To keep the backward compatibility for
+old dtb, we add new "rockchip,rk3399-pcie-host". That means DT uses
+"rockchip,rk3399-pcie" would be bound to host controller driver by
+default.
+
+Patch 5 adds endpoint controller driver support as well as the new
+documentation, rockchip-pcie-ep.txt, introduced by patch 6.
+
+
+
+Shawn Lin (6):
+  PCI: rockchip: Create individual folder for rockchip drivers
+  PCI: rockchip: Split out common function to parse DT
+  PCI: rockchip: Spilt out common function to init controller
+  PCI: rockchip: Add rockchip,rk3399-pcie-host compatible
+  PCI: rockchip: Add Endpoint controller driver for Rockchip PCIe
+    controller
+  dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint
+    controller
+
+ .../devicetree/bindings/pci/rockchip-pcie-ep.txt   |  60 ++
+ .../{rockchip-pcie.txt => rockchip-pcie-host.txt}  |   3 +-
+ MAINTAINERS                                        |   4 +-
+ drivers/pci/Kconfig                                |   1 +
+ drivers/pci/Makefile                               |   2 +
+ drivers/pci/host/Kconfig                           |  11 -
+ drivers/pci/host/Makefile                          |   1 -
+ drivers/pci/rockchip/Kconfig                       |  32 ++
+ drivers/pci/rockchip/Makefile                      |   4 +
+ drivers/pci/rockchip/pcie-rockchip-ep.c            | 629 +++++++++++++++++++++
+ .../pcie-rockchip-host.c}                          | 595 +------------------
+ drivers/pci/rockchip/pcie-rockchip.c               | 418 ++++++++++++++
+ drivers/pci/rockchip/pcie-rockchip.h               | 343 +++++++++++
+ 13 files changed, 1507 insertions(+), 596 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+ rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (98%)
+ create mode 100644 drivers/pci/rockchip/Kconfig
+ create mode 100644 drivers/pci/rockchip/Makefile
+ create mode 100644 drivers/pci/rockchip/pcie-rockchip-ep.c
+ rename drivers/pci/{host/pcie-rockchip.c => rockchip/pcie-rockchip-host.c} (61%)
+ create mode 100644 drivers/pci/rockchip/pcie-rockchip.c
+ create mode 100644 drivers/pci/rockchip/pcie-rockchip.h
 
 -- 
-regards,
-Stan
+1.9.1
