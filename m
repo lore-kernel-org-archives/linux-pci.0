@@ -1,156 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44810 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753514AbeB1REs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 12:04:48 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:59367 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752688AbeBGCza (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Feb 2018 21:55:30 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v12 3/6] PCI/PORTDRV: Implement generic find service
-Date: Wed, 28 Feb 2018 22:34:14 +0530
-Message-Id: <1519837457-3596-4-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
-References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 6/6] dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint controller
+Date: Wed,  7 Feb 2018 10:50:26 +0800
+Message-Id: <1517971826-65350-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements generic pcie_port_find_service() routine.
+This patch documents the DT bindings for the Rockchip PCIe controller
+when configured in endpoint mode.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 4acec3b..aeb8236 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -231,32 +231,6 @@ static bool find_source_device(struct pci_dev *parent,
- 	return true;
- }
- 
--static int find_aer_service_iter(struct device *device, void *data)
--{
--	struct pcie_port_service_driver *service_driver, **drv;
--
--	drv = (struct pcie_port_service_driver **) data;
--
--	if (device->bus == &pcie_port_bus_type && device->driver) {
--		service_driver = to_service_driver(device->driver);
--		if (service_driver->service == PCIE_PORT_SERVICE_AER) {
--			*drv = service_driver;
--			return 1;
--		}
--	}
--
--	return 0;
--}
--
--struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev)
--{
--	struct pcie_port_service_driver *drv = NULL;
--
--	device_for_each_child(&dev->dev, &drv, find_aer_service_iter);
--
--	return drv;
--}
--
- /**
-  * handle_error_source - handle logging error into an event log
-  * @aerdev: pointer to pcie_device data structure of the root port
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index c48eb0a..98aeec4 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -194,7 +194,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- 	}
- 
- 	/* Use the aer driver of the component firstly */
--	driver = find_aer_service(udev);
-+	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
- 
- 	if (driver && driver->reset_link) {
- 		status = driver->reset_link(udev);
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 9a8d0dd..419bdf3 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -79,5 +79,6 @@ static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask)
- static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
- #endif /* !CONFIG_ACPI */
- 
--struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev);
-+struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
-+							u32 service);
- #endif /* _PORTDRV_H_ */
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index ef3bad4..ffc6f4f 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -23,6 +23,11 @@
- 
- bool pciehp_msi_disabled;
- 
-+struct portdrv_service_data {
-+	struct pcie_port_service_driver *drv;
-+	u32 service;
+---
+
+ .../devicetree/bindings/pci/rockchip-pcie-ep.txt   | 60 ++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+new file mode 100644
+index 0000000..85f19d2
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+@@ -0,0 +1,60 @@
++* Rockchip AXI PCIe Endpoint Controller DT description
++
++Required properties:
++- compatible: Should contain "rockchip,rk3399-pcie-ep"
++- reg: Two register ranges as listed in the reg-names property
++- reg-names: Must include the following names
++	- "axi-base"
++	- "mem-base"
++- clocks: Must contain an entry for each entry in clock-names.
++		See ../clocks/clock-bindings.txt for details.
++- clock-names: Must include the following entries:
++	- "aclk"
++	- "aclk-perf"
++	- "hclk"
++	- "pm"
++- resets: Must contain seven entries for each entry in reset-names.
++	   See ../reset/reset.txt for details.
++- reset-names: Must include the following names
++	- "core"
++	- "mgmt"
++	- "mgmt-sticky"
++	- "pipe"
++	- "pm"
++	- "aclk"
++	- "pclk"
++- pinctrl-names : The pin control state names
++- pinctrl-0: The "default" pinctrl state
++- phys: Must contain an phandle to a PHY for each entry in phy-names.
++- phy-names: Must include 4 entries for all 4 lanes even if some of
++  them won't be used for your cases. Entries are of the form "pcie-phy-N":
++  where N ranges from 0 to 3.
++  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
++  for changing the #phy-cells of phy node to support it)
++- rockchip,max-outbound-regions: Maximum number of outbound regions
++
++Optional Property:
++- num-lanes: number of lanes to use
++- max-functions: Maximum number of functions that can be configured (default 1).
++
++pcie0-ep: pcie@f8000000 {
++	compatible = "rockchip,rk3399-pcie-ep";
++	rockchip,max-outbound-regions = <16>;
++	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
++		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
++	clock-names = "aclk", "aclk-perf",
++		      "hclk", "pm";
++	max-functions = /bits/ 8 <8>;
++	num-lanes = <4>;
++	reg = <0x0 0xf8000000 0x0 0x2000000>, <0x0 0x80000000 0x0 0x40000000>;
++	reg-names = "axi-base", "mem-base";
++	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
++		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE> ,
++		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
++	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
++		      "pm", "pclk", "aclk";
++	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
++	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie_clkreq>;
 +};
-+
- static int __init pciehp_setup(char *str)
- {
- 	if (!strncmp(str, "nomsi", 5))
-@@ -414,6 +419,45 @@ static int remove_iter(struct device *dev, void *data)
- 	return 0;
- }
- 
-+static int find_service_iter(struct device *device, void *data)
-+{
-+	struct pcie_port_service_driver *service_driver;
-+	struct portdrv_service_data *pdrvs;
-+	u32 service;
-+
-+	pdrvs = (struct portdrv_service_data *) data;
-+	service = pdrvs->service;
-+
-+	if (device->bus == &pcie_port_bus_type && device->driver) {
-+		service_driver = to_service_driver(device->driver);
-+		if (service_driver->service == service) {
-+			pdrvs->drv = service_driver;
-+			return 1;
-+		}
-+	}
-+
-+	return 0;
-+}
-+/**
-+ * pcie_port_find_service - find the service driver
-+ * @dev: PCI Express port the service devices associated with
-+ * @service: Service to find
-+ *
-+ * Find PCI Express port service driver associated with given service
-+ */
-+struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
-+							u32 service)
-+{
-+	struct pcie_port_service_driver *drv = NULL;
-+	struct portdrv_service_data pdrvs;
-+
-+	pdrvs.service = service;
-+	device_for_each_child(&dev->dev, &pdrvs, find_service_iter);
-+
-+	drv = pdrvs.drv;
-+	return drv;
-+}
-+
- /**
-  * pcie_port_device_remove - unregister PCI Express port service devices
-  * @dev: PCI Express port the service devices to unregister are associated with
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+1.9.1
