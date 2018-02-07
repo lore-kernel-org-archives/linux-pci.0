@@ -1,54 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39298 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750952AbeB0R6B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Feb 2018 12:58:01 -0500
-Date: Tue, 27 Feb 2018 17:57:56 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-Cc: kishon@ti.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Subject: Re: [PATCH v3 2/2] pci: endpoint: Fix kernel panic after put_device()
-Message-ID: <20180227175756.GB12756@e107981-ln.cambridge.arm.com>
-References: <20180227100231.22561-1-embedded24@evers-fischer.de>
- <20180227100231.22561-3-embedded24@evers-fischer.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180227100231.22561-3-embedded24@evers-fischer.de>
+Received: from lucky1.263xmail.com ([211.157.147.132]:46955 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752574AbeBGCyX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Feb 2018 21:54:23 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 4/6] PCI: rockchip: Add rockchip,rk3399-pcie-host compatible
+Date: Wed,  7 Feb 2018 10:47:28 +0800
+Message-Id: <1517971650-61555-5-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 27, 2018 at 11:02:30AM +0100, Rolf Evers-Fischer wrote:
-> From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-> 
-> 'put_device()' calls the relase function 'pci_epf_dev_release()',
-> which already frees 'epf->name' and 'epf'.
-> 
-> Therefore we must not free them again after 'put_device()'.
-> 
-> Fixes: 5e8cb4033807 ("PCI: endpoint: Add EP core layer to enable EP controller and EP functions")
-> 
-> Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-> ---
->  drivers/pci/endpoint/pci-epf-core.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-> index 1f2506f32bb9..1878a6776519 100644
-> --- a/drivers/pci/endpoint/pci-epf-core.c
-> +++ b/drivers/pci/endpoint/pci-epf-core.c
-> @@ -232,7 +232,7 @@ struct pci_epf *pci_epf_create(const char *name)
->  
->  put_dev:
->  	put_device(dev);
-> -	kfree(epf->name);
-> +	return ERR_PTR(ret);
+To avoid confusion when folks use this controller as endponint
+mode, we add rockchip,rk3399-pcie-host to clearly state that
+it's driver for host here. And rename/update the document to
+reflect this fact.
 
-Another thing you could do, which would get rid of these multiple return
-statements (yes there is another one) would consist in removing the goto
-labels completely and handle the errors at the respective call site and
-just return instead of jumping around.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Thanks,
-Lorenzo
+ .../bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt}         | 3 ++-
+ drivers/pci/rockchip/pcie-rockchip-host.c                              | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+ rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (98%)
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt
+similarity index 98%
+rename from Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+rename to Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt
+index af34c65..f2f3091 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt
+@@ -5,7 +5,8 @@ Required properties:
+ - #size-cells: Size representation for root ports, set to <2>
+ - #interrupt-cells: specifies the number of cells needed to encode an
+ 		interrupt source. The value must be 1.
+-- compatible: Should contain "rockchip,rk3399-pcie"
++- compatible: Should contain "rockchip,rk3399-pcie" or
++	"rockchip,rk3399-pcie-host"
+ - reg: Two register ranges as listed in the reg-names property
+ - reg-names: Must include the following names
+ 	- "axi-base"
+diff --git a/drivers/pci/rockchip/pcie-rockchip-host.c b/drivers/pci/rockchip/pcie-rockchip-host.c
+index f5b0492..efb740d 100644
+--- a/drivers/pci/rockchip/pcie-rockchip-host.c
++++ b/drivers/pci/rockchip/pcie-rockchip-host.c
+@@ -1120,6 +1120,7 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id rockchip_pcie_of_match[] = {
+ 	{ .compatible = "rockchip,rk3399-pcie", },
++	{ .compatible = "rockchip,rk3399-pcie-host", },
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(of, rockchip_pcie_of_match);
+-- 
+1.9.1
