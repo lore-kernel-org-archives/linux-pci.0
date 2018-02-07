@@ -1,88 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:44659 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964797AbeBMNHr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 08:07:47 -0500
-Date: Tue, 13 Feb 2018 14:07:43 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V7  4/4] PCI: tegra: Add power management support
-Message-ID: <20180213130743.GF6764@ulmo>
-References: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
- <1517289851-14111-5-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:32783 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753654AbeBGHCC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Feb 2018 02:02:02 -0500
+Received: by mail-qk0-f182.google.com with SMTP id c82so5655992qka.0
+        for <linux-pci@vger.kernel.org>; Tue, 06 Feb 2018 23:02:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="pyE8wggRBhVBcj8z"
-In-Reply-To: <1517289851-14111-5-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <CY4PR02MB3221824AF76CFC24FC7B9A99DAFC0@CY4PR02MB3221.namprd02.prod.outlook.com>
+References: <CAJ2oMhKJ5ECtr5-F1M_PjO+ev_8-UfpLu+jT9hG7XEwoDV0A_Q@mail.gmail.com>
+ <CY4PR02MB3221824AF76CFC24FC7B9A99DAFC0@CY4PR02MB3221.namprd02.prod.outlook.com>
+From: Ran Shalit <ranshalit@gmail.com>
+Date: Wed, 7 Feb 2018 09:02:00 +0200
+Message-ID: <CAJ2oMhKbYhbF28b=L1hhYs39oxJNA4whXv=D3eFfNnOdiTE+wg@mail.gmail.com>
+Subject: Re: understanding DMA in PCI drivers
+To: Ravikiran Gummaluri <rgummal@xilinx.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Feb 7, 2018 at 8:12 AM, Ravikiran Gummaluri <rgummal@xilinx.com> wrote:
+> I am assuming DMA as on Host side. In this case Host DMA will me master for all transactions(Tx or Rx).
+>  Point 4 may be not relevant ,as DMA on host is responsible in RX also.
+>  All this points will be relevant when DMA is working on memory mapped mode meaning transferring from Host memory to EP memory.
+> In a simple example , Tx direction DMA descriptors will be programmed with Host buffer and BAR address. Host will program DMA register to trigger transfer. DMA on host will move Data from Host to EP.
+> IN RX direction , DMA will be preprogrammed with host buffers, Host will program DMA registers to fetch data from EP to Host.
+>
 
---pyE8wggRBhVBcj8z
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I tried to check pci-skeleton.c as an example:
+It allocates dma buffer in host, but triggering dma is done by writing
+a register in EP memory (as if the endpoint is actually triggering the
+dma transaction), so I'm a bit confused here. I think that it triggers
+both tx and rx the same way (writing EP memory register).
+Are you familiar with a simple example or tuturial which explains how
+to operate host dma in PCI ? I am a bit confused with this topic of
+dma in pci.
 
-On Tue, Jan 30, 2018 at 10:54:11AM +0530, Manikanta Maddireddy wrote:
-> Tegra186 powergate driver is implemented as power domain driver, power
-> partition ungate/gate are registered as power_on/power_off callback
-> functions. There are no direct functions to power gate/ungate host
-> controller in Tegra186. Host controller driver should add "power-domains"
-> property in device tree and implement runtime suspend and resume
-> callback functons. Power gate and ungate is taken care by power domain
-> driver when host controller driver calls pm_runtime_put_sync and
-> pm_runtime_get_sync respectively.
->=20
-> Register suspend_noirq & resume_noirq callback functions to allow PCIe to
-> come up after resume from RAM. Both runtime and noirq pm ops share same
-> callback functions.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
-> V3:
-> * no change in this patch
-> V4:
-> * no change in this patch
-> V5:
-> * Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-> rebased on linux-next
-> V6:
-> * no change in this patch
-> V7:
-> * memory & irq alloc and AFI programming for MSI are split in two functio=
-ns
->=20
->  drivers/pci/host/pci-tegra.c | 178 +++++++++++++++++++++++++++----------=
-------
->  1 file changed, 111 insertions(+), 67 deletions(-)
+Thank you,
+Ran
 
-Looks good to me:
 
-Acked-by: Thierry Reding <treding@nvidia.com>
 
---pyE8wggRBhVBcj8z
-Content-Type: application/pgp-signature; name="signature.asc"
+Thanks,
+Ran
 
------BEGIN PGP SIGNATURE-----
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqC4x8ACgkQ3SOs138+
-s6G0ExAAsimmUxWHPmIdJzVfqPDh+PhG5ShmEr95sDeLCvYBG8p3GKH/1qR0qMDp
-8wDr7CYJWnVNnkR7f6psL0cTddqzH3y+2DcduqM7h3P6vfumXeXSXJkMPcMw55QA
-lQrT9rsMAqtrRDyx89w+YOWTQZ0W2Lyjab/6lYn7JnhtLS0Ro+8wAsutT7mJGqEN
-4746mDcDLrOPB50ussbX+sUxSnnDz6NeYp+ryP4gr6KUMblKWZsIF1OSg2RNy7PZ
-avC1lO2pTiPQmBg5yOq0vmyZlAOI5mEPeHtmWugpXzIFJoMNXWxy06UP5gAl4671
-o1bWNVOABYKfv9/eS7FE0WLvIC7a4HPwgjSY32j6nhKPKZZHwhSqI6lh4esG6QXe
-JLZ+ivLClbwvqRwTLmetsHRXKoOF4bY9LIGtAO7nS4x7A0ooxR0FJW2EI2tNy6Rz
-FrWVezC165efhREVMfYuNy2lCx7RfhkQ/eCUnC3aPvBy+OWIMYPYF6I1EiyADoKq
-ub8fF1nw6gmjQ5lV5p41J/pWKEDRinJsNmDZ71JG4BjpJgC2CrqezgT+QfVxhnY/
-gjLTFVejoJdEdMei4g+oihyTkteFzV0EshFQb9aj0aE2t+Lcrk/aJkGqFkhooWiF
-1YunszS351qT83u6DDNaAUJGgQrPK2hjyptTW3bYGTYcwT2ql/8=
-=B3rU
------END PGP SIGNATURE-----
 
---pyE8wggRBhVBcj8z--
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>> owner@vger.kernel.org] On Behalf Of Ran Shalit
+>> Sent: Wednesday, February 7, 2018 12:33 AM
+>> To: linux-pci@vger.kernel.org
+>> Subject: understanding DMA in PCI drivers
+>>
+>> Hello,
+>>
+>> I write a pci linux driver, and after reviewing some examples in kernel, there
+>> is issue I am not sure about:
+>> DMA seems to follow the following steps in PCI:
+>> 1.  driver allocate dma buffers and map them to BAR.
+>> 2. driver initialize device to be familiar with dma addresses.
+>> 3. tx from cpu to device: driver trigger dma, by writing into device BARs.
+>> 4. rx from device to cpu: device is responsible for triggering DMA (driver does
+>> not do anything here) 5. tx/rx completion: interrupt from DMA (in cpu) 6.
+>> interrupt handler of section 5 above checks that device finished tx/rx.
+>>
+>> Is the above understanding correct ?
+>> 1. As to 6, I am not sure about, is it that device knows that transaction is
+>> finished (DMA is in soc , not device) ?
+>> 2. How does device triggers DMA from device to cpu, is it by simply writing to
+>> BAR ?
+>> 3. How does device triggers DMA from cpu to device, is it by simply reading
+>> from BAR ?
+>>
+>> Thank you,
+>> Ran
