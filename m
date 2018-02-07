@@ -1,66 +1,59 @@
-Return-Path: <SRS0=foCx=FR=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=foCx=FR=linux.vnet.ibm.com=bryantly@kernel.org>
-Subject: Re: [PATCH] PCI/AER: Move pci_uevent_ers() out of pci.h
-To: Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-        torvalds@linux-foundation.org, ruscur@russell.cc,
-        jjalvare@linux.vnet.ibm.com
-References: <20180208122035.9305-1-mpe@ellerman.id.au>
- <dcfc6411-20cf-5b3f-20c5-14167de54700@linux.vnet.ibm.com>
- <20180222231236.GB14632@bhelgaas-glaptop.roam.corp.google.com>
- <87h8q8pcr9.fsf@concordia.ellerman.id.au>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Fri, 23 Feb 2018 08:38:57 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1518007386.23115.6.camel@mtkswgap22>
+Subject: Re: [PATCH 2/2] dt-bindings: PCI: MediaTek: Correct the
+ interrupt-map properties
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
+Date: Wed, 7 Feb 2018 20:43:06 +0800
+In-Reply-To: <20180205060830.svkrwnn6wzuig7ns@rob-hp-laptop>
+References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+ <9d247a4fba54ba90d07df32fd89a8bb2c8bdb0f9.1516961656.git.ryder.lee@mediatek.com>
+ <20180205060830.svkrwnn6wzuig7ns@rob-hp-laptop>
 MIME-Version: 1.0
-In-Reply-To: <87h8q8pcr9.fsf@concordia.ellerman.id.au>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <0217a4a8-015b-f4d8-9859-a41967038500@linux.vnet.ibm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Arnd Bergmann <arnd@arndb.de>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org, Bjorn
+ Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Bjorn,
+
+On Mon, 2018-02-05 at 00:08 -0600, Rob Herring wrote:
+> On Wed, Jan 31, 2018 at 03:41:50PM +0800, Ryder Lee wrote:
+> > Move the interrupt-map properties from the child nodes to the root node
+> > and update each entry accordingly.
+> > 
+> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> > ---
+> >  .../devicetree/bindings/pci/mediatek-pcie.txt      | 28 ++++++++++++----------
+> >  1 file changed, 15 insertions(+), 13 deletions(-)
+> 
+> Reviewed-by: Rob Herring <robh@kernel.org>
+
+Please ignore this patch as we think the original version is better than
+this.  Sorry for the inconvenience.
+
+> _______________________________________________
+> Linux-mediatek mailing list
+> Linux-mediatek@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-mediatek
 
 
-On 2/22/18 10:10 PM, Michael Ellerman wrote:
-> Bjorn Helgaas <helgaas@kernel.org> writes:
->
->> On Thu, Feb 08, 2018 at 09:05:45AM -0600, Bryant G. Ly wrote:
->>> On 2/8/18 6:20 AM, Michael Ellerman wrote:
->>>
->>>> There's no reason pci_uevent_ers() needs to be inline in pci.h, so
->>>> move it out to a C file.
->>>>
->>>> Given it's used by AER the obvious location would be somewhere in
->>>> drivers/pci/pcie/aer, but because it's also used by powerpc EEH code
->>>> unfortunately that doesn't work in the case where EEH is enabled but
->>>> PCIEPORTBUS is not.
->>>>
->>>> So for now put it in pci-driver.c, next to pci_uevent(), with an
->>>> appropriate #ifdef so it's not built if AER and EEH are both disabled.
->>>>
->>>> While we're moving it also fix up the kernel doc comment for @pdev to
->>>> be accurate.
->>>>
->>>> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
->>>> Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
->>>> ---
->>>>  drivers/pci/pci-driver.c | 36 ++++++++++++++++++++++++++++++++++++
->>>>  include/linux/pci.h      | 38 +++-----------------------------------
->>>>  2 files changed, 39 insertions(+), 35 deletions(-)
->>> Looks good, thanks for fixing it!
->>>
->>> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
->> This would normally be a "Reviewed-by" unless you actually
->> participated in developing the patch, and in that case, your
->> "Signed-off-by" would normally be included in the original posting.
->>
->> What do you intend?  I'll be glad to add either.
-> I wrote the patch, so Bryant meant Reviewed-by or maybe Acked-by.
->
-> cheers
->
-Yes, I mean't, 
 
-Reviewed-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-
-Thanks, 
-
-Bryant
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
