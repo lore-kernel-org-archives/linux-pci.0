@@ -1,185 +1,348 @@
-Return-Path: <SRS0=+CGf=FV=mellanox.com=talgi@kernel.org>
-Return-Path: <SRS0=+CGf=FV=mellanox.com=talgi@kernel.org>
-Subject: Re: [PATCH next V1 3/7] PCI: Calculate BW limitation for PCI devices
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Linux PCI
- <linux-pci@vger.kernel.org>, Tariq Toukan <tariqt@mellanox.com>
-References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
- <1516030541-6626-4-git-send-email-talgi@mellanox.com>
- <20180222202151.GD16519@bhelgaas-glaptop.roam.corp.google.com>
- <e69fdc36-1f2a-be5a-bc54-48ec47ae47ad@mellanox.com>
- <20180227151948.GD112033@bhelgaas-glaptop.roam.corp.google.com>
-From: Tal Gilboa <talgi@mellanox.com>
-Message-ID: <46f54e24-e65e-08c6-60b3-e34ffd79e91a@mellanox.com>
-Date: Tue, 27 Feb 2018 17:34:52 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180227151948.GD112033@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.135]:42188 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752732AbeBGCx3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Feb 2018 21:53:29 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 2/6] PCI: rockchip: Split out common function to parse DT
+Date: Wed,  7 Feb 2018 10:47:26 +0800
+Message-Id: <1517971650-61555-3-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/27/2018 5:19 PM, Bjorn Helgaas wrote:
-> On Tue, Feb 27, 2018 at 02:17:28PM +0200, Tal Gilboa wrote:
->> On 2/22/2018 10:21 PM, Bjorn Helgaas wrote:
->>> On Mon, Jan 15, 2018 at 05:35:37PM +0200, Tal Gilboa wrote:
->>>> pcie_get_link_limits() function, which is based on
->>>> pcie_get_minimum_link(), iterates over the PCI chain
->>>> and calculates maximum BW in addition to minimum speed and
->>>> width. The BW calculation at each level is speed * width, so
->>>> even if, for instance, a level has lower width, than the device max
->>>> capabilities, it still might not cause a BW limitation if it has a
->>>> higher speed. pcie_get_minimum_link() is kept for compatibility.
->>>>
->>>> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
->>>> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
->>>> ---
->>>>    drivers/pci/pci.c   | 31 ++++++++++++++++++++++++++++---
->>>>    include/linux/pci.h |  8 ++++++++
->>>>    2 files changed, 36 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>> index cf0401d..f0c60dc 100644
->>>> --- a/drivers/pci/pci.c
->>>> +++ b/drivers/pci/pci.c
->>>> @@ -5012,16 +5012,37 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
->>>>     * @speed: storage for minimum speed
->>>>     * @width: storage for minimum width
->>>>     *
->>>> - * This function will walk up the PCI device chain and determine the minimum
->>>> - * link width and speed of the device.
->>>> + * This function use pcie_get_link_limits() for determining the minimum
->>>> + * link width and speed of the device. Legacy code is kept for compatibility.
->>>>     */
->>>>    int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->>>>    			  enum pcie_link_width *width)
->>>>    {
->>>> +	int bw;
->>>> +
->>>> +	return pcie_get_link_limits(dev, speed, width, &bw);
->>>> +}
->>>> +EXPORT_SYMBOL(pcie_get_minimum_link);
->>>> +
->>>> +/**
->>>> + * pcie_get_link_limits - determine minimum link settings of a PCI
->>>> +			  device and its BW limitation
->>>> + * @dev: PCI device to query
->>>> + * @speed: storage for minimum speed
->>>> + * @width: storage for minimum width
->>>> + * @bw: storage for BW limitation
->>>> + *
->>>> + * This function walks up the PCI device chain and determines the link
->>>> + * limitations - minimum width, minimum speed and max possible BW of the device.
->>>
->>> I don't really like this interface because it mixes two separate
->>> things: (1) the speed/width capabilities of the current device, and
->>> (2) the minimum speed/width of the path leading to the device (and
->>> these minimums might even be at different points in the path).
->>>
->>> I think what we want is a way to get the max bandwidth a device can
->>> use, i.e., pcie_get_speed_cap() * pcie_get_width_cap().
->>>
->>> If we also had a way to find the minimum bandwidth point leading to a
->>> device, e.g., a pcie_get_minimum_bandwidth() that returned a pci_dev
->>> and its bandwidth (and maybe the link speed and width corresponding to
->>> that device), then you could print a meaningful message like "this
->>> device is capable of X, but upstream device Y limits us to Z".
->>>
->>> I think the current pcie_print_link_status() is a little misleading
->>> because it prints the minimum link speed and width from the path, but
->>> those might be from different devices, which doesn't really make
->>> sense.
->>
->> I see. We started out with simply checking speed and width only for the
->> device. If the chain bandwidth check is misleading I'll revert back to the
->> original behavior. No need to calculate bandwidth IMO. Checking current
->> speed and width and comparing to max capabilities should be enough.
-> 
-> Let's think about where we want to end up.  I think you want to emit a
-> message if either the current link width or speed is lower than the
-> device is capable of.  You don't need the bandwidth for that.
-> 
-> Do you also want to emit a message if there's a bottleneck upstream
-> from the device?  E.g., the link to the device may be x8, 5GT/s, which
-> is capable of a bandwidth of 40Gb/s, but if there's an upstream link
-> that is x4, 5GT/s, the device will be limited to a bandwidth of
-> 20Gb/s.  If you want to check for that, I think we do need to figure
-> the bandwidth.  If we want a message in situations like this, but we
-> didn't figure the bandwidth, we would erroneously complain if the
-> upstream link were x16, 2.5GT/s, where that link has a lower speed but
-> is wider so it's still capable of 40Gb/s.
+Most of the DT properties are used for both of host and
+EP drivrs, so this patch spilt them out to new function,
+rockchip_pcie_parse_dt in pcie-rockchip.c and rename the
+original function to rockchip_pcie_parse_host_dt to avoid
+confusion. No functional changed intended.
 
-I think this would have been nice but would result in more questions 
-than answers. I think we can live without it and simply check the device 
-itself.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-> 
-> If you want a message about upstream bottlenecks, do you want to
-> identify the specific device that is the bottleneck?
-> 
-> IIRC, you're adding these:
-> 
->    int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
->    int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed)
->    int pcie_get_link_limits(struct pci_dev *dev, enum pci_bus_speed *speed,
-> 			   enum pcie_link_width *width, int *bw);
-> 
-> It seems like we might not need all three of these, since the last one
-> looks like it could subsume the first two.
+ drivers/pci/rockchip/pcie-rockchip-host.c | 119 ++-------------------------
+ drivers/pci/rockchip/pcie-rockchip.c      | 128 ++++++++++++++++++++++++++++++
+ drivers/pci/rockchip/pcie-rockchip.h      |   2 +
+ 3 files changed, 135 insertions(+), 114 deletions(-)
 
-This patch becomes obsolete is we can just use pcie_get_minimum_link() 
-as it was. pcie_get_width/speed_cap() are still needed as they calculate 
-the max capability. pcie_get_link_limits and pcie_get_minimum_link() 
-calculate the link status.
-
-> 
->>>> +int pcie_get_link_limits(struct pci_dev *dev, enum pci_bus_speed *speed,
->>>> +			 enum pcie_link_width *width, int *bw)
->>>> +{
->>>>    	int ret;
->>>>    	*speed = PCI_SPEED_UNKNOWN;
->>>>    	*width = PCIE_LNK_WIDTH_UNKNOWN;
->>>> +	*bw = 0;
->>>>    	while (dev) {
->>>>    		u16 lnksta;
->>>> @@ -5042,12 +5063,16 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->>>>    		if (next_width < *width)
->>>>    			*width = next_width;
->>>> +		/* Check if current level in the chain limits the total BW */
->>>> +		if (!(*bw) || *bw > (next_width) * PCIE_SPEED2MBS(next_speed))
->>>> +			*bw = (next_width) * PCIE_SPEED2MBS(next_speed);
->>>> +
->>>>    		dev = dev->bus->self;
->>>>    	}
->>>>    	return 0;
->>>>    }
->>>> -EXPORT_SYMBOL(pcie_get_minimum_link);
->>>> +EXPORT_SYMBOL(pcie_get_link_limits);
->>>>    /**
->>>>     * pcie_get_speed_cap - queries for the PCI device's link speed capability
->>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>> index 27dc070..88e23eb 100644
->>>> --- a/include/linux/pci.h
->>>> +++ b/include/linux/pci.h
->>>> @@ -265,6 +265,12 @@ enum pci_bus_speed {
->>>>    	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
->>>>    	 "Unknown speed")
->>>> +#define PCIE_SPEED2MBS(speed) \
->>>> +	((speed) == PCIE_SPEED_8_0GT ? 8000 : \
->>>> +	 (speed) == PCIE_SPEED_5_0GT ? 5000 : \
->>>> +	 (speed) == PCIE_SPEED_2_5GT ? 2500 : \
->>>> +	 0)
->>>> +
->>>>    struct pci_cap_saved_data {
->>>>    	u16		cap_nr;
->>>>    	bool		cap_extended;
->>>> @@ -1088,6 +1094,8 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->>>>    			  enum pcie_link_width *width);
->>>>    int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
->>>>    int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
->>>> +int pcie_get_link_limits(struct pci_dev *dev, enum pci_bus_speed *speed,
->>>> +			 enum pcie_link_width *width, int *bw);
->>>>    void pcie_flr(struct pci_dev *dev);
->>>>    int __pci_reset_function_locked(struct pci_dev *dev);
->>>>    int pci_reset_function(struct pci_dev *dev);
->>>> -- 
->>>> 1.8.3.1
->>>>
+diff --git a/drivers/pci/rockchip/pcie-rockchip-host.c b/drivers/pci/rockchip/pcie-rockchip-host.c
+index 563f696..079949c 100644
+--- a/drivers/pci/rockchip/pcie-rockchip-host.c
++++ b/drivers/pci/rockchip/pcie-rockchip-host.c
+@@ -703,130 +703,20 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
+ }
+ 
+ /**
+- * rockchip_pcie_parse_dt - Parse Device Tree
++ * rockchip_pcie_parse_host_dt - Parse Device Tree
+  * @rockchip: PCIe port information
+  *
+  * Return: '0' on success and error value on failure
+  */
+-static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
++static int rockchip_pcie_parse_host_dt(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+-	struct platform_device *pdev = to_platform_device(dev);
+-	struct device_node *node = dev->of_node;
+-	struct resource *regs;
+ 	int err;
+ 
+-	regs = platform_get_resource_byname(pdev,
+-					    IORESOURCE_MEM,
+-					    "axi-base");
+-	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
+-	if (IS_ERR(rockchip->reg_base))
+-		return PTR_ERR(rockchip->reg_base);
+-
+-	regs = platform_get_resource_byname(pdev,
+-					    IORESOURCE_MEM,
+-					    "apb-base");
+-	rockchip->apb_base = devm_ioremap_resource(dev, regs);
+-	if (IS_ERR(rockchip->apb_base))
+-		return PTR_ERR(rockchip->apb_base);
+-
+-	err = rockchip_pcie_get_phys(rockchip);
++	err = rockchip_pcie_parse_dt(rockchip);
+ 	if (err)
+ 		return err;
+ 
+-	rockchip->lanes = 1;
+-	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
+-	if (!err && (rockchip->lanes == 0 ||
+-		     rockchip->lanes == 3 ||
+-		     rockchip->lanes > 4)) {
+-		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
+-		rockchip->lanes = 1;
+-	}
+-
+-	rockchip->link_gen = of_pci_get_max_link_speed(node);
+-	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
+-		rockchip->link_gen = 2;
+-
+-	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
+-	if (IS_ERR(rockchip->core_rst)) {
+-		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing core reset property in node\n");
+-		return PTR_ERR(rockchip->core_rst);
+-	}
+-
+-	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
+-	if (IS_ERR(rockchip->mgmt_rst)) {
+-		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing mgmt reset property in node\n");
+-		return PTR_ERR(rockchip->mgmt_rst);
+-	}
+-
+-	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
+-								     "mgmt-sticky");
+-	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
+-		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing mgmt-sticky reset property in node\n");
+-		return PTR_ERR(rockchip->mgmt_sticky_rst);
+-	}
+-
+-	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
+-	if (IS_ERR(rockchip->pipe_rst)) {
+-		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pipe reset property in node\n");
+-		return PTR_ERR(rockchip->pipe_rst);
+-	}
+-
+-	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
+-	if (IS_ERR(rockchip->pm_rst)) {
+-		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pm reset property in node\n");
+-		return PTR_ERR(rockchip->pm_rst);
+-	}
+-
+-	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
+-	if (IS_ERR(rockchip->pclk_rst)) {
+-		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pclk reset property in node\n");
+-		return PTR_ERR(rockchip->pclk_rst);
+-	}
+-
+-	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
+-	if (IS_ERR(rockchip->aclk_rst)) {
+-		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing aclk reset property in node\n");
+-		return PTR_ERR(rockchip->aclk_rst);
+-	}
+-
+-	rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
+-	if (IS_ERR(rockchip->ep_gpio)) {
+-		dev_err(dev, "missing ep-gpios property in node\n");
+-		return PTR_ERR(rockchip->ep_gpio);
+-	}
+-
+-	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
+-	if (IS_ERR(rockchip->aclk_pcie)) {
+-		dev_err(dev, "aclk clock not found\n");
+-		return PTR_ERR(rockchip->aclk_pcie);
+-	}
+-
+-	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
+-	if (IS_ERR(rockchip->aclk_perf_pcie)) {
+-		dev_err(dev, "aclk_perf clock not found\n");
+-		return PTR_ERR(rockchip->aclk_perf_pcie);
+-	}
+-
+-	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
+-	if (IS_ERR(rockchip->hclk_pcie)) {
+-		dev_err(dev, "hclk clock not found\n");
+-		return PTR_ERR(rockchip->hclk_pcie);
+-	}
+-
+-	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
+-	if (IS_ERR(rockchip->clk_pcie_pm)) {
+-		dev_err(dev, "pm clock not found\n");
+-		return PTR_ERR(rockchip->clk_pcie_pm);
+-	}
+-
+ 	err = rockchip_pcie_setup_irq(rockchip);
+ 	if (err)
+ 		return err;
+@@ -1193,8 +1083,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, rockchip);
+ 	rockchip->dev = dev;
++	rockchip->is_rc = true;
+ 
+-	err = rockchip_pcie_parse_dt(rockchip);
++	err = rockchip_pcie_parse_host_dt(rockchip);
+ 	if (err)
+ 		return err;
+ 
+diff --git a/drivers/pci/rockchip/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip.c
+index c7614f9..6c0063d 100644
+--- a/drivers/pci/rockchip/pcie-rockchip.c
++++ b/drivers/pci/rockchip/pcie-rockchip.c
+@@ -12,10 +12,138 @@
+  */
+ 
+ #include <linux/clk.h>
++#include <linux/gpio/consumer.h>
++#include <linux/of_pci.h>
+ #include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <linux/reset.h>
+ 
+ #include "pcie-rockchip.h"
+ 
++int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct device_node *node = dev->of_node;
++	struct resource *regs;
++	int err;
++
++	regs = platform_get_resource_byname(pdev,
++					    IORESOURCE_MEM,
++					    "axi-base");
++	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
++	if (IS_ERR(rockchip->reg_base))
++		return PTR_ERR(rockchip->reg_base);
++
++	regs = platform_get_resource_byname(pdev,
++					    IORESOURCE_MEM,
++					    "apb-base");
++	rockchip->apb_base = devm_ioremap_resource(dev, regs);
++	if (IS_ERR(rockchip->apb_base))
++		return PTR_ERR(rockchip->apb_base);
++
++	err = rockchip_pcie_get_phys(rockchip);
++	if (err)
++		return err;
++
++	rockchip->lanes = 1;
++	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
++	if (!err && (rockchip->lanes == 0 ||
++		     rockchip->lanes == 3 ||
++		     rockchip->lanes > 4)) {
++		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
++		rockchip->lanes = 1;
++	}
++
++	rockchip->link_gen = of_pci_get_max_link_speed(node);
++	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
++		rockchip->link_gen = 2;
++
++	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
++	if (IS_ERR(rockchip->core_rst)) {
++		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing core reset property in node\n");
++		return PTR_ERR(rockchip->core_rst);
++	}
++
++	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
++	if (IS_ERR(rockchip->mgmt_rst)) {
++		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing mgmt reset property in node\n");
++		return PTR_ERR(rockchip->mgmt_rst);
++	}
++
++	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
++								     "mgmt-sticky");
++	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
++		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing mgmt-sticky reset property in node\n");
++		return PTR_ERR(rockchip->mgmt_sticky_rst);
++	}
++
++	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
++	if (IS_ERR(rockchip->pipe_rst)) {
++		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pipe reset property in node\n");
++		return PTR_ERR(rockchip->pipe_rst);
++	}
++
++	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
++	if (IS_ERR(rockchip->pm_rst)) {
++		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pm reset property in node\n");
++		return PTR_ERR(rockchip->pm_rst);
++	}
++
++	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
++	if (IS_ERR(rockchip->pclk_rst)) {
++		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pclk reset property in node\n");
++		return PTR_ERR(rockchip->pclk_rst);
++	}
++
++	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
++	if (IS_ERR(rockchip->aclk_rst)) {
++		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing aclk reset property in node\n");
++		return PTR_ERR(rockchip->aclk_rst);
++	}
++
++	if (rockchip->is_rc) {
++		rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
++		if (IS_ERR(rockchip->ep_gpio)) {
++			dev_err(dev, "missing ep-gpios property in node\n");
++			return PTR_ERR(rockchip->ep_gpio);
++		}
++	}
++
++	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
++	if (IS_ERR(rockchip->aclk_pcie)) {
++		dev_err(dev, "aclk clock not found\n");
++		return PTR_ERR(rockchip->aclk_pcie);
++	}
++
++	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
++	if (IS_ERR(rockchip->aclk_perf_pcie)) {
++		dev_err(dev, "aclk_perf clock not found\n");
++		return PTR_ERR(rockchip->aclk_perf_pcie);
++	}
++
++	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
++	if (IS_ERR(rockchip->hclk_pcie)) {
++		dev_err(dev, "hclk clock not found\n");
++		return PTR_ERR(rockchip->hclk_pcie);
++	}
++
++	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
++	if (IS_ERR(rockchip->clk_pcie_pm)) {
++		dev_err(dev, "pm clock not found\n");
++		return PTR_ERR(rockchip->clk_pcie_pm);
++	}
++
++	return 0;
++}
++
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+diff --git a/drivers/pci/rockchip/pcie-rockchip.h b/drivers/pci/rockchip/pcie-rockchip.h
+index 9e0cf2e..c0f84d9 100644
+--- a/drivers/pci/rockchip/pcie-rockchip.h
++++ b/drivers/pci/rockchip/pcie-rockchip.h
+@@ -222,6 +222,7 @@ struct rockchip_pcie {
+ 	u32     mem_size;
+ 	phys_addr_t msg_bus_addr;
+ 	phys_addr_t mem_bus_addr;
++	bool is_rc;
+ };
+ 
+ 
+@@ -236,6 +237,7 @@ static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
+ 	writel(val, rockchip->apb_base + reg);
+ }
+ 
++int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip);
+ void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip);
+-- 
+1.9.1
