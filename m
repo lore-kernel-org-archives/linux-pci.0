@@ -1,81 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 29/37] iommu/arm-smmu-v3: Add stall support for platform
- devices
-To: Xu Zaibo <xuzaibo@huawei.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Cc: "joro@8bytes.org" <joro@8bytes.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        Catalin Marinas <Catalin.Marinas@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        Sudeep Holla <Sudeep.Holla@arm.com>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-30-jean-philippe.brucker@arm.com>
- <5A824359.1080005@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <f8005429-8e51-fe54-17f8-820543883ce9@arm.com>
-Date: Tue, 13 Feb 2018 12:58:56 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 8 Feb 2018 15:57:35 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        John Keeping <john@metanate.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] PCI: endpoint: Handle 64-bit BARs properly
+Message-ID: <20180208215735.GD98765@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180208123346.20784-1-niklas.cassel@axis.com>
+ <20180208123346.20784-2-niklas.cassel@axis.com>
+ <da5004d3-c3e8-d9fd-6698-3b12c3ab624a@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <5A824359.1080005@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <da5004d3-c3e8-d9fd-6698-3b12c3ab624a@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 13/02/18 01:46, Xu Zaibo wrote:
+On Thu, Feb 08, 2018 at 06:17:32PM +0530, Kishon Vijay Abraham I wrote:
 > Hi,
 > 
-> On 2018/2/13 2:33, Jean-Philippe Brucker wrote:
->> The SMMU provides a Stall model for handling page faults in platform
->> devices. It is similar to PCI PRI, but doesn't require devices to have
->> their own translation cache. Instead, faulting transactions are parked and
->> the OS is given a chance to fix the page tables and retry the transaction.
->>
->> Enable stall for devices that support it (opt-in by firmware). When an
->> event corresponds to a translation error, call the IOMMU fault handler. If
->> the fault is recoverable, it will call us back to terminate or continue
->> the stall.
->>
->> Note that this patch tweaks the iommu_fault_event and page_response_msg to
->> extend the fault id field. Stall uses 16 bits of IDs whereas PCI PRI only
->> uses 9.
-> For PCIe devices without ATC,  can they use this Stall model?
+> On Thursday 08 February 2018 06:03 PM, Niklas Cassel wrote:
+> > A 64-bit BAR uses the succeeding BAR for the upper bits, therefore
+> > we cannot call pci_epc_set_bar() on a BAR that follows a 64-bit BAR.
+> > 
+> > If pci_epc_set_bar() is called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
+> 
+> Not related to $patch. But I have a query on when
+> PCI_BASE_ADDRESS_MEM_TYPE_64 should be set. Whether if the size is >
+> 4G or if the address can be mapped anywhere in the 64-bit PCIe
+> address space or both?
 
-Unfortunately no, Stall it is incompatible with PCI. Timing constraints in
-PCI prevent from stalling transactions in the IOMMU.
+In general, PCI_BASE_ADDRESS_MEM_TYPE_64 should be set if the BAR is
+64 bits wide.  IORESOURCE_MEM_64 is similar.
 
-Thanks,
-Jean
+It doesn't matter what the current value of the BAR is.
+
+It's easy to look at the current address or size of a resource if we
+need to know where it is or how big it is.  But if we lose track of
+the width of the BAR register, we have no way to know whether it's
+*capable* of holding a 64-bit value.
+
+> > it has to be up to the controller driver to write both BAR[x] and BAR[x+1]
+> > (and BAR_mask[x] and BAR_mask[x+1]).
+> > 
+> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > ---
+> >  drivers/pci/endpoint/functions/pci-epf-test.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > index 800da09d9005..eef85820f59e 100644
+> > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > @@ -382,6 +382,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
+> >  			if (bar == test_reg_bar)
+> >  				return ret;
+> >  		}
+> > +		if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
+> > +			bar++;
+> >  	}
+> >  
+> >  	return 0;
+> > 
