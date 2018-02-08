@@ -1,97 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0053.outbound.protection.outlook.com ([104.47.2.53]:36672
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751640AbeBYLUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 25 Feb 2018 06:20:46 -0500
-Subject: Re: [PATCH next V1 7/7] net/mlx5e: Use generic PCI function for BW
- calculation
-To: Bjorn Helgaas <helgaas@kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40314 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750961AbeBHWnB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Feb 2018 17:43:01 -0500
+Date: Thu, 8 Feb 2018 16:42:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>
-References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
- <1516030541-6626-8-git-send-email-talgi@mellanox.com>
- <20180222200901.GC16519@bhelgaas-glaptop.roam.corp.google.com>
-From: Tal Gilboa <talgi@mellanox.com>
-Message-ID: <f1341aae-db08-74fc-461d-7a074198aed8@mellanox.com>
-Date: Sun, 25 Feb 2018 13:20:39 +0200
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Paul Mackerras <paulus@ozlabs.org>,
+        Rob Herring <robh@kernel.org>,
+        Alistair Popple <alistair@popple.id.au>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH kernel] powerpc/pci: Fix broken INTx configuration via OF
+Message-ID: <20180208224205.GA206223@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180208053354.41725-1-aik@ozlabs.ru>
+ <CAErSpo7S7vJTKBrxuzH-G0y-U2Z15jKpPJDZEEuhh7vAs0hjOA@mail.gmail.com>
+ <20180208213956.GC98765@bhelgaas-glaptop.roam.corp.google.com>
+ <1518128503.2312.219.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <20180222200901.GC16519@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1518128503.2312.219.camel@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/22/2018 10:09 PM, Bjorn Helgaas wrote:
-> On Mon, Jan 15, 2018 at 05:35:41PM +0200, Tal Gilboa wrote:
->> Newly introduced pcie_get_link_limits() function calculates
->> maximum available BW through the PCI chain. We can use this
->> value for mlx5e_get_pci_bw() instead of calculating ourselves.
->>
->> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
->> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
->> ---
->>   drivers/net/ethernet/mellanox/mlx5/core/en_main.c | 17 +++--------------
->>   1 file changed, 3 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
->> index d2b057a..d1d7427 100644
->> --- a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
->> +++ b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
->> @@ -3971,27 +3971,16 @@ static int mlx5e_get_pci_bw(struct mlx5_core_dev *mdev, u32 *pci_bw)
->>   	enum pcie_link_width width;
->>   	enum pci_bus_speed speed;
->>   	int err = 0;
->> +	int bw;
->>   
->> -	err = pcie_get_minimum_link(mdev->pdev, &speed, &width);
->> +	err = pcie_get_link_limits(mdev->pdev, &speed, &width, &bw);
+On Fri, Feb 09, 2018 at 09:21:43AM +1100, Benjamin Herrenschmidt wrote:
+> On Thu, 2018-02-08 at 15:39 -0600, Bjorn Helgaas wrote:
+> > I don't understand how this fix works.  We used to check the result of
+> > of_irq_parse_and_map_pci() and entered the block if it was zero.
+> > 
+> > Now you enter the block if it is zero or less than zero, but:
+> > 
+> >   static int pci_read_irq_line(...)
+> >   {
+> >     unsigned int virq = 0;     /* unnecessarily initialized, BTW */
+> > 
+> >     virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
+> >     if (virq <= 0) {
+> >       ...
+> > 
+> > virq is unsigned, so "virq < 0" can never be true.  So how does this
+> > change anything?
 > 
-> Why don't you refactor this a little so it calls
-> pcie_print_link_status() like mlx5 and mlx4?
+> Yes it does:
 > 
-> I think this is the only call of pcie_get_link_limits() outside
-> drivers/pci, and it seems like a little overkill here since you really
-> don't need "speed" here.
-
-I wouldn't like to call pcie_print_link_status() if I don't really want 
-to print the status. In this case mlx5e driver needs the PCI bandwidth 
-limitation in order to make a decision. I think it is good that we 
-expose a method to do precisely that.
-
+> So the unsigned thing is a second bug in the original patch that Alexey
+> isn't fixing, we need to fix it too.
 > 
-> But I don't understand what's going on with mlx5e_get_max_linkspeed().
-> It doesn't look like that is actually looking at the PCIe link speed,
-> so maybe there's something special going on there.
+> However, the actual bug Alexey is fixing is that we lost the actual
+> value of virq. IE, without his fix, we test it for 0 but we don't
+> actually return it if it's positive.
 
-mlx5e_get_max_linkspeed() queries for the port wire speed. mlx5e driver 
-might change some settings (CQE zipping, LRO) in case PCI bandwidth 
-can't support wire speed.
+Ah, I see, the bug is that we discarded the non-zero virq value when
+we actually need it.  I'm going to wait for a new patch with a
+changelog that says that and doesn't test an unsigned value for < 0.
 
-> 
->>   	if (err)
->>   		return err;
->>   
->>   	if (speed == PCI_SPEED_UNKNOWN || width == PCIE_LNK_WIDTH_UNKNOWN)
->>   		return -EINVAL;
->>   
->> -	switch (speed) {
->> -	case PCIE_SPEED_2_5GT:
->> -		*pci_bw = 2500 * width;
->> -		break;
->> -	case PCIE_SPEED_5_0GT:
->> -		*pci_bw = 5000 * width;
->> -		break;
->> -	case PCIE_SPEED_8_0GT:
->> -		*pci_bw = 8000 * width;
->> -		break;
->> -	default:
->> -		return -EINVAL;
->> -	}
->> +	*pci_bw = bw;
->>   
->>   	return 0;
->>   }
->> -- 
->> 1.8.3.1
->>
+> So he fixes the normal case but there's still a bug in the error case,
+> we need to make virq signed.
+
+I looked through the of_irq_parse_and_map_pci() path and I do not see
+a case where it can return a negative value.  It either returns zero
+or one of these:
+
+  virq = irq_find_mapping(...)
+  virq = irq_create_mapping(...)
+
+Both of these functions return unsigned values.
