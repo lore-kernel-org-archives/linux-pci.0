@@ -1,123 +1,72 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 15 Feb 2018 13:49:41 +0000
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: Jacob Pan <jacob.jun.pan@linux.intel.com>
-Subject: Re: [PATCH 07/37] iommu: Add a page fault handler
-Message-ID: <2be857f1-cde2-a448-2bca-045f068396e7@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-8-jean-philippe.brucker@arm.com>
- <20180213231821.5863ef99@jacob-builder>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:38742 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751544AbeBHTU0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Feb 2018 14:20:26 -0500
+Received: by mail-yw0-f194.google.com with SMTP id m84so3420052ywd.5
+        for <linux-pci@vger.kernel.org>; Thu, 08 Feb 2018 11:20:25 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20180213231821.5863ef99@jacob-builder>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180208053354.41725-1-aik@ozlabs.ru>
+References: <20180208053354.41725-1-aik@ozlabs.ru>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 8 Feb 2018 13:20:04 -0600
+Message-ID: <CAErSpo7S7vJTKBrxuzH-G0y-U2Z15jKpPJDZEEuhh7vAs0hjOA@mail.gmail.com>
+Subject: Re: [PATCH kernel] powerpc/pci: Fix broken INTx configuration via OF
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Paul Mackerras <paulus@ozlabs.org>,
+        Rob Herring <robh@kernel.org>,
+        Alistair Popple <alistair@popple.id.au>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/02/18 07:18, Jacob Pan wrote:
-[...]
->> +/* Used to store incomplete fault groups */
->> +static LIST_HEAD(iommu_partial_faults);
->> +static DEFINE_SPINLOCK(iommu_partial_faults_lock);
->> +
-> should partial fault list be per iommu?
+[+cc linux-pci]
 
-That would be good, but I don't see an easy way to retrieve the iommu
-instance in report_device_fault(). Maybe the driver should pass it to
-report_device_fault(), and we can then store partial faults in struct
-iommu_device.
+The original commit was merged via PCI, and I think it's a good idea
+to merge fixes to it the same way.  I'll try to merge this in time for
+v4.16-rc1.
 
-[...]
->> +/**
->> + * iommu_report_device_fault() - Handle fault in device driver or mm
->> + *
->> + * If the device driver expressed interest in handling fault, report
->> it through
->> + * the callback. If the fault is recoverable, try to page in the
->> address.
->> + */
->> +int iommu_report_device_fault(struct device *dev, struct
->> iommu_fault_event *evt) +{
->> +	int ret = -ENOSYS;
->> +	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
->> +
->> +	if (!domain)
->> +		return -ENODEV;
->> +
->> +	/*
->> +	 * if upper layers showed interest and installed a fault
->> handler,
->> +	 * invoke it.
->> +	 */
->> +	if (iommu_has_device_fault_handler(dev)) {
-> I think Alex pointed out this is racy, so adding a mutex to the
-> iommu_fault_param and acquire it would help. Do we really
-> atomic handler?
-
-Yes I think a few IOMMU drivers will call this function from IRQ context,
-so a spinlock might be better for acquiring iommu_fault_param.
-
->> +		struct iommu_fault_param *param =
->> dev->iommu_param->fault_param; +
->> +		return param->handler(evt, param->data);
-> Even upper layer (VFIO) registered handler to propagate PRQ to a guest
-> to fault in the pages, we may still need to keep track of the page
-> requests that need page response later, i.e. last page in group or
-> stream request in vt-d. This will allow us sanitize the page response
-> come back from the guest/VFIO.
-> In my next round, I am adding a per device list under iommu_fault_param
-> for pending page request. This will also address the situation where
-> guest failed to send response. We can enforce time or credit limit of
-> pending requests based on this list.
-
-Sounds good
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Wed, Feb 7, 2018 at 11:33 PM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+> Commit 59f47eff03a0 ("powerpc/pci: Use of_irq_parse_and_map_pci() helper")
+> correctly states that of_irq_parse_and_map_pci() does the same thing as
+> of_irq_parse_pci() does as it simply calls
+> of_irq_parse_pci() and irq_create_of_mapping().
+>
+> However of_irq_parse_and_map_pci() not only returns 0 for success and
+> negative value for an error but also a positive virq value from
+> irq_create_of_mapping() which the mentioned commit ignores and
+> INTx config fails.
+>
+> This fixes the of_irq_parse_and_map_pci() return value handling.
+>
+> Fixes: 59f47eff03a0 "powerpc/pci: Use of_irq_parse_and_map_pci() helper"
+> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> ---
+>
+> Found it on POWER9 + powernv system - almost all devices suddenly lost
+> INTx support.
+> ---
+>  arch/powerpc/kernel/pci-common.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index ae2ede4..acbb44f2 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -370,7 +370,8 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
+>         memset(&oirq, 0xff, sizeof(oirq));
+>  #endif
+>         /* Try to get a mapping from the device-tree */
+> -       if (!of_irq_parse_and_map_pci(pci_dev, 0, 0)) {
+> +       virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
+> +       if (virq <= 0) {
+>                 u8 line, pin;
+>
+>                 /* If that fails, lets fallback to what is in the config
+> --
+> 2.11.0
+>
