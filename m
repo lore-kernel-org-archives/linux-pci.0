@@ -1,144 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:40653 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932235AbeB1OqR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 09:46:17 -0500
-Date: Wed, 28 Feb 2018 15:46:04 +0100 (CET)
-From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-cc: Rolf Evers-Fischer <embedded24@evers-fischer.de>, kishon@ti.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Subject: Re: [PATCH v4 3/3] PCI: endpoint: pci_epf_create: remove goto
- labels
-In-Reply-To: <20180228133323.GB21854@e107981-ln.cambridge.arm.com>
-Message-ID: <alpine.LNX.2.20.1802281440001.31400@5HSWXM1.fritz.box>
-References: <20180228130719.31218-1-embedded24@evers-fischer.de> <20180228130719.31218-4-embedded24@evers-fischer.de> <20180228133323.GB21854@e107981-ln.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=5Nig=FC=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=5Nig=FC=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1518130243.2312.221.camel@kernel.crashing.org>
+Subject: Re: [PATCH kernel] powerpc/pci: Fix broken INTx configuration via OF
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Alexey Kardashevskiy
+ <aik@ozlabs.ru>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Michael
+ Ellerman <mpe@ellerman.id.au>,
+        Paul Mackerras <paulus@ozlabs.org>, Rob
+ Herring <robh@kernel.org>,
+        Alistair Popple <alistair@popple.id.au>, linux-pci@vger.kernel.org
+Date: Fri, 09 Feb 2018 09:50:43 +1100
+In-Reply-To: <20180208224205.GA206223@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180208053354.41725-1-aik@ozlabs.ru>
+	 <CAErSpo7S7vJTKBrxuzH-G0y-U2Z15jKpPJDZEEuhh7vAs0hjOA@mail.gmail.com>
+	 <20180208213956.GC98765@bhelgaas-glaptop.roam.corp.google.com>
+	 <1518128503.2312.219.camel@kernel.crashing.org>
+	 <20180208224205.GA206223@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon and Lorenzo,
-
-On Wed, 28 Feb 2018, Lorenzo Pieralisi wrote:
-
-> On Wed, Feb 28, 2018 at 02:07:19PM +0100, Rolf Evers-Fischer wrote:
-> > From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+On Thu, 2018-02-08 at 16:42 -0600, Bjorn Helgaas wrote:
+> On Fri, Feb 09, 2018 at 09:21:43AM +1100, Benjamin Herrenschmidt wrote:
+> > On Thu, 2018-02-08 at 15:39 -0600, Bjorn Helgaas wrote:
+> > > I don't understand how this fix works.  We used to check the result of
+> > > of_irq_parse_and_map_pci() and entered the block if it was zero.
+> > > 
+> > > Now you enter the block if it is zero or less than zero, but:
+> > > 
+> > >   static int pci_read_irq_line(...)
+> > >   {
+> > >     unsigned int virq = 0;     /* unnecessarily initialized, BTW */
+> > > 
+> > >     virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
+> > >     if (virq <= 0) {
+> > >       ...
+> > > 
+> > > virq is unsigned, so "virq < 0" can never be true.  So how does this
+> > > change anything?
 > > 
-> > Removes the goto labels completely, handles the errors at the
-> > respective call site and just returns instead of jumping around.
+> > Yes it does:
 > > 
-> > Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-> > ---
-> >  drivers/pci/endpoint/pci-epf-core.c | 30 +++++++++---------------------
-> >  1 file changed, 9 insertions(+), 21 deletions(-)
+> > So the unsigned thing is a second bug in the original patch that Alexey
+> > isn't fixing, we need to fix it too.
 > > 
-> > diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-> > index 1878a6776519..cf2c4f6590a0 100644
-> > --- a/drivers/pci/endpoint/pci-epf-core.c
-> > +++ b/drivers/pci/endpoint/pci-epf-core.c
-> > @@ -203,16 +203,14 @@ struct pci_epf *pci_epf_create(const char *name)
-> >  	int len;
-> >  
-> >  	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
-> > -	if (!epf) {
-> > -		ret = -ENOMEM;
-> > -		goto err_ret;
-> > -	}
-> > +	if (!epf)
-> > +		return ERR_PTR(-ENOMEM);
-> >  
-> >  	len = strchrnul(name, '.') - name;
-> >  	epf->name = kstrndup(name, len, GFP_KERNEL);
-> >  	if (!epf->name) {
-> > -		ret = -ENOMEM;
-> > -		goto free_epf;
-> > +		kfree(epf);
-> > +		return ERR_PTR(-ENOMEM);
-> >  	}
-> >  
-> >  	dev = &epf->dev;
-> > @@ -221,24 +219,14 @@ struct pci_epf *pci_epf_create(const char *name)
-> >  	dev->type = &pci_epf_type;
-> >  
-> >  	ret = dev_set_name(dev, "%s", name);
-> > -	if (ret)
-> > -		goto put_dev;
-> > -
-> > -	ret = device_add(dev);
-> > -	if (ret)
-> > -		goto put_dev;
-> > -
-> > -	return epf;
-> > +	if (!ret) {
-> > +		ret = device_add(dev);
-> > +		if (!ret)
-> > +			return epf;
-> > +	}
+> > However, the actual bug Alexey is fixing is that we lost the actual
+> > value of virq. IE, without his fix, we test it for 0 but we don't
+> > actually return it if it's positive.
 > 
-> This is ugly, sorry. I should have been more explicit, I prefer
-> this construct:
+> Ah, I see, the bug is that we discarded the non-zero virq value when
+> we actually need it.  I'm going to wait for a new patch with a
+> changelog that says that and doesn't test an unsigned value for < 0.
 > 
-> ret = dev_set_name(dev, "%s", name);
-> if (ret) {
-> 	kfree(epf->name);
-> 	kfree(epf);
-> 	return ERR_PTR(ret);
-> }
+> > So he fixes the normal case but there's still a bug in the error case,
+> > we need to make virq signed.
 > 
-> ret = device_add(dev);
-> if (ret) {
-> 	put_device(dev);
-> 	return ERR_PTR(ret);
-> }
+> I looked through the of_irq_parse_and_map_pci() path and I do not see
+> a case where it can return a negative value.  It either returns zero
+> or one of these:
 > 
-> return epf;
+>   virq = irq_find_mapping(...)
+>   virq = irq_create_mapping(...)
 > 
-> Please send a v5 and let's be done with it.
-> 
+> Both of these functions return unsigned values.
 
-Thank you for your feedback. I agree with you. Hiding the correct return 
-value under two levels of 'if' is not the best idea.
+Ok so the test is just wrong then. Aleey, can you respin ?
 
-I will send a v5 containing the proposal from Lorenzo. There is only one
-difference: We must call 'put_device()' in both error cases, because
-we have already initialized the device before. We had also jumped into
-'put_dev:' in both situations before.
-
-The modified code will then look like this:
-
- ret = dev_set_name(dev, "%s", name);
- if (ret) {
- 	put_device(dev);
- 	return ERR_PTR(ret);
- }
-
- ret = device_add(dev);
- if (ret) {
- 	put_device(dev);
- 	return ERR_PTR(ret);
- }
-
- return epf;
-
-Best regards,
- Rolf
-
-> > -put_dev:
-> >  	put_device(dev);
-> >  	return ERR_PTR(ret);
-> > -
-> > -free_epf:
-> > -	kfree(epf);
-> > -
-> > -err_ret:
-> > -	return ERR_PTR(ret);
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_epf_create);
-> >  
-> > -- 
-> > 2.16.2
-> > 
-> 
+Cheers,
+Ben.
