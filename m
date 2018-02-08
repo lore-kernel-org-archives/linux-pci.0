@@ -1,59 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1518007386.23115.6.camel@mtkswgap22>
-Subject: Re: [PATCH 2/2] dt-bindings: PCI: MediaTek: Correct the
- interrupt-map properties
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-Date: Wed, 7 Feb 2018 20:43:06 +0800
-In-Reply-To: <20180205060830.svkrwnn6wzuig7ns@rob-hp-laptop>
-References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
- <9d247a4fba54ba90d07df32fd89a8bb2c8bdb0f9.1516961656.git.ryder.lee@mediatek.com>
- <20180205060830.svkrwnn6wzuig7ns@rob-hp-laptop>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Robert Moore <robert.moore@intel.com>,
+        linux-pci@vger.kernel.org, devel@acpica.org
+Subject: Re: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices with unmet dependencies
+Date: Thu, 08 Feb 2018 10:57:24 +0100
+Message-ID: <3281375.11fh90aaLK@aspire.rjw.lan>
+In-Reply-To: <20180122085135.16732-1-hdegoede@redhat.com>
+References: <20180122085135.16732-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Arnd Bergmann <arnd@arndb.de>, Benjamin
- Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org,
- linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org, Bjorn
- Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
- linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Mon, 2018-02-05 at 00:08 -0600, Rob Herring wrote:
-> On Wed, Jan 31, 2018 at 03:41:50PM +0800, Ryder Lee wrote:
-> > Move the interrupt-map properties from the child nodes to the root node
-> > and update each entry accordingly.
-> > 
-> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> > ---
-> >  .../devicetree/bindings/pci/mediatek-pcie.txt      | 28 ++++++++++++----------
-> >  1 file changed, 15 insertions(+), 13 deletions(-)
+On Monday, January 22, 2018 9:51:30 AM CET Hans de Goede wrote:
+> Hi All,
 > 
-> Reviewed-by: Rob Herring <robh@kernel.org>
+> Here is v2 of this set, new in v2 is the addressing of Bjorn's comments
+> to the "PCI: acpiphp_ibm: prepare for acpi_get_object_info no longer
+> returning status" patch and a new patch (the first patch in v2) which
+> exports acpi_bus_get_status_handle() for use in modules as acpiphp_ibm
+> will now depend on it.
+> 
+> Here is the old coverletter from v1 (adjusted for the new patch):
+> 
+> The ACPI code already contains quite a bit of code to not bind the
+> ACPI-battery until all deps for an ACPI battery device have been met,
+> but on some devices calling _STA before all deps are met is a problem
+> too because the _STA method uses an i2c OpRegion there.
+> 
+> Here is the DSDT of the device I'm seeing this on:
+> https://fedorapeople.org/~jwrdegoede/toshiba-click-mini-dsdt.dsl
+> 
+> This series modifies the kernel to not call _STA until all deps are met,
+> mirroring the binding behavior of the battery driver.
+> 
+> Without this series a total of 32 ACPI errors get printend to the console
+> on boot, there are 4 errors per _STA call, 2 battery devices on this
+> system and 4 _STA calls per battery device.
+> 
+> The first 2 commits are preparation commits for making the ACPICA changes
+> in the 4th commit, these commits are necessary to not break things after
+> the ACPICA changes.
+> 
+> The 3th commit modifies acpi_bus_get_status to not call _STA on
+> battery devices until all deps are met. This fixes 2 of the 4 too early
+> _STA calls triggering these errors.
+> 
+> The 4th commit makes the device instantiation code use
+> acpi_bus_get_status instead of acpi_bus_get_status_handle so that the
+> code to get the initial status also does not makes 1 too early _STA call.
+> 
+> The 5th commit changes the ACPICA acpi_get_object_info function to not
+> call _STA. Only 1 user (which is fixed in the first commit) cares about
+> acpi_device_info.current_status. And the ACPICA code has this comment:
+> 
+>  * Note: This interface is intended to be used during the initial device
+>  * discovery namespace traversal. Therefore, no complex methods can be
+>  * executed, especially those that access operation regions. Therefore, do
+>  * not add any additional methods that could cause problems in this area.
+>  * Because of this reason support for the following methods has been removed:
+>  * this was the fate of the _SUB method which was found to cause such
+>  * problems and was removed (11/2015).
+> 
+> The described problems with the _SUB method clearly also apply to the _STA
+> method, so removing it from acpi_get_object_info seems like it is the right
+> thing to do here. This too fixes 1 too early _STA call, so that with all
+> 5 patches in place we've fixed all 4 too early _STA calls.
 
-Please ignore this patch as we think the original version is better than
-this.  Sorry for the inconvenience.
+I've applied [1-4/5] from this series.
 
-> _______________________________________________
-> Linux-mediatek mailing list
-> Linux-mediatek@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-mediatek
+The last one needs to go in via ACPICA anyway or we'll need to carry
+a Linux-specific replacement for acpi_get_object_info().
 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
