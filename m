@@ -1,58 +1,229 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:55745 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032738AbeBNQio (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Feb 2018 11:38:44 -0500
-Received: by mail-wm0-f66.google.com with SMTP id a84so12563614wmi.5
-        for <linux-pci@vger.kernel.org>; Wed, 14 Feb 2018 08:38:43 -0800 (PST)
-Subject: Re: [PATCH v2] PCI: qcom: add missing supplies required for msm8996
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh+dt@kernel.org, devicetree@vger.kernel.org
-References: <20180214120616.23428-1-srinivas.kandagatla@linaro.org>
- <79820f4c-5166-852f-1bc5-8cef2ff81a00@mm-sol.com>
- <d2b0f220-2982-dc86-ae9e-edf88e0b8e7d@linaro.org>
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Message-ID: <fe5639be-e520-b7f2-233e-c091440c77dc@linaro.org>
-Date: Wed, 14 Feb 2018 18:38:39 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v3 5/5] ACPICA: Remove calling of _STA from
+ acpi_get_object_info
+From: Hans de Goede <hdegoede@redhat.com>
+To: "Moore, Robert" <robert.moore@intel.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        "Schmauss, Erik" <erik.schmauss@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devel@acpica.org" <devel@acpica.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <20180126150300.9691-1-hdegoede@redhat.com>
+ <20180126150300.9691-5-hdegoede@redhat.com>
+ <94F2FBAB4432B54E8AACC7DFDE6C92E3B75696BC@ORSMSX110.amr.corp.intel.com>
+ <08f2a8aa-1510-3b78-4fa7-bf0ae194ccb0@redhat.com>
+Message-ID: <d4f6bb0e-6d72-9384-9df5-c22b936bed99@redhat.com>
+Date: Thu, 8 Feb 2018 13:02:23 +0100
 MIME-Version: 1.0
-In-Reply-To: <d2b0f220-2982-dc86-ae9e-edf88e0b8e7d@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <08f2a8aa-1510-3b78-4fa7-bf0ae194ccb0@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
+
+On 27-01-18 15:02, Hans de Goede wrote:
+> Hi,
+> 
+> On 26-01-18 21:42, Moore, Robert wrote:
+>> For ACPICA, this is a change to a published public interface. A change to this will potentially affect many operating systems, so we would be very hesitant to change it in the core ACPICA code.
+> 
+>  From the acpi_get_object_info() documentation in drivers/acpi/acpica/nsxfname.c:
+> 
+>   * Note: This interface is intended to be used during the initial device
+>   * discovery namespace traversal. Therefore, no complex methods can be
+>   * executed, especially those that access operation regions.
+> 
+> Since _STA can call Opregions, IMHO it does not belong in acpi_get_object_info()
+> and as Erik mentioned _STA can have side-effects then that seems like another
+> reason to NOT call it from acpi_get_object_info().
+> 
+> But I can understand that you don't want to outright change the behavior of
+> acpi_get_object_info() to call _STA since it has always done this, still
+> calling _STA can be a problem in some cases.
+> 
+> Perhaps we can give acpi_get_object_info() a flags argument, or if you want to
+> preserve the current interface ad a new acpi_get_object_info_no_sta() call (and
+> use flags under the hood so that we still have only 1 implementation) ?
+
+Erm, ping? It would be nice to get some feedback on my suggestions how to deal
+with this... ?
+
+Regards,
+
+Hans
 
 
-On 02/14/2018 06:14 PM, Srinivas Kandagatla wrote:
+
+
+
+> 
+> Regards,
+> 
+> Hans
 > 
 > 
-> On 14/02/18 16:00, Stanimir Varbanov wrote:
->>>   .../devicetree/bindings/pci/qcom,pcie.txt          |  4 ++++
->>>   drivers/pci/dwc/pcie-qcom.c                        | 24
->>> ++++++++++++++++++++--
->>>   2 files changed, 26 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
->>> b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
->>> index 3c9d321b3d3b..1fd703bd73e0 100644
->>> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
->>> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
->>> @@ -189,6 +189,10 @@
->>>       Value type: <phandle>
->>>       Definition: A phandle to the analog power supply for IC which
->>> generates
->>>               reference clock
->>> +- vddpe-3v3-supply:
->> shouldn't it be vddpe_3v3-supply to be aligned with the other supplies?
 >>
-> I noticed that, I had to do it intentionally
-> As dt properties should follow - instead of _
-
-I don't agree with that. If the supply name is more than one word it
-should be separated by underscore ('git grep \-supply' in dts files).
-
--- 
-regards,
-Stan
+>> Bob
+>>
+>>
+>>> -----Original Message-----
+>>> From: Hans de Goede [mailto:hdegoede@redhat.com]
+>>> Sent: Friday, January 26, 2018 7:03 AM
+>>> To: Rafael J . Wysocki <rjw@rjwysocki.net>; Len Brown <lenb@kernel.org>;
+>>> Moore, Robert <robert.moore@intel.com>; Schmauss, Erik
+>>> <erik.schmauss@intel.com>; Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: Hans de Goede <hdegoede@redhat.com>; linux-acpi@vger.kernel.org;
+>>> devel@acpica.org; linux-pci@vger.kernel.org
+>>> Subject: [PATCH v3 5/5] ACPICA: Remove calling of _STA from
+>>> acpi_get_object_info
+>>>
+>>> As the comment above it indicates, acpi_get_object_info is intended for
+>>> early probe usage and as such should not call any methods which may rely
+>>> on OpRegions, before this commit it was also calling _STA, which on some
+>>> systems does rely on OpRegions.
+>>>
+>>> Calling _STA before things are ready leads to errors such as these:
+>>>
+>>> [    0.123579] ACPI Error: No handler for Region [ECRM]
+>>> (00000000ba9edc4c)
+>>>                 [GenericSerialBus] (20170831/evregion-166)
+>>> [    0.123601] ACPI Error: Region GenericSerialBus (ID=9) has no handler
+>>>                 (20170831/exfldio-299)
+>>> [    0.123618] ACPI Error: Method parse/execution failed
+>>>                 \_SB.I2C1.BAT1._STA, AE_NOT_EXIST (20170831/psparse-550)
+>>>
+>>> End 2015 support for the _SUB method was removed for exactly the same
+>>> reason. Removing current_status from struct acpi_device_info only has a
+>>> limit impact. Within ACPICA it is only used by 2 debug messages, both of
+>>> which are modified to no longer print it with this commit.
+>>>
+>>> Outside of ACPICA, for Linux there is only one user. For which a patch
+>>> to remove the dependency on the current_status field is available.
+>>>
+>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>>> ---
+>>>   drivers/acpi/acpica/dbdisply.c |  5 ++---
+>>> drivers/acpi/acpica/nsdumpdv.c |  5 ++---
+>>> drivers/acpi/acpica/nsxfname.c | 19 ++++---------------
+>>>   include/acpi/actypes.h         |  2 --
+>>>   4 files changed, 8 insertions(+), 23 deletions(-)
+>>>
+>>> diff --git a/drivers/acpi/acpica/dbdisply.c
+>>> b/drivers/acpi/acpica/dbdisply.c index 5a606eac0c22..7b5eb33fe962 100644
+>>> --- a/drivers/acpi/acpica/dbdisply.c
+>>> +++ b/drivers/acpi/acpica/dbdisply.c
+>>> @@ -642,9 +642,8 @@ void acpi_db_display_object_type(char *object_arg)
+>>>           return;
+>>>       }
+>>>
+>>> -    acpi_os_printf("ADR: %8.8X%8.8X, STA: %8.8X, Flags: %X\n",
+>>> -               ACPI_FORMAT_UINT64(info->address),
+>>> -               info->current_status, info->flags);
+>>> +    acpi_os_printf("ADR: %8.8X%8.8X, Flags: %X\n",
+>>> +               ACPI_FORMAT_UINT64(info->address), info->flags);
+>>>
+>>>       acpi_os_printf("S1D-%2.2X S2D-%2.2X S3D-%2.2X S4D-%2.2X\n",
+>>>                  info->highest_dstates[0], info->highest_dstates[1],
+>>> diff --git a/drivers/acpi/acpica/nsdumpdv.c
+>>> b/drivers/acpi/acpica/nsdumpdv.c index 5026594763ea..573a5f36f01a 100644
+>>> --- a/drivers/acpi/acpica/nsdumpdv.c
+>>> +++ b/drivers/acpi/acpica/nsdumpdv.c
+>>> @@ -88,10 +88,9 @@ acpi_ns_dump_one_device(acpi_handle obj_handle,
+>>>           }
+>>>
+>>>           ACPI_DEBUG_PRINT_RAW((ACPI_DB_TABLES,
+>>> -                      "    HID: %s, ADR: %8.8X%8.8X, Status: %X\n",
+>>> +                      "    HID: %s, ADR: %8.8X%8.8X\n",
+>>>                         info->hardware_id.value,
+>>> -                      ACPI_FORMAT_UINT64(info->address),
+>>> -                      info->current_status));
+>>> +                      ACPI_FORMAT_UINT64(info->address));
+>>>           ACPI_FREE(info);
+>>>       }
+>>>
+>>> diff --git a/drivers/acpi/acpica/nsxfname.c
+>>> b/drivers/acpi/acpica/nsxfname.c index 106966235805..0a9c600c2599 100644
+>>> --- a/drivers/acpi/acpica/nsxfname.c
+>>> +++ b/drivers/acpi/acpica/nsxfname.c
+>>> @@ -241,7 +241,7 @@ static char *acpi_ns_copy_device_id(struct
+>>> acpi_pnp_device_id *dest,
+>>>    *              namespace node and possibly by running several standard
+>>>    *              control methods (Such as in the case of a device.)
+>>>    *
+>>> - * For Device and Processor objects, run the Device _HID, _UID, _CID,
+>>> _STA,
+>>> + * For Device and Processor objects, run the Device _HID, _UID, _CID,
+>>>    * _CLS, _ADR, _sx_w, and _sx_d methods.
+>>>    *
+>>>    * Note: Allocates the return buffer, must be freed by the caller.
+>>> @@ -250,8 +250,9 @@ static char *acpi_ns_copy_device_id(struct
+>>> acpi_pnp_device_id *dest,
+>>>    * discovery namespace traversal. Therefore, no complex methods can be
+>>>    * executed, especially those that access operation regions. Therefore,
+>>> do
+>>>    * not add any additional methods that could cause problems in this
+>>> area.
+>>> - * this was the fate of the _SUB method which was found to cause such
+>>> - * problems and was removed (11/2015).
+>>> + * Because of this reason support for the following methods has been
+>>> removed:
+>>> + * 1) _SUB method was removed (11/2015)
+>>> + * 2) _STA method was removed (01/2018)
+>>>    *
+>>>
+>>> ************************************************************************
+>>> ******/
+>>>
+>>> @@ -374,20 +375,8 @@ acpi_get_object_info(acpi_handle handle,
+>>>            * Notes: none of these methods are required, so they may or
+>>> may
+>>>            * not be present for this device. The Info->Valid bitfield
+>>> is used
+>>>            * to indicate which methods were found and run successfully.
+>>> -         *
+>>> -         * For _STA, if the method does not exist, then (as per the
+>>> ACPI
+>>> -         * specification), the returned current_status flags will
+>>> indicate
+>>> -         * that the device is present/functional/enabled. Otherwise,
+>>> the
+>>> -         * current_status flags reflect the value returned from _STA.
+>>>            */
+>>>
+>>> -        /* Execute the Device._STA method */
+>>> -
+>>> -        status = acpi_ut_execute_STA(node, &info->current_status);
+>>> -        if (ACPI_SUCCESS(status)) {
+>>> -            valid |= ACPI_VALID_STA;
+>>> -        }
+>>> -
+>>>           /* Execute the Device._ADR method */
+>>>
+>>>           status = acpi_ut_evaluate_numeric_object(METHOD_NAME__ADR,
+>>> node, diff --git a/include/acpi/actypes.h b/include/acpi/actypes.h index
+>>> 4f077edb9b81..220ef8674763 100644
+>>> --- a/include/acpi/actypes.h
+>>> +++ b/include/acpi/actypes.h
+>>> @@ -1191,7 +1191,6 @@ struct acpi_device_info {
+>>>       u8 flags;        /* Miscellaneous info */
+>>>       u8 highest_dstates[4];    /* _sx_d values: 0xFF indicates not
+>>> valid */
+>>>       u8 lowest_dstates[5];    /* _sx_w values: 0xFF indicates not valid */
+>>> -    u32 current_status;    /* _STA value */
+>>>       u64 address;    /* _ADR value */
+>>>       struct acpi_pnp_device_id hardware_id;    /* _HID value */
+>>>       struct acpi_pnp_device_id unique_id;    /* _UID value */
+>>> @@ -1205,7 +1204,6 @@ struct acpi_device_info {
+>>>
+>>>   /* Flags for Valid field above (acpi_get_object_info) */
+>>>
+>>> -#define ACPI_VALID_STA                  0x0001
+>>>   #define ACPI_VALID_ADR                  0x0002
+>>>   #define ACPI_VALID_HID                  0x0004
+>>>   #define ACPI_VALID_UID                  0x0008
+>>> -- 
+>>> 2.14.3
+>>
