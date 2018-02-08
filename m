@@ -1,77 +1,60 @@
-Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
-Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Greg KH <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
-	Michael Moese <mmoese@suse.de>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	linux-pci@vger.kernel.org,
-	Johannes Thumshirn <jthumshirn@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Eli Billauer <eli.billauer@gmail.com>,
-	Anatolij Gustschin <agust@denx.de>
-Subject: [PATCH v2 1/2] PCI: add vendor id for Altera
-Date: Wed, 28 Feb 2018 09:44:17 +0100
-Message-Id: <20180228084418.7566-2-jthumshirn@suse.de>
-In-Reply-To: <20180228084418.7566-1-jthumshirn@suse.de>
-References: <20180228084418.7566-1-jthumshirn@suse.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35336 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751079AbeBHPFw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Feb 2018 10:05:52 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w18F3Qtk104127
+        for <linux-pci@vger.kernel.org>; Thu, 8 Feb 2018 10:05:51 -0500
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2g0rs48fjg-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 08 Feb 2018 10:05:51 -0500
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+        Thu, 8 Feb 2018 10:05:50 -0500
+Subject: Re: [PATCH] PCI/AER: Move pci_uevent_ers() out of pci.h
+To: Michael Ellerman <mpe@ellerman.id.au>, bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
+        torvalds@linux-foundation.org, ruscur@russell.cc,
+        jjalvare@linux.vnet.ibm.com
+References: <20180208122035.9305-1-mpe@ellerman.id.au>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Thu, 8 Feb 2018 09:05:45 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180208122035.9305-1-mpe@ellerman.id.au>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <dcfc6411-20cf-5b3f-20c5-14167de54700@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the Altera PCI Vendor id to pci_ids.h and remove the private
-definitions from xillybus_pcie.c and altera-cvp.c.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Eli Billauer <eli.billauer@gmail.com>
-Cc: Anatolij Gustschin <agust@denx.de>
+On 2/8/18 6:20 AM, Michael Ellerman wrote:
 
----
-Changes to v1:
-- Remove redundant pci_ids.h include (Andy)
----
- drivers/char/xillybus/xillybus_pcie.c | 1 -
- drivers/fpga/altera-cvp.c             | 2 --
- include/linux/pci_ids.h               | 2 ++
- 3 files changed, 2 insertions(+), 3 deletions(-)
+> There's no reason pci_uevent_ers() needs to be inline in pci.h, so
+> move it out to a C file.
+>
+> Given it's used by AER the obvious location would be somewhere in
+> drivers/pci/pcie/aer, but because it's also used by powerpc EEH code
+> unfortunately that doesn't work in the case where EEH is enabled but
+> PCIEPORTBUS is not.
+>
+> So for now put it in pci-driver.c, next to pci_uevent(), with an
+> appropriate #ifdef so it's not built if AER and EEH are both disabled.
+>
+> While we're moving it also fix up the kernel doc comment for @pdev to
+> be accurate.
+>
+> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
+> ---
+>  drivers/pci/pci-driver.c | 36 ++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h      | 38 +++-----------------------------------
+>  2 files changed, 39 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/char/xillybus/xillybus_pcie.c b/drivers/char/xillybus/xillybus_pcie.c
-index dff2d1538164..05e5324f60bd 100644
---- a/drivers/char/xillybus/xillybus_pcie.c
-+++ b/drivers/char/xillybus/xillybus_pcie.c
-@@ -24,7 +24,6 @@ MODULE_LICENSE("GPL v2");
- 
- #define PCI_DEVICE_ID_XILLYBUS		0xebeb
- 
--#define PCI_VENDOR_ID_ALTERA		0x1172
- #define PCI_VENDOR_ID_ACTEL		0x11aa
- #define PCI_VENDOR_ID_LATTICE		0x1204
- 
-diff --git a/drivers/fpga/altera-cvp.c b/drivers/fpga/altera-cvp.c
-index 00e73d28077c..77b04e4b3254 100644
---- a/drivers/fpga/altera-cvp.c
-+++ b/drivers/fpga/altera-cvp.c
-@@ -384,8 +384,6 @@ static int altera_cvp_probe(struct pci_dev *pdev,
- 			    const struct pci_device_id *dev_id);
- static void altera_cvp_remove(struct pci_dev *pdev);
- 
--#define PCI_VENDOR_ID_ALTERA	0x1172
--
- static struct pci_device_id altera_cvp_id_tbl[] = {
- 	{ PCI_VDEVICE(ALTERA, PCI_ANY_ID) },
- 	{ }
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index a6b30667a331..6a96a70fb462 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1561,6 +1561,8 @@
- #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
- #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
- 
-+#define PCI_VENDOR_ID_ALTERA		0x1172
-+
- #define PCI_VENDOR_ID_SBE		0x1176
- #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
- #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
--- 
-2.13.6
+Looks good, thanks for fixing it!
+
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+
+-Bryant
