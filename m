@@ -1,88 +1,53 @@
-Return-Path: <SRS0=+pYx=FN=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=+pYx=FN=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Jayachandran Nair <Jayachandran.Nair@cavium.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>, Robert Richter <Robert.Richter@cavium.com>, Tom Vaden <tom.vaden@hpe.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, George Cherian <george.cherian@cavium.com>
-Subject: Re: [PATCH v1 1/2] PCI: Probe for device reset support before driver claim
-Date: Mon, 19 Feb 2018 13:59:38 +0100
-Message-ID: <9067468.WjanRiEMkP@aspire.rjw.lan>
-In-Reply-To: <20180216225010.67295.92539.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180216224213.67295.2251.stgit@bhelgaas-glaptop.roam.corp.google.com> <20180216225010.67295.92539.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=5Nig=FC=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=5Nig=FC=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1518128503.2312.219.camel@kernel.crashing.org>
+Subject: Re: [PATCH kernel] powerpc/pci: Fix broken INTx configuration via OF
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
+        linuxppc-dev
+ <linuxppc-dev@lists.ozlabs.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Paul Mackerras <paulus@ozlabs.org>, Rob Herring <robh@kernel.org>,
+        Alistair
+ Popple <alistair@popple.id.au>, linux-pci@vger.kernel.org
+Date: Fri, 09 Feb 2018 09:21:43 +1100
+In-Reply-To: <20180208213956.GC98765@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180208053354.41725-1-aik@ozlabs.ru>
+	 <CAErSpo7S7vJTKBrxuzH-G0y-U2Z15jKpPJDZEEuhh7vAs0hjOA@mail.gmail.com>
+	 <20180208213956.GC98765@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, February 16, 2018 11:50:11 PM CET Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, 2018-02-08 at 15:39 -0600, Bjorn Helgaas wrote:
+> I don't understand how this fix works.  We used to check the result of
+> of_irq_parse_and_map_pci() and entered the block if it was zero.
 > 
-> Previously we called pci_probe_reset_function() in this path:
+> Now you enter the block if it is zero or less than zero, but:
 > 
->   pci_sysfs_init                              # late_initcall
->     for_each_pci_dev(dev)
->       pci_create_sysfs_dev_files(dev)
-> 	pci_create_capabilities_sysfs(dev)
-> 	  pci_probe_reset_function
-> 	    pci_dev_specific_reset
-> 	    pcie_has_flr
->               pcie_capability_read_dword
+>   static int pci_read_irq_line(...)
+>   {
+>     unsigned int virq = 0;     /* unnecessarily initialized, BTW */
 > 
-> pci_sysfs_init() is a late_initcall, and a driver may have already claimed
-> one of these devices and enabled runtime power management for it, so the
-> device could already be in D3hot by the time we get to pci_sysfs_init().
+>     virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
+>     if (virq <= 0) {
+>       ...
+> 
+> virq is unsigned, so "virq < 0" can never be true.  So how does this
+> change anything?
 
-It also may be in D3cold if, say, AML can cut off power from it or ACPI
-power resources can be used for that.
+Yes it does:
 
-> The device itself should respond to the config read even while it's in
-> D3hot, but if an upstream bridge is also in D3hot, the read won't even
-> reach the device because the bridge won't forward it downstream to the
-> device.  If the bridge is a PCIe port, it should complete the read as an
-> Unsupported Request, which may be reported to the CPU as an exception or as
-> invalid data.
-> 
-> Avoid this case by probing for reset support from pci_init_capabilities(),
-> before a driver can claim the device.  The device should be in D0 and fully
-> accessible at that point.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+So the unsigned thing is a second bug in the original patch that Alexey
+isn't fixing, we need to fix it too.
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+However, the actual bug Alexey is fixing is that we lost the actual
+value of virq. IE, without his fix, we test it for 0 but we don't
+actually return it if it's positive.
 
-> ---
->  drivers/pci/pci-sysfs.c |    3 +--
->  drivers/pci/probe.c     |    3 +++
->  2 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index eb6bee8724cc..4933f0270471 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1542,11 +1542,10 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
->  	/* Active State Power Management */
->  	pcie_aspm_create_sysfs_dev_files(dev);
->  
-> -	if (!pci_probe_reset_function(dev)) {
-> +	if (dev->reset_fn) {
->  		retval = device_create_file(&dev->dev, &reset_attr);
->  		if (retval)
->  			goto error;
-> -		dev->reset_fn = 1;
->  	}
->  	return 0;
->  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ef5377438a1e..489660d0d384 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2121,6 +2121,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  
->  	/* Advanced Error Reporting */
->  	pci_aer_init(dev);
-> +
-> +	if (pci_probe_reset_function(dev) == 0)
-> +		dev->reset_fn = 1;
->  }
->  
->  /*
-> 
-> 
+So he fixes the normal case but there's still a bug in the error case,
+we need to make virq signed.
+
+Cheers,
+Ben.
