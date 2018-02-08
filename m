@@ -1,236 +1,135 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 5/5] ACPICA: Remove calling of _STA from
- acpi_get_object_info
-From: Hans de Goede <hdegoede@redhat.com>
-To: "Moore, Robert" <robert.moore@intel.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        "Schmauss, Erik" <erik.schmauss@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devel@acpica.org" <devel@acpica.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20180126150300.9691-1-hdegoede@redhat.com>
- <20180126150300.9691-5-hdegoede@redhat.com>
- <94F2FBAB4432B54E8AACC7DFDE6C92E3B75696BC@ORSMSX110.amr.corp.intel.com>
- <08f2a8aa-1510-3b78-4fa7-bf0ae194ccb0@redhat.com>
-Message-ID: <8b7eec39-a262-0317-baf7-5301cce367ab@redhat.com>
-Date: Thu, 8 Feb 2018 13:16:20 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:49950 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750865AbeBHMvi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Feb 2018 07:51:38 -0500
+Subject: =?UTF-8?Q?Re:_xhci=5fhcd_HC_died;_cleaning_up_with_TUSB7340_and_?=
+ =?UTF-8?Q?=c2=b5PD720201?=
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        "Quadros, Roger" <rogerq@ti.com>
+CC: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, Joao Pinto <jpinto@synopsys.com>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        Rabin Vincent <rabinv@axis.com>, <faiz_abbas@ti.com>
+References: <BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com>
+ <3dd7a4fc-da86-03cc-9b01-a0d29dd73230@ti.com>
+ <f57ccfd8-0b99-278c-6c10-474395f96a3c@ti.com>
+ <e7fc4bc3-8bd1-4915-bb2a-37420ee725f9@axis.com>
+From: Vignesh R <vigneshr@ti.com>
+Message-ID: <09f6143b-ae0a-498e-2826-ab6e5055e6bb@ti.com>
+Date: Thu, 8 Feb 2018 18:22:12 +0530
 MIME-Version: 1.0
-In-Reply-To: <08f2a8aa-1510-3b78-4fa7-bf0ae194ccb0@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <e7fc4bc3-8bd1-4915-bb2a-37420ee725f9@axis.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 27-01-18 15:02, Hans de Goede wrote:
-> Hi,
-> 
-> On 26-01-18 21:42, Moore, Robert wrote:
->> For ACPICA, this is a change to a published public interface. A change to this will potentially affect many operating systems, so we would be very hesitant to change it in the core ACPICA code.
-> 
->  From the acpi_get_object_info() documentation in drivers/acpi/acpica/nsxfname.c:
-> 
->   * Note: This interface is intended to be used during the initial device
->   * discovery namespace traversal. Therefore, no complex methods can be
->   * executed, especially those that access operation regions.
-> 
-> Since _STA can call Opregions, IMHO it does not belong in acpi_get_object_info()
-> and as Erik mentioned _STA can have side-effects then that seems like another
-> reason to NOT call it from acpi_get_object_info().
-> 
-> But I can understand that you don't want to outright change the behavior of
-> acpi_get_object_info() to call _STA since it has always done this, still
-> calling _STA can be a problem in some cases.
-> 
-> Perhaps we can give acpi_get_object_info() a flags argument, or if you want to
-> preserve the current interface ad a new acpi_get_object_info_no_sta() call (and
-> use flags under the hood so that we still have only 1 implementation) ?
-
-p.s.
-
-A cleaner fix might simply be to make whether or not acpi_get_object_info()
-calls _STA configurable, by say doing something like this in acconfig.h:
-
-#ifndef ACPI_GET_OBJ_INFO_WITH_STA
-#define ACPI_GET_OBJ_INFO_WITH_STA 1
-#endif
-
-And then in aclinux.h:
-
-#define ACPI_GET_OBJ_INFO_WITH_STA 0
-
-And instead of removing the calling of _STA all together as my initial
-patch did, wrap it in:
-
-#if ACPI_GET_OBJ_INFO_WITH_STA
-#endif
-
-Shall I respin the patch to do this ?
-
-Regards,
-
-Hans
 
 
-
-
->>> -----Original Message-----
->>> From: Hans de Goede [mailto:hdegoede@redhat.com]
->>> Sent: Friday, January 26, 2018 7:03 AM
->>> To: Rafael J . Wysocki <rjw@rjwysocki.net>; Len Brown <lenb@kernel.org>;
->>> Moore, Robert <robert.moore@intel.com>; Schmauss, Erik
->>> <erik.schmauss@intel.com>; Bjorn Helgaas <bhelgaas@google.com>
->>> Cc: Hans de Goede <hdegoede@redhat.com>; linux-acpi@vger.kernel.org;
->>> devel@acpica.org; linux-pci@vger.kernel.org
->>> Subject: [PATCH v3 5/5] ACPICA: Remove calling of _STA from
->>> acpi_get_object_info
->>>
->>> As the comment above it indicates, acpi_get_object_info is intended for
->>> early probe usage and as such should not call any methods which may rely
->>> on OpRegions, before this commit it was also calling _STA, which on some
->>> systems does rely on OpRegions.
->>>
->>> Calling _STA before things are ready leads to errors such as these:
->>>
->>> [    0.123579] ACPI Error: No handler for Region [ECRM]
->>> (00000000ba9edc4c)
->>>                 [GenericSerialBus] (20170831/evregion-166)
->>> [    0.123601] ACPI Error: Region GenericSerialBus (ID=9) has no handler
->>>                 (20170831/exfldio-299)
->>> [    0.123618] ACPI Error: Method parse/execution failed
->>>                 \_SB.I2C1.BAT1._STA, AE_NOT_EXIST (20170831/psparse-550)
->>>
->>> End 2015 support for the _SUB method was removed for exactly the same
->>> reason. Removing current_status from struct acpi_device_info only has a
->>> limit impact. Within ACPICA it is only used by 2 debug messages, both of
->>> which are modified to no longer print it with this commit.
->>>
->>> Outside of ACPICA, for Linux there is only one user. For which a patch
->>> to remove the dependency on the current_status field is available.
->>>
->>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>> ---
->>>   drivers/acpi/acpica/dbdisply.c |  5 ++---
->>> drivers/acpi/acpica/nsdumpdv.c |  5 ++---
->>> drivers/acpi/acpica/nsxfname.c | 19 ++++---------------
->>>   include/acpi/actypes.h         |  2 --
->>>   4 files changed, 8 insertions(+), 23 deletions(-)
->>>
->>> diff --git a/drivers/acpi/acpica/dbdisply.c
->>> b/drivers/acpi/acpica/dbdisply.c index 5a606eac0c22..7b5eb33fe962 100644
->>> --- a/drivers/acpi/acpica/dbdisply.c
->>> +++ b/drivers/acpi/acpica/dbdisply.c
->>> @@ -642,9 +642,8 @@ void acpi_db_display_object_type(char *object_arg)
->>>           return;
->>>       }
->>>
->>> -    acpi_os_printf("ADR: %8.8X%8.8X, STA: %8.8X, Flags: %X\n",
->>> -               ACPI_FORMAT_UINT64(info->address),
->>> -               info->current_status, info->flags);
->>> +    acpi_os_printf("ADR: %8.8X%8.8X, Flags: %X\n",
->>> +               ACPI_FORMAT_UINT64(info->address), info->flags);
->>>
->>>       acpi_os_printf("S1D-%2.2X S2D-%2.2X S3D-%2.2X S4D-%2.2X\n",
->>>                  info->highest_dstates[0], info->highest_dstates[1],
->>> diff --git a/drivers/acpi/acpica/nsdumpdv.c
->>> b/drivers/acpi/acpica/nsdumpdv.c index 5026594763ea..573a5f36f01a 100644
->>> --- a/drivers/acpi/acpica/nsdumpdv.c
->>> +++ b/drivers/acpi/acpica/nsdumpdv.c
->>> @@ -88,10 +88,9 @@ acpi_ns_dump_one_device(acpi_handle obj_handle,
->>>           }
->>>
->>>           ACPI_DEBUG_PRINT_RAW((ACPI_DB_TABLES,
->>> -                      "    HID: %s, ADR: %8.8X%8.8X, Status: %X\n",
->>> +                      "    HID: %s, ADR: %8.8X%8.8X\n",
->>>                         info->hardware_id.value,
->>> -                      ACPI_FORMAT_UINT64(info->address),
->>> -                      info->current_status));
->>> +                      ACPI_FORMAT_UINT64(info->address));
->>>           ACPI_FREE(info);
->>>       }
->>>
->>> diff --git a/drivers/acpi/acpica/nsxfname.c
->>> b/drivers/acpi/acpica/nsxfname.c index 106966235805..0a9c600c2599 100644
->>> --- a/drivers/acpi/acpica/nsxfname.c
->>> +++ b/drivers/acpi/acpica/nsxfname.c
->>> @@ -241,7 +241,7 @@ static char *acpi_ns_copy_device_id(struct
->>> acpi_pnp_device_id *dest,
->>>    *              namespace node and possibly by running several standard
->>>    *              control methods (Such as in the case of a device.)
->>>    *
->>> - * For Device and Processor objects, run the Device _HID, _UID, _CID,
->>> _STA,
->>> + * For Device and Processor objects, run the Device _HID, _UID, _CID,
->>>    * _CLS, _ADR, _sx_w, and _sx_d methods.
->>>    *
->>>    * Note: Allocates the return buffer, must be freed by the caller.
->>> @@ -250,8 +250,9 @@ static char *acpi_ns_copy_device_id(struct
->>> acpi_pnp_device_id *dest,
->>>    * discovery namespace traversal. Therefore, no complex methods can be
->>>    * executed, especially those that access operation regions. Therefore,
->>> do
->>>    * not add any additional methods that could cause problems in this
->>> area.
->>> - * this was the fate of the _SUB method which was found to cause such
->>> - * problems and was removed (11/2015).
->>> + * Because of this reason support for the following methods has been
->>> removed:
->>> + * 1) _SUB method was removed (11/2015)
->>> + * 2) _STA method was removed (01/2018)
->>>    *
->>>
->>> ************************************************************************
->>> ******/
->>>
->>> @@ -374,20 +375,8 @@ acpi_get_object_info(acpi_handle handle,
->>>            * Notes: none of these methods are required, so they may or
->>> may
->>>            * not be present for this device. The Info->Valid bitfield
->>> is used
->>>            * to indicate which methods were found and run successfully.
->>> -         *
->>> -         * For _STA, if the method does not exist, then (as per the
->>> ACPI
->>> -         * specification), the returned current_status flags will
->>> indicate
->>> -         * that the device is present/functional/enabled. Otherwise,
->>> the
->>> -         * current_status flags reflect the value returned from _STA.
->>>            */
->>>
->>> -        /* Execute the Device._STA method */
->>> -
->>> -        status = acpi_ut_execute_STA(node, &info->current_status);
->>> -        if (ACPI_SUCCESS(status)) {
->>> -            valid |= ACPI_VALID_STA;
->>> -        }
->>> -
->>>           /* Execute the Device._ADR method */
->>>
->>>           status = acpi_ut_evaluate_numeric_object(METHOD_NAME__ADR,
->>> node, diff --git a/include/acpi/actypes.h b/include/acpi/actypes.h index
->>> 4f077edb9b81..220ef8674763 100644
->>> --- a/include/acpi/actypes.h
->>> +++ b/include/acpi/actypes.h
->>> @@ -1191,7 +1191,6 @@ struct acpi_device_info {
->>>       u8 flags;        /* Miscellaneous info */
->>>       u8 highest_dstates[4];    /* _sx_d values: 0xFF indicates not
->>> valid */
->>>       u8 lowest_dstates[5];    /* _sx_w values: 0xFF indicates not valid */
->>> -    u32 current_status;    /* _STA value */
->>>       u64 address;    /* _ADR value */
->>>       struct acpi_pnp_device_id hardware_id;    /* _HID value */
->>>       struct acpi_pnp_device_id unique_id;    /* _UID value */
->>> @@ -1205,7 +1204,6 @@ struct acpi_device_info {
->>>
->>>   /* Flags for Valid field above (acpi_get_object_info) */
->>>
->>> -#define ACPI_VALID_STA                  0x0001
->>>   #define ACPI_VALID_ADR                  0x0002
->>>   #define ACPI_VALID_HID                  0x0004
->>>   #define ACPI_VALID_UID                  0x0008
->>> -- 
->>> 2.14.3
+On Thursday 08 February 2018 02:24 PM, Niklas Cassel wrote:
+> On 16/11/17 13:26, Vignesh R wrote:
+>> +linux-pci
 >>
+>> Hi Chris,
+>>
+>> On Thursday 16 November 2017 05:20 PM, Quadros, Roger wrote:
+>>> +Vignesh
+>>>
+>>> On 13/09/17 17:26, Chris Welch wrote:
+>>>> We are developing a product based on the TI AM5728 EVM.  The product utilizes a TUSB7340 PCIe USB host for additional ports.  The TUSB7340 is detected and setup properly and works OK with low data rate devices.  However, hot plugging a Realtek USB network adapter and doing Ethernet transfer bandwidth testing using iperf3 causes the TUSB7340 host to be  locked out.  The TUSB7340 host appears to no longer communicate and the logging indicates xhci_hcd 0000:01:00.0: HC died; cleaning up.  Same issue occurs with another USB Ethernet adapter I tried (Asus).
+>>>>
+>>>> We looked at using another host and found a mini PCIe card that utilizes the µPD720201 and can be directly installed on the TI AM5728 EVM.  The card is detected properly and we reran the transfer test.  The uPD720201 gets locks out with the same problem.
+>>>>
+>>>> The AM5728 testing was performed using the TI SD card stock am57xx-evm-linux-04.00.00.04.img, kernel am57xx-evm 4.9.28-geed43d1050, and it reports that it is using the TI AM572x EVM Rev A3 device tree.
+>>>>
+>>>> It shows the following logging when it fails (this is with the TI EVM and uPD720201).
+>>>>
+>>>> [  630.400899] xhci_hcd 0000:01:00.0: xHCI host not responding to stop endpoint command.
+>>>> [  630.408769] xhci_hcd 0000:01:00.0: Assuming host is dying, halting host.
+>>>> [  630.420849] r8152 2-4:1.0 enp1s0u4: Tx status -108
+>>>> [  630.425667] r8152 2-4:1.0 enp1s0u4: Tx status -108
+>>>> [  630.430483] r8152 2-4:1.0 enp1s0u4: Tx status -108
+>>>> [  630.435297] r8152 2-4:1.0 enp1s0u4: Tx status -108
+>>>> [  630.440122] xhci_hcd 0000:01:00.0: HC died; cleaning up
+>>>> [  630.453961] usb 2-4: USB disconnect, device number 2
+>>>>
+>>>> The problem appears to be a general driver issue given we get the same problem with both the  TUSB7340 and the µPD720201.
+>>
+>> Seems like PCIe driver is missing MSI IRQs leading to stall. 
+>> Reading xHCI registers via PCIe mem space confirms this.
+>>
+>> I see two problems wrt MSI handling:
+>> Since commit 8c934095fa2f3 ("PCI: dwc: Clear MSI interrupt status after it is handled, not before"),
+>> dwc clears MSI status after calling EP's IRQ handler. But, it happens that another MSI interrupt is
+>> raised just at the end of EP's IRQ handler and before clearing MSI status.
+>> This will result in loss of new MSI IRQ as we clear the MSI IRQ status without handling.
+>>
+>> Another problem appears to be wrt dra7xx PCIe wrapper:
+>> PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI does not seem to catch MSI IRQs unless,
+>> its ensured that PCIE_MSI_INTR0_STATUS register read returns 0.
+>>
+>> So, could you try reverting commit 8c934095fa2f3 and 
+>> also apply below patch and let me know if that fixes the issue?
+> 
+> Hello Vignesh,
+> 
+> It is not only dra7xx that is affected by this bug,
+> all other DWC based drivers as well.
+> 
+> I suggest that we either:
+> Revert 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status after it is handled,
+> not before")
+
+I will send a revert soon.
+
+> or
+> You implement a generic solution
+> (i.e. in drivers/pci/dwc/pcie-designware-host.c)
+> rather than just a dra7xx specific solution.
+
+Reverting 8c934095fa2f should unblock all other DWC drivers. For dra7xx,
+I will send separate patches to fix TI dra7xx specific wrapper level IRQ
+handler.
+
+
+>> -----------
+>>
+>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>> index e77a4ceed74c..8280abc56f30 100644
+>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>> @@ -259,10 +259,17 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>>         u32 reg;
+>>  
+>>         reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
+>> +       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+>>  
+>>         switch (reg) {
+>>         case MSI:
+>> -               dw_handle_msi_irq(pp);
+>> +               /*
+>> +                * Need to make sure no MSI IRQs are pending before
+>> +                * exiting handler, else the wrapper will not catch new
+>> +                * IRQs. So loop around till dw_handle_msi_irq() returns
+>> +                * IRQ_NONE
+>> +                */
+>> +               while (dw_handle_msi_irq(pp) != IRQ_NONE);
+>>                 break;
+>>         case INTA:
+>>         case INTB:
+>> @@ -273,8 +280,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>>                 break;
+>>         }
+>>  
+>> -       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+>> -
+>>         return IRQ_HANDLED;
+>>  }
+>>
+>>
+>>
+>>
+
+-- 
+Regards
+Vignesh
