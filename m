@@ -1,59 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:40375 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752670AbeBSQWu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Feb 2018 11:22:50 -0500
-Date: Mon, 19 Feb 2018 17:22:48 +0100
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 0/8] SH7786 PCIe support fixes
-Message-ID: <20180219172248.12360360@windsurf.lan>
-In-Reply-To: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from bastet.se.axis.com ([195.60.68.11]:49065 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750961AbeBHMd4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Feb 2018 07:33:56 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        John Keeping <john@metanate.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/3] PCI: endpoint: Handle 64-bit BARs properly
+Date: Thu,  8 Feb 2018 13:33:44 +0100
+Message-Id: <20180208123346.20784-2-niklas.cassel@axis.com>
+In-Reply-To: <20180208123346.20784-1-niklas.cassel@axis.com>
+References: <20180208123346.20784-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+A 64-bit BAR uses the succeeding BAR for the upper bits, therefore
+we cannot call pci_epc_set_bar() on a BAR that follows a 64-bit BAR.
 
-On Mon,  4 Dec 2017 16:08:59 +0100, Thomas Petazzoni wrote:
+If pci_epc_set_bar() is called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
+it has to be up to the controller driver to write both BAR[x] and BAR[x+1]
+(and BAR_mask[x] and BAR_mask[x+1]).
 
-> Thomas Petazzoni (8):
->   arch/sh: add sh7786_mm_sel() function
->   arch/sh: make the DMA mapping operations observe dev->dma_pfn_offset
->   arch/sh: pci: don't use disabled resources
->   arch/sh: pcie-sh7786: mark unavailable PCI resource as disabled
->   arch/sh: pcie-sh7786: exclude unusable PCI MEM areas
->   arch/sh: pcie-sh7786: adjust PCI MEM and IO regions
->   arch/sh: pcie-sh7786: adjust the memory mapping
->   arch/sh: pcie-sh7786: handle non-zero DMA offset
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-It's been more than 2 months, and I haven't received any review on this
-patch series.
-
-It is very likely that I am one of the only active user of a SH7786
-platform, so I don't think those patches will break things for anybody.
-Would it be possible to just merge them ? I doubt anyone will be
-interested in doing a very careful and detailed review, since I doubt
-anyone is interested in this SH7786 platform anymore.
-
-The only patch that can potentially break things for other is "arch/sh:
-make the DMA mapping operations observe dev->dma_pfn_offset" but I
-believe it is useful to have it and fix any fallout (which should be
-trivial).
-
-So please, please, merge :-)
-
-Thanks,
-
-Thomas
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 800da09d9005..eef85820f59e 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -382,6 +382,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
+ 			if (bar == test_reg_bar)
+ 				return ret;
+ 		}
++		if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
++			bar++;
+ 	}
+ 
+ 	return 0;
 -- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-http://bootlin.com
+2.14.2
