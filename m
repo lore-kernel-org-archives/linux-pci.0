@@ -1,69 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50266 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.99]:39022 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752157AbeB1OVx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 09:21:53 -0500
-Date: Wed, 28 Feb 2018 14:21:48 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: kishon@ti.com, Bjorn Helgaas <bhelgaas@google.com>,
-        Sekhar Nori <nsekhar@ti.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        Niklas Cassel <niklass@axis.com>,
-        John Keeping <john@metanate.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] PCI: endpoint: Handle 64-bit BARs properly
-Message-ID: <20180228142148.GD21854@e107981-ln.cambridge.arm.com>
-References: <20180227115908.14593-1-niklas.cassel@axis.com>
- <20180227115908.14593-2-niklas.cassel@axis.com>
+        id S1752497AbeBISHn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Feb 2018 13:07:43 -0500
+Date: Fri, 9 Feb 2018 12:07:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: linuxppc-dev@lists.ozlabs.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH kernel v3] powerpc/pci: Fix broken INTx configuration via
+ OF
+Message-ID: <20180209180741.GB206223@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180209062358.33457-1-aik@ozlabs.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180227115908.14593-2-niklas.cassel@axis.com>
+In-Reply-To: <20180209062358.33457-1-aik@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 27, 2018 at 12:59:05PM +0100, Niklas Cassel wrote:
-> A 64-bit BAR uses the succeeding BAR for the upper bits, therefore
-> we cannot call pci_epc_set_bar() on a BAR that follows a 64-bit BAR.
+On Fri, Feb 09, 2018 at 05:23:58PM +1100, Alexey Kardashevskiy wrote:
+> Commit 59f47eff03a0 ("powerpc/pci: Use of_irq_parse_and_map_pci() helper")
+> replaced of_irq_parse_pci() + irq_create_of_mapping() with
+> of_irq_parse_and_map_pci() but this change lost virq returned by
+> irq_create_of_mapping() so virq remained zero causing INTx
+> misconfiguration.
 > 
-> If pci_epc_set_bar() is called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
+> This fixes pci_read_irq_line() not to loose a virq returned by
+> of_irq_parse_and_map_pci().
 
-PCI_BASE_ADDRESS_MEM_TYPE_64 is detected through a sizeof(dma_addr_t).
+s/not to loose a/to not lose the/
 
-I thought we decided to describe the BARs not as dma_addr_t + size but
-as resources, which would allow you to have flags describing their
-actual size.
+> Fixes: 59f47eff03a0 "powerpc/pci: Use of_irq_parse_and_map_pci() helper"
+> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
 
-Current code has a fixed BAR size defined by the dma_addr_t type size
-and I do not think that's what we really want.
+I'm fine with this version.
 
-How is (in HW I mean) actually the BAR size configured in a given EPF ?
+Since you started applying a previous version, Michael, I'll assume
+you will handle this unless you tell me otherwise.  One way or another
+it would be good to get this in before -rc1.
 
-Thanks,
-Lorenzo
-
-> it has to be up to the controller driver to write both BAR[x] and BAR[x+1]
-> (and BAR_mask[x] and BAR_mask[x+1]).
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 > ---
->  drivers/pci/endpoint/functions/pci-epf-test.c | 2 ++
->  1 file changed, 2 insertions(+)
+> Changes:
+> v3:
+> * change virq from unsigned to int as of_irq_parse_and_map_pci returns int
+> and even though it only returns non-negative values now, this may change
+> in the future
 > 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index 64d8a17f8094..ecbf6a7750dc 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -382,6 +382,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
->  			if (bar == test_reg_bar)
->  				return ret;
->  		}
-> +		if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
-> +			bar++;
->  	}
+> v2:
+> * changed the condition from <=0 to !=0 as by design
+> of_irq_parse_and_map_pci() can only return 0 for an error and virq>0.
+> ---
+>  arch/powerpc/kernel/pci-common.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index ae2ede4..446c796 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -362,7 +362,7 @@ struct pci_controller* pci_find_hose_for_OF_device(struct device_node* node)
+>   */
+>  static int pci_read_irq_line(struct pci_dev *pci_dev)
+>  {
+> -	unsigned int virq = 0;
+> +	int virq;
 >  
->  	return 0;
+>  	pr_debug("PCI: Try to map irq for %s...\n", pci_name(pci_dev));
+>  
+> @@ -370,7 +370,8 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
+>  	memset(&oirq, 0xff, sizeof(oirq));
+>  #endif
+>  	/* Try to get a mapping from the device-tree */
+> -	if (!of_irq_parse_and_map_pci(pci_dev, 0, 0)) {
+> +	virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
+> +	if (virq <= 0) {
+>  		u8 line, pin;
+>  
+>  		/* If that fails, lets fallback to what is in the config
 > -- 
-> 2.14.2
+> 2.11.0
 > 
