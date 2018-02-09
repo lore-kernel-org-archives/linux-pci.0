@@ -1,144 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 12 Feb 2018 09:21:22 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mike Lothian <mike@fireburn.co.uk>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:29054 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbeBIMDx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Feb 2018 07:03:53 -0500
+From: Vignesh R <vigneshr@ti.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <lenb@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Check presence of slot itself in
- get_slot_status()
-Message-ID: <20180212152122.GB75542@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
- <CAHbf0-Exsu14dBmmfYy8Tcb4R58eYJKLFPPoM9RkqxHWDkqwXQ@mail.gmail.com>
+        Niklas Cassel <niklas.cassel@axis.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
+Subject: [PATCH 1/3] Revert "PCI: dwc: Clear MSI interrupt status after it is handled, not before"
+Date: Fri, 9 Feb 2018 17:34:13 +0530
+Message-ID: <20180209120415.17590-2-vigneshr@ti.com>
+In-Reply-To: <20180209120415.17590-1-vigneshr@ti.com>
+References: <20180209120415.17590-1-vigneshr@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHbf0-Exsu14dBmmfYy8Tcb4R58eYJKLFPPoM9RkqxHWDkqwXQ@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 12, 2018 at 11:08:55AM +0000, Mike Lothian wrote:
-> On 12 February 2018 at 10:55, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
-> > Mike Lothian reported that plugging in a USB-C device does not work
-> > properly in his Dell Alienware system. This system has Intel Alpine
-> > Ridge Thunderbolt controller providing USB-C functionality. In these
-> > systems the USB controller (xHCI) is hotplugged whenever a device is
-> > connected to the port using ACPI based hotplug.
-> >
-> > The ACPI description of the root port in question looks as follows:
-> >
-> > Device (RP01)
-> > {
-> >     Name (_ADR, 0x001C0000)
-> >
-> >     Device (PXSX)
-> >     {
-> >         Name (_ADR, 0x02)
-> >
-> >         Method (_RMV, 0, NotSerialized)
-> >         {
-> >             // ...
-> >         }
-> >     }
-> >
-> > Here _ADR 0x02 means device 0, function 2 on the bus under root port
-> > (RP1) but that seems to be incorrect because device 0 is the upstream
-> > port of the Alpine Ridge PCIe switch and it does not have other
-> > functions than 0 (the bridge itself). When we get ACPI Notify() to the
-> > root port resulting from connecting a USB-C device, Linux tries to read
-> > PCI_VENDOR_ID from device 0, function 2 which of course always returns
-> > 0xffffffff because there is no such function and we never find the
-> > device.
-> >
-> > In Windows this works fine.
-> >
-> > Now, since we get ACPI Notify() to the root port and not to the PXSX
-> > device we should actually start our scan from there as well and not from
-> > the non-existent PXSX device so fix this by checking presence of the
-> > slot itself (function 0) if we fail to do that otherwise.
-> >
-> > While there use pci_bus_read_dev_vendor_id() in get_slot_status() which
-> > is the recommended way to read device and vendor ID of device on PCI bus.
-> >
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=198557
-> > Reported-by: Mike Lothian <mike@fireburn.co.uk>
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > Cc: stable@vger.kernel.org
-> > ---
-> >  drivers/pci/hotplug/acpiphp_glue.c | 23 ++++++++++++++++-------
-> >  1 file changed, 16 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> > index e2198a2feeca..b45b375c0e6c 100644
-> > --- a/drivers/pci/hotplug/acpiphp_glue.c
-> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> > @@ -541,6 +541,7 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
-> >  {
-> >         unsigned long long sta = 0;
-> >         struct acpiphp_func *func;
-> > +       u32 dvid;
-> >
-> >         list_for_each_entry(func, &slot->funcs, sibling) {
-> >                 if (func->flags & FUNC_HAS_STA) {
-> > @@ -551,19 +552,27 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
-> >                         if (ACPI_SUCCESS(status) && sta)
-> >                                 break;
-> >                 } else {
-> > -                       u32 dvid;
-> > -
-> > -                       pci_bus_read_config_dword(slot->bus,
-> > -                                                 PCI_DEVFN(slot->device,
-> > -                                                           func->function),
-> > -                                                 PCI_VENDOR_ID, &dvid);
-> > -                       if (dvid != 0xffffffff) {
-> > +                       if (pci_bus_read_dev_vendor_id(slot->bus,
-> > +                                       PCI_DEVFN(slot->device, func->function),
-> > +                                       &dvid, 0)) {
-> >                                 sta = ACPI_STA_ALL;
-> >                                 break;
-> >                         }
-> >                 }
-> >         }
-> >
-> > +       if (!sta) {
-> > +               /*
-> > +                * Check for the slot itself since it may be that the
-> > +                * ACPI slot is a device below PCIe upstream port so in
-> > +                * that case it may not even be reachable yet.
-> > +                */
-> > +               if (pci_bus_read_dev_vendor_id(slot->bus,
-> > +                               PCI_DEVFN(slot->device, 0), &dvid, 0)) {
-> > +                       sta = ACPI_STA_ALL;
-> > +               }
-> > +       }
-> > +
-> >         return (unsigned int)sta;
-> >  }
-> >
-> > --
-> > 2.15.1
-> >
-> 
-> Thanks for this, it fixes a few other issues on my machine too
+Since commit 06e15e6883bed ("PCI: dwc: Clear MSI interrupt status after
+it is handled, not before"), MSI IRQ status in PCIE_MSI_INTR0_STATUS
+register is cleared after calling EP's IRQ handler.
+But, MSI IRQs in case of PCIe are bit like edge interrupts. If a
+another MSI IRQ is raised and the end of current EP's IRQ handler call
+but before clearing the MSI IRQ status in PCIE_MSI_INTR0_STATUS register
+then the new MSI IRQ is lost.
 
-Thanks for testing this.  Can you elaborate on what other issues this
-fixes?  I don't know what they are, but they might be worth mentioning
-in the changelog do make this fix more discoverable.
+This issue has been observed in case of USB-Ethernet adapter connected
+to PCIe USB card running iperf3 test. iperf3 client stalls after
+sometime as reported here[1]. This is because XHCI raises MSI IRQ at the
+end of its IRQ handler but before PCIe driver has cleared its status
+in PCIE_MSI_INTR0_STATUS register. Hence, the new IRQ is never
+registered by PCIe designware core. Since, XHCI does not raise any more
+IRQs until the previous one is handled, it leads to a stall in
+communication.
+Therefore driver should always clear the MSI IRQ status in
+PCIE_MSI_INTR0_STATUS before calling EP's IRQ handler. This make sure
+that DW PCIe core catches new IRQ raised during the call to EP's IRQ
+handler
 
-> I'm going to do some searches around different bugzillas for the USB-C
-> non-detection and the NVMe drive disappearing after suspend issues and
-> report that they'll be getting a fix soon
+[1] https://lkml.kernel.org/r/BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com
 
-If you find more bugzillas that are fixed by this, please include the
-URLs so we can include them in the changelog.  (I can do this; no need
-to respin the patch just for this.)
+Signed-off-by: Vignesh R <vigneshr@ti.com>
+---
+ drivers/pci/dwc/pcie-designware-host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Tested-by: Mike Lothian <mike@fireburn.co.uk>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 8de2d5c69b1d..c29cbcd430f4 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -68,9 +68,9 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 		while ((pos = find_next_bit((unsigned long *) &val, 32,
+ 					    pos)) != 32) {
+ 			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
+-			generic_handle_irq(irq);
+ 			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
+ 					    4, 1 << pos);
++			generic_handle_irq(irq);
+ 			pos++;
+ 		}
+ 	}
+-- 
+2.16.1
