@@ -1,156 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:60164 "EHLO ale.deltatee.com"
+Received: from ozlabs.ru ([107.173.13.209]:49124 "EHLO ozlabs.ru"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965054AbeB1XkZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 18:40:25 -0500
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        id S1752172AbeBICsc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Feb 2018 21:48:32 -0500
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Feb 2018 16:39:56 -0700
-Message-Id: <20180228234006.21093-1-logang@deltatee.com>
-Subject: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH kernel v2] powerpc/pci: Fix broken INTx configuration via OF
+Date: Fri,  9 Feb 2018 13:41:25 +1100
+Message-Id: <20180209024125.38862-1-aik@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Everyone,
+Commit 59f47eff03a0 ("powerpc/pci: Use of_irq_parse_and_map_pci() helper")
+replaced of_irq_parse_pci() + irq_create_of_mapping() with
+of_irq_parse_and_map_pci() but this change lost virq returned by
+irq_create_of_mapping() so virq remained zero causing INTx
+misconfiguration.
 
-Here's v2 of our series to introduce P2P based copy offload to NVMe
-fabrics. This version has been rebased onto v4.16-rc3 which already
-includes Christoph's devpagemap work the previous version was based
-off as well as a couple of the cleanup patches that were in v1.
+This fixes pci_read_irq_line() not to loose a virq returned by
+of_irq_parse_and_map_pci().
 
-Additionally, we've made the following changes based on feedback:
+Fixes: 59f47eff03a0 "powerpc/pci: Use of_irq_parse_and_map_pci() helper"
+Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+Changes:
+v2:
+* changed the condition from <=0 to !=0 as by design
+of_irq_parse_and_map_pci() can only return 0 for an error and virq>0.
+---
+ arch/powerpc/kernel/pci-common.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-* Renamed everything to 'p2pdma' per the suggestion from Bjorn as well
-  as a bunch of cleanup and spelling fixes he pointed out in the last
-  series.
-
-* To address Alex's ACS concerns, we change to a simpler method of
-  just disabling ACS behind switches for any kernel that has
-  CONFIG_PCI_P2PDMA.
-
-* We also reject using devices that employ 'dma_virt_ops' which should
-  fairly simply handle Jason's concerns that this work might break with
-  the HFI, QIB and rxe drivers that use the virtual ops to implement
-  their own special DMA operations.
-
-Thanks,
-
-Logan
-
---
-
-This is a continuation of our work to enable using Peer-to-Peer PCI
-memory in NVMe fabrics targets. Many thanks go to Christoph Hellwig who
-provided valuable feedback to get these patches to where they are today.
-
-The concept here is to use memory that's exposed on a PCI BAR as
-data buffers in the NVME target code such that data can be transferred
-from an RDMA NIC to the special memory and then directly to an NVMe
-device avoiding system memory entirely. The upside of this is better
-QoS for applications running on the CPU utilizing memory and lower
-PCI bandwidth required to the CPU (such that systems could be designed
-with fewer lanes connected to the CPU). However, presently, the
-trade-off is currently a reduction in overall throughput. (Largely due
-to hardware issues that would certainly improve in the future).
-
-Due to these trade-offs we've designed the system to only enable using
-the PCI memory in cases where the NIC, NVMe devices and memory are all
-behind the same PCI switch. This will mean many setups that could likely
-work well will not be supported so that we can be more confident it
-will work and not place any responsibility on the user to understand
-their topology. (We chose to go this route based on feedback we
-received at the last LSF). Future work may enable these transfers behind
-a fabric of PCI switches or perhaps using a white list of known good
-root complexes.
-
-In order to enable this functionality, we introduce a few new PCI
-functions such that a driver can register P2P memory with the system.
-Struct pages are created for this memory using devm_memremap_pages()
-and the PCI bus offset is stored in the corresponding pagemap structure.
-
-Another set of functions allow a client driver to create a list of
-client devices that will be used in a given P2P transactions and then
-use that list to find any P2P memory that is supported by all the
-client devices. This list is then also used to selectively disable the
-ACS bits for the downstream ports behind these devices.
-
-In the block layer, we also introduce a P2P request flag to indicate a
-given request targets P2P memory as well as a flag for a request queue
-to indicate a given queue supports targeting P2P memory. P2P requests
-will only be accepted by queues that support it. Also, P2P requests
-are marked to not be merged seeing a non-homogenous request would
-complicate the DMA mapping requirements.
-
-In the PCI NVMe driver, we modify the existing CMB support to utilize
-the new PCI P2P memory infrastructure and also add support for P2P
-memory in its request queue. When a P2P request is received it uses the
-pci_p2pmem_map_sg() function which applies the necessary transformation
-to get the corrent pci_bus_addr_t for the DMA transactions.
-
-In the RDMA core, we also adjust rdma_rw_ctx_init() and
-rdma_rw_ctx_destroy() to take a flags argument which indicates whether
-to use the PCI P2P mapping functions or not.
-
-Finally, in the NVMe fabrics target port we introduce a new
-configuration boolean: 'allow_p2pmem'. When set, the port will attempt
-to find P2P memory supported by the RDMA NIC and all namespaces. If
-supported memory is found, it will be used in all IO transfers. And if
-a port is using P2P memory, adding new namespaces that are not supported
-by that memory will fail.
-
-Logan Gunthorpe (10):
-  PCI/P2PDMA: Support peer to peer memory
-  PCI/P2PDMA: Add sysfs group to display p2pmem stats
-  PCI/P2PDMA: Add PCI p2pmem dma mappings to adjust the bus offset
-  PCI/P2PDMA: Clear ACS P2P flags for all devices behind switches
-  block: Introduce PCI P2P flags for request and request queue
-  IB/core: Add optional PCI P2P flag to rdma_rw_ctx_[init|destroy]()
-  nvme-pci: Use PCI p2pmem subsystem to manage the CMB
-  nvme-pci: Add support for P2P memory in requests
-  nvme-pci: Add a quirk for a pseudo CMB
-  nvmet: Optionally use PCI P2P memory
-
- Documentation/ABI/testing/sysfs-bus-pci |  25 ++
- block/blk-core.c                        |   3 +
- drivers/infiniband/core/rw.c            |  21 +-
- drivers/infiniband/ulp/isert/ib_isert.c |   5 +-
- drivers/infiniband/ulp/srpt/ib_srpt.c   |   7 +-
- drivers/nvme/host/core.c                |   4 +
- drivers/nvme/host/nvme.h                |   8 +
- drivers/nvme/host/pci.c                 | 118 ++++--
- drivers/nvme/target/configfs.c          |  29 ++
- drivers/nvme/target/core.c              |  95 ++++-
- drivers/nvme/target/io-cmd.c            |   3 +
- drivers/nvme/target/nvmet.h             |  10 +
- drivers/nvme/target/rdma.c              |  43 +-
- drivers/pci/Kconfig                     |  20 +
- drivers/pci/Makefile                    |   1 +
- drivers/pci/p2pdma.c                    | 713 ++++++++++++++++++++++++++++++++
- drivers/pci/pci.c                       |   4 +
- include/linux/blk_types.h               |  18 +-
- include/linux/blkdev.h                  |   3 +
- include/linux/memremap.h                |  19 +
- include/linux/pci-p2pdma.h              | 105 +++++
- include/linux/pci.h                     |   4 +
- include/rdma/rw.h                       |   7 +-
- net/sunrpc/xprtrdma/svc_rdma_rw.c       |   6 +-
- 24 files changed, 1204 insertions(+), 67 deletions(-)
- create mode 100644 drivers/pci/p2pdma.c
- create mode 100644 include/linux/pci-p2pdma.h
-
---
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index ae2ede4..33580a9 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -362,7 +362,7 @@ struct pci_controller* pci_find_hose_for_OF_device(struct device_node* node)
+  */
+ static int pci_read_irq_line(struct pci_dev *pci_dev)
+ {
+-	unsigned int virq = 0;
++	unsigned int virq;
+ 
+ 	pr_debug("PCI: Try to map irq for %s...\n", pci_name(pci_dev));
+ 
+@@ -370,7 +370,8 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
+ 	memset(&oirq, 0xff, sizeof(oirq));
+ #endif
+ 	/* Try to get a mapping from the device-tree */
+-	if (!of_irq_parse_and_map_pci(pci_dev, 0, 0)) {
++	virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
++	if (!virq) {
+ 		u8 line, pin;
+ 
+ 		/* If that fails, lets fallback to what is in the config
+-- 
 2.11.0
