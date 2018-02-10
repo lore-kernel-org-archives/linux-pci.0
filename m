@@ -1,68 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 15 Feb 2018 10:59:09 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
-Message-ID: <20180215095909.r4nwqjhuijusssuy@8bytes.org>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-2-jean-philippe.brucker@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sat, 10 Feb 2018 09:34:50 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Alex Hung <alex.hung@canonical.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH] ACPI/PCI: pci_link: change log level of no _PRS messages
+Message-ID: <20180210153450.GD206223@bhelgaas-glaptop.roam.corp.google.com>
+References: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
+ <20180210010548.GC206223@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0gBK8WmX4QYYBzVxdk8CaSBo5ckzmP49qr05+9DAYieqw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180212183352.22730-2-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, xieyisheng1@huawei.com, ilias.apalodimas@linaro.org,
- kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
- jonathan.cameron@huawei.com, will.deacon@arm.com, okaya@codeaurora.org,
- yi.l.liu@intel.com, lorenzo.pieralisi@arm.com, ashok.raj@intel.com,
- tn@semihalf.com, robdclark@gmail.com, bharatku@xilinx.com,
- linux-acpi@vger.kernel.org, catalin.marinas@arm.com, rfranz@cavium.com,
- lenb@kernel.org, devicetree@vger.kernel.org, jacob.jun.pan@linux.intel.com,
- alex.williamson@redhat.com, robh+dt@kernel.org, thunder.leizhen@huawei.com,
- bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
- shunyong.yang@hxt-semitech.com, dwmw2@infradead.org, liubo95@huawei.com,
- rjw@rjwysocki.net, jcrouse@codeaurora.org, iommu@lists.linux-foundation.org,
- hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com,
- christian.koenig@amd.com, nwatters@codeaurora.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0gBK8WmX4QYYBzVxdk8CaSBo5ckzmP49qr05+9DAYieqw@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 12, 2018 at 06:33:16PM +0000, Jean-Philippe Brucker wrote:
-  
-> +config IOMMU_SVA
-> +	bool "Shared Virtual Addressing API for the IOMMU"
-> +	select IOMMU_API
-> +	help
-> +	  Enable process address space management for the IOMMU API. In systems
-> +	  that support it, device drivers can bind process address spaces to
-> +	  devices and share their page tables using this API.
-> +
-> +	  If unsure, say N here.
+On Sat, Feb 10, 2018 at 09:08:42AM +0100, Rafael J. Wysocki wrote:
+> On Sat, Feb 10, 2018 at 2:05 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Fri, Feb 09, 2018 at 02:56:43PM -0800, Alex Hung wrote:
+> >> In recent Intel hardware the IRQs become non-configurable after BIOS
+> >> initializes them in PEI phase and _PRS objects are no longer included in
+> >> ASL.
+> >>
+> >> This is the same as "static (non-configurable) devices do not
+> >> specify a _PRS object" in ACPI spec. As a result, error messages
+> >> saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
+> >> be in kernel messages all the time but only when debug is enabled.
+> >
+> > I agree and would even go further: _PRS is optional and I don't think
+> > there's a reason to log anything at all if it's absent.  A log message
+> > like "failed to evaluate _PRS" makes people think something is wrong
+> > when in fact nothing is wrong.
+> 
+> _PRS is required if the link object is pointed to by a _PRT entry.
 
-I think this should be an option selected by IOMMU driver and not be
-activly selectable by the user.
+The closest thing I see with a quick look is ACPI 6.0, sec 6.2.13:
 
-> +/**
-> + * iommu_sva_device_shutdown() - Shutdown Shared Virtual Addressing for a device
-> + * @dev: the device
-> + *
-> + * Disable SVA. The device should not be performing any DMA while this function
-> + * is running.
+  These objects [PCI Interrupt Link Devices] have _PRS, _CRS, _SRS,
+  and _DIS control methods to allocate the interrupt.
 
-Is this a good idea? How about devices that get hot-unplugged while
-processes still use them and there is DMA going back and forth? This
-function can be the point to shut down all ongoing stuff first and the
-shutdown the device.
+I don't read that as a requirement for _PRS in particular; I read it
+as saying that the interrupt link devices use the normal device
+configuration method, i.e., _CRS is required and _PRS and _SRS are
+optional and needed for configurable devices but not for static ones.
 
+But this is just a drive-by comment and I'm really fine with whatever
+you decide to do.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > That leads to the mindset of treating a missing _PRS as an error when
+> > it's not.  In fact, it looks like acpi_pci_link_add() *does* treat
+> > this as an error.  If _PRS doesn't exist, it skips the _CRS
+> > evaluation.  That seems wrong.
+> 
+> I agree here.  _CRS still should be evaluated if _PRS is not there in
+> general, but in some cases the lack of _PRS *is* an error.
