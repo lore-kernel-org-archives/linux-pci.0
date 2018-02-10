@@ -1,68 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:12800 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752050AbeB1KAy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 05:00:54 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V9 0/3] Add loadable kernel module and power management support
-Date: Wed, 28 Feb 2018 15:30:31 +0530
-Message-ID: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:45400 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750835AbeBJPnp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 10 Feb 2018 10:43:45 -0500
+Date: Sat, 10 Feb 2018 09:43:42 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian Zigotzky <chzigotzky@xenosoft.de>
+Cc: linux-pci@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] PCI: Make PCI_SCAN_ALL_PCIE_DEVS work for Root as
+ well as Downstream Ports
+Message-ID: <20180210154342.GE206223@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171202002710.17686.21340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171202191827.GB18780@bhelgaas-glaptop.roam.corp.google.com>
+ <33CA1586-051C-47F4-83CD-4A406FAE85F7@xenosoft.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <33CA1586-051C-47F4-83CD-4A406FAE85F7@xenosoft.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series of patches adds loadable kernel module and power management
-support to Tegra PCIe host controller driver. irq_set_msi_desc() and
-tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
-set of patches.
+On Sat, Feb 10, 2018 at 09:05:40AM +0100, Christian Zigotzky wrote:
+> Hi All,
+> 
+> The AmigaOne X1000 doesn’t boot anymore since the PCI updates. I
+> have seen, that the PCI updates are different to the updates below.
+> The code below works but the latest not. Is there a problem with the
+> latest PCI updates currently?
 
-These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
-are the verification details.
-	- Multiple module insert & remove
-	- PCIe device functionality after module insert
-	- Free clock, resets, regulators, powergate, iomem and interrupt
-	resources after module remove
-	- PCIe device functionality after resume from RAM
+I'm not aware of a problem, and it *looks* like the patch below is in
+Linus' tree (I'm looking at 9a61df9e5f74 ("Merge tag 'kbuild-v4.16-2'
+of git://git.kernel.org/pub/scm/linux/kernel/git/masahiroy/linux-kbuild")).
 
-V2: PM QoS fix is dropped in V2 from this series because the fix is
-incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
-latency framework")'. Update commit message of few patches in V2.
+I assume you're still booting with "pci=pcie_scan_all", since I don't
+think we ever got a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically.
 
-V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_use()
-are dropped based on review comments. These symbols will be addressed in next
-series. Took care of few other review comments.
+If AmigaOne X1000 doesn't boot with "pci=pcie_scan_all", can you diff
+the working only_one_child() with the current upstream?  I compared
+the version in my pci/enumeration branch with what's upstream, and
+they're identical.  So maybe the original patch I applied was wrong?
 
-V4: Dropped pci_find_host_bridge() export patch and added new patch to use
-bus->sysdata for private data.
+If you have a patch that works, can you post it and maybe I can sort
+out what's different?
 
-V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
-on top of linux-next
-
-V6: Rebased on lpieralisi/pci/tegra branch
-
-V7: Addressed comments on patch: 6 and 7 in V6
-Limiting this series to linux-tegra & linux-pci since patches for other 
-subsystem are merged or dropped
-
-V8: Since LKM is not completely implemented changing PCI_TEGRA config
-back to bool
-
-V9: Squash patch-3 (PME_Turn_Off patch) on top of patch-2 (LKM patch)
-in V8 to have single working LKM patch.
-
-Manikanta Maddireddy (3):
-  PCI: tegra: Free resources on probe failure
-  PCI: tegra: Add loadable kernel module support
-  PCI: tegra: Add power management support
-
- drivers/pci/host/pci-tegra.c | 354 +++++++++++++++++++++++++++++++++----------
- 1 file changed, 278 insertions(+), 76 deletions(-)
-
--- 
-2.1.4
+> On 2. Dec 2017, at 20:18, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> 
+> On Fri, Dec 01, 2017 at 06:27:10PM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> PCIe Downstream Ports normally have only a Device 0 below them.  To
+> optimize enumeration, we don't scan for other devices *unless* the
+> PCI_SCAN_ALL_PCIE_DEVS flag is set by set by quirks or the
+> "pci=pcie_scan_all" kernel parameter.
+> 
+> Previously PCI_SCAN_ALL_PCIE_DEVS only affected scanning below Switch
+> Downstream Ports, not Root Ports.
+> 
+> But the "Nemo" system, also known as the AmigaOne X1000, has a PA Semi Root
+> Port whose link leads to an AMD/ATI SB600 South Bridge.  The Root Port is a
+> PCIe device, of course, but the SB600 contains only conventional PCI
+> devices with no visible PCIe port.
+> 
+> Simplify and restructure only_one_child() so that we scan for all possible
+> devices below Root Ports as well as Switch Downstream Ports when
+> PCI_SCAN_ALL_PCIE_DEVS is set.
+> 
+> This is enough to make Nemo work with "pci=pcie_scan_all".  We would also
+> like to add a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically on Nemo so
+> users wouldn't have to use the "pci=pcie_scan_all" parameter, but we don't
+> have that yet.
+> 
+> Link: https://lkml.kernel.org/r/CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=198057
+> Reported-and-Tested-by: Christian Zigotzky <chzigotzky@xenosoft.de>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Applied to pci/enumeration for v4.16.
+> 
+> ---
+> drivers/pci/probe.c |   25 +++++++++++++++----------
+> 1 file changed, 15 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 14e0ea1ff38b..303c0cb0550c 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2215,22 +2215,27 @@ static unsigned next_fn(struct pci_bus *bus, struct pci_dev *dev, unsigned fn)
+> 
+> static int only_one_child(struct pci_bus *bus)
+> {
+> -    struct pci_dev *parent = bus->self;
+> +    struct pci_dev *bridge = bus->self;
+> 
+> -    if (!parent || !pci_is_pcie(parent))
+> +    /*
+> +     * Systems with unusual topologies set PCI_SCAN_ALL_PCIE_DEVS so
+> +     * we scan for all possible devices, not just Device 0.
+> +     */
+> +    if (pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+>        return 0;
+> -    if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+> -        return 1;
+> 
+>    /*
+> -     * PCIe downstream ports are bridges that normally lead to only a
+> -     * device 0, but if PCI_SCAN_ALL_PCIE_DEVS is set, scan all
+> -     * possible devices, not just device 0.  See PCIe spec r3.0,
+> -     * sec 7.3.1.
+> +     * A PCIe Downstream Port normally leads to a Link with only Device
+> +     * 0 on it (PCIe spec r3.1, sec 7.3.1).  As an optimization, scan
+> +     * only for Device 0 in that situation.
+> +     *
+> +     * Checking has_secondary_link is a hack to identify Downstream
+> +     * Ports because sometimes Switches are configured such that the
+> +     * PCIe Port Type labels are backwards.
+>     */
+> -    if (parent->has_secondary_link &&
+> -        !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+> +    if (bridge && pci_is_pcie(bridge) && bridge->has_secondary_link)
+>        return 1;
+> +
+>    return 0;
+> }
+> 
