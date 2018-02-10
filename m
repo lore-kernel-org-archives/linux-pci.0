@@ -1,42 +1,110 @@
-Return-Path: <SRS0=BsMt=FU=xilinx.com=bharatku@kernel.org>
-Return-Path: <SRS0=BsMt=FU=xilinx.com=bharatku@kernel.org>
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: <helgaas@kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: Multi MSI with multiple End Points
-Message-ID: <d1cdbe97-8ed4-c4d5-0b1f-8d281b44871d@xilinx.com>
-Date: Mon, 26 Feb 2018 19:40:28 +0530
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Return-Path: <SRS0=jA/5=FE=xenosoft.de=chzigotzky@kernel.org>
+Return-Path: <SRS0=jA/5=FE=xenosoft.de=chzigotzky@kernel.org>
+Content-Type: text/plain;
+	charset=utf-8
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH v1] PCI: Make PCI_SCAN_ALL_PCIE_DEVS work for Root as well as Downstream Ports
+From: Christian Zigotzky <chzigotzky@xenosoft.de>
+In-Reply-To: <20171202191827.GB18780@bhelgaas-glaptop.roam.corp.google.com>
+Date: Sat, 10 Feb 2018 09:05:40 +0100
+Cc: linux-pci@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
+ linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Message-Id: <33CA1586-051C-47F4-83CD-4A406FAE85F7@xenosoft.de>
+References: <20171202002710.17686.21340.stgit@bhelgaas-glaptop.roam.corp.google.com> <20171202191827.GB18780@bhelgaas-glaptop.roam.corp.google.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi All,
 
-A switch is connected to an RC with 2 EP=E2=80=99s, the RC supports multi M=
-SI.
-1st EP requests one MSI vector, 2nd EP requests 4 MSI vectors.
+The AmigaOne X1000 doesn=E2=80=99t boot anymore since the PCI updates. I hav=
+e seen, that the PCI updates are different to the updates below. The code be=
+low works but the latest not. Is there a problem with the latest PCI updates=
+ currently?
 
-If we are programming hwirq as MSI data (hwirq being obtained from
-bitmap_find_next_zero_area, with number of zeroed bits being requested
-based on number of irq=E2=80=99s being requested).
+Thanks,
+Christian
 
-This results in 1st EP is given zero as hwirq, 2nd EP is given one as hwirq=
-.
+Sent from my iPhone
 
-If we use msi data to retrieve virq (use msi data as hwirq), Since as
-per PCI spec lower 2 bits of MSI data are modifiable  for 2nd EP, if an
-interrupt is raised by 2nd EP on msi data zero, but this is already used
-by 1st EP, so the current EP=E2=80=99s interrupt will never be served.
+On 2. Dec 2017, at 20:18, Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-One way to deal with this issue is, using bit shift operations on hwriq
-before programming to msi data and at retrieving.
+On Fri, Dec 01, 2017 at 06:27:10PM -0600, Bjorn Helgaas wrote:
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Is there any other way to handle this ?
+PCIe Downstream Ports normally have only a Device 0 below them.  To
+optimize enumeration, we don't scan for other devices *unless* the
+PCI_SCAN_ALL_PCIE_DEVS flag is set by set by quirks or the
+"pci=3Dpcie_scan_all" kernel parameter.
 
-Regards,
-Bharat
-This email and any attachments are intended for the sole use of the named r=
-ecipient(s) and contain(s) confidential information that may be proprietary=
-, privileged or copyrighted under applicable law. If you are not the intend=
-ed recipient, do not read, copy, or forward this email message or any attac=
-hments. Delete this email message and any attachments immediately.
+Previously PCI_SCAN_ALL_PCIE_DEVS only affected scanning below Switch
+Downstream Ports, not Root Ports.
+
+But the "Nemo" system, also known as the AmigaOne X1000, has a PA Semi Root
+Port whose link leads to an AMD/ATI SB600 South Bridge.  The Root Port is a
+PCIe device, of course, but the SB600 contains only conventional PCI
+devices with no visible PCIe port.
+
+Simplify and restructure only_one_child() so that we scan for all possible
+devices below Root Ports as well as Switch Downstream Ports when
+PCI_SCAN_ALL_PCIE_DEVS is set.
+
+This is enough to make Nemo work with "pci=3Dpcie_scan_all".  We would also
+like to add a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically on Nemo so
+users wouldn't have to use the "pci=3Dpcie_scan_all" parameter, but we don't=
+
+have that yet.
+
+Link: https://lkml.kernel.org/r/CAErSpo55Q8Q=3D5p6_+uu7ahnw+53ibVDNRXxrzRV9Q=
+nUr_9EUfw@mail.gmail.com
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D198057
+Reported-and-Tested-by: Christian Zigotzky <chzigotzky@xenosoft.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Applied to pci/enumeration for v4.16.
+
+---
+drivers/pci/probe.c |   25 +++++++++++++++----------
+1 file changed, 15 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 14e0ea1ff38b..303c0cb0550c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2215,22 +2215,27 @@ static unsigned next_fn(struct pci_bus *bus, struct p=
+ci_dev *dev, unsigned fn)
+
+static int only_one_child(struct pci_bus *bus)
+{
+-    struct pci_dev *parent =3D bus->self;
++    struct pci_dev *bridge =3D bus->self;
+
+-    if (!parent || !pci_is_pcie(parent))
++    /*
++     * Systems with unusual topologies set PCI_SCAN_ALL_PCIE_DEVS so
++     * we scan for all possible devices, not just Device 0.
++     */
++    if (pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+       return 0;
+-    if (pci_pcie_type(parent) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
+-        return 1;
+
+   /*
+-     * PCIe downstream ports are bridges that normally lead to only a
+-     * device 0, but if PCI_SCAN_ALL_PCIE_DEVS is set, scan all
+-     * possible devices, not just device 0.  See PCIe spec r3.0,
+-     * sec 7.3.1.
++     * A PCIe Downstream Port normally leads to a Link with only Device
++     * 0 on it (PCIe spec r3.1, sec 7.3.1).  As an optimization, scan
++     * only for Device 0 in that situation.
++     *
++     * Checking has_secondary_link is a hack to identify Downstream
++     * Ports because sometimes Switches are configured such that the
++     * PCIe Port Type labels are backwards.
+    */
+-    if (parent->has_secondary_link &&
+-        !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
++    if (bridge && pci_is_pcie(bridge) && bridge->has_secondary_link)
+       return 1;
++
+   return 0;
+}
