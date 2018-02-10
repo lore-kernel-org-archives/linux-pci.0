@@ -1,103 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gregory CLEMENT <gregory.clement@bootlin.com>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH 2/2] PCI: armada8k: Fix clock resource by adding a
- register clock
-References: <20180228144704.12947-1-gregory.clement@bootlin.com>
- <20180228144704.12947-3-gregory.clement@bootlin.com>
- <20180228155350.0221a90f@windsurf.lan>
-Date: Wed, 28 Feb 2018 16:37:24 +0100
-In-Reply-To: <20180228155350.0221a90f@windsurf.lan> (Thomas Petazzoni's
- message of "Wed, 28 Feb 2018 15:53:50 +0100")
-Message-ID: <874lm1f7m3.fsf@bootlin.com>
+Return-Path: <SRS0=XI/F=FE=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=XI/F=FE=rock-chips.com=shawn.lin@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Ran Shalit <ranshalit@gmail.com>,
+ shawn.lin@rock-chips.com, linux-pci@vger.kernel.org
+Subject: Re: understanding DMA in PCI drivers
+To: Kishon Vijay Abraham I <kishon@ti.com>
+References: <CAJ2oMhKJ5ECtr5-F1M_PjO+ev_8-UfpLu+jT9hG7XEwoDV0A_Q@mail.gmail.com>
+ <20180207143954.GA30525@bhelgaas-glaptop.roam.corp.google.com>
+ <3d427721-7489-040e-791d-4963a1d5941c@rock-chips.com>
+ <3d80da48-dfb6-495e-1448-5d142b3e709e@ti.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <aae1b034-bb18-9e41-c6dd-0d4704e48fa6@rock-chips.com>
+Date: Sat, 10 Feb 2018 09:51:39 +0800
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jason Cooper <jason@lakedaemon.net>,
- Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Hanna Hawa <hannah@marvell.com>, Omri Itach <omrii@marvell.com>,
- Nadav Haklai <nadavh@marvell.com>, Shadi Ammouri <shadi@marvell.com>,
- Igal Liberman <igall@marvell.com>,
- =?utf-8?Q?Miqu=C3=A8l?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Marcin Wojtas <mw@semihalf.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <3d80da48-dfb6-495e-1448-5d142b3e709e@ti.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgVGhvbWFzLAogCiBPbiBtZXIuLCBmw6l2ci4gMjggMjAxOCwgVGhvbWFzIFBldGF6em9uaSA8
-dGhvbWFzLnBldGF6em9uaUBib290bGluLmNvbT4gd3JvdGU6Cgo+IEhlbGxvLAo+Cj4gT24gV2Vk
-LCAyOCBGZWIgMjAxOCAxNTo0NzowNCArMDEwMCwgR3JlZ29yeSBDTEVNRU5UIHdyb3RlOgo+PiBP
-biBBcm1hZGEgN0svOEsgd2UgbmVlZCB0byBleHBsaWNpdGx5IGVuYWJsZSB0aGUgcmVnaXN0ZXIg
-Y2xvY2suIFRoaXMKPj4gY2xvY2sgaXMgb3B0aW9uYWwgYmVjYXVzZSBub3QgYWxsIHRoZSBTb0Nz
-IHVzaW5nIHRoaXMgSVAgbmVlZCBpdCBidXQgYXQKPj4gbGVhc3QgZm9yIEFybWFkYSA3Sy84SyBp
-dCBpcyBhY3R1YWxseSBtYW5kYXRvcnkuCj4+IAo+PiBUaGUgYmluZGluZyBkb2N1bWVudGF0aW9u
-IGlzIHVwZGF0ZWQgYWNjb3JkaW5nbHkuCj4+IAo+PiBTaWduZWQtb2ZmLWJ5OiBHcmVnb3J5IENM
-RU1FTlQgPGdyZWdvcnkuY2xlbWVudEBib290bGluLmNvbT4KPj4gLS0tCj4+ICBEb2N1bWVudGF0
-aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3BjaS1hcm1hZGE4ay50eHQgfCAgNiArKysrKy0K
-Pj4gIGRyaXZlcnMvcGNpL2R3Yy9wY2llLWFybWFkYThrLmMgICAgICAgICAgICAgICAgICAgICAg
-ICB8IDExICsrKysrKysrKysrCj4+ICAyIGZpbGVzIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKyks
-IDEgZGVsZXRpb24oLSkKPj4gCj4+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRy
-ZWUvYmluZGluZ3MvcGNpL3BjaS1hcm1hZGE4ay50eHQgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRy
-ZWUvYmluZGluZ3MvcGNpL3BjaS1hcm1hZGE4ay50eHQKPj4gaW5kZXggYzFlNGMzZDEwYTc0Li45
-OTQ4YjFlOWE4ZTUgMTAwNjQ0Cj4+IC0tLSBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5k
-aW5ncy9wY2kvcGNpLWFybWFkYThrLnR4dAo+PiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRy
-ZWUvYmluZGluZ3MvcGNpL3BjaS1hcm1hZGE4ay50eHQKPj4gQEAgLTEyLDcgKzEyLDExIEBAIFJl
-cXVpcmVkIHByb3BlcnRpZXM6Cj4+ICAgICAtICJjdHJsIiBmb3IgdGhlIGNvbnRyb2wgcmVnaXN0
-ZXIgcmVnaW9uCj4+ICAgICAtICJjb25maWciIGZvciB0aGUgY29uZmlnIHNwYWNlIHJlZ2lvbgo+
-PiAgLSBpbnRlcnJ1cHRzOiBJbnRlcnJ1cHQgc3BlY2lmaWVyIGZvciB0aGUgUENJZSBjb250cm9s
-ZXIKPj4gLS0gY2xvY2tzOiByZWZlcmVuY2UgdG8gdGhlIFBDSWUgY29udHJvbGxlciBjbG9jawo+
-PiArLSBjbG9ja3M6IHJlZmVyZW5jZSB0byB0aGUgUENJZSBjb250cm9sbGVyIGNsb2Nrcwo+PiAr
-LSBjbG9jay1uYW1lczogbWFuZGF0b3J5IGlmIHRoZXJlIGlzIGEgc2Vjb25kIGNsb2NrLCBpbiB0
-aGlzIGNhc2UgdGhlCj4+ICsgICBuYW1lIG11c3QgYmUgImNvcmUiIGZvciB0aGUgZmlyc3QgY2xv
-Y2sgYW5kICJyZWciIGZvciB0aGUgc2Vjb25kCj4+ICsgICBvbmUKPj4gKwo+Cj4gVW5uZWVkZWQg
-bmV3IGxpbmUgYWRkZWQgaGVyZS4Kd2lsbCByZW1vdmVkIGl0Cgo+Cj4+ICAKPj4gIEV4YW1wbGU6
-Cj4+ICAKPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2R3Yy9wY2llLWFybWFkYThrLmMgYi9k
-cml2ZXJzL3BjaS9kd2MvcGNpZS1hcm1hZGE4ay5jCj4+IGluZGV4IGY5YjFhZWMyNWM1Yy4uYWE0
-ZTVjYzRhYjdiIDEwMDY0NAo+PiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpZS1hcm1hZGE4ay5j
-Cj4+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2llLWFybWFkYThrLmMKPj4gQEAgLTI4LDYgKzI4
-LDcgQEAKPj4gIHN0cnVjdCBhcm1hZGE4a19wY2llIHsKPj4gIAlzdHJ1Y3QgZHdfcGNpZSAqcGNp
-Owo+PiAgCXN0cnVjdCBjbGsgKmNsazsKPj4gKwlzdHJ1Y3QgY2xrICpjbGtfcmVnOwo+PiAgfTsK
-Pj4gIAo+PiAgI2RlZmluZSBQQ0lFX1ZFTkRPUl9SRUdTX09GRlNFVAkJMHg4MDAwCj4+IEBAIC0y
-MjksNiArMjMwLDE1IEBAIHN0YXRpYyBpbnQgYXJtYWRhOGtfcGNpZV9wcm9iZShzdHJ1Y3QgcGxh
-dGZvcm1fZGV2aWNlICpwZGV2KQo+PiAgCWlmIChyZXQpCj4+ICAJCXJldHVybiByZXQ7Cj4+ICAK
-Pj4gKwlpZiAoSVNfRVJSKHBjaWUtPmNsa19yZWcpICYmIFBUUl9FUlIocGNpZS0+Y2xrX3JlZykg
-PT0gLUVQUk9CRV9ERUZFUikgewo+PiArCQljbGtfZGlzYWJsZV91bnByZXBhcmUocGNpZS0+Y2xr
-KTsKPj4gKwkJcmV0dXJuIC1FUFJPQkVfREVGRVI7Cj4+ICsJfQo+PiArCWlmICghSVNfRVJSKHBj
-aWUtPmNsa19yZWcpKSB7Cj4+ICsJCXJldCA9IGNsa19wcmVwYXJlX2VuYWJsZShwY2llLT5jbGtf
-cmVnKTsKPj4gKwkJaWYgKHJldCkKPj4gKwkJCWdvdG8gZmFpbDsKPj4gKwl9Cj4+ICAJLyogR2V0
-IHRoZSBkdy1wY2llIHVuaXQgY29uZmlndXJhdGlvbi9jb250cm9sIHJlZ2lzdGVycyBiYXNlLiAq
-Lwo+Cj4gTWlzc2luZyBuZXcgbGluZSBiZXR3ZWVuIHRoZSBlbmQgb2YgdGhlIGJsb2NrIGFuZCB0
-aGUgbmV4dCBjb21tZW50Lgo+Ck9LCgo+IFJlZ2FyZGluZyB0aGUgZXJyb3IgaGFuZGxpbmcsIGRv
-ZXNuJ3QgaXQgbWFrZSBtb3JlIHNlbnNlIHRvIGFsc28gdXNlIGEKPiBnb3RvIGxhYmVsIHRvIGRp
-c2FibGUgcGNpZS0+Y2xrIHdoZW4gZ2V0dGluZyB0aGUgc2Vjb25kIGNsb2NrIGdldHMgYQo+IC1F
-UFJPQkVfREVGRVIgPwo+Cj4+ICAJYmFzZSA9IHBsYXRmb3JtX2dldF9yZXNvdXJjZV9ieW5hbWUo
-cGRldiwgSU9SRVNPVVJDRV9NRU0sICJjdHJsIik7Cj4+ICAJcGNpLT5kYmlfYmFzZSA9IGRldm1f
-cGNpX3JlbWFwX2NmZ19yZXNvdXJjZShkZXYsIGJhc2UpOwo+PiBAQCAtMjQ3LDYgKzI1Nyw3IEBA
-IHN0YXRpYyBpbnQgYXJtYWRhOGtfcGNpZV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpw
-ZGV2KQo+PiAgCXJldHVybiAwOwo+PiAgCj4+ICBmYWlsOgo+PiArCWNsa19kaXNhYmxlX3VucHJl
-cGFyZShwY2llLT5jbGtfcmVnKTsKPgo+IFNvIHlvdSBhcmUgZGlzYWJsaW5nL3VucHJlcGFyaW5n
-IHRoZSBjbG9jaywgd2hpY2ggZmFpbGVkIHRvCj4gcHJlcGFyZS9lbmFibGUgPwoKSSB3YXMgdGhp
-bmtpbmcgdG8gYSBzaW5nbGUgdXNlciwgaW4gdGhpcyBjYXNlIGlmIHRoZSBwcmVwYXJlL2VuYWJs
-ZQpmYWlsZWQgdGhlbiB0aGUgZGlzYWJsaW5nL3VucHJlcGFyaW5nIGRvIG5vdGhpbmcgYmVjYXVz
-ZSB0aGUgY291bnRlciBpcwphbHJlYWR5IHRvIDAuIEJ1dCBpbmRlZWQgaW4gY2FzZSBvZiBtdWx0
-aXBsZSB1c2VycyBvZiB0aGUgY2xvY2ssIHRoZW4gdGhlCmNvdW50ZXIgY291bGQgYmUgd3Jvbmds
-eSBkZWNyZWFzZS4gSSB3aWxsIG1vZGlmeSBpdCBieSBhZGRpbmcgYSBvdGhlcgpsYWJlbC4KClRo
-YW5rcywKCkdyZWdvcnkKCj4KPj4gIAljbGtfZGlzYWJsZV91bnByZXBhcmUocGNpZS0+Y2xrKTsK
-Pj4gIAo+PiAgCXJldHVybiByZXQ7Cj4KPiBUaG9tYXMKPiAtLSAKPiBUaG9tYXMgUGV0YXp6b25p
-LCBDVE8sIEJvb3RsaW4gKGZvcm1lcmx5IEZyZWUgRWxlY3Ryb25zKQo+IEVtYmVkZGVkIExpbnV4
-IGFuZCBLZXJuZWwgZW5naW5lZXJpbmcKPiBodHRwOi8vYm9vdGxpbi5jb20KCi0tIApHcmVnb3J5
-IENsZW1lbnQsIEJvb3RsaW4gKGZvcm1lcmx5IEZyZWUgRWxlY3Ryb25zKQpFbWJlZGRlZCBMaW51
-eCBhbmQgS2VybmVsIGVuZ2luZWVyaW5nCmh0dHA6Ly9ib290bGluLmNvbQoKX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWls
-aW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0
-cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+Hi
+
+On 2018/2/8 16:30, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> On Thursday 08 February 2018 07:11 AM, Shawn Lin wrote:
+>> Hi Bjorn,
+>>
+>> [+ Kishon]
+>>
+>> On 2018/2/7 22:39, Bjorn Helgaas wrote:
+>>
+>>>> 2. How does device triggers DMA from device to cpu, is it by simply
+>>>> writing to BAR ?
+>>>
+>>> In most cases the device itself performs the DMA.  It sounds like
+>>> you have a case where the DMA engine is not part of the device itself.
+>>> I don't know how that would be programmed, except to say that the DMA
+>>> engine presumably operates on DMA addresses, and something would still
+>>> have to DMA-map buffers to obtain those.
+>>
+>> I have a question that why it's always device to performs the DMA for
+>> no matter memory read and write? We have builtin DMA engine inside the
+> The PCI devices are supposed to work with different host controllers and
+> instead of relying on host controller capabilities (in this case DMA), the
+> device can use it's own DMA.
+> 
+>> PCIe RC controller, so could the function driver submit the DMA request
+>> to the PCIe RC controller driver and let it fire the DMA to access
+>> device's internal memory? Given that we now support PCIe EP framework,
+> 
+> As Bjorne mentioned before, RC accessing the EP memory is mostly for
+> configuring the device and not in the data path. Having said that, there can be
+> a pci_driver which DMAs to a BAR region, if thats your usecase.
+
+Ok, I see now. Thanks for that¡£
+
+
+>> and now linux-pci behave like a *device* per your saying, so that is
+>> quite possible for us to consider how we would submit DMA request with
+>> current PCIe EP stuff.
+> 
+> Thanks
+> Kishon
+> 
+> 
+> 
