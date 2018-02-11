@@ -1,73 +1,53 @@
-Return-Path: <SRS0=AA+w=FN=intel.com=jani.nikula@kernel.org>
-Return-Path: <SRS0=AA+w=FN=intel.com=jani.nikula@kernel.org>
-From: Jani Nikula <jani.nikula@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, David Airlie <airlied@linux.ie>, linux-arm-msm@vger.kernel.org, intel-gfx@lists.freedesktop.org, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, open list <linux-kernel@vger.kernel.org>, "open list\:DRM DRIVERS" <dri-devel@lists.freedesktop.org>, Rodrigo Vivi <rodrigo.vivi@intel.com>, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V3 09/29] drm/i915: deprecate pci_get_bus_and_slot()
-In-Reply-To: <20180216145444.GA11014@bhelgaas-glaptop.roam.corp.google.com>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org> <1511801886-6753-10-git-send-email-okaya@codeaurora.org> <20180216145444.GA11014@bhelgaas-glaptop.roam.corp.google.com>
-Date: Mon, 19 Feb 2018 11:34:34 +0200
-Message-ID: <87bmglb9w5.fsf@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:47133 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752273AbeBKJXy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Feb 2018 04:23:54 -0500
+Date: Sun, 11 Feb 2018 10:25:25 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+        linux-kernel@vger.kernel.org,
+        MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: Re: [PATCH] PCI/portdrv: Remove "pcie_hp=nomsi" kernel parameter
+Message-ID: <20180211092525.GA1085@wunner.de>
+References: <20180211024815.73781.92853.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180211024815.73781.92853.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 16 Feb 2018, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Nov 27, 2017 at 11:57:46AM -0500, Sinan Kaya wrote:
->> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
->> where a PCI device is present. This restricts the device drivers to be
->> reused for other domain numbers.
->> 
->> Getting ready to remove pci_get_bus_and_slot() function in favor of
->> pci_get_domain_bus_and_slot().
->> 
->> Extract the domain number from drm_device and pass it into
->> pci_get_domain_bus_and_slot() function.
->> 
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->
-> I don't know what happened to this, and it didn't make it into
-> v4.16-rc1.  I applied it to pci/deprecate-get-bus-and-slot for v4.17
-> along with the patch that actually removes pci_get_bus_and_slot().
+On Sat, Feb 10, 2018 at 08:48:15PM -0600, Bjorn Helgaas wrote:
+> 7570a333d8b0 ("PCI: Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
+> driver") added the "pcie_hp=nomsi" kernel parameter to work around this
+> error on shutdown:
+> 
+>   irq 16: nobody cared (try booting with the "irqpoll" option)
+>   Pid: 1081, comm: reboot Not tainted 3.2.0 #1
+>   ...
+>   Disabling IRQ #16
+> 
+> This happened on an unspecified system (possibly involving the Integrated
+> Device Technology, Inc. Device 807f bridge).  There is no automated way to
+> set this parameter, so it's not very useful for distributions or end users.
+> 
+> I suspect the root cause of the underlying "irq 16: nobody cared" issue was
+> fixed by Prarit Bhargava <prarit@redhat.com> with fda78d7a0ead ("PCI/MSI:
+> Stop disabling MSI/MSI-X in pci_device_shutdown()") and we probably don't
+> need "pcie_hp=nomsi" any more.
+> 
+> Revert 7570a333d8b0 to remove the "pcie_hp=nomsi" parameter.
 
-It fell between the cracks as we couldn't apply it before getting a
-backmerge on the dependency. Sorry about that.
-
-Ack for merging through your tree.
+This has been useful when bringing up broken hardware which claims to
+support MSI but really doesn't, such as in commit 19bf4d4f909d
+("thunderbolt: Support 1st gen Light Ridge controller").  In this case
+I didn't know why the controller wasn't sending interrupts, on a hunch
+I tried "pcie_hp=nomsi" and that worked, and looking in the macOS source
+code I was able to verify that they disable MSI for this particular
+hardware as well.  So please leave it in to ease developers' lives.
 
 Thanks,
-Jani.
 
-
->
->> ---
->>  drivers/gpu/drm/i915/i915_drv.c | 5 ++++-
->>  1 file changed, 4 insertions(+), 1 deletion(-)
->> 
->> diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
->> index 9f45cfe..5a8cb79 100644
->> --- a/drivers/gpu/drm/i915/i915_drv.c
->> +++ b/drivers/gpu/drm/i915/i915_drv.c
->> @@ -419,7 +419,10 @@ static int i915_getparam(struct drm_device *dev, void *data,
->>  
->>  static int i915_get_bridge_dev(struct drm_i915_private *dev_priv)
->>  {
->> -	dev_priv->bridge_dev = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
->> +	int domain = pci_domain_nr(dev_priv->drm.pdev->bus);
->> +
->> +	dev_priv->bridge_dev =
->> +		pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(0, 0));
->>  	if (!dev_priv->bridge_dev) {
->>  		DRM_ERROR("bridge device not found\n");
->>  		return -1;
->> -- 
->> 1.9.1
->> 
->> 
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
--- 
-Jani Nikula, Intel Open Source Technology Center
+Lukas
