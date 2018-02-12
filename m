@@ -1,53 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:35141 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751663AbeBYCH3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Feb 2018 21:07:29 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI: cpqphp: Fix possible NULL pointer dereference
-Date: Sun, 25 Feb 2018 10:01:42 +0800
-Message-Id: <1519524102-121438-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:36653 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933722AbeBLORo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Feb 2018 09:17:44 -0500
+Date: Mon, 12 Feb 2018 08:17:42 -0600
+From: Rob Herring <robh@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        devicetree@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 6/6] dt-bindings: PCI: rockchip: Add DT bindings for
+ Rockchip PCIe endpoint controller
+Message-ID: <20180212141742.ism3xnohyonp6pi3@rob-hp-laptop>
+References: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
+ <1517971826-65350-1-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1517971826-65350-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-io_node is used before verify whether it's null pointer,
-so move the check of null pointer immediately after.
+On Wed, Feb 07, 2018 at 10:50:26AM +0800, Shawn Lin wrote:
+> This patch documents the DT bindings for the Rockchip PCIe controller
+> when configured in endpoint mode.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> ---
+> 
+>  .../devicetree/bindings/pci/rockchip-pcie-ep.txt   | 60 ++++++++++++++++++++++
+>  1 file changed, 60 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
-
- drivers/pci/hotplug/cpqphp_ctrl.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/hotplug/cpqphp_ctrl.c b/drivers/pci/hotplug/cpqphp_ctrl.c
-index b1b6e45..616df44 100644
---- a/drivers/pci/hotplug/cpqphp_ctrl.c
-+++ b/drivers/pci/hotplug/cpqphp_ctrl.c
-@@ -2812,18 +2812,16 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
- 
- 					dbg("CND:      length = 0x%x\n", base);
- 					io_node = get_io_resource(&(resources->io_head), base);
-+					if (!io_node)
-+						return -ENOMEM;
- 					dbg("Got io_node start = %8.8x, length = %8.8x next (%p)\n",
- 					    io_node->base, io_node->length, io_node->next);
- 					dbg("func (%p) io_head (%p)\n", func, func->io_head);
- 
- 					/* allocate the resource to the board */
--					if (io_node) {
--						base = io_node->base;
--
--						io_node->next = func->io_head;
--						func->io_head = io_node;
--					} else
--						return -ENOMEM;
-+					base = io_node->base;
-+					io_node->next = func->io_head;
-+					func->io_head = io_node;
- 				} else if ((temp_register & 0x0BL) == 0x08) {
- 					/* Map prefetchable memory */
- 					base = temp_register & 0xFFFFFFF0;
--- 
-1.9.1
+Reviewed-by: Rob Herring <robh@kernel.org>
