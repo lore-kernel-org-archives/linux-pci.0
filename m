@@ -1,56 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-he1eur01on0133.outbound.protection.outlook.com ([104.47.0.133]:35168
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751684AbeBRXNJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 18 Feb 2018 18:13:09 -0500
-From: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
-To: linux-pci@vger.kernel.org, mj@ucw.cz
-Cc: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
-Subject: [PATCH v3 0/3] lspci: Add support of JSON output format
-Date: Mon, 19 Feb 2018 02:12:48 +0300
-Message-Id: <20180218231251.23988-1-viktor.prutyanov@virtuozzo.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from foss.arm.com ([217.140.101.70]:46236 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753359AbeBLSdS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Feb 2018 13:33:18 -0500
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
+        bharatku@xilinx.com
+Subject: [PATCH 24/37] iommu/arm-smmu-v3: Add SVA feature checking
+Date: Mon, 12 Feb 2018 18:33:39 +0000
+Message-Id: <20180212183352.22730-25-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This collection of patches adds support of printing PCI info in JSON
-format.
+Aggregate all sanity-checks for sharing CPU page tables with the SMMU
+under a single ARM_SMMU_FEAT_SVA bit. For PCIe SVA, users also need to
+check FEAT_ATS and FEAT_PRI. For platform SVM, they will most likely have
+to check FEAT_STALLS.
 
-1st patch adds skeleton for creating structured object which can be
-printed in JSON or another structured format.
-2nd patch adds output of general PCI info which prints with -m, -k,
--[v]+ options, but without capabilities.
-3rd patch adds PCI-E capability.
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 60 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
 
-For example, we can easily, using jq utility, check speed of a device:
-lspci -Jvv | jq -r '.[][] | select(.Device == "GK107M [GeForce GT 750M]") | .capabilities.express | {s1:.LnkCap.Speed, s2:.LnkSta.Speed, w1
-:.LnkCap.Width, w2:.LnkSta.Width }'
-
-{
-    "s1": "8GT/s",
-    "s2": "5GT/s",
-    "w1": "x16",
-    "w2": "x4"
-}
-
-Viktor Prutyanov (3):
-  lspci: Add printing info in JSON format
-  lspci: Add PCI info output in JSON format
-  lspci: Add JSON PCI Express capabilities
-
- Makefile    |   3 +-
- common.c    |   2 +-
- ls-caps.c   | 417 +++++++++++++++++++++++++++++++++++
- ls-info.c   | 328 ++++++++++++++++++++++++++++
- ls-kernel.c |  24 +++
- lspci.c     | 706 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- lspci.h     |  56 +++++
- lspci.man   |   3 +
- pciutils.h  |   2 +-
- 9 files changed, 1537 insertions(+), 4 deletions(-)
- create mode 100644 ls-info.c
-
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 98690589156b..79bc5b5cceed 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -570,6 +570,7 @@ struct arm_smmu_device {
+ #define ARM_SMMU_FEAT_STALL_FORCE	(1 << 13)
+ #define ARM_SMMU_FEAT_E2H		(1 << 14)
+ #define ARM_SMMU_FEAT_BTM		(1 << 15)
++#define ARM_SMMU_FEAT_SVA		(1 << 16)
+ 	u32				features;
+ 
+ #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
+@@ -2619,6 +2620,62 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
+ 	return 0;
+ }
+ 
++static bool arm_smmu_supports_sva(struct arm_smmu_device *smmu)
++{
++	unsigned long reg, fld;
++	unsigned long oas;
++	unsigned long asid_bits;
++
++	u32 feat_mask = ARM_SMMU_FEAT_BTM | ARM_SMMU_FEAT_COHERENCY;
++
++	if ((smmu->features & feat_mask) != feat_mask)
++		return false;
++
++	if (!(smmu->pgsize_bitmap & PAGE_SIZE))
++		return false;
++
++	/*
++	 * Get the smallest PA size of all CPUs (sanitized by cpufeature). We're
++	 * not even pretending to support AArch32 here.
++	 */
++	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
++	fld = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
++	switch (fld) {
++	case 0x0:
++		oas = 32;
++		break;
++	case 0x1:
++		oas = 36;
++		break;
++	case 0x2:
++		oas = 40;
++		break;
++	case 0x3:
++		oas = 42;
++		break;
++	case 0x4:
++		oas = 44;
++		break;
++	case 0x5:
++		oas = 48;
++		break;
++	default:
++		return false;
++	}
++
++	/* abort if MMU outputs addresses greater than what we support. */
++	if (smmu->oas < oas)
++		return false;
++
++	/* We can support bigger ASIDs than the CPU, but not smaller */
++	fld = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_ASID_SHIFT);
++	asid_bits = fld ? 16 : 8;
++	if (smmu->asid_bits < asid_bits)
++		return false;
++
++	return true;
++}
++
+ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ {
+ 	u32 reg;
+@@ -2813,6 +2870,9 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ 
+ 	smmu->ias = max(smmu->ias, smmu->oas);
+ 
++	if (arm_smmu_supports_sva(smmu))
++		smmu->features |= ARM_SMMU_FEAT_SVA;
++
+ 	dev_info(smmu->dev, "ias %lu-bit, oas %lu-bit (features 0x%08x)\n",
+ 		 smmu->ias, smmu->oas, smmu->features);
+ 	return 0;
 -- 
-2.14.3
+2.15.1
