@@ -1,56 +1,76 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 9 Feb 2018 19:05:48 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex Hung <alex.hung@canonical.com>
-Cc: rjw@rjwysocki.net, lenb@kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH] ACPI/PCI: pci_link: change log level of no _PRS messages
-Message-ID: <20180210010548.GC206223@bhelgaas-glaptop.roam.corp.google.com>
-References: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
+        bharatku@xilinx.com
+Subject: [PATCH 11/37] dt-bindings: document stall and PASID properties for IOMMU masters
+Date: Mon, 12 Feb 2018 18:33:26 +0000
+Message-Id: <20180212183352.22730-12-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 09, 2018 at 02:56:43PM -0800, Alex Hung wrote:
-> In recent Intel hardware the IRQs become non-configurable after BIOS
-> initializes them in PEI phase and _PRS objects are no longer included in
-> ASL.
-> 
-> This is the same as "static (non-configurable) devices do not
-> specify a _PRS object" in ACPI spec. As a result, error messages
-> saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
-> be in kernel messages all the time but only when debug is enabled.
+On ARM systems, some platform devices behind an IOMMU may support stall
+and PASID features. Stall is the ability to recover from page faults and
+PASID offers multiple process address spaces to the device. Together they
+allow to do paging with a device. Let the firmware tell us when a device
+supports stall and PASID.
 
-I agree and would even go further: _PRS is optional and I don't think
-there's a reason to log anything at all if it's absent.  A log message
-like "failed to evaluate _PRS" makes people think something is wrong
-when in fact nothing is wrong.
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ Documentation/devicetree/bindings/iommu/iommu.txt | 24 +++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-That leads to the mindset of treating a missing _PRS as an error when
-it's not.  In fact, it looks like acpi_pci_link_add() *does* treat
-this as an error.  If _PRS doesn't exist, it skips the _CRS
-evaluation.  That seems wrong.
+diff --git a/Documentation/devicetree/bindings/iommu/iommu.txt b/Documentation/devicetree/bindings/iommu/iommu.txt
+index 5a8b4624defc..8066b3852110 100644
+--- a/Documentation/devicetree/bindings/iommu/iommu.txt
++++ b/Documentation/devicetree/bindings/iommu/iommu.txt
+@@ -86,6 +86,30 @@ have a means to turn off translation. But it is invalid in such cases to
+ disable the IOMMU's device tree node in the first place because it would
+ prevent any driver from properly setting up the translations.
+ 
++Optional properties:
++--------------------
++- dma-can-stall: When present, the master can wait for a transaction to
++  complete for an indefinite amount of time. Upon translation fault some
++  IOMMUs, instead of aborting the translation immediately, may first
++  notify the driver and keep the transaction in flight. This allows the OS
++  to inspect the fault and, for example, make physical pages resident
++  before updating the mappings and completing the transaction. Such IOMMU
++  accepts a limited number of simultaneous stalled transactions before
++  having to either put back-pressure on the master, or abort new faulting
++  transactions.
++
++  Firmware has to opt-in stalling, because most buses and masters don't
++  support it. In particular it isn't compatible with PCI, where
++  transactions have to complete before a time limit. More generally it
++  won't work in systems and masters that haven't been designed for
++  stalling. For example the OS, in order to handle a stalled transaction,
++  may attempt to retrieve pages from secondary storage in a stalled
++  domain, leading to a deadlock.
++
++- pasid-bits: Some masters support multiple address spaces for DMA, by
++  tagging DMA transactions with an address space identifier. By default,
++  this is 0, which means that the device only has one address space.
++
+ 
+ Notes:
+ ======
+-- 
+2.15.1
 
-> Signed-off-by: Alex Hung <alex.hung@canonical.com>
-> ---
->  drivers/acpi/pci_link.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index 85ad679..9d9cf24 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -173,7 +173,7 @@ static int acpi_pci_link_get_possible(struct acpi_pci_link *link)
->  	status = acpi_walk_resources(link->device->handle, METHOD_NAME__PRS,
->  				     acpi_pci_link_check_possible, link);
->  	if (ACPI_FAILURE(status)) {
-> -		ACPI_EXCEPTION((AE_INFO, status, "Evaluating _PRS"));
-> +		acpi_handle_debug(link->device->handle, "failed to evaluate _PRS");
->  		return -ENODEV;
->  	}
->  
-> -- 
-> 2.7.4
-> 
