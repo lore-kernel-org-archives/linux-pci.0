@@ -1,50 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 02/37] iommu/sva: Bind process address spaces to devices
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-3-jean-philippe.brucker@arm.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <bce32071-4159-3bdd-1e03-77f540ee4509@codeaurora.org>
-Date: Wed, 28 Feb 2018 15:34:20 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180212183352.22730-3-jean-philippe.brucker@arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aibo.runbox.com ([91.220.196.211]:51268 "EHLO aibo.runbox.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932378AbeBLXoS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Feb 2018 18:44:18 -0500
+From: Kenny Ballou <kballou@devnulllabs.io>
+To: linux-pci@vger.kernel.org
+Cc: Kenny Ballou <kballou@devnulllabs.io>, googlegot@yahooo.com,
+        bhelgaas@google.com
+Subject: [PATCH] pci: use kstrtobool over ad hoc string parsing
+Date: Mon, 12 Feb 2018 16:04:57 -0700
+Message-Id: <20180212230457.23181-1-kballou@devnulllabs.io>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/12/2018 1:33 PM, Jean-Philippe Brucker wrote:
-> +int iommu_sva_unbind_group(struct iommu_group *group, int pasid)
-> +{
-> +	struct group_device *device;
-> +
-> +	mutex_lock(&group->mutex);
-> +	list_for_each_entry(device, &group->devices, list)
-> +		iommu_sva_unbind_device(device->dev, pasid);
-> +	mutex_unlock(&group->mutex);
-> +
-> +	return 0;
-> +}
+Convert ROM read access enable/disable string parsing to use the
+`kstrtobool` function.
 
-I think we should handle the errors returned by iommu_sva_unbind_device() here
-or at least print a warning if we want to still continue unbinding. 
+This fixes Bugzilla Bug 111301 -- Sysfs PCI rom file functionality does
+not match documentation.
 
+bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111301
+
+Reported-by: googlegot@yahoo.com
+Signed-off-by: Kenny Ballou <kballou@devnulllabs.io>
+---
+ drivers/pci/pci-sysfs.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index eb6bee8724cc..3cde1f25e786 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1424,10 +1424,12 @@ static ssize_t pci_write_rom(struct file *filp, struct kobject *kobj,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 
+-	if ((off ==  0) && (*buf == '0') && (count == 2))
+-		pdev->rom_attr_enabled = 0;
+-	else
++	bool res = false;
++
++	if (kstrtobool(buf, &res) == 0 && res)
+ 		pdev->rom_attr_enabled = 1;
++	else
++		pdev->rom_attr_enabled = 0;
+ 
+ 	return count;
+ }
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.13.6
