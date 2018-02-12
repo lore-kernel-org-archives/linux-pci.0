@@ -1,47 +1,246 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:22314 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751754AbeB0WpV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Feb 2018 17:45:21 -0500
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: David Miller <davem@davemloft.net>
-CC: "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "MRustad@gmail.com" <MRustad@gmail.com>,
-        "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
-        "mst@redhat.com" <mst@redhat.com>
-Subject: Re: [RFC PATCH V3] virtio_pci: Add SR-IOV support
-Date: Tue, 27 Feb 2018 22:45:19 +0000
-Message-ID: <CABB6175-4FC3-4742-9C54-FCDEE3E5A608@intel.com>
-References: <20180226031911.18980.80488.stgit@mdrustad-mac04.local>
- <20180227.103502.2160088807348773566.davem@davemloft.net>
-In-Reply-To: <20180227.103502.2160088807348773566.davem@davemloft.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
+        bharatku@xilinx.com
+Subject: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
+Date: Mon, 12 Feb 2018 18:33:42 +0000
+Message-Id: <20180212183352.22730-28-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Feb 27, 2018, at 7:35 AM, David Miller <davem@davemloft.net> wrote:
-> 
-> I don't like these helpers on many different levels.
+When using PRI or Stall, the PRI or event handler enqueues faults into the
+core fault queue. Register it based on the SMMU features.
 
-<snip much embarrassment>
+When the core stops using a PASID, it notifies the SMMU to flush all
+instances of this PASID from the PRI queue. Add a way to flush the PRI and
+event queue. PRI and event thread now take a spinlock while processing the
+queue. The flush handler takes this lock to inspect the queue state.
+We avoid livelock, where the SMMU adds fault to the queue faster than we
+can consume them, by incrementing a 'batch' number on every cycle so the
+flush handler only has to wait a complete cycle (two batch increments.)
 
-> So kill off pci_sriov_enable() helper completely, it is unnecessary,
-> and rename the disable helper so that it says something meaningful to
-> the reader.
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/Kconfig       |   1 +
+ drivers/iommu/arm-smmu-v3.c | 103 +++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 103 insertions(+), 1 deletion(-)
 
-Yes. Once pointed out, I completely agree with your comments and wish that I had seen those things myself.
-
-> Thanks.
-
-V3 was junk, but your comments apply to V4 as well, so please ignore it.
-
-Thank you for your valuable review.
-
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index d434f7085dc2..d79c68754bb9 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -354,6 +354,7 @@ config ARM_SMMU_V3
+ 	depends on ARM64
+ 	select IOMMU_API
+ 	select IOMMU_SVA
++	select IOMMU_FAULT
+ 	select IOMMU_IO_PGTABLE_LPAE
+ 	select ARM_SMMU_V3_CONTEXT
+ 	select GENERIC_MSI_IRQ_DOMAIN
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 8528704627b5..c5b3a43becaf 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -494,6 +494,10 @@ struct arm_smmu_queue {
+ 
+ 	u32 __iomem			*prod_reg;
+ 	u32 __iomem			*cons_reg;
++
++	/* Event and PRI */
++	u64				batch;
++	wait_queue_head_t		wq;
+ };
+ 
+ struct arm_smmu_cmdq {
+@@ -610,6 +614,9 @@ struct arm_smmu_device {
+ 
+ 	/* IOMMU core code handle */
+ 	struct iommu_device		iommu;
++
++	/* Notifier for the fault queue */
++	struct notifier_block		faultq_nb;
+ };
+ 
+ /* SMMU private data for each master */
+@@ -1247,14 +1254,23 @@ static int arm_smmu_init_l2_strtab(struct arm_smmu_device *smmu, u32 sid)
+ static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
+ {
+ 	int i;
++	int num_handled = 0;
+ 	struct arm_smmu_device *smmu = dev;
+ 	struct arm_smmu_queue *q = &smmu->evtq.q;
++	size_t queue_size = 1 << q->max_n_shift;
+ 	u64 evt[EVTQ_ENT_DWORDS];
+ 
++	spin_lock(&q->wq.lock);
+ 	do {
+ 		while (!queue_remove_raw(q, evt)) {
+ 			u8 id = evt[0] >> EVTQ_0_ID_SHIFT & EVTQ_0_ID_MASK;
+ 
++			if (++num_handled == queue_size) {
++				q->batch++;
++				wake_up_locked(&q->wq);
++				num_handled = 0;
++			}
++
+ 			dev_info(smmu->dev, "event 0x%02x received:\n", id);
+ 			for (i = 0; i < ARRAY_SIZE(evt); ++i)
+ 				dev_info(smmu->dev, "\t0x%016llx\n",
+@@ -1272,6 +1288,11 @@ static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
+ 
+ 	/* Sync our overflow flag, as we believe we're up to speed */
+ 	q->cons = Q_OVF(q, q->prod) | Q_WRP(q, q->cons) | Q_IDX(q, q->cons);
++
++	q->batch++;
++	wake_up_locked(&q->wq);
++	spin_unlock(&q->wq.lock);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -1315,13 +1336,24 @@ static void arm_smmu_handle_ppr(struct arm_smmu_device *smmu, u64 *evt)
+ 
+ static irqreturn_t arm_smmu_priq_thread(int irq, void *dev)
+ {
++	int num_handled = 0;
+ 	struct arm_smmu_device *smmu = dev;
+ 	struct arm_smmu_queue *q = &smmu->priq.q;
++	size_t queue_size = 1 << q->max_n_shift;
+ 	u64 evt[PRIQ_ENT_DWORDS];
+ 
++	spin_lock(&q->wq.lock);
+ 	do {
+-		while (!queue_remove_raw(q, evt))
++		while (!queue_remove_raw(q, evt)) {
++			spin_unlock(&q->wq.lock);
+ 			arm_smmu_handle_ppr(smmu, evt);
++			spin_lock(&q->wq.lock);
++			if (++num_handled == queue_size) {
++				q->batch++;
++				wake_up_locked(&q->wq);
++				num_handled = 0;
++			}
++		}
+ 
+ 		if (queue_sync_prod(q) == -EOVERFLOW)
+ 			dev_err(smmu->dev, "PRIQ overflow detected -- requests lost\n");
+@@ -1329,9 +1361,65 @@ static irqreturn_t arm_smmu_priq_thread(int irq, void *dev)
+ 
+ 	/* Sync our overflow flag, as we believe we're up to speed */
+ 	q->cons = Q_OVF(q, q->prod) | Q_WRP(q, q->cons) | Q_IDX(q, q->cons);
++
++	q->batch++;
++	wake_up_locked(&q->wq);
++	spin_unlock(&q->wq.lock);
++
+ 	return IRQ_HANDLED;
+ }
+ 
++/*
++ * arm_smmu_flush_queue - wait until all events/PPRs currently in the queue have
++ * been consumed.
++ *
++ * Wait until the queue thread finished a batch, or until the queue is empty.
++ * Note that we don't handle overflows on q->batch. If it occurs, just wait for
++ * the queue to be empty.
++ */
++static int arm_smmu_flush_queue(struct arm_smmu_device *smmu,
++				struct arm_smmu_queue *q, const char *name)
++{
++	int ret;
++	u64 batch;
++
++	spin_lock(&q->wq.lock);
++	if (queue_sync_prod(q) == -EOVERFLOW)
++		dev_err(smmu->dev, "%s overflow detected -- requests lost\n", name);
++
++	batch = q->batch;
++	ret = wait_event_interruptible_locked(q->wq, queue_empty(q) ||
++					      q->batch >= batch + 2);
++	spin_unlock(&q->wq.lock);
++
++	return ret;
++}
++
++static int arm_smmu_flush_queues(struct notifier_block *nb,
++				 unsigned long action, void *data)
++{
++	struct arm_smmu_device *smmu = container_of(nb, struct arm_smmu_device,
++						    faultq_nb);
++	struct device *dev = data;
++	struct arm_smmu_master_data *master = NULL;
++
++	if (dev)
++		master = dev->iommu_fwspec->iommu_priv;
++
++	if (master) {
++		/* TODO: add support for PRI and Stall */
++		return 0;
++	}
++
++	/* No target device, flush all queues. */
++	if (smmu->features & ARM_SMMU_FEAT_STALLS)
++		arm_smmu_flush_queue(smmu, &smmu->evtq.q, "evtq");
++	if (smmu->features & ARM_SMMU_FEAT_PRI)
++		arm_smmu_flush_queue(smmu, &smmu->priq.q, "priq");
++
++	return 0;
++}
++
+ static int arm_smmu_device_disable(struct arm_smmu_device *smmu);
+ 
+ static irqreturn_t arm_smmu_gerror_handler(int irq, void *dev)
+@@ -2288,6 +2376,10 @@ static int arm_smmu_init_one_queue(struct arm_smmu_device *smmu,
+ 		     << Q_BASE_LOG2SIZE_SHIFT;
+ 
+ 	q->prod = q->cons = 0;
++
++	init_waitqueue_head(&q->wq);
++	q->batch = 0;
++
+ 	return 0;
+ }
+ 
+@@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
++		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
++		ret = iommu_fault_queue_register(&smmu->faultq_nb);
++		if (ret)
++			return ret;
++	}
++
+ 	/* And we're up. Go go go! */
+ 	ret = iommu_device_sysfs_add(&smmu->iommu, dev, NULL,
+ 				     "smmu3.%pa", &ioaddr);
+@@ -3210,6 +3309,8 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+ {
+ 	struct arm_smmu_device *smmu = platform_get_drvdata(pdev);
+ 
++	iommu_fault_queue_unregister(&smmu->faultq_nb);
++
+ 	arm_smmu_device_disable(smmu);
+ 
+ 	return 0;
 -- 
-Mark Rustad, Networking Division, Intel Corporation
+2.15.1
+
