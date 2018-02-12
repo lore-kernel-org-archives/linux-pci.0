@@ -1,66 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60248 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751474AbeBWIY2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 03:24:28 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v11 3/7] PCI/ERR: add mutex to synchronize recovery
-Date: Fri, 23 Feb 2018 13:54:00 +0530
-Message-Id: <1519374244-20539-4-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
-References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:46350 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932574AbeBLPBw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Feb 2018 10:01:52 -0500
+Date: Mon, 12 Feb 2018 09:01:46 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+        linux-kernel@vger.kernel.org,
+        MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: Re: [PATCH] PCI/portdrv: Remove "pcie_hp=nomsi" kernel parameter
+Message-ID: <20180212150146.GA75542@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180211024815.73781.92853.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20180211092525.GA1085@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180211092525.GA1085@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch protects pci_do_recovery with mutex.
+On Sun, Feb 11, 2018 at 10:25:25AM +0100, Lukas Wunner wrote:
+> On Sat, Feb 10, 2018 at 08:48:15PM -0600, Bjorn Helgaas wrote:
+> > 7570a333d8b0 ("PCI: Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
+> > driver") added the "pcie_hp=nomsi" kernel parameter to work around this
+> > error on shutdown:
+> > 
+> >   irq 16: nobody cared (try booting with the "irqpoll" option)
+> >   Pid: 1081, comm: reboot Not tainted 3.2.0 #1
+> >   ...
+> >   Disabling IRQ #16
+> > 
+> > This happened on an unspecified system (possibly involving the Integrated
+> > Device Technology, Inc. Device 807f bridge).  There is no automated way to
+> > set this parameter, so it's not very useful for distributions or end users.
+> > 
+> > I suspect the root cause of the underlying "irq 16: nobody cared" issue was
+> > fixed by Prarit Bhargava <prarit@redhat.com> with fda78d7a0ead ("PCI/MSI:
+> > Stop disabling MSI/MSI-X in pci_device_shutdown()") and we probably don't
+> > need "pcie_hp=nomsi" any more.
+> > 
+> > Revert 7570a333d8b0 to remove the "pcie_hp=nomsi" parameter.
+> 
+> This has been useful when bringing up broken hardware which claims to
+> support MSI but really doesn't, such as in commit 19bf4d4f909d
+> ("thunderbolt: Support 1st gen Light Ridge controller").  In this case
+> I didn't know why the controller wasn't sending interrupts, on a hunch
+> I tried "pcie_hp=nomsi" and that worked, and looking in the macOS source
+> code I was able to verify that they disable MSI for this particular
+> hardware as well.  So please leave it in to ease developers' lives.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Wouldn't "pci=nomsi" be sufficient for that sort of bringup
+experimentation?  We don't need to be super specific in that
+situation.
 
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index fcd5add..f830975 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -20,6 +20,8 @@
- #include <linux/pcieport_if.h>
- #include "portdrv.h"
- 
-+static DEFINE_MUTEX(pci_err_recovery_lock);
-+
- struct aer_broadcast_data {
- 	enum pci_channel_state state;
- 	enum pci_ers_result result;
-@@ -283,6 +285,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
- 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
- 	enum pci_channel_state state;
- 
-+	mutex_lock(&pci_err_recovery_lock);
-+
- 	if (severity == AER_FATAL)
- 		state = pci_channel_io_frozen;
- 	else
-@@ -326,9 +330,11 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
- 				report_resume);
- 
- 	dev_info(&dev->dev, "Device recovery successful\n");
-+	mutex_unlock(&pci_err_recovery_lock);
- 	return;
- 
- failed:
- 	/* TODO: Should kernel panic here? */
- 	dev_info(&dev->dev, "Device recovery failed\n");
-+	mutex_unlock(&pci_err_recovery_lock);
- }
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+The reason I want to remove it is that the port driver
+(drivers/pci/pcie/portdrv*) has become a rat's nest of switches and
+special cases, and I'm trying to simplify it.  Things like
+"pcie_hp=nomsi" are trivial individually, but collectively it's
+getting unmanageable.
+
+Bjorn
