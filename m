@@ -1,103 +1,75 @@
-Return-Path: <SRS0=5qSp=FT=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=5qSp=FT=h08.hostsharing.net=foo00@kernel.org>
-Date: Sun, 25 Feb 2018 09:59:00 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:45805 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751196AbeBLSzK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Feb 2018 13:55:10 -0500
+Date: Mon, 12 Feb 2018 19:55:08 +0100
 From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	dri-devel <dri-devel@lists.freedesktop.org>,
-	Peter Wu <peter@lekensteyn.nl>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Dave Airlie <airlied@redhat.com>, nouveau@lists.freedesktop.org,
-	Ben Skeggs <bskeggs@redhat.com>, Lyude Paul <lyude@redhat.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>,
-	Takashi Iwai <tiwai@suse.com>, Jaroslav Kysela <perex@perex.cz>,
-	Linux PM <linux-pm@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Pierre Moreau <pierre.morrow@free.fr>,
-	Bastien Nocera <hadess@hadess.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/7] PCI: Restore BARs on runtime resume despite being
- unbound
-Message-ID: <20180225085900.GA923@wunner.de>
-References: <cover.1518941072.git.lukas@wunner.de>
- <20180220212922.GC32228@bhelgaas-glaptop.roam.corp.google.com>
- <CAJZ5v0h+qipaKKDxxFFpkwUKgMjnoaUB8_p+FRDb+fSM_v+wBw@mail.gmail.com>
- <6131920.sr0PL0JerP@aspire.rjw.lan>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+        linux-kernel@vger.kernel.org,
+        MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: Re: [PATCH] PCI/portdrv: Remove "pcie_hp=nomsi" kernel parameter
+Message-ID: <20180212185508.GB3862@wunner.de>
+References: <20180211024815.73781.92853.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20180211092525.GA1085@wunner.de>
+ <20180212150146.GA75542@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6131920.sr0PL0JerP@aspire.rjw.lan>
+In-Reply-To: <20180212150146.GA75542@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 21, 2018 at 01:39:34PM +0100, Rafael J. Wysocki wrote:
-> On Wednesday, February 21, 2018 10:57:14 AM CET Rafael J. Wysocki wrote:
-> > So if pci_pm_runtime_suspend() is modified to call pci_save_state()
-> > before returning 0 in the !dev->driver case, we can just move the
-> > pci_restore_standard_config() invocation in pci_pm_runtime_resume() up
-> > to the very top and check dev->driver later.
+On Mon, Feb 12, 2018 at 09:01:46AM -0600, Bjorn Helgaas wrote:
+> On Sun, Feb 11, 2018 at 10:25:25AM +0100, Lukas Wunner wrote:
+> > On Sat, Feb 10, 2018 at 08:48:15PM -0600, Bjorn Helgaas wrote:
+> > > 7570a333d8b0 ("PCI: Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
+> > > driver") added the "pcie_hp=nomsi" kernel parameter to work around this
+> > > error on shutdown:
+> > > 
+> > >   irq 16: nobody cared (try booting with the "irqpoll" option)
+> > >   Pid: 1081, comm: reboot Not tainted 3.2.0 #1
+> > >   ...
+> > >   Disabling IRQ #16
+> > > 
+> > > This happened on an unspecified system (possibly involving the Integrated
+> > > Device Technology, Inc. Device 807f bridge).  There is no automated way to
+> > > set this parameter, so it's not very useful for distributions or end users.
+> > > 
+> > > I suspect the root cause of the underlying "irq 16: nobody cared" issue was
+> > > fixed by Prarit Bhargava <prarit@redhat.com> with fda78d7a0ead ("PCI/MSI:
+> > > Stop disabling MSI/MSI-X in pci_device_shutdown()") and we probably don't
+> > > need "pcie_hp=nomsi" any more.
+> > > 
+> > > Revert 7570a333d8b0 to remove the "pcie_hp=nomsi" parameter.
+> > 
+> > This has been useful when bringing up broken hardware which claims to
+> > support MSI but really doesn't, such as in commit 19bf4d4f909d
+> > ("thunderbolt: Support 1st gen Light Ridge controller").  In this case
+> > I didn't know why the controller wasn't sending interrupts, on a hunch
+> > I tried "pcie_hp=nomsi" and that worked, and looking in the macOS source
+> > code I was able to verify that they disable MSI for this particular
+> > hardware as well.  So please leave it in to ease developers' lives.
 > 
-> I mean something like the patch below, overall (untested).
-> 
-> Tentatively-signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Wouldn't "pci=nomsi" be sufficient for that sort of bringup
+> experimentation?  We don't need to be super specific in that
+> situation.
 
-Okay I've tested this successfully now.  I'll have to respin the series
-at least one more time to address the unnecessary initialization Bjorn
-spotted in patch [5/7] and will then replace patch [1/7] with this one.
+I'm not sure if that would work as it also disables MSI for
+anything not a hotplug bridge.
 
-I'll wait a few more days before respinning to allow for further
-comments, in particular I'm hoping for feedback from Takashi and
-someone testing this on Optimus/ATPX.
 
-Thanks!
+> The reason I want to remove it is that the port driver
+> (drivers/pci/pcie/portdrv*) has become a rat's nest of switches and
+> special cases, and I'm trying to simplify it.  Things like
+> "pcie_hp=nomsi" are trivial individually, but collectively it's
+> getting unmanageable.
+
+I see your point and don't want to stand in the way of progress.
+It just was a useful tool for me once, that's all I'm saying,
+I probably won't need it again, but maybe someone else will.
+
+Thanks,
 
 Lukas
-
-> ---
->  drivers/pci/pci-driver.c |   16 ++++++++++------
->  1 file changed, 10 insertions(+), 6 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -1224,11 +1224,14 @@ static int pci_pm_runtime_suspend(struct
->  	int error;
->  
->  	/*
-> -	 * If pci_dev->driver is not set (unbound), the device should
-> -	 * always remain in D0 regardless of the runtime PM status
-> +	 * If pci_dev->driver is not set (unbound), the device may go to D3cold,
-> +	 * but only if the bridge above it is suspended.  In case that happens,
-> +	 * save its config space.
->  	 */
-> -	if (!pci_dev->driver)
-> +	if (!pci_dev->driver) {
-> +		pci_save_state(pci_dev);
->  		return 0;
-> +	}
->  
->  	if (!pm || !pm->runtime_suspend)
->  		return -ENOSYS;
-> @@ -1276,16 +1279,17 @@ static int pci_pm_runtime_resume(struct
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->  
->  	/*
-> -	 * If pci_dev->driver is not set (unbound), the device should
-> -	 * always remain in D0 regardless of the runtime PM status
-> +	 * Regardless of whether or not the driver is there, the device might
-> +	 * have been put into D3cold as a result of suspending the bridge above
-> +	 * it, so restore the config spaces of all devices here.
->  	 */
-> +	pci_restore_standard_config(pci_dev);
->  	if (!pci_dev->driver)
->  		return 0;
->  
->  	if (!pm || !pm->runtime_resume)
->  		return -ENOSYS;
->  
-> -	pci_restore_standard_config(pci_dev);
->  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
->  	pci_enable_wake(pci_dev, PCI_D0, false);
->  	pci_fixup_device(pci_fixup_resume, pci_dev);
-> 
