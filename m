@@ -1,149 +1,252 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
-To: "Tian, Kevin" <kevin.tian@intel.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-2-jean-philippe.brucker@arm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D191002823@SHSMSX101.ccr.corp.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:46290 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753452AbeBLSdZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Feb 2018 13:33:25 -0500
 From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <b3c190e7-1a33-971e-b86c-a9725118ba05@arm.com>
-Date: Tue, 13 Feb 2018 12:40:13 +0000
-MIME-Version: 1.0
-In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D191002823@SHSMSX101.ccr.corp.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>, "Raj,
- Ashok" <ashok.raj@intel.com>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- Will Deacon <Will.Deacon@arm.com>, Joerg Roedel <joro@8bytes.org>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, Sudeep Holla <Sudeep.Holla@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "lenb@kernel.org" <lenb@kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
+        bharatku@xilinx.com
+Subject: [PATCH 25/37] iommu/arm-smmu-v3: Implement mm operations
+Date: Mon, 12 Feb 2018 18:33:40 +0000
+Message-Id: <20180212183352.22730-26-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kevin,
+Hook mm operations to support PASID and page table sharing with the
+SMMUv3:
 
-Thanks for taking a look!
+* mm_alloc allocates a context descriptor.
+* mm_free releases the context descriptor.
+* mm_attach checks device capabilities and writes the context descriptor.
+* mm_detach clears the context descriptor and sends required
+  invalidations.
+* mm_invalidate sends required invalidations.
 
-On 13/02/18 07:31, Tian, Kevin wrote:
->> From: Jean-Philippe Brucker
->> Sent: Tuesday, February 13, 2018 2:33 AM
->>
->> Shared Virtual Addressing (SVA) provides a way for device drivers to bind
->> process address spaces to devices. This requires the IOMMU to support the
->> same page table format as CPUs, and requires the system to support I/O
-> 
-> "same" is a bit restrictive. "compatible" is better as you used in coverletter. :-)
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/Kconfig       |   1 +
+ drivers/iommu/arm-smmu-v3.c | 131 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 132 insertions(+)
 
-Indeed
-
-[..]
->> +config IOMMU_SVA
->> +	bool "Shared Virtual Addressing API for the IOMMU"
->> +	select IOMMU_API
->> +	help
->> +	  Enable process address space management for the IOMMU API. In
->> systems
->> +	  that support it, device drivers can bind process address spaces to
->> +	  devices and share their page tables using this API.
-> 
-> "their page table" is a bit confusing here.
-
-Maybe this is sufficient:
-"In systems that support it, drivers can share process address spaces with
-their devices using this API."
-
-[...]
->> +
->> +/**
->> + * iommu_sva_device_init() - Initialize Shared Virtual Addressing for a
->> device
->> + * @dev: the device
->> + * @features: bitmask of features that need to be initialized
->> + * @max_pasid: max PASID value supported by the device
->> + *
->> + * Users of the bind()/unbind() API must call this function to initialize all
->> + * features required for SVA.
->> + *
->> + * - If the device should support multiple address spaces (e.g. PCI PASID),
->> + *   IOMMU_SVA_FEAT_PASID must be requested.
-> 
-> I think it is by default assumed when using this API, based on definition of
-> SVA. Can you elaborate the situation where this flag can be cleared?
-
-When passing a device to userspace, you could also share its non-pasid
-address space with the process. It requires a new domain type so is left
-as a TODO in patch 2/37. I did get requests for this feature, though I
-think it was mostly for prototyping. I guess I could remove the flag, and
-reintroduce it as IOMMU_SVA_FEAT_NO_PASID later on.
-
->> + *
->> + *   By default the PASID allocated during bind() is limited by the IOMMU
->> + *   capacity, and by the device PASID width defined in the PCI capability or
->> in
->> + *   the firmware description. Setting @max_pasid to a non-zero value
->> smaller
->> + *   than this limit overrides it.
->> + *
->> + * - If the device should support I/O Page Faults (e.g. PCI PRI),
->> + *   IOMMU_SVA_FEAT_IOPF must be requested.
->> + *
->> + * The device should not be be performing any DMA while this function is
-> 
-> remove double "be"
-> 
->> + * running.
-> 
-> "otherwise the behavior is undefined"
-
-ok
-
-[...]
->> +	ret = domain->ops->sva_device_init(dev, features, &min_pasid,
->> +					   &max_pasid);
->> +	if (ret)
->> +		return ret;
->> +
->> +	/* FIXME: racy. Next version should have a mutex (same as fault
->> handler) */
->> +	dev_param->sva_features = features;
->> +	dev_param->min_pasid = min_pasid;
->> +	dev_param->max_pasid = max_pasid;
-> 
-> what's the point of min_pasid here?
-
-Arm SMMUv3 uses entry 0 of the PASID table for the default (non-pasid)
-context, so it needs to set min_pasid to 1. AMD IOMMU recently added a
-similar feature (GIoSup), if I understood correctly.
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index 4b272925ee78..d434f7085dc2 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -353,6 +353,7 @@ config ARM_SMMU_V3
+ 	bool "ARM Ltd. System MMU Version 3 (SMMUv3) Support"
+ 	depends on ARM64
+ 	select IOMMU_API
++	select IOMMU_SVA
+ 	select IOMMU_IO_PGTABLE_LPAE
+ 	select ARM_SMMU_V3_CONTEXT
+ 	select GENERIC_MSI_IRQ_DOMAIN
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 79bc5b5cceed..1cdeea7e22cb 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -29,6 +29,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/iommu.h>
+ #include <linux/iopoll.h>
++#include <linux/mmu_context.h>
+ #include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
+@@ -37,6 +38,7 @@
+ #include <linux/of_platform.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
++#include <linux/sched/mm.h>
+ 
+ #include <linux/amba/bus.h>
+ 
+@@ -617,6 +619,7 @@ struct arm_smmu_master_data {
+ 	struct device			*dev;
+ 
+ 	size_t				ssid_bits;
++	bool				can_fault;
+ };
+ 
+ /* SMMU private data for an IOMMU domain */
+@@ -645,6 +648,13 @@ struct arm_smmu_domain {
+ 	spinlock_t			devices_lock;
+ };
+ 
++struct arm_smmu_mm {
++	struct io_mm			io_mm;
++	struct iommu_pasid_entry	*cd;
++	/* Only for release ! */
++	struct iommu_pasid_table_ops	*ops;
++};
++
+ struct arm_smmu_option_prop {
+ 	u32 opt;
+ 	const char *prop;
+@@ -671,6 +681,11 @@ static struct arm_smmu_domain *to_smmu_domain(struct iommu_domain *dom)
+ 	return container_of(dom, struct arm_smmu_domain, domain);
+ }
+ 
++static struct arm_smmu_mm *to_smmu_mm(struct io_mm *io_mm)
++{
++	return container_of(io_mm, struct arm_smmu_mm, io_mm);
++}
++
+ static void parse_driver_options(struct arm_smmu_device *smmu)
+ {
+ 	int i = 0;
+@@ -1785,6 +1800,8 @@ static void arm_smmu_detach_dev(struct device *dev)
+ 	struct arm_smmu_domain *smmu_domain = master->domain;
+ 
+ 	if (smmu_domain) {
++		__iommu_sva_unbind_dev_all(dev);
++
+ 		spin_lock_irqsave(&smmu_domain->devices_lock, flags);
+ 		list_del(&master->list);
+ 		spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
+@@ -1902,6 +1919,113 @@ arm_smmu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova)
+ 	return ops->iova_to_phys(ops, iova);
+ }
+ 
++static int arm_smmu_sva_init(struct device *dev, unsigned long features,
++			     unsigned int *min_pasid, unsigned int *max_pasid)
++{
++	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
++
++	if (features & IOMMU_SVA_FEAT_IOPF && !master->can_fault)
++		return -EINVAL;
++
++	if (features & IOMMU_SVA_FEAT_PASID && !master->ssid_bits)
++		return -EINVAL;
++
++	if (!*max_pasid)
++		*max_pasid = 0xfffffU;
++
++	/* SSID support in the SMMU requires at least one SSID bit */
++	*min_pasid = max(*min_pasid, 1U);
++	*max_pasid = min(*max_pasid, (1U << master->ssid_bits) - 1);
++
++	return 0;
++}
++
++static void arm_smmu_sva_shutdown(struct device *dev)
++{
++}
++
++static struct io_mm *arm_smmu_mm_alloc(struct iommu_domain *domain,
++				       struct mm_struct *mm)
++{
++	struct arm_smmu_mm *smmu_mm;
++	struct iommu_pasid_entry *cd;
++	struct iommu_pasid_table_ops *ops;
++	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
++
++	if (smmu_domain->stage != ARM_SMMU_DOMAIN_S1)
++		return NULL;
++
++	smmu_mm = kzalloc(sizeof(*smmu_mm), GFP_KERNEL);
++	if (!smmu_mm)
++		return NULL;
++
++	smmu_mm->ops = ops = smmu_domain->s1_cfg.ops;
++	cd = ops->alloc_shared_entry(ops, mm);
++	if (IS_ERR(cd)) {
++		kfree(smmu_mm);
++		return ERR_CAST(cd);
++	}
++
++	smmu_mm->cd = cd;
++	return &smmu_mm->io_mm;
++}
++
++static void arm_smmu_mm_free(struct io_mm *io_mm)
++{
++	struct arm_smmu_mm *smmu_mm = to_smmu_mm(io_mm);
++
++	smmu_mm->ops->free_entry(smmu_mm->ops, smmu_mm->cd);
++	kfree(smmu_mm);
++}
++
++static int arm_smmu_mm_attach(struct iommu_domain *domain, struct device *dev,
++			      struct io_mm *io_mm, bool attach_domain)
++{
++	struct arm_smmu_mm *smmu_mm = to_smmu_mm(io_mm);
++	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
++	struct iommu_pasid_table_ops *ops = smmu_domain->s1_cfg.ops;
++	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
++
++	if (smmu_domain->stage != ARM_SMMU_DOMAIN_S1)
++		return -EINVAL;
++
++	if (!(master->smmu->features & ARM_SMMU_FEAT_SVA))
++		return -ENODEV;
++
++	/* TODO: io_mm->no_need_for_pri_ill_pin_everything */
++	if (!master->can_fault)
++		return -ENODEV;
++
++	if (!attach_domain)
++		return 0;
++
++	return ops->set_entry(ops, io_mm->pasid, smmu_mm->cd);
++}
++
++static void arm_smmu_mm_detach(struct iommu_domain *domain, struct device *dev,
++			       struct io_mm *io_mm, bool detach_domain)
++{
++	struct arm_smmu_mm *smmu_mm = to_smmu_mm(io_mm);
++	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
++	struct iommu_pasid_table_ops *ops = smmu_domain->s1_cfg.ops;
++
++	if (detach_domain)
++		ops->clear_entry(ops, io_mm->pasid, smmu_mm->cd);
++
++	/* TODO: Invalidate ATC. */
++	/* TODO: Invalidate all mappings if last and not DVM. */
++}
++
++static void arm_smmu_mm_invalidate(struct iommu_domain *domain,
++				   struct device *dev, struct io_mm *io_mm,
++				   unsigned long iova, size_t size)
++{
++	/*
++	 * TODO: Invalidate ATC.
++	 * TODO: Invalidate mapping if not DVM
++	 */
++}
++
+ static struct platform_driver arm_smmu_driver;
+ 
+ static int arm_smmu_match_node(struct device *dev, void *data)
+@@ -2108,6 +2232,13 @@ static struct iommu_ops arm_smmu_ops = {
+ 	.domain_alloc		= arm_smmu_domain_alloc,
+ 	.domain_free		= arm_smmu_domain_free,
+ 	.attach_dev		= arm_smmu_attach_dev,
++	.sva_device_init	= arm_smmu_sva_init,
++	.sva_device_shutdown	= arm_smmu_sva_shutdown,
++	.mm_alloc		= arm_smmu_mm_alloc,
++	.mm_free		= arm_smmu_mm_free,
++	.mm_attach		= arm_smmu_mm_attach,
++	.mm_detach		= arm_smmu_mm_detach,
++	.mm_invalidate		= arm_smmu_mm_invalidate,
+ 	.map			= arm_smmu_map,
+ 	.unmap			= arm_smmu_unmap,
+ 	.map_sg			= default_iommu_map_sg,
+-- 
+2.15.1
