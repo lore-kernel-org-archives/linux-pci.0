@@ -1,196 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:42080 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965411AbeBMRvE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 12:51:04 -0500
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:39305 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753979AbeBLMFT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Feb 2018 07:05:19 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180213163200.8787-5-mika.westerberg@linux.intel.com>
-References: <20180213163200.8787-1-mika.westerberg@linux.intel.com> <20180213163200.8787-5-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
+References: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
 From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 13 Feb 2018 18:51:03 +0100
-Message-ID: <CAJZ5v0hq1jpqCMAH==cXzg978nF6Ew1AhdUEpChCGKD3tM0kOQ@mail.gmail.com>
-Subject: Re: [PATCH 4/5] ACPI / hotplug / PCI: Do not scan all bridges when
- native PCIe hotplug is used
+Date: Mon, 12 Feb 2018 13:05:17 +0100
+Message-ID: <CAJZ5v0h3qstkuNbuTv29ARBWo7L5rNtBAW6GHSZwV8CNa+pYHg@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Check presence of slot itself in get_slot_status()
 To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Len Brown <lenb@kernel.org>,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+        Mike Lothian <mike@fireburn.co.uk>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 13, 2018 at 5:31 PM, Mika Westerberg
+On Mon, Feb 12, 2018 at 11:55 AM, Mika Westerberg
 <mika.westerberg@linux.intel.com> wrote:
-> When a system is using native PCIe hotplug for Thunderbolt and the
-> controller is not enabled for full RTD3 (runtime D3) it will be only
-> present in the system when there is a device connected. This pretty much
-> follows the BIOS assisted hotplug behaviour.
+> Mike Lothian reported that plugging in a USB-C device does not work
+> properly in his Dell Alienware system. This system has Intel Alpine
+> Ridge Thunderbolt controller providing USB-C functionality. In these
+> systems the USB controller (xHCI) is hotplugged whenever a device is
+> connected to the port using ACPI based hotplug.
 >
-> Thunderbolt host controller integrated PCIe switch has two additional
-> PCIe downstream ports that lead to NHI (Thunderbolt host controller) and
-> xHCI (USB 3 host controller) respectively. These downstream ports are
-> not marked being hotplug capable. Reason for that is to preserve
-> resources. Otherwise the OS would distribute remaining resources between
-> all downstream ports making these two ports consume too much resources
-> they don't really need (both NHI and xHCI only need 1 MB of MMIO space,
-> and no extra buses).
+> The ACPI description of the root port in question looks as follows:
 >
-> Now, because these ports are not marked being hotplug capable the OS
-> will not enable hotplug interrupt for them either and will not receive
-> interrupt when devices below them are hotplugged. Solution to this is
-> that the BIOS sends ACPI Notify() for the root port to notify the OS it
-> needs to rescan for added devices.
+> Device (RP01)
+> {
+>     Name (_ADR, 0x001C0000)
 >
-> However, the current ACPI hotplug implementation scans the whole slot
-> regardless whether native PCIe is used or not and it expects that the
-> BIOS has configured bridge resources upfront. If that's not the case it
-> assigns resources using minimal allocation (everything currently found
-> just barely fit) preventing future extension. In addition to that, if
-> there is another native PCIe hotplug going on we may find the new PCIe
-> switch only partially ready (all links are not fully trained yet)
-> confusing PCIehp when it finally starts to enumerate new devices.
+>     Device (PXSX)
+>     {
+>         Name (_ADR, 0x02)
 >
-> To make this work better with the native PCIe hotplug driver (PCIehp),
-> we let it to handle all slot management and resource allocation for
-> hotplug bridges and restrict ACPI hotplug to non-hotplug bridges.
+>         Method (_RMV, 0, NotSerialized)
+>         {
+>             // ...
+>         }
+>     }
 >
+> Here _ADR 0x02 means device 0, function 2 on the bus under root port
+> (RP1) but that seems to be incorrect because device 0 is the upstream
+> port of the Alpine Ridge PCIe switch and it does not have other
+> functions than 0 (the bridge itself). When we get ACPI Notify() to the
+> root port resulting from connecting a USB-C device, Linux tries to read
+> PCI_VENDOR_ID from device 0, function 2 which of course always returns
+> 0xffffffff because there is no such function and we never find the
+> device.
+>
+> In Windows this works fine.
+>
+> Now, since we get ACPI Notify() to the root port and not to the PXSX
+> device we should actually start our scan from there as well and not from
+> the non-existent PXSX device so fix this by checking presence of the
+> slot itself (function 0) if we fail to do that otherwise.
+>
+> While there use pci_bus_read_dev_vendor_id() in get_slot_status() which
+> is the recommended way to read device and vendor ID of device on PCI bus.
+>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=198557
+> Reported-by: Mike Lothian <mike@fireburn.co.uk>
 > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 > Cc: stable@vger.kernel.org
 
 Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
 > ---
->  drivers/pci/hotplug/acpiphp.h      |  1 +
->  drivers/pci/hotplug/acpiphp_glue.c | 73 ++++++++++++++++++++++++++++++--------
->  2 files changed, 59 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-> index e438a2d734f2..8dcfd623ef1d 100644
-> --- a/drivers/pci/hotplug/acpiphp.h
-> +++ b/drivers/pci/hotplug/acpiphp.h
-> @@ -158,6 +158,7 @@ struct acpiphp_attention_info
->
->  #define SLOT_ENABLED           (0x00000001)
->  #define SLOT_IS_GOING_AWAY     (0x00000002)
-> +#define SLOT_IS_NATIVE         (0x00000004)
->
->  /* function flags */
+>  drivers/pci/hotplug/acpiphp_glue.c | 23 ++++++++++++++++-------
+>  1 file changed, 16 insertions(+), 7 deletions(-)
 >
 > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index b45b375c0e6c..5efa21cdddc9 100644
+> index e2198a2feeca..b45b375c0e6c 100644
 > --- a/drivers/pci/hotplug/acpiphp_glue.c
 > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -282,6 +282,9 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
->         slot->device = device;
->         INIT_LIST_HEAD(&slot->funcs);
->
-> +       if (pdev && pciehp_is_native(pdev))
-> +               slot->flags |= SLOT_IS_NATIVE;
-> +
->         list_add_tail(&slot->node, &bridge->slots);
->
->         /*
-> @@ -291,7 +294,7 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
->          * expose slots to user space in those cases.
->          */
->         if ((acpi_pci_check_ejectable(pbus, handle) || is_dock_device(adev))
-> -           && !(pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev))) {
-> +           && !(slot->flags & SLOT_IS_NATIVE && pdev->is_hotplug_bridge)) {
->                 unsigned long long sun;
->                 int retval;
->
-> @@ -430,6 +433,29 @@ static int acpiphp_rescan_slot(struct acpiphp_slot *slot)
->         return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
->  }
->
-> +static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
-> +{
-> +       struct pci_bus *bus = bridge->subordinate;
-> +       struct pci_dev *dev;
-> +       int max;
-> +
-> +       if (!bus)
-> +               return;
-> +
-> +       max = bus->busn_res.start;
-> +       /* Scan already configured non-hotplug bridges */
-> +       for_each_pci_bridge(dev, bus) {
-> +               if (!dev->is_hotplug_bridge)
-> +                       max = pci_scan_bridge(bus, dev, max, 0);
-> +       }
-> +
-> +       /* Scan non-hotplug bridges that need to be reconfigured */
-> +       for_each_pci_bridge(dev, bus) {
-> +               if (!dev->is_hotplug_bridge)
-> +                       max = pci_scan_bridge(bus, dev, max, 1);
-> +       }
-> +}
-> +
->  /**
->   * enable_slot - enable, configure a slot
->   * @slot: slot to be enabled
-> @@ -442,25 +468,42 @@ static void enable_slot(struct acpiphp_slot *slot)
->         struct pci_dev *dev;
->         struct pci_bus *bus = slot->bus;
+> @@ -541,6 +541,7 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+>  {
+>         unsigned long long sta = 0;
 >         struct acpiphp_func *func;
-> -       int max, pass;
-> -       LIST_HEAD(add_list);
+> +       u32 dvid;
 >
-> -       acpiphp_rescan_slot(slot);
-> -       max = acpiphp_max_busnr(bus);
-> -       for (pass = 0; pass < 2; pass++) {
-> +       if (slot->flags & SLOT_IS_NATIVE) {
-> +               /*
-> +                * If native PCIe hotplug is used, it will take care of
-> +                * hotplug slot management and resource allocation for
-> +                * hotplug bridges. However, ACPI hotplug may still be
-> +                * used for non-hotplug bridges to bring in additional
-> +                * devices such as Thunderbolt host controller.
-> +                */
->                 for_each_pci_bridge(dev, bus) {
-> -                       if (PCI_SLOT(dev->devfn) != slot->device)
-> -                               continue;
+>         list_for_each_entry(func, &slot->funcs, sibling) {
+>                 if (func->flags & FUNC_HAS_STA) {
+> @@ -551,19 +552,27 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+>                         if (ACPI_SUCCESS(status) && sta)
+>                                 break;
+>                 } else {
+> -                       u32 dvid;
 > -
-> -                       max = pci_scan_bridge(bus, dev, max, pass);
-> -                       if (pass && dev->subordinate) {
-> -                               check_hotplug_bridge(slot, dev);
-> -                               pcibios_resource_survey_bus(dev->subordinate);
-> -                               __pci_bus_size_bridges(dev->subordinate, &add_list);
-> +                       if (PCI_SLOT(dev->devfn) == slot->device)
-> +                               acpiphp_native_scan_bridge(dev);
-> +               }
-> +               pci_assign_unassigned_bridge_resources(bus->self);
-> +       } else {
-> +               LIST_HEAD(add_list);
-> +               int max, pass;
-> +
-> +               acpiphp_rescan_slot(slot);
-> +               max = acpiphp_max_busnr(bus);
-> +               for (pass = 0; pass < 2; pass++) {
-> +                       for_each_pci_bridge(dev, bus) {
-> +                               if (PCI_SLOT(dev->devfn) != slot->device)
-> +                                       continue;
-> +
-> +                               max = pci_scan_bridge(bus, dev, max, pass);
-> +                               if (pass && dev->subordinate) {
-> +                                       check_hotplug_bridge(slot, dev);
-> +                                       pcibios_resource_survey_bus(dev->subordinate);
-> +                                       __pci_bus_size_bridges(dev->subordinate,
-> +                                                              &add_list);
-> +                               }
+> -                       pci_bus_read_config_dword(slot->bus,
+> -                                                 PCI_DEVFN(slot->device,
+> -                                                           func->function),
+> -                                                 PCI_VENDOR_ID, &dvid);
+> -                       if (dvid != 0xffffffff) {
+> +                       if (pci_bus_read_dev_vendor_id(slot->bus,
+> +                                       PCI_DEVFN(slot->device, func->function),
+> +                                       &dvid, 0)) {
+>                                 sta = ACPI_STA_ALL;
+>                                 break;
 >                         }
 >                 }
-> +               __pci_bus_assign_resources(bus, &add_list, NULL);
 >         }
-> -       __pci_bus_assign_resources(bus, &add_list, NULL);
 >
->         acpiphp_sanitize_bus(bus);
->         pcie_bus_configure_settings(bus);
+> +       if (!sta) {
+> +               /*
+> +                * Check for the slot itself since it may be that the
+> +                * ACPI slot is a device below PCIe upstream port so in
+> +                * that case it may not even be reachable yet.
+> +                */
+> +               if (pci_bus_read_dev_vendor_id(slot->bus,
+> +                               PCI_DEVFN(slot->device, 0), &dvid, 0)) {
+> +                       sta = ACPI_STA_ALL;
+> +               }
+> +       }
+> +
+>         return (unsigned int)sta;
+>  }
+>
 > --
 > 2.15.1
 >
