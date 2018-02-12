@@ -1,207 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-fw-33001.amazon.com ([207.171.190.10]:3704 "EHLO
-        smtp-fw-33001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752638AbeBSNEY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Feb 2018 08:04:24 -0500
-From: David Woodhouse <dwmw@amazon.co.uk>
-To: davem@davemloft.net, sparclinux@vger.kernel.org,
-        bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] sparc: Use generic pci_mmap_resource_range()
-Date: Mon, 19 Feb 2018 13:04:12 +0000
-Message-Id: <1519045452-22645-1-git-send-email-dwmw@amazon.co.uk>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:46652 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932184AbeBLSeH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Feb 2018 13:34:07 -0500
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
+        bharatku@xilinx.com
+Subject: [PATCH 32/37] iommu/arm-smmu-v3: Hook up ATC invalidation to mm ops
+Date: Mon, 12 Feb 2018 18:33:47 +0000
+Message-Id: <20180212183352.22730-33-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit f719582435 ("PCI: Add pci_mmap_resource_range() and use it for
-ARM64") added this generic function with the intent of using it
-everywhere and ultimately killing the old arch-specific implementations.
+The core calls us when an mm is modified. Perform the required ATC
+invalidations.
 
-Let's get on with that eradication...
-
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 ---
- arch/sparc/include/asm/pci_64.h |   1 +
- arch/sparc/kernel/pci.c         | 155 ----------------------------------------
- 2 files changed, 1 insertion(+), 155 deletions(-)
+ drivers/iommu/arm-smmu-v3.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
-index 671274e..95d41c8 100644
---- a/arch/sparc/include/asm/pci_64.h
-+++ b/arch/sparc/include/asm/pci_64.h
-@@ -43,6 +43,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- /* Platform support for /proc/bus/pci/X/Y mmap()s. */
- 
- #define HAVE_PCI_MMAP
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- #define arch_can_pci_mmap_io()	1
- #define HAVE_ARCH_PCI_GET_UNMAPPED_AREA
- #define get_pci_unmapped_area get_fb_unmapped_area
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 220d0f3..1c1f632 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -721,161 +721,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return 0;
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 76513135310f..8d09615fab35 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -1805,6 +1805,15 @@ static int arm_smmu_atc_inv_master_all(struct arm_smmu_master_data *master,
+ 	return arm_smmu_atc_inv_master(master, &cmd);
  }
  
--/* Platform support for /proc/bus/pci/X/Y mmap()s. */
--
--/* If the user uses a host-bridge as the PCI device, he may use
-- * this to perform a raw mmap() of the I/O or MEM space behind
-- * that controller.
-- *
-- * This can be useful for execution of x86 PCI bios initialization code
-- * on a PCI card, like the xfree86 int10 stuff does.
-- */
--static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struct *vma,
--				      enum pci_mmap_state mmap_state)
--{
--	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
--	unsigned long space_size, user_offset, user_size;
--
--	if (mmap_state == pci_mmap_io) {
--		space_size = resource_size(&pbm->io_space);
--	} else {
--		space_size = resource_size(&pbm->mem_space);
--	}
--
--	/* Make sure the request is in range. */
--	user_offset = vma->vm_pgoff << PAGE_SHIFT;
--	user_size = vma->vm_end - vma->vm_start;
--
--	if (user_offset >= space_size ||
--	    (user_offset + user_size) > space_size)
--		return -EINVAL;
--
--	if (mmap_state == pci_mmap_io) {
--		vma->vm_pgoff = (pbm->io_space.start +
--				 user_offset) >> PAGE_SHIFT;
--	} else {
--		vma->vm_pgoff = (pbm->mem_space.start +
--				 user_offset) >> PAGE_SHIFT;
--	}
--
--	return 0;
--}
--
--/* Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static int __pci_mmap_make_offset(struct pci_dev *pdev,
--				  struct vm_area_struct *vma,
--				  enum pci_mmap_state mmap_state)
--{
--	unsigned long user_paddr, user_size;
--	int i, err;
--
--	/* First compute the physical address in vma->vm_pgoff,
--	 * making sure the user offset is within range in the
--	 * appropriate PCI space.
--	 */
--	err = __pci_mmap_make_offset_bus(pdev, vma, mmap_state);
--	if (err)
--		return err;
--
--	/* If this is a mapping on a host bridge, any address
--	 * is OK.
--	 */
--	if ((pdev->class >> 8) == PCI_CLASS_BRIDGE_HOST)
--		return err;
--
--	/* Otherwise make sure it's in the range for one of the
--	 * device's resources.
--	 */
--	user_paddr = vma->vm_pgoff << PAGE_SHIFT;
--	user_size = vma->vm_end - vma->vm_start;
--
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &pdev->resource[i];
--		resource_size_t aligned_end;
--
--		/* Active? */
--		if (!rp->flags)
--			continue;
--
--		/* Same type? */
--		if (i == PCI_ROM_RESOURCE) {
--			if (mmap_state != pci_mmap_mem)
--				continue;
--		} else {
--			if ((mmap_state == pci_mmap_io &&
--			     (rp->flags & IORESOURCE_IO) == 0) ||
--			    (mmap_state == pci_mmap_mem &&
--			     (rp->flags & IORESOURCE_MEM) == 0))
--				continue;
--		}
--
--		/* Align the resource end to the next page address.
--		 * PAGE_SIZE intentionally added instead of (PAGE_SIZE - 1),
--		 * because actually we need the address of the next byte
--		 * after rp->end.
--		 */
--		aligned_end = (rp->end + PAGE_SIZE) & PAGE_MASK;
--
--		if ((rp->start <= user_paddr) &&
--		    (user_paddr + user_size) <= aligned_end)
--			break;
--	}
--
--	if (i > PCI_ROM_RESOURCE)
--		return -EINVAL;
--
--	return 0;
--}
--
--/* Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
-- * device mapping.
-- */
--static void __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vma,
--					     enum pci_mmap_state mmap_state)
--{
--	/* Our io_remap_pfn_range takes care of this, do nothing.  */
--}
--
--/* Perform the actual remap of the pages for a PCI device mapping, as appropriate
-- * for this architecture.  The region in the process to map is described by vm_start
-- * and vm_end members of VMA, the base physical address is found in vm_pgoff.
-- * The pci device structure is provided so that architectures may make mapping
-- * decisions on a per-device or per-bus basis.
-- *
-- * Returns a negative error code on failure, zero on success.
-- */
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	int ret;
--
--	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
--	if (ret < 0)
--		return ret;
--
--	__pci_mmap_set_pgprot(dev, vma, mmap_state);
--
--	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
--	ret = io_remap_pfn_range(vma, vma->vm_start,
--				 vma->vm_pgoff,
--				 vma->vm_end - vma->vm_start,
--				 vma->vm_page_prot);
--	if (ret)
--		return ret;
--
--	return 0;
--}
--
- #ifdef CONFIG_NUMA
- int pcibus_to_node(struct pci_bus *pbus)
++static int arm_smmu_atc_inv_master_range(struct arm_smmu_master_data *master,
++					 int ssid, unsigned long iova, size_t size)
++{
++	struct arm_smmu_cmdq_ent cmd;
++
++	arm_smmu_atc_inv_to_cmd(ssid, iova, size, &cmd);
++	return arm_smmu_atc_inv_master(master, &cmd);
++}
++
+ static size_t
+ arm_smmu_atc_inv_domain(struct arm_smmu_domain *smmu_domain, int ssid,
+ 			unsigned long iova, size_t size)
+@@ -2450,11 +2459,12 @@ static void arm_smmu_mm_detach(struct iommu_domain *domain, struct device *dev,
+ 	struct arm_smmu_mm *smmu_mm = to_smmu_mm(io_mm);
+ 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
+ 	struct iommu_pasid_table_ops *ops = smmu_domain->s1_cfg.ops;
++	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
+ 
+ 	if (detach_domain)
+ 		ops->clear_entry(ops, io_mm->pasid, smmu_mm->cd);
+ 
+-	/* TODO: Invalidate ATC. */
++	arm_smmu_atc_inv_master_all(master, io_mm->pasid);
+ 	/* TODO: Invalidate all mappings if last and not DVM. */
+ }
+ 
+@@ -2462,8 +2472,10 @@ static void arm_smmu_mm_invalidate(struct iommu_domain *domain,
+ 				   struct device *dev, struct io_mm *io_mm,
+ 				   unsigned long iova, size_t size)
  {
++	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
++
++	arm_smmu_atc_inv_master_range(master, io_mm->pasid, iova, size);
+ 	/*
+-	 * TODO: Invalidate ATC.
+ 	 * TODO: Invalidate mapping if not DVM
+ 	 */
+ }
 -- 
-2.7.4
+2.15.1
