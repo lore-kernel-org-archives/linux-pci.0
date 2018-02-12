@@ -1,166 +1,236 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Woodhouse <dwmw@amazon.co.uk>
-To: monstr@monstr.eu, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH] microblaze: Use generic pci_mmap_resource_range()
-Date: Mon, 19 Feb 2018 13:01:23 +0000
-Message-Id: <1519045283-22350-1-git-send-email-dwmw@amazon.co.uk>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
+        bharatku@xilinx.com
+Subject: [PATCH 19/37] iommu/arm-smmu-v3: Add second level of context descriptor table
+Date: Mon, 12 Feb 2018 18:33:34 +0000
+Message-Id: <20180212183352.22730-20-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit f719582435 ("PCI: Add pci_mmap_resource_range() and use it for
-ARM64") added this generic function with the intent of using it
-everywhere and ultimately killing the old arch-specific implementations.
+The SMMU can support up to 20 bits of SSID. Add a second level of page
+tables to accommodate this. Devices that support more than 1024 SSIDs now
+have a table of 1024 L1 entries (8kB), pointing to tables of 1024 context
+descriptors (64kB), allocated on demand.
 
-Let's get on with that eradication...
-
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 ---
- arch/microblaze/include/asm/pci.h |  7 +--
- arch/microblaze/pci/pci-common.c  | 99 ++++-----------------------------------
- 2 files changed, 13 insertions(+), 93 deletions(-)
+ drivers/iommu/arm-smmu-v3-context.c | 137 ++++++++++++++++++++++++++++++++++--
+ 1 file changed, 130 insertions(+), 7 deletions(-)
 
-diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-index 114b934..5de871e 100644
---- a/arch/microblaze/include/asm/pci.h
-+++ b/arch/microblaze/include/asm/pci.h
-@@ -47,9 +47,10 @@ extern int pci_proc_domain(struct pci_bus *bus);
+diff --git a/drivers/iommu/arm-smmu-v3-context.c b/drivers/iommu/arm-smmu-v3-context.c
+index 3b0bb9475dea..aaffc2071966 100644
+--- a/drivers/iommu/arm-smmu-v3-context.c
++++ b/drivers/iommu/arm-smmu-v3-context.c
+@@ -14,6 +14,19 @@
  
- struct vm_area_struct;
+ #include "iommu-pasid.h"
  
--/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
--#define HAVE_PCI_MMAP		1
--#define arch_can_pci_mmap_io()	1
-+/* Tell PCI code what kind of PCI resource mappings we support */
-+#define HAVE_PCI_MMAP			1
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
-+#define arch_can_pci_mmap_io()		1
++/*
++ * Linear: when less than 1024 SSIDs are supported
++ * 2lvl: at most 1024 L1 entrie,
++ *	 1024 lazy entries per table.
++ */
++#define CTXDESC_SPLIT			10
++#define CTXDESC_NUM_L2_ENTRIES		(1 << CTXDESC_SPLIT)
++
++#define CTXDESC_L1_DESC_DWORD		1
++#define CTXDESC_L1_DESC_VALID		1
++#define CTXDESC_L1_DESC_L2PTR_SHIFT	12
++#define CTXDESC_L1_DESC_L2PTR_MASK	0xfffffffffUL
++
+ #define CTXDESC_CD_DWORDS		8
+ #define CTXDESC_CD_0_TCR_T0SZ_SHIFT	0
+ #define ARM64_TCR_T0SZ_SHIFT		0
+@@ -86,7 +99,17 @@ struct arm_smmu_cd_table {
  
- extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
- 			   size_t count);
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index ae79e86..161f975 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -151,72 +151,22 @@ void pcibios_set_master(struct pci_dev *dev)
+ struct arm_smmu_cd_tables {
+ 	struct iommu_pasid_table	pasid;
+-	struct arm_smmu_cd_table	table;
++	bool				linear;
++	union {
++		struct arm_smmu_cd_table table;
++		struct {
++			__le64		*ptr;
++			dma_addr_t	ptr_dma;
++			size_t		num_entries;
++
++			struct arm_smmu_cd_table *tables;
++		} l1;
++	};
+ };
+ 
+ #define pasid_to_cd_tables(pasid_table) \
+@@ -122,9 +145,44 @@ static void arm_smmu_free_cd_leaf_table(struct device *dev,
+ 	dmam_free_coherent(dev, size, desc->ptr, desc->ptr_dma);
  }
  
- /*
-- * Platform support for /proc/bus/pci/X/Y mmap()s,
-- * modelled on the sparc64 implementation by Dave Miller.
-- *  -- paulus.
-+ * Platform support for /proc/bus/pci/X/Y mmap()s.
-  */
- 
--/*
-- * Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
--					       resource_size_t *offset,
--					       enum pci_mmap_state mmap_state)
-+int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
++static void arm_smmu_write_cd_l1_desc(__le64 *dst,
++				      struct arm_smmu_cd_table *desc)
++{
++	u64 val = (desc->ptr_dma & CTXDESC_L1_DESC_L2PTR_MASK <<
++		   CTXDESC_L1_DESC_L2PTR_SHIFT) | CTXDESC_L1_DESC_VALID;
++
++	*dst = cpu_to_le64(val);
++}
++
+ static __le64 *arm_smmu_get_cd_ptr(struct arm_smmu_cd_tables *tbl, u32 ssid)
  {
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	unsigned long io_offset = 0;
--	int i, res_bit;
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
-+	resource_size_t ioaddr = pci_resource_start(pdev, bar);
- 
- 	if (!hose)
--		return NULL;		/* should never happen */
--
--	/* If memory, add on the PCI bridge address offset */
--	if (mmap_state == pci_mmap_mem) {
--#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
--		*offset += hose->pci_mem_offset;
--#endif
--		res_bit = IORESOURCE_MEM;
--	} else {
--		io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		*offset += io_offset;
--		res_bit = IORESOURCE_IO;
--	}
--
--	/*
--	 * Check that the offset requested corresponds to one of the
--	 * resources of the device.
--	 */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &dev->resource[i];
--		int flags = rp->flags;
-+		return -EINVAL;		/* should never happen */
- 
--		/* treat ROM as memory (should be already) */
--		if (i == PCI_ROM_RESOURCE)
--			flags |= IORESOURCE_MEM;
--
--		/* Active and same type? */
--		if ((flags & res_bit) == 0)
--			continue;
--
--		/* In the range of this resource? */
--		if (*offset < (rp->start & PAGE_MASK) || *offset > rp->end)
--			continue;
--
--		/* found it! construct the final physical address */
--		if (mmap_state == pci_mmap_io)
--			*offset += hose->io_base_phys - io_offset;
--		return rp;
--	}
-+	/* Convert to an offset within this PCI controller */
-+	ioaddr -= (unsigned long)hose->io_base_virt - _IO_BASE;
- 
--	return NULL;
-+	vma->vm_pgoff += (ioaddr + hose->io_base_phys) >> PAGE_SHIFT;
-+	return 0;
+-	return tbl->table.ptr + ssid * CTXDESC_CD_DWORDS;
++	unsigned long idx;
++	struct arm_smmu_cd_table *l1_desc;
++	struct iommu_pasid_table_cfg *cfg = &tbl->pasid.cfg;
++
++	if (tbl->linear)
++		return tbl->table.ptr + ssid * CTXDESC_CD_DWORDS;
++
++	idx = ssid >> CTXDESC_SPLIT;
++	if (idx >= tbl->l1.num_entries)
++		return NULL;
++
++	l1_desc = &tbl->l1.tables[idx];
++	if (!l1_desc->ptr) {
++		__le64 *l1ptr = tbl->l1.ptr + idx * CTXDESC_L1_DESC_DWORD;
++
++		if (arm_smmu_alloc_cd_leaf_table(cfg->iommu_dev, l1_desc,
++						 CTXDESC_NUM_L2_ENTRIES))
++			return NULL;
++
++		arm_smmu_write_cd_l1_desc(l1ptr, l1_desc);
++		/* An invalid L1 entry is allowed to be cached */
++		iommu_pasid_flush(&tbl->pasid, idx << CTXDESC_SPLIT, false);
++	}
++
++	idx = ssid & (CTXDESC_NUM_L2_ENTRIES - 1);
++
++	return l1_desc->ptr + idx * CTXDESC_CD_DWORDS;
  }
  
- /*
-@@ -268,37 +218,6 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
- 	return prot;
- }
- 
--/*
-- * Perform the actual remap of the pages for a PCI device mapping, as
-- * appropriate for this architecture.  The region in the process to map
-- * is described by vm_start and vm_end members of VMA, the base physical
-- * address is found in vm_pgoff.
-- * The pci device structure is provided so that architectures may make mapping
-- * decisions on a per-device or per-bus basis.
-- *
-- * Returns a negative error code on failure, zero on success.
-- */
--int pci_mmap_page_range(struct pci_dev *dev, int bar, struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	resource_size_t offset =
--		((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
--	struct resource *rp;
--	int ret;
--
--	rp = __pci_mmap_make_offset(dev, &offset, mmap_state);
--	if (rp == NULL)
--		return -EINVAL;
--
--	vma->vm_pgoff = offset >> PAGE_SHIFT;
--	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
--
--	ret = remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			       vma->vm_end - vma->vm_start, vma->vm_page_prot);
--
--	return ret;
--}
--
- /* This provides legacy IO read access on a bus */
- int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val, size_t size)
+ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
+@@ -307,16 +365,51 @@ static struct iommu_pasid_table *
+ arm_smmu_alloc_cd_tables(struct iommu_pasid_table_cfg *cfg, void *cookie)
  {
+ 	int ret;
++	size_t size = 0;
+ 	struct arm_smmu_cd_tables *tbl;
+ 	struct device *dev = cfg->iommu_dev;
++	struct arm_smmu_cd_table *leaf_table;
++	size_t num_contexts, num_leaf_entries;
+ 
+ 	tbl = devm_kzalloc(dev, sizeof(*tbl), GFP_KERNEL);
+ 	if (!tbl)
+ 		return NULL;
+ 
+-	ret = arm_smmu_alloc_cd_leaf_table(dev, &tbl->table, 1 << cfg->order);
++	num_contexts = 1 << cfg->order;
++	if (num_contexts <= CTXDESC_NUM_L2_ENTRIES) {
++		/* Fits in a single table */
++		tbl->linear = true;
++		num_leaf_entries = num_contexts;
++		leaf_table = &tbl->table;
++	} else {
++		/*
++		 * SSID[S1CDmax-1:10] indexes 1st-level table, SSID[9:0] indexes
++		 * 2nd-level
++		 */
++		tbl->l1.num_entries = num_contexts / CTXDESC_NUM_L2_ENTRIES;
++
++		tbl->l1.tables = devm_kzalloc(dev,
++					      sizeof(struct arm_smmu_cd_table) *
++					      tbl->l1.num_entries, GFP_KERNEL);
++		if (!tbl->l1.tables)
++			goto err_free_tbl;
++
++		size = tbl->l1.num_entries * (CTXDESC_L1_DESC_DWORD << 3);
++		tbl->l1.ptr = dmam_alloc_coherent(dev, size, &tbl->l1.ptr_dma,
++						  GFP_KERNEL | __GFP_ZERO);
++		if (!tbl->l1.ptr) {
++			dev_warn(dev, "failed to allocate L1 context table\n");
++			devm_kfree(dev, tbl->l1.tables);
++			goto err_free_tbl;
++		}
++
++		num_leaf_entries = CTXDESC_NUM_L2_ENTRIES;
++		leaf_table = tbl->l1.tables;
++	}
++
++	ret = arm_smmu_alloc_cd_leaf_table(dev, leaf_table, num_leaf_entries);
+ 	if (ret)
+-		goto err_free_tbl;
++		goto err_free_l1;
+ 
+ 	tbl->pasid.ops = (struct iommu_pasid_table_ops) {
+ 		.alloc_priv_entry	= arm_smmu_alloc_priv_cd,
+@@ -326,11 +419,22 @@ arm_smmu_alloc_cd_tables(struct iommu_pasid_table_cfg *cfg, void *cookie)
+ 		.clear_entry		= arm_smmu_clear_cd,
+ 	};
+ 
+-	cfg->base		= tbl->table.ptr_dma;
+-	cfg->arm_smmu.s1fmt	= ARM_SMMU_S1FMT_LINEAR;
++	if (tbl->linear) {
++		cfg->base		= leaf_table->ptr_dma;
++		cfg->arm_smmu.s1fmt	= ARM_SMMU_S1FMT_LINEAR;
++	} else {
++		cfg->base		= tbl->l1.ptr_dma;
++		cfg->arm_smmu.s1fmt	= ARM_SMMU_S1FMT_64K_L2;
++		arm_smmu_write_cd_l1_desc(tbl->l1.ptr, leaf_table);
++	}
+ 
+ 	return &tbl->pasid;
+ 
++err_free_l1:
++	if (!tbl->linear) {
++		dmam_free_coherent(dev, size, tbl->l1.ptr, tbl->l1.ptr_dma);
++		devm_kfree(dev, tbl->l1.tables);
++	}
+ err_free_tbl:
+ 	devm_kfree(dev, tbl);
+ 
+@@ -343,7 +447,26 @@ static void arm_smmu_free_cd_tables(struct iommu_pasid_table *pasid_table)
+ 	struct device *dev = cfg->iommu_dev;
+ 	struct arm_smmu_cd_tables *tbl = pasid_to_cd_tables(pasid_table);
+ 
+-	arm_smmu_free_cd_leaf_table(dev, &tbl->table, 1 << cfg->order);
++	if (tbl->linear) {
++		arm_smmu_free_cd_leaf_table(dev, &tbl->table, 1 << cfg->order);
++	} else {
++		size_t i, size;
++
++		for (i = 0; i < tbl->l1.num_entries; i++) {
++			struct arm_smmu_cd_table *table = &tbl->l1.tables[i];
++
++			if (!table->ptr)
++				continue;
++
++			arm_smmu_free_cd_leaf_table(dev, table,
++						    CTXDESC_NUM_L2_ENTRIES);
++		}
++
++		size = tbl->l1.num_entries * (CTXDESC_L1_DESC_DWORD << 3);
++		dmam_free_coherent(dev, size, tbl->l1.ptr, tbl->l1.ptr_dma);
++		devm_kfree(dev, tbl->l1.tables);
++	}
++
+ 	devm_kfree(dev, tbl);
+ }
+ 
 -- 
-2.7.4
+2.15.1
+
