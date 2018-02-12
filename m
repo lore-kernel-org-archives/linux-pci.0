@@ -1,116 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:37768 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752295AbeB1MEi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 07:04:38 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
-Subject: [PATCH v8 9/9] PCI: dwc: Expand maximum number of IRQs from 32 to 256
-Date: Wed, 28 Feb 2018 12:04:22 +0000
-Message-Id: <5e7119dd2c83c221b5968bc8ad053b86e2103afc.1519819020.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ZYJC=FG=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=ZYJC=FG=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <CAJZ5v0iNq2ni9ML=_6H0i99dUm5+Noh1MQ9AO4JCiqyXU1xW3Q@mail.gmail.com>
+References: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
+ <20180210010548.GC206223@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0gBK8WmX4QYYBzVxdk8CaSBo5ckzmP49qr05+9DAYieqw@mail.gmail.com>
+ <20180210153450.GD206223@bhelgaas-glaptop.roam.corp.google.com> <CAJZ5v0iNq2ni9ML=_6H0i99dUm5+Noh1MQ9AO4JCiqyXU1xW3Q@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 12 Feb 2018 09:58:04 +0100
+Message-ID: <CAJZ5v0gb9_xOEoDbNf65CuTqokG0-b+B6FEQh9C0D2z2pu9WqQ@mail.gmail.com>
+Subject: Re: [PATCH] ACPI/PCI: pci_link: change log level of no _PRS messages
+To: Bjorn Helgaas <helgaas@kernel.org>, Alex Hung <alex.hung@canonical.com>
+Cc: Len Brown <lenb@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-The Synopsys PCIe Root Complex supports up to 256 IRQs distributed by 8
-controller registers.
+On Mon, Feb 12, 2018 at 9:51 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Sat, Feb 10, 2018 at 4:34 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> On Sat, Feb 10, 2018 at 09:08:42AM +0100, Rafael J. Wysocki wrote:
+>>> On Sat, Feb 10, 2018 at 2:05 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> > On Fri, Feb 09, 2018 at 02:56:43PM -0800, Alex Hung wrote:
+>>> >> In recent Intel hardware the IRQs become non-configurable after BIOS
+>>> >> initializes them in PEI phase and _PRS objects are no longer included in
+>>> >> ASL.
+>>> >>
+>>> >> This is the same as "static (non-configurable) devices do not
+>>> >> specify a _PRS object" in ACPI spec. As a result, error messages
+>>> >> saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
+>>> >> be in kernel messages all the time but only when debug is enabled.
+>>> >
+>>> > I agree and would even go further: _PRS is optional and I don't think
+>>> > there's a reason to log anything at all if it's absent.  A log message
+>>> > like "failed to evaluate _PRS" makes people think something is wrong
+>>> > when in fact nothing is wrong.
+>>>
+>>> _PRS is required if the link object is pointed to by a _PRT entry.
+>>
+>> The closest thing I see with a quick look is ACPI 6.0, sec 6.2.13:
+>>
+>>   These objects [PCI Interrupt Link Devices] have _PRS, _CRS, _SRS,
+>>   and _DIS control methods to allocate the interrupt.
+>>
+>> I don't read that as a requirement for _PRS in particular; I read it
+>> as saying that the interrupt link devices use the normal device
+>> configuration method, i.e., _CRS is required and _PRS and _SRS are
+>> optional and needed for configurable devices but not for static ones.
+>
+> Well, that's slightly out of context. :-)
+>
+> First of all, Section 6.2.13 says this: "Typically, the interrupt
+> input that a given PCI interrupt is on is configurable. [...]  In this
+> model, each interrupt is represented in the ACPI namespace as a PCI
+> Interrupt Link Device."  Then, it says the above.
+>
+> Now, if _PRS is not present, the IRQ represented by the link object
+> cannot be configured, so in fact the underlying assumption doesn't
+> apply to it, strictly speaking.  It follows from the last paragraph in
+> Section 6.2.13 that _PRT entries representing such IRQs should not
+> point to interrupt link device objects (there should be 0 in their
+> Source fields).
+>
+> Hence, if a _PRT entry points to an interrupt link device object in
+> the namespace, _PRS should be present under this object or at least it
+> is reasonable to expect that it will be present in there.
+>
+>> But this is just a drive-by comment and I'm really fine with whatever
+>> you decide to do.
+>
+> OK
+>
+> So I think that (a) the message should be printed using
+> acpi_handle_debug(), except that I would make it slightly more
+> neutral, something like "_PRS not present or invalid", and (b) 0
+> should be returned instead of -ENODEV when _PRS evaluation doesn't
+> succeed.
 
-Having this in mind, the number of the maximum number of IRQs was changed
-to 256 and now the number of controllers is calculated based on the number
-of vectors used by the specific SoC driver.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- New patch file.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Patch renamed from v3-0009 to v4-0010.
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
-Change v5->v6:
-- Nothing changed, just to follow the patch set version.
-Change v6->v7:
-- Nothing changed, just to follow the patch set version.
-Change v7->v8:
-- Rebased against v4.16-rc1.
-
- drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
- drivers/pci/dwc/pcie-designware.h      | 10 +++-------
- 2 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 3678818..4da8807 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -76,11 +76,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
- /* MSI int handler */
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- {
--	u32 val;
- 	int i, pos, irq;
-+	u32 val, num_ctrls;
- 	irqreturn_t ret = IRQ_NONE;
- 
--	for (i = 0; i < MAX_MSI_CTRLS; i++) {
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
-+	for (i = 0; i < num_ctrls; i++) {
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
- 				    &val);
- 		if (!val)
-@@ -641,13 +643,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
- 
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
--	u32 val, ctrl;
-+	u32 val, ctrl, num_ctrls;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
- 	dw_pcie_setup(pci);
- 
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
- 	/* Initialize IRQ Status array */
--	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
-+	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
- 				    &pp->irq_status[ctrl]);
- 	/* setup RC BARs */
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 5807f3f..04e1c22 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -107,13 +107,9 @@
- #define MSI_MESSAGE_DATA_32		0x58
- #define MSI_MESSAGE_DATA_64		0x5C
- 
--/*
-- * Maximum number of MSI IRQs can be 256 per controller. But keep
-- * it 32 as of now. Probably we will never need more than 32. If needed,
-- * then increment it in multiple of 32.
-- */
--#define MAX_MSI_IRQS			32
--#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
-+#define MAX_MSI_IRQS			256
-+#define MAX_MSI_IRQS_PER_CTRL		32
-+#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
--- 
-2.7.4
+But then, of course, we may not want to evaluate _DIS on this link and
+I'm not quite sure if adding it to acpi_link_list makes sense then.
