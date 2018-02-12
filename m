@@ -1,175 +1,526 @@
-Return-Path: <SRS0=/y4y=FP=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=/y4y=FP=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, dri-devel <dri-devel@lists.freedesktop.org>, Peter Wu <peter@lekensteyn.nl>, Alex Deucher <alexander.deucher@amd.com>, Dave Airlie <airlied@redhat.com>, nouveau@lists.freedesktop.org, Ben Skeggs <bskeggs@redhat.com>, Lyude Paul <lyude@redhat.com>, Hans de Goede <hdegoede@redhat.com>, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>, Takashi Iwai <tiwai@suse.com>, Jaroslav Kysela <perex@perex.cz>, Linux PM <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Pierre Moreau <pierre.morrow@free.fr>, Bastien Nocera <hadess@hadess.net>, Bjorn Helgaas <bhelgaas@google.com>, Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/7] PCI: Restore BARs on runtime resume despite being unbound
-Date: Wed, 21 Feb 2018 13:39:34 +0100
-Message-ID: <6131920.sr0PL0JerP@aspire.rjw.lan>
-In-Reply-To: <CAJZ5v0h+qipaKKDxxFFpkwUKgMjnoaUB8_p+FRDb+fSM_v+wBw@mail.gmail.com>
-References: <cover.1518941072.git.lukas@wunner.de> <20180220212922.GC32228@bhelgaas-glaptop.roam.corp.google.com> <CAJZ5v0h+qipaKKDxxFFpkwUKgMjnoaUB8_p+FRDb+fSM_v+wBw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
+        bharatku@xilinx.com
+Subject: [PATCH 07/37] iommu: Add a page fault handler
+Date: Mon, 12 Feb 2018 18:33:22 +0000
+Message-Id: <20180212183352.22730-8-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, February 21, 2018 10:57:14 AM CET Rafael J. Wysocki wrote:
-> On Tue, Feb 20, 2018 at 10:29 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Sun, Feb 18, 2018 at 09:38:32AM +0100, Lukas Wunner wrote:
-> >> PCI devices not bound to a driver are supposed to stay in D0 during
-> >> runtime suspend.
-> >
-> > Doesn't "runtime suspend" mean an individual device is suspended while
-> > the rest of the system remains active?
-> >
-> > If so, maybe it would be more direct to say "PCI devices not bound to
-> > a driver cannot be runtime suspended"?
-> >
-> > (It's a separate question not relevant to this patch, but I'm not
-> > convinced that "PCI devices without a driver cannot be suspended"
-> > should be accepted as a rule.  If it is a rule, we should be able to
-> > deduce it from the specs.)
-> >
-> >> But they may have a parent which is bound and can be
-> >> transitioned to D3cold at runtime.  Once the parent goes to D3cold, the
-> >> unbound child may go to D3cold as well.  When the child comes out of
-> >> D3cold, its BARs are uninitialized and thus inaccessible when a driver
-> >> tries to probe.
-> >>
-> >> One example are recent hybrid graphics laptops which cut power to the
-> >> discrete GPU when the root port above it goes to ACPI power state D3.
-> >> Users may provoke this by unbinding the GPU driver and allowing runtime
-> >> PM on the GPU via sysfs:  The PM core will then treat the GPU as
-> >> "suspended", which in turn allows the root port to runtime suspend,
-> >> causing the power resources listed in its _PR3 object to be powered off.
-> >> The GPU's BARs will be uninitialized when a driver later probes it.
-> >>
-> >> Another example are hybrid graphics laptops where the GPU itself (rather
-> >> than the root port) is capable of runtime suspending to D3cold.  If the
-> >> GPU's integrated HDA controller is not bound and the GPU's driver
-> >> decides to runtime suspend to D3cold, the HDA controller's BARs will be
-> >> uninitialized when a driver later probes it.
-> >>
-> >> Fix by restoring the BARs on runtime resume if the device is not bound.
-> >> This is sufficient to fix the above-mentioned use cases.  Other use
-> >> cases might require a full-blown pci_save_state() / pci_restore_state()
-> >> or execution of fixups.  We can add that once use cases materialize,
-> >> let's not inflate the code unnecessarily.
-> >
-> > Why would we not do a full-blown restore?  With this patch, I think
-> > some configuration done during enumeration, e.g., ASPM and MPS, will
-> > be lost.  "lspci -vv" of the HDA before and after the suspend may show
-> > different things, which seems counter-intuitive.
-> 
-> Right.
-> 
-> > I wouldn't think of a full-blown restore as "inflating the code"; I
-> > would think of it as "having fewer special cases", i.e., we always use
-> > the same restore path instead of having the main one plus a special
-> > one for unbound devices.
-> 
-> That is a fair point, but if you look at pci_pm_runtime_suspend(), it
-> doesn't actually save anything for devices without drivers, so we'd
-> just restore the original initial state for them every time.
-> 
-> If we are to restore the entire state on runtime resume,
-> pci_pm_runtime_suspend() should be changed to call pci_save_state()
-> before returning 0 in the !dev->driver case AFAICS.
-> 
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> >> ---
-> >>  drivers/pci/pci-driver.c | 8 ++++++--
-> >>  drivers/pci/pci.c        | 2 +-
-> >>  drivers/pci/pci.h        | 1 +
-> >>  3 files changed, 8 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> >> index 3bed6beda051..51b11cbd48f6 100644
-> >> --- a/drivers/pci/pci-driver.c
-> >> +++ b/drivers/pci/pci-driver.c
-> >> @@ -1277,10 +1277,14 @@ static int pci_pm_runtime_resume(struct device *dev)
-> >>
-> >>       /*
-> >>        * If pci_dev->driver is not set (unbound), the device should
-> >> -      * always remain in D0 regardless of the runtime PM status
-> >> +      * always remain in D0 regardless of the runtime PM status.
-> >> +      * But if its parent can go to D3cold, this device may have
-> >> +      * been in D3cold as well and require restoration of its BARs.
-> >>        */
-> >> -     if (!pci_dev->driver)
-> >> +     if (!pci_dev->driver) {
-> >> +             pci_restore_bars(pci_dev);
-> >
-> > If we do decide not to do a full-blown restore, how do we decide
-> > whether to use pci_restore_bars() or pci_restore_config_space()?
-> >
-> > I'm not sure why we have both.
-> 
-> Me neither.
-> 
-> > The pci_restore_bars() path looks a
-> > little smarter in that it is more careful when updating 64-bit BARs
-> > that can't be updated atomically.
-> >
-> >>               return 0;
-> >> +     }
-> >>
-> >>       if (!pm || !pm->runtime_resume)
-> >>               return -ENOSYS;
-> 
-> So if pci_pm_runtime_suspend() is modified to call pci_save_state()
-> before returning 0 in the !dev->driver case, we can just move the
-> pci_restore_standard_config() invocation in pci_pm_runtime_resume() up
-> to the very top and check dev->driver later.
+Some systems allow devices to handle IOMMU translation faults in the core
+mm. For example systems supporting the PCI PRI extension or Arm SMMU stall
+model. Infrastructure for reporting such recoverable page faults was
+recently added to the IOMMU core, for SVA virtualization. Extend
+iommu_report_device_fault() to handle host page faults as well.
 
-I mean something like the patch below, overall (untested).
+* IOMMU drivers instantiate a fault workqueue, using
+  iommu_fault_queue_init() and iommu_fault_queue_destroy().
 
-Tentatively-signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+* When it receives a fault event, supposedly in an IRQ handler, the IOMMU
+  driver reports the fault using iommu_report_device_fault()
+
+* If the device driver registered a handler (e.g. VFIO), pass down the
+  fault event. Otherwise submit it to the fault queue, to be handled in a
+  thread.
+
+* When the fault corresponds to an io_mm, call the mm fault handler on it
+  (in next patch).
+
+* Once the fault is handled, the mm wrapper or the device driver reports
+  success of failure with iommu_page_response(). The translation is either
+  retried or aborted, depending on the response code.
+
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 ---
- drivers/pci/pci-driver.c |   16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/iommu/Kconfig      |  10 ++
+ drivers/iommu/Makefile     |   1 +
+ drivers/iommu/io-pgfault.c | 282 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/iommu/iommu-sva.c  |   3 -
+ drivers/iommu/iommu.c      |  31 ++---
+ include/linux/iommu.h      |  34 +++++-
+ 6 files changed, 339 insertions(+), 22 deletions(-)
+ create mode 100644 drivers/iommu/io-pgfault.c
 
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -1224,11 +1224,14 @@ static int pci_pm_runtime_suspend(struct
- 	int error;
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index 146eebe9a4bb..e751bb9958ba 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -85,6 +85,15 @@ config IOMMU_SVA
  
- 	/*
--	 * If pci_dev->driver is not set (unbound), the device should
--	 * always remain in D0 regardless of the runtime PM status
-+	 * If pci_dev->driver is not set (unbound), the device may go to D3cold,
-+	 * but only if the bridge above it is suspended.  In case that happens,
-+	 * save its config space.
- 	 */
--	if (!pci_dev->driver)
-+	if (!pci_dev->driver) {
-+		pci_save_state(pci_dev);
- 		return 0;
+ 	  If unsure, say N here.
+ 
++config IOMMU_FAULT
++	bool "Fault handler for the IOMMU API"
++	select IOMMU_API
++	help
++	  Enable the generic fault handler for the IOMMU API, that handles
++	  recoverable page faults or inject them into guests.
++
++	  If unsure, say N here.
++
+ config FSL_PAMU
+ 	bool "Freescale IOMMU support"
+ 	depends on PCI
+@@ -156,6 +165,7 @@ config INTEL_IOMMU
+ 	select IOMMU_API
+ 	select IOMMU_IOVA
+ 	select DMAR_TABLE
++	select IOMMU_FAULT
+ 	help
+ 	  DMA remapping (DMAR) devices support enables independent address
+ 	  translations for Direct Memory Access (DMA) from devices.
+diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
+index 1dbcc89ebe4c..f4324e29035e 100644
+--- a/drivers/iommu/Makefile
++++ b/drivers/iommu/Makefile
+@@ -4,6 +4,7 @@ obj-$(CONFIG_IOMMU_API) += iommu-traces.o
+ obj-$(CONFIG_IOMMU_API) += iommu-sysfs.o
+ obj-$(CONFIG_IOMMU_DMA) += dma-iommu.o
+ obj-$(CONFIG_IOMMU_SVA) += iommu-sva.o
++obj-$(CONFIG_IOMMU_FAULT) += io-pgfault.o
+ obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
+ obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
+ obj-$(CONFIG_IOMMU_IO_PGTABLE_LPAE) += io-pgtable-arm.o
+diff --git a/drivers/iommu/io-pgfault.c b/drivers/iommu/io-pgfault.c
+new file mode 100644
+index 000000000000..33309ed316d2
+--- /dev/null
++++ b/drivers/iommu/io-pgfault.c
+@@ -0,0 +1,282 @@
++/*
++ * Handle device page faults
++ *
++ * Copyright (C) 2018 ARM Ltd.
++ * Author: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
++ *
++ * SPDX-License-Identifier: GPL-2.0
++ */
++
++#include <linux/iommu.h>
++#include <linux/list.h>
++#include <linux/slab.h>
++#include <linux/workqueue.h>
++
++static struct workqueue_struct *iommu_fault_queue;
++static DECLARE_RWSEM(iommu_fault_queue_sem);
++static refcount_t iommu_fault_queue_refs = REFCOUNT_INIT(0);
++static BLOCKING_NOTIFIER_HEAD(iommu_fault_queue_flush_notifiers);
++
++/* Used to store incomplete fault groups */
++static LIST_HEAD(iommu_partial_faults);
++static DEFINE_SPINLOCK(iommu_partial_faults_lock);
++
++struct iommu_fault_context {
++	struct device			*dev;
++	struct iommu_fault_event	evt;
++	struct list_head		head;
++};
++
++struct iommu_fault_group {
++	struct iommu_domain		*domain;
++	struct iommu_fault_context	last_fault;
++	struct list_head		faults;
++	struct work_struct		work;
++};
++
++/*
++ * iommu_fault_complete() - Finish handling a fault
++ *
++ * Send a response if necessary and pass on the sanitized status code
++ */
++static int iommu_fault_complete(struct iommu_domain *domain, struct device *dev,
++				struct iommu_fault_event *evt, int status)
++{
++	struct page_response_msg resp = {
++		.addr		= evt->addr,
++		.pasid		= evt->pasid,
++		.pasid_present	= evt->pasid_valid,
++		.page_req_group_id = evt->page_req_group_id,
++		.type		= IOMMU_PAGE_GROUP_RESP,
++		.private_data	= evt->iommu_private,
++	};
++
++	/*
++	 * There is no "handling" an unrecoverable fault, so the only valid
++	 * return values are 0 or an error.
++	 */
++	if (evt->type == IOMMU_FAULT_DMA_UNRECOV)
++		return status > 0 ? 0 : status;
++
++	/* Someone took ownership of the fault and will complete it later */
++	if (status == IOMMU_PAGE_RESP_HANDLED)
++		return 0;
++
++	/*
++	 * There was an internal error with handling the recoverable fault. Try
++	 * to complete the fault if possible.
++	 */
++	if (status < 0)
++		status = IOMMU_PAGE_RESP_INVALID;
++
++	if (WARN_ON(!domain->ops->page_response))
++		/*
++		 * The IOMMU driver shouldn't have submitted recoverable faults
++		 * if it cannot receive a response.
++		 */
++		return -EINVAL;
++
++	resp.resp_code = status;
++	return domain->ops->page_response(domain, dev, &resp);
++}
++
++static int iommu_fault_handle_single(struct iommu_fault_context *fault)
++{
++	/* TODO */
++	return -ENODEV;
++}
++
++static void iommu_fault_handle_group(struct work_struct *work)
++{
++	struct iommu_fault_group *group;
++	struct iommu_fault_context *fault, *next;
++	int status = IOMMU_PAGE_RESP_SUCCESS;
++
++	group = container_of(work, struct iommu_fault_group, work);
++
++	list_for_each_entry_safe(fault, next, &group->faults, head) {
++		struct iommu_fault_event *evt = &fault->evt;
++		/*
++		 * Errors are sticky: don't handle subsequent faults in the
++		 * group if there is an error.
++		 */
++		if (status == IOMMU_PAGE_RESP_SUCCESS)
++			status = iommu_fault_handle_single(fault);
++
++		if (!evt->last_req)
++			kfree(fault);
 +	}
++
++	iommu_fault_complete(group->domain, group->last_fault.dev,
++			     &group->last_fault.evt, status);
++	kfree(group);
++}
++
++static int iommu_queue_fault(struct iommu_domain *domain, struct device *dev,
++			     struct iommu_fault_event *evt)
++{
++	struct iommu_fault_group *group;
++	struct iommu_fault_context *fault, *next;
++
++	if (!iommu_fault_queue)
++		return -ENOSYS;
++
++	if (!evt->last_req) {
++		fault = kzalloc(sizeof(*fault), GFP_KERNEL);
++		if (!fault)
++			return -ENOMEM;
++
++		fault->evt = *evt;
++		fault->dev = dev;
++
++		/* Non-last request of a group. Postpone until the last one */
++		spin_lock(&iommu_partial_faults_lock);
++		list_add_tail(&fault->head, &iommu_partial_faults);
++		spin_unlock(&iommu_partial_faults_lock);
++
++		return IOMMU_PAGE_RESP_HANDLED;
++	}
++
++	group = kzalloc(sizeof(*group), GFP_KERNEL);
++	if (!group)
++		return -ENOMEM;
++
++	group->last_fault.evt = *evt;
++	group->last_fault.dev = dev;
++	group->domain = domain;
++	INIT_LIST_HEAD(&group->faults);
++	list_add(&group->last_fault.head, &group->faults);
++	INIT_WORK(&group->work, iommu_fault_handle_group);
++
++	/* See if we have pending faults for this group */
++	spin_lock(&iommu_partial_faults_lock);
++	list_for_each_entry_safe(fault, next, &iommu_partial_faults, head) {
++		if (fault->evt.page_req_group_id == evt->page_req_group_id &&
++		    fault->dev == dev) {
++			list_del(&fault->head);
++			/* Insert *before* the last fault */
++			list_add(&fault->head, &group->faults);
++		}
++	}
++	spin_unlock(&iommu_partial_faults_lock);
++
++	queue_work(iommu_fault_queue, &group->work);
++
++	/* Postpone the fault completion */
++	return IOMMU_PAGE_RESP_HANDLED;
++}
++
++/**
++ * iommu_report_device_fault() - Handle fault in device driver or mm
++ *
++ * If the device driver expressed interest in handling fault, report it through
++ * the callback. If the fault is recoverable, try to page in the address.
++ */
++int iommu_report_device_fault(struct device *dev, struct iommu_fault_event *evt)
++{
++	int ret = -ENOSYS;
++	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
++
++	if (!domain)
++		return -ENODEV;
++
++	/*
++	 * if upper layers showed interest and installed a fault handler,
++	 * invoke it.
++	 */
++	if (iommu_has_device_fault_handler(dev)) {
++		struct iommu_fault_param *param = dev->iommu_param->fault_param;
++
++		return param->handler(evt, param->data);
++	}
++
++	/* If the handler is blocking, handle fault in the workqueue */
++	if (evt->type == IOMMU_FAULT_PAGE_REQ)
++		ret = iommu_queue_fault(domain, dev, evt);
++
++	return iommu_fault_complete(domain, dev, evt, ret);
++}
++EXPORT_SYMBOL_GPL(iommu_report_device_fault);
++
++/**
++ * iommu_fault_queue_register() - register an IOMMU driver to the fault queue
++ * @flush_notifier: a notifier block that is called before the fault queue is
++ * flushed. The IOMMU driver should commit all faults that are pending in its
++ * low-level queues at the time of the call, into the fault queue. The notifier
++ * takes a device pointer as argument, hinting what endpoint is causing the
++ * flush. When the device is NULL, all faults should be committed.
++ */
++int iommu_fault_queue_register(struct notifier_block *flush_notifier)
++{
++	/*
++	 * The WQ is unordered because the low-level handler enqueues faults by
++	 * group. PRI requests within a group have to be ordered, but once
++	 * that's dealt with, the high-level function can handle groups out of
++	 * order.
++	 */
++	down_write(&iommu_fault_queue_sem);
++	if (!iommu_fault_queue) {
++		iommu_fault_queue = alloc_workqueue("iommu_fault_queue",
++						    WQ_UNBOUND, 0);
++		if (iommu_fault_queue)
++			refcount_set(&iommu_fault_queue_refs, 1);
++	} else {
++		refcount_inc(&iommu_fault_queue_refs);
++	}
++	up_write(&iommu_fault_queue_sem);
++
++	if (!iommu_fault_queue)
++		return -ENOMEM;
++
++	if (flush_notifier)
++		blocking_notifier_chain_register(&iommu_fault_queue_flush_notifiers,
++						 flush_notifier);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iommu_fault_queue_register);
++
++/**
++ * iommu_fault_queue_flush() - Ensure that all queued faults have been
++ * processed.
++ * @dev: the endpoint whose faults need to be flushed. If NULL, flush all
++ *       pending faults.
++ *
++ * Users must call this function when releasing a PASID, to ensure that all
++ * pending faults affecting this PASID have been handled, and won't affect the
++ * address space of a subsequent process that reuses this PASID.
++ */
++void iommu_fault_queue_flush(struct device *dev)
++{
++	blocking_notifier_call_chain(&iommu_fault_queue_flush_notifiers, 0, dev);
++
++	down_read(&iommu_fault_queue_sem);
++	/*
++	 * Don't flush the partial faults list. All PRGs with the PASID are
++	 * complete and have been submitted to the queue.
++	 */
++	if (iommu_fault_queue)
++		flush_workqueue(iommu_fault_queue);
++	up_read(&iommu_fault_queue_sem);
++}
++EXPORT_SYMBOL_GPL(iommu_fault_queue_flush);
++
++/**
++ * iommu_fault_queue_unregister() - Unregister an IOMMU driver from the fault
++ * queue.
++ * @flush_notifier: same parameter as iommu_fault_queue_register
++ */
++void iommu_fault_queue_unregister(struct notifier_block *flush_notifier)
++{
++	down_write(&iommu_fault_queue_sem);
++	if (refcount_dec_and_test(&iommu_fault_queue_refs)) {
++		destroy_workqueue(iommu_fault_queue);
++		iommu_fault_queue = NULL;
++	}
++	up_write(&iommu_fault_queue_sem);
++
++	if (flush_notifier)
++		blocking_notifier_chain_unregister(&iommu_fault_queue_flush_notifiers,
++						   flush_notifier);
++}
++EXPORT_SYMBOL_GPL(iommu_fault_queue_unregister);
+diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
+index 4bc2a8c12465..d7b231cd7355 100644
+--- a/drivers/iommu/iommu-sva.c
++++ b/drivers/iommu/iommu-sva.c
+@@ -102,9 +102,6 @@
+  * the device table and PASID 0 would be available to the allocator.
+  */
  
- 	if (!pm || !pm->runtime_suspend)
- 		return -ENOSYS;
-@@ -1276,16 +1279,17 @@ static int pci_pm_runtime_resume(struct
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+-/* TODO: stub for the fault queue. Remove later. */
+-#define iommu_fault_queue_flush(...)
+-
+ struct iommu_bond {
+ 	struct io_mm		*io_mm;
+ 	struct device		*dev;
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 1d60b32a6744..c475893ec7dc 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -798,6 +798,17 @@ int iommu_group_unregister_notifier(struct iommu_group *group,
+ }
+ EXPORT_SYMBOL_GPL(iommu_group_unregister_notifier);
  
- 	/*
--	 * If pci_dev->driver is not set (unbound), the device should
--	 * always remain in D0 regardless of the runtime PM status
-+	 * Regardless of whether or not the driver is there, the device might
-+	 * have been put into D3cold as a result of suspending the bridge above
-+	 * it, so restore the config spaces of all devices here.
- 	 */
-+	pci_restore_standard_config(pci_dev);
- 	if (!pci_dev->driver)
- 		return 0;
++/**
++ * iommu_register_device_fault_handler() - Register a device fault handler
++ * @dev: the device
++ * @handler: the fault handler
++ * @data: private data passed as argument to the callback
++ *
++ * When an IOMMU fault event is received, call this handler with the fault event
++ * and data as argument.
++ *
++ * Return 0 if the fault handler was installed successfully, or an error.
++ */
+ int iommu_register_device_fault_handler(struct device *dev,
+ 					iommu_dev_fault_handler_t handler,
+ 					void *data)
+@@ -825,6 +836,13 @@ int iommu_register_device_fault_handler(struct device *dev,
+ }
+ EXPORT_SYMBOL_GPL(iommu_register_device_fault_handler);
  
- 	if (!pm || !pm->runtime_resume)
- 		return -ENOSYS;
++/**
++ * iommu_unregister_device_fault_handler() - Unregister the device fault handler
++ * @dev: the device
++ *
++ * Remove the device fault handler installed with
++ * iommu_register_device_fault_handler().
++ */
+ int iommu_unregister_device_fault_handler(struct device *dev)
+ {
+ 	struct iommu_param *idata = dev->iommu_param;
+@@ -840,19 +858,6 @@ int iommu_unregister_device_fault_handler(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(iommu_unregister_device_fault_handler);
  
--	pci_restore_standard_config(pci_dev);
- 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
- 	pci_enable_wake(pci_dev, PCI_D0, false);
- 	pci_fixup_device(pci_fixup_resume, pci_dev);
+-
+-int iommu_report_device_fault(struct device *dev, struct iommu_fault_event *evt)
+-{
+-	/* we only report device fault if there is a handler registered */
+-	if (!dev->iommu_param || !dev->iommu_param->fault_param ||
+-		!dev->iommu_param->fault_param->handler)
+-		return -ENOSYS;
+-
+-	return dev->iommu_param->fault_param->handler(evt,
+-						dev->iommu_param->fault_param->data);
+-}
+-EXPORT_SYMBOL_GPL(iommu_report_device_fault);
+-
+ /**
+  * iommu_group_id - Return ID for a group
+  * @group: the group to ID
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 226ab4f3ae0e..65e56f28e0ce 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -205,6 +205,7 @@ struct page_response_msg {
+ 	u32 resp_code:4;
+ #define IOMMU_PAGE_RESP_SUCCESS	0
+ #define IOMMU_PAGE_RESP_INVALID	1
++#define IOMMU_PAGE_RESP_HANDLED	2
+ #define IOMMU_PAGE_RESP_FAILURE	0xF
+ 
+ 	u32 pasid_present:1;
+@@ -534,7 +535,6 @@ extern int iommu_register_device_fault_handler(struct device *dev,
+ 
+ extern int iommu_unregister_device_fault_handler(struct device *dev);
+ 
+-extern int iommu_report_device_fault(struct device *dev, struct iommu_fault_event *evt);
+ extern int iommu_page_response(struct iommu_domain *domain, struct device *dev,
+ 			       struct page_response_msg *msg);
+ 
+@@ -836,11 +836,6 @@ static inline bool iommu_has_device_fault_handler(struct device *dev)
+ 	return false;
+ }
+ 
+-static inline int iommu_report_device_fault(struct device *dev, struct iommu_fault_event *evt)
+-{
+-	return 0;
+-}
+-
+ static inline int iommu_page_response(struct iommu_domain *domain, struct device *dev,
+ 				      struct page_response_msg *msg)
+ {
+@@ -1005,4 +1000,31 @@ static inline struct mm_struct *iommu_sva_find(int pasid)
+ }
+ #endif /* CONFIG_IOMMU_SVA */
+ 
++#ifdef CONFIG_IOMMU_FAULT
++extern int iommu_fault_queue_register(struct notifier_block *flush_notifier);
++extern void iommu_fault_queue_flush(struct device *dev);
++extern void iommu_fault_queue_unregister(struct notifier_block *flush_notifier);
++extern int iommu_report_device_fault(struct device *dev,
++				     struct iommu_fault_event *evt);
++#else /* CONFIG_IOMMU_FAULT */
++static inline int iommu_fault_queue_register(struct notifier_block *flush_notifier)
++{
++	return -ENODEV;
++}
++
++static inline void iommu_fault_queue_flush(struct device *dev)
++{
++}
++
++static inline void iommu_fault_queue_unregister(struct notifier_block *flush_notifier)
++{
++}
++
++static inline int iommu_report_device_fault(struct device *dev,
++					    struct iommu_fault_event *evt)
++{
++	return 0;
++}
++#endif /* CONFIG_IOMMU_FAULT */
++
+ #endif /* __LINUX_IOMMU_H */
+-- 
+2.15.1
+
