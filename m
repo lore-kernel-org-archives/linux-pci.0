@@ -1,97 +1,156 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0gDDUKy_vzjBiBiBLThsaeZxwpi7t9se0VKPsB1eo778Q@mail.gmail.com>
-References: <1519433209-14581-1-git-send-email-fkan@apm.com>
- <CAJZ5v0hDM=DtBZA1awz7ao62cpe4CAhUz1L7KkLTv=G3YQhuEw@mail.gmail.com>
- <CAJZ5v0jJMODOsZV41Jn18LCtttMemFQyXonJxZnUgXday8_4iw@mail.gmail.com>
- <20180224135946.GA1735@wunner.de>
- <CAJZ5v0gDDUKy_vzjBiBiBLThsaeZxwpi7t9se0VKPsB1eo778Q@mail.gmail.com>
-From: Feng Kan <fkan@apm.com>
-Date: Sun, 25 Feb 2018 08:28:56 -0800
-Message-ID: <CAL85gmCQjVb4i6+LUBKXsqM1cRTt_YWLvWxz+U4e_ahE+8dE1w@mail.gmail.com>
-Subject: Re: [PATCH] PCIe bridge deferred probe breaks suspend resume
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Linux PM <linux-pm@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
- Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45172 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753682AbeBLSbQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Feb 2018 13:31:16 -0500
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
+        bharatku@xilinx.com
+Subject: [PATCH 04/37] iommu/sva: Add a mm_exit callback for device drivers
+Date: Mon, 12 Feb 2018 18:33:19 +0000
+Message-Id: <20180212183352.22730-5-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 25, 2018 at 1:29 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
-> On Sat, Feb 24, 2018 at 2:59 PM, Lukas Wunner <lukas@wunner.de> wrote:
->> On Sat, Feb 24, 2018 at 10:47:26AM +0100, Rafael J. Wysocki wrote:
->>> On Sat, Feb 24, 2018 at 10:35 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
->>> > On Sat, Feb 24, 2018 at 1:46 AM, Feng Kan <fkan@apm.com> wrote:
->>> >> This is not a patch, but rather a question regarding the deferred
->>> >> probe's effect on PCIe PM ordering. This happens on our system
->>> >> which defer the probing of root bridge due to  the IOMMU not being
->>> >> ready. Because of the deferred action, the bridge is moved to the
->>> >> end of the dpm_list which results in incorrect suspend and resume
->>> >> sequence.
->>> >>
->>> >> In the cases I have seen, the bridge is always reordered because of
->>> >> startup sequence. They are always place after the endpoint. If that
->>> >> is the case the following code should be able to prevent such cases.
->>> >> However, is there some cases here that would violate such situation?
->>> >
->>> > The code in dd.c assumes that the device being probed has no children
->>> > (or consumers, for that matter) and so it is safe to move it to the
->>> > end of the list.
->>> >
->>> > If the device has children (or consumers), moving it to the end of the
->>> > list by itself doesn't work, which is the case for you.
->>> >
->>> > You can try to replace the device_pm_move_last(dev) in
->>> > deferred_probe_work_func(struct() with device_reorder_to_tail(), but
->>> > that has to be called under device_links_read_lock/unloc () and
->>> > device_pm_lock/unloc() (in the right order).
->>>
->>> Alternatively, you can replace your !dev_is_pci(dev) check with a
->>> check for the presence of children or consumers and only move the
->>> device to the end of the PM list if there are not any.  That would
->>> kind of make sense, but it may break other assumptions in the deferred
->>> probing mechanism which I don't recall ATM.
->>>
->>> Or avoid deferred probing of the host bridge driver entirely.  I guess
->>> you can use it with limited functionality until the IOMMU driver is
->>> ready and switch over to the fully functional operation mode when that
->>> happens, but that would need to hook into the IOMMU code somehow.
->>
->> Or model the root bridge's dependency on the iommu using a device link:
->> https://www.kernel.org/doc/html/latest/driver-api/device_link.html
->
-> Apparently, there are children registered under the bridge device
-> before the driver for it is probed.
+When an mm exits, devices that were bound to it must stop performing DMA
+on its PASID. Let device drivers register a callback to be notified on mm
+exit. Add the callback to the iommu_param structure attached to struct
+device.
 
-Yes, so the order seems to be like this:
-1. root port and endporint is enumerated and added to dpm_list
-2. root port probed and deferred
-3. iommu probed and successful
-4. root port probed again and successful -> moved to last in dpm_list
-5. endpoint probed and successful
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/iommu-sva.c | 54 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iommu.h     | 18 ++++++++++++++++
+ 2 files changed, 72 insertions(+)
 
-I guess another approach would be to prevent 1 from happening by not
-adding to dpm_list until the probe is successful.
-
->
-> That is kind of unusual and I'm not really sure why it happens at all,
-> because (in theory) the bridge driver should be responsible for
-> assigning resources to the devices on the bus, among other things.
-> Depending on what the reason is, your suggestion may or may not work.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
+index f9af9d66b3ed..90b524c99d3d 100644
+--- a/drivers/iommu/iommu-sva.c
++++ b/drivers/iommu/iommu-sva.c
+@@ -569,3 +569,57 @@ void __iommu_sva_unbind_dev_all(struct device *dev)
+ 	spin_unlock(&iommu_sva_lock);
+ }
+ EXPORT_SYMBOL_GPL(__iommu_sva_unbind_dev_all);
++
++/**
++ * iommu_register_mm_exit_handler() - Set a callback for mm exit
++ * @dev: the device
++ * @handler: exit handler
++ *
++ * Users of the bind/unbind API should call this function to set a
++ * device-specific callback telling them when a mm is exiting.
++ *
++ * After the callback returns, the device must not issue any more transaction
++ * with the PASID given as argument to the handler. In addition the handler gets
++ * an opaque pointer corresponding to the drvdata passed as argument of bind().
++ *
++ * The handler itself should return 0 on success, and an appropriate error code
++ * otherwise.
++ */
++int iommu_register_mm_exit_handler(struct device *dev,
++				   iommu_mm_exit_handler_t handler)
++{
++	struct iommu_param *dev_param = dev->iommu_param;
++
++	if (!dev_param)
++		return -EINVAL;
++
++	/*
++	 * FIXME: racy. Same as iommu_sva_device_init, but here we'll need a
++	 * spinlock to call the mm_exit param from atomic context.
++	 */
++	if (dev_param->mm_exit)
++		return -EBUSY;
++
++	get_device(dev);
++	dev_param->mm_exit = handler;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iommu_register_mm_exit_handler);
++
++/**
++ * iommu_unregister_mm_exit_handler() - Remove mm exit callback
++ */
++int iommu_unregister_mm_exit_handler(struct device *dev)
++{
++	struct iommu_param *dev_param = dev->iommu_param;
++
++	if (!dev_param || !dev_param->mm_exit)
++		return -EINVAL;
++
++	dev_param->mm_exit = NULL;
++	put_device(dev);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iommu_unregister_mm_exit_handler);
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 09d85f44142a..1b1a16892ac1 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -65,6 +65,8 @@ typedef int (*iommu_dev_fault_handler_t)(struct iommu_fault_event *, void *);
+ /* Request I/O page fault support */
+ #define IOMMU_SVA_FEAT_IOPF		(1 << 1)
+ 
++typedef int (*iommu_mm_exit_handler_t)(struct device *dev, int pasid, void *);
++
+ struct iommu_domain_geometry {
+ 	dma_addr_t aperture_start; /* First address that can be mapped    */
+ 	dma_addr_t aperture_end;   /* Last address that can be mapped     */
+@@ -424,6 +426,7 @@ struct iommu_param {
+ 	unsigned int min_pasid;
+ 	unsigned int max_pasid;
+ 	struct list_head mm_list;
++	iommu_mm_exit_handler_t mm_exit;
+ };
+ 
+ int  iommu_device_register(struct iommu_device *iommu);
+@@ -941,6 +944,10 @@ extern int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
+ 				int *pasid, unsigned long flags, void *drvdata);
+ extern int iommu_sva_unbind_device(struct device *dev, int pasid);
+ extern void __iommu_sva_unbind_dev_all(struct device *dev);
++extern int iommu_register_mm_exit_handler(struct device *dev,
++					  iommu_mm_exit_handler_t handler);
++extern int iommu_unregister_mm_exit_handler(struct device *dev);
++
+ #else /* CONFIG_IOMMU_SVA */
+ static inline int iommu_sva_device_init(struct device *dev,
+ 					unsigned long features,
+@@ -969,6 +976,17 @@ static inline int iommu_sva_unbind_device(struct device *dev, int pasid)
+ static inline void __iommu_sva_unbind_dev_all(struct device *dev)
+ {
+ }
++
++static inline int iommu_register_mm_exit_handler(struct device *dev,
++						 iommu_mm_exit_handler_t handler)
++{
++	return -ENODEV;
++}
++
++static inline int iommu_unregister_mm_exit_handler(struct device *dev)
++{
++	return -ENODEV;
++}
+ #endif /* CONFIG_IOMMU_SVA */
+ 
+ #endif /* __LINUX_IOMMU_H */
+-- 
+2.15.1
