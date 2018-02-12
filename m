@@ -1,74 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 28 Feb 2018 16:20:45 +0000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: "Tian, Kevin" <kevin.tian@intel.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Subject: Re: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
-Message-ID: <f3de53ca-0c3f-47f4-d77b-cf3d9bfd3da6@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
+        bharatku@xilinx.com
+Subject: [PATCH 33/37] iommu/arm-smmu-v3: Disable tagged pointers
+Date: Mon, 12 Feb 2018 18:33:48 +0000
+Message-Id: <20180212183352.22730-34-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
 References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-2-jean-philippe.brucker@arm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D191002823@SHSMSX101.ccr.corp.intel.com>
- <b3c190e7-1a33-971e-b86c-a9725118ba05@arm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D191003B1B@SHSMSX101.ccr.corp.intel.com>
- <0b579768-3090-dd50-58b1-3385be92ef21@arm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D19101C8A7@SHSMSX101.ccr.corp.intel.com>
-MIME-Version: 1.0
-In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D19101C8A7@SHSMSX101.ccr.corp.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>, "Raj,
- Ashok" <ashok.raj@intel.com>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- Will Deacon <Will.Deacon@arm.com>, Joerg Roedel <joro@8bytes.org>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, Sudeep Holla <Sudeep.Holla@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "lenb@kernel.org" <lenb@kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/02/18 06:21, Tian, Kevin wrote:
-[...]
->> Technically nothing prevents it, but now the resv problem discussed on
->> patch 2/37 stands out. For example on x86 you'd probably need to carve
->> the
->> IOAPIC MSI range out of the process address space. On Arm you'd need to
->> create a write-only mapping for MSIs (IOMMU translates it to the IRQ chip
->> address, but thankfully accessing the doorbell from CPU side doesn't
->> trigger an MSI.)
-> 
-> so if overlap already exists when binding a process address space
-> (since binding may happen much later than creating the process),
-> I assume the call will simply fail since carve out at this point is not
-> possible?
+The ARM architecture has a "Top Byte Ignore" (TBI) option that makes the
+MMU mask out bits [63:56] of an address, allowing a userspace application
+to store data in its pointers. This option is incompatible with PCI ATS.
 
-Yes in this case I think it's safer to abort the bind() call
+If TBI is enabled in the SMMU and userspace triggers DMA transactions on
+tagged pointers, the endpoint might create ATC entries for addresses that
+include a tag. Software would then have to send ATC invalidation packets
+for each 255 possible alias of an address, or just wipe the whole address
+space. This is not a viable option, so disable TBI.
 
-Thanks,
-Jean
+The impact of this change is unclear, since there are very few users of
+tagged pointers, much less SVA. But the requirement introduced by this
+patch doesn't seem excessive: a userspace application using both tagged
+pointers and SVA should now sanitize addresses (clear the tag) before
+using them for device DMA.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3-context.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/iommu/arm-smmu-v3-context.c b/drivers/iommu/arm-smmu-v3-context.c
+index eaeba1bec2e9..0479cae5249c 100644
+--- a/drivers/iommu/arm-smmu-v3-context.c
++++ b/drivers/iommu/arm-smmu-v3-context.c
+@@ -221,7 +221,6 @@ static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_context_cfg *cfg, u64 tcr)
+ 	val |= ARM_SMMU_TCR2CD(tcr, EPD0);
+ 	val |= ARM_SMMU_TCR2CD(tcr, EPD1);
+ 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
+-	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
+ 
+ 	if (cfg->hw_access)
+ 		val |= ARM_SMMU_TCR2CD(tcr, HA);
+-- 
+2.15.1
+
