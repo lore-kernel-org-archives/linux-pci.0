@@ -1,68 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.mailbox.org ([80.241.60.212]:59900 "EHLO mx1.mailbox.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751643AbeBBOoY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Feb 2018 09:44:24 -0500
-Subject: Re: [RFC PATCH] PCI: pciehp: Add module parameter to enable
- debouncing of HP link events
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-References: <20180130084121.18653-1-sr@denx.de>
- <20180130102840.GF27654@lahna.fi.intel.com>
- <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
- <20180202134710.GA24377@wunner.de>
-From: Stefan Roese <sr@denx.de>
-Message-ID: <fc56ecd5-7465-872b-48d7-c7eaf0dd779a@denx.de>
-Date: Fri, 2 Feb 2018 15:44:21 +0100
+Return-Path: <SRS0=u01k=FG=fireburn.co.uk=mike@kernel.org>
+Return-Path: <SRS0=u01k=FG=fireburn.co.uk=mike@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180202134710.GA24377@wunner.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180212152122.GB75542@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
+ <CAHbf0-Exsu14dBmmfYy8Tcb4R58eYJKLFPPoM9RkqxHWDkqwXQ@mail.gmail.com> <20180212152122.GB75542@bhelgaas-glaptop.roam.corp.google.com>
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Mon, 12 Feb 2018 15:42:20 +0000
+Message-ID: <CAHbf0-FaUnoh5+q3e7MQsPiQKBiaekms_b6zxzAjKWhd+7Gj_w@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Check presence of slot itself in get_slot_status()
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02.02.2018 14:47, Lukas Wunner wrote:
-> On Fri, Feb 02, 2018 at 02:38:34PM +0100, Stefan Roese wrote:
->>> On Tue, Jan 30, 2018 at 09:41:21AM +0100, Stefan Roese wrote:
->>>> Hotplugging of some PCIe devices on our platform sometimes leads to a
->>>> bounce of link-up and link-down events, resulting in problems in the
->>>> corresponding PCI drivers.
->>>>
->>>> Here an example of such a hotplug event bounce for a AHCI PCIe card:
->>>> ...
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
+On 12 February 2018 at 15:21, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Mon, Feb 12, 2018 at 11:08:55AM +0000, Mike Lothian wrote:
+>> On 12 February 2018 at 10:55, Mika Westerberg
+>> <mika.westerberg@linux.intel.com> wrote:
+>> > Mike Lothian reported that plugging in a USB-C device does not work
+>> > properly in his Dell Alienware system. This system has Intel Alpine
+>> > Ridge Thunderbolt controller providing USB-C functionality. In these
+>> > systems the USB controller (xHCI) is hotplugged whenever a device is
+>> > connected to the port using ACPI based hotplug.
+>> >
+>> > The ACPI description of the root port in question looks as follows:
+>> >
+>> > Device (RP01)
+>> > {
+>> >     Name (_ADR, 0x001C0000)
+>> >
+>> >     Device (PXSX)
+>> >     {
+>> >         Name (_ADR, 0x02)
+>> >
+>> >         Method (_RMV, 0, NotSerialized)
+>> >         {
+>> >             // ...
+>> >         }
+>> >     }
+>> >
+>> > Here _ADR 0x02 means device 0, function 2 on the bus under root port
+>> > (RP1) but that seems to be incorrect because device 0 is the upstream
+>> > port of the Alpine Ridge PCIe switch and it does not have other
+>> > functions than 0 (the bridge itself). When we get ACPI Notify() to the
+>> > root port resulting from connecting a USB-C device, Linux tries to read
+>> > PCI_VENDOR_ID from device 0, function 2 which of course always returns
+>> > 0xffffffff because there is no such function and we never find the
+>> > device.
+>> >
+>> > In Windows this works fine.
+>> >
+>> > Now, since we get ACPI Notify() to the root port and not to the PXSX
+>> > device we should actually start our scan from there as well and not from
+>> > the non-existent PXSX device so fix this by checking presence of the
+>> > slot itself (function 0) if we fail to do that otherwise.
+>> >
+>> > While there use pci_bus_read_dev_vendor_id() in get_slot_status() which
+>> > is the recommended way to read device and vendor ID of device on PCI bus.
+>> >
+>> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=198557
+>> > Reported-by: Mike Lothian <mike@fireburn.co.uk>
+>> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+>> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> > Cc: stable@vger.kernel.org
+>> > ---
+>> >  drivers/pci/hotplug/acpiphp_glue.c | 23 ++++++++++++++++-------
+>> >  1 file changed, 16 insertions(+), 7 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> > index e2198a2feeca..b45b375c0e6c 100644
+>> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> > @@ -541,6 +541,7 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+>> >  {
+>> >         unsigned long long sta = 0;
+>> >         struct acpiphp_func *func;
+>> > +       u32 dvid;
+>> >
+>> >         list_for_each_entry(func, &slot->funcs, sibling) {
+>> >                 if (func->flags & FUNC_HAS_STA) {
+>> > @@ -551,19 +552,27 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+>> >                         if (ACPI_SUCCESS(status) && sta)
+>> >                                 break;
+>> >                 } else {
+>> > -                       u32 dvid;
+>> > -
+>> > -                       pci_bus_read_config_dword(slot->bus,
+>> > -                                                 PCI_DEVFN(slot->device,
+>> > -                                                           func->function),
+>> > -                                                 PCI_VENDOR_ID, &dvid);
+>> > -                       if (dvid != 0xffffffff) {
+>> > +                       if (pci_bus_read_dev_vendor_id(slot->bus,
+>> > +                                       PCI_DEVFN(slot->device, func->function),
+>> > +                                       &dvid, 0)) {
+>> >                                 sta = ACPI_STA_ALL;
+>> >                                 break;
+>> >                         }
+>> >                 }
+>> >         }
+>> >
+>> > +       if (!sta) {
+>> > +               /*
+>> > +                * Check for the slot itself since it may be that the
+>> > +                * ACPI slot is a device below PCIe upstream port so in
+>> > +                * that case it may not even be reachable yet.
+>> > +                */
+>> > +               if (pci_bus_read_dev_vendor_id(slot->bus,
+>> > +                               PCI_DEVFN(slot->device, 0), &dvid, 0)) {
+>> > +                       sta = ACPI_STA_ALL;
+>> > +               }
+>> > +       }
+>> > +
+>> >         return (unsigned int)sta;
+>> >  }
+>> >
+>> > --
+>> > 2.15.1
+>> >
 >>
->> I'm open for other / better ideas on how to solve this situation, we
->> are seeing on our systems.
-> 
-> If a Link Up event is received and there is already a Link Up / Link Down
-> pair in the queue, the Link Down event can be dequeued and the newly
-> received Link Up event need not be queued.
-> 
-> Same if a Link Down event is received and there is already a Link Down /
-> Link Up pair in the queue.
+>> Thanks for this, it fixes a few other issues on my machine too
+>
+> Thanks for testing this.  Can you elaborate on what other issues this
+> fixes?  I don't know what they are, but they might be worth mentioning
+> in the changelog do make this fix more discoverable.
+>
+>> I'm going to do some searches around different bugzillas for the USB-C
+>> non-detection and the NVMe drive disappearing after suspend issues and
+>> report that they'll be getting a fix soon
+>
+> If you find more bugzillas that are fixed by this, please include the
+> URLs so we can include them in the changelog.  (I can do this; no need
+> to respin the patch just for this.)
+>
+>> Tested-by: Mike Lothian <mike@fireburn.co.uk>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Makes sense. But I'm more often seeing this sequence here while
-hot-plugging the PCIe card:
+Hi
 
-[   41.260667] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-[   41.260731] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-[   41.290650] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
-[   41.295837] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-[   41.320664] pciehp 0000:00:1c.1:pcie004: Slot(1): Card not present
-[   41.330042] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-[   41.330110] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-[   41.375950] pci 0000:02:00.0: [1b4b:9215] type 00 class 0x010601
-...
+The main issue was the NVMe drive disappearing after suspend/resume
+https://bugzilla.kernel.org/show_bug.cgi?id=112121
 
-So a link-down is following the link-up directly (~30ms here). Sometimes
-a double link-up is also seen. But this one is more frequent in my test
-cases.
+The workaround was to disable hotplugging - most of the forum posts I
+found relating to this issue have the solution acpiphp.disable=1
 
-Thanks,
-Stefan
+Through my bug I also realised that CONFIG_ACPI_PCI_SLOT also didn't
+work and prevented my machine from booting - that's fixed now too
+
+I've went round as many of the distro sites as possible posting about
+this fix so people can avoid the work around and get working USB-C
+ports
+
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1655100
+https://bbs.archlinux.org/viewtopic.php?id=216520
+https://askubuntu.com/questions/981657/cannot-suspend-with-nvme-m-2-ssd
+https://forums.linuxmint.com/viewtopic.php?t=234368
+
+Hope that helps
+
+Mike
