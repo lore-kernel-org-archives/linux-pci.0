@@ -1,33 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:39011 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965315AbeBMT0c (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 14:26:32 -0500
+Return-Path: <SRS0=ZYJC=FG=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=ZYJC=FG=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180213130550.Horde.JMezTfF5lIykmPMB49PKEwG@gator4166.hostgator.com>
-References: <20180213165948.GA14035@embeddedor.com> <CAHp75VfdDUooc=zy2rk8ep0PdsEsD1TGbaD9nm8DBB1NmYYTTw@mail.gmail.com>
- <20180213130550.Horde.JMezTfF5lIykmPMB49PKEwG@gator4166.hostgator.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 13 Feb 2018 21:26:30 +0200
-Message-ID: <CAHp75Vf2MF0cxyi+g99WUMViWGGq6B_S6nKPPfpaYWL5SvizKw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/ASPM: Use 64-bit arithmetic instead of 32-bit
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20180210153450.GD206223@bhelgaas-glaptop.roam.corp.google.com>
+References: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
+ <20180210010548.GC206223@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0gBK8WmX4QYYBzVxdk8CaSBo5ckzmP49qr05+9DAYieqw@mail.gmail.com> <20180210153450.GD206223@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 12 Feb 2018 09:51:04 +0100
+Message-ID: <CAJZ5v0iNq2ni9ML=_6H0i99dUm5+Noh1MQ9AO4JCiqyXU1xW3Q@mail.gmail.com>
+Subject: Re: [PATCH] ACPI/PCI: pci_link: change log level of no _PRS messages
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Alex Hung <alex.hung@canonical.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 13, 2018 at 9:05 PM, Gustavo A. R. Silva
-<garsilva@embeddedor.com> wrote:
+On Sat, Feb 10, 2018 at 4:34 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Sat, Feb 10, 2018 at 09:08:42AM +0100, Rafael J. Wysocki wrote:
+>> On Sat, Feb 10, 2018 at 2:05 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Fri, Feb 09, 2018 at 02:56:43PM -0800, Alex Hung wrote:
+>> >> In recent Intel hardware the IRQs become non-configurable after BIOS
+>> >> initializes them in PEI phase and _PRS objects are no longer included in
+>> >> ASL.
+>> >>
+>> >> This is the same as "static (non-configurable) devices do not
+>> >> specify a _PRS object" in ACPI spec. As a result, error messages
+>> >> saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
+>> >> be in kernel messages all the time but only when debug is enabled.
+>> >
+>> > I agree and would even go further: _PRS is optional and I don't think
+>> > there's a reason to log anything at all if it's absent.  A log message
+>> > like "failed to evaluate _PRS" makes people think something is wrong
+>> > when in fact nothing is wrong.
+>>
+>> _PRS is required if the link object is pointed to by a _PRT entry.
+>
+> The closest thing I see with a quick look is ACPI 6.0, sec 6.2.13:
+>
+>   These objects [PCI Interrupt Link Devices] have _PRS, _CRS, _SRS,
+>   and _DIS control methods to allocate the interrupt.
+>
+> I don't read that as a requirement for _PRS in particular; I read it
+> as saying that the interrupt link devices use the normal device
+> configuration method, i.e., _CRS is required and _PRS and _SRS are
+> optional and needed for configurable devices but not for static ones.
 
-> It seems to me that it makes no sense for threshold_ns to be of type u64,
-> because the expression threshold_us * 1000 will never exceed the 32-bit
-> limits. So if you agree I can send a patch to change its type to u32
-> instead.
+Well, that's slightly out of context. :-)
 
-Whatever Bjorn prefers.
+First of all, Section 6.2.13 says this: "Typically, the interrupt
+input that a given PCI interrupt is on is configurable. [...]  In this
+model, each interrupt is represented in the ACPI namespace as a PCI
+Interrupt Link Device."  Then, it says the above.
 
--- 
-With Best Regards,
-Andy Shevchenko
+Now, if _PRS is not present, the IRQ represented by the link object
+cannot be configured, so in fact the underlying assumption doesn't
+apply to it, strictly speaking.  It follows from the last paragraph in
+Section 6.2.13 that _PRT entries representing such IRQs should not
+point to interrupt link device objects (there should be 0 in their
+Source fields).
+
+Hence, if a _PRT entry points to an interrupt link device object in
+the namespace, _PRS should be present under this object or at least it
+is reasonable to expect that it will be present in there.
+
+> But this is just a drive-by comment and I'm really fine with whatever
+> you decide to do.
+
+OK
+
+So I think that (a) the message should be printed using
+acpi_handle_debug(), except that I would make it slightly more
+neutral, something like "_PRS not present or invalid", and (b) 0
+should be returned instead of -ENODEV when _PRS evaluation doesn't
+succeed.
