@@ -1,205 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44354 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934954AbeB1Va2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 16:30:28 -0500
-Date: Wed, 28 Feb 2018 15:30:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: KarimAllah Ahmed <karahmed@amazon.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Store more data about VFs into the SRIOV struct
-Message-ID: <20180228213026.GN127842@bhelgaas-glaptop.roam.corp.google.com>
-References: <1516211063-1488-1-git-send-email-karahmed@amazon.de>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:57950 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753791AbeBLSOn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Feb 2018 13:14:43 -0500
+Subject: Re: [PATCH v6 0/9] PCI: dwc: MSI-X feature
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+        "thomas.petazzoni@free-electrons.com"
+        <thomas.petazzoni@free-electrons.com>,
+        "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>,
+        "mingkai.hu@freescale.com" <mingkai.hu@freescale.com>,
+        "tie-fei.zang@freescale.com" <tie-fei.zang@freescale.com>,
+        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+        "wangzhou1@hisilicon.com" <wangzhou1@hisilicon.com>,
+        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
+        "nsekhar@ti.com" <nsekhar@ti.com>
+References: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+ <20180212122334.GA25396@e107981-ln.cambridge.arm.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <47720ab7-1eb5-0605-5711-80595b358f7d@synopsys.com>
+Date: Mon, 12 Feb 2018 18:14:29 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1516211063-1488-1-git-send-email-karahmed@amazon.de>
+In-Reply-To: <20180212122334.GA25396@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 17, 2018 at 06:44:23PM +0100, KarimAllah Ahmed wrote:
-> ... to avoid reading them from the config space of all the PCI VFs. This is
-> specially a useful optimization when bringing up thousands of VFs.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: KarimAllah Ahmed <karahmed@amazon.de>
+Hi Lorenzo,
 
-What does this patch apply to?  It doesn't apply to v4.16-rc1 (my
-"master" branch).  I don't see anything in the history of
-drivers/pci/iov.c about pci_iov_wq_fn().
+On 12/02/2018 12:23, Lorenzo Pieralisi wrote:
+> On Fri, Jan 26, 2018 at 04:35:35PM +0000, Gustavo Pimentel wrote:
+>> Replaces the use of IRQ domain hierarchy by the IRQ chained used by
+>> pcie-designware and each SoC specific driver in order to allow new and
+>> complex features like MSI-X.
+>>
+>> Adds Synopsys Root Complex support for MSI-X feature.
+> 
+> Hi Gustavo,
+> 
+> please CC me for future patch versions. I have a question for you,
+> the series definitely looks like it is going in the right direction
+> but I do not understand the cover letter.
+> 
+> - You are not replacing the IRQ domain hierarchy, you are actually
+>   introducing it properly. It may be just nomenclature but I though
+>   I would mention that.
+> - I really do not understand why this series is advertised as
+>   "implementing MSI-X". I want to understand why MSI-X it is not
+>   currently supported and why this series would enable it, I
+>   honestly do not understand the reasoning behind this, it looks
+>   a bit fuzzy.
+> 
+> Please note I am just asking clarifications on the $SUBJECT for my own
+> understanding, the series is definitely the right thing to do and I am
+> happy to target v4.17 for it.
 
-> ---
->  drivers/pci/iov.c   | 20 ++++++++++++++++++--
->  drivers/pci/pci.h   |  6 +++++-
->  drivers/pci/probe.c | 42 ++++++++++++++++++++++++++++++++----------
->  3 files changed, 55 insertions(+), 13 deletions(-)
+Marc Zyngier also pointed out like you that the description is confusing and
+does not correspond to what is done in the code and now I also see it now.
+
+Please fell free to review and point out something wrong, only in this way can I
+evolve. :)
+
 > 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 168328a..78e9595 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -129,7 +129,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
->  	if (!dev->is_physfn)
->  		return 0;
->  
-> -	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
-> +	return dev->sriov->vf_barsz[resno - PCI_IOV_RESOURCES];
->  }
->  
->  int batch_pci_iov_add_virtfn(struct pci_dev *dev, struct pci_bus **bus,
-> @@ -325,6 +325,20 @@ static void pci_iov_wq_fn(struct work_struct *work)
->  	kfree(req);
->  }
->  
-> +static void pci_read_vf_config_common(struct pci_bus *bus,
-> +				      struct pci_dev *dev)
-> +{
-> +	int devfn = pci_iov_virtfn_devfn(dev, 0);
-> +
-> +	pci_bus_read_config_dword(bus, devfn, PCI_CLASS_REVISION,
-> +				  &dev->sriov->vf_class);
-> +	pci_bus_read_config_word(bus, devfn, PCI_SUBSYSTEM_ID,
-> +				 &dev->sriov->vf_subsystem_device);
-> +	pci_bus_read_config_word(bus, devfn, PCI_SUBSYSTEM_VENDOR_ID,
-> +				 &dev->sriov->vf_subsystem_vendor);
-> +	pci_bus_read_config_byte(bus, devfn, PCI_HEADER_TYPE, &dev->sriov->vf_hdr_type);
-> +}
-> +
->  static struct workqueue_struct *pci_iov_wq;
->  
->  static int __init init_pci_iov_wq(void)
-> @@ -361,6 +375,8 @@ static int enable_vfs(struct pci_dev *dev, int nr_vfs)
->  			goto add_bus_fail;
->  	}
->  
-> +	pci_read_vf_config_common(bus[0], dev);
-> +
->  	while (remaining_vfs > 0) {
->  		bool ret;
->  		struct pci_iov_wq_item *req;
-> @@ -617,7 +633,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  			rc = -EIO;
->  			goto failed;
->  		}
-> -		iov->barsz[i] = resource_size(res);
-> +		iov->vf_barsz[i] = resource_size(res);
->  		res->end = res->start + resource_size(res) * total - 1;
->  		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
->  			 i, res, i, total);
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index f6b58b3..3264c9e 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -271,7 +271,11 @@ struct pci_sriov {
->  	u16 driver_max_VFs;	/* max num VFs driver supports */
->  	struct pci_dev *dev;	/* lowest numbered PF */
->  	struct pci_dev *self;	/* this PF */
-> -	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
-> +	u8 vf_hdr_type;		/* VF header type */
-> +	u32 vf_class;		/* VF device */
-> +	u16 vf_subsystem_vendor;	/* VF subsystem vendor */
-> +	u16 vf_subsystem_device;	/* VF subsystem device */
-> +	resource_size_t vf_barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
->  	bool drivers_autoprobe;	/* auto probing of VFs by driver */
->  };
->  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 14e0ea1..65099d0 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -175,6 +175,7 @@ static inline unsigned long decode_bar(struct pci_dev *dev, u32 bar)
->  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  		    struct resource *res, unsigned int pos)
->  {
-> +	int bar = res - dev->resource;
->  	u32 l = 0, sz = 0, mask;
->  	u64 l64, sz64, mask64;
->  	u16 orig_cmd;
-> @@ -194,9 +195,13 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  	res->name = pci_name(dev);
->  
->  	pci_read_config_dword(dev, pos, &l);
-> -	pci_write_config_dword(dev, pos, l | mask);
-> -	pci_read_config_dword(dev, pos, &sz);
-> -	pci_write_config_dword(dev, pos, l);
-> +	if (dev->is_virtfn) {
-> +		sz = dev->physfn->sriov->vf_barsz[bar] & 0xffffffff;
-> +	} else {
-> +		pci_write_config_dword(dev, pos, l | mask);
-> +		pci_read_config_dword(dev, pos, &sz);
-> +		pci_write_config_dword(dev, pos, l);
-> +	}
->  
->  	/*
->  	 * All bits set in sz means the device isn't working properly.
-> @@ -236,9 +241,14 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  
->  	if (res->flags & IORESOURCE_MEM_64) {
->  		pci_read_config_dword(dev, pos + 4, &l);
-> -		pci_write_config_dword(dev, pos + 4, ~0);
-> -		pci_read_config_dword(dev, pos + 4, &sz);
-> -		pci_write_config_dword(dev, pos + 4, l);
-> +
-> +		if (dev->is_virtfn) {
-> +			sz = (dev->physfn->sriov->vf_barsz[bar] >> 32) & 0xffffffff;
-> +		} else {
-> +			pci_write_config_dword(dev, pos + 4, ~0);
-> +			pci_read_config_dword(dev, pos + 4, &sz);
-> +			pci_write_config_dword(dev, pos + 4, l);
-> +		}
->  
->  		l64 |= ((u64)l << 32);
->  		sz64 |= ((u64)sz << 32);
-> @@ -327,6 +337,8 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
->  	for (pos = 0; pos < howmany; pos++) {
->  		struct resource *res = &dev->resource[pos];
->  		reg = PCI_BASE_ADDRESS_0 + (pos << 2);
-> +		if (dev->is_virtfn && dev->physfn->sriov->vf_barsz[pos] == 0)
-> +			continue;
->  		pos += __pci_read_base(dev, pci_bar_unknown, res, reg);
->  	}
->  
-> @@ -1444,7 +1456,9 @@ int pci_setup_device(struct pci_dev *dev)
->  	struct pci_bus_region region;
->  	struct resource *res;
->  
-> -	if (pci_read_config_byte(dev, PCI_HEADER_TYPE, &hdr_type))
-> +	if (dev->is_virtfn)
-> +		hdr_type = dev->physfn->sriov->vf_hdr_type;
-> +	else if (pci_read_config_byte(dev, PCI_HEADER_TYPE, &hdr_type))
->  		return -EIO;
->  
->  	dev->sysdata = dev->bus->sysdata;
-> @@ -1464,7 +1478,10 @@ int pci_setup_device(struct pci_dev *dev)
->  		     dev->bus->number, PCI_SLOT(dev->devfn),
->  		     PCI_FUNC(dev->devfn));
->  
-> -	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class);
-> +	if (dev->is_virtfn)
-> +		class = dev->physfn->sriov->vf_class;
-> +	else
-> +		pci_read_config_dword(dev, PCI_CLASS_REVISION, &class);
->  	dev->revision = class & 0xff;
->  	dev->class = class >> 8;		    /* upper 3 bytes */
->  
-> @@ -1503,8 +1520,13 @@ int pci_setup_device(struct pci_dev *dev)
->  			goto bad;
->  		pci_read_irq(dev);
->  		pci_read_bases(dev, 6, PCI_ROM_ADDRESS);
-> -		pci_read_config_word(dev, PCI_SUBSYSTEM_VENDOR_ID, &dev->subsystem_vendor);
-> -		pci_read_config_word(dev, PCI_SUBSYSTEM_ID, &dev->subsystem_device);
-> +		if (dev->is_virtfn) {
-> +			dev->subsystem_vendor = dev->physfn->sriov->vf_subsystem_vendor;
-> +			dev->subsystem_device = dev->physfn->sriov->vf_subsystem_device;
-> +		} else {
-> +			pci_read_config_word(dev, PCI_SUBSYSTEM_VENDOR_ID, &dev->subsystem_vendor);
-> +			pci_read_config_word(dev, PCI_SUBSYSTEM_ID, &dev->subsystem_device);
-> +		}
->  
->  		/*
->  		 * Do the ugly legacy mode stuff here rather than broken chip
-> -- 
-> 2.7.4
+> Thanks,
+> Lorenzo
 > 
+>> Expands the maximum number of IRQs from 32 to 256 distributed by
+>> a maximum of 8 controller registers.
+>>
+>> The patch set was made against the Bjorn's next branch.
+>>
+>> Gustavo Pimentel (9):
+>>   PCI: dwc: Add IRQ chained API support
+>>   PCI: dwc: exynos: Switch to use the IRQ chained API
+>>   PCI: dwc: imx6: Switch to use the IRQ chained API
+>>   PCI: dwc: artpec6: Switch to use the IRQ chained API
+>>   PCI: dwc: designware: Switch to use the IRQ chained API
+>>   PCI: dwc: qcom: Switch to use the IRQ chained API
+>>   PCI: dwc: keystone: Switch to use the IRQ chained API
+>>   PCI: dwc: Remove IRQ domain hierarchy API support
+>>   PCI: dwc: Expand maximum number of IRQs from 32 to 256
+>>
+>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>  drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
+>>  drivers/pci/dwc/pci-keystone.c         |   1 +
+>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
+>>  drivers/pci/dwc/pci-layerscape.c       |   3 +-
+>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>  drivers/pci/dwc/pcie-designware-host.c | 402 +++++++++++++++++++--------------
+>>  drivers/pci/dwc/pcie-designware-plat.c |  16 --
+>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
+>>  drivers/pci/dwc/pcie-qcom.c            |  16 --
+>>  11 files changed, 260 insertions(+), 357 deletions(-)
+>>
+>> -- 
+>> 2.7.4
+>>
+>>
+
+Thanks,
+Gustavo
