@@ -1,170 +1,128 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, okaya@codeaurora.org,
-        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
-        bharatku@xilinx.com
-Subject: [PATCH 26/37] iommu/arm-smmu-v3: Add support for Hardware Translation Table Update
-Date: Mon, 12 Feb 2018 18:33:41 +0000
-Message-Id: <20180212183352.22730-27-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+MIME-Version: 1.0
+In-Reply-To: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
+References: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Mon, 12 Feb 2018 11:08:55 +0000
+Message-ID: <CAHbf0-Exsu14dBmmfYy8Tcb4R58eYJKLFPPoM9RkqxHWDkqwXQ@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Check presence of slot itself in get_slot_status()
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Len Brown <lenb@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the SMMU supports it and the kernel was built with HTTU support, enable
-hardware update of access and dirty flags. This is essential for shared
-page tables, to reduce the number of access faults on the fault queue.
+On 12 February 2018 at 10:55, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> Mike Lothian reported that plugging in a USB-C device does not work
+> properly in his Dell Alienware system. This system has Intel Alpine
+> Ridge Thunderbolt controller providing USB-C functionality. In these
+> systems the USB controller (xHCI) is hotplugged whenever a device is
+> connected to the port using ACPI based hotplug.
+>
+> The ACPI description of the root port in question looks as follows:
+>
+> Device (RP01)
+> {
+>     Name (_ADR, 0x001C0000)
+>
+>     Device (PXSX)
+>     {
+>         Name (_ADR, 0x02)
+>
+>         Method (_RMV, 0, NotSerialized)
+>         {
+>             // ...
+>         }
+>     }
+>
+> Here _ADR 0x02 means device 0, function 2 on the bus under root port
+> (RP1) but that seems to be incorrect because device 0 is the upstream
+> port of the Alpine Ridge PCIe switch and it does not have other
+> functions than 0 (the bridge itself). When we get ACPI Notify() to the
+> root port resulting from connecting a USB-C device, Linux tries to read
+> PCI_VENDOR_ID from device 0, function 2 which of course always returns
+> 0xffffffff because there is no such function and we never find the
+> device.
+>
+> In Windows this works fine.
+>
+> Now, since we get ACPI Notify() to the root port and not to the PXSX
+> device we should actually start our scan from there as well and not from
+> the non-existent PXSX device so fix this by checking presence of the
+> slot itself (function 0) if we fail to do that otherwise.
+>
+> While there use pci_bus_read_dev_vendor_id() in get_slot_status() which
+> is the recommended way to read device and vendor ID of device on PCI bus.
+>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=198557
+> Reported-by: Mike Lothian <mike@fireburn.co.uk>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c | 23 ++++++++++++++++-------
+>  1 file changed, 16 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index e2198a2feeca..b45b375c0e6c 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -541,6 +541,7 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+>  {
+>         unsigned long long sta = 0;
+>         struct acpiphp_func *func;
+> +       u32 dvid;
+>
+>         list_for_each_entry(func, &slot->funcs, sibling) {
+>                 if (func->flags & FUNC_HAS_STA) {
+> @@ -551,19 +552,27 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+>                         if (ACPI_SUCCESS(status) && sta)
+>                                 break;
+>                 } else {
+> -                       u32 dvid;
+> -
+> -                       pci_bus_read_config_dword(slot->bus,
+> -                                                 PCI_DEVFN(slot->device,
+> -                                                           func->function),
+> -                                                 PCI_VENDOR_ID, &dvid);
+> -                       if (dvid != 0xffffffff) {
+> +                       if (pci_bus_read_dev_vendor_id(slot->bus,
+> +                                       PCI_DEVFN(slot->device, func->function),
+> +                                       &dvid, 0)) {
+>                                 sta = ACPI_STA_ALL;
+>                                 break;
+>                         }
+>                 }
+>         }
+>
+> +       if (!sta) {
+> +               /*
+> +                * Check for the slot itself since it may be that the
+> +                * ACPI slot is a device below PCIe upstream port so in
+> +                * that case it may not even be reachable yet.
+> +                */
+> +               if (pci_bus_read_dev_vendor_id(slot->bus,
+> +                               PCI_DEVFN(slot->device, 0), &dvid, 0)) {
+> +                       sta = ACPI_STA_ALL;
+> +               }
+> +       }
+> +
+>         return (unsigned int)sta;
+>  }
+>
+> --
+> 2.15.1
+>
 
-We can still enable HTTU if CPUs don't support it, because the kernel
-always checks for HW dirty bit and updates the PTE flags atomically.
+Thanks for this, it fixes a few other issues on my machine too
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3-context.c | 20 ++++++++++++++++++--
- drivers/iommu/arm-smmu-v3.c         | 12 ++++++++++++
- drivers/iommu/iommu-pasid.h         |  4 ++++
- 3 files changed, 34 insertions(+), 2 deletions(-)
+I'm going to do some searches around different bugzillas for the USB-C
+non-detection and the NVMe drive disappearing after suspend issues and
+report that they'll be getting a fix soon
 
-diff --git a/drivers/iommu/arm-smmu-v3-context.c b/drivers/iommu/arm-smmu-v3-context.c
-index 5b8c5875e0d9..eaeba1bec2e9 100644
---- a/drivers/iommu/arm-smmu-v3-context.c
-+++ b/drivers/iommu/arm-smmu-v3-context.c
-@@ -62,7 +62,16 @@
- #define ARM64_TCR_TBI0_SHIFT		37
- #define ARM64_TCR_TBI0_MASK		0x1UL
- 
-+#define ARM64_TCR_HA_SHIFT		39
-+#define ARM64_TCR_HA_MASK		0x1UL
-+#define ARM64_TCR_HD_SHIFT		40
-+#define ARM64_TCR_HD_MASK		0x1UL
-+
- #define CTXDESC_CD_0_AA64		(1UL << 41)
-+#define CTXDESC_CD_0_TCR_HD_SHIFT	42
-+#define CTXDESC_CD_0_TCR_HA_SHIFT	43
-+#define CTXDESC_CD_0_HD			(1UL << CTXDESC_CD_0_TCR_HD_SHIFT)
-+#define CTXDESC_CD_0_HA			(1UL << CTXDESC_CD_0_TCR_HA_SHIFT)
- #define CTXDESC_CD_0_S			(1UL << 44)
- #define CTXDESC_CD_0_R			(1UL << 45)
- #define CTXDESC_CD_0_A			(1UL << 46)
-@@ -199,7 +208,7 @@ static __le64 *arm_smmu_get_cd_ptr(struct arm_smmu_cd_tables *tbl, u32 ssid)
- 	return l1_desc->ptr + idx * CTXDESC_CD_DWORDS;
- }
- 
--static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
-+static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_context_cfg *cfg, u64 tcr)
- {
- 	u64 val = 0;
- 
-@@ -214,6 +223,12 @@ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
- 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
- 	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
- 
-+	if (cfg->hw_access)
-+		val |= ARM_SMMU_TCR2CD(tcr, HA);
-+
-+	if (cfg->hw_dirty)
-+		val |= ARM_SMMU_TCR2CD(tcr, HD);
-+
- 	return val;
- }
- 
-@@ -269,7 +284,7 @@ static int __arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
- 		iommu_pasid_flush(&tbl->pasid, ssid, true);
- 
- 
--		val = arm_smmu_cpu_tcr_to_cd(cd->tcr) |
-+		val = arm_smmu_cpu_tcr_to_cd(cfg, cd->tcr) |
- #ifdef __BIG_ENDIAN
- 		      CTXDESC_CD_0_ENDI |
- #endif
-@@ -460,6 +475,7 @@ arm_smmu_alloc_shared_cd(struct iommu_pasid_table_ops *ops, struct mm_struct *mm
- 	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
- 	par = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
- 	tcr |= par << ARM_LPAE_TCR_IPS_SHIFT;
-+	tcr |= TCR_HA | TCR_HD;
- 
- 	cd->ttbr	= virt_to_phys(mm->pgd);
- 	cd->tcr		= tcr;
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 1cdeea7e22cb..8528704627b5 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -67,6 +67,8 @@
- #define IDR0_ASID16			(1 << 12)
- #define IDR0_ATS			(1 << 10)
- #define IDR0_HYP			(1 << 9)
-+#define IDR0_HD				(1 << 7)
-+#define IDR0_HA				(1 << 6)
- #define IDR0_BTM			(1 << 5)
- #define IDR0_COHACC			(1 << 4)
- #define IDR0_TTF_SHIFT			2
-@@ -573,6 +575,8 @@ struct arm_smmu_device {
- #define ARM_SMMU_FEAT_E2H		(1 << 14)
- #define ARM_SMMU_FEAT_BTM		(1 << 15)
- #define ARM_SMMU_FEAT_SVA		(1 << 16)
-+#define ARM_SMMU_FEAT_HA		(1 << 17)
-+#define ARM_SMMU_FEAT_HD		(1 << 18)
- 	u32				features;
- 
- #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
-@@ -1631,6 +1635,8 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
- 		.arm_smmu = {
- 			.stall		= !!(smmu->features & ARM_SMMU_FEAT_STALL_FORCE),
- 			.asid_bits	= smmu->asid_bits,
-+			.hw_access	= !!(smmu->features & ARM_SMMU_FEAT_HA),
-+			.hw_dirty	= !!(smmu->features & ARM_SMMU_FEAT_HD),
- 		},
- 	};
- 
-@@ -2865,6 +2871,12 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 			smmu->features |= ARM_SMMU_FEAT_E2H;
- 	}
- 
-+	if (reg & (IDR0_HA | IDR0_HD)) {
-+		smmu->features |= ARM_SMMU_FEAT_HA;
-+		if (reg & IDR0_HD)
-+			smmu->features |= ARM_SMMU_FEAT_HD;
-+	}
-+
- 	/*
- 	 * If the CPU is using VHE, but the SMMU doesn't support it, the SMMU
- 	 * will create TLB entries for NH-EL1 world and will miss the
-diff --git a/drivers/iommu/iommu-pasid.h b/drivers/iommu/iommu-pasid.h
-index 77e449a1655b..46fd44e7f4f1 100644
---- a/drivers/iommu/iommu-pasid.h
-+++ b/drivers/iommu/iommu-pasid.h
-@@ -79,6 +79,8 @@ struct iommu_pasid_sync_ops {
-  *
-  * SMMU properties:
-  * @stall:	devices attached to the domain are allowed to stall.
-+ * @hw_dirty:	hardware may update dirty flag
-+ * @hw_access:	hardware may update access flag
-  * @asid_bits:	number of ASID bits supported by the SMMU
-  *
-  * @s1fmt:	PASID table format, chosen by the allocator.
-@@ -86,6 +88,8 @@ struct iommu_pasid_sync_ops {
- struct arm_smmu_context_cfg {
- 	u8				stall:1;
- 	u8				asid_bits;
-+	u8				hw_dirty:1;
-+	u8				hw_access:1;
- 
- #define ARM_SMMU_S1FMT_LINEAR		0x0
- #define ARM_SMMU_S1FMT_4K_L2		0x1
--- 
-2.15.1
-
+Tested-by: Mike Lothian <mike@fireburn.co.uk>
