@@ -1,257 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:14429 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964869AbeBMPYi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 10:24:38 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V8 1/4] PCI: tegra: Free resources on probe failure
-Date: Tue, 13 Feb 2018 20:54:07 +0530
-Message-ID: <1518535450-24400-2-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH 02/37] iommu/sva: Bind process address spaces to devices
+To: "Tian, Kevin" <kevin.tian@intel.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Cc: "joro@8bytes.org" <joro@8bytes.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        Mark Rutland <Mark.Rutland@arm.com>,
+        Catalin Marinas <Catalin.Marinas@arm.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+        Sudeep Holla <Sudeep.Holla@arm.com>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "liubo95@huawei.com" <liubo95@huawei.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+        "Liu, Yi L" <yi.l.liu@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        mykyta.iziumtsev@linaro.org
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-3-jean-philippe.brucker@arm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D191002897@SHSMSX101.ccr.corp.intel.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <b9eacb30-817f-9027-bc0a-1f01cf9f13f9@arm.com>
+Date: Tue, 13 Feb 2018 12:57:23 +0000
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D191002897@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-tegra_pcie_probe() can fail in multiple instances, this patch takes care
-of freeing the resources which are allocated before probe fail.
+On 13/02/18 07:54, Tian, Kevin wrote:
+>> From: Jean-Philippe Brucker
+>> Sent: Tuesday, February 13, 2018 2:33 AM
+>>
+>> Add bind() and unbind() operations to the IOMMU API. Device drivers can
+>> use them to share process page tables with their devices. bind_group()
+>> is provided for VFIO's convenience, as it needs to provide a coherent
+>> interface on containers. Other device drivers will most likely want to
+>> use bind_device(), which binds a single device in the group.
+> 
+> I saw your bind_group implementation tries to bind the address space
+> for all devices within a group, which IMO has some problem. Based on PCIe
+> spec, packet routing on the bus doesn't take PASID into consideration. 
+> since devices within same group cannot be isolated based on requestor-ID
+> i.e. traffic not guaranteed going to IOMMU, enabling SVA on multiple devices
+> could cause undesired p2p.
+But so does enabling "classic" DMA... If two devices are not protected by
+ACS for example, they are put in the same IOMMU group, and one device
+might be able to snoop the other's DMA. VFIO allows userspace to create a
+container for them and use MAP/UNMAP, but makes it explicit to the user
+that for DMA, these devices are not isolated and must be considered as a
+single device (you can't pass them to different VMs or put them in
+different containers). So I tried to keep the same idea as MAP/UNMAP for
+SVA, performing BIND/UNBIND operations on the VFIO container instead of
+the device.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
-Tested-by: Thierry Reding <treding@nvidia.com>
----
-V2:
-* no change in this patch
-V3:
-* change 'if check' to 'legacy_phy is true' for tegra_pcie_phys_put_legacy()
-* commit log correction
-V4:
-* no change in this patch
-V5:
-* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-rebased on linux-next
-V6:
-* no change in this patch
-V7:
-* no change in this patch
-V8:
-* no change in this patch
+I kept the analogy simple though, because I don't think there will be many
+SVA-capable systems that require IOMMU groups. They will likely implement
+proper device isolation. Unlike iommu_attach_device(), bind_device()
+doesn't call bind_group(), because keeping bonds consistent in groups is
+complicated, not worth implementing (drivers can explicitly bind() all
+devices that need it) and probably wouldn't ever be used. I also can't
+test it. But maybe we could implement the following for now:
 
- drivers/pci/host/pci-tegra.c | 99 +++++++++++++++++++++++++++++++++++---------
- 1 file changed, 79 insertions(+), 20 deletions(-)
+* bind_device() fails if the device's group has more than one device,
+otherwise calls __bind_device(). This prevents device drivers that are
+oblivious to IOMMU groups from opening a backdoor.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index e4b47ebc91fe..e68507f658d8 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -562,14 +562,25 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- 	pci_add_resource(windows, &pcie->busn);
- 
- 	err = devm_request_pci_bus_resources(dev, windows);
--	if (err < 0)
-+	if (err < 0) {
-+		pci_free_resource_list(windows);
- 		return err;
-+	}
- 
- 	pci_remap_iospace(&pcie->pio, pcie->io.start);
- 
- 	return 0;
- }
- 
-+static void tegra_pcie_free_resources(struct tegra_pcie *pcie)
-+{
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct list_head *windows = &host->windows;
-+
-+	pci_unmap_iospace(&pcie->pio);
-+	pci_free_resource_list(windows);
-+}
-+
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- {
- 	struct tegra_pcie *pcie = pdev->bus->sysdata;
-@@ -979,24 +990,35 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
--static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
- {
--	struct device *dev = pcie->dev;
--	const struct tegra_pcie_soc *soc = pcie->soc;
- 	int err;
- 
--	/* TODO: disable and unprepare clocks? */
-+	reset_control_assert(pcie->pcie_xrst);
- 
--	if (soc->program_uphy) {
-+	if (pcie->soc->program_uphy) {
- 		err = tegra_pcie_phy_power_off(pcie);
- 		if (err < 0)
--			dev_err(dev, "failed to power off PHY(s): %d\n", err);
-+			dev_err(pcie->dev, "failed to power off PHY(s): %d\n",
-+				err);
- 	}
-+}
-+
-+static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+{
-+	struct device *dev = pcie->dev;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	int err;
- 
--	reset_control_assert(pcie->pcie_xrst);
- 	reset_control_assert(pcie->afi_rst);
- 	reset_control_assert(pcie->pex_rst);
- 
-+	clk_disable_unprepare(pcie->pll_e);
-+	if (soc->has_cml_clk)
-+		clk_disable_unprepare(pcie->cml_clk);
-+	clk_disable_unprepare(pcie->afi_clk);
-+	clk_disable_unprepare(pcie->pex_clk);
-+
- 	if (!dev->pm_domain)
- 		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
- 
-@@ -1205,6 +1227,30 @@ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_phys_put(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port;
-+	struct device *dev = pcie->dev;
-+	int err, i;
-+
-+	if (pcie->legacy_phy) {
-+		err = phy_exit(pcie->phy);
-+		if (err < 0)
-+			dev_err(dev, "failed to teardown PHY: %d\n", err);
-+		return;
-+	}
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		for (i = 0; i < port->lanes; i++) {
-+			err = phy_exit(port->phys[i]);
-+			if (err < 0)
-+				dev_err(dev, "failed to teardown PHY#%u: %d\n",
-+					i, err);
-+		}
-+	}
-+}
-+
-+
- static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -1236,7 +1282,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	err = tegra_pcie_power_on(pcie);
- 	if (err) {
- 		dev_err(dev, "failed to power up: %d\n", err);
--		return err;
-+		goto phys_put;
- 	}
- 
- 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
-@@ -1288,6 +1334,9 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 
- 	return 0;
- 
-+phys_put:
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- poweroff:
- 	tegra_pcie_power_off(pcie);
- 	return err;
-@@ -1295,20 +1344,15 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- {
--	struct device *dev = pcie->dev;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
--	int err;
- 
- 	if (pcie->irq > 0)
- 		free_irq(pcie->irq, pcie);
- 
- 	tegra_pcie_power_off(pcie);
- 
--	if (soc->program_uphy) {
--		err = phy_exit(pcie->phy);
--		if (err < 0)
--			dev_err(dev, "failed to teardown PHY: %d\n", err);
--	}
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- 
- 	return 0;
- }
-@@ -2048,6 +2092,16 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 	}
- }
- 
-+static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port, *tmp;
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-+		tegra_pcie_port_disable(port);
-+		tegra_pcie_port_free(port);
-+	}
-+}
-+
- static const struct tegra_pcie_soc tegra20_pcie = {
- 	.num_ports = 2,
- 	.msi_base_shift = 0,
-@@ -2278,7 +2332,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	err = tegra_pcie_request_resources(pcie);
- 	if (err)
--		goto put_resources;
-+		goto disable_controller;
- 
- 	/* setup the AFI address translations */
- 	tegra_pcie_setup_translations(pcie);
-@@ -2287,7 +2341,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		err = tegra_pcie_enable_msi(pcie);
- 		if (err < 0) {
- 			dev_err(dev, "failed to enable MSI support: %d\n", err);
--			goto put_resources;
-+			goto free_resources;
- 		}
- 	}
- 
-@@ -2302,7 +2356,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	err = pci_scan_root_bus_bridge(host);
- 	if (err < 0) {
- 		dev_err(dev, "failed to register host: %d\n", err);
--		goto disable_msi;
-+		goto disable_ports;
- 	}
- 
- 	pci_bus_size_bridges(host->bus);
-@@ -2321,9 +2375,14 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	return 0;
- 
--disable_msi:
-+disable_ports:
-+	tegra_pcie_disable_ports(pcie);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_disable_msi(pcie);
-+free_resources:
-+	tegra_pcie_free_resources(pcie);
-+disable_controller:
-+	tegra_pcie_disable_controller(pcie);
- put_resources:
- 	tegra_pcie_put_resources(pcie);
- 	return err;
--- 
-2.1.4
+* bind_group() calls __bind_device() for all devices in group. This way
+users that are aware of IOMMU groups can still use them safely. Note that
+at the moment bind_group() fails as soon as it finds a device that doesn't
+support SVA. Having all devices support SVA in a given group is
+unrealistic and this behavior ought to be improved.
+
+* hotplugging a device into a group still succeeds even if the group
+already has mm bonds. Same happens for classic DMA, a hotplugged device
+will have access to all mappings already present in the domain.
+
+> If my understanding of PCIe spec is correct, probably we should fail 
+> calling bind_group()/bind_device() when there are multiple devices within 
+> the given group. If only one device then bind_group is essentially a wrapper
+> to bind_device.>>
+>> Regardless of the IOMMU group or domain a device is in, device drivers
+>> should call bind() for each device that will use the PASID.
+>>
+[...]
+>> +/**
+>> + * iommu_sva_bind_device() - Bind a process address space to a device
+>> + * @dev: the device
+>> + * @mm: the mm to bind, caller must hold a reference to it
+>> + * @pasid: valid address where the PASID will be stored
+>> + * @flags: bond properties (IOMMU_SVA_FEAT_*)
+>> + * @drvdata: private data passed to the mm exit handler
+>> + *
+>> + * Create a bond between device and task, allowing the device to access
+>> the mm
+>> + * using the returned PASID. A subsequent bind() for the same device and
+>> mm will
+>> + * reuse the bond (and return the same PASID), but users will have to call
+>> + * unbind() twice.
+> 
+> what's the point of requiring unbind twice?
+
+Mmh, that was necessary when we kept bond information as domain<->mm, but
+since it's now device<->mm, we can probably remove the bond refcount. I
+consider that a bind() between a given device and mm will always be issued
+by the same driver.
+
+Thanks,
+Jean
