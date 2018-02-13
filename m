@@ -1,126 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:38961 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031525AbeBONYw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Feb 2018 08:24:52 -0500
-Received: by mail-wr0-f196.google.com with SMTP id w77so3350704wrc.6
-        for <linux-pci@vger.kernel.org>; Thu, 15 Feb 2018 05:24:52 -0800 (PST)
-From: srinivas.kandagatla@linaro.org
-To: stanimir.varbanov@linaro.org, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh+dt@kernel.org, devicetree@vger.kernel.org,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: [PATCH v3] PCI: qcom: add missing supplies required for msm8996
-Date: Thu, 15 Feb 2018 13:22:48 +0000
-Message-Id: <20180215132248.5572-1-srinivas.kandagatla@linaro.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:1443 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752177AbeBMP06 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 10:26:58 -0500
+Subject: Re: [PATCH V7 2/4] PCI: tegra: Add loadable kernel module support
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <cyndis@kapsi.fi>, <jonathanh@nvidia.com>,
+        <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+        <vidyas@nvidia.com>, <kthota@nvidia.com>
+References: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
+ <1517289851-14111-3-git-send-email-mmaddireddy@nvidia.com>
+ <20180213130718.GE6764@ulmo>
+ <eeab925c-3da4-38ae-2060-f77458abaaea@nvidia.com>
+ <20180213135139.GA15842@ulmo>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <80f86571-dd70-717b-124a-f2e8cd4c377f@nvidia.com>
+Date: Tue, 13 Feb 2018 20:56:28 +0530
+MIME-Version: 1.0
+In-Reply-To: <20180213135139.GA15842@ulmo>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
 
-This patch adds supplies that are required for msm8996. vdda
-is analog supply that go in to controller, and vddpe_3v3 is
-supply to PCIe endpoint.
 
-Without these supplies PCIe endpoints which require power supplies are
-not enumerated at all, as there is no one to power it up.
+On 13-Feb-18 7:21 PM, Thierry Reding wrote:
+> On Tue, Feb 13, 2018 at 06:48:49PM +0530, Manikanta Maddireddy wrote:
+>>
+>>
+>> On 13-Feb-18 6:37 PM, Thierry Reding wrote:
+>>> On Tue, Jan 30, 2018 at 10:54:09AM +0530, Manikanta Maddireddy wrote:
+>>>> Implement remove callback function for Tegra PCIe driver to add
+>>>> loadable kernel module support. Change PCI_TEGRA config to tristate to
+>>>> allow pci-tegra driver to be build as a module.
+>>>>
+>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>>>> Acked-by: Thierry Reding <treding@nvidia.com>
+>>>> ---
+>>>> V2:
+>>>> * no change in this patch
+>>>> V3:
+>>>> * use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_init()
+>>>> V4:
+>>>> * no change in this patch
+>>>> V5:
+>>>> * Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
+>>>> rebased on linux-next
+>>>> V6:
+>>>> * no change in this patch
+>>>> V7:
+>>>> * no change in this patch
+>>>>
+>>>>  drivers/pci/host/Kconfig     |  2 +-
+>>>>  drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
+>>>>  2 files changed, 32 insertions(+), 4 deletions(-)
+>>>
+>>> Trying to build this as a module I get a link failure because
+>>> irq_set_msi_desc() is not exported. I thought a patch to do that had
+>>> been part of an earlier version of this series. Has that not been merged
+>>> yet?
+>>>
+>>> Thierry
+>>>
+>> I got a review comment to use generic MSI model instead of deprecated API.
+>> source: https://patchwork.ozlabs.org/patch/841111/
+>>
+>> Also arm32 compilation will fail because of missing EXPORT of
+>> tegra_cpuidle_pcie_irqs_in_use()
+>> source: https://patchwork.ozlabs.org/patch/841119/
+>>
+>> I need to put some time to prepare patches for these two cases.
+>> Meanwhile I want to get the basic driver structure for LKM to be merged.
+>> I verified locally with these two symbols exported.
+> 
+> Okay, that's fine. However, you can't request these patches to be merged
+> if they will break builds. There are people that run automated builders
+> that will check random configurations, which is bound to eventually get
+> us a bug report about how this fails to build.
+> 
+> Perhaps in order to get loadable module support merged without these
+> issues you could omit the Kconfig change making this a tristate symbol.
+> That way we can get all the structural changes ready and you can work
+> on the necessary exports or MSI model patches so that we can eventually
+> flip the symbol to tristate.
+> 
+> By the way, if you do respin for the tristate change, do you mind taking
+> a look at the blank line changes for readability I mentioned earlier?
+> 
+> Thierry
+> 
 
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
----
-changes since v2:
-	Add back empty line suggested by Stan
-	use ARRAY_SIZE
+Taken care of both and published V8.
 
- .../devicetree/bindings/pci/qcom,pcie.txt          |  4 ++++
- drivers/pci/dwc/pcie-qcom.c                        | 23 +++++++++++++++++++++-
- 2 files changed, 26 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index 3c9d321b3d3b..1fd703bd73e0 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -189,6 +189,10 @@
- 	Value type: <phandle>
- 	Definition: A phandle to the analog power supply for IC which generates
- 		    reference clock
-+- vddpe-3v3-supply:
-+	Usage: optional
-+	Value type: <phandle>
-+	Definition: A phandle to the PCIe endpoint power supply
- 
- - phys:
- 	Usage: required for apq8084
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 3e89909f8cb9..e3f20e09a18d 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -102,12 +102,14 @@ struct qcom_pcie_resources_1_0_0 {
- 	struct regulator *vdda;
- };
- 
-+#define QCOM_PCIE_2_3_2_MAX_SUPPLY	2
- struct qcom_pcie_resources_2_3_2 {
- 	struct clk *aux_clk;
- 	struct clk *master_clk;
- 	struct clk *slave_clk;
- 	struct clk *cfg_clk;
- 	struct clk *pipe_clk;
-+	struct regulator_bulk_data supplies[QCOM_PCIE_2_3_2_MAX_SUPPLY];
- };
- 
- struct qcom_pcie_resources_2_4_0 {
-@@ -521,6 +523,14 @@ static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
-+	int ret;
-+
-+	res->supplies[0].supply = "vdda";
-+	res->supplies[1].supply = "vddpe-3v3";
-+	ret = devm_regulator_bulk_get(dev, ARRAY_SIZE(res->supplies),
-+				      res->supplies);
-+	if (ret)
-+		return ret;
- 
- 	res->aux_clk = devm_clk_get(dev, "aux");
- 	if (IS_ERR(res->aux_clk))
-@@ -550,6 +560,8 @@ static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
- 	clk_disable_unprepare(res->master_clk);
- 	clk_disable_unprepare(res->cfg_clk);
- 	clk_disable_unprepare(res->aux_clk);
-+
-+	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
- }
- 
- static void qcom_pcie_post_deinit_2_3_2(struct qcom_pcie *pcie)
-@@ -567,10 +579,16 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
- 	u32 val;
- 	int ret;
- 
-+	ret = regulator_bulk_enable(ARRAY_SIZE(res->supplies), res->supplies);
-+	if (ret < 0) {
-+		dev_err(dev, "cannot enable regulators\n");
-+		return ret;
-+	}
-+
- 	ret = clk_prepare_enable(res->aux_clk);
- 	if (ret) {
- 		dev_err(dev, "cannot prepare/enable aux clock\n");
--		return ret;
-+		goto err_aux_clk;
- 	}
- 
- 	ret = clk_prepare_enable(res->cfg_clk);
-@@ -621,6 +639,9 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
- err_cfg_clk:
- 	clk_disable_unprepare(res->aux_clk);
- 
-+err_aux_clk:
-+	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-+
- 	return ret;
- }
- 
--- 
-2.15.1
+Manikanta
