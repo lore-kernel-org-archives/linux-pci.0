@@ -1,70 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from thoth.sbs.de ([192.35.17.2]:47577 "EHLO thoth.sbs.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966070AbeCAFlK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 00:41:10 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH v3 4/6] x86: Consolidate PCI_MMCONFIG configs
-Date: Thu,  1 Mar 2018 06:40:47 +0100
-Message-Id: <8527c92b2e2920b8cd9096ddcbbb6d0f4004eb69.1519882849.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1519882849.git.jan.kiszka@siemens.com>
-References: <cover.1519882849.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1519882849.git.jan.kiszka@siemens.com>
-References: <cover.1519882849.git.jan.kiszka@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ACWn=FH=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=ACWn=FH=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <CAJ=jquZtaLqZZQaAitPYLK4dGVXxw3U92NJB5KuP3oU-LFDudQ@mail.gmail.com>
+References: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
+ <20180210010548.GC206223@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0gBK8WmX4QYYBzVxdk8CaSBo5ckzmP49qr05+9DAYieqw@mail.gmail.com>
+ <20180210153450.GD206223@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0iNq2ni9ML=_6H0i99dUm5+Noh1MQ9AO4JCiqyXU1xW3Q@mail.gmail.com> <CAJ=jquZtaLqZZQaAitPYLK4dGVXxw3U92NJB5KuP3oU-LFDudQ@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 13 Feb 2018 09:49:31 +0100
+Message-ID: <CAJZ5v0hb3SBnKJm+EQaJk3dFp+_8kXHJ8SLH-QYrgR-bUiHwJg@mail.gmail.com>
+Subject: Re: [PATCH] ACPI/PCI: pci_link: change log level of no _PRS messages
+To: Alex Hung <alex.hung@canonical.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On Tue, Feb 13, 2018 at 5:03 AM, Alex Hung <alex.hung@canonical.com> wrote:
+> On Mon, Feb 12, 2018 at 12:51 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+>> On Sat, Feb 10, 2018 at 4:34 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> On Sat, Feb 10, 2018 at 09:08:42AM +0100, Rafael J. Wysocki wrote:
+>>>> On Sat, Feb 10, 2018 at 2:05 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>> > On Fri, Feb 09, 2018 at 02:56:43PM -0800, Alex Hung wrote:
+>>>> >> In recent Intel hardware the IRQs become non-configurable after BIOS
+>>>> >> initializes them in PEI phase and _PRS objects are no longer included in
+>>>> >> ASL.
+>>>> >>
+>>>> >> This is the same as "static (non-configurable) devices do not
+>>>> >> specify a _PRS object" in ACPI spec. As a result, error messages
+>>>> >> saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
+>>>> >> be in kernel messages all the time but only when debug is enabled.
+>>>> >
+>>>> > I agree and would even go further: _PRS is optional and I don't think
+>>>> > there's a reason to log anything at all if it's absent.  A log message
+>>>> > like "failed to evaluate _PRS" makes people think something is wrong
+>>>> > when in fact nothing is wrong.
+>>>>
+>>>> _PRS is required if the link object is pointed to by a _PRT entry.
+>>>
+>>> The closest thing I see with a quick look is ACPI 6.0, sec 6.2.13:
+>>>
+>>>   These objects [PCI Interrupt Link Devices] have _PRS, _CRS, _SRS,
+>>>   and _DIS control methods to allocate the interrupt.
+>>>
+>>> I don't read that as a requirement for _PRS in particular; I read it
+>>> as saying that the interrupt link devices use the normal device
+>>> configuration method, i.e., _CRS is required and _PRS and _SRS are
+>>> optional and needed for configurable devices but not for static ones.
+>>
+>> Well, that's slightly out of context. :-)
+>>
+>> First of all, Section 6.2.13 says this: "Typically, the interrupt
+>> input that a given PCI interrupt is on is configurable. [...]  In this
+>> model, each interrupt is represented in the ACPI namespace as a PCI
+>> Interrupt Link Device."  Then, it says the above.
+>>
+>> Now, if _PRS is not present, the IRQ represented by the link object
+>> cannot be configured, so in fact the underlying assumption doesn't
+>> apply to it, strictly speaking.  It follows from the last paragraph in
+>> Section 6.2.13 that _PRT entries representing such IRQs should not
+>> point to interrupt link device objects (there should be 0 in their
+>> Source fields).
+>>
+>> Hence, if a _PRT entry points to an interrupt link device object in
+>> the namespace, _PRS should be present under this object or at least it
+>> is reasonable to expect that it will be present in there.
+>>
+>>> But this is just a drive-by comment and I'm really fine with whatever
+>>> you decide to do.
+>>
+>> OK
+>>
+>> So I think that (a) the message should be printed using
+>> acpi_handle_debug(), except that I would make it slightly more
+>> neutral, something like "_PRS not present or invalid", and (b) 0
+>> should be returned instead of -ENODEV when _PRS evaluation doesn't
+>> succeed.
+>
+> Looks like we will do the following.
+>
+>         if (ACPI_FAILURE(status)) {
+> -               ACPI_EXCEPTION((AE_INFO, status, "Evaluating _PRS"));
+> -                return -ENODEV;
+> +               acpi_handle_debug(link->device->handle, "_PRS not
+> present or invalid");
+> +                return 0;
 
-Since e279b6c1d329 ("x86: start unification of arch/x86/Kconfig.*"), we
-have two PCI_MMCONFIG entries, one from the original i386 and another
-from x86_64. This consolidates both entries into a single one.
+Yes, but this affects the caller.
 
-The logic for x86_32, where this option was not under user control,
-remains identical. On x86_64, PCI_MMCONFIG becomes additionally
-configurable for SFI systems even if ACPI was disabled. This just
-simplifies the logic without restricting the configurability in any way.
-
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- arch/x86/Kconfig | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index eb7f43f23521..aef9d67ac186 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2641,8 +2641,9 @@ config PCI_DIRECT
- 	depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC || PCI_GOMMCONFIG))
- 
- config PCI_MMCONFIG
--	def_bool y
--	depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
-+	bool "Support mmconfig PCI config space access" if X86_64
-+	default y
-+	depends on PCI && (ACPI || SFI) && (X86_64 || (PCI_GOANY || PCI_GOMMCONFIG))
- 
- config PCI_OLPC
- 	def_bool y
-@@ -2657,10 +2658,6 @@ config PCI_DOMAINS
- 	def_bool y
- 	depends on PCI
- 
--config PCI_MMCONFIG
--	bool "Support mmconfig PCI config space access"
--	depends on X86_64 && PCI && ACPI
--
- config PCI_CNB20LE_QUIRK
- 	bool "Read CNB20LE Host Bridge Windows" if EXPERT
- 	depends on PCI
--- 
-2.13.6
+Please make sure that everything will work correctly in there after this change.
