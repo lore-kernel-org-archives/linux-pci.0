@@ -1,160 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33155 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751958AbeBZDTN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 25 Feb 2018 22:19:13 -0500
-Subject: [RFC PATCH V3] virtio_pci: Add SR-IOV support
-To: virtio-dev@lists.oasis-open.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-From: Mark Rustad <mark.d.rustad@intel.com>
-Cc: dan.daly@intel.com, alex.williamson@redhat.com, MRustad@gmail.com,
-        alexander.duyck@gmail.com, mst@redhat.com
-Date: Sun, 25 Feb 2018 19:19:11 -0800
-Message-ID: <20180226031911.18980.80488.stgit@mdrustad-mac04.local>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:58148 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964917AbeBMOEW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Feb 2018 09:04:22 -0500
+Date: Tue, 13 Feb 2018 14:04:09 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+        "thomas.petazzoni@free-electrons.com"
+        <thomas.petazzoni@free-electrons.com>,
+        "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>,
+        "mingkai.hu@freescale.com" <mingkai.hu@freescale.com>,
+        "tie-fei.zang@freescale.com" <tie-fei.zang@freescale.com>,
+        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+        "wangzhou1@hisilicon.com" <wangzhou1@hisilicon.com>,
+        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
+        "nsekhar@ti.com" <nsekhar@ti.com>
+Subject: Re: [PATCH v6 0/9] PCI: dwc: MSI-X feature
+Message-ID: <20180213140359.GA12971@e107981-ln.cambridge.arm.com>
+References: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
+ <20180212122334.GA25396@e107981-ln.cambridge.arm.com>
+ <47720ab7-1eb5-0605-5711-80595b358f7d@synopsys.com>
+ <20180213122920.GB8981@e107981-ln.cambridge.arm.com>
+ <1518525395.2744.14.camel@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1518525395.2744.14.camel@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hardware-realized virtio-pci devices can implement SR-IOV, so this
-patch enables its use. The device in question is an upcoming Intel
-NIC that implements both a virtio-net PF and virtio-net VFs. These
-are hardware realizations of what has been up to now been a software
-interface.
+On Tue, Feb 13, 2018 at 01:36:35PM +0100, Lucas Stach wrote:
+> Am Dienstag, den 13.02.2018, 12:29 +0000 schrieb Lorenzo Pieralisi:
+> > On Mon, Feb 12, 2018 at 06:14:29PM +0000, Gustavo Pimentel wrote:
+> > > Hi Lorenzo,
+> > > 
+> > > On 12/02/2018 12:23, Lorenzo Pieralisi wrote:
+> > > > On Fri, Jan 26, 2018 at 04:35:35PM +0000, Gustavo Pimentel wrote:
+> > > > > Replaces the use of IRQ domain hierarchy by the IRQ chained
+> > > > > used by
+> > > > > pcie-designware and each SoC specific driver in order to allow
+> > > > > new and
+> > > > > complex features like MSI-X.
+> > > > > 
+> > > > > Adds Synopsys Root Complex support for MSI-X feature.
+> > > > 
+> > > > Hi Gustavo,
+> > > > 
+> > > > please CC me for future patch versions. I have a question for
+> > > > you,
+> > > > the series definitely looks like it is going in the right
+> > > > direction
+> > > > but I do not understand the cover letter.
+> > > > 
+> > > > - You are not replacing the IRQ domain hierarchy, you are
+> > > > actually
+> > > > ?? introducing it properly. It may be just nomenclature but I
+> > > > though
+> > > > ?? I would mention that.
+> > > > - I really do not understand why this series is advertised as
+> > > > ?? "implementing MSI-X". I want to understand why MSI-X it is not
+> > > > ?? currently supported and why this series would enable it, I
+> > > > ?? honestly do not understand the reasoning behind this, it looks
+> > > > ?? a bit fuzzy.
+> > > > 
+> > > > Please note I am just asking clarifications on the $SUBJECT for
+> > > > my own
+> > > > understanding, the series is definitely the right thing to do and
+> > > > I am
+> > > > happy to target v4.17 for it.
+> > > 
+> > > Marc Zyngier also pointed out like you that the description is
+> > > confusing and
+> > > does not correspond to what is done in the code and now I also see
+> > > it now.
+> > > 
+> > > Please fell free to review and point out something wrong, only in
+> > > this way can I
+> > > evolve. :)
+> > 
+> > Sure. Let's start by discussing this:
+> > 
+> > https://patchwork.kernel.org/patch/5708521/
+> > 
+> > If it is a HW issue your patches can't solve it. If it is a SW issue
+> > patch above (and current mainline code - commit 19c5392eb1c1) is
+> > wrong.
+> > 
+> > Before updating the code I want to understand what the problem is
+> > with
+> > MSI-X in current mainline.
+> > 
+> > To be as clear as I can: this series is doing the *right* thing, I
+> > want
+> > to understand what the current driver is doing with MSIs and why, so
+> > that we can help you update the code correctly.
+> 
+> It's partly a software issue and partly a wrong understanding of MSI-X
+> on my side at the time. The DW hardware doesn't support different MSI
+> target addresses for individual MSIs, but that's just a optional
+> feature of MSI-X and not required to implement them correctly. Enabling
+> of MSI-X on the DW hardware via a proper software implementation is
+> fine.
 
-The device in question has the following 4-part PCI IDs:
+Ok, thanks for clarifying, that matches my understanding, I completely
+agree that to enable MSI-X we must move to a hierarchical IRQ domain
+implementation (where core IRQ code deals with IRQ allocation and
+mapping on behalf of drivers) instead of abusing the IRQ layer even
+further, so this series is definitely the way to go, I just wanted to
+understand why DW does not support MSI-X.
 
-PF: device: 1af4 vendor: 1041 subvendor: 8086 subdevice: 15fe
-VF: device: 1af4 vendor: 1041 subvendor: 8086 subdevice: 05fe
-
-The patch needs no check for device ID, because the callback will
-never be made for devices that do not assert the capability or
-when run on a platform incapable of SR-IOV.
-
-One reason for this patch is because the hardware requires the
-vendor ID of a VF to be the same as the vendor ID of the PF that
-created it. So it seemed logical to simply have a fully-functioning
-virtio-net PF create the VFs. This patch makes that possible.
-
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-Reviewed-by: Alexander Duyck <alexander.h.duyck@intel.com>
----
-Changes in V3:
-- Move most code to a new helper in pci/iov.c, pci_sriov_configure
-Changes in V2:
-- Simplified logic from previous version, removed added driver variable
-- Disable SR-IOV on driver removal excapt when VFs are assigned
-- Sent as RFC to virtio-dev, linux-pci, netdev, lkml and others
----
- drivers/pci/iov.c                  |   48 ++++++++++++++++++++++++++++++++++++
- drivers/virtio/virtio_pci_common.c |    2 ++
- include/linux/pci.h                |   10 ++++++++
- 3 files changed, 60 insertions(+)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 677924ae0350..ddd44a9d93ec 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -367,6 +367,54 @@ static void sriov_disable(struct pci_dev *dev)
- 	pci_iov_set_numvfs(dev, 0);
- }
- 
-+/**
-+ * pci_sriov_disable - standard helper to disable SR-IOV
-+ * @dev:the PCI PF device whose VFs are to be disabled
-+ */
-+int pci_sriov_disable(struct pci_dev *dev)
-+{
-+	/*
-+	 * If vfs are assigned we cannot shut down SR-IOV without causing
-+	 * issues, so just leave the hardware available.
-+	 */
-+	if (pci_vfs_assigned(dev)) {
-+		pci_warn(&dev->dev,
-+			 "Cannot disable SR-IOV while VFs are assigned - VFs will not be deallocated\n");
-+		return -EPERM;
-+	}
-+	pci_disable_sriov(dev);
-+	return 0;
-+}
-+
-+static int pci_sriov_enable(struct pci_dev *dev, int num_vfs)
-+{
-+	int rc;
-+
-+	if (pci_num_vf(dev))
-+		return -EINVAL;
-+
-+	rc = pci_enable_sriov(dev, num_vfs);
-+	if (rc) {
-+		pci_warn(dev, "Failed to enable PCI sriov: %d\n", rc);
-+		return rc;
-+	}
-+	dev_info(dev, "SR-IOV enabled with %d VFs\n", num_vfs);
-+	return num_vfs;
-+}
-+
-+/**
-+ * pci_sriov_configure - standard helper to configure SR-IOV
-+ * @dev: the PCI PF device that is configuring SR-IOV
-+ */
-+int pci_sriov_configure(struct pci_dev *dev, int num_vfs)
-+{
-+	if (num_vfs)
-+		return pci_sriov_enable(dev, num_vfs);
-+	if (!pci_num_vf(dev))
-+		return -EINVAL;
-+	return pci_sriov_disable(dev);
-+}
-+
- static int sriov_init(struct pci_dev *dev, int pos)
- {
- 	int i, bar64;
-diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-index 48d4d1cf1cb6..37e353c4f8b4 100644
---- a/drivers/virtio/virtio_pci_common.c
-+++ b/drivers/virtio/virtio_pci_common.c
-@@ -584,6 +584,7 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
- 	else
- 		virtio_pci_modern_remove(vp_dev);
- 
-+	pci_sriov_disable(pci_dev);
- 	pci_disable_device(pci_dev);
- 	put_device(dev);
- }
-@@ -596,6 +597,7 @@ static struct pci_driver virtio_pci_driver = {
- #ifdef CONFIG_PM_SLEEP
- 	.driver.pm	= &virtio_pci_pm_ops,
- #endif
-+	.sriov_configure = pci_sriov_configure,
- };
- 
- module_pci_driver(virtio_pci_driver);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 024a1beda008..ef6b359afefd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1947,6 +1947,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
- 
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-+int pci_sriov_disable(struct pci_dev *dev);
-+int pci_sriov_configure(struct pci_dev *dev, int num_vfs);
- int pci_iov_add_virtfn(struct pci_dev *dev, int id);
- void pci_iov_remove_virtfn(struct pci_dev *dev, int id);
- int pci_num_vf(struct pci_dev *dev);
-@@ -1973,6 +1975,14 @@ static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id)
- static inline void pci_iov_remove_virtfn(struct pci_dev *dev,
- 					 int id) { }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
-+static inline int pci_sriov_disable(struct pci_dev *dev)
-+{
-+	return -ENODEV;
-+}
-+static inline int pci_sriov_configure(struct pci_dev *dev, int num_vfs)
-+{
-+	return -ENODEV;
-+}
- static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
- static inline int pci_vfs_assigned(struct pci_dev *dev)
- { return 0; }
+Thanks,
+Lorenzo
