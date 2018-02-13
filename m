@@ -1,104 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:53215 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751329AbeBWBX0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 20:23:26 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 6/6] dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint controller
-Date: Fri, 23 Feb 2018 09:17:49 +0800
-Message-Id: <1519348669-243645-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=RfUu=FH=canonical.com=alex.hung@kernel.org>
+Return-Path: <SRS0=RfUu=FH=canonical.com=alex.hung@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0iNq2ni9ML=_6H0i99dUm5+Noh1MQ9AO4JCiqyXU1xW3Q@mail.gmail.com>
+References: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
+ <20180210010548.GC206223@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0gBK8WmX4QYYBzVxdk8CaSBo5ckzmP49qr05+9DAYieqw@mail.gmail.com>
+ <20180210153450.GD206223@bhelgaas-glaptop.roam.corp.google.com> <CAJZ5v0iNq2ni9ML=_6H0i99dUm5+Noh1MQ9AO4JCiqyXU1xW3Q@mail.gmail.com>
+From: Alex Hung <alex.hung@canonical.com>
+Date: Mon, 12 Feb 2018 20:03:02 -0800
+Message-ID: <CAJ=jquZtaLqZZQaAitPYLK4dGVXxw3U92NJB5KuP3oU-LFDudQ@mail.gmail.com>
+Subject: Re: [PATCH] ACPI/PCI: pci_link: change log level of no _PRS messages
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch documents the DT bindings for the Rockchip PCIe controller
-when configured in endpoint mode.
+On Mon, Feb 12, 2018 at 12:51 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Sat, Feb 10, 2018 at 4:34 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> On Sat, Feb 10, 2018 at 09:08:42AM +0100, Rafael J. Wysocki wrote:
+>>> On Sat, Feb 10, 2018 at 2:05 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> > On Fri, Feb 09, 2018 at 02:56:43PM -0800, Alex Hung wrote:
+>>> >> In recent Intel hardware the IRQs become non-configurable after BIOS
+>>> >> initializes them in PEI phase and _PRS objects are no longer included in
+>>> >> ASL.
+>>> >>
+>>> >> This is the same as "static (non-configurable) devices do not
+>>> >> specify a _PRS object" in ACPI spec. As a result, error messages
+>>> >> saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
+>>> >> be in kernel messages all the time but only when debug is enabled.
+>>> >
+>>> > I agree and would even go further: _PRS is optional and I don't think
+>>> > there's a reason to log anything at all if it's absent.  A log message
+>>> > like "failed to evaluate _PRS" makes people think something is wrong
+>>> > when in fact nothing is wrong.
+>>>
+>>> _PRS is required if the link object is pointed to by a _PRT entry.
+>>
+>> The closest thing I see with a quick look is ACPI 6.0, sec 6.2.13:
+>>
+>>   These objects [PCI Interrupt Link Devices] have _PRS, _CRS, _SRS,
+>>   and _DIS control methods to allocate the interrupt.
+>>
+>> I don't read that as a requirement for _PRS in particular; I read it
+>> as saying that the interrupt link devices use the normal device
+>> configuration method, i.e., _CRS is required and _PRS and _SRS are
+>> optional and needed for configurable devices but not for static ones.
+>
+> Well, that's slightly out of context. :-)
+>
+> First of all, Section 6.2.13 says this: "Typically, the interrupt
+> input that a given PCI interrupt is on is configurable. [...]  In this
+> model, each interrupt is represented in the ACPI namespace as a PCI
+> Interrupt Link Device."  Then, it says the above.
+>
+> Now, if _PRS is not present, the IRQ represented by the link object
+> cannot be configured, so in fact the underlying assumption doesn't
+> apply to it, strictly speaking.  It follows from the last paragraph in
+> Section 6.2.13 that _PRT entries representing such IRQs should not
+> point to interrupt link device objects (there should be 0 in their
+> Source fields).
+>
+> Hence, if a _PRT entry points to an interrupt link device object in
+> the namespace, _PRS should be present under this object or at least it
+> is reasonable to expect that it will be present in there.
+>
+>> But this is just a drive-by comment and I'm really fine with whatever
+>> you decide to do.
+>
+> OK
+>
+> So I think that (a) the message should be printed using
+> acpi_handle_debug(), except that I would make it slightly more
+> neutral, something like "_PRS not present or invalid", and (b) 0
+> should be returned instead of -ENODEV when _PRS evaluation doesn't
+> succeed.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Looks like we will do the following.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
----
+        if (ACPI_FAILURE(status)) {
+-               ACPI_EXCEPTION((AE_INFO, status, "Evaluating _PRS"));
+-                return -ENODEV;
++               acpi_handle_debug(link->device->handle, "_PRS not
+present or invalid");
++                return 0;
 
-Changes in v2: None
-
- .../devicetree/bindings/pci/rockchip-pcie-ep.txt   | 62 ++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-new file mode 100644
-index 0000000..77846730
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-@@ -0,0 +1,62 @@
-+* Rockchip AXI PCIe Endpoint Controller DT description
-+
-+Required properties:
-+- compatible: Should contain "rockchip,rk3399-pcie-ep"
-+- reg: Two register ranges as listed in the reg-names property
-+- reg-names: Must include the following names
-+	- "apb-base"
-+	- "mem-base"
-+- clocks: Must contain an entry for each entry in clock-names.
-+		See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+	- "aclk"
-+	- "aclk-perf"
-+	- "hclk"
-+	- "pm"
-+- resets: Must contain seven entries for each entry in reset-names.
-+	   See ../reset/reset.txt for details.
-+- reset-names: Must include the following names
-+	- "core"
-+	- "mgmt"
-+	- "mgmt-sticky"
-+	- "pipe"
-+	- "pm"
-+	- "aclk"
-+	- "pclk"
-+- pinctrl-names : The pin control state names
-+- pinctrl-0: The "default" pinctrl state
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include 4 entries for all 4 lanes even if some of
-+  them won't be used for your cases. Entries are of the form "pcie-phy-N":
-+  where N ranges from 0 to 3.
-+  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
-+  for changing the #phy-cells of phy node to support it)
-+- rockchip,max-outbound-regions: Maximum number of outbound regions
-+
-+Optional Property:
-+- num-lanes: number of lanes to use
-+- max-functions: Maximum number of functions that can be configured (default 1).
-+
-+pcie0-ep: pcie@f8000000 {
-+	compatible = "rockchip,rk3399-pcie-ep";
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	rockchip,max-outbound-regions = <16>;
-+	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-+		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
-+	clock-names = "aclk", "aclk-perf",
-+		      "hclk", "pm";
-+	max-functions = /bits/ 8 <8>;
-+	num-lanes = <4>;
-+	reg = <0x0 0xfd000000 0x0 0x1000000>, <0x0 0x80000000 0x0 0x20000>;
-+	reg-names = "apb-base", "mem-base";
-+	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-+		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE> ,
-+		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
-+	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
-+		      "pm", "pclk", "aclk";
-+	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
-+	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_clkreq>;
-+};
--- 
-1.9.1
+I will revise the patch and send it if this is all agreed.
