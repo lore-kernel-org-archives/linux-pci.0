@@ -1,85 +1,151 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v8 5/7] PCI/AER: Unify aer error defines at single space
-Date: Wed, 21 Feb 2018 15:56:42 +0530
-Message-Id: <1519208804-24512-6-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519208804-24512-1-git-send-email-poza@codeaurora.org>
-References: <1519208804-24512-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20180213163200.8787-3-mika.westerberg@linux.intel.com>
+References: <20180213163200.8787-1-mika.westerberg@linux.intel.com> <20180213163200.8787-3-mika.westerberg@linux.intel.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 13 Feb 2018 18:45:02 +0100
+Message-ID: <CAJZ5v0i5hzMktBDhYcOiZnnvNyS6QeanVmjs2dR=XewmLzeW4g@mail.gmail.com>
+Subject: Re: [PATCH 2/5] PCI: Take bridge window alignment into account when
+ distributing resources
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch moves AER error defines to drivers/pci/pci.h.
-So that it unifies the error repoting codes at single place along with dpc
+On Tue, Feb 13, 2018 at 5:31 PM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> When connecting a Thunderbolt endpoint which itself has internal PCIe
+> switch (not the integrated one) the way we currently distribute
+> resources does not always work well because devices below non-hotplug
+> bridges might need to have their MMIO resources aligned to something
+> else than 1 MB boundary. As an example connecting a server grade 4-port
+> GbE add in card adds another PCIe switch leading to GbE devices that
+> want to have their MMIO resources aligned to 2 MB boundary instead.
+>
+> Current resource distribution code does not take this alignment into
+> account and might try to add too much resources for the extension
+> hotplug bridges. The resulting bridge window is then too big which makes
+> Linux to re-allocate minimal amount of resources, making future
+> extension impossible.
+>
+> Make this work better by substracting properly aligned non-hotplug
+> downstream bridge window size from the remaining resources.
+>
+> Fixes: 1a5767725cec ("PCI: Distribute available resources to hotplug-capable bridges")
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: stable@vger.kernel.org
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index 1efefe9..7ae9bb3 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -56,6 +56,7 @@
- #include <ras/ras_event.h>
- 
- #include "apei-internal.h"
-+#include "../../pci/pci.h"
- 
- #define GHES_PFX	"GHES: "
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 124f42e..b0e63b5 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -343,7 +343,11 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- void pci_enable_acs(struct pci_dev *dev);
- 
- /* PCI error reporting and recovery */
--#define DPC_FATAL	4
-+#define AER_NONFATAL		0
-+#define AER_FATAL		1
-+#define AER_CORRECTABLE		2
-+
-+#define DPC_FATAL		4
- 
- void pci_do_recovery(struct pci_dev *dev, int severity);
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 6a352e6..4c59f37 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -19,6 +19,7 @@
- #include <linux/cper.h>
- 
- #include "aerdrv.h"
-+#include "../../pci.h"
- #include <ras/ras_event.h>
- 
- #define AER_AGENT_RECEIVER		0
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 8f87bbe..3eac8ed 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -11,10 +11,6 @@
- #include <linux/errno.h>
- #include <linux/types.h>
- 
--#define AER_NONFATAL			0
--#define AER_FATAL			1
--#define AER_CORRECTABLE			2
--
- struct pci_dev;
- 
- struct aer_header_log_regs {
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> ---
+>  drivers/pci/setup-bus.c | 41 ++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 40 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 3cce29a069e6..f1e6172734f0 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1882,6 +1882,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>         resource_size_t available_mmio, resource_size_t available_mmio_pref)
+>  {
+>         resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
+> +       resource_size_t io_start, mmio_start, mmio_pref_start;
+>         unsigned int normal_bridges = 0, hotplug_bridges = 0;
+>         struct resource *io_res, *mmio_res, *mmio_pref_res;
+>         struct pci_dev *dev, *bridge = bus->self;
+> @@ -1946,11 +1947,16 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>                         remaining_mmio_pref -= resource_size(res);
+>         }
+>
+> +       io_start = io_res->start;
+> +       mmio_start = mmio_res->start;
+> +       mmio_pref_start = mmio_pref_res->start;
+> +
+>         /*
+>          * Go over devices on this bus and distribute the remaining
+>          * resource space between hotplug bridges.
+>          */
+>         for_each_pci_bridge(dev, bus) {
+> +               resource_size_t align;
+>                 struct pci_bus *b;
+>
+>                 b = dev->subordinate;
+> @@ -1968,7 +1974,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>                                 available_io, available_mmio,
+>                                 available_mmio_pref);
+>                 } else if (dev->is_hotplug_bridge) {
+> -                       resource_size_t align, io, mmio, mmio_pref;
+> +                       resource_size_t io, mmio, mmio_pref;
+>
+>                         /*
+>                          * Distribute available extra resources equally
+> @@ -1981,11 +1987,13 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>                         io = div64_ul(available_io, hotplug_bridges);
+>                         io = min(ALIGN(io, align), remaining_io);
+>                         remaining_io -= io;
+> +                       io_start += io;
+>
+>                         align = pci_resource_alignment(bridge, mmio_res);
+>                         mmio = div64_ul(available_mmio, hotplug_bridges);
+>                         mmio = min(ALIGN(mmio, align), remaining_mmio);
+>                         remaining_mmio -= mmio;
+> +                       mmio_start += mmio;
+>
+>                         align = pci_resource_alignment(bridge, mmio_pref_res);
+>                         mmio_pref = div64_ul(available_mmio_pref,
+> @@ -1993,9 +2001,40 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>                         mmio_pref = min(ALIGN(mmio_pref, align),
+>                                         remaining_mmio_pref);
+>                         remaining_mmio_pref -= mmio_pref;
+> +                       mmio_pref_start += mmio_pref;
+>
+>                         pci_bus_distribute_available_resources(b, add_list, io,
+>                                                                mmio, mmio_pref);
+> +               } else {
+> +                       /*
+> +                        * For normal bridges, track start of the parent
+> +                        * bridge window to make sure we align the
+> +                        * remaining space which is distributed to the
+> +                        * hotplug bridges properly.
+> +                        */
+> +                       resource_size_t aligned;
+> +                       struct resource *res;
+> +
+> +                       res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
+> +                       io_start += resource_size(res);
+> +                       aligned = ALIGN(io_start,
+> +                                       pci_resource_alignment(dev, res));
+> +                       if (aligned > io_start)
+> +                               remaining_io -= aligned - io_start;
+> +
+> +                       res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
+> +                       mmio_start += resource_size(res);
+> +                       aligned = ALIGN(mmio_start,
+> +                                       pci_resource_alignment(dev, res));
+> +                       if (aligned > mmio_start)
+> +                               remaining_mmio -= aligned - mmio_start;
+> +
+> +                       res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
+> +                       mmio_pref_start += resource_size(res);
+> +                       aligned = ALIGN(mmio_pref_start,
+> +                                       pci_resource_alignment(dev, res));
+> +                       if (aligned > mmio_pref_start)
+> +                               remaining_mmio_pref -= aligned - mmio_pref_start;
+>                 }
+>         }
+>  }
+> --
+> 2.15.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
