@@ -1,68 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.ru ([107.173.13.209]:36180 "EHLO ozlabs.ru"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750830AbeBIGYD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Feb 2018 01:24:03 -0500
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH kernel v3] powerpc/pci: Fix broken INTx configuration via OF
-Date: Fri,  9 Feb 2018 17:23:58 +1100
-Message-Id: <20180209062358.33457-1-aik@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20180213163200.8787-4-mika.westerberg@linux.intel.com>
+References: <20180213163200.8787-1-mika.westerberg@linux.intel.com> <20180213163200.8787-4-mika.westerberg@linux.intel.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 13 Feb 2018 18:46:16 +0100
+Message-ID: <CAJZ5v0jKjzUJ8fBJ6cN6RUUm_nfk_a8Bt1CVCZGD=L39sPT5fw@mail.gmail.com>
+Subject: Re: [PATCH 3/5] PCI: pciehp: Clear Presence Detect and Data Link
+ Layer Status Changed on resume
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 59f47eff03a0 ("powerpc/pci: Use of_irq_parse_and_map_pci() helper")
-replaced of_irq_parse_pci() + irq_create_of_mapping() with
-of_irq_parse_and_map_pci() but this change lost virq returned by
-irq_create_of_mapping() so virq remained zero causing INTx
-misconfiguration.
+On Tue, Feb 13, 2018 at 5:31 PM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> After suspend/resume cycle the Presence Detect or Data Link Layer Status
+> Changed bits might be set and if we don't clear them those events will
+> not fire anymore and nothing happens for instance when a device is now
+> hot-unplugged.
+>
+> Fix this by clearing those bits in a newly introduced function
+> pcie_reenable_notification(). This should be fine because immediately
+> after we check if the adapter is still present by reading directly from
+> the status register.
+>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: stable@vger.kernel.org
 
-This fixes pci_read_irq_line() not to loose a virq returned by
-of_irq_parse_and_map_pci().
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Fixes: 59f47eff03a0 "powerpc/pci: Use of_irq_parse_and_map_pci() helper"
-Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
----
-Changes:
-v3:
-* change virq from unsigned to int as of_irq_parse_and_map_pci returns int
-and even though it only returns non-negative values now, this may change
-in the future
-
-v2:
-* changed the condition from <=0 to !=0 as by design
-of_irq_parse_and_map_pci() can only return 0 for an error and virq>0.
----
- arch/powerpc/kernel/pci-common.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index ae2ede4..446c796 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -362,7 +362,7 @@ struct pci_controller* pci_find_hose_for_OF_device(struct device_node* node)
-  */
- static int pci_read_irq_line(struct pci_dev *pci_dev)
- {
--	unsigned int virq = 0;
-+	int virq;
- 
- 	pr_debug("PCI: Try to map irq for %s...\n", pci_name(pci_dev));
- 
-@@ -370,7 +370,8 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- 	memset(&oirq, 0xff, sizeof(oirq));
- #endif
- 	/* Try to get a mapping from the device-tree */
--	if (!of_irq_parse_and_map_pci(pci_dev, 0, 0)) {
-+	virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
-+	if (virq <= 0) {
- 		u8 line, pin;
- 
- 		/* If that fails, lets fallback to what is in the config
--- 
-2.11.0
+> ---
+>  drivers/pci/hotplug/pciehp.h      |  2 +-
+>  drivers/pci/hotplug/pciehp_core.c |  2 +-
+>  drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
+>  3 files changed, 14 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index 636ed8f4b869..5abf864eae35 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -120,7 +120,7 @@ struct controller *pcie_init(struct pcie_device *dev);
+>  int pcie_init_notification(struct controller *ctrl);
+>  int pciehp_enable_slot(struct slot *p_slot);
+>  int pciehp_disable_slot(struct slot *p_slot);
+> -void pcie_enable_notification(struct controller *ctrl);
+> +void pcie_reenable_notification(struct controller *ctrl);
+>  int pciehp_power_on_slot(struct slot *slot);
+>  void pciehp_power_off_slot(struct slot *slot);
+>  void pciehp_get_power_status(struct slot *slot, u8 *status);
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 332b723ff9e6..44a6a63802d5 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
+>         ctrl = get_service_data(dev);
+>
+>         /* reinitialize the chipset's event detection logic */
+> -       pcie_enable_notification(ctrl);
+> +       pcie_reenable_notification(ctrl);
+>
+>         slot = ctrl->slot;
+>
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 18a42f8f5dc5..98ea75aa32c7 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+>         return handled;
+>  }
+>
+> -void pcie_enable_notification(struct controller *ctrl)
+> +static void pcie_enable_notification(struct controller *ctrl)
+>  {
+>         u16 cmd, mask;
+>
+> @@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
+>                  pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+>  }
+>
+> +void pcie_reenable_notification(struct controller *ctrl)
+> +{
+> +       /*
+> +        * Clear both Presence and Data Link Layer Changed to make sure
+> +        * those events still fire after we have re-enabled them.
+> +        */
+> +       pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
+> +                                  PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
+> +       pcie_enable_notification(ctrl);
+> +}
+> +
+>  static void pcie_disable_notification(struct controller *ctrl)
+>  {
+>         u16 mask;
+> --
+> 2.15.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
