@@ -1,303 +1,528 @@
-Return-Path: <SRS0=d09z=FG=xenosoft.de=chzigotzky@kernel.org>
-Return-Path: <SRS0=d09z=FG=xenosoft.de=chzigotzky@kernel.org>
-Content-Type: multipart/alternative;
-	boundary=Apple-Mail-075E060E-FAD4-432A-89CD-3BD6BFA7B823
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH v1] PCI: Make PCI_SCAN_ALL_PCIE_DEVS work for Root as well as Downstream Ports
-From: Christian Zigotzky <chzigotzky@xenosoft.de>
-In-Reply-To: <20180210154342.GE206223@bhelgaas-glaptop.roam.corp.google.com>
-Date: Mon, 12 Feb 2018 07:02:32 +0100
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org
-Message-Id: <5ED03D5D-B20A-48FE-AD56-E76A06B1DC7C@xenosoft.de>
-References: <20171202002710.17686.21340.stgit@bhelgaas-glaptop.roam.corp.google.com> <20171202191827.GB18780@bhelgaas-glaptop.roam.corp.google.com> <33CA1586-051C-47F4-83CD-4A406FAE85F7@xenosoft.de> <20180210154342.GE206223@bhelgaas-glaptop.roam.corp.google.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>
+Subject: [PATCH v13 1/9] LIB: Introduce a generic PIO mapping method
+Date: Wed, 14 Feb 2018 01:45:25 +0800
+Message-ID: <1518543933-22456-2-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Zhichang Yuan <yuanzhichang@hisilicon.com>
 
---Apple-Mail-075E060E-FAD4-432A-89CD-3BD6BFA7B823
-Content-Type: text/plain;
-	charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+In commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
+pci_pio_to_address()"), a new I/O space management was supported. With
+that driver, the I/O ranges configured for PCI/PCIe hosts on some
+architectures can be mapped to logical PIO, converted easily between
+CPU address and the corresponding logicial PIO. Based on this, PCI
+I/O devices can be accessed in a memory read/write way through the
+unified in/out accessors.
 
-Hi Bjorn,
+But on some archs/platforms, there are bus hosts which access I/O
+peripherals with host-local I/O port addresses rather than memory
+addresses after memory-mapped.
 
-Sorry for my late answer. The X1000 boots and works since yesterday. I think=
- the following patch solved the issue: https://git.kernel.org/pub/scm/linux/=
-kernel/git/torvalds/linux.git/commit/?id=3Dc591c2e36ccc9a08f265841d2fd68e353=
-27ab3c4
+To support those devices, a more generic I/O mapping method is introduced
+here. Through this patch, both the CPU addresses and the host-local port
+can be mapped into the logical PIO space with different logical/fake PIOs.
+After this, all the I/O accesses to either PCI MMIO devices or host-local
+I/O peripherals can be unified into the existing I/O accessors defined in
+asm-generic/io.h and be redirected to the right device-specific hooks
+based on the input logical PIO.
 
-Cheers,
-Christian
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ include/asm-generic/io.h  |   2 +
+ include/linux/logic_pio.h | 131 ++++++++++++++++++++++
+ lib/Kconfig               |  15 +++
+ lib/Makefile              |   2 +
+ lib/logic_pio.c           | 272 ++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 422 insertions(+)
+ create mode 100644 include/linux/logic_pio.h
+ create mode 100644 lib/logic_pio.c
 
-Sent from my iPhone
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index b4531e3..b7996a79 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -351,6 +351,8 @@ static inline void writesq(volatile void __iomem *addr, const void *buffer,
+ #define IO_SPACE_LIMIT 0xffff
+ #endif
+ 
++#include <linux/logic_pio.h>
++
+ /*
+  * {in,out}{b,w,l}() access little endian I/O. {in,out}{b,w,l}_p() can be
+  * implemented on hardware that needs an additional delay for I/O accesses to
+diff --git a/include/linux/logic_pio.h b/include/linux/logic_pio.h
+new file mode 100644
+index 0000000..b3322fd
+--- /dev/null
++++ b/include/linux/logic_pio.h
+@@ -0,0 +1,131 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
++ * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
++ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
++ *
++ */
++
++#ifndef __LINUX_LOGIC_PIO_H__
++#define __LINUX_LOGIC_PIO_H__
++
++#ifdef __KERNEL__
++
++#include <linux/fwnode.h>
++
++#define PIO_INDIRECT		0x01UL /* indirect IO flag */
++#define PIO_CPU_MMIO		0x00UL /* memory mapped io flag */
++
++struct logic_pio_hwaddr {
++	struct list_head list;
++	struct fwnode_handle *fwnode;
++	resource_size_t hw_start;
++	resource_size_t io_start;
++	resource_size_t size; /* range size populated */
++	unsigned long flags;
++
++	void *devpara;	/* private parameter of the host device */
++	struct hostio_ops *ops;	/* ops operating on this node */
++};
++
++struct hostio_ops {
++	u32 (*pfin)(void *devobj, unsigned long ptaddr,	size_t dlen);
++	void (*pfout)(void *devobj, unsigned long ptaddr, u32 outval,
++			size_t dlen);
++	u32 (*pfins)(void *devobj, unsigned long ptaddr, void *inbuf,
++			size_t dlen, unsigned int count);
++	void (*pfouts)(void *devobj, unsigned long ptaddr,
++			const void *outbuf, size_t dlen, unsigned int count);
++};
++
++#ifdef CONFIG_INDIRECT_PIO
++u8 logic_inb(unsigned long addr);
++void logic_outb(u8 value, unsigned long addr);
++void logic_outw(u16 value, unsigned long addr);
++void logic_outl(u32 value, unsigned long addr);
++u16 logic_inw(unsigned long addr);
++u32 logic_inl(unsigned long addr);
++void logic_outb(u8 value, unsigned long addr);
++void logic_outw(u16 value, unsigned long addr);
++void logic_outl(u32 value, unsigned long addr);
++void logic_insb(unsigned long addr, void *buffer, unsigned int count);
++void logic_insl(unsigned long addr, void *buffer, unsigned int count);
++void logic_insw(unsigned long addr, void *buffer, unsigned int count);
++void logic_outsb(unsigned long addr, const void *buffer, unsigned int count);
++void logic_outsw(unsigned long addr, const void *buffer, unsigned int count);
++void logic_outsl(unsigned long addr, const void *buffer, unsigned int count);
++
++#ifndef inb
++#define inb logic_inb
++#endif
++
++#ifndef inw
++#define inw logic_inw
++#endif
++
++#ifndef inl
++#define inl logic_inl
++#endif
++
++#ifndef outb
++#define outb logic_outb
++#endif
++
++#ifndef outw
++#define outw logic_outw
++#endif
++
++#ifndef outl
++#define outl logic_outl
++#endif
++
++#ifndef insb
++#define insb logic_insb
++#endif
++
++#ifndef insw
++#define insw logic_insw
++#endif
++
++#ifndef insl
++#define insl logic_insl
++#endif
++
++#ifndef outsb
++#define outsb logic_outsb
++#endif
++
++#ifndef outsw
++#define outsw logic_outsw
++#endif
++
++#ifndef outsl
++#define outsl logic_outsl
++#endif
++
++/*
++ * Below we reserve 0x4000 bytes for Indirect IO as so far this library is only
++ * used by Hisilicon LPC Host. If needed in future we may reserve a wider IO
++ * area by redefining the macro below.
++ */
++#define PIO_INDIRECT_SIZE 0x4000
++#define MMIO_UPPER_LIMIT (IO_SPACE_LIMIT - PIO_INDIRECT_SIZE)
++#else
++#define MMIO_UPPER_LIMIT IO_SPACE_LIMIT
++#endif /* CONFIG_INDIRECT_PIO */
++
++
++struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode);
++
++unsigned long logic_pio_trans_hwaddr(struct fwnode_handle *fwnode,
++			resource_size_t hw_addr, resource_size_t size);
++
++int logic_pio_register_range(struct logic_pio_hwaddr *newrange);
++
++
++extern resource_size_t logic_pio_to_hwaddr(unsigned long pio);
++
++extern unsigned long logic_pio_trans_cpuaddr(resource_size_t hw_addr);
++
++#endif /* __KERNEL__ */
++#endif /* __LINUX_LOGIC_PIO_H__ */
+diff --git a/lib/Kconfig b/lib/Kconfig
+index e960894..7ad1e69 100644
+--- a/lib/Kconfig
++++ b/lib/Kconfig
+@@ -55,6 +55,21 @@ config ARCH_USE_CMPXCHG_LOCKREF
+ config ARCH_HAS_FAST_MULTIPLIER
+ 	bool
+ 
++config INDIRECT_PIO
++	bool "Access I/O in non-MMIO mode"
++	depends on ARM64
++	help
++	  On some platforms where no separate I/O space exists, there are I/O
++	  hosts which can not be accessed in MMIO mode. Using the logical PIO
++	  mechanism, the host-local I/O resource can be mapped into system
++	  logic PIO space shared with MMIO hosts, such as PCI/PCIE, then the
++	  system can access the I/O devices with the mapped logic PIO through
++	  I/O accessors.
++	  This way has a relatively little I/O performance cost. Please make
++	  sure your devices really need this configure item enabled.
++
++	  When in doubt, say N.
++
+ config CRC_CCITT
+ 	tristate "CRC-CCITT functions"
+ 	help
+diff --git a/lib/Makefile b/lib/Makefile
+index a90d4fc..4a9eacd 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -81,6 +81,8 @@ obj-$(CONFIG_HAS_IOMEM) += iomap_copy.o devres.o
+ obj-$(CONFIG_CHECK_SIGNATURE) += check_signature.o
+ obj-$(CONFIG_DEBUG_LOCKING_API_SELFTESTS) += locking-selftest.o
+ 
++obj-y += logic_pio.o
++
+ obj-$(CONFIG_GENERIC_HWEIGHT) += hweight.o
+ 
+ obj-$(CONFIG_BTREE) += btree.o
+diff --git a/lib/logic_pio.c b/lib/logic_pio.c
+new file mode 100644
+index 0000000..1006d9d
+--- /dev/null
++++ b/lib/logic_pio.c
+@@ -0,0 +1,272 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
++ * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
++ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
++ *
++ */
++
++#define pr_fmt(fmt)	"LOGIC PIO: " fmt
++
++#include <linux/of.h>
++#include <linux/io.h>
++#include <linux/logic_pio.h>
++#include <linux/mm.h>
++#include <linux/rculist.h>
++#include <linux/sizes.h>
++#include <linux/slab.h>
++
++/* The unique hardware address list. */
++static LIST_HEAD(io_range_list);
++static DEFINE_MUTEX(io_range_mutex);
++
++/*
++ * register a new io range node in the io range list.
++ *
++ * @newrange: pointer to the io range to be registered.
++ *
++ * returns 0 on success, the error code in case of failure
++ */
++int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
++{
++	struct logic_pio_hwaddr *range;
++	int ret = 0;
++	resource_size_t start = new_range->hw_start;
++	resource_size_t end = new_range->hw_start + new_range->size;
++	resource_size_t allocated_mmio_size = 0;
++	resource_size_t allocated_iio_size = MMIO_UPPER_LIMIT;
++
++	if (!new_range || !new_range->fwnode || !new_range->size)
++		return -EINVAL;
++
++	mutex_lock(&io_range_mutex);
++	list_for_each_entry_rcu(range, &io_range_list, list) {
++		if (range->fwnode == new_range->fwnode) {
++			/* range already there */
++			ret = -EFAULT;
++			goto end_register;
++		}
++		if (range->flags == PIO_CPU_MMIO &&
++				new_range->flags == PIO_CPU_MMIO) {
++			/* for MMIO ranges we need to check for overlap */
++			if (start >= range->hw_start + range->size ||
++			    end < range->hw_start)
++				allocated_mmio_size += range->size;
++			else {
++				ret = -EFAULT;
++				goto end_register;
++			}
++		} else if (range->flags == PIO_INDIRECT &&
++			   new_range->flags == PIO_INDIRECT) {
++			allocated_iio_size += range->size;
++		}
++	}
++
++	/* range not registered yet, check for available space */
++	if (new_range->flags == PIO_CPU_MMIO) {
++		if (allocated_mmio_size + new_range->size - 1 >
++			MMIO_UPPER_LIMIT) {
++			/* if it's too big check if 64K space can be reserved */
++			if (allocated_mmio_size + SZ_64K - 1 >
++			MMIO_UPPER_LIMIT) {
++				ret = -E2BIG;
++				goto end_register;
++			}
++			new_range->size = SZ_64K;
++			pr_warn("Requested IO range too big, new size set to 64K\n");
++		}
++		new_range->io_start = allocated_mmio_size;
++	} else if (new_range->flags == PIO_INDIRECT) {
++		if (allocated_iio_size + new_range->size - 1 >
++		    IO_SPACE_LIMIT) {
++			ret = -E2BIG;
++			goto end_register;
++		}
++		new_range->io_start = allocated_iio_size;
++	} else {
++		/* invalid flag */
++		ret = -EINVAL;
++		goto end_register;
++	}
++
++	list_add_tail_rcu(&new_range->list, &io_range_list);
++
++end_register:
++	mutex_unlock(&io_range_mutex);
++	return ret;
++}
++
++/*
++ * traverse the io_range_list to find the registered node whose device node
++ * and/or physical IO address match to.
++ */
++struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode)
++{
++	struct logic_pio_hwaddr *range;
++
++	list_for_each_entry_rcu(range, &io_range_list, list) {
++		if (range->fwnode == fwnode)
++			return range;
++	}
++	return NULL;
++}
++
++/* return a registered range given an input PIO token */
++static struct logic_pio_hwaddr *find_io_range(unsigned long pio)
++{
++	struct logic_pio_hwaddr *range;
++
++	list_for_each_entry_rcu(range, &io_range_list, list) {
++		if (pio >= range->io_start &&
++		    pio < range->io_start + range->size)
++			return range;
++	}
++	pr_err("PIO entry token invalid\n");
++	return NULL;
++}
++
++/*
++ * Translate the input logical pio to the corresponding hardware address.
++ * The input pio should be unique in the whole logical PIO space.
++ */
++resource_size_t logic_pio_to_hwaddr(unsigned long pio)
++{
++	struct logic_pio_hwaddr *range;
++	resource_size_t hwaddr = -1;
++
++	range = find_io_range(pio);
++	if (range)
++		hwaddr = range->hw_start + pio - range->io_start;
++
++	return hwaddr;
++}
++
++/*
++ * This function is generic for translating a hardware address to logical PIO.
++ * @hw_addr: the hardware address of host, can be CPU address or host-local
++ *		address;
++ */
++unsigned long
++logic_pio_trans_hwaddr(struct fwnode_handle *fwnode, resource_size_t addr,
++		       resource_size_t size)
++{
++	struct logic_pio_hwaddr *range;
++
++	range = find_io_range_by_fwnode(fwnode);
++	if (!range || range->flags == PIO_CPU_MMIO) {
++		pr_err("range not found or invalid\n");
++		return -1;
++	}
++	if (range->size < size) {
++		pr_err("resource size %pa cannot fit in IO range size %pa\n",
++		       &size, &range->size);
++		return -1;
++	}
++	return addr - range->hw_start + range->io_start;
++}
++
++unsigned long
++logic_pio_trans_cpuaddr(resource_size_t addr)
++{
++	struct logic_pio_hwaddr *range;
++
++	list_for_each_entry_rcu(range, &io_range_list, list) {
++		if (range->flags != PIO_CPU_MMIO)
++			continue;
++		if (addr >= range->hw_start &&
++		    addr < range->hw_start + range->size)
++			return addr - range->hw_start +
++				range->io_start;
++	}
++	pr_err("addr not registered in io_range_list\n");
++	return -1;
++}
++
++#if defined(CONFIG_INDIRECT_PIO) && defined(PCI_IOBASE)
++#define BUILD_LOGIC_IO(bw, type)					\
++type logic_in##bw(unsigned long addr)					\
++{									\
++	type ret = -1;							\
++									\
++	if (addr < MMIO_UPPER_LIMIT) {					\
++		ret = read##bw(PCI_IOBASE + addr);			\
++	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) { \
++		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
++									\
++		if (entry && entry->ops)				\
++			ret = entry->ops->pfin(entry->devpara,		\
++					addr, sizeof(type));		\
++		else							\
++			WARN_ON_ONCE(1);				\
++	}								\
++	return ret;							\
++}									\
++									\
++void logic_out##bw(type value, unsigned long addr)			\
++{									\
++	if (addr < MMIO_UPPER_LIMIT) {					\
++		write##bw(value, PCI_IOBASE + addr);			\
++	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) {	\
++		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
++									\
++		if (entry && entry->ops)				\
++			entry->ops->pfout(entry->devpara,		\
++					addr, value, sizeof(type));	\
++		else							\
++			WARN_ON_ONCE(1);				\
++	}								\
++}									\
++									\
++void logic_ins##bw(unsigned long addr, void *buffer, unsigned int count)\
++{									\
++	if (addr < MMIO_UPPER_LIMIT) {					\
++		reads##bw(PCI_IOBASE + addr, buffer, count);		\
++	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) {	\
++		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
++									\
++		if (entry && entry->ops)				\
++			entry->ops->pfins(entry->devpara,		\
++				addr, buffer, sizeof(type), count);	\
++		else							\
++			WARN_ON_ONCE(1);				\
++	}								\
++									\
++}									\
++									\
++void logic_outs##bw(unsigned long addr, const void *buffer,		\
++		    unsigned int count)					\
++{									\
++	if (addr < MMIO_UPPER_LIMIT) {					\
++		writes##bw(PCI_IOBASE + addr, buffer, count);		\
++	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) {	\
++		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
++									\
++		if (entry && entry->ops)				\
++			entry->ops->pfouts(entry->devpara,		\
++				addr, buffer, sizeof(type), count);	\
++		else							\
++			WARN_ON_ONCE(1);				\
++	}								\
++}
++
++BUILD_LOGIC_IO(b, u8)
++
++EXPORT_SYMBOL(logic_inb);
++EXPORT_SYMBOL(logic_outb);
++EXPORT_SYMBOL(logic_insb);
++EXPORT_SYMBOL(logic_outsb);
++
++BUILD_LOGIC_IO(w, u16)
++
++EXPORT_SYMBOL(logic_inw);
++EXPORT_SYMBOL(logic_outw);
++EXPORT_SYMBOL(logic_insw);
++EXPORT_SYMBOL(logic_outsw);
++
++BUILD_LOGIC_IO(l, u32)
++
++EXPORT_SYMBOL(logic_inl);
++EXPORT_SYMBOL(logic_outl);
++EXPORT_SYMBOL(logic_insl);
++EXPORT_SYMBOL(logic_outsl);
++#endif /* CONFIG_INDIRECT_PIO && PCI_IOBASE */
+-- 
+1.9.1
 
-> On 10. Feb 2018, at 16:43, Bjorn Helgaas <helgaas@kernel.org> wrote:
->=20
->> On Sat, Feb 10, 2018 at 09:05:40AM +0100, Christian Zigotzky wrote:
->> Hi All,
->>=20
->> The AmigaOne X1000 doesn=E2=80=99t boot anymore since the PCI updates. I
->> have seen, that the PCI updates are different to the updates below.
->> The code below works but the latest not. Is there a problem with the
->> latest PCI updates currently?
->=20
-> I'm not aware of a problem, and it *looks* like the patch below is in
-> Linus' tree (I'm looking at 9a61df9e5f74 ("Merge tag 'kbuild-v4.16-2'
-> of git://git.kernel.org/pub/scm/linux/kernel/git/masahiroy/linux-kbuild"))=
-.
->=20
-> I assume you're still booting with "pci=3Dpcie_scan_all", since I don't
-> think we ever got a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically.
->=20
-> If AmigaOne X1000 doesn't boot with "pci=3Dpcie_scan_all", can you diff
-> the working only_one_child() with the current upstream?  I compared
-> the version in my pci/enumeration branch with what's upstream, and
-> they're identical.  So maybe the original patch I applied was wrong?
->=20
-> If you have a patch that works, can you post it and maybe I can sort
-> out what's different?
->=20
->> On 2. Dec 2017, at 20:18, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>=20
->> On Fri, Dec 01, 2017 at 06:27:10PM -0600, Bjorn Helgaas wrote:
->> From: Bjorn Helgaas <bhelgaas@google.com>
->>=20
->> PCIe Downstream Ports normally have only a Device 0 below them.  To
->> optimize enumeration, we don't scan for other devices *unless* the
->> PCI_SCAN_ALL_PCIE_DEVS flag is set by set by quirks or the
->> "pci=3Dpcie_scan_all" kernel parameter.
->>=20
->> Previously PCI_SCAN_ALL_PCIE_DEVS only affected scanning below Switch
->> Downstream Ports, not Root Ports.
->>=20
->> But the "Nemo" system, also known as the AmigaOne X1000, has a PA Semi Ro=
-ot
->> Port whose link leads to an AMD/ATI SB600 South Bridge.  The Root Port is=
- a
->> PCIe device, of course, but the SB600 contains only conventional PCI
->> devices with no visible PCIe port.
->>=20
->> Simplify and restructure only_one_child() so that we scan for all possibl=
-e
->> devices below Root Ports as well as Switch Downstream Ports when
->> PCI_SCAN_ALL_PCIE_DEVS is set.
->>=20
->> This is enough to make Nemo work with "pci=3Dpcie_scan_all".  We would al=
-so
->> like to add a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically on Nemo s=
-o
->> users wouldn't have to use the "pci=3Dpcie_scan_all" parameter, but we do=
-n't
->> have that yet.
->>=20
->> Link: https://lkml.kernel.org/r/CAErSpo55Q8Q=3D5p6_+uu7ahnw+53ibVDNRXxrzR=
-V9QnUr_9EUfw@mail.gmail.com
->> Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D198057
->> Reported-and-Tested-by: Christian Zigotzky <chzigotzky@xenosoft.de>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>=20
->> Applied to pci/enumeration for v4.16.
->>=20
->> ---
->> drivers/pci/probe.c |   25 +++++++++++++++----------
->> 1 file changed, 15 insertions(+), 10 deletions(-)
->>=20
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 14e0ea1ff38b..303c0cb0550c 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -2215,22 +2215,27 @@ static unsigned next_fn(struct pci_bus *bus, stru=
-ct pci_dev *dev, unsigned fn)
->>=20
->> static int only_one_child(struct pci_bus *bus)
->> {
->> -    struct pci_dev *parent =3D bus->self;
->> +    struct pci_dev *bridge =3D bus->self;
->>=20
->> -    if (!parent || !pci_is_pcie(parent))
->> +    /*
->> +     * Systems with unusual topologies set PCI_SCAN_ALL_PCIE_DEVS so
->> +     * we scan for all possible devices, not just Device 0.
->> +     */
->> +    if (pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
->>       return 0;
->> -    if (pci_pcie_type(parent) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
->> -        return 1;
->>=20
->>   /*
->> -     * PCIe downstream ports are bridges that normally lead to only a
->> -     * device 0, but if PCI_SCAN_ALL_PCIE_DEVS is set, scan all
->> -     * possible devices, not just device 0.  See PCIe spec r3.0,
->> -     * sec 7.3.1.
->> +     * A PCIe Downstream Port normally leads to a Link with only Device
->> +     * 0 on it (PCIe spec r3.1, sec 7.3.1).  As an optimization, scan
->> +     * only for Device 0 in that situation.
->> +     *
->> +     * Checking has_secondary_link is a hack to identify Downstream
->> +     * Ports because sometimes Switches are configured such that the
->> +     * PCIe Port Type labels are backwards.
->>    */
->> -    if (parent->has_secondary_link &&
->> -        !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
->> +    if (bridge && pci_is_pcie(bridge) && bridge->has_secondary_link)
->>       return 1;
->> +
->>   return 0;
->> }
->>=20
-
---Apple-Mail-075E060E-FAD4-432A-89CD-3BD6BFA7B823
-Content-Type: text/html;
-	charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-<html><head><meta http-equiv=3D"content-type" content=3D"text/html; charset=3D=
-utf-8"></head><body dir=3D"auto">Hi Bjorn,<div><br></div><div>Sorry for my l=
-ate answer. The X1000 boots and works since yesterday.&nbsp;<span style=3D"b=
-ackground-color: rgba(255, 255, 255, 0);">I think the following patch solved=
- the issue:&nbsp;<a href=3D"https://git.kernel.org/pub/scm/linux/kernel/git/=
-torvalds/linux.git/commit/?id=3Dc591c2e36ccc9a08f265841d2fd68e35327ab3c4">ht=
-tps://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=3D=
-c591c2e36ccc9a08f265841d2fd68e35327ab3c4</a></span></div><div><br></div><div=
->Cheers,</div><div>Christian<br><br><div id=3D"AppleMailSignature">Sent from=
- my iPhone</div><div><br>On 10. Feb 2018, at 16:43, Bjorn Helgaas &lt;<a hre=
-f=3D"mailto:helgaas@kernel.org">helgaas@kernel.org</a>&gt; wrote:<br><br></d=
-iv><blockquote type=3D"cite"><div><span>On Sat, Feb 10, 2018 at 09:05:40AM +=
-0100, Christian Zigotzky wrote:</span><br><blockquote type=3D"cite"><span>Hi=
- All,</span><br></blockquote><blockquote type=3D"cite"><span></span><br></bl=
-ockquote><blockquote type=3D"cite"><span>The AmigaOne X1000 doesn=E2=80=99t b=
-oot anymore since the PCI updates. I</span><br></blockquote><blockquote type=
-=3D"cite"><span>have seen, that the PCI updates are different to the updates=
- below.</span><br></blockquote><blockquote type=3D"cite"><span>The code belo=
-w works but the latest not. Is there a problem with the</span><br></blockquo=
-te><blockquote type=3D"cite"><span>latest PCI updates currently?</span><br><=
-/blockquote><span></span><br><span>I'm not aware of a problem, and it *looks=
-* like the patch below is in</span><br><span>Linus' tree (I'm looking at 9a6=
-1df9e5f74 ("Merge tag 'kbuild-v4.16-2'</span><br><span>of git://git.kernel.o=
-rg/pub/scm/linux/kernel/git/masahiroy/linux-kbuild")).</span><br><span></spa=
-n><br><span>I assume you're still booting with "pci=3Dpcie_scan_all", since I=
- don't</span><br><span>think we ever got a quirk to set PCI_SCAN_ALL_PCIE_DE=
-VS automatically.</span><br><span></span><br><span>If AmigaOne X1000 doesn't=
- boot with "pci=3Dpcie_scan_all", can you diff</span><br><span>the working o=
-nly_one_child() with the current upstream? &nbsp;I compared</span><br><span>=
-the version in my pci/enumeration branch with what's upstream, and</span><br=
-><span>they're identical. &nbsp;So maybe the original patch I applied was wr=
-ong?</span><br><span></span><br><span>If you have a patch that works, can yo=
-u post it and maybe I can sort</span><br><span>out what's different?</span><=
-br><span></span><br><blockquote type=3D"cite"><span>On 2. Dec 2017, at 20:18=
-, Bjorn Helgaas &lt;<a href=3D"mailto:helgaas@kernel.org">helgaas@kernel.org=
-</a>&gt; wrote:</span><br></blockquote><blockquote type=3D"cite"><span></spa=
-n><br></blockquote><blockquote type=3D"cite"><span>On Fri, Dec 01, 2017 at 0=
-6:27:10PM -0600, Bjorn Helgaas wrote:</span><br></blockquote><blockquote typ=
-e=3D"cite"><span>From: Bjorn Helgaas &lt;<a href=3D"mailto:bhelgaas@google.c=
-om">bhelgaas@google.com</a>&gt;</span><br></blockquote><blockquote type=3D"c=
-ite"><span></span><br></blockquote><blockquote type=3D"cite"><span>PCIe Down=
-stream Ports normally have only a Device 0 below them. &nbsp;To</span><br></=
-blockquote><blockquote type=3D"cite"><span>optimize enumeration, we don't sc=
-an for other devices *unless* the</span><br></blockquote><blockquote type=3D=
-"cite"><span>PCI_SCAN_ALL_PCIE_DEVS flag is set by set by quirks or the</spa=
-n><br></blockquote><blockquote type=3D"cite"><span>"pci=3Dpcie_scan_all" ker=
-nel parameter.</span><br></blockquote><blockquote type=3D"cite"><span></span=
-><br></blockquote><blockquote type=3D"cite"><span>Previously PCI_SCAN_ALL_PC=
-IE_DEVS only affected scanning below Switch</span><br></blockquote><blockquo=
-te type=3D"cite"><span>Downstream Ports, not Root Ports.</span><br></blockqu=
-ote><blockquote type=3D"cite"><span></span><br></blockquote><blockquote type=
-=3D"cite"><span>But the "Nemo" system, also known as the AmigaOne X1000, has=
- a PA Semi Root</span><br></blockquote><blockquote type=3D"cite"><span>Port w=
-hose link leads to an AMD/ATI SB600 South Bridge. &nbsp;The Root Port is a</=
-span><br></blockquote><blockquote type=3D"cite"><span>PCIe device, of course=
-, but the SB600 contains only conventional PCI</span><br></blockquote><block=
-quote type=3D"cite"><span>devices with no visible PCIe port.</span><br></blo=
-ckquote><blockquote type=3D"cite"><span></span><br></blockquote><blockquote t=
-ype=3D"cite"><span>Simplify and restructure only_one_child() so that we scan=
- for all possible</span><br></blockquote><blockquote type=3D"cite"><span>dev=
-ices below Root Ports as well as Switch Downstream Ports when</span><br></bl=
-ockquote><blockquote type=3D"cite"><span>PCI_SCAN_ALL_PCIE_DEVS is set.</spa=
-n><br></blockquote><blockquote type=3D"cite"><span></span><br></blockquote><=
-blockquote type=3D"cite"><span>This is enough to make Nemo work with "pci=3D=
-pcie_scan_all". &nbsp;We would also</span><br></blockquote><blockquote type=3D=
-"cite"><span>like to add a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically=
- on Nemo so</span><br></blockquote><blockquote type=3D"cite"><span>users wou=
-ldn't have to use the "pci=3Dpcie_scan_all" parameter, but we don't</span><b=
-r></blockquote><blockquote type=3D"cite"><span>have that yet.</span><br></bl=
-ockquote><blockquote type=3D"cite"><span></span><br></blockquote><blockquote=
- type=3D"cite"><span>Link: <a href=3D"https://lkml.kernel.org/r/CAErSpo55Q8Q=
-=3D5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com">https://lkml.kerne=
-l.org/r/CAErSpo55Q8Q=3D5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com=
-</a></span><br></blockquote><blockquote type=3D"cite"><span>Link: <a href=3D=
-"https://bugzilla.kernel.org/show_bug.cgi?id=3D198057">https://bugzilla.kern=
-el.org/show_bug.cgi?id=3D198057</a></span><br></blockquote><blockquote type=3D=
-"cite"><span>Reported-and-Tested-by: Christian Zigotzky &lt;<a href=3D"mailt=
-o:chzigotzky@xenosoft.de">chzigotzky@xenosoft.de</a>&gt;</span><br></blockqu=
-ote><blockquote type=3D"cite"><span>Signed-off-by: Bjorn Helgaas &lt;<a href=
-=3D"mailto:bhelgaas@google.com">bhelgaas@google.com</a>&gt;</span><br></bloc=
-kquote><blockquote type=3D"cite"><span></span><br></blockquote><blockquote t=
-ype=3D"cite"><span>Applied to pci/enumeration for v4.16.</span><br></blockqu=
-ote><blockquote type=3D"cite"><span></span><br></blockquote><blockquote type=
-=3D"cite"><span>---</span><br></blockquote><blockquote type=3D"cite"><span>d=
-rivers/pci/probe.c | &nbsp;&nbsp;25 +++++++++++++++----------</span><br></bl=
-ockquote><blockquote type=3D"cite"><span>1 file changed, 15 insertions(+), 1=
-0 deletions(-)</span><br></blockquote><blockquote type=3D"cite"><span></span=
-><br></blockquote><blockquote type=3D"cite"><span>diff --git a/drivers/pci/p=
-robe.c b/drivers/pci/probe.c</span><br></blockquote><blockquote type=3D"cite=
-"><span>index 14e0ea1ff38b..303c0cb0550c 100644</span><br></blockquote><bloc=
-kquote type=3D"cite"><span>--- a/drivers/pci/probe.c</span><br></blockquote>=
-<blockquote type=3D"cite"><span>+++ b/drivers/pci/probe.c</span><br></blockq=
-uote><blockquote type=3D"cite"><span>@@ -2215,22 +2215,27 @@ static unsigned=
- next_fn(struct pci_bus *bus, struct pci_dev *dev, unsigned fn)</span><br></=
-blockquote><blockquote type=3D"cite"><span></span><br></blockquote><blockquo=
-te type=3D"cite"><span>static int only_one_child(struct pci_bus *bus)</span>=
-<br></blockquote><blockquote type=3D"cite"><span>{</span><br></blockquote><b=
-lockquote type=3D"cite"><span>- &nbsp;&nbsp;&nbsp;struct pci_dev *parent =3D=
- bus-&gt;self;</span><br></blockquote><blockquote type=3D"cite"><span>+ &nbs=
-p;&nbsp;&nbsp;struct pci_dev *bridge =3D bus-&gt;self;</span><br></blockquot=
-e><blockquote type=3D"cite"><span></span><br></blockquote><blockquote type=3D=
-"cite"><span>- &nbsp;&nbsp;&nbsp;if (!parent || !pci_is_pcie(parent))</span>=
-<br></blockquote><blockquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;/*</spa=
-n><br></blockquote><blockquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;&nbsp=
-;* Systems with unusual topologies set PCI_SCAN_ALL_PCIE_DEVS so</span><br><=
-/blockquote><blockquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;&nbsp;* we s=
-can for all possible devices, not just Device 0.</span><br></blockquote><blo=
-ckquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;&nbsp;*/</span><br></blockqu=
-ote><blockquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;if (pci_has_flag(PCI=
-_SCAN_ALL_PCIE_DEVS))</span><br></blockquote><blockquote type=3D"cite"><span=
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return 0;</span><br></blockquote><bloc=
-kquote type=3D"cite"><span>- &nbsp;&nbsp;&nbsp;if (pci_pcie_type(parent) =3D=
-=3D PCI_EXP_TYPE_ROOT_PORT)</span><br></blockquote><blockquote type=3D"cite"=
-><span>- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return 1;</span><br></blo=
-ckquote><blockquote type=3D"cite"><span></span><br></blockquote><blockquote t=
-ype=3D"cite"><span> &nbsp;&nbsp;/*</span><br></blockquote><blockquote type=3D=
-"cite"><span>- &nbsp;&nbsp;&nbsp;&nbsp;* PCIe downstream ports are bridges t=
-hat normally lead to only a</span><br></blockquote><blockquote type=3D"cite"=
-><span>- &nbsp;&nbsp;&nbsp;&nbsp;* device 0, but if PCI_SCAN_ALL_PCIE_DEVS i=
-s set, scan all</span><br></blockquote><blockquote type=3D"cite"><span>- &nb=
-sp;&nbsp;&nbsp;&nbsp;* possible devices, not just device 0. &nbsp;See PCIe s=
-pec r3.0,</span><br></blockquote><blockquote type=3D"cite"><span>- &nbsp;&nb=
-sp;&nbsp;&nbsp;* sec 7.3.1.</span><br></blockquote><blockquote type=3D"cite"=
-><span>+ &nbsp;&nbsp;&nbsp;&nbsp;* A PCIe Downstream Port normally leads to a=
- Link with only Device</span><br></blockquote><blockquote type=3D"cite"><spa=
-n>+ &nbsp;&nbsp;&nbsp;&nbsp;* 0 on it (PCIe spec r3.1, sec 7.3.1). &nbsp;As a=
-n optimization, scan</span><br></blockquote><blockquote type=3D"cite"><span>=
-+ &nbsp;&nbsp;&nbsp;&nbsp;* only for Device 0 in that situation.</span><br><=
-/blockquote><blockquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;&nbsp;*</spa=
-n><br></blockquote><blockquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;&nbsp=
-;* Checking has_secondary_link is a hack to identify Downstream</span><br></=
-blockquote><blockquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;&nbsp;* Ports=
- because sometimes Switches are configured such that the</span><br></blockqu=
-ote><blockquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;&nbsp;* PCIe Port Ty=
-pe labels are backwards.</span><br></blockquote><blockquote type=3D"cite"><s=
-pan> &nbsp;&nbsp;&nbsp;*/</span><br></blockquote><blockquote type=3D"cite"><=
-span>- &nbsp;&nbsp;&nbsp;if (parent-&gt;has_secondary_link &amp;&amp;</span>=
-<br></blockquote><blockquote type=3D"cite"><span>- &nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;!pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))</span><br></blockquo=
-te><blockquote type=3D"cite"><span>+ &nbsp;&nbsp;&nbsp;if (bridge &amp;&amp;=
- pci_is_pcie(bridge) &amp;&amp; bridge-&gt;has_secondary_link)</span><br></b=
-lockquote><blockquote type=3D"cite"><span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;return 1;</span><br></blockquote><blockquote type=3D"cite"><span>+</span>=
-<br></blockquote><blockquote type=3D"cite"><span> &nbsp;&nbsp;return 0;</spa=
-n><br></blockquote><blockquote type=3D"cite"><span>}</span><br></blockquote>=
-<blockquote type=3D"cite"><span></span><br></blockquote></div></blockquote><=
-/div></body></html>=
-
---Apple-Mail-075E060E-FAD4-432A-89CD-3BD6BFA7B823--
