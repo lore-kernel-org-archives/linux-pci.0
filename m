@@ -1,63 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.ru ([107.173.13.209]:49124 "EHLO ozlabs.ru"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752172AbeBICsc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Feb 2018 21:48:32 -0500
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH kernel v2] powerpc/pci: Fix broken INTx configuration via OF
-Date: Fri,  9 Feb 2018 13:41:25 +1100
-Message-Id: <20180209024125.38862-1-aik@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>
+Subject: [PATCH v13 9/9] MAINTAINERS: Add maintainer for HiSilicon LPC driver
+Date: Wed, 14 Feb 2018 01:45:33 +0800
+Message-ID: <1518543933-22456-10-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 59f47eff03a0 ("powerpc/pci: Use of_irq_parse_and_map_pci() helper")
-replaced of_irq_parse_pci() + irq_create_of_mapping() with
-of_irq_parse_and_map_pci() but this change lost virq returned by
-irq_create_of_mapping() so virq remained zero causing INTx
-misconfiguration.
+Added maintainer for drivers/bus/hisi_lpc.c
 
-This fixes pci_read_irq_line() not to loose a virq returned by
-of_irq_parse_and_map_pci().
-
-Fixes: 59f47eff03a0 "powerpc/pci: Use of_irq_parse_and_map_pci() helper"
-Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
-Changes:
-v2:
-* changed the condition from <=0 to !=0 as by design
-of_irq_parse_and_map_pci() can only return 0 for an error and virq>0.
----
- arch/powerpc/kernel/pci-common.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index ae2ede4..33580a9 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -362,7 +362,7 @@ struct pci_controller* pci_find_hose_for_OF_device(struct device_node* node)
-  */
- static int pci_read_irq_line(struct pci_dev *pci_dev)
- {
--	unsigned int virq = 0;
-+	unsigned int virq;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index fc538a9..9a2fe10 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6386,6 +6386,13 @@ W:	http://www.hisilicon.com
+ S:	Maintained
+ F:	drivers/net/ethernet/hisilicon/hns3/
  
- 	pr_debug("PCI: Try to map irq for %s...\n", pci_name(pci_dev));
- 
-@@ -370,7 +370,8 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- 	memset(&oirq, 0xff, sizeof(oirq));
- #endif
- 	/* Try to get a mapping from the device-tree */
--	if (!of_irq_parse_and_map_pci(pci_dev, 0, 0)) {
-+	virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
-+	if (!virq) {
- 		u8 line, pin;
- 
- 		/* If that fails, lets fallback to what is in the config
++HISILICON LPC BUS DRIVER
++M:	john.garry@huawei.com
++W:	http://www.hisilicon.com
++S:	Maintained
++F:	drivers/bus/hisi_lpc.c
++F:	Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
++
+ HISILICON NETWORK SUBSYSTEM DRIVER
+ M:	Yisen Zhuang <yisen.zhuang@huawei.com>
+ M:	Salil Mehta <salil.mehta@huawei.com>
 -- 
-2.11.0
+1.9.1
