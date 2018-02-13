@@ -1,86 +1,88 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 28 Feb 2018 15:24:17 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2] PCI/ASPM: Suppress common clock mode setting failure
-Message-ID: <20180228212417.GM127842@bhelgaas-glaptop.roam.corp.google.com>
-References: <1516651924-21820-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:44659 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964797AbeBMNHr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 08:07:47 -0500
+Date: Tue, 13 Feb 2018 14:07:43 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com, cyndis@kapsi.fi,
+        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH V7  4/4] PCI: tegra: Add power management support
+Message-ID: <20180213130743.GF6764@ulmo>
+References: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
+ <1517289851-14111-5-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <1516651924-21820-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kees Cook <keescook@chromium.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
- Vidya Sagar <vidyas@nvidia.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
- Yinghai Lu <yinghai@kernel.org>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="pyE8wggRBhVBcj8z"
+In-Reply-To: <1517289851-14111-5-git-send-email-mmaddireddy@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 22, 2018 at 03:12:01PM -0500, Sinan Kaya wrote:
-> Code is emitting warnings when it tries to set the common clock mode for
-> ASPM and ASPM is already configured to common clock mode by the UEFI BIOS.
-> Let's bail out silently in such a case.
-> 
-> pci 0004:00:00.0: ASPM: Could not configure common clock
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-Applied to pci/aspm for v4.17, thanks!
+--pyE8wggRBhVBcj8z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, Jan 30, 2018 at 10:54:11AM +0530, Manikanta Maddireddy wrote:
+> Tegra186 powergate driver is implemented as power domain driver, power
+> partition ungate/gate are registered as power_on/power_off callback
+> functions. There are no direct functions to power gate/ungate host
+> controller in Tegra186. Host controller driver should add "power-domains"
+> property in device tree and implement runtime suspend and resume
+> callback functons. Power gate and ungate is taken care by power domain
+> driver when host controller driver calls pm_runtime_put_sync and
+> pm_runtime_get_sync respectively.
+>=20
+> Register suspend_noirq & resume_noirq callback functions to allow PCIe to
+> come up after resume from RAM. Both runtime and noirq pm ops share same
+> callback functions.
+>=20
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 > ---
->  drivers/pci/pcie/aspm.c | 18 ++++++++++++++++++
->  1 file changed, 18 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 9783e10..913b90d 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -240,6 +240,24 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
->  	if (!(reg16 & PCI_EXP_LNKSTA_SLC))
->  		same_clock = 0;
->  
-> +	/* Port might be already in common clock mode */
-> +	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &reg16);
-> +	if (same_clock && (reg16 & PCI_EXP_LNKCTL_CCC)) {
-> +		bool consistent = true;
-> +
-> +		list_for_each_entry(child, &linkbus->devices, bus_list) {
-> +			pcie_capability_read_word(child, PCI_EXP_LNKCTL,
-> +						  &reg16);
-> +			if (!(reg16 & PCI_EXP_LNKCTL_CCC)) {
-> +				consistent = false;
-> +				break;
-> +			}
-> +		}
-> +		if (consistent)
-> +			return;
-> +		dev_warn(&parent->dev, "ASPM: current common clock configuration is broken, reconfiguring\n");
-> +	}
-> +
->  	/* Configure downstream component, all functions */
->  	list_for_each_entry(child, &linkbus->devices, bus_list) {
->  		pcie_capability_read_word(child, PCI_EXP_LNKCTL, &reg16);
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> V2:
+> * no change in this patch
+> V3:
+> * no change in this patch
+> V4:
+> * no change in this patch
+> V5:
+> * Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
+> rebased on linux-next
+> V6:
+> * no change in this patch
+> V7:
+> * memory & irq alloc and AFI programming for MSI are split in two functio=
+ns
+>=20
+>  drivers/pci/host/pci-tegra.c | 178 +++++++++++++++++++++++++++----------=
+------
+>  1 file changed, 111 insertions(+), 67 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Looks good to me:
+
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+--pyE8wggRBhVBcj8z
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqC4x8ACgkQ3SOs138+
+s6G0ExAAsimmUxWHPmIdJzVfqPDh+PhG5ShmEr95sDeLCvYBG8p3GKH/1qR0qMDp
+8wDr7CYJWnVNnkR7f6psL0cTddqzH3y+2DcduqM7h3P6vfumXeXSXJkMPcMw55QA
+lQrT9rsMAqtrRDyx89w+YOWTQZ0W2Lyjab/6lYn7JnhtLS0Ro+8wAsutT7mJGqEN
+4746mDcDLrOPB50ussbX+sUxSnnDz6NeYp+ryP4gr6KUMblKWZsIF1OSg2RNy7PZ
+avC1lO2pTiPQmBg5yOq0vmyZlAOI5mEPeHtmWugpXzIFJoMNXWxy06UP5gAl4671
+o1bWNVOABYKfv9/eS7FE0WLvIC7a4HPwgjSY32j6nhKPKZZHwhSqI6lh4esG6QXe
+JLZ+ivLClbwvqRwTLmetsHRXKoOF4bY9LIGtAO7nS4x7A0ooxR0FJW2EI2tNy6Rz
+FrWVezC165efhREVMfYuNy2lCx7RfhkQ/eCUnC3aPvBy+OWIMYPYF6I1EiyADoKq
+ub8fF1nw6gmjQ5lV5p41J/pWKEDRinJsNmDZ71JG4BjpJgC2CrqezgT+QfVxhnY/
+gjLTFVejoJdEdMei4g+oihyTkteFzV0EshFQb9aj0aE2t+Lcrk/aJkGqFkhooWiF
+1YunszS351qT83u6DDNaAUJGgQrPK2hjyptTW3bYGTYcwT2ql/8=
+=B3rU
+-----END PGP SIGNATURE-----
+
+--pyE8wggRBhVBcj8z--
