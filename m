@@ -1,37 +1,131 @@
-Return-Path: <SRS0=wxkp=FC=nexb.com=pombredanne@kernel.org>
-Return-Path: <SRS0=wxkp=FC=nexb.com=pombredanne@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:14436 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964869AbeBMPYq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 10:24:46 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V8 2/4] PCI: tegra: Add loadable kernel module support
+Date: Tue, 13 Feb 2018 20:54:08 +0530
+Message-ID: <1518535450-24400-3-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20180126212536.31503.43805.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180126212536.31503.43805.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Philippe Ombredanne <pombredanne@nexb.com>
-Date: Thu, 8 Feb 2018 15:12:56 +0100
-Message-ID: <CAOFm3uEfnG8kc4UNOAUq5Ycb+GpfZsA9Yymbmu6omuDYLPBxMg@mail.gmail.com>
-Subject: Re: [PATCH 0/4] PCI: Add SPDX tags
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+Implement remove callback function for Tegra PCIe driver to add
+loadable kernel module support. Change PCI_TEGRA config to tristate to
+allow pci-tegra driver to be build as a module.
 
-On Fri, Jan 26, 2018 at 10:32 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> b24413180f56 ("License cleanup: add SPDX GPL-2.0 license identifier to
-> files with no license") added SPDX GPL-2.0 tags to several PCI files.
->
-> These patches add SPDX tags to almost all remaining PCI files.  For ease of
-> reviewing they're split into several cases (GPL v2, GPL v2+, etc.)
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+Tested-by: Thierry Reding <treding@nvidia.com>
+---
+V2:
+* no change in this patch
+V3:
+* use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_init()
+V4:
+* no change in this patch
+V5:
+* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
+rebased on linux-next
+V6:
+* no change in this patch
+V7:
+* no change in this patch
+V8:
+* Added new lines around conditional blocks
 
-Better late than never: thank you ++ for this: my hero!
+ drivers/pci/host/pci-tegra.c | 37 ++++++++++++++++++++++++++++++++++---
+ 1 file changed, 34 insertions(+), 3 deletions(-)
 
-> One file (drivers/pci/hotplug/s390_pci_hpc.c) specifies only "GPL"; I don't
-> know what to do with that, so I left it unchanged.
-
-This is the way to go when there are ambiguities alright. One
-interpretation of a bare GPL is GPL-1.0+ but the context matters a
-lot!
-
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index e68507f658d8..17ccb5e3ba04 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -35,6 +35,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -2276,6 +2277,12 @@ static const struct file_operations tegra_pcie_ports_ops = {
+ 	.release = seq_release,
+ };
+ 
++static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
++{
++	debugfs_remove_recursive(pcie->debugfs);
++	pcie->debugfs = NULL;
++}
++
+ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+ {
+ 	struct dentry *file;
+@@ -2292,8 +2299,7 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+ 	return 0;
+ 
+ remove:
+-	debugfs_remove_recursive(pcie->debugfs);
+-	pcie->debugfs = NULL;
++	tegra_pcie_debugfs_exit(pcie);
+ 	return -ENOMEM;
+ }
+ 
+@@ -2311,6 +2317,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	pcie = pci_host_bridge_priv(host);
+ 	host->sysdata = pcie;
++	platform_set_drvdata(pdev, pcie);
+ 
+ 	pcie->soc = of_device_get_match_data(dev);
+ 	INIT_LIST_HEAD(&pcie->ports);
+@@ -2388,6 +2395,28 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++static int tegra_pcie_remove(struct platform_device *pdev)
++{
++	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++
++	if (IS_ENABLED(CONFIG_DEBUG_FS))
++		tegra_pcie_debugfs_exit(pcie);
++
++	pci_stop_root_bus(host->bus);
++	pci_remove_root_bus(host->bus);
++	tegra_pcie_disable_ports(pcie);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		tegra_pcie_disable_msi(pcie);
++
++	tegra_pcie_free_resources(pcie);
++	tegra_pcie_disable_controller(pcie);
++	tegra_pcie_put_resources(pcie);
++
++	return 0;
++}
++
+ static struct platform_driver tegra_pcie_driver = {
+ 	.driver = {
+ 		.name = "tegra-pcie",
+@@ -2395,5 +2424,7 @@ static struct platform_driver tegra_pcie_driver = {
+ 		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = tegra_pcie_probe,
++	.remove = tegra_pcie_remove,
+ };
+-builtin_platform_driver(tegra_pcie_driver);
++module_platform_driver(tegra_pcie_driver);
++MODULE_LICENSE("GPL");
 -- 
-Cordially
-Philippe Ombredanne
+2.1.4
