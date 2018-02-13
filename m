@@ -1,178 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52102 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033088AbeBOPSI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Feb 2018 10:18:08 -0500
-Subject: [PATCH v1 1/2] sparc/PCI: Support arbitrary host bridge address
- offset
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Khalid Aziz <khalid.aziz@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
-Date: Thu, 15 Feb 2018 09:18:05 -0600
-Message-ID: <20180215151805.196756.22214.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180215151118.196756.99622.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180215151118.196756.99622.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH 2/5] PCI: Take bridge window alignment into account when distributing resources
+Date: Tue, 13 Feb 2018 19:31:57 +0300
+Message-Id: <20180213163200.8787-3-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180213163200.8787-1-mika.westerberg@linux.intel.com>
+References: <20180213163200.8787-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+When connecting a Thunderbolt endpoint which itself has internal PCIe
+switch (not the integrated one) the way we currently distribute
+resources does not always work well because devices below non-hotplug
+bridges might need to have their MMIO resources aligned to something
+else than 1 MB boundary. As an example connecting a server grade 4-port
+GbE add in card adds another PCIe switch leading to GbE devices that
+want to have their MMIO resources aligned to 2 MB boundary instead.
 
-Add support for arbitrary bus address offset.  Previously we ignored the
-child (PCI) address in the "ranges" property and assumed it was always
-zero.  That means every host bridge window mapped to PCI bus address zero,
-e.g.,
+Current resource distribution code does not take this alignment into
+account and might try to add too much resources for the extension
+hotplug bridges. The resulting bridge window is then too big which makes
+Linux to re-allocate minimal amount of resources, making future
+extension impossible.
 
-  pci_bus 0000:00: root bus resource [mem 0x2000000000000-0x200007fffffff] (bus address [0x00000000-0x7fffffff])
+Make this work better by substracting properly aligned non-hotplug
+downstream bridge window size from the remaining resources.
 
-But some systems have host bridge windows with non-zero child addresses, so
-parse the child address and compute the offset between the parent (CPU) and
-child (PCI) addresses.  This allows windows like these:
-
-  /pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
-  pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
-  pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
-
-[bhelgaas: changelog]
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: sparclinux@vger.kernel.org
+Fixes: 1a5767725cec ("PCI: Distribute available resources to hotplug-capable bridges")
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: stable@vger.kernel.org
 ---
- arch/sparc/kernel/pci.c        |    6 +++---
- arch/sparc/kernel/pci_common.c |   34 ++++++++++++++++++++++++++--------
- arch/sparc/kernel/pci_impl.h   |    4 ++++
- 3 files changed, 33 insertions(+), 11 deletions(-)
+ drivers/pci/setup-bus.c | 41 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 220d0f36560a..41b20edb427d 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -664,12 +664,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
- 	pci_add_resource_offset(&resources, &pbm->io_space,
--				pbm->io_space.start);
-+				pbm->io_offset);
- 	pci_add_resource_offset(&resources, &pbm->mem_space,
--				pbm->mem_space.start);
-+				pbm->mem_offset);
- 	if (pbm->mem64_space.flags)
- 		pci_add_resource_offset(&resources, &pbm->mem64_space,
--					pbm->mem_space.start);
-+					pbm->mem64_offset);
- 	pbm->busn.start = pbm->pci_first_busno;
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 1e10fb26fa88..14fa74f90fdb 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -397,6 +397,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 	int i, saw_mem, saw_io;
- 	int num_pbm_ranges;
- 
-+	/* Corresponding generic code in of_pci_get_host_bridge_resources() */
-+
- 	saw_mem = saw_io = 0;
- 	pbm_ranges = of_get_property(pbm->op->dev.of_node, "ranges", &i);
- 	if (!pbm_ranges) {
-@@ -411,13 +413,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 
- 	for (i = 0; i < num_pbm_ranges; i++) {
- 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
--		unsigned long a, size;
-+		unsigned long a, size, region_a;
- 		u32 parent_phys_hi, parent_phys_lo;
-+		u32 child_phys_mid, child_phys_lo;
- 		u32 size_hi, size_lo;
- 		int type;
- 
- 		parent_phys_hi = pr->parent_phys_hi;
- 		parent_phys_lo = pr->parent_phys_lo;
-+		child_phys_mid = pr->child_phys_mid;
-+		child_phys_lo = pr->child_phys_lo;
- 		if (tlb_type == hypervisor)
- 			parent_phys_hi &= 0x0fffffff;
- 
-@@ -427,6 +432,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		type = (pr->child_phys_hi >> 24) & 0x3;
- 		a = (((unsigned long)parent_phys_hi << 32UL) |
- 		     ((unsigned long)parent_phys_lo  <<  0UL));
-+		region_a = (((unsigned long)child_phys_mid << 32UL) |
-+		     ((unsigned long)child_phys_lo  <<  0UL));
- 		size = (((unsigned long)size_hi << 32UL) |
- 			((unsigned long)size_lo  <<  0UL));
- 
-@@ -441,6 +448,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->io_space.start = a;
- 			pbm->io_space.end = a + size - 1UL;
- 			pbm->io_space.flags = IORESOURCE_IO;
-+			pbm->io_offset = a - region_a;
- 			saw_io = 1;
- 			break;
- 
-@@ -449,6 +457,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem_space.start = a;
- 			pbm->mem_space.end = a + size - 1UL;
- 			pbm->mem_space.flags = IORESOURCE_MEM;
-+			pbm->mem_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -457,6 +466,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem64_space.start = a;
- 			pbm->mem64_space.end = a + size - 1UL;
- 			pbm->mem64_space.flags = IORESOURCE_MEM;
-+			pbm->mem64_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -472,14 +482,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		prom_halt();
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 3cce29a069e6..f1e6172734f0 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1882,6 +1882,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 	resource_size_t available_mmio, resource_size_t available_mmio_pref)
+ {
+ 	resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
++	resource_size_t io_start, mmio_start, mmio_pref_start;
+ 	unsigned int normal_bridges = 0, hotplug_bridges = 0;
+ 	struct resource *io_res, *mmio_res, *mmio_pref_res;
+ 	struct pci_dev *dev, *bridge = bus->self;
+@@ -1946,11 +1947,16 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			remaining_mmio_pref -= resource_size(res);
  	}
  
--	printk("%s: PCI IO[%llx] MEM[%llx]",
--	       pbm->name,
--	       pbm->io_space.start,
--	       pbm->mem_space.start);
-+	if (pbm->io_space.flags)
-+		printk("%s: PCI IO %pR offset %llx\n",
-+		       pbm->name, &pbm->io_space, pbm->io_offset);
-+	if (pbm->mem_space.flags)
-+		printk("%s: PCI MEM %pR offset %llx\n",
-+		       pbm->name, &pbm->mem_space, pbm->mem_offset);
-+	if (pbm->mem64_space.flags && pbm->mem_space.flags) {
-+		if (pbm->mem64_space.start <= pbm->mem_space.end)
-+			pbm->mem64_space.start = pbm->mem_space.end + 1;
-+		if (pbm->mem64_space.start > pbm->mem64_space.end)
-+			pbm->mem64_space.flags = 0;
-+	}
++	io_start = io_res->start;
++	mmio_start = mmio_res->start;
++	mmio_pref_start = mmio_pref_res->start;
 +
- 	if (pbm->mem64_space.flags)
--		printk(" MEM64[%llx]",
--		       pbm->mem64_space.start);
--	printk("\n");
-+		printk("%s: PCI MEM64 %pR offset %llx\n",
-+		       pbm->name, &pbm->mem64_space, pbm->mem64_offset);
+ 	/*
+ 	 * Go over devices on this bus and distribute the remaining
+ 	 * resource space between hotplug bridges.
+ 	 */
+ 	for_each_pci_bridge(dev, bus) {
++		resource_size_t align;
+ 		struct pci_bus *b;
  
- 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
- 	pbm->mem64_space.name = pbm->name;
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index ac172961d276..4e3d15189fa9 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -100,6 +100,10 @@ struct pci_pbm_info {
- 	struct resource			mem_space;
- 	struct resource			mem64_space;
- 	struct resource			busn;
-+	/* offset */
-+	resource_size_t			io_offset;
-+	resource_size_t			mem_offset;
-+	resource_size_t			mem64_offset;
+ 		b = dev->subordinate;
+@@ -1968,7 +1974,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 				available_io, available_mmio,
+ 				available_mmio_pref);
+ 		} else if (dev->is_hotplug_bridge) {
+-			resource_size_t align, io, mmio, mmio_pref;
++			resource_size_t io, mmio, mmio_pref;
  
- 	/* Base of PCI Config space, can be per-PBM or shared. */
- 	unsigned long			config_space;
+ 			/*
+ 			 * Distribute available extra resources equally
+@@ -1981,11 +1987,13 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			io = div64_ul(available_io, hotplug_bridges);
+ 			io = min(ALIGN(io, align), remaining_io);
+ 			remaining_io -= io;
++			io_start += io;
+ 
+ 			align = pci_resource_alignment(bridge, mmio_res);
+ 			mmio = div64_ul(available_mmio, hotplug_bridges);
+ 			mmio = min(ALIGN(mmio, align), remaining_mmio);
+ 			remaining_mmio -= mmio;
++			mmio_start += mmio;
+ 
+ 			align = pci_resource_alignment(bridge, mmio_pref_res);
+ 			mmio_pref = div64_ul(available_mmio_pref,
+@@ -1993,9 +2001,40 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			mmio_pref = min(ALIGN(mmio_pref, align),
+ 					remaining_mmio_pref);
+ 			remaining_mmio_pref -= mmio_pref;
++			mmio_pref_start += mmio_pref;
+ 
+ 			pci_bus_distribute_available_resources(b, add_list, io,
+ 							       mmio, mmio_pref);
++		} else {
++			/*
++			 * For normal bridges, track start of the parent
++			 * bridge window to make sure we align the
++			 * remaining space which is distributed to the
++			 * hotplug bridges properly.
++			 */
++			resource_size_t aligned;
++			struct resource *res;
++
++			res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
++			io_start += resource_size(res);
++			aligned = ALIGN(io_start,
++					pci_resource_alignment(dev, res));
++			if (aligned > io_start)
++				remaining_io -= aligned - io_start;
++
++			res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
++			mmio_start += resource_size(res);
++			aligned = ALIGN(mmio_start,
++					pci_resource_alignment(dev, res));
++			if (aligned > mmio_start)
++				remaining_mmio -= aligned - mmio_start;
++
++			res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
++			mmio_pref_start += resource_size(res);
++			aligned = ALIGN(mmio_pref_start,
++					pci_resource_alignment(dev, res));
++			if (aligned > mmio_pref_start)
++				remaining_mmio_pref -= aligned - mmio_pref_start;
+ 		}
+ 	}
+ }
+-- 
+2.15.1
+
