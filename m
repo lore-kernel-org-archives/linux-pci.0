@@ -1,48 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:59443 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752035AbeBUMs6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Feb 2018 07:48:58 -0500
-From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: kishon@ti.com
-Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>,
-        Rolf Evers-Fischer <embedded24@evers-fischer.de>
-Subject: [PATCH 2/2] pci: endpoint: Fix kernel panic after put_device()
-Date: Wed, 21 Feb 2018 13:47:07 +0100
-Message-Id: <20180221124707.26308-3-embedded24@evers-fischer.de>
-In-Reply-To: <20180221124707.26308-1-embedded24@evers-fischer.de>
-References: <20180221124707.26308-1-embedded24@evers-fischer.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH 3/5] PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+Date: Tue, 13 Feb 2018 19:31:58 +0300
+Message-Id: <20180213163200.8787-4-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180213163200.8787-1-mika.westerberg@linux.intel.com>
+References: <20180213163200.8787-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+After suspend/resume cycle the Presence Detect or Data Link Layer Status
+Changed bits might be set and if we don't clear them those events will
+not fire anymore and nothing happens for instance when a device is now
+hot-unplugged.
 
-'put_device()' calls the relase function 'pci_epf_dev_release()',
-which already frees 'epf->name' and 'epf'.
+Fix this by clearing those bits in a newly introduced function
+pcie_reenable_notification(). This should be fine because immediately
+after we check if the adapter is still present by reading directly from
+the status register.
 
-Therefore we must not free them again after 'put_device()'.
-
-Change-Id: I14ca19f96abfbbb489dd1f4d489e085329d7112e
-Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Signed-off-by: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/pci/endpoint/pci-epf-core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/hotplug/pciehp.h      |  2 +-
+ drivers/pci/hotplug/pciehp_core.c |  2 +-
+ drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 23d0e128d1a5..3718b4c5814a 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -243,7 +243,7 @@ struct pci_epf *pci_epf_create(const char *name)
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 636ed8f4b869..5abf864eae35 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -120,7 +120,7 @@ struct controller *pcie_init(struct pcie_device *dev);
+ int pcie_init_notification(struct controller *ctrl);
+ int pciehp_enable_slot(struct slot *p_slot);
+ int pciehp_disable_slot(struct slot *p_slot);
+-void pcie_enable_notification(struct controller *ctrl);
++void pcie_reenable_notification(struct controller *ctrl);
+ int pciehp_power_on_slot(struct slot *slot);
+ void pciehp_power_off_slot(struct slot *slot);
+ void pciehp_get_power_status(struct slot *slot, u8 *status);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 332b723ff9e6..44a6a63802d5 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
+ 	ctrl = get_service_data(dev);
  
- put_dev:
- 	put_device(dev);
--	kfree(epf->name);
-+	return ERR_PTR(ret);
+ 	/* reinitialize the chipset's event detection logic */
+-	pcie_enable_notification(ctrl);
++	pcie_reenable_notification(ctrl);
  
- free_epf:
- 	kfree(epf);
+ 	slot = ctrl->slot;
+ 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8f5dc5..98ea75aa32c7 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	return handled;
+ }
+ 
+-void pcie_enable_notification(struct controller *ctrl)
++static void pcie_enable_notification(struct controller *ctrl)
+ {
+ 	u16 cmd, mask;
+ 
+@@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+ }
+ 
++void pcie_reenable_notification(struct controller *ctrl)
++{
++	/*
++	 * Clear both Presence and Data Link Layer Changed to make sure
++	 * those events still fire after we have re-enabled them.
++	 */
++	pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
++				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
++	pcie_enable_notification(ctrl);
++}
++
+ static void pcie_disable_notification(struct controller *ctrl)
+ {
+ 	u16 mask;
 -- 
-2.16.2
+2.15.1
+
