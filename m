@@ -1,349 +1,103 @@
-Return-Path: <SRS0=PSar=FV=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=PSar=FV=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:43276 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935116AbeBMNJD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 08:09:03 -0500
+Date: Tue, 13 Feb 2018 14:08:58 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com, cyndis@kapsi.fi,
+        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH V7  0/4] Add loadable kernel module and power management
+ support
+Message-ID: <20180213130858.GG6764@ulmo>
+References: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 27 Feb 2018 11:36:25 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
- <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
- <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
- <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v11 4/7] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <20180224000754.GR14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
- <1519374244-20539-5-git-send-email-poza@codeaurora.org>
- <20180224000754.GR14632@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <db8895a8e2cc1abc16445964ea030dc4@codeaurora.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="p7qwJlK53pWzbayA"
+In-Reply-To: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-02-24 05:37, Bjorn Helgaas wrote:
-> On Fri, Feb 23, 2018 at 01:54:01PM +0530, Oza Pawandeep wrote:
->> Current DPC driver does not do recovery, e.g. calling end-point's 
->> driver's
->> callbacks, which sanitize the sw.
->> 
->> DPC driver implements link_reset callback, and calls pcie_do_recovery.
-> 
-> s/pcie_do_recovery/pcie_do_recovery()/
-> 
 
-sure.
+--p7qwJlK53pWzbayA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> 
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index abc514e..f8575da 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -343,6 +343,8 @@ static inline resource_size_t 
->> pci_resource_alignment(struct pci_dev *dev,
->>  void pci_enable_acs(struct pci_dev *dev);
->> 
->>  /* PCI error reporting and recovery */
->> +#define DPC_FATAL	4
-> 
-> This needs to go next to the AER_FATAL, etc., definitions because
-> DPC_FATAL shares the namespace and they all need to have distinct
-> values.  I can't tell from this patch whether they do or not.
-> 
+On Tue, Jan 30, 2018 at 10:54:07AM +0530, Manikanta Maddireddy wrote:
+> This series of patches adds loadable kernel module and power management
+> support to Tegra PCIe host controller driver. irq_set_msi_desc() and
+> tegra_cpuidle_pcie_irqs_in_use() symbols will be taken care in next
+> set of patches.
+>=20
+> These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
+> are the verification details.
+> 	- Multiple module insert & remove
+> 	- PCIe device functionality after module insert
+> 	- Free clock, resets, regulators, powergate, iomem and interrupt
+> 	resources after module remove
+> 	- PCIe device functionality after resume from RAM
+>=20
+> V2: PM QoS fix is dropped in V2 from this series because the fix is
+> incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
+> latency framework")'. Update commit message of few patches in V2.
+>=20
+> V3: Patches to export irq_set_msi_desc() and tegra_cpuidle_pcie_irqs_in_u=
+se()
+> are dropped based on review comments. These symbols will be addressed in =
+next
+> series. Took care of few other review comments.
+>=20
+> V4: Dropped pci_find_host_bridge() export patch and added new patch to use
+> bus->sysdata for private data.
+>=20
+> V5: Decouple from https://patchwork.ozlabs.org/patch/832053/ and rebase
+> on top of linux-next
+>=20
+> V6: Rebased on lpieralisi/pci/tegra branch
+>=20
+> V7: Addressed comments on patch: 6 and 7 in V6
+> Limiting this series to linux-tegra & linux-pci since patches for other=
+=20
+> subsystem are merged or dropped
+>=20
+> Manikanta Maddireddy (4):
+>   PCI: tegra: Free resources on probe failure
+>   PCI: tegra: Add loadable kernel module support
+>   PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
+>   PCI: tegra: Add power management support
+>=20
+>  drivers/pci/host/Kconfig     |   2 +-
+>  drivers/pci/host/pci-tegra.c | 347 +++++++++++++++++++++++++++++++++----=
+------
+>  2 files changed, 272 insertions(+), 77 deletions(-)
 
-sure.
+With the exception of the failure when building as a module that I
+mentioned on patch 3/4, I've successfully tested this on Tegra20
+(TrimSlice), Tegra30 (Beaver) and Tegra186 (Jetson TX2):
 
->>  void pcie_do_recovery(struct pci_dev *dev, int severity);
->> 
->>  #ifdef CONFIG_PCIEASPM
->> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
->> index 38e40c6..5c01c63 100644
->> --- a/drivers/pci/pcie/pcie-dpc.c
->> +++ b/drivers/pci/pcie/pcie-dpc.c
->> @@ -13,6 +13,7 @@
->>  #include <linux/pcieport_if.h>
->>  #include "../pci.h"
->>  #include "aer/aerdrv.h"
->> +#include "portdrv.h"
->> 
->>  struct dpc_dev {
->>  	struct pcie_device	*dev;
->> @@ -45,6 +46,58 @@ struct dpc_dev {
->>  	"Memory Request Completion Timeout",		 /* Bit Position 18 */
->>  };
->> 
->> +static int find_dpc_dev_iter(struct device *device, void *data)
->> +{
->> +	struct pcie_port_service_driver *service_driver;
->> +	struct device **dev = (struct device **) data;;
->> +
->> +	if (device->bus == &pcie_port_bus_type && device->driver) {
->> +		service_driver = to_service_driver(device->driver);
->> +		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
->> +			*dev = device;
->> +			return 1;
->> +		}
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->> +static struct device *pci_find_dpc_dev(struct pci_dev *pdev)
->> +{
->> +	struct device *dev = NULL;
->> +
->> +	device_for_each_child(&pdev->dev, &dev, find_dpc_dev_iter);
->> +
->> +	return dev;
->> +}
-> 
-> Ugh.  You're not responsible for this and you don't need to do
-> anything, but hanging the struct dpc_dev off the struct pcie_device
-> and then having to grub around like this to locate it from the pci_dev
-> is just ... clunky.  OK, rant over, sorry :)
-> 
+Tested-by: Thierry Reding <treding@nvidia.com>
 
-:) I keep it for now.
+--p7qwJlK53pWzbayA
+Content-Type: application/pgp-signature; name="signature.asc"
 
->> +static int find_dpc_service_iter(struct device *device, void *data)
->> +{
->> +	struct pcie_port_service_driver *service_driver;
->> +	struct pcie_port_service_driver **drv =
->> +		(struct pcie_port_service_driver **) data;
->> +
->> +	if (device->bus == &pcie_port_bus_type && device->driver) {
->> +		service_driver = to_service_driver(device->driver);
->> +		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
->> +			*drv = service_driver;
->> +			return 1;
->> +		}
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->> +struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev 
->> *dev)
->> +{
->> +	struct pcie_port_service_driver *drv = NULL;
->> +
->> +	device_for_each_child(&dev->dev, &drv, find_dpc_service_iter);
->> +
->> +	return drv;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_find_dpc_service);
-> 
-> No module uses this, so it doesn't need to be exported.
-> 
-> This is a clone of find_aer_service().  Can you add a preliminary patch 
-> to
-> make a generic "find service" interface that accepts the service type
-> (PCIE_PORT_SERVICE_AER, PCIE_PORT_SERVICE_DPC) as a parameter?
-> 
-> This whole "find service" thing is ugly as sin.  You're not responsible 
-> for
-> cleaning it up, but maybe we can at least limit the proliferation of 
-> it.
-> 
+-----BEGIN PGP SIGNATURE-----
 
-I have taken care of making this as a generic find_Service in pcie port 
-driver now.
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqC42oACgkQ3SOs138+
+s6H8hA/8CrlhFya4crtq2aXk7WbelAxMF1O3+hOtBJVPMQEc7qwp2TWjcjY+w2jp
+JcGMxmy22r7UEQvWV9eCkW8Fak1z7TCTFfO2EKGitUyA2IUxVv5d8wqWF6bZDno/
+CTKVTc4XEqUMGGtARnW8EgTogc4+ZVlwMoNS0frsPm6eD3PwIgNZTP7EbCaKf8Sr
+2yntJntr/qWGBIpMZnMulgx2RxU0dgyywKTihuyjrj35aIxDVFHcAouqah9J9pp+
+ytQpV2d09KO6PimB8GFa+NLl6p1fPmD8dyGxNwHt7X2eJ89pfLbeOB4xCtPf4p/c
+O4Zk/raCvpniyGb0ozZTIShdH0q1MhzAd9aRHZepJ26gSv9Vi3SUEOuWx5VKeSuU
+1E1ClBoHt1cyAichMOrKThyr3gVn/JR3BKlw8FsLhnGS47vYgmwlifz/+zAF9FxG
++vFeCEAXVJ9CklbVU2rvnXWxuzorZT2cUCrMaObZ5Y0ljOsm4hRqh1EvjF1z5WJJ
+IM+zWifUifwtaUvv8RdHpVD53yE5wY/2oTn0GbEBVyW1r0C9anLB6Q8fETWiWcxW
+rkw1wy6OITyWWxaMNoaPvspdRtUyTVktcNmgDlNYe54cbmjzSKEkua9OYjYgNyE/
+670Z3Mg1vMFKl9nnIBjkKseGhbrl5tQ31kzTH2S9J2HoN3PcF04=
+=UcNn
+-----END PGP SIGNATURE-----
 
->>  static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
->>  {
->>  	unsigned long timeout = jiffies + HZ;
->> @@ -82,12 +135,25 @@ static void dpc_wait_link_inactive(struct dpc_dev 
->> *dpc)
->>  		dev_warn(dev, "Link state not disabled for DPC event\n");
->>  }
->> 
->> -static void dpc_work(struct work_struct *work)
->> +/**
->> + * dpc_reset_link - reset link DPC  routine
-> 
-> s/  / / (remove extra space)
-sure.
-> 
->> + * @dev: pointer to Root Port's pci_dev data structure
->> + *
->> + * Invoked by Port Bus driver when performing link reset at Root 
->> Port.
->> + */
->> +static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->>  {
->> -	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> -	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
->>  	struct pci_bus *parent = pdev->subordinate;
->> -	u16 cap = dpc->cap_pos, ctl;
->> +	struct pci_dev *dev, *temp;
->> +	struct dpc_dev *dpc;
->> +	struct pcie_device *pciedev;
->> +	struct device *devdpc;
->> +	u16 cap, ctl;
->> +
->> +	devdpc = pci_find_dpc_dev(pdev);
->> +	pciedev = to_pcie_device(devdpc);
->> +	dpc = get_service_data(pciedev);
->> +	cap = dpc->cap_pos;
->> 
->>  	pci_lock_rescan_remove();
->>  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
->> @@ -104,21 +170,31 @@ static void dpc_work(struct work_struct *work)
->> 
->>  	dpc_wait_link_inactive(dpc);
->>  	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
->> -		return;
->> +		return PCI_ERS_RESULT_DISCONNECT;
->>  	if (dpc->rp_extensions && dpc->rp_pio_status) {
->>  		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
->>  				       dpc->rp_pio_status);
->>  		dpc->rp_pio_status = 0;
->>  	}
->> 
->> -	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
->> +	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
->>  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
->> 
->>  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
->>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
->> -			      ctl | PCI_EXP_DPC_CTL_INT_EN);
->> +				ctl | PCI_EXP_DPC_CTL_INT_EN);
-> 
-> Align "ctl" with "pdev".
-
-sure.
-> 
->> +	return PCI_ERS_RESULT_RECOVERED;
->>  }
->> 
->> +static void dpc_work(struct work_struct *work)
->> +{
->> +	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> +	struct pci_dev *pdev = dpc->dev->port;
->> +
->> +	/* From DPC point of view error is always FATAL. */
->> +	pcie_do_recovery(pdev, DPC_FATAL);
->> +}
->>  static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
->>  {
->>  	struct device *dev = &dpc->dev->device;
->> @@ -297,6 +373,7 @@ static void dpc_remove(struct pcie_device *dev)
->>  	.service	= PCIE_PORT_SERVICE_DPC,
->>  	.probe		= dpc_probe,
->>  	.remove		= dpc_remove,
->> +	.reset_link     = dpc_reset_link,
->>  };
->> 
->>  static int __init dpc_service_init(void)
->> diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
->> index f830975..1ea4b9a 100644
->> --- a/drivers/pci/pcie/pcie-err.c
->> +++ b/drivers/pci/pcie/pcie-err.c
->> @@ -19,6 +19,7 @@
->>  #include <linux/aer.h>
->>  #include <linux/pcieport_if.h>
->>  #include "portdrv.h"
->> +#include "./../pci.h"
->> 
->>  static DEFINE_MUTEX(pci_err_recovery_lock);
->> 
->> @@ -181,7 +182,7 @@ static pci_ers_result_t default_reset_link(struct 
->> pci_dev *dev)
->>  	return PCI_ERS_RESULT_RECOVERED;
->>  }
->> 
->> -static pci_ers_result_t reset_link(struct pci_dev *dev)
->> +static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
->>  {
->>  	struct pci_dev *udev;
->>  	pci_ers_result_t status;
->> @@ -195,9 +196,17 @@ static pci_ers_result_t reset_link(struct pci_dev 
->> *dev)
->>  		udev = dev->bus->self;
->>  	}
->> 
->> +
->> +	/* Use the service driver of the component firstly */
->> +#if IS_ENABLED(CONFIG_PCIE_DPC)
-> 
-> #ifdef CONFIG_PCIE_DPC
-> 
->> +	if (severity == DPC_FATAL)
->> +		driver = pci_find_dpc_service(udev);
->> +#endif
->>  #if IS_ENABLED(CONFIG_PCIEAER)
->> -	/* Use the aer driver of the component firstly */
->> -	driver = pci_find_aer_service(udev);
->> +	if (severity == AER_FATAL ||
->> +	    severity == AER_NONFATAL ||
->> +	    severity == AER_CORRECTABLE)
-> 
-> This change (to check for AER_FATAL, etc) looks like it belongs in a
-> different patch.  This patch doesn't change any places that set the
-> severity.
-
-I have made generic service and probably now it does not look like this.
-
-> 
->> +		driver = pci_find_aer_service(udev);
->>  #endif
->> 
->>  	if (driver && driver->reset_link) {
->> @@ -287,7 +296,8 @@ void pcie_do_recovery(struct pci_dev *dev, int 
->> severity)
->> 
->>  	mutex_lock(&pci_err_recovery_lock);
->> 
->> -	if (severity == AER_FATAL)
->> +	if (severity == AER_FATAL ||
->> +	    severity == DPC_FATAL)
->>  		state = pci_channel_io_frozen;
->>  	else
->>  		state = pci_channel_io_normal;
->> @@ -297,10 +307,14 @@ void pcie_do_recovery(struct pci_dev *dev, int 
->> severity)
->>  			"error_detected",
->>  			report_error_detected);
->> 
->> -	if (severity == AER_FATAL) {
->> -		result = reset_link(dev);
->> +	if (severity == AER_FATAL ||
->> +	    severity == DPC_FATAL) {
->> +		result = reset_link(dev, severity);
->>  		if (result != PCI_ERS_RESULT_RECOVERED)
->>  			goto failed;
->> +		else if (severity == DPC_FATAL)
->> +			goto resume;
->> +
->>  	}
->> 
->>  	if (status == PCI_ERS_RESULT_CAN_RECOVER)
->> @@ -324,6 +338,7 @@ void pcie_do_recovery(struct pci_dev *dev, int 
->> severity)
->>  	if (status != PCI_ERS_RESULT_RECOVERED)
->>  		goto failed;
->> 
->> +resume:
->>  	broadcast_error_message(dev,
->>  				state,
->>  				"resume",
->> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
->> index 4f1992d..b013e24 100644
->> --- a/drivers/pci/pcie/portdrv.h
->> +++ b/drivers/pci/pcie/portdrv.h
->> @@ -80,4 +80,5 @@ static inline void pcie_port_platform_notify(struct 
->> pci_dev *port, int *mask){}
->>  #endif /* !CONFIG_ACPI */
->> 
->>  struct pcie_port_service_driver *pci_find_aer_service(struct pci_dev 
->> *dev);
->> +struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev 
->> *dev);
->>  #endif /* _PORTDRV_H_ */
->> --
->> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm 
->> Technologies, Inc.,
->> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
->> Linux Foundation Collaborative Project.
->> 
+--p7qwJlK53pWzbayA--
