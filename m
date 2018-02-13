@@ -1,50 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:40550 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752463AbeBAQLb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Feb 2018 11:11:31 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sekhar Nori <nsekhar@ti.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        Niklas Cassel <niklass@axis.com>,
-        John Keeping <john@metanate.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] PCI: endpoint: Handle 64-bit BARs properly
-Date: Thu,  1 Feb 2018 17:11:17 +0100
-Message-Id: <20180201161119.3852-2-niklas.cassel@axis.com>
-In-Reply-To: <20180201161119.3852-1-niklas.cassel@axis.com>
-References: <20180201161119.3852-1-niklas.cassel@axis.com>
+Received: from mga06.intel.com ([134.134.136.31]:53132 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965066AbeBMQcE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Feb 2018 11:32:04 -0500
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH 0/5] PCI: Fixes for native PCIe and ACPI hotplug
+Date: Tue, 13 Feb 2018 19:31:55 +0300
+Message-Id: <20180213163200.8787-1-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A 64-bit BAR uses the succeeding BAR for the upper bits, therefore
-we cannot call pci_epc_set_bar() on a BAR that follows a 64-bit BAR.
+Hi,
 
-If pci_epc_set_bar() is called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
-it has to be up to the controller driver to write both BAR[x] and BAR[x+1]
-(and BAR_mask[x] and BAR_mask[x+1]).
+When Thunderbolt controller is configured to be in native enumeration mode
+it actually includes two slightly different modes. First there is non-RTD3
+mode where the Thunderbolt host controller is only present when there is a
+device connected. The second one is RTD3 mode where the controller is
+always present.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/endpoint/functions/pci-epf-test.c | 2 ++
- 1 file changed, 2 insertions(+)
+In non-RTD3 mode the Thunderbolt host controller (NHI) and USB host (xHCI)
+controller are not hotplugged using native PCIe hotplug but instead they
+will be hotplugged via BIOS triggered ACPI Notify() to the root port. This
+is done to preserve resources since the NHI and xHCI only need 1 MB of MMIO
+space and no additional buses. Currently Linux does not support this very
+well and ends up failing the hotplug in one way or another. More detailed
+explanation is in changelog of patch [4/5].
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 800da09d9005..eef85820f59e 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -382,6 +382,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
- 			if (bar == test_reg_bar)
- 				return ret;
- 		}
-+		if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
-+			bar++;
- 	}
- 
- 	return 0;
+This series fixes this issue and in addition includes fixes for few other
+issues found during testing on a system that has Thunderbolt controller in
+non-RTD3 native PCIe enumeration mode. However, the fixes here are not in
+any way Thunderbolt specific and should be applicable to other systems as
+well.
+
+Mika Westerberg (5):
+  PCI: Make sure all bridges reserve at least one bus number
+  PCI: Take bridge window alignment into account when distributing resources
+  PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+  ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
+  ACPI / hotplug / PCI: Mark stale PCI devices disconnected
+
+ drivers/pci/hotplug/acpiphp.h      |  1 +
+ drivers/pci/hotplug/acpiphp_glue.c | 78 ++++++++++++++++++++++++++++++--------
+ drivers/pci/hotplug/pciehp.h       |  2 +-
+ drivers/pci/hotplug/pciehp_core.c  |  2 +-
+ drivers/pci/hotplug/pciehp_hpc.c   | 13 ++++++-
+ drivers/pci/probe.c                |  9 +++--
+ drivers/pci/setup-bus.c            | 41 +++++++++++++++++++-
+ 7 files changed, 124 insertions(+), 22 deletions(-)
+
 -- 
-2.14.2
+2.15.1
