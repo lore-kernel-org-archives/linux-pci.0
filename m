@@ -1,101 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55820 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933085AbeBVQC5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 11:02:57 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v10 5/7] PCI/AER: Unify aer error defines at single space
-Date: Thu, 22 Feb 2018 21:32:10 +0530
-Message-Id: <1519315332-26852-6-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
-References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=DXIZ=FH=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=DXIZ=FH=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 13 Feb 2018 10:28:53 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Niklas Cassel <niklas.cassel@axis.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Sekhar Nori <nsekhar@ti.com>,
+	Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+	Niklas Cassel <niklass@axis.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	John Keeping <john@metanate.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] PCI: endpoint: Handle 64-bit BARs properly
+Message-ID: <20180213102853.GA8981@e107981-ln.cambridge.arm.com>
+References: <20180208123346.20784-1-niklas.cassel@axis.com>
+ <20180208123346.20784-2-niklas.cassel@axis.com>
+ <da5004d3-c3e8-d9fd-6698-3b12c3ab624a@ti.com>
+ <20180208215735.GD98765@bhelgaas-glaptop.roam.corp.google.com>
+ <5e54c525-1b78-bef3-7f83-82eb872837da@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5e54c525-1b78-bef3-7f83-82eb872837da@ti.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch moves AER error defines to drivers/pci/pci.h.
-So that it unifies the error repoting codes at single place along with dpc
+On Fri, Feb 09, 2018 at 06:14:49PM +0530, Kishon Vijay Abraham I wrote:
+> Hi Bjorn,
+> 
+> On Friday 09 February 2018 03:27 AM, Bjorn Helgaas wrote:
+> > On Thu, Feb 08, 2018 at 06:17:32PM +0530, Kishon Vijay Abraham I wrote:
+> >> Hi,
+> >>
+> >> On Thursday 08 February 2018 06:03 PM, Niklas Cassel wrote:
+> >>> A 64-bit BAR uses the succeeding BAR for the upper bits, therefore
+> >>> we cannot call pci_epc_set_bar() on a BAR that follows a 64-bit BAR.
+> >>>
+> >>> If pci_epc_set_bar() is called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
+> >>
+> >> Not related to $patch. But I have a query on when
+> >> PCI_BASE_ADDRESS_MEM_TYPE_64 should be set. Whether if the size is >
+> >> 4G or if the address can be mapped anywhere in the 64-bit PCIe
+> >> address space or both?
+> > 
+> > In general, PCI_BASE_ADDRESS_MEM_TYPE_64 should be set if the BAR is
+> > 64 bits wide.  IORESOURCE_MEM_64 is similar.
+> 
+> okay, if the HW support 64bit BAR, 64 bit flag should be set and not based on
+> size or anything else?
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Yes, I completely agree with Bjorn. Actually it would be a good idea to
+make the struct pci_epf->bar member array an array of struct resources
+to simplify its handling.
 
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index 1efefe9..7ae9bb3 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -56,6 +56,7 @@
- #include <ras/ras_event.h>
- 
- #include "apei-internal.h"
-+#include "../../pci/pci.h"
- 
- #define GHES_PFX	"GHES: "
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 124f42e..b0e63b5 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -343,7 +343,11 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- void pci_enable_acs(struct pci_dev *dev);
- 
- /* PCI error reporting and recovery */
--#define DPC_FATAL	4
-+#define AER_NONFATAL		0
-+#define AER_FATAL		1
-+#define AER_CORRECTABLE		2
-+
-+#define DPC_FATAL		4
- 
- void pci_do_recovery(struct pci_dev *dev, int severity);
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 6a352e6..4c59f37 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -19,6 +19,7 @@
- #include <linux/cper.h>
- 
- #include "aerdrv.h"
-+#include "../../pci.h"
- #include <ras/ras_event.h>
- 
- #define AER_AGENT_RECEIVER		0
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 8f87bbe..3eac8ed 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -11,10 +11,6 @@
- #include <linux/errno.h>
- #include <linux/types.h>
- 
--#define AER_NONFATAL			0
--#define AER_FATAL			1
--#define AER_CORRECTABLE			2
--
- struct pci_dev;
- 
- struct aer_header_log_regs {
-diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
-index 9c68986..d75c75b 100644
---- a/include/ras/ras_event.h
-+++ b/include/ras/ras_event.h
-@@ -13,6 +13,7 @@
- #include <linux/aer.h>
- #include <linux/cper.h>
- #include <linux/mm.h>
-+#include "../../../drivers/pci/pci.h"
- 
- /*
-  * MCE Extended Error Log trace event
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Thanks,
+Lorenzo
