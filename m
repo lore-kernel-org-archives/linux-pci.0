@@ -1,215 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:14448 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964869AbeBMPY4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 10:24:56 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V8 3/4] PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
-Date: Tue, 13 Feb 2018 20:54:09 +0530
-Message-ID: <1518535450-24400-4-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 04/37] iommu/sva: Add a mm_exit callback for device drivers
+To: "Tian, Kevin" <kevin.tian@intel.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-5-jean-philippe.brucker@arm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D1910028F9@SHSMSX101.ccr.corp.intel.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <7c4e5d24-6560-44a8-2bdc-890cd06603b3@arm.com>
+Date: Tue, 13 Feb 2018 12:57:56 +0000
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D1910028F9@SHSMSX101.ccr.corp.intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ Catalin Marinas <Catalin.Marinas@arm.com>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>, "Liu,
+ Yi L" <yi.l.liu@intel.com>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "Raj, Ashok" <ashok.raj@intel.com>, "tn@semihalf.com" <tn@semihalf.com>,
+ "joro@8bytes.org" <joro@8bytes.org>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per PCIe r3.0, sec 5.3.3.2.1, PCIe root port shoould broadcast PME_Turn_Off
-message before PCIe link goes to L2. PME_Turn_Off broadcast mechanism is
-implemented in AFI module. Each Tegra PCIe root port has its own
-PME_Turn_Off and PME_TO_Ack bitmap in AFI_PME register, program this
-register to broadcast PME_Turn_Off message.
+On 13/02/18 08:11, Tian, Kevin wrote:
+>> From: Jean-Philippe Brucker
+>> Sent: Tuesday, February 13, 2018 2:33 AM
+>>
+>> When an mm exits, devices that were bound to it must stop performing
+>> DMA
+>> on its PASID. Let device drivers register a callback to be notified on mm
+>> exit. Add the callback to the iommu_param structure attached to struct
+>> device.
+> 
+> what about registering the callback in sva_device_init? 
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
-Tested-by: Thierry Reding <treding@nvidia.com>
----
-V2:
-* no change in this patch
-V3:
-* add PME bitmap in soc data instead of using compatible string
-* replace while loop with readl_poll_timeout() for polling
-* commit log correction
-V4:
-* no change in this patch
-V5:
-* Rebased on linux-next
-V6:
-* no change in this patch
-V7:
-* Per port soc data is added for pme bits
-* list_for_each_entry_safe is changed to list_for_each_entry for pme turnoff
-V8:
-* Rebased on top of latest patch-2
+I don't have a preference. This way it look like
+iommu_register_device_fault_handler, but adding the callback to
+sva_device_init makes sense too.
 
- drivers/pci/host/pci-tegra.c | 66 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 66 insertions(+)
+Thanks,
+Jean
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 17ccb5e3ba04..60b1d5e1cfa4 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -31,6 +31,7 @@
- #include <linux/delay.h>
- #include <linux/export.h>
- #include <linux/interrupt.h>
-+#include <linux/iopoll.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-@@ -153,6 +154,8 @@
- #define  AFI_INTR_EN_FPCI_TIMEOUT	(1 << 7)
- #define  AFI_INTR_EN_PRSNT_SENSE	(1 << 8)
- 
-+#define AFI_PCIE_PME		0xf0
-+
- #define AFI_PCIE_CONFIG					0x0f8
- #define  AFI_PCIE_CONFIG_PCIE_DISABLE(x)		(1 << ((x) + 1))
- #define  AFI_PCIE_CONFIG_PCIE_DISABLE_ALL		0xe
-@@ -233,6 +236,8 @@
- #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
- #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
- 
-+#define PME_ACK_TIMEOUT 10000
-+
- struct tegra_msi {
- 	struct msi_controller chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-@@ -244,8 +249,16 @@ struct tegra_msi {
- };
- 
- /* used to differentiate between Tegra SoC generations */
-+struct tegra_pcie_port_soc {
-+	struct {
-+		u8 turnoff_bit;
-+		u8 ack_bit;
-+	} pme;
-+};
-+
- struct tegra_pcie_soc {
- 	unsigned int num_ports;
-+	const struct tegra_pcie_port_soc *ports;
- 	unsigned int msi_base_shift;
- 	u32 pads_pll_ctl;
- 	u32 tx_ref_sel;
-@@ -1358,6 +1371,32 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_pme_turnoff(struct tegra_pcie_port *port)
-+{
-+	struct tegra_pcie *pcie = port->pcie;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	int err;
-+	u32 val;
-+	u8 ack_bit;
-+
-+	val = afi_readl(pcie, AFI_PCIE_PME);
-+	val |= (0x1 << soc->ports[port->index].pme.turnoff_bit);
-+	afi_writel(pcie, val, AFI_PCIE_PME);
-+
-+	ack_bit = soc->ports[port->index].pme.ack_bit;
-+	err = readl_poll_timeout(pcie->afi + AFI_PCIE_PME, val,
-+				 val & (0x1 << ack_bit), 1, PME_ACK_TIMEOUT);
-+	if (err)
-+		dev_err(pcie->dev, "PME Ack is not received on port: %d\n",
-+			port->index);
-+
-+	usleep_range(10000, 11000);
-+
-+	val = afi_readl(pcie, AFI_PCIE_PME);
-+	val &= ~(0x1 << soc->ports[port->index].pme.turnoff_bit);
-+	afi_writel(pcie, val, AFI_PCIE_PME);
-+}
-+
- static int tegra_msi_alloc(struct tegra_msi *chip)
- {
- 	int msi;
-@@ -2103,8 +2142,14 @@ static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
- 	}
- }
- 
-+static const struct tegra_pcie_port_soc tegra20_pcie_ports[] = {
-+	{ .pme.turnoff_bit = 0, .pme.ack_bit =  5 },
-+	{ .pme.turnoff_bit = 8, .pme.ack_bit = 10 },
-+};
-+
- static const struct tegra_pcie_soc tegra20_pcie = {
- 	.num_ports = 2,
-+	.ports = tegra20_pcie_ports,
- 	.msi_base_shift = 0,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
-@@ -2118,8 +2163,15 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.program_uphy = true,
- };
- 
-+static const struct tegra_pcie_port_soc tegra30_pcie_ports[] = {
-+	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
-+	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
-+	{ .pme.turnoff_bit = 16, .pme.ack_bit = 18 },
-+};
-+
- static const struct tegra_pcie_soc tegra30_pcie = {
- 	.num_ports = 3,
-+	.ports = tegra30_pcie_ports,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-@@ -2136,6 +2188,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
- 	.num_ports = 2,
-+	.ports = tegra20_pcie_ports,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-@@ -2151,6 +2204,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
- 	.num_ports = 2,
-+	.ports = tegra20_pcie_ports,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-@@ -2164,8 +2218,15 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.program_uphy = true,
- };
- 
-+static const struct tegra_pcie_port_soc tegra186_pcie_ports[] = {
-+	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
-+	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
-+	{ .pme.turnoff_bit = 12, .pme.ack_bit = 14 },
-+};
-+
- static const struct tegra_pcie_soc tegra186_pcie = {
- 	.num_ports = 3,
-+	.ports = tegra186_pcie_ports,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-@@ -2399,12 +2460,17 @@ static int tegra_pcie_remove(struct platform_device *pdev)
- {
- 	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
- 	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct tegra_pcie_port *port;
- 
- 	if (IS_ENABLED(CONFIG_DEBUG_FS))
- 		tegra_pcie_debugfs_exit(pcie);
- 
- 	pci_stop_root_bus(host->bus);
- 	pci_remove_root_bus(host->bus);
-+
-+	list_for_each_entry(port, &pcie->ports, list)
-+		tegra_pcie_pme_turnoff(port);
-+
- 	tegra_pcie_disable_ports(pcie);
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
--- 
-2.1.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
