@@ -1,398 +1,202 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
- <1518543933-22456-8-git-send-email-john.garry@huawei.com>
- <CAHp75Ve7C4AJYK6AC=o-jzw6b2p8c8GBRd70Zjv+vYWbfytufg@mail.gmail.com>
-CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        "Rob Herring" <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Arnd Bergmann" <arnd@arndb.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Dann Frazier <dann.frazier@canonical.com>,
-        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>,
-        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>
 From: John Garry <john.garry@huawei.com>
-Message-ID: <adfa2009-476b-8c25-c661-b0eeb48a6c43@huawei.com>
-Date: Wed, 14 Feb 2018 15:33:59 +0000
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>
+Subject: [PATCH v13 4/9] PCI: Apply the new generic I/O management on PCI IO hosts
+Date: Wed, 14 Feb 2018 01:45:28 +0800
+Message-ID: <1518543933-22456-5-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHp75Ve7C4AJYK6AC=o-jzw6b2p8c8GBRd70Zjv+vYWbfytufg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/02/2018 13:53, Andy Shevchenko wrote:
-> On Tue, Feb 13, 2018 at 7:45 PM, John Garry <john.garry@huawei.com> wrote:
->> On some platforms (such as arm64-based hip06/hip07), access to legacy
->> ISA/LPC devices through access IO space is required, similar to x86
->> platforms. As the I/O for these devices are not memory mapped like
->> PCI/PCIE MMIO host bridges, they require special low-level device
->> operations through some host to generate IO accesses, i.e. a non-
->> transparent bridge.
->>
->> Through the logical PIO framework, hosts are able to register address
->> ranges in the logical PIO space for IO accesses. For hosts which require
->> a LLDD to generate the IO accesses, through the logical PIO framework
->> the host also registers accessors as a backend to generate the physical
->> bus transactions for IO space accesses (called indirect IO).
->>
->> When describing the indirect IO child device in APCI tables, the IO
->> resource is the host-specific address for the child (generally a
->> bus address).
->> An example is as follows:
->>   Device (LPC0) {
->>     Name (_HID, "HISI0191")  // HiSi LPC
->>     Name (_CRS, ResourceTemplate () {
->>       Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
->>     })
->>   }
->>
->>   Device (LPC0.IPMI) {
->>     Name (_HID, "IPI0001")
->>     Name (LORS, ResourceTemplate() {
->>       QWordIO (
->>         ResourceConsumer,
->>         MinNotFixed,     // _MIF
->>         MaxNotFixed,     // _MAF
->>         PosDecode,
->>         EntireRange,
->>         0x0,             // _GRA
->>         0xe4,            // _MIN
->>         0x3fff,          // _MAX
->>         0x0,             // _TRA
->>         0x04,            // _LEN
->>         , ,
->>         BTIO
->>       )
->>     })
->>
->> Since the IO resource for the child is a host-specific address,
->> special translation are required to retrieve the logical PIO address
->> for that child.
->>
->> To overcome the problem of associating this logical PIO address
->> with the child device, a scan handler is added to scan the ACPI
->> namespace for known indirect IO hosts. This scan handler creates an
->> MFD per child with the translated logical PIO address as it's IO
->> resource, as a substitute for the normal platform device which ACPI
->> would create during device enumeration.
->
+From: Zhichang Yuan <yuanzhichang@hisilicon.com>
 
-Hi Andy,
+After introducing the new generic I/O space management in logic pio, the
+original PCI MMIO relevant helpers need to be updated based on the new
+interfaces.
+This patch adapts the corresponding code to match the changes introduced
+by logic pio.
 
->> +       unsigned long sys_port;
->
->> +       sys_port = logic_pio_trans_hwaddr(&host->fwnode, res->start, len);
->> +       if (sys_port == -1UL)
->
-> Wouldn't it be better to compare with ULONG_MAX?
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c        | 95 +++++++++---------------------------------------
+ include/asm-generic/io.h |  2 +-
+ 2 files changed, 18 insertions(+), 79 deletions(-)
 
-Could do, being the same thing. Maybe people prefer -1UL as it saves 
-having to figure out what ULONG_MAX is :)
-
->
->> +               return -EFAULT;
->
->
->> +/*
->
-> Shouldn't be a kernel-doc?
-
-Right, I'll make it /**
-
->
->> + * acpi_indirect_io_set_res - set the resources for a child device
->> + * (MFD) of an "indirect IO" host.
->
-> In that case this would be one line w/o period at the end.
->
->> + * @child: the device node to be updated the I/O resource
->> + * @hostdev: the device node associated with the "indirect IO" host
->> + * @res: double pointer to be set to the address of translated resources
->> + * @num_res: pointer to variable to hold the number of translated resources
->> + *
->> + * Returns 0 when successful, and a negative value for failure.
->> + *
->> + * For a given "indirect IO" host, each child device will have associated
->> + * host-relevative address resource. This function will return the translated
->> + * logical PIO addresses for each child devices resources.
->> + */
->> +static int acpi_indirect_io_set_res(struct device *child,
->> +                                   struct device *hostdev,
->> +                                   const struct resource **res,
->> +                                   int *num_res)
->> +{
->> +       struct acpi_device *adev;
->> +       struct acpi_device *host;
->> +       struct resource_entry *rentry;
->> +       LIST_HEAD(resource_list);
->> +       struct resource *resources;
->> +       int count;
->> +       int i;
->> +       int ret = -EIO;
->> +
->> +       if (!child || !hostdev)
->> +               return -EINVAL;
->> +
->> +       host = to_acpi_device(hostdev);
->> +       adev = to_acpi_device(child);
->
-
-***
-
->> +       count = acpi_dev_get_resources(adev, &resource_list, NULL, NULL);
->> +       if (count <= 0) {
->> +               dev_err(child, "failed to get resources\n");
->> +               return count ? count : -EIO;
->> +       }
->> +
->> +       resources = kcalloc(count, sizeof(*resources), GFP_KERNEL);
->> +       if (!resources) {
->> +               acpi_dev_free_resource_list(&resource_list);
->> +               return -ENOMEM;
->> +       }
->> +       count = 0;
->> +       list_for_each_entry(rentry, &resource_list, node)
->> +               resources[count++] = *rentry->res;
->> +
->> +       acpi_dev_free_resource_list(&resource_list);
->
-> It has similarities with acpi_create_platform_device().
-> I guess we can utilize existing code.
->
-
-For sure, this particular segment is effectively same as part of 
-acpi_create_platform_device():
-
-struct platform_device *acpi_create_platform_device(struct acpi_device 
-*adev,
-                     struct property_entry *properties)
-{
-     struct platform_device *pdev = NULL;
-     struct platform_device_info pdevinfo;
-     struct resource_entry *rentry;
-     struct list_head resource_list;
-     struct resource *resources = NULL;
-     int count;
-
-     /* If the ACPI node already has a physical device attached, skip it. */
-     if (adev->physical_node_count)
-         return NULL;
-
-     if (!acpi_match_device_ids(adev, forbidden_id_list))
-         return ERR_PTR(-EINVAL);
-
-***>
-     INIT_LIST_HEAD(&resource_list);
-     count = acpi_dev_get_resources(adev, &resource_list, NULL, NULL);
-     if (count < 0) {
-         return NULL;
-     } else if (count > 0) {
-         resources = kzalloc(count * sizeof(struct resource),
-                     GFP_KERNEL);
-         if (!resources) {
-             dev_err(&adev->dev, "No memory for resources\n");
-             acpi_dev_free_resource_list(&resource_list);
-             return ERR_PTR(-ENOMEM);
-         }
-         count = 0;
-         list_for_each_entry(rentry, &resource_list, node)
-             acpi_platform_fill_resource(adev, rentry->res,
-                             &resources[count++]);
-
-         acpi_dev_free_resource_list(&resource_list);
-     }
-<****
-     memset(&pdevinfo, 0, sizeof(pdevinfo));
-     /*
-      * If the ACPI node has a parent and that parent has a physical
-
-So is your idea to refactor this common segment into a helper function?
-
->> +       /* translate the I/O resources */
->> +       for (i = 0; i < count; i++) {
->> +               if (!(resources[i].flags & IORESOURCE_IO))
->> +                       continue;
->
->> +               ret = acpi_indirect_io_xlat_res(adev, host, &resources[i]);
->> +               if (ret) {
->> +                       kfree(resources);
->> +                       dev_err(child, "translate IO range failed(%d)\n", ret);
->> +                       return ret;
->> +               }
->> +       }
->> +       *res = resources;
->> +       *num_res = count;
->> +
->> +       return ret;
->
-> Perhaps,
->
->    ret = ...
->    if (ret)
->     break;
->   }
->
->   if (ret) {
->                        kfree(resources);
->                        dev_err(child, "translate IO range failed(%d)\n", ret);
->                        return ret;
->   }
->
->   *res = resources;
->   *num_res = count;
->   return 0;
-
-seems fine
-
->
-> ?
->
->> +}
->> +
->> +/*
->> + * acpi_indirect_io_setup - scan handler for "indirect IO" host.
->> + * @adev: "indirect IO" host ACPI device pointer
->> + * Returns 0 when successful, and a negative value for failure.
->> + *
->> + * Setup an "indirect IO" host by scanning all child devices, and
->> + * create a per-device MFD with logical PIO translated IO resources.
->> + */
->> +static int acpi_indirect_io_setup(struct acpi_device *adev)
->> +{
->> +       struct platform_device *pdev;
->> +       struct mfd_cell *mfd_cells;
->> +       struct logic_pio_hwaddr *range;
->> +       struct acpi_device *child;
->> +       struct acpi_indirect_io_mfd_cell *acpi_indirect_io_mfd_cells;
->> +       int size, ret, count = 0, cell_num = 0;
->> +
->> +       range = kzalloc(sizeof(*range), GFP_KERNEL);
->> +       if (!range)
->> +               return -ENOMEM;
->> +       range->fwnode = &adev->fwnode;
->> +       range->flags = PIO_INDIRECT;
->> +       range->size = PIO_INDIRECT_SIZE;
->> +
->> +       ret = logic_pio_register_range(range);
->> +       if (ret)
->> +               goto free_range;
->> +
->> +       list_for_each_entry(child, &adev->children, node)
->> +               cell_num++;
->> +
->> +       /* allocate the mfd cell and companion acpi info, one per child */
->> +       size = sizeof(*mfd_cells) + sizeof(*acpi_indirect_io_mfd_cells);
->> +       mfd_cells = kcalloc(cell_num, size, GFP_KERNEL);
->> +       if (!mfd_cells) {
->> +               ret = -ENOMEM;
->> +               goto free_range;
->> +       }
->> +
->> +       acpi_indirect_io_mfd_cells = (struct acpi_indirect_io_mfd_cell *)
->> +                                       &mfd_cells[cell_num];
->> +       /* Only consider the children of the host */
->> +       list_for_each_entry(child, &adev->children, node) {
->> +               struct mfd_cell *mfd_cell = &mfd_cells[count];
->> +               struct acpi_indirect_io_mfd_cell *acpi_indirect_io_mfd_cell =
->> +                                       &acpi_indirect_io_mfd_cells[count];
->> +               const struct mfd_cell_acpi_match *acpi_match =
->> +                                       &acpi_indirect_io_mfd_cell->acpi_match;
->
->> +               char *name = &acpi_indirect_io_mfd_cell[count].name[0];
->> +               char *pnpid = &acpi_indirect_io_mfd_cell[count].pnpid[0];
->
-> Plain x is equivalent to &x[0].
-
-Right, but I thought for arrays that we should use address of x rather 
-than x itself, no?
-
->
->> +               struct mfd_cell_acpi_match match = {
->> +                       .pnpid = pnpid,
->> +               };
->> +
->> +               snprintf(name, ACPI_INDIRECT_IO_NAME_LEN, "indirect-io-%s",
->> +                        acpi_device_hid(child));
->> +               snprintf(pnpid, ACPI_INDIRECT_IO_NAME_LEN, "%s",
->> +                        acpi_device_hid(child))
->
->> +               memcpy((void *)acpi_match, (void *)&match, sizeof(*acpi_match));
->
-> Casting to void * is pointless. In both cases.
-
-I rechecked this. The casting to void * was there to mask another issue 
-which I've now fixed.
-
->
->> +               mfd_cell->name = name;
->> +               mfd_cell->acpi_match = acpi_match;
->> +
->> +               ret = acpi_indirect_io_set_res(&child->dev, &adev->dev,
->> +                                              &mfd_cell->resources,
->> +                                              &mfd_cell->num_resources);
->> +               if (ret) {
->> +                       dev_err(&child->dev, "set resource failed (%d)\n", ret);
->> +                       goto free_mfd_resources;
->> +               }
->> +               count++;
->> +       }
->> +
->> +       pdev = acpi_create_platform_device(adev, NULL);
->> +       if (IS_ERR_OR_NULL(pdev)) {
->> +               dev_err(&adev->dev, "create platform device for host failed\n");
->
->> +               ret = PTR_ERR(pdev);
->
-> So, NULL case will return 0. Is it expected?
->
-
-Should error in that case also, so I'll change.
-
->> +               goto free_mfd_resources;
->> +       }
->> +       acpi_device_set_enumerated(adev);
->> +
->> +       ret = mfd_add_devices(&pdev->dev, PLATFORM_DEVID_NONE,
->> +                             mfd_cells, cell_num, NULL, 0, NULL);
->> +       if (ret) {
->> +               dev_err(&pdev->dev, "failed to add mfd cells (%d)\n", ret);
->> +               goto free_mfd_resources;
->> +       }
->> +
->> +       return ret;
->> +
->> +free_mfd_resources:
->> +       while (cell_num--)
->> +               kfree(mfd_cells[cell_num].resources);
->> +       kfree(mfd_cells);
->> +free_range:
->> +       kfree(range);
->> +
->> +       return ret;
->> +}
->
-> One question, what a scope of use of this function? Is it ->probe() time?
-> If it's so, can we use devm_* variants?
-
-It is called from a scan handler, so prior to device probing.
-
->
-
-Thanks,
-John
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 07290a3..8aa5c54 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -22,6 +22,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/log2.h>
++#include <linux/logic_pio.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/pm_wakeup.h>
+ #include <linux/interrupt.h>
+@@ -3440,17 +3441,6 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_regions_exclusive);
+ 
+-#ifdef PCI_IOBASE
+-struct io_range {
+-	struct list_head list;
+-	phys_addr_t start;
+-	resource_size_t size;
+-};
+-
+-static LIST_HEAD(io_range_list);
+-static DEFINE_SPINLOCK(io_range_lock);
+-#endif
+-
+ /*
+  * Record the PCI IO range (expressed as CPU physical address + size).
+  * Return a negative value if an error has occured, zero otherwise
+@@ -3458,51 +3448,28 @@ struct io_range {
+ int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
+ 			resource_size_t	size)
+ {
+-	int err = 0;
+-
++	int ret = 0;
+ #ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	/* check if the range hasn't been previously recorded */
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (addr >= range->start && addr + size <= range->start + size) {
+-			/* range already registered, bail out */
+-			goto end_register;
+-		}
+-		allocated_size += range->size;
+-	}
++	struct logic_pio_hwaddr *range;
+ 
+-	/* range not registed yet, check for available space */
+-	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+-		/* if it's too big check if 64K space can be reserved */
+-		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
+-			err = -E2BIG;
+-			goto end_register;
+-		}
+-
+-		size = SZ_64K;
+-		pr_warn("Requested IO range too big, new size set to 64K\n");
+-	}
++	if (!size || addr + size < addr)
++		return -EINVAL;
+ 
+-	/* add the range to the list */
+ 	range = kzalloc(sizeof(*range), GFP_ATOMIC);
+-	if (!range) {
+-		err = -ENOMEM;
+-		goto end_register;
+-	}
++	if (!range)
++		return -ENOMEM;
+ 
+-	range->start = addr;
++	range->fwnode = fwnode;
+ 	range->size = size;
++	range->hw_start = addr;
++	range->flags = PIO_CPU_MMIO;
+ 
+-	list_add_tail(&range->list, &io_range_list);
+-
+-end_register:
+-	spin_unlock(&io_range_lock);
++	ret = logic_pio_register_range(range);
++	if (ret)
++		kfree(range);
+ #endif
+ 
+-	return err;
++	return ret;
+ }
+ 
+ phys_addr_t pci_pio_to_address(unsigned long pio)
+@@ -3510,21 +3477,10 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ 	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+ 
+ #ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	if (pio > IO_SPACE_LIMIT)
++	if (pio >= MMIO_UPPER_LIMIT)
+ 		return address;
+ 
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (pio >= allocated_size && pio < allocated_size + range->size) {
+-			address = range->start + pio - allocated_size;
+-			break;
+-		}
+-		allocated_size += range->size;
+-	}
+-	spin_unlock(&io_range_lock);
++	address = logic_pio_to_hwaddr(pio);
+ #endif
+ 
+ 	return address;
+@@ -3533,25 +3489,8 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+ #ifdef PCI_IOBASE
+-	struct io_range *res;
+-	resource_size_t offset = 0;
+-	unsigned long addr = -1;
+-
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(res, &io_range_list, list) {
+-		if (address >= res->start && address < res->start + res->size) {
+-			addr = address - res->start + offset;
+-			break;
+-		}
+-		offset += res->size;
+-	}
+-	spin_unlock(&io_range_lock);
+-
+-	return addr;
++	return logic_pio_trans_cpuaddr(address);
+ #else
+-	if (address > IO_SPACE_LIMIT)
+-		return (unsigned long)-1;
+-
+ 	return (unsigned long) address;
+ #endif
+ }
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index b7996a79..5a59931 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -901,7 +901,7 @@ static inline void iounmap(void __iomem *addr)
+ #define ioport_map ioport_map
+ static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+ {
+-	return PCI_IOBASE + (port & IO_SPACE_LIMIT);
++	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
+ }
+ #endif
+ 
+-- 
+1.9.1
 
