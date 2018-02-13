@@ -1,94 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60234 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750811AbeBUXUs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Feb 2018 18:20:48 -0500
-Date: Wed, 21 Feb 2018 17:20:40 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: George Cherian <gcherian@caviumnetworks.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com, Jayachandran.Nair@cavium.com,
-        Robert.Richter@cavium.com,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Huang Ying <ying.huang@intel.com>
-Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
-Message-ID: <20180221232040.GA52685@bhelgaas-glaptop.roam.corp.google.com>
-References: <1517554846-16703-1-git-send-email-george.cherian@cavium.com>
- <2323301.ORZpb3hFRe@aspire.rjw.lan>
- <20180216203434.GC11014@bhelgaas-glaptop.roam.corp.google.com>
- <2858019.9TUCWsDpTB@aspire.rjw.lan>
- <20180220015433.GA9656@wunner.de>
- <20180220190037.GB32228@bhelgaas-glaptop.roam.corp.google.com>
- <c8454323-06b2-e758-0d38-550c6b31b15e@caviumnetworks.com>
- <20180221095435.xe5lmes7mpxca3en@wunner.de>
- <d0f6a588-23e7-123e-267c-5257c21bb38a@caviumnetworks.com>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:5233 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934677AbeBMQ4w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Feb 2018 11:56:52 -0500
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>
+Subject: [PATCH v13 5/9] OF: Add missing I/O range exception for indirect-IO devices
+Date: Wed, 14 Feb 2018 01:45:29 +0800
+Message-ID: <1518543933-22456-6-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d0f6a588-23e7-123e-267c-5257c21bb38a@caviumnetworks.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 21, 2018 at 04:25:08PM +0530, George Cherian wrote:
-> On 02/21/2018 03:24 PM, Lukas Wunner wrote:
-> > On Wed, Feb 21, 2018 at 02:58:13PM +0530, George Cherian wrote:
-> > > I will explain the setup used
-> > > To the Cavium ThunderX RC the following PLX device is connected.
-> > > PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s)
-> > > Switch
-> > > There is no device connected downstream to the PLX switch.
-> > > 
-> > > AFAIU the pcie_port driver probes PLX and enters autosuspend after 100ms
-> > > since pci_bridge_d3_possible() returns true.
-> > > 
-> > > And later pci_sysfs_init() ends up doing a config access of PLX which fails
-> > > with a "synchronous external abort"
+From: Zhichang Yuan <yuanzhichang@hisilicon.com>
 
-Thanks for the details!
+There are some special ISA/LPC devices that work on a specific I/O range
+where it is not correct to specify a 'ranges' property in DTS parent node
+as cpu addresses translated from DTS node are only for memory space on
+some architectures, such as Arm64. Without the parent 'ranges' property,
+current of_translate_address() return an error.
+Here we add special handlings for this case.
+During the OF address translation, some checkings will be perfromed to
+identify whether the device node is registered as indirect-IO. If yes,
+the I/O translation will be done in a different way from that one of PCI
+MMIO. In this way, the I/O 'reg' property of the special ISA/LPC devices
+will be parsed correctly.
 
-This one *should* be fixed by this patch:
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=bf6c089ee2ac67eb22c0ff0ac9cc7f9ccd619d90
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>    #earlier draft
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ drivers/of/address.c | 92 +++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 76 insertions(+), 16 deletions(-)
 
-Any chance you could try that out?
-
-> > Then you're missing a pci_config_pm_runtime_get() in pci_sysfs_init() or
-> > further down in the call stack, rather than a quirk which just papers
-> > over the issue.
-> 
-> I have found another configuration where this fails.
-> Following is the configuration
-> 1) Connected a PCIe Intel i40 card under the root port.
-> 2) unbind the i40 driver and bind with vfio-pci driver.
-> 3) Run lspci in a loop. "lspci -s xx:xx.xx -vvv"
-> 
-> I get the same synchronous external abort.
-> In this case the vfio-pci driver probe it moves the device (i40) to
-> D3hot provided disable_idle_d3 is not set. lspci tries to do
-> the config_access which fails with synchronous external abort when
-> the root port transitions to D3hot.
-
-This one sounds like we're missing something in this path:
-
-  pci_read_config
-    pci_config_pm_runtime_get
-      if (parent)
-        pm_runtime_get_sync
-          __pm_runtime_resume(dev, RPM_GET_PUT)
-            rpm_resume
-
-It *looks* like rpm_resume() should resume parent devices, i.e., the
-root port, but I don't know that code at all.  Maybe Rafael or Lukas
-could confirm that?
-
-pci_config_pm_runtime_get() knows that config space is always
-accessible unless the device is in D3cold, so if the target device is
-in D3hot, it will leave it there.  I assume that if/when rpm_resume()
-resumes the parent bridges, it will resume them all the way to D0.
-
-I'm *really* glad you're finding these issues, because on most
-platforms we would just silently read invalid data (all ones) and the
-caller would have no idea what's going wrong.
-
-Bjorn
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index cdf047b..2db8b56 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -5,6 +5,7 @@
+ #include <linux/fwnode.h>
+ #include <linux/io.h>
+ #include <linux/ioport.h>
++#include <linux/logic_pio.h>
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/pci.h>
+@@ -562,9 +563,14 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+  * that translation is impossible (that is we are not dealing with a value
+  * that can be mapped to a cpu physical address). This is not really specified
+  * that way, but this is traditionally the way IBM at least do things
++ *
++ * Whenever the translation fails, the *host pointer will be set to the
++ * device that had registered logical PIO mapping, and the return code is
++ * relative to that node.
+  */
+ static u64 __of_translate_address(struct device_node *dev,
+-				  const __be32 *in_addr, const char *rprop)
++				  const __be32 *in_addr, const char *rprop,
++				  struct device_node **host)
+ {
+ 	struct device_node *parent = NULL;
+ 	struct of_bus *bus, *pbus;
+@@ -577,6 +583,7 @@ static u64 __of_translate_address(struct device_node *dev,
+ 	/* Increase refcount at current level */
+ 	of_node_get(dev);
+ 
++	*host = NULL;
+ 	/* Get parent & match bus type */
+ 	parent = of_get_parent(dev);
+ 	if (parent == NULL)
+@@ -597,6 +604,8 @@ static u64 __of_translate_address(struct device_node *dev,
+ 
+ 	/* Translate */
+ 	for (;;) {
++		struct logic_pio_hwaddr *iorange;
++
+ 		/* Switch to parent bus */
+ 		of_node_put(dev);
+ 		dev = parent;
+@@ -609,6 +618,19 @@ static u64 __of_translate_address(struct device_node *dev,
+ 			break;
+ 		}
+ 
++		/*
++		 * For indirectIO device which has no ranges property, get
++		 * the address from reg directly.
++		 */
++		iorange = find_io_range_by_fwnode(&dev->fwnode);
++		if (iorange && (iorange->flags != PIO_CPU_MMIO)) {
++			result = of_read_number(addr + 1, na - 1);
++			pr_debug("indirectIO matched(%s) 0x%llx\n",
++					of_node_full_name(dev), result);
++			*host = of_node_get(dev);
++			break;
++		}
++
+ 		/* Get new parent bus and counts */
+ 		pbus = of_match_bus(parent);
+ 		pbus->count_cells(dev, &pna, &pns);
+@@ -640,13 +662,32 @@ static u64 __of_translate_address(struct device_node *dev,
+ 
+ u64 of_translate_address(struct device_node *dev, const __be32 *in_addr)
+ {
+-	return __of_translate_address(dev, in_addr, "ranges");
++	struct device_node *host;
++	u64 ret;
++
++	ret = __of_translate_address(dev, in_addr, "ranges", &host);
++	if (host) {
++		of_node_put(host);
++		return OF_BAD_ADDR;
++	}
++
++	return ret;
+ }
+ EXPORT_SYMBOL(of_translate_address);
+ 
+ u64 of_translate_dma_address(struct device_node *dev, const __be32 *in_addr)
+ {
+-	return __of_translate_address(dev, in_addr, "dma-ranges");
++	struct device_node *host;
++	u64 ret;
++
++	ret = __of_translate_address(dev, in_addr, "dma-ranges", &host);
++
++	if (host) {
++		of_node_put(host);
++		return OF_BAD_ADDR;
++	}
++
++	return ret;
+ }
+ EXPORT_SYMBOL(of_translate_dma_address);
+ 
+@@ -688,29 +729,48 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ }
+ EXPORT_SYMBOL(of_get_address);
+ 
++static u64 of_translate_ioport(struct device_node *dev, const __be32 *in_addr,
++			u64 size)
++{
++	u64 taddr;
++	unsigned long port;
++	struct device_node *host;
++
++	taddr = __of_translate_address(dev, in_addr, "ranges", &host);
++	if (host) {
++		/* host specific port access */
++		port = logic_pio_trans_hwaddr(&host->fwnode, taddr, size);
++		of_node_put(host);
++	} else {
++		/* memory mapped I/O range */
++		port = pci_address_to_pio(taddr);
++	}
++
++	if (port == (unsigned long)-1)
++		return OF_BAD_ADDR;
++
++	return port;
++}
++
+ static int __of_address_to_resource(struct device_node *dev,
+ 		const __be32 *addrp, u64 size, unsigned int flags,
+ 		const char *name, struct resource *r)
+ {
+ 	u64 taddr;
+ 
+-	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
++	if (flags & IORESOURCE_MEM)
++		taddr = of_translate_address(dev, addrp);
++	else if (flags & IORESOURCE_IO)
++		taddr = of_translate_ioport(dev, addrp, size);
++	else
+ 		return -EINVAL;
+-	taddr = of_translate_address(dev, addrp);
++
+ 	if (taddr == OF_BAD_ADDR)
+ 		return -EINVAL;
+ 	memset(r, 0, sizeof(struct resource));
+-	if (flags & IORESOURCE_IO) {
+-		unsigned long port;
+-		port = pci_address_to_pio(taddr);
+-		if (port == (unsigned long)-1)
+-			return -EINVAL;
+-		r->start = port;
+-		r->end = port + size - 1;
+-	} else {
+-		r->start = taddr;
+-		r->end = taddr + size - 1;
+-	}
++
++	r->start = taddr;
++	r->end = taddr + size - 1;
+ 	r->flags = flags;
+ 	r->name = name ? name : dev->full_name;
+ 
+-- 
+1.9.1
