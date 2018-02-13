@@ -1,189 +1,215 @@
-Return-Path: <SRS0=PSar=FV=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=PSar=FV=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:14448 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964869AbeBMPY4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 10:24:56 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V8 3/4] PCI: tegra: Broadcast PME_Turn_Off message before link goes to L2
+Date: Tue, 13 Feb 2018 20:54:09 +0530
+Message-ID: <1518535450-24400-4-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 27 Feb 2018 14:09:43 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
- <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
- <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
- <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v11 6/7] PCI: Unify wait for link active into generic pci
-In-Reply-To: <20180224154115.GT14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
- <1519374244-20539-7-git-send-email-poza@codeaurora.org>
- <20180224154115.GT14632@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <44250c485313bd1240d8617511f5888c@codeaurora.org>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-02-24 21:11, Bjorn Helgaas wrote:
-> In subject:
-> 
-> s/pci/PCI/
-sure.
-> 
-> On Fri, Feb 23, 2018 at 01:54:03PM +0530, Oza Pawandeep wrote:
->> Clients such as pciehp, dpc are using pcie_wait_link_active, which 
->> waits
->> till the link becomes active or inactive.
-> 
-> Use "()" after function names so we have a visual clue that they are
-> functions.
-> 
->> Made generic function and moved it to drivers/pci/pci.c
->> 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> 
->> diff --git a/drivers/pci/hotplug/pciehp_hpc.c 
->> b/drivers/pci/hotplug/pciehp_hpc.c
->> index 18a42f8..de9b0ea 100644
->> --- a/drivers/pci/hotplug/pciehp_hpc.c
->> +++ b/drivers/pci/hotplug/pciehp_hpc.c
->> @@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller 
->> *ctrl)
->>  	return ret;
->>  }
->> 
->> -static void __pcie_wait_link_active(struct controller *ctrl, bool 
->> active)
->> +static bool pcie_wait_link_active(struct controller *ctrl)
->>  {
->> -	int timeout = 1000;
->> -
->> -	if (pciehp_check_link_active(ctrl) == active)
->> -		return;
->> -	while (timeout > 0) {
->> -		msleep(10);
->> -		timeout -= 10;
->> -		if (pciehp_check_link_active(ctrl) == active)
->> -			return;
->> -	}
->> -	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
->> -			active ? "set" : "cleared");
->> -}
->> +	struct pci_dev *pdev = ctrl_dev(ctrl);
->> 
->> -static void pcie_wait_link_active(struct controller *ctrl)
->> -{
->> -	__pcie_wait_link_active(ctrl, true);
->> +	return pci_wait_for_link(pdev, true);
->>  }
->> 
->>  static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index f6a4dd1..f8d44b4 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4176,6 +4176,37 @@ static int pci_pm_reset(struct pci_dev *dev, 
->> int probe)
->>  	return 0;
->>  }
->> 
->> +/**
->> + * pci_wait_for_link - Wait for link till its active/inactive
-> 
-> s/its/it's/
-sure.
-> 
->> + * @pdev: Bridge device
->> + * @active: waiting for active or inactive ?
->> + *
->> + * Use this to wait till link becomes active or inactive.
->> + */
->> +bool pci_wait_for_link(struct pci_dev *pdev, bool active)
-> 
-> I think this should be "pcie_wait_for_link()".  There's no concept of a
-> link in conventional PCI.
-> 
->> +{
->> +	int timeout = 1000;
->> +	bool ret;
->> +	u16 lnk_status;
->> +
->> +	for (;;) {
->> +		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
->> +		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
->> +		if (ret == active)
->> +			return true;
->> +		if (timeout <= 0)
->> +			break;
->> +		timeout -= 10;
->> +	}
->> +
->> +	dev_printk(KERN_DEBUG, &pdev->dev,
-> 
-> pci_info().  Distros often seem to have logging configured so
-> KERN_DEBUG things aren't captured, and this definitely seems worth
-> capturing.
-> 
->> +		   "Data Link Layer Link Active not %s in 1000 msec\n",
->> +		   active ? "set" : "cleared");
->> +
->> +	return false;
->> +}
->> +EXPORT_SYMBOL(pci_wait_for_link);
-> 
-> I don't think this needs to be exported.
-> 
-sure.
->>  void pci_reset_secondary_bus(struct pci_dev *dev)
->>  {
->>  	u16 ctrl;
->> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
->> index 5c01c63..e15bcda 100644
->> --- a/drivers/pci/pcie/pcie-dpc.c
->> +++ b/drivers/pci/pcie/pcie-dpc.c
->> @@ -120,19 +120,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev 
->> *dpc)
->> 
->>  static void dpc_wait_link_inactive(struct dpc_dev *dpc)
->>  {
->> -	unsigned long timeout = jiffies + HZ;
->>  	struct pci_dev *pdev = dpc->dev->port;
->> -	struct device *dev = &dpc->dev->device;
->> -	u16 lnk_status;
->> 
->> -	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
->> -	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
->> -					!time_after(jiffies, timeout)) {
->> -		msleep(10);
->> -		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
->> -	}
->> -	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
->> -		dev_warn(dev, "Link state not disabled for DPC event\n");
->> +	pci_wait_for_link(pdev, false);
->>  }
->> 
->>  /**
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 024a1be..cb674c3 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1195,6 +1195,7 @@ int pci_add_ext_cap_save_buffer(struct pci_dev 
->> *dev,
->>  int pci_request_selected_regions(struct pci_dev *, int, const char 
->> *);
->>  int pci_request_selected_regions_exclusive(struct pci_dev *, int, 
->> const char *);
->>  void pci_release_selected_regions(struct pci_dev *, int);
->> +bool pci_wait_for_link(struct pci_dev *pdev, bool active);
-> 
-> I don't think this needs to be available outside the PCI core, so this
-> could probably be declared in drivers/pci/pci.h
-> 
+Per PCIe r3.0, sec 5.3.3.2.1, PCIe root port shoould broadcast PME_Turn_Off
+message before PCIe link goes to L2. PME_Turn_Off broadcast mechanism is
+implemented in AFI module. Each Tegra PCIe root port has its own
+PME_Turn_Off and PME_TO_Ack bitmap in AFI_PME register, program this
+register to broadcast PME_Turn_Off message.
 
-thanks, will move it.
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+Tested-by: Thierry Reding <treding@nvidia.com>
+---
+V2:
+* no change in this patch
+V3:
+* add PME bitmap in soc data instead of using compatible string
+* replace while loop with readl_poll_timeout() for polling
+* commit log correction
+V4:
+* no change in this patch
+V5:
+* Rebased on linux-next
+V6:
+* no change in this patch
+V7:
+* Per port soc data is added for pme bits
+* list_for_each_entry_safe is changed to list_for_each_entry for pme turnoff
+V8:
+* Rebased on top of latest patch-2
 
->>  /* drivers/pci/bus.c */
->>  struct pci_bus *pci_bus_get(struct pci_bus *bus);
->> --
->> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm 
->> Technologies, Inc.,
->> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
->> Linux Foundation Collaborative Project.
->> 
+ drivers/pci/host/pci-tegra.c | 66 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 17ccb5e3ba04..60b1d5e1cfa4 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -31,6 +31,7 @@
+ #include <linux/delay.h>
+ #include <linux/export.h>
+ #include <linux/interrupt.h>
++#include <linux/iopoll.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+@@ -153,6 +154,8 @@
+ #define  AFI_INTR_EN_FPCI_TIMEOUT	(1 << 7)
+ #define  AFI_INTR_EN_PRSNT_SENSE	(1 << 8)
+ 
++#define AFI_PCIE_PME		0xf0
++
+ #define AFI_PCIE_CONFIG					0x0f8
+ #define  AFI_PCIE_CONFIG_PCIE_DISABLE(x)		(1 << ((x) + 1))
+ #define  AFI_PCIE_CONFIG_PCIE_DISABLE_ALL		0xe
+@@ -233,6 +236,8 @@
+ #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
+ #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
+ 
++#define PME_ACK_TIMEOUT 10000
++
+ struct tegra_msi {
+ 	struct msi_controller chip;
+ 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+@@ -244,8 +249,16 @@ struct tegra_msi {
+ };
+ 
+ /* used to differentiate between Tegra SoC generations */
++struct tegra_pcie_port_soc {
++	struct {
++		u8 turnoff_bit;
++		u8 ack_bit;
++	} pme;
++};
++
+ struct tegra_pcie_soc {
+ 	unsigned int num_ports;
++	const struct tegra_pcie_port_soc *ports;
+ 	unsigned int msi_base_shift;
+ 	u32 pads_pll_ctl;
+ 	u32 tx_ref_sel;
+@@ -1358,6 +1371,32 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
++static void tegra_pcie_pme_turnoff(struct tegra_pcie_port *port)
++{
++	struct tegra_pcie *pcie = port->pcie;
++	const struct tegra_pcie_soc *soc = pcie->soc;
++	int err;
++	u32 val;
++	u8 ack_bit;
++
++	val = afi_readl(pcie, AFI_PCIE_PME);
++	val |= (0x1 << soc->ports[port->index].pme.turnoff_bit);
++	afi_writel(pcie, val, AFI_PCIE_PME);
++
++	ack_bit = soc->ports[port->index].pme.ack_bit;
++	err = readl_poll_timeout(pcie->afi + AFI_PCIE_PME, val,
++				 val & (0x1 << ack_bit), 1, PME_ACK_TIMEOUT);
++	if (err)
++		dev_err(pcie->dev, "PME Ack is not received on port: %d\n",
++			port->index);
++
++	usleep_range(10000, 11000);
++
++	val = afi_readl(pcie, AFI_PCIE_PME);
++	val &= ~(0x1 << soc->ports[port->index].pme.turnoff_bit);
++	afi_writel(pcie, val, AFI_PCIE_PME);
++}
++
+ static int tegra_msi_alloc(struct tegra_msi *chip)
+ {
+ 	int msi;
+@@ -2103,8 +2142,14 @@ static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
+ 	}
+ }
+ 
++static const struct tegra_pcie_port_soc tegra20_pcie_ports[] = {
++	{ .pme.turnoff_bit = 0, .pme.ack_bit =  5 },
++	{ .pme.turnoff_bit = 8, .pme.ack_bit = 10 },
++};
++
+ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.num_ports = 2,
++	.ports = tegra20_pcie_ports,
+ 	.msi_base_shift = 0,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
+@@ -2118,8 +2163,15 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.program_uphy = true,
+ };
+ 
++static const struct tegra_pcie_port_soc tegra30_pcie_ports[] = {
++	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
++	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
++	{ .pme.turnoff_bit = 16, .pme.ack_bit = 18 },
++};
++
+ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.num_ports = 3,
++	.ports = tegra30_pcie_ports,
+ 	.msi_base_shift = 8,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+@@ -2136,6 +2188,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.num_ports = 2,
++	.ports = tegra20_pcie_ports,
+ 	.msi_base_shift = 8,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+@@ -2151,6 +2204,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.num_ports = 2,
++	.ports = tegra20_pcie_ports,
+ 	.msi_base_shift = 8,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+@@ -2164,8 +2218,15 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.program_uphy = true,
+ };
+ 
++static const struct tegra_pcie_port_soc tegra186_pcie_ports[] = {
++	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
++	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
++	{ .pme.turnoff_bit = 12, .pme.ack_bit = 14 },
++};
++
+ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.num_ports = 3,
++	.ports = tegra186_pcie_ports,
+ 	.msi_base_shift = 8,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+@@ -2399,12 +2460,17 @@ static int tegra_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
+ 	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct tegra_pcie_port *port;
+ 
+ 	if (IS_ENABLED(CONFIG_DEBUG_FS))
+ 		tegra_pcie_debugfs_exit(pcie);
+ 
+ 	pci_stop_root_bus(host->bus);
+ 	pci_remove_root_bus(host->bus);
++
++	list_for_each_entry(port, &pcie->ports, list)
++		tegra_pcie_pme_turnoff(port);
++
+ 	tegra_pcie_disable_ports(pcie);
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+-- 
+2.1.4
