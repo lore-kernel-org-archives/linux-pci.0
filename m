@@ -1,90 +1,326 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:48357 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751908AbeB0KC7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 05:02:59 -0500
-From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: kishon@ti.com
-Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        andy.shevchenko@gmail.com,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Subject: [PATCH v3 1/2] pci: endpoint: Simplify name allocation for epf device
-Date: Tue, 27 Feb 2018 11:02:29 +0100
-Message-Id: <20180227100231.22561-2-embedded24@evers-fischer.de>
-In-Reply-To: <20180227100231.22561-1-embedded24@evers-fischer.de>
-References: <20180227100231.22561-1-embedded24@evers-fischer.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linux-acpi@vger.kernel.org"
+ <linux-acpi@vger.kernel.org>, "devicetree@vger.kernel.org"
+ <devicetree@vger.kernel.org>, "iommu@lists.linux-foundation.org"
+ <iommu@lists.linux-foundation.org>, "kvm@vger.kernel.org"
+ <kvm@vger.kernel.org>
+Subject: RE: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
+Date: Tue, 13 Feb 2018 07:31:51 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D191002823@SHSMSX101.ccr.corp.intel.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-2-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180212183352.22730-2-jean-philippe.brucker@arm.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>, "Raj,
+ Ashok" <ashok.raj@intel.com>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "sudeep.holla@arm.com" <sudeep.holla@arm.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "lenb@kernel.org" <lenb@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+> From: Jean-Philippe Brucker
+> Sent: Tuesday, February 13, 2018 2:33 AM
+> 
+> Shared Virtual Addressing (SVA) provides a way for device drivers to bind
+> process address spaces to devices. This requires the IOMMU to support the
+> same page table format as CPUs, and requires the system to support I/O
 
-This commit replaces allocating and freeing the intermediate
-'buf'/'func_name' with a combination of 'kstrndup()' and 'len'.
+"same" is a bit restrictive. "compatible" is better as you used in coverletter. :-)
 
-'len' is the required length of 'epf->name'.
-'epf->name' should be either the first part of 'name' preceding the '.'
-or the complete 'name', if there is no '.' in the name.
+> Page Faults (IOPF) and Process Address Space ID (PASID). When all of these
+> are available, DMA can access virtual addresses of a process. A PASID is
+> allocated for each process, and the device driver programs it into the
+> device in an implementation-specific way.
+> 
+> Add a new API for sharing process page tables with devices. Introduce two
+> IOMMU operations, sva_device_init() and sva_device_shutdown(), that
+> prepare the IOMMU driver for SVA. For example allocate PASID tables and
+> fault queues. Subsequent patches will implement the bind() and unbind()
+> operations.
+> 
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> ---
+>  drivers/iommu/Kconfig     | 10 ++++++
+>  drivers/iommu/Makefile    |  1 +
+>  drivers/iommu/iommu-sva.c | 90
+> +++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/iommu.h     | 32 +++++++++++++++++
+>  4 files changed, 133 insertions(+)
+>  create mode 100644 drivers/iommu/iommu-sva.c
+> 
+> diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+> index f3a21343e636..555147a61f7c 100644
+> --- a/drivers/iommu/Kconfig
+> +++ b/drivers/iommu/Kconfig
+> @@ -74,6 +74,16 @@ config IOMMU_DMA
+>  	select IOMMU_IOVA
+>  	select NEED_SG_DMA_LENGTH
+> 
+> +config IOMMU_SVA
+> +	bool "Shared Virtual Addressing API for the IOMMU"
+> +	select IOMMU_API
+> +	help
+> +	  Enable process address space management for the IOMMU API. In
+> systems
+> +	  that support it, device drivers can bind process address spaces to
+> +	  devices and share their page tables using this API.
 
-Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
----
- drivers/pci/endpoint/pci-epf-core.c | 22 ++++------------------
- 1 file changed, 4 insertions(+), 18 deletions(-)
+"their page table" is a bit confusing here.
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 766ce1dca2ec..1f2506f32bb9 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -200,8 +200,7 @@ struct pci_epf *pci_epf_create(const char *name)
- 	int ret;
- 	struct pci_epf *epf;
- 	struct device *dev;
--	char *func_name;
--	char *buf;
-+	int len;
- 
- 	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
- 	if (!epf) {
-@@ -209,20 +208,11 @@ struct pci_epf *pci_epf_create(const char *name)
- 		goto err_ret;
- 	}
- 
--	buf = kstrdup(name, GFP_KERNEL);
--	if (!buf) {
--		ret = -ENOMEM;
--		goto free_epf;
--	}
--
--	func_name = buf;
--	buf = strchrnul(buf, '.');
--	*buf = '\0';
--
--	epf->name = kstrdup(func_name, GFP_KERNEL);
-+	len = strchrnul(name, '.') - name;
-+	epf->name = kstrndup(name, len, GFP_KERNEL);
- 	if (!epf->name) {
- 		ret = -ENOMEM;
--		goto free_func_name;
-+		goto free_epf;
- 	}
- 
- 	dev = &epf->dev;
-@@ -238,16 +228,12 @@ struct pci_epf *pci_epf_create(const char *name)
- 	if (ret)
- 		goto put_dev;
- 
--	kfree(func_name);
- 	return epf;
- 
- put_dev:
- 	put_device(dev);
- 	kfree(epf->name);
- 
--free_func_name:
--	kfree(func_name);
--
- free_epf:
- 	kfree(epf);
- 
--- 
-2.16.2
+> +
+> +	  If unsure, say N here.
+> +
+>  config FSL_PAMU
+>  	bool "Freescale IOMMU support"
+>  	depends on PCI
+> diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
+> index 1fb695854809..1dbcc89ebe4c 100644
+> --- a/drivers/iommu/Makefile
+> +++ b/drivers/iommu/Makefile
+> @@ -3,6 +3,7 @@ obj-$(CONFIG_IOMMU_API) += iommu.o
+>  obj-$(CONFIG_IOMMU_API) += iommu-traces.o
+>  obj-$(CONFIG_IOMMU_API) += iommu-sysfs.o
+>  obj-$(CONFIG_IOMMU_DMA) += dma-iommu.o
+> +obj-$(CONFIG_IOMMU_SVA) += iommu-sva.o
+>  obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
+>  obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
+>  obj-$(CONFIG_IOMMU_IO_PGTABLE_LPAE) += io-pgtable-arm.o
+> diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
+> new file mode 100644
+> index 000000000000..cab5d723520f
+> --- /dev/null
+> +++ b/drivers/iommu/iommu-sva.c
+> @@ -0,0 +1,90 @@
+> +/*
+> + * Track processes address spaces bound to devices and allocate PASIDs.
+> + *
+> + * Copyright (C) 2018 ARM Ltd.
+> + * Author: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> + *
+> + * SPDX-License-Identifier: GPL-2.0
+> + */
+> +
+> +#include <linux/iommu.h>
+> +
+> +/**
+> + * iommu_sva_device_init() - Initialize Shared Virtual Addressing for a
+> device
+> + * @dev: the device
+> + * @features: bitmask of features that need to be initialized
+> + * @max_pasid: max PASID value supported by the device
+> + *
+> + * Users of the bind()/unbind() API must call this function to initialize all
+> + * features required for SVA.
+> + *
+> + * - If the device should support multiple address spaces (e.g. PCI PASID),
+> + *   IOMMU_SVA_FEAT_PASID must be requested.
+
+I think it is by default assumed when using this API, based on definition of
+SVA. Can you elaborate the situation where this flag can be cleared?
+
+> + *
+> + *   By default the PASID allocated during bind() is limited by the IOMMU
+> + *   capacity, and by the device PASID width defined in the PCI capability or
+> in
+> + *   the firmware description. Setting @max_pasid to a non-zero value
+> smaller
+> + *   than this limit overrides it.
+> + *
+> + * - If the device should support I/O Page Faults (e.g. PCI PRI),
+> + *   IOMMU_SVA_FEAT_IOPF must be requested.
+> + *
+> + * The device should not be be performing any DMA while this function is
+
+remove double "be"
+
+> + * running.
+
+"otherwise the behavior is undefined"
+
+> + *
+> + * Return 0 if initialization succeeded, or an error.
+> + */
+> +int iommu_sva_device_init(struct device *dev, unsigned long features,
+> +			  unsigned int max_pasid)
+> +{
+> +	int ret;
+> +	unsigned int min_pasid = 0;
+> +	struct iommu_param *dev_param = dev->iommu_param;
+> +	struct iommu_domain *domain =
+> iommu_get_domain_for_dev(dev);
+> +
+> +	if (!domain || !dev_param || !domain->ops->sva_device_init)
+> +		return -ENODEV;
+> +
+> +	/*
+> +	 * IOMMU driver updates the limits depending on the IOMMU and
+> device
+> +	 * capabilities.
+> +	 */
+> +	ret = domain->ops->sva_device_init(dev, features, &min_pasid,
+> +					   &max_pasid);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/* FIXME: racy. Next version should have a mutex (same as fault
+> handler) */
+> +	dev_param->sva_features = features;
+> +	dev_param->min_pasid = min_pasid;
+> +	dev_param->max_pasid = max_pasid;
+
+what's the point of min_pasid here?
+
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(iommu_sva_device_init);
+> +
+> +/**
+> + * iommu_sva_device_shutdown() - Shutdown Shared Virtual Addressing
+> for a device
+> + * @dev: the device
+> + *
+> + * Disable SVA. The device should not be performing any DMA while this
+> function
+> + * is running.
+> + */
+> +int iommu_sva_device_shutdown(struct device *dev)
+> +{
+> +	struct iommu_param *dev_param = dev->iommu_param;
+> +	struct iommu_domain *domain =
+> iommu_get_domain_for_dev(dev);
+> +
+> +	if (!domain)
+> +		return -ENODEV;
+> +
+> +	if (domain->ops->sva_device_shutdown)
+> +		domain->ops->sva_device_shutdown(dev);
+> +
+> +	dev_param->sva_features = 0;
+> +	dev_param->min_pasid = 0;
+> +	dev_param->max_pasid = 0;
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(iommu_sva_device_shutdown);
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index 66ef406396e9..e9e09eecdece 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -60,6 +60,11 @@ typedef int (*iommu_fault_handler_t)(struct
+> iommu_domain *,
+>  			struct device *, unsigned long, int, void *);
+>  typedef int (*iommu_dev_fault_handler_t)(struct iommu_fault_event *,
+> void *);
+> 
+> +/* Request PASID support */
+> +#define IOMMU_SVA_FEAT_PASID		(1 << 0)
+> +/* Request I/O page fault support */
+> +#define IOMMU_SVA_FEAT_IOPF		(1 << 1)
+> +
+>  struct iommu_domain_geometry {
+>  	dma_addr_t aperture_start; /* First address that can be mapped
+> */
+>  	dma_addr_t aperture_end;   /* Last address that can be mapped
+> */
+> @@ -197,6 +202,8 @@ struct page_response_msg {
+>   * @domain_free: free iommu domain
+>   * @attach_dev: attach device to an iommu domain
+>   * @detach_dev: detach device from an iommu domain
+> + * @sva_device_init: initialize Shared Virtual Adressing for a device
+> + * @sva_device_shutdown: shutdown Shared Virtual Adressing for a
+> device
+>   * @map: map a physically contiguous memory region to an iommu
+> domain
+>   * @unmap: unmap a physically contiguous memory region from an
+> iommu domain
+>   * @map_sg: map a scatter-gather list of physically contiguous memory
+> chunks
+> @@ -230,6 +237,10 @@ struct iommu_ops {
+> 
+>  	int (*attach_dev)(struct iommu_domain *domain, struct device
+> *dev);
+>  	void (*detach_dev)(struct iommu_domain *domain, struct device
+> *dev);
+> +	int (*sva_device_init)(struct device *dev, unsigned long features,
+> +			       unsigned int *min_pasid,
+> +			       unsigned int *max_pasid);
+> +	void (*sva_device_shutdown)(struct device *dev);
+>  	int (*map)(struct iommu_domain *domain, unsigned long iova,
+>  		   phys_addr_t paddr, size_t size, int prot);
+>  	size_t (*unmap)(struct iommu_domain *domain, unsigned long
+> iova,
+> @@ -385,6 +396,9 @@ struct iommu_fault_param {
+>   */
+>  struct iommu_param {
+>  	struct iommu_fault_param *fault_param;
+> +	unsigned long sva_features;
+> +	unsigned int min_pasid;
+> +	unsigned int max_pasid;
+>  };
+> 
+>  int  iommu_device_register(struct iommu_device *iommu);
+> @@ -878,4 +892,22 @@ const struct iommu_ops
+> *iommu_ops_from_fwnode(struct fwnode_handle *fwnode)
+> 
+>  #endif /* CONFIG_IOMMU_API */
+> 
+> +#ifdef CONFIG_IOMMU_SVA
+> +extern int iommu_sva_device_init(struct device *dev, unsigned long
+> features,
+> +				 unsigned int max_pasid);
+> +extern int iommu_sva_device_shutdown(struct device *dev);
+> +#else /* CONFIG_IOMMU_SVA */
+> +static inline int iommu_sva_device_init(struct device *dev,
+> +					unsigned long features,
+> +					unsigned int max_pasid)
+> +{
+> +	return -ENODEV;
+> +}
+> +
+> +static inline int iommu_sva_device_shutdown(struct device *dev)
+> +{
+> +	return -ENODEV;
+> +}
+> +#endif /* CONFIG_IOMMU_SVA */
+> +
+>  #endif /* __LINUX_IOMMU_H */
+> --
+> 2.15.1
+> 
+> _______________________________________________
+> iommu mailing list
+> iommu@lists.linux-foundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
