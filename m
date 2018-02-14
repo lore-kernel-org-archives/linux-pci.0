@@ -1,94 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 1/2] pci: endpoint: Simplify name allocation for epf
- device
-To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-References: <20180227100231.22561-1-embedded24@evers-fischer.de>
- <20180227100231.22561-2-embedded24@evers-fischer.de>
- <76904bbe-ebef-9b8f-5f30-e876f73b28fe@ti.com>
- <alpine.LNX.2.20.1802271112310.22764@5HSWXM1.fritz.box>
-CC: <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <andy.shevchenko@gmail.com>,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <0053bf2c-c6a2-f32e-54ea-2189226cbece@ti.com>
-Date: Tue, 27 Feb 2018 16:13:20 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43970 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1031247AbeBNPcS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Feb 2018 10:32:18 -0500
+Date: Wed, 14 Feb 2018 15:32:11 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: kdinh@apm.com, Bjorn Helgaas <bhelgaas@google.com>, dhdang@apm.com,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: xgene: Fix the error return code
+Message-ID: <20180214153211.GA13711@e107981-ln.cambridge.arm.com>
+References: <1513730309-18831-1-git-send-email-festevam@gmail.com>
+ <20171220121438.GB1709@red-moon>
+ <CAOMZO5CwQwxeuaswRHmgY=KA8o8-Zidz0N5tVFhtn9iZJqqh=A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.20.1802271112310.22764@5HSWXM1.fritz.box>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOMZO5CwQwxeuaswRHmgY=KA8o8-Zidz0N5tVFhtn9iZJqqh=A@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Feb 13, 2018 at 11:45:15PM -0200, Fabio Estevam wrote:
+> Khuong Dinh, Lorenzo,
+> 
+> On Wed, Dec 20, 2017 at 10:14 AM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > [+ Khuong Dinh]
+> >
+> > On Tue, Dec 19, 2017 at 10:38:29PM -0200, Fabio Estevam wrote:
+> >> In the case of IS_ERR() error, we should return PTR_ERR().
+> >>
+> >> Fix the error return code.
+> >>
+> >> Signed-off-by: Fabio Estevam <festevam@gmail.com>
+> >> ---
+> >>  drivers/pci/host/pci-xgene-msi.c | 2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > I am about to apply this patch, please let me know if you see
+> > any issue with that.
+> 
+> A gente ping.
 
+Applied to pci/xgene for v4.17, sorry for the delay.
 
-On Tuesday 27 February 2018 03:45 PM, Rolf Evers-Fischer wrote:
-> Hi,
-> 
-> On Tue, 27 Feb 2018, Kishon Vijay Abraham I wrote:
-> 
->> Hi,
->>
->> On Tuesday 27 February 2018 03:32 PM, Rolf Evers-Fischer wrote:
->>> From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
->>>
->>> This commit replaces allocating and freeing the intermediate
->>> 'buf'/'func_name' with a combination of 'kstrndup()' and 'len'.
->>>
->>> 'len' is the required length of 'epf->name'.
->>> 'epf->name' should be either the first part of 'name' preceding the '.'
->>> or the complete 'name', if there is no '.' in the name.
->>>
->>> Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
->>> ---
->>>  drivers/pci/endpoint/pci-epf-core.c | 22 ++++------------------
->>>  1 file changed, 4 insertions(+), 18 deletions(-)
->>>
->>> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
->>> index 766ce1dca2ec..1f2506f32bb9 100644
->>> --- a/drivers/pci/endpoint/pci-epf-core.c
->>> +++ b/drivers/pci/endpoint/pci-epf-core.c
->>> @@ -200,8 +200,7 @@ struct pci_epf *pci_epf_create(const char *name)
->>>  	int ret;
->>>  	struct pci_epf *epf;
->>>  	struct device *dev;
->>> -	char *func_name;
->>> -	char *buf;
->>> +	int len;
->>>  
->>>  	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
->>>  	if (!epf) {
->>> @@ -209,20 +208,11 @@ struct pci_epf *pci_epf_create(const char *name)
->>>  		goto err_ret;
->>>  	}
->>>  
->>> -	buf = kstrdup(name, GFP_KERNEL);
->>> -	if (!buf) {
->>> -		ret = -ENOMEM;
->>> -		goto free_epf;
->>> -	}
->>> -
->>> -	func_name = buf;
->>> -	buf = strchrnul(buf, '.');
->>> -	*buf = '\0';
->>> -
->>> -	epf->name = kstrdup(func_name, GFP_KERNEL);
->>> +	len = strchrnul(name, '.') - name;
->>> +	epf->name = kstrndup(name, len, GFP_KERNEL);
->>
->> shouldn't the string end with '\0'?
->>
-> 
-> I agree, it should end with '\0', but fortunately the 'kstrndup()' 
-> function already adds it for us, see mm/util.c, line 100:
-> 	(...)
-> 	memcpy(buf, s, len);
-> 	buf[len] = '\0';
-> 	(...)
+Lorenzo
 
-oh okay. missed that..
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> 
-> Kind regards
->  Rolf
-> 
+> > Thanks,
+> > Lorenzo
+> >
+> >> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+> >> index 1f42a20..4a1fb01 100644
+> >> --- a/drivers/pci/host/pci-xgene-msi.c
+> >> +++ b/drivers/pci/host/pci-xgene-msi.c
+> >> @@ -465,7 +465,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+> >>       xgene_msi->msi_regs = devm_ioremap_resource(&pdev->dev, res);
+> >>       if (IS_ERR(xgene_msi->msi_regs)) {
+> >>               dev_err(&pdev->dev, "no reg space\n");
+> >> -             rc = -EINVAL;
+> >> +             rc = PTR_ERR(xgene_msi->msi_regs);
+> >>               goto error;
+> >>       }
+> >>       xgene_msi->msi_addr = res->start;
+> >> --
+> >> 2.7.4
+> >>
