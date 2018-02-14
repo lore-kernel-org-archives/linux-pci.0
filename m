@@ -1,209 +1,314 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:60178 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965002AbeB1XkZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 18:40:25 -0500
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1518543933-22456-8-git-send-email-john.garry@huawei.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com> <1518543933-22456-8-git-send-email-john.garry@huawei.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 14 Feb 2018 15:53:21 +0200
+Message-ID: <CAHp75Ve7C4AJYK6AC=o-jzw6b2p8c8GBRd70Zjv+vYWbfytufg@mail.gmail.com>
+Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: John Garry <john.garry@huawei.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Feb 2018 16:40:03 -0700
-Message-Id: <20180228234006.21093-8-logang@deltatee.com>
-In-Reply-To: <20180228234006.21093-1-logang@deltatee.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
-Subject: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the CMB
-Sender: linux-pci-owner@vger.kernel.org
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Register the CMB buffer as p2pmem and use the appropriate allocation
-functions to create and destroy the IO SQ.
+On Tue, Feb 13, 2018 at 7:45 PM, John Garry <john.garry@huawei.com> wrote:
+> On some platforms (such as arm64-based hip06/hip07), access to legacy
+> ISA/LPC devices through access IO space is required, similar to x86
+> platforms. As the I/O for these devices are not memory mapped like
+> PCI/PCIE MMIO host bridges, they require special low-level device
+> operations through some host to generate IO accesses, i.e. a non-
+> transparent bridge.
+>
+> Through the logical PIO framework, hosts are able to register address
+> ranges in the logical PIO space for IO accesses. For hosts which require
+> a LLDD to generate the IO accesses, through the logical PIO framework
+> the host also registers accessors as a backend to generate the physical
+> bus transactions for IO space accesses (called indirect IO).
+>
+> When describing the indirect IO child device in APCI tables, the IO
+> resource is the host-specific address for the child (generally a
+> bus address).
+> An example is as follows:
+>   Device (LPC0) {
+>     Name (_HID, "HISI0191")  // HiSi LPC
+>     Name (_CRS, ResourceTemplate () {
+>       Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
+>     })
+>   }
+>
+>   Device (LPC0.IPMI) {
+>     Name (_HID, "IPI0001")
+>     Name (LORS, ResourceTemplate() {
+>       QWordIO (
+>         ResourceConsumer,
+>         MinNotFixed,     // _MIF
+>         MaxNotFixed,     // _MAF
+>         PosDecode,
+>         EntireRange,
+>         0x0,             // _GRA
+>         0xe4,            // _MIN
+>         0x3fff,          // _MAX
+>         0x0,             // _TRA
+>         0x04,            // _LEN
+>         , ,
+>         BTIO
+>       )
+>     })
+>
+> Since the IO resource for the child is a host-specific address,
+> special translation are required to retrieve the logical PIO address
+> for that child.
+>
+> To overcome the problem of associating this logical PIO address
+> with the child device, a scan handler is added to scan the ACPI
+> namespace for known indirect IO hosts. This scan handler creates an
+> MFD per child with the translated logical PIO address as it's IO
+> resource, as a substitute for the normal platform device which ACPI
+> would create during device enumeration.
 
-If the CMB supports WDS and RDS, publish it for use as p2p memory
-by other devices.
+> +       unsigned long sys_port;
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/nvme/host/pci.c | 75 +++++++++++++++++++++++++++----------------------
- 1 file changed, 41 insertions(+), 34 deletions(-)
+> +       sys_port = logic_pio_trans_hwaddr(&host->fwnode, res->start, len);
+> +       if (sys_port == -1UL)
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 73036d2fbbd5..56ca79be8476 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -29,6 +29,7 @@
- #include <linux/types.h>
- #include <linux/io-64-nonatomic-lo-hi.h>
- #include <linux/sed-opal.h>
-+#include <linux/pci-p2pdma.h>
- 
- #include "nvme.h"
- 
-@@ -91,9 +92,8 @@ struct nvme_dev {
- 	struct work_struct remove_work;
- 	struct mutex shutdown_lock;
- 	bool subsystem;
--	void __iomem *cmb;
--	pci_bus_addr_t cmb_bus_addr;
- 	u64 cmb_size;
-+	bool cmb_use_sqes;
- 	u32 cmbsz;
- 	u32 cmbloc;
- 	struct nvme_ctrl ctrl;
-@@ -148,7 +148,7 @@ struct nvme_queue {
- 	struct nvme_dev *dev;
- 	spinlock_t q_lock;
- 	struct nvme_command *sq_cmds;
--	struct nvme_command __iomem *sq_cmds_io;
-+	bool sq_cmds_is_io;
- 	volatile struct nvme_completion *cqes;
- 	struct blk_mq_tags **tags;
- 	dma_addr_t sq_dma_addr;
-@@ -429,10 +429,7 @@ static void __nvme_submit_cmd(struct nvme_queue *nvmeq,
- {
- 	u16 tail = nvmeq->sq_tail;
- 
--	if (nvmeq->sq_cmds_io)
--		memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
--	else
--		memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
-+	memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
- 
- 	if (++tail == nvmeq->q_depth)
- 		tail = 0;
-@@ -1286,9 +1283,18 @@ static void nvme_free_queue(struct nvme_queue *nvmeq)
- {
- 	dma_free_coherent(nvmeq->q_dmadev, CQ_SIZE(nvmeq->q_depth),
- 				(void *)nvmeq->cqes, nvmeq->cq_dma_addr);
--	if (nvmeq->sq_cmds)
--		dma_free_coherent(nvmeq->q_dmadev, SQ_SIZE(nvmeq->q_depth),
--					nvmeq->sq_cmds, nvmeq->sq_dma_addr);
-+
-+	if (nvmeq->sq_cmds) {
-+		if (nvmeq->sq_cmds_is_io)
-+			pci_free_p2pmem(to_pci_dev(nvmeq->q_dmadev),
-+					nvmeq->sq_cmds,
-+					SQ_SIZE(nvmeq->q_depth));
-+		else
-+			dma_free_coherent(nvmeq->q_dmadev,
-+					  SQ_SIZE(nvmeq->q_depth),
-+					  nvmeq->sq_cmds,
-+					  nvmeq->sq_dma_addr);
-+	}
- }
- 
- static void nvme_free_queues(struct nvme_dev *dev, int lowest)
-@@ -1368,12 +1374,21 @@ static int nvme_cmb_qdepth(struct nvme_dev *dev, int nr_io_queues,
- static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
- 				int qid, int depth)
- {
--	/* CMB SQEs will be mapped before creation */
--	if (qid && dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS))
--		return 0;
-+	struct pci_dev *pdev = to_pci_dev(dev->dev);
-+
-+	if (qid && dev->cmb_use_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
-+		nvmeq->sq_cmds = pci_alloc_p2pmem(pdev, SQ_SIZE(depth));
-+		nvmeq->sq_dma_addr = pci_p2pmem_virt_to_bus(pdev,
-+						nvmeq->sq_cmds);
-+		nvmeq->sq_cmds_is_io = true;
-+	}
-+
-+	if (!nvmeq->sq_cmds) {
-+		nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
-+					&nvmeq->sq_dma_addr, GFP_KERNEL);
-+		nvmeq->sq_cmds_is_io = false;
-+	}
- 
--	nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
--					    &nvmeq->sq_dma_addr, GFP_KERNEL);
- 	if (!nvmeq->sq_cmds)
- 		return -ENOMEM;
- 	return 0;
-@@ -1449,13 +1464,6 @@ static int nvme_create_queue(struct nvme_queue *nvmeq, int qid)
- 	struct nvme_dev *dev = nvmeq->dev;
- 	int result;
- 
--	if (dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
--		unsigned offset = (qid - 1) * roundup(SQ_SIZE(nvmeq->q_depth),
--						      dev->ctrl.page_size);
--		nvmeq->sq_dma_addr = dev->cmb_bus_addr + offset;
--		nvmeq->sq_cmds_io = dev->cmb + offset;
--	}
--
- 	nvmeq->cq_vector = qid - 1;
- 	result = adapter_alloc_cq(dev, qid, nvmeq);
- 	if (result < 0)
-@@ -1685,9 +1693,6 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 		return;
- 	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
- 
--	if (!use_cmb_sqes)
--		return;
--
- 	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
- 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
- 	bar = NVME_CMB_BIR(dev->cmbloc);
-@@ -1704,11 +1709,15 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 	if (size > bar_size - offset)
- 		size = bar_size - offset;
- 
--	dev->cmb = ioremap_wc(pci_resource_start(pdev, bar) + offset, size);
--	if (!dev->cmb)
-+	if (pci_p2pdma_add_resource(pdev, bar, size, offset))
- 		return;
--	dev->cmb_bus_addr = pci_bus_address(pdev, bar) + offset;
-+
- 	dev->cmb_size = size;
-+	dev->cmb_use_sqes = use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS);
-+
-+	if ((dev->cmbsz & (NVME_CMBSZ_WDS | NVME_CMBSZ_RDS)) ==
-+			(NVME_CMBSZ_WDS | NVME_CMBSZ_RDS))
-+		pci_p2pmem_publish(pdev, true);
- 
- 	if (sysfs_add_file_to_group(&dev->ctrl.device->kobj,
- 				    &dev_attr_cmb.attr, NULL))
-@@ -1718,12 +1727,10 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 
- static inline void nvme_release_cmb(struct nvme_dev *dev)
- {
--	if (dev->cmb) {
--		iounmap(dev->cmb);
--		dev->cmb = NULL;
-+	if (dev->cmb_size) {
- 		sysfs_remove_file_from_group(&dev->ctrl.device->kobj,
- 					     &dev_attr_cmb.attr, NULL);
--		dev->cmbsz = 0;
-+		dev->cmb_size = 0;
- 	}
- }
- 
-@@ -1918,13 +1925,13 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 	if (nr_io_queues == 0)
- 		return 0;
- 
--	if (dev->cmb && (dev->cmbsz & NVME_CMBSZ_SQS)) {
-+	if (dev->cmb_use_sqes) {
- 		result = nvme_cmb_qdepth(dev, nr_io_queues,
- 				sizeof(struct nvme_command));
- 		if (result > 0)
- 			dev->q_depth = result;
- 		else
--			nvme_release_cmb(dev);
-+			dev->cmb_use_sqes = false;
- 	}
- 
- 	do {
+Wouldn't it be better to compare with ULONG_MAX?
+
+> +               return -EFAULT;
+
+
+> +/*
+
+Shouldn't be a kernel-doc?
+
+> + * acpi_indirect_io_set_res - set the resources for a child device
+> + * (MFD) of an "indirect IO" host.
+
+In that case this would be one line w/o period at the end.
+
+> + * @child: the device node to be updated the I/O resource
+> + * @hostdev: the device node associated with the "indirect IO" host
+> + * @res: double pointer to be set to the address of translated resources
+> + * @num_res: pointer to variable to hold the number of translated resources
+> + *
+> + * Returns 0 when successful, and a negative value for failure.
+> + *
+> + * For a given "indirect IO" host, each child device will have associated
+> + * host-relevative address resource. This function will return the translated
+> + * logical PIO addresses for each child devices resources.
+> + */
+> +static int acpi_indirect_io_set_res(struct device *child,
+> +                                   struct device *hostdev,
+> +                                   const struct resource **res,
+> +                                   int *num_res)
+> +{
+> +       struct acpi_device *adev;
+> +       struct acpi_device *host;
+> +       struct resource_entry *rentry;
+> +       LIST_HEAD(resource_list);
+> +       struct resource *resources;
+> +       int count;
+> +       int i;
+> +       int ret = -EIO;
+> +
+> +       if (!child || !hostdev)
+> +               return -EINVAL;
+> +
+> +       host = to_acpi_device(hostdev);
+> +       adev = to_acpi_device(child);
+
+> +       count = acpi_dev_get_resources(adev, &resource_list, NULL, NULL);
+> +       if (count <= 0) {
+> +               dev_err(child, "failed to get resources\n");
+> +               return count ? count : -EIO;
+> +       }
+> +
+> +       resources = kcalloc(count, sizeof(*resources), GFP_KERNEL);
+> +       if (!resources) {
+> +               acpi_dev_free_resource_list(&resource_list);
+> +               return -ENOMEM;
+> +       }
+> +       count = 0;
+> +       list_for_each_entry(rentry, &resource_list, node)
+> +               resources[count++] = *rentry->res;
+> +
+> +       acpi_dev_free_resource_list(&resource_list);
+
+It has similarities with acpi_create_platform_device().
+I guess we can utilize existing code.
+
+> +       /* translate the I/O resources */
+> +       for (i = 0; i < count; i++) {
+> +               if (!(resources[i].flags & IORESOURCE_IO))
+> +                       continue;
+
+> +               ret = acpi_indirect_io_xlat_res(adev, host, &resources[i]);
+> +               if (ret) {
+> +                       kfree(resources);
+> +                       dev_err(child, "translate IO range failed(%d)\n", ret);
+> +                       return ret;
+> +               }
+> +       }
+> +       *res = resources;
+> +       *num_res = count;
+> +
+> +       return ret;
+
+Perhaps,
+
+   ret = ...
+   if (ret)
+    break;
+  }
+
+  if (ret) {
+                       kfree(resources);
+                       dev_err(child, "translate IO range failed(%d)\n", ret);
+                       return ret;
+  }
+
+  *res = resources;
+  *num_res = count;
+  return 0;
+
+?
+
+> +}
+> +
+> +/*
+> + * acpi_indirect_io_setup - scan handler for "indirect IO" host.
+> + * @adev: "indirect IO" host ACPI device pointer
+> + * Returns 0 when successful, and a negative value for failure.
+> + *
+> + * Setup an "indirect IO" host by scanning all child devices, and
+> + * create a per-device MFD with logical PIO translated IO resources.
+> + */
+> +static int acpi_indirect_io_setup(struct acpi_device *adev)
+> +{
+> +       struct platform_device *pdev;
+> +       struct mfd_cell *mfd_cells;
+> +       struct logic_pio_hwaddr *range;
+> +       struct acpi_device *child;
+> +       struct acpi_indirect_io_mfd_cell *acpi_indirect_io_mfd_cells;
+> +       int size, ret, count = 0, cell_num = 0;
+> +
+> +       range = kzalloc(sizeof(*range), GFP_KERNEL);
+> +       if (!range)
+> +               return -ENOMEM;
+> +       range->fwnode = &adev->fwnode;
+> +       range->flags = PIO_INDIRECT;
+> +       range->size = PIO_INDIRECT_SIZE;
+> +
+> +       ret = logic_pio_register_range(range);
+> +       if (ret)
+> +               goto free_range;
+> +
+> +       list_for_each_entry(child, &adev->children, node)
+> +               cell_num++;
+> +
+> +       /* allocate the mfd cell and companion acpi info, one per child */
+> +       size = sizeof(*mfd_cells) + sizeof(*acpi_indirect_io_mfd_cells);
+> +       mfd_cells = kcalloc(cell_num, size, GFP_KERNEL);
+> +       if (!mfd_cells) {
+> +               ret = -ENOMEM;
+> +               goto free_range;
+> +       }
+> +
+> +       acpi_indirect_io_mfd_cells = (struct acpi_indirect_io_mfd_cell *)
+> +                                       &mfd_cells[cell_num];
+> +       /* Only consider the children of the host */
+> +       list_for_each_entry(child, &adev->children, node) {
+> +               struct mfd_cell *mfd_cell = &mfd_cells[count];
+> +               struct acpi_indirect_io_mfd_cell *acpi_indirect_io_mfd_cell =
+> +                                       &acpi_indirect_io_mfd_cells[count];
+> +               const struct mfd_cell_acpi_match *acpi_match =
+> +                                       &acpi_indirect_io_mfd_cell->acpi_match;
+
+> +               char *name = &acpi_indirect_io_mfd_cell[count].name[0];
+> +               char *pnpid = &acpi_indirect_io_mfd_cell[count].pnpid[0];
+
+Plain x is equivalent to &x[0].
+
+> +               struct mfd_cell_acpi_match match = {
+> +                       .pnpid = pnpid,
+> +               };
+> +
+> +               snprintf(name, ACPI_INDIRECT_IO_NAME_LEN, "indirect-io-%s",
+> +                        acpi_device_hid(child));
+> +               snprintf(pnpid, ACPI_INDIRECT_IO_NAME_LEN, "%s",
+> +                        acpi_device_hid(child))
+
+> +               memcpy((void *)acpi_match, (void *)&match, sizeof(*acpi_match));
+
+Casting to void * is pointless. In both cases.
+
+> +               mfd_cell->name = name;
+> +               mfd_cell->acpi_match = acpi_match;
+> +
+> +               ret = acpi_indirect_io_set_res(&child->dev, &adev->dev,
+> +                                              &mfd_cell->resources,
+> +                                              &mfd_cell->num_resources);
+> +               if (ret) {
+> +                       dev_err(&child->dev, "set resource failed (%d)\n", ret);
+> +                       goto free_mfd_resources;
+> +               }
+> +               count++;
+> +       }
+> +
+> +       pdev = acpi_create_platform_device(adev, NULL);
+> +       if (IS_ERR_OR_NULL(pdev)) {
+> +               dev_err(&adev->dev, "create platform device for host failed\n");
+
+> +               ret = PTR_ERR(pdev);
+
+So, NULL case will return 0. Is it expected?
+
+> +               goto free_mfd_resources;
+> +       }
+> +       acpi_device_set_enumerated(adev);
+> +
+> +       ret = mfd_add_devices(&pdev->dev, PLATFORM_DEVID_NONE,
+> +                             mfd_cells, cell_num, NULL, 0, NULL);
+> +       if (ret) {
+> +               dev_err(&pdev->dev, "failed to add mfd cells (%d)\n", ret);
+> +               goto free_mfd_resources;
+> +       }
+> +
+> +       return ret;
+> +
+> +free_mfd_resources:
+> +       while (cell_num--)
+> +               kfree(mfd_cells[cell_num].resources);
+> +       kfree(mfd_cells);
+> +free_range:
+> +       kfree(range);
+> +
+> +       return ret;
+> +}
+
+One question, what a scope of use of this function? Is it ->probe() time?
+If it's so, can we use devm_* variants?
+
 -- 
-2.11.0
+With Best Regards,
+Andy Shevchenko
