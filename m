@@ -1,50 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37622 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751119AbeBVVBN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Feb 2018 16:01:13 -0500
-Date: Thu, 22 Feb 2018 15:01:12 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Martin Mares <mj@ucw.cz>,
-        Michal Vaner <vorner@vorner.cz>
-Subject: Re: [PATCH] PCI: update location of pci.ids file
-Message-ID: <20180222210112.GF16519@bhelgaas-glaptop.roam.corp.google.com>
-References: <1703ad43-3bf3-b777-7e1c-0beb55b064e8@infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v12 6/9] LPC: Support the LPC host on Hip06/Hip07 with DT
+ bindings
+To: dann frazier <dann.frazier@canonical.com>
+References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
+ <1516725385-24535-7-git-send-email-john.garry@huawei.com>
+ <20180213184123.GA11446@xps13.dannf>
+CC: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
+        <mark.rutland@arm.com>, <olof@lixom.net>, <hanjun.guo@linaro.org>,
+        <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
+        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+        <rdunlap@infradead.org>,
+        Zhichang Yuan <yuanzhichang@hisilicon.com>,
+        "Zou Rongrong" <zourongrong@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <78ff2d7a-201f-8fff-9acc-ae23a65ce18f@huawei.com>
+Date: Wed, 14 Feb 2018 11:35:24 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1703ad43-3bf3-b777-7e1c-0beb55b064e8@infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180213184123.GA11446@xps13.dannf>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 03, 2018 at 04:53:09PM -0800, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Update the URL for the pci.ids file and add locations for its mirrors.
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Martin Mares <mj@ucw.cz>
-> Cc: Michal Vaner <vorner@vorner.cz>
+Hi Dann,
 
-Applied to for-linus for v4.16, thanks!
+>> + */
+>> +static int
+>> +hisilpc_target_in(struct hisilpc_dev *lpcdev, struct lpc_cycle_para *para,
+>> +		  unsigned long ptaddr, unsigned char *buf,
+>> +		  unsigned long opcnt)
+>> +{
+>> +	unsigned long cnt_per_trans;
+>> +	unsigned int cmd_word;
+>> +	unsigned int waitcnt;
+>> +	int ret;
+>> +
+>> +	if (!buf || !opcnt || !para || !para->csize || !lpcdev)
+>> +		return -EINVAL;
+>> +
+>> +	cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_READ;
+>> +	waitcnt = LPC_PEROP_WAITCNT;
+>> +	if (!(para->opflags & FG_INCRADDR_LPC)) {
+>> +		cmd_word |= LPC_CMD_SAMEADDR;
+>> +		waitcnt = LPC_MAX_WAITCNT;
+>> +	}
+>> +
+>> +	ret = 0;
+>> +	cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
+>> +	for (; opcnt && !ret; cnt_per_trans = para->csize) {
+>> +		unsigned long flags;
+>> +
+>> +		/* whole operation must be atomic */
+>> +		spin_lock_irqsave(&lpcdev->cycle_lock, flags);
+>> +
+>> +		writel_relaxed(cnt_per_trans, lpcdev->membase + LPC_REG_OP_LEN);
+>> +
+>> +		writel_relaxed(cmd_word, lpcdev->membase + LPC_REG_CMD);
+>> +
+>> +		writel_relaxed(ptaddr, lpcdev->membase + LPC_REG_ADDR);
+>> +
+>> +		writel(LPC_START_WORK, lpcdev->membase + LPC_REG_START);
+>> +
+>> +		/* whether the operation is finished */
+>> +		ret = wait_lpc_idle(lpcdev->membase, waitcnt);
+>> +		if (!ret) {
+>> +			opcnt -= cnt_per_trans;
+>
+> Do we need to check for an underflow here?
 
-> ---
->  Documentation/PCI/pci.txt |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> --- linux-next-20180202.orig/Documentation/PCI/pci.txt
-> +++ linux-next-20180202/Documentation/PCI/pci.txt
-> @@ -570,7 +570,9 @@ your driver if they're helpful, or just
->  The device IDs are arbitrary hex numbers (vendor controlled) and normally used
->  only in a single location, the pci_device_id table.
->  
-> -Please DO submit new vendor/device IDs to http://pciids.sourceforge.net/.
-> +Please DO submit new vendor/device IDs to http://pci-ids.ucw.cz/.
-> +There are mirrors of the pci.ids file at http://pciids.sourceforge.net/
-> +and https://github.com/pciutils/pciids.
->  
->  
->  
-> 
+I think that underflow is ensured not to happen.
+
+Regardless, I find this code hard to follow myself, so I will rewrite a 
+bit of this to make it more straightforward.
+
+>
+>> +			for (cnt_per_trans--; cnt_per_trans--; buf++)
+>> +				*buf = readb_relaxed(lpcdev->membase +
+>> +					LPC_REG_RDATA);
+>> +			*buf = readb(lpcdev->membase + LPC_REG_RDATA);
+>> +		}
+>> +
+>> +		spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
+>> +	}
+>> +
+>> +	return ret;
+>> +}
+>> +
+>> +/*
+>> + * hisilpc_target_out - trigger a series of lpc cycles to write required
+>> + *			data to target peripheral.
+>> + * @lpcdev: pointer to hisi lpc device
+>> + * @para: some parameters used to control the lpc I/O operations
+>> + * @ptaddr: the lpc I/O target port address
+>> + * @buf: where the data to be written is stored
+>> + * @opcnt: how many I/O operations required
+>> + *
+>> + * Only one byte data is read each I/O operation.
+>
+> s/read/written/ ?
+
+Right
+
+>
+>> + * Returns 0 on success, non-zero on fail.
+>> + *
+>> + */
+>> +static int
+>> +hisilpc_target_out(struct hisilpc_dev *lpcdev, struct lpc_cycle_para *para,
+>> +		   unsigned long ptaddr, const unsigned char *buf,
+>> +		   unsigned long opcnt)
+>> +{
+>> +	unsigned long cnt_per_trans;
+>> +	unsigned int cmd_word;
+>> +	unsigned int waitcnt;
+>> +	int ret;
+>> +
+>> +	if (!buf || !opcnt || !para || !lpcdev)
+>> +		return -EINVAL;
+>> +
+>> +	/* default is increasing address */
+>> +	cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_WRITE;
+>> +	waitcnt = LPC_PEROP_WAITCNT;
+>> +	if (!(para->opflags & FG_INCRADDR_LPC)) {
+>> +		cmd_word |= LPC_CMD_SAMEADDR;
+>> +		waitcnt = LPC_MAX_WAITCNT;
+>> +	}
+>> +
+>> +	ret = 0;
+>> +	cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
+>> +	for (; opcnt && !ret; cnt_per_trans = para->csize) {
+>> +		unsigned long flags;
+>> +
+>> +		spin_lock_irqsave(&lpcdev->cycle_lock, flags);
+>> +
+>> +		writel_relaxed(cnt_per_trans, lpcdev->membase + LPC_REG_OP_LEN);
+>> +		writel_relaxed(cmd_word, lpcdev->membase + LPC_REG_CMD);
+>> +		writel_relaxed(ptaddr, lpcdev->membase + LPC_REG_ADDR);
+>> +
+>> +		opcnt -= cnt_per_trans;
+>
+> Underflow check needed?
+
+As above
+
+>
+>  -dann
+>
+
+Thanks,
+John
+
+
