@@ -1,135 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:49950 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750865AbeBHMvi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Feb 2018 07:51:38 -0500
-Subject: =?UTF-8?Q?Re:_xhci=5fhcd_HC_died;_cleaning_up_with_TUSB7340_and_?=
- =?UTF-8?Q?=c2=b5PD720201?=
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        "Quadros, Roger" <rogerq@ti.com>
-CC: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, Joao Pinto <jpinto@synopsys.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        Rabin Vincent <rabinv@axis.com>, <faiz_abbas@ti.com>
-References: <BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com>
- <3dd7a4fc-da86-03cc-9b01-a0d29dd73230@ti.com>
- <f57ccfd8-0b99-278c-6c10-474395f96a3c@ti.com>
- <e7fc4bc3-8bd1-4915-bb2a-37420ee725f9@axis.com>
-From: Vignesh R <vigneshr@ti.com>
-Message-ID: <09f6143b-ae0a-498e-2826-ab6e5055e6bb@ti.com>
-Date: Thu, 8 Feb 2018 18:22:12 +0530
-MIME-Version: 1.0
-In-Reply-To: <e7fc4bc3-8bd1-4915-bb2a-37420ee725f9@axis.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:51677 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031788AbeBNPt2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Feb 2018 10:49:28 -0500
+Message-ID: <1518623360.2744.20.camel@pengutronix.de>
+Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root
+ subordinate
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Fabio Estevam <festevam@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>,
+        linux-pci@vger.kernel.org,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>
+Date: Wed, 14 Feb 2018 16:49:20 +0100
+In-Reply-To: <CAOMZO5A2pn23+nBEMV=bYaHa6-Pa3qohFMzrcnkECGhMFAJW6g@mail.gmail.com>
+References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
+         <20180205191420.GA12397@red-moon>
+         <CAOMZO5A2pn23+nBEMV=bYaHa6-Pa3qohFMzrcnkECGhMFAJW6g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Thursday 08 February 2018 02:24 PM, Niklas Cassel wrote:
-> On 16/11/17 13:26, Vignesh R wrote:
->> +linux-pci
->>
->> Hi Chris,
->>
->> On Thursday 16 November 2017 05:20 PM, Quadros, Roger wrote:
->>> +Vignesh
->>>
->>> On 13/09/17 17:26, Chris Welch wrote:
->>>> We are developing a product based on the TI AM5728 EVM.  The product utilizes a TUSB7340 PCIe USB host for additional ports.  The TUSB7340 is detected and setup properly and works OK with low data rate devices.  However, hot plugging a Realtek USB network adapter and doing Ethernet transfer bandwidth testing using iperf3 causes the TUSB7340 host to be  locked out.  The TUSB7340 host appears to no longer communicate and the logging indicates xhci_hcd 0000:01:00.0: HC died; cleaning up.  Same issue occurs with another USB Ethernet adapter I tried (Asus).
->>>>
->>>> We looked at using another host and found a mini PCIe card that utilizes the µPD720201 and can be directly installed on the TI AM5728 EVM.  The card is detected properly and we reran the transfer test.  The uPD720201 gets locks out with the same problem.
->>>>
->>>> The AM5728 testing was performed using the TI SD card stock am57xx-evm-linux-04.00.00.04.img, kernel am57xx-evm 4.9.28-geed43d1050, and it reports that it is using the TI AM572x EVM Rev A3 device tree.
->>>>
->>>> It shows the following logging when it fails (this is with the TI EVM and uPD720201).
->>>>
->>>> [  630.400899] xhci_hcd 0000:01:00.0: xHCI host not responding to stop endpoint command.
->>>> [  630.408769] xhci_hcd 0000:01:00.0: Assuming host is dying, halting host.
->>>> [  630.420849] r8152 2-4:1.0 enp1s0u4: Tx status -108
->>>> [  630.425667] r8152 2-4:1.0 enp1s0u4: Tx status -108
->>>> [  630.430483] r8152 2-4:1.0 enp1s0u4: Tx status -108
->>>> [  630.435297] r8152 2-4:1.0 enp1s0u4: Tx status -108
->>>> [  630.440122] xhci_hcd 0000:01:00.0: HC died; cleaning up
->>>> [  630.453961] usb 2-4: USB disconnect, device number 2
->>>>
->>>> The problem appears to be a general driver issue given we get the same problem with both the  TUSB7340 and the µPD720201.
->>
->> Seems like PCIe driver is missing MSI IRQs leading to stall. 
->> Reading xHCI registers via PCIe mem space confirms this.
->>
->> I see two problems wrt MSI handling:
->> Since commit 8c934095fa2f3 ("PCI: dwc: Clear MSI interrupt status after it is handled, not before"),
->> dwc clears MSI status after calling EP's IRQ handler. But, it happens that another MSI interrupt is
->> raised just at the end of EP's IRQ handler and before clearing MSI status.
->> This will result in loss of new MSI IRQ as we clear the MSI IRQ status without handling.
->>
->> Another problem appears to be wrt dra7xx PCIe wrapper:
->> PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI does not seem to catch MSI IRQs unless,
->> its ensured that PCIE_MSI_INTR0_STATUS register read returns 0.
->>
->> So, could you try reverting commit 8c934095fa2f3 and 
->> also apply below patch and let me know if that fixes the issue?
+Am Mittwoch, den 14.02.2018, 13:41 -0200 schrieb Fabio Estevam:
+> Hi Lucas and Richard,
 > 
-> Hello Vignesh,
+> On Mon, Feb 5, 2018 at 5:14 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+[...]
+> > I would appreciate some testing from dwc host maintainers so that
+> > we can merge this patch, it is a bug fix that should be merged as
+> > soon as possible, please help Koen test it and provide feedback
+> > on the list.
 > 
-> It is not only dra7xx that is affected by this bug,
-> all other DWC based drivers as well.
-> 
-> I suggest that we either:
-> Revert 8c934095fa2f ("PCI: dwc: Clear MSI interrupt status after it is handled,
-> not before")
+> Is it possible for you to test this patch?
 
-I will send a revert soon.
+I did not test myself, but a Pengutronix colleague did and reported it
+did fix the bus scanning issues, while not introducing any obvious
+issues.
 
-> or
-> You implement a generic solution
-> (i.e. in drivers/pci/dwc/pcie-designware-host.c)
-> rather than just a dra7xx specific solution.
+Acked-by: Lucas Stach <l.stach@pengutronix.de>
 
-Reverting 8c934095fa2f should unblock all other DWC drivers. For dra7xx,
-I will send separate patches to fix TI dra7xx specific wrapper level IRQ
-handler.
-
-
->> -----------
->>
->> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->> index e77a4ceed74c..8280abc56f30 100644
->> --- a/drivers/pci/dwc/pci-dra7xx.c
->> +++ b/drivers/pci/dwc/pci-dra7xx.c
->> @@ -259,10 +259,17 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
->>         u32 reg;
->>  
->>         reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
->> +       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
->>  
->>         switch (reg) {
->>         case MSI:
->> -               dw_handle_msi_irq(pp);
->> +               /*
->> +                * Need to make sure no MSI IRQs are pending before
->> +                * exiting handler, else the wrapper will not catch new
->> +                * IRQs. So loop around till dw_handle_msi_irq() returns
->> +                * IRQ_NONE
->> +                */
->> +               while (dw_handle_msi_irq(pp) != IRQ_NONE);
->>                 break;
->>         case INTA:
->>         case INTB:
->> @@ -273,8 +280,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
->>                 break;
->>         }
->>  
->> -       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
->> -
->>         return IRQ_HANDLED;
->>  }
->>
->>
->>
->>
-
--- 
-Regards
-Vignesh
+Regards,
+Lucas
