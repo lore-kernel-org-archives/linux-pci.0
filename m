@@ -1,735 +1,420 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:37975 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753059AbeB0MUe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 07:20:34 -0500
-Received: by mail-pf0-f195.google.com with SMTP id d26so7863800pfn.5
-        for <linux-pci@vger.kernel.org>; Tue, 27 Feb 2018 04:20:34 -0800 (PST)
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com
-Cc: mingkai.hu@nxp.com, peter.newton@nxp.com, minghuan.lian@nxp.com,
-        rajesh.raina@nxp.com, rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
-        Marc Zyngier <marc.zyngier@arm.com>, devicetree@vger.kernel.org
-Subject: [PATCH v6 2/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver
-Date: Tue, 27 Feb 2018 07:20:24 -0500
-Message-Id: <1519734024-32253-1-git-send-email-l.subrahmanya@mobiveil.co.in>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 14 Feb 2018 16:16:35 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: John Garry <john.garry@huawei.com>
+Cc: mika.westerberg@linux.intel.com, rafael@kernel.org,
+        rjw@rjwysocki.net, hanjun.guo@linaro.org, robh+dt@kernel.org,
+        bhelgaas@google.com, arnd@arndb.de, mark.rutland@arm.com,
+        olof@lixom.net, dann.frazier@canonical.com,
+        andy.shevchenko@gmail.com, robh@kernel.org, joe@perches.com,
+        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linuxarm@huawei.com, minyard@acm.org, devicetree@vger.kernel.org,
+        linux-arch@vger.kernel.org, rdunlap@infradead.org
+Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO
+ devices before scanning
+Message-ID: <20180214161635.GA13849@e107981-ln.cambridge.arm.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+ <1518543933-22456-8-git-send-email-john.garry@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1518543933-22456-8-git-send-email-john.garry@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds driver for Mobiveil AXI PCIe Host Bridge Soft IP -
-GPEX 4.0, a PCIe gen4 IP. This IP has upto 8
-outbound and inbound windows for the address translation.
+On Wed, Feb 14, 2018 at 01:45:31AM +0800, John Garry wrote:
+> On some platforms (such as arm64-based hip06/hip07), access to legacy
+> ISA/LPC devices through access IO space is required, similar to x86
+> platforms. As the I/O for these devices are not memory mapped like
+> PCI/PCIE MMIO host bridges, they require special low-level device
+> operations through some host to generate IO accesses, i.e. a non-
+> transparent bridge.
+> 
+> Through the logical PIO framework, hosts are able to register address
+> ranges in the logical PIO space for IO accesses. For hosts which require
+> a LLDD to generate the IO accesses, through the logical PIO framework
+> the host also registers accessors as a backend to generate the physical
+> bus transactions for IO space accesses (called indirect IO).
+> 
+> When describing the indirect IO child device in APCI tables, the IO
+> resource is the host-specific address for the child (generally a
+> bus address).
+> An example is as follows:
+>   Device (LPC0) {
+>     Name (_HID, "HISI0191")  // HiSi LPC
+>     Name (_CRS, ResourceTemplate () {
+>       Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
+>     })
+>   }
+> 
+>   Device (LPC0.IPMI) {
+>     Name (_HID, "IPI0001")
+>     Name (LORS, ResourceTemplate() {
+>       QWordIO (
+>         ResourceConsumer,
+> 	MinNotFixed,     // _MIF
+> 	MaxNotFixed,     // _MAF
+> 	PosDecode,
+> 	EntireRange,
+> 	0x0,             // _GRA
+> 	0xe4,            // _MIN
+> 	0x3fff,          // _MAX
+> 	0x0,             // _TRA
+> 	0x04,            // _LEN
+> 	, ,
+> 	BTIO
+>       )
+>     })
+> 
+> Since the IO resource for the child is a host-specific address,
+> special translation are required to retrieve the logical PIO address
+> for that child.
 
-Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org
----
- drivers/pci/host/pcie-mobiveil.c | 692 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 692 insertions(+)
- create mode 100644 drivers/pci/host/pcie-mobiveil.c
+The problem I have with this patchset and with pretending that the ACPI
+bits are generic is that the rules used to translate resources (I am
+referring to LPC0.IPMI above) are documented _nowhere_ which means that
+making this series generic code is just wishful thinking - there are no
+bindings backing it, it will never ever be used on a platform different
+from the one you are pushing this code for and I stated this already.
 
-diff --git a/drivers/pci/host/pcie-mobiveil.c b/drivers/pci/host/pcie-mobiveil.c
-new file mode 100644
-index 0000000..4270387
---- /dev/null
-+++ b/drivers/pci/host/pcie-mobiveil.c
-@@ -0,0 +1,692 @@
-+/*
-+ * PCIe host controller driver for Mobiveil PCIe Host controller
-+ *
-+ * SPDX-License-Identifier: GPL-2.0
-+ * Copyright (c) 2017 Mobiveil Inc.
-+ * Author: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/init.h>
-+#include <linux/irq.h>
-+#include <linux/irqchip/chained_irq.h>
-+#include <linux/irqdomain.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_platform.h>
-+#include <linux/of_pci.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/slab.h>
-+
-+/* register offsets and bit positions */
-+
-+/*
-+ * translation tables are grouped into windows, each window registers are
-+ * grouped into blocks of 4 or 16 registers each
-+ */
-+#define PAB_REG_BLOCK_SIZE	16
-+#define PAB_EXT_REG_BLOCK_SIZE	4
-+
-+#define PAB_REG_ADDR(offset, win) (offset + (win * PAB_REG_BLOCK_SIZE))
-+#define PAB_EXT_REG_ADDR(offset, win) (offset + (win * PAB_EXT_REG_BLOCK_SIZE))
-+
-+#define LTSSM_STATUS		0x0404
-+#define  LTSSM_STATUS_L0_MASK	0x3f
-+#define  LTSSM_STATUS_L0	0x2d
-+
-+#define PAB_CTRL		0x0808
-+#define  AMBA_PIO_ENABLE_SHIFT	0
-+#define  PEX_PIO_ENABLE_SHIFT	1
-+#define  PAGE_SEL_SHIFT		13
-+#define  PAGE_SEL_MASK		0x3f
-+#define  PAGE_LO_MASK		0x3ff
-+#define  PAGE_SEL_EN		0xc00
-+#define  PAGE_SEL_OFFSET_SHIFT	10
-+
-+#define PAB_AXI_PIO_CTRL	0x0840
-+#define  APIO_EN_MASK		0xf
-+
-+#define PAB_PEX_PIO_CTRL	0x08c0
-+#define  PIO_ENABLE_SHIFT	0
-+
-+#define PAB_INTP_AMBA_MISC_ENB	0x0b0c
-+#define PAB_INTP_AMBA_MISC_STAT	0x0b1c
-+#define  PAB_INTP_INTX_MASK	0x1e0
-+
-+#define PAB_AXI_AMAP_CTRL(win)	PAB_REG_ADDR(0x0ba0, win)
-+#define  WIN_ENABLE_SHIFT	0
-+#define  WIN_TYPE_SHIFT		1
-+
-+#define PAB_EXT_AXI_AMAP_SIZE(win)	PAB_EXT_REG_ADDR(0xbaf0, win)
-+
-+#define PAB_AXI_AMAP_AXI_WIN(win)	PAB_REG_ADDR(0x0ba4, win)
-+#define  AXI_WINDOW_BASE_SHIFT		2
-+
-+#define PAB_AXI_AMAP_PEX_WIN_L(win)	PAB_REG_ADDR(0x0ba8, win)
-+#define  PAB_BUS_SHIFT			24
-+#define  PAB_DEVICE_SHIFT		19
-+#define  PAB_FUNCTION_SHIFT		16
-+
-+#define PAB_AXI_AMAP_PEX_WIN_H(win)	PAB_REG_ADDR(0x0bac, win)
-+#define PAB_INTP_AXI_PIO_CLASS		0x474
-+
-+#define PAB_PEX_AMAP_CTRL(win)		PAB_REG_ADDR(0x4ba0, win)
-+#define  AMAP_CTRL_EN_SHIFT		0
-+#define  AMAP_CTRL_TYPE_SHIFT		1
-+
-+#define PAB_EXT_PEX_AMAP_SIZEN(win)	PAB_EXT_REG_ADDR(0xbef0, win)
-+#define PAB_PEX_AMAP_AXI_WIN(win)	PAB_REG_ADDR(0x4ba4, win)
-+#define PAB_PEX_AMAP_PEX_WIN_L(win)	PAB_REG_ADDR(0x4ba8, win)
-+#define PAB_PEX_AMAP_PEX_WIN_H(win)	PAB_REG_ADDR(0x4bac, win)
-+
-+/* supported number of interrupts */
-+#define PCI_NUM_INTX    4
-+#define PAB_INTA_POS    5
-+
-+/* outbound and inbound window definitions */
-+#define WIN_NUM_0		0
-+#define WIN_NUM_1		1
-+#define CFG_WINDOW_TYPE		0
-+#define IO_WINDOW_TYPE		1
-+#define MEM_WINDOW_TYPE		2
-+#define IB_WIN_SIZE		(256 * 1024 * 1024 * 1024)
-+#define MAX_PIO_WINDOWS		8
-+
-+/* Parameters for the waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES	10
-+#define LINK_WAIT_MIN		90000
-+#define LINK_WAIT_MAX		100000
-+
-+struct mobiveil_pcie {
-+	struct platform_device *pdev;
-+	struct list_head resources;
-+	void __iomem *config_axi_slave_base;	/* endpoint config base */
-+	void __iomem *csr_axi_slave_base;   /* root port config base */
-+	void __iomem *pcie_reg_base;    /* Physical PCIe Controller Base */
-+	struct irq_domain *intx_domain;
-+	raw_spinlock_t intx_mask_lock;
-+	int irq;
-+	int apio_wins;
-+	int ppio_wins;
-+	int ob_wins_configured;	/*  configured outbound windows */
-+	int ib_wins_configured;	/*  configured inbound windows */
-+	struct resource *ob_io_res;
-+	char root_bus_nr;
-+};
-+
-+static inline void csr_writel(struct mobiveil_pcie *pcie, const u32 value,
-+		const u32 reg)
-+{
-+	writel_relaxed(value, pcie->csr_axi_slave_base + reg);
-+}
-+
-+static inline u32 csr_readl(struct mobiveil_pcie *pcie,	const u32 reg)
-+{
-+	return readl_relaxed(pcie->csr_axi_slave_base + reg);
-+}
-+
-+/*
-+ * Routine to check the downstream link status, its recommended to
-+ * check the link status before accessing downstream config resources.
-+ */
-+static bool mobiveil_pcie_link_up(struct mobiveil_pcie *pcie)
-+{
-+	return (csr_readl(pcie, LTSSM_STATUS) &
-+		LTSSM_STATUS_L0_MASK) == LTSSM_STATUS_L0;
-+}
-+
-+static bool mobiveil_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
-+{
-+	struct mobiveil_pcie *pcie = bus->sysdata;
-+
-+	/* Check if link is up when trying to access downstream ports */
-+	if (bus->number != pcie->root_bus_nr)
-+		if (!mobiveil_pcie_link_up(pcie))
-+			return false;
-+
-+	/* Only one device down on each root port */
-+	if ((bus->number == pcie->root_bus_nr) && (devfn > 0))
-+		return false;
-+
-+	/*
-+	 * Do not read more than one device on the bus directly
-+	 * attached to RC
-+	 */
-+	if ((bus->primary == pcie->root_bus_nr) && (devfn > 0))
-+		return false;
-+
-+	return true;
-+}
-+
-+/*
-+ * mobiveil_pcie_map_bus - routine to get the configuration base of either
-+ * root port or endpoint
-+ */
-+static void __iomem *mobiveil_pcie_map_bus(struct pci_bus *bus,
-+					unsigned int devfn, int where)
-+{
-+	struct mobiveil_pcie *pcie = bus->sysdata;
-+
-+	if (!mobiveil_pcie_valid_device(bus, devfn))
-+		return NULL;
-+
-+	if (bus->number == pcie->root_bus_nr) {
-+		/* RC config access */
-+		return pcie->csr_axi_slave_base + where;
-+	} else {
-+		/*
-+		 * EP config access (in Config/APIO space)
-+		 * Program PEX Address base (31..16 bits) with appropriate value
-+		 * (BDF) in PAB_AXI_AMAP_PEX_WIN_L0 Register.
-+		 * Relies on pci_lock serialization
-+		 */
-+		csr_writel(pcie,
-+			bus->number << PAB_BUS_SHIFT |
-+			PCI_SLOT(devfn) << PAB_DEVICE_SHIFT |
-+			PCI_FUNC(devfn) << PAB_FUNCTION_SHIFT,
-+			PAB_AXI_AMAP_PEX_WIN_L(WIN_NUM_0));
-+		return pcie->config_axi_slave_base + where;
-+	}
-+}
-+
-+static struct pci_ops mobiveil_pcie_ops = {
-+	.map_bus = mobiveil_pcie_map_bus,
-+	.read = pci_generic_config_read,
-+	.write = pci_generic_config_write,
-+};
-+
-+static void mobiveil_pcie_isr(struct irq_desc *desc)
-+{
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct mobiveil_pcie *pcie = irq_desc_get_handler_data(desc);
-+	struct device *dev = &pcie->pdev->dev;
-+	unsigned long shifted_status;
-+	u32 bit, virq;
-+	u32 val, mask;
-+
-+	/*
-+	 * The core provides a single interrupt for both INTx/MSI messages.
-+	 * So we'll read both INTx and MSI status
-+	 */
-+
-+	chained_irq_enter(chip, desc);
-+
-+	/* read INTx status */
-+	val = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
-+	mask = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
-+	intr_status = val & mask;
-+
-+	/* Handle INTx */
-+	if (intr_status & PAB_INTP_INTX_MASK) {
-+		shifted_status = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT) >>
-+			PAB_INTA_POS;
-+		do {
-+			for_each_set_bit(bit, &shifted_status, PCI_NUM_INTX) {
-+				virq = irq_find_mapping(pcie->intx_domain,
-+						bit + 1);
-+				if (virq)
-+					generic_handle_irq(virq);
-+				else
-+					dev_err_ratelimited(dev,
-+						"unexpected IRQ, INT%d\n", bit);
-+
-+				/* clear interrupt */
-+				csr_writel(pcie, shifted_status << PAB_INTA_POS,
-+						PAB_INTP_AMBA_MISC_STAT);
-+			}
-+		} while ((shifted_status >>  PAB_INTA_POS) != 0);
-+	}
-+
-+	/* Clear the interrupt status */
-+	csr_writel(pcie, intr_status, PAB_INTP_AMBA_MISC_STAT);
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+	struct platform_device *pdev = pcie->pdev;
-+	struct device_node *node = dev->of_node;
-+	struct resource *res;
-+	const char *type;
-+
-+	type = of_get_property(node, "device_type", NULL);
-+	if (!type || strcmp(type, "pci")) {
-+		dev_err(dev, "invalid \"device_type\" %s\n", type);
-+		return -EINVAL;
-+	}
-+
-+	/* map config resource */
-+	res = platform_get_resource_byname(pdev,
-+		IORESOURCE_MEM, "config_axi_slave");
-+	pcie->config_axi_slave_base = devm_pci_remap_cfg_resource(dev, res);
-+	if (IS_ERR(pcie->config_axi_slave_base))
-+		return PTR_ERR(pcie->config_axi_slave_base);
-+	pcie->ob_io_res = res;
-+
-+	/* map csr resource */
-+	res = platform_get_resource_byname(pdev,
-+		IORESOURCE_MEM, "csr_axi_slave");
-+	pcie->csr_axi_slave_base = devm_pci_remap_cfg_resource(dev, res);
-+	if (IS_ERR(pcie->csr_axi_slave_base))
-+		return PTR_ERR(pcie->csr_axi_slave_base);
-+	pcie->pcie_reg_base = res->start;
-+
-+	/* read the number of windows requested */
-+	if (of_property_read_u32(node, "apio-wins", &pcie->apio_wins))
-+		pcie->apio_wins = MAX_PIO_WINDOWS;
-+
-+	if (of_property_read_u32(node, "ppio-wins", &pcie->ppio_wins))
-+		pcie->ppio_wins = MAX_PIO_WINDOWS;
-+
-+	pcie->irq = platform_get_irq(pdev, 0);
-+	if (pcie->irq <= 0) {
-+		dev_err(dev, "failed to map IRQ: %d\n", pcie->irq);
-+		return -ENODEV;
-+	}
-+
-+	irq_set_chained_handler_and_data(pcie->irq, mobiveil_pcie_isr, pcie);
-+
-+	return 0;
-+}
-+
-+/*
-+ * select_paged_register - routine to access paged register of root complex
-+ *
-+ * registers of RC are paged, for this scheme to work
-+ * extracted higher 6 bits of the offset will be written to pg_sel
-+ * field of PAB_CTRL register and rest of the lower 10 bits enabled with
-+ * PAGE_SEL_EN are used as offset of the register.
-+ *
-+ */
-+static void select_paged_register(struct mobiveil_pcie *pcie, u32 offset)
-+{
-+	int pab_ctrl_dw, pg_sel;
-+
-+	/* clear pg_sel field */
-+	pab_ctrl_dw = csr_readl(pcie, PAB_CTRL);
-+	pab_ctrl_dw = (pab_ctrl_dw & ~(PAGE_SEL_MASK << PAGE_SEL_SHIFT));
-+
-+	/* set pg_sel field */
-+	pg_sel = (offset >> PAGE_SEL_OFFSET_SHIFT) & PAGE_SEL_MASK;
-+	pab_ctrl_dw |= ((pg_sel << PAGE_SEL_SHIFT));
-+	csr_writel(pcie, pab_ctrl_dw, PAB_CTRL);
-+}
-+
-+static void write_paged_register(struct mobiveil_pcie *pcie,
-+		u32 val, u32 offset)
-+{
-+	u32 off = (offset & PAGE_LO_MASK) | PAGE_SEL_EN;
-+
-+	select_paged_register(pcie, offset);
-+	csr_writel(pcie, val, off);
-+}
-+
-+static u32 read_paged_register(struct mobiveil_pcie *pcie, u32 offset)
-+{
-+	u32 off = (offset & PAGE_LO_MASK) | PAGE_SEL_EN;
-+
-+	select_paged_register(pcie, offset);
-+	return csr_readl(pcie, off);
-+}
-+
-+static void program_ib_windows(struct mobiveil_pcie *pcie, int win_num,
-+		int pci_addr, u32 type,	int size)
-+{
-+	int pio_ctrl_val;
-+	int amap_ctrl_dw;
-+	u64 size64 =  ~(size-1);
-+
-+	if ((pcie->ib_wins_configured + 1) > pcie->ppio_wins) {
-+		dev_err(&pcie->pdev->dev,
-+			"ERROR: max inbound windows reached !\n");
-+		return;
-+	}
-+
-+	pio_ctrl_val = csr_readl(pcie, PAB_PEX_PIO_CTRL);
-+	csr_writel(pcie,
-+		pio_ctrl_val | (1 << PIO_ENABLE_SHIFT), PAB_PEX_PIO_CTRL);
-+	amap_ctrl_dw =	read_paged_register(pcie, PAB_PEX_AMAP_CTRL(win_num));
-+	amap_ctrl_dw = (amap_ctrl_dw | (type << AMAP_CTRL_TYPE_SHIFT));
-+	amap_ctrl_dw = (amap_ctrl_dw | (1 << AMAP_CTRL_EN_SHIFT));
-+
-+	write_paged_register(pcie, amap_ctrl_dw | lower_32_bits(size64),
-+				PAB_PEX_AMAP_CTRL(win_num));
-+
-+	write_paged_register(pcie, upper_32_bits(size64),
-+				PAB_EXT_PEX_AMAP_SIZEN(win_num));
-+
-+	write_paged_register(pcie, pci_addr, PAB_PEX_AMAP_AXI_WIN(win_num));
-+	write_paged_register(pcie, pci_addr, PAB_PEX_AMAP_PEX_WIN_L(win_num));
-+	write_paged_register(pcie, 0, PAB_PEX_AMAP_PEX_WIN_H(win_num));
-+}
-+
-+/*
-+ * routine to program the outbound windows
-+ */
-+static void program_ob_windows(struct mobiveil_pcie *pcie, int win_num,
-+		u64 cpu_addr, u64 pci_addr, u32 config_io_bit,
-+		int size)
-+{
-+
-+	u32 value, type;
-+	u64 size64 =  ~(size-1);
-+
-+	if ((pcie->ob_wins_configured + 1) > pcie->apio_wins) {
-+		dev_err(&pcie->pdev->dev,
-+			"ERROR: max outbound windows reached !\n");
-+		return;
-+	}
-+
-+	/*
-+	 * program Enable Bit to 1, Type Bit to (00) base 2, AXI Window Size Bit
-+	 * to 4 KB in PAB_AXI_AMAP_CTRL register
-+	 */
-+	type = config_io_bit;
-+	value = csr_readl(pcie, PAB_AXI_AMAP_CTRL(win_num));
-+	csr_writel(pcie,
-+			1 << WIN_ENABLE_SHIFT |
-+			type << WIN_TYPE_SHIFT |
-+			lower_32_bits(size64),
-+			PAB_AXI_AMAP_CTRL(win_num));
-+
-+	write_paged_register(pcie, upper_32_bits(size64),
-+				PAB_EXT_AXI_AMAP_SIZE(win_num));
-+
-+	/*
-+	 * program AXI window base with appropriate value in
-+	 * PAB_AXI_AMAP_AXI_WIN0 register
-+	 */
-+	value = csr_readl(pcie, PAB_AXI_AMAP_AXI_WIN(win_num));
-+	csr_writel(pcie,
-+			cpu_addr >> AXI_WINDOW_BASE_SHIFT <<
-+			AXI_WINDOW_BASE_SHIFT, PAB_AXI_AMAP_AXI_WIN(win_num));
-+
-+	value = csr_readl(pcie, PAB_AXI_AMAP_PEX_WIN_H(win_num));
-+
-+	csr_writel(pcie, lower_32_bits(pci_addr),
-+			PAB_AXI_AMAP_PEX_WIN_L(win_num));
-+	csr_writel(pcie, upper_32_bits(pci_addr),
-+			PAB_AXI_AMAP_PEX_WIN_H(win_num));
-+
-+	pcie->ob_wins_configured++;
-+}
-+
-+static int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
-+{
-+	int retries;
-+
-+	/* check if the link is up or not */
-+	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+		if (mobiveil_pcie_link_up(pcie))
-+			return 0;
-+
-+		usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
-+	}
-+	dev_err(&pcie->pdev->dev, "link never came up\n");
-+	return -ETIMEDOUT;
-+}
-+
-+static int mobiveil_host_init(struct mobiveil_pcie *pcie)
-+{
-+	u32 value;
-+	u32 type = 0;
-+	u32 pab_ctrl;
-+	int err;
-+	struct resource_entry *win, *tmp;
-+
-+	err = mobiveil_bringup_link(pcie);
-+	if (err) {
-+		dev_info(&pcie->pdev->dev, "link bring-up failed\n");
-+		return err;
-+	}
-+
-+	/*
-+	 * program Bus Master Enable Bit in Command Register in PAB Config
-+	 * Space
-+	 */
-+	value = csr_readl(pcie, PCI_COMMAND);
-+	csr_writel(pcie, value | PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
-+		PCI_COMMAND_MASTER,	PCI_COMMAND);
-+
-+	/*
-+	 * program PIO Enable Bit to 1 (and PEX PIO Enable to 1) in PAB_CTRL
-+	 * register
-+	 */
-+	pab_ctrl = csr_readl(pcie, PAB_CTRL);
-+	csr_writel(pcie, pab_ctrl | (1 << AMBA_PIO_ENABLE_SHIFT) |
-+		(1 << PEX_PIO_ENABLE_SHIFT),
-+		PAB_CTRL);
-+
-+	csr_writel(pcie, (PAB_INTP_INTX_MASK | PAB_INTP_MSI_MASK),
-+		PAB_INTP_AMBA_MISC_ENB);
-+
-+	/* program PIO Enable Bit to 1 and Config Window Enable Bit to 1 in
-+	 * PAB_AXI_PIO_CTRL Register
-+	 */
-+	value = csr_readl(pcie, PAB_AXI_PIO_CTRL);
-+	csr_writel(pcie, value | APIO_EN_MASK, PAB_AXI_PIO_CTRL);
-+
-+	/*
-+	 * we'll program one outbound window for config reads and
-+	 * another default inbound window for all the upstream traffic
-+	 * rest of the outbound windows will be configured according to
-+	 * the "ranges" field defined in device tree
-+	 */
-+
-+	/* config outbound translation window */
-+	program_ob_windows(pcie, pcie->ob_wins_configured,
-+			pcie->ob_io_res->start,	0, CFG_WINDOW_TYPE,
-+			resource_size(pcie->ob_io_res));
-+
-+	/* memory inbound  translation window */
-+	program_ib_windows(pcie, WIN_NUM_1, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
-+
-+	/* Get the I/O and memory ranges from DT */
-+	resource_list_for_each_entry_safe(win, tmp, &pcie->resources) {
-+		type = 0;
-+		if (resource_type(win->res) == IORESOURCE_MEM)
-+			type = MEM_WINDOW_TYPE;
-+		if (resource_type(win->res) == IORESOURCE_IO)
-+			type = IO_WINDOW_TYPE;
-+		if (type) {
-+			/* configure outbound translation window */
-+			program_ob_windows(pcie, pcie->ob_wins_configured,
-+				win->res->start, 0, type,
-+				resource_size(win->res));
-+		}
-+	}
-+
-+	return err;
-+}
-+
-+static void mobiveil_mask_intx_irq(struct irq_data *data)
-+{
-+	struct irq_desc *desc = irq_to_desc(data->irq);
-+	struct mobiveil_pcie *pcie;
-+	unsigned long flags;
-+	u32 mask;
-+	u32 shifted_val;
-+
-+	pcie = irq_desc_get_chip_data(desc);
-+	mask = 1 << ((data->hwirq + PAB_INTA_POS) - 1);
-+	raw_spin_lock_irqsave(&pcie->intx_mask_lock, flags);
-+	shifted_val = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
-+	csr_writel(pcie, (shifted_val & (~mask)), PAB_INTP_AMBA_MISC_ENB);
-+	raw_spin_unlock_irqrestore(&pcie->intx_mask_lock, flags);
-+}
-+
-+static void mobiveil_unmask_intx_irq(struct irq_data *data)
-+{
-+	struct irq_desc *desc = irq_to_desc(data->irq);
-+	struct mobiveil_pcie *pcie;
-+	unsigned long flags;
-+	u32 shifted_val;
-+	u32 mask;
-+
-+	pcie = irq_desc_get_chip_data(desc);
-+	mask = 1 << ((data->hwirq + PAB_INTA_POS) - 1);
-+	raw_spin_lock_irqsave(&pcie->intx_mask_lock, flags);
-+	shifted_val = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
-+	csr_writel(pcie, (shifted_val | mask), PAB_INTP_AMBA_MISC_ENB);
-+	raw_spin_unlock_irqrestore(&pcie->intx_mask_lock, flags);
-+}
-+
-+static struct irq_chip intx_irq_chip = {
-+	.name = "mobiveil_pcie:intx",
-+	.irq_enable = mobiveil_unmask_intx_irq,
-+	.irq_disable = mobiveil_mask_intx_irq,
-+	.irq_mask = mobiveil_mask_intx_irq,
-+	.irq_unmask = mobiveil_unmask_intx_irq,
-+};
-+
-+/* routine to setup the INTx related data */
-+static int mobiveil_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-+		irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &intx_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+	return 0;
-+}
-+
-+/* INTx domain operations structure */
-+static const struct irq_domain_ops intx_domain_ops = {
-+	.map = mobiveil_pcie_intx_map,
-+	.xlate = pci_irqd_intx_xlate,
-+};
-+
-+static int mobiveil_pcie_init_irq_domain(struct mobiveil_pcie *pcie)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+	struct device_node *node = dev->of_node;
-+	int ret;
-+
-+	/* setup INTx */
-+	pcie->intx_domain = irq_domain_add_linear(node,
-+				PCI_NUM_INTX + 1, &intx_domain_ops, pcie);
-+
-+	if (!pcie->intx_domain) {
-+		dev_err(dev, "Failed to get a INTx IRQ domain\n");
-+		return -ENODEV;
-+	}
-+
-+	raw_spin_lock_init(&pcie->intx_mask_lock);
-+
-+	return 0;
-+}
-+
-+static int mobiveil_pcie_probe(struct platform_device *pdev)
-+{
-+	struct mobiveil_pcie *pcie;
-+	struct pci_bus *bus;
-+	struct pci_bus *child;
-+	struct pci_host_bridge *bridge;
-+	struct device *dev = &pdev->dev;
-+	struct device_node *node = dev->of_node;
-+	resource_size_t iobase;
-+	int ret;
-+
-+	/* allocate the PCIe port */
-+	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-+	if (!bridge)
-+		return -ENODEV;
-+
-+	pcie = pci_host_bridge_priv(bridge);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->pdev = pdev;
-+
-+	ret = mobiveil_pcie_parse_dt(pcie);
-+	if (ret) {
-+		dev_err(dev, "Parsing DT failed, ret: %x\n", ret);
-+		return ret;
-+	}
-+
-+	INIT_LIST_HEAD(&pcie->resources);
-+
-+	/* parse the host bridge base addresses from the device tree file */
-+	ret = of_pci_get_host_bridge_resources(node,
-+			0, 0xff, &pcie->resources, &iobase);
-+	if (ret) {
-+		dev_err(dev, "Getting bridge resources failed\n");
-+		return -ENOMEM;
-+	}
-+
-+	/*
-+	 * configure all inbound and outbound windows and prepare the RC for
-+	 * config access
-+	 */
-+	ret = mobiveil_host_init(pcie);
-+	if (ret) {
-+		dev_err(dev, "Failed to initialize host\n");
-+		goto error;
-+	}
-+
-+	/* fixup for PCIe class register */
-+	csr_writel(pcie, 0x060402ab, PAB_INTP_AXI_PIO_CLASS);
-+
-+	/* initialize the IRQ domains */
-+	ret = mobiveil_pcie_init_irq_domain(pcie);
-+	if (ret) {
-+		dev_err(dev, "Failed creating IRQ Domain\n");
-+		goto error;
-+	}
-+
-+	ret = devm_request_pci_bus_resources(dev, &pcie->resources);
-+	if (ret)
-+		goto error;
-+
-+	/* Initialize bridge */
-+	list_splice_init(&pcie->resources, &bridge->windows);
-+	bridge->dev.parent = dev;
-+	bridge->sysdata = pcie;
-+	bridge->busnr = pcie->root_bus_nr;
-+	bridge->ops = &mobiveil_pcie_ops;
-+	bridge->map_irq = of_irq_parse_and_map_pci;
-+	bridge->swizzle_irq = pci_common_swizzle;
-+
-+	/* setup the kernel resources for the newly added PCIe root bus */
-+	ret = pci_scan_root_bus_bridge(bridge);
-+	if (ret)
-+		goto error;
-+
-+	bus = bridge->bus;
-+
-+	pci_assign_unassigned_bus_resources(bus);
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
-+	pci_bus_add_devices(bus);
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	return 0;
-+error:
-+	pci_free_resource_list(&pcie->resources);
-+	return ret;
-+}
-+
-+static const struct of_device_id mobiveil_pcie_of_match[] = {
-+	{.compatible = "mbvl,gpex40-pcie",},
-+};
-+
-+MODULE_DEVICE_TABLE(of, mobiveil_pcie_of_match);
-+
-+static struct platform_driver mobiveil_pcie_driver = {
-+	.probe = mobiveil_pcie_probe,
-+	.driver = {
-+			.name = "mobiveil-pcie",
-+			.of_match_table = mobiveil_pcie_of_match,
-+			.suppress_bind_attrs = true,
-+		},
-+};
-+
-+builtin_platform_driver(mobiveil_pcie_driver);
-+
-+MODULE_LICENSE("GPL v2");
-+MODULE_DESCRIPTION("Mobiveil PCIe host controller driver");
-+MODULE_AUTHOR("Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>");
--- 
-1.8.3.1
+Reworded differently - this is a Hisilicon driver it is not generic ACPI
+code; I can't see how it can be used on a multitude of platforms unless
+you specify FW level bindings.
+
+> To overcome the problem of associating this logical PIO address
+> with the child device, a scan handler is added to scan the ACPI
+> namespace for known indirect IO hosts. This scan handler creates an
+> MFD per child with the translated logical PIO address as it's IO
+> resource, as a substitute for the normal platform device which ACPI
+> would create during device enumeration.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> ---
+>  drivers/acpi/arm64/Makefile          |   1 +
+>  drivers/acpi/arm64/acpi_indirectio.c | 250 +++++++++++++++++++++++++++++++++++
+
+See above (and I do not understand what arm64 has to do with it).
+
+I understand you need to find a place to add the:
+
+acpi_indirect_io_scan_init()
+
+to be called from core ACPI code because ACPI can't handle probe
+dependencies in any other way but other than that this patch is
+a Hisilicon ACPI driver - there is nothing generic in it (or at
+least there are no standard bindings to make it so).
+
+Whether a callback from ACPI core code (acpi_scan_init()) to a driver
+specific hook is sane or not that's the question and the only reason
+why you want to add this in drivers/acpi/arm64 rather than, say,
+drivers/bus (as you do for the DT driver).
+
+I do not know Rafael's opinion on the above, I would like to help
+you make forward progress but please understand my concerns, mostly
+on FW side.
+
+Thanks,
+Lorenzo
+
+>  drivers/acpi/internal.h              |   5 +
+>  drivers/acpi/scan.c                  |   1 +
+>  4 files changed, 257 insertions(+)
+>  create mode 100644 drivers/acpi/arm64/acpi_indirectio.c
+> 
+> diff --git a/drivers/acpi/arm64/Makefile b/drivers/acpi/arm64/Makefile
+> index 1017def..f4a7f46 100644
+> --- a/drivers/acpi/arm64/Makefile
+> +++ b/drivers/acpi/arm64/Makefile
+> @@ -1,2 +1,3 @@
+>  obj-$(CONFIG_ACPI_IORT) 	+= iort.o
+>  obj-$(CONFIG_ACPI_GTDT) 	+= gtdt.o
+> +obj-$(CONFIG_INDIRECT_PIO)	+= acpi_indirectio.o
+> diff --git a/drivers/acpi/arm64/acpi_indirectio.c b/drivers/acpi/arm64/acpi_indirectio.c
+> new file mode 100644
+> index 0000000..51a1b92
+> --- /dev/null
+> +++ b/drivers/acpi/arm64/acpi_indirectio.c
+> @@ -0,0 +1,250 @@
+> +// SPDX-License-Identifier: GPL-2.0+
+> +/*
+> + * Copyright (C) 2017 HiSilicon Limited, All Rights Reserved.
+> + * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
+> + * Author: John Garry <john.garry@huawei.com>
+> + *
+> + * This file implements functunality to scan the ACPI namespace and config
+> + * devices under "indirect IO" hosts. An "indirect IO" host allows child
+> + * devices to use logical IO accesses when the host, itself, does not provide
+> + * a transparent bridge. The device setup creates a per-child MFD with a
+> + * logical port IO resource.
+> + */
+> +
+> +#include <linux/acpi.h>
+> +#include <linux/logic_pio.h>
+> +#include <linux/mfd/core.h>
+> +#include <linux/platform_device.h>
+> +
+> +ACPI_MODULE_NAME("indirect IO");
+> +
+> +#define ACPI_INDIRECT_IO_NAME_LEN 255
+> +
+> +struct acpi_indirect_io_mfd_cell {
+> +	struct mfd_cell_acpi_match acpi_match;
+> +	char name[ACPI_INDIRECT_IO_NAME_LEN];
+> +	char pnpid[ACPI_INDIRECT_IO_NAME_LEN];
+> +};
+> +
+> +static int acpi_indirect_io_xlat_res(struct acpi_device *adev,
+> +				     struct acpi_device *host,
+> +				     struct resource *res)
+> +{
+> +	unsigned long sys_port;
+> +	resource_size_t len = res->end - res->start;
+> +
+> +	sys_port = logic_pio_trans_hwaddr(&host->fwnode, res->start, len);
+> +	if (sys_port == -1UL)
+> +		return -EFAULT;
+> +
+> +	res->start = sys_port;
+> +	res->end = sys_port + len;
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+> + * acpi_indirect_io_set_res - set the resources for a child device
+> + * (MFD) of an "indirect IO" host.
+> + * @child: the device node to be updated the I/O resource
+> + * @hostdev: the device node associated with the "indirect IO" host
+> + * @res: double pointer to be set to the address of translated resources
+> + * @num_res: pointer to variable to hold the number of translated resources
+> + *
+> + * Returns 0 when successful, and a negative value for failure.
+> + *
+> + * For a given "indirect IO" host, each child device will have associated
+> + * host-relevative address resource. This function will return the translated
+> + * logical PIO addresses for each child devices resources.
+> + */
+> +static int acpi_indirect_io_set_res(struct device *child,
+> +				    struct device *hostdev,
+> +				    const struct resource **res,
+> +				    int *num_res)
+> +{
+> +	struct acpi_device *adev;
+> +	struct acpi_device *host;
+> +	struct resource_entry *rentry;
+> +	LIST_HEAD(resource_list);
+> +	struct resource *resources;
+> +	int count;
+> +	int i;
+> +	int ret = -EIO;
+> +
+> +	if (!child || !hostdev)
+> +		return -EINVAL;
+> +
+> +	host = to_acpi_device(hostdev);
+> +	adev = to_acpi_device(child);
+> +
+> +	/* check the device state */
+> +	if (!adev->status.present) {
+> +		dev_info(child, "device is not present\n");
+> +		return 0;
+> +	}
+> +	/* whether the child had been enumerated? */
+> +	if (acpi_device_enumerated(adev)) {
+> +		dev_info(child, "had been enumerated\n");
+> +		return 0;
+> +	}
+> +
+> +	count = acpi_dev_get_resources(adev, &resource_list, NULL, NULL);
+> +	if (count <= 0) {
+> +		dev_err(child, "failed to get resources\n");
+> +		return count ? count : -EIO;
+> +	}
+> +
+> +	resources = kcalloc(count, sizeof(*resources), GFP_KERNEL);
+> +	if (!resources) {
+> +		acpi_dev_free_resource_list(&resource_list);
+> +		return -ENOMEM;
+> +	}
+> +	count = 0;
+> +	list_for_each_entry(rentry, &resource_list, node)
+> +		resources[count++] = *rentry->res;
+> +
+> +	acpi_dev_free_resource_list(&resource_list);
+> +
+> +	/* translate the I/O resources */
+> +	for (i = 0; i < count; i++) {
+> +		if (!(resources[i].flags & IORESOURCE_IO))
+> +			continue;
+> +		ret = acpi_indirect_io_xlat_res(adev, host, &resources[i]);
+> +		if (ret) {
+> +			kfree(resources);
+> +			dev_err(child, "translate IO range failed(%d)\n", ret);
+> +			return ret;
+> +		}
+> +	}
+> +	*res = resources;
+> +	*num_res = count;
+> +
+> +	return ret;
+> +}
+> +
+> +/*
+> + * acpi_indirect_io_setup - scan handler for "indirect IO" host.
+> + * @adev: "indirect IO" host ACPI device pointer
+> + * Returns 0 when successful, and a negative value for failure.
+> + *
+> + * Setup an "indirect IO" host by scanning all child devices, and
+> + * create a per-device MFD with logical PIO translated IO resources.
+> + */
+> +static int acpi_indirect_io_setup(struct acpi_device *adev)
+> +{
+> +	struct platform_device *pdev;
+> +	struct mfd_cell *mfd_cells;
+> +	struct logic_pio_hwaddr *range;
+> +	struct acpi_device *child;
+> +	struct acpi_indirect_io_mfd_cell *acpi_indirect_io_mfd_cells;
+> +	int size, ret, count = 0, cell_num = 0;
+> +
+> +	range = kzalloc(sizeof(*range), GFP_KERNEL);
+> +	if (!range)
+> +		return -ENOMEM;
+> +	range->fwnode = &adev->fwnode;
+> +	range->flags = PIO_INDIRECT;
+> +	range->size = PIO_INDIRECT_SIZE;
+> +
+> +	ret = logic_pio_register_range(range);
+> +	if (ret)
+> +		goto free_range;
+> +
+> +	list_for_each_entry(child, &adev->children, node)
+> +		cell_num++;
+> +
+> +	/* allocate the mfd cell and companion acpi info, one per child */
+> +	size = sizeof(*mfd_cells) + sizeof(*acpi_indirect_io_mfd_cells);
+> +	mfd_cells = kcalloc(cell_num, size, GFP_KERNEL);
+> +	if (!mfd_cells) {
+> +		ret = -ENOMEM;
+> +		goto free_range;
+> +	}
+> +
+> +	acpi_indirect_io_mfd_cells = (struct acpi_indirect_io_mfd_cell *)
+> +					&mfd_cells[cell_num];
+> +	/* Only consider the children of the host */
+> +	list_for_each_entry(child, &adev->children, node) {
+> +		struct mfd_cell *mfd_cell = &mfd_cells[count];
+> +		struct acpi_indirect_io_mfd_cell *acpi_indirect_io_mfd_cell =
+> +					&acpi_indirect_io_mfd_cells[count];
+> +		const struct mfd_cell_acpi_match *acpi_match =
+> +					&acpi_indirect_io_mfd_cell->acpi_match;
+> +		char *name = &acpi_indirect_io_mfd_cell[count].name[0];
+> +		char *pnpid = &acpi_indirect_io_mfd_cell[count].pnpid[0];
+> +		struct mfd_cell_acpi_match match = {
+> +			.pnpid = pnpid,
+> +		};
+> +
+> +		snprintf(name, ACPI_INDIRECT_IO_NAME_LEN, "indirect-io-%s",
+> +			 acpi_device_hid(child));
+> +		snprintf(pnpid, ACPI_INDIRECT_IO_NAME_LEN, "%s",
+> +			 acpi_device_hid(child));
+> +
+> +		memcpy((void *)acpi_match, (void *)&match, sizeof(*acpi_match));
+> +		mfd_cell->name = name;
+> +		mfd_cell->acpi_match = acpi_match;
+> +
+> +		ret = acpi_indirect_io_set_res(&child->dev, &adev->dev,
+> +					       &mfd_cell->resources,
+> +					       &mfd_cell->num_resources);
+> +		if (ret) {
+> +			dev_err(&child->dev, "set resource failed (%d)\n", ret);
+> +			goto free_mfd_resources;
+> +		}
+> +		count++;
+> +	}
+> +
+> +	pdev = acpi_create_platform_device(adev, NULL);
+> +	if (IS_ERR_OR_NULL(pdev)) {
+> +		dev_err(&adev->dev, "create platform device for host failed\n");
+> +		ret = PTR_ERR(pdev);
+> +		goto free_mfd_resources;
+> +	}
+> +	acpi_device_set_enumerated(adev);
+> +
+> +	ret = mfd_add_devices(&pdev->dev, PLATFORM_DEVID_NONE,
+> +			      mfd_cells, cell_num, NULL, 0, NULL);
+> +	if (ret) {
+> +		dev_err(&pdev->dev, "failed to add mfd cells (%d)\n", ret);
+> +		goto free_mfd_resources;
+> +	}
+> +
+> +	return ret;
+> +
+> +free_mfd_resources:
+> +	while (cell_num--)
+> +		kfree(mfd_cells[cell_num].resources);
+> +	kfree(mfd_cells);
+> +free_range:
+> +	kfree(range);
+> +
+> +	return ret;
+> +}
+> +
+> +/* All the host devices which apply indirect-IO can be listed here. */
+> +static const struct acpi_device_id acpi_indirect_io_host_id[] = {
+> +	{}
+> +};
+> +
+> +static int acpi_indirect_io_attach(struct acpi_device *adev,
+> +				   const struct acpi_device_id *id)
+> +{
+> +	int ret = acpi_indirect_io_setup(adev);
+> +
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	return 1;
+> +}
+> +
+> +static struct acpi_scan_handler acpi_indirect_io_handler = {
+> +	.ids = acpi_indirect_io_host_id,
+> +	.attach = acpi_indirect_io_attach,
+> +};
+> +
+> +void __init acpi_indirect_io_scan_init(void)
+> +{
+> +	acpi_scan_add_handler(&acpi_indirect_io_handler);
+> +}
+> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+> index 1d0a501..680f3cf 100644
+> --- a/drivers/acpi/internal.h
+> +++ b/drivers/acpi/internal.h
+> @@ -31,6 +31,11 @@
+>  void acpi_platform_init(void);
+>  void acpi_pnp_init(void);
+>  void acpi_int340x_thermal_init(void);
+> +#ifdef CONFIG_INDIRECT_PIO
+> +void acpi_indirect_io_scan_init(void);
+> +#else
+> +static inline void acpi_indirect_io_scan_init(void) {}
+> +#endif
+>  #ifdef CONFIG_ARM_AMBA
+>  void acpi_amba_init(void);
+>  #else
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 8e63d93..204da8a 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -2155,6 +2155,7 @@ int __init acpi_scan_init(void)
+>  	acpi_amba_init();
+>  	acpi_watchdog_init();
+>  	acpi_init_lpit();
+> +	acpi_indirect_io_scan_init();
+>  
+>  	acpi_scan_add_handler(&generic_device_handler);
+>  
+> -- 
+> 1.9.1
+> 
