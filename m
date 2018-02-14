@@ -1,52 +1,180 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 26 Feb 2018 12:22:59 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-Cc: kishon@ti.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        andy.shevchenko@gmail.com
-Subject: Re: [PATCH v2 0/2] pci: endpoint: Fix double free in pci_epf_create()
-Message-ID: <20180226182259.GD25159@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180226171617.10016-1-embedded24@evers-fischer.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180226171617.10016-1-embedded24@evers-fischer.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:39087 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966717AbeBNDwY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 22:52:24 -0500
+Received: by mail-ot0-f196.google.com with SMTP id f18so19262832otf.6
+        for <linux-pci@vger.kernel.org>; Tue, 13 Feb 2018 19:52:24 -0800 (PST)
+From: Frederick Lawler <fred@fredlawl.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, Frederick Lawler <fred@fredlawl.com>
+Subject: [PATCH] PCI: Move pcieport_if.h to drivers/pci and replace includes
+Date: Tue, 13 Feb 2018 21:52:18 -0600
+Message-Id: <1518580338-13826-1-git-send-email-fred@fredlawl.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 26, 2018 at 06:16:15PM +0100, Rolf Evers-Fischer wrote:
-> This is version 2 of a patchset to avoid double free in function
-> 'pci_epf_create()'.
-> 
-> When I accidentally created a new endpoint device with an empty name,
-> the kernel warned about "attempted to be registered with empty name!"
-> and crashed afterwards.
-> 
-> It turned out that the crash was not caused by the 'device_add()'
-> function itself, but by a double kfree of 'epf->name' and 'epf'.
-> 
-> The first patch just simplifies the code, while the second patch
-> fixes the problem.
-> 
-> Changes in v2:
-> - Based on feedback from Lorenzo, Andy and Kishon (thanks!)
-> - Change IDs removed
-> - First patch completely reworked in order to eliminate the
->   need for the second 'kstrdup' allocation and the 'kfree' of
->   the first allocation.
->   It was tested with name="pci_epf_test.0" and name="pci_epb":
->   The 'epf->name' was "pci_epf_test" or "pci_epb" (=unchanged).
-> 
-> Rolf Evers-Fischer (2):
->   pci: endpoint: Simplify name allocation for epf device
->   pci: endpoint: Fix kernel panic after put_device()
+Move the include/linux/pcieport_if.h file to drivers/pci/pcieport_if.h.
 
-$ git log --oneline --no-merges drivers/pci/endpoint/
-fc41df28f89e PCI: endpoint: Fix EPF device name to support multi-function devices
-4494738de0d9 PCI: endpoint: Add the function number as argument to EPC ops
-b330104fa76d PCI: endpoint: Use EPC's device in dma_alloc_coherent()/dma_free_coherent()
-35ad61921f49 PCI: endpoint: Fix find_first_zero_bit() usage
-0c47cd7a9b6c PCI: endpoint: Populate func_no before calling pci_epc_add_epf()
-...
+Replace all uses of #include<linux/pcieport_if.h> with relative paths to
+the new file location. eg. #include "../pcieport_if.h"
 
-Please make yours match.
+Signed-off-by: Frederick Lawler <fred@fredlawl.com>
+---
+ drivers/pci/hotplug/pciehp.h                 | 3 ++-
+ drivers/pci/pcie/aer/aerdrv.c                | 2 +-
+ drivers/pci/pcie/aer/aerdrv.h                | 3 ++-
+ drivers/pci/pcie/pcie-dpc.c                  | 3 ++-
+ drivers/pci/pcie/pme.c                       | 2 +-
+ drivers/pci/pcie/portdrv_acpi.c              | 2 +-
+ drivers/pci/pcie/portdrv_bus.c               | 2 +-
+ drivers/pci/pcie/portdrv_core.c              | 2 +-
+ drivers/pci/pcie/portdrv_pci.c               | 2 +-
+ {include/linux => drivers/pci}/pcieport_if.h | 0
+ 10 files changed, 12 insertions(+), 9 deletions(-)
+ rename {include/linux => drivers/pci}/pcieport_if.h (100%)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 636ed8f..0a2f955 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -20,10 +20,11 @@
+ #include <linux/pci_hotplug.h>
+ #include <linux/delay.h>
+ #include <linux/sched/signal.h>		/* signal_pending() */
+-#include <linux/pcieport_if.h>
+ #include <linux/mutex.h>
+ #include <linux/workqueue.h>
+ 
++#include "../pcieport_if.h"
++
+ #define MY_NAME	"pciehp"
+ 
+ extern bool pciehp_poll_mode;
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index da8331f..4a27a90 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -21,10 +21,10 @@
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/delay.h>
+-#include <linux/pcieport_if.h>
+ #include <linux/slab.h>
+ 
+ #include "aerdrv.h"
++#include "../../pcieport_if.h"
+ #include "../../pci.h"
+ 
+ static int aer_probe(struct pcie_device *dev);
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index 5449e5c..8e16261 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -10,10 +10,11 @@
+ #define _AERDRV_H_
+ 
+ #include <linux/workqueue.h>
+-#include <linux/pcieport_if.h>
+ #include <linux/aer.h>
+ #include <linux/interrupt.h>
+ 
++#include "../../pcieport_if.h"
++
+ #define SYSTEM_ERROR_INTR_ON_MESG_MASK	(PCI_EXP_RTCTL_SECEE|	\
+ 					PCI_EXP_RTCTL_SENFEE|	\
+ 					PCI_EXP_RTCTL_SEFEE)
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 38e40c6..d21b1c7 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -10,7 +10,8 @@
+ #include <linux/interrupt.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
+-#include <linux/pcieport_if.h>
++
++#include "../pcieport_if.h"
+ #include "../pci.h"
+ #include "aer/aerdrv.h"
+ 
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 5480f54..cc57707 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -14,9 +14,9 @@
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/device.h>
+-#include <linux/pcieport_if.h>
+ #include <linux/pm_runtime.h>
+ 
++#include "../pcieport_if.h"
+ #include "../pci.h"
+ #include "portdrv.h"
+ 
+diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+index 319c949..80375f0 100644
+--- a/drivers/pci/pcie/portdrv_acpi.c
++++ b/drivers/pci/pcie/portdrv_acpi.c
+@@ -10,8 +10,8 @@
+ #include <linux/errno.h>
+ #include <linux/acpi.h>
+ #include <linux/pci-acpi.h>
+-#include <linux/pcieport_if.h>
+ 
++#include "../pcieport_if.h"
+ #include "aer/aerdrv.h"
+ #include "../pci.h"
+ #include "portdrv.h"
+diff --git a/drivers/pci/pcie/portdrv_bus.c b/drivers/pci/pcie/portdrv_bus.c
+index f0fba55..8047485 100644
+--- a/drivers/pci/pcie/portdrv_bus.c
++++ b/drivers/pci/pcie/portdrv_bus.c
+@@ -13,7 +13,7 @@
+ #include <linux/errno.h>
+ #include <linux/pm.h>
+ 
+-#include <linux/pcieport_if.h>
++#include  "../pcieport_if.h"
+ #include "portdrv.h"
+ 
+ static int pcie_port_bus_match(struct device *dev, struct device_driver *drv);
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index ef3bad4..3089eef 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -15,9 +15,9 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/string.h>
+ #include <linux/slab.h>
+-#include <linux/pcieport_if.h>
+ #include <linux/aer.h>
+ 
++#include "../pcieport_if.h"
+ #include "../pci.h"
+ #include "portdrv.h"
+ 
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index fb1c1bb..3dfc9ac 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -15,11 +15,11 @@
+ #include <linux/pm.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/init.h>
+-#include <linux/pcieport_if.h>
+ #include <linux/aer.h>
+ #include <linux/dmi.h>
+ #include <linux/pci-aspm.h>
+ 
++#include "../pcieport_if.h"
+ #include "../pci.h"
+ #include "portdrv.h"
+ 
+diff --git a/include/linux/pcieport_if.h b/drivers/pci/pcieport_if.h
+similarity index 100%
+rename from include/linux/pcieport_if.h
+rename to drivers/pci/pcieport_if.h
+-- 
+2.7.4
