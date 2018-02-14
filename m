@@ -1,89 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:9006 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750909AbeBIMEB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Feb 2018 07:04:01 -0500
-From: Vignesh R <vigneshr@ti.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
-Subject: [PATCH 2/3] PCI: dwc: pci-dra7xx: Improve MSI IRQ handling
-Date: Fri, 9 Feb 2018 17:34:14 +0530
-Message-ID: <20180209120415.17590-3-vigneshr@ti.com>
-In-Reply-To: <20180209120415.17590-1-vigneshr@ti.com>
-References: <20180209120415.17590-1-vigneshr@ti.com>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:44645 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1031562AbeBNPlg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Feb 2018 10:41:36 -0500
+Received: by mail-ot0-f193.google.com with SMTP id 79so539699oth.11
+        for <linux-pci@vger.kernel.org>; Wed, 14 Feb 2018 07:41:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180205191420.GA12397@red-moon>
+References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com> <20180205191420.GA12397@red-moon>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Wed, 14 Feb 2018 13:41:34 -0200
+Message-ID: <CAOMZO5A2pn23+nBEMV=bYaHa6-Pa3qohFMzrcnkECGhMFAJW6g@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root subordinate
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>,
+        linux-pci@vger.kernel.org,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to ensure that there are no pending MSI IRQ vector set (i.e
-PCIE_MSI_INTR0_STATUS reads 0 at least once) before exiting
-dra7xx_pcie_msi_irq_handler(). Else, the dra7xx PCIe wrapper will not
-register new MSI IRQs even though PCIE_MSI_INTR0_STATUS shows IRQs are
-pending. Therefore, keep calling dra7xx_pcie_msi_irq_handler() until it
-returns IRQ_NONE, which suggests that PCIE_MSI_INTR0_STATUS is 0.
+Hi Lucas and Richard,
 
-This fixes a bug, where PCIe wifi cards with 4 DMA queues like Intel
-8260 used to throw following error and stall during ping/iperf3 tests.
+On Mon, Feb 5, 2018 at 5:14 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Mon, Jan 15, 2018 at 10:36:08AM +0100, Koen Vandeputte wrote:
+>> The subordinate value indicates the highest bus number which can be
+>> reached downstream though a certain device.
+>>
+>> Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+>> parent")
+>> ensures that downstream devices cannot assign busnumbers higher than the
+>> upstream device subordinate number, which was indeed illogical.
+>>
+>> By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
+>> value of 0x01.
+>>
+>> Due to this combined with above commit, enumeration stops digging deeper
+>> downstream as soon as bus num 0x01 has been assigned, which is always
+>> the case for a bridge device.
+>>
+>> This results in all devices behind a bridge bus to remain undetected, as
+>> these would be connected to bus 0x02 or higher.
+>>
+>> Fix this by initializing the RC to a subordinate value of 0xff, which is
+>> not altering hardware behaviour in any way, but informs probing
+>> function pci_scan_bridge() later on which reads this value back from
+>> register.
+>>
+>> Following nasty errors during boot are also fixed by this:
+>>
+>> [    0.459145] pci_bus 0000:02: busn_res: can not insert [bus 02-ff]
+>> under [bus 01] (conflicts with (null) [bus 01])
+>> ...
+>> [    0.464515] pci_bus 0000:03: [bus 03] partially hidden behind bridge
+>> 0000:01 [bus 01]
+>> ...
+>> [    0.464892] pci_bus 0000:04: [bus 04] partially hidden behind bridge
+>> 0000:01 [bus 01]
+>> ...
+>> [    0.466488] pci_bus 0000:05: [bus 05] partially hidden behind bridge
+>> 0000:01 [bus 01]
+>> [    0.466506] pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to
+>> 05
+>> [    0.466517] pci_bus 0000:02: busn_res: can not insert [bus 02-05]
+>> under [bus 01] (conflicts with (null) [bus 01])
+>> [    0.466534] pci_bus 0000:02: [bus 02-05] partially hidden behind
+>> bridge 0000:01 [bus 01]
+>>
+>> Fixes: a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+>> parent")
+>> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+>> Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+>> Cc: Binghui Wang <wangbinghui@hisilicon.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Jesper Nilsson <jesper.nilsson@axis.com>
+>> Cc: Jianguo Sun <sunjianguo1@huawei.com>
+>> Cc: Jingoo Han <jingoohan1@gmail.com>
+>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Lucas Stach <l.stach@pengutronix.de>
+>> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+>> Cc: Minghuan Lian <minghuan.Lian@freescale.com>
+>> Cc: Mingkai Hu <mingkai.hu@freescale.com>
+>> Cc: Murali Karicheri <m-karicheri2@ti.com>
+>> Cc: Pratyush Anand <pratyush.anand@gmail.com>
+>> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+>> Cc: Roy Zang <tie-fei.zang@freescale.com>
+>> Cc: Shawn Guo <shawn.guo@linaro.org>
+>> Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+>> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+>> Cc: Xiaowei Song <songxiaowei@hisilicon.com>
+>> Cc: Zhou Wang <wangzhou1@hisilicon.com>
+>> ---
+>>  drivers/pci/dwc/pcie-designware-host.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> I would appreciate some testing from dwc host maintainers so that
+> we can merge this patch, it is a bug fix that should be merged as
+> soon as possible, please help Koen test it and provide feedback
+> on the list.
 
-[   97.776310] iwlwifi 0000:01:00.0: Queue 9 stuck for 2500 ms.
+Is it possible for you to test this patch?
 
-Signed-off-by: Vignesh R <vigneshr@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c | 21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index ed8558d638e5..3420cbf7b60a 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -254,14 +254,31 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 	struct dra7xx_pcie *dra7xx = arg;
- 	struct dw_pcie *pci = dra7xx->pci;
- 	struct pcie_port *pp = &pci->pp;
-+	int count = 0;
- 	unsigned long reg;
- 	u32 virq, bit;
- 
- 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
- 
- 	switch (reg) {
- 	case MSI:
--		dw_handle_msi_irq(pp);
-+		/*
-+		 * Need to make sure no MSI IRQs are pending before
-+		 * exiting handler, else the wrapper will not catch new
-+		 * IRQs. So loop around till dw_handle_msi_irq() returns
-+		 * IRQ_NONE
-+		 */
-+		while (dw_handle_msi_irq(pp) != IRQ_NONE && count < 1000)
-+			count++;
-+
-+		if (count == 1000) {
-+			dev_err(pci->dev, "too much work in msi irq\n");
-+			dra7xx_pcie_writel(dra7xx,
-+					   PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
-+					   reg);
-+			return IRQ_HANDLED;
-+		}
- 		break;
- 	case INTA:
- 	case INTB:
-@@ -275,8 +292,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 		break;
- 	}
- 
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
--
- 	return IRQ_HANDLED;
- }
- 
--- 
-2.16.1
+Thanks
