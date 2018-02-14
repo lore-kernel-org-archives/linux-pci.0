@@ -1,58 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:50192 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751661AbeBWPKl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 10:10:41 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
-Subject: [PATCH v7 0/9] PCI: dwc: Enables MSI-X driver support
-Date: Fri, 23 Feb 2018 15:10:23 +0000
-Message-Id: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Moore, Robert" <robert.moore@intel.com>
+To: Hans de Goede <hdegoede@redhat.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "Schmauss, Erik" <erik.schmauss@intel.com>,
+        "Box, David E" <david.e.box@intel.com>
+CC: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@acpica.org" <devel@acpica.org>
+Subject: RE: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices with
+ unmet dependencies
+Date: Wed, 14 Feb 2018 15:28:07 +0000
+Message-ID: <94F2FBAB4432B54E8AACC7DFDE6C92E3B7572CE8@ORSMSX110.amr.corp.intel.com>
+References: <20180122085135.16732-1-hdegoede@redhat.com>
+ <3281375.11fh90aaLK@aspire.rjw.lan>
+ <7efce3e1-4cb7-fa68-9024-73fa124b9171@redhat.com>
+ <94F2FBAB4432B54E8AACC7DFDE6C92E3B7570FA0@ORSMSX110.amr.corp.intel.com>
+ <a62364ba-7b79-6bb0-20a3-c66cb166e923@redhat.com>
+In-Reply-To: <a62364ba-7b79-6bb0-20a3-c66cb166e923@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes into a new IRQ handler mechanism (multiplexed IRQ domain hierarchy)
-more suitable and appropriate to use on pcie-designware and on each SoC
-specific driver in order to allow new and more complex features like MSI-X.
-
-Adds Synopsys Root Complex driver support for MSI-X feature.
-
-Expands the maximum number of IRQs from 32 to 256 distributed by
-a maximum of 8 controller registers.
-
-The patch set was made against the Bjorn's next branch.
-
-Gustavo Pimentel (9):
-  PCI: dwc: Add new IRQ API to pcie-desigware
-  PCI: dwc: exynos: Switch to use the new IRQ API
-  PCI: dwc: imx6: Switch to use the new IRQ API
-  PCI: dwc: artpec6: Switch to use the new IRQ API
-  PCI: dwc: designware: Switch to use the new IRQ API
-  PCI: dwc: qcom: Switch to use the new IRQ API
-  PCI: dwc: keystone: Switch to use the new IRQ API
-  PCI: dwc: Remove old IRQ API
-  PCI: dwc: Expand maximum number of IRQs from 32 to 256
-
- drivers/pci/dwc/pci-exynos.c           |  18 --
- drivers/pci/dwc/pci-imx6.c             |  18 --
- drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
- drivers/pci/dwc/pci-keystone.c         |   1 +
- drivers/pci/dwc/pci-keystone.h         |   4 +-
- drivers/pci/dwc/pci-layerscape.c       |   3 +-
- drivers/pci/dwc/pcie-artpec6.c         |  18 --
- drivers/pci/dwc/pcie-designware-host.c | 398 +++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware-plat.c |  16 --
- drivers/pci/dwc/pcie-designware.h      |  30 ++-
- drivers/pci/dwc/pcie-qcom.c            |  16 --
- 11 files changed, 258 insertions(+), 355 deletions(-)
-
--- 
-2.7.4
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSGFucyBkZSBHb2VkZSBb
+bWFpbHRvOmhkZWdvZWRlQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgRmVicnVhcnkg
+MTQsIDIwMTggMjozMyBBTQ0KPiBUbzogTW9vcmUsIFJvYmVydCA8cm9iZXJ0Lm1vb3JlQGludGVs
+LmNvbT47IFJhZmFlbCBKLiBXeXNvY2tpDQo+IDxyandAcmp3eXNvY2tpLm5ldD47IGxpbnV4LWFj
+cGlAdmdlci5rZXJuZWwub3JnOyBTY2htYXVzcywgRXJpaw0KPiA8ZXJpay5zY2htYXVzc0BpbnRl
+bC5jb20+OyBCb3gsIERhdmlkIEUgPGRhdmlkLmUuYm94QGludGVsLmNvbT4NCj4gQ2M6IExlbiBC
+cm93biA8bGVuYkBrZXJuZWwub3JnPjsgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNv
+bT47DQo+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGRldmVsQGFjcGljYS5vcmcNCj4gU3Vi
+amVjdDogUmU6IFtQQVRDSCB2MiAwLzVdIEFDUEk6IERvIG5vdCBjYWxsIF9TVEEgb24gYmF0dGVy
+eSBkZXZpY2VzDQo+IHdpdGggdW5tZXQgZGVwZW5kZW5jaWVzDQo+IA0KPiBIaSwNCj4gDQo+IE9u
+IDA4LTAyLTE4IDE4OjM0LCBNb29yZSwgUm9iZXJ0IHdyb3RlOg0KPiA+DQo+ID4NCj4gPj4+IFRo
+ZSBsYXN0IG9uZSBuZWVkcyB0byBnbyBpbiB2aWEgQUNQSUNBIGFueXdheSBvciB3ZSdsbCBuZWVk
+IHRvIGNhcnJ5DQo+ID4+PiBhIExpbnV4LXNwZWNpZmljIHJlcGxhY2VtZW50IGZvciBhY3BpX2dl
+dF9vYmplY3RfaW5mbygpLg0KPiA+Pg0KPiA+PiBBY2ssIEknbSBkaXNjdXNzaW5nIGhvdyB0byBw
+cm9jZWVkIHdpdGggdGhpcyB3aXRoIHRoZSBBQ1BJQ0EgcGVvcGxlLg0KPiA+Pg0KPiA+PiBSZWdh
+cmRzLA0KPiA+Pg0KPiA+PiBIYW5zDQo+ID4NCj4gPg0KPiA+IEkgbm9ybWFsbHkgZG9uJ3QgbGlr
+ZSB0byBjaGFuZ2UgZXh0ZXJuYWwgaW50ZXJmYWNlcyAodGhlIGJpZ2dlc3QNCj4gcmVhc29uIGJl
+aW5nIHRoZSBzaGVlciBudW1iZXIgb2YgZGlmZmVyZW50IE9TIHZlbmRvcnMgdGhhdCB1c2UgQUNQ
+SUNBKSwNCj4gYnV0IGluIHRoaXMgY2FzZSwgSSBmZWVsIGl0IG1heSBiZSBPSy4gVGhpcyBpbnRl
+cmZhY2UgaXMgcHJvYmFibHkgbm90DQo+IGhlYXZpbHkgdXNlZCwgYW5kIHRoZXJlIGlzIHByZWNl
+ZGVudCBmb3IgdGhpcyB3aGVuIHRoZSBpbnZvY2F0aW9uIG9mDQo+IF9TVUIgd2FzIHJlbW92ZWQu
+DQo+ID4NCj4gPiBPbiB0aGUgb3RoZXIgaGFuZCwgSSB0aGluayBJIHNhdyBpdCBtZW50aW9uZWQg
+dGhhdCBMaW51eCBjYWxscyB0aGlzDQo+IGludGVyZmFjZSBvbmx5IG9uY2UsIGlzIHRoaXMgY29y
+cmVjdD8NCj4gDQo+IE1vcmUgb3IgbGVzcywgTGludXggY2FsbHMgaXQgb25jZSB3aGVuIGVudW1l
+cmF0aW5nIGFsbCB0aGUgZGV2aWNlcyBhbmQgYQ0KPiBmZXcgQUNQSSBkcml2ZXJzIGNhbGwgaXQg
+YWdhaW4gdG8gZ2V0IHNvbWUgZXh0cmEgaW5mbyB0aGV5IG5lZWQuDQo+IA0KPiA+IElmIHNvLCBw
+ZXJoYXBzIGl0IHdvdWxkIGJlIGVhc2llc3QgdG8gc2ltcGx5IHJlbW92ZSB0aGlzIGNhbGwgYW5k
+IHVzZQ0KPiBkaXJlY3QgY29udHJvbCBtZXRob2QgaW52b2NhdGlvbnMgdG8gb2J0YWluIHRoZSBk
+ZXNpcmVkIGRhdGEuDQo+IA0KPiBJZiB3ZSBnbyB0aGlzIHJvdXRlIHdlIHdvdWxkIHByb2JhYmx5
+IGVuZCB1cCBjb3B5aW5nIHRoZSBmdW5jdGlvbiwgc2luY2UNCj4gYXMgc2FpZCBzZXZlcmFsIGRy
+aXZlcnMgdXNlIGl0IHRvby4NCj4gDQo+ID4gSWYgd2UgZ28gYWhlYWQgYW5kIG1ha2UgdGhpcyBj
+aGFuZ2UgdG8gQUNQSUNBOiBJIGhhdmUgbm90IHNlZW4gdGhlDQo+IHBhdGNoLCBidXQgcGxlYXNl
+IG1ha2Ugc3VyZSB0aGF0IGFsbCB2ZXN0aWdlcyBvZiB0aGlzIGFyZSByZW1vdmVkLiBUaGlzDQo+
+IGluY2x1ZGVzIGFsbCBpbnZvY2F0aW9ucyB3aXRoaW4gQUNQSUNBIHRoYXQgZXhhbWluZSB0aGUg
+cmVzdWx0IG9mIHRoZQ0KPiBfU1RBIGludm9jYXRpb24sIHRoZSBDdXJyZW50U3RhdHVzIGZpZWxk
+IG9mIEFDUElfREVWSUNFX0lORk8sIHRoZQ0KPiBBQ1BJX1ZBTElEX1NUQSBmbGFnLCBldGMuDQo+
+IA0KPiBUaGUgcGF0Y2ggYWxyZWFkeSBkb2VzIHRoYXQ6DQo+IA0KPiBodHRwczovL3BhdGNod29y
+ay5rZXJuZWwub3JnL3BhdGNoLzEwMTg2MTk1Lw0KPiANCg0KDQpPZiBjb3Vyc2UsIHdlIHdpbGwg
+bmVlZCB0aGUgQUNQSUNBIHZlcnNpb24gb2YgdGhlIHBhdGNoLCBub3QgdGhlICJsaW51eGl6ZWQi
+IHZlcnNpb24uDQpCb2INCg0KDQoNCj4gUmVnYXJkcywNCj4gDQo+IEhhbnMNCj4gDQoNCg==
