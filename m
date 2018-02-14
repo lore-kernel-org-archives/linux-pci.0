@@ -1,64 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:45976 "EHLO david.siemens.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751646AbeB1GfM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 01:35:12 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Subject: [PATCH v2 4/6] x86: Consolidate PCI_MMCONFIG configs
-Date: Wed, 28 Feb 2018 07:34:49 +0100
-Message-Id: <76a05abd818c89032161585ba130511a5bd673f0.1519799691.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
-References: <cover.1519799691.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
-References: <cover.1519799691.git.jan.kiszka@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 14 Feb 2018 10:46:21 -0800
+From: Jacob Pan <jacob.jun.pan@linux.intel.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
+        nwatters@codeaurora.org, okaya@codeaurora.org,
+        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        yi.l.liu@intel.com, ashok.raj@intel.com, robdclark@gmail.com,
+        christian.koenig@amd.com, bharatku@xilinx.com,
+        jacob.jun.pan@linux.intel.com
+Subject: Re: [PATCH 08/37] iommu/fault: Handle mm faults
+Message-ID: <20180214104621.7675579c@jacob-builder>
+In-Reply-To: <20180212183352.22730-9-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+        <20180212183352.22730-9-jean-philippe.brucker@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On Mon, 12 Feb 2018 18:33:23 +0000
+Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
 
-Not sure if those two worked by design or just by chance so far. In any
-case, it's at least cleaner and clearer to express this in a single
-config statement.
+> When a recoverable page fault is handled by the fault workqueue, find
+> the associated mm and call handle_mm_fault.
+> 
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> ---
+>  drivers/iommu/io-pgfault.c | 89
+> ++++++++++++++++++++++++++++++++++++++++++++-- 1 file changed, 87
+> insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/iommu/io-pgfault.c b/drivers/iommu/io-pgfault.c
+> index 33309ed316d2..565ec01a1b5f 100644
+> --- a/drivers/iommu/io-pgfault.c
+> +++ b/drivers/iommu/io-pgfault.c
+> @@ -9,6 +9,7 @@
+>  
+>  #include <linux/iommu.h>
+>  #include <linux/list.h>
+> +#include <linux/sched/mm.h>
+>  #include <linux/slab.h>
+>  #include <linux/workqueue.h>
+>  
+> @@ -82,8 +83,92 @@ static int iommu_fault_complete(struct
+> iommu_domain *domain, struct device *dev, 
+>  static int iommu_fault_handle_single(struct iommu_fault_context
+> *fault) {
+> -	/* TODO */
+> -	return -ENODEV;
+> +	struct mm_struct *mm;
+> +	struct vm_area_struct *vma;
+> +	unsigned int access_flags = 0;
+unsigned long to match vm_flags?
+> +	int ret = IOMMU_PAGE_RESP_INVALID;
+> +	unsigned int fault_flags = FAULT_FLAG_REMOTE;
+> +	struct iommu_fault_event *evt = &fault->evt;
+> +
+> +	if (!evt->pasid_valid)
+> +		return ret;
+I guess for not we don't handle PRQ without PASID, right?
+> +
+> +	/*
+> +	 * Special case: PASID Stop Marker (LRW = 0b100) doesn't
+> expect a
+> +	 * response. A Stop Marker may be generated when disabling a
+> PASID
+> +	 * (issuing a PASID stop request) in some PCI devices.
+> +	 *
+> +	 * When the mm_exit() callback returns from the device
+> driver, no page
+> +	 * request is generated for this PASID anymore and
+> outstanding ones have
+> +	 * been pushed to the IOMMU (as per PCIe 4.0r1.0 - 6.20.1
+> and 10.4.1.2 -
+> +	 * Managing PASID TLP Prefix Usage). Some PCI devices will
+> wait for all
+> +	 * outstanding page requests to come back with a response
+> before
+> +	 * completing the PASID stop request. Others do not wait for
+> page
+> +	 * responses, and instead issue this Stop Marker that tells
+> us when the
+> +	 * PASID can be reallocated.
+> +	 *
+> +	 * We ignore the Stop Marker because:
+> +	 * a. Page requests, which are posted requests, have been
+> flushed to the
+> +	 *    IOMMU when mm_exit() returns,
+> +	 * b. We flush all fault queues after mm_exit() returns and
+> before
+> +	 *    freeing the PASID.
+> +	 *
+> +	 * So even though the Stop Marker might be issued by the
+> device *after*
+> +	 * the stop request completes, outstanding faults will have
+> been dealt
+> +	 * with by the time we free the PASID.
+> +	 */
+> +	if (evt->last_req &&
+> +	    !(evt->prot & (IOMMU_FAULT_READ | IOMMU_FAULT_WRITE)))
+> +		return IOMMU_PAGE_RESP_HANDLED;
+> +
+If we don't expect a page response, shouldn't it be filtered by the
+IOMMU vendor driver in the first place? i.e. in the vendor IOMMU driver
+PRQ handler, it will sanitize the request anyway, for anything that
+does not need response, it will not call iommu_report_device_fault().
+> +	mm = iommu_sva_find(evt->pasid);
+> +	if (!mm)
+> +		return ret;
+> +
+> +	down_read(&mm->mmap_sem);
+> +
+> +	vma = find_extend_vma(mm, evt->addr);
+> +	if (!vma)
+> +		/* Unmapped area */
+> +		goto out_put_mm;
+> +
+> +	if (evt->prot & IOMMU_FAULT_READ)
+> +		access_flags |= VM_READ;
+> +
+> +	if (evt->prot & IOMMU_FAULT_WRITE) {
+> +		access_flags |= VM_WRITE;
+> +		fault_flags |= FAULT_FLAG_WRITE;
+> +	}
+> +
+> +	if (evt->prot & IOMMU_FAULT_EXEC) {
+> +		access_flags |= VM_EXEC;
+> +		fault_flags |= FAULT_FLAG_INSTRUCTION;
+> +	}
+> +
+> +	if (!(evt->prot & IOMMU_FAULT_PRIV))
+> +		fault_flags |= FAULT_FLAG_USER;
+> +
+> +	if (access_flags & ~vma->vm_flags)
+> +		/* Access fault */
+> +		goto out_put_mm;
+> +
+> +	ret = handle_mm_fault(vma, evt->addr, fault_flags);
+> +	ret = ret & VM_FAULT_ERROR ? IOMMU_PAGE_RESP_INVALID :
+> +		IOMMU_PAGE_RESP_SUCCESS;
+> +
+> +out_put_mm:
+> +	up_read(&mm->mmap_sem);
+> +
+> +	/*
+> +	 * If the process exits while we're handling the fault on
+> its mm, we
+> +	 * can't do mmput(). exit_mmap() would release the MMU
+> notifier, calling
+> +	 * iommu_notifier_release(), which has to flush the fault
+> queue that
+> +	 * we're executing on... So mmput_async() moves the release
+> of the mm to
+> +	 * another thread, if we're the last user.
+> +	 */
+> +	mmput_async(mm);
+> +
+> +	return ret;
+>  }
+>  
+>  static void iommu_fault_handle_group(struct work_struct *work)
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- arch/x86/Kconfig | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index eb7f43f23521..63e85e7da12e 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2641,8 +2641,9 @@ config PCI_DIRECT
- 	depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC || PCI_GOMMCONFIG))
- 
- config PCI_MMCONFIG
--	def_bool y
--	depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
-+	bool "Support mmconfig PCI config space access" if X86_64
-+	default y
-+	depends on PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY || X86_64)
- 
- config PCI_OLPC
- 	def_bool y
-@@ -2657,10 +2658,6 @@ config PCI_DOMAINS
- 	def_bool y
- 	depends on PCI
- 
--config PCI_MMCONFIG
--	bool "Support mmconfig PCI config space access"
--	depends on X86_64 && PCI && ACPI
--
- config PCI_CNB20LE_QUIRK
- 	bool "Read CNB20LE Host Bridge Windows" if EXPERT
- 	depends on PCI
--- 
-2.13.6
+[Jacob Pan]
