@@ -1,101 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38188 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752816AbeBVHqm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 02:46:42 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v9 5/7] PCI/AER: Unify aer error defines at single space
-Date: Thu, 22 Feb 2018 13:16:09 +0530
-Message-Id: <1519285571-5634-6-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
-References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices with
+ unmet dependencies
+To: "Moore, Robert" <robert.moore@intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "Schmauss, Erik" <erik.schmauss@intel.com>,
+        "Box, David E" <david.e.box@intel.com>
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@acpica.org" <devel@acpica.org>
+References: <20180122085135.16732-1-hdegoede@redhat.com>
+ <3281375.11fh90aaLK@aspire.rjw.lan>
+ <7efce3e1-4cb7-fa68-9024-73fa124b9171@redhat.com>
+ <94F2FBAB4432B54E8AACC7DFDE6C92E3B7570FA0@ORSMSX110.amr.corp.intel.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <a62364ba-7b79-6bb0-20a3-c66cb166e923@redhat.com>
+Date: Wed, 14 Feb 2018 11:33:06 +0100
+MIME-Version: 1.0
+In-Reply-To: <94F2FBAB4432B54E8AACC7DFDE6C92E3B7570FA0@ORSMSX110.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch moves AER error defines to drivers/pci/pci.h.
-So that it unifies the error repoting codes at single place along with dpc
+Hi,
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+On 08-02-18 18:34, Moore, Robert wrote:
+> 
+> 
+>>> The last one needs to go in via ACPICA anyway or we'll need to carry a
+>>> Linux-specific replacement for acpi_get_object_info().
+>>
+>> Ack, I'm discussing how to proceed with this with the ACPICA people.
+>>
+>> Regards,
+>>
+>> Hans
+> 
+> 
+> I normally don't like to change external interfaces (the biggest reason being the sheer number of different OS vendors that use ACPICA), but in this case, I feel it may be OK. This interface is probably not heavily used, and there is precedent for this when the invocation of _SUB was removed.
+> 
+> On the other hand, I think I saw it mentioned that Linux calls this interface only once, is this correct?
 
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index 1efefe9..7ae9bb3 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -56,6 +56,7 @@
- #include <ras/ras_event.h>
- 
- #include "apei-internal.h"
-+#include "../../pci/pci.h"
- 
- #define GHES_PFX	"GHES: "
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 124f42e..b0e63b5 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -343,7 +343,11 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- void pci_enable_acs(struct pci_dev *dev);
- 
- /* PCI error reporting and recovery */
--#define DPC_FATAL	4
-+#define AER_NONFATAL		0
-+#define AER_FATAL		1
-+#define AER_CORRECTABLE		2
-+
-+#define DPC_FATAL		4
- 
- void pci_do_recovery(struct pci_dev *dev, int severity);
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 6a352e6..4c59f37 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -19,6 +19,7 @@
- #include <linux/cper.h>
- 
- #include "aerdrv.h"
-+#include "../../pci.h"
- #include <ras/ras_event.h>
- 
- #define AER_AGENT_RECEIVER		0
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 8f87bbe..3eac8ed 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -11,10 +11,6 @@
- #include <linux/errno.h>
- #include <linux/types.h>
- 
--#define AER_NONFATAL			0
--#define AER_FATAL			1
--#define AER_CORRECTABLE			2
--
- struct pci_dev;
- 
- struct aer_header_log_regs {
-diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
-index 9c68986..d75c75b 100644
---- a/include/ras/ras_event.h
-+++ b/include/ras/ras_event.h
-@@ -13,6 +13,7 @@
- #include <linux/aer.h>
- #include <linux/cper.h>
- #include <linux/mm.h>
-+#include "../../../drivers/pci/pci.h"
- 
- /*
-  * MCE Extended Error Log trace event
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+More or less, Linux calls it once when enumerating all the devices and a few ACPI drivers call it again to get some
+extra info they need.
+
+> If so, perhaps it would be easiest to simply remove this call and use direct control method invocations to obtain the desired data.
+
+If we go this route we would probably end up copying the function, since as said several drivers
+use it too.
+
+> If we go ahead and make this change to ACPICA: I have not seen the patch, but please make sure that all vestiges of this are removed. This includes all invocations within ACPICA that examine the result of the _STA invocation, the CurrentStatus field of ACPI_DEVICE_INFO, the ACPI_VALID_STA flag, etc.
+
+The patch already does that:
+
+https://patchwork.kernel.org/patch/10186195/
+
+Regards,
+
+Hans
+
+
