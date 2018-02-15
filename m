@@ -1,97 +1,114 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices with
- unmet dependencies
-To: "Moore, Robert" <robert.moore@intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "Schmauss, Erik" <erik.schmauss@intel.com>,
-        "Box, David E" <david.e.box@intel.com>
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@acpica.org" <devel@acpica.org>
-References: <20180122085135.16732-1-hdegoede@redhat.com>
- <3281375.11fh90aaLK@aspire.rjw.lan>
- <7efce3e1-4cb7-fa68-9024-73fa124b9171@redhat.com>
- <94F2FBAB4432B54E8AACC7DFDE6C92E3B7570FA0@ORSMSX110.amr.corp.intel.com>
- <a62364ba-7b79-6bb0-20a3-c66cb166e923@redhat.com>
- <94F2FBAB4432B54E8AACC7DFDE6C92E3B7572CE8@ORSMSX110.amr.corp.intel.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <e9264ac3-2219-f337-026f-9f97ffe9ce65@redhat.com>
-Date: Mon, 26 Feb 2018 09:42:20 +0100
 MIME-Version: 1.0
-In-Reply-To: <94F2FBAB4432B54E8AACC7DFDE6C92E3B7572CE8@ORSMSX110.amr.corp.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <e3fb78b3-5f5c-fe96-9f02-e96092963c17@huawei.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+ <1518543933-22456-8-git-send-email-john.garry@huawei.com> <20180214161635.GA13849@e107981-ln.cambridge.arm.com>
+ <65185a4d-c712-4486-d713-3fa9de14e35d@huawei.com> <e3fb78b3-5f5c-fe96-9f02-e96092963c17@huawei.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 15 Feb 2018 12:47:25 +0100
+Message-ID: <CAJZ5v0jGvo+cutmvi3WSe1JNvQ1UvZhJr1mQ76=8=1E5Gq+iRg@mail.gmail.com>
+Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: John Garry <john.garry@huawei.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 14-02-18 16:28, Moore, Robert wrote:
-> 
-> 
->> -----Original Message-----
->> From: Hans de Goede [mailto:hdegoede@redhat.com]
->> Sent: Wednesday, February 14, 2018 2:33 AM
->> To: Moore, Robert <robert.moore@intel.com>; Rafael J. Wysocki
->> <rjw@rjwysocki.net>; linux-acpi@vger.kernel.org; Schmauss, Erik
->> <erik.schmauss@intel.com>; Box, David E <david.e.box@intel.com>
->> Cc: Len Brown <lenb@kernel.org>; Bjorn Helgaas <bhelgaas@google.com>;
->> linux-pci@vger.kernel.org; devel@acpica.org
->> Subject: Re: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices
->> with unmet dependencies
+On Thu, Feb 15, 2018 at 12:19 PM, John Garry <john.garry@huawei.com> wrote:
+>> Nothing apart from only being used by arm64 platforms today, which is
+>> circumstantial.
 >>
->> Hi,
->>
->> On 08-02-18 18:34, Moore, Robert wrote:
 >>>
+>>> I understand you need to find a place to add the:
 >>>
->>>>> The last one needs to go in via ACPICA anyway or we'll need to carry
->>>>> a Linux-specific replacement for acpi_get_object_info().
->>>>
->>>> Ack, I'm discussing how to proceed with this with the ACPICA people.
->>>>
->>>> Regards,
->>>>
->>>> Hans
+>>> acpi_indirect_io_scan_init()
 >>>
+>>> to be called from core ACPI code because ACPI can't handle probe
+>>> dependencies in any other way but other than that this patch is
+>>> a Hisilicon ACPI driver - there is nothing generic in it (or at
+>>> least there are no standard bindings to make it so).
 >>>
->>> I normally don't like to change external interfaces (the biggest
->> reason being the sheer number of different OS vendors that use ACPICA),
->> but in this case, I feel it may be OK. This interface is probably not
->> heavily used, and there is precedent for this when the invocation of
->> _SUB was removed.
+>>> Whether a callback from ACPI core code (acpi_scan_init()) to a driver
+>>> specific hook is sane or not that's the question and the only reason
+>>> why you want to add this in drivers/acpi/arm64 rather than, say,
+>>> drivers/bus (as you do for the DT driver).
 >>>
->>> On the other hand, I think I saw it mentioned that Linux calls this
->> interface only once, is this correct?
+>>> I do not know Rafael's opinion on the above, I would like to help
+>>> you make forward progress but please understand my concerns, mostly
+>>> on FW side.
+>>>
 >>
->> More or less, Linux calls it once when enumerating all the devices and a
->> few ACPI drivers call it again to get some extra info they need.
+>> I did mention an alternative in my "ping" in v12 patch 7/9 (Feb 1), but
+>> no response to this specific note so I kept on the same path.
 >>
->>> If so, perhaps it would be easiest to simply remove this call and use
->> direct control method invocations to obtain the desired data.
+>> Here's what I then wrote:
+>> "I think another solution - which you may prefer - is to avoid adding
+>> this scan handler (and all this other scan code) and add a check like
+>> acpi_is_serial_bus_slave() [which checks the device parent versus a list
+>> of known indirectIO hosts] to not enumerate these children, and do it
+>> from the LLDD host probe instead (https://lkml.org/lkml/2017/6/16/250)"
 >>
->> If we go this route we would probably end up copying the function, since
->> as said several drivers use it too.
->>
->>> If we go ahead and make this change to ACPICA: I have not seen the
->> patch, but please make sure that all vestiges of this are removed. This
->> includes all invocations within ACPICA that examine the result of the
->> _STA invocation, the CurrentStatus field of ACPI_DEVICE_INFO, the
->> ACPI_VALID_STA flag, etc.
->>
->> The patch already does that:
->>
->> https://patchwork.kernel.org/patch/10186195/
->>
-> 
-> 
-> Of course, we will need the ACPICA version of the patch, not the "linuxized" version.
-> Bob
+>
+> Hi Rafael, Lorenzo,
+>
+> I can avoid adding the scan handler in acpi_indirectio.c by skipping the
+> child enumeration, like with this change in scan.c:
+>
+> +static const struct acpi_device_id indirect_io_hosts[] = {
+> +    {"HISI0191", 0},    /* HiSilicon LPC host */
+> +    {},
+> +};
+> +
+> +static bool acpi_is_indirect_io_slave(struct acpi_device *device)
+> +{
 
-Ok, I've submitted a pull-request with an ACPICA version of the patch here:
+Why don't you put the table definition here?
 
-https://github.com/acpica/acpica/pull/364
+> +    struct acpi_device *parent = dev->parent;
+> +
+> +    if (!parent || acpi_match_device_ids(parent, indirect_io_hosts))
+> +        return false;
+> +
+> +    return true;
 
-Regards,
+return parent && !acpi_match_device_ids(parent, indirect_io_hosts);
 
-Hans
+> +}
+> +
+>  static bool acpi_is_serial_bus_slave(struct acpi_device *device)
+>  {
+>      struct list_head resource_list;
+>      bool is_serial_bus_slave = false;
+>
+> +    if (acpi_is_indirect_io_slave(device))
+> +        return true;
+> +
+>      /* Macs use device properties in lieu of _CRS resources */
+>
+>
+> This means I can move all this scan code into the LLDD.
+>
+> What do you think? Please let me know.
+
+If Lorenzo agrees, that will be fine by me modulo the above remarks.
