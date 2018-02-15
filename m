@@ -1,251 +1,131 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, okaya@codeaurora.org,
-        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
-        bharatku@xilinx.com
-Subject: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
-Date: Mon, 12 Feb 2018 18:33:16 +0000
-Message-Id: <20180212183352.22730-2-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:52974 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967920AbeBOMgw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Feb 2018 07:36:52 -0500
+Date: Thu, 15 Feb 2018 12:36:42 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: John Garry <john.garry@huawei.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO
+ devices before scanning
+Message-ID: <20180215123642.GA28256@e107981-ln.cambridge.arm.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+ <1518543933-22456-8-git-send-email-john.garry@huawei.com>
+ <20180214161635.GA13849@e107981-ln.cambridge.arm.com>
+ <65185a4d-c712-4486-d713-3fa9de14e35d@huawei.com>
+ <e3fb78b3-5f5c-fe96-9f02-e96092963c17@huawei.com>
+ <CAJZ5v0jGvo+cutmvi3WSe1JNvQ1UvZhJr1mQ76=8=1E5Gq+iRg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0jGvo+cutmvi3WSe1JNvQ1UvZhJr1mQ76=8=1E5Gq+iRg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Shared Virtual Addressing (SVA) provides a way for device drivers to bind
-process address spaces to devices. This requires the IOMMU to support the
-same page table format as CPUs, and requires the system to support I/O
-Page Faults (IOPF) and Process Address Space ID (PASID). When all of these
-are available, DMA can access virtual addresses of a process. A PASID is
-allocated for each process, and the device driver programs it into the
-device in an implementation-specific way.
+On Thu, Feb 15, 2018 at 12:47:25PM +0100, Rafael J. Wysocki wrote:
+> On Thu, Feb 15, 2018 at 12:19 PM, John Garry <john.garry@huawei.com> wrote:
+> >> Nothing apart from only being used by arm64 platforms today, which is
+> >> circumstantial.
+> >>
+> >>>
+> >>> I understand you need to find a place to add the:
+> >>>
+> >>> acpi_indirect_io_scan_init()
+> >>>
+> >>> to be called from core ACPI code because ACPI can't handle probe
+> >>> dependencies in any other way but other than that this patch is
+> >>> a Hisilicon ACPI driver - there is nothing generic in it (or at
+> >>> least there are no standard bindings to make it so).
+> >>>
+> >>> Whether a callback from ACPI core code (acpi_scan_init()) to a driver
+> >>> specific hook is sane or not that's the question and the only reason
+> >>> why you want to add this in drivers/acpi/arm64 rather than, say,
+> >>> drivers/bus (as you do for the DT driver).
+> >>>
+> >>> I do not know Rafael's opinion on the above, I would like to help
+> >>> you make forward progress but please understand my concerns, mostly
+> >>> on FW side.
+> >>>
+> >>
+> >> I did mention an alternative in my "ping" in v12 patch 7/9 (Feb 1), but
+> >> no response to this specific note so I kept on the same path.
+> >>
+> >> Here's what I then wrote:
+> >> "I think another solution - which you may prefer - is to avoid adding
+> >> this scan handler (and all this other scan code) and add a check like
+> >> acpi_is_serial_bus_slave() [which checks the device parent versus a list
+> >> of known indirectIO hosts] to not enumerate these children, and do it
+> >> from the LLDD host probe instead (https://lkml.org/lkml/2017/6/16/250)"
+> >>
+> >
+> > Hi Rafael, Lorenzo,
+> >
+> > I can avoid adding the scan handler in acpi_indirectio.c by skipping the
+> > child enumeration, like with this change in scan.c:
+> >
+> > +static const struct acpi_device_id indirect_io_hosts[] = {
+> > +    {"HISI0191", 0},    /* HiSilicon LPC host */
+> > +    {},
+> > +};
+> > +
+> > +static bool acpi_is_indirect_io_slave(struct acpi_device *device)
+> > +{
+> 
+> Why don't you put the table definition here?
+> 
+> > +    struct acpi_device *parent = dev->parent;
+> > +
+> > +    if (!parent || acpi_match_device_ids(parent, indirect_io_hosts))
+> > +        return false;
+> > +
+> > +    return true;
+> 
+> return parent && !acpi_match_device_ids(parent, indirect_io_hosts);
+> 
+> > +}
+> > +
+> >  static bool acpi_is_serial_bus_slave(struct acpi_device *device)
+> >  {
+> >      struct list_head resource_list;
+> >      bool is_serial_bus_slave = false;
+> >
+> > +    if (acpi_is_indirect_io_slave(device))
+> > +        return true;
+> > +
+> >      /* Macs use device properties in lieu of _CRS resources */
+> >
+> >
+> > This means I can move all this scan code into the LLDD.
+> >
+> > What do you think? Please let me know.
+> 
+> If Lorenzo agrees, that will be fine by me modulo the above remarks.
 
-Add a new API for sharing process page tables with devices. Introduce two
-IOMMU operations, sva_device_init() and sva_device_shutdown(), that
-prepare the IOMMU driver for SVA. For example allocate PASID tables and
-fault queues. Subsequent patches will implement the bind() and unbind()
-operations.
+I agree and I thank you for accepting this in core ACPI code, I think
+that's much cleaner than a driver specific scan hook.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/Kconfig     | 10 ++++++
- drivers/iommu/Makefile    |  1 +
- drivers/iommu/iommu-sva.c | 90 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iommu.h     | 32 +++++++++++++++++
- 4 files changed, 133 insertions(+)
- create mode 100644 drivers/iommu/iommu-sva.c
+It is a shame we do not have a generic identifier for such bus in ACPI
+but that won't happen overnight anyway (if ever, I think a binding for
+LPC in the ACPI specs is hard to justify).
 
-diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-index f3a21343e636..555147a61f7c 100644
---- a/drivers/iommu/Kconfig
-+++ b/drivers/iommu/Kconfig
-@@ -74,6 +74,16 @@ config IOMMU_DMA
- 	select IOMMU_IOVA
- 	select NEED_SG_DMA_LENGTH
- 
-+config IOMMU_SVA
-+	bool "Shared Virtual Addressing API for the IOMMU"
-+	select IOMMU_API
-+	help
-+	  Enable process address space management for the IOMMU API. In systems
-+	  that support it, device drivers can bind process address spaces to
-+	  devices and share their page tables using this API.
-+
-+	  If unsure, say N here.
-+
- config FSL_PAMU
- 	bool "Freescale IOMMU support"
- 	depends on PCI
-diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
-index 1fb695854809..1dbcc89ebe4c 100644
---- a/drivers/iommu/Makefile
-+++ b/drivers/iommu/Makefile
-@@ -3,6 +3,7 @@ obj-$(CONFIG_IOMMU_API) += iommu.o
- obj-$(CONFIG_IOMMU_API) += iommu-traces.o
- obj-$(CONFIG_IOMMU_API) += iommu-sysfs.o
- obj-$(CONFIG_IOMMU_DMA) += dma-iommu.o
-+obj-$(CONFIG_IOMMU_SVA) += iommu-sva.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE_LPAE) += io-pgtable-arm.o
-diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
-new file mode 100644
-index 000000000000..cab5d723520f
---- /dev/null
-+++ b/drivers/iommu/iommu-sva.c
-@@ -0,0 +1,90 @@
-+/*
-+ * Track processes address spaces bound to devices and allocate PASIDs.
-+ *
-+ * Copyright (C) 2018 ARM Ltd.
-+ * Author: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-+ *
-+ * SPDX-License-Identifier: GPL-2.0
-+ */
-+
-+#include <linux/iommu.h>
-+
-+/**
-+ * iommu_sva_device_init() - Initialize Shared Virtual Addressing for a device
-+ * @dev: the device
-+ * @features: bitmask of features that need to be initialized
-+ * @max_pasid: max PASID value supported by the device
-+ *
-+ * Users of the bind()/unbind() API must call this function to initialize all
-+ * features required for SVA.
-+ *
-+ * - If the device should support multiple address spaces (e.g. PCI PASID),
-+ *   IOMMU_SVA_FEAT_PASID must be requested.
-+ *
-+ *   By default the PASID allocated during bind() is limited by the IOMMU
-+ *   capacity, and by the device PASID width defined in the PCI capability or in
-+ *   the firmware description. Setting @max_pasid to a non-zero value smaller
-+ *   than this limit overrides it.
-+ *
-+ * - If the device should support I/O Page Faults (e.g. PCI PRI),
-+ *   IOMMU_SVA_FEAT_IOPF must be requested.
-+ *
-+ * The device should not be be performing any DMA while this function is
-+ * running.
-+ *
-+ * Return 0 if initialization succeeded, or an error.
-+ */
-+int iommu_sva_device_init(struct device *dev, unsigned long features,
-+			  unsigned int max_pasid)
-+{
-+	int ret;
-+	unsigned int min_pasid = 0;
-+	struct iommu_param *dev_param = dev->iommu_param;
-+	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
-+
-+	if (!domain || !dev_param || !domain->ops->sva_device_init)
-+		return -ENODEV;
-+
-+	/*
-+	 * IOMMU driver updates the limits depending on the IOMMU and device
-+	 * capabilities.
-+	 */
-+	ret = domain->ops->sva_device_init(dev, features, &min_pasid,
-+					   &max_pasid);
-+	if (ret)
-+		return ret;
-+
-+	/* FIXME: racy. Next version should have a mutex (same as fault handler) */
-+	dev_param->sva_features = features;
-+	dev_param->min_pasid = min_pasid;
-+	dev_param->max_pasid = max_pasid;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iommu_sva_device_init);
-+
-+/**
-+ * iommu_sva_device_shutdown() - Shutdown Shared Virtual Addressing for a device
-+ * @dev: the device
-+ *
-+ * Disable SVA. The device should not be performing any DMA while this function
-+ * is running.
-+ */
-+int iommu_sva_device_shutdown(struct device *dev)
-+{
-+	struct iommu_param *dev_param = dev->iommu_param;
-+	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
-+
-+	if (!domain)
-+		return -ENODEV;
-+
-+	if (domain->ops->sva_device_shutdown)
-+		domain->ops->sva_device_shutdown(dev);
-+
-+	dev_param->sva_features = 0;
-+	dev_param->min_pasid = 0;
-+	dev_param->max_pasid = 0;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iommu_sva_device_shutdown);
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 66ef406396e9..e9e09eecdece 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -60,6 +60,11 @@ typedef int (*iommu_fault_handler_t)(struct iommu_domain *,
- 			struct device *, unsigned long, int, void *);
- typedef int (*iommu_dev_fault_handler_t)(struct iommu_fault_event *, void *);
- 
-+/* Request PASID support */
-+#define IOMMU_SVA_FEAT_PASID		(1 << 0)
-+/* Request I/O page fault support */
-+#define IOMMU_SVA_FEAT_IOPF		(1 << 1)
-+
- struct iommu_domain_geometry {
- 	dma_addr_t aperture_start; /* First address that can be mapped    */
- 	dma_addr_t aperture_end;   /* Last address that can be mapped     */
-@@ -197,6 +202,8 @@ struct page_response_msg {
-  * @domain_free: free iommu domain
-  * @attach_dev: attach device to an iommu domain
-  * @detach_dev: detach device from an iommu domain
-+ * @sva_device_init: initialize Shared Virtual Adressing for a device
-+ * @sva_device_shutdown: shutdown Shared Virtual Adressing for a device
-  * @map: map a physically contiguous memory region to an iommu domain
-  * @unmap: unmap a physically contiguous memory region from an iommu domain
-  * @map_sg: map a scatter-gather list of physically contiguous memory chunks
-@@ -230,6 +237,10 @@ struct iommu_ops {
- 
- 	int (*attach_dev)(struct iommu_domain *domain, struct device *dev);
- 	void (*detach_dev)(struct iommu_domain *domain, struct device *dev);
-+	int (*sva_device_init)(struct device *dev, unsigned long features,
-+			       unsigned int *min_pasid,
-+			       unsigned int *max_pasid);
-+	void (*sva_device_shutdown)(struct device *dev);
- 	int (*map)(struct iommu_domain *domain, unsigned long iova,
- 		   phys_addr_t paddr, size_t size, int prot);
- 	size_t (*unmap)(struct iommu_domain *domain, unsigned long iova,
-@@ -385,6 +396,9 @@ struct iommu_fault_param {
-  */
- struct iommu_param {
- 	struct iommu_fault_param *fault_param;
-+	unsigned long sva_features;
-+	unsigned int min_pasid;
-+	unsigned int max_pasid;
- };
- 
- int  iommu_device_register(struct iommu_device *iommu);
-@@ -878,4 +892,22 @@ const struct iommu_ops *iommu_ops_from_fwnode(struct fwnode_handle *fwnode)
- 
- #endif /* CONFIG_IOMMU_API */
- 
-+#ifdef CONFIG_IOMMU_SVA
-+extern int iommu_sva_device_init(struct device *dev, unsigned long features,
-+				 unsigned int max_pasid);
-+extern int iommu_sva_device_shutdown(struct device *dev);
-+#else /* CONFIG_IOMMU_SVA */
-+static inline int iommu_sva_device_init(struct device *dev,
-+					unsigned long features,
-+					unsigned int max_pasid)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline int iommu_sva_device_shutdown(struct device *dev)
-+{
-+	return -ENODEV;
-+}
-+#endif /* CONFIG_IOMMU_SVA */
-+
- #endif /* __LINUX_IOMMU_H */
--- 
-2.15.1
-
+Thank you,
+Lorenzo
