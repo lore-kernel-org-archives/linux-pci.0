@@ -1,94 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53896 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751785AbeBTTAj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Feb 2018 14:00:39 -0500
-Date: Tue, 20 Feb 2018 13:00:37 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        George Cherian <george.cherian@cavium.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com, Jayachandran.Nair@cavium.com,
-        Robert.Richter@cavium.com,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Huang Ying <ying.huang@intel.com>
-Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
-Message-ID: <20180220190037.GB32228@bhelgaas-glaptop.roam.corp.google.com>
-References: <1517554846-16703-1-git-send-email-george.cherian@cavium.com>
- <2323301.ORZpb3hFRe@aspire.rjw.lan>
- <20180216203434.GC11014@bhelgaas-glaptop.roam.corp.google.com>
- <2858019.9TUCWsDpTB@aspire.rjw.lan>
- <20180220015433.GA9656@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/3] PCI: dwc: pci-dra7xx: Improve MSI IRQ handling
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20180209120415.17590-1-vigneshr@ti.com>
+ <20180209120415.17590-3-vigneshr@ti.com>
+ <20180212175801.GA29070@e107981-ln.cambridge.arm.com>
+From: Vignesh R <vigneshr@ti.com>
+Message-ID: <7cfa73af-09fa-d298-aaab-3e74ee7e1dd5@ti.com>
+Date: Thu, 15 Feb 2018 09:59:21 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180220015433.GA9656@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180212175801.GA29070@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Huang]
+Hi,
 
-On Tue, Feb 20, 2018 at 02:54:33AM +0100, Lukas Wunner wrote:
-> On Mon, Feb 19, 2018 at 12:21:56PM +0100, Rafael J. Wysocki wrote:
-> > On Friday, February 16, 2018 9:34:34 PM CET Bjorn Helgaas wrote:
-> > > On Fri, Feb 16, 2018 at 01:40:37PM +0100, Rafael J. Wysocki wrote:
-> > > > On Friday, February 16, 2018 12:39:00 AM CET Bjorn Helgaas wrote:
-> > > > > On Thu, Feb 15, 2018 at 10:57:25PM +0100, Rafael J. Wysocki wrote:
-> > > > > > On Wednesday, February 14, 2018 9:16:53 PM CET Bjorn Helgaas wrote:
-> > > > > > > I don't know how this runtime PM works, but maybe Rafael can help
-> > > > > > > us out.
+On Monday 12 February 2018 11:28 PM, Lorenzo Pieralisi wrote:
+> On Fri, Feb 09, 2018 at 05:34:14PM +0530, Vignesh R wrote:
+>> We need to ensure that there are no pending MSI IRQ vector set (i.e
+>> PCIE_MSI_INTR0_STATUS reads 0 at least once) before exiting
+>> dra7xx_pcie_msi_irq_handler(). Else, the dra7xx PCIe wrapper will not
+>> register new MSI IRQs even though PCIE_MSI_INTR0_STATUS shows IRQs are
+>> pending. Therefore, keep calling dra7xx_pcie_msi_irq_handler() until it
+>> returns IRQ_NONE, which suggests that PCIE_MSI_INTR0_STATUS is 0.
+>> 
+>> This fixes a bug, where PCIe wifi cards with 4 DMA queues like Intel
+>> 8260 used to throw following error and stall during ping/iperf3 tests.
+>> 
+>> [   97.776310] iwlwifi 0000:01:00.0: Queue 9 stuck for 2500 ms.
+>> 
+>> Signed-off-by: Vignesh R <vigneshr@ti.com>
+>> ---
+>>  drivers/pci/dwc/pci-dra7xx.c | 21 ++++++++++++++++++---
+>>  1 file changed, 18 insertions(+), 3 deletions(-)
+>> 
+>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>> index ed8558d638e5..3420cbf7b60a 100644
+>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>> @@ -254,14 +254,31 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>>        struct dra7xx_pcie *dra7xx = arg;
+>>        struct dw_pcie *pci = dra7xx->pci;
+>>        struct pcie_port *pp = &pci->pp;
+>> +     int count = 0;
+>>        unsigned long reg;
+>>        u32 virq, bit;
+>>  
+>>        reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
+>> +     dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+>>  
+>>        switch (reg) {
+>>        case MSI:
+>> -             dw_handle_msi_irq(pp);
+>> +             /*
+>> +              * Need to make sure no MSI IRQs are pending before
+>> +              * exiting handler, else the wrapper will not catch new
+>> +              * IRQs. So loop around till dw_handle_msi_irq() returns
+>> +              * IRQ_NONE
+>> +              */
+>> +             while (dw_handle_msi_irq(pp) != IRQ_NONE && count < 1000)
+>> +                     count++;
+>> +
+>> +             if (count == 1000) {
+>> +                     dev_err(pci->dev, "too much work in msi irq\n");
+>> +                     dra7xx_pcie_writel(dra7xx,
+>> +                                        PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+>> +                                        reg);
+>> +                     return IRQ_HANDLED;
 > 
-> This has nothing to do with runtime PM AFAICS.
+> I am not merging any code patching this IRQ handling routine anymore
+> unless you thoroughly explain to me how this CONF_IRQSTATUS_MSI register
+> works (and how it is related to DW registers) and why this specific host
+> controller needs handling that is not required by any other host
+> controller relying on dw_handle_msi_irq().
+
+Unlike other DW PCIe controllers, TI implementation has a wrapper on top
+of DW core. This wrapper latches the DW core level MSI and legacy
+interrupts and then propagates it to GIC.
+PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI register is present in this TI
+wrapper which aggregates all the MSI IRQs(PCIE_MSI_INTR0_STATUS) of DW
+level. They are mapped on the MSI interrupt line of PCIe controller,
+using a single status bit in the PCIECTRL_TI_CONF_IRQSTATUS_MSI register.
+
+So, the irq handler, dra7xx_pcie_msi_irq_handler(), first needs to look
+at PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI[4] to know that its MSI IRQ and
+then call dw_handle_msi_irq() to handle individual MSI vectors.
+Driver has to make sure there are no pending vectors in DW core MSI
+status register before exiting handler. Otherwise next MSI IRQ will not
+be latched by the wrapper.
+
+
 > 
-> The device seems to be in D3hot on boot, is that correct?
-
-I actually don't know for sure what device caused the issue or what
-state it was in.  George, if you could clarify that, it would be
-helpful.
-
-My assumption (possibly incorrect) is that the issue happens when we
-read config space of an endpoint behind a PCIe bridge that is in D3.
-The PCIe portdrv binds to the bridge before the pci_sysfs_init()
-late_initcall happens, and it enables runtime PM on the bridge, so
-it's possible the bridge is in D3 before pci_sysfs_init() happens.
-
-> The PCI core assumes that unbound devices remain in D0
-> (see comments in pci_pm_runtime_resume() / pci_pm_runtime_suspend()).
-
-That comment was added by 967577b06241 ("PCI/PM: Keep runtime PM
-enabled for unbound PCI devices"), apparently because "some devices do
-not work again after being put into D3".  That commit mentions
-https://bugzilla.kernel.org/show_bug.cgi?id=48201 but I don't think
-it's completely convincing about the requirement for keeping things in
-D0.
-
-Even if it's true that some devices don't work after being in D3, that
-doesn't seem like sufficient reason to keep *all* devices on all
-systems in D0.  We would normally use quirks to address device issues
-like this.
-
-> > > > > > I'm not sure what the question is to be honest.
-> > > > > 
-> > > > > My questions are basically "What does the PCI core need to do to make
-> > > > > sure a device is in D0 before it operates on it?  And where do we need
-> > > > > to do that?"
+> I suspect there is a code design flaw with the way this host handles
+> IRQs and we are going to find it and fix it the way it should, not with
+> any plaster like this patch.
 > 
-> When scanning the bus and discovering the device is not in D0,
-> call pci_power_up().  This could probably go into pci_init_pm().
-> Once a driver binds to it, it may choose to runtime suspend it to
-> D3hot again.
 
-s/pci_init_pm/pci_pm_init/
+I agree there has been some churn wrt this wrapper level IRQ handler.
+But, that was because hardware documentation/TRM did not match
+actual behavior and so it took some time to understand how the
+hardware is working. I have extensively tested this series on multiple
+problematic PCIe USB cards and PCIe WiFi cards over week long stress
+tests. And also had some agreement with internal hardware designers.
+Hardware documentations will also be updated.
 
-That's an interesting idea.  I hadn't thought of the case where a
-device is not in D0 when we enumerate it.  We *do* make sure bridges
-are in D0 before scanning behind them (pci_scan_bridge_extend() calls
-pm_runtime_get_sync()).
 
-Since enumeration should only perform config accesses, and devices
-must respond to config accesses even when in D3hot, I guess I'm not
-convinced that we need to power up everything (other than bridges)
-during enumeration.
+> Lorenzo
+> 
+>> +             }
+>>                break;
+>>        case INTA:
+>>        case INTB:
+>> @@ -275,8 +292,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>>                break;
+>>        }
+>>  
+>> -     dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+>> -
+>>        return IRQ_HANDLED;
+>>  }
+>>  
+>> -- 
+>> 2.16.1
+>> 
 
-Bjorn
+-- 
+Regards
+Vignesh
