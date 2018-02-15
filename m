@@ -1,138 +1,216 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.mailbox.org ([80.241.60.212]:9502 "EHLO mx1.mailbox.org"
+Received: from mail.kernel.org ([198.145.29.99]:58950 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752183AbeBBOu7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Feb 2018 09:50:59 -0500
-Subject: Re: [RFC PATCH] PCI: pciehp: Add module parameter to enable
- debouncing of HP link events
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-References: <20180130084121.18653-1-sr@denx.de>
- <20180130102840.GF27654@lahna.fi.intel.com>
- <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
- <20180202135659.GN27654@lahna.fi.intel.com>
-From: Stefan Roese <sr@denx.de>
-Message-ID: <15ddf930-66e2-fae8-09c7-1d1ad7d5b07a@denx.de>
-Date: Fri, 2 Feb 2018 15:50:55 +0100
+        id S1164340AbeBOXjF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Feb 2018 18:39:05 -0500
+Date: Thu, 15 Feb 2018 17:39:00 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        George Cherian <gcherian@caviumnetworks.com>,
+        George Cherian <george.cherian@cavium.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, Jayachandran.Nair@cavium.com,
+        Robert.Richter@cavium.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
+Message-ID: <20180215233900.GA195653@bhelgaas-glaptop.roam.corp.google.com>
+References: <1517554846-16703-1-git-send-email-george.cherian@cavium.com>
+ <dd104986-81e2-e7a2-353c-91827078bc4c@caviumnetworks.com>
+ <20180214201653.GA62268@bhelgaas-glaptop.roam.corp.google.com>
+ <26660034.hqiP3ND89J@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20180202135659.GN27654@lahna.fi.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <26660034.hqiP3ND89J@aspire.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02.02.2018 14:56, Mika Westerberg wrote:
-> On Fri, Feb 02, 2018 at 02:38:34PM +0100, Stefan Roese wrote:
->> Hi Mika,
->>
->> sorry for the late reply.
->>
->> On 30.01.2018 11:28, Mika Westerberg wrote:
->>> On Tue, Jan 30, 2018 at 09:41:21AM +0100, Stefan Roese wrote:
->>>> Hotplugging of some PCIe devices on our platform sometimes leads to a
->>>> bounce of link-up and link-down events, resulting in problems in the
->>>> corresponding PCI drivers.
->>>>
->>>> Here an example of such a hotplug event bounce for a AHCI PCIe card:
->>>> ...
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
->>>
->>> It would be good to find out why this happens in the first place.
->>> Perhaps there is some environmental interference or something causing
->>> this?
->>
->> I'm seeing these link bounces in the following environments:
->>
->> a) Using a BayTrail SoC and hotplugging a standard Desktop PCIe SATA /
->>     AHCI Controller (Marvell chip)
->> b) Hotplugging (booting via SPI) an Altera / Intel FPGA which is connected
->>     via PCIe to a PCIe switch
->>
->> In both cases, this link bouncing happens infrequently, approx. once out
->> of 5 - 10 tries.
->>
->> Out of curiosity, has nobody else ever experienced such "link bouncing"
->> with PCIe cards / devices getting hot-plugged?
+On Thu, Feb 15, 2018 at 10:57:25PM +0100, Rafael J. Wysocki wrote:
+> On Wednesday, February 14, 2018 9:16:53 PM CET Bjorn Helgaas wrote:
+> > On Wed, Feb 14, 2018 at 04:58:08PM +0530, George Cherian wrote:
+> > > On 02/13/2018 08:39 PM, Bjorn Helgaas wrote:
+> > > >On Fri, Feb 02, 2018 at 07:00:46AM +0000, George Cherian wrote:
+> > > >>The PCIe Controller on Cavium ThunderX2 processors does not
+> > > >>respond to downstream CFG/ECFG cycles when root port is
+> > > >>in power management D3-hot state.
+> > > >
+> > > >I think you're talking about the CPU initiating a config cycle to
+> > > >a device below the root port, right?
+> > > Yes
+> > 
+> > If a bridge, e.g., a Root Port in your case, is in D3hot, we should be
+> > able to access config space of the bridge itself, but the secondary
+> > bus will be in B2 or B3 and we won't be able to access config space
+> > for any devices below the bridge.  This is true for *all* bridges, not
+> > just this Cavium Root Port.
 > 
-> I've seen it with some Thunderbolt devices from time to time.
+> Right.
 > 
-> I think it is entirely possible in real world that the link goes down
-> briefly for example because of some external interference so we should
-> make sure we can handle that properly.
+> But AFAICS config space reads from devices that aren't there (which
+> effectively is what happens if the bridge is in D3hot) are at least
+> expected to return all ones.
+
+Yes.  AIUI, the PCIe spec doesn't actually *require* all ones in this
+case, but the sec 2.3.2 implementation note says hardware intended for
+use with software (like Linux) that assumes the all ones behavior
+should synthesize all ones.  So I'm speculating that this Cavium
+device is supposed to synthesize all ones, but does not.
+
+But from the discussion below, it sounds like this may have helped
+uncover a more serious Linux bug, i.e., we don't resume a device
+before trying to use it.
+
+> > The PCIe r4.0, sec 5.3.1, implementation note seems relevant:
+> > 
+> >   When a Type 1 Function associated with a Switch/Root Port (a
+> >   "virtual bridge") is in a non-D0 power state, it will emulate the
+> >   behavior of a conventional PCI bridge in its handling of Memory,
+> >   I/O, and Configuration Requests and Completions. ...  All Type 1
+> >   Configuration Requests are terminated as Unsupported Requests, ...
+> > 
+> > > >This erratum isn't published anywhere where we could include a URL,
+> > > >is it?
+> > > This erratum is available at support.cavium.com, You might need to
+> > > register to the website to get hold of a copy.
+> > 
+> > That appears to require an NDA, so that doesn't work for me.  Can you
+> > just include the erratum text in the changelog?
+> > 
+> > > >>In our tests the above mentioned errata causes the following crash when
+> > > >>the downstream endpoint config space is accessed, while root port is in
+> > > >>D3 state.
+> > > >>
+> > > >>[   12.775202] Unhandled fault: synchronous external abort (0x96000610) at 0x0000000000000000
+> > > >
+> > > >This looks like another example of not being able to deal with error
+> > > >responses to PCIe events, for example, the whole mess with drivers
+> > > >checking whether the link is up before issuing a config access.
+> > > >
+> > > >In that sense, this looks like a band-aid that avoids the issue by
+> > > >preventing the use of D3, but doesn't fix the underlying problem.  If
+> > > >we *could* deal nicely with this error, maybe we could use D3 on these
+> > > >root ports.
+> > > >
+> > > >So I'm not convinced yet that this is actually a PCIe erratum.  Does
+> > > >the hardware actually violate the PCIe spec, or is this just a problem
+> > > >with the kernel not knowing how to deal nicely with a PCIe error?
+> > > >
+> > > This is not an issue with the way kernel handles the PCIe error.
+> > > 
+> > > >If you could include the erratum text and reference to the relevant
+> > > >section of the PCIe spec, that would be useful.
+> > > >
+> > > The relevant section of the PCIe Spec is the following Section 5.3
+> > > on wards (subsection  5.3.1.4.1)
+> > > 
+> > > Configuration and Message requests are the only TLPs accepted by a
+> > > Function in the D3hot state. All other received Requests must be
+> > > handled as Unsupported Requests, and all received Completions may
+> > > optionally be handled as Unexpected Completions.
+> > 
+> > This isn't exactly relevant because it says requests *other than*
+> > config and message requests must be handled as Unsupported Requests,
+> > and we're talking about a config request.  I think sec 5.3.1 is more
+> > to the point: the Root Port sees a Type 1 Configuration Request that
+> > would be forwarded to its secondary interface if the port were in D0,
+> > and that request should be terminated as an Unsupported Request.
+> > 
+> > I think the question is how the Root Complex turns this Unsupported
+> > Request into some signal to the CPU.  The implementation note in 2.3.2
+> > might be relevant:
+> > 
+> >   Some system configuration software depends on reading a data value
+> >   of all 1’s when a Configuration Read Request is terminated as an
+> >   Unsupported Request, particularly when probing to determine the
+> >   existence of a device in the system. A Root Complex intended for use
+> >   with software that depends on a read-data value of all 1’s must
+> >   synthesize this value when UR Completion Status is returned for a
+> >   Configuration Read Request.
+> > 
+> > So maybe the erratum is that the RC was intended to synthesize all 1's
+> > but it doesn't?
+> > 
+> > There are other cases that can result in Unsupported Request
+> > completions, so my fear is that this change will take care of one such
+> > case but leave others that will cause similar unhandled external
+> > aborts.
+> > 
+> > > >>[   12.775202] Unhandled fault: synchronous external abort (0x96000610) at 0x0000000000000000
+> > 
+> > > >>[   12.813518] PC is at pci_generic_config_read+0x5c/0xf0
+> > > >>[   12.818643] LR is at pci_generic_config_read+0x48/0xf0
+> > > >> ...
+> > > >>[   13.269819] [<ffff000008506f34>] pci_generic_config_read+0x5c/0xf0
+> > > >>[   13.275987] [<ffff000008506e2c>] pci_bus_read_config_dword+0xb4/0xd8
+> > > >>[   13.282328] [<ffff0000085089f4>] pcie_capability_read_dword+0x64/0xb8
+> > > >>[   13.288757] [<ffff000008513d28>] __pci_dev_reset+0x90/0x328
+> > > >>[   13.294317] [<ffff0000085142d4>] pci_probe_reset_function+0x24/0x30
+> > > >>[   13.300571] [<ffff000008518754>] pci_create_sysfs_dev_files+0x18c/0x2a0
+> > > >>[   13.307173] [<ffff000008d9a974>] pci_sysfs_init+0x38/0x60
+> > > >>[   13.312560] [<ffff000008083b4c>] do_one_initcall+0x5c/0x170
+> > > >>[   13.318122] [<ffff000008d60dfc>] kernel_init_freeable+0x1c0/0x27c
+> > > >>[   13.324205] [<ffff000008980d90>] kernel_init+0x18/0x110
+> > > >>[   13.329416] [<ffff000008083690>] ret_from_fork+0x10/0x40
+> > 
+> > I should have asked this before: why are we even trying to do this
+> > config read to a device that's in D3?  I assume this root port started
+> > out in D0 because we apparently enumerated it successfully, but it
+> > must have been put into D3 later?
+> > 
+> > The pci_probe_reset_function() function comment says "the PCI device
+> > must be responsive to PCI config space in order to use this function." 
+> > So apparently the caller should make sure the device is in at least
+> > D3hot and any bridges leading to it are in D0.
+> > 
+> > If we're missing whatever it is that makes sure the target device is
+> > reachable and responsive to config space, we likely have issues on
+> > other systems as well.  On Cavium this causes the external abort, but
+> > on other systems, we'd probably just get all 1's data back from the
+> > config read and silently do the wrong thing in
+> > pci_probe_reset_function().
+> > 
+> > I don't know how this runtime PM works, but maybe Rafael can help us
+> > out.
 > 
->>>> pci 0000:02:00.0: [1b4b:9215] type 00 class 0x010601
->>>> pci 0000:02:00.0: reg 0x10: [io  0x8000-0x8007]
->>>> ...
->>>> ata3: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910100 irq 100
->>>> ata4: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910180 irq 100
->>>> ata5: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910200 irq 100
->>>> ata6: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910280 irq 100
->>>> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
->>>> ahci 0000:02:00.0: PME# disabled
->>>> ata3: SATA link down (SStatus 0 SControl 300)
->>>> ata5: SATA link down (SStatus 0 SControl 300)
->>>> ata4: SATA link down (SStatus 0 SControl 300)
->>>> WARNING: CPU: 2 PID: 1162 at drivers/ata/libata-core.c:6620 ata_host_detach+0x125/0x130
->>>
->>> I think the AHCI driver should be fixed to cope with this.
->>
->> Yes, this can be discussed. But still the root-cause should be fixed,
->> IMHO. Either in our environment (HW issue?) or by adding this de-bouncing
->> feature.
->>
->>>> ata6: SATA link down (SStatus 0 SControl 300)
->>>> Modules linked in:
->>>> CPU: 2 PID: 1162 Comm: kworker/u8:5 Not tainted 4.15.0+ #26
->>>> Hardware name: congatec conga-qeval20-qa3-e3845/conga-qeval20-qa3-e3845, BIOS 2018.01-00033-g0125f37185-dirty 01/18/2018
->>>> Workqueue: pciehp-1 pciehp_power_thread
->>>> ...
->>>>
->>>> This patch now adds the 'pciehp_debounce_time' module parameter, which
->>>> can be used to drop all events for the specified time (in milliseconds)
->>>> after a link-up event occurred. A value of ~100ms works fine in my tests
->>>> to debounce all the link-up / link-down events in my tests.
->>>
->>> This sounds a bit "hackish". I would rather make sure we can handle
->>> situations like this properly without passing additional parameters.
->>
->> I'm open for other / better ideas on how to solve this situation, we
->> are seeing on our systems.
-> 
-> Well, I would start by fixing drivers that can't cope with surprise link
-> down (e.g disapearing PCI device, or suddenly reading 0xffffffff from
-> register).
+> I'm not sure what the question is to be honest.
 
-I've already sent a patch regarding a libata problem while unplugging
-an AHCI controller:
+My questions are basically "What does the PCI core need to do to make
+sure a device is in D0 before it operates on it?  And where do we need
+to do that?"
 
-https://www.spinics.net/lists/linux-ide/msg55038.html
+> Unused ports are autosuspended after 100ms as per pcie_portdrv_probe().
 
-> BTW, have you checked whether presence detect actually toggles similarly
-> or is it only triggered when the link is fully up? Since currently we
-> prioritize link up/down higher than presence detect but it may be that
-> we should do the opposite.
+So I guess this is only done for PCIe bridges, not for conventional
+PCI bridges.  Is this because autosuspend depends on a PCIe-only
+feature?
 
-As seen in the log sent in my previous mail, presence detect also
-toggles. Here again:
+Here's the path we're in now:
 
-[   41.260667] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-[   41.260731] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-[   41.290650] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
-[   41.295837] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-[   41.320664] pciehp 0000:00:1c.1:pcie004: Slot(1): Card not present
-[   41.330042] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-[   41.330110] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-[   41.375950] pci 0000:02:00.0: [1b4b:9215] type 00 class 0x010601
-...
+  pcie_portdrv_init                        # device_initcall (level 6)
+    pci_register_driver(&pcie_portdriver)
+      ...
+        pcie_portdrv_probe                 # pcie_portdriver.probe
+          pm_runtime_set_autosuspend_delay(&dev->dev, 100)
 
-Even though I'm wondering, why we are seeing 3 times "Card present"
-and only one time "Card not present". I would expect to see 2
-"Card present" messages here. This does not seem to be balanced
-correctly.
+  pci_sysfs_init                           # late_initcall (level 7)
+    for_each_pci_dev(dev)
+      pci_create_sysfs_dev_files(dev)
+        pci_create_capabilities_sysfs(dev)
+          pci_probe_reset_function(dev)
+            ...
+              pcie_capability_read_dword   <-- config read causing abort
 
-Thanks,
-Stefan
+I guess it's conceivable that more than 100ms elapsed between
+pcie_portdrv_probe() and pci_probe_reset_function(), and obviously we
+can't depend on any particular timing.
+
+> Now, it looks like they should be resumed in the code path in question,
+> so this case seems to have been overlooked.
+
+How do we identify which code paths need to resume the device, and
+what do we need to do to resume it?
+
+I'm kind of scared about this because most hardware just returns all
+ones in this case and we might never notice.
+
+Bjorn
