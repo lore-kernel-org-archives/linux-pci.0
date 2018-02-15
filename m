@@ -1,180 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:39087 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966717AbeBNDwY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 22:52:24 -0500
-Received: by mail-ot0-f196.google.com with SMTP id f18so19262832otf.6
-        for <linux-pci@vger.kernel.org>; Tue, 13 Feb 2018 19:52:24 -0800 (PST)
-From: Frederick Lawler <fred@fredlawl.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Frederick Lawler <fred@fredlawl.com>
-Subject: [PATCH] PCI: Move pcieport_if.h to drivers/pci and replace includes
-Date: Tue, 13 Feb 2018 21:52:18 -0600
-Message-Id: <1518580338-13826-1-git-send-email-fred@fredlawl.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, <rafael@kernel.org>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+ <1518543933-22456-8-git-send-email-john.garry@huawei.com>
+ <20180214161635.GA13849@e107981-ln.cambridge.arm.com>
+ <65185a4d-c712-4486-d713-3fa9de14e35d@huawei.com>
+CC: <mika.westerberg@linux.intel.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>, <joe@perches.com>,
+        <benh@kernel.crashing.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linuxarm@huawei.com>, <minyard@acm.org>,
+        <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+        <rdunlap@infradead.org>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <e3fb78b3-5f5c-fe96-9f02-e96092963c17@huawei.com>
+Date: Thu, 15 Feb 2018 11:19:00 +0000
+MIME-Version: 1.0
+In-Reply-To: <65185a4d-c712-4486-d713-3fa9de14e35d@huawei.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move the include/linux/pcieport_if.h file to drivers/pci/pcieport_if.h.
+> Nothing apart from only being used by arm64 platforms today, which is
+> circumstantial.
+>
+>>
+>> I understand you need to find a place to add the:
+>>
+>> acpi_indirect_io_scan_init()
+>>
+>> to be called from core ACPI code because ACPI can't handle probe
+>> dependencies in any other way but other than that this patch is
+>> a Hisilicon ACPI driver - there is nothing generic in it (or at
+>> least there are no standard bindings to make it so).
+>>
+>> Whether a callback from ACPI core code (acpi_scan_init()) to a driver
+>> specific hook is sane or not that's the question and the only reason
+>> why you want to add this in drivers/acpi/arm64 rather than, say,
+>> drivers/bus (as you do for the DT driver).
+>>
+>> I do not know Rafael's opinion on the above, I would like to help
+>> you make forward progress but please understand my concerns, mostly
+>> on FW side.
+>>
+>
+> I did mention an alternative in my "ping" in v12 patch 7/9 (Feb 1), but
+> no response to this specific note so I kept on the same path.
+>
+> Here's what I then wrote:
+> "I think another solution - which you may prefer - is to avoid adding
+> this scan handler (and all this other scan code) and add a check like
+> acpi_is_serial_bus_slave() [which checks the device parent versus a list
+> of known indirectIO hosts] to not enumerate these children, and do it
+> from the LLDD host probe instead (https://lkml.org/lkml/2017/6/16/250)"
+>
 
-Replace all uses of #include<linux/pcieport_if.h> with relative paths to
-the new file location. eg. #include "../pcieport_if.h"
+Hi Rafael, Lorenzo,
 
-Signed-off-by: Frederick Lawler <fred@fredlawl.com>
----
- drivers/pci/hotplug/pciehp.h                 | 3 ++-
- drivers/pci/pcie/aer/aerdrv.c                | 2 +-
- drivers/pci/pcie/aer/aerdrv.h                | 3 ++-
- drivers/pci/pcie/pcie-dpc.c                  | 3 ++-
- drivers/pci/pcie/pme.c                       | 2 +-
- drivers/pci/pcie/portdrv_acpi.c              | 2 +-
- drivers/pci/pcie/portdrv_bus.c               | 2 +-
- drivers/pci/pcie/portdrv_core.c              | 2 +-
- drivers/pci/pcie/portdrv_pci.c               | 2 +-
- {include/linux => drivers/pci}/pcieport_if.h | 0
- 10 files changed, 12 insertions(+), 9 deletions(-)
- rename {include/linux => drivers/pci}/pcieport_if.h (100%)
+I can avoid adding the scan handler in acpi_indirectio.c by skipping the 
+child enumeration, like with this change in scan.c:
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 636ed8f..0a2f955 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -20,10 +20,11 @@
- #include <linux/pci_hotplug.h>
- #include <linux/delay.h>
- #include <linux/sched/signal.h>		/* signal_pending() */
--#include <linux/pcieport_if.h>
- #include <linux/mutex.h>
- #include <linux/workqueue.h>
- 
-+#include "../pcieport_if.h"
++static const struct acpi_device_id indirect_io_hosts[] = {
++    {"HISI0191", 0},    /* HiSilicon LPC host */
++    {},
++};
 +
- #define MY_NAME	"pciehp"
- 
- extern bool pciehp_poll_mode;
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index da8331f..4a27a90 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -21,10 +21,10 @@
- #include <linux/init.h>
- #include <linux/interrupt.h>
- #include <linux/delay.h>
--#include <linux/pcieport_if.h>
- #include <linux/slab.h>
- 
- #include "aerdrv.h"
-+#include "../../pcieport_if.h"
- #include "../../pci.h"
- 
- static int aer_probe(struct pcie_device *dev);
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index 5449e5c..8e16261 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -10,10 +10,11 @@
- #define _AERDRV_H_
- 
- #include <linux/workqueue.h>
--#include <linux/pcieport_if.h>
- #include <linux/aer.h>
- #include <linux/interrupt.h>
- 
-+#include "../../pcieport_if.h"
++static bool acpi_is_indirect_io_slave(struct acpi_device *device)
++{
++    struct acpi_device *parent = dev->parent;
 +
- #define SYSTEM_ERROR_INTR_ON_MESG_MASK	(PCI_EXP_RTCTL_SECEE|	\
- 					PCI_EXP_RTCTL_SENFEE|	\
- 					PCI_EXP_RTCTL_SEFEE)
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 38e40c6..d21b1c7 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -10,7 +10,8 @@
- #include <linux/interrupt.h>
- #include <linux/init.h>
- #include <linux/pci.h>
--#include <linux/pcieport_if.h>
++    if (!parent || acpi_match_device_ids(parent, indirect_io_hosts))
++        return false;
 +
-+#include "../pcieport_if.h"
- #include "../pci.h"
- #include "aer/aerdrv.h"
- 
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 5480f54..cc57707 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -14,9 +14,9 @@
- #include <linux/init.h>
- #include <linux/interrupt.h>
- #include <linux/device.h>
--#include <linux/pcieport_if.h>
- #include <linux/pm_runtime.h>
- 
-+#include "../pcieport_if.h"
- #include "../pci.h"
- #include "portdrv.h"
- 
-diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
-index 319c949..80375f0 100644
---- a/drivers/pci/pcie/portdrv_acpi.c
-+++ b/drivers/pci/pcie/portdrv_acpi.c
-@@ -10,8 +10,8 @@
- #include <linux/errno.h>
- #include <linux/acpi.h>
- #include <linux/pci-acpi.h>
--#include <linux/pcieport_if.h>
- 
-+#include "../pcieport_if.h"
- #include "aer/aerdrv.h"
- #include "../pci.h"
- #include "portdrv.h"
-diff --git a/drivers/pci/pcie/portdrv_bus.c b/drivers/pci/pcie/portdrv_bus.c
-index f0fba55..8047485 100644
---- a/drivers/pci/pcie/portdrv_bus.c
-+++ b/drivers/pci/pcie/portdrv_bus.c
-@@ -13,7 +13,7 @@
- #include <linux/errno.h>
- #include <linux/pm.h>
- 
--#include <linux/pcieport_if.h>
-+#include  "../pcieport_if.h"
- #include "portdrv.h"
- 
- static int pcie_port_bus_match(struct device *dev, struct device_driver *drv);
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index ef3bad4..3089eef 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -15,9 +15,9 @@
- #include <linux/pm_runtime.h>
- #include <linux/string.h>
- #include <linux/slab.h>
--#include <linux/pcieport_if.h>
- #include <linux/aer.h>
- 
-+#include "../pcieport_if.h"
- #include "../pci.h"
- #include "portdrv.h"
- 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index fb1c1bb..3dfc9ac 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -15,11 +15,11 @@
- #include <linux/pm.h>
- #include <linux/pm_runtime.h>
- #include <linux/init.h>
--#include <linux/pcieport_if.h>
- #include <linux/aer.h>
- #include <linux/dmi.h>
- #include <linux/pci-aspm.h>
- 
-+#include "../pcieport_if.h"
- #include "../pci.h"
- #include "portdrv.h"
- 
-diff --git a/include/linux/pcieport_if.h b/drivers/pci/pcieport_if.h
-similarity index 100%
-rename from include/linux/pcieport_if.h
-rename to drivers/pci/pcieport_if.h
--- 
-2.7.4
++    return true;
++}
++
+  static bool acpi_is_serial_bus_slave(struct acpi_device *device)
+  {
+      struct list_head resource_list;
+      bool is_serial_bus_slave = false;
+
++    if (acpi_is_indirect_io_slave(device))
++        return true;
++
+      /* Macs use device properties in lieu of _CRS resources */
+
+
+This means I can move all this scan code into the LLDD.
+
+What do you think? Please let me know.
+
+John
