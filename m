@@ -1,55 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:13227 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932500AbeBVM72 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Feb 2018 07:59:28 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.com>, linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 4/4] pci: Re-use new dmi_get_bios_year() helper
-Date: Thu, 22 Feb 2018 14:59:23 +0200
-Message-Id: <20180222125923.57385-4-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
-References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
+To: Joerg Roedel <joro@8bytes.org>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-2-jean-philippe.brucker@arm.com>
+ <20180215095909.r4nwqjhuijusssuy@8bytes.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <69405fb7-7453-8575-e020-2ded7b2b92f5@arm.com>
+Date: Thu, 15 Feb 2018 12:43:06 +0000
+MIME-Version: 1.0
+In-Reply-To: <20180215095909.r4nwqjhuijusssuy@8bytes.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ Catalin Marinas <Catalin.Marinas@arm.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-...instead of open coding its functionality.
+On 15/02/18 09:59, Joerg Roedel wrote:
+> On Mon, Feb 12, 2018 at 06:33:16PM +0000, Jean-Philippe Brucker wrote:
+>   
+>> +config IOMMU_SVA
+>> +	bool "Shared Virtual Addressing API for the IOMMU"
+>> +	select IOMMU_API
+>> +	help
+>> +	  Enable process address space management for the IOMMU API. In systems
+>> +	  that support it, device drivers can bind process address spaces to
+>> +	  devices and share their page tables using this API.
+>> +
+>> +	  If unsure, say N here.
+> 
+> I think this should be an option selected by IOMMU driver and not be
+> activly selectable by the user.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/pci/pci.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+Ok
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd10d9b0..ae654e21439d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2258,8 +2258,6 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
-  */
- bool pci_bridge_d3_possible(struct pci_dev *bridge)
- {
--	unsigned int year;
--
- 	if (!pci_is_pcie(bridge))
- 		return false;
- 
-@@ -2287,10 +2285,8 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 		 * It should be safe to put PCIe ports from 2015 or newer
- 		 * to D3.
- 		 */
--		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
--		    year >= 2015) {
-+		if (dmi_get_bios_year() >= 2015)
- 			return true;
--		}
- 		break;
- 	}
- 
--- 
-2.16.1
+>> +/**
+>> + * iommu_sva_device_shutdown() - Shutdown Shared Virtual Addressing for a device
+>> + * @dev: the device
+>> + *
+>> + * Disable SVA. The device should not be performing any DMA while this function
+>> + * is running.
+> 
+> Is this a good idea? How about devices that get hot-unplugged while
+> processes still use them and there is DMA going back and forth? This
+> function can be the point to shut down all ongoing stuff first and the
+> shutdown the device.
+
+To be honest I don't know how hot-unplug works. But sva_device_shutdown()
+may be called, for instance, by the device driver before the device
+disappears, so it has to know how to stop DMA before calling it. The IOMMU
+driver can't really do anything more.
+
+For hot-unplug I guess that device_driver::remove() is called first,
+allowing it to stop all DMA and call sva_device_shutdown().
+
+Then the IOMMU gets a BUS_NOTIFY_REMOVED_DEVICE notification and calls
+iommu_ops::remove_device(), allowing to clean up SVA structure if the
+device driver didn't call unbind_device() and sva_device_shutdown(). But
+at that point we don't have a way to cooperate with the driver to stop DMA
+anymore.
+
+Thanks,
+Jean
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
