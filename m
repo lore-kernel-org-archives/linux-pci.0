@@ -1,113 +1,135 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Feng Kan <fkan@apm.com>
-To: rjw@rjwysocki.net, linux-pm@vger.kernel.org, lorenzo.pieralisi@arm.com,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- bhelgaas@google.com
-Subject: [PATCH] PM / core: move device and its children to end of dpm list
-Date: Wed, 28 Feb 2018 10:45:55 -0800
-Message-Id: <1519843555-982-1-git-send-email-fkan@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Feng Kan <fkan@apm.com>, Toan Le <toanle@apm.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+ <1518543933-22456-8-git-send-email-john.garry@huawei.com>
+ <20180214161635.GA13849@e107981-ln.cambridge.arm.com>
+ <65185a4d-c712-4486-d713-3fa9de14e35d@huawei.com>
+ <e3fb78b3-5f5c-fe96-9f02-e96092963c17@huawei.com>
+ <CAJZ5v0jGvo+cutmvi3WSe1JNvQ1UvZhJr1mQ76=8=1E5Gq+iRg@mail.gmail.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        "Bjorn Helgaas" <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
+        "Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <4c81ecec-b3be-6b57-938a-b7d11ca7ee96@huawei.com>
+Date: Thu, 15 Feb 2018 12:59:36 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAJZ5v0jGvo+cutmvi3WSe1JNvQ1UvZhJr1mQ76=8=1E5Gq+iRg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When bridge and its endpoint is enumated the devices are added to the
-dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
-This causes the bridge to be moved to the end of the dpm list when deferred
-probe kicks in. The order of the dpm list for bridge and endpoint is
-reversed.
+On 15/02/2018 11:47, Rafael J. Wysocki wrote:
+> On Thu, Feb 15, 2018 at 12:19 PM, John Garry <john.garry@huawei.com> wrote:
+>>> Nothing apart from only being used by arm64 platforms today, which is
+>>> circumstantial.
+>>>
+>>>>
+>>>> I understand you need to find a place to add the:
+>>>>
+>>>> acpi_indirect_io_scan_init()
+>>>>
+>>>> to be called from core ACPI code because ACPI can't handle probe
+>>>> dependencies in any other way but other than that this patch is
+>>>> a Hisilicon ACPI driver - there is nothing generic in it (or at
+>>>> least there are no standard bindings to make it so).
+>>>>
+>>>> Whether a callback from ACPI core code (acpi_scan_init()) to a driver
+>>>> specific hook is sane or not that's the question and the only reason
+>>>> why you want to add this in drivers/acpi/arm64 rather than, say,
+>>>> drivers/bus (as you do for the DT driver).
+>>>>
+>>>> I do not know Rafael's opinion on the above, I would like to help
+>>>> you make forward progress but please understand my concerns, mostly
+>>>> on FW side.
+>>>>
+>>>
+>>> I did mention an alternative in my "ping" in v12 patch 7/9 (Feb 1), but
+>>> no response to this specific note so I kept on the same path.
+>>>
+>>> Here's what I then wrote:
+>>> "I think another solution - which you may prefer - is to avoid adding
+>>> this scan handler (and all this other scan code) and add a check like
+>>> acpi_is_serial_bus_slave() [which checks the device parent versus a list
+>>> of known indirectIO hosts] to not enumerate these children, and do it
+>>> from the LLDD host probe instead (https://lkml.org/lkml/2017/6/16/250)"
+>>>
+>>
+>> Hi Rafael, Lorenzo,
+>>
+>> I can avoid adding the scan handler in acpi_indirectio.c by skipping the
+>> child enumeration, like with this change in scan.c:
+>>
 
-Add reordering code to re-position the bridge and its children so the order
-for suspend and resume is not altered.
+Hi Rafael,
 
-Signed-off-by: Feng Kan <fkan@apm.com>
-Signed-off-by: Toan Le <toanle@apm.com>
----
- drivers/base/core.c    | 20 ++++++++++++++++++++
- drivers/base/dd.c      |  8 ++++----
- include/linux/device.h |  3 +++
- 3 files changed, 27 insertions(+), 4 deletions(-)
+>> +static const struct acpi_device_id indirect_io_hosts[] = {
+>> +    {"HISI0191", 0},    /* HiSilicon LPC host */
+>> +    {},
+>> +};
+>> +
+>> +static bool acpi_is_indirect_io_slave(struct acpi_device *device)
+>> +{
+>
+> Why don't you put the table definition here?
+>
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 110230d..0b4ad99 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -148,6 +148,26 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
- }
- 
- /**
-+ * device_pm_reorder - reorder device and its children to end of dpm list
-+ * @dev: current device pointer
-+ *
-+ * This is a lock held version of reordering the device to dpm list tail.
-+ * This will move the device to the end of the dpm list if it not registered.
-+ * Afterward, it will iterate through its children and do the same for them.
-+ */
-+void device_pm_reorder(struct device *dev)
-+{
-+	int idx;
-+
-+	idx = device_links_read_lock();
-+	device_pm_lock();
-+	device_reorder_to_tail(dev, NULL);
-+	device_pm_unlock();
-+	device_links_read_unlock(idx);
-+}
-+EXPORT_SYMBOL_GPL(device_pm_reorder);
-+
-+/**
-  * device_link_add - Create a link between two devices.
-  * @consumer: Consumer end of the link.
-  * @supplier: Supplier end of the link.
-diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-index 2c964f5..3223a30 100644
---- a/drivers/base/dd.c
-+++ b/drivers/base/dd.c
-@@ -121,11 +121,11 @@ static void deferred_probe_work_func(struct work_struct *work)
- 		 * Force the device to the end of the dpm_list since
- 		 * the PM code assumes that the order we add things to
- 		 * the list is a good order for suspend but deferred
--		 * probe makes that very unsafe.
-+		 * probe makes that very unsafe. Also move any children
-+		 * belong to the device to the end of the list as well.
-+		 * This way the suspend resume order won't be corrupted.
- 		 */
--		device_pm_lock();
--		device_pm_move_last(dev);
--		device_pm_unlock();
-+		device_pm_reorder(dev);
- 
- 		dev_dbg(dev, "Retrying from deferred list\n");
- 		if (initcall_debug && !initcalls_done)
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 9d32000..1ec12d5 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -1272,6 +1272,9 @@ extern void devm_device_remove_group(struct device *dev,
- /* debugging and troubleshooting/diagnostic helpers. */
- extern const char *dev_driver_string(const struct device *dev);
- 
-+/* reorder device and its children to end of dpm list */
-+void device_pm_reorder(struct device *dev);
-+
- /* Device links interface. */
- struct device_link *device_link_add(struct device *consumer,
- 				    struct device *supplier, u32 flags);
--- 
-1.8.3.1
+I can do.
 
+>> +    struct acpi_device *parent = dev->parent;
+>> +
+>> +    if (!parent || acpi_match_device_ids(parent, indirect_io_hosts))
+>> +        return false;
+>> +
+>> +    return true;
+>
+> return parent && !acpi_match_device_ids(parent, indirect_io_hosts);
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Fine, a bit more concise
+
+>
+>> +}
+>> +
+>>  static bool acpi_is_serial_bus_slave(struct acpi_device *device)
+>>  {
+>>      struct list_head resource_list;
+>>      bool is_serial_bus_slave = false;
+>>
+>> +    if (acpi_is_indirect_io_slave(device))
+>> +        return true;
+>> +
+>>      /* Macs use device properties in lieu of _CRS resources */
+>>
+>>
+>> This means I can move all this scan code into the LLDD.
+>>
+>> What do you think? Please let me know.
+>
+> If Lorenzo agrees, that will be fine by me modulo the above remarks.
+>
+> .
+
+I see Lorenzo also finds this ok, so I'll go with that.
+
+Thanks to all,
+John
+
+>
