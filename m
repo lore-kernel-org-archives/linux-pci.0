@@ -1,72 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:43921 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752309AbeB0MMJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 07:12:09 -0500
-Date: Tue, 27 Feb 2018 13:11:57 +0100 (CET)
-From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-cc: Rolf Evers-Fischer <embedded24@evers-fischer.de>, kishon@ti.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com
-Subject: Re: [PATCH v3 0/2] pci: endpoint: Fix double free in
- pci_epf_create()
-In-Reply-To: <20180227102030.GB26238@e107981-ln.cambridge.arm.com>
-Message-ID: <alpine.LNX.2.20.1802271257030.23086@5HSWXM1.fritz.box>
-References: <20180227100231.22561-1-embedded24@evers-fischer.de> <20180227102030.GB26238@e107981-ln.cambridge.arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
+To: "Tian, Kevin" <kevin.tian@intel.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        Catalin Marinas <Catalin.Marinas@arm.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        Sudeep Holla <Sudeep.Holla@arm.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        Joerg Roedel <joro@8bytes.org>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-2-jean-philippe.brucker@arm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D191002823@SHSMSX101.ccr.corp.intel.com>
+ <b3c190e7-1a33-971e-b86c-a9725118ba05@arm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D191003B1B@SHSMSX101.ccr.corp.intel.com>
+Message-ID: <0b579768-3090-dd50-58b1-3385be92ef21@arm.com>
+Date: Thu, 15 Feb 2018 12:42:05 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D191003B1B@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Lorenzo,
-
-On Tue, 27 Feb 2018, Lorenzo Pieralisi wrote:
-
-> On Tue, Feb 27, 2018 at 11:02:28AM +0100, Rolf Evers-Fischer wrote:
-> > This is version 3 of a patchset to avoid double free in function
-> > 'pci_epf_create()'.
-> > 
-> > When I accidentally created a new endpoint device with an empty name,
-> > the kernel warned about "attempted to be registered with empty name!"
-> > and crashed afterwards.
-> > 
-> > It turned out that the crash was not caused by the 'device_add()'
-> > function itself, but by a double kfree of 'epf->name' and 'epf'.
-> > 
-> > The first patch just simplifies the code, while the second patch
-> > fixes the problem.
-> > 
-> > Changes in v3:
-> > - Matched to other pending pci endpoint commits (thanks, Bjorn!)
-> > - Added "Fixes" tag in patch 2 (thanks, Andy!)
-> > 
-> > Changes in v2:
-> > - Based on feedback from Lorenzo, Andy and Kishon (thanks!)
-> > - Change IDs removed
-> > - First patch completely reworked in order to eliminate the
-> >   need for the second 'kstrdup' allocation and the 'kfree' of
-> >   the first allocation.
-> >   It was tested with name="pci_epf_test.0" and name="pci_epb":
-> >   The 'epf->name' was "pci_epf_test" or "pci_epb" (=unchanged).
-> > 
-> > Rolf Evers-Fischer (2):
-> >   pci: endpoint: Simplify name allocation for epf device
-> >   pci: endpoint: Fix kernel panic after put_device()
->     ^^^
+On 13/02/18 23:43, Tian, Kevin wrote:
+>> From: Jean-Philippe Brucker
+>> Sent: Tuesday, February 13, 2018 8:40 PM
+>>
+>>
+>> [...]
+>>>> +
+>>>> +/**
+>>>> + * iommu_sva_device_init() - Initialize Shared Virtual Addressing for a
+>>>> device
+>>>> + * @dev: the device
+>>>> + * @features: bitmask of features that need to be initialized
+>>>> + * @max_pasid: max PASID value supported by the device
+>>>> + *
+>>>> + * Users of the bind()/unbind() API must call this function to initialize all
+>>>> + * features required for SVA.
+>>>> + *
+>>>> + * - If the device should support multiple address spaces (e.g. PCI
+>> PASID),
+>>>> + *   IOMMU_SVA_FEAT_PASID must be requested.
+>>>
+>>> I think it is by default assumed when using this API, based on definition of
+>>> SVA. Can you elaborate the situation where this flag can be cleared?
+>>
+>> When passing a device to userspace, you could also share its non-pasid
+>> address space with the process. It requires a new domain type so is left
+>> as a TODO in patch 2/37. I did get requests for this feature, though I
+>> think it was mostly for prototyping. I guess I could remove the flag, and
+>> reintroduce it as IOMMU_SVA_FEAT_NO_PASID later on.
 > 
-> s/pci/PCI
+> sorry I still didn't get the definition of non-pasid address space. 
+> Did you mean the GPA/IOVA address space and no_pasid implies
+> actually some default PASID associated?
+
+Yes I mean merging the process address space and IOVA space. There are no
+PASIDs involved if the device or the IOMMU doesn't support it. Instead of
+private DMA page tables you program the mm pgd into the IOMMU. A VFIO
+userspace driver, instead of sending MAP/UNMAP ioctl, could simply issue a
+BIND.
+
+Technically nothing prevents it, but now the resv problem discussed on
+patch 2/37 stands out. For example on x86 you'd probably need to carve the
+IOAPIC MSI range out of the process address space. On Arm you'd need to
+create a write-only mapping for MSIs (IOMMU translates it to the IRQ chip
+address, but thankfully accessing the doorbell from CPU side doesn't
+trigger an MSI.)
+
+>> [...]
+>>>> +	ret = domain->ops->sva_device_init(dev, features, &min_pasid,
+>>>> +					   &max_pasid);
+>>>> +	if (ret)
+>>>> +		return ret;
+>>>> +
+>>>> +	/* FIXME: racy. Next version should have a mutex (same as fault
+>>>> handler) */
+>>>> +	dev_param->sva_features = features;
+>>>> +	dev_param->min_pasid = min_pasid;
+>>>> +	dev_param->max_pasid = max_pasid;
+>>>
+>>> what's the point of min_pasid here?
+>>
+>> Arm SMMUv3 uses entry 0 of the PASID table for the default (non-pasid)
+>> context, so it needs to set min_pasid to 1. AMD IOMMU recently added a
+>> similar feature (GIoSup), if I understood correctly.
+>>
 > 
-> Bjorn pointed that out too, I can do it when merging the patches myself
-> just a hint in case you have to respin it again, no problem.
-> 
+> just for such purpose maybe we should just define a reserved_pasid
+> otherwise there will be some waste if an implementation allows it
+> non-zero.
 
-thank you for pointing this out. I haven't recognized this detail. I 
-thought that Bjorn wanted me to rebase my patch series upon the latest 
-unmerged PCI endpoint patches - and I was surprised that there was no 
-change.
+What's wasted? It's slightly simpler to use min_pasid because we just pass
+that limit to idr_alloc(). With a reserved_pasid we'll have to call
+idr_alloc(reserved_pasid) once, for the same result.
 
-Thank you for your kind offer to fix it when merging the patches.
-
-Best regards,
- Rolf
+Thanks,
+Jean
