@@ -1,147 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48356 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933086AbeBUK13 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Feb 2018 05:27:29 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v8 7/7] PCI/DPC: Enumerate the devices after DPC trigger event
-Date: Wed, 21 Feb 2018 15:56:44 +0530
-Message-Id: <1519208804-24512-8-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519208804-24512-1-git-send-email-poza@codeaurora.org>
-References: <1519208804-24512-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 02/37] iommu/sva: Bind process address spaces to devices
+To: "joro@8bytes.org" <joro@8bytes.org>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-3-jean-philippe.brucker@arm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D191002897@SHSMSX101.ccr.corp.intel.com>
+ <b9eacb30-817f-9027-bc0a-1f01cf9f13f9@arm.com>
+ <20180215102113.c7t7rrnyzgazmdli@8bytes.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <9d440890-cb57-c890-334d-c40a6c68566e@arm.com>
+Date: Thu, 15 Feb 2018 12:46:36 +0000
+MIME-Version: 1.0
+In-Reply-To: <20180215102113.c7t7rrnyzgazmdli@8bytes.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "mykyta.iziumtsev@linaro.org" <mykyta.iziumtsev@linaro.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>, "Liu,
+ Yi L" <yi.l.liu@intel.com>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "Raj, Ashok" <ashok.raj@intel.com>, "tn@semihalf.com" <tn@semihalf.com>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ Catalin Marinas <Catalin.Marinas@arm.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "Tian,
+ Kevin" <kevin.tian@intel.com>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement error_resume callback in DPC so, after DPC trigger event
-enumerates the devices beneath.
+On 15/02/18 10:21, joro@8bytes.org wrote:
+> On Tue, Feb 13, 2018 at 12:57:23PM +0000, Jean-Philippe Brucker wrote:
+>> * bind_device() fails if the device's group has more than one device,
+>> otherwise calls __bind_device(). This prevents device drivers that are
+>> oblivious to IOMMU groups from opening a backdoor.
+>>
+>> * bind_group() calls __bind_device() for all devices in group. This way
+>> users that are aware of IOMMU groups can still use them safely. Note that
+>> at the moment bind_group() fails as soon as it finds a device that doesn't
+>> support SVA. Having all devices support SVA in a given group is
+>> unrealistic and this behavior ought to be improved.
+> 
+> Yeah, so the problem on PCI is that all functions of a multi-function
+> device are put into one group. For AMD-GPUs this means that the GPU
+> (SVA-capable) will end up in the same group as the on-GPU sound
+> device (not SVA-capable).
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+As I understood it ACS also isolate functions within a device, for example
+the two PFs of my ixgbe card are in different groups. Strangely all VFs go
+in the same group, I haven't investigated why yet.
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index fce4518..59c01c7 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -129,6 +129,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- }
- 
- /**
-+ * dpc_error_resume - enumerate the devices beneath
-+ * @dev: pointer to Root Port's pci_dev data structure
-+ *
-+ * Invoked by Port Bus driver during nonfatal recovery.
-+ */
-+static void dpc_error_resume(struct pci_dev *pdev)
-+{
-+	bool active = true;
-+
-+	if (pci_wait_for_link(pdev, active)) {
-+		pci_lock_rescan_remove();
-+		pci_rescan_bus(pdev->bus);
-+		pci_unlock_rescan_remove();
-+	}
-+}
-+
-+/**
-  * dpc_reset_link - reset link DPC  routine
-  * @dev: pointer to Root Port's pci_dev data structure
-  *
-@@ -366,6 +383,7 @@ static void dpc_remove(struct pcie_device *dev)
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
-+	.error_resume	= dpc_error_resume,
- 	.reset_link     = dpc_reset_link,
- };
- 
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 6844347..4950f49 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -236,6 +236,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
-  * @state: error state
-  * @error_mesg: message to print
-  * @cb: callback to be broadcasted
-+ * @severity: error severity
-  *
-  * Invoked during error recovery process. Once being invoked, the content
-  * of error severity will be broadcasted to all downstream drivers in a
-@@ -244,7 +245,8 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
- static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 	enum pci_channel_state state,
- 	char *error_mesg,
--	int (*cb)(struct pci_dev *, void *))
-+	int (*cb)(struct pci_dev *, void *),
-+	int severity)
- {
- 	struct aer_broadcast_data result_data;
- 
-@@ -256,6 +258,15 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 		result_data.result = PCI_ERS_RESULT_RECOVERED;
- 
- 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		/* If DPC is triggered, call resume error hanlder
-+		 * because, at this point we can safely assume that
-+		 * link recovery has happened.
-+		 */
-+		if ((severity == DPC_FATAL) &&
-+			(cb == report_resume)) {
-+			cb(dev, NULL);
-+			return PCI_ERS_RESULT_RECOVERED;
-+		}
- 		/*
- 		 * If the error is reported by a bridge, we think this error
- 		 * is related to the downstream link of the bridge, so we
-@@ -305,7 +316,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 	status = broadcast_error_message(dev,
- 			state,
- 			"error_detected",
--			report_error_detected);
-+			report_error_detected,
-+			severity);
- 
- 	if ((severity == AER_FATAL) ||
- 	    (severity == DPC_FATAL)) {
-@@ -321,7 +333,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 		status = broadcast_error_message(dev,
- 				state,
- 				"mmio_enabled",
--				report_mmio_enabled);
-+				report_mmio_enabled,
-+				severity);
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
- 		/*
-@@ -332,7 +345,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 		status = broadcast_error_message(dev,
- 				state,
- 				"slot_reset",
--				report_slot_reset);
-+				report_slot_reset,
-+				severity);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
-@@ -342,7 +356,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 	broadcast_error_message(dev,
- 				state,
- 				"resume",
--				report_resume);
-+				report_resume,
-+				severity);
- 
- 	dev_info(&dev->dev, "Device recovery successful\n");
- 	mutex_unlock(&pci_err_recovery_lock);
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> Before this causes us big headaches I suggest to only provide the
+> bind_device() function.
+
+Ok. I added bind_group() to make it easier for VFIO - so if one bind()
+fails in the group, iommu.c can rollback and remove the bonds already
+created. If we mandate a single device in the group for SVA, then VFIO can
+use iommu_group_for_each_dev() and ensure that the callback was only
+called once.
+
+> This should be fine because for SVA we don't
+> need all types of isolation that iommu_groups provide.
+> 
+> IOMMU-groups provide two types of isolation:
+> 
+> 	1) They group devices together which the IOMMU can't distinguish
+> 	   from each other, like PCI devices behind a PCIe bridge.
+> 
+> 	2) Devices that can't be isolated from each other are also put
+> 	   into the same group. This is the case for multi-function PCIe
+> 	   devices as well as all PCIe devices behind a non-ACS bridge.
+> 	   But all these devices cann still be distinguished by the
+> 	   IOMMU.
+
+But transactions don't necessarily reach the IOMMU if devices are not
+isolated by ACS. So even if you disable all translation in the IOMMU for
+one device in the group, it may still have a view of address spaces shared
+with another device in that group.
+
+> These two types of protection are needed to safely assign devices to
+> guests, but for bare-metal SVA all we need is type 1) isolation, and
+> not even that if we can assume that all SVA-capable devices have an
+> exclusive device-id (or stream-id).
+
+I'm not as optimistic that we won't need IOMMU groups with SVA devices for
+2) (hardware bugs, integration issues, etc). I'd be more comfortable if we
+added a sanity-check as suggested by Kevin, to ensure that SVA is
+disallowed if multiple devices are in the group.
+
+Thanks,
+Jean
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
