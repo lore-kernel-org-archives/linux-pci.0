@@ -1,15 +1,23 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:43832 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030245AbeBOMzj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Feb 2018 07:55:39 -0500
 MIME-Version: 1.0
-In-Reply-To: <1519062520-198902-2-git-send-email-john.garry@huawei.com>
-References: <1519062520-198902-1-git-send-email-john.garry@huawei.com> <1519062520-198902-2-git-send-email-john.garry@huawei.com>
+In-Reply-To: <f7b3de31-46fb-f80e-511e-651fa815bddf@huawei.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+ <1518543933-22456-8-git-send-email-john.garry@huawei.com> <20180214161635.GA13849@e107981-ln.cambridge.arm.com>
+ <65185a4d-c712-4486-d713-3fa9de14e35d@huawei.com> <e3fb78b3-5f5c-fe96-9f02-e96092963c17@huawei.com>
+ <CAHp75VfFKcnUVQwPUxynzp88RXWdV8VEqtXxd0=_Q_GJKO6UpQ@mail.gmail.com> <f7b3de31-46fb-f80e-511e-651fa815bddf@huawei.com>
 From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 20 Feb 2018 16:33:45 +0200
-Message-ID: <CAHp75Vf102MDDZ8d9kXw2K0+0_WkhFMSq7o=Vz=KrzOM=NRW5A@mail.gmail.com>
-Subject: Re: [PATCH v14 1/9] LIB: Introduce a generic PIO mapping method
+Date: Thu, 15 Feb 2018 14:55:37 +0200
+Message-ID: <CAHp75Vec1vXxuo9i5G-og1cQre1AYm=0_61u+DK1690FpY17bQ@mail.gmail.com>
+Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
 To: John Garry <john.garry@huawei.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>,
         Hanjun Guo <hanjun.guo@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
@@ -28,55 +36,54 @@ Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
         Linux-Arch <linux-arch@vger.kernel.org>,
         Randy Dunlap <rdunlap@infradead.org>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 19, 2018 at 7:48 PM, John Garry <john.garry@huawei.com> wrote:
-> From: Zhichang Yuan <yuanzhichang@hisilicon.com>
+On Thu, Feb 15, 2018 at 2:52 PM, John Garry <john.garry@huawei.com> wrote:
+> On 15/02/2018 12:22, Andy Shevchenko wrote:
+>> On Thu, Feb 15, 2018 at 1:19 PM, John Garry <john.garry@huawei.com> wrote:
+
+>>> +static const struct acpi_device_id indirect_io_hosts[] = {
+>>> +    {"HISI0191", 0},    /* HiSilicon LPC host */
+>>> +    {},
+>>
+>>
+>> Just a nit.
+>>
 >
-> In commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
-> pci_pio_to_address()"), a new I/O space management was supported. With
-> that driver, the I/O ranges configured for PCI/PCIe hosts on some
-> architectures can be mapped to logical PIO, converted easily between
-> CPU address and the corresponding logicial PIO. Based on this, PCI
-> I/O devices can be accessed in a memory read/write way through the
-> unified in/out accessors.
+> I noticed that I have this in the LLDD also. I think that this may be a
+> force of habit.
+
+
+>> It seems lately this happens more often than usual, I mean a comma in
+>> the terminator line.
+>>
+>> If we remove it. we terminate not only at runtime, but at compile
+>> time, which is slightly better.
 >
-> But on some archs/platforms, there are bus hosts which access I/O
-> peripherals with host-local I/O port addresses rather than memory
-> addresses after memory-mapped.
 >
-> To support those devices, a more generic I/O mapping method is introduced
-> here. Through this patch, both the CPU addresses and the host-local port
-> can be mapped into the logical PIO space with different logical/fake PIOs.
-> After this, all the I/O accesses to either PCI MMIO devices or host-local
-> I/O peripherals can be unified into the existing I/O accessors defined in
-> asm-generic/io.h and be redirected to the right device-specific hooks
-> based on the input logical PIO.
+> I grepped for "{}," in the drivers folder and it gives many results (I do
+> accept that some are not sentinels):
 
-> +#define PIO_INDIRECT           0x01UL /* indirect IO flag */
-> +#define PIO_CPU_MMIO           0x00UL /* memory mapped io flag */
+Yes, in old code it might be, but why to cargo-culting bad (okay, less
+worth) practices?
 
-It looks like bitfield, but from use I don't see it.
+>>grep -R "{}," * | tail
 
-Perhaps use enum instead?
+Btw, `git grep ...` is much faster.
 
-> +       resource_size_t hwaddr = -1;
+> watchdog/gef_wdt.c:    {},
+> watchdog/asm9260_wdt.c:    {},
+> watchdog/bcm2835_wdt.c:    {},
+> watchdog/digicolor_wdt.c:    {},
+> watchdog/bcm7038_wdt.c:    {},
+> watchdog/ath79_wdt.c:    {},
+> watchdog/riowd.c:    {},
+> watchdog/sbsa_gwdt.c:    {},
+> watchdog/sbsa_gwdt.c:    {},
+> watchdog/bcm_kona_wdt.c:    {},
 
-> +unsigned long
-> +               return -1;
-> +               return -1;
 
-> +unsigned long
-> +       return -1;
-
-> +type logic_in##bw(unsigned long addr)                                  \
-> +       type ret = -1;                                                  \
-
-All types above are unsigned. I'm not sure it's the best approach to
-use -1 implicitly casted to unsigned type.
-
-I would rather use ~0UL or alike.
 
 -- 
 With Best Regards,
