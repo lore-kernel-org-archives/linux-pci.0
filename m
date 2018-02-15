@@ -1,69 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:29054 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbeBIMDx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Feb 2018 07:03:53 -0500
-From: Vignesh R <vigneshr@ti.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
-Subject: [PATCH 1/3] Revert "PCI: dwc: Clear MSI interrupt status after it is handled, not before"
-Date: Fri, 9 Feb 2018 17:34:13 +0530
-Message-ID: <20180209120415.17590-2-vigneshr@ti.com>
-In-Reply-To: <20180209120415.17590-1-vigneshr@ti.com>
-References: <20180209120415.17590-1-vigneshr@ti.com>
+Received: from mail.kernel.org ([198.145.29.99]:52164 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1033088AbeBOPSO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Feb 2018 10:18:14 -0500
+Subject: [PATCH v1 2/2] sparc/PCI: Reserve System ROM and Video ROM outside
+ of PCI space
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Khalid Aziz <khalid.aziz@oracle.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
+Date: Thu, 15 Feb 2018 09:18:11 -0600
+Message-ID: <20180215151811.196756.2750.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180215151118.196756.99622.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180215151118.196756.99622.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit 06e15e6883bed ("PCI: dwc: Clear MSI interrupt status after
-it is handled, not before"), MSI IRQ status in PCIE_MSI_INTR0_STATUS
-register is cleared after calling EP's IRQ handler.
-But, MSI IRQs in case of PCIe are bit like edge interrupts. If a
-another MSI IRQ is raised and the end of current EP's IRQ handler call
-but before clearing the MSI IRQ status in PCIE_MSI_INTR0_STATUS register
-then the new MSI IRQ is lost.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-This issue has been observed in case of USB-Ethernet adapter connected
-to PCIe USB card running iperf3 test. iperf3 client stalls after
-sometime as reported here[1]. This is because XHCI raises MSI IRQ at the
-end of its IRQ handler but before PCIe driver has cleared its status
-in PCIE_MSI_INTR0_STATUS register. Hence, the new IRQ is never
-registered by PCIe designware core. Since, XHCI does not raise any more
-IRQs until the previous one is handled, it leads to a stall in
-communication.
-Therefore driver should always clear the MSI IRQ status in
-PCIE_MSI_INTR0_STATUS before calling EP's IRQ handler. This make sure
-that DW PCIe core catches new IRQ raised during the call to EP's IRQ
-handler
+Previously, pci_register_legacy_regions() reserved PCI address space under
+every PCI host bridge for the System ROM and the Video ROM, but these
+regions are not part of PCI address space.
 
-[1] https://lkml.kernel.org/r/BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com
+PCI address space usage is discoverable via PCI device BARs, PCI bridge
+window registers, or legacy IDE or VGA devices that use the hardwired
+legacy resources, e.g., memory 0xa0000-0xbffff, io 0x3c0-0x3df, etc.
 
-Signed-off-by: Vignesh R <vigneshr@ti.com>
+The System ROM and Video ROM areas are none of these, so they should be
+reserved as part of the system address space, not the PCI address space.
+
+Reserve the System ROM and Video ROM areas once per system.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/dwc/pcie-designware-host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/sparc/kernel/pci_common.c |   20 --------------------
+ arch/sparc/mm/init_64.c        |   17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 8de2d5c69b1d..c29cbcd430f4 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -68,9 +68,9 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 		while ((pos = find_next_bit((unsigned long *) &val, 32,
- 					    pos)) != 32) {
- 			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
--			generic_handle_irq(irq);
- 			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
- 					    4, 1 << pos);
-+			generic_handle_irq(irq);
- 			pos++;
- 		}
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 14fa74f90fdb..38d46bcc8634 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -344,26 +344,6 @@ static void pci_register_legacy_regions(struct resource *io_res,
+ 	p->end = p->start + 0x1ffffUL;
+ 	p->flags = IORESOURCE_BUSY;
+ 	request_resource(mem_res, p);
+-
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return;
+-
+-	p->name = "System ROM";
+-	p->start = mem_res->start + 0xf0000UL;
+-	p->end = p->start + 0xffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
+-
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return;
+-
+-	p->name = "Video ROM";
+-	p->start = mem_res->start + 0xc0000UL;
+-	p->end = p->start + 0x7fffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
+ }
+ 
+ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
+diff --git a/arch/sparc/mm/init_64.c b/arch/sparc/mm/init_64.c
+index 995f9490334d..a9f94e911e0a 100644
+--- a/arch/sparc/mm/init_64.c
++++ b/arch/sparc/mm/init_64.c
+@@ -3089,6 +3089,20 @@ static struct resource bss_resource = {
+ 	.flags	= IORESOURCE_BUSY | IORESOURCE_SYSTEM_RAM
+ };
+ 
++static struct resource system_rom_resource = {
++	.name	= "System ROM",
++	.start  = 0xf0000,
++	.end    = 0xfffff,
++	.flags	= IORESOURCE_BUSY | IORESOURCE_MEM,
++};
++
++static struct resource video_rom_resource = {
++	.name	= "Video ROM",
++	.start  = 0xc0000,
++	.end    = 0xc7fff,
++	.flags	= IORESOURCE_BUSY | IORESOURCE_MEM,
++};
++
+ static inline resource_size_t compute_kern_paddr(void *addr)
+ {
+ 	return (resource_size_t) (addr - KERNBASE + kern_base);
+@@ -3134,6 +3148,9 @@ static int __init report_memory(void)
+ 		insert_resource(res, &bss_resource);
  	}
--- 
-2.16.1
+ 
++	request_resource(&iomem_resource, &system_rom_resource);
++	request_resource(&iomem_resource, &video_rom_resource);
++
+ 	return 0;
+ }
+ arch_initcall(report_memory);
