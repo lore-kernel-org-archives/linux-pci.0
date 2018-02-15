@@ -1,151 +1,79 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180213163200.8787-3-mika.westerberg@linux.intel.com>
-References: <20180213163200.8787-1-mika.westerberg@linux.intel.com> <20180213163200.8787-3-mika.westerberg@linux.intel.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 13 Feb 2018 18:45:02 +0100
-Message-ID: <CAJZ5v0i5hzMktBDhYcOiZnnvNyS6QeanVmjs2dR=XewmLzeW4g@mail.gmail.com>
-Subject: Re: [PATCH 2/5] PCI: Take bridge window alignment into account when
- distributing resources
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+ <1518543933-22456-8-git-send-email-john.garry@huawei.com>
+ <20180214161635.GA13849@e107981-ln.cambridge.arm.com>
+ <65185a4d-c712-4486-d713-3fa9de14e35d@huawei.com>
+ <e3fb78b3-5f5c-fe96-9f02-e96092963c17@huawei.com>
+ <CAHp75VfFKcnUVQwPUxynzp88RXWdV8VEqtXxd0=_Q_GJKO6UpQ@mail.gmail.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Arnd Bergmann" <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>,
+        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <f7b3de31-46fb-f80e-511e-651fa815bddf@huawei.com>
+Date: Thu, 15 Feb 2018 12:52:26 +0000
+MIME-Version: 1.0
+In-Reply-To: <CAHp75VfFKcnUVQwPUxynzp88RXWdV8VEqtXxd0=_Q_GJKO6UpQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 13, 2018 at 5:31 PM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> When connecting a Thunderbolt endpoint which itself has internal PCIe
-> switch (not the integrated one) the way we currently distribute
-> resources does not always work well because devices below non-hotplug
-> bridges might need to have their MMIO resources aligned to something
-> else than 1 MB boundary. As an example connecting a server grade 4-port
-> GbE add in card adds another PCIe switch leading to GbE devices that
-> want to have their MMIO resources aligned to 2 MB boundary instead.
+On 15/02/2018 12:22, Andy Shevchenko wrote:
+> On Thu, Feb 15, 2018 at 1:19 PM, John Garry <john.garry@huawei.com> wrote:
 >
-> Current resource distribution code does not take this alignment into
-> account and might try to add too much resources for the extension
-> hotplug bridges. The resulting bridge window is then too big which makes
-> Linux to re-allocate minimal amount of resources, making future
-> extension impossible.
->
-> Make this work better by substracting properly aligned non-hotplug
-> downstream bridge window size from the remaining resources.
->
-> Fixes: 1a5767725cec ("PCI: Distribute available resources to hotplug-capable bridges")
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: stable@vger.kernel.org
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Andy,
 
-> ---
->  drivers/pci/setup-bus.c | 41 ++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 40 insertions(+), 1 deletion(-)
+>> +static const struct acpi_device_id indirect_io_hosts[] = {
+>> +    {"HISI0191", 0},    /* HiSilicon LPC host */
+>> +    {},
 >
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 3cce29a069e6..f1e6172734f0 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1882,6 +1882,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->         resource_size_t available_mmio, resource_size_t available_mmio_pref)
->  {
->         resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
-> +       resource_size_t io_start, mmio_start, mmio_pref_start;
->         unsigned int normal_bridges = 0, hotplug_bridges = 0;
->         struct resource *io_res, *mmio_res, *mmio_pref_res;
->         struct pci_dev *dev, *bridge = bus->self;
-> @@ -1946,11 +1947,16 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->                         remaining_mmio_pref -= resource_size(res);
->         }
+> Just a nit.
 >
-> +       io_start = io_res->start;
-> +       mmio_start = mmio_res->start;
-> +       mmio_pref_start = mmio_pref_res->start;
-> +
->         /*
->          * Go over devices on this bus and distribute the remaining
->          * resource space between hotplug bridges.
->          */
->         for_each_pci_bridge(dev, bus) {
-> +               resource_size_t align;
->                 struct pci_bus *b;
+
+I noticed that I have this in the LLDD also. I think that this may be a 
+force of habit.
+
+> It seems lately this happens more often than usual, I mean a comma in
+> the terminator line.
 >
->                 b = dev->subordinate;
-> @@ -1968,7 +1974,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->                                 available_io, available_mmio,
->                                 available_mmio_pref);
->                 } else if (dev->is_hotplug_bridge) {
-> -                       resource_size_t align, io, mmio, mmio_pref;
-> +                       resource_size_t io, mmio, mmio_pref;
->
->                         /*
->                          * Distribute available extra resources equally
-> @@ -1981,11 +1987,13 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->                         io = div64_ul(available_io, hotplug_bridges);
->                         io = min(ALIGN(io, align), remaining_io);
->                         remaining_io -= io;
-> +                       io_start += io;
->
->                         align = pci_resource_alignment(bridge, mmio_res);
->                         mmio = div64_ul(available_mmio, hotplug_bridges);
->                         mmio = min(ALIGN(mmio, align), remaining_mmio);
->                         remaining_mmio -= mmio;
-> +                       mmio_start += mmio;
->
->                         align = pci_resource_alignment(bridge, mmio_pref_res);
->                         mmio_pref = div64_ul(available_mmio_pref,
-> @@ -1993,9 +2001,40 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->                         mmio_pref = min(ALIGN(mmio_pref, align),
->                                         remaining_mmio_pref);
->                         remaining_mmio_pref -= mmio_pref;
-> +                       mmio_pref_start += mmio_pref;
->
->                         pci_bus_distribute_available_resources(b, add_list, io,
->                                                                mmio, mmio_pref);
-> +               } else {
-> +                       /*
-> +                        * For normal bridges, track start of the parent
-> +                        * bridge window to make sure we align the
-> +                        * remaining space which is distributed to the
-> +                        * hotplug bridges properly.
-> +                        */
-> +                       resource_size_t aligned;
-> +                       struct resource *res;
-> +
-> +                       res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
-> +                       io_start += resource_size(res);
-> +                       aligned = ALIGN(io_start,
-> +                                       pci_resource_alignment(dev, res));
-> +                       if (aligned > io_start)
-> +                               remaining_io -= aligned - io_start;
-> +
-> +                       res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
-> +                       mmio_start += resource_size(res);
-> +                       aligned = ALIGN(mmio_start,
-> +                                       pci_resource_alignment(dev, res));
-> +                       if (aligned > mmio_start)
-> +                               remaining_mmio -= aligned - mmio_start;
-> +
-> +                       res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
-> +                       mmio_pref_start += resource_size(res);
-> +                       aligned = ALIGN(mmio_pref_start,
-> +                                       pci_resource_alignment(dev, res));
-> +                       if (aligned > mmio_pref_start)
-> +                               remaining_mmio_pref -= aligned - mmio_pref_start;
->                 }
->         }
->  }
-> --
-> 2.15.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> If we remove it. we terminate not only at runtime, but at compile
+> time, which is slightly better.
+
+I grepped for "{}," in the drivers folder and it gives many results (I 
+do accept that some are not sentinels):
+ >grep -R "{}," * | tail
+watchdog/gef_wdt.c:    {},
+watchdog/asm9260_wdt.c:    {},
+watchdog/bcm2835_wdt.c:    {},
+watchdog/digicolor_wdt.c:    {},
+watchdog/bcm7038_wdt.c:    {},
+watchdog/ath79_wdt.c:    {},
+watchdog/riowd.c:    {},
+watchdog/sbsa_gwdt.c:    {},
+watchdog/sbsa_gwdt.c:    {},
+watchdog/bcm_kona_wdt.c:    {},
+
+Much appreciated,
+John
+
+
