@@ -1,59 +1,73 @@
-Return-Path: <SRS0=eJnL=FX=davemloft.net=davem@kernel.org>
-Return-Path: <SRS0=eJnL=FX=davemloft.net=davem@kernel.org>
-Date: Wed, 28 Feb 2018 22:28:53 -0500 (EST)
-Message-Id: <20180228.222853.1570972177848923005.davem@davemloft.net>
-To: helgaas@kernel.org
-Cc: dwmw2@infradead.org, sparclinux@vger.kernel.org, bhelgaas@google.com,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] sparc: Use generic pci_mmap_resource_range()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180228230828.GR127842@bhelgaas-glaptop.roam.corp.google.com>
-References: <1519053858.7876.84.camel@infradead.org>
-	<20180219.103025.1676484157305869188.davem@davemloft.net>
-	<20180228230828.GR127842@bhelgaas-glaptop.roam.corp.google.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <59e5293f-0ea5-12f4-27db-b13bbcf0918b@huawei.com>
+References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
+ <1518543933-22456-8-git-send-email-john.garry@huawei.com> <CAHp75Ve7C4AJYK6AC=o-jzw6b2p8c8GBRd70Zjv+vYWbfytufg@mail.gmail.com>
+ <adfa2009-476b-8c25-c661-b0eeb48a6c43@huawei.com> <CAHp75VfOa5pN4MKT-aQmWBwPGWsOaQupyfrN-weWwfR3vMLtuA@mail.gmail.com>
+ <59e5293f-0ea5-12f4-27db-b13bbcf0918b@huawei.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Fri, 16 Feb 2018 16:42:34 +0200
+Message-ID: <CAHp75VeTQg+A9o5Ox-k_9Qx8=JPEnqg1taVjcd8Zd2rfj_TMog@mail.gmail.com>
+Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: John Garry <john.garry@huawei.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <helgaas@kernel.org>
-Date: Wed, 28 Feb 2018 17:08:29 -0600
+On Thu, Feb 15, 2018 at 7:07 PM, John Garry <john.garry@huawei.com> wrote:
+> On 14/02/2018 16:16, Andy Shevchenko wrote:
 
-> On Mon, Feb 19, 2018 at 10:30:25AM -0500, David Miller wrote:
->> From: David Woodhouse <dwmw2@infradead.org>
->> Date: Mon, 19 Feb 2018 15:24:18 +0000
->> =
+>>>>> >>> +       list_for_each_entry(rentry, &resource_list, node)
+>>>>> >>> +               resources[count++] = *rentry->res;
+>>>>
+>>>> >> It has similarities with acpi_create_platform_device().
+>>>> >> I guess we can utilize existing code.
+>>>
+>>> > For sure, this particular segment is effectively same as part of
+>>> > acpi_create_platform_device():
+>>
+>> Not the same, acpi_create_platform_device() does a bit more than
+>> copying the resources. If it indeed makes no hurt...
+>>
+>>> >         list_for_each_entry(rentry, &resource_list, node)
+>>> >             acpi_platform_fill_resource(adev, rentry->res,
+>>> >                             &resources[count++]);
+>>> > So is your idea to refactor this common segment into a helper function?
+>>
+>> ...I would go with helper.
+>>
+>
+> Hi Andy,
+>
+> Since the plan now is that this code is no longer going to be added to
+> drivers/acpi, but instead pushed to the LLDD, I am pondering whether we
+> should still factor out of this common code. Opinion?
 
->> >> For one, the sparc specific code allows mmap'ing any address rang=
-e
->> >> within a PCI bus device.=A0=A0The generic code does not allow tha=
-t.
->> > =
+I would still go with a common helper. Though, as first step, we can
+make it lazy, i.e. put a comment in your code, like a todo notice (w/o
+TODO word :-) ) to consider a common helper.
 
->> > =
-
->> > You mean any address range in a given PCI bus even if there is no
->> > actual device with a BAR at the corresponding address?
->> > =
-
->> > Would I be right to assume this was only available through the leg=
-acy
->> > procfs API? I think it should be possible to accommodate it, and i=
-t
->> > does look like I'd missed this requirement the first time round; t=
-hanks
->> > for pointing it out.
->> =
-
->> It was probably the case that only procfs could do it.
->> =
-
->> It is the mechanism by which we were able to let the X server poke
->> around in VGA ISA space.  It does a bus I/O space map for the bus
->> device above the VGA card.
-> =
-
-> What's the bottom line?  Do we want this for sparc?  If so, do you
-> want to take it, Dave M, or would you like me to?
-
-The bottom line is that David W.'s patch would break sparc so
-we don't want this.
+-- 
+With Best Regards,
+Andy Shevchenko
