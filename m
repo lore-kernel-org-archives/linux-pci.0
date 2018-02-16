@@ -1,17 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gregory CLEMENT <gregory.clement@bootlin.com>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [PATCH 2/2] PCI: armada8k: Fix clock resource by adding a
- register clock
-References: <20180228144704.12947-1-gregory.clement@bootlin.com>
- <20180228144704.12947-3-gregory.clement@bootlin.com>
- <20180228152756.GV9418@n2100.armlinux.org.uk>
-Date: Wed, 28 Feb 2018 16:31:16 +0100
-In-Reply-To: <20180228152756.GV9418@n2100.armlinux.org.uk> (Russell King's
- message of "Wed, 28 Feb 2018 15:27:57 +0000")
-Message-ID: <878tbdf7wb.fsf@bootlin.com>
+Date: Fri, 16 Feb 2018 08:54:44 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V3 09/29] drm/i915: deprecate pci_get_bus_and_slot()
+Message-ID: <20180216145444.GA11014@bhelgaas-glaptop.roam.corp.google.com>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+ <1511801886-6753-10-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
+In-Reply-To: <1511801886-6753-10-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,44 +16,66 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jason Cooper <jason@lakedaemon.net>,
- Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Hanna Hawa <hannah@marvell.com>, Omri Itach <omrii@marvell.com>,
- Nadav Haklai <nadavh@marvell.com>, Shadi Ammouri <shadi@marvell.com>,
- linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- =?utf-8?Q?Miqu=C3=A8l?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Marcin Wojtas <mw@semihalf.com>,
- Igal Liberman <igall@marvell.com>,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Cc: David Airlie <airlied@linux.ie>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ Jani Nikula <jani.nikula@linux.intel.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>,
+ "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
+ linux-arm-msm@vger.kernel.org, intel-gfx@lists.freedesktop.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUnVzc2VsbCBLaW5nLAogCiBPbiBtZXIuLCBmw6l2ci4gMjggMjAxOCwgUnVzc2VsbCBLaW5n
-IC0gQVJNIExpbnV4IDxsaW51eEBhcm1saW51eC5vcmcudWs+IHdyb3RlOgoKPiBPbiBXZWQsIEZl
-YiAyOCwgMjAxOCBhdCAwMzo0NzowNFBNICswMTAwLCBHcmVnb3J5IENMRU1FTlQgd3JvdGU6Cj4+
-IEBAIC0yMjksNiArMjMwLDE1IEBAIHN0YXRpYyBpbnQgYXJtYWRhOGtfcGNpZV9wcm9iZShzdHJ1
-Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQo+PiAgCWlmIChyZXQpCj4+ICAJCXJldHVybiByZXQ7
-Cj4+ICAKPj4gKwlpZiAoSVNfRVJSKHBjaWUtPmNsa19yZWcpICYmIFBUUl9FUlIocGNpZS0+Y2xr
-X3JlZykgPT0gLUVQUk9CRV9ERUZFUikgewo+Cj4gWW91IGRvIHJlYWxpc2UgdGhpcyBpcyBuZWVk
-bGVzc2x5IGNvbXBsZXguCj4KPiBQb2ludGVyIGVycm9ycyBhcmUgdW5pcXVlLCBzbzoKPgo+IAlp
-ZiAocGNpZS0+Y2xrX3JlZyA9PSBFUlJfUFRSKC1FUFJPQkVfREVGRVIpKSB7Cj4KPiB3aWxsIGRv
-IHRoZSBzYW1lIHRoaW5nIGJ1dCB3aXRob3V0IHRoZSBjb21wbGV4aXR5LiAgVHJhbnNmb3JtaW5n
-IHRoZQo+IGNvbnN0YW50IHJhdGhlciB0aGFuIHRoZSB2YXJpYWJsZSBpcyBhbHNvIGEgZ29vZCBo
-YWJiaXQgdG8gZ2V0IGludG8gLQo+IHRoZSBjb21waWxlciBjYW4gb3B0aW1pc2UgdHJhbnNmb3Jt
-cyB0byBjb25zdGFudHMsIGJ1dCBjYW4ndCB3aXRoCj4gdmFyaWFibGVzLCBzbyBjb21wYXJpc29u
-cyBpbnZvbHZpbmcgdGhpbmdzIGxpa2UgZW5kaWFuIGNvbnZlcnNpb24KPiBzaG91bGQgYWx3YXlz
-IGJlIGRvbmUgYnkgdHJhbnNmb3JtaW5nIHRoZSBjb25zdGFudCBub3QgdGhlIHZhcmlhYmxlLgoK
-VGhhbmtzIGZvciB0aGUgdGlwLCBJIHdpbGwgdXNlIGl0IGluIHRoZSBuZXh0IHZlcnNpb24uCgpH
-cmVnb3J5Cgo+Cj4gLS0gCj4gUk1LJ3MgUGF0Y2ggc3lzdGVtOiBodHRwOi8vd3d3LmFybWxpbnV4
-Lm9yZy51ay9kZXZlbG9wZXIvcGF0Y2hlcy8KPiBGVFRDIGJyb2FkYmFuZCBmb3IgMC44bWlsZSBs
-aW5lIGluIHN1YnVyYmlhOiBzeW5jIGF0IDguOE1icHMgZG93biA2MzBrYnBzIHVwCj4gQWNjb3Jk
-aW5nIHRvIHNwZWVkdGVzdC5uZXQ6IDguMjFNYnBzIGRvd24gNTEwa2JwcyB1cAoKLS0gCkdyZWdv
-cnkgQ2xlbWVudCwgQm9vdGxpbiAoZm9ybWVybHkgRnJlZSBFbGVjdHJvbnMpCkVtYmVkZGVkIExp
-bnV4IGFuZCBLZXJuZWwgZW5naW5lZXJpbmcKaHR0cDovL2Jvb3RsaW4uY29tCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1h
-aWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xp
-c3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+On Mon, Nov 27, 2017 at 11:57:46AM -0500, Sinan Kaya wrote:
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
+> 
+> Getting ready to remove pci_get_bus_and_slot() function in favor of
+> pci_get_domain_bus_and_slot().
+> 
+> Extract the domain number from drm_device and pass it into
+> pci_get_domain_bus_and_slot() function.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+
+I don't know what happened to this, and it didn't make it into
+v4.16-rc1.  I applied it to pci/deprecate-get-bus-and-slot for v4.17
+along with the patch that actually removes pci_get_bus_and_slot().
+
+> ---
+>  drivers/gpu/drm/i915/i915_drv.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
+> index 9f45cfe..5a8cb79 100644
+> --- a/drivers/gpu/drm/i915/i915_drv.c
+> +++ b/drivers/gpu/drm/i915/i915_drv.c
+> @@ -419,7 +419,10 @@ static int i915_getparam(struct drm_device *dev, void *data,
+>  
+>  static int i915_get_bridge_dev(struct drm_i915_private *dev_priv)
+>  {
+> -	dev_priv->bridge_dev = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
+> +	int domain = pci_domain_nr(dev_priv->drm.pdev->bus);
+> +
+> +	dev_priv->bridge_dev =
+> +		pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(0, 0));
+>  	if (!dev_priv->bridge_dev) {
+>  		DRM_ERROR("bridge device not found\n");
+>  		return -1;
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
