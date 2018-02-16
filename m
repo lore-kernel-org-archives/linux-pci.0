@@ -1,79 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v13 7/9] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-References: <1518543933-22456-1-git-send-email-john.garry@huawei.com>
- <1518543933-22456-8-git-send-email-john.garry@huawei.com>
- <20180214161635.GA13849@e107981-ln.cambridge.arm.com>
- <65185a4d-c712-4486-d713-3fa9de14e35d@huawei.com>
- <e3fb78b3-5f5c-fe96-9f02-e96092963c17@huawei.com>
- <CAHp75VfFKcnUVQwPUxynzp88RXWdV8VEqtXxd0=_Q_GJKO6UpQ@mail.gmail.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Arnd Bergmann" <arnd@arndb.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Dann Frazier <dann.frazier@canonical.com>,
-        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>,
-        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <f7b3de31-46fb-f80e-511e-651fa815bddf@huawei.com>
-Date: Thu, 15 Feb 2018 12:52:26 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ns.mm-sol.com ([37.157.136.199]:38985 "EHLO extserv.mm-sol.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967151AbeBPMmQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Feb 2018 07:42:16 -0500
+Subject: Re: [PATCH v3] PCI: qcom: add missing supplies required for msm8996
+To: srinivas.kandagatla@linaro.org, stanimir.varbanov@linaro.org,
+        linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        robh+dt@kernel.org, devicetree@vger.kernel.org
+References: <20180215132248.5572-1-srinivas.kandagatla@linaro.org>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <e7f1ae50-3bf2-de7c-270d-5d06dac25e78@mm-sol.com>
+Date: Fri, 16 Feb 2018 14:42:07 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAHp75VfFKcnUVQwPUxynzp88RXWdV8VEqtXxd0=_Q_GJKO6UpQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180215132248.5572-1-srinivas.kandagatla@linaro.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15/02/2018 12:22, Andy Shevchenko wrote:
-> On Thu, Feb 15, 2018 at 1:19 PM, John Garry <john.garry@huawei.com> wrote:
->
+Hi Srini,
 
-Hi Andy,
+On 02/15/2018 03:22 PM, srinivas.kandagatla@linaro.org wrote:
+> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> 
+> This patch adds supplies that are required for msm8996. vdda
+> is analog supply that go in to controller, and vddpe_3v3 is
+> supply to PCIe endpoint.
+> 
+> Without these supplies PCIe endpoints which require power supplies are
+> not enumerated at all, as there is no one to power it up.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> ---
+> changes since v2:
+> 	Add back empty line suggested by Stan
+> 	use ARRAY_SIZE
+> 
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  4 ++++
+>  drivers/pci/dwc/pcie-qcom.c                        | 23 +++++++++++++++++++++-
+>  2 files changed, 26 insertions(+), 1 deletion(-)
 
->> +static const struct acpi_device_id indirect_io_hosts[] = {
->> +    {"HISI0191", 0},    /* HiSilicon LPC host */
->> +    {},
->
-> Just a nit.
->
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
 
-I noticed that I have this in the LLDD also. I think that this may be a 
-force of habit.
-
-> It seems lately this happens more often than usual, I mean a comma in
-> the terminator line.
->
-> If we remove it. we terminate not only at runtime, but at compile
-> time, which is slightly better.
-
-I grepped for "{}," in the drivers folder and it gives many results (I 
-do accept that some are not sentinels):
- >grep -R "{}," * | tail
-watchdog/gef_wdt.c:    {},
-watchdog/asm9260_wdt.c:    {},
-watchdog/bcm2835_wdt.c:    {},
-watchdog/digicolor_wdt.c:    {},
-watchdog/bcm7038_wdt.c:    {},
-watchdog/ath79_wdt.c:    {},
-watchdog/riowd.c:    {},
-watchdog/sbsa_gwdt.c:    {},
-watchdog/sbsa_gwdt.c:    {},
-watchdog/bcm_kona_wdt.c:    {},
-
-Much appreciated,
-John
-
-
+-- 
+regards,
+Stan
