@@ -1,70 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1517968688.31641.12.camel@mtkswgap22>
-Subject: Re: [PATCH 1/2] of_pci_irq: add a check to fallback to standard
- device tree parsing
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt
- <benh@kernel.crashing.org>
-Date: Wed, 7 Feb 2018 09:58:08 +0800
-In-Reply-To: <1517956309.2312.172.camel@kernel.crashing.org>
-References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
- <CAL_JsqLZqrxxpuEnoWEGkT2WCuyjqn0bM1DP8PdAwnQsso8kOA@mail.gmail.com>
- <1517563970.24622.9.camel@mtkswgap22>
- <1517866584.2312.140.camel@kernel.crashing.org>
- <1517884738.16010.27.camel@mtkswgap22>
- <1517889903.2312.151.camel@kernel.crashing.org>
- <1517891471.20869.6.camel@mtkswgap22>
- <1517892624.2312.167.camel@kernel.crashing.org>
- <1517895732.23319.21.camel@mtkswgap22>
- <1517956309.2312.172.camel@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-he1eur01on0133.outbound.protection.outlook.com ([104.47.0.133]:35168
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751684AbeBRXNJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 18 Feb 2018 18:13:09 -0500
+From: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
+To: linux-pci@vger.kernel.org, mj@ucw.cz
+Cc: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
+Subject: [PATCH v3 0/3] lspci: Add support of JSON output format
+Date: Mon, 19 Feb 2018 02:12:48 +0300
+Message-Id: <20180218231251.23988-1-viktor.prutyanov@virtuozzo.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
- "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Arnd
+This collection of patches adds support of printing PCI info in JSON
+format.
 
-On Wed, 2018-02-07 at 09:31 +1100, Benjamin Herrenschmidt wrote:
-> On Tue, 2018-02-06 at 13:42 +0800, Ryder Lee wrote:
-> > Thanks for explanation.
-> > 
-> > So I guess the better way to achieve my aim - one IRQ per slot that is
-> > connected to all INTx and get propagated through the bridges (and for
-> > those root ports own interrupts (PME ..)} is to add interrupt-map
-> > properties in both parent and root port nodes.
-> > 
-> > Something like this: https://patchwork.kernel.org/patch/9970923// ,right?
-> 
-> Yup.
-> 
-> Cheers,
-> Ben.
-> 
+1st patch adds skeleton for creating structured object which can be
+printed in JSON or another structured format.
+2nd patch adds output of general PCI info which prints with -m, -k,
+-[v]+ options, but without capabilities.
+3rd patch adds PCI-E capability.
 
-Do you have any thoughts on the original approach? If you are okay with
-it, I will resend the DT patch.
+For example, we can easily, using jq utility, check speed of a device:
+lspci -Jvv | jq -r '.[][] | select(.Device == "GK107M [GeForce GT 750M]") | .capabilities.express | {s1:.LnkCap.Speed, s2:.LnkSta.Speed, w1
+:.LnkCap.Width, w2:.LnkSta.Width }'
 
-Thanks.
+{
+    "s1": "8GT/s",
+    "s2": "5GT/s",
+    "w1": "x16",
+    "w2": "x4"
+}
 
+Viktor Prutyanov (3):
+  lspci: Add printing info in JSON format
+  lspci: Add PCI info output in JSON format
+  lspci: Add JSON PCI Express capabilities
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ Makefile    |   3 +-
+ common.c    |   2 +-
+ ls-caps.c   | 417 +++++++++++++++++++++++++++++++++++
+ ls-info.c   | 328 ++++++++++++++++++++++++++++
+ ls-kernel.c |  24 +++
+ lspci.c     | 706 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ lspci.h     |  56 +++++
+ lspci.man   |   3 +
+ pciutils.h  |   2 +-
+ 9 files changed, 1537 insertions(+), 4 deletions(-)
+ create mode 100644 ls-info.c
+
+-- 
+2.14.3
