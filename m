@@ -1,59 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 28 Feb 2018 09:44:12 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-cc: Ingo Molnar <mingo@redhat.com>, "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Benedikt Spranger <b.spranger@linutronix.de>
-Subject: Re: [PATCH v2 2/6] PCI: Scan all functions when running over
- Jailhouse
-In-Reply-To: <021d3dde4276c9bf4325f7bdc37e3c47069e48fc.1519799691.git.jan.kiszka@siemens.com>
-Message-ID: <alpine.DEB.2.21.1802280938380.1886@nanos.tec.linutronix.de>
-References: <cover.1519799691.git.jan.kiszka@siemens.com> <021d3dde4276c9bf4325f7bdc37e3c47069e48fc.1519799691.git.jan.kiszka@siemens.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:58611 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751052AbeBRIjL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 18 Feb 2018 03:39:11 -0500
+Message-Id: <f7593132608eb9a83d7268cc5b3ef12b3dd9c52d.1518941073.git.lukas@wunner.de>
+In-Reply-To: <cover.1518941072.git.lukas@wunner.de>
+References: <cover.1518941072.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 18 Feb 2018 09:38:32 +0100
+Subject: [PATCH 1/7] PCI: Restore BARs on runtime resume despite being unbound
+To: dri-devel@lists.freedesktop.org
+Cc: Peter Wu <peter@lekensteyn.nl>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Dave Airlie <airlied@redhat.com>,
+        nouveau@lists.freedesktop.org, Ben Skeggs <bskeggs@redhat.com>,
+        Lyude Paul <lyude@redhat.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.com>,
+        Jaroslav Kysela <perex@perex.cz>, linux-pm@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Pierre Moreau <pierre.morrow@free.fr>,
+        Bastien Nocera <hadess@hadess.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 28 Feb 2018, Jan Kiszka wrote:
+PCI devices not bound to a driver are supposed to stay in D0 during
+runtime suspend.  But they may have a parent which is bound and can be
+transitioned to D3cold at runtime.  Once the parent goes to D3cold, the
+unbound child may go to D3cold as well.  When the child comes out of
+D3cold, its BARs are uninitialized and thus inaccessible when a driver
+tries to probe.
 
-> From: Jan Kiszka <jan.kiszka@siemens.com>
-> 
-> Per PCIe r4.0, sec 7.5.1.1.9, multi-function devices are required to
-> have a function 0.  Therefore, Linux scans for devices at function 0
-> (devfn 0/8/16/...) and only scans for other functions if function 0
-> has its Multi-Function Device bit set or ARI or SR-IOV indicate
-> there are more functions.
-> 
-> The Jailhouse hypervisor may pass individual functions of a
-> multi-function device to a guest without passing function 0, which
-> means a Linux guest won't find them.
-> 
-> Change Linux PCI probing so it scans all function numbers when
-> running as a guest over Jailhouse.
+One example are recent hybrid graphics laptops which cut power to the
+discrete GPU when the root port above it goes to ACPI power state D3.
+Users may provoke this by unbinding the GPU driver and allowing runtime
+PM on the GPU via sysfs:  The PM core will then treat the GPU as
+"suspended", which in turn allows the root port to runtime suspend,
+causing the power resources listed in its _PR3 object to be powered off.
+The GPU's BARs will be uninitialized when a driver later probes it.
 
->  void pcibios_scan_specific_bus(int busn)
->  {
-> +	int stride = jailhouse_paravirt() ? 1 : 8;
->  	int devfn;
->  	u32 l;
->  
->  	if (pci_find_bus(0, busn))
->  		return;
->  
-> -	for (devfn = 0; devfn < 256; devfn += 8) {
-> +	for (devfn = 0; devfn < 256; devfn += stride) {
->  		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
->  		    l != 0x0000 && l != 0xffff) {
->  			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
+Another example are hybrid graphics laptops where the GPU itself (rather
+than the root port) is capable of runtime suspending to D3cold.  If the
+GPU's integrated HDA controller is not bound and the GPU's driver
+decides to runtime suspend to D3cold, the HDA controller's BARs will be
+uninitialized when a driver later probes it.
 
-Shouldn't that take the situation into account where the MFD bit is set on
-a regular devfn, i.e. (devfn % 8) == 0? In that case you'd scan the
-subfunctions twice.
+Fix by restoring the BARs on runtime resume if the device is not bound.
+This is sufficient to fix the above-mentioned use cases.  Other use
+cases might require a full-blown pci_save_state() / pci_restore_state()
+or execution of fixups.  We can add that once use cases materialize,
+let's not inflate the code unnecessarily.
 
-Thanks,
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci-driver.c | 8 ++++++--
+ drivers/pci/pci.c        | 2 +-
+ drivers/pci/pci.h        | 1 +
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-	tglx
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3bed6beda051..51b11cbd48f6 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1277,10 +1277,14 @@ static int pci_pm_runtime_resume(struct device *dev)
+ 
+ 	/*
+ 	 * If pci_dev->driver is not set (unbound), the device should
+-	 * always remain in D0 regardless of the runtime PM status
++	 * always remain in D0 regardless of the runtime PM status.
++	 * But if its parent can go to D3cold, this device may have
++	 * been in D3cold as well and require restoration of its BARs.
+ 	 */
+-	if (!pci_dev->driver)
++	if (!pci_dev->driver) {
++		pci_restore_bars(pci_dev);
+ 		return 0;
++	}
+ 
+ 	if (!pm || !pm->runtime_resume)
+ 		return -ENOSYS;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f6a4dd10d9b0..f694650235f2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -563,7 +563,7 @@ int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask)
+  * Restore the BAR values for a given device, so as to make it
+  * accessible by its driver.
+  */
+-static void pci_restore_bars(struct pci_dev *dev)
++void pci_restore_bars(struct pci_dev *dev)
+ {
+ 	int i;
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index fcd81911b127..29dc15bbe3bf 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -83,6 +83,7 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
+ bool pci_bridge_d3_possible(struct pci_dev *dev);
+ void pci_bridge_d3_update(struct pci_dev *dev);
++void pci_restore_bars(struct pci_dev *dev);
+ 
+ static inline void pci_wakeup_event(struct pci_dev *dev)
+ {
+-- 
+2.15.1
