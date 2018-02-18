@@ -1,62 +1,118 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices with
- unmet dependencies
-To: "Moore, Robert" <robert.moore@intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "Schmauss, Erik" <erik.schmauss@intel.com>,
-        "Box, David E" <david.e.box@intel.com>
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@acpica.org" <devel@acpica.org>
-References: <20180122085135.16732-1-hdegoede@redhat.com>
- <3281375.11fh90aaLK@aspire.rjw.lan>
- <7efce3e1-4cb7-fa68-9024-73fa124b9171@redhat.com>
- <94F2FBAB4432B54E8AACC7DFDE6C92E3B7570FA0@ORSMSX110.amr.corp.intel.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <a62364ba-7b79-6bb0-20a3-c66cb166e923@redhat.com>
-Date: Wed, 14 Feb 2018 11:33:06 +0100
-MIME-Version: 1.0
-In-Reply-To: <94F2FBAB4432B54E8AACC7DFDE6C92E3B7570FA0@ORSMSX110.amr.corp.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:57951 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751052AbeBRIio (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 18 Feb 2018 03:38:44 -0500
+Message-Id: <cover.1518941072.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 18 Feb 2018 09:38:32 +0100
+Subject: [PATCH 0/7] Modernize vga_switcheroo by using device link for HDA
+To: dri-devel@lists.freedesktop.org
+Cc: Peter Wu <peter@lekensteyn.nl>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Dave Airlie <airlied@redhat.com>,
+        nouveau@lists.freedesktop.org, Ben Skeggs <bskeggs@redhat.com>,
+        Lyude Paul <lyude@redhat.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.com>,
+        Jaroslav Kysela <perex@perex.cz>, linux-pm@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Pierre Moreau <pierre.morrow@free.fr>,
+        Bastien Nocera <hadess@hadess.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Modernize vga_switcheroo by using a "device link" to enforce a runtime PM
+dependency from an HDA controller to the GPU it's integrated into.
+Remove thereby obsoleted code and fix a bunch of bugs.
+Device links were introduced in v4.10.
 
-On 08-02-18 18:34, Moore, Robert wrote:
-> 
-> 
->>> The last one needs to go in via ACPICA anyway or we'll need to carry a
->>> Linux-specific replacement for acpi_get_object_info().
->>
->> Ack, I'm discussing how to proceed with this with the ACPICA people.
->>
->> Regards,
->>
->> Hans
-> 
-> 
-> I normally don't like to change external interfaces (the biggest reason being the sheer number of different OS vendors that use ACPICA), but in this case, I feel it may be OK. This interface is probably not heavily used, and there is precedent for this when the invocation of _SUB was removed.
-> 
-> On the other hand, I think I saw it mentioned that Linux calls this interface only once, is this correct?
+Users might see a small power saving if the discrete GPU is in use and
+its HDA controller is not, because the HDA controller is now allowed
+to runtime suspend to D3hot.  Probing and accessing the HDA controller
+while the GPU is in D3cold should be very robust, unlike before.
+Under the hood things become quite a bit leaner.
 
-More or less, Linux calls it once when enumerating all the devices and a few ACPI drivers call it again to get some
-extra info they need.
+Also, this series gets us one step closer to supporting runtime PM on
+muxed laptops such as the MacBook Pro because it fixes a deadlock
+occurring when runtime resuming the discrete GPU on switching the mux.
+(The deadlock occurs in vga_switcheroo_set_dynamic_switch() and that
+function is obsoleted and removed by this series.)
 
-> If so, perhaps it would be easiest to simply remove this call and use direct control method invocations to obtain the desired data.
+The meat of the series is in patch [5/7], read its commit message for
+details.  The other patches contain prep and cleanup work.
 
-If we go this route we would probably end up copying the function, since as said several drivers
-use it too.
+Patches [1/7], [2/7] and [5/7] require an ack from Bjorn (and Rafael?),
+patch [5/7] requires an ack from Takashi.
+Additionally I'd appreciate a Tested-by and/or Acked-by from Peter Wu,
+the resident Nvidia Optimus expert, and from Alex for AMD PowerXpress
+because my own testing only covers the MacBook Pro.
+Testing and comments from anyone else are most welcome of course.
 
-> If we go ahead and make this change to ACPICA: I have not seen the patch, but please make sure that all vestiges of this are removed. This includes all invocations within ACPICA that examine the result of the _STA invocation, the CurrentStatus field of ACPI_DEVICE_INFO, the ACPI_VALID_STA flag, etc.
+The series is based on 4.16-rc1.  To test it on 4.15, you need to
+cherry-pick 7506dc798993 and 2fa6d6cdaf28.  For your convenience
+I've pushed a 4.15-based branch to:
+https://github.com/l1k/linux/commits/switcheroo_devlink_v1
 
-The patch already does that:
+Minimal test procedure for non-Macs:
 
-https://patchwork.kernel.org/patch/10186195/
+- Note well: Recent Optimus require that a Mini-DP or HDMI cable is
+  plugged in on boot for the HDA device to be present.
 
-Regards,
+- Check that HDA, GPU and root port autosuspend when not in use:
+  cat /sys/bus/pci/devices/0000:01:00.1/power/runtime_status  # HDA
+  cat /sys/bus/pci/devices/0000:01:00.0/power/runtime_status  # GPU
+  cat /sys/bus/pci/devices/0000:00:01.0/power/runtime_status  # Root Port
 
-Hans
+- Check that all three autoresume when accessing the HDA:
+  hdajacksensetest -c 1
 
+- Unbind the HDA controller:
+  echo 0000:01:00.1 > /sys/bus/pci/drivers/snd_hda_intel/unbind
+  Wait for GPU to power off, then rebind the HDA controller:
+  echo 0000:01:00.1 > /sys/bus/pci/drivers/snd_hda_intel/bind
+  Check dmesg for errors, try accessing HDA with hdajacksensetest.
 
+- If your laptop uses the root port's _PR3 to cut power to the GPU:
+  Unbind the GPU:
+  echo 0000:01:00.0 > /sys/bus/pci/drivers/{nouveau,amdgpu,radeon}/unbind
+  Allow runtime PM on the GPU:
+  echo auto > /sys/bus/pci/devices/0000:01:00.0/power/control
+  Wait for GPU to power off, then rebind it:
+  echo 0000:01:00.0 > /sys/bus/pci/drivers/{nouveau,amdgpu,radeon}/bind
+  Check dmesg for errors.  If you see any then we may need to perform
+  further actions in pci_pm_runtime_resume(), see patch [1/7].
+
+Thanks,
+
+Lukas
+
+Lukas Wunner (7):
+  PCI: Restore BARs on runtime resume despite being unbound
+  PCI: Make pci_wakeup_bus() & pci_bus_set_current_state() public
+  vga_switcheroo: Update PCI current_state on power change
+  vga_switcheroo: Deduplicate power state tracking
+  vga_switcheroo: Use device link for HDA controller
+  vga_switcheroo: Let HDA autosuspend on mux change
+  drm/nouveau: Runtime suspend despite HDA being unbound
+
+ drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c |   2 -
+ drivers/gpu/drm/nouveau/nouveau_drm.c   |  46 ----------
+ drivers/gpu/drm/nouveau/nouveau_drv.h   |   1 -
+ drivers/gpu/drm/radeon/radeon_drv.c     |   2 -
+ drivers/gpu/vga/vga_switcheroo.c        | 152 ++++++++------------------------
+ drivers/pci/pci-driver.c                |   8 +-
+ drivers/pci/pci.c                       |  10 +--
+ drivers/pci/pci.h                       |   1 +
+ drivers/pci/quirks.c                    |  39 ++++++++
+ include/linux/pci.h                     |   2 +
+ include/linux/pci_ids.h                 |   1 +
+ include/linux/vga_switcheroo.h          |   6 --
+ include/sound/hdaudio.h                 |   3 -
+ sound/pci/hda/hda_intel.c               |  36 +++++---
+ sound/pci/hda/hda_intel.h               |   3 -
+ 15 files changed, 114 insertions(+), 198 deletions(-)
+
+-- 
+2.15.1
