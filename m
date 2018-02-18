@@ -1,124 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, okaya@codeaurora.org,
-        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
-        bharatku@xilinx.com
-Subject: [PATCH 36/37] iommu/arm-smmu-v3: Add support for PCI PASID
-Date: Mon, 12 Feb 2018 18:33:51 +0000
-Message-Id: <20180212183352.22730-37-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0107.outbound.protection.outlook.com ([104.47.2.107]:27920
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751549AbeBRVpw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 18 Feb 2018 16:45:52 -0500
+Date: Mon, 19 Feb 2018 00:45:40 +0300
+From: "viktor.prutyanov" <viktor.prutyanov@virtuozzo.com>
+To: Martin Mares <mj@ucw.cz>
+Cc: <linux-pci@vger.kernel.org>, dmonakhov@openvz.org
+Subject: Re: [PATCH v2 0/2] lspci: Add support of JSON output format
+Message-ID: <20180219004540.47d0fa1f@virtuozzo.com>
+In-Reply-To: <mj+md-20180215.103138.21596.nikam@ucw.cz>
+References: <20180214160741.8958-1-viktor.prutyanov@virtuozzo.com>
+        <mj+md-20180215.103138.21596.nikam@ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable PASID for PCI devices that support it.
+=D0=92 Thu, 15 Feb 2018 11:32:55 +0100
+Martin Mares <mj@ucw.cz> =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 54 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 54 insertions(+)
+> Hello!
+>=20
+> > This collection of patches adds support of printing PCI info in
+> > JSON format =20
+>=20
+> First of all, I would really like to hear the reasons behind that --
+> especially why the current machine-readable format is not sufficient.
+>=20
+> Generally, adding 1000 lines of code which duplicate a lot of existing
+> logic should have a strong reason.
+>=20
+> 				Have a nice fortnight
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index ace2f995b0c0..26935a9a5a97 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2608,6 +2608,52 @@ static void arm_smmu_disable_pri(struct arm_smmu_master_data *master)
- 	master->can_fault = false;
- }
- 
-+static int arm_smmu_enable_pasid(struct arm_smmu_master_data *master)
-+{
-+	int ret;
-+	int features;
-+	u8 pasid_bits;
-+	int num_pasids;
-+	struct pci_dev *pdev;
-+
-+	if (!dev_is_pci(master->dev))
-+		return -ENOSYS;
-+
-+	pdev = to_pci_dev(master->dev);
-+
-+	features = pci_pasid_features(pdev);
-+	if (features < 0)
-+		return -ENOSYS;
-+
-+	num_pasids = pci_max_pasids(pdev);
-+	if (num_pasids <= 0)
-+		return -ENOSYS;
-+
-+	pasid_bits = min_t(u8, ilog2(num_pasids), master->smmu->ssid_bits);
-+
-+	dev_dbg(&pdev->dev, "device supports %#x PASID bits [%s%s]\n", pasid_bits,
-+		(features & PCI_PASID_CAP_EXEC) ? "x" : "",
-+		(features & PCI_PASID_CAP_PRIV) ? "p" : "");
-+
-+	ret = pci_enable_pasid(pdev, features);
-+	return ret ? ret : pasid_bits;
-+}
-+
-+static void arm_smmu_disable_pasid(struct arm_smmu_master_data *master)
-+{
-+	struct pci_dev *pdev;
-+
-+	if (!dev_is_pci(master->dev))
-+		return;
-+
-+	pdev = to_pci_dev(master->dev);
-+
-+	if (!pdev->pasid_enabled)
-+		return;
-+
-+	pci_disable_pasid(pdev);
-+}
-+
- static int arm_smmu_insert_master(struct arm_smmu_device *smmu,
- 				  struct arm_smmu_master_data *master)
- {
-@@ -2728,6 +2774,11 @@ static int arm_smmu_add_device(struct device *dev)
- 		master->ste.can_stall = true;
- 	}
- 
-+	/* PASID must be enabled before ATS */
-+	ret = arm_smmu_enable_pasid(master);
-+	if (ret > 0)
-+		master->ssid_bits = ret;
-+
- 	if (!arm_smmu_enable_ats(master))
- 		arm_smmu_enable_pri(master);
- 
-@@ -2746,6 +2797,7 @@ static int arm_smmu_add_device(struct device *dev)
- err_disable_pri:
- 	arm_smmu_disable_pri(master);
- 	arm_smmu_disable_ats(master);
-+	arm_smmu_disable_pasid(master);
- 
- 	return ret;
- }
-@@ -2766,7 +2818,9 @@ static void arm_smmu_remove_device(struct device *dev)
- 	arm_smmu_remove_master(smmu, master);
- 
- 	arm_smmu_disable_pri(master);
-+	/* PASID must be disabled after ATS */
- 	arm_smmu_disable_ats(master);
-+	arm_smmu_disable_pasid(master);
- 
- 	iommu_group_remove_device(dev);
- 	iommu_device_unlink(&smmu->iommu, dev);
--- 
-2.15.1
+Hello!
 
+Because current machine-readable format is very limited and it is
+difficult to extend it to support verbosity options.
+
+JSON is defacto standard structured format. The key JSON's advantage is
+good portability and extensibility and rich toolchain support. Almost
+every modern utility has JSON format support for output, for example
+lsblk and lscpu.
+
+For example here is how structured -vv output looks like:
+$ ./lspci -Jvv | python -m json.tool
+
+JSON has nice tool called 'jq' which is basically Swiss-knife parser.
+For example you can output some fields you need as tsv:
+$ ./lspci -J -vv | jq -r '.[][] | [.Slot, .Device, .IRQ] | @tsv'
+
+...
+00:14.0	8 Series USB xHCI HC	41
+03:00.0	RTL8411B PCI Express Card Reader	43
+04:00.0	GK107M [GeForce GT 750M] 255
+...
+
+Or let's reformat part of input structure to another structure you need:
+$ ./lspci -Jvv | jq '.[][3] | {dev:.Device, class:.Class, irq:.IRQ}'
+
+{
+  "dev": "Haswell-ULT HD Audio Controller",
+  "class": "Audio device",
+  "irq": "48"
+}
+
+The patch is large mostly because current lspci use add-hoc output
+approach. So patch add skeleton which construct structured object
+separately from printing. Objects can later be easily extended to
+support new fields and output formats (not only JSON).
