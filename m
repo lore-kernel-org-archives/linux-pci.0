@@ -1,60 +1,42 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1519813744.10722.258.camel@linux.intel.com>
-Subject: Re: [PATCH v1 2/4] x86/pci: Re-use new dmi_get_bios_year() helper
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Jean Delvare <jdelvare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 28 Feb 2018 12:29:04 +0200
-In-Reply-To: <20180226172832.7bf82336@endymion>
-References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
-         <20180222125923.57385-2-andriy.shevchenko@linux.intel.com>
-         <20180226172832.7bf82336@endymion>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:46845 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750961AbeBRXHq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 18 Feb 2018 18:07:46 -0500
+Date: Sun, 18 Feb 2018 17:07:44 -0600
+From: Rob Herring <robh@kernel.org>
+To: srinivas.kandagatla@linaro.org
+Cc: stanimir.varbanov@linaro.org, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, bhelgaas@google.com,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: qcom: add missing supplies required for msm8996
+Message-ID: <20180218230744.hdl4ctug5utif6j5@rob-hp-laptop>
+References: <20180215132248.5572-1-srinivas.kandagatla@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180215132248.5572-1-srinivas.kandagatla@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2018-02-26 at 17:28 +0100, Jean Delvare wrote:
-
-> > -	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year
-> > < 2008) {
-> > -		if (iomem_resource.end <= 0xffffffff)
-> > -			pci_use_crs = false;
-> > -	}
-> > +	if ((dmi_get_bios_year() < 2008) && (iomem_resource.end <=
-> > 0xffffffff))
-> > +		pci_use_crs = false;
+On Thu, Feb 15, 2018 at 01:22:48PM +0000, srinivas.kandagatla@linaro.org wrote:
+> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
 > 
-> You are changing the behavior here, when DMI does not provide a BIOS
-> date. Beforehand, the test would fail and pci_use_crs would be left
-> alone. After your change, dmi_get_bios_year() will return 0, and
-> "0 < 2008" is true, so pci_use_crs is set to false.
+> This patch adds supplies that are required for msm8996. vdda
+> is analog supply that go in to controller, and vddpe_3v3 is
+> supply to PCIe endpoint.
+> 
+> Without these supplies PCIe endpoints which require power supplies are
+> not enumerated at all, as there is no one to power it up.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> ---
+> changes since v2:
+> 	Add back empty line suggested by Stan
+> 	use ARRAY_SIZE
+> 
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  4 ++++
+>  drivers/pci/dwc/pcie-qcom.c                        | 23 +++++++++++++++++++++-
+>  2 files changed, 26 insertions(+), 1 deletion(-)
 
-Hmm... Indeed.
-
-> I have no opinion on what this driver should do in such case,
-
-I would assume that no BIOS date is related to prehistoric firmwares and
- using _CRS would sound weird on them.
-
->  but I
-> certainly wouldn't expect a change of behavior from a "use a helper
-> instead of open-coding" kind of patch.
-
-Agree.
-
-> I don't think you can safely assume that the code calling
-> dmi_get_bios_year() will always do the right thing when 0 is being
-> returned. It's up to the calling code to decide what the default
-> behavior should be.
-
-That's correct.
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+Reviewed-by: Rob Herring <robh@kernel.org>
