@@ -1,167 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 22 Feb 2018 07:13:43 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mike Lothian <mike@fireburn.co.uk>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <lenb@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Check presence of slot itself in
- get_slot_status()
-Message-ID: <20180222131343.GA205018@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
- <CAHbf0-Exsu14dBmmfYy8Tcb4R58eYJKLFPPoM9RkqxHWDkqwXQ@mail.gmail.com>
- <20180212152122.GB75542@bhelgaas-glaptop.roam.corp.google.com>
- <CAHbf0-HffVDu0vxyTrSfgCtJ5rGtu_4HqAoo2sseG3HoE-1djw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHbf0-HffVDu0vxyTrSfgCtJ5rGtu_4HqAoo2sseG3HoE-1djw@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:36527 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751052AbeBRIjj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 18 Feb 2018 03:39:39 -0500
+Message-Id: <9d36522bc3d7e0ed1c1d5f653514d9fb0d34c0a8.1518941073.git.lukas@wunner.de>
+In-Reply-To: <cover.1518941072.git.lukas@wunner.de>
+References: <cover.1518941072.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 18 Feb 2018 09:38:32 +0100
+Subject: [PATCH 2/7] PCI: Make pci_wakeup_bus() & pci_bus_set_current_state()
+ public
+To: dri-devel@lists.freedesktop.org
+Cc: Peter Wu <peter@lekensteyn.nl>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Dave Airlie <airlied@redhat.com>,
+        nouveau@lists.freedesktop.org, Ben Skeggs <bskeggs@redhat.com>,
+        Lyude Paul <lyude@redhat.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.com>,
+        Jaroslav Kysela <perex@perex.cz>, linux-pm@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Pierre Moreau <pierre.morrow@free.fr>,
+        Bastien Nocera <hadess@hadess.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 22, 2018 at 09:19:24AM +0000, Mike Lothian wrote:
-> On 12 February 2018 at 15:21, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Mon, Feb 12, 2018 at 11:08:55AM +0000, Mike Lothian wrote:
-> >> On 12 February 2018 at 10:55, Mika Westerberg
-> >> <mika.westerberg@linux.intel.com> wrote:
-> >> > Mike Lothian reported that plugging in a USB-C device does not work
-> >> > properly in his Dell Alienware system. This system has Intel Alpine
-> >> > Ridge Thunderbolt controller providing USB-C functionality. In these
-> >> > systems the USB controller (xHCI) is hotplugged whenever a device is
-> >> > connected to the port using ACPI based hotplug.
-> >> >
-> >> > The ACPI description of the root port in question looks as follows:
-> >> >
-> >> > Device (RP01)
-> >> > {
-> >> >     Name (_ADR, 0x001C0000)
-> >> >
-> >> >     Device (PXSX)
-> >> >     {
-> >> >         Name (_ADR, 0x02)
-> >> >
-> >> >         Method (_RMV, 0, NotSerialized)
-> >> >         {
-> >> >             // ...
-> >> >         }
-> >> >     }
-> >> >
-> >> > Here _ADR 0x02 means device 0, function 2 on the bus under root port
-> >> > (RP1) but that seems to be incorrect because device 0 is the upstream
-> >> > port of the Alpine Ridge PCIe switch and it does not have other
-> >> > functions than 0 (the bridge itself). When we get ACPI Notify() to the
-> >> > root port resulting from connecting a USB-C device, Linux tries to read
-> >> > PCI_VENDOR_ID from device 0, function 2 which of course always returns
-> >> > 0xffffffff because there is no such function and we never find the
-> >> > device.
-> >> >
-> >> > In Windows this works fine.
-> >> >
-> >> > Now, since we get ACPI Notify() to the root port and not to the PXSX
-> >> > device we should actually start our scan from there as well and not from
-> >> > the non-existent PXSX device so fix this by checking presence of the
-> >> > slot itself (function 0) if we fail to do that otherwise.
-> >> >
-> >> > While there use pci_bus_read_dev_vendor_id() in get_slot_status() which
-> >> > is the recommended way to read device and vendor ID of device on PCI bus.
-> >> >
-> >> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=198557
-> >> > Reported-by: Mike Lothian <mike@fireburn.co.uk>
-> >> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> >> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> >> > Cc: stable@vger.kernel.org
-> >> > ---
-> >> >  drivers/pci/hotplug/acpiphp_glue.c | 23 ++++++++++++++++-------
-> >> >  1 file changed, 16 insertions(+), 7 deletions(-)
-> >> >
-> >> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> >> > index e2198a2feeca..b45b375c0e6c 100644
-> >> > --- a/drivers/pci/hotplug/acpiphp_glue.c
-> >> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> >> > @@ -541,6 +541,7 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
-> >> >  {
-> >> >         unsigned long long sta = 0;
-> >> >         struct acpiphp_func *func;
-> >> > +       u32 dvid;
-> >> >
-> >> >         list_for_each_entry(func, &slot->funcs, sibling) {
-> >> >                 if (func->flags & FUNC_HAS_STA) {
-> >> > @@ -551,19 +552,27 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
-> >> >                         if (ACPI_SUCCESS(status) && sta)
-> >> >                                 break;
-> >> >                 } else {
-> >> > -                       u32 dvid;
-> >> > -
-> >> > -                       pci_bus_read_config_dword(slot->bus,
-> >> > -                                                 PCI_DEVFN(slot->device,
-> >> > -                                                           func->function),
-> >> > -                                                 PCI_VENDOR_ID, &dvid);
-> >> > -                       if (dvid != 0xffffffff) {
-> >> > +                       if (pci_bus_read_dev_vendor_id(slot->bus,
-> >> > +                                       PCI_DEVFN(slot->device, func->function),
-> >> > +                                       &dvid, 0)) {
-> >> >                                 sta = ACPI_STA_ALL;
-> >> >                                 break;
-> >> >                         }
-> >> >                 }
-> >> >         }
-> >> >
-> >> > +       if (!sta) {
-> >> > +               /*
-> >> > +                * Check for the slot itself since it may be that the
-> >> > +                * ACPI slot is a device below PCIe upstream port so in
-> >> > +                * that case it may not even be reachable yet.
-> >> > +                */
-> >> > +               if (pci_bus_read_dev_vendor_id(slot->bus,
-> >> > +                               PCI_DEVFN(slot->device, 0), &dvid, 0)) {
-> >> > +                       sta = ACPI_STA_ALL;
-> >> > +               }
-> >> > +       }
-> >> > +
-> >> >         return (unsigned int)sta;
-> >> >  }
-> >> >
-> >> > --
-> >> > 2.15.1
-> >> >
-> >>
-> >> Thanks for this, it fixes a few other issues on my machine too
-> >
-> > Thanks for testing this.  Can you elaborate on what other issues this
-> > fixes?  I don't know what they are, but they might be worth mentioning
-> > in the changelog do make this fix more discoverable.
-> >
-> >> I'm going to do some searches around different bugzillas for the USB-C
-> >> non-detection and the NVMe drive disappearing after suspend issues and
-> >> report that they'll be getting a fix soon
-> >
-> > If you find more bugzillas that are fixed by this, please include the
-> > URLs so we can include them in the changelog.  (I can do this; no need
-> > to respin the patch just for this.)
-> >
-> >> Tested-by: Mike Lothian <mike@fireburn.co.uk>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> Hi
-> 
-> Is this going in via this tree:
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/
-> 
-> Is there anything else that needs to be done before it can go into rc3?
+There are PCI devices which are power-manageable by a nonstandard means,
+such as a custom ACPI method.  One example are discrete GPUs in hybrid
+graphics laptops, another are Thunderbolt controllers in Macs.
 
-Not on your end.  But thanks fo the reminder, and also for the hint
-that you'd like it in -rc3.  It's not likely to make -rc3 because I
-like things to at least be in -next for a few days before I ask Linus
-to pull them.
+Such devices can't be put into D3cold with pci_set_power_state() because
+pci_platform_power_transition() fails with -ENODEV.  Instead they're put
+into D3hot by pci_set_power_state() and subsequently into D3cold by
+invoking the nonstandard means.  However as a consequence the cached
+current_state is incorrectly left at D3hot.
 
-But more importantly, what's the justification for adding this after
-the merge window?  It doesn't look like a regression or a fix for
-something we broke in the merge window.  It certainly *could* still be
-merged for v4.16, but the default target would be v4.17.
+What we need to do is walk the hierarchy below such a PCI device on
+powerdown and update the current_state to D3cold.  On powerup the PCI
+device itself and the hierarchy below it is in D0uninitialized, so we
+need to walk the hierarchy again and wake all devices, causing them to
+be put into D0active and then letting them autosuspend as they see fit.
 
-Bjorn
+To this end make pci_wakeup_bus() & pci_bus_set_current_state() public
+so PCI drivers don't have to reinvent the wheel.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci.c   | 8 ++++----
+ include/linux/pci.h | 2 ++
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f694650235f2..6e6e322a5a7d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -800,7 +800,7 @@ static int pci_wakeup(struct pci_dev *pci_dev, void *ign)
+  * pci_wakeup_bus - Walk given bus and wake up devices on it
+  * @bus: Top bus of the subtree to walk.
+  */
+-static void pci_wakeup_bus(struct pci_bus *bus)
++void pci_wakeup_bus(struct pci_bus *bus)
+ {
+ 	if (bus)
+ 		pci_walk_bus(bus, pci_wakeup, NULL);
+@@ -850,11 +850,11 @@ static int __pci_dev_set_current_state(struct pci_dev *dev, void *data)
+ }
+ 
+ /**
+- * __pci_bus_set_current_state - Walk given bus and set current state of devices
++ * pci_bus_set_current_state - Walk given bus and set current state of devices
+  * @bus: Top bus of the subtree to walk.
+  * @state: state to be set
+  */
+-static void __pci_bus_set_current_state(struct pci_bus *bus, pci_power_t state)
++void pci_bus_set_current_state(struct pci_bus *bus, pci_power_t state)
+ {
+ 	if (bus)
+ 		pci_walk_bus(bus, __pci_dev_set_current_state, &state);
+@@ -876,7 +876,7 @@ int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
+ 	ret = pci_platform_power_transition(dev, state);
+ 	/* Power off the bridge may power off the whole hierarchy */
+ 	if (!ret && state == PCI_D3cold)
+-		__pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
++		pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 024a1beda008..ae42289662df 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1147,6 +1147,8 @@ void pci_pme_wakeup_bus(struct pci_bus *bus);
+ void pci_d3cold_enable(struct pci_dev *dev);
+ void pci_d3cold_disable(struct pci_dev *dev);
+ bool pcie_relaxed_ordering_enabled(struct pci_dev *dev);
++void pci_wakeup_bus(struct pci_bus *bus);
++void pci_bus_set_current_state(struct pci_bus *bus, pci_power_t state);
+ 
+ /* PCI Virtual Channel */
+ int pci_save_vc_state(struct pci_dev *dev);
+-- 
+2.15.1
