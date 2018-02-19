@@ -1,50 +1,63 @@
-Return-Path: <SRS0=Utot=FC=rock-chips.com=shawn.lin@kernel.org>
-Return-Path: <SRS0=Utot=FC=rock-chips.com=shawn.lin@kernel.org>
-Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
- Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: understanding DMA in PCI drivers
-To: Bjorn Helgaas <helgaas@kernel.org>, Ran Shalit <ranshalit@gmail.com>
-References: <CAJ2oMhKJ5ECtr5-F1M_PjO+ev_8-UfpLu+jT9hG7XEwoDV0A_Q@mail.gmail.com>
- <20180207143954.GA30525@bhelgaas-glaptop.roam.corp.google.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <3d427721-7489-040e-791d-4963a1d5941c@rock-chips.com>
-Date: Thu, 8 Feb 2018 09:41:35 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aibo.runbox.com ([91.220.196.211]:37992 "EHLO aibo.runbox.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932067AbeBSU4o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Feb 2018 15:56:44 -0500
+References: <20180212230457.23181-1-kballou@devnulllabs.io>
+From: Kenny Ballou <kballou@devnulllabs.io>
+To: linux-pci@vger.kernel.org
+Cc: googlegot@yahoo.com, bhelgaas@google.com
+Subject: Re: [PATCH] pci: use kstrtobool over ad hoc string parsing
+In-reply-to: <20180212230457.23181-1-kballou@devnulllabs.io>
+Date: Mon, 19 Feb 2018 13:56:23 -0700
+Message-ID: <87eflghf60.fsf@devnulllabs.io>
 MIME-Version: 1.0
-In-Reply-To: <20180207143954.GA30525@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
 
-[+ Kishon]
+On 2018年02月12日 23:04 GMT, Kenny Ballou wrote:
+> Convert ROM read access enable/disable string parsing to use the
+> `kstrtobool` function.
+>
+> This fixes Bugzilla Bug 111301 -- Sysfs PCI rom file functionality does
+> not match documentation.
+>
+> bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111301
+>
+> Reported-by: googlegot@yahoo.com
+> Signed-off-by: Kenny Ballou <kballou@devnulllabs.io>
+> ---
+>  drivers/pci/pci-sysfs.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index eb6bee8724cc..3cde1f25e786 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1424,10 +1424,12 @@ static ssize_t pci_write_rom(struct file *filp, struct kobject *kobj,
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+>  
+> -	if ((off ==  0) && (*buf == '0') && (count == 2))
+> -		pdev->rom_attr_enabled = 0;
+> -	else
+> +	bool res = false;
+> +
+> +	if (kstrtobool(buf, &res) == 0 && res)
+>  		pdev->rom_attr_enabled = 1;
+> +	else
+> +		pdev->rom_attr_enabled = 0;
+>  
+>  	return count;
+>  }
 
-On 2018/2/7 22:39, Bjorn Helgaas wrote:
+Bjorn,
 
->> 2. How does device triggers DMA from device to cpu, is it by simply
->> writing to BAR ?
-> 
-> In most cases the device itself performs the DMA.  It sounds like
-> you have a case where the DMA engine is not part of the device itself.
-> I don't know how that would be programmed, except to say that the DMA
-> engine presumably operates on DMA addresses, and something would still
-> have to DMA-map buffers to obtain those.
+How does one know if a patch was accepted?  Should I be monitoring
+patchwork?  What's the status of the quoted patch?  Patchwork doesn't
+seem to show any changes for this patch.
 
-I have a question that why it's always device to performs the DMA for
-no matter memory read and write? We have builtin DMA engine inside the
-PCIe RC controller, so could the function driver submit the DMA request
-to the PCIe RC controller driver and let it fire the DMA to access
-device's internal memory? Given that we now support PCIe EP framework,
-and now linux-pci behave like a *device* per your saying, so that is
-quite possible for us to consider how we would submit DMA request with
-current PCIe EP stuff.
-
-> 
-> BARs are typically used for programming the device, i.e., the driver
-> would use them.  BARs are not in the data path for a DMA transfer.
-> 
->> 3. How does device triggers DMA from cpu to device, is it by simply
->> reading from BAR ?
-> 
-> 
-> 
-> 
+Regards,
+-Kenny
