@@ -1,68 +1,126 @@
-Return-Path: <SRS0=8nNQ=FA=gmail.com=ulfalizer@kernel.org>
-Return-Path: <SRS0=8nNQ=FA=gmail.com=ulfalizer@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>
+Subject: [PATCH v14 3/9] PCI: Add fwnode handler as input param of pci_register_io_range()
+Date: Tue, 20 Feb 2018 01:48:34 +0800
+Message-ID: <1519062520-198902-4-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
+References: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20180206191126.GB98765@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180205012146.23981-1-ulfalizer@gmail.com> <20180205012146.23981-21-ulfalizer@gmail.com>
- <20180206191126.GB98765@bhelgaas-glaptop.roam.corp.google.com>
-From: Ulf Magnusson <ulfalizer@gmail.com>
-Date: Tue, 6 Feb 2018 23:17:05 +0100
-Message-ID: <CAFkk2KTUGG9-VZcJpvD_qkE3+AMy2XZOvU4=UEWp4arrzRWw+Q@mail.gmail.com>
-Subject: Re: [PATCH 20/20] x86/PCI: VMD: Fix malformed default
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>, tfiga@chromium.org, paul.burton@mips.com,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Hans-Christian Noren Egtvedt <egtvedt@samfundet.no>, Linus Walleij <linus.walleij@linaro.org>,
-	Vineet Gupta <vgupta@synopsys.com>, mgorman@techsingularity.net,
-	Christoph Hellwig <hch@lst.de>, mina86@mina86.com, Rob Herring <robh@kernel.org>,
-	Stephen Boyd <sboyd@codeaurora.org>, Paul Mackerras <paulus@ozlabs.org>,
-	Will Deacon <will.deacon@arm.com>, Tony Lindgren <tony@atomide.com>,
-	Nicholas Piggin <npiggin@gmail.com>, Masahiro Yamada <yamada.masahiro@socionext.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 6, 2018 at 8:11 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> x86/PCI: VMD: Fix malformed default
->
-> In the title, please include a clue about what default you're talking
-> about, e.g., mention Kconfig somehow.
->
-> On Mon, Feb 05, 2018 at 02:21:32AM +0100, Ulf Magnusson wrote:
->> 'default N' should be 'default n', though they happen to have the same
->> effect here, due to undefined symbols (N in this case) evaluating to n
->> in a tristate sense.
->>
->> Remove the default from VMD instead of changing it. bool and tristate
->> symbols implicitly default to n.
->>
->> Discovered with the
->> https://github.com/ulfalizer/Kconfiglib/blob/master/examples/list_undefined.py
->> script.
->>
->> Signed-off-by: Ulf Magnusson <ulfalizer@gmail.com>
->> ---
->>  drivers/pci/host/Kconfig | 1 -
->>  1 file changed, 1 deletion(-)
->>
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index a4ed7484d127..dc8a2a175f19 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -215,7 +215,6 @@ config PCIE_TANGO_SMP8759
->>  config VMD
->>       depends on PCI_MSI && X86_64 && SRCU
->>       tristate "Intel Volume Management Device Driver"
->> -     default N
->>       ---help---
->>         Adds support for the Intel Volume Management Device (VMD). VMD is a
->>         secondary PCI host bridge that allows PCI Express root ports,
->> --
->> 2.14.1
->>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-Typoed the --in-reply-to. v2 is at https://lkml.org/lkml/2018/2/6/770
+In preparation for having the PCI MMIO helpers to use the new generic
+I/O space management(logical PIO) we need to add the fwnode handler as
+extra input parameter.
+This patch changes the signature of pci_register_io_range() and of
+its callers as needed.
 
-Cheers,
-Ulf
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ drivers/acpi/pci_root.c | 8 +++++---
+ drivers/of/address.c    | 4 +++-
+ drivers/pci/pci.c       | 3 ++-
+ include/linux/pci.h     | 3 ++-
+ 4 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 6fc204a..1213479 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -729,7 +729,8 @@ static void acpi_pci_root_validate_resources(struct device *dev,
+ 	}
+ }
+ 
+-static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
++static void acpi_pci_root_remap_iospace(struct fwnode_handle *fwnode,
++			struct resource_entry *entry)
+ {
+ #ifdef PCI_IOBASE
+ 	struct resource *res = entry->res;
+@@ -738,7 +739,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
+ 	resource_size_t length = resource_size(res);
+ 	unsigned long port;
+ 
+-	if (pci_register_io_range(cpu_addr, length))
++	if (pci_register_io_range(fwnode, cpu_addr, length))
+ 		goto err;
+ 
+ 	port = pci_address_to_pio(cpu_addr);
+@@ -780,7 +781,8 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ 	else {
+ 		resource_list_for_each_entry_safe(entry, tmp, list) {
+ 			if (entry->res->flags & IORESOURCE_IO)
+-				acpi_pci_root_remap_iospace(entry);
++				acpi_pci_root_remap_iospace(&device->fwnode,
++						entry);
+ 
+ 			if (entry->res->flags & IORESOURCE_DISABLED)
+ 				resource_list_destroy_entry(entry);
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index ce4d3d8..cdf047b 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -2,6 +2,7 @@
+ #define pr_fmt(fmt)	"OF: " fmt
+ 
+ #include <linux/device.h>
++#include <linux/fwnode.h>
+ #include <linux/io.h>
+ #include <linux/ioport.h>
+ #include <linux/module.h>
+@@ -333,7 +334,8 @@ int of_pci_range_to_resource(struct of_pci_range *range,
+ 
+ 	if (res->flags & IORESOURCE_IO) {
+ 		unsigned long port;
+-		err = pci_register_io_range(range->cpu_addr, range->size);
++		err = pci_register_io_range(&np->fwnode, range->cpu_addr,
++				range->size);
+ 		if (err)
+ 			goto invalid_range;
+ 		port = pci_address_to_pio(range->cpu_addr);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4666a01..07290a3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3455,7 +3455,8 @@ struct io_range {
+  * Record the PCI IO range (expressed as CPU physical address + size).
+  * Return a negative value if an error has occured, zero otherwise
+  */
+-int pci_register_io_range(phys_addr_t addr, resource_size_t size)
++int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
++			resource_size_t	size)
+ {
+ 	int err = 0;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 25b7a35..17cc998 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1221,7 +1221,8 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 			void *alignf_data);
+ 
+ 
+-int pci_register_io_range(phys_addr_t addr, resource_size_t size);
++int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
++			resource_size_t size);
+ unsigned long pci_address_to_pio(phys_addr_t addr);
+ phys_addr_t pci_pio_to_address(unsigned long pio);
+ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+-- 
+1.9.1
