@@ -1,522 +1,581 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 37/37] vfio: Add support for Shared Virtual Addressing
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
- iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-38-jean-philippe.brucker@arm.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <1e76c66c-952e-71bd-d831-d3a1ded9559c@codeaurora.org>
-Date: Tue, 27 Feb 2018 20:26:39 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>
+Subject: [PATCH v14 6/9] HISI LPC: Support the LPC host on Hip06/Hip07 with DT bindings
+Date: Tue, 20 Feb 2018 01:48:37 +0800
+Message-ID: <1519062520-198902-7-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
+References: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20180212183352.22730-38-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, xieyisheng1@huawei.com, ilias.apalodimas@linaro.org,
- catalin.marinas@arm.com, xuzaibo@huawei.com, jonathan.cameron@huawei.com,
- will.deacon@arm.com, yi.l.liu@intel.com, lorenzo.pieralisi@arm.com,
- ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org, bharatku@xilinx.com,
- rfranz@cavium.com, lenb@kernel.org, jacob.jun.pan@linux.intel.com,
- alex.williamson@redhat.com, robh+dt@kernel.org, thunder.leizhen@huawei.com,
- bhelgaas@google.com, shunyong.yang@hxt-semitech.com, dwmw2@infradead.org,
- liubo95@huawei.com, rjw@rjwysocki.net, jcrouse@codeaurora.org,
- robdclark@gmail.com, hanjun.guo@linaro.org, sudeep.holla@arm.com,
- robin.murphy@arm.com, christian.koenig@amd.com, nwatters@codeaurora.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/12/2018 1:33 PM, Jean-Philippe Brucker wrote:
-> Add two new ioctl for VFIO containers. VFIO_IOMMU_BIND_PROCESS creates a
-> bond between a container and a process address space, identified by a
-> device-specific ID named PASID. This allows the device to target DMA
-> transactions at the process virtual addresses without a need for mapping
-> and unmapping buffers explicitly in the IOMMU. The process page tables are
-> shared with the IOMMU, and mechanisms such as PCI ATS/PRI are used to
-> handle faults. VFIO_IOMMU_UNBIND_PROCESS removes a bond created with
-> VFIO_IOMMU_BIND_PROCESS.
-> 
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> ---
->  drivers/vfio/vfio_iommu_type1.c | 399 ++++++++++++++++++++++++++++++++++++++++
->  include/uapi/linux/vfio.h       |  76 ++++++++
->  2 files changed, 475 insertions(+)
-> 
-> diff --git a/drivers/vfio/vfio_iommu_type1.c b/drivers/vfio/vfio_iommu_type1.c
-> index e30e29ae4819..cac066f0026b 100644
-> --- a/drivers/vfio/vfio_iommu_type1.c
-> +++ b/drivers/vfio/vfio_iommu_type1.c
-> @@ -30,6 +30,7 @@
->  #include <linux/iommu.h>
->  #include <linux/module.h>
->  #include <linux/mm.h>
-> +#include <linux/ptrace.h>
->  #include <linux/rbtree.h>
->  #include <linux/sched/signal.h>
->  #include <linux/sched/mm.h>
-> @@ -60,6 +61,7 @@ MODULE_PARM_DESC(disable_hugepages,
->  
->  struct vfio_iommu {
->  	struct list_head	domain_list;
-> +	struct list_head	mm_list;
->  	struct vfio_domain	*external_domain; /* domain for external user */
->  	struct mutex		lock;
->  	struct rb_root		dma_list;
-> @@ -90,6 +92,15 @@ struct vfio_dma {
->  struct vfio_group {
->  	struct iommu_group	*iommu_group;
->  	struct list_head	next;
-> +	bool			sva_enabled;
-> +};
-> +
-> +struct vfio_mm {
-> +#define VFIO_PASID_INVALID	(-1)
-> +	spinlock_t		lock;
-> +	int			pasid;
-> +	struct mm_struct	*mm;
-> +	struct list_head	next;
->  };
->  
->  /*
-> @@ -1117,6 +1128,157 @@ static int vfio_iommu_replay(struct vfio_iommu *iommu,
->  	return 0;
->  }
->  
-> +static int vfio_iommu_mm_exit(struct device *dev, int pasid, void *data)
-> +{
-> +	struct vfio_mm *vfio_mm = data;
-> +
-> +	/*
-> +	 * The mm_exit callback cannot block, so we can't take the iommu mutex
-> +	 * and remove this vfio_mm from the list. Hopefully the SVA code will
-> +	 * relax its locking requirement in the future.
-> +	 *
-> +	 * We mostly care about attach_group, which will attempt to replay all
-> +	 * binds in this container. Ensure that it doesn't touch this defunct mm
-> +	 * struct, by clearing the pointer. The structure will be freed when the
-> +	 * group is removed from the container.
-> +	 */
-> +	spin_lock(&vfio_mm->lock);
-> +	vfio_mm->mm = NULL;
-> +	spin_unlock(&vfio_mm->lock);
-> +
-> +	return 0;
-> +}
-> +
-> +static int vfio_iommu_sva_init(struct device *dev, void *data)
-> +{
+From: Zhichang Yuan <yuanzhichang@hisilicon.com>
 
-data is not getting used.
+The low-pin-count(LPC) interface of Hip06/Hip07 accesses the peripherals in
+I/O port addresses. This patch implements the LPC host controller driver
+which perform the I/O operations on the underlying hardware.
+We don't want to touch those existing peripherals' driver, such as ipmi-bt.
+So this driver applies the indirect-IO introduced in the previous patch
+after registering an indirect-IO node to the indirect-IO devices list which
+will be searched in the I/O accessors to retrieve the host-local I/O port.
 
-> +
-> +	int ret;
-> +
-> +	ret = iommu_sva_device_init(dev, IOMMU_SVA_FEAT_PASID |
-> +				    IOMMU_SVA_FEAT_IOPF, 0);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return iommu_register_mm_exit_handler(dev, vfio_iommu_mm_exit);
-> +}
-> +
-> +static int vfio_iommu_sva_shutdown(struct device *dev, void *data)
-> +{
-> +	iommu_sva_device_shutdown(dev);
-> +	iommu_unregister_mm_exit_handler(dev);
-> +
-> +	return 0;
-> +}
-> +
-> +static int vfio_iommu_bind_group(struct vfio_iommu *iommu,
-> +				 struct vfio_group *group,
-> +				 struct vfio_mm *vfio_mm)
-> +{
-> +	int ret;
-> +	int pasid;
-> +
-> +	if (!group->sva_enabled) {
-> +		ret = iommu_group_for_each_dev(group->iommu_group, NULL,
-> +					       vfio_iommu_sva_init);
-> +		if (ret)
-> +			return ret;
-> +
-> +		group->sva_enabled = true;
-> +	}
-> +
-> +	ret = iommu_sva_bind_group(group->iommu_group, vfio_mm->mm, &pasid,
-> +				   IOMMU_SVA_FEAT_PASID | IOMMU_SVA_FEAT_IOPF,
-> +				   vfio_mm);
-> +	if (ret)
-> +		return ret;
+The driver config is set as a bool instead of a trisate. The reason
+here is that, by the very nature of the driver providing a logical
+PIO range, it does not make sense to have this driver as a loadable
+module. Another more specific reason is that the Huawei D03 board
+which includes hip06 SoC requires the LPC bus for UART console, so
+should be built in.
 
-don't you need to clean up the work done by vfio_iommu_sva_init() here.
+Signed-off-by: Zou Rongrong <zourongrong@huawei.com>
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+Acked-by: Rob Herring <robh@kernel.org> #dts part
+---
+ .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
+ drivers/bus/Kconfig                                |   8 +
+ drivers/bus/Makefile                               |   1 +
+ drivers/bus/hisi_lpc.c                             | 449 +++++++++++++++++++++
+ 4 files changed, 491 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
+ create mode 100644 drivers/bus/hisi_lpc.c
 
-> +
-> +	if (WARN_ON(vfio_mm->pasid != VFIO_PASID_INVALID && pasid !=
-> +		    vfio_mm->pasid))
-> +		return -EFAULT;
-> +
-> +	vfio_mm->pasid = pasid;
-> +
-> +	return 0;
-> +}
-> +
-> +static void vfio_iommu_unbind_group(struct vfio_group *group,
-> +				    struct vfio_mm *vfio_mm)
-> +{
-> +	iommu_sva_unbind_group(group->iommu_group, vfio_mm->pasid);
-> +}
-> +
-> +static void vfio_iommu_unbind(struct vfio_iommu *iommu,
-> +			      struct vfio_mm *vfio_mm)
-> +{
-> +	struct vfio_group *group;
-> +	struct vfio_domain *domain;
-> +
-> +	list_for_each_entry(domain, &iommu->domain_list, next)
-> +		list_for_each_entry(group, &domain->group_list, next)
-> +			vfio_iommu_unbind_group(group, vfio_mm);
-> +}
-> +
-> +static bool vfio_mm_get(struct vfio_mm *vfio_mm)
-> +{
-> +	bool ret;
-> +
-> +	spin_lock(&vfio_mm->lock);
-> +	ret = vfio_mm->mm && mmget_not_zero(vfio_mm->mm);
-> +	spin_unlock(&vfio_mm->lock);
-> +
-> +	return ret;
-> +}
-> +
-> +static void vfio_mm_put(struct vfio_mm *vfio_mm)
-> +{
-> +	mmput(vfio_mm->mm);
-> +}
-> +
-> +static int vfio_iommu_replay_bind(struct vfio_iommu *iommu, struct vfio_group *group)
-> +{
-> +	int ret = 0;
-> +	struct vfio_mm *vfio_mm;
-> +
-> +	list_for_each_entry(vfio_mm, &iommu->mm_list, next) {
-> +		/*
-> +		 * Ensure mm doesn't exit while we're binding it to the new
-> +		 * group.
-> +		 */
-> +		if (!vfio_mm_get(vfio_mm))
-> +			continue;
-> +		ret = vfio_iommu_bind_group(iommu, group, vfio_mm);
-> +		vfio_mm_put(vfio_mm);
-> +
-> +		if (ret)
-> +			goto out_unbind;
-> +	}
-> +
-> +	return 0;
-> +
-> +out_unbind:
-> +	list_for_each_entry_continue_reverse(vfio_mm, &iommu->mm_list, next) {
-> +		if (!vfio_mm_get(vfio_mm))
-> +			continue;
-> +		iommu_sva_unbind_group(group->iommu_group, vfio_mm->pasid);
-> +		vfio_mm_put(vfio_mm);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static void vfio_iommu_free_all_mm(struct vfio_iommu *iommu)
-> +{
-> +	struct vfio_mm *vfio_mm, *tmp;
-> +
-> +	/*
-> +	 * No need for unbind() here. Since all groups are detached from this
-> +	 * iommu, bonds have been removed.
-> +	 */
-> +	list_for_each_entry_safe(vfio_mm, tmp, &iommu->mm_list, next)
-> +		kfree(vfio_mm);
-> +	INIT_LIST_HEAD(&iommu->mm_list);
-> +}
-> +
->  /*
->   * We change our unmap behavior slightly depending on whether the IOMMU
->   * supports fine-grained superpages.  IOMMUs like AMD-Vi will use a superpage
-> @@ -1301,6 +1463,15 @@ static int vfio_iommu_type1_attach_group(void *iommu_data,
->  		    d->prot == domain->prot) {
->  			iommu_detach_group(domain->domain, iommu_group);
->  			if (!iommu_attach_group(d->domain, iommu_group)) {
-> +				if (vfio_iommu_replay_bind(iommu, group)) {
-> +					iommu_detach_group(d->domain, iommu_group);
-> +					ret = iommu_attach_group(domain->domain,
-> +								 iommu_group);
-> +					if (ret)
-> +						goto out_domain;
-> +					continue;
-> +				}
-> +
->  				list_add(&group->next, &d->group_list);
->  				iommu_domain_free(domain->domain);
->  				kfree(domain);
-> @@ -1321,6 +1492,10 @@ static int vfio_iommu_type1_attach_group(void *iommu_data,
->  	if (ret)
->  		goto out_detach;
->  
-> +	ret = vfio_iommu_replay_bind(iommu, group);
-> +	if (ret)
-> +		goto out_detach;
-> +
->  	if (resv_msi) {
->  		ret = iommu_get_msi_cookie(domain->domain, resv_msi_base);
->  		if (ret)
-> @@ -1426,6 +1601,11 @@ static void vfio_iommu_type1_detach_group(void *iommu_data,
->  			continue;
->  
->  		iommu_detach_group(domain->domain, iommu_group);
-> +		if (group->sva_enabled) {
-> +			iommu_group_for_each_dev(iommu_group, NULL,
-> +						 vfio_iommu_sva_shutdown);
-> +			group->sva_enabled = false;
-> +		}
->  		list_del(&group->next);
->  		kfree(group);
->  		/*
-> @@ -1441,6 +1621,7 @@ static void vfio_iommu_type1_detach_group(void *iommu_data,
->  					vfio_iommu_unmap_unpin_all(iommu);
->  				else
->  					vfio_iommu_unmap_unpin_reaccount(iommu);
-> +				vfio_iommu_free_all_mm(iommu);
->  			}
->  			iommu_domain_free(domain->domain);
->  			list_del(&domain->next);
-> @@ -1475,6 +1656,7 @@ static void *vfio_iommu_type1_open(unsigned long arg)
->  	}
->  
->  	INIT_LIST_HEAD(&iommu->domain_list);
-> +	INIT_LIST_HEAD(&iommu->mm_list);
->  	iommu->dma_list = RB_ROOT;
->  	mutex_init(&iommu->lock);
->  	BLOCKING_INIT_NOTIFIER_HEAD(&iommu->notifier);
-> @@ -1509,6 +1691,7 @@ static void vfio_iommu_type1_release(void *iommu_data)
->  		kfree(iommu->external_domain);
->  	}
->  
-> +	vfio_iommu_free_all_mm(iommu);
->  	vfio_iommu_unmap_unpin_all(iommu);
->  
->  	list_for_each_entry_safe(domain, domain_tmp,
-> @@ -1537,6 +1720,184 @@ static int vfio_domains_have_iommu_cache(struct vfio_iommu *iommu)
->  	return ret;
->  }
->  
-> +static struct mm_struct *vfio_iommu_get_mm_by_vpid(pid_t vpid)
-> +{
-> +	struct mm_struct *mm;
-> +	struct task_struct *task;
-> +
-> +	rcu_read_lock();
-> +	task = find_task_by_vpid(vpid);
-> +	if (task)
-> +		get_task_struct(task);
-> +	rcu_read_unlock();
-> +	if (!task)
-> +		return ERR_PTR(-ESRCH);
-> +
-> +	/* Ensure that current has RW access on the mm */
-> +	mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
-> +	put_task_struct(task);
-> +
-> +	if (!mm)
-> +		return ERR_PTR(-ESRCH);
-> +
-> +	return mm;
-> +}
-> +
-> +static long vfio_iommu_type1_bind_process(struct vfio_iommu *iommu,
-> +					  void __user *arg,
-> +					  struct vfio_iommu_type1_bind *bind)
-> +{
-> +	struct vfio_iommu_type1_bind_process params;
-> +	struct vfio_domain *domain;
-> +	struct vfio_group *group;
-> +	struct vfio_mm *vfio_mm;
-> +	struct mm_struct *mm;
-> +	unsigned long minsz;
-> +	int ret = 0;
-> +
-> +	minsz = sizeof(*bind) + sizeof(params);
-> +	if (bind->argsz < minsz)
-> +		return -EINVAL;
-> +
-> +	arg += sizeof(*bind);
-> +	if (copy_from_user(&params, arg, sizeof(params)))
-> +		return -EFAULT;
-> +
-> +	if (params.flags & ~VFIO_IOMMU_BIND_PID)
-> +		return -EINVAL;
-> +
-> +	if (params.flags & VFIO_IOMMU_BIND_PID) {
-> +		mm = vfio_iommu_get_mm_by_vpid(params.pid);
-> +		if (IS_ERR(mm))
-> +			return PTR_ERR(mm);
-> +	} else {
-> +		mm = get_task_mm(current);
-> +		if (!mm)
-> +			return -EINVAL;
-> +	}
-
-I think you can merge mm failure in both states.
-
-> +
-> +	mutex_lock(&iommu->lock);
-> +	if (!IS_IOMMU_CAP_DOMAIN_IN_CONTAINER(iommu)) {
-> +		ret = -EINVAL;
-> +		goto out_put_mm;
-> +	}
-> +
-> +	list_for_each_entry(vfio_mm, &iommu->mm_list, next) {
-> +		if (vfio_mm->mm != mm)
-> +			continue;
-> +
-> +		params.pasid = vfio_mm->pasid;
-> +
-> +		ret = copy_to_user(arg, &params, sizeof(params)) ? -EFAULT : 0;
-> +		goto out_put_mm;
-> +	}
-> +
-> +	vfio_mm = kzalloc(sizeof(*vfio_mm), GFP_KERNEL);
-> +	if (!vfio_mm) {
-> +		ret = -ENOMEM;
-> +		goto out_put_mm;
-> +	}
-> +
-> +	vfio_mm->mm = mm;
-> +	vfio_mm->pasid = VFIO_PASID_INVALID;
-> +	spin_lock_init(&vfio_mm->lock);
-> +
-> +	list_for_each_entry(domain, &iommu->domain_list, next) {
-> +		list_for_each_entry(group, &domain->group_list, next) {
-> +			ret = vfio_iommu_bind_group(iommu, group, vfio_mm);
-> +			if (ret)
-> +				break;
-> +		}
-> +		if (ret)
-> +			break;
-> +	}
-> +
-> +	if (ret) {
-> +		/* Undo all binds that already succeeded */
-> +		list_for_each_entry_continue_reverse(group, &domain->group_list,
-> +						     next)
-> +			vfio_iommu_unbind_group(group, vfio_mm);
-> +		list_for_each_entry_continue_reverse(domain, &iommu->domain_list,
-> +						     next)
-> +			list_for_each_entry(group, &domain->group_list, next)
-> +				vfio_iommu_unbind_group(group, vfio_mm);
-> +		kfree(vfio_mm);
-> +	} else {
-> +		list_add(&vfio_mm->next, &iommu->mm_list);
-> +
-> +		params.pasid = vfio_mm->pasid;
-> +		ret = copy_to_user(arg, &params, sizeof(params)) ? -EFAULT : 0;
-> +		if (ret) {
-> +			vfio_iommu_unbind(iommu, vfio_mm);
-> +			kfree(vfio_mm);
-> +		}
-> +	}
-> +
-> +out_put_mm:
-> +	mutex_unlock(&iommu->lock);
-> +	mmput(mm);
-> +
-> +	return ret;
-> +}
-> +
-> +static long vfio_iommu_type1_unbind_process(struct vfio_iommu *iommu,
-> +					    void __user *arg,
-> +					    struct vfio_iommu_type1_bind *bind)
-> +{
-> +	int ret = -EINVAL;
-> +	unsigned long minsz;
-> +	struct mm_struct *mm;
-> +	struct vfio_mm *vfio_mm;
-> +	struct vfio_iommu_type1_bind_process params;
-> +
-> +	minsz = sizeof(*bind) + sizeof(params);
-> +	if (bind->argsz < minsz)
-> +		return -EINVAL;
-> +
-> +	arg += sizeof(*bind);
-> +	if (copy_from_user(&params, arg, sizeof(params)))
-> +		return -EFAULT;
-> +
-> +	if (params.flags & ~VFIO_IOMMU_BIND_PID)
-> +		return -EINVAL;
-> +
-> +	/*
-> +	 * We can't simply unbind a foreign process by PASID, because the
-> +	 * process might have died and the PASID might have been reallocated to
-> +	 * another process. Instead we need to fetch that process mm by PID
-> +	 * again to make sure we remove the right vfio_mm. In addition, holding
-> +	 * the mm guarantees that mm_users isn't dropped while we unbind and the
-> +	 * exit_mm handler doesn't fire. While not strictly necessary, not
-> +	 * having to care about that race simplifies everyone's life.
-> +	 */
-> +	if (params.flags & VFIO_IOMMU_BIND_PID) {
-> +		mm = vfio_iommu_get_mm_by_vpid(params.pid);
-> +		if (IS_ERR(mm))
-> +			return PTR_ERR(mm);
-> +	} else {
-> +		mm = get_task_mm(current);
-> +		if (!mm)
-> +			return -EINVAL;
-> +	}
-> +
-
-I think you can merge mm failure in both states.
-
-> +	ret = -ESRCH;
-> +	mutex_lock(&iommu->lock);
-> +	list_for_each_entry(vfio_mm, &iommu->mm_list, next) {
-> +		if (vfio_mm->mm != mm)
-> +			continue;
-> +
-
-these loops look wierd 
-1. for loops + break 
-2. for loops + goto
-
-how about closing the for loop here. and then return here if not vfio_mm
-not found.
-
-
-> +		vfio_iommu_unbind(iommu, vfio_mm);
-> +		list_del(&vfio_mm->next);
-> +		kfree(vfio_mm);
-> +		ret = 0;
-> +		break;
-> +	}
-> +	mutex_unlock(&iommu->lock);
-> +	mmput(mm);
-> +
-> +	return ret;
-> +}
-> +
-
+diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
+new file mode 100644
+index 0000000..213181f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
+@@ -0,0 +1,33 @@
++Hisilicon Hip06 low-pin-count device
++  Hisilicon Hip06 SoCs implement a Low Pin Count (LPC) controller, which
++  provides I/O access to some legacy ISA devices.
++  Hip06 is based on arm64 architecture where there is no I/O space. So, the
++  I/O ports here are not cpu addresses, and there is no 'ranges' property in
++  LPC device node.
++
++Required properties:
++- compatible:  value should be as follows:
++	(a) "hisilicon,hip06-lpc"
++	(b) "hisilicon,hip07-lpc"
++- #address-cells: must be 2 which stick to the ISA/EISA binding doc.
++- #size-cells: must be 1 which stick to the ISA/EISA binding doc.
++- reg: base memory range where the LPC register set is mapped.
++
++Note:
++  The node name before '@' must be "isa" to represent the binding stick to the
++  ISA/EISA binding specification.
++
++Example:
++
++isa@a01b0000 {
++	compatible = "hisilicon,hip06-lpc";
++	#address-cells = <2>;
++	#size-cells = <1>;
++	reg = <0x0 0xa01b0000 0x0 0x1000>;
++
++	ipmi0: bt@e4 {
++		compatible = "ipmi-bt";
++		device_type = "ipmi";
++		reg = <0x01 0xe4 0x04>;
++	};
++};
+diff --git a/drivers/bus/Kconfig b/drivers/bus/Kconfig
+index 57e011d..91debe4 100644
+--- a/drivers/bus/Kconfig
++++ b/drivers/bus/Kconfig
+@@ -65,6 +65,14 @@ config BRCMSTB_GISB_ARB
+ 	  arbiter. This driver provides timeout and target abort error handling
+ 	  and internal bus master decoding.
+ 
++config HISILICON_LPC
++	bool "Support for ISA I/O space on Hisilicon hip06/7"
++	depends on (ARM64 && (ARCH_HISI || COMPILE_TEST))
++	select INDIRECT_PIO
++	help
++	  Driver needed for some legacy ISA devices attached to Low-Pin-Count
++	  on Hisilicon hip06/7 SoC.
++
+ config IMX_WEIM
+ 	bool "Freescale EIM DRIVER"
+ 	depends on ARCH_MXC
+diff --git a/drivers/bus/Makefile b/drivers/bus/Makefile
+index 9bcd0bf..abc7a42 100644
+--- a/drivers/bus/Makefile
++++ b/drivers/bus/Makefile
+@@ -8,6 +8,7 @@ obj-$(CONFIG_ARM_CCI)		+= arm-cci.o
+ obj-$(CONFIG_ARM_CCN)		+= arm-ccn.o
+ 
+ obj-$(CONFIG_BRCMSTB_GISB_ARB)	+= brcmstb_gisb.o
++obj-$(CONFIG_HISILICON_LPC)	+= hisi_lpc.o
+ obj-$(CONFIG_IMX_WEIM)		+= imx-weim.o
+ obj-$(CONFIG_MIPS_CDMM)		+= mips_cdmm.o
+ obj-$(CONFIG_MVEBU_MBUS) 	+= mvebu-mbus.o
+diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
+new file mode 100644
+index 0000000..8036291
+--- /dev/null
++++ b/drivers/bus/hisi_lpc.c
+@@ -0,0 +1,449 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
++ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
++ * Author: Zou Rongrong <zourongrong@huawei.com>
++ * Author: John Garry <john.garry@huawei.com>
++ *
++ */
++
++#include <linux/acpi.h>
++#include <linux/console.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/logic_pio.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/of_platform.h>
++#include <linux/pci.h>
++#include <linux/slab.h>
++
++#define DRV_NAME "hisi-lpc"
++
++/*
++ * Setting this bit means each IO operation will target to a
++ * different port address:
++ * 0 means repeatedly IO operations will stick on the same port,
++ * such as BT;
++ */
++#define FG_INCRADDR_LPC		0x02
++
++struct lpc_cycle_para {
++	unsigned int opflags;
++	unsigned int csize; /* the data length of each operation */
++};
++
++struct hisi_lpc_dev {
++	spinlock_t cycle_lock;
++	void __iomem  *membase;
++	struct logic_pio_hwaddr *io_host;
++};
++
++/* The maximum continuous cycles per burst */
++#define LPC_MAX_BURST	16
++/* The IO cycle counts supported is four per operation at maximum */
++#define LPC_MAX_DULEN	4
++#if LPC_MAX_DULEN > LPC_MAX_BURST
++#error "LPC.. MAX_DULEN must be not bigger than MAX_OPCNT!"
++#endif
++
++#if LPC_MAX_BURST % LPC_MAX_DULEN
++#error "LPC.. LPC_MAX_BURST must be multiple of LPC_MAX_DULEN!"
++#endif
++
++#define LPC_REG_START		0x00 /* start a new LPC cycle */
++#define LPC_REG_OP_STATUS	0x04 /* the current LPC status */
++#define LPC_REG_IRQ_ST		0x08 /* interrupt enable&status */
++#define LPC_REG_OP_LEN		0x10 /* how many LPC cycles each start */
++#define LPC_REG_CMD		0x14 /* command for the required LPC cycle */
++#define LPC_REG_ADDR		0x20 /* LPC target address */
++#define LPC_REG_WDATA		0x24 /* data to be written */
++#define LPC_REG_RDATA		0x28 /* data coming from peer */
++
++
++/* The command register fields */
++#define LPC_CMD_SAMEADDR	0x08
++#define LPC_CMD_TYPE_IO		0x00
++#define LPC_CMD_WRITE		0x01
++#define LPC_CMD_READ		0x00
++/* the bit attribute is W1C. 1 represents OK. */
++#define LPC_STAT_BYIRQ		0x02
++
++#define LPC_STATUS_IDLE		0x01
++#define LPC_OP_FINISHED		0x02
++
++#define LPC_START_WORK		0x01
++
++/* The minimal nanosecond interval for each query on LPC cycle status. */
++#define LPC_NSEC_PERWAIT	100
++
++/*
++ * The maximum waiting time is about 128us.
++ * It is specific for stream I/O, such as ins.
++ * The fastest IO cycle time is about 390ns, but the worst case will wait
++ * for extra 256 lpc clocks, so (256 + 13) * 30ns = 8 us. The maximum
++ * burst cycles is 16. So, the maximum waiting time is about 128us under
++ * worst case.
++ * choose 1300 as the maximum.
++ */
++#define LPC_MAX_WAITCNT		1300
++/* About 10us. This is specific for single IO operation, such as inb. */
++#define LPC_PEROP_WAITCNT	100
++
++static inline int wait_lpc_idle(unsigned char *mbase,
++				unsigned int waitcnt) {
++	u32 opstatus;
++
++	while (waitcnt--) {
++		ndelay(LPC_NSEC_PERWAIT);
++		opstatus = readl(mbase + LPC_REG_OP_STATUS);
++		if (opstatus & LPC_STATUS_IDLE)
++			return (opstatus & LPC_OP_FINISHED) ? 0 : (-EIO);
++	}
++	return -ETIME;
++}
++
++/*
++ * hisi_lpc_target_in - trigger a series of LPC cycles for read operation
++ * @lpcdev: pointer to hisi lpc device
++ * @para: some parameters used to control the lpc I/O operations
++ * @addr: the lpc I/O target port address
++ * @buf: where the read back data is stored
++ * @opcnt: how many I/O operations required, i.e. data width
++ *
++ * Returns 0 on success, non-zero on fail.
++ */
++static int
++hisi_lpc_target_in(struct hisi_lpc_dev *lpcdev, struct lpc_cycle_para *para,
++		  unsigned long addr, unsigned char *buf,
++		  unsigned long opcnt)
++{
++	unsigned int cmd_word;
++	unsigned int waitcnt;
++	unsigned long flags;
++	int ret;
++
++	if (!buf || !opcnt || !para || !para->csize || !lpcdev)
++		return -EINVAL;
++
++	cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_READ;
++	waitcnt = LPC_PEROP_WAITCNT;
++	if (!(para->opflags & FG_INCRADDR_LPC)) {
++		cmd_word |= LPC_CMD_SAMEADDR;
++		waitcnt = LPC_MAX_WAITCNT;
++	}
++
++	ret = 0;
++
++	/* whole operation must be atomic */
++	spin_lock_irqsave(&lpcdev->cycle_lock, flags);
++
++	writel_relaxed(opcnt, lpcdev->membase + LPC_REG_OP_LEN);
++
++	writel_relaxed(cmd_word, lpcdev->membase + LPC_REG_CMD);
++
++	writel_relaxed(addr, lpcdev->membase + LPC_REG_ADDR);
++
++	writel(LPC_START_WORK, lpcdev->membase + LPC_REG_START);
++
++	/* whether the operation is finished */
++	ret = wait_lpc_idle(lpcdev->membase, waitcnt);
++	if (!ret) {
++		for (; opcnt; opcnt--, buf++)
++			*buf = readb(lpcdev->membase + LPC_REG_RDATA);
++	}
++
++	spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
++
++	return ret;
++}
++
++/*
++ * hisi_lpc_target_out - trigger a series of LPC cycles for write operation
++ * @lpcdev: pointer to hisi lpc device
++ * @para: some parameters used to control the lpc I/O operations
++ * @addr: the lpc I/O target port address
++ * @buf: where the data to be written is stored
++ * @opcnt: how many I/O operations required, i.e. data width
++ *
++ * Returns 0 on success, non-zero on fail.
++ */
++static int
++hisi_lpc_target_out(struct hisi_lpc_dev *lpcdev, struct lpc_cycle_para *para,
++		    unsigned long addr, const unsigned char *buf,
++		    unsigned long opcnt)
++{
++	unsigned int cmd_word;
++	unsigned int waitcnt;
++	unsigned long flags;
++	int ret;
++
++	if (!buf || !opcnt || !para || !lpcdev)
++		return -EINVAL;
++
++	/* default is increasing address */
++	cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_WRITE;
++	waitcnt = LPC_PEROP_WAITCNT;
++	if (!(para->opflags & FG_INCRADDR_LPC)) {
++		cmd_word |= LPC_CMD_SAMEADDR;
++		waitcnt = LPC_MAX_WAITCNT;
++	}
++
++	spin_lock_irqsave(&lpcdev->cycle_lock, flags);
++
++	writel_relaxed(opcnt, lpcdev->membase + LPC_REG_OP_LEN);
++	writel_relaxed(cmd_word, lpcdev->membase + LPC_REG_CMD);
++	writel_relaxed(addr, lpcdev->membase + LPC_REG_ADDR);
++
++	for (; opcnt; buf++, opcnt--)
++		writeb(*buf, lpcdev->membase + LPC_REG_WDATA);
++
++	writel(LPC_START_WORK, lpcdev->membase + LPC_REG_START);
++
++	/* whether the operation is finished */
++	ret = wait_lpc_idle(lpcdev->membase, waitcnt);
++
++	spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
++
++	return ret;
++}
++
++static inline unsigned long
++hisi_lpc_pio_to_addr(struct hisi_lpc_dev *lpcdev, unsigned long pio)
++{
++	return pio - lpcdev->io_host->io_start +
++		lpcdev->io_host->hw_start;
++}
++
++/*
++ * hisi_lpc_comm_in - input the data in a single operation
++ * @hostdata: pointer to the device information relevant to LPC controller.
++ * @pio: the target I/O port address.
++ * @dwidth: the data length required to read from the target I/O port.
++ *
++ * When success, data is returned. Otherwise, -1 is returned.
++ */
++static u32 hisi_lpc_comm_in(void *hostdata, unsigned long pio, size_t dwidth)
++{
++	struct hisi_lpc_dev *lpcdev = hostdata;
++	struct lpc_cycle_para iopara;
++	u32 rd_data = 0;
++	unsigned long addr;
++	int ret = 0;
++
++	if (!lpcdev || !dwidth || dwidth > LPC_MAX_DULEN)
++		return -1;
++
++	addr = hisi_lpc_pio_to_addr(lpcdev, pio);
++
++	iopara.opflags = FG_INCRADDR_LPC;
++	iopara.csize = dwidth;
++
++	ret = hisi_lpc_target_in(lpcdev, &iopara, addr,
++				 (unsigned char *)&rd_data, dwidth);
++	if (ret)
++		return -1;
++
++	return le32_to_cpu(rd_data);
++}
++
++/*
++ * hisi_lpc_comm_out - output the data in a single operation
++ * @hostdata: pointer to the device information relevant to LPC controller.
++ * @pio: the target I/O port address.
++ * @val: a value to be outputted from caller, maximum is four bytes.
++ * @dwidth: the data width required writing to the target I/O port.
++ *
++ * This function is corresponding to out(b,w,l) only
++ *
++ */
++static void hisi_lpc_comm_out(void *hostdata, unsigned long pio,
++			     u32 val, size_t dwidth)
++{
++	struct hisi_lpc_dev *lpcdev = hostdata;
++	struct lpc_cycle_para iopara;
++	const unsigned char *buf;
++	unsigned long addr;
++
++	if (!lpcdev || !dwidth || dwidth > LPC_MAX_DULEN)
++		return;
++
++	val = cpu_to_le32(val);
++
++	buf = (const unsigned char *)&val;
++	addr = hisi_lpc_pio_to_addr(lpcdev, pio);
++
++	iopara.opflags = FG_INCRADDR_LPC;
++	iopara.csize = dwidth;
++
++	hisi_lpc_target_out(lpcdev, &iopara, addr, buf, dwidth);
++}
++
++/*
++ * hisi_lpc_comm_ins - input the data in the buffer in multiple operations
++ * @hostdata: pointer to the device information relevant to LPC controller.
++ * @pio: the target I/O port address.
++ * @buffer: a buffer where read/input data bytes are stored.
++ * @dwidth: the data width required writing to the target I/O port.
++ * @count: how many data units whose length is dwidth will be read.
++ *
++ * When success, the data read back is stored in buffer pointed by buffer.
++ * Returns 0 on success, -errno otherwise
++ *
++ */
++static u32
++hisi_lpc_comm_ins(void *hostdata, unsigned long pio, void *buffer,
++		  size_t dwidth, unsigned int count)
++{
++	struct hisi_lpc_dev *lpcdev = hostdata;
++	unsigned char *buf = buffer;
++	struct lpc_cycle_para iopara;
++	unsigned long addr;
++
++	if (!lpcdev || !buf || !count || !dwidth || dwidth > LPC_MAX_DULEN)
++		return -EINVAL;
++
++	iopara.opflags = 0;
++	if (dwidth > 1)
++		iopara.opflags |= FG_INCRADDR_LPC;
++	iopara.csize = dwidth;
++
++	addr = hisi_lpc_pio_to_addr(lpcdev, pio);
++
++	do {
++		int ret;
++
++		ret = hisi_lpc_target_in(lpcdev, &iopara, addr,
++					buf, dwidth);
++		if (ret)
++			return ret;
++		buf += dwidth;
++		count--;
++	} while (count);
++
++	return 0;
++}
++
++/*
++ * hisi_lpc_comm_outs - output the data in the buffer in multiple operations
++ * @hostdata: pointer to the device information relevant to LPC controller.
++ * @pio: the target I/O port address.
++ * @buffer: a buffer where write/output data bytes are stored.
++ * @dwidth: the data width required writing to the target I/O port .
++ * @count: how many data units whose length is dwidth will be written.
++ *
++ */
++static void
++hisi_lpc_comm_outs(void *hostdata, unsigned long pio, const void *buffer,
++		   size_t dwidth, unsigned int count)
++{
++	struct hisi_lpc_dev *lpcdev = hostdata;
++	struct lpc_cycle_para iopara;
++	const unsigned char *buf = buffer;
++	unsigned long addr;
++
++	if (!lpcdev || !buf || !count || !dwidth || dwidth > LPC_MAX_DULEN)
++		return;
++
++	iopara.opflags = 0;
++	if (dwidth > 1)
++		iopara.opflags |= FG_INCRADDR_LPC;
++	iopara.csize = dwidth;
++
++	addr = hisi_lpc_pio_to_addr(lpcdev, pio);
++	do {
++		if (hisi_lpc_target_out(lpcdev, &iopara, addr, buf,
++						dwidth))
++			break;
++		buf += dwidth;
++		count--;
++	} while (count);
++}
++
++static const struct logic_pio_host_ops hisi_lpc_ops = {
++	.in = hisi_lpc_comm_in,
++	.out = hisi_lpc_comm_out,
++	.ins = hisi_lpc_comm_ins,
++	.outs = hisi_lpc_comm_outs,
++};
++
++/*
++ * hisi_lpc_probe - the probe callback function for hisi lpc host,
++ *		   will finish all the initialization.
++ * @pdev: the platform device corresponding to hisi lpc host
++ *
++ * Returns 0 on success, non-zero on fail.
++ */
++static int hisi_lpc_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct acpi_device *acpi_device = ACPI_COMPANION(dev);
++	struct logic_pio_hwaddr *range;
++	struct hisi_lpc_dev *lpcdev;
++	struct resource *res;
++	int ret = 0;
++
++	lpcdev = devm_kzalloc(dev, sizeof(struct hisi_lpc_dev), GFP_KERNEL);
++	if (!lpcdev)
++		return -ENOMEM;
++
++	spin_lock_init(&lpcdev->cycle_lock);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -ENODEV;
++
++	lpcdev->membase = devm_ioremap_resource(dev, res);
++	if (IS_ERR(lpcdev->membase)) {
++		dev_err(dev, "remap failed\n");
++		return PTR_ERR(lpcdev->membase);
++	}
++
++	range = devm_kzalloc(dev, sizeof(*range), GFP_KERNEL);
++	if (!range)
++		return -ENOMEM;
++	range->fwnode = dev->fwnode;
++	range->flags = PIO_INDIRECT;
++	range->size = PIO_INDIRECT_SIZE;
++
++	ret = logic_pio_register_range(range);
++	if (ret) {
++		dev_err(dev, "register IO range failed (%d)!\n", ret);
++		return ret;
++	}
++	lpcdev->io_host = range;
++
++	/* register the LPC host PIO resources */
++	if (!acpi_device)
++		ret = of_platform_populate(dev->of_node, NULL, NULL, dev);
++	if (ret) {
++		dev_err(dev, "populate children failed (%d)\n", ret);
++		return ret;
++	}
++
++	lpcdev->io_host->hostdata = lpcdev;
++	lpcdev->io_host->ops = &hisi_lpc_ops;
++
++	dev_info(dev, "registered range[%pa - sz:%pa]\n",
++		 &lpcdev->io_host->io_start,
++		 &lpcdev->io_host->size);
++
++	return ret;
++}
++
++static const struct of_device_id hisi_lpc_of_match[] = {
++	{ .compatible = "hisilicon,hip06-lpc", },
++	{ .compatible = "hisilicon,hip07-lpc", },
++	{}
++};
++
++static struct platform_driver hisi_lpc_driver = {
++	.driver = {
++		.name           = DRV_NAME,
++		.of_match_table = hisi_lpc_of_match,
++	},
++	.probe = hisi_lpc_probe,
++};
++
++builtin_platform_driver(hisi_lpc_driver);
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+1.9.1
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
