@@ -1,88 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: kishon@ti.com
-Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        andy.shevchenko@gmail.com,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Subject: [PATCH v5 1/3] PCI: endpoint: Simplify name allocation for EPF device
-Date: Wed, 28 Feb 2018 18:32:18 +0100
-Message-Id: <20180228173220.544-2-embedded24@evers-fischer.de>
-In-Reply-To: <20180228173220.544-1-embedded24@evers-fischer.de>
-References: <20180228173220.544-1-embedded24@evers-fischer.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=+pYx=FN=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=+pYx=FN=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Jayachandran Nair <Jayachandran.Nair@cavium.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>, Robert Richter <Robert.Richter@cavium.com>, Tom Vaden <tom.vaden@hpe.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, George Cherian <george.cherian@cavium.com>
+Subject: Re: [PATCH v1 1/2] PCI: Probe for device reset support before driver claim
+Date: Mon, 19 Feb 2018 13:59:38 +0100
+Message-ID: <9067468.WjanRiEMkP@aspire.rjw.lan>
+In-Reply-To: <20180216225010.67295.92539.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180216224213.67295.2251.stgit@bhelgaas-glaptop.roam.corp.google.com> <20180216225010.67295.92539.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+On Friday, February 16, 2018 11:50:11 PM CET Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Previously we called pci_probe_reset_function() in this path:
+> 
+>   pci_sysfs_init                              # late_initcall
+>     for_each_pci_dev(dev)
+>       pci_create_sysfs_dev_files(dev)
+> 	pci_create_capabilities_sysfs(dev)
+> 	  pci_probe_reset_function
+> 	    pci_dev_specific_reset
+> 	    pcie_has_flr
+>               pcie_capability_read_dword
+> 
+> pci_sysfs_init() is a late_initcall, and a driver may have already claimed
+> one of these devices and enabled runtime power management for it, so the
+> device could already be in D3hot by the time we get to pci_sysfs_init().
 
-This commit replaces allocating and freeing the intermediate
-'buf'/'func_name' with a combination of 'kstrndup()' and 'len'.
+It also may be in D3cold if, say, AML can cut off power from it or ACPI
+power resources can be used for that.
 
-'len' is the required length of 'epf->name'.
-'epf->name' should be either the first part of 'name' preceding the '.'
-or the complete 'name', if there is no '.' in the name.
+> The device itself should respond to the config read even while it's in
+> D3hot, but if an upstream bridge is also in D3hot, the read won't even
+> reach the device because the bridge won't forward it downstream to the
+> device.  If the bridge is a PCIe port, it should complete the read as an
+> Unsupported Request, which may be reported to the CPU as an exception or as
+> invalid data.
+> 
+> Avoid this case by probing for reset support from pci_init_capabilities(),
+> before a driver can claim the device.  The device should be in D0 and fully
+> accessible at that point.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/pci/endpoint/pci-epf-core.c | 22 ++++------------------
- 1 file changed, 4 insertions(+), 18 deletions(-)
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 766ce1dca2ec..1f2506f32bb9 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -200,8 +200,7 @@ struct pci_epf *pci_epf_create(const char *name)
- 	int ret;
- 	struct pci_epf *epf;
- 	struct device *dev;
--	char *func_name;
--	char *buf;
-+	int len;
- 
- 	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
- 	if (!epf) {
-@@ -209,20 +208,11 @@ struct pci_epf *pci_epf_create(const char *name)
- 		goto err_ret;
- 	}
- 
--	buf = kstrdup(name, GFP_KERNEL);
--	if (!buf) {
--		ret = -ENOMEM;
--		goto free_epf;
--	}
--
--	func_name = buf;
--	buf = strchrnul(buf, '.');
--	*buf = '\0';
--
--	epf->name = kstrdup(func_name, GFP_KERNEL);
-+	len = strchrnul(name, '.') - name;
-+	epf->name = kstrndup(name, len, GFP_KERNEL);
- 	if (!epf->name) {
- 		ret = -ENOMEM;
--		goto free_func_name;
-+		goto free_epf;
- 	}
- 
- 	dev = &epf->dev;
-@@ -238,16 +228,12 @@ struct pci_epf *pci_epf_create(const char *name)
- 	if (ret)
- 		goto put_dev;
- 
--	kfree(func_name);
- 	return epf;
- 
- put_dev:
- 	put_device(dev);
- 	kfree(epf->name);
- 
--free_func_name:
--	kfree(func_name);
--
- free_epf:
- 	kfree(epf);
- 
--- 
-2.16.2
+> ---
+>  drivers/pci/pci-sysfs.c |    3 +--
+>  drivers/pci/probe.c     |    3 +++
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index eb6bee8724cc..4933f0270471 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1542,11 +1542,10 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+>  	/* Active State Power Management */
+>  	pcie_aspm_create_sysfs_dev_files(dev);
+>  
+> -	if (!pci_probe_reset_function(dev)) {
+> +	if (dev->reset_fn) {
+>  		retval = device_create_file(&dev->dev, &reset_attr);
+>  		if (retval)
+>  			goto error;
+> -		dev->reset_fn = 1;
+>  	}
+>  	return 0;
+>  
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ef5377438a1e..489660d0d384 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2121,6 +2121,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  
+>  	/* Advanced Error Reporting */
+>  	pci_aer_init(dev);
+> +
+> +	if (pci_probe_reset_function(dev) == 0)
+> +		dev->reset_fn = 1;
+>  }
+>  
+>  /*
+> 
+> 
