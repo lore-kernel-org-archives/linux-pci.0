@@ -1,35 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51108 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753763AbeBGOLi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Feb 2018 09:11:38 -0500
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sun, 18 Feb 2018 21:10:59 -0600
+From: Rob Herring <robh@kernel.org>
+To: Ryder Lee <ryder.lee@mediatek.com>
+Subject: Re: [PATCH] dt-bindings: PCI: MediaTek: fix dtc warnings
+Message-ID: <20180219031059.jdv3q4big6c4ra7p@rob-hp-laptop>
+References: <9940757fe2889f46d0de214c5f277bf3c2074205.1518577579.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Subject: Re: [v3,1/2] pci: Add vendor id of Ubiquiti Networks
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20180125111340.17553-2-tobleminer@gmail.com>
-References: <20180125111340.17553-2-tobleminer@gmail.com>
-To: Tobias Schramm <tobleminer@gmail.com>
-Cc: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, Tobias Schramm <tobleminer@gmail.com>
-Message-Id: <20180207141137.B778060767@smtp.codeaurora.org>
-Date: Wed,  7 Feb 2018 14:11:37 +0000 (UTC)
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <9940757fe2889f46d0de214c5f277bf3c2074205.1518577579.git.ryder.lee@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tobias Schramm <tobleminer@gmail.com> wrote:
+On Wed, Feb 14, 2018 at 11:27:58AM +0800, Ryder Lee wrote:
+> dtc recently added PCI bus checks. Fix these warnings:
+> 
+> Warning (pci_bridge): Node /pcie@1a140000/pcie@0,0 missing bus-range for PCI bridge
+> Warning (pci_bridge): Node /pcie@1a140000/pcie@1,0 missing bus-range for PCI bridge
+> Warning (pci_bridge): Node /pcie@1a140000/pcie@2,0 missing bus-range for PCI bridge
+> Warning (unit_address_format): Failed prerequisite 'pci_bridge'
+> Warning (pci_device_reg): Failed prerequisite 'pci_bridge'
+> Warning (pci_device_bus_num): Failed prerequisite 'pci_bridge'
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+>  Documentation/devicetree/bindings/pci/mediatek-pcie.txt | 11 +++--------
+>  1 file changed, 3 insertions(+), 8 deletions(-)
 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Tobias Schramm <tobleminer@gmail.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
 
-2 patches applied to ath-current branch of ath.git, thanks.
 
-d5cc61119343 PCI: Add Ubiquiti Networks vendor ID
-34f1cb339cae ath10k: add support for Ubiquiti rebranded QCA988X v2
-
--- 
-https://patchwork.kernel.org/patch/10183907/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
