@@ -1,42 +1,76 @@
-Return-Path: <SRS0=iNvw=FQ=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=iNvw=FQ=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=+pYx=FN=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=+pYx=FN=rjwysocki.net=rjw@kernel.org>
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: George Cherian <gcherian@caviumnetworks.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, bhelgaas@google.com, Jayachandran.Nair@cavium.com, Robert.Richter@cavium.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Huang Ying <ying.huang@intel.com>
-Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
-Date: Thu, 22 Feb 2018 11:19:12 +0100
-Message-ID: <1606177.uAVMQdvpea@aspire.rjw.lan>
-In-Reply-To: <20180222083543.GA14945@wunner.de>
-References: <1517554846-16703-1-git-send-email-george.cherian@cavium.com> <20180221232040.GA52685@bhelgaas-glaptop.roam.corp.google.com> <20180222083543.GA14945@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Jayachandran Nair <Jayachandran.Nair@cavium.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>, Robert Richter <Robert.Richter@cavium.com>, Tom Vaden <tom.vaden@hpe.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, George Cherian <george.cherian@cavium.com>
+Subject: Re: [PATCH v1 2/2] PCI: Remove redundant probes for device reset support
+Date: Mon, 19 Feb 2018 14:00:53 +0100
+Message-ID: <5209987.iOvtupYxAV@aspire.rjw.lan>
+In-Reply-To: <20180216225018.67295.36860.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180216224213.67295.2251.stgit@bhelgaas-glaptop.roam.corp.google.com> <20180216225018.67295.36860.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, February 22, 2018 9:35:43 AM CET Lukas Wunner wrote:
-> On Wed, Feb 21, 2018 at 05:20:40PM -0600, Bjorn Helgaas wrote:
-> > On Wed, Feb 21, 2018 at 04:25:08PM +0530, George Cherian wrote:
-> > > I have found another configuration where this fails.
-> > > Following is the configuration
-> > > 1) Connected a PCIe Intel i40 card under the root port.
-> > > 2) unbind the i40 driver and bind with vfio-pci driver.
-> > > 3) Run lspci in a loop. "lspci -s xx:xx.xx -vvv"
-> > > 
-> > > I get the same synchronous external abort.
-> > > In this case the vfio-pci driver probe it moves the device (i40) to
-> > > D3hot provided disable_idle_d3 is not set. lspci tries to do
-> > > the config_access which fails with synchronous external abort when
-> > > the root port transitions to D3hot.
-> > 
-> > It *looks* like rpm_resume() should resume parent devices, i.e., the
-> > root port, but I don't know that code at all.
+On Friday, February 16, 2018 11:50:18 PM CET Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> It does that unless the ignore_children flag is set, which only few
-> drivers do.
+> We probe every device for whether it supports reset so we can tell whether
+> to create a sysfs "reset" file for it.  We do that probe in
+> pci_init_capabilities() during enumeration and save the result in
+> dev->reset_fn.  The result doesn't depend on any other devices on the bus
+> and shouldn't change after boot, so we don't need to do the probe again.
+> 
+> Remove the pci_probe_reset_function() calls and rely on the dev->reset_fn
+> we found during enumeration.  No functional change intended.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Right.
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-And the PCIe port driver doesn't do that in particular, so PCIe ports
-should be resumed by the resume of devices below them.
-
-Thanks,
-Rafael
+> ---
+>  drivers/pci/pci.c |   15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f6a4dd10d9b0..4db740e4f50a 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4450,9 +4450,8 @@ int pci_reset_function(struct pci_dev *dev)
+>  {
+>  	int rc;
+>  
+> -	rc = pci_probe_reset_function(dev);
+> -	if (rc)
+> -		return rc;
+> +	if (!dev->reset_fn)
+> +		return -ENOTTY;
+>  
+>  	pci_dev_lock(dev);
+>  	pci_dev_save_and_disable(dev);
+> @@ -4487,9 +4486,8 @@ int pci_reset_function_locked(struct pci_dev *dev)
+>  {
+>  	int rc;
+>  
+> -	rc = pci_probe_reset_function(dev);
+> -	if (rc)
+> -		return rc;
+> +	if (!dev->reset_fn)
+> +		return -ENOTTY;
+>  
+>  	pci_dev_save_and_disable(dev);
+>  
+> @@ -4511,9 +4509,8 @@ int pci_try_reset_function(struct pci_dev *dev)
+>  {
+>  	int rc;
+>  
+> -	rc = pci_probe_reset_function(dev);
+> -	if (rc)
+> -		return rc;
+> +	if (!dev->reset_fn)
+> +		return -ENOTTY;
+>  
+>  	if (!pci_dev_trylock(dev))
+>  		return -EAGAIN;
+> 
+> 
