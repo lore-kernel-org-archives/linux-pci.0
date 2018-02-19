@@ -1,43 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:42861 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932143AbeCABXX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 20:23:23 -0500
-Received: by mail-pf0-f193.google.com with SMTP id a16so1776398pfn.9
-        for <linux-pci@vger.kernel.org>; Wed, 28 Feb 2018 17:23:23 -0800 (PST)
-Date: Thu, 1 Mar 2018 09:22:46 +0800
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
-        Fabio Estevam <festevam@gmail.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        Jiancheng Xue <xuejiancheng@hisilicon.com>
-Subject: Re: [PATCH v2 0/2] Add power control for pcie-histb driver
-Message-ID: <20180301012241.GA28619@dragon>
-References: <1516722337-1533-1-git-send-email-shawn.guo@linaro.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sun, 18 Feb 2018 20:51:07 -0600
+From: Rob Herring <robh@kernel.org>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH 11/37] dt-bindings: document stall and PASID properties
+ for IOMMU masters
+Message-ID: <20180219025107.v3f3eapukupm7g5j@rob-hp-laptop>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-12-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1516722337-1533-1-git-send-email-shawn.guo@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180212183352.22730-12-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, xieyisheng1@huawei.com, ilias.apalodimas@linaro.org,
+ kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
+ jonathan.cameron@huawei.com, will.deacon@arm.com, okaya@codeaurora.org,
+ lorenzo.pieralisi@arm.com, ashok.raj@intel.com, tn@semihalf.com,
+ joro@8bytes.org, robdclark@gmail.com, bharatku@xilinx.com,
+ linux-acpi@vger.kernel.org, catalin.marinas@arm.com, rfranz@cavium.com,
+ lenb@kernel.org, devicetree@vger.kernel.org, jacob.jun.pan@linux.intel.com,
+ alex.williamson@redhat.com, yi.l.liu@intel.com, thunder.leizhen@huawei.com,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+ shunyong.yang@hxt-semitech.com, dwmw2@infradead.org, liubo95@huawei.com,
+ rjw@rjwysocki.net, jcrouse@codeaurora.org, iommu@lists.linux-foundation.org,
+ hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com,
+ christian.koenig@amd.com, nwatters@codeaurora.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 23, 2018 at 11:45:35PM +0800, Shawn Guo wrote:
-> The first patch is a small fix which is useful for the second one.
-> This version basically follows Fabio's suggestion to reimplement the
-> first version patch, using a regulator that can be backed by GPIO to
-> control the power to PCIe port.
+On Mon, Feb 12, 2018 at 06:33:26PM +0000, Jean-Philippe Brucker wrote:
+> On ARM systems, some platform devices behind an IOMMU may support stall
+> and PASID features. Stall is the ability to recover from page faults and
+> PASID offers multiple process address spaces to the device. Together they
+> allow to do paging with a device. Let the firmware tell us when a device
+> supports stall and PASID.
 > 
-> Shawn Guo (2):
->   PCI: histb: fix error path of histb_pcie_host_enable()
->   PCI: histb: add an optional regulator for PCIe port power control
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> ---
+>  Documentation/devicetree/bindings/iommu/iommu.txt | 24 +++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
 > 
->  .../bindings/pci/hisilicon-histb-pcie.txt          |  1 +
->  drivers/pci/dwc/pcie-histb.c                       | 28 ++++++++++++++++++----
->  2 files changed, 25 insertions(+), 4 deletions(-)
+> diff --git a/Documentation/devicetree/bindings/iommu/iommu.txt b/Documentation/devicetree/bindings/iommu/iommu.txt
+> index 5a8b4624defc..8066b3852110 100644
+> --- a/Documentation/devicetree/bindings/iommu/iommu.txt
+> +++ b/Documentation/devicetree/bindings/iommu/iommu.txt
+> @@ -86,6 +86,30 @@ have a means to turn off translation. But it is invalid in such cases to
+>  disable the IOMMU's device tree node in the first place because it would
+>  prevent any driver from properly setting up the translations.
+>  
+> +Optional properties:
+> +--------------------
+> +- dma-can-stall: When present, the master can wait for a transaction to
+> +  complete for an indefinite amount of time. Upon translation fault some
+> +  IOMMUs, instead of aborting the translation immediately, may first
+> +  notify the driver and keep the transaction in flight. This allows the OS
+> +  to inspect the fault and, for example, make physical pages resident
+> +  before updating the mappings and completing the transaction. Such IOMMU
+> +  accepts a limited number of simultaneous stalled transactions before
+> +  having to either put back-pressure on the master, or abort new faulting
+> +  transactions.
+> +
+> +  Firmware has to opt-in stalling, because most buses and masters don't
+> +  support it. In particular it isn't compatible with PCI, where
+> +  transactions have to complete before a time limit. More generally it
+> +  won't work in systems and masters that haven't been designed for
+> +  stalling. For example the OS, in order to handle a stalled transaction,
+> +  may attempt to retrieve pages from secondary storage in a stalled
+> +  domain, leading to a deadlock.
+> +
+> +- pasid-bits: Some masters support multiple address spaces for DMA, by
+> +  tagging DMA transactions with an address space identifier. By default,
+> +  this is 0, which means that the device only has one address space.
 
-Hi Bjorn,
+So 3 would mean 8 address spaces?
 
-Did you get a chance to look at the series?
+Maybe pasid-num-bits would be a bit clearer. Either way,
 
-Shawn
+Reviewed-by: Rob Herring <robh@kernel.org>
+
+Rob
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
