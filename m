@@ -1,128 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46236 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753359AbeBLSdS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Feb 2018 13:33:18 -0500
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, okaya@codeaurora.org,
-        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
-        bharatku@xilinx.com
-Subject: [PATCH 24/37] iommu/arm-smmu-v3: Add SVA feature checking
-Date: Mon, 12 Feb 2018 18:33:39 +0000
-Message-Id: <20180212183352.22730-25-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+Received: from mail-yb0-f195.google.com ([209.85.213.195]:37565 "EHLO
+        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932067AbeBSVKo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Feb 2018 16:10:44 -0500
+Received: by mail-yb0-f195.google.com with SMTP id g26-v6so3270864ybj.4
+        for <linux-pci@vger.kernel.org>; Mon, 19 Feb 2018 13:10:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87eflghf60.fsf@devnulllabs.io>
+References: <20180212230457.23181-1-kballou@devnulllabs.io> <87eflghf60.fsf@devnulllabs.io>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 19 Feb 2018 15:10:23 -0600
+Message-ID: <CAErSpo6otjOp99+jH0dNF+V-TFj2rQRd1MOwvYz5GKxzhJW-1w@mail.gmail.com>
+Subject: Re: [PATCH] pci: use kstrtobool over ad hoc string parsing
+To: Kenny Ballou <kballou@devnulllabs.io>
+Cc: linux-pci@vger.kernel.org, googlegot@yahoo.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Aggregate all sanity-checks for sharing CPU page tables with the SMMU
-under a single ARM_SMMU_FEAT_SVA bit. For PCIe SVA, users also need to
-check FEAT_ATS and FEAT_PRI. For platform SVM, they will most likely have
-to check FEAT_STALLS.
+On Mon, Feb 19, 2018 at 2:56 PM, Kenny Ballou <kballou@devnulllabs.io> wrot=
+e:
+>
+> On 2018=E5=B9=B402=E6=9C=8812=E6=97=A5 23:04 GMT, Kenny Ballou wrote:
+>> Convert ROM read access enable/disable string parsing to use the
+>> `kstrtobool` function.
+>>
+>> This fixes Bugzilla Bug 111301 -- Sysfs PCI rom file functionality does
+>> not match documentation.
+>>
+>> bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D111301
+>>
+>> Reported-by: googlegot@yahoo.com
+>> Signed-off-by: Kenny Ballou <kballou@devnulllabs.io>
+>> ---
+>>  drivers/pci/pci-sysfs.c | 8 +++++---
+>>  1 file changed, 5 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index eb6bee8724cc..3cde1f25e786 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -1424,10 +1424,12 @@ static ssize_t pci_write_rom(struct file *filp, =
+struct kobject *kobj,
+>>  {
+>>       struct pci_dev *pdev =3D to_pci_dev(kobj_to_dev(kobj));
+>>
+>> -     if ((off =3D=3D  0) && (*buf =3D=3D '0') && (count =3D=3D 2))
+>> -             pdev->rom_attr_enabled =3D 0;
+>> -     else
+>> +     bool res =3D false;
+>> +
+>> +     if (kstrtobool(buf, &res) =3D=3D 0 && res)
+>>               pdev->rom_attr_enabled =3D 1;
+>> +     else
+>> +             pdev->rom_attr_enabled =3D 0;
+>>
+>>       return count;
+>>  }
+>
+> Bjorn,
+>
+> How does one know if a patch was accepted?  Should I be monitoring
+> patchwork?  What's the status of the quoted patch?  Patchwork doesn't
+> seem to show any changes for this patch.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 60 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
+When I apply or review a patch, I always respond to the original email
+posting of it.  So you don't need to do anything more; I just haven't
+gotten to this one.  I don't see any real issues with this, although
+I'll probably expand the changelog to contain a little more detail
+about exactly what the problem is and how this fixes it.  The bugzilla
+link is great but the changelog itself should have enough information
+to justify the change.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 98690589156b..79bc5b5cceed 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -570,6 +570,7 @@ struct arm_smmu_device {
- #define ARM_SMMU_FEAT_STALL_FORCE	(1 << 13)
- #define ARM_SMMU_FEAT_E2H		(1 << 14)
- #define ARM_SMMU_FEAT_BTM		(1 << 15)
-+#define ARM_SMMU_FEAT_SVA		(1 << 16)
- 	u32				features;
- 
- #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
-@@ -2619,6 +2620,62 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
- 	return 0;
- }
- 
-+static bool arm_smmu_supports_sva(struct arm_smmu_device *smmu)
-+{
-+	unsigned long reg, fld;
-+	unsigned long oas;
-+	unsigned long asid_bits;
-+
-+	u32 feat_mask = ARM_SMMU_FEAT_BTM | ARM_SMMU_FEAT_COHERENCY;
-+
-+	if ((smmu->features & feat_mask) != feat_mask)
-+		return false;
-+
-+	if (!(smmu->pgsize_bitmap & PAGE_SIZE))
-+		return false;
-+
-+	/*
-+	 * Get the smallest PA size of all CPUs (sanitized by cpufeature). We're
-+	 * not even pretending to support AArch32 here.
-+	 */
-+	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
-+	fld = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
-+	switch (fld) {
-+	case 0x0:
-+		oas = 32;
-+		break;
-+	case 0x1:
-+		oas = 36;
-+		break;
-+	case 0x2:
-+		oas = 40;
-+		break;
-+	case 0x3:
-+		oas = 42;
-+		break;
-+	case 0x4:
-+		oas = 44;
-+		break;
-+	case 0x5:
-+		oas = 48;
-+		break;
-+	default:
-+		return false;
-+	}
-+
-+	/* abort if MMU outputs addresses greater than what we support. */
-+	if (smmu->oas < oas)
-+		return false;
-+
-+	/* We can support bigger ASIDs than the CPU, but not smaller */
-+	fld = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_ASID_SHIFT);
-+	asid_bits = fld ? 16 : 8;
-+	if (smmu->asid_bits < asid_bits)
-+		return false;
-+
-+	return true;
-+}
-+
- static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- {
- 	u32 reg;
-@@ -2813,6 +2870,9 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 
- 	smmu->ias = max(smmu->ias, smmu->oas);
- 
-+	if (arm_smmu_supports_sva(smmu))
-+		smmu->features |= ARM_SMMU_FEAT_SVA;
-+
- 	dev_info(smmu->dev, "ias %lu-bit, oas %lu-bit (features 0x%08x)\n",
- 		 smmu->ias, smmu->oas, smmu->features);
- 	return 0;
--- 
-2.15.1
+Bjorn
