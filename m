@@ -1,58 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:37713 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752195AbeB1MEh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 07:04:37 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
-Subject: [PATCH v8 0/9] PCI: dwc: Enables MSI-X driver support
-Date: Wed, 28 Feb 2018 12:04:13 +0000
-Message-Id: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
+Received: from smtp-fw-6001.amazon.com ([52.95.48.154]:23263 "EHLO
+        smtp-fw-6001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752638AbeBSNCn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Feb 2018 08:02:43 -0500
+From: David Woodhouse <dwmw@amazon.co.uk>
+To: chris@zankel.net, jcmvbkbc@gmail.com,
+        linux-xtensa@linux-xtensa.org, bhelgaas@google.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH] xtensa: Use generic pci_mmap_resource_range()
+Date: Mon, 19 Feb 2018 13:02:33 +0000
+Message-Id: <1519045353-22496-1-git-send-email-dwmw@amazon.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes into a new IRQ handler mechanism (multiplexed IRQ domain hierarchy)
-more suitable and appropriate to use on pcie-designware and on each SoC
-specific driver in order to allow new and more complex features like MSI-X.
+Commit f719582435 ("PCI: Add pci_mmap_resource_range() and use it for
+ARM64") added this generic function with the intent of using it
+everywhere and ultimately killing the old arch-specific implementations.
 
-Adds Synopsys Root Complex driver support for MSI-X feature.
+Let's get on with that eradication...
 
-Expands the maximum number of IRQs from 32 to 256 distributed by
-a maximum of 8 controller registers.
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ arch/xtensa/include/asm/pci.h |  7 ++--
+ arch/xtensa/kernel/pci.c      | 94 ++++---------------------------------------
+ 2 files changed, 12 insertions(+), 89 deletions(-)
 
-The patch set was made against the Bjorn's master branch (v4.16-rc1).
-
-Gustavo Pimentel (9):
-  PCI: dwc: Add new IRQ API to pcie-desigware
-  PCI: dwc: exynos: Switch to use the new IRQ API
-  PCI: dwc: imx6: Switch to use the new IRQ API
-  PCI: dwc: artpec6: Switch to use the new IRQ API
-  PCI: dwc: designware: Switch to use the new IRQ API
-  PCI: dwc: qcom: Switch to use the new IRQ API
-  PCI: dwc: keystone: Switch to use the new IRQ API
-  PCI: dwc: Remove old IRQ API
-  PCI: dwc: Expand maximum number of IRQs from 32 to 256
-
- drivers/pci/dwc/pci-exynos.c           |  18 --
- drivers/pci/dwc/pci-imx6.c             |  18 --
- drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
- drivers/pci/dwc/pci-keystone.c         |   1 +
- drivers/pci/dwc/pci-keystone.h         |   4 +-
- drivers/pci/dwc/pci-layerscape.c       |   3 +-
- drivers/pci/dwc/pcie-artpec6.c         |  18 --
- drivers/pci/dwc/pcie-designware-host.c | 398 +++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware-plat.c |  16 --
- drivers/pci/dwc/pcie-designware.h      |  30 ++-
- drivers/pci/dwc/pcie-qcom.c            |  16 --
- 11 files changed, 258 insertions(+), 355 deletions(-)
-
+diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+index 5c83798..d5a8215 100644
+--- a/arch/xtensa/include/asm/pci.h
++++ b/arch/xtensa/include/asm/pci.h
+@@ -44,9 +44,10 @@ extern struct pci_controller* pcibios_alloc_controller(void);
+ 
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ 
+-/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+-#define HAVE_PCI_MMAP		1
+-#define arch_can_pci_mmap_io()	1
++/* Tell PCI code what kind of PCI resource mappings we support */
++#define HAVE_PCI_MMAP			1
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
++#define arch_can_pci_mmap_io()		1
+ 
+ #endif /* __KERNEL__ */
+ 
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index d981f01..b7c7a60 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -39,7 +39,6 @@
+  * pcibios_align_resource
+  * pcibios_fixup_bus
+  * pci_bus_add_device
+- * pci_mmap_page_range
+  */
+ 
+ struct pci_controller* pci_ctrl_head;
+@@ -258,98 +257,21 @@ pci_controller_num(struct pci_dev *dev)
+ #endif /* CONFIG_PROC_FS */
+ 
+ /*
+- * Platform support for /proc/bus/pci/X/Y mmap()s,
+- * modelled on the sparc64 implementation by Dave Miller.
++ * Platform support for /proc/bus/pci/X/Y mmap()s.
+  *  -- paulus.
+  */
+ 
+-/*
+- * Adjust vm_pgoff of VMA such that it is the physical page offset
+- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
+- *
+- * Basically, the user finds the base address for his device which he wishes
+- * to mmap.  They read the 32-bit value from the config space base register,
+- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
+- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
+- *
+- * Returns negative error code on failure, zero on success.
+- */
+-static __inline__ int
+-__pci_mmap_make_offset(struct pci_dev *dev, struct vm_area_struct *vma,
+-		       enum pci_mmap_state mmap_state)
++int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
+ {
+-	struct pci_controller *pci_ctrl = (struct pci_controller*) dev->sysdata;
+-	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
+-	unsigned long io_offset = 0;
+-	int i, res_bit;
++	struct pci_controller *pci_ctrl = (struct pci_controller*) pdev->sysdata;
++	resource_size_t ioaddr = pci_resource_start(pdev, bar);
+ 
+ 	if (pci_ctrl == 0)
+ 		return -EINVAL;		/* should never happen */
+ 
+-	/* If memory, add on the PCI bridge address offset */
+-	if (mmap_state == pci_mmap_mem) {
+-		res_bit = IORESOURCE_MEM;
+-	} else {
+-		io_offset = (unsigned long)pci_ctrl->io_space.base;
+-		offset += io_offset;
+-		res_bit = IORESOURCE_IO;
+-	}
+-
+-	/*
+-	 * Check that the offset requested corresponds to one of the
+-	 * resources of the device.
+-	 */
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+-		struct resource *rp = &dev->resource[i];
+-		int flags = rp->flags;
+-
+-		/* treat ROM as memory (should be already) */
+-		if (i == PCI_ROM_RESOURCE)
+-			flags |= IORESOURCE_MEM;
+-
+-		/* Active and same type? */
+-		if ((flags & res_bit) == 0)
+-			continue;
+-
+-		/* In the range of this resource? */
+-		if (offset < (rp->start & PAGE_MASK) || offset > rp->end)
+-			continue;
+-
+-		/* found it! construct the final physical address */
+-		if (mmap_state == pci_mmap_io)
+-			offset += pci_ctrl->io_space.start - io_offset;
+-		vma->vm_pgoff = offset >> PAGE_SHIFT;
+-		return 0;
+-	}
+-
+-	return -EINVAL;
+-}
++	/* Convert to an offset within this PCI controller */
++	ioaddr -= (unsigned long)pci_ctrl->io_space.base;
+ 
+-/*
+- * Perform the actual remap of the pages for a PCI device mapping, as
+- * appropriate for this architecture.  The region in the process to map
+- * is described by vm_start and vm_end members of VMA, the base physical
+- * address is found in vm_pgoff.
+- * The pci device structure is provided so that architectures may make mapping
+- * decisions on a per-device or per-bus basis.
+- *
+- * Returns a negative error code on failure, zero on success.
+- */
+-int pci_mmap_page_range(struct pci_dev *dev, int bar,
+-			struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state,
+-			int write_combine)
+-{
+-	int ret;
+-
+-	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
+-	if (ret < 0)
+-		return ret;
+-
+-	vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
+-
+-	ret = io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-			         vma->vm_end - vma->vm_start,vma->vm_page_prot);
+-
+-	return ret;
++	vma->vm_pgoff += (ioaddr + pci_ctrl->io_space.start) >> PAGE_SHIFT;
++	return 0;
+ }
 -- 
 2.7.4
