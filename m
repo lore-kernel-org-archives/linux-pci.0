@@ -1,60 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:42449 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752742AbeBVIfp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 03:35:45 -0500
-Date: Thu, 22 Feb 2018 09:35:43 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: George Cherian <gcherian@caviumnetworks.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Received: from mail.kernel.org ([198.145.29.99]:53896 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751785AbeBTTAj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Feb 2018 14:00:39 -0500
+Date: Tue, 20 Feb 2018 13:00:37 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
+        George Cherian <george.cherian@cavium.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         bhelgaas@google.com, Jayachandran.Nair@cavium.com,
         Robert.Richter@cavium.com,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Huang Ying <ying.huang@intel.com>
 Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
-Message-ID: <20180222083543.GA14945@wunner.de>
+Message-ID: <20180220190037.GB32228@bhelgaas-glaptop.roam.corp.google.com>
 References: <1517554846-16703-1-git-send-email-george.cherian@cavium.com>
  <2323301.ORZpb3hFRe@aspire.rjw.lan>
  <20180216203434.GC11014@bhelgaas-glaptop.roam.corp.google.com>
  <2858019.9TUCWsDpTB@aspire.rjw.lan>
  <20180220015433.GA9656@wunner.de>
- <20180220190037.GB32228@bhelgaas-glaptop.roam.corp.google.com>
- <c8454323-06b2-e758-0d38-550c6b31b15e@caviumnetworks.com>
- <20180221095435.xe5lmes7mpxca3en@wunner.de>
- <d0f6a588-23e7-123e-267c-5257c21bb38a@caviumnetworks.com>
- <20180221232040.GA52685@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180221232040.GA52685@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180220015433.GA9656@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 21, 2018 at 05:20:40PM -0600, Bjorn Helgaas wrote:
-> On Wed, Feb 21, 2018 at 04:25:08PM +0530, George Cherian wrote:
-> > I have found another configuration where this fails.
-> > Following is the configuration
-> > 1) Connected a PCIe Intel i40 card under the root port.
-> > 2) unbind the i40 driver and bind with vfio-pci driver.
-> > 3) Run lspci in a loop. "lspci -s xx:xx.xx -vvv"
-> > 
-> > I get the same synchronous external abort.
-> > In this case the vfio-pci driver probe it moves the device (i40) to
-> > D3hot provided disable_idle_d3 is not set. lspci tries to do
-> > the config_access which fails with synchronous external abort when
-> > the root port transitions to D3hot.
+[+cc Huang]
+
+On Tue, Feb 20, 2018 at 02:54:33AM +0100, Lukas Wunner wrote:
+> On Mon, Feb 19, 2018 at 12:21:56PM +0100, Rafael J. Wysocki wrote:
+> > On Friday, February 16, 2018 9:34:34 PM CET Bjorn Helgaas wrote:
+> > > On Fri, Feb 16, 2018 at 01:40:37PM +0100, Rafael J. Wysocki wrote:
+> > > > On Friday, February 16, 2018 12:39:00 AM CET Bjorn Helgaas wrote:
+> > > > > On Thu, Feb 15, 2018 at 10:57:25PM +0100, Rafael J. Wysocki wrote:
+> > > > > > On Wednesday, February 14, 2018 9:16:53 PM CET Bjorn Helgaas wrote:
+> > > > > > > I don't know how this runtime PM works, but maybe Rafael can help
+> > > > > > > us out.
 > 
-> It *looks* like rpm_resume() should resume parent devices, i.e., the
-> root port, but I don't know that code at all.
+> This has nothing to do with runtime PM AFAICS.
+> 
+> The device seems to be in D3hot on boot, is that correct?
 
-It does that unless the ignore_children flag is set, which only few
-drivers do.
+I actually don't know for sure what device caused the issue or what
+state it was in.  George, if you could clarify that, it would be
+helpful.
 
-Sounds to me like another missing pci_config_pm_runtime_get() somewhere
-but it's hard to tell without a stacktrace.
+My assumption (possibly incorrect) is that the issue happens when we
+read config space of an endpoint behind a PCIe bridge that is in D3.
+The PCIe portdrv binds to the bridge before the pci_sysfs_init()
+late_initcall happens, and it enables runtime PM on the bridge, so
+it's possible the bridge is in D3 before pci_sysfs_init() happens.
 
-Thanks,
+> The PCI core assumes that unbound devices remain in D0
+> (see comments in pci_pm_runtime_resume() / pci_pm_runtime_suspend()).
 
-Lukas
+That comment was added by 967577b06241 ("PCI/PM: Keep runtime PM
+enabled for unbound PCI devices"), apparently because "some devices do
+not work again after being put into D3".  That commit mentions
+https://bugzilla.kernel.org/show_bug.cgi?id=48201 but I don't think
+it's completely convincing about the requirement for keeping things in
+D0.
+
+Even if it's true that some devices don't work after being in D3, that
+doesn't seem like sufficient reason to keep *all* devices on all
+systems in D0.  We would normally use quirks to address device issues
+like this.
+
+> > > > > > I'm not sure what the question is to be honest.
+> > > > > 
+> > > > > My questions are basically "What does the PCI core need to do to make
+> > > > > sure a device is in D0 before it operates on it?  And where do we need
+> > > > > to do that?"
+> 
+> When scanning the bus and discovering the device is not in D0,
+> call pci_power_up().  This could probably go into pci_init_pm().
+> Once a driver binds to it, it may choose to runtime suspend it to
+> D3hot again.
+
+s/pci_init_pm/pci_pm_init/
+
+That's an interesting idea.  I hadn't thought of the case where a
+device is not in D0 when we enumerate it.  We *do* make sure bridges
+are in D0 before scanning behind them (pci_scan_bridge_extend() calls
+pm_runtime_get_sync()).
+
+Since enumeration should only perform config accesses, and devices
+must respond to config accesses even when in D3hot, I guess I'm not
+convinced that we need to power up everything (other than bridges)
+during enumeration.
+
+Bjorn
