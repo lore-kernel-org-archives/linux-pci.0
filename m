@@ -1,167 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from twosheds.infradead.org ([90.155.92.209]:37036 "EHLO
-        twosheds.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751568AbeBSPYX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Feb 2018 10:24:23 -0500
-Message-ID: <1519053858.7876.84.camel@infradead.org>
-Subject: Re: [PATCH] sparc: Use generic pci_mmap_resource_range()
-From: David Woodhouse <dwmw2@infradead.org>
-To: David Miller <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20180219.094951.2098243214524004486.davem@davemloft.net>
-References: <1519045452-22645-1-git-send-email-dwmw@amazon.co.uk>
-         <20180219.094951.2098243214524004486.davem@davemloft.net>
-Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-xYmtH6Wh1Y2xqvmm2vuF"
-Date: Mon, 19 Feb 2018 15:24:18 +0000
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=EwSf=FO=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=EwSf=FO=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20180220181554.GA32228@bhelgaas-glaptop.roam.corp.google.com>
+References: <151908155159.37696.9710083237704994886.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <151908204614.37696.12828004282495415825.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0irpPi4PXPHWaSpa3=MpUY4Sg3C-iHd0LPQN+FN-VTRpQ@mail.gmail.com> <20180220181554.GA32228@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 20 Feb 2018 20:00:57 +0100
+Message-ID: <CAJZ5v0jqe6Jv9_tjUD=9d9VkxgQRLGpzqo2qJkLc2n3g6EsGAg@mail.gmail.com>
+Subject: Re: [PATCH v1 2/2] PCI: Allow user to request power management of
+ conventional and hotplug bridges
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+	Valdis Kletnieks <Valdis.Kletnieks@vt.edu>, Mathias Nyman <mathias.nyman@intel.com>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
+	Peter Wu <peter@lekensteyn.nl>, Qipeng Zha <qipeng.zha@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Andreas Noever <andreas.noever@gmail.com>,
+	Dave Airlie <airlied@gmail.com>, Qi Zheng <qi.zheng@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-
---=-xYmtH6Wh1Y2xqvmm2vuF
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2018-02-19 at 09:49 -0500, David Miller wrote:
-> From: David Woodhouse <dwmw@amazon.co.uk>
-> Date: Mon, 19 Feb 2018 13:04:12 +0000
->=20
-> >=20
-> > Commit f719582435 ("PCI: Add pci_mmap_resource_range() and use it for
-> > ARM64") added this generic function with the intent of using it
-> > everywhere and ultimately killing the old arch-specific implementations=
-.
-> >=20
-> > Let's get on with that eradication...
-> >=20
-> > Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+On Tue, Feb 20, 2018 at 7:15 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Tue, Feb 20, 2018 at 10:41:33AM +0100, Rafael J. Wysocki wrote:
+>> On Tue, Feb 20, 2018 at 12:14 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > From: Bjorn Helgaas <bhelgaas@google.com>
+>> >
+>> > Previously "pcie_port_pm=force" enabled power management of PCI bridges,
+>> > but only for PCIe ports (not conventional PCI bridges) and only for ports
+>> > that do not support hotplug.  Those limitations are there because we're not
+>> > confident that all those configurations work, not because the spec requires
+>> > them.
+>> >
+>> > Change "pcie_port_pm=force" to enable power management of conventional PCI
+>> > bridges and hotplug bridges as well as PCIe ports.  As with the previous
+>> > PCIe port-only behavior, this is not expected to work in all systems.
+>> >
+>> > Add a "pci=bridge_pm" parameter to reflect the increased scope.  For
+>> > backward compatibility, retain "pcie_port_pm=force" as an undocumented
+>> > equivalent.
+>> >
+>> > Add "pci=no_bridge_pm" as an equivalent to "pcie_port_pm=off".  This
+>> > disables power management for all PCI bridges, which is results in the same
+>> > behavior as before, since we always disabled power management of
+>> > conventional PCI bridges, and "pcie_port_pm=off" disabled it for PCIe
+>> > ports.
+>> >
+>> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> Honestly, I wouldn't do that, at least not this way.
+>>
+>> Somebody might be using pcie_port_pm=force already, for example, and
+>> it works for them for PCIe, but the PCI-to-PCI part of the same system
+>> may not.
 >
-> David, the generic code is definitely doing different things.
+> Yes, you and Valdis are right, this is over-aggressive and I'll drop
+> it.
+>
+>> IMO the behavior of pcie_port_pm= should be as is and I don't see
+>> what's wrong with it being documented.
+>>
+>> Of course, you can add pci=bridge_pm/no_bridge_pm to extend the scope,
+>> but for what reason really?  Just to follow the letter of the spec?
+>
+> Basically I was hoping to partially rectify what I think was a mistake
+> on my part when we merged this.  9d26d3a8f1b0 ("PCI: Put PCIe ports
+> into D3 during suspend") is somewhat misleading because it suggests
+> that PCI bridge power management can only be supported on non-hotplug
+> PCIe ports, when in fact this was mostly a question of testing and "we
+> know this works on the systems we care about so we're going to
+> minimize our risk by excluding others".  These constraints seem pretty
+> Intel-centric and it's not clear how or whether they apply to other
+> architectures.
+>
+> Adding the comments will help with that some, but in general I don't
+> like to artificially limit feature support because it reduces testing
+> exposure and makes future maintenance more difficult.
+>
+> For example, we disallow D3 for hotplug bridges.  I don't think the
+> spec requires that, so the fact that we put that limitation in
+> suggests that there was some issue we didn't fully understand, and now
+> it will be hard to go back and figure that out if and when we *do*
+> want to support D3 for hotplug bridges.
 
+In this particular case we just wanted to limit the scope of changes
+to what we were able to test at that time.
 
-Note that this is new "generic" code that I added last year, specifically t=
-o be able to obsolete all the old arch-specific code.
-The main reason for the change was to take host physical addresses, instead=
- of converting to via legacy "pci_resource_to_user()" even for the new sysf=
-s API.
+You seem to be arguing that the target coverage for a new feature
+should always be maximum, because that makes future maintenance
+easier.
 
-The details are hazy right now =E2=80=94 I deliberately held back the "fun"=
- architectures and sent only the no-brainers in the first batch via Bjorn's=
- PCI tree, and then promptly forgot about it for a year.
+While that might be the case, it places a lot of burden on the
+developer who introduces the feature to also cover systems they may
+not have access to and causes the test matrix to increase
+significantly.
 
-But I definitely *attempted* to ensure that the new code would cover all th=
-e requirements of SPARC and the various architectures that have lifted and =
-modified the SPARC PCI code over the years.
+I prefer to limit the initial scope of changes to a set of systems
+that can be tested and validated in a specific time frame as that is
+much more friendly to developers working on the features in question.
+It's just a different development strategy and it is generally
+applicable regardless of which company the given developers work for
+IMO.
 
-> For one, the sparc specific code allows mmap'ing any address range
-> within a PCI bus device.=C2=A0=C2=A0The generic code does not allow that.
+> Anyway, I'll drop this one and just go with adding the comments.
 
-
-You mean any address range in a given PCI bus even if there is no
-actual device with a BAR at the corresponding address?
-
-Would I be right to assume this was only available through the legacy
-procfs API? I think it should be possible to accommodate it, and it
-does look like I'd missed this requirement the first time round; thanks
-for pointing it out.
---=-xYmtH6Wh1Y2xqvmm2vuF
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCEFQw
-ggUxMIIEGaADAgECAhBNRhEyk/HZ7naOeTHWrzuAMA0GCSqGSIb3DQEBCwUAMIGXMQswCQYDVQQG
-EwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYD
-VQQKExFDT01PRE8gQ0EgTGltaXRlZDE9MDsGA1UEAxM0Q09NT0RPIFJTQSBDbGllbnQgQXV0aGVu
-dGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQTAeFw0xNzEyMjEwMDAwMDBaFw0xODEyMjEyMzU5
-NTlaMCQxIjAgBgkqhkiG9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcwggEiMA0GCSqGSIb3DQEB
-AQUAA4IBDwAwggEKAoIBAQDgzLNWa18DNpGUj/ZeH0Sgz53ESIbzdPw3OJeuNP6jZhxZojbyfxbM
-hETscxI/Hj6UZ4a7sHm5BkVjlsB1Af2Za/PXUt8MmLAcPMHkMPGunvkUibEvblDvpqMkQZlaZM+t
-5PqFmWkbehLaEvbpNY7dmEAAeKh4klTzJzrr5AAzaCQ32cA2e3+DEIv5O5l9ViMIjy/JM+xMQrfX
-3PZ0chY1PaVWjg59d4Uno+5LRDbgCnPkKJX4ysBGadibjBGQGJEZCjh94iiEebn2KsRLvtrJ72Ph
-3W2HDEdngW3YP0wujFQVs81U7L8XN3kdPRsa9zNqGtYQP/+1KMMJQ57hnfi9AgMBAAGjggHpMIIB
-5TAfBgNVHSMEGDAWgBSCr2yM+MX+lmF86B89K3FIXsSLwDAdBgNVHQ4EFgQUpL+/5lli9jmj2KHj
-ryyhnB2xRt0wDgYDVR0PAQH/BAQDAgWgMAwGA1UdEwEB/wQCMAAwIAYDVR0lBBkwFwYIKwYBBQUH
-AwQGCysGAQQBsjEBAwUCMBEGCWCGSAGG+EIBAQQEAwIFIDBGBgNVHSAEPzA9MDsGDCsGAQQBsjEB
-AgEBATArMCkGCCsGAQUFBwIBFh1odHRwczovL3NlY3VyZS5jb21vZG8ubmV0L0NQUzBaBgNVHR8E
-UzBRME+gTaBLhklodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9DT01PRE9SU0FDbGllbnRBdXRoZW50
-aWNhdGlvbmFuZFNlY3VyZUVtYWlsQ0EuY3JsMIGLBggrBgEFBQcBAQR/MH0wVQYIKwYBBQUHMAKG
-SWh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1JTQUNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
-U2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmNvbW9kb2NhLmNvbTAe
-BgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3DQEBCwUAA4IBAQCK28BdbVJ9
-QKQqTDfXwogAYiRBEGptfE1Bjy4F5vC6eWJqOJ15vunxjLwdbZYb4L0qrJlh+ZHHHlbIK8uEZu7N
-XHUntmWMbGbZiu7JgrbSXJK1ct9gxrN/sdWYJ+JDjVHg7GfDTvTTPa26JMRqJsO1TjjyDX7A3K39
-TjV8C0hqXvwF9BsNf+qBeWO6GVzJ5572awY221hc1umibmZaKV4fg+7fS7qscx5TSuIc6uvMBQhm
-7NQiCq6euMMWBDUDlotQCDW0ilm0OuLW3IVLuZCm6Msc+6hT9+dCT4JUvxTHZnnO7uLCxV+Ujad+
-PH3itRm38i96p2zvwgLr8vwWA0ckMIIFMTCCBBmgAwIBAgIQTUYRMpPx2e52jnkx1q87gDANBgkq
-hkiG9w0BAQsFADCBlzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQ
-MA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxPTA7BgNVBAMTNENP
-TU9ETyBSU0EgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTcx
-MjIxMDAwMDAwWhcNMTgxMjIxMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRl
-YWQub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4MyzVmtfAzaRlI/2Xh9EoM+d
-xEiG83T8NziXrjT+o2YcWaI28n8WzIRE7HMSPx4+lGeGu7B5uQZFY5bAdQH9mWvz11LfDJiwHDzB
-5DDxrp75FImxL25Q76ajJEGZWmTPreT6hZlpG3oS2hL26TWO3ZhAAHioeJJU8yc66+QAM2gkN9nA
-Nnt/gxCL+TuZfVYjCI8vyTPsTEK319z2dHIWNT2lVo4OfXeFJ6PuS0Q24Apz5CiV+MrARmnYm4wR
-kBiRGQo4feIohHm59irES77aye9j4d1thwxHZ4Ft2D9MLoxUFbPNVOy/Fzd5HT0bGvczahrWED//
-tSjDCUOe4Z34vQIDAQABo4IB6TCCAeUwHwYDVR0jBBgwFoAUgq9sjPjF/pZhfOgfPStxSF7Ei8Aw
-HQYDVR0OBBYEFKS/v+ZZYvY5o9ih468soZwdsUbdMA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8E
-AjAAMCAGA1UdJQQZMBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAw
-RgYDVR0gBD8wPTA7BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUu
-Y29tb2RvLm5ldC9DUFMwWgYDVR0fBFMwUTBPoE2gS4ZJaHR0cDovL2NybC5jb21vZG9jYS5jb20v
-Q09NT0RPUlNBQ2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBiwYIKwYB
-BQUHAQEEfzB9MFUGCCsGAQUFBzAChklodHRwOi8vY3J0LmNvbW9kb2NhLmNvbS9DT01PRE9SU0FD
-bGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3VyZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRw
-Oi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0RBBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkq
-hkiG9w0BAQsFAAOCAQEAitvAXW1SfUCkKkw318KIAGIkQRBqbXxNQY8uBebwunliajideb7p8Yy8
-HW2WG+C9KqyZYfmRxx5WyCvLhGbuzVx1J7ZljGxm2YruyYK20lyStXLfYMazf7HVmCfiQ41R4Oxn
-w0700z2tuiTEaibDtU448g1+wNyt/U41fAtIal78BfQbDX/qgXljuhlcyeee9msGNttYXNbpom5m
-WileH4Pu30u6rHMeU0riHOrrzAUIZuzUIgqunrjDFgQ1A5aLUAg1tIpZtDri1tyFS7mQpujLHPuo
-U/fnQk+CVL8Ux2Z5zu7iwsVflI2nfjx94rUZt/Iveqds78IC6/L8FgNHJDCCBeYwggPOoAMCAQIC
-EGqb4Tg7/ytrnwHV2binUlYwDQYJKoZIhvcNAQEMBQAwgYUxCzAJBgNVBAYTAkdCMRswGQYDVQQI
-ExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBD
-QSBMaW1pdGVkMSswKQYDVQQDEyJDT01PRE8gUlNBIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4X
-DTEzMDExMDAwMDAwMFoXDTI4MDEwOTIzNTk1OVowgZcxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJH
-cmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBM
-aW1pdGVkMT0wOwYDVQQDEzRDT01PRE8gUlNBIENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQgU2Vj
-dXJlIEVtYWlsIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvrOeV6wodnVAFsc4
-A5jTxhh2IVDzJXkLTLWg0X06WD6cpzEup/Y0dtmEatrQPTRI5Or1u6zf+bGBSyD9aH95dDSmeny1
-nxdlYCeXIoymMv6pQHJGNcIDpFDIMypVpVSRsivlJTRENf+RKwrB6vcfWlP8dSsE3Rfywq09N0Zf
-xcBa39V0wsGtkGWC+eQKiz4pBZYKjrc5NOpG9qrxpZxyb4o4yNNwTqzaaPpGRqXB7IMjtf7tTmU2
-jqPMLxFNe1VXj9XB1rHvbRikw8lBoNoSWY66nJN/VCJv5ym6Q0mdCbDKCMPybTjoNCQuelc0IAaO
-4nLUXk0BOSxSxt8kCvsUtQIDAQABo4IBPDCCATgwHwYDVR0jBBgwFoAUu69+Aj36pvE8hI6t7jiY
-7NkyMtQwHQYDVR0OBBYEFIKvbIz4xf6WYXzoHz0rcUhexIvAMA4GA1UdDwEB/wQEAwIBhjASBgNV
-HRMBAf8ECDAGAQH/AgEAMBEGA1UdIAQKMAgwBgYEVR0gADBMBgNVHR8ERTBDMEGgP6A9hjtodHRw
-Oi8vY3JsLmNvbW9kb2NhLmNvbS9DT01PRE9SU0FDZXJ0aWZpY2F0aW9uQXV0aG9yaXR5LmNybDBx
-BggrBgEFBQcBAQRlMGMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9E
-T1JTQUFkZFRydXN0Q0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20w
-DQYJKoZIhvcNAQEMBQADggIBAHhcsoEoNE887l9Wzp+XVuyPomsX9vP2SQgG1NgvNc3fQP7TcePo
-7EIMERoh42awGGsma65u/ITse2hKZHzT0CBxhuhb6txM1n/y78e/4ZOs0j8CGpfb+SJA3GaBQ+39
-4k+z3ZByWPQedXLL1OdK8aRINTsjk/H5Ns77zwbjOKkDamxlpZ4TKSDMKVmU/PUWNMKSTvtlenlx
-Bhh7ETrN543j/Q6qqgCWgWuMAXijnRglp9fyadqGOncjZjaaSOGTTFB+E2pvOUtY+hPebuPtTbq7
-vODqzCM6ryEhNhzf+enm0zlpXK7q332nXttNtjv7VFNYG+I31gnMrwfHM5tdhYF/8v5UY5g2xANP
-ECTQdu9vWPoqNSGDt87b3gXb1AiGGaI06vzgkejL580ul+9hz9D0S0U4jkhJiA7EuTecP/CFtR72
-uYRBcunwwH3fciPjviDDAI9SnC/2aPY8ydehzuZutLbZdRJ5PDEJM/1tyZR2niOYihZ+FCbtf3D9
-mB12D4ln9icgc7CwaxpNSCPt8i/GqK2HsOgkL3VYnwtx7cJUmpvVdZ4ognzgXtgtdk3ShrtOS1iA
-N2ZBXFiRmjVzmehoMof06r1xub+85hFQzVxZx5/bRaTKTlL8YXLI8nAbR9HWdFqzcOoB/hxfEyIQ
-px9/s81rgzdEZOofSlZHynoSMYIDxzCCA8MCAQEwgawwgZcxCzAJBgNVBAYTAkdCMRswGQYDVQQI
-ExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBD
-QSBMaW1pdGVkMT0wOwYDVQQDEzRDT01PRE8gUlNBIENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
-U2VjdXJlIEVtYWlsIENBAhBNRhEyk/HZ7naOeTHWrzuAMA0GCWCGSAFlAwQCAQUAoIIB6zAYBgkq
-hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0xODAyMTkxNTI0MThaMC8GCSqG
-SIb3DQEJBDEiBCAEl4btCwfazQzrNI09BJITAvyC4Jw8eLxMzIDMqVhppzCBvQYJKwYBBAGCNxAE
-MYGvMIGsMIGXMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYD
-VQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDE9MDsGA1UEAxM0Q09NT0RP
-IFJTQSBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQTUYRMpPx2e52
-jnkx1q87gDCBvwYLKoZIhvcNAQkQAgsxga+ggawwgZcxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJH
-cmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBM
-aW1pdGVkMT0wOwYDVQQDEzRDT01PRE8gUlNBIENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQgU2Vj
-dXJlIEVtYWlsIENBAhBNRhEyk/HZ7naOeTHWrzuAMA0GCSqGSIb3DQEBAQUABIIBAL2Y3sBdfwUe
-80Q+72UZw2Ec/W9dLGMMFRkZ29e6nKyYH7rJmJi5VGWqIqem8VspM29KNAE+Mw531CCzeIEv7kFX
-9oXatMsC0jXzMJx+gAWm7vgFdw+t5bvBbHvLtArkN0vOcKWj6c1VJN55RhwO4CvSN8B7rR6Qd9sA
-4M5kz39oGUFLzVNOax28wToDeD4jjxhN67C8ly+BiTxmTXkidexDAwWTafptEpb8Mhny+3NA9saa
-Hwi4JaxV4HtDTdynOJZgxMkqGehBOtPKWmhT7SkUdVfM0oVciZs5z2SuMZGq24/dt70NF+JTBIdk
-PE7B7tjy/P4cYhKKPucaTwNdtc4AAAAAAAA=
-
-
---=-xYmtH6Wh1Y2xqvmm2vuF--
+Thanks!
