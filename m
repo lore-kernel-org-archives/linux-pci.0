@@ -1,208 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:42018 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752205AbeB0Mm4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 07:42:56 -0500
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, lorenzo.pieralisi@arm.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: MSI-X diagnostic problems
-Message-ID: <959dfbab-7d90-f10c-f4aa-7f0bf5a6af3e@synopsys.com>
-Date: Tue, 27 Feb 2018 12:42:35 +0000
+Received: from foss.arm.com ([217.140.101.70]:44486 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752313AbeBTPj4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Feb 2018 10:39:56 -0500
+Date: Tue, 20 Feb 2018 15:39:47 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Cc: linux-pci@vger.kernel.org,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>
+Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root
+ subordinate
+Message-ID: <20180220153947.GA21801@e107981-ln.cambridge.arm.com>
+References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
+On Mon, Jan 15, 2018 at 10:36:08AM +0100, Koen Vandeputte wrote:
+> The subordinate value indicates the highest bus number which can be
+> reached downstream though a certain device.
+> 
+> Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+> parent")
+> ensures that downstream devices cannot assign busnumbers higher than the
+> upstream device subordinate number, which was indeed illogical.
+> 
+> By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
+> value of 0x01.
+> 
+> Due to this combined with above commit, enumeration stops digging deeper
+> downstream as soon as bus num 0x01 has been assigned, which is always
+> the case for a bridge device.
+> 
+> This results in all devices behind a bridge bus to remain undetected, as
+> these would be connected to bus 0x02 or higher.
+> 
+> Fix this by initializing the RC to a subordinate value of 0xff, which is
+> not altering hardware behaviour in any way, but informs probing
+> function pci_scan_bridge() later on which reads this value back from
+> register.
+> 
+> Following nasty errors during boot are also fixed by this:
+> 
+> [    0.459145] pci_bus 0000:02: busn_res: can not insert [bus 02-ff]
+> under [bus 01] (conflicts with (null) [bus 01])
+> ...
+> [    0.464515] pci_bus 0000:03: [bus 03] partially hidden behind bridge
+> 0000:01 [bus 01]
+> ...
+> [    0.464892] pci_bus 0000:04: [bus 04] partially hidden behind bridge
+> 0000:01 [bus 01]
+> ...
+> [    0.466488] pci_bus 0000:05: [bus 05] partially hidden behind bridge
+> 0000:01 [bus 01]
+> [    0.466506] pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to
+> 05
+> [    0.466517] pci_bus 0000:02: busn_res: can not insert [bus 02-05]
+> under [bus 01] (conflicts with (null) [bus 01])
+> [    0.466534] pci_bus 0000:02: [bus 02-05] partially hidden behind
+> bridge 0000:01 [bus 01]
+> 
+> Fixes: a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+> parent")
+> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+> Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+> Cc: Binghui Wang <wangbinghui@hisilicon.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Jesper Nilsson <jesper.nilsson@axis.com>
+> Cc: Jianguo Sun <sunjianguo1@huawei.com>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
+> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Minghuan Lian <minghuan.Lian@freescale.com>
+> Cc: Mingkai Hu <mingkai.hu@freescale.com>
+> Cc: Murali Karicheri <m-karicheri2@ti.com>
+> Cc: Pratyush Anand <pratyush.anand@gmail.com>
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> Cc: Roy Zang <tie-fei.zang@freescale.com>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: Xiaowei Song <songxiaowei@hisilicon.com>
+> Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> ---
+>  drivers/pci/dwc/pcie-designware-host.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'm having some problems in my setup related to MSI-X, maybe you could help me
-debugging where could be the problem.
+I have applied it to pci/dwc for v4.17, with a tag to stable
+for v4.15, we will have to send a backport to older stable
+kernels.
 
-Currently I have a RC (bridge) with 1 MSI-X interrupt and a commercial USB 3.0
-EP capable of 8 MSI-X interrupts, however the xhci driver only uses 2 interrupts.
+Thanks,
+Lorenzo
 
-I have posted below some debug info gathered during my tests.
-
-
-# cat /proc/interrupts
-           CPU0
-  3:      10014  ARC In-core Intc   3  Timer0 (per-cpu-tick)
-  4:          0  dw-apb-ictl   4  eth0
-  8:          1  dw-apb-ictl   8  ehci_hcd:usb1, ohci_hcd:usb2
-  9:         38  dw-apb-ictl   7  dw-mci
- 14:          0  dw-apb-ictl  14  e001d000.i2c
- 16:          0  dw-apb-ictl  16  e001f000.i2c
- 19:       4065  dw-apb-ictl  19  ttyS3
- 46:          0   PCI-MSI   0  aerdrv
- 47:          1   PCI-MSI 524288  xhci_hcd
- 48:          0   PCI-MSI 524289  xhci_hcd
-#
-#
-# find /sys/ | grep msi
-/sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_bus
-/sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_irqs
-/sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_irqs/46
-/sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_bus
-/sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs
-/sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs/48
-/sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs/47
-#
-#
-# cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/ms
-i_bus
-1
-#
-#
-# cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/ms
-i_irqs/46
-msix
-#
-# cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
-00:01:00.0/msi_bus
-1
-#
-# cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
-00:01:00.0/msi_irqs/48
-msix
-#
-#
-# cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
-00:01:00.0/msi_irqs/47
-msix
-
-
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:dw_pcie_host_init:449) pp->num_vectors = 64
-(GP:dw_pcie_host_init:453) dw_pcie_allocate_domains
-(GP:dw_pcie_allocate_domains:277) pp->num_vectors = 64
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:pci_alloc_irq_vectors_affinity:1214) MSI-X
-(GP:__pci_enable_msix_range:1132) min=1, max=32
-(GP:__pci_enable_msix:975)
-(GP:__pci_enable_msix:981) nr_entries = 1, nvec = 32
-(GP:__pci_enable_msix_range:1145) rc=1
-(GP:__pci_enable_msix:975)
-(GP:__pci_enable_msix:981) nr_entries = 1, nvec = 1
-(GP:__pci_enable_msix:987)
-(GP:msix_capability_init:773)
-(GP:msix_capability_init:777) Disable MSI-X
-(GP:msix_capability_init:780) Control register 0x00000000
-(GP:msix_map_region:682) Table offset = 0x00000000, bir = 0)
-(GP:msix_map_region:685) phys_addr = 0xD0500000, nr_entries = 1, ENTRY_SIZE = 16
-bytes, table size = 16 bytes)
-(GP:msix_setup_entries:701) Allocate MSI entries 0/1
-(GP:msix_setup_entries:719)
-(GP:msix_setup_entries:725) dev->irq = 45, base = d0500000,
-entry->msi_attrib.entry_nr = 0
-(GP:pci_msi_setup_msi_irqs:53) msi_domain_alloc_irqs
-(GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
-(GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
-(GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
-(GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 46, bit + 0 = 0
-(GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:__irq_domain_activate_irq:1521)
-(GP:__irq_domain_activate_irq:1516)
-(GP:msi_domain_activate:107)
-(GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000000, msg->address_hi = 0x9A228000,
-msg->data = 0x00000000, hwirq = 0
-(GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
-0x00000000, msg->data = 0x00000000
-(GP:msix_capability_init:804) Mask all MSI-X and enable MSI-X
-(GP:msix_program_entries:743)
-(GP:msix_capability_init:810) Populating MSI sysfs
-(GP:msix_capability_init:818) Unmask all MSI-X
-(GP:__pci_enable_msix_range:1145) rc=0
-(GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:xhci_setup_msix:264)
-(GP:pci_alloc_irq_vectors_affinity:1214) MSI-X
-(GP:__pci_enable_msix_range:1132) min=2, max=2
-(GP:__pci_enable_msix:975)
-(GP:__pci_enable_msix:981) nr_entries = 8, nvec = 2
-(GP:__pci_enable_msix:987)
-(GP:msix_capability_init:773)
-(GP:msix_capability_init:777) Disable MSI-X
-(GP:msix_capability_init:780) Control register 0x00000007
-(GP:msix_map_region:682) Table offset = 0x00002000, bir = 0)
-(GP:msix_map_region:685) phys_addr = 0xD0402000, nr_entries = 8, ENTRY_SIZE = 16
-bytes, table size = 128 bytes)
-(GP:msix_setup_entries:701) Allocate MSI entries 0/2
-(GP:msix_setup_entries:719)
-(GP:msix_setup_entries:725) dev->irq = 45, base = d0402000,
-entry->msi_attrib.entry_nr = 0
-(GP:msix_setup_entries:701) Allocate MSI entries 1/2
-(GP:msix_setup_entries:719)
-(GP:msix_setup_entries:725) dev->irq = 45, base = d0402000,
-entry->msi_attrib.entry_nr = 1
-(GP:pci_msi_setup_msi_irqs:53) msi_domain_alloc_irqs
-(GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
-(GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
-(GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
-(GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 47, bit + 0 = 1
-(GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
-(GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
-(GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
-(GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 48, bit + 0 = 2
-(GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:__irq_domain_activate_irq:1521)
-(GP:__irq_domain_activate_irq:1516)
-(GP:msi_domain_activate:107)
-(GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000001, msg->address_hi = 0x9A228000,
-msg->data = 0x00000000, hwirq = 1
-(GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
-0x00000000, msg->data = 0x00000001
-(GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:__irq_domain_activate_irq:1521)
-(GP:__irq_domain_activate_irq:1516)
-(GP:msi_domain_activate:107)
-(GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000002, msg->address_hi = 0x9A228000,
-msg->data = 0x00000000, hwirq = 2
-(GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
-0x00000000, msg->data = 0x00000002
-(GP:msix_capability_init:804) Mask all MSI-X and enable MSI-X
-(GP:msix_program_entries:743)
-(GP:msix_capability_init:810) Populating MSI sysfs
-(GP:msix_capability_init:818) Unmask all MSI-X
-(GP:__pci_enable_msix_range:1145) rc=0
-(GP:xhci_setup_msix:285) 0/2
-(GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
-(GP:xhci_setup_msix:285) 1/2
-(GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-(GP:irq_domain_activate_irq:1552) NOT ACTIVATED
-(GP:__irq_domain_activate_irq:1516)
-
-Me and João have looked to the sequence and this seems to be correct, however we
-are not receiving any interrupts and that originates the xhci to abort...
-
-xhci_hcd 0000:01:00.0: Abort failed to stop command ring: -110
-xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
-xhci_hcd 0000:01:00.0: HC died; cleaning up
-xhci_hcd 0000:01:00.0: Error while assigning device slot ID
-xhci_hcd 0000:01:00.0: Max number of devices this xHCI host supports is 64.
-usb usb3-port1: couldn't allocate usb_device
-
-Any clue? Thanks in advance.
-
-Regards,
-Gustavo
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index bf558df5b7b3..2b5470173196 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -616,7 +616,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	/* setup bus numbers */
+>  	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
+>  	val &= 0xff000000;
+> -	val |= 0x00010100;
+> +	val |= 0x00ff0100;
+>  	dw_pcie_writel_dbi(pci, PCI_PRIMARY_BUS, val);
+>  
+>  	/* setup command register */
+> -- 
+> 2.7.4
+> 
