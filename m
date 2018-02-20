@@ -1,268 +1,148 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49458 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750799AbeBTV3Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Feb 2018 16:29:25 -0500
+Date: Tue, 20 Feb 2018 15:29:22 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: dri-devel@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Dave Airlie <airlied@redhat.com>,
+        nouveau@lists.freedesktop.org, Ben Skeggs <bskeggs@redhat.com>,
+        Lyude Paul <lyude@redhat.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.com>,
+        Jaroslav Kysela <perex@perex.cz>, linux-pm@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Pierre Moreau <pierre.morrow@free.fr>,
+        Bastien Nocera <hadess@hadess.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/7] PCI: Restore BARs on runtime resume despite being
+ unbound
+Message-ID: <20180220212922.GC32228@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1518941072.git.lukas@wunner.de>
+ <f7593132608eb9a83d7268cc5b3ef12b3dd9c52d.1518941073.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <1519062520-198902-7-git-send-email-john.garry@huawei.com>
-References: <1519062520-198902-1-git-send-email-john.garry@huawei.com> <1519062520-198902-7-git-send-email-john.garry@huawei.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 20 Feb 2018 16:50:07 +0200
-Message-ID: <CAHp75VcOayaBDrEPnorYiywn_g22TYZ7-Rw396Czj7briyLYfg@mail.gmail.com>
-Subject: Re: [PATCH v14 6/9] HISI LPC: Support the LPC host on Hip06/Hip07
- with DT bindings
-To: John Garry <john.garry@huawei.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Dann Frazier <dann.frazier@canonical.com>,
-        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f7593132608eb9a83d7268cc5b3ef12b3dd9c52d.1518941073.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 19, 2018 at 7:48 PM, John Garry <john.garry@huawei.com> wrote:
-> From: Zhichang Yuan <yuanzhichang@hisilicon.com>
->
-> The low-pin-count(LPC) interface of Hip06/Hip07 accesses the peripherals in
-> I/O port addresses. This patch implements the LPC host controller driver
-> which perform the I/O operations on the underlying hardware.
-> We don't want to touch those existing peripherals' driver, such as ipmi-bt.
-> So this driver applies the indirect-IO introduced in the previous patch
-> after registering an indirect-IO node to the indirect-IO devices list which
-> will be searched in the I/O accessors to retrieve the host-local I/O port.
->
-> The driver config is set as a bool instead of a trisate. The reason
-> here is that, by the very nature of the driver providing a logical
-> PIO range, it does not make sense to have this driver as a loadable
-> module. Another more specific reason is that the Huawei D03 board
-> which includes hip06 SoC requires the LPC bus for UART console, so
-> should be built in.
+On Sun, Feb 18, 2018 at 09:38:32AM +0100, Lukas Wunner wrote:
+> PCI devices not bound to a driver are supposed to stay in D0 during
+> runtime suspend.
 
-> +config HISILICON_LPC
-> +       bool "Support for ISA I/O space on Hisilicon hip06/7"
-> +       depends on (ARM64 && (ARCH_HISI || COMPILE_TEST))
+Doesn't "runtime suspend" mean an individual device is suspended while
+the rest of the system remains active?
 
-Redundant parens.
+If so, maybe it would be more direct to say "PCI devices not bound to
+a driver cannot be runtime suspended"?
 
-> +       select INDIRECT_PIO
-> +       help
-> +         Driver needed for some legacy ISA devices attached to Low-Pin-Count
-> +         on Hisilicon hip06/7 SoC.
+(It's a separate question not relevant to this patch, but I'm not
+convinced that "PCI devices without a driver cannot be suspended"
+should be accepted as a rule.  If it is a rule, we should be able to
+deduce it from the specs.)
 
+> But they may have a parent which is bound and can be
+> transitioned to D3cold at runtime.  Once the parent goes to D3cold, the
+> unbound child may go to D3cold as well.  When the child comes out of
+> D3cold, its BARs are uninitialized and thus inaccessible when a driver
+> tries to probe.
+> 
+> One example are recent hybrid graphics laptops which cut power to the
+> discrete GPU when the root port above it goes to ACPI power state D3.
+> Users may provoke this by unbinding the GPU driver and allowing runtime
+> PM on the GPU via sysfs:  The PM core will then treat the GPU as
+> "suspended", which in turn allows the root port to runtime suspend,
+> causing the power resources listed in its _PR3 object to be powered off.
+> The GPU's BARs will be uninitialized when a driver later probes it.
+> 
+> Another example are hybrid graphics laptops where the GPU itself (rather
+> than the root port) is capable of runtime suspending to D3cold.  If the
+> GPU's integrated HDA controller is not bound and the GPU's driver
+> decides to runtime suspend to D3cold, the HDA controller's BARs will be
+> uninitialized when a driver later probes it.
+> 
+> Fix by restoring the BARs on runtime resume if the device is not bound.
+> This is sufficient to fix the above-mentioned use cases.  Other use
+> cases might require a full-blown pci_save_state() / pci_restore_state()
+> or execution of fixups.  We can add that once use cases materialize,
+> let's not inflate the code unnecessarily.
 
+Why would we not do a full-blown restore?  With this patch, I think
+some configuration done during enumeration, e.g., ASPM and MPS, will
+be lost.  "lspci -vv" of the HDA before and after the suspend may show
+different things, which seems counter-intuitive.
 
-> +#if LPC_MAX_DULEN > LPC_MAX_BURST
-> +#error "LPC.. MAX_DULEN must be not bigger than MAX_OPCNT!"
-> +#endif
+I wouldn't think of a full-blown restore as "inflating the code"; I
+would think of it as "having fewer special cases", i.e., we always use
+the same restore path instead of having the main one plus a special
+one for unbound devices.
 
-But here you can easily avoid an #error, by making them equal, just
-issue a warning instead.
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> ---
+>  drivers/pci/pci-driver.c | 8 ++++++--
+>  drivers/pci/pci.c        | 2 +-
+>  drivers/pci/pci.h        | 1 +
+>  3 files changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3bed6beda051..51b11cbd48f6 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1277,10 +1277,14 @@ static int pci_pm_runtime_resume(struct device *dev)
+>  
+>  	/*
+>  	 * If pci_dev->driver is not set (unbound), the device should
+> -	 * always remain in D0 regardless of the runtime PM status
+> +	 * always remain in D0 regardless of the runtime PM status.
+> +	 * But if its parent can go to D3cold, this device may have
+> +	 * been in D3cold as well and require restoration of its BARs.
+>  	 */
+> -	if (!pci_dev->driver)
+> +	if (!pci_dev->driver) {
+> +		pci_restore_bars(pci_dev);
 
-> +#if LPC_MAX_BURST % LPC_MAX_DULEN
-> +#error "LPC.. LPC_MAX_BURST must be multiple of LPC_MAX_DULEN!"
-> +#endif
+If we do decide not to do a full-blown restore, how do we decide
+whether to use pci_restore_bars() or pci_restore_config_space()?
 
-Is it like this, or also should be power of two?
+I'm not sure why we have both.  The pci_restore_bars() path looks a
+little smarter in that it is more careful when updating 64-bit BARs
+that can't be updated atomically.
 
-> +/* The command register fields */
-> +#define LPC_CMD_SAMEADDR       0x08
-> +#define LPC_CMD_TYPE_IO                0x00
-
-> +#define LPC_CMD_WRITE          0x01
-> +#define LPC_CMD_READ           0x00
-> +/* the bit attribute is W1C. 1 represents OK. */
-> +#define LPC_STAT_BYIRQ         0x02
-
-BIT() ?
-
-> +#define LPC_STATUS_IDLE                0x01
-> +#define LPC_OP_FINISHED                0x02
-> +
-> +#define LPC_START_WORK         0x01
-
-Ditto?
-
-> +static inline int wait_lpc_idle(unsigned char *mbase,
-> +                               unsigned int waitcnt) {
-> +       u32 opstatus;
-> +
-> +       while (waitcnt--) {
-> +               ndelay(LPC_NSEC_PERWAIT);
-> +               opstatus = readl(mbase + LPC_REG_OP_STATUS);
-> +               if (opstatus & LPC_STATUS_IDLE)
-> +                       return (opstatus & LPC_OP_FINISHED) ? 0 : (-EIO);
-> +       }
-> +       return -ETIME;
-
-Personally I prefer timeout loops in a do {} while (--count) style.
-
-> +}
-
-> +static int
-> +hisi_lpc_target_in(struct hisi_lpc_dev *lpcdev, struct lpc_cycle_para *para,
-> +                 unsigned long addr, unsigned char *buf,
-> +                 unsigned long opcnt)
-> +{
-> +       unsigned int cmd_word;
-> +       unsigned int waitcnt;
-> +       unsigned long flags;
-> +       int ret;
-> +
-> +       if (!buf || !opcnt || !para || !para->csize || !lpcdev)
-> +               return -EINVAL;
-
-> +
-> +       cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_READ;
-> +       waitcnt = LPC_PEROP_WAITCNT;
-> +       if (!(para->opflags & FG_INCRADDR_LPC)) {
-> +               cmd_word |= LPC_CMD_SAMEADDR;
-> +               waitcnt = LPC_MAX_WAITCNT;
-> +       }
-> +
-
-> +       ret = 0;
-> +
-
-Sounds redundant.
-
-> +       /* whole operation must be atomic */
-> +       spin_lock_irqsave(&lpcdev->cycle_lock, flags);
-> +
-> +       writel_relaxed(opcnt, lpcdev->membase + LPC_REG_OP_LEN);
-> +
-> +       writel_relaxed(cmd_word, lpcdev->membase + LPC_REG_CMD);
-> +
-> +       writel_relaxed(addr, lpcdev->membase + LPC_REG_ADDR);
-> +
-> +       writel(LPC_START_WORK, lpcdev->membase + LPC_REG_START);
-> +
-> +       /* whether the operation is finished */
-> +       ret = wait_lpc_idle(lpcdev->membase, waitcnt);
-
-> +       if (!ret) {
-
-I would rather go with usual pattern
-if (ret) {
- ...
- return ret;
-}
-
-
-> +               for (; opcnt; opcnt--, buf++)
-> +                       *buf = readb(lpcdev->membase + LPC_REG_RDATA);
-
-Looks like a do {} while (slightly better for my opinion).
-
-do {
-              *buf++ = readb(lpcdev->membase + LPC_REG_RDATA);
-} while (--opcnt);
-
-> +       }
-> +
-> +       spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
-> +
-> +       return ret;
-> +}
-
-> +       for (; opcnt; buf++, opcnt--)
-> +               writeb(*buf, lpcdev->membase + LPC_REG_WDATA);
-
-Ditto.
-
-> +static u32 hisi_lpc_comm_in(void *hostdata, unsigned long pio, size_t dwidth)
-
-> +       if (!lpcdev || !dwidth || dwidth > LPC_MAX_DULEN)
-> +               return -1;
-
-~0 ?
-
-> +       if (ret)
-> +               return -1;
-
-Ditto.
-
-> +       do {
-> +               int ret;
-> +
-> +               ret = hisi_lpc_target_in(lpcdev, &iopara, addr,
-> +                                       buf, dwidth);
-> +               if (ret)
-> +                       return ret;
-> +               buf += dwidth;
-
-> +               count--;
-> +       } while (count);
-
-} while (--count);
-
-> +       do {
-> +               if (hisi_lpc_target_out(lpcdev, &iopara, addr, buf,
-> +                                               dwidth))
-> +                       break;
-> +               buf += dwidth;
-> +               count--;
-> +       } while (count);
-
-Ditto.
-
-> +static int hisi_lpc_probe(struct platform_device *pdev)
-> +{
-> +       struct device *dev = &pdev->dev;
-> +       struct acpi_device *acpi_device = ACPI_COMPANION(dev);
-> +       struct logic_pio_hwaddr *range;
-> +       struct hisi_lpc_dev *lpcdev;
-> +       struct resource *res;
-
-> +       int ret = 0;
-
-Redundant assignment.
-
-> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-
-> +       if (!res)
-> +               return -ENODEV;
-
-Redundant.
-
-> +
-> +       lpcdev->membase = devm_ioremap_resource(dev, res);
-> +       if (IS_ERR(lpcdev->membase)) {
-
-> +               dev_err(dev, "remap failed\n");
-
-Redundant.
-
-> +               return PTR_ERR(lpcdev->membase);
-> +       }
-
-> +       /* register the LPC host PIO resources */
-
-> +       if (!acpi_device)
-> +               ret = of_platform_populate(dev->of_node, NULL, NULL, dev);
-
-> +       if (ret) {
-
-> +               dev_err(dev, "populate children failed (%d)\n", ret);
-
-JFYI: ret is printed by device core if ->probe() fails.
-
-> +               return ret;
-> +       }
-
-This condition should go under if (!acpi_device) case.
-
--- 
-With Best Regards,
-Andy Shevchenko
+>  		return 0;
+> +	}
+>  
+>  	if (!pm || !pm->runtime_resume)
+>  		return -ENOSYS;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f6a4dd10d9b0..f694650235f2 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -563,7 +563,7 @@ int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask)
+>   * Restore the BAR values for a given device, so as to make it
+>   * accessible by its driver.
+>   */
+> -static void pci_restore_bars(struct pci_dev *dev)
+> +void pci_restore_bars(struct pci_dev *dev)
+>  {
+>  	int i;
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index fcd81911b127..29dc15bbe3bf 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -83,6 +83,7 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+>  void pci_free_cap_save_buffers(struct pci_dev *dev);
+>  bool pci_bridge_d3_possible(struct pci_dev *dev);
+>  void pci_bridge_d3_update(struct pci_dev *dev);
+> +void pci_restore_bars(struct pci_dev *dev);
+>  
+>  static inline void pci_wakeup_event(struct pci_dev *dev)
+>  {
+> -- 
+> 2.15.1
+> 
