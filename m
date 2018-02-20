@@ -1,264 +1,324 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:48099 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750746AbeB0SMO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 13:12:14 -0500
-Subject: Re: MSI-X diagnostic problems
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <959dfbab-7d90-f10c-f4aa-7f0bf5a6af3e@synopsys.com>
- <2050bd39-12cd-4d21-3127-4282392c555f@arm.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <e37d8deb-e090-3f52-322b-1c6738199b81@synopsys.com>
-Date: Tue, 27 Feb 2018 18:11:52 +0000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v14 6/9] HISI LPC: Support the LPC host on Hip06/Hip07
+ with DT bindings
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
+ <1519062520-198902-7-git-send-email-john.garry@huawei.com>
+ <CAHp75VcOayaBDrEPnorYiywn_g22TYZ7-Rw396Czj7briyLYfg@mail.gmail.com>
+CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        "Rob Herring" <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Arnd Bergmann" <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>,
+        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <cb2d5338-0f3b-6e30-3611-0cb18dd9fb1a@huawei.com>
+Date: Tue, 20 Feb 2018 15:39:55 +0000
 MIME-Version: 1.0
-In-Reply-To: <2050bd39-12cd-4d21-3127-4282392c555f@arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAHp75VcOayaBDrEPnorYiywn_g22TYZ7-Rw396Czj7briyLYfg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/02/2018 13:25, Marc Zyngier wrote:
-> Hi Gustavo,
-> 
-> On 27/02/18 12:42, Gustavo Pimentel wrote:
->> Hi Marc,
+On 20/02/2018 14:50, Andy Shevchenko wrote:
+> On Mon, Feb 19, 2018 at 7:48 PM, John Garry <john.garry@huawei.com> wrote:
+>> From: Zhichang Yuan <yuanzhichang@hisilicon.com>
 >>
->> I'm having some problems in my setup related to MSI-X, maybe you could help me
->> debugging where could be the problem.
+>> The low-pin-count(LPC) interface of Hip06/Hip07 accesses the peripherals in
+>> I/O port addresses. This patch implements the LPC host controller driver
+>> which perform the I/O operations on the underlying hardware.
+>> We don't want to touch those existing peripherals' driver, such as ipmi-bt.
+>> So this driver applies the indirect-IO introduced in the previous patch
+>> after registering an indirect-IO node to the indirect-IO devices list which
+>> will be searched in the I/O accessors to retrieve the host-local I/O port.
 >>
->> Currently I have a RC (bridge) with 1 MSI-X interrupt and a commercial USB 3.0
->> EP capable of 8 MSI-X interrupts, however the xhci driver only uses 2 interrupts.
->>
->> I have posted below some debug info gathered during my tests.
->>
->>
->> # cat /proc/interrupts
->>            CPU0
->>   3:      10014  ARC In-core Intc   3  Timer0 (per-cpu-tick)
->>   4:          0  dw-apb-ictl   4  eth0
->>   8:          1  dw-apb-ictl   8  ehci_hcd:usb1, ohci_hcd:usb2
->>   9:         38  dw-apb-ictl   7  dw-mci
->>  14:          0  dw-apb-ictl  14  e001d000.i2c
->>  16:          0  dw-apb-ictl  16  e001f000.i2c
->>  19:       4065  dw-apb-ictl  19  ttyS3
->>  46:          0   PCI-MSI   0  aerdrv
->>  47:          1   PCI-MSI 524288  xhci_hcd
->>  48:          0   PCI-MSI 524289  xhci_hcd
->> #
->> #
->> # find /sys/ | grep msi
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_bus
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_irqs
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_irqs/46
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_bus
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs/48
->> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs/47
->> #
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/ms
->> i_bus
->> 1
->> #
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/ms
->> i_irqs/46
->> msix
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
->> 00:01:00.0/msi_bus
->> 1
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
->> 00:01:00.0/msi_irqs/48
->> msix
->> #
->> #
->> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
->> 00:01:00.0/msi_irqs/47
->> msix
->>
->>
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:dw_pcie_host_init:449) pp->num_vectors = 64
->> (GP:dw_pcie_host_init:453) dw_pcie_allocate_domains
->> (GP:dw_pcie_allocate_domains:277) pp->num_vectors = 64
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:pci_alloc_irq_vectors_affinity:1214) MSI-X
->> (GP:__pci_enable_msix_range:1132) min=1, max=32
->> (GP:__pci_enable_msix:975)
->> (GP:__pci_enable_msix:981) nr_entries = 1, nvec = 32
->> (GP:__pci_enable_msix_range:1145) rc=1
->> (GP:__pci_enable_msix:975)
->> (GP:__pci_enable_msix:981) nr_entries = 1, nvec = 1
->> (GP:__pci_enable_msix:987)
->> (GP:msix_capability_init:773)
->> (GP:msix_capability_init:777) Disable MSI-X
->> (GP:msix_capability_init:780) Control register 0x00000000
->> (GP:msix_map_region:682) Table offset = 0x00000000, bir = 0)
->> (GP:msix_map_region:685) phys_addr = 0xD0500000, nr_entries = 1, ENTRY_SIZE = 16
->> bytes, table size = 16 bytes)
->> (GP:msix_setup_entries:701) Allocate MSI entries 0/1
->> (GP:msix_setup_entries:719)
->> (GP:msix_setup_entries:725) dev->irq = 45, base = d0500000,
->> entry->msi_attrib.entry_nr = 0
->> (GP:pci_msi_setup_msi_irqs:53) msi_domain_alloc_irqs
->> (GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
->> (GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
->> (GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
->> (GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 46, bit + 0 = 0
->> (GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:__irq_domain_activate_irq:1521)
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:msi_domain_activate:107)
->> (GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000000, msg->address_hi = 0x9A228000,
->> msg->data = 0x00000000, hwirq = 0
->> (GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
->> 0x00000000, msg->data = 0x00000000
->> (GP:msix_capability_init:804) Mask all MSI-X and enable MSI-X
->> (GP:msix_program_entries:743)
->> (GP:msix_capability_init:810) Populating MSI sysfs
->> (GP:msix_capability_init:818) Unmask all MSI-X
->> (GP:__pci_enable_msix_range:1145) rc=0
-(GP:request_threaded_irq:1694)
->> (GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
-(GP:dw_pci_bottom_unmask:187)
-(GP:dw_pci_bottom_unmask:197) ctrl = 0, res = 0, bit = 0
-(GP:dw_pci_bottom_unmask:198) Before, pp->irq_status[0] = 0x0
-(GP:dw_pci_bottom_unmask:200) After, pp->irq_status[0] = 0x1
-(GP:request_threaded_irq:1769) retval = 0
-(GP:request_threaded_irq:1694)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)(GP:request_threaded_irq:1769) retval = 0
-(GP:request_threaded_irq:1694)
-(GP:request_threaded_irq:1769) retval = 0
->> (GP:xhci_setup_msix:264)
->> (GP:pci_alloc_irq_vectors_affinity:1214) MSI-X
->> (GP:__pci_enable_msix_range:1132) min=2, max=2
->> (GP:__pci_enable_msix:975)
->> (GP:__pci_enable_msix:981) nr_entries = 8, nvec = 2
->> (GP:__pci_enable_msix:987)
->> (GP:msix_capability_init:773)
->> (GP:msix_capability_init:777) Disable MSI-X
->> (GP:msix_capability_init:780) Control register 0x00000007
->> (GP:msix_map_region:682) Table offset = 0x00002000, bir = 0)
->> (GP:msix_map_region:685) phys_addr = 0xD0402000, nr_entries = 8, ENTRY_SIZE = 16
->> bytes, table size = 128 bytes)
->> (GP:msix_setup_entries:701) Allocate MSI entries 0/2
->> (GP:msix_setup_entries:719)
->> (GP:msix_setup_entries:725) dev->irq = 45, base = d0402000,
->> entry->msi_attrib.entry_nr = 0
->> (GP:msix_setup_entries:701) Allocate MSI entries 1/2
->> (GP:msix_setup_entries:719)
->> (GP:msix_setup_entries:725) dev->irq = 45, base = d0402000,
->> entry->msi_attrib.entry_nr = 1
->> (GP:pci_msi_setup_msi_irqs:53) msi_domain_alloc_irqs
->> (GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
->> (GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
->> (GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
->> (GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 47, bit + 0 = 1
->> (GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
->> (GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
->> (GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
->> (GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 48, bit + 0 = 2
->> (GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:__irq_domain_activate_irq:1521)
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:msi_domain_activate:107)
->> (GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000001, msg->address_hi = 0x9A228000,
->> msg->data = 0x00000000, hwirq = 1
->> (GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
->> 0x00000000, msg->data = 0x00000001
->> (GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:__irq_domain_activate_irq:1521)
->> (GP:__irq_domain_activate_irq:1516)
->> (GP:msi_domain_activate:107)
->> (GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000002, msg->address_hi = 0x9A228000,
->> msg->data = 0x00000000, hwirq = 2
->> (GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
->> 0x00000000, msg->data = 0x00000002
->> (GP:msix_capability_init:804) Mask all MSI-X and enable MSI-X
->> (GP:msix_program_entries:743)
->> (GP:msix_capability_init:810) Populating MSI sysfs
->> (GP:msix_capability_init:818) Unmask all MSI-X
->> (GP:__pci_enable_msix_range:1145) rc=0
->> (GP:xhci_setup_msix:285) 0/2
-(GP:request_threaded_irq:1694)
->> (GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
-(GP:dw_pci_bottom_unmask:187)
-(GP:dw_pci_bottom_unmask:197) ctrl = 0, res = 0, bit = 1
-(GP:dw_pci_bottom_unmask:198) Before, pp->irq_status[0] = 0x1
-(GP:dw_pci_bottom_unmask:200) After, pp->irq_status[0] = 0x3
-(GP:request_threaded_irq:1769) retval = 0
-(GP:xhci_setup_msix:289) ret = 0
->> (GP:xhci_setup_msix:285) 1/2
-(GP:request_threaded_irq:1694)
->> (GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
-(GP:dw_pci_bottom_unmask:187)
-(GP:dw_pci_bottom_unmask:197) ctrl = 0, res = 0, bit = 2
-(GP:dw_pci_bottom_unmask:198) Before, pp->irq_status[0] = 0x3
-(GP:dw_pci_bottom_unmask:200) After, pp->irq_status[0] = 0x7
-(GP:request_threaded_irq:1769) retval = 0
-(GP:xhci_setup_msix:289) ret = 0
-(GP:xhci_setup_msix:293) msix_enabled
-(GP:request_threaded_irq:1694)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
-(GP:request_threaded_irq:1769) retval = 0
-(GP:request_threaded_irq:1694)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
-(GP:request_threaded_irq:1769) retval = 0
-(GP:request_threaded_irq:1694)
->> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
->> (GP:__irq_domain_activate_irq:1516)
-(GP:__irq_domain_activate_irq:1516)
-(GP:request_threaded_irq:1769) retval = 0
->>
->> Me and João have looked to the sequence and this seems to be correct, however we
->> are not receiving any interrupts and that originates the xhci to abort...
->>
->> xhci_hcd 0000:01:00.0: Abort failed to stop command ring: -110
->> xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
->> xhci_hcd 0000:01:00.0: HC died; cleaning up
->> xhci_hcd 0000:01:00.0: Error while assigning device slot ID
->> xhci_hcd 0000:01:00.0: Max number of devices this xHCI host supports is 64.
->> usb usb3-port1: couldn't allocate usb_device
->>
->> Any clue? Thanks in advance.
-> It is hard to dig in such a trace. One thing that strikes me is that I
-> don't see any trace that suggest that the interrupts get unmasked. That
-> should happen when the driver issues a request_irq.
+>> The driver config is set as a bool instead of a trisate. The reason
+>> here is that, by the very nature of the driver providing a logical
+>> PIO range, it does not make sense to have this driver as a loadable
+>> module. Another more specific reason is that the Huawei D03 board
+>> which includes hip06 SoC requires the LPC bus for UART console, so
+>> should be built in.
+>
 
-I have completed the above trace. As you can see the interrupts are being unmasked.
+Hi Andy,
 
-This modification has worked before with just one device with MSI-X capability,
-I assume the problem exists now because I have now 2 devices (Bridge + EP) the
-MSI-X capability (that's my currently theory).
+>> +config HISILICON_LPC
+>> +       bool "Support for ISA I/O space on Hisilicon hip06/7"
+>> +       depends on (ARM64 && (ARCH_HISI || COMPILE_TEST))
+>
+> Redundant parens.
 
-> 
-> I'd suggest you investigate that area.
-> 
-> Thanks,
-> 
-> 	M.
-> 
+OK, these can be removed
 
-Regards,
-Gustavo
+>
+>> +       select INDIRECT_PIO
+>> +       help
+>> +         Driver needed for some legacy ISA devices attached to Low-Pin-Count
+>> +         on Hisilicon hip06/7 SoC.
+>
+>
+>
+>> +#if LPC_MAX_DULEN > LPC_MAX_BURST
+>> +#error "LPC.. MAX_DULEN must be not bigger than MAX_OPCNT!"
+>> +#endif
+>
+> But here you can easily avoid an #error, by making them equal, just
+> issue a warning instead.
+
+These values are dictated by the HW. Well the burst length is. 
+Regardless I have simplified the driver not to use the burst mode so I 
+can remove.
+
+>
+>> +#if LPC_MAX_BURST % LPC_MAX_DULEN
+>> +#error "LPC.. LPC_MAX_BURST must be multiple of LPC_MAX_DULEN!"
+>> +#endif
+>
+> Is it like this, or also should be power of two?
+>
+
+As above
+
+>> +/* The command register fields */
+>> +#define LPC_CMD_SAMEADDR       0x08
+>> +#define LPC_CMD_TYPE_IO                0x00
+>
+>> +#define LPC_CMD_WRITE          0x01
+>> +#define LPC_CMD_READ           0x00
+>> +/* the bit attribute is W1C. 1 represents OK. */
+>> +#define LPC_STAT_BYIRQ         0x02
+>
+> BIT() ?
+
+Not all, but I'll fix them up to be clearer
+
+>
+>> +#define LPC_STATUS_IDLE                0x01
+>> +#define LPC_OP_FINISHED                0x02
+>> +
+>> +#define LPC_START_WORK         0x01
+>
+> Ditto?
+>
+>> +static inline int wait_lpc_idle(unsigned char *mbase,
+>> +                               unsigned int waitcnt) {
+>> +       u32 opstatus;
+>> +
+>> +       while (waitcnt--) {
+>> +               ndelay(LPC_NSEC_PERWAIT);
+>> +               opstatus = readl(mbase + LPC_REG_OP_STATUS);
+>> +               if (opstatus & LPC_STATUS_IDLE)
+>> +                       return (opstatus & LPC_OP_FINISHED) ? 0 : (-EIO);
+>> +       }
+>> +       return -ETIME;
+>
+> Personally I prefer timeout loops in a do {} while (--count) style.
+
+OK, I think it's fine to change as mentioned
+
+>
+>> +}
+>
+>> +static int
+>> +hisi_lpc_target_in(struct hisi_lpc_dev *lpcdev, struct lpc_cycle_para *para,
+>> +                 unsigned long addr, unsigned char *buf,
+>> +                 unsigned long opcnt)
+>> +{
+>> +       unsigned int cmd_word;
+>> +       unsigned int waitcnt;
+>> +       unsigned long flags;
+>> +       int ret;
+>> +
+>> +       if (!buf || !opcnt || !para || !para->csize || !lpcdev)
+>> +               return -EINVAL;
+>
+>> +
+>> +       cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_READ;
+>> +       waitcnt = LPC_PEROP_WAITCNT;
+>> +       if (!(para->opflags & FG_INCRADDR_LPC)) {
+>> +               cmd_word |= LPC_CMD_SAMEADDR;
+>> +               waitcnt = LPC_MAX_WAITCNT;
+>> +       }
+>> +
+>
+>> +       ret = 0;
+>> +
+>
+> Sounds redundant.
+
+it is, so I'll fix
+
+>
+>> +       /* whole operation must be atomic */
+>> +       spin_lock_irqsave(&lpcdev->cycle_lock, flags);
+>> +
+>> +       writel_relaxed(opcnt, lpcdev->membase + LPC_REG_OP_LEN);
+>> +
+>> +       writel_relaxed(cmd_word, lpcdev->membase + LPC_REG_CMD);
+>> +
+>> +       writel_relaxed(addr, lpcdev->membase + LPC_REG_ADDR);
+>> +
+>> +       writel(LPC_START_WORK, lpcdev->membase + LPC_REG_START);
+>> +
+>> +       /* whether the operation is finished */
+>> +       ret = wait_lpc_idle(lpcdev->membase, waitcnt);
+>
+>> +       if (!ret) {
+>
+> I would rather go with usual pattern
+> if (ret) {
+>  ...
+>  return ret;
+> }
+>
+
+The intention was to not have 2 calls to free the spinlock. But we can 
+go with the usual pattern.
+
+>
+>> +               for (; opcnt; opcnt--, buf++)
+>> +                       *buf = readb(lpcdev->membase + LPC_REG_RDATA);
+>
+> Looks like a do {} while (slightly better for my opinion).
+>
+> do {
+>               *buf++ = readb(lpcdev->membase + LPC_REG_RDATA);
+> } while (--opcnt);
+>
+
+ok
+
+>> +       }
+>> +
+>> +       spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
+>> +
+>> +       return ret;
+>> +}
+>
+>> +       for (; opcnt; buf++, opcnt--)
+>> +               writeb(*buf, lpcdev->membase + LPC_REG_WDATA);
+>
+> Ditto.
+>
+
+Ditto
+
+>> +static u32 hisi_lpc_comm_in(void *hostdata, unsigned long pio, size_t dwidth)
+>
+>> +       if (!lpcdev || !dwidth || dwidth > LPC_MAX_DULEN)
+>> +               return -1;
+>
+> ~0 ?
+>
+
+I need to check the patchset for all of these :)
+
+>> +       if (ret)
+>> +               return -1;
+>
+> Ditto.
+>
+>> +       do {
+>> +               int ret;
+>> +
+>> +               ret = hisi_lpc_target_in(lpcdev, &iopara, addr,
+>> +                                       buf, dwidth);
+>> +               if (ret)
+>> +                       return ret;
+>> +               buf += dwidth;
+>
+>> +               count--;
+>> +       } while (count);
+>
+> } while (--count);
+>
+>> +       do {
+>> +               if (hisi_lpc_target_out(lpcdev, &iopara, addr, buf,
+>> +                                               dwidth))
+>> +                       break;
+>> +               buf += dwidth;
+>> +               count--;
+>> +       } while (count);
+>
+> Ditto.
+
+ok, we can use the do-while loop
+
+>
+>> +static int hisi_lpc_probe(struct platform_device *pdev)
+>> +{
+>> +       struct device *dev = &pdev->dev;
+>> +       struct acpi_device *acpi_device = ACPI_COMPANION(dev);
+>> +       struct logic_pio_hwaddr *range;
+>> +       struct hisi_lpc_dev *lpcdev;
+>> +       struct resource *res;
+>
+>> +       int ret = 0;
+>
+> Redundant assignment.
+
+Right
+
+>
+>> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>
+>> +       if (!res)
+>> +               return -ENODEV;
+>
+> Redundant.
+>
+
+Right, devm_ioremap_resource() can deal with res = NULL.
+
+>> +
+>> +       lpcdev->membase = devm_ioremap_resource(dev, res);
+>> +       if (IS_ERR(lpcdev->membase)) {
+>
+>> +               dev_err(dev, "remap failed\n");
+>
+> Redundant.
+
+right, an error is printed in devm_ioremap_resource()
+
+>
+>> +               return PTR_ERR(lpcdev->membase);
+>> +       }
+>
+>> +       /* register the LPC host PIO resources */
+>
+>> +       if (!acpi_device)
+>> +               ret = of_platform_populate(dev->of_node, NULL, NULL, dev);
+>
+>> +       if (ret) {
+>
+>> +               dev_err(dev, "populate children failed (%d)\n", ret);
+>
+> JFYI: ret is printed by device core if ->probe() fails.
+
+OK, so then this is superfluous
+
+>
+>> +               return ret;
+>> +       }
+>
+> This condition should go under if (!acpi_device) case.
+>
+
+Thanks,
+John
+
+
