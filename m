@@ -1,49 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:49065 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750961AbeBHMd4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Feb 2018 07:33:56 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: Re: [PATCH v14 1/9] LIB: Introduce a generic PIO mapping method
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
+ <1519062520-198902-2-git-send-email-john.garry@huawei.com>
+ <CAHp75Vf102MDDZ8d9kXw2K0+0_WkhFMSq7o=Vz=KrzOM=NRW5A@mail.gmail.com>
+CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        "Rob Herring" <robh+dt@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sekhar Nori <nsekhar@ti.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        John Keeping <john@metanate.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/3] PCI: endpoint: Handle 64-bit BARs properly
-Date: Thu,  8 Feb 2018 13:33:44 +0100
-Message-Id: <20180208123346.20784-2-niklas.cassel@axis.com>
-In-Reply-To: <20180208123346.20784-1-niklas.cassel@axis.com>
-References: <20180208123346.20784-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+        "Arnd Bergmann" <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>,
+        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <7197ce31-c4c2-d00e-be04-1edc14c3e721@huawei.com>
+Date: Tue, 20 Feb 2018 15:06:51 +0000
+MIME-Version: 1.0
+In-Reply-To: <CAHp75Vf102MDDZ8d9kXw2K0+0_WkhFMSq7o=Vz=KrzOM=NRW5A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A 64-bit BAR uses the succeeding BAR for the upper bits, therefore
-we cannot call pci_epc_set_bar() on a BAR that follows a 64-bit BAR.
+On 20/02/2018 14:33, Andy Shevchenko wrote:
+> On Mon, Feb 19, 2018 at 7:48 PM, John Garry <john.garry@huawei.com> wrote:
+>> From: Zhichang Yuan <yuanzhichang@hisilicon.com>
+>>
+>> In commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
+>> pci_pio_to_address()"), a new I/O space management was supported. With
+>> that driver, the I/O ranges configured for PCI/PCIe hosts on some
+>> architectures can be mapped to logical PIO, converted easily between
+>> CPU address and the corresponding logicial PIO. Based on this, PCI
+>> I/O devices can be accessed in a memory read/write way through the
+>> unified in/out accessors.
+>>
+>> But on some archs/platforms, there are bus hosts which access I/O
+>> peripherals with host-local I/O port addresses rather than memory
+>> addresses after memory-mapped.
+>>
+>> To support those devices, a more generic I/O mapping method is introduced
+>> here. Through this patch, both the CPU addresses and the host-local port
+>> can be mapped into the logical PIO space with different logical/fake PIOs.
+>> After this, all the I/O accesses to either PCI MMIO devices or host-local
+>> I/O peripherals can be unified into the existing I/O accessors defined in
+>> asm-generic/io.h and be redirected to the right device-specific hooks
+>> based on the input logical PIO.
+>
 
-If pci_epc_set_bar() is called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
-it has to be up to the controller driver to write both BAR[x] and BAR[x+1]
-(and BAR_mask[x] and BAR_mask[x+1]).
+Hi Andy,
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/endpoint/functions/pci-epf-test.c | 2 ++
- 1 file changed, 2 insertions(+)
+>> +#define PIO_INDIRECT           0x01UL /* indirect IO flag */
+>> +#define PIO_CPU_MMIO           0x00UL /* memory mapped io flag */
+>
+> It looks like bitfield, but from use I don't see it.
+>
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 800da09d9005..eef85820f59e 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -382,6 +382,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
- 			if (bar == test_reg_bar)
- 				return ret;
- 		}
-+		if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
-+			bar++;
- 	}
- 
- 	return 0;
--- 
-2.14.2
+IIRC, the orignal intention was that this would be a bit value in a 
+bitfield.
+
+> Perhaps use enum instead?
+
+I'll change to enum to be clear.
+
+>> +       resource_size_t hwaddr = -1;
+>
+>> +unsigned long
+>> +               return -1;
+>> +               return -1;
+>
+>> +unsigned long
+>> +       return -1;
+>
+>> +type logic_in##bw(unsigned long addr)                                  \
+>> +       type ret = -1;                                                  \
+>
+> All types above are unsigned. I'm not sure it's the best approach to
+> use -1 implicitly casted to unsigned type.
+>
+> I would rather use ~0UL or alike.
+>
+
+Yes, I can change these.
+
+Much appreciated,
+John
