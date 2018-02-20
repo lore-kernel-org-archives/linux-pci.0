@@ -1,91 +1,112 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: Re: [PATCH v14 0/9] LPC: legacy ISA I/O support
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-References: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
- <CAHp75VeFiQocuedW64ePgLO=_FQd7Q_hX-+wMh0zec3XUzhVxw@mail.gmail.com>
-CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        "Rob Herring" <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Arnd Bergmann" <arnd@arndb.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Dann Frazier <dann.frazier@canonical.com>,
-        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>,
-        "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <55d64c79-87b6-78e0-b13e-77ac7f1c9e90@huawei.com>
-Date: Tue, 20 Feb 2018 15:41:18 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45006 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750866AbeBTE5E (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Feb 2018 23:57:04 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAHp75VeFiQocuedW64ePgLO=_FQd7Q_hX-+wMh0zec3XUzhVxw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 20 Feb 2018 10:27:02 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v7 0/7] Address error and recovery for AER and DPC
+In-Reply-To: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
+References: <1516430119-3825-1-git-send-email-poza@codeaurora.org>
+Message-ID: <b667e39f9d16a90ff8745f90010871da@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/02/2018 14:54, Andy Shevchenko wrote:
-> On Mon, Feb 19, 2018 at 7:48 PM, John Garry <john.garry@huawei.com> wrote:
->> > This patchset supports the IPMI-bt device attached to the Low-Pin-Count
->> > interface implemented on Hisilicon Hip06/Hip07 SoC.
->> >                         -----------
->> >                         | LPC host|
->> >                         |         |
->> >                         -----------
->> >                              |
->> >                 _____________V_______________LPC
->> >                   |                       |
->> >                   V                       V
->> >                                      ------------
->> >                                      |  BT(ipmi)|
->> >                                      ------------
->> >
->> > When master accesses those peripherals beneath the Hip06/Hip07 LPC, a specific
->> > LPC driver is needed to make LPC host generate the standard LPC I/O cycles with
->> > the target peripherals'I/O port addresses. But on curent arm64 world, there is
->> > no real I/O accesses. All the I/O operations through in/out accessors are based
->> > on MMIO ranges; on Hip06/Hip07 LPC the I/O accesses are performed through driver
->> > specific accessors rather than MMIO.
->> > To solve this issue and keep the relevant existing peripherals' drivers untouched,
->> > this patchset:
->> >    - introduces a generic I/O space management framework, logical PIO, to support
->> >       I/O operations on host controllers operating either on MMIO buses or on buses
->> >      requiring specific driver I/O accessors;
->> >    - redefines the in/out accessors to provide a unified interface for both MMIO
->> >      and driver specific I/O operations. Using logical PIO, th call of in/out() from
->> >      the host children drivers, such as ipmi-si, will be redirected to the
->> >      corresponding device-specific I/O hooks to perform the I/O accesses.
->> >
->> > Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC peripherals can
->> > be supported without any changes on the existing ipmi-si driver.
->> >
->> > The whole patchset has been tested on Hip07 D05 board both using DTB and ACPI.
->> >
->> > Differences to v13:
->> > - dropped ACPI scan handler and added patch to not enumerate children
->> >   of indirect IO hosts in ACPI code
->> > - tidied up logic_pio.c a bit for kerneldoc and made some APIs clearer
->> >   to understand
->> > - tided (and simplified) hisi_lpc.c and added new ACPI probe code
->> >   (same as previous ACPI scan handler code, so comments from Rafael
->> >   and Andy included)
->> > - reinstated PCI range upper limit check in pci_pio_to_address()
->> > - dropped Dann Frazier's "tested-by" tag in light of changes
->> > - rebase to linuxnext 20180219 (had to fix locally arm64 build issue)
->> >
-> Some minor comments per patches, otherwise FWIW
->
-> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
->
+On 2018-01-20 12:05, Oza Pawandeep wrote:
+> This patch set brings in error handling support for DPC
+> 
+> The current implementation of AER and error message broadcasting to the
+> EP driver is tightly coupled and limited to AER service driver.
+> It is important to factor out broadcasting and other link handling
+> callbacks. So that not only when AER gets triggered, but also when DPC 
+> get
+> triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+> 
+> DPC should enumerate the devices after recovering the link, which is
+> achieved by implementing error_resume callback.
+> 
+> Changes since v6:
+>     Sinan's and Stefan's comments implemented.
+> 	> reordered patch 6 and 7
+> 	> cleaned up
+> Changes since v5:
+>     Sinan's and Keith's comments incorporated.
+>         > made separate patch for mutex
+>         > unified error repotting codes into driver/pci/pci.h
+>         > got rid of wait link active/inactive and
+>           made generic function in driver/pci/pci.c
+> Changes since v4:
+>     Bjorn's comments incorporated.
+>         > Renamed only do_recovery.
+>         > moved the things more locally to drivers/pci/pci.h
+> Changes since v3:
+>     Bjorn's comments incorporated.
+>         > Made separate patch renaming generic pci_err.c
+>         > Introduce pci_err.h to contain all the error types and 
+> recovery
+>         > removed all the dependencies on pci.h
+> Changes since v2:
+>     Based on feedback from Keith:
+>     "
+>     When DPC is triggered due to receipt of an uncorrectable error 
+> Message,
+>     the Requester ID from the Message is recorded in the DPC Error
+>     Source ID register and that Message is discarded and not forwarded 
+> Upstream.
+>     "
+>     Removed the patch where AER checks if DPC service is active
+> Changes since v1:
+>     Kbuild errors fixed:
+>         > pci_find_dpc_dev made static
+>         > ras_event.h updated
+>         > pci_find_aer_service call with CONFIG check
+>         > pci_find_dpc_service call with CONFIG check
+> 
+> Oza Pawandeep (7):
+>   PCI/AER: Rename error recovery to generic pci naming
+>   PCI/AER: factor out error reporting from AER
+>   PCI/ERR: add mutex to synchronize recovery
+>   PCI/DPC: Unify and plumb error handling into DPC
+>   PCI/AER: Unify aer error defines at single space
+>   PCI/DPC: Enumerate the devices after DPC trigger event
+>   PCI: Unify wait for link active into generic pci
+> 
+>  drivers/acpi/apei/ghes.c               |   1 +
+>  drivers/pci/hotplug/pciehp_hpc.c       |  21 +-
+>  drivers/pci/pci.c                      |  39 +++-
+>  drivers/pci/pci.h                      |  11 +
+>  drivers/pci/pcie/Makefile              |   2 +-
+>  drivers/pci/pcie/aer/aerdrv.h          |  30 ---
+>  drivers/pci/pcie/aer/aerdrv_core.c     | 293 
+> +-------------------------
+>  drivers/pci/pcie/aer/aerdrv_errprint.c |   1 +
+>  drivers/pci/pcie/pcie-dpc.c            | 115 ++++++++++-
+>  drivers/pci/pcie/pcie-err.c            | 366 
+> +++++++++++++++++++++++++++++++++
+>  drivers/pci/pcie/portdrv.h             |   2 +
+>  include/linux/aer.h                    |   4 -
+>  include/linux/pci.h                    |   1 +
+>  13 files changed, 534 insertions(+), 352 deletions(-)
+>  create mode 100644 drivers/pci/pcie/pcie-err.c
 
-Thanks, the comments in the other 2 patches I did not reply to are ok.
+Hi Bjorn,
 
-John
+I will rebase this patch series on pci and post it again.
+on
+https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
+
+Regards,
+Oza.
