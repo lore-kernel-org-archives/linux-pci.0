@@ -1,147 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33813 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753048AbeB0MUL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 07:20:11 -0500
-Received: by mail-pf0-f196.google.com with SMTP id j20so4431327pfi.1
-        for <linux-pci@vger.kernel.org>; Tue, 27 Feb 2018 04:20:11 -0800 (PST)
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com
-Cc: mingkai.hu@nxp.com, peter.newton@nxp.com, minghuan.lian@nxp.com,
-        rajesh.raina@nxp.com, rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
-        devicetree@vger.kernel.org
-Subject: [PATCH v6 1/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver DT bindings
-Date: Tue, 27 Feb 2018 07:19:51 -0500
-Message-Id: <1519733991-32198-1-git-send-email-l.subrahmanya@mobiveil.co.in>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=EwSf=FO=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=EwSf=FO=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <151908204614.37696.12828004282495415825.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <151908155159.37696.9710083237704994886.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <151908204614.37696.12828004282495415825.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 20 Feb 2018 10:41:33 +0100
+Message-ID: <CAJZ5v0irpPi4PXPHWaSpa3=MpUY4Sg3C-iHd0LPQN+FN-VTRpQ@mail.gmail.com>
+Subject: Re: [PATCH v1 2/2] PCI: Allow user to request power management of
+ conventional and hotplug bridges
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>, Valdis Kletnieks <Valdis.Kletnieks@vt.edu>,
+	Mathias Nyman <mathias.nyman@intel.com>, Linux PM <linux-pm@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
+	Peter Wu <peter@lekensteyn.nl>, Qipeng Zha <qipeng.zha@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Andreas Noever <andreas.noever@gmail.com>,
+	Dave Airlie <airlied@gmail.com>, Qi Zheng <qi.zheng@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the DT bindings for Mobiveil PCIe Host Bridge
-IP driver and updates the vendor prefixes file.
+On Tue, Feb 20, 2018 at 12:14 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Previously "pcie_port_pm=force" enabled power management of PCI bridges,
+> but only for PCIe ports (not conventional PCI bridges) and only for ports
+> that do not support hotplug.  Those limitations are there because we're not
+> confident that all those configurations work, not because the spec requires
+> them.
+>
+> Change "pcie_port_pm=force" to enable power management of conventional PCI
+> bridges and hotplug bridges as well as PCIe ports.  As with the previous
+> PCIe port-only behavior, this is not expected to work in all systems.
+>
+> Add a "pci=bridge_pm" parameter to reflect the increased scope.  For
+> backward compatibility, retain "pcie_port_pm=force" as an undocumented
+> equivalent.
+>
+> Add "pci=no_bridge_pm" as an equivalent to "pcie_port_pm=off".  This
+> disables power management for all PCI bridges, which is results in the same
+> behavior as before, since we always disabled power management of
+> conventional PCI bridges, and "pcie_port_pm=off" disabled it for PCIe
+> ports.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Acked-by: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org
----
- .../devicetree/bindings/pci/mobiveil-pcie.txt      | 73 ++++++++++++++++++++++
- .../devicetree/bindings/vendor-prefixes.txt        |  1 +
- MAINTAINERS                                        |  7 +++
- 3 files changed, 81 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+Honestly, I wouldn't do that, at least not this way.
 
-diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-new file mode 100644
-index 0000000..e9dd1e8
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-@@ -0,0 +1,73 @@
-+* Mobiveil AXI PCIe Root Port Bridge DT description
-+
-+Mobiveil's GPEX 4.0 is a PCIe Gen4 root port bridge IP. This configurable IP
-+has up to 8 outbound and inbound windows for the address translation.
-+
-+Required properties:
-+- #address-cells: Address representation for root ports, set to <3>
-+- #size-cells: Size representation for root ports, set to <2>
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- compatible: Should contain "mbvl,gpex40-pcie"
-+- reg: Should contain PCIe registers location and length
-+	"config_axi_slave": PCIe controller registers
-+	"csr_axi_slave"	  : Bridge config registers
-+	"gpio_slave"	  : GPIO registers to control slot power
-+	"apb_csr"	  : MSI registers
-+
-+- device_type: must be "pci"
-+- apio-wins : number of requested apio outbound windows
-+		default 2 outbound windows are configured -
-+		1. Config window
-+		2. Memory window
-+- ppio-wins : number of requested ppio inbound windows
-+		default 1 inbound memory window is configured.
-+- bus-range: PCI bus numbers covered
-+- interrupt-controller: identifies the node as an interrupt controller
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- interrupt-parent : phandle to the interrupt controller that
-+		it is attached to, it should be set to gic to point to
-+		ARM's Generic Interrupt Controller node in system DT.
-+- interrupts: The interrupt line of the PCIe controller
-+		last cell of this field is set to 4 to
-+		denote it as IRQ_TYPE_LEVEL_HIGH type interrupt.
-+- interrupt-map-mask,
-+	interrupt-map: standard PCI properties to define the mapping of the
-+	PCI interface to interrupt numbers.
-+- ranges: ranges for the PCI memory regions (I/O space region is not
-+	supported by hardware)
-+	Please refer to the standard PCI bus binding document for a more
-+	detailed explanation
-+
-+
-+Example:
-+++++++++
-+	pcie0: pcie@a0000000 {
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		compatible = "mbvl,gpex40-pcie";
-+		reg =	<0xa0000000 0x00001000>,
-+			<0xb0000000 0x00010000>,
-+			<0xff000000 0x00200000>,
-+			<0xb0010000 0x00001000>;
-+		reg-names =	"config_axi_slave",
-+				"csr_axi_slave",
-+				"gpio_slave",
-+				"apb_csr";
-+		device_type = "pci";
-+		apio-wins = <2>;
-+		ppio-wins = <1>;
-+		bus-range = <0x00000000 0x000000ff>;
-+		interrupt-controller;
-+		interrupt-parent = <&gic>;
-+		#interrupt-cells = <1>;
-+		interrupts = < 0 89 4 >;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pci_express 1>,
-+				<0 0 0 2 &pci_express 2>,
-+				<0 0 0 3 &pci_express 3>,
-+				<0 0 0 4 &pci_express 4>;
-+		ranges = < 0x83000000 0 0x00000000 0xa8000000 0 0x8000000>;
-+
-+	};
-diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
-index 0994bdd..8263cc7 100644
---- a/Documentation/devicetree/bindings/vendor-prefixes.txt
-+++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
-@@ -197,6 +197,7 @@ lwn	Liebherr-Werk Nenzing GmbH
- macnica	Macnica Americas
- marvell	Marvell Technology Group Ltd.
- maxim	Maxim Integrated Products
-+mbvl	Mobiveil Inc.
- mcube	mCube
- meas	Measurement Specialties
- mediatek	MediaTek Inc.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 44512c3..b295080 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9162,6 +9162,13 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
- S:	Maintained
- F:	drivers/media/dvb-frontends/mn88473*
- 
-+PCI DRIVER FOR MOBIVEIL PCIE IP
-+M:	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-+F:	drivers/pci/host/pcie-mobiveil.c
-+
- MODULE SUPPORT
- M:	Jessica Yu <jeyu@kernel.org>
- M:	Rusty Russell <rusty@rustcorp.com.au>
--- 
-1.8.3.1
+Somebody might be using pcie_port_pm=force already, for example, and
+it works for them for PCIe, but the PCI-to-PCI part of the same system
+may not.
+
+IMO the behavior of pcie_port_pm= should be as is and I don't see
+what's wrong with it being documented.
+
+Of course, you can add pci=bridge_pm/no_bridge_pm to extend the scope,
+but for what reason really?  Just to follow the letter of the spec?
+
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt |    8 ++++----
+>  drivers/pci/pci.c                               |   21 ++++++++++++---------
+>  2 files changed, 16 insertions(+), 13 deletions(-)
+>
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 1d1d53f85ddd..4660105ec851 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -3117,6 +3117,10 @@
+>                 pcie_scan_all   Scan all possible PCIe devices.  Otherwise we
+>                                 only look for one device below a PCIe downstream
+>                                 port.
+> +               bridge_pm       Enable runtime power management of all bridges,
+> +                               including conventional PCI bridges, PCIe ports,
+> +                               and hotplug bridges.
+> +               no_bridge_pm    Disable runtime power management of all bridges.
+>                 big_root_window Try to add a big 64bit memory window to the PCIe
+>                                 root complex on AMD CPUs. Some GFX hardware
+>                                 can resize a BAR to allow access to all VRAM.
+> @@ -3143,10 +3147,6 @@
+>                 compat  Treat PCIe ports as PCI-to-PCI bridges, disable the PCIe
+>                         ports driver.
+>
+> -       pcie_port_pm=   [PCIE] PCIe port power management handling:
+> -               off     Disable power management of all PCIe ports
+> -               force   Forcibly enable power management of all PCIe ports
+> -
+>         pcie_pme=       [PCIE,PM] Native PCIe PME signaling options:
+>                 nomsi   Do not use MSI for native PCIe PME signaling (this makes
+>                         all PCIe root ports use INTx for all services).
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 75db77cf3f8f..2aa1ae9c4afa 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -111,10 +111,8 @@ unsigned int pcibios_max_latency = 255;
+>  /* If set, the PCIe ARI capability will not be used. */
+>  static bool pcie_ari_disabled;
+>
+> -/* Disable bridge_d3 for all PCIe ports */
+> -static bool pci_bridge_d3_disable;
+> -/* Force bridge_d3 for all PCIe ports */
+> -static bool pci_bridge_d3_force;
+> +static bool pci_bridge_d3_disable;     /* Disable D3 for all bridges */
+> +static bool pci_bridge_d3_force;       /* Enable D3 for all bridges */
+>
+>  static int __init pcie_port_pm_setup(char *str)
+>  {
+> @@ -2260,6 +2258,12 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>  {
+>         unsigned int year;
+>
+> +       if (pci_bridge_d3_disable)
+> +               return false;
+> +
+> +       if (pci_bridge_d3_force)
+> +               return true;
+> +
+>         /*
+>          * In principle we should be able to put conventional PCI bridges
+>          * into D3.  We only support it for PCIe because (a) we want to
+> @@ -2274,8 +2278,6 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>         case PCI_EXP_TYPE_ROOT_PORT:
+>         case PCI_EXP_TYPE_UPSTREAM:
+>         case PCI_EXP_TYPE_DOWNSTREAM:
+> -               if (pci_bridge_d3_disable)
+> -                       return false;
+>
+>                 /*
+>                  * Hotplug interrupts cannot be delivered if the link is down,
+> @@ -2295,9 +2297,6 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>                 if (bridge->is_hotplug_bridge)
+>                         return false;
+>
+> -               if (pci_bridge_d3_force)
+> -                       return true;
+> -
+>                 /*
+>                  * It should be safe to put PCIe ports from 2015 or newer
+>                  * to D3.  We have vague reports of possible hardware
+> @@ -5708,6 +5707,10 @@ static int __init pci_setup(char *str)
+>                                 pcie_bus_config = PCIE_BUS_PEER2PEER;
+>                         } else if (!strncmp(str, "pcie_scan_all", 13)) {
+>                                 pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+> +                       } else if (!strncmp(str, "bridge_pm", 9)) {
+> +                               pci_bridge_d3_force = true;
+> +                       } else if (!strncmp(str, "no_bridge_pm", 12)) {
+> +                               pci_bridge_d3_disable = true;
+>                         } else {
+>                                 printk(KERN_ERR "PCI: Unknown option `%s'\n",
+>                                                 str);
+>
