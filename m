@@ -1,186 +1,153 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 20 Feb 2018 11:26:48 +0000
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH 37/37] vfio: Add support for Shared Virtual Addressing
-Message-ID: <5789fb21-dd4b-85a3-e5fc-7212a01fecc7@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-38-jean-philippe.brucker@arm.com>
- <20180216123329.10f6dc23@w520.home>
-MIME-Version: 1.0
-In-Reply-To: <20180216123329.10f6dc23@w520.home>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48226 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933084AbeBUK1Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Feb 2018 05:27:25 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v8 6/7] PCI: Unify wait for link active into generic pci
+Date: Wed, 21 Feb 2018 15:56:43 +0530
+Message-Id: <1519208804-24512-7-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519208804-24512-1-git-send-email-poza@codeaurora.org>
+References: <1519208804-24512-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16/02/18 19:33, Alex Williamson wrote:
-[...]
->> +static int vfio_iommu_sva_init(struct device *dev, void *data)
->> +{
->> +
->> +	int ret;
->> +
->> +	ret = iommu_sva_device_init(dev, IOMMU_SVA_FEAT_PASID |
->> +				    IOMMU_SVA_FEAT_IOPF, 0);
->> +	if (ret)
->> +		return ret;
->> +
->> +	return iommu_register_mm_exit_handler(dev, vfio_iommu_mm_exit);
->> +}
->> +
->> +static int vfio_iommu_sva_shutdown(struct device *dev, void *data)
->> +{
->> +	iommu_sva_device_shutdown(dev);
->> +	iommu_unregister_mm_exit_handler(dev);
-> 
-> Typically the order would be reverse of the setup, is it correct this
-> way?
+Clients such as pciehp, dpc are using pcie_wait_link_active, which waits
+till the link becomes active or inactive.
 
-I don't think it matters either way, but ABBA order would be nicer.
-Registering mm_exit handler before sva_device_init is probably best.
+Made generic function and moved it to drivers/pci/pci.c
 
->> +
->> +	return 0;
->> +}
->> +
->> +static int vfio_iommu_bind_group(struct vfio_iommu *iommu,
->> +				 struct vfio_group *group,
->> +				 struct vfio_mm *vfio_mm)
->> +{
->> +	int ret;
->> +	int pasid;
->> +
->> +	if (!group->sva_enabled) {
->> +		ret = iommu_group_for_each_dev(group->iommu_group, NULL,
->> +					       vfio_iommu_sva_init);
->> +		if (ret)
->> +			return ret;
-> 
-> Seems were at an unknown state here, do we need to undo any that
-> succeeded?
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-I think we do. However following the discussion on patch 2/37 it seems
-we should limit SVA to singular groups for the moment, disallowing it if
-the group has more than one device. Handling compound groups is
-complicated and hopefully not needed by SVA systems. So I'd like to
-change the logic here and ensure group_for_each_dev only calls sva_init
-once.
-
-[...]
->> +	/*
->> +	 * We can't simply unbind a foreign process by PASID, because the
->> +	 * process might have died and the PASID might have been reallocated to
->> +	 * another process. Instead we need to fetch that process mm by PID
->> +	 * again to make sure we remove the right vfio_mm. In addition, holding
->> +	 * the mm guarantees that mm_users isn't dropped while we unbind and the
->> +	 * exit_mm handler doesn't fire. While not strictly necessary, not
->> +	 * having to care about that race simplifies everyone's life.
->> +	 */
->> +	if (params.flags & VFIO_IOMMU_BIND_PID) {
->> +		mm = vfio_iommu_get_mm_by_vpid(params.pid);
->> +		if (IS_ERR(mm))
->> +			return PTR_ERR(mm);
-> 
-> I don't understand how this works for a process that has exited, the
-> mm_exit function gets called to clear vfio_mm.mm, the above may or may
-> not work (could be new ptrace'able process with same pid), but it won't
-> match the mm below, so is the vfio_mm that mm_exit zapped forever stuck
-> in this list until the container is destroyed?
-
-Yes, it's not nice. mm_exit() is called with a spinlock held, so it
-can't take the iommu->lock and modify mm_list.
-vfio_iommu_type1_unbind_process() could do a bit of garbage collection
-and remove all defunct vfio_mm, if they're not held by any iommu_bond
-anymore.
-
-But I think iommu_notifier_release (patch 5/37) can actually release the
-lock temporarily if it's careful about concurrent list modifications
-(and takes a ref to the given bond), in which case we can remove this
-mm_exit() constraint and simplify the VFIO patch.
-
-[...]
->> +/*
->> + * Only mode supported at the moment is VFIO_IOMMU_BIND_PROCESS, which takes
->> + * vfio_iommu_type1_bind_process in data.
->> + */
->> +struct vfio_iommu_type1_bind {
->> +	__u32	argsz;
->> +	__u32	mode;
-> 
-> s/mode/flags/
-> 
->> +#define VFIO_IOMMU_BIND_PROCESS		(1 << 0)
->> +	__u8	data[];
->> +};
-> 
-> I'm not convinced having a separate vfio_iommu_type1_bind_process
-> struct is necessary.  It seems like we always expect to return a pasid,
-> only the pid is optional, but that could be handled by a single
-> structure with a flag bit to indicate a pid bind is requested.
-
-We were planning to reuse VFIO_IOMMU_BIND for PASID table binding as
-well. So vfio_iommu_type1_bind::flags would either be
-VFIO_IOMMU_BIND_PROCESS or VFIO_IOMMU_BIND_PASID_TABLE, and
-vfio_iommu_type1_bind::data is an union of vfio_iommu_type1_bind_process
-and vfio_iommu_type1_bind_pasid_table
-
-https://patchwork.kernel.org/patch/9701025/
-
-> 
->> +
->> +/*
->> + * VFIO_IOMMU_BIND - _IOWR(VFIO_TYPE, VFIO_BASE + 22, struct vfio_iommu_bind)
-> 
-> vfio_iommu_type1_bind
-
-Thanks,
-Jean
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8..a133b8b 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -231,25 +231,12 @@ bool pciehp_check_link_active(struct controller *ctrl)
+ 	return ret;
+ }
+ 
+-static void __pcie_wait_link_active(struct controller *ctrl, bool active)
++static bool pcie_wait_link_active(struct controller *ctrl)
+ {
+-	int timeout = 1000;
+-
+-	if (pciehp_check_link_active(ctrl) == active)
+-		return;
+-	while (timeout > 0) {
+-		msleep(10);
+-		timeout -= 10;
+-		if (pciehp_check_link_active(ctrl) == active)
+-			return;
+-	}
+-	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
+-			active ? "set" : "cleared");
+-}
++	struct pci_dev *pdev = ctrl_dev(ctrl);
++	bool active = true;
+ 
+-static void pcie_wait_link_active(struct controller *ctrl)
+-{
+-	__pcie_wait_link_active(ctrl, true);
++	return pci_wait_for_link(pdev, active);
+ }
+ 
+ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f6a4dd1..aff13c5 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4176,6 +4176,41 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++/**
++ * pci__wait_for_link - Wait for link till its active/inactive
++ * @dev: Bridge device
++ * @active: waiting for active or inactive ?
++ *
++ * Use this to wait till link becomes active or inactive.
++ */
++
++bool pci_wait_for_link(struct pci_dev *pdev, bool active)
++{
++	int timeout = 1000;
++	bool ret;
++	u16 lnk_status;
++
++	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++	ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++
++	while ((ret != active) && (timeout > 0)) {
++		msleep(10);
++		timeout -= 10;
++		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++	}
++
++	if (ret == active)
++		return true;
++
++	dev_printk(KERN_DEBUG, &pdev->dev,
++		   "Data Link Layer Link Active not %s in 1000 msec\n",
++		   active ? "set" : "cleared");
++
++	return false;
++}
++EXPORT_SYMBOL(pci_wait_for_link);
++
+ void pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 208b427..fce4518 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -122,19 +122,10 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ 
+ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ {
+-	unsigned long timeout = jiffies + HZ;
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	struct device *dev = &dpc->dev->device;
+-	u16 lnk_status;
++	bool active = false;
+ 
+-	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
+-					!time_after(jiffies, timeout)) {
+-		msleep(10);
+-		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-	}
+-	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
+-		dev_warn(dev, "Link state not disabled for DPC event\n");
++	pci_wait_for_link(pdev, active);
+ }
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 024a1be..cb674c3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1195,6 +1195,7 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
+ int pci_request_selected_regions(struct pci_dev *, int, const char *);
+ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+ void pci_release_selected_regions(struct pci_dev *, int);
++bool pci_wait_for_link(struct pci_dev *pdev, bool active);
+ 
+ /* drivers/pci/bus.c */
+ struct pci_bus *pci_bus_get(struct pci_bus *bus);
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
