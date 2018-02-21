@@ -1,105 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57732 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750949AbeBWFWt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 00:22:49 -0500
+Return-Path: <SRS0=fqZp=FP=cavium.com=George.Cherian@kernel.org>
+Return-Path: <SRS0=fqZp=FP=cavium.com=George.Cherian@kernel.org>
+Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
+To: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ George Cherian <george.cherian@cavium.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, bhelgaas@google.com,
+ Jayachandran.Nair@cavium.com, Robert.Richter@cavium.com,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Huang Ying <ying.huang@intel.com>
+References: <1517554846-16703-1-git-send-email-george.cherian@cavium.com>
+ <2323301.ORZpb3hFRe@aspire.rjw.lan>
+ <20180216203434.GC11014@bhelgaas-glaptop.roam.corp.google.com>
+ <2858019.9TUCWsDpTB@aspire.rjw.lan> <20180220015433.GA9656@wunner.de>
+ <20180220190037.GB32228@bhelgaas-glaptop.roam.corp.google.com>
+From: George Cherian <gcherian@caviumnetworks.com>
+Message-ID: <c8454323-06b2-e758-0d38-550c6b31b15e@caviumnetworks.com>
+Date: Wed, 21 Feb 2018 14:58:13 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 23 Feb 2018 10:52:47 +0530
-From: poza@codeaurora.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v9 7/7] PCI/DPC: Enumerate the devices after DPC trigger
- event
-In-Reply-To: <d8da89bf-aaa1-c6ed-d21a-4cd51265d4a2@infradead.org>
-References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
- <1519285571-5634-8-git-send-email-poza@codeaurora.org>
- <d8da89bf-aaa1-c6ed-d21a-4cd51265d4a2@infradead.org>
-Message-ID: <a5cd1c22acb9178301dd415e67f40f89@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180220190037.GB32228@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-02-23 00:53, Randy Dunlap wrote:
-> On 02/21/2018 11:46 PM, Oza Pawandeep wrote:
->> Implement error_resume callback in DPC so, after DPC trigger event
->> enumerates the devices beneath.
->> 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> 
->> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
->> index fce4518..59c01c7 100644
->> --- a/drivers/pci/pcie/pcie-dpc.c
->> +++ b/drivers/pci/pcie/pcie-dpc.c
->> @@ -129,6 +129,23 @@ static void dpc_wait_link_inactive(struct dpc_dev 
->> *dpc)
->>  }
->> 
->>  /**
->> + * dpc_error_resume - enumerate the devices beneath
->> + * @dev: pointer to Root Port's pci_dev data structure
-> 
->     * @pdev: ...
-> 
->> + *
->> + * Invoked by Port Bus driver during nonfatal recovery.
->> + */
->> +static void dpc_error_resume(struct pci_dev *pdev)
->> +{
->> +	bool active = true;
->> +
->> +	if (pci_wait_for_link(pdev, active)) {
->> +		pci_lock_rescan_remove();
->> +		pci_rescan_bus(pdev->bus);
->> +		pci_unlock_rescan_remove();
->> +	}
->> +}
->> +
->> +/**
->>   * dpc_reset_link - reset link DPC  routine
->>   * @dev: pointer to Root Port's pci_dev data structure
->>   *
->> diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
->> index 6844347..4950f49 100644
->> --- a/drivers/pci/pcie/pcie-err.c
->> +++ b/drivers/pci/pcie/pcie-err.c
->> @@ -256,6 +258,15 @@ static pci_ers_result_t 
->> broadcast_error_message(struct pci_dev *dev,
->>  		result_data.result = PCI_ERS_RESULT_RECOVERED;
->> 
->>  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> +		/* If DPC is triggered, call resume error hanlder
-> 
-> 		                                          handler
-> 
-> Kernel multi-line comment style is:
-> 		/*
-> 		 * Begin comment here.
-> 		 * foo bar blah
-> 		 */
-> 
->> +		 * because, at this point we can safely assume that
->> +		 * link recovery has happened.
->> +		 */
->> +		if ((severity == DPC_FATAL) &&
->> +			(cb == report_resume)) {
->> +			cb(dev, NULL);
->> +			return PCI_ERS_RESULT_RECOVERED;
->> +		}
->>  		/*
->>  		 * If the error is reported by a bridge, we think this error
->>  		 * is related to the downstream link of the bridge, so we
-> 
-> thanks,
+Hi Bjorn,
 
-Thanks for the comments,
-All your comments are taken care in v10, though I will post v11.
+
+On 02/21/2018 12:30 AM, Bjorn Helgaas wrote:
+> [+cc Huang]
+> 
+> On Tue, Feb 20, 2018 at 02:54:33AM +0100, Lukas Wunner wrote:
+>> On Mon, Feb 19, 2018 at 12:21:56PM +0100, Rafael J. Wysocki wrote:
+>>> On Friday, February 16, 2018 9:34:34 PM CET Bjorn Helgaas wrote:
+>>>> On Fri, Feb 16, 2018 at 01:40:37PM +0100, Rafael J. Wysocki wrote:
+>>>>> On Friday, February 16, 2018 12:39:00 AM CET Bjorn Helgaas wrote:
+>>>>>> On Thu, Feb 15, 2018 at 10:57:25PM +0100, Rafael J. Wysocki wrote:
+>>>>>>> On Wednesday, February 14, 2018 9:16:53 PM CET Bjorn Helgaas wrote:
+>>>>>>>> I don't know how this runtime PM works, but maybe Rafael can help
+>>>>>>>> us out.
+>>
+>> This has nothing to do with runtime PM AFAICS.
+>>
+>> The device seems to be in D3hot on boot, is that correct?
+> 
+> I actually don't know for sure what device caused the issue or what
+> state it was in.  George, if you could clarify that, it would be
+> helpful.
+> 
+I will explain the setup used
+To the Cavium ThunderX RC the following PLX device is connected.
+PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 
+GT/s) Switch
+There is no device connected downstream to the PLX switch.
+
+AFAIU the pcie_port driver probes PLX and enters autosuspend after 100ms 
+since pci_bridge_d3_possible() returns true.
+
+And later pci_sysfs_init() ends up doing a config access of PLX which 
+fails with a "synchronous external abort"
+
+> My assumption (possibly incorrect) is that the issue happens when we
+> read config space of an endpoint behind a PCIe bridge that is in D3.
+> The PCIe portdrv binds to the bridge before the pci_sysfs_init()
+> late_initcall happens, and it enables runtime PM on the bridge, so
+> it's possible the bridge is in D3 before pci_sysfs_init() happens.
+> 
+>> The PCI core assumes that unbound devices remain in D0
+>> (see comments in pci_pm_runtime_resume() / pci_pm_runtime_suspend()).
+> 
+> That comment was added by 967577b06241 ("PCI/PM: Keep runtime PM
+> enabled for unbound PCI devices"), apparently because "some devices do
+> not work again after being put into D3".  That commit mentions
+> https://bugzilla.kernel.org/show_bug.cgi?id=48201 but I don't think
+> it's completely convincing about the requirement for keeping things in
+> D0.
+> 
+> Even if it's true that some devices don't work after being in D3, that
+> doesn't seem like sufficient reason to keep *all* devices on all
+> systems in D0.  We would normally use quirks to address device issues
+> like this.
+> 
+>>>>>>> I'm not sure what the question is to be honest.
+>>>>>>
+>>>>>> My questions are basically "What does the PCI core need to do to make
+>>>>>> sure a device is in D0 before it operates on it?  And where do we need
+>>>>>> to do that?"
+>>
+>> When scanning the bus and discovering the device is not in D0,
+>> call pci_power_up().  This could probably go into pci_init_pm().
+>> Once a driver binds to it, it may choose to runtime suspend it to
+>> D3hot again.
+> 
+> s/pci_init_pm/pci_pm_init/
+> 
+> That's an interesting idea.  I hadn't thought of the case where a
+> device is not in D0 when we enumerate it.  We *do* make sure bridges
+> are in D0 before scanning behind them (pci_scan_bridge_extend() calls
+> pm_runtime_get_sync()).
+> 
+> Since enumeration should only perform config accesses, and devices
+> must respond to config accesses even when in D3hot, I guess I'm not
+> convinced that we need to power up everything (other than bridges)
+> during enumeration.
+> 
+> Bjorn
+> 
