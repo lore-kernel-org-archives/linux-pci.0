@@ -1,79 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45806 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752157AbeBWXp1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Feb 2018 18:45:27 -0500
-Date: Fri, 23 Feb 2018 17:45:25 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v11 3/7] PCI/ERR: add mutex to synchronize recovery
-Message-ID: <20180223234525.GQ14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
- <1519374244-20539-4-git-send-email-poza@codeaurora.org>
+Return-Path: <SRS0=0M+R=FP=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=0M+R=FP=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519374244-20539-4-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20180220212922.GC32228@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1518941072.git.lukas@wunner.de> <f7593132608eb9a83d7268cc5b3ef12b3dd9c52d.1518941073.git.lukas@wunner.de>
+ <20180220212922.GC32228@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 21 Feb 2018 10:57:14 +0100
+Message-ID: <CAJZ5v0h+qipaKKDxxFFpkwUKgMjnoaUB8_p+FRDb+fSM_v+wBw@mail.gmail.com>
+Subject: Re: [PATCH 1/7] PCI: Restore BARs on runtime resume despite being unbound
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, dri-devel <dri-devel@lists.freedesktop.org>,
+	Peter Wu <peter@lekensteyn.nl>, Alex Deucher <alexander.deucher@amd.com>,
+	Dave Airlie <airlied@redhat.com>, nouveau@lists.freedesktop.org,
+	Ben Skeggs <bskeggs@redhat.com>, Lyude Paul <lyude@redhat.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	"moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>, Takashi Iwai <tiwai@suse.com>,
+	Jaroslav Kysela <perex@perex.cz>, Linux PM <linux-pm@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Pierre Moreau <pierre.morrow@free.fr>,
+	Bastien Nocera <hadess@hadess.net>, Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 23, 2018 at 01:54:00PM +0530, Oza Pawandeep wrote:
-> This patch protects pci_do_recovery with mutex.
+On Tue, Feb 20, 2018 at 10:29 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Sun, Feb 18, 2018 at 09:38:32AM +0100, Lukas Wunner wrote:
+>> PCI devices not bound to a driver are supposed to stay in D0 during
+>> runtime suspend.
+>
+> Doesn't "runtime suspend" mean an individual device is suspended while
+> the rest of the system remains active?
+>
+> If so, maybe it would be more direct to say "PCI devices not bound to
+> a driver cannot be runtime suspended"?
+>
+> (It's a separate question not relevant to this patch, but I'm not
+> convinced that "PCI devices without a driver cannot be suspended"
+> should be accepted as a rule.  If it is a rule, we should be able to
+> deduce it from the specs.)
+>
+>> But they may have a parent which is bound and can be
+>> transitioned to D3cold at runtime.  Once the parent goes to D3cold, the
+>> unbound child may go to D3cold as well.  When the child comes out of
+>> D3cold, its BARs are uninitialized and thus inaccessible when a driver
+>> tries to probe.
+>>
+>> One example are recent hybrid graphics laptops which cut power to the
+>> discrete GPU when the root port above it goes to ACPI power state D3.
+>> Users may provoke this by unbinding the GPU driver and allowing runtime
+>> PM on the GPU via sysfs:  The PM core will then treat the GPU as
+>> "suspended", which in turn allows the root port to runtime suspend,
+>> causing the power resources listed in its _PR3 object to be powered off.
+>> The GPU's BARs will be uninitialized when a driver later probes it.
+>>
+>> Another example are hybrid graphics laptops where the GPU itself (rather
+>> than the root port) is capable of runtime suspending to D3cold.  If the
+>> GPU's integrated HDA controller is not bound and the GPU's driver
+>> decides to runtime suspend to D3cold, the HDA controller's BARs will be
+>> uninitialized when a driver later probes it.
+>>
+>> Fix by restoring the BARs on runtime resume if the device is not bound.
+>> This is sufficient to fix the above-mentioned use cases.  Other use
+>> cases might require a full-blown pci_save_state() / pci_restore_state()
+>> or execution of fixups.  We can add that once use cases materialize,
+>> let's not inflate the code unnecessarily.
+>
+> Why would we not do a full-blown restore?  With this patch, I think
+> some configuration done during enumeration, e.g., ASPM and MPS, will
+> be lost.  "lspci -vv" of the HDA before and after the suspend may show
+> different things, which seems counter-intuitive.
 
-pcie_do_recovery()
+Right.
 
-Please explain why the mutex is necessary.  What bad things happen
-without the mutex?
+> I wouldn't think of a full-blown restore as "inflating the code"; I
+> would think of it as "having fewer special cases", i.e., we always use
+> the same restore path instead of having the main one plus a special
+> one for unbound devices.
 
-You named (some) of the other things "pcie"; maybe use "pcie" in the
-mutex name as well so they look the same.
+That is a fair point, but if you look at pci_pm_runtime_suspend(), it
+doesn't actually save anything for devices without drivers, so we'd
+just restore the original initial state for them every time.
 
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-> 
-> diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-> index fcd5add..f830975 100644
-> --- a/drivers/pci/pcie/pcie-err.c
-> +++ b/drivers/pci/pcie/pcie-err.c
-> @@ -20,6 +20,8 @@
->  #include <linux/pcieport_if.h>
->  #include "portdrv.h"
->  
-> +static DEFINE_MUTEX(pci_err_recovery_lock);
-> +
->  struct aer_broadcast_data {
->  	enum pci_channel_state state;
->  	enum pci_ers_result result;
-> @@ -283,6 +285,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
->  	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
->  	enum pci_channel_state state;
->  
-> +	mutex_lock(&pci_err_recovery_lock);
-> +
->  	if (severity == AER_FATAL)
->  		state = pci_channel_io_frozen;
->  	else
-> @@ -326,9 +330,11 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
->  				report_resume);
->  
->  	dev_info(&dev->dev, "Device recovery successful\n");
-> +	mutex_unlock(&pci_err_recovery_lock);
->  	return;
->  
->  failed:
->  	/* TODO: Should kernel panic here? */
->  	dev_info(&dev->dev, "Device recovery failed\n");
-> +	mutex_unlock(&pci_err_recovery_lock);
->  }
-> -- 
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-> 
+If we are to restore the entire state on runtime resume,
+pci_pm_runtime_suspend() should be changed to call pci_save_state()
+before returning 0 in the !dev->driver case AFAICS.
+
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+>> ---
+>>  drivers/pci/pci-driver.c | 8 ++++++--
+>>  drivers/pci/pci.c        | 2 +-
+>>  drivers/pci/pci.h        | 1 +
+>>  3 files changed, 8 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 3bed6beda051..51b11cbd48f6 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -1277,10 +1277,14 @@ static int pci_pm_runtime_resume(struct device *dev)
+>>
+>>       /*
+>>        * If pci_dev->driver is not set (unbound), the device should
+>> -      * always remain in D0 regardless of the runtime PM status
+>> +      * always remain in D0 regardless of the runtime PM status.
+>> +      * But if its parent can go to D3cold, this device may have
+>> +      * been in D3cold as well and require restoration of its BARs.
+>>        */
+>> -     if (!pci_dev->driver)
+>> +     if (!pci_dev->driver) {
+>> +             pci_restore_bars(pci_dev);
+>
+> If we do decide not to do a full-blown restore, how do we decide
+> whether to use pci_restore_bars() or pci_restore_config_space()?
+>
+> I'm not sure why we have both.
+
+Me neither.
+
+> The pci_restore_bars() path looks a
+> little smarter in that it is more careful when updating 64-bit BARs
+> that can't be updated atomically.
+>
+>>               return 0;
+>> +     }
+>>
+>>       if (!pm || !pm->runtime_resume)
+>>               return -ENOSYS;
+
+So if pci_pm_runtime_suspend() is modified to call pci_save_state()
+before returning 0 in the !dev->driver case, we can just move the
+pci_restore_standard_config() invocation in pci_pm_runtime_resume() up
+to the very top and check dev->driver later.
