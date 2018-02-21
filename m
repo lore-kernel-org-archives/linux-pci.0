@@ -1,42 +1,62 @@
-Return-Path: <SRS0=wxkp=FC=nexb.com=pombredanne@kernel.org>
-Return-Path: <SRS0=wxkp=FC=nexb.com=pombredanne@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180130003559.15416.18047.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180130003559.15416.18047.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Philippe Ombredanne <pombredanne@nexb.com>
-Date: Thu, 8 Feb 2018 15:17:39 +0100
-Message-ID: <CAOFm3uHagzL5r5MYfu1ep5nf9Y6RAj866+uUO74c1mJRYPfeQg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Add SPDX tag for s390_pci_hpc.c
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>,
-	linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>, LKML <linux-kernel@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>, Gerald Schaefer <gerald.schaefer@de.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v8 3/7] PCI/ERR: add mutex to synchronize recovery
+Date: Wed, 21 Feb 2018 15:56:40 +0530
+Message-Id: <1519208804-24512-4-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519208804-24512-1-git-send-email-poza@codeaurora.org>
+References: <1519208804-24512-1-git-send-email-poza@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+This patch protects pci_do_recovery with mutex.
 
-On Tue, Jan 30, 2018 at 1:40 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> I previously posted patches [1] to add SPDX tags to all drivers/pci files
-> except drivers/pci/hotplug/s390_pci_hpc.c.  I omitted that one because it
-> contained only a "License: GPL" comment, which I thought was ambiguous.
->
-> However, I think it is actually unambiguous because the file was added with
-> a 'MODULE_LICENSE("GPL")', and include/linux/module.h shows that means "GPL
-> v2 or later".
->
-> So this patch adds the GPL-2.0+ tag to the file.  I plan to include this
-> for v4.16 unless somebody objects.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-As I as said in a previous email, context matters a lot in these case
-and you made the right choice.
-When there is a MODULE_LICENSE and a super terse "GPL" license notice,
-the two taken together can provide the proper context e.g. here
-GPL-2.0+ rather than a less common GPL-1.0+
-
-Thank you for your efforts there!
-
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index a532fe0..8318c84 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -20,6 +20,8 @@
+ #include <linux/pcieport_if.h>
+ #include "portdrv.h"
+ 
++static DEFINE_MUTEX(pci_err_recovery_lock);
++
+ struct aer_broadcast_data {
+ 	enum pci_channel_state state;
+ 	enum pci_ers_result result;
+@@ -283,6 +285,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+ 
++	mutex_lock(&pci_err_recovery_lock);
++
+ 	if (severity == AER_FATAL)
+ 		state = pci_channel_io_frozen;
+ 	else
+@@ -326,9 +330,11 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 				report_resume);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ 	return;
+ 
+ failed:
+ 	/* TODO: Should kernel panic here? */
+ 	dev_info(&dev->dev, "Device recovery failed\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ }
 -- 
-Cordially
-Philippe Ombredanne
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
