@@ -1,110 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45498 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751544AbeBBN5C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Feb 2018 08:57:02 -0500
-Date: Fri, 2 Feb 2018 15:56:59 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Stefan Roese <sr@denx.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH] PCI: pciehp: Add module parameter to enable
- debouncing of HP link events
-Message-ID: <20180202135659.GN27654@lahna.fi.intel.com>
-References: <20180130084121.18653-1-sr@denx.de>
- <20180130102840.GF27654@lahna.fi.intel.com>
- <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38502 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752816AbeBVHqu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 02:46:50 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v9 7/7] PCI/DPC: Enumerate the devices after DPC trigger event
+Date: Thu, 22 Feb 2018 13:16:11 +0530
+Message-Id: <1519285571-5634-8-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
+References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 02, 2018 at 02:38:34PM +0100, Stefan Roese wrote:
-> Hi Mika,
-> 
-> sorry for the late reply.
-> 
-> On 30.01.2018 11:28, Mika Westerberg wrote:
-> > On Tue, Jan 30, 2018 at 09:41:21AM +0100, Stefan Roese wrote:
-> >> Hotplugging of some PCIe devices on our platform sometimes leads to a
-> >> bounce of link-up and link-down events, resulting in problems in the
-> >> corresponding PCI drivers.
-> >>
-> >> Here an example of such a hotplug event bounce for a AHCI PCIe card:
-> >> ...
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-> > 
-> > It would be good to find out why this happens in the first place.
-> > Perhaps there is some environmental interference or something causing
-> > this?
-> 
-> I'm seeing these link bounces in the following environments:
-> 
-> a) Using a BayTrail SoC and hotplugging a standard Desktop PCIe SATA /
->    AHCI Controller (Marvell chip)
-> b) Hotplugging (booting via SPI) an Altera / Intel FPGA which is connected
->    via PCIe to a PCIe switch
-> 
-> In both cases, this link bouncing happens infrequently, approx. once out
-> of 5 - 10 tries.
-> 
-> Out of curiosity, has nobody else ever experienced such "link bouncing"
-> with PCIe cards / devices getting hot-plugged?
+Implement error_resume callback in DPC so, after DPC trigger event
+enumerates the devices beneath.
 
-I've seen it with some Thunderbolt devices from time to time.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-I think it is entirely possible in real world that the link goes down
-briefly for example because of some external interference so we should
-make sure we can handle that properly.
-
-> >> pci 0000:02:00.0: [1b4b:9215] type 00 class 0x010601
-> >> pci 0000:02:00.0: reg 0x10: [io  0x8000-0x8007]
-> >> ...
-> >> ata3: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910100 irq 100
-> >> ata4: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910180 irq 100
-> >> ata5: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910200 irq 100
-> >> ata6: SATA max UDMA/133 abar m2048@0x80910000 port 0x80910280 irq 100
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
-> >> ahci 0000:02:00.0: PME# disabled
-> >> ata3: SATA link down (SStatus 0 SControl 300)
-> >> ata5: SATA link down (SStatus 0 SControl 300)
-> >> ata4: SATA link down (SStatus 0 SControl 300)
-> >> WARNING: CPU: 2 PID: 1162 at drivers/ata/libata-core.c:6620 ata_host_detach+0x125/0x130
-> > 
-> > I think the AHCI driver should be fixed to cope with this.
-> 
-> Yes, this can be discussed. But still the root-cause should be fixed,
-> IMHO. Either in our environment (HW issue?) or by adding this de-bouncing
-> feature.
->
-> >> ata6: SATA link down (SStatus 0 SControl 300)
-> >> Modules linked in:
-> >> CPU: 2 PID: 1162 Comm: kworker/u8:5 Not tainted 4.15.0+ #26
-> >> Hardware name: congatec conga-qeval20-qa3-e3845/conga-qeval20-qa3-e3845, BIOS 2018.01-00033-g0125f37185-dirty 01/18/2018
-> >> Workqueue: pciehp-1 pciehp_power_thread
-> >> ...
-> >>
-> >> This patch now adds the 'pciehp_debounce_time' module parameter, which
-> >> can be used to drop all events for the specified time (in milliseconds)
-> >> after a link-up event occurred. A value of ~100ms works fine in my tests
-> >> to debounce all the link-up / link-down events in my tests.
-> > 
-> > This sounds a bit "hackish". I would rather make sure we can handle
-> > situations like this properly without passing additional parameters.
-> 
-> I'm open for other / better ideas on how to solve this situation, we
-> are seeing on our systems.
-
-Well, I would start by fixing drivers that can't cope with surprise link
-down (e.g disapearing PCI device, or suddenly reading 0xffffffff from
-register).
-
-BTW, have you checked whether presence detect actually toggles similarly
-or is it only triggered when the link is fully up? Since currently we
-prioritize link up/down higher than presence detect but it may be that
-we should do the opposite.
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index fce4518..59c01c7 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -129,6 +129,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ }
+ 
+ /**
++ * dpc_error_resume - enumerate the devices beneath
++ * @dev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver during nonfatal recovery.
++ */
++static void dpc_error_resume(struct pci_dev *pdev)
++{
++	bool active = true;
++
++	if (pci_wait_for_link(pdev, active)) {
++		pci_lock_rescan_remove();
++		pci_rescan_bus(pdev->bus);
++		pci_unlock_rescan_remove();
++	}
++}
++
++/**
+  * dpc_reset_link - reset link DPC  routine
+  * @dev: pointer to Root Port's pci_dev data structure
+  *
+@@ -366,6 +383,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.error_resume	= dpc_error_resume,
+ 	.reset_link     = dpc_reset_link,
+ };
+ 
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index 6844347..4950f49 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -236,6 +236,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+  * @state: error state
+  * @error_mesg: message to print
+  * @cb: callback to be broadcasted
++ * @severity: error severity
+  *
+  * Invoked during error recovery process. Once being invoked, the content
+  * of error severity will be broadcasted to all downstream drivers in a
+@@ -244,7 +245,8 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 	enum pci_channel_state state,
+ 	char *error_mesg,
+-	int (*cb)(struct pci_dev *, void *))
++	int (*cb)(struct pci_dev *, void *),
++	int severity)
+ {
+ 	struct aer_broadcast_data result_data;
+ 
+@@ -256,6 +258,15 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 		result_data.result = PCI_ERS_RESULT_RECOVERED;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		/* If DPC is triggered, call resume error hanlder
++		 * because, at this point we can safely assume that
++		 * link recovery has happened.
++		 */
++		if ((severity == DPC_FATAL) &&
++			(cb == report_resume)) {
++			cb(dev, NULL);
++			return PCI_ERS_RESULT_RECOVERED;
++		}
+ 		/*
+ 		 * If the error is reported by a bridge, we think this error
+ 		 * is related to the downstream link of the bridge, so we
+@@ -305,7 +316,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	status = broadcast_error_message(dev,
+ 			state,
+ 			"error_detected",
+-			report_error_detected);
++			report_error_detected,
++			severity);
+ 
+ 	if ((severity == AER_FATAL) ||
+ 	    (severity == DPC_FATAL)) {
+@@ -321,7 +333,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 		status = broadcast_error_message(dev,
+ 				state,
+ 				"mmio_enabled",
+-				report_mmio_enabled);
++				report_mmio_enabled,
++				severity);
+ 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+ 		/*
+@@ -332,7 +345,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 		status = broadcast_error_message(dev,
+ 				state,
+ 				"slot_reset",
+-				report_slot_reset);
++				report_slot_reset,
++				severity);
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+@@ -342,7 +356,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	broadcast_error_message(dev,
+ 				state,
+ 				"resume",
+-				report_resume);
++				report_resume,
++				severity);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
+ 	mutex_unlock(&pci_err_recovery_lock);
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
