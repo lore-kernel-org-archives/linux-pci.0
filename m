@@ -1,79 +1,65 @@
-Return-Path: <SRS0=/SZl=FR=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=/SZl=FR=h08.hostsharing.net=foo00@kernel.org>
-Date: Fri, 23 Feb 2018 10:51:47 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: dri-devel@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Dave Airlie <airlied@redhat.com>, nouveau@lists.freedesktop.org,
-	Ben Skeggs <bskeggs@redhat.com>, Lyude Paul <lyude@redhat.com>,
-	Hans de Goede <hdegoede@redhat.com>, alsa-devel@alsa-project.org,
-	Takashi Iwai <tiwai@suse.com>, Jaroslav Kysela <perex@perex.cz>,
-	linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Pierre Moreau <pierre.morrow@free.fr>,
-	Bastien Nocera <hadess@hadess.net>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 5/7] vga_switcheroo: Use device link for HDA controller
-Message-ID: <20180223095147.GB17092@wunner.de>
-References: <cover.1518941072.git.lukas@wunner.de>
- <99358da18f1c61b226678c7c70240e4407ac575b.1518941073.git.lukas@wunner.de>
- <20180220222059.GD32228@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40714 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932744AbeBVPTk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Feb 2018 10:19:40 -0500
+Date: Thu, 22 Feb 2018 09:19:38 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?iso-8859-1?Q?St=E9phane?= Grosjean <s.grosjean@peak-system.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: free_irq(IRQ#0) on PCIe device with MSI enabled issue...
+Message-ID: <20180222151938.GC52685@bhelgaas-glaptop.roam.corp.google.com>
+References: <AM5PR03MB296338FECDD421CF2F438EB7D6CD0@AM5PR03MB2963.eurprd03.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180220222059.GD32228@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AM5PR03MB296338FECDD421CF2F438EB7D6CD0@AM5PR03MB2963.eurprd03.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 20, 2018 at 04:20:59PM -0600, Bjorn Helgaas wrote:
-> On Sun, Feb 18, 2018 at 09:38:32AM +0100, Lukas Wunner wrote:
-> > The device link is added in a PCI quirk rather than in hda_intel.c.
-> > It is therefore legal for the GPU to runtime suspend to D3cold even if
-> > the HDA controller is not bound to a driver or if CONFIG_SND_HDA_INTEL
-> > is not enabled, for accesses to the HDA controller will cause the GPU to
-> > wake up regardless if they're occurring outside of hda_intel.c (think
-> > config space readout via sysfs).
+[+cc Marc, Thomas]
+
+Hi Stéphane,
+
+Thanks for your email!
+
+On Thu, Feb 22, 2018 at 08:23:52AM +0000, Stéphane Grosjean wrote:
+> I've been writing some drivers for Linux-can in the past years and
+> want to add support of MSI in one of them (see
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/net/can/peak_canfd).
 > 
-> I guess this GPU wakeup happens *if* the path accessing the HDA
-> controller calls pm_runtime_get_sync() or similar, right?
-
-Right.
-
-> We do have
-> that in the sysfs config accessors via pci_config_pm_runtime_get(),
-> but not in the sysfs mmap paths.  I think that's a latent PCI core
-> defect independent of this series.
-
-Yes, there may be a few places where the parent of the device is
-erroneously not runtime resumed when sysfs files are accessed.
-I've never used the sysfs mmap feature, so never witnessed issues
-with it.
-
-> We also don't have that in PCI core config accessors.  That maybe
-> doesn't matter because the core probably shouldn't be touching devices
-> after enumeration (although there might be holes there for things like
-> ASPM where a sysfs file can cause reconfiguration of several devices).
-
-I assume with PCI core config accessors you're referring to
-pci_read_config_word() and friends?  Those are arguably hotpaths
-where we wouldn't want the overhead to check runtime PM status
-everytime.  They might also be called from atomic context, I'm
-not sure, and the runtime PM callbacks may sleep by default
-(unless pm_runtime_irq_safe() was called).
-
-> > +static void quirk_gpu_hda(struct pci_dev *hda)
-> > +{
-> > +	struct pci_dev *gpu = NULL;
-> > +
-> > +	if (PCI_FUNC(hda->devfn) != 1)
-> > +		return;
-> > +
-> > +	gpu = pci_get_domain_bus_and_slot(pci_domain_nr(hda->bus),
+> This device driver works with legacy shared INTx over a CAN PCIe
+> device. I'd like to switch to a full MSI usage of this device, which
+> proposes up to 4 vectors (this device is proposed with 1, 2 or 4 CAN
+> FD ports).
 > 
-> Unnecessary initialization.
+> I'm running x86_64 Kernel 4.13.0-32 from Ubuntu 17.10. Everything
+> looks ok as I successfully get the 4 consecutive IRQ levels. My
+> problem is this one: as soon as the driver free_irq() the FISRT IRQ
+> level, then it does not receive any interrupt from the device
+> anymore, for all other 3 IRQs... On the contrary, when the driver
+> free_irq() one of the 3 other IRQ (instead of the 1st one), then
+> there is no problem and all other interrupts (including the first
+> IRQ vector) are working as they should.
 
-Thanks for spotting this, it's a remnant of an earlier version of the
-patch which called pci_dev_put(gpu) in the (PCI_FUNC(hda->devfn) != 1)
-case.
+Can you share the actual driver code you're running?  The peak_canfd.c
+in v4.16-rc1 doesn't have the MSI code in it, so I can't see exactly
+what you're doing.
 
-Best regards,
+The fact that it does work on ARM suggests there's some difference in
+the arch code.  I don't know enough about this area to figure it out
+from scratch, but maybe working through the actual code would help.
 
-Lukas
+It would be ideal if you could reproduce the problem on v4.16-rc1, in
+case it's something fixed since v4.13.
+
+> I contact you because this "issue" seems to be arch dependent:
+> running the same driver and the same board on another arch (ARM),
+> then everything works like a charm: the driver can free_irq() any
+> IRQ in any order without disturbing the other ones. But running on
+> x86, free_irq() on the FIRST MSI seems to (also) free all the other
+> ones...
+> 
+> Note that the driver set up MSI as described in the last version of
+> Documentation/PCI/MSI-HOWTO.txt.
