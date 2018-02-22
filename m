@@ -1,85 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:53858 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752231AbeB1MEh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 07:04:37 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
-Subject: [PATCH v8 6/9] PCI: dwc: qcom: Switch to use the new IRQ API
-Date: Wed, 28 Feb 2018 12:04:19 +0000
-Message-Id: <72e1aa7e77c31872a40246cbb5858d20a0fcfd4a.1519819020.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
+Received: from merlin.infradead.org ([205.233.59.134]:56496 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750821AbeBVTXq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 14:23:46 -0500
+Subject: Re: [PATCH v9 7/7] PCI/DPC: Enumerate the devices after DPC trigger
+ event
+To: Oza Pawandeep <poza@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
+ <1519285571-5634-8-git-send-email-poza@codeaurora.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <d8da89bf-aaa1-c6ed-d21a-4cd51265d4a2@infradead.org>
+Date: Thu, 22 Feb 2018 11:23:28 -0800
+MIME-Version: 1.0
+In-Reply-To: <1519285571-5634-8-git-send-email-poza@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes QCOM SoC specific driver to use the new IRQ API available in
-pcie-designware.
+On 02/21/2018 11:46 PM, Oza Pawandeep wrote:
+> Implement error_resume callback in DPC so, after DPC trigger event
+> enumerates the devices beneath.
+> 
+> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> 
+> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> index fce4518..59c01c7 100644
+> --- a/drivers/pci/pcie/pcie-dpc.c
+> +++ b/drivers/pci/pcie/pcie-dpc.c
+> @@ -129,6 +129,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+>  }
+>  
+>  /**
+> + * dpc_error_resume - enumerate the devices beneath
+> + * @dev: pointer to Root Port's pci_dev data structure
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
-Change v5->v6:
-- Nothing changed, just to follow the patch set version.
-Change v6->v7:
-- Nothing changed, just to follow the patch set version.
-Change v7->v8:
-- Rebased against v4.16-rc1.
+    * @pdev: ...
 
- drivers/pci/dwc/pcie-qcom.c | 16 ----------------
- 1 file changed, 16 deletions(-)
+> + *
+> + * Invoked by Port Bus driver during nonfatal recovery.
+> + */
+> +static void dpc_error_resume(struct pci_dev *pdev)
+> +{
+> +	bool active = true;
+> +
+> +	if (pci_wait_for_link(pdev, active)) {
+> +		pci_lock_rescan_remove();
+> +		pci_rescan_bus(pdev->bus);
+> +		pci_unlock_rescan_remove();
+> +	}
+> +}
+> +
+> +/**
+>   * dpc_reset_link - reset link DPC  routine
+>   * @dev: pointer to Root Port's pci_dev data structure
+>   *
+> diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+> index 6844347..4950f49 100644
+> --- a/drivers/pci/pcie/pcie-err.c
+> +++ b/drivers/pci/pcie/pcie-err.c
+> @@ -256,6 +258,15 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+>  		result_data.result = PCI_ERS_RESULT_RECOVERED;
+>  
+>  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		/* If DPC is triggered, call resume error hanlder
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 6310c66..89e5cc5 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -180,13 +180,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
- 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
- }
- 
--static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct pcie_port *pp = arg;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
- {
- 	struct dw_pcie *pci = pcie->pci;
-@@ -1262,15 +1255,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
- 		if (pp->msi_irq < 0)
- 			return pp->msi_irq;
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       qcom_pcie_msi_irq_handler,
--				       IRQF_SHARED | IRQF_NO_THREAD,
--				       "qcom-pcie-msi", pp);
--		if (ret) {
--			dev_err(dev, "cannot request msi irq\n");
--			return ret;
--		}
- 	}
- 
- 	ret = phy_init(pcie->phy);
+		                                          handler
+
+Kernel multi-line comment style is:
+		/*
+		 * Begin comment here.
+		 * foo bar blah
+		 */
+
+> +		 * because, at this point we can safely assume that
+> +		 * link recovery has happened.
+> +		 */
+> +		if ((severity == DPC_FATAL) &&
+> +			(cb == report_resume)) {
+> +			cb(dev, NULL);
+> +			return PCI_ERS_RESULT_RECOVERED;
+> +		}
+>  		/*
+>  		 * If the error is reported by a bridge, we think this error
+>  		 * is related to the downstream link of the bridge, so we
+
+thanks,
 -- 
-2.7.4
+~Randy
