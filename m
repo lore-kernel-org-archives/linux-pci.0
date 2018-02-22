@@ -1,81 +1,72 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 16 Feb 2018 08:55:09 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V4 26/26] PCI: Remove pci_get_bus_and_slot() function
-Message-ID: <20180216145509.GB11014@bhelgaas-glaptop.roam.corp.google.com>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-27-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1513661883-28662-27-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37732 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752682AbeBVHq1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 02:46:27 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v9 1/7] PCI/AER: Rename error recovery to generic pci naming
+Date: Thu, 22 Feb 2018 13:16:05 +0530
+Message-Id: <1519285571-5634-2-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
+References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 19, 2017 at 12:38:02AM -0500, Sinan Kaya wrote:
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Now that all users of pci_get_bus_and_slot() switched to
-> pci_get_domain_bus_and_slot(), it is now safe to remove this function.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+This patch renames error recovery to generic name with pci prefix
 
-Applied to pci/deprecate-get-bus-and-slot for v4.17, thanks!
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-> ---
->  include/linux/pci.h | 8 --------
->  1 file changed, 8 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 66cca1c..04cecbe 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -948,11 +948,6 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
->  struct pci_dev *pci_get_slot(struct pci_bus *bus, unsigned int devfn);
->  struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
->  					    unsigned int devfn);
-> -static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
-> -						   unsigned int devfn)
-> -{
-> -	return pci_get_domain_bus_and_slot(0, bus, devfn);
-> -}
->  struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
->  int pci_dev_present(const struct pci_device_id *ids);
->  
-> @@ -1660,9 +1655,6 @@ static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
->  static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
->  						unsigned int devfn)
->  { return NULL; }
-> -static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
-> -						unsigned int devfn)
-> -{ return NULL; }
->  static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
->  					unsigned int bus, unsigned int devfn)
->  { return NULL; }
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index a4bfea5..306bf2f 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -478,7 +478,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ }
+ 
+ /**
+- * do_recovery - handle nonfatal/fatal error recovery process
++ * pci_do_recovery - handle nonfatal/fatal error recovery process
+  * @dev: pointer to a pci_dev data structure of agent detecting an error
+  * @severity: error severity type
+  *
+@@ -486,7 +486,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+  * error detected message to all downstream drivers within a hierarchy in
+  * question and return the returned code.
+  */
+-static void do_recovery(struct pci_dev *dev, int severity)
++static void pci_do_recovery(struct pci_dev *dev, int severity)
+ {
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+@@ -566,7 +566,7 @@ static void handle_error_source(struct pcie_device *aerdev,
+ 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 					info->status);
+ 	} else
+-		do_recovery(dev, info->severity);
++		pci_do_recovery(dev, info->severity);
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -631,7 +631,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		}
+ 		cper_print_aer(pdev, entry.severity, entry.regs);
+ 		if (entry.severity != AER_CORRECTABLE)
+-			do_recovery(pdev, entry.severity);
++			pci_do_recovery(pdev, entry.severity);
+ 		pci_dev_put(pdev);
+ 	}
+ }
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
