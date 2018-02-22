@@ -1,230 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52256 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752357AbeBZPyy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Feb 2018 10:54:54 -0500
-Date: Mon, 26 Feb 2018 15:54:49 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, bhelgaas@google.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V8 3/4] PCI: tegra: Broadcast PME_Turn_Off message before
- link goes to L2
-Message-ID: <20180226155449.GC23806@e107981-ln.cambridge.arm.com>
-References: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
- <1518535450-24400-4-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1518535450-24400-4-git-send-email-mmaddireddy@nvidia.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:55954 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933068AbeBVQDA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 11:03:00 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v10 7/7] PCI/DPC: Enumerate the devices after DPC trigger event
+Date: Thu, 22 Feb 2018 21:32:12 +0530
+Message-Id: <1519315332-26852-8-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
+References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 13, 2018 at 08:54:09PM +0530, Manikanta Maddireddy wrote:
-> Per PCIe r3.0, sec 5.3.3.2.1, PCIe root port shoould broadcast PME_Turn_Off
+Implement error_resume callback in DPC so, after DPC trigger event
+enumerates the devices beneath.
 
-s/shoould/should
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-> message before PCIe link goes to L2. PME_Turn_Off broadcast mechanism is
-> implemented in AFI module. Each Tegra PCIe root port has its own
-> PME_Turn_Off and PME_TO_Ack bitmap in AFI_PME register, program this
-> register to broadcast PME_Turn_Off message.
-> 
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> Acked-by: Thierry Reding <treding@nvidia.com>
-> Tested-by: Thierry Reding <treding@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
-> V3:
-> * add PME bitmap in soc data instead of using compatible string
-> * replace while loop with readl_poll_timeout() for polling
-> * commit log correction
-> V4:
-> * no change in this patch
-> V5:
-> * Rebased on linux-next
-> V6:
-> * no change in this patch
-> V7:
-> * Per port soc data is added for pme bits
-> * list_for_each_entry_safe is changed to list_for_each_entry for pme turnoff
-> V8:
-> * Rebased on top of latest patch-2
-> 
->  drivers/pci/host/pci-tegra.c | 66 ++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 66 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 17ccb5e3ba04..60b1d5e1cfa4 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -31,6 +31,7 @@
->  #include <linux/delay.h>
->  #include <linux/export.h>
->  #include <linux/interrupt.h>
-> +#include <linux/iopoll.h>
->  #include <linux/irq.h>
->  #include <linux/irqdomain.h>
->  #include <linux/kernel.h>
-> @@ -153,6 +154,8 @@
->  #define  AFI_INTR_EN_FPCI_TIMEOUT	(1 << 7)
->  #define  AFI_INTR_EN_PRSNT_SENSE	(1 << 8)
->  
-> +#define AFI_PCIE_PME		0xf0
-> +
->  #define AFI_PCIE_CONFIG					0x0f8
->  #define  AFI_PCIE_CONFIG_PCIE_DISABLE(x)		(1 << ((x) + 1))
->  #define  AFI_PCIE_CONFIG_PCIE_DISABLE_ALL		0xe
-> @@ -233,6 +236,8 @@
->  #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
->  #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
->  
-> +#define PME_ACK_TIMEOUT 10000
-> +
->  struct tegra_msi {
->  	struct msi_controller chip;
->  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-> @@ -244,8 +249,16 @@ struct tegra_msi {
->  };
->  
->  /* used to differentiate between Tegra SoC generations */
-> +struct tegra_pcie_port_soc {
-> +	struct {
-> +		u8 turnoff_bit;
-> +		u8 ack_bit;
-> +	} pme;
-> +};
-> +
->  struct tegra_pcie_soc {
->  	unsigned int num_ports;
-> +	const struct tegra_pcie_port_soc *ports;
->  	unsigned int msi_base_shift;
->  	u32 pads_pll_ctl;
->  	u32 tx_ref_sel;
-> @@ -1358,6 +1371,32 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
->  	return 0;
->  }
->  
-> +static void tegra_pcie_pme_turnoff(struct tegra_pcie_port *port)
-> +{
-> +	struct tegra_pcie *pcie = port->pcie;
-> +	const struct tegra_pcie_soc *soc = pcie->soc;
-> +	int err;
-> +	u32 val;
-> +	u8 ack_bit;
-> +
-> +	val = afi_readl(pcie, AFI_PCIE_PME);
-> +	val |= (0x1 << soc->ports[port->index].pme.turnoff_bit);
-> +	afi_writel(pcie, val, AFI_PCIE_PME);
-> +
-> +	ack_bit = soc->ports[port->index].pme.ack_bit;
-> +	err = readl_poll_timeout(pcie->afi + AFI_PCIE_PME, val,
-> +				 val & (0x1 << ack_bit), 1, PME_ACK_TIMEOUT);
-> +	if (err)
-> +		dev_err(pcie->dev, "PME Ack is not received on port: %d\n",
-> +			port->index);
-> +
-> +	usleep_range(10000, 11000);
-> +
-> +	val = afi_readl(pcie, AFI_PCIE_PME);
-> +	val &= ~(0x1 << soc->ports[port->index].pme.turnoff_bit);
-> +	afi_writel(pcie, val, AFI_PCIE_PME);
-> +}
-> +
->  static int tegra_msi_alloc(struct tegra_msi *chip)
->  {
->  	int msi;
-> @@ -2103,8 +2142,14 @@ static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
->  	}
->  }
->  
-> +static const struct tegra_pcie_port_soc tegra20_pcie_ports[] = {
-> +	{ .pme.turnoff_bit = 0, .pme.ack_bit =  5 },
-> +	{ .pme.turnoff_bit = 8, .pme.ack_bit = 10 },
-> +};
-> +
->  static const struct tegra_pcie_soc tegra20_pcie = {
->  	.num_ports = 2,
-> +	.ports = tegra20_pcie_ports,
->  	.msi_base_shift = 0,
->  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
->  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
-> @@ -2118,8 +2163,15 @@ static const struct tegra_pcie_soc tegra20_pcie = {
->  	.program_uphy = true,
->  };
->  
-> +static const struct tegra_pcie_port_soc tegra30_pcie_ports[] = {
-> +	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
-> +	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
-> +	{ .pme.turnoff_bit = 16, .pme.ack_bit = 18 },
-> +};
-> +
->  static const struct tegra_pcie_soc tegra30_pcie = {
->  	.num_ports = 3,
-> +	.ports = tegra30_pcie_ports,
->  	.msi_base_shift = 8,
->  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
->  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-> @@ -2136,6 +2188,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
->  
->  static const struct tegra_pcie_soc tegra124_pcie = {
->  	.num_ports = 2,
-> +	.ports = tegra20_pcie_ports,
->  	.msi_base_shift = 8,
->  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
->  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-> @@ -2151,6 +2204,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
->  
->  static const struct tegra_pcie_soc tegra210_pcie = {
->  	.num_ports = 2,
-> +	.ports = tegra20_pcie_ports,
->  	.msi_base_shift = 8,
->  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
->  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-> @@ -2164,8 +2218,15 @@ static const struct tegra_pcie_soc tegra210_pcie = {
->  	.program_uphy = true,
->  };
->  
-> +static const struct tegra_pcie_port_soc tegra186_pcie_ports[] = {
-> +	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
-> +	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
-> +	{ .pme.turnoff_bit = 12, .pme.ack_bit = 14 },
-> +};
-> +
->  static const struct tegra_pcie_soc tegra186_pcie = {
->  	.num_ports = 3,
-> +	.ports = tegra186_pcie_ports,
->  	.msi_base_shift = 8,
->  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
->  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-> @@ -2399,12 +2460,17 @@ static int tegra_pcie_remove(struct platform_device *pdev)
->  {
->  	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
->  	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-> +	struct tegra_pcie_port *port;
->  
->  	if (IS_ENABLED(CONFIG_DEBUG_FS))
->  		tegra_pcie_debugfs_exit(pcie);
->  
->  	pci_stop_root_bus(host->bus);
->  	pci_remove_root_bus(host->bus);
-> +
-> +	list_for_each_entry(port, &pcie->ports, list)
-> +		tegra_pcie_pme_turnoff(port);
-> +
-
-IIUC how it works this patch and the previous one should be swapped,
-otherwise the driver removal may not work correctly.
-
-It is just for my own understanding (and bisection reasons).
-
-Thanks,
-Lorenzo
-
->  	tegra_pcie_disable_ports(pcie);
->  
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
-> -- 
-> 2.1.4
-> 
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 0524bd3..382d5c5 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -128,6 +128,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ }
+ 
+ /**
++ * dpc_error_resume - enumerate the devices beneath
++ * @dev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver during nonfatal recovery.
++ */
++static void dpc_error_resume(struct pci_dev *pdev)
++{
++	bool active = true;
++
++	if (pci_wait_for_link(pdev, active)) {
++		pci_lock_rescan_remove();
++		pci_rescan_bus(pdev->bus);
++		pci_unlock_rescan_remove();
++	}
++}
++
++/**
+  * dpc_reset_link - reset link DPC  routine
+  * @dev: pointer to Root Port's pci_dev data structure
+  *
+@@ -365,6 +382,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.error_resume	= dpc_error_resume,
+ 	.reset_link     = dpc_reset_link,
+ };
+ 
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index 6844347..d7e2377 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -236,6 +236,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+  * @state: error state
+  * @error_mesg: message to print
+  * @cb: callback to be broadcasted
++ * @severity: error severity
+  *
+  * Invoked during error recovery process. Once being invoked, the content
+  * of error severity will be broadcasted to all downstream drivers in a
+@@ -244,7 +245,8 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 	enum pci_channel_state state,
+ 	char *error_mesg,
+-	int (*cb)(struct pci_dev *, void *))
++	int (*cb)(struct pci_dev *, void *),
++	int severity)
+ {
+ 	struct aer_broadcast_data result_data;
+ 
+@@ -256,6 +258,17 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 		result_data.result = PCI_ERS_RESULT_RECOVERED;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		/* If DPC is triggered, call resume error handler
++		 * because, at this point we can safely assume that
++		 * link recovery has happened, this is only handled if
++		 * callback is resume, as this function can be called
++		 * with multiple callbacks.
++		 */
++		if ((severity == DPC_FATAL) &&
++			(cb == report_resume)) {
++			cb(dev, NULL);
++			return PCI_ERS_RESULT_RECOVERED;
++		}
+ 		/*
+ 		 * If the error is reported by a bridge, we think this error
+ 		 * is related to the downstream link of the bridge, so we
+@@ -305,7 +318,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	status = broadcast_error_message(dev,
+ 			state,
+ 			"error_detected",
+-			report_error_detected);
++			report_error_detected,
++			severity);
+ 
+ 	if ((severity == AER_FATAL) ||
+ 	    (severity == DPC_FATAL)) {
+@@ -321,7 +335,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 		status = broadcast_error_message(dev,
+ 				state,
+ 				"mmio_enabled",
+-				report_mmio_enabled);
++				report_mmio_enabled,
++				severity);
+ 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+ 		/*
+@@ -332,7 +347,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 		status = broadcast_error_message(dev,
+ 				state,
+ 				"slot_reset",
+-				report_slot_reset);
++				report_slot_reset,
++				severity);
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+@@ -342,7 +358,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	broadcast_error_message(dev,
+ 				state,
+ 				"resume",
+-				report_resume);
++				report_resume,
++				severity);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
+ 	mutex_unlock(&pci_err_recovery_lock);
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
