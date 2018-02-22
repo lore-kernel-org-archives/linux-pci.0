@@ -1,48 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:48484 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932199AbeBVM72 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Feb 2018 07:59:28 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.com>, linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 3/4] ACPI / sleep: Re-use new dmi_get_bios_year() helper
-Date: Thu, 22 Feb 2018 14:59:22 +0200
-Message-Id: <20180222125923.57385-3-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
-References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57762 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933069AbeBVQGZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 11:06:25 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 22 Feb 2018 21:36:23 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v10 5/7] PCI/AER: Unify aer error defines at single space
+In-Reply-To: <1519315332-26852-6-git-send-email-poza@codeaurora.org>
+References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
+ <1519315332-26852-6-git-send-email-poza@codeaurora.org>
+Message-ID: <823d8b71a56656f87b6f0868a813db8c@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-...instead of open coding its functionality.
+On 2018-02-22 21:32, Oza Pawandeep wrote:
+> This patch moves AER error defines to drivers/pci/pci.h.
+> So that it unifies the error repoting codes at single place along with 
+> dpc
+> 
+> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> 
+> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+> index 1efefe9..7ae9bb3 100644
+> --- a/drivers/acpi/apei/ghes.c
+> +++ b/drivers/acpi/apei/ghes.c
+> @@ -56,6 +56,7 @@
+>  #include <ras/ras_event.h>
+> 
+>  #include "apei-internal.h"
+> +#include "../../pci/pci.h"
+> 
+>  #define GHES_PFX	"GHES: "
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 124f42e..b0e63b5 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -343,7 +343,11 @@ static inline resource_size_t
+> pci_resource_alignment(struct pci_dev *dev,
+>  void pci_enable_acs(struct pci_dev *dev);
+> 
+>  /* PCI error reporting and recovery */
+> -#define DPC_FATAL	4
+> +#define AER_NONFATAL		0
+> +#define AER_FATAL		1
+> +#define AER_CORRECTABLE		2
+> +
+> +#define DPC_FATAL		4
+> 
+>  void pci_do_recovery(struct pci_dev *dev, int severity);
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index 6a352e6..4c59f37 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -19,6 +19,7 @@
+>  #include <linux/cper.h>
+> 
+>  #include "aerdrv.h"
+> +#include "../../pci.h"
+>  #include <ras/ras_event.h>
+> 
+>  #define AER_AGENT_RECEIVER		0
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index 8f87bbe..3eac8ed 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -11,10 +11,6 @@
+>  #include <linux/errno.h>
+>  #include <linux/types.h>
+> 
+> -#define AER_NONFATAL			0
+> -#define AER_FATAL			1
+> -#define AER_CORRECTABLE			2
+> -
+>  struct pci_dev;
+> 
+>  struct aer_header_log_regs {
+> diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+> index 9c68986..d75c75b 100644
+> --- a/include/ras/ras_event.h
+> +++ b/include/ras/ras_event.h
+> @@ -13,6 +13,7 @@
+>  #include <linux/aer.h>
+>  #include <linux/cper.h>
+>  #include <linux/mm.h>
+> +#include "../../../drivers/pci/pci.h"
+> 
+>  /*
+>   * MCE Extended Error Log trace event
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/acpi/sleep.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/acpi/sleep.c b/drivers/acpi/sleep.c
-index 46cde0912762..b35923e3a926 100644
---- a/drivers/acpi/sleep.c
-+++ b/drivers/acpi/sleep.c
-@@ -376,12 +376,10 @@ void __init acpi_sleep_no_blacklist(void)
- 
- static void __init acpi_sleep_dmi_check(void)
- {
--	int year;
--
- 	if (ignore_blacklist)
- 		return;
- 
--	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year >= 2012)
-+	if (dmi_get_bios_year() >= 2012)
- 		acpi_nvs_nosave_s3();
- 
- 	dmi_check_system(acpisleep_dmi_table);
--- 
-2.16.1
+Hi Bjorn,
+
+Based on your earlier comment I have moved AER and DPC error defined in 
+driver/pci/pci.h
+but I am not entirely comfortable with moving them there because
+
+file such as
+drivers/acpi/apei/ghes.c
+include/ras/ras_event.h
+
+they are outside of the scope of driver/pci/pci.h and they have to 
+include the files
+#include "../../pci/pci.h" and #include "../../../drivers/pci/pci.h" 
+respectively.
+
+hence my suggestion is to move error defines in include/linux/pci.h
+
+let me know your view.
+
+Regards,
+Oza.
