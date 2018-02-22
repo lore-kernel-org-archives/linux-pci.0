@@ -1,111 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59760 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750935AbeBWIYR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 03:24:17 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v11 0/7] Address error and recovery for AER and DPC
-Date: Fri, 23 Feb 2018 13:53:57 +0530
-Message-Id: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:52776 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751436AbeBVXSp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Feb 2018 18:18:45 -0500
+Date: Thu, 22 Feb 2018 17:18:43 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Frederick Lawler <fred@fredlawl.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH] PCI: Move pcieport_if.h to drivers/pci and replace
+ includes
+Message-ID: <20180222231843.GD14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1518580338-13826-1-git-send-email-fred@fredlawl.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1518580338-13826-1-git-send-email-fred@fredlawl.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set brings in error handling support for DPC
+On Tue, Feb 13, 2018 at 09:52:18PM -0600, Frederick Lawler wrote:
+> Move the include/linux/pcieport_if.h file to drivers/pci/pcieport_if.h.
+> 
+> Replace all uses of #include<linux/pcieport_if.h> with relative paths to
+> the new file location. eg. #include "../pcieport_if.h"
+> 
+> Signed-off-by: Frederick Lawler <fred@fredlawl.com>
 
-The current implementation of AER and error message broadcasting to the
-EP driver is tightly coupled and limited to AER service driver.
-It is important to factor out broadcasting and other link handling
-callbacks. So that not only when AER gets triggered, but also when DPC get
-triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+Applied to pci/portdrv for v4.17, thanks!
 
-DPC should enumerate the devices after recovering the link, which is
-achieved by implementing error_resume callback.
-
-Changes since v10:
-    Christoph Hellwig's, David Laight's and Randy Dunlap's
-    comments addressed.
-	> renamed pci_do_recovery to pcie_do_recovery
-	> removed inner braces in conditional statements.
-	> restrctured the code in pci_wait_for_link 
-	> EXPORT_SYMBOL_GPL
-Changes since v9:
-    Sinan's comments addressed.
-	> bool active = true; unnecessary variable removed.
-Changes since v8:
-    Fixed Kbuild errors.
-Changes since v7:
-    Rebased the code on pci master
-	> https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
-Changes since v6:
-    Sinan's and Stefan's comments implemented.
-	> reordered patch 6 and 7
-	> cleaned up
-Changes since v5:
-    Sinan's and Keith's comments incorporated.
-        > made separate patch for mutex
-        > unified error repotting codes into driver/pci/pci.h
-        > got rid of wait link active/inactive and
-          made generic function in driver/pci/pci.c
-Changes since v4:
-    Bjorn's comments incorporated.
-        > Renamed only do_recovery.
-        > moved the things more locally to drivers/pci/pci.h
-Changes since v3:
-    Bjorn's comments incorporated.
-        > Made separate patch renaming generic pci_err.c
-        > Introduce pci_err.h to contain all the error types and recovery
-        > removed all the dependencies on pci.h
-Changes since v2:
-    Based on feedback from Keith:
-    "
-    When DPC is triggered due to receipt of an uncorrectable error Message,
-    the Requester ID from the Message is recorded in the DPC Error
-    Source ID register and that Message is discarded and not forwarded Upstream.
-    "
-    Removed the patch where AER checks if DPC service is active
-Changes since v1:
-    Kbuild errors fixed:
-        > pci_find_dpc_dev made static
-        > ras_event.h updated
-        > pci_find_aer_service call with CONFIG check
-        > pci_find_dpc_service call with CONFIG check
-
-Oza Pawandeep (7):
-  PCI/AER: Rename error recovery to generic pci naming
-  PCI/AER: factor out error reporting from AER
-  PCI/ERR: add mutex to synchronize recovery
-  PCI/DPC: Unify and plumb error handling into DPC
-  PCI/AER: Unify aer error defines at single space
-  PCI/DPC: Enumerate the devices after DPC trigger event
-  PCI: Unify wait for link active into generic pci
-
- drivers/acpi/apei/ghes.c               |   1 +
- drivers/pci/hotplug/pciehp_hpc.c       |  21 +-
- drivers/pci/pci.c                      |  39 +++-
- drivers/pci/pci.h                      |  11 +
- drivers/pci/pcie/Makefile              |   2 +-
- drivers/pci/pcie/aer/aerdrv.h          |  30 ---
- drivers/pci/pcie/aer/aerdrv_core.c     | 293 +-------------------------
- drivers/pci/pcie/aer/aerdrv_errprint.c |   1 +
- drivers/pci/pcie/pcie-dpc.c            | 115 ++++++++++-
- drivers/pci/pcie/pcie-err.c            | 366 +++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.h             |   2 +
- include/linux/aer.h                    |   4 -
- include/linux/pci.h                    |   1 +
- 13 files changed, 534 insertions(+), 352 deletions(-)
- create mode 100644 drivers/pci/pcie/pcie-err.c
-
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> ---
+>  drivers/pci/hotplug/pciehp.h                 | 3 ++-
+>  drivers/pci/pcie/aer/aerdrv.c                | 2 +-
+>  drivers/pci/pcie/aer/aerdrv.h                | 3 ++-
+>  drivers/pci/pcie/pcie-dpc.c                  | 3 ++-
+>  drivers/pci/pcie/pme.c                       | 2 +-
+>  drivers/pci/pcie/portdrv_acpi.c              | 2 +-
+>  drivers/pci/pcie/portdrv_bus.c               | 2 +-
+>  drivers/pci/pcie/portdrv_core.c              | 2 +-
+>  drivers/pci/pcie/portdrv_pci.c               | 2 +-
+>  {include/linux => drivers/pci}/pcieport_if.h | 0
+>  10 files changed, 12 insertions(+), 9 deletions(-)
+>  rename {include/linux => drivers/pci}/pcieport_if.h (100%)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index 636ed8f..0a2f955 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -20,10 +20,11 @@
+>  #include <linux/pci_hotplug.h>
+>  #include <linux/delay.h>
+>  #include <linux/sched/signal.h>		/* signal_pending() */
+> -#include <linux/pcieport_if.h>
+>  #include <linux/mutex.h>
+>  #include <linux/workqueue.h>
+>  
+> +#include "../pcieport_if.h"
+> +
+>  #define MY_NAME	"pciehp"
+>  
+>  extern bool pciehp_poll_mode;
+> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> index da8331f..4a27a90 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.c
+> +++ b/drivers/pci/pcie/aer/aerdrv.c
+> @@ -21,10 +21,10 @@
+>  #include <linux/init.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/delay.h>
+> -#include <linux/pcieport_if.h>
+>  #include <linux/slab.h>
+>  
+>  #include "aerdrv.h"
+> +#include "../../pcieport_if.h"
+>  #include "../../pci.h"
+>  
+>  static int aer_probe(struct pcie_device *dev);
+> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+> index 5449e5c..8e16261 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.h
+> +++ b/drivers/pci/pcie/aer/aerdrv.h
+> @@ -10,10 +10,11 @@
+>  #define _AERDRV_H_
+>  
+>  #include <linux/workqueue.h>
+> -#include <linux/pcieport_if.h>
+>  #include <linux/aer.h>
+>  #include <linux/interrupt.h>
+>  
+> +#include "../../pcieport_if.h"
+> +
+>  #define SYSTEM_ERROR_INTR_ON_MESG_MASK	(PCI_EXP_RTCTL_SECEE|	\
+>  					PCI_EXP_RTCTL_SENFEE|	\
+>  					PCI_EXP_RTCTL_SEFEE)
+> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> index 38e40c6..d21b1c7 100644
+> --- a/drivers/pci/pcie/pcie-dpc.c
+> +++ b/drivers/pci/pcie/pcie-dpc.c
+> @@ -10,7 +10,8 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/init.h>
+>  #include <linux/pci.h>
+> -#include <linux/pcieport_if.h>
+> +
+> +#include "../pcieport_if.h"
+>  #include "../pci.h"
+>  #include "aer/aerdrv.h"
+>  
+> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> index 5480f54..cc57707 100644
+> --- a/drivers/pci/pcie/pme.c
+> +++ b/drivers/pci/pcie/pme.c
+> @@ -14,9 +14,9 @@
+>  #include <linux/init.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/device.h>
+> -#include <linux/pcieport_if.h>
+>  #include <linux/pm_runtime.h>
+>  
+> +#include "../pcieport_if.h"
+>  #include "../pci.h"
+>  #include "portdrv.h"
+>  
+> diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+> index 319c949..80375f0 100644
+> --- a/drivers/pci/pcie/portdrv_acpi.c
+> +++ b/drivers/pci/pcie/portdrv_acpi.c
+> @@ -10,8 +10,8 @@
+>  #include <linux/errno.h>
+>  #include <linux/acpi.h>
+>  #include <linux/pci-acpi.h>
+> -#include <linux/pcieport_if.h>
+>  
+> +#include "../pcieport_if.h"
+>  #include "aer/aerdrv.h"
+>  #include "../pci.h"
+>  #include "portdrv.h"
+> diff --git a/drivers/pci/pcie/portdrv_bus.c b/drivers/pci/pcie/portdrv_bus.c
+> index f0fba55..8047485 100644
+> --- a/drivers/pci/pcie/portdrv_bus.c
+> +++ b/drivers/pci/pcie/portdrv_bus.c
+> @@ -13,7 +13,7 @@
+>  #include <linux/errno.h>
+>  #include <linux/pm.h>
+>  
+> -#include <linux/pcieport_if.h>
+> +#include  "../pcieport_if.h"
+>  #include "portdrv.h"
+>  
+>  static int pcie_port_bus_match(struct device *dev, struct device_driver *drv);
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index ef3bad4..3089eef 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -15,9 +15,9 @@
+>  #include <linux/pm_runtime.h>
+>  #include <linux/string.h>
+>  #include <linux/slab.h>
+> -#include <linux/pcieport_if.h>
+>  #include <linux/aer.h>
+>  
+> +#include "../pcieport_if.h"
+>  #include "../pci.h"
+>  #include "portdrv.h"
+>  
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index fb1c1bb..3dfc9ac 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -15,11 +15,11 @@
+>  #include <linux/pm.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/init.h>
+> -#include <linux/pcieport_if.h>
+>  #include <linux/aer.h>
+>  #include <linux/dmi.h>
+>  #include <linux/pci-aspm.h>
+>  
+> +#include "../pcieport_if.h"
+>  #include "../pci.h"
+>  #include "portdrv.h"
+>  
+> diff --git a/include/linux/pcieport_if.h b/drivers/pci/pcieport_if.h
+> similarity index 100%
+> rename from include/linux/pcieport_if.h
+> rename to drivers/pci/pcieport_if.h
+> -- 
+> 2.7.4
+> 
