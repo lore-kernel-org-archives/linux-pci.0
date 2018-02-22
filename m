@@ -1,111 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:42529 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933151AbeB1Qfp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 11:35:45 -0500
-From: Gregory CLEMENT <gregory.clement@bootlin.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37990 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752754AbeBVHqf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 02:46:35 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        linux-pci@vger.kernel.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory CLEMENT <gregory.clement@bootlin.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Omri Itach <omrii@marvell.com>,
-        Hanna Hawa <hannah@marvell.com>,
-        Igal Liberman <igall@marvell.com>,
-        Marcin Wojtas <mw@semihalf.com>
-Subject: [PATCH v2 2/2] PCI: armada8k: Fix clock resource by adding a register clock
-Date: Wed, 28 Feb 2018 17:35:30 +0100
-Message-Id: <20180228163530.25389-3-gregory.clement@bootlin.com>
-In-Reply-To: <20180228163530.25389-1-gregory.clement@bootlin.com>
-References: <20180228163530.25389-1-gregory.clement@bootlin.com>
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v9 3/7] PCI/ERR: add mutex to synchronize recovery
+Date: Thu, 22 Feb 2018 13:16:07 +0530
+Message-Id: <1519285571-5634-4-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
+References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Armada 7K/8K we need to explicitly enable the register clock. This
-clock is optional because not all the SoCs using this IP need it but at
-least for Armada 7K/8K it is actually mandatory.
+This patch protects pci_do_recovery with mutex.
 
-The binding documentation is updated accordingly.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Signed-off-by: Gregory CLEMENT <gregory.clement@bootlin.com>
----
- Documentation/devicetree/bindings/pci/pci-armada8k.txt |  5 ++++-
- drivers/pci/dwc/pcie-armada8k.c                        | 18 ++++++++++++++++--
- 2 files changed, 20 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci-armada8k.txt b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-index c1e4c3d10a74..9e3fc15e1af8 100644
---- a/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-@@ -12,7 +12,10 @@ Required properties:
-    - "ctrl" for the control register region
-    - "config" for the config space region
- - interrupts: Interrupt specifier for the PCIe controler
--- clocks: reference to the PCIe controller clock
-+- clocks: reference to the PCIe controller clocks
-+- clock-names: mandatory if there is a second clock, in this case the
-+   name must be "core" for the first clock and "reg" for the second
-+   one
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index a532fe0..8318c84 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -20,6 +20,8 @@
+ #include <linux/pcieport_if.h>
+ #include "portdrv.h"
  
- Example:
- 
-diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-index f9b1aec25c5c..072fd7ecc29f 100644
---- a/drivers/pci/dwc/pcie-armada8k.c
-+++ b/drivers/pci/dwc/pcie-armada8k.c
-@@ -28,6 +28,7 @@
- struct armada8k_pcie {
- 	struct dw_pcie *pci;
- 	struct clk *clk;
-+	struct clk *clk_reg;
- };
- 
- #define PCIE_VENDOR_REGS_OFFSET		0x8000
-@@ -229,23 +230,36 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	pcie->clk_reg = devm_clk_get(dev, "reg");
-+	if (pcie->clk_reg == ERR_PTR(-EPROBE_DEFER)) {
-+		ret = -EPROBE_DEFER;
-+		goto fail;
-+	}
-+	if (!IS_ERR(pcie->clk_reg)) {
-+		ret = clk_prepare_enable(pcie->clk_reg);
-+		if (ret)
-+			goto fail_clkreg;
-+	}
++static DEFINE_MUTEX(pci_err_recovery_lock);
 +
- 	/* Get the dw-pcie unit configuration/control registers base. */
- 	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
- 	pci->dbi_base = devm_pci_remap_cfg_resource(dev, base);
- 	if (IS_ERR(pci->dbi_base)) {
- 		dev_err(dev, "couldn't remap regs base %p\n", base);
- 		ret = PTR_ERR(pci->dbi_base);
--		goto fail;
-+		goto fail_clkreg;
- 	}
+ struct aer_broadcast_data {
+ 	enum pci_channel_state state;
+ 	enum pci_ers_result result;
+@@ -283,6 +285,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
  
- 	platform_set_drvdata(pdev, pcie);
++	mutex_lock(&pci_err_recovery_lock);
++
+ 	if (severity == AER_FATAL)
+ 		state = pci_channel_io_frozen;
+ 	else
+@@ -326,9 +330,11 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 				report_resume);
  
- 	ret = armada8k_add_pcie_port(pcie, pdev);
- 	if (ret)
--		goto fail;
-+		goto fail_clkreg;
+ 	dev_info(&dev->dev, "Device recovery successful\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ 	return;
  
- 	return 0;
- 
-+fail_clkreg:
-+	clk_disable_unprepare(pcie->clk_reg);
- fail:
- 	clk_disable_unprepare(pcie->clk);
- 
+ failed:
+ 	/* TODO: Should kernel panic here? */
+ 	dev_info(&dev->dev, "Device recovery failed\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ }
 -- 
-2.16.1
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
