@@ -1,99 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:1567 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933577AbeBMPaa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 10:30:30 -0500
-Subject: Re: [PATCH V7 2/4] PCI: tegra: Add loadable kernel module support
-To: Thierry Reding <thierry.reding@gmail.com>
-CC: <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <cyndis@kapsi.fi>, <jonathanh@nvidia.com>,
-        <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <vidyas@nvidia.com>, <kthota@nvidia.com>
-References: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
- <1517289851-14111-3-git-send-email-mmaddireddy@nvidia.com>
- <20180213130718.GE6764@ulmo>
- <eeab925c-3da4-38ae-2060-f77458abaaea@nvidia.com>
- <20180213135139.GA15842@ulmo>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <b90f8f85-9e8a-3ba3-1e4d-7bd63b61c9b7@nvidia.com>
-Date: Tue, 13 Feb 2018 21:00:07 +0530
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Subject: Re: [PATCH 03/37] iommu/sva: Manage process address spaces
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+References: <1519280641-30258-1-git-send-email-xieyisheng1@huawei.com>
+ <1519280641-30258-3-git-send-email-xieyisheng1@huawei.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <kvm@vger.kernel.org>, <joro@8bytes.org>,
+        Mark Rutland <Mark.Rutland@arm.com>,
+        Catalin Marinas <Catalin.Marinas@arm.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        "Lorenzo Pieralisi" <Lorenzo.Pieralisi@arm.com>,
+        <hanjun.guo@linaro.org>, Sudeep Holla <Sudeep.Holla@arm.com>,
+        <rjw@rjwysocki.net>, <lenb@kernel.org>,
+        Robin Murphy <Robin.Murphy@arm.com>, <bhelgaas@google.com>,
+        <alex.williamson@redhat.com>, <tn@semihalf.com>,
+        <liubo95@huawei.com>, <thunder.leizhen@huawei.com>,
+        <xuzaibo@huawei.com>, <ilias.apalodimas@linaro.org>,
+        <jonathan.cameron@huawei.com>, <shunyong.yang@hxt-semitech.com>,
+        <nwatters@codeaurora.org>, <okaya@codeaurora.org>,
+        <jcrouse@codeaurora.org>, <rfranz@cavium.com>,
+        <dwmw2@infradead.org>, <jacob.jun.pan@linux.intel.com>,
+        <yi.l.liu@intel.com>, <ashok.raj@intel.com>, <robdclark@gmail.com>,
+        <christian.koenig@amd.com>, <bharatku@xilinx.com>,
+        <robh@kernel.org>
+Message-ID: <63e4b545-c6e5-f4b4-3ba1-cf7a142b64ec@huawei.com>
+Date: Thu, 22 Feb 2018 17:03:41 +0800
 MIME-Version: 1.0
-In-Reply-To: <20180213135139.GA15842@ulmo>
+In-Reply-To: <1519280641-30258-3-git-send-email-xieyisheng1@huawei.com>
 Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Jean,
 
+On 2018/2/22 14:23, Jean-Philippe Brucker wrote:
+> @@ -129,7 +439,10 @@ int iommu_sva_device_shutdown(struct device *dev)
+>  int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
+>  			  unsigned long flags, void *drvdata)
+>  {
+> +	int i, ret;
+> +	struct io_mm *io_mm = NULL;
+>  	struct iommu_domain *domain;
+> +	struct iommu_bond *bond = NULL, *tmp;
+>  	struct iommu_param *dev_param = dev->iommu_param;
+>  
+>  	domain = iommu_get_domain_for_dev(dev);
+> @@ -145,7 +458,42 @@ int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
+>  	if (flags != (IOMMU_SVA_FEAT_PASID | IOMMU_SVA_FEAT_IOPF))
+>  		return -EINVAL;
+>  
+> -	return -ENOSYS; /* TODO */
+> +	/* If an io_mm already exists, use it */
+> +	spin_lock(&iommu_sva_lock);
+> +	idr_for_each_entry(&iommu_pasid_idr, io_mm, i) {
+> +		if (io_mm->mm != mm || !io_mm_get_locked(io_mm))
+> +			continue;
+> +
+> +		/* Is it already bound to this device? */
+> +		list_for_each_entry(tmp, &io_mm->devices, mm_head) {
+> +			if (tmp->dev != dev)
+> +				continue;
+> +
+> +			bond = tmp;
+> +			refcount_inc(&bond->refs);
+> +			io_mm_put_locked(io_mm);
 
-On 13-Feb-18 7:21 PM, Thierry Reding wrote:
-> On Tue, Feb 13, 2018 at 06:48:49PM +0530, Manikanta Maddireddy wrote:
->>
->>
->> On 13-Feb-18 6:37 PM, Thierry Reding wrote:
->>> On Tue, Jan 30, 2018 at 10:54:09AM +0530, Manikanta Maddireddy wrote:
->>>> Implement remove callback function for Tegra PCIe driver to add
->>>> loadable kernel module support. Change PCI_TEGRA config to tristate to
->>>> allow pci-tegra driver to be build as a module.
->>>>
->>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->>>> Acked-by: Thierry Reding <treding@nvidia.com>
->>>> ---
->>>> V2:
->>>> * no change in this patch
->>>> V3:
->>>> * use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_init()
->>>> V4:
->>>> * no change in this patch
->>>> V5:
->>>> * Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
->>>> rebased on linux-next
->>>> V6:
->>>> * no change in this patch
->>>> V7:
->>>> * no change in this patch
->>>>
->>>>  drivers/pci/host/Kconfig     |  2 +-
->>>>  drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
->>>>  2 files changed, 32 insertions(+), 4 deletions(-)
->>>
->>> Trying to build this as a module I get a link failure because
->>> irq_set_msi_desc() is not exported. I thought a patch to do that had
->>> been part of an earlier version of this series. Has that not been merged
->>> yet?
->>>
->>> Thierry
->>>
->> I got a review comment to use generic MSI model instead of deprecated API.
->> source: https://patchwork.ozlabs.org/patch/841111/
->>
->> Also arm32 compilation will fail because of missing EXPORT of
->> tegra_cpuidle_pcie_irqs_in_use()
->> source: https://patchwork.ozlabs.org/patch/841119/
->>
->> I need to put some time to prepare patches for these two cases.
->> Meanwhile I want to get the basic driver structure for LKM to be merged.
->> I verified locally with these two symbols exported.
-> 
-> Okay, that's fine. However, you can't request these patches to be merged
-> if they will break builds. There are people that run automated builders
-> that will check random configurations, which is bound to eventually get
-> us a bug report about how this fails to build.
-> 
-> Perhaps in order to get loadable module support merged without these
-> issues you could omit the Kconfig change making this a tristate symbol.
-> That way we can get all the structural changes ready and you can work
-> on the necessary exports or MSI model patches so that we can eventually
-> flip the symbol to tristate.
-> 
-> By the way, if you do respin for the tristate change, do you mind taking
-> a look at the blank line changes for readability I mentioned earlier?
-> 
-> Thierry
-> 
+Should io_mm->pasid still be set to *pasid when the device already bond? so driver can
+always get the right pasid if it bond to a mm multi-times, without keeping the pasid itself?
 
-Hi Thierry,
+Thanks
+Yisheng
+> +			break;
+> +		}
+> +		break;
+> +	}
+> +	spin_unlock(&iommu_sva_lock);
+> +
+> +	if (bond)
+> +		return 0;
+> +
+> +	if (!io_mm) {
+> +		io_mm = io_mm_alloc(domain, dev, mm);
+> +		if (IS_ERR(io_mm))
+> +			return PTR_ERR(io_mm);
+> +	}
+> +
+> +	ret = io_mm_attach(domain, dev, io_mm, drvdata);
+> +	if (ret)
+> +		io_mm_put(io_mm);
+> +	else
+> +		*pasid = io_mm->pasid;
+> +
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(iommu_sva_bind_device);
 
-Taken care of both and published V8. Since these are simple changes,
-I retained your Ack & Tested signoff.
-
-Manikanta
