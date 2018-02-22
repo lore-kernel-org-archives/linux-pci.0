@@ -1,173 +1,101 @@
-Return-Path: <SRS0=uKA5=FR=peak-system.com=s.grosjean@kernel.org>
-Return-Path: <SRS0=uKA5=FR=peak-system.com=s.grosjean@kernel.org>
-From: =?utf-8?B?U3TDqXBoYW5lIEdyb3NqZWFu?= <s.grosjean@peak-system.com>
-To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Thomas Gleixner
-	<tglx@linutronix.de>
-Subject: RE: free_irq(IRQ#0) on PCIe device with MSI enabled issue...
-Date: Fri, 23 Feb 2018 11:15:27 +0000
-Message-ID: <AM5PR03MB2963E0E5AAEED849D9EC424DD6CC0@AM5PR03MB2963.eurprd03.prod.outlook.com>
-References: <AM5PR03MB296338FECDD421CF2F438EB7D6CD0@AM5PR03MB2963.eurprd03.prod.outlook.com>
- <20180222151938.GC52685@bhelgaas-glaptop.roam.corp.google.com>
- <95d5a99e-4511-52da-8bd5-0a601ac390d2@arm.com>
-In-Reply-To: <95d5a99e-4511-52da-8bd5-0a601ac390d2@arm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37582 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752628AbeBVHqX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 02:46:23 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v9 0/7] Address error and recovery for AER and DPC
+Date: Thu, 22 Feb 2018 13:16:04 +0530
+Message-Id: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTWFyYywNCg0KVGhhbmtzIGZvciB5b3VyIGFuc3dlci4gVW5mb3J0dW5hdGVseSwgdGhpcyBk
-ZXZpY2UgaXMgb25seSBNU0kgY2FwYWJsZS4NCg0KSGVyZSBhcmUgdGhlIHJlc3VsdHMgb2YgbHNw
-Y2kgLXZ2IHdoZW4gdGhlIChNU0kpIGRyaXZlciBpcyBsb2FkZWQgb24gYm90aCBhcmNoczoNCg0K
-Rmlyc3QsIG9uIGEgSW50ZWwgUEMgZXF1aXBwZWQgd2l0aCBhIGk3IGNvcmU6DQoNCiQgdW5hbWUg
-LWENCkxpbnV4IGxpbnV4LWRldiA0LjE2LjAtcmMxICM0IFNNUCBUaHUgRmViIDIyIDE3OjExOjQ0
-IENFVCAyMDE4IHg4Nl82NCB4ODZfNjQgeDg2XzY0IEdOVS9MaW51eA0KDQokIGRtZXNnIHwgZ3Jl
-cCBwZWFrX3BjaWVmZA0KWyA1NTMyLjI0MjI4MF0gcGVha19wY2llZmQgMDAwMDowYjowMC4wOiA0
-eCBDQU4tRkQgUENBTi1QQ0llIEZQR0EgdjMuMi4xOg0KWyA1NTMyLjI0MjM4MV0gcGVha19wY2ll
-ZmQgMDAwMDowYjowMC4wOiBNU0lbMS4uNF0gZW5hYmxpbmcgc3RhdHVzOiA0DQpbIDU1MzIuMjQy
-NTcxXSBwZWFrX3BjaWVmZCAwMDAwOjBiOjAwLjA6IGNhbjAgYXQgcmVnX2Jhc2U9MHgwMDAwMDAw
-MGFhYjU1YTRkIGlycT03MA0KWyA1NTMyLjI0MjcxMl0gcGVha19wY2llZmQgMDAwMDowYjowMC4w
-OiBjYW4xIGF0IHJlZ19iYXNlPTB4MDAwMDAwMDAxNWJiMDk2MyBpcnE9NzENClsgNTUzMi4yNDI4
-NjldIHBlYWtfcGNpZWZkIDAwMDA6MGI6MDAuMDogY2FuMiBhdCByZWdfYmFzZT0weDAwMDAwMDAw
-NGYwN2ExZmMgaXJxPTcyDQpbIDU1MzIuMjQyOTk3XSBwZWFrX3BjaWVmZCAwMDAwOjBiOjAwLjA6
-IGNhbjMgYXQgcmVnX2Jhc2U9MHgwMDAwMDAwMGRhMDIzNjA4IGlycT03Mw0KDQokIHN1ZG8gbHNw
-Y2kgLXZ2IC1zIDBiOjAwLjANCjBiOjAwLjAgTmV0d29yayBjb250cm9sbGVyOiBQRUFLLVN5c3Rl
-bSBUZWNobmlrIEdtYkggRGV2aWNlIDAwMTMgKHJldiAwMSkNCiAgICAgICAgU3Vic3lzdGVtOiBQ
-RUFLLVN5c3RlbSBUZWNobmlrIEdtYkggRGV2aWNlIDAwMTQNCiAgICAgICAgQ29udHJvbDogSS9P
-LSBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLSBT
-dGVwcGluZy0gU0VSUisgRmFzdEIyQi0gRGlzSU5UeCsNCiAgICAgICAgU3RhdHVzOiBDYXArIDY2
-TUh6LSBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VMPWZhc3QgPlRBYm9ydC0gPFRBYm9ydC0g
-PE1BYm9ydC0gPlNFUlItIDxQRVJSLSBJTlR4LQ0KICAgICAgICBMYXRlbmN5OiAwLCBDYWNoZSBM
-aW5lIFNpemU6IDMyIGJ5dGVzDQogICAgICAgIEludGVycnVwdDogcGluIEEgcm91dGVkIHRvIElS
-USA3MA0KICAgICAgICBOVU1BIG5vZGU6IDANCiAgICAgICAgUmVnaW9uIDA6IE1lbW9yeSBhdCBm
-YjIwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT02NEtdDQogICAgICAgIENh
-cGFiaWxpdGllczogWzUwXSBQb3dlciBNYW5hZ2VtZW50IHZlcnNpb24gMA0KICAgICAgICAgICAg
-ICAgIEZsYWdzOiBQTUVDbGstIERTSS0gRDEtIEQyLSBBdXhDdXJyZW50PTBtQSBQTUUoRDAtLEQx
-LSxEMi0sRDNob3QtLEQzY29sZC0pDQogICAgICAgICAgICAgICAgU3RhdHVzOiBEMCBOb1NvZnRS
-c3QtIFBNRS1FbmFibGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtDQogICAgICAgIENhcGFiaWxpdGll
-czogWzcwXSBNU0k6IEVuYWJsZSsgQ291bnQ9NC80IE1hc2thYmxlLSA2NGJpdCsNCiAgICAgICAg
-ICAgICAgICBBZGRyZXNzOiAwMDAwMDAwMDAwMDAwMDAwICBEYXRhOiAwMDAwDQogICAgICAgIENh
-cGFiaWxpdGllczogWzkwXSBFeHByZXNzICh2MSkgRW5kcG9pbnQsIE1TSSAwMA0KICAgICAgICAg
-ICAgICAgIERldkNhcDogTWF4UGF5bG9hZCAxMjggYnl0ZXMsIFBoYW50RnVuYyAwLCBMYXRlbmN5
-IEwwcyA8NjRucywgTDEgPDF1cw0KICAgICAgICAgICAgICAgICAgICAgICAgRXh0VGFnLSBBdHRu
-QnRuLSBBdHRuSW5kLSBQd3JJbmQtIFJCRSsgRkxSZXNldC0gU2xvdFBvd2VyTGltaXQgMC4wMDBX
-DQogICAgICAgICAgICAgICAgRGV2Q3RsOiBSZXBvcnQgZXJyb3JzOiBDb3JyZWN0YWJsZS0gTm9u
-LUZhdGFsLSBGYXRhbC0gVW5zdXBwb3J0ZWQtDQogICAgICAgICAgICAgICAgICAgICAgICBSbHhk
-T3JkLSBFeHRUYWctIFBoYW50RnVuYy0gQXV4UHdyLSBOb1Nub29wLQ0KICAgICAgICAgICAgICAg
-ICAgICAgICAgTWF4UGF5bG9hZCAxMjggYnl0ZXMsIE1heFJlYWRSZXEgNTEyIGJ5dGVzDQogICAg
-ICAgICAgICAgICAgRGV2U3RhOiBDb3JyRXJyLSBVbmNvcnJFcnItIEZhdGFsRXJyLSBVbnN1cHBS
-ZXEtIEF1eFB3ci0gVHJhbnNQZW5kLQ0KICAgICAgICAgICAgICAgIExua0NhcDogUG9ydCAjMCwg
-U3BlZWQgMi41R1QvcywgV2lkdGggeDEsIEFTUE0gTDEsIEV4aXQgTGF0ZW5jeSBMMHMgdW5saW1p
-dGVkLCBMMSB1bmxpbWl0ZWQNCiAgICAgICAgICAgICAgICAgICAgICAgIENsb2NrUE0tIFN1cnBy
-aXNlLSBMTEFjdFJlcC0gQndOb3QtIEFTUE1PcHRDb21wKw0KICAgICAgICAgICAgICAgIExua0N0
-bDogQVNQTSBEaXNhYmxlZDsgUkNCIDY0IGJ5dGVzIERpc2FibGVkLSBDb21tQ2xrLQ0KICAgICAg
-ICAgICAgICAgICAgICAgICAgRXh0U3luY2gtIENsb2NrUE0tIEF1dFdpZERpcy0gQldJbnQtIEF1
-dEJXSW50LQ0KICAgICAgICAgICAgICAgIExua1N0YTogU3BlZWQgMi41R1QvcywgV2lkdGggeDEs
-IFRyRXJyLSBUcmFpbi0gU2xvdENsaysgRExBY3RpdmUtIEJXTWdtdC0gQUJXTWdtdC0NCiAgICAg
-ICAgQ2FwYWJpbGl0aWVzOiBbMTAwIHYxXSBWZW5kb3IgU3BlY2lmaWMgSW5mb3JtYXRpb246IElE
-PTAwMDAgUmV2PTAgTGVuPTAwYyA8Pz4NCiAgICAgICAgS2VybmVsIGRyaXZlciBpbiB1c2U6IHBl
-YWtfcGNpZWZkDQogICAgICAgIEtlcm5lbCBtb2R1bGVzOiBwZWFrX3BjaWVmZA0KDQpUaGVuLCBv
-biB0aGUgdGhlIEJlYWdsZUJvYXJkIHgxNSAodGhlIHNhbWUgY2FyZCBidXQgaW4gbWluaS1QQ0ll
-IGZvcm1hdCk6DQoNCiMgdW5hbWUgLWENCkxpbnV4IFBDQU4tRXRoZXJuZXQgR2F0ZXdheSBEUiA0
-LjkuMTMtcnQxMiAjNCBTTVAgTW9uIEZlYiA1IDExOjM2OjM5IENFVCAyMDE4IGFybXY3bCBHTlUv
-TGludXgNCg0KIyBkbWVzZyB8Z3JlcCBwZWFrX3BjaWVmZA0KIFsgICAgMy40NTc0MjRdIHBlYWtf
-cGNpZWZkIDAwMDA6MDE6MDAuMDogNHggQ0FOLUZEIFBDQU4tUENJZSBGUEdBIHYzLjIuMToNClsg
-ICAgMy40NjQ0NDRdIHBlYWtfcGNpZWZkIDAwMDA6MDE6MDAuMDogTVNJWzEuLjRdIGVuYWJsaW5n
-IHN0YXR1cyA0DQpbICAgIDMuNDcyOTkyXSBwZWFrX3BjaWVmZCAwMDAwOjAxOjAwLjA6IGNhbjAg
-YXQgcmVnX2Jhc2U9MHhmMWI2MTAwMCBpcnE9NDIwDQpbICAgIDMuNDgxNzUwXSBwZWFrX3BjaWVm
-ZCAwMDAwOjAxOjAwLjA6IGNhbjEgYXQgcmVnX2Jhc2U9MHhmMWI2MjAwMCBpcnE9NDIxDQpbICAg
-IDMuNDkwMjE3XSBwZWFrX3BjaWVmZCAwMDAwOjAxOjAwLjA6IGNhbjIgYXQgcmVnX2Jhc2U9MHhm
-MWI2MzAwMCBpcnE9NDIyDQpbICAgIDMuNDk4NjY0XSBwZWFrX3BjaWVmZCAwMDAwOjAxOjAwLjA6
-IGNhbjMgYXQgcmVnX2Jhc2U9MHhmMWI2NDAwMCBpcnE9NDIzDQoNCiMgbHNwY2kgLXZ2IC1zIDAx
-OjAwLjANCjAxOjAwLjAgTmV0d29yayBjb250cm9sbGVyOiBQRUFLLVN5c3RlbSBUZWNobmlrIEdt
-YkggRGV2aWNlIDAwMTggKHJldiAwMSkNCiAgICAgICAgU3Vic3lzdGVtOiBQRUFLLVN5c3RlbSBU
-ZWNobmlrIEdtYkggRGV2aWNlIDAwMTINCiAgICAgICAgQ29udHJvbDogSS9PLSBNZW0rIEJ1c01h
-c3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyKyBTdGVwcGluZy0gU0VS
-UisgRmFzdEIyQi0gRGlzSU5UeCsNCiAgICAgICAgU3RhdHVzOiBDYXArIDY2TUh6LSBVREYtIEZh
-c3RCMkItIFBhckVyci0gREVWU0VMPWZhc3QgPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPlNF
-UlItIDxQRVJSLSBJTlR4LQ0KICAgICAgICBMYXRlbmN5OiAwLCBDYWNoZSBMaW5lIFNpemU6IDY0
-IGJ5dGVzDQogICAgICAgIEludGVycnVwdDogcGluIEEgcm91dGVkIHRvIElSUSA0MjANCiAgICAg
-ICAgUmVnaW9uIDA6IE1lbW9yeSBhdCAyMDIwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxl
-KSBbc2l6ZT02NEtdDQogICAgICAgIENhcGFiaWxpdGllczogWzUwXSBQb3dlciBNYW5hZ2VtZW50
-IHZlcnNpb24gMA0KICAgICAgICAgICAgICAgIEZsYWdzOiBQTUVDbGstIERTSS0gRDEtIEQyLSBB
-dXhDdXJyZW50PTBtQSBQTUUoRDAtLEQxLSxEMi0sRDNob3QtLEQzY29sZC0pDQogICAgICAgICAg
-ICAgICAgU3RhdHVzOiBEMCBOb1NvZnRSc3QtIFBNRS1FbmFibGUtIERTZWw9MCBEU2NhbGU9MCBQ
-TUUtDQogICAgICAgIENhcGFiaWxpdGllczogWzcwXSBNU0k6IEVuYWJsZSsgQ291bnQ9NC80IE1h
-c2thYmxlLSA2NGJpdCsNCiAgICAgICAgICAgICAgICBBZGRyZXNzOiAwMDAwMDAwMGFlNjI1MDAw
-ICBEYXRhOiAwMDA0DQogICAgICAgIENhcGFiaWxpdGllczogWzkwXSBFeHByZXNzICh2MSkgRW5k
-cG9pbnQsIE1TSSAwMA0KICAgICAgICAgICAgICAgIERldkNhcDogTWF4UGF5bG9hZCAxMjggYnl0
-ZXMsIFBoYW50RnVuYyAwLCBMYXRlbmN5IEwwcyA8NjRucywgTDEgPDF1cw0KICAgICAgICAgICAg
-ICAgICAgICAgICAgRXh0VGFnLSBBdHRuQnRuLSBBdHRuSW5kLSBQd3JJbmQtIFJCRSsgRkxSZXNl
-dC0gU2xvdFBvd2VyTGltaXQgMC4wMDBXDQogICAgICAgICAgICAgICAgRGV2Q3RsOiBSZXBvcnQg
-ZXJyb3JzOiBDb3JyZWN0YWJsZS0gTm9uLUZhdGFsLSBGYXRhbC0gVW5zdXBwb3J0ZWQtDQogICAg
-ICAgICAgICAgICAgICAgICAgICBSbHhkT3JkLSBFeHRUYWctIFBoYW50RnVuYy0gQXV4UHdyLSBO
-b1Nub29wLQ0KICAgICAgICAgICAgICAgICAgICAgICAgTWF4UGF5bG9hZCAxMjggYnl0ZXMsIE1h
-eFJlYWRSZXEgNTEyIGJ5dGVzDQogICAgICAgICAgICAgICAgRGV2U3RhOiBDb3JyRXJyLSBVbmNv
-cnJFcnItIEZhdGFsRXJyLSBVbnN1cHBSZXEtIEF1eFB3ci0gVHJhbnNQZW5kLQ0KICAgICAgICAg
-ICAgICAgIExua0NhcDogUG9ydCAjMCwgU3BlZWQgMi41R1QvcywgV2lkdGggeDEsIEFTUE0gTDEs
-IEV4aXQgTGF0ZW5jeSBMMHMgdW5saW1pdGVkLCBMMSB1bmxpbWl0ZWQNCiAgICAgICAgICAgICAg
-ICAgICAgICAgIENsb2NrUE0tIFN1cnByaXNlLSBMTEFjdFJlcC0gQndOb3QtIEFTUE1PcHRDb21w
-Kw0KICAgICAgICAgICAgICAgIExua0N0bDogQVNQTSBEaXNhYmxlZDsgUkNCIDY0IGJ5dGVzIERp
-c2FibGVkLSBDb21tQ2xrKw0KICAgICAgICAgICAgICAgICAgICAgICAgRXh0U3luY2gtIENsb2Nr
-UE0tIEF1dFdpZERpcy0gQldJbnQtIEF1dEJXSW50LQ0KICAgICAgICAgICAgICAgIExua1N0YTog
-U3BlZWQgMi41R1QvcywgV2lkdGggeDEsIFRyRXJyLSBUcmFpbi0gU2xvdENsaysgRExBY3RpdmUt
-IEJXTWdtdC0gQUJXTWdtdC0NCiAgICAgICAgQ2FwYWJpbGl0aWVzOiBbMTAwIHYxXSBWZW5kb3Ig
-U3BlY2lmaWMgSW5mb3JtYXRpb246IElEPTAwMDAgUmV2PTAgTGVuPTAwYyA8Pz4NCiAgICAgICAg
-S2VybmVsIGRyaXZlciBpbiB1c2U6IHBlYWtfcGNpZWZkDQoNCk9uY2UgYWdhaW4sIHRoYW5rIHlv
-dSBmb3IgeW91ciBoZWxwLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206
-IE1hcmMgWnluZ2llciA8bWFyYy56eW5naWVyQGFybS5jb20+DQo+IFNlbnQ6IGpldWRpIDIyIGbD
-qXZyaWVyIDIwMTggMTk6MDMNCj4gVG86IEJqb3JuIEhlbGdhYXMgPGhlbGdhYXNAa2VybmVsLm9y
-Zz47IFN0w6lwaGFuZSBHcm9zamVhbg0KPiA8cy5ncm9zamVhbkBwZWFrLXN5c3RlbS5jb20+DQo+
-IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBUaG9tYXMgR2xlaXhuZXIgPHRnbHhAbGlu
-dXRyb25peC5kZT4NCj4gU3ViamVjdDogUmU6IGZyZWVfaXJxKElSUSMwKSBvbiBQQ0llIGRldmlj
-ZSB3aXRoIE1TSSBlbmFibGVkIGlzc3VlLi4uDQo+DQo+IE9uIDIyLzAyLzE4IDE1OjE5LCBCam9y
-biBIZWxnYWFzIHdyb3RlOg0KPiA+IFsrY2MgTWFyYywgVGhvbWFzXQ0KPiA+DQo+ID4gSGkgU3TD
-qXBoYW5lLA0KPiA+DQo+ID4gVGhhbmtzIGZvciB5b3VyIGVtYWlsIQ0KPiA+DQo+ID4gT24gVGh1
-LCBGZWIgMjIsIDIwMTggYXQgMDg6MjM6NTJBTSArMDAwMCwgU3TDqXBoYW5lIEdyb3NqZWFuIHdy
-b3RlOg0KPiA+PiBJJ3ZlIGJlZW4gd3JpdGluZyBzb21lIGRyaXZlcnMgZm9yIExpbnV4LWNhbiBp
-biB0aGUgcGFzdCB5ZWFycyBhbmQNCj4gPj4gd2FudCB0byBhZGQgc3VwcG9ydCBvZiBNU0kgaW4g
-b25lIG9mIHRoZW0gKHNlZQ0KPiA+Pg0KPiBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20v
-bGludXgva2VybmVsL2dpdC90b3J2YWxkcy9saW51eC5naXQvdHJlZS9kcml2ZQ0KPiBycy9uZXQv
-Y2FuL3BlYWtfY2FuZmQpLg0KPiA+Pg0KPiA+PiBUaGlzIGRldmljZSBkcml2ZXIgd29ya3Mgd2l0
-aCBsZWdhY3kgc2hhcmVkIElOVHggb3ZlciBhIENBTiBQQ0llDQo+ID4+IGRldmljZS4gSSdkIGxp
-a2UgdG8gc3dpdGNoIHRvIGEgZnVsbCBNU0kgdXNhZ2Ugb2YgdGhpcyBkZXZpY2UsIHdoaWNoDQo+
-ID4+IHByb3Bvc2VzIHVwIHRvIDQgdmVjdG9ycyAodGhpcyBkZXZpY2UgaXMgcHJvcG9zZWQgd2l0
-aCAxLCAyIG9yIDQgQ0FODQo+ID4+IEZEIHBvcnRzKS4NCj4gPj4NCj4gPj4gSSdtIHJ1bm5pbmcg
-eDg2XzY0IEtlcm5lbCA0LjEzLjAtMzIgZnJvbSBVYnVudHUgMTcuMTAuIEV2ZXJ5dGhpbmcNCj4g
-Pj4gbG9va3Mgb2sgYXMgSSBzdWNjZXNzZnVsbHkgZ2V0IHRoZSA0IGNvbnNlY3V0aXZlIElSUSBs
-ZXZlbHMuIE15DQo+ID4+IHByb2JsZW0gaXMgdGhpcyBvbmU6IGFzIHNvb24gYXMgdGhlIGRyaXZl
-ciBmcmVlX2lycSgpIHRoZSBGSVNSVCBJUlENCj4gPj4gbGV2ZWwsIHRoZW4gaXQgZG9lcyBub3Qg
-cmVjZWl2ZSBhbnkgaW50ZXJydXB0IGZyb20gdGhlIGRldmljZQ0KPiA+PiBhbnltb3JlLCBmb3Ig
-YWxsIG90aGVyIDMgSVJRcy4uLiBPbiB0aGUgY29udHJhcnksIHdoZW4gdGhlIGRyaXZlcg0KPiA+
-PiBmcmVlX2lycSgpIG9uZSBvZiB0aGUgMyBvdGhlciBJUlEgKGluc3RlYWQgb2YgdGhlIDFzdCBv
-bmUpLCB0aGVuDQo+ID4+IHRoZXJlIGlzIG5vIHByb2JsZW0gYW5kIGFsbCBvdGhlciBpbnRlcnJ1
-cHRzIChpbmNsdWRpbmcgdGhlIGZpcnN0IElSUQ0KPiA+PiB2ZWN0b3IpIGFyZSB3b3JraW5nIGFz
-IHRoZXkgc2hvdWxkLg0KPiA+DQo+ID4gQ2FuIHlvdSBzaGFyZSB0aGUgYWN0dWFsIGRyaXZlciBj
-b2RlIHlvdSdyZSBydW5uaW5nPyAgVGhlIHBlYWtfY2FuZmQuYw0KPiA+IGluIHY0LjE2LXJjMSBk
-b2Vzbid0IGhhdmUgdGhlIE1TSSBjb2RlIGluIGl0LCBzbyBJIGNhbid0IHNlZSBleGFjdGx5DQo+
-ID4gd2hhdCB5b3UncmUgZG9pbmcuDQo+ID4NCj4gPiBUaGUgZmFjdCB0aGF0IGl0IGRvZXMgd29y
-ayBvbiBBUk0gc3VnZ2VzdHMgdGhlcmUncyBzb21lIGRpZmZlcmVuY2UgaW4NCj4gPiB0aGUgYXJj
-aCBjb2RlLiAgSSBkb24ndCBrbm93IGVub3VnaCBhYm91dCB0aGlzIGFyZWEgdG8gZmlndXJlIGl0
-IG91dA0KPiA+IGZyb20gc2NyYXRjaCwgYnV0IG1heWJlIHdvcmtpbmcgdGhyb3VnaCB0aGUgYWN0
-dWFsIGNvZGUgd291bGQgaGVscC4NCj4gPg0KPiA+IEl0IHdvdWxkIGJlIGlkZWFsIGlmIHlvdSBj
-b3VsZCByZXByb2R1Y2UgdGhlIHByb2JsZW0gb24gdjQuMTYtcmMxLCBpbg0KPiA+IGNhc2UgaXQn
-cyBzb21ldGhpbmcgZml4ZWQgc2luY2UgdjQuMTMuDQo+ID4NCj4gPj4gSSBjb250YWN0IHlvdSBi
-ZWNhdXNlIHRoaXMgImlzc3VlIiBzZWVtcyB0byBiZSBhcmNoIGRlcGVuZGVudDoNCj4gPj4gcnVu
-bmluZyB0aGUgc2FtZSBkcml2ZXIgYW5kIHRoZSBzYW1lIGJvYXJkIG9uIGFub3RoZXIgYXJjaCAo
-QVJNKSwNCj4gPj4gdGhlbiBldmVyeXRoaW5nIHdvcmtzIGxpa2UgYSBjaGFybTogdGhlIGRyaXZl
-ciBjYW4gZnJlZV9pcnEoKSBhbnkgSVJRDQo+ID4+IGluIGFueSBvcmRlciB3aXRob3V0IGRpc3R1
-cmJpbmcgdGhlIG90aGVyIG9uZXMuIEJ1dCBydW5uaW5nIG9uIHg4NiwNCj4gPj4gZnJlZV9pcnEo
-KSBvbiB0aGUgRklSU1QgTVNJIHNlZW1zIHRvIChhbHNvKSBmcmVlIGFsbCB0aGUgb3RoZXINCj4g
-Pj4gb25lcy4uLg0KPiA+Pg0KPiA+PiBOb3RlIHRoYXQgdGhlIGRyaXZlciBzZXQgdXAgTVNJIGFz
-IGRlc2NyaWJlZCBpbiB0aGUgbGFzdCB2ZXJzaW9uIG9mDQo+ID4+IERvY3VtZW50YXRpb24vUENJ
-L01TSS1IT1dUTy50eHQuDQo+DQo+IENvdWxkIGl0IGJlIHRoYXQgdGhlIGRyaXZlciBpcyBlbmRp
-bmcgdXAgd2l0aCBNdWx0aS1NU0kgaW5zdGVhZCBvZiBNU0ktWD8gIElmDQo+IHVzaW5nIE11bHRp
-LU1TSSwgSSB0aGluayB0aGF0IHdvdWxkIGJlIHRoZSBleHBlY3RlZCBiZWhhdmlvdXIsIGFzIHRo
-ZSB2YXJpb3VzDQo+IE1TSXMgYXJlIG5vdCBjb250cm9sbGFibGUgaW5kZXBlbmRlbnRseSAodGhl
-cmUgaXMgYSBzaW5nbGUgaW50ZXJydXB0IG1hc2sgZm9yDQo+IGFsbCBNU0lzKS4gT24gdGhlIG90
-aGVyIGhhbmQsIE1TSS1YIGdpdmVzIHlvdSBhIGJ1bmNoIG9mIGNvbXBsZXRlbHkNCj4gaW5kZXBl
-bmRlbnQgaW50ZXJydXB0cy4NCj4NCj4gQW4gbHNwY2kgLXZ2IGR1bXAgb24gYm90aCBwbGF0Zm9y
-bXMgd291bGQgZ28gYSBsb25nIHdheSBpbiBoZWxwaW5nIHRvDQo+IHVuZGVyc3RhbmQgdGhlIHNl
-dHVwLg0KPg0KPiBUaGFua3MsDQo+DQo+IE0uDQo+IC0tDQo+IEphenogaXMgbm90IGRlYWQuIEl0
-IGp1c3Qgc21lbGxzIGZ1bm55Li4uDQoNCi0tDQpQRUFLLVN5c3RlbSBUZWNobmlrIEdtYkgNClNp
-dHogZGVyIEdlc2VsbHNjaGFmdCBEYXJtc3RhZHQgLSBIUkIgOTE4Mw0KR2VzY2hhZWZ0c2Z1ZWhy
-dW5nOiBBbGV4YW5kZXIgR2FjaCAvIFV3ZSBXaWxoZWxtDQotLQ0K
+This patch set brings in error handling support for DPC
+
+The current implementation of AER and error message broadcasting to the
+EP driver is tightly coupled and limited to AER service driver.
+It is important to factor out broadcasting and other link handling
+callbacks. So that not only when AER gets triggered, but also when DPC get
+triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+
+DPC should enumerate the devices after recovering the link, which is
+achieved by implementing error_resume callback.
+
+Changes since v8:
+    Fixed Kbuild errors.
+Changes since v7:
+    Rebased the code on pci master.
+	> https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
+Changes since v6:
+    Sinan's and Stefan's comments implemented.
+	> reordered patch 6 and 7
+	> cleaned up
+Changes since v5:
+    Sinan's and Keith's comments incorporated.
+        > made separate patch for mutex
+        > unified error repotting codes into driver/pci/pci.h
+        > got rid of wait link active/inactive and
+          made generic function in driver/pci/pci.c
+Changes since v4:
+    Bjorn's comments incorporated.
+        > Renamed only do_recovery.
+        > moved the things more locally to drivers/pci/pci.h
+Changes since v3:
+    Bjorn's comments incorporated.
+        > Made separate patch renaming generic pci_err.c
+        > Introduce pci_err.h to contain all the error types and recovery
+        > removed all the dependencies on pci.h
+Changes since v2:
+    Based on feedback from Keith:
+    "
+    When DPC is triggered due to receipt of an uncorrectable error Message,
+    the Requester ID from the Message is recorded in the DPC Error
+    Source ID register and that Message is discarded and not forwarded Upstream.
+    "
+    Removed the patch where AER checks if DPC service is active
+Changes since v1:
+    Kbuild errors fixed:
+        > pci_find_dpc_dev made static
+        > ras_event.h updated
+        > pci_find_aer_service call with CONFIG check
+        > pci_find_dpc_service call with CONFIG check
+
+Oza Pawandeep (7):
+  PCI/AER: Rename error recovery to generic pci naming
+  PCI/AER: factor out error reporting from AER
+  PCI/ERR: add mutex to synchronize recovery
+  PCI/DPC: Unify and plumb error handling into DPC
+  PCI/AER: Unify aer error defines at single space
+  PCI/DPC: Enumerate the devices after DPC trigger event
+  PCI: Unify wait for link active into generic pci
+
+ drivers/acpi/apei/ghes.c               |   1 +
+ drivers/pci/hotplug/pciehp_hpc.c       |  21 +-
+ drivers/pci/pci.c                      |  39 +++-
+ drivers/pci/pci.h                      |  11 +
+ drivers/pci/pcie/Makefile              |   2 +-
+ drivers/pci/pcie/aer/aerdrv.h          |  30 ---
+ drivers/pci/pcie/aer/aerdrv_core.c     | 293 +-------------------------
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   1 +
+ drivers/pci/pcie/pcie-dpc.c            | 115 ++++++++++-
+ drivers/pci/pcie/pcie-err.c            | 366 +++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/portdrv.h             |   2 +
+ include/linux/aer.h                    |   4 -
+ include/linux/pci.h                    |   1 +
+ 13 files changed, 534 insertions(+), 352 deletions(-)
+ create mode 100644 drivers/pci/pcie/pcie-err.c
+
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
