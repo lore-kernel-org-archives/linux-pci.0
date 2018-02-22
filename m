@@ -1,51 +1,33 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/3] PCI: designware-ep: Return an error when requesting a too large BAR size
-Date: Thu,  8 Feb 2018 13:33:46 +0100
-Message-Id: <20180208123346.20784-4-niklas.cassel@axis.com>
-In-Reply-To: <20180208123346.20784-1-niklas.cassel@axis.com>
-References: <20180208123346.20784-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:52336 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750805AbeBVSgF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 13:36:05 -0500
+Date: Thu, 22 Feb 2018 10:36:02 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v10 3/7] PCI/ERR: add mutex to synchronize recovery
+Message-ID: <20180222183602.GC6267@infradead.org>
+References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
+ <1519315332-26852-4-git-send-email-poza@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519315332-26852-4-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_epc_set_bar() can be called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
-and can thus request a BAR size larger than 4 GB.
+On Thu, Feb 22, 2018 at 09:32:08PM +0530, Oza Pawandeep wrote:
+> This patch protects pci_do_recovery with mutex.
 
-However, the pcie-designware-ep.c driver currently doesn't handle
-BAR sizes larger than 4 GB. (Since we are only writing the BAR_mask[x]
-register and not the BAR_mask[x+1] register.)
-
-For now, return an error when requesting a BAR size larger than 4 GB.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-Changes since v1:
-Use upper_32_bits() to avoid build warning on systems with 32-bit size_t.
-
- drivers/pci/dwc/pcie-designware-ep.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 3a6feeff5f5b..efb65a7c06b8 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -126,6 +126,11 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
- 	enum dw_pcie_as_type as_type;
- 	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
- 
-+	if (upper_32_bits(size)) {
-+		dev_err(pci->dev, "can't handle BAR larger than 4GB\n");
-+		return -EINVAL;
-+	}
-+
- 	if (!(flags & PCI_BASE_ADDRESS_SPACE))
- 		as_type = DW_PCIE_AS_MEM;
- 	else
--- 
-2.14.2
+Do we really want a global mutex for this and not one per root complex
+at very least?
