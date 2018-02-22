@@ -1,36 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr50092.outbound.protection.outlook.com ([40.107.5.92]:15555
-        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1030349AbeBNQIH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Feb 2018 11:08:07 -0500
-From: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
-To: linux-pci@vger.kernel.org, mj@ucw.cz
-Cc: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
-Subject: [PATCH v2 0/2] lspci: Add support of JSON output format
-Date: Wed, 14 Feb 2018 19:07:39 +0300
-Message-Id: <20180214160741.8958-1-viktor.prutyanov@virtuozzo.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.codeaurora.org ([198.145.29.96]:55104 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933094AbeBVQCn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 11:02:43 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v10 3/7] PCI/ERR: add mutex to synchronize recovery
+Date: Thu, 22 Feb 2018 21:32:08 +0530
+Message-Id: <1519315332-26852-4-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
+References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This collection of patches adds support of printing PCI info in JSON format
+This patch protects pci_do_recovery with mutex.
 
-Viktor Prutyanov (2):
-  lspci: Add printing info in JSON format
-  lspci: Add PCI info output in JSON format
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
- Makefile    |   3 +-
- common.c    |   2 +-
- ls-info.c   | 328 ++++++++++++++++++++++++++++
- ls-kernel.c |  24 +++
- lspci.c     | 701 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- lspci.h     |  55 +++++
- lspci.man   |   3 +
- pciutils.h  |   2 +-
- 8 files changed, 1114 insertions(+), 4 deletions(-)
- create mode 100644 ls-info.c
-
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index a532fe0..8318c84 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -20,6 +20,8 @@
+ #include <linux/pcieport_if.h>
+ #include "portdrv.h"
+ 
++static DEFINE_MUTEX(pci_err_recovery_lock);
++
+ struct aer_broadcast_data {
+ 	enum pci_channel_state state;
+ 	enum pci_ers_result result;
+@@ -283,6 +285,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+ 
++	mutex_lock(&pci_err_recovery_lock);
++
+ 	if (severity == AER_FATAL)
+ 		state = pci_channel_io_frozen;
+ 	else
+@@ -326,9 +330,11 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
+ 				report_resume);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ 	return;
+ 
+ failed:
+ 	/* TODO: Should kernel panic here? */
+ 	dev_info(&dev->dev, "Device recovery failed\n");
++	mutex_unlock(&pci_err_recovery_lock);
+ }
 -- 
-2.14.1
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
