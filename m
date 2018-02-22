@@ -1,86 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44604 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753495AbeB1REk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 12:04:40 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v12 1/6] PCI/AER: Rename error recovery to generic PCI naming
-Date: Wed, 28 Feb 2018 22:34:12 +0530
-Message-Id: <1519837457-3596-2-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
-References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+Received: from mga04.intel.com ([192.55.52.120]:48484 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932199AbeBVM72 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Feb 2018 07:59:28 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.com>, linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 3/4] ACPI / sleep: Re-use new dmi_get_bios_year() helper
+Date: Thu, 22 Feb 2018 14:59:22 +0200
+Message-Id: <20180222125923.57385-3-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
+References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch renames error recovery to generic name with pcie prefix
+...instead of open coding its functionality.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/acpi/sleep.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fcd8191..abc514e 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -342,6 +342,9 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+diff --git a/drivers/acpi/sleep.c b/drivers/acpi/sleep.c
+index 46cde0912762..b35923e3a926 100644
+--- a/drivers/acpi/sleep.c
++++ b/drivers/acpi/sleep.c
+@@ -376,12 +376,10 @@ void __init acpi_sleep_no_blacklist(void)
  
- void pci_enable_acs(struct pci_dev *dev);
- 
-+/* PCI error reporting and recovery */
-+void pcie_do_recovery(struct pci_dev *dev, int severity);
-+
- #ifdef CONFIG_PCIEASPM
- void pcie_aspm_init_link_state(struct pci_dev *pdev);
- void pcie_aspm_exit_link_state(struct pci_dev *pdev);
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index a4bfea5..aeb83a0 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -478,7 +478,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- }
- 
- /**
-- * do_recovery - handle nonfatal/fatal error recovery process
-+ * pcie_do_recovery - handle nonfatal/fatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-  * @severity: error severity type
-  *
-@@ -486,7 +486,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
-  * error detected message to all downstream drivers within a hierarchy in
-  * question and return the returned code.
-  */
--static void do_recovery(struct pci_dev *dev, int severity)
-+static void pcie_do_recovery(struct pci_dev *dev, int severity)
+ static void __init acpi_sleep_dmi_check(void)
  {
- 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
- 	enum pci_channel_state state;
-@@ -566,7 +566,7 @@ static void handle_error_source(struct pcie_device *aerdev,
- 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
- 					info->status);
- 	} else
--		do_recovery(dev, info->severity);
-+		pcie_do_recovery(dev, info->severity);
- }
+-	int year;
+-
+ 	if (ignore_blacklist)
+ 		return;
  
- #ifdef CONFIG_ACPI_APEI_PCIEAER
-@@ -631,7 +631,7 @@ static void aer_recover_work_func(struct work_struct *work)
- 		}
- 		cper_print_aer(pdev, entry.severity, entry.regs);
- 		if (entry.severity != AER_CORRECTABLE)
--			do_recovery(pdev, entry.severity);
-+			pcie_do_recovery(pdev, entry.severity);
- 		pci_dev_put(pdev);
- 	}
- }
+-	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year >= 2012)
++	if (dmi_get_bios_year() >= 2012)
+ 		acpi_nvs_nosave_s3();
+ 
+ 	dmi_check_system(acpisleep_dmi_table);
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.16.1
