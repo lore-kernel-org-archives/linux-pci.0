@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60708 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:38188 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751581AbeBWIYk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 03:24:40 -0500
+        with ESMTP id S1752816AbeBVHqm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 02:46:42 -0500
 From: Oza Pawandeep <poza@codeaurora.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
         Philippe Ombredanne <pombredanne@nexb.com>,
@@ -15,133 +15,87 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
         Sinan Kaya <okaya@codeaurora.org>,
         Timur Tabi <timur@codeaurora.org>
 Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v11 6/7] PCI: Unify wait for link active into generic pci
-Date: Fri, 23 Feb 2018 13:54:03 +0530
-Message-Id: <1519374244-20539-7-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
-References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+Subject: [PATCH v9 5/7] PCI/AER: Unify aer error defines at single space
+Date: Thu, 22 Feb 2018 13:16:09 +0530
+Message-Id: <1519285571-5634-6-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
+References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clients such as pciehp, dpc are using pcie_wait_link_active, which waits
-till the link becomes active or inactive.
-
-Made generic function and moved it to drivers/pci/pci.c
+This patch moves AER error defines to drivers/pci/pci.h.
+So that it unifies the error repoting codes at single place along with dpc
 
 Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 18a42f8..de9b0ea 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller *ctrl)
- 	return ret;
- }
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index 1efefe9..7ae9bb3 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -56,6 +56,7 @@
+ #include <ras/ras_event.h>
  
--static void __pcie_wait_link_active(struct controller *ctrl, bool active)
-+static bool pcie_wait_link_active(struct controller *ctrl)
- {
--	int timeout = 1000;
+ #include "apei-internal.h"
++#include "../../pci/pci.h"
+ 
+ #define GHES_PFX	"GHES: "
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 124f42e..b0e63b5 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -343,7 +343,11 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ void pci_enable_acs(struct pci_dev *dev);
+ 
+ /* PCI error reporting and recovery */
+-#define DPC_FATAL	4
++#define AER_NONFATAL		0
++#define AER_FATAL		1
++#define AER_CORRECTABLE		2
++
++#define DPC_FATAL		4
+ 
+ void pci_do_recovery(struct pci_dev *dev, int severity);
+ 
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 6a352e6..4c59f37 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -19,6 +19,7 @@
+ #include <linux/cper.h>
+ 
+ #include "aerdrv.h"
++#include "../../pci.h"
+ #include <ras/ras_event.h>
+ 
+ #define AER_AGENT_RECEIVER		0
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 8f87bbe..3eac8ed 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -11,10 +11,6 @@
+ #include <linux/errno.h>
+ #include <linux/types.h>
+ 
+-#define AER_NONFATAL			0
+-#define AER_FATAL			1
+-#define AER_CORRECTABLE			2
 -
--	if (pciehp_check_link_active(ctrl) == active)
--		return;
--	while (timeout > 0) {
--		msleep(10);
--		timeout -= 10;
--		if (pciehp_check_link_active(ctrl) == active)
--			return;
--	}
--	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
--			active ? "set" : "cleared");
--}
-+	struct pci_dev *pdev = ctrl_dev(ctrl);
+ struct pci_dev;
  
--static void pcie_wait_link_active(struct controller *ctrl)
--{
--	__pcie_wait_link_active(ctrl, true);
-+	return pci_wait_for_link(pdev, true);
- }
+ struct aer_header_log_regs {
+diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+index 9c68986..d75c75b 100644
+--- a/include/ras/ras_event.h
++++ b/include/ras/ras_event.h
+@@ -13,6 +13,7 @@
+ #include <linux/aer.h>
+ #include <linux/cper.h>
+ #include <linux/mm.h>
++#include "../../../drivers/pci/pci.h"
  
- static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd1..f8d44b4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4176,6 +4176,37 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
-+/**
-+ * pci_wait_for_link - Wait for link till its active/inactive
-+ * @pdev: Bridge device
-+ * @active: waiting for active or inactive ?
-+ *
-+ * Use this to wait till link becomes active or inactive.
-+ */
-+bool pci_wait_for_link(struct pci_dev *pdev, bool active)
-+{
-+	int timeout = 1000;
-+	bool ret;
-+	u16 lnk_status;
-+
-+	for (;;) {
-+		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
-+		if (ret == active)
-+			return true;
-+		if (timeout <= 0)
-+			break;
-+		timeout -= 10;
-+	}
-+
-+	dev_printk(KERN_DEBUG, &pdev->dev,
-+		   "Data Link Layer Link Active not %s in 1000 msec\n",
-+		   active ? "set" : "cleared");
-+
-+	return false;
-+}
-+EXPORT_SYMBOL(pci_wait_for_link);
-+
- void pci_reset_secondary_bus(struct pci_dev *dev)
- {
- 	u16 ctrl;
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 5c01c63..e15bcda 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -120,19 +120,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- 
- static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- {
--	unsigned long timeout = jiffies + HZ;
- 	struct pci_dev *pdev = dpc->dev->port;
--	struct device *dev = &dpc->dev->device;
--	u16 lnk_status;
- 
--	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
--					!time_after(jiffies, timeout)) {
--		msleep(10);
--		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--	}
--	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
--		dev_warn(dev, "Link state not disabled for DPC event\n");
-+	pci_wait_for_link(pdev, false);
- }
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 024a1be..cb674c3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1195,6 +1195,7 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
- int pci_request_selected_regions(struct pci_dev *, int, const char *);
- int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
- void pci_release_selected_regions(struct pci_dev *, int);
-+bool pci_wait_for_link(struct pci_dev *pdev, bool active);
- 
- /* drivers/pci/bus.c */
- struct pci_bus *pci_bus_get(struct pci_bus *bus);
+ /*
+  * MCE Extended Error Log trace event
 -- 
 Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
 a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
