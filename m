@@ -1,77 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: valdis.kletnieks@vt.edu
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Mathias Nyman <mathias.nyman@intel.com>,
-        linux-pm@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Qipeng Zha <qipeng.zha@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Dave Airlie <airlied@gmail.com>, Qi Zheng <qi.zheng@intel.com>
-Subject: Re: [PATCH v1 2/2] PCI: Allow user to request power management of conventional and hotplug bridges
-In-Reply-To: <151908204614.37696.12828004282495415825.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <151908155159.37696.9710083237704994886.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <151908204614.37696.12828004282495415825.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1519082904_3347P";
-         micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Mon, 19 Feb 2018 18:28:24 -0500
-Message-ID: <7778.1519082904@turing-police.cc.vt.edu>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:57592 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750826AbeBVUJC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Feb 2018 15:09:02 -0500
+Date: Thu, 22 Feb 2018 14:09:01 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tal Gilboa <talgi@mellanox.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>
+Subject: Re: [PATCH next V1 7/7] net/mlx5e: Use generic PCI function for BW
+ calculation
+Message-ID: <20180222200901.GC16519@bhelgaas-glaptop.roam.corp.google.com>
+References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+ <1516030541-6626-8-git-send-email-talgi@mellanox.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1516030541-6626-8-git-send-email-talgi@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---==_Exmh_1519082904_3347P
-Content-Type: text/plain; charset=us-ascii
+On Mon, Jan 15, 2018 at 05:35:41PM +0200, Tal Gilboa wrote:
+> Newly introduced pcie_get_link_limits() function calculates
+> maximum available BW through the PCI chain. We can use this
+> value for mlx5e_get_pci_bw() instead of calculating ourselves.
+> 
+> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+> ---
+>  drivers/net/ethernet/mellanox/mlx5/core/en_main.c | 17 +++--------------
+>  1 file changed, 3 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+> index d2b057a..d1d7427 100644
+> --- a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+> +++ b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+> @@ -3971,27 +3971,16 @@ static int mlx5e_get_pci_bw(struct mlx5_core_dev *mdev, u32 *pci_bw)
+>  	enum pcie_link_width width;
+>  	enum pci_bus_speed speed;
+>  	int err = 0;
+> +	int bw;
+>  
+> -	err = pcie_get_minimum_link(mdev->pdev, &speed, &width);
+> +	err = pcie_get_link_limits(mdev->pdev, &speed, &width, &bw);
 
-On Mon, 19 Feb 2018 17:14:06 -0600, Bjorn Helgaas said:
+Why don't you refactor this a little so it calls
+pcie_print_link_status() like mlx5 and mlx4?
 
-> Change "pcie_port_pm=force" to enable power management of conventional PCI
-> bridges and hotplug bridges as well as PCIe ports.  As with the previous
-> PCIe port-only behavior, this is not expected to work in all systems.
+I think this is the only call of pcie_get_link_limits() outside
+drivers/pci, and it seems like a little overkill here since you really
+don't need "speed" here.
 
-This part says the behavior changes - which is itself a Bad Idea unless you
-have a deprecation cut-over across several releases.  The general rule is that
-you're not allowed to break somebody's kernel without a lot of warning.
-Remember that there's probably a lot of embedded systems that hardcode their
-boot cmdline and changing the behavior can result in a failed boot - which can
-be a royal bitch to debug if the embedded system doesn't have a console.....
+But I don't understand what's going on with mlx5e_get_max_linkspeed().
+It doesn't look like that is actually looking at the PCIe link speed,
+so maybe there's something special going on there.
 
-In addition, it doesn't match the actual patch, which documents the boot
-parameter as being removed, rather than the behavior changed:
-
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index 1d1d53f85ddd..4660105ec851 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-
-> @@ -3143,10 +3147,6 @@
->  		compat	Treat PCIe ports as PCI-to-PCI bridges, disable the PCIe
->  			ports driver.
->
-> -	pcie_port_pm=	[PCIE] PCIe port power management handling:
-> -		off	Disable power management of all PCIe ports
-> -		force	Forcibly enable power management of all PCIe ports
-> -
-
-And *that* doesn't match the rest of the patch, which never touches the handling
-of that parameter, either changing it or removing it.
-
---==_Exmh_1519082904_3347P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Comment: Exmh version 2.8.0 04/21/2017
-
-iQEVAwUBWotdmI0DS38y7CIcAQIFNgf/Voo1PhvVYqriKAKxYoK9fDPbW7e5I/CQ
-RyGJmtTIvp+AZNCcZUv1OMQYitmPzUPDSDcYcwaDDRS/y06kV78U+lE+rpr1OuPA
-k6DLH7LX3vM30nHY6Pt2uxeDWK7otdCByBZwrrFMo0IqJle/2sK/RcFfkr3B1+24
-wo8QO3Gnq/u44KMaGaEUz3plZN2z0ZcKPf3Wffy6CTPSzwy38K55tbjqhylhpYJL
-HQ5LYC6WP2LsAAQ8jJ3VeZGY9OoVZcz2c1JH9PxdIrFr3R5zcYmEQhGBPmya3yF9
-J/jqc10cp0fx9YiexZxU+UdaaZpK3Yf5/rdoX7AWB2ZdhqnTEFpBIw==
-=TDtU
------END PGP SIGNATURE-----
-
---==_Exmh_1519082904_3347P--
+>  	if (err)
+>  		return err;
+>  
+>  	if (speed == PCI_SPEED_UNKNOWN || width == PCIE_LNK_WIDTH_UNKNOWN)
+>  		return -EINVAL;
+>  
+> -	switch (speed) {
+> -	case PCIE_SPEED_2_5GT:
+> -		*pci_bw = 2500 * width;
+> -		break;
+> -	case PCIE_SPEED_5_0GT:
+> -		*pci_bw = 5000 * width;
+> -		break;
+> -	case PCIE_SPEED_8_0GT:
+> -		*pci_bw = 8000 * width;
+> -		break;
+> -	default:
+> -		return -EINVAL;
+> -	}
+> +	*pci_bw = bw;
+>  
+>  	return 0;
+>  }
+> -- 
+> 1.8.3.1
+> 
