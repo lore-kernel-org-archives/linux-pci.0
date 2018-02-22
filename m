@@ -1,74 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:36329 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751554AbeB1Bkn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 20:40:43 -0500
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 5/6] PCI: rockchip: Add Endpoint controller driver for
- Rockchip PCIe controller
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
- <1519348654-243597-1-git-send-email-shawn.lin@rock-chips.com>
- <20180227153202.GB7184@e107981-ln.cambridge.arm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <8244c52c-73d3-5b20-eb39-ddc37968163a@rock-chips.com>
-Date: Wed, 28 Feb 2018 09:40:36 +0800
+Return-Path: <SRS0=RzOh=FQ=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=RzOh=FQ=arm.com=marc.zyngier@kernel.org>
+Subject: Re: free_irq(IRQ#0) on PCIe device with MSI enabled issue...
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ =?UTF-8?Q?St=c3=a9phane_Grosjean?= <s.grosjean@peak-system.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>
+References: <AM5PR03MB296338FECDD421CF2F438EB7D6CD0@AM5PR03MB2963.eurprd03.prod.outlook.com>
+ <20180222151938.GC52685@bhelgaas-glaptop.roam.corp.google.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <95d5a99e-4511-52da-8bd5-0a601ac390d2@arm.com>
+Date: Thu, 22 Feb 2018 18:02:40 +0000
 MIME-Version: 1.0
-In-Reply-To: <20180227153202.GB7184@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180222151938.GC52685@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Lorenzo,
-
-On 2018/2/27 23:32, Lorenzo Pieralisi wrote:
-> On Fri, Feb 23, 2018 at 09:17:33AM +0800, Shawn Lin wrote:
->> This patch adds support to the Rockchip PCIe controller in endpoint mode
->> which currently supports up to 32 regions, and each regions should at
->> least be 1MB per TRM.
+On 22/02/18 15:19, Bjorn Helgaas wrote:
+> [+cc Marc, Thomas]
+> 
+> Hi Stéphane,
+> 
+> Thanks for your email!
+> 
+> On Thu, Feb 22, 2018 at 08:23:52AM +0000, Stéphane Grosjean wrote:
+>> I've been writing some drivers for Linux-can in the past years and
+>> want to add support of MSI in one of them (see
+>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/net/can/peak_canfd).
 >>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> This device driver works with legacy shared INTx over a CAN PCIe
+>> device. I'd like to switch to a full MSI usage of this device, which
+>> proposes up to 4 vectors (this device is proposed with 1, 2 or 4 CAN
+>> FD ports).
 >>
-
+>> I'm running x86_64 Kernel 4.13.0-32 from Ubuntu 17.10. Everything
+>> looks ok as I successfully get the 4 consecutive IRQ levels. My
+>> problem is this one: as soon as the driver free_irq() the FISRT IRQ
+>> level, then it does not receive any interrupt from the device
+>> anymore, for all other 3 IRQs... On the contrary, when the driver
+>> free_irq() one of the 3 other IRQ (instead of the 1st one), then
+>> there is no problem and all other interrupts (including the first
+>> IRQ vector) are working as they should.
 > 
-> I reviewed this patch and I then realized that it is not bits, it is
-> that the drivers are almost identical. Are we talking about the same IP
-> (possibly with some HW wrapper of sorts) ?
+> Can you share the actual driver code you're running?  The peak_canfd.c
+> in v4.16-rc1 doesn't have the MSI code in it, so I can't see exactly
+> what you're doing.
 > 
-
-Nope, I would seriouly say they are not the same IP legally :)
-If we take about IP, it's referred to a functional entity designed
-and licensed by the provider, but it's not the case here since
-
-(1) There is nothing about cadence throughout the TRM when upstreamed
-it in 2016, and actually it was designed much earlier than 2016.
-(2) Much of the flow was different, and even some of the bit offset is
-different per my reading of cadence's driver, though most registers
-looks much similar.
-
-So my best guess was HW guys referenced to cadence's register layout(or
-the reverse), so they are much partially compatible from the
-register level POV, but the backend design are different leading to the
-quite different control flow and also rockchip controller have lots of
-HW bugs that I didn't see them when reviewing cadence's driver which do
-the same flow using similar register. That's very common if you search
-drivers/mmc/host/sdhci*, which means all of them share the *same*
-register layout and control flow, so it makes software guys' life easy,
-but still they are different IPs. But it's sightly different here as
-the pcie registers aren't the totally same and the flow control is
-different.
-
-Also historically that happened for other controllers designed from 
-rockchip, for instance, SPI controller looks much like designware one,
-but the flow control was totally differnt preventing SW guys to
-refactor the designware driver to fit for rockchip one.
-
-This is all I could guess here, hope that help for you.
-
-
+> The fact that it does work on ARM suggests there's some difference in
+> the arch code.  I don't know enough about this area to figure it out
+> from scratch, but maybe working through the actual code would help.
 > 
+> It would be ideal if you could reproduce the problem on v4.16-rc1, in
+> case it's something fixed since v4.13.
 > 
-> 
+>> I contact you because this "issue" seems to be arch dependent:
+>> running the same driver and the same board on another arch (ARM),
+>> then everything works like a charm: the driver can free_irq() any
+>> IRQ in any order without disturbing the other ones. But running on
+>> x86, free_irq() on the FIRST MSI seems to (also) free all the other
+>> ones...
+>>
+>> Note that the driver set up MSI as described in the last version of
+>> Documentation/PCI/MSI-HOWTO.txt.
+
+Could it be that the driver is ending up with Multi-MSI instead of
+MSI-X?  If using Multi-MSI, I think that would be the expected
+behaviour, as the various MSIs are not controllable independently (there
+is a single interrupt mask for all MSIs). On the other hand, MSI-X gives
+you a bunch of completely independent interrupts.
+
+An lspci -vv dump on both platforms would go a long way in helping to
+understand the setup.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
