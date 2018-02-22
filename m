@@ -1,60 +1,52 @@
-Return-Path: <SRS0=2ss6=FT=linux.intel.com=andriy.shevchenko@kernel.org>
-Return-Path: <SRS0=2ss6=FT=linux.intel.com=andriy.shevchenko@kernel.org>
-Message-ID: <1519565039.10722.145.camel@linux.intel.com>
-Subject: Re: [PATCH v1 1/4] dmi: Introduce dmi_get_bios_year() helper
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, "Rafael
- J. Wysocki" <rjw@rjwysocki.net>, linux-acpi@vger.kernel.org, Thomas
- Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter
- Anvin" <hpa@zytor.com>, x86@kernel.org, Jean Delvare <jdelvare@suse.com>,
- linux-kernel@vger.kernel.org
-Date: Sun, 25 Feb 2018 15:23:59 +0200
-In-Reply-To: <20180223213552.GL14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
-	 <20180223213552.GL14632@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.131]:48459 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933193AbeBVQVb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 11:21:31 -0500
+Date: Thu, 22 Feb 2018 17:21:13 +0100 (CET)
+From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+cc: Rolf Evers-Fischer <embedded24@evers-fischer.de>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+Subject: Re: [PATCH 1/2] pci: endpoint: Free func_name after last usage
+In-Reply-To: <CAHp75VfgqqkLq0PbC0SBMCyCLqqoNZcUW0xngjacEL0VtAskmg@mail.gmail.com>
+Message-ID: <alpine.LNX.2.20.1802221710110.1801@5HSWXM1.fritz.box>
+References: <20180221124707.26308-1-embedded24@evers-fischer.de> <20180221124707.26308-2-embedded24@evers-fischer.de> <CAHp75VfgqqkLq0PbC0SBMCyCLqqoNZcUW0xngjacEL0VtAskmg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-02-23 at 15:35 -0600, Bjorn Helgaas wrote:
-> On Thu, Feb 22, 2018 at 02:59:20PM +0200, Andy Shevchenko wrote:
-> > It's used in several places and more users may come.
-> > By using this helper they may create a slightly cleaner code.
-> > 
-> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > ---
-> >  include/linux/dmi.h | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > diff --git a/include/linux/dmi.h b/include/linux/dmi.h
-> > index 46e151172d95..241c27008c70 100644
-> > --- a/include/linux/dmi.h
-> > +++ b/include/linux/dmi.h
-> > @@ -147,4 +147,11 @@ static inline const struct dmi_system_id *
-> >  
-> >  #endif
-> >  
-> > +static inline int dmi_get_bios_year(void)
-> > +{
-> > +	int year;
-> > +	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
-> > +	return year;
-> > +}
+
+
+On Wed, 21 Feb 2018, Andy Shevchenko wrote:
+
+> > Change-Id: I0d1b6fd652395b85f82b11c43bf9b7db512854d1
 > 
-> I don't really care personally, and I assume this series will go via a
-> non-PCI tree, but making this inline looks similar to this, which
-> wasn't well-received:
+> First of all, this shouldn't be here.
+>
+Please excuse me. I know that I have to remove this, but
+unfortunately I forgot to do so (here and also in the other patch).
+ 
+> > Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+> > Signed-off-by: Rolf Evers-Fischer <embedded24@evers-fischer.de>
 > 
-> https://lkml.kernel.org/r/CA+55aFypU331cQy-
-> 6ZJ6szF=2KVLqcbwCUGd+gTwPViRqRWN+g@mail.gmail.com
+> Looks like bipolar disorder?
+>
+You are right: One "Signed-off" should be enough.
+ 
+> To the topic.
+> This is a slow path and your change makes code slightly less readable
+> b/c of patterns used in the kernel.
+> 
+I see. It is probably not a good idea to free the
+memory in the middle of the function.
+If you don't mind, I will remove this patch and change the other
+one accordingly.
 
-"Yes, that header file is already full of random inline functions, but
-they are generally wrapper functions that don't really do anything, ..."
-
-I think the function above is exactly from the "wrapper that doesn't
-really do anything" category.
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+With best regards,
+Rolf Evers-Fischer
