@@ -1,79 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:58221 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752972AbeBEQZW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Feb 2018 11:25:22 -0500
-Date: Mon, 5 Feb 2018 17:25:20 +0100
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>
-Cc: 'Andy Shevchenko' <andy.shevchenko@gmail.com>,
-        'Kishon Vijay Abraham I' <kishon@ti.com>,
-        'Joao Pinto' <Joao.Pinto@synopsys.com>,
-        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org,
-        'Linux Kernel Mailing List' <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 3/3] PCI: designware-ep: Return an error when requesting
- a too large BAR size
-Message-ID: <20180205162519.GA3044@axis.com>
-References: <20180201161119.3852-1-niklas.cassel@axis.com>
- <20180201161119.3852-4-niklas.cassel@axis.com>
- <CAHp75VdX5=kzKFunM-Kbw7KOBt3+xik_pxhX1EZdO9eA3QHrBQ@mail.gmail.com>
- <000601d39b8e$f58a76f0$e09f64d0$@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Reply-To: monstr@monstr.eu
+Subject: Re: [PATCH] microblaze: Use generic pci_mmap_resource_range()
+To: David Woodhouse <dwmw@amazon.co.uk>, bhelgaas@google.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+References: <1519045283-22350-1-git-send-email-dwmw@amazon.co.uk>
+From: Michal Simek <monstr@monstr.eu>
+Message-ID: <82d28f04-f196-d608-cd37-d28a9fc1bcae@monstr.eu>
+Date: Thu, 22 Feb 2018 15:26:19 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <000601d39b8e$f58a76f0$e09f64d0$@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1519045283-22350-1-git-send-email-dwmw@amazon.co.uk>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="9iHJX5OJH7uahLZINhvu45qCCJRyJ4kSq"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 01, 2018 at 02:00:40PM -0500, Jingoo Han wrote:
-> On Thursday, February 1, 2018 1:58 PM, Andy Shevchenko wrote:
-> > 
-> > On Thu, Feb 1, 2018 at 6:11 PM, Niklas Cassel <niklas.cassel@axis.com>
-> > wrote:
-> > 
-> > include/linux/sizes.h:
-> > 
-> > +SZ_4G  0x100000000ULL
-> > 
-> > > +       if (size > 0x100000000ULL) {
-> > 
-> > #include <linux/sizes.h>
-> > 
-> > if (size > SZ_4G) {
-> 
-> I like this one for the readability.
-> Thank you.
-> 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--9iHJX5OJH7uahLZINhvu45qCCJRyJ4kSq
+Content-Type: multipart/mixed; boundary="n9ncCsB8SIakI1XiMcgMUinWCEJbnMVff";
+ protected-headers="v1"
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
+To: David Woodhouse <dwmw@amazon.co.uk>, bhelgaas@google.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Message-ID: <82d28f04-f196-d608-cd37-d28a9fc1bcae@monstr.eu>
+Subject: Re: [PATCH] microblaze: Use generic pci_mmap_resource_range()
+References: <1519045283-22350-1-git-send-email-dwmw@amazon.co.uk>
+In-Reply-To: <1519045283-22350-1-git-send-email-dwmw@amazon.co.uk>
 
-I liked it too, however both variants
+--n9ncCsB8SIakI1XiMcgMUinWCEJbnMVff
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-if (size > 0x100000000ULL) {
+On 19.2.2018 14:01, David Woodhouse wrote:
+> Commit f719582435 ("PCI: Add pci_mmap_resource_range() and use it for
+> ARM64") added this generic function with the intent of using it
+> everywhere and ultimately killing the old arch-specific implementations=
+=2E
+>=20
+> Let's get on with that eradication...
+>=20
+> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+> ---
+>  arch/microblaze/include/asm/pci.h |  7 +--
+>  arch/microblaze/pci/pci-common.c  | 99 ++++---------------------------=
+--------
+>  2 files changed, 13 insertions(+), 93 deletions(-)
 
-if (size > SZ_4G) {
+Good to see patches for these files.
 
-result in:
+Applied.
 
-drivers/pci/dwc/pcie-designware-ep.c:131:11: warning:
-  comparison is always false due to limited range of data type [-Wtype-limits]
+Thanks,
+Michal
 
-when compiling with W=1 on a platform with 32-bit size_t.
-
-
-The annoying thing here is that a BAR can be 64-bit,
-yet the parameter size is defined as a size_t,
-so the error will only show on 32-bit and not on 64-bit.
-
-What do you think about:
-
-if (upper_32_bits(size)) {
-	dev_err(pci->dev, "can't handle BAR larger than 4GB\n");
-	return -EINVAL;
-}
-
-That should compile without warnings for both
-32-bit size_t and 64-bit size_t.
+--=20
+Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel - Xilinx Microblaze
+Maintainer of Linux kernel - Xilinx Zynq ARM and ZynqMP ARM64 SoCs
+U-Boot custodian - Xilinx Microblaze/Zynq/ZynqMP SoCs
 
 
-Regards,
-Niklas
+
+--n9ncCsB8SIakI1XiMcgMUinWCEJbnMVff--
+
+--9iHJX5OJH7uahLZINhvu45qCCJRyJ4kSq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iEYEARECAAYFAlqO0wsACgkQykllyylKDCGEXgCdGetE968BONjONgDznAUfJ/dk
+Y1sAn3+rSC3ryYigKcplFnxMd93WFU7y
+=fknL
+-----END PGP SIGNATURE-----
+
+--9iHJX5OJH7uahLZINhvu45qCCJRyJ4kSq--
