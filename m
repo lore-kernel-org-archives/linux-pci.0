@@ -1,99 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:59367 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752688AbeBGCza (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Feb 2018 21:55:30 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 6/6] dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint controller
-Date: Wed,  7 Feb 2018 10:50:26 +0800
-Message-Id: <1517971826-65350-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1517971650-61555-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 23 Feb 2018 11:25:43 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mario.Limonciello@dell.com
+Cc: bhelgaas@google.com, rjw@rjwysocki.net,
+        andriy.shevchenko@linux.intel.com, lenb@kernel.org,
+        michael.jamet@intel.com, yehezkel.bernat@intel.com,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        mika.westerberg@linux.intel.com
+Subject: Re: [PATCH v2 1/5] PCI: Make sure all bridges reserve at least one
+ bus number
+Message-ID: <20180223172543.GK14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180215144000.60456-1-mika.westerberg@linux.intel.com>
+ <20180215144000.60456-2-mika.westerberg@linux.intel.com>
+ <20180223002733.GH14632@bhelgaas-glaptop.roam.corp.google.com>
+ <c00e7c7a-6ebd-41b6-a924-92a2070e3db3@Dell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c00e7c7a-6ebd-41b6-a924-92a2070e3db3@Dell.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch documents the DT bindings for the Rockchip PCIe controller
-when configured in endpoint mode.
+On Fri, Feb 23, 2018 at 12:52:18AM +0000, Mario.Limonciello@dell.com wrote:
+> On Feb 22, 2018 18:27, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Thu, Feb 15, 2018 at 05:39:55PM +0300, Mika Westerberg wrote:
+> > > When distributing extra buses between hotplug bridges we need to make
+> > > sure each bridge reserve at least one bus number, even if there is
+> > > currently nothing connected to it. For instance ACPI hotplug may bring
+> > > in additional devices to non-hotplug bridges later on. To make sure we
+> > > don't run out of bus numbers for non-hotplug bridges reserve one bus
+> > > number for them upfront before distributing buses for hotplug bridges.
+> > >
+> > > Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
+> > > Reported-by: Mario Limonciello <mario.limonciello@dell.com>
+> >
+> > Is there a bugzilla or email URL we can include here?
+> 
+> Sorry it was private communication that I believe Mika is referring to in Reported-By here.
+> 
+> You can remove the tag if you think it's inappropriate for this commit.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+I like to give credit whenever possible, so I wouldn't necessarily
+remove the Reported-by.
 
----
+But it would be very useful to also have a URL to something with more
+details, e.g., what sort of failure the user would observe, dmesg
+logs, PCI topology, etc.
 
- .../devicetree/bindings/pci/rockchip-pcie-ep.txt   | 60 ++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+This information can certainly be redacted to remove any proprietary
+things that can't be made public.  Usually that isn't of interest to
+structural issues like this anyway.
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-new file mode 100644
-index 0000000..85f19d2
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-@@ -0,0 +1,60 @@
-+* Rockchip AXI PCIe Endpoint Controller DT description
-+
-+Required properties:
-+- compatible: Should contain "rockchip,rk3399-pcie-ep"
-+- reg: Two register ranges as listed in the reg-names property
-+- reg-names: Must include the following names
-+	- "axi-base"
-+	- "mem-base"
-+- clocks: Must contain an entry for each entry in clock-names.
-+		See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+	- "aclk"
-+	- "aclk-perf"
-+	- "hclk"
-+	- "pm"
-+- resets: Must contain seven entries for each entry in reset-names.
-+	   See ../reset/reset.txt for details.
-+- reset-names: Must include the following names
-+	- "core"
-+	- "mgmt"
-+	- "mgmt-sticky"
-+	- "pipe"
-+	- "pm"
-+	- "aclk"
-+	- "pclk"
-+- pinctrl-names : The pin control state names
-+- pinctrl-0: The "default" pinctrl state
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include 4 entries for all 4 lanes even if some of
-+  them won't be used for your cases. Entries are of the form "pcie-phy-N":
-+  where N ranges from 0 to 3.
-+  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
-+  for changing the #phy-cells of phy node to support it)
-+- rockchip,max-outbound-regions: Maximum number of outbound regions
-+
-+Optional Property:
-+- num-lanes: number of lanes to use
-+- max-functions: Maximum number of functions that can be configured (default 1).
-+
-+pcie0-ep: pcie@f8000000 {
-+	compatible = "rockchip,rk3399-pcie-ep";
-+	rockchip,max-outbound-regions = <16>;
-+	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-+		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
-+	clock-names = "aclk", "aclk-perf",
-+		      "hclk", "pm";
-+	max-functions = /bits/ 8 <8>;
-+	num-lanes = <4>;
-+	reg = <0x0 0xf8000000 0x0 0x2000000>, <0x0 0x80000000 0x0 0x40000000>;
-+	reg-names = "axi-base", "mem-base";
-+	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-+		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE> ,
-+		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
-+	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
-+		      "pm", "pclk", "aclk";
-+	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
-+	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_clkreq>;
-+};
--- 
-1.9.1
+> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > Cc: stable@vger.kernel.org
+> > > ---
+> > >  drivers/pci/probe.c | 11 ++++++++---
+> > >  1 file changed, 8 insertions(+), 3 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > index ef5377438a1e..6cefd47556e3 100644
+> > > --- a/drivers/pci/probe.c
+> > > +++ b/drivers/pci/probe.c
+> > > @@ -2561,7 +2561,10 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+> > >  for_each_pci_bridge(dev, bus) {
+> > >  cmax = max;
+> > >  max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
+> > > - used_buses += cmax - max;
+> > > + /* Reserve one bus for each bridge */
+> > > + used_buses++;
+> > > + if (cmax - max > 1)
+> > > + used_buses += cmax - max - 1;
+> > >  }
+> > >
+> > >  /* Scan bridges that need to be reconfigured */
+> > > @@ -2584,12 +2587,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+> > >  * bridges if any.
+> > >  */
+> > >  buses = available_buses / hotplug_bridges;
+> > > - buses = min(buses, available_buses - used_buses);
+> > > + buses = min(buses, available_buses - used_buses + 1);
+> > >  }
+> > >
+> > >  cmax = max;
+> > >  max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
+> > > - used_buses += max - cmax;
+> > > + /* One bus is already accounted so don't add it again */
+> > > + if (max - cmax > 1)
+> > > + used_buses += max - cmax - 1;
+> > >  }
+> > >
+> > >  /*
+> > > --
+> > > 2.15.1
+> > >
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
