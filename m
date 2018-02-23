@@ -1,105 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:46006 "EHLO david.siemens.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751758AbeB1GfS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 01:35:18 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [PATCH v2 1/6] jailhouse: Provide detection for non-x86 systems
-Date: Wed, 28 Feb 2018 07:34:46 +0100
-Message-Id: <558f5cbae432ae029e2d8ee9b0ef44d837318625.1519799691.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
-References: <cover.1519799691.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
-References: <cover.1519799691.git.jan.kiszka@siemens.com>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:51037 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750879AbeBWGLB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 01:11:01 -0500
+Subject: Re: [PATCH 1/2] pci: endpoint: Free func_name after last usage
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rolf Evers-Fischer <embedded24@evers-fischer.de>
+References: <20180221124707.26308-1-embedded24@evers-fischer.de>
+ <20180221124707.26308-2-embedded24@evers-fischer.de>
+ <20180222181901.GA13694@e107981-ln.cambridge.arm.com>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <9cdc8c1c-b448-b00b-d5b8-b664bd96f856@ti.com>
+Date: Fri, 23 Feb 2018 11:40:49 +0530
+MIME-Version: 1.0
+In-Reply-To: <20180222181901.GA13694@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+Hi Lorenzo,
 
-Implement jailhouse_paravirt() via device tree probing on architectures
-!= x86. Will be used by the PCI core.
+On Thursday 22 February 2018 11:49 PM, Lorenzo Pieralisi wrote:
+> On Wed, Feb 21, 2018 at 01:47:06PM +0100, Rolf Evers-Fischer wrote:
+>> From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+>>
+>> This commit decreases the number of jump labels and ensures
+>> that the next commit doesn't increase the number of occurrences
+>> of 'kfree(func_name)'.
+>>
+>> Change-Id: I0d1b6fd652395b85f82b11c43bf9b7db512854d1
+>> Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+>> Signed-off-by: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+>> ---
+>>  drivers/pci/endpoint/pci-epf-core.c | 7 ++-----
+>>  1 file changed, 2 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+>> index 766ce1dca2ec..23d0e128d1a5 100644
+>> --- a/drivers/pci/endpoint/pci-epf-core.c
+>> +++ b/drivers/pci/endpoint/pci-epf-core.c
+>> @@ -220,9 +220,10 @@ struct pci_epf *pci_epf_create(const char *name)
+>>  	*buf = '\0';
+>>  
+>>  	epf->name = kstrdup(func_name, GFP_KERNEL);
+>> +	kfree(func_name);
+> 
+> I am certainly missing something but what if we reworked the code
+> and just:
+> 
+> kstrdup(name, GFP_KERNEL);
+> 
+> once instead of allocating another local copy (that we then have to
+> free) ?
 
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Mark Rutland <mark.rutland@arm.com>
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
- arch/x86/include/asm/jailhouse_para.h           |  2 +-
- include/linux/hypervisor.h                      | 17 +++++++++++++++--
- 3 files changed, 24 insertions(+), 3 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
+name will be something like pci_epf_test.0 and in epf->name we want to just
+have pci_epf_test.
+> 
+> Reworded: why
+> 
+> epf->name = func_name;
 
-diff --git a/Documentation/devicetree/bindings/jailhouse.txt b/Documentation/devicetree/bindings/jailhouse.txt
-new file mode 100644
-index 000000000000..2901c25ff340
---- /dev/null
-+++ b/Documentation/devicetree/bindings/jailhouse.txt
-@@ -0,0 +1,8 @@
-+Jailhouse non-root cell device tree bindings
-+--------------------------------------------
-+
-+When running in a non-root Jailhouse cell (partition), the device tree of this
-+platform shall have a top-level "hypervisor" node with the following
-+properties:
-+
-+- compatible = "jailhouse,cell"
-diff --git a/arch/x86/include/asm/jailhouse_para.h b/arch/x86/include/asm/jailhouse_para.h
-index 875b54376689..b885a961a150 100644
---- a/arch/x86/include/asm/jailhouse_para.h
-+++ b/arch/x86/include/asm/jailhouse_para.h
-@@ -1,7 +1,7 @@
- /* SPDX-License-Identifier: GPL2.0 */
- 
- /*
-- * Jailhouse paravirt_ops implementation
-+ * Jailhouse paravirt detection
-  *
-  * Copyright (c) Siemens AG, 2015-2017
-  *
-diff --git a/include/linux/hypervisor.h b/include/linux/hypervisor.h
-index b19563f9a8eb..fc08b433c856 100644
---- a/include/linux/hypervisor.h
-+++ b/include/linux/hypervisor.h
-@@ -8,15 +8,28 @@
-  */
- 
- #ifdef CONFIG_X86
-+
-+#include <asm/jailhouse_para.h>
- #include <asm/x86_init.h>
-+
- static inline void hypervisor_pin_vcpu(int cpu)
- {
- 	x86_platform.hyper.pin_vcpu(cpu);
- }
--#else
-+
-+#else /* !CONFIG_X86 */
-+
-+#include <linux/of.h>
-+
- static inline void hypervisor_pin_vcpu(int cpu)
- {
- }
--#endif
-+
-+static inline bool jailhouse_paravirt(void)
-+{
-+	return of_find_compatible_node(NULL, NULL, "jailhouse,cell");
-+}
-+
-+#endif /* !CONFIG_X86 */
- 
- #endif /* __LINUX_HYPEVISOR_H */
--- 
-2.13.6
+memory should be allocated for epf->name before it can be initialized. IMO
+without kstrdup, there will be a null pointer exception.
+
+Thanks
+Kishon
