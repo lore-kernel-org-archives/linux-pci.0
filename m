@@ -1,110 +1,72 @@
-Return-Path: <SRS0=jA/5=FE=xenosoft.de=chzigotzky@kernel.org>
-Return-Path: <SRS0=jA/5=FE=xenosoft.de=chzigotzky@kernel.org>
-Content-Type: text/plain;
-	charset=utf-8
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH v1] PCI: Make PCI_SCAN_ALL_PCIE_DEVS work for Root as well as Downstream Ports
-From: Christian Zigotzky <chzigotzky@xenosoft.de>
-In-Reply-To: <20171202191827.GB18780@bhelgaas-glaptop.roam.corp.google.com>
-Date: Sat, 10 Feb 2018 09:05:40 +0100
-Cc: linux-pci@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
- linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
-Message-Id: <33CA1586-051C-47F4-83CD-4A406FAE85F7@xenosoft.de>
-References: <20171202002710.17686.21340.stgit@bhelgaas-glaptop.roam.corp.google.com> <20171202191827.GB18780@bhelgaas-glaptop.roam.corp.google.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 23 Feb 2018 08:50:26 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Hung <alex.hung@canonical.com>
+Cc: rjw@rjwysocki.net, lenb@kernel.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH][V3] ACPI/PCI: pci_link: allow the absence of _PSR and
+ change log level
+Message-ID: <20180223145026.GJ14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519364624-4363-1-git-send-email-alex.hung@canonical.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519364624-4363-1-git-send-email-alex.hung@canonical.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+In subject:
 
-The AmigaOne X1000 doesn=E2=80=99t boot anymore since the PCI updates. I hav=
-e seen, that the PCI updates are different to the updates below. The code be=
-low works but the latest not. Is there a problem with the latest PCI updates=
- currently?
+s/allow the/Allow the/ to match drivers/acpi capitalization convention
+s/_PSR/_PRS/ to fix typo
 
-Thanks,
-Christian
+On Thu, Feb 22, 2018 at 09:43:44PM -0800, Alex Hung wrote:
+> In recent Intel hardware the IRQs become non-configurable after BIOS
+> initializes them in PEI phase and _PRS objects are no longer included in
+> ASL.
+> 
+> This is the same as "static (non-configurable) devices do not
+> specify a _PRS object" in ACPI spec. As a result, error messages
+> saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
+> be in kernel messenges all the time but only when debug is enabled, and
+> acpi_pci_link_get_possible should not return -ENODEV when _PRS is
+> absent.
+> 
+> Signed-off-by: Alex Hung <alex.hung@canonical.com>
 
-Sent from my iPhone
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-On 2. Dec 2017, at 20:18, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> ---
+>  drivers/acpi/pci_link.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index bc3d914..65f1908 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -173,8 +173,8 @@ static int acpi_pci_link_get_possible(struct acpi_pci_link *link)
+>  	status = acpi_walk_resources(link->device->handle, METHOD_NAME__PRS,
+>  				     acpi_pci_link_check_possible, link);
+>  	if (ACPI_FAILURE(status)) {
+> -		ACPI_EXCEPTION((AE_INFO, status, "Evaluating _PRS"));
+> -		return -ENODEV;
+> +		acpi_handle_debug(link->device->handle, "_PRS not present or invalid");
 
-On Fri, Dec 01, 2017 at 06:27:10PM -0600, Bjorn Helgaas wrote:
-From: Bjorn Helgaas <bhelgaas@google.com>
+The rest of this file uses ACPI_EXCEPTION(), ACPI_DEBUG_PRINT(), etc.
+My personal preference would be to keep the file consistent, e.g.,
+maybe use the style that matches the file in this patch, and have a
+second patch that changes all the logging in the file to use
+acpi_handle_*().
 
-PCIe Downstream Ports normally have only a Device 0 below them.  To
-optimize enumeration, we don't scan for other devices *unless* the
-PCI_SCAN_ALL_PCIE_DEVS flag is set by set by quirks or the
-"pci=3Dpcie_scan_all" kernel parameter.
+But I'm fine with whatever you and Rafael want to do about this.
 
-Previously PCI_SCAN_ALL_PCIE_DEVS only affected scanning below Switch
-Downstream Ports, not Root Ports.
-
-But the "Nemo" system, also known as the AmigaOne X1000, has a PA Semi Root
-Port whose link leads to an AMD/ATI SB600 South Bridge.  The Root Port is a
-PCIe device, of course, but the SB600 contains only conventional PCI
-devices with no visible PCIe port.
-
-Simplify and restructure only_one_child() so that we scan for all possible
-devices below Root Ports as well as Switch Downstream Ports when
-PCI_SCAN_ALL_PCIE_DEVS is set.
-
-This is enough to make Nemo work with "pci=3Dpcie_scan_all".  We would also
-like to add a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically on Nemo so
-users wouldn't have to use the "pci=3Dpcie_scan_all" parameter, but we don't=
-
-have that yet.
-
-Link: https://lkml.kernel.org/r/CAErSpo55Q8Q=3D5p6_+uu7ahnw+53ibVDNRXxrzRV9Q=
-nUr_9EUfw@mail.gmail.com
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D198057
-Reported-and-Tested-by: Christian Zigotzky <chzigotzky@xenosoft.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Applied to pci/enumeration for v4.16.
-
----
-drivers/pci/probe.c |   25 +++++++++++++++----------
-1 file changed, 15 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 14e0ea1ff38b..303c0cb0550c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2215,22 +2215,27 @@ static unsigned next_fn(struct pci_bus *bus, struct p=
-ci_dev *dev, unsigned fn)
-
-static int only_one_child(struct pci_bus *bus)
-{
--    struct pci_dev *parent =3D bus->self;
-+    struct pci_dev *bridge =3D bus->self;
-
--    if (!parent || !pci_is_pcie(parent))
-+    /*
-+     * Systems with unusual topologies set PCI_SCAN_ALL_PCIE_DEVS so
-+     * we scan for all possible devices, not just Device 0.
-+     */
-+    if (pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
-       return 0;
--    if (pci_pcie_type(parent) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
--        return 1;
-
-   /*
--     * PCIe downstream ports are bridges that normally lead to only a
--     * device 0, but if PCI_SCAN_ALL_PCIE_DEVS is set, scan all
--     * possible devices, not just device 0.  See PCIe spec r3.0,
--     * sec 7.3.1.
-+     * A PCIe Downstream Port normally leads to a Link with only Device
-+     * 0 on it (PCIe spec r3.1, sec 7.3.1).  As an optimization, scan
-+     * only for Device 0 in that situation.
-+     *
-+     * Checking has_secondary_link is a hack to identify Downstream
-+     * Ports because sometimes Switches are configured such that the
-+     * PCIe Port Type labels are backwards.
-    */
--    if (parent->has_secondary_link &&
--        !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
-+    if (bridge && pci_is_pcie(bridge) && bridge->has_secondary_link)
-       return 1;
-+
-   return 0;
-}
+> +		return 0;
+>  	}
+>  
+>  	ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
