@@ -1,184 +1,350 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34514 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752702AbeBFTIt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Feb 2018 14:08:49 -0500
-Date: Tue, 6 Feb 2018 13:08:44 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Scott Bauer <scott.bauer@intel.com>
-Subject: Re: [PATCH] vmd: Interrupt affinity pairing to child devices
-Message-ID: <20180206190844.GA98765@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180201222305.25066-1-keith.busch@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180201222305.25066-1-keith.busch@intel.com>
+Received: from lucky1.263xmail.com ([211.157.147.135]:42744 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751329AbeBWBWP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 20:22:15 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 2/6] PCI: rockchip: Split out common function to parse DT
+Date: Fri, 23 Feb 2018 09:16:21 +0800
+Message-Id: <1519348581-243419-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-$ git log --oneline drivers/pci/host/vmd.c
-46a6561b29cb PCI: vmd: Remove IRQ affinity so we can allocate more IRQs
-e2b1820bd5d0 PCI: vmd: Free up IRQs on suspend path
-f2586c678cb2 PCI: vmd: Assign vector zero to all bridges
-37d7f818a462 PCI: vmd: Reserve IRQ pre-vector for better affinity
-0cb259c47a4d PCI: vmd: Move SRCU cleanup after bus, child device removal
-575a144e7b30 PCI: vmd: Correct comment: VMD domains start at 0x10000, not 0x1000
+Most of the DT properties are used for both of host and
+EP drivrs, so this patch spilt them out to new function,
+rockchip_pcie_parse_dt in pcie-rockchip.c and rename the
+original function to rockchip_pcie_parse_host_dt to avoid
+confusion. No functional changed intended.
 
-Make yours match:
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-  PCI: vmd: <verb> ...
+Changes in v2: None
 
-On Thu, Feb 01, 2018 at 03:23:05PM -0700, Keith Busch wrote:
-> Performance for devices in VMD domains suffer in NUMA environments if
-> we're not respecting the desired IRQ CPU affinity. This patch fixes
-> that by creating managed affinity irq vectors for the VMD device, and
-> then drivers registering their chained interrupts will be assigned the
-> h/w irq that most closely matches its desired IRQ affinity. A tie is
-> awarded to the lesser used vector.
-> 
-> Note, this only works for drivers that allocate their vectors with
-> PCI_IRQ_AFFINITY. All other drivers will be assigned the least used
-> vector without consideration for affinity.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/host/vmd.c | 80 ++++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 65 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-> index 930a8fa08bd6..ac84676e79a4 100644
-> --- a/drivers/pci/host/vmd.c
-> +++ b/drivers/pci/host/vmd.c
-> @@ -166,10 +166,6 @@ static irq_hw_number_t vmd_get_hwirq(struct msi_domain_info *info,
->  	return 0;
->  }
->  
-> -/*
-> - * XXX: We can be even smarter selecting the best IRQ once we solve the
-> - * affinity problem.
-> - */
->  static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *desc)
->  {
->  	int i, best = 1;
-> @@ -188,24 +184,61 @@ static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *d
->  	return &vmd->irqs[best];
->  }
->  
-> +static struct vmd_irq_list *vmd_next_affinity_irq(struct vmd_dev *vmd,  const struct cpumask *dest)
-> +{
-> +	struct vmd_irq_list *irq = NULL;
-> +	const struct cpumask *vmd_mask;
-> +	unsigned long flags, match;
-> +	int i, best = 0;
-> +
-> +	if (!dest || vmd->msix_count < 2)
-> +		return NULL;
-> +
-> +	raw_spin_lock_irqsave(&list_lock, flags);
-> +	for (i = 1; i < vmd->msix_count; i++) {
-> +		struct cpumask tmp;
-> +
-> +		vmd_mask = pci_irq_get_affinity(vmd->dev, i);
-> +		cpumask_and(&tmp, vmd_mask, dest);
-> +		match = cpumask_weight(&tmp);
-> +		if (match >= best) {
-> +			if (match == best && irq &&
-> +			    (vmd->irqs[i].count >= irq->count))
-> +				continue;
-> +			irq = &vmd->irqs[i];
-> +			best = match;
-> +		}
-> +	}
-> +	if (irq)
-> +		irq->count++;
-> +	raw_spin_unlock_irqrestore(&list_lock, flags);
-> +
-> +	return irq;
-> +}
-> +
->  static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
->  			unsigned int virq, irq_hw_number_t hwirq,
->  			msi_alloc_info_t *arg)
->  {
-> -	struct msi_desc *desc = arg->desc;
-> -	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(desc)->bus);
-> +	struct msi_desc *msidesc = arg->desc;
-> +	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(msidesc)->bus);
->  	struct vmd_irq *vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
-> -	unsigned int index, vector;
-> +	struct irq_desc *desc = irq_to_desc(virq);
-> +	unsigned int vector;
->  
->  	if (!vmdirq)
->  		return -ENOMEM;
->  
->  	INIT_LIST_HEAD(&vmdirq->node);
-> -	vmdirq->irq = vmd_next_irq(vmd, desc);
-> -	vmdirq->virq = virq;
-> -	index = index_from_irqs(vmd, vmdirq->irq);
-> -	vector = pci_irq_vector(vmd->dev, index);
->  
-> +	if (desc && irqd_affinity_is_managed(&desc->irq_data))
-> +		vmdirq->irq = vmd_next_affinity_irq(vmd,
-> +					desc->irq_common_data.affinity);
-> +	if (vmdirq->irq == NULL)
-> +		vmdirq->irq = vmd_next_irq(vmd, msidesc);
-> +
-> +	vmdirq->virq = virq;
-> +	vector = pci_irq_vector(vmd->dev, index_from_irqs(vmd, vmdirq->irq));
->  	irq_domain_set_info(domain, virq, vector, info->chip, vmdirq,
->  			    handle_untracked_irq, vmd, NULL);
->  	return 0;
-> @@ -233,9 +266,11 @@ static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
->  	struct pci_dev *pdev = to_pci_dev(dev);
->  	struct vmd_dev *vmd = vmd_from_bus(pdev->bus);
->  
-> -	if (nvec > vmd->msix_count)
-> +	if (nvec > vmd->msix_count) {
-> +		if (vmd->msix_count > 1)
-> +			return vmd->msix_count - 1;
->  		return vmd->msix_count;
-> -
-> +	}
->  	memset(arg, 0, sizeof(*arg));
->  	return 0;
->  }
-> @@ -663,6 +698,14 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  	struct vmd_dev *vmd;
->  	int i, err;
->  
-> +	/*
-> +	 * The first vector is reserved for special use, so start affinity at
-> +	 * the second vector.
-> +	 */
-> +	struct irq_affinity affd = {
-> +		.pre_vectors = 1,
-> +	};
-> +
->  	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
->  		return -ENOMEM;
->  
-> @@ -688,8 +731,15 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  	if (vmd->msix_count < 0)
->  		return -ENODEV;
->  
-> -	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
-> -					PCI_IRQ_MSIX);
-> +	/*
-> +	 * Reserve remaining vectors that IRQ affinity won't be able to assign.
-> +	 */
-> +	if ((vmd->msix_count - 1) > cpumask_weight(cpu_present_mask))
-> +		affd.post_vectors = vmd->msix_count -
-> +					cpumask_weight(cpu_present_mask) - 1;
-> +
-> +	vmd->msix_count = pci_alloc_irq_vectors_affinity(dev, 1, vmd->msix_count,
-> +					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &affd);
->  	if (vmd->msix_count < 0)
->  		return vmd->msix_count;
->  
-> -- 
-> 2.14.3
-> 
+ drivers/pci/rockchip/pcie-rockchip-host.c | 119 ++-------------------------
+ drivers/pci/rockchip/pcie-rockchip.c      | 128 ++++++++++++++++++++++++++++++
+ drivers/pci/rockchip/pcie-rockchip.h      |   2 +
+ 3 files changed, 135 insertions(+), 114 deletions(-)
+
+diff --git a/drivers/pci/rockchip/pcie-rockchip-host.c b/drivers/pci/rockchip/pcie-rockchip-host.c
+index 563f696..079949c 100644
+--- a/drivers/pci/rockchip/pcie-rockchip-host.c
++++ b/drivers/pci/rockchip/pcie-rockchip-host.c
+@@ -703,130 +703,20 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
+ }
+ 
+ /**
+- * rockchip_pcie_parse_dt - Parse Device Tree
++ * rockchip_pcie_parse_host_dt - Parse Device Tree
+  * @rockchip: PCIe port information
+  *
+  * Return: '0' on success and error value on failure
+  */
+-static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
++static int rockchip_pcie_parse_host_dt(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+-	struct platform_device *pdev = to_platform_device(dev);
+-	struct device_node *node = dev->of_node;
+-	struct resource *regs;
+ 	int err;
+ 
+-	regs = platform_get_resource_byname(pdev,
+-					    IORESOURCE_MEM,
+-					    "axi-base");
+-	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
+-	if (IS_ERR(rockchip->reg_base))
+-		return PTR_ERR(rockchip->reg_base);
+-
+-	regs = platform_get_resource_byname(pdev,
+-					    IORESOURCE_MEM,
+-					    "apb-base");
+-	rockchip->apb_base = devm_ioremap_resource(dev, regs);
+-	if (IS_ERR(rockchip->apb_base))
+-		return PTR_ERR(rockchip->apb_base);
+-
+-	err = rockchip_pcie_get_phys(rockchip);
++	err = rockchip_pcie_parse_dt(rockchip);
+ 	if (err)
+ 		return err;
+ 
+-	rockchip->lanes = 1;
+-	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
+-	if (!err && (rockchip->lanes == 0 ||
+-		     rockchip->lanes == 3 ||
+-		     rockchip->lanes > 4)) {
+-		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
+-		rockchip->lanes = 1;
+-	}
+-
+-	rockchip->link_gen = of_pci_get_max_link_speed(node);
+-	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
+-		rockchip->link_gen = 2;
+-
+-	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
+-	if (IS_ERR(rockchip->core_rst)) {
+-		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing core reset property in node\n");
+-		return PTR_ERR(rockchip->core_rst);
+-	}
+-
+-	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
+-	if (IS_ERR(rockchip->mgmt_rst)) {
+-		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing mgmt reset property in node\n");
+-		return PTR_ERR(rockchip->mgmt_rst);
+-	}
+-
+-	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
+-								     "mgmt-sticky");
+-	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
+-		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing mgmt-sticky reset property in node\n");
+-		return PTR_ERR(rockchip->mgmt_sticky_rst);
+-	}
+-
+-	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
+-	if (IS_ERR(rockchip->pipe_rst)) {
+-		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pipe reset property in node\n");
+-		return PTR_ERR(rockchip->pipe_rst);
+-	}
+-
+-	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
+-	if (IS_ERR(rockchip->pm_rst)) {
+-		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pm reset property in node\n");
+-		return PTR_ERR(rockchip->pm_rst);
+-	}
+-
+-	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
+-	if (IS_ERR(rockchip->pclk_rst)) {
+-		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pclk reset property in node\n");
+-		return PTR_ERR(rockchip->pclk_rst);
+-	}
+-
+-	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
+-	if (IS_ERR(rockchip->aclk_rst)) {
+-		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing aclk reset property in node\n");
+-		return PTR_ERR(rockchip->aclk_rst);
+-	}
+-
+-	rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
+-	if (IS_ERR(rockchip->ep_gpio)) {
+-		dev_err(dev, "missing ep-gpios property in node\n");
+-		return PTR_ERR(rockchip->ep_gpio);
+-	}
+-
+-	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
+-	if (IS_ERR(rockchip->aclk_pcie)) {
+-		dev_err(dev, "aclk clock not found\n");
+-		return PTR_ERR(rockchip->aclk_pcie);
+-	}
+-
+-	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
+-	if (IS_ERR(rockchip->aclk_perf_pcie)) {
+-		dev_err(dev, "aclk_perf clock not found\n");
+-		return PTR_ERR(rockchip->aclk_perf_pcie);
+-	}
+-
+-	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
+-	if (IS_ERR(rockchip->hclk_pcie)) {
+-		dev_err(dev, "hclk clock not found\n");
+-		return PTR_ERR(rockchip->hclk_pcie);
+-	}
+-
+-	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
+-	if (IS_ERR(rockchip->clk_pcie_pm)) {
+-		dev_err(dev, "pm clock not found\n");
+-		return PTR_ERR(rockchip->clk_pcie_pm);
+-	}
+-
+ 	err = rockchip_pcie_setup_irq(rockchip);
+ 	if (err)
+ 		return err;
+@@ -1193,8 +1083,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, rockchip);
+ 	rockchip->dev = dev;
++	rockchip->is_rc = true;
+ 
+-	err = rockchip_pcie_parse_dt(rockchip);
++	err = rockchip_pcie_parse_host_dt(rockchip);
+ 	if (err)
+ 		return err;
+ 
+diff --git a/drivers/pci/rockchip/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip.c
+index c7614f9..6c0063d 100644
+--- a/drivers/pci/rockchip/pcie-rockchip.c
++++ b/drivers/pci/rockchip/pcie-rockchip.c
+@@ -12,10 +12,138 @@
+  */
+ 
+ #include <linux/clk.h>
++#include <linux/gpio/consumer.h>
++#include <linux/of_pci.h>
+ #include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <linux/reset.h>
+ 
+ #include "pcie-rockchip.h"
+ 
++int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct device_node *node = dev->of_node;
++	struct resource *regs;
++	int err;
++
++	regs = platform_get_resource_byname(pdev,
++					    IORESOURCE_MEM,
++					    "axi-base");
++	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
++	if (IS_ERR(rockchip->reg_base))
++		return PTR_ERR(rockchip->reg_base);
++
++	regs = platform_get_resource_byname(pdev,
++					    IORESOURCE_MEM,
++					    "apb-base");
++	rockchip->apb_base = devm_ioremap_resource(dev, regs);
++	if (IS_ERR(rockchip->apb_base))
++		return PTR_ERR(rockchip->apb_base);
++
++	err = rockchip_pcie_get_phys(rockchip);
++	if (err)
++		return err;
++
++	rockchip->lanes = 1;
++	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
++	if (!err && (rockchip->lanes == 0 ||
++		     rockchip->lanes == 3 ||
++		     rockchip->lanes > 4)) {
++		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
++		rockchip->lanes = 1;
++	}
++
++	rockchip->link_gen = of_pci_get_max_link_speed(node);
++	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
++		rockchip->link_gen = 2;
++
++	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
++	if (IS_ERR(rockchip->core_rst)) {
++		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing core reset property in node\n");
++		return PTR_ERR(rockchip->core_rst);
++	}
++
++	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
++	if (IS_ERR(rockchip->mgmt_rst)) {
++		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing mgmt reset property in node\n");
++		return PTR_ERR(rockchip->mgmt_rst);
++	}
++
++	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
++								     "mgmt-sticky");
++	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
++		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing mgmt-sticky reset property in node\n");
++		return PTR_ERR(rockchip->mgmt_sticky_rst);
++	}
++
++	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
++	if (IS_ERR(rockchip->pipe_rst)) {
++		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pipe reset property in node\n");
++		return PTR_ERR(rockchip->pipe_rst);
++	}
++
++	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
++	if (IS_ERR(rockchip->pm_rst)) {
++		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pm reset property in node\n");
++		return PTR_ERR(rockchip->pm_rst);
++	}
++
++	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
++	if (IS_ERR(rockchip->pclk_rst)) {
++		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pclk reset property in node\n");
++		return PTR_ERR(rockchip->pclk_rst);
++	}
++
++	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
++	if (IS_ERR(rockchip->aclk_rst)) {
++		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing aclk reset property in node\n");
++		return PTR_ERR(rockchip->aclk_rst);
++	}
++
++	if (rockchip->is_rc) {
++		rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
++		if (IS_ERR(rockchip->ep_gpio)) {
++			dev_err(dev, "missing ep-gpios property in node\n");
++			return PTR_ERR(rockchip->ep_gpio);
++		}
++	}
++
++	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
++	if (IS_ERR(rockchip->aclk_pcie)) {
++		dev_err(dev, "aclk clock not found\n");
++		return PTR_ERR(rockchip->aclk_pcie);
++	}
++
++	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
++	if (IS_ERR(rockchip->aclk_perf_pcie)) {
++		dev_err(dev, "aclk_perf clock not found\n");
++		return PTR_ERR(rockchip->aclk_perf_pcie);
++	}
++
++	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
++	if (IS_ERR(rockchip->hclk_pcie)) {
++		dev_err(dev, "hclk clock not found\n");
++		return PTR_ERR(rockchip->hclk_pcie);
++	}
++
++	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
++	if (IS_ERR(rockchip->clk_pcie_pm)) {
++		dev_err(dev, "pm clock not found\n");
++		return PTR_ERR(rockchip->clk_pcie_pm);
++	}
++
++	return 0;
++}
++
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+diff --git a/drivers/pci/rockchip/pcie-rockchip.h b/drivers/pci/rockchip/pcie-rockchip.h
+index 9e0cf2e..c0f84d9 100644
+--- a/drivers/pci/rockchip/pcie-rockchip.h
++++ b/drivers/pci/rockchip/pcie-rockchip.h
+@@ -222,6 +222,7 @@ struct rockchip_pcie {
+ 	u32     mem_size;
+ 	phys_addr_t msg_bus_addr;
+ 	phys_addr_t mem_bus_addr;
++	bool is_rc;
+ };
+ 
+ 
+@@ -236,6 +237,7 @@ static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
+ 	writel(val, rockchip->apb_base + reg);
+ }
+ 
++int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip);
+ void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip);
+-- 
+1.9.1
