@@ -1,63 +1,46 @@
-Return-Path: <SRS0=fqZp=FP=cavium.com=George.Cherian@kernel.org>
-Return-Path: <SRS0=fqZp=FP=cavium.com=George.Cherian@kernel.org>
-Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki"
- <rjw@rjwysocki.net>, Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- bhelgaas@google.com, Jayachandran.Nair@cavium.com,
- Robert.Richter@cavium.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Huang Ying <ying.huang@intel.com>
-References: <1517554846-16703-1-git-send-email-george.cherian@cavium.com>
- <2323301.ORZpb3hFRe@aspire.rjw.lan>
- <20180216203434.GC11014@bhelgaas-glaptop.roam.corp.google.com>
- <2858019.9TUCWsDpTB@aspire.rjw.lan> <20180220015433.GA9656@wunner.de>
- <20180220190037.GB32228@bhelgaas-glaptop.roam.corp.google.com>
- <c8454323-06b2-e758-0d38-550c6b31b15e@caviumnetworks.com>
- <20180221095435.xe5lmes7mpxca3en@wunner.de>
-From: George Cherian <gcherian@caviumnetworks.com>
-Message-ID: <d0f6a588-23e7-123e-267c-5257c21bb38a@caviumnetworks.com>
-Date: Wed, 21 Feb 2018 16:25:08 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:35159 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751381AbeBWNXi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 08:23:38 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180221095435.xe5lmes7mpxca3en@wunner.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <66bfcfc6dc1832baa3fbd8e4879764d36aa9c1e7.1516601570.git.jan.kiszka@siemens.com>
+References: <cover.1516601570.git.jan.kiszka@siemens.com> <66bfcfc6dc1832baa3fbd8e4879764d36aa9c1e7.1516601570.git.jan.kiszka@siemens.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Fri, 23 Feb 2018 15:23:37 +0200
+Message-ID: <CAHp75VcssoPE8ZCiHOt8-BKcponpr3xpzn42KZGx=Y+nMmZjYw@mail.gmail.com>
+Subject: Re: [PATCH 2/6] pci: Scan all functions when probing while running
+ over Jailhouse
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Benedikt Spranger <b.spranger@linutronix.de>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lukas,
+On Mon, Jan 22, 2018 at 8:12 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
 
-On 02/21/2018 03:24 PM, Lukas Wunner wrote:
-> On Wed, Feb 21, 2018 at 02:58:13PM +0530, George Cherian wrote:
->> I will explain the setup used
->> To the Cavium ThunderX RC the following PLX device is connected.
->> PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express Gen 3 (8.0 GT/s)
->> Switch
->> There is no device connected downstream to the PLX switch.
->>
->> AFAIU the pcie_port driver probes PLX and enters autosuspend after 100ms
->> since pci_bridge_d3_possible() returns true.
->>
->> And later pci_sysfs_init() ends up doing a config access of PLX which fails
->> with a "synchronous external abort"
-> 
-> Then you're missing a pci_config_pm_runtime_get() in pci_sysfs_init() or
-> further down in the call stack, rather than a quirk which just papers
-> over the issue.
+>  #include <linux/export.h>
+>  #include <linux/pci.h>
+>  #include <asm/pci_x86.h>
+> +#include <asm/jailhouse_para.h>
 
-I have found another configuration where this fails.
-Following is the configuration
-1) Connected a PCIe Intel i40 card under the root port.
-2) unbind the i40 driver and bind with vfio-pci driver.
-3) Run lspci in a loop. "lspci -s xx:xx.xx -vvv"
+Keep it in order?
 
-I get the same synchronous external abort.
-In this case the vfio-pci driver probe it moves the device (i40) to
-D3hot provided disable_idle_d3 is not set. lspci tries to do
-the config_access which fails with synchronous external abort when
-the root port transitions to D3hot.
-> 
-> Thanks,
-> 
-> Lukas
-> 
-Regards,
--George
+
+>  #include <linux/acpi.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/pm_runtime.h>
+> +#include <linux/hypervisor.h>
+
+Ditto.
+
+-- 
+With Best Regards,
+Andy Shevchenko
