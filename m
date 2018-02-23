@@ -1,74 +1,147 @@
-Return-Path: <SRS0=ZELb=FN=jonmasters.org=jcm@kernel.org>
-Return-Path: <SRS0=ZELb=FN=jonmasters.org=jcm@kernel.org>
-Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
-To: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki"
- <rjw@rjwysocki.net>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
- George Cherian <gcherian@caviumnetworks.com>,
- George Cherian <george.cherian@cavium.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, bhelgaas@google.com,
- Jayachandran.Nair@cavium.com, Robert.Richter@cavium.com,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1517554846-16703-1-git-send-email-george.cherian@cavium.com>
- <dd104986-81e2-e7a2-353c-91827078bc4c@caviumnetworks.com>
- <20180214201653.GA62268@bhelgaas-glaptop.roam.corp.google.com>
- <26660034.hqiP3ND89J@aspire.rjw.lan>
- <20180215233900.GA195653@bhelgaas-glaptop.roam.corp.google.com>
-From: Jon Masters <jcm@jonmasters.org>
-Message-ID: <4adb69b4-f566-cca8-6038-ab2e6be59d12@jonmasters.org>
-Date: Mon, 19 Feb 2018 14:08:26 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180215233900.GA195653@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60840 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbeBWIYo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 03:24:44 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v11 7/7] PCI/DPC: Enumerate the devices after DPC trigger event
+Date: Fri, 23 Feb 2018 13:54:04 +0530
+Message-Id: <1519374244-20539-8-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, Rafael, others,
+Implement error_resume callback in DPC so, after DPC trigger event
+enumerates the devices beneath.
 
-On 02/15/2018 06:39 PM, Bjorn Helgaas wrote:
-> On Thu, Feb 15, 2018 at 10:57:25PM +0100, Rafael J. Wysocki wrote:
->> On Wednesday, February 14, 2018 9:16:53 PM CET Bjorn Helgaas wrote:
->>> On Wed, Feb 14, 2018 at 04:58:08PM +0530, George Cherian wrote:
->>>> On 02/13/2018 08:39 PM, Bjorn Helgaas wrote:
->>>>> On Fri, Feb 02, 2018 at 07:00:46AM +0000, George Cherian wrote:
->>>>>> The PCIe Controller on Cavium ThunderX2 processors does not
->>>>>> respond to downstream CFG/ECFG cycles when root port is
->>>>>> in power management D3-hot state.
->>>>>
->>>>> I think you're talking about the CPU initiating a config cycle to
->>>>> a device below the root port, right?
->>>> Yes
->>>
->>> If a bridge, e.g., a Root Port in your case, is in D3hot, we should be
->>> able to access config space of the bridge itself, but the secondary
->>> bus will be in B2 or B3 and we won't be able to access config space
->>> for any devices below the bridge.  This is true for *all* bridges, not
->>> just this Cavium Root Port.
->>
->> Right.
->>
->> But AFAICS config space reads from devices that aren't there (which
->> effectively is what happens if the bridge is in D3hot) are at least
->> expected to return all ones.
-> 
-> Yes.  AIUI, the PCIe spec doesn't actually *require* all ones
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Indeed. This was my reading of the spec last year when I originally
-discovered this bug (and suggested the temporary bandaid of the runtime
-kernel parameter to disable pm for the port). I've seen this on certain
-Cavium ThunderX2 systems in specific configurations, but in my debug
-sessions it seemed that the problem was we're expecting all 1s and we
-don't get those, so we then ultimately get an SError and go to lunch.
-
-<snip>
-
-> But from the discussion below, it sounds like this may have helped
-> uncover a more serious Linux bug, i.e., we don't resume a device
-> before trying to use it.
-
-I suspected this too, but didn't get chance to followup. I had expected
-the above would have been posted many months ago.
-
-Jon.
-
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index e15bcda..751efc0 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -126,6 +126,21 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ }
+ 
+ /**
++ * dpc_error_resume - enumerate the devices beneath
++ * @dev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver during fatal recovery.
++ */
++static void dpc_error_resume(struct pci_dev *pdev)
++{
++	if (pci_wait_for_link(pdev, true)) {
++		pci_lock_rescan_remove();
++		pci_rescan_bus(pdev->bus);
++		pci_unlock_rescan_remove();
++	}
++}
++
++/**
+  * dpc_reset_link - reset link DPC  routine
+  * @dev: pointer to Root Port's pci_dev data structure
+  *
+@@ -364,6 +379,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
+ 	.reset_link     = dpc_reset_link,
++	.error_resume	= dpc_error_resume,
+ };
+ 
+ static int __init dpc_service_init(void)
+diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+index 1ea4b9a..1e1bf98 100644
+--- a/drivers/pci/pcie/pcie-err.c
++++ b/drivers/pci/pcie/pcie-err.c
+@@ -236,6 +236,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+  * @state: error state
+  * @error_mesg: message to print
+  * @cb: callback to be broadcast
++ * @severity: error severity
+  *
+  * Invoked during error recovery process. Once being invoked, the content
+  * of error severity will be broadcast to all downstream drivers in a
+@@ -244,7 +245,8 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 	enum pci_channel_state state,
+ 	char *error_mesg,
+-	int (*cb)(struct pci_dev *, void *))
++	int (*cb)(struct pci_dev *, void *),
++	int severity)
+ {
+ 	struct aer_broadcast_data result_data;
+ 
+@@ -256,6 +258,17 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 		result_data.result = PCI_ERS_RESULT_RECOVERED;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		/* If DPC is triggered, call resume error handler
++		 * because, at this point we can safely assume that
++		 * link recovery has happened, this is only handled if
++		 * callback is resume, as this function can be called
++		 * with multiple callbacks.
++		 */
++		if ((severity == DPC_FATAL) &&
++		    (cb == report_resume)) {
++			cb(dev, NULL);
++			return PCI_ERS_RESULT_RECOVERED;
++		}
+ 		/*
+ 		 * If the error is reported by a bridge, we think this error
+ 		 * is related to the downstream link of the bridge, so we
+@@ -305,7 +318,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+ 	status = broadcast_error_message(dev,
+ 			state,
+ 			"error_detected",
+-			report_error_detected);
++			report_error_detected,
++			severity);
+ 
+ 	if (severity == AER_FATAL ||
+ 	    severity == DPC_FATAL) {
+@@ -321,7 +335,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+ 		status = broadcast_error_message(dev,
+ 				state,
+ 				"mmio_enabled",
+-				report_mmio_enabled);
++				report_mmio_enabled,
++				severity);
+ 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+ 		/*
+@@ -332,7 +347,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+ 		status = broadcast_error_message(dev,
+ 				state,
+ 				"slot_reset",
+-				report_slot_reset);
++				report_slot_reset,
++				severity);
+ 	}
+ 
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+@@ -342,7 +358,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+ 	broadcast_error_message(dev,
+ 				state,
+ 				"resume",
+-				report_resume);
++				report_resume,
++				severity);
+ 
+ 	dev_info(&dev->dev, "Device recovery successful\n");
+ 	mutex_unlock(&pci_err_recovery_lock);
 -- 
-Computer Architect
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
