@@ -1,135 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:40657 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750853AbeBHMUt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Feb 2018 07:20:49 -0500
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-        torvalds@linux-foundation.org, ruscur@russell.cc,
-        bryantly@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com
-Subject: [PATCH] PCI/AER: Move pci_uevent_ers() out of pci.h
-Date: Thu,  8 Feb 2018 23:20:35 +1100
-Message-Id: <20180208122035.9305-1-mpe@ellerman.id.au>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:50220 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751828AbeBWPKl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 10:10:41 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
+Subject: [PATCH v7 2/9] PCI: dwc: exynos: Switch to use the new IRQ API
+Date: Fri, 23 Feb 2018 15:10:25 +0000
+Message-Id: <500cc507a12f20c6b2892b6c76e05960fbd6bffd.1519318663.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no reason pci_uevent_ers() needs to be inline in pci.h, so
-move it out to a C file.
+Changes Exynos SoC specific driver to use the new IRQ API available in
+pcie-designware.
 
-Given it's used by AER the obvious location would be somewhere in
-drivers/pci/pcie/aer, but because it's also used by powerpc EEH code
-unfortunately that doesn't work in the case where EEH is enabled but
-PCIEPORTBUS is not.
-
-So for now put it in pci-driver.c, next to pci_uevent(), with an
-appropriate #ifdef so it's not built if AER and EEH are both disabled.
-
-While we're moving it also fix up the kernel doc comment for @pdev to
-be accurate.
-
-Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 ---
- drivers/pci/pci-driver.c | 36 ++++++++++++++++++++++++++++++++++++
- include/linux/pci.h      | 38 +++-----------------------------------
- 2 files changed, 39 insertions(+), 35 deletions(-)
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
+Change v5->v6:
+- Nothing changed, just to follow the patch set version.
+Change v6->v7:
+- Nothing changed, just to follow the patch set version.
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3bed6beda051..f21e8b1bef80 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1517,6 +1517,42 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
- 	return 0;
+ drivers/pci/dwc/pci-exynos.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 56f32ae..0a6b283d 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -297,15 +297,6 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
  }
  
-+#if defined(CONFIG_PCIEAER) || defined(CONFIG_EEH)
-+/**
-+ * pci_uevent_ers - emit a uevent during recovery path of pci device
-+ * @pdev: pci device undergoing error recovery
-+ * @err_type: type of error event
-+ */
-+void pci_uevent_ers(struct pci_dev *pdev, enum pci_ers_result err_type)
-+{
-+	int idx = 0;
-+	char *envp[3];
-+
-+	switch (err_type) {
-+	case PCI_ERS_RESULT_NONE:
-+	case PCI_ERS_RESULT_CAN_RECOVER:
-+		envp[idx++] = "ERROR_EVENT=BEGIN_RECOVERY";
-+		envp[idx++] = "DEVICE_ONLINE=0";
-+		break;
-+	case PCI_ERS_RESULT_RECOVERED:
-+		envp[idx++] = "ERROR_EVENT=SUCCESSFUL_RECOVERY";
-+		envp[idx++] = "DEVICE_ONLINE=1";
-+		break;
-+	case PCI_ERS_RESULT_DISCONNECT:
-+		envp[idx++] = "ERROR_EVENT=FAILED_RECOVERY";
-+		envp[idx++] = "DEVICE_ONLINE=0";
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (idx > 0) {
-+		envp[idx++] = NULL;
-+		kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, envp);
-+	}
-+}
-+#endif
-+
- static int pci_bus_num_vf(struct device *dev)
- {
- 	return pci_num_vf(to_pci_dev(dev));
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 024a1beda008..19c1dbcff0c6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2280,41 +2280,9 @@ static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
- 	return false;
- }
- 
--/**
-- * pci_uevent_ers - emit a uevent during recovery path of pci device
-- * @pdev: pci device to check
-- * @err_type: type of error event
-- *
-- */
--static inline void pci_uevent_ers(struct pci_dev *pdev,
--				  enum  pci_ers_result err_type)
+-static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
 -{
--	int idx = 0;
--	char *envp[3];
+-	struct exynos_pcie *ep = arg;
+-	struct dw_pcie *pci = ep->pci;
+-	struct pcie_port *pp = &pci->pp;
 -
--	switch (err_type) {
--	case PCI_ERS_RESULT_NONE:
--	case PCI_ERS_RESULT_CAN_RECOVER:
--		envp[idx++] = "ERROR_EVENT=BEGIN_RECOVERY";
--		envp[idx++] = "DEVICE_ONLINE=0";
--		break;
--	case PCI_ERS_RESULT_RECOVERED:
--		envp[idx++] = "ERROR_EVENT=SUCCESSFUL_RECOVERY";
--		envp[idx++] = "DEVICE_ONLINE=1";
--		break;
--	case PCI_ERS_RESULT_DISCONNECT:
--		envp[idx++] = "ERROR_EVENT=FAILED_RECOVERY";
--		envp[idx++] = "DEVICE_ONLINE=0";
--		break;
--	default:
--		break;
--	}
--
--	if (idx > 0) {
--		envp[idx++] = NULL;
--		kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, envp);
--	}
+-	return dw_handle_msi_irq(pp);
 -}
-+#if defined(CONFIG_PCIEAER) || defined(CONFIG_EEH)
-+void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
-+#endif
+-
+ static void exynos_pcie_msi_init(struct exynos_pcie *ep)
+ {
+ 	struct dw_pcie *pci = ep->pci;
+@@ -431,15 +422,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+ 			dev_err(dev, "failed to get msi irq\n");
+ 			return pp->msi_irq;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					exynos_pcie_msi_irq_handler,
+-					IRQF_SHARED | IRQF_NO_THREAD,
+-					"exynos-pcie", ep);
+-		if (ret) {
+-			dev_err(dev, "failed to request msi irq\n");
+-			return ret;
+-		}
+ 	}
  
- /* Provide the legacy pci_dma_* API */
- #include <linux/pci-dma-compat.h>
+ 	pp->root_bus_nr = -1;
 -- 
-2.14.1
+2.7.4
