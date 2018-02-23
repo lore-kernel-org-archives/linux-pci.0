@@ -1,43 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:45274 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753124AbeBIW4s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Feb 2018 17:56:48 -0500
-From: Alex Hung <alex.hung@canonical.com>
-To: rjw@rjwysocki.net, lenb@kernel.org, alex.hung@canonical.com,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH] ACPI/PCI: pci_link: change log level of no _PRS messages
-Date: Fri,  9 Feb 2018 14:56:43 -0800
-Message-Id: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60708 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbeBWIYk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 03:24:40 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v11 6/7] PCI: Unify wait for link active into generic pci
+Date: Fri, 23 Feb 2018 13:54:03 +0530
+Message-Id: <1519374244-20539-7-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In recent Intel hardware the IRQs become non-configurable after BIOS
-initializes them in PEI phase and _PRS objects are no longer included in
-ASL.
+Clients such as pciehp, dpc are using pcie_wait_link_active, which waits
+till the link becomes active or inactive.
 
-This is the same as "static (non-configurable) devices do not
-specify a _PRS object" in ACPI spec. As a result, error messages
-saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
-be in kernel messages all the time but only when debug is enabled.
+Made generic function and moved it to drivers/pci/pci.c
 
-Signed-off-by: Alex Hung <alex.hung@canonical.com>
----
- drivers/acpi/pci_link.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index 85ad679..9d9cf24 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -173,7 +173,7 @@ static int acpi_pci_link_get_possible(struct acpi_pci_link *link)
- 	status = acpi_walk_resources(link->device->handle, METHOD_NAME__PRS,
- 				     acpi_pci_link_check_possible, link);
- 	if (ACPI_FAILURE(status)) {
--		ACPI_EXCEPTION((AE_INFO, status, "Evaluating _PRS"));
-+		acpi_handle_debug(link->device->handle, "failed to evaluate _PRS");
- 		return -ENODEV;
- 	}
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8..de9b0ea 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller *ctrl)
+ 	return ret;
+ }
  
+-static void __pcie_wait_link_active(struct controller *ctrl, bool active)
++static bool pcie_wait_link_active(struct controller *ctrl)
+ {
+-	int timeout = 1000;
+-
+-	if (pciehp_check_link_active(ctrl) == active)
+-		return;
+-	while (timeout > 0) {
+-		msleep(10);
+-		timeout -= 10;
+-		if (pciehp_check_link_active(ctrl) == active)
+-			return;
+-	}
+-	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
+-			active ? "set" : "cleared");
+-}
++	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 
+-static void pcie_wait_link_active(struct controller *ctrl)
+-{
+-	__pcie_wait_link_active(ctrl, true);
++	return pci_wait_for_link(pdev, true);
+ }
+ 
+ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f6a4dd1..f8d44b4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4176,6 +4176,37 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++/**
++ * pci_wait_for_link - Wait for link till its active/inactive
++ * @pdev: Bridge device
++ * @active: waiting for active or inactive ?
++ *
++ * Use this to wait till link becomes active or inactive.
++ */
++bool pci_wait_for_link(struct pci_dev *pdev, bool active)
++{
++	int timeout = 1000;
++	bool ret;
++	u16 lnk_status;
++
++	for (;;) {
++		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++		if (ret == active)
++			return true;
++		if (timeout <= 0)
++			break;
++		timeout -= 10;
++	}
++
++	dev_printk(KERN_DEBUG, &pdev->dev,
++		   "Data Link Layer Link Active not %s in 1000 msec\n",
++		   active ? "set" : "cleared");
++
++	return false;
++}
++EXPORT_SYMBOL(pci_wait_for_link);
++
+ void pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 5c01c63..e15bcda 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -120,19 +120,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ 
+ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ {
+-	unsigned long timeout = jiffies + HZ;
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	struct device *dev = &dpc->dev->device;
+-	u16 lnk_status;
+ 
+-	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
+-					!time_after(jiffies, timeout)) {
+-		msleep(10);
+-		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-	}
+-	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
+-		dev_warn(dev, "Link state not disabled for DPC event\n");
++	pci_wait_for_link(pdev, false);
+ }
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 024a1be..cb674c3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1195,6 +1195,7 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
+ int pci_request_selected_regions(struct pci_dev *, int, const char *);
+ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+ void pci_release_selected_regions(struct pci_dev *, int);
++bool pci_wait_for_link(struct pci_dev *pdev, bool active);
+ 
+ /* drivers/pci/bus.c */
+ struct pci_bus *pci_bus_get(struct pci_bus *bus);
 -- 
-2.7.4
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
