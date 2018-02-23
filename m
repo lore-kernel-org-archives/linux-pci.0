@@ -1,83 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from thoth.sbs.de ([192.35.17.2]:47583 "EHLO thoth.sbs.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966072AbeCAFlL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 00:41:11 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Benedikt Spranger <b.spranger@linutronix.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Otavio Pontes <otavio.pontes@intel.com>,
-        Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH v3 0/6] jailhouse: Enhance secondary Jailhouse guest support /wrt PCI
-Date: Thu,  1 Mar 2018 06:40:43 +0100
-Message-Id: <cover.1519882849.git.jan.kiszka@siemens.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:50152 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751541AbeBWPKk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 10:10:40 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
+Subject: [PATCH v7 9/9] PCI: dwc: Expand maximum number of IRQs from 32 to 256
+Date: Fri, 23 Feb 2018 15:10:32 +0000
+Message-Id: <9790c7af149503e03c48ccacfe2d29a456c2c699.1519318663.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Basic x86 support [1] for running Linux as secondary Jailhouse [2] guest
-is currently pending in the tip tree. This builds on top and enhances
-the PCI support for x86 and also ARM guests (ARM[64] does not require
-platform patches and works already).
+The Synopsys PCIe Root Complex supports up to 256 IRQs distributed by 8
+controller registers.
 
-Key elements of this series are:
- - detection of Jailhouse via device tree hypervisor node
- - function-level PCI scan if Jailhouse is detected
- - MMCONFIG support for x86 guests
+Having this in mind, the number of the maximum number of IRQs was changed
+to 256 and now the number of controllers is calculated based on the number
+of vectors used by the specific SoC driver.
 
-As most changes affect x86, I would suggest to route the series also via
-tip after the necessary acks are collected.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- New patch file.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Patch renamed from v3-0009 to v4-0010.
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
+Change v5->v6:
+- Nothing changed, just to follow the patch set version.
+Change v6->v7:
+- Nothing changed, just to follow the patch set version.
 
-Changes in v3:
- - avoided duplicate scans of PCI functions under Jailhouse
- - reformated PCI_MMCONFIG condition and rephrase related commit log
+ drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
+ drivers/pci/dwc/pcie-designware.h      | 10 +++-------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-Changes in v2:
- - adjusted commit log and include ordering in patch 2
- - rebased over Linus master
-
-Jan
-
-[1] https://lkml.org/lkml/2017/11/27/125
-[2] http://jailhouse-project.org
-
-CC: Benedikt Spranger <b.spranger@linutronix.de>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Otavio Pontes <otavio.pontes@intel.com>
-CC: Rob Herring <robh+dt@kernel.org>
-
-Jan Kiszka (5):
-  jailhouse: Provide detection for non-x86 systems
-  PCI: Scan all functions when running over Jailhouse
-  x86: Consolidate PCI_MMCONFIG configs
-  x86/jailhouse: Allow to use PCI_MMCONFIG without ACPI
-  MAINTAINERS: Add entry for Jailhouse
-
-Otavio Pontes (1):
-  x86/jailhouse: Enable PCI mmconfig access in inmates
-
- Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
- MAINTAINERS                                     |  7 +++++++
- arch/x86/Kconfig                                | 11 ++++++-----
- arch/x86/include/asm/jailhouse_para.h           |  2 +-
- arch/x86/include/asm/pci_x86.h                  |  2 ++
- arch/x86/kernel/Makefile                        |  2 +-
- arch/x86/kernel/cpu/amd.c                       |  2 +-
- arch/x86/kernel/jailhouse.c                     |  7 +++++++
- arch/x86/pci/legacy.c                           |  4 +++-
- arch/x86/pci/mmconfig-shared.c                  |  4 ++--
- drivers/pci/probe.c                             | 22 +++++++++++++++++++---
- include/linux/hypervisor.h                      | 17 +++++++++++++++--
- 12 files changed, 72 insertions(+), 16 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
-
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 2dc4941..bcadf82 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -79,11 +79,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+ /* MSI int handler */
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ {
+-	u32 val;
+ 	int i, pos, irq;
++	u32 val, num_ctrls;
+ 	irqreturn_t ret = IRQ_NONE;
+ 
+-	for (i = 0; i < MAX_MSI_CTRLS; i++) {
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
++	for (i = 0; i < num_ctrls; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+ 				    &val);
+ 		if (!val)
+@@ -644,13 +646,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+-	u32 val, ctrl;
++	u32 val, ctrl, num_ctrls;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 
+ 	dw_pcie_setup(pci);
+ 
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
+ 	/* Initialize IRQ Status array */
+-	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
++	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+ 				    &pp->irq_status[ctrl]);
+ 	/* setup RC BARs */
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index c77c2e0..074bd14 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -110,13 +110,9 @@
+ #define MSI_MESSAGE_DATA_32		0x58
+ #define MSI_MESSAGE_DATA_64		0x5C
+ 
+-/*
+- * Maximum number of MSI IRQs can be 256 per controller. But keep
+- * it 32 as of now. Probably we will never need more than 32. If needed,
+- * then increment it in multiple of 32.
+- */
+-#define MAX_MSI_IRQS			32
+-#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
++#define MAX_MSI_IRQS			256
++#define MAX_MSI_IRQS_PER_CTRL		32
++#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+ #define MSI_DEF_NUM_VECTORS		32
+ 
+ /* Maximum number of inbound/outbound iATUs */
 -- 
-2.13.6
+2.7.4
