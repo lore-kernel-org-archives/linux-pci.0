@@ -1,147 +1,137 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-CC: Mark Rutland <Mark.Rutland@arm.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        Catalin Marinas <Catalin.Marinas@arm.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        Sudeep Holla <Sudeep.Holla@arm.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        Joerg Roedel <joro@8bytes.org>
-Subject: RE: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
-Date: Tue, 27 Feb 2018 06:21:58 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D19101C8A7@SHSMSX101.ccr.corp.intel.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-2-jean-philippe.brucker@arm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D191002823@SHSMSX101.ccr.corp.intel.com>
- <b3c190e7-1a33-971e-b86c-a9725118ba05@arm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D191003B1B@SHSMSX101.ccr.corp.intel.com>
- <0b579768-3090-dd50-58b1-3385be92ef21@arm.com>
-In-Reply-To: <0b579768-3090-dd50-58b1-3385be92ef21@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from esa4.dell-outbound.iphmx.com ([68.232.149.214]:33416 "EHLO
+        esa4.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754520AbeBWTHB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 14:07:01 -0500
+From: <Mario.Limonciello@dell.com>
+To: <helgaas@kernel.org>
+CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>,
+        <andriy.shevchenko@linux.intel.com>, <lenb@kernel.org>,
+        <michael.jamet@intel.com>, <yehezkel.bernat@intel.com>,
+        <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <mika.westerberg@linux.intel.com>
+Subject: RE: [PATCH v2 1/5] PCI: Make sure all bridges reserve at least one
+ bus number
+Date: Fri, 23 Feb 2018 19:06:59 +0000
+Message-ID: <5506aacec14e4696a6f306ebd7df6fd2@ausx13mpc120.AMER.DELL.COM>
+References: <20180215144000.60456-1-mika.westerberg@linux.intel.com>
+ <20180215144000.60456-2-mika.westerberg@linux.intel.com>
+ <20180223002733.GH14632@bhelgaas-glaptop.roam.corp.google.com>
+ <c00e7c7a-6ebd-41b6-a924-92a2070e3db3@Dell.com>
+ <20180223172543.GK14632@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180223172543.GK14632@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Jean-Philippe Brucker [mailto:jean-philippe.brucker@arm.com]
-> Sent: Thursday, February 15, 2018 8:42 PM
-> 
-> On 13/02/18 23:43, Tian, Kevin wrote:
-> >> From: Jean-Philippe Brucker
-> >> Sent: Tuesday, February 13, 2018 8:40 PM
-> >>
-> >>
-> >> [...]
-> >>>> +
-> >>>> +/**
-> >>>> + * iommu_sva_device_init() - Initialize Shared Virtual Addressing for
-> a
-> >>>> device
-> >>>> + * @dev: the device
-> >>>> + * @features: bitmask of features that need to be initialized
-> >>>> + * @max_pasid: max PASID value supported by the device
-> >>>> + *
-> >>>> + * Users of the bind()/unbind() API must call this function to initialize
-> all
-> >>>> + * features required for SVA.
-> >>>> + *
-> >>>> + * - If the device should support multiple address spaces (e.g. PCI
-> >> PASID),
-> >>>> + *   IOMMU_SVA_FEAT_PASID must be requested.
-> >>>
-> >>> I think it is by default assumed when using this API, based on definition
-> of
-> >>> SVA. Can you elaborate the situation where this flag can be cleared?
-> >>
-> >> When passing a device to userspace, you could also share its non-pasid
-> >> address space with the process. It requires a new domain type so is left
-> >> as a TODO in patch 2/37. I did get requests for this feature, though I
-> >> think it was mostly for prototyping. I guess I could remove the flag, and
-> >> reintroduce it as IOMMU_SVA_FEAT_NO_PASID later on.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Friday, February 23, 2018 11:26 AM
+> To: Limonciello, Mario <Mario_Limonciello@Dell.com>
+> Cc: bhelgaas@google.com; rjw@rjwysocki.net;
+> andriy.shevchenko@linux.intel.com; lenb@kernel.org; michael.jamet@intel.c=
+om;
+> yehezkel.bernat@intel.com; linux-acpi@vger.kernel.org; linux-
+> pci@vger.kernel.org; mika.westerberg@linux.intel.com
+> Subject: Re: [PATCH v2 1/5] PCI: Make sure all bridges reserve at least o=
+ne bus
+> number
+>=20
+> On Fri, Feb 23, 2018 at 12:52:18AM +0000, Mario.Limonciello@dell.com wrot=
+e:
+> > On Feb 22, 2018 18:27, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > On Thu, Feb 15, 2018 at 05:39:55PM +0300, Mika Westerberg wrote:
+> > > > When distributing extra buses between hotplug bridges we need to ma=
+ke
+> > > > sure each bridge reserve at least one bus number, even if there is
+> > > > currently nothing connected to it. For instance ACPI hotplug may br=
+ing
+> > > > in additional devices to non-hotplug bridges later on. To make sure=
+ we
+> > > > don't run out of bus numbers for non-hotplug bridges reserve one bu=
+s
+> > > > number for them upfront before distributing buses for hotplug bridg=
+es.
+> > > >
+> > > > Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-ca=
+pable
+> bridges")
+> > > > Reported-by: Mario Limonciello <mario.limonciello@dell.com>
+> > >
+> > > Is there a bugzilla or email URL we can include here?
 > >
-> > sorry I still didn't get the definition of non-pasid address space.
-> > Did you mean the GPA/IOVA address space and no_pasid implies
-> > actually some default PASID associated?
-> 
-> Yes I mean merging the process address space and IOVA space. There are
-> no
-> PASIDs involved if the device or the IOMMU doesn't support it. Instead of
-> private DMA page tables you program the mm pgd into the IOMMU. A VFIO
-> userspace driver, instead of sending MAP/UNMAP ioctl, could simply issue
-> a
-> BIND.
-
-got it. yes it's better to remove it for now which can avoid
-unnecessary confusion. :-)
-
-> 
-> Technically nothing prevents it, but now the resv problem discussed on
-> patch 2/37 stands out. For example on x86 you'd probably need to carve
-> the
-> IOAPIC MSI range out of the process address space. On Arm you'd need to
-> create a write-only mapping for MSIs (IOMMU translates it to the IRQ chip
-> address, but thankfully accessing the doorbell from CPU side doesn't
-> trigger an MSI.)
-
-so if overlap already exists when binding a process address space
-(since binding may happen much later than creating the process),
-I assume the call will simply fail since carve out at this point is not
-possible?
-
-> 
-> >> [...]
-> >>>> +	ret = domain->ops->sva_device_init(dev, features, &min_pasid,
-> >>>> +					   &max_pasid);
-> >>>> +	if (ret)
-> >>>> +		return ret;
-> >>>> +
-> >>>> +	/* FIXME: racy. Next version should have a mutex (same as fault
-> >>>> handler) */
-> >>>> +	dev_param->sva_features = features;
-> >>>> +	dev_param->min_pasid = min_pasid;
-> >>>> +	dev_param->max_pasid = max_pasid;
-> >>>
-> >>> what's the point of min_pasid here?
-> >>
-> >> Arm SMMUv3 uses entry 0 of the PASID table for the default (non-pasid)
-> >> context, so it needs to set min_pasid to 1. AMD IOMMU recently added
-> a
-> >> similar feature (GIoSup), if I understood correctly.
-> >>
+> > Sorry it was private communication that I believe Mika is referring to =
+in Reported-
+> By here.
 > >
-> > just for such purpose maybe we should just define a reserved_pasid
-> > otherwise there will be some waste if an implementation allows it
-> > non-zero.
-> 
-> What's wasted? It's slightly simpler to use min_pasid because we just pass
-> that limit to idr_alloc(). With a reserved_pasid we'll have to call
-> idr_alloc(reserved_pasid) once, for the same result.
-> 
+> > You can remove the tag if you think it's inappropriate for this commit.
+>=20
+> I like to give credit whenever possible, so I wouldn't necessarily
+> remove the Reported-by.
+>=20
+> But it would be very useful to also have a URL to something with more
+> details, e.g., what sort of failure the user would observe, dmesg
+> logs, PCI topology, etc.
+>=20
+> This information can certainly be redacted to remove any proprietary
+> things that can't be made public.  Usually that isn't of interest to
+> structural issues like this anyway.
 
-I'm thinking about the case where an implementation allows
-software to define a random reserved_pasid, then banning
-all pasids below reserved one could be a waste. But after
-more thinking it is not a big problem. We can request such
-driver to use 0 as reserved_pasid then same situation as
-ARM side.
+It was a result of a very long communication chain, but I think I pulled
+out the relevant details here if you would like a URL to include:
+https://gist.github.com/superm1/100a2ed20449f684ebb84c392e35dbed
 
-Thanks
-Kevin
+Thank you.
+
+>=20
+> > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > Cc: stable@vger.kernel.org
+> > > > ---
+> > > >  drivers/pci/probe.c | 11 ++++++++---
+> > > >  1 file changed, 8 insertions(+), 3 deletions(-)
+> > > >
+> > > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > > index ef5377438a1e..6cefd47556e3 100644
+> > > > --- a/drivers/pci/probe.c
+> > > > +++ b/drivers/pci/probe.c
+> > > > @@ -2561,7 +2561,10 @@ static unsigned int
+> pci_scan_child_bus_extend(struct pci_bus *bus,
+> > > >  for_each_pci_bridge(dev, bus) {
+> > > >  cmax =3D max;
+> > > >  max =3D pci_scan_bridge_extend(bus, dev, max, 0, 0);
+> > > > - used_buses +=3D cmax - max;
+> > > > + /* Reserve one bus for each bridge */
+> > > > + used_buses++;
+> > > > + if (cmax - max > 1)
+> > > > + used_buses +=3D cmax - max - 1;
+> > > >  }
+> > > >
+> > > >  /* Scan bridges that need to be reconfigured */
+> > > > @@ -2584,12 +2587,14 @@ static unsigned int
+> pci_scan_child_bus_extend(struct pci_bus *bus,
+> > > >  * bridges if any.
+> > > >  */
+> > > >  buses =3D available_buses / hotplug_bridges;
+> > > > - buses =3D min(buses, available_buses - used_buses);
+> > > > + buses =3D min(buses, available_buses - used_buses + 1);
+> > > >  }
+> > > >
+> > > >  cmax =3D max;
+> > > >  max =3D pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
+> > > > - used_buses +=3D max - cmax;
+> > > > + /* One bus is already accounted so don't add it again */
+> > > > + if (max - cmax > 1)
+> > > > + used_buses +=3D max - cmax - 1;
+> > > >  }
+> > > >
+> > > >  /*
+> > > > --
+> > > > 2.15.1
+> > > >
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-acp=
+i" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
