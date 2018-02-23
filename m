@@ -1,66 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43970 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1031247AbeBNPcS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Feb 2018 10:32:18 -0500
-Date: Wed, 14 Feb 2018 15:32:11 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: kdinh@apm.com, Bjorn Helgaas <bhelgaas@google.com>, dhdang@apm.com,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: xgene: Fix the error return code
-Message-ID: <20180214153211.GA13711@e107981-ln.cambridge.arm.com>
-References: <1513730309-18831-1-git-send-email-festevam@gmail.com>
- <20171220121438.GB1709@red-moon>
- <CAOMZO5CwQwxeuaswRHmgY=KA8o8-Zidz0N5tVFhtn9iZJqqh=A@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 23 Feb 2018 15:40:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 4/4] pci: Re-use new dmi_get_bios_year() helper
+Message-ID: <20180223214051.GN14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
+ <20180222125923.57385-4-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOMZO5CwQwxeuaswRHmgY=KA8o8-Zidz0N5tVFhtn9iZJqqh=A@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180222125923.57385-4-andriy.shevchenko@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 13, 2018 at 11:45:15PM -0200, Fabio Estevam wrote:
-> Khuong Dinh, Lorenzo,
+Please use
+
+  PCI: Re-use ...
+
+to match the prevailing drivers/pci style.
+
+On Thu, Feb 22, 2018 at 02:59:23PM +0200, Andy Shevchenko wrote:
+> ...instead of open coding its functionality.
+
+Same comment about making the changelog complete, independent of the
+subject.
+
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Let me know if you want me to take the series.  Otherwise I'll assume it
+goes elsewhere.
+
+> ---
+>  drivers/pci/pci.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
 > 
-> On Wed, Dec 20, 2017 at 10:14 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > [+ Khuong Dinh]
-> >
-> > On Tue, Dec 19, 2017 at 10:38:29PM -0200, Fabio Estevam wrote:
-> >> In the case of IS_ERR() error, we should return PTR_ERR().
-> >>
-> >> Fix the error return code.
-> >>
-> >> Signed-off-by: Fabio Estevam <festevam@gmail.com>
-> >> ---
-> >>  drivers/pci/host/pci-xgene-msi.c | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > I am about to apply this patch, please let me know if you see
-> > any issue with that.
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f6a4dd10d9b0..ae654e21439d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2258,8 +2258,6 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+>   */
+>  bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>  {
+> -	unsigned int year;
+> -
+>  	if (!pci_is_pcie(bridge))
+>  		return false;
+>  
+> @@ -2287,10 +2285,8 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>  		 * It should be safe to put PCIe ports from 2015 or newer
+>  		 * to D3.
+>  		 */
+> -		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
+> -		    year >= 2015) {
+> +		if (dmi_get_bios_year() >= 2015)
+>  			return true;
+> -		}
+>  		break;
+>  	}
+>  
+> -- 
+> 2.16.1
 > 
-> A gente ping.
-
-Applied to pci/xgene for v4.17, sorry for the delay.
-
-Lorenzo
-
-> > Thanks,
-> > Lorenzo
-> >
-> >> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> >> index 1f42a20..4a1fb01 100644
-> >> --- a/drivers/pci/host/pci-xgene-msi.c
-> >> +++ b/drivers/pci/host/pci-xgene-msi.c
-> >> @@ -465,7 +465,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
-> >>       xgene_msi->msi_regs = devm_ioremap_resource(&pdev->dev, res);
-> >>       if (IS_ERR(xgene_msi->msi_regs)) {
-> >>               dev_err(&pdev->dev, "no reg space\n");
-> >> -             rc = -EINVAL;
-> >> +             rc = PTR_ERR(xgene_msi->msi_regs);
-> >>               goto error;
-> >>       }
-> >>       xgene_msi->msi_addr = res->start;
-> >> --
-> >> 2.7.4
-> >>
