@@ -1,42 +1,38 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.com>, linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 1/4] dmi: Introduce dmi_get_bios_year() helper
-Date: Thu, 22 Feb 2018 14:59:20 +0200
-Message-Id: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=0j6w=FR=ellerman.id.au=mpe@kernel.org>
+Return-Path: <SRS0=0j6w=FR=ellerman.id.au=mpe@kernel.org>
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org, torvalds@linux-foundation.org, ruscur@russell.cc, bryantly@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com
+Subject: Re: [PATCH] PCI/AER: Move pci_uevent_ers() out of pci.h
+In-Reply-To: <20180222231251.GC14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180208122035.9305-1-mpe@ellerman.id.au> <20180222231251.GC14632@bhelgaas-glaptop.roam.corp.google.com>
+Date: Fri, 23 Feb 2018 15:09:32 +1100
+Message-ID: <87k1v4pcsj.fsf@concordia.ellerman.id.au>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-It's used in several places and more users may come.
-By using this helper they may create a slightly cleaner code.
+Bjorn Helgaas <helgaas@kernel.org> writes:
+> On Thu, Feb 08, 2018 at 11:20:35PM +1100, Michael Ellerman wrote:
+>> There's no reason pci_uevent_ers() needs to be inline in pci.h, so
+>> move it out to a C file.
+>> 
+>> Given it's used by AER the obvious location would be somewhere in
+>> drivers/pci/pcie/aer, but because it's also used by powerpc EEH code
+>> unfortunately that doesn't work in the case where EEH is enabled but
+>> PCIEPORTBUS is not.
+>> 
+>> So for now put it in pci-driver.c, next to pci_uevent(), with an
+>> appropriate #ifdef so it's not built if AER and EEH are both disabled.
+>> 
+>> While we're moving it also fix up the kernel doc comment for @pdev to
+>> be accurate.
+>> 
+>> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+>> Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
+>
+> Applied to pci/aer for v4.17, thanks!
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- include/linux/dmi.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+Thanks.
 
-diff --git a/include/linux/dmi.h b/include/linux/dmi.h
-index 46e151172d95..241c27008c70 100644
---- a/include/linux/dmi.h
-+++ b/include/linux/dmi.h
-@@ -147,4 +147,11 @@ static inline const struct dmi_system_id *
- 
- #endif
- 
-+static inline int dmi_get_bios_year(void)
-+{
-+	int year;
-+	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
-+	return year;
-+}
-+
- #endif	/* __DMI_H__ */
--- 
-2.16.1
-
+cheers
