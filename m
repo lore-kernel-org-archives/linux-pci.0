@@ -1,89 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:46290 "EHLO
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55002 "EHLO
         foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933563AbeBVSTI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Feb 2018 13:19:08 -0500
-Date: Thu, 22 Feb 2018 18:19:01 +0000
+        id S1750827AbeBWOGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Feb 2018 09:06:50 -0500
+Date: Fri, 23 Feb 2018 14:06:43 +0000
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-Cc: kishon@ti.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Subject: Re: [PATCH 1/2] pci: endpoint: Free func_name after last usage
-Message-ID: <20180222181901.GA13694@e107981-ln.cambridge.arm.com>
-References: <20180221124707.26308-1-embedded24@evers-fischer.de>
- <20180221124707.26308-2-embedded24@evers-fischer.de>
+To: Colin King <colin.king@canonical.com>
+Cc: Simon Horman <horms@verge.net.au>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar-gen2: remove duplicated bit-wise or of
+ RCAR_PCI_INT_SIGRETABORT
+Message-ID: <20180223140643.GA24211@e107981-ln.cambridge.arm.com>
+References: <20180223122949.24291-1-colin.king@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180221124707.26308-2-embedded24@evers-fischer.de>
+In-Reply-To: <20180223122949.24291-1-colin.king@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 21, 2018 at 01:47:06PM +0100, Rolf Evers-Fischer wrote:
-> From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+On Fri, Feb 23, 2018 at 12:29:49PM +0000, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> This commit decreases the number of jump labels and ensures
-> that the next commit doesn't increase the number of occurrences
-> of 'kfree(func_name)'.
+> Bit pattern RCAR_PCI_INT_SIGRETABORT is being bit-wise or'd twice;
+> remove the redundant 2nd RCAR_PCI_INT_SIGRETABORT.
 > 
-> Change-Id: I0d1b6fd652395b85f82b11c43bf9b7db512854d1
-> Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-> Signed-off-by: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > ---
->  drivers/pci/endpoint/pci-epf-core.c | 7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
+>  drivers/pci/host/pci-rcar-gen2.c | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-> index 766ce1dca2ec..23d0e128d1a5 100644
-> --- a/drivers/pci/endpoint/pci-epf-core.c
-> +++ b/drivers/pci/endpoint/pci-epf-core.c
-> @@ -220,9 +220,10 @@ struct pci_epf *pci_epf_create(const char *name)
->  	*buf = '\0';
->  
->  	epf->name = kstrdup(func_name, GFP_KERNEL);
-> +	kfree(func_name);
+> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
 
-I am certainly missing something but what if we reworked the code
-and just:
+Applied to pci/rcar for v4.17, thanks !
 
-kstrdup(name, GFP_KERNEL);
-
-once instead of allocating another local copy (that we then have to
-free) ?
-
-Reworded: why
-
-epf->name = func_name;
-
-would not work ?
-
-Thanks,
 Lorenzo
 
->  	if (!epf->name) {
->  		ret = -ENOMEM;
-> -		goto free_func_name;
-> +		goto free_epf;
->  	}
->  
->  	dev = &epf->dev;
-> @@ -238,16 +239,12 @@ struct pci_epf *pci_epf_create(const char *name)
->  	if (ret)
->  		goto put_dev;
->  
-> -	kfree(func_name);
->  	return epf;
->  
->  put_dev:
->  	put_device(dev);
->  	kfree(epf->name);
->  
-> -free_func_name:
-> -	kfree(func_name);
-> -
->  free_epf:
->  	kfree(epf);
->  
+> index a28370bb2b2a..dd4f1a6b57c5 100644
+> --- a/drivers/pci/host/pci-rcar-gen2.c
+> +++ b/drivers/pci/host/pci-rcar-gen2.c
+> @@ -52,7 +52,6 @@
+>  #define RCAR_PCI_INT_B			(1 << 17)
+>  #define RCAR_PCI_INT_PME		(1 << 19)
+>  #define RCAR_PCI_INT_ALLERRORS (RCAR_PCI_INT_SIGTABORT		| \
+> -				RCAR_PCI_INT_SIGRETABORT	| \
+>  				RCAR_PCI_INT_SIGRETABORT	| \
+>  				RCAR_PCI_INT_REMABORT		| \
+>  				RCAR_PCI_INT_PERR		| \
 > -- 
-> 2.16.2
+> 2.15.1
 > 
