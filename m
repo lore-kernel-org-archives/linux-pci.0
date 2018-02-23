@@ -1,147 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38502 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752816AbeBVHqu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 02:46:50 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v9 7/7] PCI/DPC: Enumerate the devices after DPC trigger event
-Date: Thu, 22 Feb 2018 13:16:11 +0530
-Message-Id: <1519285571-5634-8-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
-References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:50215 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751873AbeBWPKm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 10:10:42 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
+Subject: [PATCH v7 7/9] PCI: dwc: keystone: Switch to use the new IRQ API
+Date: Fri, 23 Feb 2018 15:10:30 +0000
+Message-Id: <e370c7110fb37a167627d54edffae989d3f275d6.1519318663.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement error_resume callback in DPC so, after DPC trigger event
-enumerates the devices beneath.
+Changes KeyStone SoC specific driver to use the new IRQ API available
+in pcie-designware.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Adds new callback (ks_dw_pcie_msi_irq_ack) to dw_pcie_host_ops to handle a
+specific KeyStone behavior.
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index fce4518..59c01c7 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -129,6 +129,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Removed hardcoded num_vectors configuration (now it is done in the core
+driver by default).
+Change v2->v3:
+- Added Kishon's fixes (PCI end point error and a dra7xx warning).
+Change v3->v4:
+- Moved Kishon's fixes to v4-0001 patch file.
+- Moved msi_host_init function signature change to a new v4-0008 patch file.
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Fix rebase problem.
+- Implemented Kishon's suggestion.
+Change v5->v6:
+- Nothing changed, just to follow the patch set version.
+Change v6->v7:
+- Nothing changed, just to follow the patch set version.
+
+ drivers/pci/dwc/pci-keystone-dw.c | 89 ++-------------------------------------
+ drivers/pci/dwc/pci-keystone.c    |  1 +
+ drivers/pci/dwc/pci-keystone.h    |  1 +
+ 3 files changed, 6 insertions(+), 85 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+index 2fb20b8..ace498e 100644
+--- a/drivers/pci/dwc/pci-keystone-dw.c
++++ b/drivers/pci/dwc/pci-keystone-dw.c
+@@ -124,20 +124,15 @@ void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie, int offset)
+ 	}
  }
  
- /**
-+ * dpc_error_resume - enumerate the devices beneath
-+ * @dev: pointer to Root Port's pci_dev data structure
-+ *
-+ * Invoked by Port Bus driver during nonfatal recovery.
-+ */
-+static void dpc_error_resume(struct pci_dev *pdev)
-+{
-+	bool active = true;
-+
-+	if (pci_wait_for_link(pdev, active)) {
-+		pci_lock_rescan_remove();
-+		pci_rescan_bus(pdev->bus);
-+		pci_unlock_rescan_remove();
-+	}
-+}
-+
-+/**
-  * dpc_reset_link - reset link DPC  routine
-  * @dev: pointer to Root Port's pci_dev data structure
-  *
-@@ -366,6 +383,7 @@ static void dpc_remove(struct pcie_device *dev)
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
-+	.error_resume	= dpc_error_resume,
- 	.reset_link     = dpc_reset_link,
+-static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
++void ks_dw_pcie_msi_irq_ack(int irq, struct pcie_port *pp)
+ {
+-	u32 offset, reg_offset, bit_pos;
++	u32 reg_offset, bit_pos;
+ 	struct keystone_pcie *ks_pcie;
+-	struct msi_desc *msi;
+-	struct pcie_port *pp;
+ 	struct dw_pcie *pci;
+ 
+-	msi = irq_data_get_msi_desc(d);
+-	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+ 	pci = to_dw_pcie_from_pp(pp);
+ 	ks_pcie = to_keystone_pcie(pci);
+-	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+-	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
++	update_reg_offset_bit_pos(irq, &reg_offset, &bit_pos);
+ 
+ 	ks_dw_app_writel(ks_pcie, MSI0_IRQ_STATUS + (reg_offset << 4),
+ 			 BIT(bit_pos));
+@@ -166,85 +161,9 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+ 			 BIT(bit_pos));
+ }
+ 
+-static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
+-{
+-	struct msi_desc *msi;
+-	struct pcie_port *pp;
+-	u32 offset;
+-
+-	msi = irq_data_get_msi_desc(d);
+-	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+-	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+-
+-	/* Mask the end point if PVM implemented */
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		if (msi->msi_attrib.maskbit)
+-			pci_msi_mask_irq(d);
+-	}
+-
+-	ks_dw_pcie_msi_clear_irq(pp, offset);
+-}
+-
+-static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
+-{
+-	struct msi_desc *msi;
+-	struct pcie_port *pp;
+-	u32 offset;
+-
+-	msi = irq_data_get_msi_desc(d);
+-	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+-	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+-
+-	/* Mask the end point if PVM implemented */
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		if (msi->msi_attrib.maskbit)
+-			pci_msi_unmask_irq(d);
+-	}
+-
+-	ks_dw_pcie_msi_set_irq(pp, offset);
+-}
+-
+-static struct irq_chip ks_dw_pcie_msi_irq_chip = {
+-	.name = "Keystone-PCIe-MSI-IRQ",
+-	.irq_ack = ks_dw_pcie_msi_irq_ack,
+-	.irq_mask = ks_dw_pcie_msi_irq_mask,
+-	.irq_unmask = ks_dw_pcie_msi_irq_unmask,
+-};
+-
+-static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+-			      irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
+-				 handle_level_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-
+-	return 0;
+-}
+-
+-static const struct irq_domain_ops ks_dw_pcie_msi_domain_ops = {
+-	.map = ks_dw_pcie_msi_map,
+-};
+-
+ int ks_dw_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
+ {
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
+-	struct device *dev = pci->dev;
+-	int i;
+-
+-	pp->irq_domain = irq_domain_add_linear(ks_pcie->msi_intc_np,
+-					MAX_MSI_IRQS,
+-					&ks_dw_pcie_msi_domain_ops,
+-					chip);
+-	if (!pp->irq_domain) {
+-		dev_err(dev, "irq domain init failed\n");
+-		return -ENXIO;
+-	}
+-
+-	for (i = 0; i < MAX_MSI_IRQS; i++)
+-		irq_create_mapping(pp->irq_domain, i);
+-
+-	return 0;
++	return dw_pcie_allocate_domains(pp);
+ }
+ 
+ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
+diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+index 3940559..3909c50 100644
+--- a/drivers/pci/dwc/pci-keystone.c
++++ b/drivers/pci/dwc/pci-keystone.c
+@@ -300,6 +300,7 @@ static const struct dw_pcie_host_ops keystone_pcie_host_ops = {
+ 	.msi_clear_irq = ks_dw_pcie_msi_clear_irq,
+ 	.get_msi_addr = ks_dw_pcie_get_msi_addr,
+ 	.msi_host_init = ks_dw_pcie_msi_host_init,
++	.msi_irq_ack = ks_dw_pcie_msi_irq_ack,
+ 	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
  };
  
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 6844347..4950f49 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -236,6 +236,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
-  * @state: error state
-  * @error_mesg: message to print
-  * @cb: callback to be broadcasted
-+ * @severity: error severity
-  *
-  * Invoked during error recovery process. Once being invoked, the content
-  * of error severity will be broadcasted to all downstream drivers in a
-@@ -244,7 +245,8 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
- static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 	enum pci_channel_state state,
- 	char *error_mesg,
--	int (*cb)(struct pci_dev *, void *))
-+	int (*cb)(struct pci_dev *, void *),
-+	int severity)
- {
- 	struct aer_broadcast_data result_data;
- 
-@@ -256,6 +258,15 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 		result_data.result = PCI_ERS_RESULT_RECOVERED;
- 
- 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		/* If DPC is triggered, call resume error hanlder
-+		 * because, at this point we can safely assume that
-+		 * link recovery has happened.
-+		 */
-+		if ((severity == DPC_FATAL) &&
-+			(cb == report_resume)) {
-+			cb(dev, NULL);
-+			return PCI_ERS_RESULT_RECOVERED;
-+		}
- 		/*
- 		 * If the error is reported by a bridge, we think this error
- 		 * is related to the downstream link of the bridge, so we
-@@ -305,7 +316,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 	status = broadcast_error_message(dev,
- 			state,
- 			"error_detected",
--			report_error_detected);
-+			report_error_detected,
-+			severity);
- 
- 	if ((severity == AER_FATAL) ||
- 	    (severity == DPC_FATAL)) {
-@@ -321,7 +333,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 		status = broadcast_error_message(dev,
- 				state,
- 				"mmio_enabled",
--				report_mmio_enabled);
-+				report_mmio_enabled,
-+				severity);
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
- 		/*
-@@ -332,7 +345,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 		status = broadcast_error_message(dev,
- 				state,
- 				"slot_reset",
--				report_slot_reset);
-+				report_slot_reset,
-+				severity);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
-@@ -342,7 +356,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 	broadcast_error_message(dev,
- 				state,
- 				"resume",
--				report_resume);
-+				report_resume,
-+				severity);
- 
- 	dev_info(&dev->dev, "Device recovery successful\n");
- 	mutex_unlock(&pci_err_recovery_lock);
+diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
+index 30b7bc2..aed3c73 100644
+--- a/drivers/pci/dwc/pci-keystone.h
++++ b/drivers/pci/dwc/pci-keystone.h
+@@ -53,6 +53,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		unsigned int devfn, int where, int size, u32 *val);
+ void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie);
+ void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie);
++void ks_dw_pcie_msi_irq_ack(int i, struct pcie_port *pp);
+ void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq);
+ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq);
+ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp);
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.7.4
