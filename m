@@ -1,77 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53400 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750767AbeBZR02 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Feb 2018 12:26:28 -0500
-Date: Mon, 26 Feb 2018 17:26:18 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: kishon@ti.com, Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] misc: pci_endpoint_test: Handle 64-bit BARs
- properly
-Message-ID: <20180226172618.GA26815@e107981-ln.cambridge.arm.com>
-References: <20180208123346.20784-1-niklas.cassel@axis.com>
- <20180208123346.20784-3-niklas.cassel@axis.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180208123346.20784-3-niklas.cassel@axis.com>
+Received: from lucky1.263xmail.com ([211.157.147.131]:40780 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751353AbeBWBVS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 20:21:18 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 0/6] Add endpoint driver for Rockchip PCIe controller
+Date: Fri, 23 Feb 2018 09:15:03 +0800
+Message-Id: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 08, 2018 at 01:33:45PM +0100, Niklas Cassel wrote:
-> A 64-bit BAR uses the succeeding BAR for the upper bits,
-> so we cannot simply call pci_ioremap_bar() on every single BAR.
-> 
-> Ignore BARs that does not have a valid resource length.
-> 
-> pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
-> pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
-> pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
-> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
-> pci-endpoint-test 0000:01:00.0: failed to read BAR1
-> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
-> pci-endpoint-test 0000:01:00.0: failed to read BAR3
-> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
-> pci-endpoint-test 0000:01:00.0: failed to read BAR5
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
-> Lorenzo/Bjorn: pci_resource_len() seems to fix my problem,
-> but is it the correct function to use here?
-> If BAR[x] is a 64-bit BAR, I'm assuming that pci_resource_len() on BAR[x+1]
-> will always return 0 (since BAR[x+1] cannot have any prefetchable/type bits
-> when BAR[x] is 64-bit).
-> 
->  drivers/misc/pci_endpoint_test.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index 320276f42653..3af31bfdcfdd 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -534,6 +534,8 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
->  	}
->  
->  	for (bar = BAR_0; bar <= BAR_5; bar++) {
-> +		if (pci_resource_len(pdev, bar) == 0)
-> +			continue;
 
-Should not it be handled by checking the resource flags as you loop
-through the bar counter and incrementing the bar counter (+1) if
-IORESOURCE_MEM_64 is detected ?
+Patch 1 firstly move the whole Rockchip PCIe host driver from
+drivers/pci/host to a new folder, driver/pci/rockchip/, and rename
+pcie-rockchip.c to pcie-rockchip-host.c. It also update the
+Kconfig/Makefile etc to repect this change.
 
-I would like to get Bjorn's point of view on this since it is definitely
-more comprehensive than mine.
+Then patch 2 and patch 3 are trying to spilt out some common code in
+preparation for adding endponit controller driver support.
 
-Thanks,
-Lorenzo
+Patch 4 rename rockchip-pcie.txt to rockchip-pcie-host.txt.
 
->  		base = pci_ioremap_bar(pdev, bar);
->  		if (!base) {
->  			dev_err(dev, "failed to read BAR%d\n", bar);
-> -- 
-> 2.14.2
-> 
+Patch 5 adds endpoint controller driver support as well as the new
+documentation, rockchip-pcie-ep.txt, introduced by patch 6.
+
+
+Changes in v2:
+- remove rockchip,rk3399-pcie-host compatible(Suggested by Rob)
+- fix some error handling
+
+Shawn Lin (6):
+  PCI: rockchip: Create individual folder for rockchip drivers
+  PCI: rockchip: Split out common function to parse DT
+  PCI: rockchip: Spilt out common function to init controller
+  dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to
+    rockchip-pcie-host.txt
+  PCI: rockchip: Add Endpoint controller driver for Rockchip PCIe
+    controller
+  dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint
+    controller
+
+ .../devicetree/bindings/pci/rockchip-pcie-ep.txt   |  62 ++
+ .../{rockchip-pcie.txt => rockchip-pcie-host.txt}  |   0
+ MAINTAINERS                                        |   4 +-
+ drivers/pci/Kconfig                                |   1 +
+ drivers/pci/Makefile                               |   2 +
+ drivers/pci/host/Kconfig                           |  11 -
+ drivers/pci/host/Makefile                          |   1 -
+ drivers/pci/rockchip/Kconfig                       |  32 +
+ drivers/pci/rockchip/Makefile                      |   4 +
+ drivers/pci/rockchip/pcie-rockchip-ep.c            | 641 +++++++++++++++++++++
+ .../pcie-rockchip-host.c}                          | 594 +------------------
+ drivers/pci/rockchip/pcie-rockchip.c               | 417 ++++++++++++++
+ drivers/pci/rockchip/pcie-rockchip.h               | 343 +++++++++++
+ 13 files changed, 1517 insertions(+), 595 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+ rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (100%)
+ create mode 100644 drivers/pci/rockchip/Kconfig
+ create mode 100644 drivers/pci/rockchip/Makefile
+ create mode 100644 drivers/pci/rockchip/pcie-rockchip-ep.c
+ rename drivers/pci/{host/pcie-rockchip.c => rockchip/pcie-rockchip-host.c} (61%)
+ create mode 100644 drivers/pci/rockchip/pcie-rockchip.c
+ create mode 100644 drivers/pci/rockchip/pcie-rockchip.h
+
+-- 
+1.9.1
