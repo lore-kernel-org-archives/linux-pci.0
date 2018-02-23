@@ -1,344 +1,942 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:45077 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752107AbeB0MVA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 07:21:00 -0500
-Received: by mail-pf0-f193.google.com with SMTP id j24so7857700pff.12
-        for <linux-pci@vger.kernel.org>; Tue, 27 Feb 2018 04:21:00 -0800 (PST)
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, marc.zyngier@arm.com
-Cc: mingkai.hu@nxp.com, peter.newton@nxp.com, minghuan.lian@nxp.com,
-        rajesh.raina@nxp.com, rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Subject: [PATCH v6 3/3] PCI: mobiveil: Add MSI support for Mobiveil PCIe Host Bridge IP driver
-Date: Tue, 27 Feb 2018 07:20:51 -0500
-Message-Id: <1519734051-32298-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Received: from lucky1.263xmail.com ([211.157.147.135]:42475 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751353AbeBWBVm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 20:21:42 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 1/6] PCI: rockchip: Create individual folder for rockchip drivers
+Date: Fri, 23 Feb 2018 09:15:55 +0800
+Message-Id: <1519348555-243366-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- Adds MSI support for Mobiveil PCIe Host Bridge IP driver
+In preparation for introducing End-Point driver for Rockchip
+PCIe controller, we create a new folder to follow the convention
+of dwc and cadence. Then we rename the host driver from pcie-rockchip.c
+to pcie-rockchip-host.c, and only leave some common functions in
+pcie-rockchip.c in order to be reused for both of host and EP drivers.
 
-Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
-Fixes:
-- used relaxed device access apis
-- removed memory allocation of kernel buffer for MSI data, using the
-  MSI register base instead.
-- removed redundant CONFIG_PCI_MSI checks
----
- drivers/pci/host/pcie-mobiveil.c | 204 ++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 202 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-mobiveil.c b/drivers/pci/host/pcie-mobiveil.c
-index 4270387..4b92dc0 100644
---- a/drivers/pci/host/pcie-mobiveil.c
-+++ b/drivers/pci/host/pcie-mobiveil.c
-@@ -14,6 +14,7 @@
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/of_platform.h>
-@@ -56,6 +57,7 @@
- #define PAB_INTP_AMBA_MISC_ENB	0x0b0c
- #define PAB_INTP_AMBA_MISC_STAT	0x0b1c
- #define  PAB_INTP_INTX_MASK	0x1e0
-+#define  PAB_INTP_MSI_MASK      0x8
+Changes in v2: None
+
+ MAINTAINERS                                        |   4 +-
+ drivers/pci/Kconfig                                |   1 +
+ drivers/pci/Makefile                               |   2 +
+ drivers/pci/host/Kconfig                           |  11 -
+ drivers/pci/host/Makefile                          |   1 -
+ drivers/pci/rockchip/Kconfig                       |  20 ++
+ drivers/pci/rockchip/Makefile                      |   3 +
+ .../pcie-rockchip-host.c}                          | 344 +--------------------
+ drivers/pci/rockchip/pcie-rockchip.c               | 141 +++++++++
+ drivers/pci/rockchip/pcie-rockchip.h               | 246 +++++++++++++++
+ 10 files changed, 416 insertions(+), 357 deletions(-)
+ create mode 100644 drivers/pci/rockchip/Kconfig
+ create mode 100644 drivers/pci/rockchip/Makefile
+ rename drivers/pci/{host/pcie-rockchip.c => rockchip/pcie-rockchip-host.c} (75%)
+ create mode 100644 drivers/pci/rockchip/pcie-rockchip.c
+ create mode 100644 drivers/pci/rockchip/pcie-rockchip.h
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3df0e47..e01d2b8 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10831,8 +10831,8 @@ M:	Shawn Lin <shawn.lin@rock-chips.com>
+ L:	linux-pci@vger.kernel.org
+ L:	linux-rockchip@lists.infradead.org
+ S:	Maintained
+-F:	Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+-F:	drivers/pci/host/pcie-rockchip.c
++F:	Documentation/devicetree/bindings/pci/rockchip-pcie*
++F:	drivers/pci/rockchip/*
  
- #define PAB_AXI_AMAP_CTRL(win)	PAB_REG_ADDR(0x0ba0, win)
- #define  WIN_ENABLE_SHIFT	0
-@@ -85,8 +87,19 @@
+ PCI DRIVER FOR V3 SEMICONDUCTOR V360EPC
+ M:	Linus Walleij <linus.walleij@linaro.org>
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 34b56a8..b85ad40 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -141,4 +141,5 @@ source "drivers/pci/cadence/Kconfig"
+ source "drivers/pci/dwc/Kconfig"
+ source "drivers/pci/host/Kconfig"
+ source "drivers/pci/endpoint/Kconfig"
++source "drivers/pci/rockchip/Kconfig"
+ source "drivers/pci/switch/Kconfig"
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 9419709..8434afb 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -55,6 +55,8 @@ obj-y += switch/
  
- /* supported number of interrupts */
- #define PCI_NUM_INTX    4
-+#define PCI_NUM_MSI		16
- #define PAB_INTA_POS    5
+ obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
  
-+/* MSI registers */
-+#define MSI_BASE_LO_OFFSET	0x04
-+#define MSI_BASE_HI_OFFSET	0x08
-+#define MSI_SIZE_OFFSET		0x0c
-+#define MSI_ENABLE_OFFSET	0x14
-+#define MSI_STATUS_OFFSET	0x18
-+#define MSI_DATA_OFFSET		0x20
-+#define MSI_ADDR_L_OFFSET	0x24
-+#define MSI_ADDR_H_OFFSET	0x28
++obj-$(CONFIG_PCIE_ROCKCHIP)	+= rockchip/
 +
- /* outbound and inbound window definitions */
- #define WIN_NUM_0		0
- #define WIN_NUM_1		1
-@@ -101,11 +114,21 @@
- #define LINK_WAIT_MIN		90000
- #define LINK_WAIT_MAX		100000
+ # Endpoint library must be initialized before its users
+ obj-$(CONFIG_PCIE_CADENCE)	+= cadence/
+ # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index a4ed748..05b4d3b 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -177,17 +177,6 @@ config PCI_HOST_THUNDER_ECAM
+ 	help
+ 	  Say Y here if you want ECAM support for CN88XX-Pass-1.x Cavium Thunder SoCs.
  
-+struct mobiveil_msi {			/* MSI information */
-+	struct mutex lock;		/* protect bitmap variable */
-+	struct irq_domain *msi_domain;
-+	struct irq_domain *dev_domain;
-+	phys_addr_t msi_pages_phys;
-+	int num_of_vectors;
-+	DECLARE_BITMAP(msi_irq_in_use, PCI_NUM_MSI);
-+};
+-config PCIE_ROCKCHIP
+-	tristate "Rockchip PCIe controller"
+-	depends on ARCH_ROCKCHIP || COMPILE_TEST
+-	depends on OF
+-	depends on PCI_MSI_IRQ_DOMAIN
+-	select MFD_SYSCON
+-	help
+-	  Say Y here if you want internal PCI support on Rockchip SoC.
+-	  There is 1 internal PCIe port available to support GEN2 with
+-	  4 slots.
+-
+ config PCIE_MEDIATEK
+ 	bool "MediaTek PCIe controller"
+ 	depends on (ARM || ARM64) && (ARCH_MEDIATEK || COMPILE_TEST)
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 3b10591..ceab86a 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -19,7 +19,6 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+ obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+-obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
+ obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
+ obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
+ obj-$(CONFIG_VMD) += vmd.o
+diff --git a/drivers/pci/rockchip/Kconfig b/drivers/pci/rockchip/Kconfig
+new file mode 100644
+index 0000000..d655b77
+--- /dev/null
++++ b/drivers/pci/rockchip/Kconfig
+@@ -0,0 +1,20 @@
++# SPDX-License-Identifier: GPL-2.0
 +
- struct mobiveil_pcie {
- 	struct platform_device *pdev;
- 	struct list_head resources;
- 	void __iomem *config_axi_slave_base;	/* endpoint config base */
- 	void __iomem *csr_axi_slave_base;   /* root port config base */
-+	void __iomem *apb_csr_base;     /* MSI register base */
- 	void __iomem *pcie_reg_base;    /* Physical PCIe Controller Base */
- 	struct irq_domain *intx_domain;
- 	raw_spinlock_t intx_mask_lock;
-@@ -116,6 +139,7 @@ struct mobiveil_pcie {
- 	int ib_wins_configured;	/*  configured inbound windows */
- 	struct resource *ob_io_res;
- 	char root_bus_nr;
-+	struct mobiveil_msi msi;
- };
++menu "Rockchip PCIe controllers support"
++
++config PCIE_ROCKCHIP
++	bool
++
++config PCIE_ROCKCHIP_HOST
++	tristate "Rockchip PCIe host controller"
++	depends on ARCH_ROCKCHIP || COMPILE_TEST
++	depends on OF
++	depends on PCI_MSI_IRQ_DOMAIN
++	select MFD_SYSCON
++	select PCIE_ROCKCHIP
++	help
++	  Say Y here if you want internal PCI support on Rockchip SoC.
++	  There is 1 internal PCIe port available to support GEN2 with
++	  4 slots.
++
++endmenu
+diff --git a/drivers/pci/rockchip/Makefile b/drivers/pci/rockchip/Makefile
+new file mode 100644
+index 0000000..0af40db
+--- /dev/null
++++ b/drivers/pci/rockchip/Makefile
+@@ -0,0 +1,3 @@
++# SPDX-License-Identifier: GPL-2.0
++obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
++obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip-host.c
+similarity index 75%
+rename from drivers/pci/host/pcie-rockchip.c
+rename to drivers/pci/rockchip/pcie-rockchip-host.c
+index f1e8f97..563f696 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/rockchip/pcie-rockchip-host.c
+@@ -36,226 +36,7 @@
+ #include <linux/reset.h>
+ #include <linux/regmap.h>
  
- static inline void csr_writel(struct mobiveil_pcie *pcie, const u32 value,
-@@ -204,6 +228,9 @@ static void mobiveil_pcie_isr(struct irq_desc *desc)
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	struct mobiveil_pcie *pcie = irq_desc_get_handler_data(desc);
- 	struct device *dev = &pcie->pdev->dev;
-+	struct mobiveil_msi *msi = &pcie->msi;
-+	u32 msi_data, msi_addr_lo, msi_addr_hi;
-+	u32 intr_status, msi_status;
- 	unsigned long shifted_status;
- 	u32 bit, virq;
- 	u32 val, mask;
-@@ -222,8 +249,8 @@ static void mobiveil_pcie_isr(struct irq_desc *desc)
+-/*
+- * The upper 16 bits of PCIE_CLIENT_CONFIG are a write mask for the lower 16
+- * bits.  This allows atomic updates of the register without locking.
+- */
+-#define HIWORD_UPDATE(mask, val)	(((mask) << 16) | (val))
+-#define HIWORD_UPDATE_BIT(val)		HIWORD_UPDATE(val, val)
+-
+-#define ENCODE_LANES(x)			((((x) >> 1) & 3) << 4)
+-#define MAX_LANE_NUM			4
+-
+-#define PCIE_CLIENT_BASE		0x0
+-#define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
+-#define   PCIE_CLIENT_CONF_ENABLE	  HIWORD_UPDATE_BIT(0x0001)
+-#define   PCIE_CLIENT_LINK_TRAIN_ENABLE	  HIWORD_UPDATE_BIT(0x0002)
+-#define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
+-#define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
+-#define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
+-#define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
+-#define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
+-#define PCIE_CLIENT_DEBUG_OUT_0		(PCIE_CLIENT_BASE + 0x3c)
+-#define   PCIE_CLIENT_DEBUG_LTSSM_MASK		GENMASK(5, 0)
+-#define   PCIE_CLIENT_DEBUG_LTSSM_L1		0x18
+-#define   PCIE_CLIENT_DEBUG_LTSSM_L2		0x19
+-#define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
+-#define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
+-#define   PCIE_CLIENT_LINK_STATUS_MASK		0x00300000
+-#define PCIE_CLIENT_INT_MASK		(PCIE_CLIENT_BASE + 0x4c)
+-#define PCIE_CLIENT_INT_STATUS		(PCIE_CLIENT_BASE + 0x50)
+-#define   PCIE_CLIENT_INTR_MASK			GENMASK(8, 5)
+-#define   PCIE_CLIENT_INTR_SHIFT		5
+-#define   PCIE_CLIENT_INT_LEGACY_DONE		BIT(15)
+-#define   PCIE_CLIENT_INT_MSG			BIT(14)
+-#define   PCIE_CLIENT_INT_HOT_RST		BIT(13)
+-#define   PCIE_CLIENT_INT_DPA			BIT(12)
+-#define   PCIE_CLIENT_INT_FATAL_ERR		BIT(11)
+-#define   PCIE_CLIENT_INT_NFATAL_ERR		BIT(10)
+-#define   PCIE_CLIENT_INT_CORR_ERR		BIT(9)
+-#define   PCIE_CLIENT_INT_INTD			BIT(8)
+-#define   PCIE_CLIENT_INT_INTC			BIT(7)
+-#define   PCIE_CLIENT_INT_INTB			BIT(6)
+-#define   PCIE_CLIENT_INT_INTA			BIT(5)
+-#define   PCIE_CLIENT_INT_LOCAL			BIT(4)
+-#define   PCIE_CLIENT_INT_UDMA			BIT(3)
+-#define   PCIE_CLIENT_INT_PHY			BIT(2)
+-#define   PCIE_CLIENT_INT_HOT_PLUG		BIT(1)
+-#define   PCIE_CLIENT_INT_PWR_STCG		BIT(0)
+-
+-#define PCIE_CLIENT_INT_LEGACY \
+-	(PCIE_CLIENT_INT_INTA | PCIE_CLIENT_INT_INTB | \
+-	PCIE_CLIENT_INT_INTC | PCIE_CLIENT_INT_INTD)
+-
+-#define PCIE_CLIENT_INT_CLI \
+-	(PCIE_CLIENT_INT_CORR_ERR | PCIE_CLIENT_INT_NFATAL_ERR | \
+-	PCIE_CLIENT_INT_FATAL_ERR | PCIE_CLIENT_INT_DPA | \
+-	PCIE_CLIENT_INT_HOT_RST | PCIE_CLIENT_INT_MSG | \
+-	PCIE_CLIENT_INT_LEGACY_DONE | PCIE_CLIENT_INT_LEGACY | \
+-	PCIE_CLIENT_INT_PHY)
+-
+-#define PCIE_CORE_CTRL_MGMT_BASE	0x900000
+-#define PCIE_CORE_CTRL			(PCIE_CORE_CTRL_MGMT_BASE + 0x000)
+-#define   PCIE_CORE_PL_CONF_SPEED_5G		0x00000008
+-#define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
+-#define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
+-#define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
+-#define PCIE_CORE_CTRL_PLC1		(PCIE_CORE_CTRL_MGMT_BASE + 0x004)
+-#define   PCIE_CORE_CTRL_PLC1_FTS_MASK		GENMASK(23, 8)
+-#define   PCIE_CORE_CTRL_PLC1_FTS_SHIFT		8
+-#define   PCIE_CORE_CTRL_PLC1_FTS_CNT		0xffff
+-#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
+-#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
+-#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
+-#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
+-		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
+-#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
+-#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
+-#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
+-#define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+-#define   PCIE_CORE_INT_PRFPE			BIT(0)
+-#define   PCIE_CORE_INT_CRFPE			BIT(1)
+-#define   PCIE_CORE_INT_RRPE			BIT(2)
+-#define   PCIE_CORE_INT_PRFO			BIT(3)
+-#define   PCIE_CORE_INT_CRFO			BIT(4)
+-#define   PCIE_CORE_INT_RT			BIT(5)
+-#define   PCIE_CORE_INT_RTR			BIT(6)
+-#define   PCIE_CORE_INT_PE			BIT(7)
+-#define   PCIE_CORE_INT_MTR			BIT(8)
+-#define   PCIE_CORE_INT_UCR			BIT(9)
+-#define   PCIE_CORE_INT_FCE			BIT(10)
+-#define   PCIE_CORE_INT_CT			BIT(11)
+-#define   PCIE_CORE_INT_UTC			BIT(18)
+-#define   PCIE_CORE_INT_MMVC			BIT(19)
+-#define PCIE_CORE_CONFIG_VENDOR		(PCIE_CORE_CTRL_MGMT_BASE + 0x44)
+-#define PCIE_CORE_INT_MASK		(PCIE_CORE_CTRL_MGMT_BASE + 0x210)
+-#define PCIE_RC_BAR_CONF		(PCIE_CORE_CTRL_MGMT_BASE + 0x300)
+-
+-#define PCIE_CORE_INT \
+-		(PCIE_CORE_INT_PRFPE | PCIE_CORE_INT_CRFPE | \
+-		 PCIE_CORE_INT_RRPE | PCIE_CORE_INT_CRFO | \
+-		 PCIE_CORE_INT_RT | PCIE_CORE_INT_RTR | \
+-		 PCIE_CORE_INT_PE | PCIE_CORE_INT_MTR | \
+-		 PCIE_CORE_INT_UCR | PCIE_CORE_INT_FCE | \
+-		 PCIE_CORE_INT_CT | PCIE_CORE_INT_UTC | \
+-		 PCIE_CORE_INT_MMVC)
+-
+-#define PCIE_RC_CONFIG_NORMAL_BASE	0x800000
+-#define PCIE_RC_CONFIG_BASE		0xa00000
+-#define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
+-#define   PCIE_RC_CONFIG_SCC_SHIFT		16
+-#define PCIE_RC_CONFIG_DCR		(PCIE_RC_CONFIG_BASE + 0xc4)
+-#define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
+-#define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
+-#define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
+-#define PCIE_RC_CONFIG_DCSR		(PCIE_RC_CONFIG_BASE + 0xc8)
+-#define   PCIE_RC_CONFIG_DCSR_MPS_MASK		GENMASK(7, 5)
+-#define   PCIE_RC_CONFIG_DCSR_MPS_256		(0x1 << 5)
+-#define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
+-#define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
+-#define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+-#define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
+-#define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
+-#define   PCIE_RC_CONFIG_THP_CAP_NEXT_MASK	GENMASK(31, 20)
+-
+-#define PCIE_CORE_AXI_CONF_BASE		0xc00000
+-#define PCIE_CORE_OB_REGION_ADDR0	(PCIE_CORE_AXI_CONF_BASE + 0x0)
+-#define   PCIE_CORE_OB_REGION_ADDR0_NUM_BITS	0x3f
+-#define   PCIE_CORE_OB_REGION_ADDR0_LO_ADDR	0xffffff00
+-#define PCIE_CORE_OB_REGION_ADDR1	(PCIE_CORE_AXI_CONF_BASE + 0x4)
+-#define PCIE_CORE_OB_REGION_DESC0	(PCIE_CORE_AXI_CONF_BASE + 0x8)
+-#define PCIE_CORE_OB_REGION_DESC1	(PCIE_CORE_AXI_CONF_BASE + 0xc)
+-
+-#define PCIE_CORE_AXI_INBOUND_BASE	0xc00800
+-#define PCIE_RP_IB_ADDR0		(PCIE_CORE_AXI_INBOUND_BASE + 0x0)
+-#define   PCIE_CORE_IB_REGION_ADDR0_NUM_BITS	0x3f
+-#define   PCIE_CORE_IB_REGION_ADDR0_LO_ADDR	0xffffff00
+-#define PCIE_RP_IB_ADDR1		(PCIE_CORE_AXI_INBOUND_BASE + 0x4)
+-
+-/* Size of one AXI Region (not Region 0) */
+-#define AXI_REGION_SIZE				BIT(20)
+-/* Size of Region 0, equal to sum of sizes of other regions */
+-#define AXI_REGION_0_SIZE			(32 * (0x1 << 20))
+-#define OB_REG_SIZE_SHIFT			5
+-#define IB_ROOT_PORT_REG_SIZE_SHIFT		3
+-#define AXI_WRAPPER_IO_WRITE			0x6
+-#define AXI_WRAPPER_MEM_WRITE			0x2
+-#define AXI_WRAPPER_TYPE0_CFG			0xa
+-#define AXI_WRAPPER_TYPE1_CFG			0xb
+-#define AXI_WRAPPER_NOR_MSG			0xc
+-
+-#define MAX_AXI_IB_ROOTPORT_REGION_NUM		3
+-#define MIN_AXI_ADDR_BITS_PASSED		8
+-#define PCIE_RC_SEND_PME_OFF			0x11960
+-#define ROCKCHIP_VENDOR_ID			0x1d87
+-#define PCIE_ECAM_BUS(x)			(((x) & 0xff) << 20)
+-#define PCIE_ECAM_DEV(x)			(((x) & 0x1f) << 15)
+-#define PCIE_ECAM_FUNC(x)			(((x) & 0x7) << 12)
+-#define PCIE_ECAM_REG(x)			(((x) & 0xfff) << 0)
+-#define PCIE_ECAM_ADDR(bus, dev, func, reg) \
+-	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
+-	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
+-#define PCIE_LINK_IS_L2(x) \
+-	(((x) & PCIE_CLIENT_DEBUG_LTSSM_MASK) == PCIE_CLIENT_DEBUG_LTSSM_L2)
+-#define PCIE_LINK_UP(x) \
+-	(((x) & PCIE_CLIENT_LINK_STATUS_MASK) == PCIE_CLIENT_LINK_STATUS_UP)
+-#define PCIE_LINK_IS_GEN2(x) \
+-	(((x) & PCIE_CORE_PL_CONF_SPEED_MASK) == PCIE_CORE_PL_CONF_SPEED_5G)
+-
+-#define RC_REGION_0_ADDR_TRANS_H		0x00000000
+-#define RC_REGION_0_ADDR_TRANS_L		0x00000000
+-#define RC_REGION_0_PASS_BITS			(25 - 1)
+-#define RC_REGION_0_TYPE_MASK			GENMASK(3, 0)
+-#define MAX_AXI_WRAPPER_REGION_NUM		33
+-
+-struct rockchip_pcie {
+-	void	__iomem *reg_base;		/* DT axi-base */
+-	void	__iomem *apb_base;		/* DT apb-base */
+-	bool    legacy_phy;
+-	struct  phy *phys[MAX_LANE_NUM];
+-	struct	reset_control *core_rst;
+-	struct	reset_control *mgmt_rst;
+-	struct	reset_control *mgmt_sticky_rst;
+-	struct	reset_control *pipe_rst;
+-	struct	reset_control *pm_rst;
+-	struct	reset_control *aclk_rst;
+-	struct	reset_control *pclk_rst;
+-	struct	clk *aclk_pcie;
+-	struct	clk *aclk_perf_pcie;
+-	struct	clk *hclk_pcie;
+-	struct	clk *clk_pcie_pm;
+-	struct	regulator *vpcie12v; /* 12V power supply */
+-	struct	regulator *vpcie3v3; /* 3.3V power supply */
+-	struct	regulator *vpcie1v8; /* 1.8V power supply */
+-	struct	regulator *vpcie0v9; /* 0.9V power supply */
+-	struct	gpio_desc *ep_gpio;
+-	u32	lanes;
+-	u8      lanes_map;
+-	u8	root_bus_nr;
+-	int	link_gen;
+-	struct	device *dev;
+-	struct	irq_domain *irq_domain;
+-	int     offset;
+-	struct pci_bus *root_bus;
+-	struct resource *io;
+-	phys_addr_t io_bus_addr;
+-	u32     io_size;
+-	void    __iomem *msg_region;
+-	u32     mem_size;
+-	phys_addr_t msg_bus_addr;
+-	phys_addr_t mem_bus_addr;
+-};
+-
+-static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+-{
+-	return readl(rockchip->apb_base + reg);
+-}
+-
+-static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
+-				u32 reg)
+-{
+-	writel(val, rockchip->apb_base + reg);
+-}
++#include "pcie-rockchip.h"
  
- 	/* Handle INTx */
- 	if (intr_status & PAB_INTP_INTX_MASK) {
--		shifted_status = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT) >>
--			PAB_INTA_POS;
-+		shifted_status = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT)
-+			>> PAB_INTA_POS;
- 		do {
- 			for_each_set_bit(bit, &shifted_status, PCI_NUM_INTX) {
- 				virq = irq_find_mapping(pcie->intx_domain,
-@@ -241,6 +268,39 @@ static void mobiveil_pcie_isr(struct irq_desc *desc)
- 		} while ((shifted_status >>  PAB_INTA_POS) != 0);
- 	}
- 
-+	/* read extra MSI status register */
-+	msi_status = readl_relaxed(pcie->apb_csr_base + MSI_STATUS_OFFSET);
-+
-+	/* handle MSI interrupts */
-+	if ((intr_status & PAB_INTP_MSI_MASK) || (msi_status & 1)) {
-+		do {
-+			msi_data = readl_relaxed(pcie->apb_csr_base
-+					+ MSI_DATA_OFFSET);
-+
-+			/*
-+			 * MSI_STATUS_OFFSET gets updated to zero once we have
-+			 * popped not only the data but also address from MSI
-+			 * hardware FIFO.so keeping these following two dummy
-+			 * reads.
-+			 */
-+			msi_addr_lo = readl_relaxed(pcie->apb_csr_base +
-+					MSI_ADDR_L_OFFSET);
-+			msi_addr_hi = readl_relaxed(pcie->apb_csr_base +
-+					MSI_ADDR_H_OFFSET);
-+			dev_dbg(dev,
-+				"MSI registers, data: %08x, addr: %08x:%08x\n",
-+				msi_data, msi_addr_hi, msi_addr_lo);
-+
-+				virq = irq_find_mapping(msi->dev_domain,
-+					msi_data);
-+				if (virq)
-+					generic_handle_irq(virq);
-+
-+			msi_status = readl_relaxed(pcie->apb_csr_base +
-+					MSI_STATUS_OFFSET);
-+		} while (msi_status & 1);
-+	}
-+
- 	/* Clear the interrupt status */
- 	csr_writel(pcie, intr_status, PAB_INTP_AMBA_MISC_STAT);
- 	chained_irq_exit(chip, desc);
-@@ -276,6 +336,12 @@ static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
- 		return PTR_ERR(pcie->csr_axi_slave_base);
- 	pcie->pcie_reg_base = res->start;
- 
-+	/* map MSI config resource */
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "apb_csr");
-+	pcie->apb_csr_base = devm_pci_remap_cfg_resource(dev, res);
-+	if (IS_ERR(pcie->apb_csr_base))
-+		return PTR_ERR(pcie->apb_csr_base);
-+
- 	/* read the number of windows requested */
- 	if (of_property_read_u32(node, "apio-wins", &pcie->apio_wins))
- 		pcie->apio_wins = MAX_PIO_WINDOWS;
-@@ -431,6 +497,22 @@ static int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
- 	return -ETIMEDOUT;
+ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
+ {
+@@ -374,26 +155,6 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
+ 	return PCIBIOS_SUCCESSFUL;
  }
  
-+static void mobiveil_pcie_enable_msi(struct mobiveil_pcie *pcie)
-+{
-+	phys_addr_t msg_addr = pcie->pcie_reg_base;
-+	struct mobiveil_msi *msi = &pcie->msi;
-+
-+	pcie->msi.num_of_vectors = PCI_NUM_MSI;
-+	msi->msi_pages_phys = (phys_addr_t)msg_addr;
-+
-+	writel_relaxed(lower_32_bits(msg_addr),
-+		pcie->apb_csr_base + MSI_BASE_LO_OFFSET);
-+	writel_relaxed(upper_32_bits(msg_addr),
-+		pcie->apb_csr_base + MSI_BASE_HI_OFFSET);
-+	writel_relaxed(4096, pcie->apb_csr_base + MSI_SIZE_OFFSET);
-+	writel_relaxed(1, pcie->apb_csr_base + MSI_ENABLE_OFFSET);
-+}
-+
- static int mobiveil_host_init(struct mobiveil_pcie *pcie)
- {
- 	u32 value;
-@@ -501,6 +583,9 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
- 		}
- 	}
- 
-+	/* setup MSI hardware registers */
-+	mobiveil_pcie_enable_msi(pcie);
-+
+-static void rockchip_pcie_cfg_configuration_accesses(
+-		struct rockchip_pcie *rockchip, u32 type)
+-{
+-	u32 ob_desc_0;
+-
+-	/* Configuration Accesses for region 0 */
+-	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
+-
+-	rockchip_pcie_write(rockchip,
+-			    (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
+-			    PCIE_CORE_OB_REGION_ADDR0);
+-	rockchip_pcie_write(rockchip, RC_REGION_0_ADDR_TRANS_H,
+-			    PCIE_CORE_OB_REGION_ADDR1);
+-	ob_desc_0 = rockchip_pcie_read(rockchip, PCIE_CORE_OB_REGION_DESC0);
+-	ob_desc_0 &= ~(RC_REGION_0_TYPE_MASK);
+-	ob_desc_0 |= (type | (0x1 << 23));
+-	rockchip_pcie_write(rockchip, ob_desc_0, PCIE_CORE_OB_REGION_DESC0);
+-	rockchip_pcie_write(rockchip, 0x0, PCIE_CORE_OB_REGION_DESC1);
+-}
+-
+ static int rockchip_pcie_rd_other_conf(struct rockchip_pcie *rockchip,
+ 				       struct pci_bus *bus, u32 devfn,
+ 				       int where, int size, u32 *val)
+@@ -760,18 +521,6 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
  	return err;
  }
  
-@@ -559,6 +644,116 @@ static int mobiveil_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 	.xlate = pci_irqd_intx_xlate,
- };
- 
-+static struct irq_chip mobiveil_msi_irq_chip = {
-+	.name = "Mobiveil PCIe MSI",
-+	.irq_mask = pci_msi_mask_irq,
-+	.irq_unmask = pci_msi_unmask_irq,
-+};
-+
-+static struct msi_domain_info mobiveil_msi_domain_info = {
-+	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-+			MSI_FLAG_PCI_MSIX),
-+	.chip	= &mobiveil_msi_irq_chip,
-+};
-+
-+static void mobiveil_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	struct mobiveil_pcie *pcie = irq_data_get_irq_chip_data(data);
-+	phys_addr_t addr = pcie->pcie_reg_base + (data->hwirq * sizeof(int));
-+
-+	msg->address_lo = lower_32_bits(addr);
-+	msg->address_hi = upper_32_bits(addr);
-+	msg->data = data->hwirq;
-+
-+	dev_dbg(&pcie->pdev->dev, "msi#%d address_hi %#x address_lo %#x\n",
-+		(int)data->hwirq, msg->address_hi, msg->address_lo);
-+}
-+
-+static int mobiveil_msi_set_affinity(struct irq_data *irq_data,
-+		const struct cpumask *mask, bool force)
-+{
-+	return -EINVAL;
-+}
-+
-+static struct irq_chip mobiveil_msi_bottom_irq_chip = {
-+	.name			= "Mobiveil MSI",
-+	.irq_compose_msi_msg	= mobiveil_compose_msi_msg,
-+	.irq_set_affinity	= mobiveil_msi_set_affinity,
-+};
-+
-+static int mobiveil_irq_msi_domain_alloc(struct irq_domain *domain,
-+		unsigned int virq, unsigned int nr_irqs, void *args)
-+{
-+	struct mobiveil_pcie *pcie = domain->host_data;
-+	struct mobiveil_msi *msi = &pcie->msi;
-+	unsigned long bit;
-+
-+	WARN_ON(nr_irqs != 1);
-+	mutex_lock(&msi->lock);
-+
-+	bit = find_first_zero_bit(msi->msi_irq_in_use, msi->num_of_vectors);
-+	if (bit >= msi->num_of_vectors) {
-+		mutex_unlock(&msi->lock);
-+		return -ENOSPC;
-+	}
-+
-+	set_bit(bit, msi->msi_irq_in_use);
-+
-+	mutex_unlock(&msi->lock);
-+
-+	irq_domain_set_info(domain, virq, bit, &mobiveil_msi_bottom_irq_chip,
-+				domain->host_data, handle_simple_irq,
-+				NULL, NULL);
-+	return 0;
-+}
-+
-+static void mobiveil_irq_msi_domain_free(struct irq_domain *domain,
-+		unsigned int virq, unsigned int nr_irqs)
-+{
-+	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
-+	struct mobiveil_pcie *pcie = irq_data_get_irq_chip_data(d);
-+	struct mobiveil_msi *msi = &pcie->msi;
-+
-+	mutex_lock(&msi->lock);
-+
-+	if (!test_bit(d->hwirq, msi->msi_irq_in_use)) {
-+		dev_err(&pcie->pdev->dev, "trying to free unused MSI#%lu\n",
-+			d->hwirq);
-+	} else {
-+		__clear_bit(d->hwirq, msi->msi_irq_in_use);
-+	}
-+
-+	mutex_unlock(&msi->lock);
-+}
-+static const struct irq_domain_ops msi_domain_ops = {
-+	.alloc	= mobiveil_irq_msi_domain_alloc,
-+	.free	= mobiveil_irq_msi_domain_free,
-+};
-+
-+static int mobiveil_allocate_msi_domains(struct mobiveil_pcie *pcie)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
-+	struct mobiveil_msi *msi = &pcie->msi;
-+
-+	mutex_init(&pcie->msi.lock);
-+	msi->dev_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
-+						&msi_domain_ops, pcie);
-+	if (!msi->dev_domain) {
-+		dev_err(dev, "failed to create IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+
-+	msi->msi_domain = pci_msi_create_irq_domain(fwnode,
-+				&mobiveil_msi_domain_info, msi->dev_domain);
-+	if (!msi->msi_domain) {
-+		dev_err(dev, "failed to create MSI domain\n");
-+		irq_domain_remove(msi->dev_domain);
-+		return -ENOMEM;
-+	}
-+	return 0;
-+}
-+
- static int mobiveil_pcie_init_irq_domain(struct mobiveil_pcie *pcie)
+-static void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
+-{
+-	int i;
+-
+-	for (i = 0; i < MAX_LANE_NUM; i++) {
+-		/* inactive lanes are already powered off */
+-		if (rockchip->lanes_map & BIT(i))
+-			phy_power_off(rockchip->phys[i]);
+-		phy_exit(rockchip->phys[i]);
+-	}
+-}
+-
+ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
  {
- 	struct device *dev = &pcie->pdev->dev;
-@@ -576,6 +771,11 @@ static int mobiveil_pcie_init_irq_domain(struct mobiveil_pcie *pcie)
+ 	struct rockchip_pcie *rockchip = arg;
+@@ -908,47 +657,6 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ 	chained_irq_exit(chip, desc);
+ }
  
- 	raw_spin_lock_init(&pcie->intx_mask_lock);
- 
-+	/* setup MSI */
-+	ret = mobiveil_allocate_msi_domains(pcie);
-+	if (ret)
-+		return ret;
-+
+-static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+-{
+-	struct device *dev = rockchip->dev;
+-	struct phy *phy;
+-	char *name;
+-	u32 i;
+-
+-	phy = devm_phy_get(dev, "pcie-phy");
+-	if (!IS_ERR(phy)) {
+-		rockchip->legacy_phy = true;
+-		rockchip->phys[0] = phy;
+-		dev_warn(dev, "legacy phy model is deprecated!\n");
+-		return 0;
+-	}
+-
+-	if (PTR_ERR(phy) == -EPROBE_DEFER)
+-		return PTR_ERR(phy);
+-
+-	dev_dbg(dev, "missing legacy phy; search for per-lane PHY\n");
+-
+-	for (i = 0; i < MAX_LANE_NUM; i++) {
+-		name = kasprintf(GFP_KERNEL, "pcie-phy-%u", i);
+-		if (!name)
+-			return -ENOMEM;
+-
+-		phy = devm_of_phy_get(dev, dev->of_node, name);
+-		kfree(name);
+-
+-		if (IS_ERR(phy)) {
+-			if (PTR_ERR(phy) != -EPROBE_DEFER)
+-				dev_err(dev, "missing phy for lane %d: %ld\n",
+-					i, PTR_ERR(phy));
+-			return PTR_ERR(phy);
+-		}
+-
+-		rockchip->phys[i] = phy;
+-	}
+-
+-	return 0;
+-}
+-
+ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
+ {
+ 	int irq, err;
+@@ -1393,56 +1101,6 @@ static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
  	return 0;
  }
  
+-static int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip)
+-{
+-	struct device *dev = rockchip->dev;
+-	int err;
+-
+-	err = clk_prepare_enable(rockchip->aclk_pcie);
+-	if (err) {
+-		dev_err(dev, "unable to enable aclk_pcie clock\n");
+-		return err;
+-	}
+-
+-	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
+-	if (err) {
+-		dev_err(dev, "unable to enable aclk_perf_pcie clock\n");
+-		goto err_aclk_perf_pcie;
+-	}
+-
+-	err = clk_prepare_enable(rockchip->hclk_pcie);
+-	if (err) {
+-		dev_err(dev, "unable to enable hclk_pcie clock\n");
+-		goto err_hclk_pcie;
+-	}
+-
+-	err = clk_prepare_enable(rockchip->clk_pcie_pm);
+-	if (err) {
+-		dev_err(dev, "unable to enable clk_pcie_pm clock\n");
+-		goto err_clk_pcie_pm;
+-	}
+-
+-	return 0;
+-
+-err_clk_pcie_pm:
+-	clk_disable_unprepare(rockchip->hclk_pcie);
+-err_hclk_pcie:
+-	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+-err_aclk_perf_pcie:
+-	clk_disable_unprepare(rockchip->aclk_pcie);
+-	return err;
+-}
+-
+-static void rockchip_pcie_disable_clocks(void *data)
+-{
+-	struct rockchip_pcie *rockchip = data;
+-
+-	clk_disable_unprepare(rockchip->clk_pcie_pm);
+-	clk_disable_unprepare(rockchip->hclk_pcie);
+-	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+-	clk_disable_unprepare(rockchip->aclk_pcie);
+-}
+-
+ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+diff --git a/drivers/pci/rockchip/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip.c
+new file mode 100644
+index 0000000..c7614f9
+--- /dev/null
++++ b/drivers/pci/rockchip/pcie-rockchip.c
+@@ -0,0 +1,141 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Rockchip AXI PCIe host controller driver
++ *
++ * Copyright (c) 2016 Rockchip, Inc.
++ *
++ * Author: Shawn Lin <shawn.lin@rock-chips.com>
++ *         Wenrui Li <wenrui.li@rock-chips.com>
++ *
++ * Bits taken from Synopsys DesignWare Host controller driver and
++ * ARM PCI Host generic driver.
++ */
++
++#include <linux/clk.h>
++#include <linux/phy/phy.h>
++
++#include "pcie-rockchip.h"
++
++int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++	struct phy *phy;
++	char *name;
++	u32 i;
++
++	phy = devm_phy_get(dev, "pcie-phy");
++	if (!IS_ERR(phy)) {
++		rockchip->legacy_phy = true;
++		rockchip->phys[0] = phy;
++		dev_warn(dev, "legacy phy model is deprecated!\n");
++		return 0;
++	}
++
++	if (PTR_ERR(phy) == -EPROBE_DEFER)
++		return PTR_ERR(phy);
++
++	dev_dbg(dev, "missing legacy phy; search for per-lane PHY\n");
++
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		name = kasprintf(GFP_KERNEL, "pcie-phy-%u", i);
++		if (!name)
++			return -ENOMEM;
++
++		phy = devm_of_phy_get(dev, dev->of_node, name);
++		kfree(name);
++
++		if (IS_ERR(phy)) {
++			if (PTR_ERR(phy) != -EPROBE_DEFER)
++				dev_err(dev, "missing phy for lane %d: %ld\n",
++					i, PTR_ERR(phy));
++			return PTR_ERR(phy);
++		}
++
++		rockchip->phys[i] = phy;
++	}
++
++	return 0;
++}
++
++
++void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
++{
++	int i;
++
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		/* inactive lanes are already powered off */
++		if (rockchip->lanes_map & BIT(i))
++			phy_power_off(rockchip->phys[i]);
++		phy_exit(rockchip->phys[i]);
++	}
++}
++
++int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++	int err;
++
++	err = clk_prepare_enable(rockchip->aclk_pcie);
++	if (err) {
++		dev_err(dev, "unable to enable aclk_pcie clock\n");
++		return err;
++	}
++
++	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
++	if (err) {
++		dev_err(dev, "unable to enable aclk_perf_pcie clock\n");
++		goto err_aclk_perf_pcie;
++	}
++
++	err = clk_prepare_enable(rockchip->hclk_pcie);
++	if (err) {
++		dev_err(dev, "unable to enable hclk_pcie clock\n");
++		goto err_hclk_pcie;
++	}
++
++	err = clk_prepare_enable(rockchip->clk_pcie_pm);
++	if (err) {
++		dev_err(dev, "unable to enable clk_pcie_pm clock\n");
++		goto err_clk_pcie_pm;
++	}
++
++	return 0;
++
++err_clk_pcie_pm:
++	clk_disable_unprepare(rockchip->hclk_pcie);
++err_hclk_pcie:
++	clk_disable_unprepare(rockchip->aclk_perf_pcie);
++err_aclk_perf_pcie:
++	clk_disable_unprepare(rockchip->aclk_pcie);
++	return err;
++}
++
++void rockchip_pcie_disable_clocks(void *data)
++{
++	struct rockchip_pcie *rockchip = data;
++
++	clk_disable_unprepare(rockchip->clk_pcie_pm);
++	clk_disable_unprepare(rockchip->hclk_pcie);
++	clk_disable_unprepare(rockchip->aclk_perf_pcie);
++	clk_disable_unprepare(rockchip->aclk_pcie);
++}
++
++void rockchip_pcie_cfg_configuration_accesses(
++		struct rockchip_pcie *rockchip, u32 type)
++{
++	u32 ob_desc_0;
++
++	/* Configuration Accesses for region 0 */
++	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
++
++	rockchip_pcie_write(rockchip,
++			    (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
++			    PCIE_CORE_OB_REGION_ADDR0);
++	rockchip_pcie_write(rockchip, RC_REGION_0_ADDR_TRANS_H,
++			    PCIE_CORE_OB_REGION_ADDR1);
++	ob_desc_0 = rockchip_pcie_read(rockchip, PCIE_CORE_OB_REGION_DESC0);
++	ob_desc_0 &= ~(RC_REGION_0_TYPE_MASK);
++	ob_desc_0 |= (type | (0x1 << 23));
++	rockchip_pcie_write(rockchip, ob_desc_0, PCIE_CORE_OB_REGION_DESC0);
++	rockchip_pcie_write(rockchip, 0x0, PCIE_CORE_OB_REGION_DESC1);
++}
+diff --git a/drivers/pci/rockchip/pcie-rockchip.h b/drivers/pci/rockchip/pcie-rockchip.h
+new file mode 100644
+index 0000000..9e0cf2e
+--- /dev/null
++++ b/drivers/pci/rockchip/pcie-rockchip.h
+@@ -0,0 +1,246 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Rockchip AXI PCIe controller driver
++ *
++ * Copyright (c) 2018 Rockchip, Inc.
++ *
++ * Author: Shawn Lin <shawn.lin@rock-chips.com>
++ *
++ */
++
++#ifndef _PCIE_ROCKCHIP_H
++#define _PCIE_ROCKCHIP_H
++
++#include <linux/kernel.h>
++#include <linux/pci.h>
++
++/*
++ * The upper 16 bits of PCIE_CLIENT_CONFIG are a write mask for the lower 16
++ * bits.  This allows atomic updates of the register without locking.
++ */
++#define HIWORD_UPDATE(mask, val)	(((mask) << 16) | (val))
++#define HIWORD_UPDATE_BIT(val)		HIWORD_UPDATE(val, val)
++
++#define ENCODE_LANES(x)			((((x) >> 1) & 3) << 4)
++#define MAX_LANE_NUM			4
++
++#define PCIE_CLIENT_BASE		0x0
++#define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
++#define   PCIE_CLIENT_CONF_ENABLE	  HIWORD_UPDATE_BIT(0x0001)
++#define   PCIE_CLIENT_LINK_TRAIN_ENABLE	  HIWORD_UPDATE_BIT(0x0002)
++#define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
++#define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
++#define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
++#define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
++#define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
++#define PCIE_CLIENT_DEBUG_OUT_0		(PCIE_CLIENT_BASE + 0x3c)
++#define   PCIE_CLIENT_DEBUG_LTSSM_MASK		GENMASK(5, 0)
++#define   PCIE_CLIENT_DEBUG_LTSSM_L1		0x18
++#define   PCIE_CLIENT_DEBUG_LTSSM_L2		0x19
++#define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
++#define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
++#define   PCIE_CLIENT_LINK_STATUS_MASK		0x00300000
++#define PCIE_CLIENT_INT_MASK		(PCIE_CLIENT_BASE + 0x4c)
++#define PCIE_CLIENT_INT_STATUS		(PCIE_CLIENT_BASE + 0x50)
++#define   PCIE_CLIENT_INTR_MASK			GENMASK(8, 5)
++#define   PCIE_CLIENT_INTR_SHIFT		5
++#define   PCIE_CLIENT_INT_LEGACY_DONE		BIT(15)
++#define   PCIE_CLIENT_INT_MSG			BIT(14)
++#define   PCIE_CLIENT_INT_HOT_RST		BIT(13)
++#define   PCIE_CLIENT_INT_DPA			BIT(12)
++#define   PCIE_CLIENT_INT_FATAL_ERR		BIT(11)
++#define   PCIE_CLIENT_INT_NFATAL_ERR		BIT(10)
++#define   PCIE_CLIENT_INT_CORR_ERR		BIT(9)
++#define   PCIE_CLIENT_INT_INTD			BIT(8)
++#define   PCIE_CLIENT_INT_INTC			BIT(7)
++#define   PCIE_CLIENT_INT_INTB			BIT(6)
++#define   PCIE_CLIENT_INT_INTA			BIT(5)
++#define   PCIE_CLIENT_INT_LOCAL			BIT(4)
++#define   PCIE_CLIENT_INT_UDMA			BIT(3)
++#define   PCIE_CLIENT_INT_PHY			BIT(2)
++#define   PCIE_CLIENT_INT_HOT_PLUG		BIT(1)
++#define   PCIE_CLIENT_INT_PWR_STCG		BIT(0)
++
++#define PCIE_CLIENT_INT_LEGACY \
++	(PCIE_CLIENT_INT_INTA | PCIE_CLIENT_INT_INTB | \
++	PCIE_CLIENT_INT_INTC | PCIE_CLIENT_INT_INTD)
++
++#define PCIE_CLIENT_INT_CLI \
++	(PCIE_CLIENT_INT_CORR_ERR | PCIE_CLIENT_INT_NFATAL_ERR | \
++	PCIE_CLIENT_INT_FATAL_ERR | PCIE_CLIENT_INT_DPA | \
++	PCIE_CLIENT_INT_HOT_RST | PCIE_CLIENT_INT_MSG | \
++	PCIE_CLIENT_INT_LEGACY_DONE | PCIE_CLIENT_INT_LEGACY | \
++	PCIE_CLIENT_INT_PHY)
++
++#define PCIE_CORE_CTRL_MGMT_BASE	0x900000
++#define PCIE_CORE_CTRL			(PCIE_CORE_CTRL_MGMT_BASE + 0x000)
++#define   PCIE_CORE_PL_CONF_SPEED_5G		0x00000008
++#define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
++#define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
++#define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
++#define PCIE_CORE_CTRL_PLC1		(PCIE_CORE_CTRL_MGMT_BASE + 0x004)
++#define   PCIE_CORE_CTRL_PLC1_FTS_MASK		GENMASK(23, 8)
++#define   PCIE_CORE_CTRL_PLC1_FTS_SHIFT		8
++#define   PCIE_CORE_CTRL_PLC1_FTS_CNT		0xffff
++#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
++		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
++#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
++#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
++#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
++#define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
++#define   PCIE_CORE_INT_PRFPE			BIT(0)
++#define   PCIE_CORE_INT_CRFPE			BIT(1)
++#define   PCIE_CORE_INT_RRPE			BIT(2)
++#define   PCIE_CORE_INT_PRFO			BIT(3)
++#define   PCIE_CORE_INT_CRFO			BIT(4)
++#define   PCIE_CORE_INT_RT			BIT(5)
++#define   PCIE_CORE_INT_RTR			BIT(6)
++#define   PCIE_CORE_INT_PE			BIT(7)
++#define   PCIE_CORE_INT_MTR			BIT(8)
++#define   PCIE_CORE_INT_UCR			BIT(9)
++#define   PCIE_CORE_INT_FCE			BIT(10)
++#define   PCIE_CORE_INT_CT			BIT(11)
++#define   PCIE_CORE_INT_UTC			BIT(18)
++#define   PCIE_CORE_INT_MMVC			BIT(19)
++#define PCIE_CORE_CONFIG_VENDOR		(PCIE_CORE_CTRL_MGMT_BASE + 0x44)
++#define PCIE_CORE_INT_MASK		(PCIE_CORE_CTRL_MGMT_BASE + 0x210)
++#define PCIE_RC_BAR_CONF		(PCIE_CORE_CTRL_MGMT_BASE + 0x300)
++
++#define PCIE_CORE_INT \
++		(PCIE_CORE_INT_PRFPE | PCIE_CORE_INT_CRFPE | \
++		 PCIE_CORE_INT_RRPE | PCIE_CORE_INT_CRFO | \
++		 PCIE_CORE_INT_RT | PCIE_CORE_INT_RTR | \
++		 PCIE_CORE_INT_PE | PCIE_CORE_INT_MTR | \
++		 PCIE_CORE_INT_UCR | PCIE_CORE_INT_FCE | \
++		 PCIE_CORE_INT_CT | PCIE_CORE_INT_UTC | \
++		 PCIE_CORE_INT_MMVC)
++
++#define PCIE_RC_CONFIG_NORMAL_BASE	0x800000
++#define PCIE_RC_CONFIG_BASE		0xa00000
++#define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
++#define   PCIE_RC_CONFIG_SCC_SHIFT		16
++#define PCIE_RC_CONFIG_DCR		(PCIE_RC_CONFIG_BASE + 0xc4)
++#define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
++#define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
++#define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
++#define PCIE_RC_CONFIG_DCSR		(PCIE_RC_CONFIG_BASE + 0xc8)
++#define   PCIE_RC_CONFIG_DCSR_MPS_MASK		GENMASK(7, 5)
++#define   PCIE_RC_CONFIG_DCSR_MPS_256		(0x1 << 5)
++#define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
++#define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
++#define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
++#define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2 (PCIE_RC_CONFIG_BASE + 0x90c)
++#define PCIE_RC_CONFIG_THP_CAP		(PCIE_RC_CONFIG_BASE + 0x274)
++#define   PCIE_RC_CONFIG_THP_CAP_NEXT_MASK	GENMASK(31, 20)
++
++#define PCIE_CORE_AXI_CONF_BASE		0xc00000
++#define PCIE_CORE_OB_REGION_ADDR0	(PCIE_CORE_AXI_CONF_BASE + 0x0)
++#define   PCIE_CORE_OB_REGION_ADDR0_NUM_BITS	0x3f
++#define   PCIE_CORE_OB_REGION_ADDR0_LO_ADDR	0xffffff00
++#define PCIE_CORE_OB_REGION_ADDR1	(PCIE_CORE_AXI_CONF_BASE + 0x4)
++#define PCIE_CORE_OB_REGION_DESC0	(PCIE_CORE_AXI_CONF_BASE + 0x8)
++#define PCIE_CORE_OB_REGION_DESC1	(PCIE_CORE_AXI_CONF_BASE + 0xc)
++
++#define PCIE_CORE_AXI_INBOUND_BASE	0xc00800
++#define PCIE_RP_IB_ADDR0		(PCIE_CORE_AXI_INBOUND_BASE + 0x0)
++#define   PCIE_CORE_IB_REGION_ADDR0_NUM_BITS	0x3f
++#define   PCIE_CORE_IB_REGION_ADDR0_LO_ADDR	0xffffff00
++#define PCIE_RP_IB_ADDR1		(PCIE_CORE_AXI_INBOUND_BASE + 0x4)
++
++/* Size of one AXI Region (not Region 0) */
++#define AXI_REGION_SIZE				BIT(20)
++/* Size of Region 0, equal to sum of sizes of other regions */
++#define AXI_REGION_0_SIZE			(32 * (0x1 << 20))
++#define OB_REG_SIZE_SHIFT			5
++#define IB_ROOT_PORT_REG_SIZE_SHIFT		3
++#define AXI_WRAPPER_IO_WRITE			0x6
++#define AXI_WRAPPER_MEM_WRITE			0x2
++#define AXI_WRAPPER_TYPE0_CFG			0xa
++#define AXI_WRAPPER_TYPE1_CFG			0xb
++#define AXI_WRAPPER_NOR_MSG			0xc
++
++#define MAX_AXI_IB_ROOTPORT_REGION_NUM		3
++#define MIN_AXI_ADDR_BITS_PASSED		8
++#define PCIE_RC_SEND_PME_OFF			0x11960
++#define ROCKCHIP_VENDOR_ID			0x1d87
++#define PCIE_ECAM_BUS(x)			(((x) & 0xff) << 20)
++#define PCIE_ECAM_DEV(x)			(((x) & 0x1f) << 15)
++#define PCIE_ECAM_FUNC(x)			(((x) & 0x7) << 12)
++#define PCIE_ECAM_REG(x)			(((x) & 0xfff) << 0)
++#define PCIE_ECAM_ADDR(bus, dev, func, reg) \
++	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
++	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
++#define PCIE_LINK_IS_L2(x) \
++	(((x) & PCIE_CLIENT_DEBUG_LTSSM_MASK) == PCIE_CLIENT_DEBUG_LTSSM_L2)
++#define PCIE_LINK_UP(x) \
++	(((x) & PCIE_CLIENT_LINK_STATUS_MASK) == PCIE_CLIENT_LINK_STATUS_UP)
++#define PCIE_LINK_IS_GEN2(x) \
++	(((x) & PCIE_CORE_PL_CONF_SPEED_MASK) == PCIE_CORE_PL_CONF_SPEED_5G)
++
++#define RC_REGION_0_ADDR_TRANS_H		0x00000000
++#define RC_REGION_0_ADDR_TRANS_L		0x00000000
++#define RC_REGION_0_PASS_BITS			(25 - 1)
++#define RC_REGION_0_TYPE_MASK			GENMASK(3, 0)
++#define MAX_AXI_WRAPPER_REGION_NUM		33
++
++struct rockchip_pcie {
++	void	__iomem *reg_base;		/* DT axi-base */
++	void	__iomem *apb_base;		/* DT apb-base */
++	bool    legacy_phy;
++	struct  phy *phys[MAX_LANE_NUM];
++	struct	reset_control *core_rst;
++	struct	reset_control *mgmt_rst;
++	struct	reset_control *mgmt_sticky_rst;
++	struct	reset_control *pipe_rst;
++	struct	reset_control *pm_rst;
++	struct	reset_control *aclk_rst;
++	struct	reset_control *pclk_rst;
++	struct	clk *aclk_pcie;
++	struct	clk *aclk_perf_pcie;
++	struct	clk *hclk_pcie;
++	struct	clk *clk_pcie_pm;
++	struct	regulator *vpcie12v; /* 12V power supply */
++	struct	regulator *vpcie3v3; /* 3.3V power supply */
++	struct	regulator *vpcie1v8; /* 1.8V power supply */
++	struct	regulator *vpcie0v9; /* 0.9V power supply */
++	struct	gpio_desc *ep_gpio;
++	u32	lanes;
++	u8      lanes_map;
++	u8	root_bus_nr;
++	int	link_gen;
++	struct	device *dev;
++	struct	irq_domain *irq_domain;
++	int     offset;
++	struct pci_bus *root_bus;
++	struct resource *io;
++	phys_addr_t io_bus_addr;
++	u32     io_size;
++	void    __iomem *msg_region;
++	u32     mem_size;
++	phys_addr_t msg_bus_addr;
++	phys_addr_t mem_bus_addr;
++};
++
++
++static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
++{
++	return readl(rockchip->apb_base + reg);
++}
++
++static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
++				u32 reg)
++{
++	writel(val, rockchip->apb_base + reg);
++}
++
++int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip);
++void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip);
++int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip);
++void rockchip_pcie_disable_clocks(void *data);
++void rockchip_pcie_cfg_configuration_accesses(
++		struct rockchip_pcie *rockchip, u32 type);
++
++#endif /* _PCIE_ROCKCHIP_H */
 -- 
-1.8.3.1
+1.9.1
