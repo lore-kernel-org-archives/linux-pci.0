@@ -1,78 +1,113 @@
-Return-Path: <SRS0=ZYJC=FG=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=ZYJC=FG=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 23 Feb 2018 15:39:33 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 2/4] x86/pci: Re-use new dmi_get_bios_year() helper
+Message-ID: <20180223213933.GM14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
+ <20180222125923.57385-2-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20180210153450.GD206223@bhelgaas-glaptop.roam.corp.google.com>
-References: <1518217003-19637-1-git-send-email-alex.hung@canonical.com>
- <20180210010548.GC206223@bhelgaas-glaptop.roam.corp.google.com>
- <CAJZ5v0gBK8WmX4QYYBzVxdk8CaSBo5ckzmP49qr05+9DAYieqw@mail.gmail.com> <20180210153450.GD206223@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 12 Feb 2018 09:51:04 +0100
-Message-ID: <CAJZ5v0iNq2ni9ML=_6H0i99dUm5+Noh1MQ9AO4JCiqyXU1xW3Q@mail.gmail.com>
-Subject: Re: [PATCH] ACPI/PCI: pci_link: change log level of no _PRS messages
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Alex Hung <alex.hung@canonical.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180222125923.57385-2-andriy.shevchenko@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 10, 2018 at 4:34 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Sat, Feb 10, 2018 at 09:08:42AM +0100, Rafael J. Wysocki wrote:
->> On Sat, Feb 10, 2018 at 2:05 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > On Fri, Feb 09, 2018 at 02:56:43PM -0800, Alex Hung wrote:
->> >> In recent Intel hardware the IRQs become non-configurable after BIOS
->> >> initializes them in PEI phase and _PRS objects are no longer included in
->> >> ASL.
->> >>
->> >> This is the same as "static (non-configurable) devices do not
->> >> specify a _PRS object" in ACPI spec. As a result, error messages
->> >> saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
->> >> be in kernel messages all the time but only when debug is enabled.
->> >
->> > I agree and would even go further: _PRS is optional and I don't think
->> > there's a reason to log anything at all if it's absent.  A log message
->> > like "failed to evaluate _PRS" makes people think something is wrong
->> > when in fact nothing is wrong.
->>
->> _PRS is required if the link object is pointed to by a _PRT entry.
->
-> The closest thing I see with a quick look is ACPI 6.0, sec 6.2.13:
->
->   These objects [PCI Interrupt Link Devices] have _PRS, _CRS, _SRS,
->   and _DIS control methods to allocate the interrupt.
->
-> I don't read that as a requirement for _PRS in particular; I read it
-> as saying that the interrupt link devices use the normal device
-> configuration method, i.e., _CRS is required and _PRS and _SRS are
-> optional and needed for configurable devices but not for static ones.
+x86/PCI: Re-use ...
 
-Well, that's slightly out of context. :-)
+would match the arch/x86/pci/* convention.
 
-First of all, Section 6.2.13 says this: "Typically, the interrupt
-input that a given PCI interrupt is on is configurable. [...]  In this
-model, each interrupt is represented in the ACPI namespace as a PCI
-Interrupt Link Device."  Then, it says the above.
+On Thu, Feb 22, 2018 at 02:59:21PM +0200, Andy Shevchenko wrote:
+> ...instead of open coding its functionality.
 
-Now, if _PRS is not present, the IRQ represented by the link object
-cannot be configured, so in fact the underlying assumption doesn't
-apply to it, strictly speaking.  It follows from the last paragraph in
-Section 6.2.13 that _PRT entries representing such IRQs should not
-point to interrupt link device objects (there should be 0 in their
-Source fields).
+And I personally like it when changelogs are complete in themselves,
+i.e., they aren't a continuation of the subject line.  It makes things
+easier to read because the convention in written English is that the
+title and the body are separate things.
 
-Hence, if a _PRT entry points to an interrupt link device object in
-the namespace, _PRS should be present under this object or at least it
-is reasonable to expect that it will be present in there.
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-> But this is just a drive-by comment and I'm really fine with whatever
-> you decide to do.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-OK
+Assuming this goes via some other tree.
 
-So I think that (a) the message should be printed using
-acpi_handle_debug(), except that I would make it slightly more
-neutral, something like "_PRS not present or invalid", and (b) 0
-should be returned instead of -ENODEV when _PRS evaluation doesn't
-succeed.
+> ---
+>  arch/x86/pci/acpi.c            | 8 ++------
+>  arch/x86/pci/direct.c          | 5 ++---
+>  arch/x86/pci/mmconfig-shared.c | 9 ++-------
+>  3 files changed, 6 insertions(+), 16 deletions(-)
+> 
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 7df49c40665e..00e60de30328 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -140,12 +140,8 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
+>  
+>  void __init pci_acpi_crs_quirks(void)
+>  {
+> -	int year;
+> -
+> -	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year < 2008) {
+> -		if (iomem_resource.end <= 0xffffffff)
+> -			pci_use_crs = false;
+> -	}
+> +	if ((dmi_get_bios_year() < 2008) && (iomem_resource.end <= 0xffffffff))
+> +		pci_use_crs = false;
+>  
+>  	dmi_check_system(pci_crs_quirks);
+>  
+> diff --git a/arch/x86/pci/direct.c b/arch/x86/pci/direct.c
+> index 2d9503323d10..a51074c55982 100644
+> --- a/arch/x86/pci/direct.c
+> +++ b/arch/x86/pci/direct.c
+> @@ -195,14 +195,13 @@ static const struct pci_raw_ops pci_direct_conf2 = {
+>  static int __init pci_sanity_check(const struct pci_raw_ops *o)
+>  {
+>  	u32 x = 0;
+> -	int year, devfn;
+> +	int devfn;
+>  
+>  	if (pci_probe & PCI_NO_CHECKS)
+>  		return 1;
+>  	/* Assume Type 1 works for newer systems.
+>  	   This handles machines that don't have anything on PCI Bus 0. */
+> -	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
+> -	if (year >= 2001)
+> +	if (dmi_get_bios_year() >= 2001)
+>  		return 1;
+>  
+>  	for (devfn = 0; devfn < 0x100; devfn++) {
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+> index 96684d0adcf9..0b40482578b8 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -547,19 +547,14 @@ static void __init pci_mmcfg_reject_broken(int early)
+>  static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+>  					struct acpi_mcfg_allocation *cfg)
+>  {
+> -	int year;
+> -
+>  	if (cfg->address < 0xFFFFFFFF)
+>  		return 0;
+>  
+>  	if (!strncmp(mcfg->header.oem_id, "SGI", 3))
+>  		return 0;
+>  
+> -	if (mcfg->header.revision >= 1) {
+> -		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
+> -		    year >= 2010)
+> -			return 0;
+> -	}
+> +	if ((mcfg->header.revision >= 1) && (dmi_get_bios_year() >= 2010))
+> +		return 0;
+>  
+>  	pr_err(PREFIX "MCFG region for %04x [bus %02x-%02x] at %#llx "
+>  	       "is above 4GB, ignored\n", cfg->pci_segment,
+> -- 
+> 2.16.1
+> 
