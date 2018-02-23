@@ -1,72 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:38742 "EHLO
-        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751544AbeBHTU0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Feb 2018 14:20:26 -0500
-Received: by mail-yw0-f194.google.com with SMTP id m84so3420052ywd.5
-        for <linux-pci@vger.kernel.org>; Thu, 08 Feb 2018 11:20:25 -0800 (PST)
+Received: from smtp.codeaurora.org ([198.145.29.96]:60308 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750872AbeBWF24 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 00:28:56 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180208053354.41725-1-aik@ozlabs.ru>
-References: <20180208053354.41725-1-aik@ozlabs.ru>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 8 Feb 2018 13:20:04 -0600
-Message-ID: <CAErSpo7S7vJTKBrxuzH-G0y-U2Z15jKpPJDZEEuhh7vAs0hjOA@mail.gmail.com>
-Subject: Re: [PATCH kernel] powerpc/pci: Fix broken INTx configuration via OF
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Paul Mackerras <paulus@ozlabs.org>,
-        Rob Herring <robh@kernel.org>,
-        Alistair Popple <alistair@popple.id.au>,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 23 Feb 2018 10:58:54 +0530
+From: poza@codeaurora.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v10 4/7] PCI/DPC: Unify and plumb error handling into DPC
+In-Reply-To: <20180222183954.GD6267@infradead.org>
+References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
+ <1519315332-26852-5-git-send-email-poza@codeaurora.org>
+ <20180222183954.GD6267@infradead.org>
+Message-ID: <29cde9310bb4977ab10c747d104dcb21@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+On 2018-02-23 00:09, Christoph Hellwig wrote:
+> On Thu, Feb 22, 2018 at 09:32:09PM +0530, Oza Pawandeep wrote:
+>> Current DPC driver does not do recovery, e.g. calling end-point's 
+>> driver's
+>> callbacks, which sanitize the sw.
+>> 
+>> DPC driver implements link_reset callback, and calls pci_do_recovery.
+>> 
+>> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+>> 
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index a5a79f0..124f42e 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -343,6 +343,8 @@ static inline resource_size_t 
+>> pci_resource_alignment(struct pci_dev *dev,
+>>  void pci_enable_acs(struct pci_dev *dev);
+>> 
+>>  /* PCI error reporting and recovery */
+>> +#define DPC_FATAL	4
+>> +
+>>  void pci_do_recovery(struct pci_dev *dev, int severity);
+>> 
+>>  #ifdef CONFIG_PCIEASPM
+>> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+>> index 38e40c6..208b427 100644
+>> --- a/drivers/pci/pcie/pcie-dpc.c
+>> +++ b/drivers/pci/pcie/pcie-dpc.c
+>> @@ -13,6 +13,7 @@
+>>  #include <linux/pcieport_if.h>
+>>  #include "../pci.h"
+>>  #include "aer/aerdrv.h"
+>> +#include "portdrv.h"
+>> 
+>>  struct dpc_dev {
+>>  	struct pcie_device	*dev;
+>> @@ -45,6 +46,60 @@ struct dpc_dev {
+>>  	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+>>  };
+>> 
+>> +static int find_dpc_dev_iter(struct device *device, void *data)
+>> +{
+>> +	struct pcie_port_service_driver *service_driver;
+>> +	struct device **dev;
+>> +
+>> +	dev = (struct device **) data;
+>> +
+>> +	if (device->bus == &pcie_port_bus_type && device->driver) {
+>> +		service_driver = to_service_driver(device->driver);
+> 
+> Please move the initial assignment to the declaration line to
+> clean this up a bit:
+> 
+> 	struct device **dev = (struct device **)data;
+> 
+> Same thing happens a couple more times in this patch.
+> 
+>> +EXPORT_SYMBOL(pci_find_dpc_service);
+> 
+> EXPORT_SYMBOL_GPL for PCI layer internals again - and ditto for
+> probably about everything in this series.
 
-The original commit was merged via PCI, and I think it's a good idea
-to merge fixes to it the same way.  I'll try to merge this in time for
-v4.16-rc1.
+will take care of all these comments.
 
-On Wed, Feb 7, 2018 at 11:33 PM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
-> Commit 59f47eff03a0 ("powerpc/pci: Use of_irq_parse_and_map_pci() helper")
-> correctly states that of_irq_parse_and_map_pci() does the same thing as
-> of_irq_parse_pci() does as it simply calls
-> of_irq_parse_pci() and irq_create_of_mapping().
->
-> However of_irq_parse_and_map_pci() not only returns 0 for success and
-> negative value for an error but also a positive virq value from
-> irq_create_of_mapping() which the mentioned commit ignores and
-> INTx config fails.
->
-> This fixes the of_irq_parse_and_map_pci() return value handling.
->
-> Fixes: 59f47eff03a0 "powerpc/pci: Use of_irq_parse_and_map_pci() helper"
-> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> ---
->
-> Found it on POWER9 + powernv system - almost all devices suddenly lost
-> INTx support.
-> ---
->  arch/powerpc/kernel/pci-common.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index ae2ede4..acbb44f2 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -370,7 +370,8 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
->         memset(&oirq, 0xff, sizeof(oirq));
->  #endif
->         /* Try to get a mapping from the device-tree */
-> -       if (!of_irq_parse_and_map_pci(pci_dev, 0, 0)) {
-> +       virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
-> +       if (virq <= 0) {
->                 u8 line, pin;
->
->                 /* If that fails, lets fallback to what is in the config
-> --
-> 2.11.0
->
+> 
+>>  #if IS_ENABLED(CONFIG_PCIEAER)
+>> -	/* Use the aer driver of the component firstly */
+>> -	driver = pci_find_aer_service(udev);
+>> +	if ((severity == AER_FATAL) ||
+>> +	    (severity == AER_NONFATAL) ||
+>> +	    (severity == AER_CORRECTABLE))
+>> +		driver = pci_find_aer_service(udev);
+>>  #endif
+> 
+> No need for the inner braces here.
+> 
+>> -	if (severity == AER_FATAL)
+>> +	if ((severity == AER_FATAL) ||
+>> +	    (severity == DPC_FATAL))
+>>  		state = pci_channel_io_frozen;
+>>  	else
+>>  		state = pci_channel_io_normal;
+> 
+> Same here and a few more times below.
+
+will take care
+Thanks,
+Oza.
