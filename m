@@ -1,72 +1,176 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35576 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750826AbeBXPlS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 24 Feb 2018 10:41:18 -0500
+Date: Sat, 24 Feb 2018 09:41:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v11 6/7] PCI: Unify wait for link active into generic pci
+Message-ID: <20180224154115.GT14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+ <1519374244-20539-7-git-send-email-poza@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <62634aa6-ad3c-93c2-e6fa-9e163d4004ca@huawei.com>
-References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
- <1516725385-24535-8-git-send-email-john.garry@huawei.com> <0a30452f-34eb-d0b5-2001-ab6b866c53e2@huawei.com>
- <CAHp75VfXoAHNH2BnfNLbFfdCqUk3rxU_QWfxTx7ZyLgV0qxotQ@mail.gmail.com> <62634aa6-ad3c-93c2-e6fa-9e163d4004ca@huawei.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 6 Feb 2018 21:44:35 +0200
-Message-ID: <CAHp75VdTKCq5Vxox2OPvr+BvVSduhaxs_sa7B9wskzjv8ZJLqw@mail.gmail.com>
-Subject: Re: [PATCH v12 7/9] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-To: John Garry <john.garry@huawei.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Dann Frazier <dann.frazier@canonical.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, linux-pci@vger.kernel.org,
-        Corey Minyard <minyard@acm.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519374244-20539-7-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 5, 2018 at 4:25 PM, John Garry <john.garry@huawei.com> wrote:
-> On 05/02/2018 13:16, Andy Shevchenko wrote:
->> On Thu, Feb 1, 2018 at 1:32 PM, John Garry <john.garry@huawei.com> wrote:
+In subject:
 
->> resource_size_t is dynamic width type, you will see a compiler
->> warning. For this we have
->> %pap specifier.
->>
->> Moreover, in some cases it's useful to print struct resource via %pR or
->> %pr.
+s/pci/PCI/
 
-> I have already fixed this up in my rework.
+On Fri, Feb 23, 2018 at 01:54:03PM +0530, Oza Pawandeep wrote:
+> Clients such as pciehp, dpc are using pcie_wait_link_active, which waits
+> till the link becomes active or inactive.
 
-Good!
+Use "()" after function names so we have a visual clue that they are
+functions.
 
->>>> +/* All the host devices which apply indirect-IO can be listed here. */
->>>> +static const struct acpi_device_id acpi_indirect_host_id[] = {
->>>> +       {""},
->>>> +};
->>
->>
->> The idea of terminator is to be such (remove comma there). And it's
->> basically redundant to have an empty string there. Moreover, it's a
->> waste of resources in ro section.
->
->
-> OK, the comma should be removed. So what is the preferred acpi device id
-> array sentinel? I see {}, {"", 0}, and {""} used.
+> Made generic function and moved it to drivers/pci/pci.c
+> 
+> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 18a42f8..de9b0ea 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller *ctrl)
+>  	return ret;
+>  }
+>  
+> -static void __pcie_wait_link_active(struct controller *ctrl, bool active)
+> +static bool pcie_wait_link_active(struct controller *ctrl)
+>  {
+> -	int timeout = 1000;
+> -
+> -	if (pciehp_check_link_active(ctrl) == active)
+> -		return;
+> -	while (timeout > 0) {
+> -		msleep(10);
+> -		timeout -= 10;
+> -		if (pciehp_check_link_active(ctrl) == active)
+> -			return;
+> -	}
+> -	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
+> -			active ? "set" : "cleared");
+> -}
+> +	struct pci_dev *pdev = ctrl_dev(ctrl);
+>  
+> -static void pcie_wait_link_active(struct controller *ctrl)
+> -{
+> -	__pcie_wait_link_active(ctrl, true);
+> +	return pci_wait_for_link(pdev, true);
+>  }
+>  
+>  static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f6a4dd1..f8d44b4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4176,6 +4176,37 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+>  	return 0;
+>  }
+>  
+> +/**
+> + * pci_wait_for_link - Wait for link till its active/inactive
 
-The rule of thumb --- whatever has more entries in the kernel.
-In case of similarity I would prefer simple {} because it suits for
-termination slightly better (for my opinion, some cases might
-potentially have {"", non_null_vakue}).
+s/its/it's/
 
--- 
-With Best Regards,
-Andy Shevchenko
+> + * @pdev: Bridge device
+> + * @active: waiting for active or inactive ?
+> + *
+> + * Use this to wait till link becomes active or inactive.
+> + */
+> +bool pci_wait_for_link(struct pci_dev *pdev, bool active)
+
+I think this should be "pcie_wait_for_link()".  There's no concept of a
+link in conventional PCI.
+
+> +{
+> +	int timeout = 1000;
+> +	bool ret;
+> +	u16 lnk_status;
+> +
+> +	for (;;) {
+> +		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+> +		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
+> +		if (ret == active)
+> +			return true;
+> +		if (timeout <= 0)
+> +			break;
+> +		timeout -= 10;
+> +	}
+> +
+> +	dev_printk(KERN_DEBUG, &pdev->dev,
+
+pci_info().  Distros often seem to have logging configured so
+KERN_DEBUG things aren't captured, and this definitely seems worth
+capturing.
+
+> +		   "Data Link Layer Link Active not %s in 1000 msec\n",
+> +		   active ? "set" : "cleared");
+> +
+> +	return false;
+> +}
+> +EXPORT_SYMBOL(pci_wait_for_link);
+
+I don't think this needs to be exported.
+
+>  void pci_reset_secondary_bus(struct pci_dev *dev)
+>  {
+>  	u16 ctrl;
+> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> index 5c01c63..e15bcda 100644
+> --- a/drivers/pci/pcie/pcie-dpc.c
+> +++ b/drivers/pci/pcie/pcie-dpc.c
+> @@ -120,19 +120,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+>  
+>  static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+>  {
+> -	unsigned long timeout = jiffies + HZ;
+>  	struct pci_dev *pdev = dpc->dev->port;
+> -	struct device *dev = &dpc->dev->device;
+> -	u16 lnk_status;
+>  
+> -	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+> -	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
+> -					!time_after(jiffies, timeout)) {
+> -		msleep(10);
+> -		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+> -	}
+> -	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
+> -		dev_warn(dev, "Link state not disabled for DPC event\n");
+> +	pci_wait_for_link(pdev, false);
+>  }
+>  
+>  /**
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 024a1be..cb674c3 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1195,6 +1195,7 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
+>  int pci_request_selected_regions(struct pci_dev *, int, const char *);
+>  int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+>  void pci_release_selected_regions(struct pci_dev *, int);
+> +bool pci_wait_for_link(struct pci_dev *pdev, bool active);
+
+I don't think this needs to be available outside the PCI core, so this
+could probably be declared in drivers/pci/pci.h
+
+>  /* drivers/pci/bus.c */
+>  struct pci_bus *pci_bus_get(struct pci_bus *bus);
+> -- 
+> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> 
