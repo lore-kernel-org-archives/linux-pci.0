@@ -1,164 +1,117 @@
-Return-Path: <SRS0=Ri+M=FR=dell.com=Mario.Limonciello@kernel.org>
-Return-Path: <SRS0=Ri+M=FR=dell.com=Mario.Limonciello@kernel.org>
-From: <Mario.Limonciello@dell.com>
-To: <helgaas@kernel.org>
-CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>,
-	<andriy.shevchenko@linux.intel.com>, <lenb@kernel.org>,
-	<michael.jamet@intel.com>, <yehezkel.bernat@intel.com>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v2 1/5] PCI: Make sure all bridges reserve at least one
- bus number
-Date: Fri, 23 Feb 2018 00:52:18 +0000
-Message-ID: <c00e7c7a-6ebd-41b6-a924-92a2070e3db3@Dell.com>
-References: <20180215144000.60456-1-mika.westerberg@linux.intel.com>
- <20180215144000.60456-2-mika.westerberg@linux.intel.com>
- <20180223002733.GH14632@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180223002733.GH14632@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: multipart/alternative;
-	boundary="_000_c00e7c7a6ebd41b6a92492a2070e3db3Dellcom_"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35284 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750826AbeBXPgZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 24 Feb 2018 10:36:25 -0500
+Date: Sat, 24 Feb 2018 09:36:21 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v11 5/7] PCI/AER: Unify aer error defines at single space
+Message-ID: <20180224153621.GS14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+ <1519374244-20539-6-git-send-email-poza@codeaurora.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519374244-20539-6-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_c00e7c7a6ebd41b6a92492a2070e3db3Dellcom_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+On Fri, Feb 23, 2018 at 01:54:02PM +0530, Oza Pawandeep wrote:
+> This patch moves AER error defines to drivers/pci/pci.h.
+> So that it unifies the error repoting codes at single place along with dpc
 
-DQpPbiBGZWIgMjIsIDIwMTggMTg6MjcsIEJqb3JuIEhlbGdhYXMgPGhlbGdhYXNAa2VybmVsLm9y
-Zz4gd3JvdGU6DQo+DQo+IE9uIFRodSwgRmViIDE1LCAyMDE4IGF0IDA1OjM5OjU1UE0gKzAzMDAs
-IE1pa2EgV2VzdGVyYmVyZyB3cm90ZToNCj4gPiBXaGVuIGRpc3RyaWJ1dGluZyBleHRyYSBidXNl
-cyBiZXR3ZWVuIGhvdHBsdWcgYnJpZGdlcyB3ZSBuZWVkIHRvIG1ha2UNCj4gPiBzdXJlIGVhY2gg
-YnJpZGdlIHJlc2VydmUgYXQgbGVhc3Qgb25lIGJ1cyBudW1iZXIsIGV2ZW4gaWYgdGhlcmUgaXMN
-Cj4gPiBjdXJyZW50bHkgbm90aGluZyBjb25uZWN0ZWQgdG8gaXQuIEZvciBpbnN0YW5jZSBBQ1BJ
-IGhvdHBsdWcgbWF5IGJyaW5nDQo+ID4gaW4gYWRkaXRpb25hbCBkZXZpY2VzIHRvIG5vbi1ob3Rw
-bHVnIGJyaWRnZXMgbGF0ZXIgb24uIFRvIG1ha2Ugc3VyZSB3ZQ0KPiA+IGRvbid0IHJ1biBvdXQg
-b2YgYnVzIG51bWJlcnMgZm9yIG5vbi1ob3RwbHVnIGJyaWRnZXMgcmVzZXJ2ZSBvbmUgYnVzDQo+
-ID4gbnVtYmVyIGZvciB0aGVtIHVwZnJvbnQgYmVmb3JlIGRpc3RyaWJ1dGluZyBidXNlcyBmb3Ig
-aG90cGx1ZyBicmlkZ2VzLg0KPiA+DQo+ID4gRml4ZXM6IDFjMDJlYTgxMDA2NSAoIlBDSTogRGlz
-dHJpYnV0ZSBhdmFpbGFibGUgYnVzZXMgdG8gaG90cGx1Zy1jYXBhYmxlIGJyaWRnZXMiKQ0KPiA+
-IFJlcG9ydGVkLWJ5OiBNYXJpbyBMaW1vbmNpZWxsbyA8bWFyaW8ubGltb25jaWVsbG9AZGVsbC5j
-b20+DQo+DQo+IElzIHRoZXJlIGEgYnVnemlsbGEgb3IgZW1haWwgVVJMIHdlIGNhbiBpbmNsdWRl
-IGhlcmU/DQoNClNvcnJ5IGl0IHdhcyBwcml2YXRlIGNvbW11bmljYXRpb24gdGhhdCBJIGJlbGll
-dmUgTWlrYSBpcyByZWZlcnJpbmcgdG8gaW4gUmVwb3J0ZWQtQnkgaGVyZS4NCg0KWW91IGNhbiBy
-ZW1vdmUgdGhlIHRhZyBpZiB5b3UgdGhpbmsgaXQncyBpbmFwcHJvcHJpYXRlIGZvciB0aGlzIGNv
-bW1pdC4NCg0KPg0KPiA+IFNpZ25lZC1vZmYtYnk6IE1pa2EgV2VzdGVyYmVyZyA8bWlrYS53ZXN0
-ZXJiZXJnQGxpbnV4LmludGVsLmNvbT4NCj4gPiBDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0K
-PiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3BjaS9wcm9iZS5jIHwgMTEgKysrKysrKystLS0NCj4gPiAg
-MSBmaWxlIGNoYW5nZWQsIDggaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gPg0KPiA+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wcm9iZS5jIGIvZHJpdmVycy9wY2kvcHJvYmUuYw0K
-PiA+IGluZGV4IGVmNTM3NzQzOGExZS4uNmNlZmQ0NzU1NmUzIDEwMDY0NA0KPiA+IC0tLSBhL2Ry
-aXZlcnMvcGNpL3Byb2JlLmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jDQo+ID4gQEAg
-LTI1NjEsNyArMjU2MSwxMCBAQCBzdGF0aWMgdW5zaWduZWQgaW50IHBjaV9zY2FuX2NoaWxkX2J1
-c19leHRlbmQoc3RydWN0IHBjaV9idXMgKmJ1cywNCj4gPiAgZm9yX2VhY2hfcGNpX2JyaWRnZShk
-ZXYsIGJ1cykgew0KPiA+ICBjbWF4ID0gbWF4Ow0KPiA+ICBtYXggPSBwY2lfc2Nhbl9icmlkZ2Vf
-ZXh0ZW5kKGJ1cywgZGV2LCBtYXgsIDAsIDApOw0KPiA+IC0gdXNlZF9idXNlcyArPSBjbWF4IC0g
-bWF4Ow0KPiA+ICsgLyogUmVzZXJ2ZSBvbmUgYnVzIGZvciBlYWNoIGJyaWRnZSAqLw0KPiA+ICsg
-dXNlZF9idXNlcysrOw0KPiA+ICsgaWYgKGNtYXggLSBtYXggPiAxKQ0KPiA+ICsgdXNlZF9idXNl
-cyArPSBjbWF4IC0gbWF4IC0gMTsNCj4gPiAgfQ0KPiA+DQo+ID4gIC8qIFNjYW4gYnJpZGdlcyB0
-aGF0IG5lZWQgdG8gYmUgcmVjb25maWd1cmVkICovDQo+ID4gQEAgLTI1ODQsMTIgKzI1ODcsMTQg
-QEAgc3RhdGljIHVuc2lnbmVkIGludCBwY2lfc2Nhbl9jaGlsZF9idXNfZXh0ZW5kKHN0cnVjdCBw
-Y2lfYnVzICpidXMsDQo+ID4gICogYnJpZGdlcyBpZiBhbnkuDQo+ID4gICovDQo+ID4gIGJ1c2Vz
-ID0gYXZhaWxhYmxlX2J1c2VzIC8gaG90cGx1Z19icmlkZ2VzOw0KPiA+IC0gYnVzZXMgPSBtaW4o
-YnVzZXMsIGF2YWlsYWJsZV9idXNlcyAtIHVzZWRfYnVzZXMpOw0KPiA+ICsgYnVzZXMgPSBtaW4o
-YnVzZXMsIGF2YWlsYWJsZV9idXNlcyAtIHVzZWRfYnVzZXMgKyAxKTsNCj4gPiAgfQ0KPiA+DQo+
-ID4gIGNtYXggPSBtYXg7DQo+ID4gIG1heCA9IHBjaV9zY2FuX2JyaWRnZV9leHRlbmQoYnVzLCBk
-ZXYsIGNtYXgsIGJ1c2VzLCAxKTsNCj4gPiAtIHVzZWRfYnVzZXMgKz0gbWF4IC0gY21heDsNCj4g
-PiArIC8qIE9uZSBidXMgaXMgYWxyZWFkeSBhY2NvdW50ZWQgc28gZG9uJ3QgYWRkIGl0IGFnYWlu
-ICovDQo+ID4gKyBpZiAobWF4IC0gY21heCA+IDEpDQo+ID4gKyB1c2VkX2J1c2VzICs9IG1heCAt
-IGNtYXggLSAxOw0KPiA+ICB9DQo+ID4NCj4gPiAgLyoNCj4gPiAtLQ0KPiA+IDIuMTUuMQ0KPiA+
-DQo+ID4gLS0NCj4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGlu
-ZSAidW5zdWJzY3JpYmUgbGludXgtYWNwaSIgaW4NCj4gPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2Ug
-dG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiA+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQg
-IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
+s/repoting/reporting/
+s/dpc/DPC/ (in English text)
 
---_000_c00e7c7a6ebd41b6a92492a2070e3db3Dellcom_
-Content-Type: text/html; charset="utf-8"
-Content-ID: <37E69433FC73A347ACCA982F4A81572D@dell.com>
-Content-Transfer-Encoding: base64
+> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> 
+> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+> index 1efefe9..7ae9bb3 100644
+> --- a/drivers/acpi/apei/ghes.c
+> +++ b/drivers/acpi/apei/ghes.c
+> @@ -56,6 +56,7 @@
+>  #include <ras/ras_event.h>
+>  
+>  #include "apei-internal.h"
+> +#include "../../pci/pci.h"
 
-PGh0bWw+DQo8aGVhZD4NCjxtZXRhIGh0dHAtZXF1aXY9IkNvbnRlbnQtVHlwZSIgY29udGVudD0i
-dGV4dC9odG1sOyBjaGFyc2V0PXV0Zi04Ij4NCjwvaGVhZD4NCjxib2R5Pg0KPGJyPg0KPGRpdiBk
-aXI9Imx0ciI+T24gRmViIDIyLCAyMDE4IDE4OjI3LCBCam9ybiBIZWxnYWFzICZsdDtoZWxnYWFz
-QGtlcm5lbC5vcmcmZ3Q7IHdyb3RlOjwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0OzwvZGl2Pg0K
-PGRpdiBkaXI9Imx0ciI+Jmd0OyBPbiBUaHUsIEZlYiAxNSwgMjAxOCBhdCAwNTozOTo1NVBNICYj
-NDM7MDMwMCwgTWlrYSBXZXN0ZXJiZXJnIHdyb3RlOg0KPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4m
-Z3Q7ICZndDsgV2hlbiBkaXN0cmlidXRpbmcgZXh0cmEgYnVzZXMgYmV0d2VlbiBob3RwbHVnIGJy
-aWRnZXMgd2UgbmVlZCB0byBtYWtlDQo8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyBz
-dXJlIGVhY2ggYnJpZGdlIHJlc2VydmUgYXQgbGVhc3Qgb25lIGJ1cyBudW1iZXIsIGV2ZW4gaWYg
-dGhlcmUgaXMNCjwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0OyAmZ3Q7IGN1cnJlbnRseSBub3Ro
-aW5nIGNvbm5lY3RlZCB0byBpdC4gRm9yIGluc3RhbmNlIEFDUEkgaG90cGx1ZyBtYXkgYnJpbmcN
-CjwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0OyAmZ3Q7IGluIGFkZGl0aW9uYWwgZGV2aWNlcyB0
-byBub24taG90cGx1ZyBicmlkZ2VzIGxhdGVyIG9uLiBUbyBtYWtlIHN1cmUgd2UNCjwvZGl2Pg0K
-PGRpdiBkaXI9Imx0ciI+Jmd0OyAmZ3Q7IGRvbid0IHJ1biBvdXQgb2YgYnVzIG51bWJlcnMgZm9y
-IG5vbi1ob3RwbHVnIGJyaWRnZXMgcmVzZXJ2ZSBvbmUgYnVzDQo8L2Rpdj4NCjxkaXYgZGlyPSJs
-dHIiPiZndDsgJmd0OyBudW1iZXIgZm9yIHRoZW0gdXBmcm9udCBiZWZvcmUgZGlzdHJpYnV0aW5n
-IGJ1c2VzIGZvciBob3RwbHVnIGJyaWRnZXMuDQo8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsg
-Jmd0OyA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyBGaXhlczogMWMwMmVhODEwMDY1
-ICgmcXVvdDtQQ0k6IERpc3RyaWJ1dGUgYXZhaWxhYmxlIGJ1c2VzIHRvIGhvdHBsdWctY2FwYWJs
-ZSBicmlkZ2VzJnF1b3Q7KQ0KPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsgUmVwb3J0
-ZWQtYnk6IE1hcmlvIExpbW9uY2llbGxvICZsdDttYXJpby5saW1vbmNpZWxsb0BkZWxsLmNvbSZn
-dDsgPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7PC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7
-IElzIHRoZXJlIGEgYnVnemlsbGEgb3IgZW1haWwgVVJMIHdlIGNhbiBpbmNsdWRlIGhlcmU/IDwv
-ZGl2Pg0KPGJyPg0KPGRpdiBkaXI9Imx0ciI+U29ycnkgaXQgd2FzIHByaXZhdGUgY29tbXVuaWNh
-dGlvbiB0aGF0IEkgYmVsaWV2ZSBNaWthIGlzIHJlZmVycmluZyB0byBpbiBSZXBvcnRlZC1CeSBo
-ZXJlLjwvZGl2Pg0KPGJyPg0KPGRpdiBkaXI9Imx0ciI+WW91IGNhbiByZW1vdmUgdGhlIHRhZyBp
-ZiB5b3UgdGhpbmsgaXQncyBpbmFwcHJvcHJpYXRlIGZvciB0aGlzIGNvbW1pdC48L2Rpdj4NCjxi
-cj4NCjxkaXYgZGlyPSJsdHIiPiZndDs8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyBT
-aWduZWQtb2ZmLWJ5OiBNaWthIFdlc3RlcmJlcmcgJmx0O21pa2Eud2VzdGVyYmVyZ0BsaW51eC5p
-bnRlbC5jb20mZ3Q7DQo8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyBDYzogc3RhYmxl
-QHZnZXIua2VybmVsLm9yZyA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyAtLS0gPC9k
-aXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsmbmJzcDsgZHJpdmVycy9wY2kvcHJvYmUuYyB8
-IDExICYjNDM7JiM0MzsmIzQzOyYjNDM7JiM0MzsmIzQzOyYjNDM7JiM0MzstLS0gPC9kaXY+DQo8
-ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsmbmJzcDsgMSBmaWxlIGNoYW5nZWQsIDggaW5zZXJ0aW9u
-cygmIzQzOyksIDMgZGVsZXRpb25zKC0pIDwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0OyAmZ3Q7
-IDwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0OyAmZ3Q7IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Bj
-aS9wcm9iZS5jIGIvZHJpdmVycy9wY2kvcHJvYmUuYyA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZn
-dDsgJmd0OyBpbmRleCBlZjUzNzc0MzhhMWUuLjZjZWZkNDc1NTZlMyAxMDA2NDQgPC9kaXY+DQo8
-ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsgLS0tIGEvZHJpdmVycy9wY2kvcHJvYmUuYyA8L2Rpdj4N
-CjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyAmIzQzOyYjNDM7JiM0MzsgYi9kcml2ZXJzL3BjaS9w
-cm9iZS5jIDwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0OyAmZ3Q7IEBAIC0yNTYxLDcgJiM0Mzsy
-NTYxLDEwIEBAIHN0YXRpYyB1bnNpZ25lZCBpbnQgcGNpX3NjYW5fY2hpbGRfYnVzX2V4dGVuZChz
-dHJ1Y3QgcGNpX2J1cyAqYnVzLA0KPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsmbmJz
-cDsgZm9yX2VhY2hfcGNpX2JyaWRnZShkZXYsIGJ1cykgeyA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIi
-PiZndDsgJmd0OyZuYnNwOyBjbWF4ID0gbWF4OyA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsg
-Jmd0OyZuYnNwOyBtYXggPSBwY2lfc2Nhbl9icmlkZ2VfZXh0ZW5kKGJ1cywgZGV2LCBtYXgsIDAs
-IDApOyA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyAtIHVzZWRfYnVzZXMgJiM0Mzs9
-IGNtYXggLSBtYXg7IDwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0OyAmZ3Q7ICYjNDM7IC8qIFJl
-c2VydmUgb25lIGJ1cyBmb3IgZWFjaCBicmlkZ2UgKi8gPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4m
-Z3Q7ICZndDsgJiM0MzsgdXNlZF9idXNlcyYjNDM7JiM0Mzs7IDwvZGl2Pg0KPGRpdiBkaXI9Imx0
-ciI+Jmd0OyAmZ3Q7ICYjNDM7IGlmIChjbWF4IC0gbWF4ICZndDsgMSkgPC9kaXY+DQo8ZGl2IGRp
-cj0ibHRyIj4mZ3Q7ICZndDsgJiM0MzsgdXNlZF9idXNlcyAmIzQzOz0gY21heCAtIG1heCAtIDE7
-IDwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0OyAmZ3Q7Jm5ic3A7IH0gPC9kaXY+DQo8ZGl2IGRp
-cj0ibHRyIj4mZ3Q7ICZndDsmbmJzcDsgPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsm
-bmJzcDsgLyogU2NhbiBicmlkZ2VzIHRoYXQgbmVlZCB0byBiZSByZWNvbmZpZ3VyZWQgKi8gPC9k
-aXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsgQEAgLTI1ODQsMTIgJiM0MzsyNTg3LDE0IEBA
-IHN0YXRpYyB1bnNpZ25lZCBpbnQgcGNpX3NjYW5fY2hpbGRfYnVzX2V4dGVuZChzdHJ1Y3QgcGNp
-X2J1cyAqYnVzLA0KPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsmbmJzcDsgKiBicmlk
-Z2VzIGlmIGFueS4gPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsmbmJzcDsgKi8gPC9k
-aXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsmbmJzcDsgYnVzZXMgPSBhdmFpbGFibGVfYnVz
-ZXMgLyBob3RwbHVnX2JyaWRnZXM7IDwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0OyAmZ3Q7IC0g
-YnVzZXMgPSBtaW4oYnVzZXMsIGF2YWlsYWJsZV9idXNlcyAtIHVzZWRfYnVzZXMpOyA8L2Rpdj4N
-CjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyAmIzQzOyBidXNlcyA9IG1pbihidXNlcywgYXZhaWxh
-YmxlX2J1c2VzIC0gdXNlZF9idXNlcyAmIzQzOyAxKTsgPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4m
-Z3Q7ICZndDsmbmJzcDsgfSA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyZuYnNwOyA8
-L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyZuYnNwOyBjbWF4ID0gbWF4OyA8L2Rpdj4N
-CjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyZuYnNwOyBtYXggPSBwY2lfc2Nhbl9icmlkZ2VfZXh0
-ZW5kKGJ1cywgZGV2LCBjbWF4LCBidXNlcywgMSk7IDwvZGl2Pg0KPGRpdiBkaXI9Imx0ciI+Jmd0
-OyAmZ3Q7IC0gdXNlZF9idXNlcyAmIzQzOz0gbWF4IC0gY21heDsgPC9kaXY+DQo8ZGl2IGRpcj0i
-bHRyIj4mZ3Q7ICZndDsgJiM0MzsgLyogT25lIGJ1cyBpcyBhbHJlYWR5IGFjY291bnRlZCBzbyBk
-b24ndCBhZGQgaXQgYWdhaW4gKi8gPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsgJiM0
-MzsgaWYgKG1heCAtIGNtYXggJmd0OyAxKSA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0
-OyAmIzQzOyB1c2VkX2J1c2VzICYjNDM7PSBtYXggLSBjbWF4IC0gMTsgPC9kaXY+DQo8ZGl2IGRp
-cj0ibHRyIj4mZ3Q7ICZndDsmbmJzcDsgfSA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0
-OyZuYnNwOyA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyZuYnNwOyAvKiA8L2Rpdj4N
-CjxkaXYgZGlyPSJsdHIiPiZndDsgJmd0OyAtLSA8L2Rpdj4NCjxkaXYgZGlyPSJsdHIiPiZndDsg
-Jmd0OyAyLjE1LjEgPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsgPC9kaXY+DQo8ZGl2
-IGRpcj0ibHRyIj4mZ3Q7ICZndDsgLS0gPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsg
-VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgJnF1b3Q7dW5zdWJz
-Y3JpYmUgbGludXgtYWNwaSZxdW90OyBpbg0KPC9kaXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZn
-dDsgdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgPC9k
-aXY+DQo8ZGl2IGRpcj0ibHRyIj4mZ3Q7ICZndDsgTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCZuYnNw
-OyBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCjwvZGl2Pg0KPGJy
-Pg0KPC9ib2R5Pg0KPC9odG1sPg0K
+You're right, it's ugly to use this sort of path to a private PCI
+header file from outside drivers/pci.
 
---_000_c00e7c7a6ebd41b6a92492a2070e3db3Dellcom_--
+Could you just add DPC_FATAL to include/linux/aer.h?  Maybe we
+discarded that for some reason?  Having pcie-dpc.c include linux/aer.h
+seems like it would be better than having this ACPI code include
+"../../pci/pci.h"
+
+>  #define GHES_PFX	"GHES: "
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index f8575da..c8394ec 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -343,7 +343,11 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+>  void pci_enable_acs(struct pci_dev *dev);
+>  
+>  /* PCI error reporting and recovery */
+> -#define DPC_FATAL	4
+> +#define AER_NONFATAL		0
+> +#define AER_FATAL		1
+> +#define AER_CORRECTABLE		2
+> +
+> +#define DPC_FATAL		4
+>  
+>  void pcie_do_recovery(struct pci_dev *dev, int severity);
+>  
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index 6a352e6..4c59f37 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -19,6 +19,7 @@
+>  #include <linux/cper.h>
+>  
+>  #include "aerdrv.h"
+> +#include "../../pci.h"
+>  #include <ras/ras_event.h>
+>  
+>  #define AER_AGENT_RECEIVER		0
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index 8f87bbe..3eac8ed 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -11,10 +11,6 @@
+>  #include <linux/errno.h>
+>  #include <linux/types.h>
+>  
+> -#define AER_NONFATAL			0
+> -#define AER_FATAL			1
+> -#define AER_CORRECTABLE			2
+> -
+>  struct pci_dev;
+>  
+>  struct aer_header_log_regs {
+> diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+> index 9c68986..d75c75b 100644
+> --- a/include/ras/ras_event.h
+> +++ b/include/ras/ras_event.h
+> @@ -13,6 +13,7 @@
+>  #include <linux/aer.h>
+>  #include <linux/cper.h>
+>  #include <linux/mm.h>
+> +#include "../../../drivers/pci/pci.h"
+>  
+>  /*
+>   * MCE Extended Error Log trace event
+> -- 
+> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> 
