@@ -1,130 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38490 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751622AbeBKCsW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 10 Feb 2018 21:48:22 -0500
-Subject: [PATCH] PCI/portdrv: Remove "pcie_hp=nomsi" kernel parameter
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>, linux-kernel@vger.kernel.org,
-        MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Sat, 10 Feb 2018 20:48:15 -0600
-Message-ID: <20180211024815.73781.92853.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38180 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750987AbeBYPUv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 25 Feb 2018 10:20:51 -0500
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Subject: Re: [virtio-dev] [RFC PATCH V2] virtio_pci: Add SR-IOV support
+From: Yan Vugenfirer <yvugenfi@redhat.com>
+In-Reply-To: <20180222175250.97135.98386.stgit@mdrustad-mac04.local>
+Date: Sun, 25 Feb 2018 17:20:47 +0200
+Cc: virtio-dev@lists.oasis-open.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        dan.daly@intel.com, alex.williamson@redhat.com, MRustad@gmail.com,
+        alexander.duyck@gmail.com, mst@redhat.com
+Message-Id: <7B7DC8E0-9F6A-403F-8077-39FC3939482E@redhat.com>
+References: <20180222175250.97135.98386.stgit@mdrustad-mac04.local>
+To: Mark Rustad <mark.d.rustad@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
 
-7570a333d8b0 ("PCI: Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
-driver") added the "pcie_hp=nomsi" kernel parameter to work around this
-error on shutdown:
 
-  irq 16: nobody cared (try booting with the "irqpoll" option)
-  Pid: 1081, comm: reboot Not tainted 3.2.0 #1
-  ...
-  Disabling IRQ #16
+> On 22 Feb 2018, at 19:52, Mark Rustad <mark.d.rustad@intel.com> wrote:
+> 
+> Hardware-realized virtio-pci devices can implement SR-IOV, so this
+> patch enables its use. The device in question is an upcoming Intel
+> NIC that implements both a virtio-net PF and virtio-net VFs. These
+> are hardware realizations of what has been up to now been a software
+> interface.
+> 
+> The device in question has the following 4-part PCI IDs:
+> 
+> PF: device: 1af4 vendor: 1041 subvendor: 8086 subdevice: 15fe
+> VF: device: 1af4 vendor: 1041 subvendor: 8086 subdevice: 05fe
 
-This happened on an unspecified system (possibly involving the Integrated
-Device Technology, Inc. Device 807f bridge).  There is no automated way to
-set this parameter, so it's not very useful for distributions or end users.
+Small mistake in the commit message. Red Hat (Qumranet) vendor ID is 1af4, virtio-net device ID is 1041.
+Should be:
+PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
 
-I suspect the root cause of the underlying "irq 16: nobody cared" issue was
-fixed by Prarit Bhargava <prarit@redhat.com> with fda78d7a0ead ("PCI/MSI:
-Stop disabling MSI/MSI-X in pci_device_shutdown()") and we probably don't
-need "pcie_hp=nomsi" any more.
+Best regards,
+Yan.
 
-Revert 7570a333d8b0 to remove the "pcie_hp=nomsi" parameter.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-CC: Prarit Bhargava <prarit@redhat.com>
----
- Documentation/admin-guide/kernel-parameters.txt |    4 ----
- drivers/pci/pcie/portdrv.h                      |   12 ------------
- drivers/pci/pcie/portdrv_core.c                 |   20 +++-----------------
- 3 files changed, 3 insertions(+), 33 deletions(-)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 78cdf6a637fc..ed0d26d26c26 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3101,10 +3101,6 @@
- 		force	Enable ASPM even on devices that claim not to support it.
- 			WARNING: Forcing ASPM on may cause system lockups.
- 
--	pcie_hp=	[PCIE] PCI Express Hotplug driver options:
--		nomsi	Do not use MSI for PCI Express Native Hotplug (this
--			makes all PCIe ports use INTx for hotplug services).
--
- 	pcie_ports=	[PCIE] PCIe ports handling:
- 		auto	Ask the BIOS whether or not to use native PCIe services
- 			associated with PCIe ports (PME, hot-plug, AER).  Use
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index a854bc569117..b00764bc684d 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -36,18 +36,6 @@ struct pci_dev;
- 
- void pcie_clear_root_pme_status(struct pci_dev *dev);
- 
--#ifdef CONFIG_HOTPLUG_PCI_PCIE
--extern bool pciehp_msi_disabled;
--
--static inline bool pciehp_no_msi(void)
--{
--	return pciehp_msi_disabled;
--}
--
--#else  /* !CONFIG_HOTPLUG_PCI_PCIE */
--static inline bool pciehp_no_msi(void) { return false; }
--#endif /* !CONFIG_HOTPLUG_PCI_PCIE */
--
- #ifdef CONFIG_PCIE_PME
- extern bool pcie_pme_msi_disabled;
- 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index ef3bad4ad010..219f0f47f6fb 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -21,17 +21,6 @@
- #include "../pci.h"
- #include "portdrv.h"
- 
--bool pciehp_msi_disabled;
--
--static int __init pciehp_setup(char *str)
--{
--	if (!strncmp(str, "nomsi", 5))
--		pciehp_msi_disabled = true;
--
--	return 1;
--}
--__setup("pcie_hp=", pciehp_setup);
--
- /**
-  * release_pcie_device - free PCI Express port service device structure
-  * @dev: Port service device to release
-@@ -169,16 +158,13 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- 		irqs[i] = -1;
- 
- 	/*
--	 * If we support PME or hotplug, but we can't use MSI/MSI-X for
--	 * them, we have to fall back to INTx or other interrupts, e.g., a
--	 * system shared interrupt.
-+	 * If we support PME but can't use MSI/MSI-X for it, we have to
-+	 * fall back to INTx or other interrupts, e.g., a system shared
-+	 * interrupt.
- 	 */
- 	if ((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi())
- 		goto legacy_irq;
- 
--	if ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())
--		goto legacy_irq;
--
- 	/* Try to use MSI-X or MSI if supported */
- 	if (pcie_port_enable_irq_vec(dev, irqs, mask) == 0)
- 		return 0;
+> 
+> The patch needs no check for device ID, because the callback will
+> never be made for devices that do not assert the capability or
+> when run on a platform incapable of SR-IOV.
+> 
+> One reason for this patch is because the hardware requires the
+> vendor ID of a VF to be the same as the vendor ID of the PF that
+> created it. So it seemed logical to simply have a fully-functioning
+> virtio-net PF create the VFs. This patch makes that possible.
+> 
+> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+> Reviewed-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> ---
+> Changes in V2:
+> - Simplified logic from previous version, removed added driver variable
+> - Disable SR-IOV on driver removal excapt when VFs are assigned
+> - Sent as RFC to virtio-dev, linux-pci, netdev, lkml and others
+> ---
+> drivers/virtio/virtio_pci_common.c |   47 ++++++++++++++++++++++++++++++++++++
+> 1 file changed, 47 insertions(+)
+> 
+> diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+> index 48d4d1cf1cb6..78b53ffc4cee 100644
+> --- a/drivers/virtio/virtio_pci_common.c
+> +++ b/drivers/virtio/virtio_pci_common.c
+> @@ -572,6 +572,47 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
+> 	return rc;
+> }
+> 
+> +#ifdef CONFIG_PCI_IOV
+> +static int virtio_pci_sriov_disable(struct pci_dev *pci_dev)
+> +{
+> +	/* If vfs are assigned we cannot shut down SR-IOV without causing
+> +	 * issues, so just leave the hardware available.
+> +	 */
+> +	if (pci_vfs_assigned(pci_dev)) {
+> +		dev_warn(&pci_dev->dev,
+> +			 "Unloading driver while VFs are assigned - VFs will not be deallocated\n");
+> +		return -EPERM;
+> +	}
+> +	pci_disable_sriov(pci_dev);
+> +	return 0;
+> +}
+> +
+> +static int virtio_pci_sriov_enable(struct pci_dev *pci_dev, int num_vfs)
+> +{
+> +	int rc = 0;
+> +
+> +	if (pci_num_vf(pci_dev))
+> +		return -EINVAL;
+> +
+> +	rc = pci_enable_sriov(pci_dev, num_vfs);
+> +	if (rc) {
+> +		dev_warn(&pci_dev->dev, "Failed to enable PCI sriov: %d\n", rc);
+> +		return rc;
+> +	}
+> +	dev_info(&pci_dev->dev, "SR-IOV enabled with %d VFs\n", num_vfs);
+> +	return num_vfs;
+> +}
+> +
+> +static int virtio_pci_sriov_configure(struct pci_dev *dev, int num_vfs)
+> +{
+> +	if (num_vfs)
+> +		return virtio_pci_sriov_enable(dev, num_vfs);
+> +	if (!pci_num_vf(dev))
+> +		return -EINVAL;
+> +	return virtio_pci_sriov_disable(dev);
+> +}
+> +#endif /* CONFIG_PCI_IOV */
+> +
+> static void virtio_pci_remove(struct pci_dev *pci_dev)
+> {
+> 	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+> @@ -584,6 +625,9 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+> 	else
+> 		virtio_pci_modern_remove(vp_dev);
+> 
+> +#ifdef CONFIG_PCI_IOV
+> +	virtio_pci_sriov_disable(pci_dev);
+> +#endif
+> 	pci_disable_device(pci_dev);
+> 	put_device(dev);
+> }
+> @@ -596,6 +640,9 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+> #ifdef CONFIG_PM_SLEEP
+> 	.driver.pm	= &virtio_pci_pm_ops,
+> #endif
+> +#ifdef CONFIG_PCI_IOV
+> +	.sriov_configure = virtio_pci_sriov_configure,
+> +#endif
+> };
+> 
+> module_pci_driver(virtio_pci_driver);
+> 
+> 
+> ---------------------------------------------------------------------
+> To unsubscribe, e-mail: virtio-dev-unsubscribe@lists.oasis-open.org
+> For additional commands, e-mail: virtio-dev-help@lists.oasis-open.org
+> 
