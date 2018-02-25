@@ -1,246 +1,97 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, okaya@codeaurora.org,
-        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
-        bharatku@xilinx.com
-Subject: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
-Date: Mon, 12 Feb 2018 18:33:42 +0000
-Message-Id: <20180212183352.22730-28-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0053.outbound.protection.outlook.com ([104.47.2.53]:36672
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751640AbeBYLUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 25 Feb 2018 06:20:46 -0500
+Subject: Re: [PATCH next V1 7/7] net/mlx5e: Use generic PCI function for BW
+ calculation
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>
+References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+ <1516030541-6626-8-git-send-email-talgi@mellanox.com>
+ <20180222200901.GC16519@bhelgaas-glaptop.roam.corp.google.com>
+From: Tal Gilboa <talgi@mellanox.com>
+Message-ID: <f1341aae-db08-74fc-461d-7a074198aed8@mellanox.com>
+Date: Sun, 25 Feb 2018 13:20:39 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180222200901.GC16519@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When using PRI or Stall, the PRI or event handler enqueues faults into the
-core fault queue. Register it based on the SMMU features.
+On 2/22/2018 10:09 PM, Bjorn Helgaas wrote:
+> On Mon, Jan 15, 2018 at 05:35:41PM +0200, Tal Gilboa wrote:
+>> Newly introduced pcie_get_link_limits() function calculates
+>> maximum available BW through the PCI chain. We can use this
+>> value for mlx5e_get_pci_bw() instead of calculating ourselves.
+>>
+>> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+>> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+>> ---
+>>   drivers/net/ethernet/mellanox/mlx5/core/en_main.c | 17 +++--------------
+>>   1 file changed, 3 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+>> index d2b057a..d1d7427 100644
+>> --- a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+>> +++ b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+>> @@ -3971,27 +3971,16 @@ static int mlx5e_get_pci_bw(struct mlx5_core_dev *mdev, u32 *pci_bw)
+>>   	enum pcie_link_width width;
+>>   	enum pci_bus_speed speed;
+>>   	int err = 0;
+>> +	int bw;
+>>   
+>> -	err = pcie_get_minimum_link(mdev->pdev, &speed, &width);
+>> +	err = pcie_get_link_limits(mdev->pdev, &speed, &width, &bw);
+> 
+> Why don't you refactor this a little so it calls
+> pcie_print_link_status() like mlx5 and mlx4?
+> 
+> I think this is the only call of pcie_get_link_limits() outside
+> drivers/pci, and it seems like a little overkill here since you really
+> don't need "speed" here.
 
-When the core stops using a PASID, it notifies the SMMU to flush all
-instances of this PASID from the PRI queue. Add a way to flush the PRI and
-event queue. PRI and event thread now take a spinlock while processing the
-queue. The flush handler takes this lock to inspect the queue state.
-We avoid livelock, where the SMMU adds fault to the queue faster than we
-can consume them, by incrementing a 'batch' number on every cycle so the
-flush handler only has to wait a complete cycle (two batch increments.)
+I wouldn't like to call pcie_print_link_status() if I don't really want 
+to print the status. In this case mlx5e driver needs the PCI bandwidth 
+limitation in order to make a decision. I think it is good that we 
+expose a method to do precisely that.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/Kconfig       |   1 +
- drivers/iommu/arm-smmu-v3.c | 103 +++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 103 insertions(+), 1 deletion(-)
+> 
+> But I don't understand what's going on with mlx5e_get_max_linkspeed().
+> It doesn't look like that is actually looking at the PCIe link speed,
+> so maybe there's something special going on there.
 
-diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-index d434f7085dc2..d79c68754bb9 100644
---- a/drivers/iommu/Kconfig
-+++ b/drivers/iommu/Kconfig
-@@ -354,6 +354,7 @@ config ARM_SMMU_V3
- 	depends on ARM64
- 	select IOMMU_API
- 	select IOMMU_SVA
-+	select IOMMU_FAULT
- 	select IOMMU_IO_PGTABLE_LPAE
- 	select ARM_SMMU_V3_CONTEXT
- 	select GENERIC_MSI_IRQ_DOMAIN
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 8528704627b5..c5b3a43becaf 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -494,6 +494,10 @@ struct arm_smmu_queue {
- 
- 	u32 __iomem			*prod_reg;
- 	u32 __iomem			*cons_reg;
-+
-+	/* Event and PRI */
-+	u64				batch;
-+	wait_queue_head_t		wq;
- };
- 
- struct arm_smmu_cmdq {
-@@ -610,6 +614,9 @@ struct arm_smmu_device {
- 
- 	/* IOMMU core code handle */
- 	struct iommu_device		iommu;
-+
-+	/* Notifier for the fault queue */
-+	struct notifier_block		faultq_nb;
- };
- 
- /* SMMU private data for each master */
-@@ -1247,14 +1254,23 @@ static int arm_smmu_init_l2_strtab(struct arm_smmu_device *smmu, u32 sid)
- static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
- {
- 	int i;
-+	int num_handled = 0;
- 	struct arm_smmu_device *smmu = dev;
- 	struct arm_smmu_queue *q = &smmu->evtq.q;
-+	size_t queue_size = 1 << q->max_n_shift;
- 	u64 evt[EVTQ_ENT_DWORDS];
- 
-+	spin_lock(&q->wq.lock);
- 	do {
- 		while (!queue_remove_raw(q, evt)) {
- 			u8 id = evt[0] >> EVTQ_0_ID_SHIFT & EVTQ_0_ID_MASK;
- 
-+			if (++num_handled == queue_size) {
-+				q->batch++;
-+				wake_up_locked(&q->wq);
-+				num_handled = 0;
-+			}
-+
- 			dev_info(smmu->dev, "event 0x%02x received:\n", id);
- 			for (i = 0; i < ARRAY_SIZE(evt); ++i)
- 				dev_info(smmu->dev, "\t0x%016llx\n",
-@@ -1272,6 +1288,11 @@ static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
- 
- 	/* Sync our overflow flag, as we believe we're up to speed */
- 	q->cons = Q_OVF(q, q->prod) | Q_WRP(q, q->cons) | Q_IDX(q, q->cons);
-+
-+	q->batch++;
-+	wake_up_locked(&q->wq);
-+	spin_unlock(&q->wq.lock);
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -1315,13 +1336,24 @@ static void arm_smmu_handle_ppr(struct arm_smmu_device *smmu, u64 *evt)
- 
- static irqreturn_t arm_smmu_priq_thread(int irq, void *dev)
- {
-+	int num_handled = 0;
- 	struct arm_smmu_device *smmu = dev;
- 	struct arm_smmu_queue *q = &smmu->priq.q;
-+	size_t queue_size = 1 << q->max_n_shift;
- 	u64 evt[PRIQ_ENT_DWORDS];
- 
-+	spin_lock(&q->wq.lock);
- 	do {
--		while (!queue_remove_raw(q, evt))
-+		while (!queue_remove_raw(q, evt)) {
-+			spin_unlock(&q->wq.lock);
- 			arm_smmu_handle_ppr(smmu, evt);
-+			spin_lock(&q->wq.lock);
-+			if (++num_handled == queue_size) {
-+				q->batch++;
-+				wake_up_locked(&q->wq);
-+				num_handled = 0;
-+			}
-+		}
- 
- 		if (queue_sync_prod(q) == -EOVERFLOW)
- 			dev_err(smmu->dev, "PRIQ overflow detected -- requests lost\n");
-@@ -1329,9 +1361,65 @@ static irqreturn_t arm_smmu_priq_thread(int irq, void *dev)
- 
- 	/* Sync our overflow flag, as we believe we're up to speed */
- 	q->cons = Q_OVF(q, q->prod) | Q_WRP(q, q->cons) | Q_IDX(q, q->cons);
-+
-+	q->batch++;
-+	wake_up_locked(&q->wq);
-+	spin_unlock(&q->wq.lock);
-+
- 	return IRQ_HANDLED;
- }
- 
-+/*
-+ * arm_smmu_flush_queue - wait until all events/PPRs currently in the queue have
-+ * been consumed.
-+ *
-+ * Wait until the queue thread finished a batch, or until the queue is empty.
-+ * Note that we don't handle overflows on q->batch. If it occurs, just wait for
-+ * the queue to be empty.
-+ */
-+static int arm_smmu_flush_queue(struct arm_smmu_device *smmu,
-+				struct arm_smmu_queue *q, const char *name)
-+{
-+	int ret;
-+	u64 batch;
-+
-+	spin_lock(&q->wq.lock);
-+	if (queue_sync_prod(q) == -EOVERFLOW)
-+		dev_err(smmu->dev, "%s overflow detected -- requests lost\n", name);
-+
-+	batch = q->batch;
-+	ret = wait_event_interruptible_locked(q->wq, queue_empty(q) ||
-+					      q->batch >= batch + 2);
-+	spin_unlock(&q->wq.lock);
-+
-+	return ret;
-+}
-+
-+static int arm_smmu_flush_queues(struct notifier_block *nb,
-+				 unsigned long action, void *data)
-+{
-+	struct arm_smmu_device *smmu = container_of(nb, struct arm_smmu_device,
-+						    faultq_nb);
-+	struct device *dev = data;
-+	struct arm_smmu_master_data *master = NULL;
-+
-+	if (dev)
-+		master = dev->iommu_fwspec->iommu_priv;
-+
-+	if (master) {
-+		/* TODO: add support for PRI and Stall */
-+		return 0;
-+	}
-+
-+	/* No target device, flush all queues. */
-+	if (smmu->features & ARM_SMMU_FEAT_STALLS)
-+		arm_smmu_flush_queue(smmu, &smmu->evtq.q, "evtq");
-+	if (smmu->features & ARM_SMMU_FEAT_PRI)
-+		arm_smmu_flush_queue(smmu, &smmu->priq.q, "priq");
-+
-+	return 0;
-+}
-+
- static int arm_smmu_device_disable(struct arm_smmu_device *smmu);
- 
- static irqreturn_t arm_smmu_gerror_handler(int irq, void *dev)
-@@ -2288,6 +2376,10 @@ static int arm_smmu_init_one_queue(struct arm_smmu_device *smmu,
- 		     << Q_BASE_LOG2SIZE_SHIFT;
- 
- 	q->prod = q->cons = 0;
-+
-+	init_waitqueue_head(&q->wq);
-+	q->batch = 0;
-+
- 	return 0;
- }
- 
-@@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
-+		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
-+		ret = iommu_fault_queue_register(&smmu->faultq_nb);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	/* And we're up. Go go go! */
- 	ret = iommu_device_sysfs_add(&smmu->iommu, dev, NULL,
- 				     "smmu3.%pa", &ioaddr);
-@@ -3210,6 +3309,8 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
- {
- 	struct arm_smmu_device *smmu = platform_get_drvdata(pdev);
- 
-+	iommu_fault_queue_unregister(&smmu->faultq_nb);
-+
- 	arm_smmu_device_disable(smmu);
- 
- 	return 0;
--- 
-2.15.1
+mlx5e_get_max_linkspeed() queries for the port wire speed. mlx5e driver 
+might change some settings (CQE zipping, LRO) in case PCI bandwidth 
+can't support wire speed.
 
+> 
+>>   	if (err)
+>>   		return err;
+>>   
+>>   	if (speed == PCI_SPEED_UNKNOWN || width == PCIE_LNK_WIDTH_UNKNOWN)
+>>   		return -EINVAL;
+>>   
+>> -	switch (speed) {
+>> -	case PCIE_SPEED_2_5GT:
+>> -		*pci_bw = 2500 * width;
+>> -		break;
+>> -	case PCIE_SPEED_5_0GT:
+>> -		*pci_bw = 5000 * width;
+>> -		break;
+>> -	case PCIE_SPEED_8_0GT:
+>> -		*pci_bw = 8000 * width;
+>> -		break;
+>> -	default:
+>> -		return -EINVAL;
+>> -	}
+>> +	*pci_bw = bw;
+>>   
+>>   	return 0;
+>>   }
+>> -- 
+>> 1.8.3.1
+>>
