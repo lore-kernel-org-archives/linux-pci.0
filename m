@@ -1,99 +1,123 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 23 Feb 2018 11:25:43 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mario.Limonciello@dell.com
-Cc: bhelgaas@google.com, rjw@rjwysocki.net,
-        andriy.shevchenko@linux.intel.com, lenb@kernel.org,
-        michael.jamet@intel.com, yehezkel.bernat@intel.com,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        mika.westerberg@linux.intel.com
-Subject: Re: [PATCH v2 1/5] PCI: Make sure all bridges reserve at least one
- bus number
-Message-ID: <20180223172543.GK14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180215144000.60456-1-mika.westerberg@linux.intel.com>
- <20180215144000.60456-2-mika.westerberg@linux.intel.com>
- <20180223002733.GH14632@bhelgaas-glaptop.roam.corp.google.com>
- <c00e7c7a-6ebd-41b6-a924-92a2070e3db3@Dell.com>
+Date: Mon, 26 Feb 2018 17:28:32 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 2/4] x86/pci: Re-use new dmi_get_bios_year() helper
+Message-ID: <20180226172832.7bf82336@endymion>
+In-Reply-To: <20180222125923.57385-2-andriy.shevchenko@linux.intel.com>
+References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
+        <20180222125923.57385-2-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c00e7c7a-6ebd-41b6-a924-92a2070e3db3@Dell.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 23, 2018 at 12:52:18AM +0000, Mario.Limonciello@dell.com wrote:
-> On Feb 22, 2018 18:27, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Thu, Feb 15, 2018 at 05:39:55PM +0300, Mika Westerberg wrote:
-> > > When distributing extra buses between hotplug bridges we need to make
-> > > sure each bridge reserve at least one bus number, even if there is
-> > > currently nothing connected to it. For instance ACPI hotplug may bring
-> > > in additional devices to non-hotplug bridges later on. To make sure we
-> > > don't run out of bus numbers for non-hotplug bridges reserve one bus
-> > > number for them upfront before distributing buses for hotplug bridges.
-> > >
-> > > Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
-> > > Reported-by: Mario Limonciello <mario.limonciello@dell.com>
-> >
-> > Is there a bugzilla or email URL we can include here?
+Hi Andy,
+
+On Thu, 22 Feb 2018 14:59:21 +0200, Andy Shevchenko wrote:
+> ...instead of open coding its functionality.
 > 
-> Sorry it was private communication that I believe Mika is referring to in Reported-By here.
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  arch/x86/pci/acpi.c            | 8 ++------
+>  arch/x86/pci/direct.c          | 5 ++---
+>  arch/x86/pci/mmconfig-shared.c | 9 ++-------
+>  3 files changed, 6 insertions(+), 16 deletions(-)
 > 
-> You can remove the tag if you think it's inappropriate for this commit.
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 7df49c40665e..00e60de30328 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -140,12 +140,8 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
+>  
+>  void __init pci_acpi_crs_quirks(void)
+>  {
+> -	int year;
+> -
+> -	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year < 2008) {
+> -		if (iomem_resource.end <= 0xffffffff)
+> -			pci_use_crs = false;
+> -	}
+> +	if ((dmi_get_bios_year() < 2008) && (iomem_resource.end <= 0xffffffff))
+> +		pci_use_crs = false;
 
-I like to give credit whenever possible, so I wouldn't necessarily
-remove the Reported-by.
+You are changing the behavior here, when DMI does not provide a BIOS
+date. Beforehand, the test would fail and pci_use_crs would be left
+alone. After your change, dmi_get_bios_year() will return 0, and
+"0 < 2008" is true, so pci_use_crs is set to false.
 
-But it would be very useful to also have a URL to something with more
-details, e.g., what sort of failure the user would observe, dmesg
-logs, PCI topology, etc.
+I have no opinion on what this driver should do in such case, but I
+certainly wouldn't expect a change of behavior from a "use a helper
+instead of open-coding" kind of patch.
 
-This information can certainly be redacted to remove any proprietary
-things that can't be made public.  Usually that isn't of interest to
-structural issues like this anyway.
+I don't think you can safely assume that the code calling
+dmi_get_bios_year() will always do the right thing when 0 is being
+returned. It's up to the calling code to decide what the default
+behavior should be.
 
-> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > Cc: stable@vger.kernel.org
-> > > ---
-> > >  drivers/pci/probe.c | 11 ++++++++---
-> > >  1 file changed, 8 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > > index ef5377438a1e..6cefd47556e3 100644
-> > > --- a/drivers/pci/probe.c
-> > > +++ b/drivers/pci/probe.c
-> > > @@ -2561,7 +2561,10 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
-> > >  for_each_pci_bridge(dev, bus) {
-> > >  cmax = max;
-> > >  max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
-> > > - used_buses += cmax - max;
-> > > + /* Reserve one bus for each bridge */
-> > > + used_buses++;
-> > > + if (cmax - max > 1)
-> > > + used_buses += cmax - max - 1;
-> > >  }
-> > >
-> > >  /* Scan bridges that need to be reconfigured */
-> > > @@ -2584,12 +2587,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
-> > >  * bridges if any.
-> > >  */
-> > >  buses = available_buses / hotplug_bridges;
-> > > - buses = min(buses, available_buses - used_buses);
-> > > + buses = min(buses, available_buses - used_buses + 1);
-> > >  }
-> > >
-> > >  cmax = max;
-> > >  max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
-> > > - used_buses += max - cmax;
-> > > + /* One bus is already accounted so don't add it again */
-> > > + if (max - cmax > 1)
-> > > + used_buses += max - cmax - 1;
-> > >  }
-> > >
-> > >  /*
-> > > --
-> > > 2.15.1
-> > >
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Also there are more parentheses than needed.
+
+>  
+>  	dmi_check_system(pci_crs_quirks);
+>  
+> diff --git a/arch/x86/pci/direct.c b/arch/x86/pci/direct.c
+> index 2d9503323d10..a51074c55982 100644
+> --- a/arch/x86/pci/direct.c
+> +++ b/arch/x86/pci/direct.c
+> @@ -195,14 +195,13 @@ static const struct pci_raw_ops pci_direct_conf2 = {
+>  static int __init pci_sanity_check(const struct pci_raw_ops *o)
+>  {
+>  	u32 x = 0;
+> -	int year, devfn;
+> +	int devfn;
+>  
+>  	if (pci_probe & PCI_NO_CHECKS)
+>  		return 1;
+>  	/* Assume Type 1 works for newer systems.
+>  	   This handles machines that don't have anything on PCI Bus 0. */
+> -	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
+> -	if (year >= 2001)
+> +	if (dmi_get_bios_year() >= 2001)
+>  		return 1;
+>  
+>  	for (devfn = 0; devfn < 0x100; devfn++) {
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+> index 96684d0adcf9..0b40482578b8 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -547,19 +547,14 @@ static void __init pci_mmcfg_reject_broken(int early)
+>  static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+>  					struct acpi_mcfg_allocation *cfg)
+>  {
+> -	int year;
+> -
+>  	if (cfg->address < 0xFFFFFFFF)
+>  		return 0;
+>  
+>  	if (!strncmp(mcfg->header.oem_id, "SGI", 3))
+>  		return 0;
+>  
+> -	if (mcfg->header.revision >= 1) {
+> -		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
+> -		    year >= 2010)
+> -			return 0;
+> -	}
+> +	if ((mcfg->header.revision >= 1) && (dmi_get_bios_year() >= 2010))
+> +		return 0;
+
+Here too some parentheses are not needed.
+
+>  
+>  	pr_err(PREFIX "MCFG region for %04x [bus %02x-%02x] at %#llx "
+>  	       "is above 4GB, ignored\n", cfg->pci_segment,
+
+
+-- 
+Jean Delvare
+SUSE L3 Support
