@@ -1,114 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43654 "EHLO mail.kernel.org"
+Received: from mga06.intel.com ([134.134.136.31]:26241 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753156AbeB0Ol7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Feb 2018 09:41:59 -0500
-Date: Tue, 27 Feb 2018 08:41:57 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: poza@codeaurora.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v11 3/7] PCI/ERR: add mutex to synchronize recovery
-Message-ID: <20180227144157.GA112033@bhelgaas-glaptop.roam.corp.google.com>
-References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
- <1519374244-20539-4-git-send-email-poza@codeaurora.org>
- <20180223234525.GQ14632@bhelgaas-glaptop.roam.corp.google.com>
- <34e4c9a98a9ed3494a0295d00e181fe9@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <34e4c9a98a9ed3494a0295d00e181fe9@codeaurora.org>
+        id S1750877AbeBZPZO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Feb 2018 10:25:14 -0500
+Message-ID: <1519658167.10722.188.camel@linux.intel.com>
+Subject: Re: [PATCH v3 0/5] PCI: Fixes for native PCIe and ACPI hotplug
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Date: Mon, 26 Feb 2018 17:16:07 +0200
+In-Reply-To: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 27, 2018 at 10:46:34AM +0530, poza@codeaurora.org wrote:
-> On 2018-02-24 05:15, Bjorn Helgaas wrote:
-> > On Fri, Feb 23, 2018 at 01:54:00PM +0530, Oza Pawandeep wrote:
-> > > This patch protects pci_do_recovery with mutex.
-> > 
-> > pcie_do_recovery()
-> > 
-> > Please explain why the mutex is necessary.  What bad things happen
-> > without the mutex?
-> > 
-> > You named (some) of the other things "pcie"; maybe use "pcie" in the
-> > mutex name as well so they look the same.
-> > 
+On Mon, 2018-02-26 at 16:21 +0300, Mika Westerberg wrote:
+> Hi,
 > 
-> PCIe specification: 6.2.10
-> When DPC is triggered due to receipt of an uncorrectable error Message, the
-> Requester ID from the Message is recorded in the DPC Error Source ID
-> register and that Message is discarded and not forwarded Upstream.
+> When Thunderbolt controller is configured to be in native enumeration
+> mode
+> it actually includes two slightly different modes. First there is non-
+> RTD3
+> mode where the Thunderbolt host controller is only present when there
+> is a
+> device connected. The second one is RTD3 mode where the controller is
+> always present.
 > 
-> So, having said that, what we think is we dont need Mutex, because in DPC
-> enabled system either AER or DPC can be triggered, not both.
-> so right now there is no need of guarding pcie_do_recovery() with mutex.
+> In non-RTD3 mode the Thunderbolt host controller (NHI) and USB host
+> (xHCI)
+> controller are not hotplugged using native PCIe hotplug but instead
+> they
+> will be hotplugged via BIOS triggered ACPI Notify() to the root port.
+> This
+> is done to preserve resources since the NHI and xHCI only need 1 MB of
+> MMIO
+> space and no additional buses. Currently Linux does not support this
+> very
+> well and ends up failing the hotplug in one way or another. More
+> detailed
+> explanation is in changelog of patch [4/5].
 > 
-> but I was in a thought that; since pcie_do_recovery is supposed to be used
-> by error clients,
-> from sw architecture point of view, adding mutex takes care of concurrency
-> if it exists (in corner cases, faulty hw where both AER and DPC triggered
-> etc..)
+> This series fixes this issue and in addition includes fixes for few
+> other
+> issues found during testing on a system that has Thunderbolt
+> controller in
+> non-RTD3 native PCIe enumeration mode. However, the fixes here are not
+> in
+> any way Thunderbolt specific and should be applicable to other systems
+> as
+> well.
 > 
-> We can choose to drop this patch, since we dont require mutex.
-> Bjorn, please advise.
 
-I'm not trying to convince you that we don't need the mutex.  My
-point is that if we *do* need it, the changelog needs to say *why*
-(and ideally the code will either have a comment or it will be obvious
-from the code why it's necessary).
+FWIW, 
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-If we don't have a clear indication that it's required, I guess I
-would omit it.
+> The previous versions of the patch series can be found here:
+> 
+>   v2: https://www.spinics.net/lists/linux-pci/msg69186.html
+>   v1: https://www.spinics.net/lists/linux-acpi/msg80607.html
+> 
+> Changes from v2:
+> 
+>   - Added Rafael's tag to patch [1/5].
+>   - Updated changelog of patch [1/5] to include more details about how
+> the
+>     problem can be observed from dmesg and lspci output.
+> 
+> Changes from v1:
+> 
+>   - Drop 'cmax - max ?: 1' and use similar construct than we use in
+> second
+>     pass loop in patch [1/5].
+>   - Drop unnecessary parentheses in patch [1/5].
+>   - Added Rafael's tag to patches [2-5/5].
+> 
+> Mika Westerberg (5):
+>   PCI: Make sure all bridges reserve at least one bus number
+>   PCI: Take bridge window alignment into account when distributing
+> resources
+>   PCI: pciehp: Clear Presence Detect and Data Link Layer Status
+> Changed on resume
+>   ACPI / hotplug / PCI: Do not scan all bridges when native PCIe
+> hotplug is used
+>   ACPI / hotplug / PCI: Mark stale PCI devices disconnected
+> 
+>  drivers/pci/hotplug/acpiphp.h      |  1 +
+>  drivers/pci/hotplug/acpiphp_glue.c | 78
+> ++++++++++++++++++++++++++++++--------
+>  drivers/pci/hotplug/pciehp.h       |  2 +-
+>  drivers/pci/hotplug/pciehp_core.c  |  2 +-
+>  drivers/pci/hotplug/pciehp_hpc.c   | 13 ++++++-
+>  drivers/pci/probe.c                | 11 ++++--
+>  drivers/pci/setup-bus.c            | 41 +++++++++++++++++++-
+>  7 files changed, 126 insertions(+), 22 deletions(-)
+> 
 
-> > > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-> > > 
-> > > diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-> > > index fcd5add..f830975 100644
-> > > --- a/drivers/pci/pcie/pcie-err.c
-> > > +++ b/drivers/pci/pcie/pcie-err.c
-> > > @@ -20,6 +20,8 @@
-> > >  #include <linux/pcieport_if.h>
-> > >  #include "portdrv.h"
-> > > 
-> > > +static DEFINE_MUTEX(pci_err_recovery_lock);
-> > > +
-> > >  struct aer_broadcast_data {
-> > >  	enum pci_channel_state state;
-> > >  	enum pci_ers_result result;
-> > > @@ -283,6 +285,8 @@ void pcie_do_recovery(struct pci_dev *dev, int
-> > > severity)
-> > >  	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
-> > >  	enum pci_channel_state state;
-> > > 
-> > > +	mutex_lock(&pci_err_recovery_lock);
-> > > +
-> > >  	if (severity == AER_FATAL)
-> > >  		state = pci_channel_io_frozen;
-> > >  	else
-> > > @@ -326,9 +330,11 @@ void pcie_do_recovery(struct pci_dev *dev, int
-> > > severity)
-> > >  				report_resume);
-> > > 
-> > >  	dev_info(&dev->dev, "Device recovery successful\n");
-> > > +	mutex_unlock(&pci_err_recovery_lock);
-> > >  	return;
-> > > 
-> > >  failed:
-> > >  	/* TODO: Should kernel panic here? */
-> > >  	dev_info(&dev->dev, "Device recovery failed\n");
-> > > +	mutex_unlock(&pci_err_recovery_lock);
-> > >  }
-> > > --
-> > > Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
-> > > Technologies, Inc.,
-> > > a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-> > > a Linux Foundation Collaborative Project.
-> > > 
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
