@@ -1,282 +1,243 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:12808 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752299AbeB1KBB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 05:01:01 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V9 2/3] PCI: tegra: Add loadable kernel module support
-Date: Wed, 28 Feb 2018 15:30:33 +0530
-Message-ID: <1519812034-11120-3-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
+        <andriy.shevchenko@linux.intel.com>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
+        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
+        <frowand.list@gmail.com>, <agraf@suse.de>
+Subject: [PATCH v15 0/9] LPC: legacy ISA I/O support
+Date: Tue, 27 Feb 2018 00:40:40 +0800
+Message-ID: <1519663249-9850-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement remove callback function for Tegra PCIe driver to add
-loadable kernel module support.
+This patchset supports the IPMI-bt device attached to the Low-Pin-Count
+interface implemented on Hisilicon Hip06/Hip07 SoC.
+                        -----------
+                        | LPC host|
+                        |         |
+                        -----------
+                             |
+                _____________V_______________LPC
+                  |                       |
+                  V                       V
+                                     ------------
+                                     |  BT(ipmi)|
+                                     ------------
 
-Per PCIe r3.0, sec 5.3.3.2.1, PCIe root port should broadcast PME_Turn_Off
-message before PCIe link goes to L2. PME_Turn_Off broadcast mechanism is
-implemented in AFI module. Each Tegra PCIe root port has its own
-PME_Turn_Off and PME_TO_Ack bitmap in AFI_PME register, program this
-register to broadcast PME_Turn_Off message.
+When master accesses those peripherals beneath the Hip06/Hip07 LPC, a specific
+LPC driver is needed to make LPC host generate the standard LPC I/O cycles with
+the target peripherals'I/O port addresses. But on curent arm64 world, there is
+no real I/O accesses. All the I/O operations through in/out accessors are based
+on MMIO ranges; on Hip06/Hip07 LPC the I/O accesses are performed through driver
+specific accessors rather than MMIO.
+To solve this issue and keep the relevant existing peripherals' drivers untouched,
+this patchset:
+   - introduces a generic I/O space management framework, logical PIO, to support
+      I/O operations on host controllers operating either on MMIO buses or on buses
+     requiring specific driver I/O accessors;
+   - redefines the in/out accessors to provide a unified interface for both MMIO
+     and driver specific I/O operations. Using logical PIO, th call of in/out() from
+     the host children drivers, such as ipmi-si, will be redirected to the
+     corresponding device-specific I/O hooks to perform the I/O accesses.
 
-Once PME_TO_Ack is recieved driver will turn OFF PCIe clock, power gate
-PCIe partition and turn OFF regulators.
+Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC peripherals can
+be supported without any changes on the existing ipmi-si driver.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
-Tested-by: Thierry Reding <treding@nvidia.com>
----
-V2:
-* no change in this patch
-V3:
-* use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_init()
-V4:
-* no change in this patch
-V5:
-* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-rebased on linux-next
-V6:
-* no change in this patch
-V7:
-* no change in this patch
-V8:
-* Added new lines around conditional blocks
-V9:
-* Squash PME_Turn_Off patch on top this to have single working LKM patch
+The whole patchset has been tested on Hip07 D05 board both using DTB and ACPI.
 
- drivers/pci/host/pci-tegra.c | 103 +++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 100 insertions(+), 3 deletions(-)
+Differences to v14:
+- addressed coding style comments from Andy
+- applied tags from Rafael, Andy, and Dann
+- rebased to linux next 20180223 (had to fix locally arm64 build issue)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index e68507f658d8..60b1d5e1cfa4 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -31,10 +31,12 @@
- #include <linux/delay.h>
- #include <linux/export.h>
- #include <linux/interrupt.h>
-+#include <linux/iopoll.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -152,6 +154,8 @@
- #define  AFI_INTR_EN_FPCI_TIMEOUT	(1 << 7)
- #define  AFI_INTR_EN_PRSNT_SENSE	(1 << 8)
- 
-+#define AFI_PCIE_PME		0xf0
-+
- #define AFI_PCIE_CONFIG					0x0f8
- #define  AFI_PCIE_CONFIG_PCIE_DISABLE(x)		(1 << ((x) + 1))
- #define  AFI_PCIE_CONFIG_PCIE_DISABLE_ALL		0xe
-@@ -232,6 +236,8 @@
- #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
- #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
- 
-+#define PME_ACK_TIMEOUT 10000
-+
- struct tegra_msi {
- 	struct msi_controller chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-@@ -243,8 +249,16 @@ struct tegra_msi {
- };
- 
- /* used to differentiate between Tegra SoC generations */
-+struct tegra_pcie_port_soc {
-+	struct {
-+		u8 turnoff_bit;
-+		u8 ack_bit;
-+	} pme;
-+};
-+
- struct tegra_pcie_soc {
- 	unsigned int num_ports;
-+	const struct tegra_pcie_port_soc *ports;
- 	unsigned int msi_base_shift;
- 	u32 pads_pll_ctl;
- 	u32 tx_ref_sel;
-@@ -1357,6 +1371,32 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_pme_turnoff(struct tegra_pcie_port *port)
-+{
-+	struct tegra_pcie *pcie = port->pcie;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	int err;
-+	u32 val;
-+	u8 ack_bit;
-+
-+	val = afi_readl(pcie, AFI_PCIE_PME);
-+	val |= (0x1 << soc->ports[port->index].pme.turnoff_bit);
-+	afi_writel(pcie, val, AFI_PCIE_PME);
-+
-+	ack_bit = soc->ports[port->index].pme.ack_bit;
-+	err = readl_poll_timeout(pcie->afi + AFI_PCIE_PME, val,
-+				 val & (0x1 << ack_bit), 1, PME_ACK_TIMEOUT);
-+	if (err)
-+		dev_err(pcie->dev, "PME Ack is not received on port: %d\n",
-+			port->index);
-+
-+	usleep_range(10000, 11000);
-+
-+	val = afi_readl(pcie, AFI_PCIE_PME);
-+	val &= ~(0x1 << soc->ports[port->index].pme.turnoff_bit);
-+	afi_writel(pcie, val, AFI_PCIE_PME);
-+}
-+
- static int tegra_msi_alloc(struct tegra_msi *chip)
- {
- 	int msi;
-@@ -2102,8 +2142,14 @@ static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
- 	}
- }
- 
-+static const struct tegra_pcie_port_soc tegra20_pcie_ports[] = {
-+	{ .pme.turnoff_bit = 0, .pme.ack_bit =  5 },
-+	{ .pme.turnoff_bit = 8, .pme.ack_bit = 10 },
-+};
-+
- static const struct tegra_pcie_soc tegra20_pcie = {
- 	.num_ports = 2,
-+	.ports = tegra20_pcie_ports,
- 	.msi_base_shift = 0,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
-@@ -2117,8 +2163,15 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.program_uphy = true,
- };
- 
-+static const struct tegra_pcie_port_soc tegra30_pcie_ports[] = {
-+	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
-+	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
-+	{ .pme.turnoff_bit = 16, .pme.ack_bit = 18 },
-+};
-+
- static const struct tegra_pcie_soc tegra30_pcie = {
- 	.num_ports = 3,
-+	.ports = tegra30_pcie_ports,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-@@ -2135,6 +2188,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
- 	.num_ports = 2,
-+	.ports = tegra20_pcie_ports,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-@@ -2150,6 +2204,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
- 	.num_ports = 2,
-+	.ports = tegra20_pcie_ports,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-@@ -2163,8 +2218,15 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.program_uphy = true,
- };
- 
-+static const struct tegra_pcie_port_soc tegra186_pcie_ports[] = {
-+	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
-+	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
-+	{ .pme.turnoff_bit = 12, .pme.ack_bit = 14 },
-+};
-+
- static const struct tegra_pcie_soc tegra186_pcie = {
- 	.num_ports = 3,
-+	.ports = tegra186_pcie_ports,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-@@ -2276,6 +2338,12 @@ static const struct file_operations tegra_pcie_ports_ops = {
- 	.release = seq_release,
- };
- 
-+static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
-+{
-+	debugfs_remove_recursive(pcie->debugfs);
-+	pcie->debugfs = NULL;
-+}
-+
- static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
- {
- 	struct dentry *file;
-@@ -2292,8 +2360,7 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
- 	return 0;
- 
- remove:
--	debugfs_remove_recursive(pcie->debugfs);
--	pcie->debugfs = NULL;
-+	tegra_pcie_debugfs_exit(pcie);
- 	return -ENOMEM;
- }
- 
-@@ -2311,6 +2378,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	pcie = pci_host_bridge_priv(host);
- 	host->sysdata = pcie;
-+	platform_set_drvdata(pdev, pcie);
- 
- 	pcie->soc = of_device_get_match_data(dev);
- 	INIT_LIST_HEAD(&pcie->ports);
-@@ -2388,6 +2456,33 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static int tegra_pcie_remove(struct platform_device *pdev)
-+{
-+	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct tegra_pcie_port *port;
-+
-+	if (IS_ENABLED(CONFIG_DEBUG_FS))
-+		tegra_pcie_debugfs_exit(pcie);
-+
-+	pci_stop_root_bus(host->bus);
-+	pci_remove_root_bus(host->bus);
-+
-+	list_for_each_entry(port, &pcie->ports, list)
-+		tegra_pcie_pme_turnoff(port);
-+
-+	tegra_pcie_disable_ports(pcie);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		tegra_pcie_disable_msi(pcie);
-+
-+	tegra_pcie_free_resources(pcie);
-+	tegra_pcie_disable_controller(pcie);
-+	tegra_pcie_put_resources(pcie);
-+
-+	return 0;
-+}
-+
- static struct platform_driver tegra_pcie_driver = {
- 	.driver = {
- 		.name = "tegra-pcie",
-@@ -2395,5 +2490,7 @@ static struct platform_driver tegra_pcie_driver = {
- 		.suppress_bind_attrs = true,
- 	},
- 	.probe = tegra_pcie_probe,
-+	.remove = tegra_pcie_remove,
- };
--builtin_platform_driver(tegra_pcie_driver);
-+module_platform_driver(tegra_pcie_driver);
-+MODULE_LICENSE("GPL");
+Differences to v13:
+- dropped ACPI scan handler and added patch to not enumerate children
+  of indirect IO hosts in ACPI code
+- tidied up logic_pio.c a bit for kerneldoc and made some APIs clearer
+  to understand
+- tided (and simplified) hisi_lpc.c and added new ACPI probe code
+  (same as previous ACPI scan handler code, so comments from Rafael
+  and Andy included)
+- reinstated PCI range upper limit check in pci_pio_to_address()
+- dropped Dann Frazier's "tested-by" tag in light of changes
+- rebase to linuxnext 20180219 (had to fix locally arm64 build issue)
+
+Differences to v12:
+    - Addressed ACPI comments from Rafael and Andy, including:
+     - added SPDX license identifiers (other new files in the series got this also)
+     - fixed style issues, like superflous newlines and symbol naming
+     - add fuller acpi_indirectio.c patch commit message
+     - dropped acpi_indirectio_host_data (author's decision) to simplify
+    - added Rob Herring's tag
+    - rebase to linux-next 20180212
+    
+Differences to v11:
+    - fixed build errors for i386, m68k, and tile
+    - added a comment in LPC driver commit log why we set
+       the kernel config as bool
+    - some tidying logic_pio code
+
+Differences to v10:
+    - dropped CONFIG_LOGIC_PIO. Reason is that CONFIG_PCI
+      depends on this, and CONFIG_PCI is a per-arch CONFIG.
+      So we would require all arch's kconfig to select this.
+    - Addressed Dann Frazier's comments on LPC driver, and
+      sopme other cleanup
+    - Moved logic_pio.h to be included in generic asm io.h
+    - Fixed ACPI indirect IO host setup to handle >1 child
+    - Relocated ACPI indirect IO host setup code to
+      drivers/acpi
+    - Rebased to linux next-20180118
+
+Changes from v9:
+  - patch 2 has been split into 3 patches according to Bjorn comments on
+    v9 thread
+  - patch 1 has been reworked accordign to Bjorn comments on v9
+  - now logic_pio_trans_hwaddr() has a sanity check to make sure the resource
+    size fits into the assigned range
+  - in patch 5 the MFD framework has been used to probe the LPC children
+    according to the suggestion from Mika Westerberg
+  - Maintaner has changed to Huawei Linuxarm mailing list
+
+Changes from v8:
+  - Simplified LIB IO framewrok
+  - Moved INDIRECT PIO ACPI framework under acpi/arm64
+  - Renamed occurrences of "lib io" and "indirect io" to "lib pio" and
+    "indirect pio" to keep the patchset nomenclature consistent
+  - Removed Alignment reuqirements
+  - Moved LPC specific code out of ACPI common framework
+  - Now PIO indirect HW ranges can overlap
+  - Changed HiSilicon LPC driver maintainer (Gabriele Paoloni now) and split
+    maintaner file modifications in a separate commit
+  - Removed the commit with the DT nodes support for hip06 and hip07 (to be
+    pushed separately)
+  - Added a checking on ioport_map() not to break that function as Arnd points
+    out in V7 review thread;
+  - fixed the compile issues on alpha, m68k;
+
+Changes from V7:
+  - Based on Arnd's comment, rename the LIBIO as LOGIC_PIO;
+  - Improved the mapping process in LOGIC_PIO to gain better efficiency when
+    redirecting the I/O accesses to right device driver;
+  - To reduce the impact on PCI MMIO to a minimum, add a new
+    CONFIG_INDIRECT_PIO for indirect-IO hosts/devices;
+  - Added a new ACPI handler for indirect-IO hosts/devices;
+  - Fixed the compile issues on V6;
+
+Changes from V6:
+  - According to the comments from Bjorn and Alex, merge PCI IO and indirect-IO
+    into a generic I/O space management, LIBIO;
+  - Adopted the '_DEP' to replace the platform bus notifier. In this way, we can
+    ensure the LPC peripherals' I/O resources had been translated to logical IO
+    before the LPC peripheral enumeration;
+  - Replaced the rwlock with rcu list based on Alex's suggestion;
+  - Applied relaxed write/read to LPC driver;
+  - Some bugs fixing and some optimazations based on the comments of V6;
+
+Changes from V5:
+  - Made the extio driver more generic and locate in lib/;
+  - Supported multiple indirect-IO bus instances;
+  - Extended the pci_register_io_range() to support indirect-IO, then dropped
+  the I/O reservation used in previous patchset;
+  - Reimplemented the ACPI LPC support;
+  - Fixed some bugs, including the compile error on other archs, the module
+  building failure found by Ming Lei, etc;
+
+Changes from V4:
+  - Some revises based on the comments from Bjorn, Rob on V4;
+  - Fixed the compile error on some platforms, such as openrisc;
+
+Changes from V3:
+  - UART support deferred to a separate patchset; This patchset only support
+  ipmi device under LPC;
+  - LPC bus I/O range is fixed to 0 ~ (PCIBIOS_MIN_IO - 1), which is separeted
+  from PCI/PCIE PIO space;
+  - Based on Arnd's remarks, removed the ranges property from Hip06 lpc dts and
+  added a new fixup function, of_isa_indirect_io(), to get the I/O address
+  directly from LPC dts configurations;
+  - Support in(w,l)/out(w,l) for Hip06 lpc I/O;
+  - Decouple the header file dependency on the gerenic io.h by defining in/out
+  as normal functions in c file;
+  - removed unused macro definitions in the LPC driver;
+
+Changes from V2:
+  - Support the PIO retrieval from the linux PIO generated by
+  pci_address_to_pio. This method replace the 4K PIO reservation in V2;
+  - Support the flat-tree earlycon;
+  - Some revises based on Arnd's remarks;
+  - Make sure the linux PIO range allocated to Hip06 LPC peripherals starts
+  from non-ZERO;
+
+Changes from V1:
+  - Support the ACPI LPC device;
+  - Optimize the dts LPC driver in ISA compatible mode;
+  - Reserve the IO range below 4K in avoid the possible conflict with PCI host
+  IO ranges;
+  - Support the LPC uart and relevant earlycon;
+
+V14 thread here: https://lkml.org/lkml/2018/2/19/460
+V13 thread here: https://lkml.org/lkml/2018/2/13/744
+V12 thread here: https://lkml.org/lkml/2018/1/23/508
+V11 thread here: https://lkml.org/lkml/2018/1/21/38
+V10 thread here: https://lkml.org/lkml/2017/10/27/465
+V9 thread here: https://lkml.org/lkml/2017/5/25/263
+V8 thread here: https://lkml.org/lkml/2017/3/30/619
+V7 thread here: https://lkml.org/lkml/2017/3/12/279
+v6 thread here: https://lkml.org/lkml/2017/1/24/25
+v5 thread here: https://lkml.org/lkml/2016/11/7/955
+v4 thread here: https://lkml.org/lkml/2016/10/20/149
+v3 thread here: https://lkml.org/lkml/2016/9/14/326
+v2 thread here: https://lkml.org/lkml/2016/9/7/356
+v1 thread here: https://lkml.org/lkml/2015/12/29/154
+
+Gabriele Paoloni (2):
+  PCI: Remove unused __weak attribute in pci_register_io_range()
+  PCI: Add fwnode handler as input param of pci_register_io_range()
+
+John Garry (3):
+  ACPI / scan: do not enumerate Indirect IO host children
+  HISI LPC: Add ACPI support
+  MAINTAINERS: Add maintainer for HiSilicon LPC driver
+
+Zhichang Yuan (4):
+  LIB: Introduce a generic PIO mapping method
+  PCI: Apply the new generic I/O management on PCI IO hosts
+  OF: Add missing I/O range exception for indirect-IO devices
+  HISI LPC: Support the LPC host on Hip06/Hip07 with DT bindings
+
+ .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
+ MAINTAINERS                                        |   7 +
+ drivers/acpi/pci_root.c                            |   8 +-
+ drivers/acpi/scan.c                                |  14 +
+ drivers/bus/Kconfig                                |   8 +
+ drivers/bus/Makefile                               |   2 +
+ drivers/bus/hisi_lpc.c                             | 624 +++++++++++++++++++++
+ drivers/of/address.c                               |  96 +++-
+ drivers/pci/pci.c                                  |  95 +---
+ include/asm-generic/io.h                           |   4 +-
+ include/linux/logic_pio.h                          | 127 +++++
+ include/linux/pci.h                                |   3 +-
+ lib/Kconfig                                        |  15 +
+ lib/Makefile                                       |   2 +
+ lib/logic_pio.c                                    | 285 ++++++++++
+ 15 files changed, 1225 insertions(+), 98 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
+ create mode 100644 drivers/bus/hisi_lpc.c
+ create mode 100644 include/linux/logic_pio.h
+ create mode 100644 lib/logic_pio.c
+
 -- 
-2.1.4
+1.9.1
+
