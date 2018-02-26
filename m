@@ -1,149 +1,206 @@
-Return-Path: <SRS0=BsMt=FU=xilinx.com=bharatku@kernel.org>
-Return-Path: <SRS0=BsMt=FU=xilinx.com=bharatku@kernel.org>
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Multi MSI with multiple End Points
-Date: Mon, 26 Feb 2018 09:13:29 +0000
-Message-ID: <BLUPR0201MB150530CBA42729AFD6603519A5C10@BLUPR0201MB1505.namprd02.prod.outlook.com>
-Content-Type: multipart/alternative;
-	boundary="_000_BLUPR0201MB150530CBA42729AFD6603519A5C10BLUPR0201MB1505_"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47650 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751245AbeBZWcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Feb 2018 17:32:50 -0500
+Date: Tue, 27 Feb 2018 00:32:47 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Mark Rustad <mark.d.rustad@intel.com>,
+        virtio-dev@lists.oasis-open.org, Netdev <netdev@vger.kernel.org>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        "Daly, Dan" <dan.daly@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>, MRustad@gmail.com
+Subject: Re: [RFC PATCH V4] pci: virtio_pci: Add SR-IOV support for
+ virtio_pci devices
+Message-ID: <20180227003123-mutt-send-email-mst@kernel.org>
+References: <20180226044837.19543.12267.stgit@mdrustad-mac04.local>
+ <CAKgT0UcMth9Jxovoj7xo0q2t+MuY0K1Upf+Mqs3zgXdriui-tA@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKgT0UcMth9Jxovoj7xo0q2t+MuY0K1Upf+Mqs3zgXdriui-tA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_BLUPR0201MB150530CBA42729AFD6603519A5C10BLUPR0201MB1505_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Mon, Feb 26, 2018 at 07:26:14AM -0800, Alexander Duyck wrote:
+> On Sun, Feb 25, 2018 at 8:48 PM, Mark Rustad <mark.d.rustad@intel.com> wrote:
+> > Hardware-realized virtio_pci devices can implement SR-IOV, so this
+> > patch enables its use. The device in question is an upcoming Intel
+> > NIC that implements both a virtio_net PF and virtio_net VFs. These
+> > are hardware realizations of what has been up to now been a software
+> > interface.
+> >
+> > The device in question has the following 4-part PCI IDs:
+> >
+> > PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+> > VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
+> >
+> > The patch needs no check for device ID, because the callback will
+> > never be made for devices that do not assert the capability or
+> > when run on a platform incapable of SR-IOV.
+> >
+> > One reason for this patch is because the hardware requires the
+> > vendor ID of a VF to be the same as the vendor ID of the PF that
+> > created it. So it seemed logical to simply have a fully-functioning
+> > virtio_net PF create the VFs. This patch makes that possible.
+> >
+> > Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+> > Reviewed-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> 
+> Mark,
+> 
+> In the future please don't put my "Reviewed-by" on a patch that I
+> haven't reviewed. I believe I reviewed one of the earlier patches, but
+> I hadn't reviewed this version.
+> 
+> Also, after thinking about it over the weekend we may want to look at
+> just coming up with a truly "generic" solution that is applied to
+> SR-IOV capable devices that don't have a SR-IOV capable driver loaded
+> on them. That would allow us to handle the uio, vfio, pci-stub, and
+> virtio cases all in one fell swoop. I think us going though and
+> modifying one patch at a time to do this kind of thing isn't going to
+> scale.
 
-Hi,
+uio really can't support VFs properly - without proper IOMMU
+support any MSIs can corrupt kernel memory, and VFs are
+limited to MSIs.
 
-A switch is connected to an RC with 2 EP's, the RC supports multi MSI.
-1st EP requests one MSI vector, 2nd EP requests 4 MSI vectors.
-
-If we are programming hwirq as MSI data (hwirq being obtained from bitmap_f=
-ind_next_zero_area,
-with number of zeroed bits being requested based on number of irq's being r=
-equested).
-This gives 1st EP is given zero as hwirq, 2nd EP is given one as hwirq.
-
-If we use msi data to retrieve virq (use msi data as hwirq), Since as per P=
-CI spec lower 2 bits of MSI data
-are modifiable  for 2nd EP, if an interrupt is raised by 2nd EP on msi data=
- zero, but this is already used by 1st EP, so the
-current EP's interrupt will never be served.
-One way to deal with this issue is, using bit shift operations on hwriq bef=
-ore programming to msi data
-and at retrieving.
-
-Is there any other better way to handle this ?
-
-Regards,
-Bharat
-
-
---_000_BLUPR0201MB150530CBA42729AFD6603519A5C10BLUPR0201MB1505_
-Content-Type: text/html; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
-osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
-//www.w3.org/TR/REC-html40">
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
->
-<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
-<style><!--
-/* Font Definitions */
-@font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0in;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri",sans-serif;}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:#0563C1;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:#954F72;
-	text-decoration:underline;}
-span.EmailStyle17
-	{mso-style-type:personal;
-	font-family:"Calibri",sans-serif;
-	color:windowtext;}
-span.EmailStyle18
-	{mso-style-type:personal;
-	font-family:"Calibri",sans-serif;
-	color:#1F497D;}
-span.EmailStyle19
-	{mso-style-type:personal;
-	font-family:"Calibri",sans-serif;
-	color:windowtext;}
-span.EmailStyle20
-	{mso-style-type:personal-reply;
-	font-family:"Calibri",sans-serif;
-	color:#1F497D;}
-.MsoChpDefault
-	{mso-style-type:export-only;
-	font-size:10.0pt;}
-@page WordSection1
-	{size:8.5in 11.0in;
-	margin:1.0in 1.0in 1.0in 1.0in;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]-->
-</head>
-<body lang=3D"EN-US" link=3D"#0563C1" vlink=3D"#954F72">
-<div class=3D"WordSection1">
-<p class=3D"MsoNormal">Hi,<br>
-<br>
-A switch is connected to an RC with 2 EP&#8217;s, the RC supports multi MSI=
-.<o:p></o:p></p>
-<p class=3D"MsoNormal">1<sup>st</sup> EP requests one MSI vector, 2<sup>nd<=
-/sup> EP requests 4 MSI vectors.<br>
-<br>
-If we are programming hwirq as MSI data (hwirq being obtained from bitmap_f=
-ind_next_zero_area,<o:p></o:p></p>
-<p class=3D"MsoNormal">with number of zeroed bits being requested based on =
-number of irq&#8217;s being requested).
-<o:p></o:p></p>
-<p class=3D"MsoNormal">This gives 1<sup>st </sup>EP is given zero as hwirq,=
- 2<sup>nd</sup> EP is given one as hwirq.<br>
-<br>
-If we use msi data to retrieve virq (use msi data as hwirq), Since as per P=
-CI spec lower 2 bits of MSI data
-<o:p></o:p></p>
-<p class=3D"MsoNormal">are modifiable&nbsp; for 2<sup>nd</sup> EP, if an in=
-terrupt is raised by 2<sup>nd</sup> EP on msi data zero, but this is alread=
-y used by 1<sup>st</sup> EP, so the
-<o:p></o:p></p>
-<p class=3D"MsoNormal" style=3D"margin-bottom:12.0pt">current EP&#8217;s in=
-terrupt will never be served.<o:p></o:p></p>
-<p class=3D"MsoNormal">One way to deal with this issue is, using bit shift =
-operations on hwriq before programming to msi data<o:p></o:p></p>
-<p class=3D"MsoNormal">and at retrieving.<o:p></o:p></p>
-<p class=3D"MsoNormal"><br>
-Is there any other better way to handle this ? <o:p></o:p></p>
-<p class=3D"MsoNormal"><br>
-Regards,<br>
-Bharat<o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-</div>
-</body>
-</html>
-
---_000_BLUPR0201MB150530CBA42729AFD6603519A5C10BLUPR0201MB1505_--
+> I'll try to do some digging and find the VFIO approach we had been
+> working on. I think with a couple tweaks we can probably make that
+> truly generic and ready for submission.
+> 
+> Thanks.
+> 
+> - Alex
+> 
+> > ---
+> > Changes in V4:
+> > - V3 was a mis-send, this has what was intended
+> > - Move most code to new helpers in pci/iov.c, pci_sriov_configure_generic
+> >   and pci_sriov_disable_generic
+> > - Correct mislabeling of vendor and device IDs
+> > - Other minor changelog fixes
+> > - Rebased to pci/master, since most changes are in that area now
+> > - No new ifdefs with this approach (yay)
+> > Changes in V3:
+> > - Missent patch, please disregard
+> > Changes in V2:
+> > - Simplified logic from previous version, removed added driver variable
+> > - Disable SR-IOV on driver removal except when VFs are assigned
+> > - Sent as RFC to virtio-dev, linux-pci, netdev, lkml and others
+> > ---
+> >  drivers/pci/iov.c                  |   50 ++++++++++++++++++++++++++++++++++++
+> >  drivers/virtio/virtio_pci_common.c |    2 +
+> >  include/linux/pci.h                |   10 +++++++
+> >  3 files changed, 62 insertions(+)
+> >
+> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> > index 677924ae0350..4b110e169b7c 100644
+> > --- a/drivers/pci/iov.c
+> > +++ b/drivers/pci/iov.c
+> > @@ -367,6 +367,56 @@ static void sriov_disable(struct pci_dev *dev)
+> >         pci_iov_set_numvfs(dev, 0);
+> >  }
+> >
+> > +/**
+> > + * pci_sriov_disable_generic - standard helper to disable SR-IOV
+> > + * @dev:the PCI PF device whose VFs are to be disabled
+> > + */
+> > +int pci_sriov_disable_generic(struct pci_dev *dev)
+> > +{
+> > +       /*
+> > +        * If vfs are assigned we cannot shut down SR-IOV without causing
+> > +        * issues, so just leave the hardware available.
+> > +        */
+> > +       if (pci_vfs_assigned(dev)) {
+> > +               pci_warn(dev,
+> > +                        "Cannot disable SR-IOV while VFs are assigned - VFs will not be deallocated\n");
+> > +               return -EPERM;
+> > +       }
+> > +       pci_disable_sriov(dev);
+> > +       return 0;
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_sriov_disable_generic);
+> > +
+> > +static int pci_sriov_enable(struct pci_dev *dev, int num_vfs)
+> > +{
+> > +       int rc;
+> > +
+> > +       if (pci_num_vf(dev))
+> > +               return -EINVAL;
+> > +
+> > +       rc = pci_enable_sriov(dev, num_vfs);
+> > +       if (rc) {
+> > +               pci_warn(dev, "Failed to enable PCI sriov: %d\n", rc);
+> > +               return rc;
+> > +       }
+> > +       pci_info(dev, "SR-IOV enabled with %d VFs\n", num_vfs);
+> > +       return num_vfs;
+> > +}
+> > +
+> > +/**
+> > + * pci_sriov_configure_generic - standard helper to configure SR-IOV
+> > + * @dev: the PCI PF device that is configuring SR-IOV
+> > + */
+> > +int pci_sriov_configure_generic(struct pci_dev *dev, int num_vfs)
+> > +{
+> > +       if (num_vfs)
+> > +               return pci_sriov_enable(dev, num_vfs);
+> > +       if (!pci_num_vf(dev))
+> > +               return -EINVAL;
+> > +       return pci_sriov_disable_generic(dev);
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_sriov_configure_generic);
+> > +
+> >  static int sriov_init(struct pci_dev *dev, int pos)
+> >  {
+> >         int i, bar64;
+> > diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+> > index 48d4d1cf1cb6..d7679377131f 100644
+> > --- a/drivers/virtio/virtio_pci_common.c
+> > +++ b/drivers/virtio/virtio_pci_common.c
+> > @@ -584,6 +584,7 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+> >         else
+> >                 virtio_pci_modern_remove(vp_dev);
+> >
+> > +       pci_sriov_disable_generic(pci_dev);
+> >         pci_disable_device(pci_dev);
+> >         put_device(dev);
+> >  }
+> > @@ -596,6 +597,7 @@ static struct pci_driver virtio_pci_driver = {
+> >  #ifdef CONFIG_PM_SLEEP
+> >         .driver.pm      = &virtio_pci_pm_ops,
+> >  #endif
+> > +       .sriov_configure = pci_sriov_configure_generic,
+> >  };
+> >
+> >  module_pci_driver(virtio_pci_driver);
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 024a1beda008..937124d4e098 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -1947,6 +1947,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+> >
+> >  int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+> >  void pci_disable_sriov(struct pci_dev *dev);
+> > +int pci_sriov_disable_generic(struct pci_dev *dev);
+> > +int pci_sriov_configure_generic(struct pci_dev *dev, int num_vfs);
+> >  int pci_iov_add_virtfn(struct pci_dev *dev, int id);
+> >  void pci_iov_remove_virtfn(struct pci_dev *dev, int id);
+> >  int pci_num_vf(struct pci_dev *dev);
+> > @@ -1973,6 +1975,14 @@ static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id)
+> >  static inline void pci_iov_remove_virtfn(struct pci_dev *dev,
+> >                                          int id) { }
+> >  static inline void pci_disable_sriov(struct pci_dev *dev) { }
+> > +static inline int pci_sriov_disable_generic(struct pci_dev *dev)
+> > +{
+> > +       return -ENODEV;
+> > +}
+> > +static inline int pci_sriov_configure_generic(struct pci_dev *dev, int num_vfs)
+> > +{
+> > +       return -ENODEV;
+> > +}
+> >  static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
+> >  static inline int pci_vfs_assigned(struct pci_dev *dev)
+> >  { return 0; }
+> >
