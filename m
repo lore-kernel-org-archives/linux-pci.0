@@ -1,53 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54216 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932236AbeB1RAR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 12:00:17 -0500
-Date: Wed, 28 Feb 2018 17:00:12 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Ley Foon Tan <lftan@altera.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        rfi@lists.rocketboards.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: Re: [PATCH] PCI: altera: Fix bool initialization in tlp_read_packet
-Message-ID: <20180228170012.GB14610@e107981-ln.cambridge.arm.com>
-References: <20180120032651.GA14512@embeddedgus>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180120032651.GA14512@embeddedgus>
+Received: from mout.kundenserver.de ([212.227.126.187]:38921 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751487AbeBZRRF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Feb 2018 12:17:05 -0500
+From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+To: kishon@ti.com
+Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        andy.shevchenko@gmail.com,
+        Rolf Evers-Fischer <embedded24@evers-fischer.de>
+Subject: [PATCH v2 0/2] pci: endpoint: Fix double free in pci_epf_create()
+Date: Mon, 26 Feb 2018 18:16:15 +0100
+Message-Id: <20180226171617.10016-1-embedded24@evers-fischer.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 19, 2018 at 09:26:51PM -0600, Gustavo A. R. Silva wrote:
-> Bool initializations should use true and false.
-> 
-> This issue was detected with the help of Coccinelle.
-> 
-> Fixes: eaa6111b70a7 ("PCI: altera: Add Altera PCIe host controller driver")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> ---
->  drivers/pci/host/pcie-altera.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+This is version 2 of a patchset to avoid double free in function
+'pci_epf_create()'.
 
-Applied to pci/altera for v4.17, thanks.
+When I accidentally created a new endpoint device with an empty name,
+the kernel warned about "attempted to be registered with empty name!"
+and crashed afterwards.
 
-Lorenzo
+It turned out that the crash was not caused by the 'device_add()'
+function itself, but by a double kfree of 'epf->name' and 'epf'.
 
-> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-> index 5cc4f59..f9ee090 100644
-> --- a/drivers/pci/host/pcie-altera.c
-> +++ b/drivers/pci/host/pcie-altera.c
-> @@ -156,7 +156,7 @@ static bool altera_pcie_valid_device(struct altera_pcie *pcie,
->  static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
->  {
->  	int i;
-> -	bool sop = 0;
-> +	bool sop = false;
->  	u32 ctrl;
->  	u32 reg0, reg1;
->  	u32 comp_status = 1;
-> -- 
-> 2.7.4
-> 
+The first patch just simplifies the code, while the second patch
+fixes the problem.
+
+Changes in v2:
+- Based on feedback from Lorenzo, Andy and Kishon (thanks!)
+- Change IDs removed
+- First patch completely reworked in order to eliminate the
+  need for the second 'kstrdup' allocation and the 'kfree' of
+  the first allocation.
+  It was tested with name="pci_epf_test.0" and name="pci_epb":
+  The 'epf->name' was "pci_epf_test" or "pci_epb" (=unchanged).
+
+Rolf Evers-Fischer (2):
+  pci: endpoint: Simplify name allocation for epf device
+  pci: endpoint: Fix kernel panic after put_device()
+
+ drivers/pci/endpoint/pci-epf-core.c | 24 +++++-------------------
+ 1 file changed, 5 insertions(+), 19 deletions(-)
+
+-- 
+2.16.2
