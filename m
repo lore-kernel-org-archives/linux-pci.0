@@ -1,82 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46980 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752109AbeB1KOH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 05:14:07 -0500
-Date: Wed, 28 Feb 2018 10:13:56 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com, linux-pci@vger.kernel.org,
-        m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
-        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
-        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
-        l.stach@pengutronix.de, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com, nsekhar@ti.com
-Subject: Re: [PATCH v7 0/9] PCI: dwc: Enables MSI-X driver support
-Message-ID: <20180228101356.GA18879@e107981-ln.cambridge.arm.com>
-References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+Return-Path: <SRS0=CXPL=FU=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=CXPL=FU=linux.intel.com=mika.westerberg@kernel.org>
+Date: Mon, 26 Feb 2018 14:05:34 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Valdis Kletnieks <Valdis.Kletnieks@vt.edu>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Peter Wu <peter@lekensteyn.nl>, Qipeng Zha <qipeng.zha@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Dave Airlie <airlied@gmail.com>, Qi Zheng <qi.zheng@intel.com>
+Subject: Re: [PATCH v1 2/2] PCI: Allow user to request power management of
+ conventional and hotplug bridges
+Message-ID: <20180226120534.GO27191@lahna.fi.intel.com>
+References: <151908155159.37696.9710083237704994886.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <151908204614.37696.12828004282495415825.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0irpPi4PXPHWaSpa3=MpUY4Sg3C-iHd0LPQN+FN-VTRpQ@mail.gmail.com>
+ <20180220181554.GA32228@bhelgaas-glaptop.roam.corp.google.com>
+ <20180222131834.GA5527@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180222131834.GA5527@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 23, 2018 at 03:10:23PM +0000, Gustavo Pimentel wrote:
-> Changes into a new IRQ handler mechanism (multiplexed IRQ domain hierarchy)
-> more suitable and appropriate to use on pcie-designware and on each SoC
-> specific driver in order to allow new and more complex features like MSI-X.
-> 
-> Adds Synopsys Root Complex driver support for MSI-X feature.
-> 
-> Expands the maximum number of IRQs from 32 to 256 distributed by
-> a maximum of 8 controller registers.
-> 
-> The patch set was made against the Bjorn's next branch.
+On Thu, Feb 22, 2018 at 02:18:34PM +0100, Lukas Wunner wrote:
+> We do need runtime PM on hotplug ports to power off Thunderbolt
+> controllers when nothing is plugged in.  That saves 1.5 W, so a
+> noticeable amount of power.  I was going to respin the series one
+> of these days, I think the best I can do is continue to forbid
+> runtime PM on hotplug ports by default, but whitelist it for
+> Thunderbolt and allow manually enabling it on other platforms via
+> the command line.  That way, vendors are put in a position to
+> validate their platforms for runtime PM of hotplug ports, and
+> perhaps someday we can enable it for all platforms by default,
+> but with a BIOS cut-off date.
 
-Hi Gustavo,
-
-please rebase your series against v4.16-rc1, it does not apply to
-it as-is.
-
-Do not base it against Bjorn's next branch since it is a moving target,
-it is up to us to handle the conflicts (if any), if there is a
-dependency against a branch on my tree or Bjorn's please let us know.
-
-> Gustavo Pimentel (9):
->   PCI: dwc: Add new IRQ API to pcie-desigware
-                                           ^
-s/desigware/designware
-
-update the respective patch $SUBJECT.
-
-Thanks,
-Lorenzo
-
->   PCI: dwc: exynos: Switch to use the new IRQ API
->   PCI: dwc: imx6: Switch to use the new IRQ API
->   PCI: dwc: artpec6: Switch to use the new IRQ API
->   PCI: dwc: designware: Switch to use the new IRQ API
->   PCI: dwc: qcom: Switch to use the new IRQ API
->   PCI: dwc: keystone: Switch to use the new IRQ API
->   PCI: dwc: Remove old IRQ API
->   PCI: dwc: Expand maximum number of IRQs from 32 to 256
-> 
->  drivers/pci/dwc/pci-exynos.c           |  18 --
->  drivers/pci/dwc/pci-imx6.c             |  18 --
->  drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
->  drivers/pci/dwc/pci-keystone.c         |   1 +
->  drivers/pci/dwc/pci-keystone.h         |   4 +-
->  drivers/pci/dwc/pci-layerscape.c       |   3 +-
->  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->  drivers/pci/dwc/pcie-designware-host.c | 398 +++++++++++++++++++--------------
->  drivers/pci/dwc/pcie-designware-plat.c |  16 --
->  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->  drivers/pci/dwc/pcie-qcom.c            |  16 --
->  11 files changed, 258 insertions(+), 355 deletions(-)
-> 
-> -- 
-> 2.7.4
-> 
-> 
+AFAIK Windows started to enable runtime PM (RTD3) for native PCIe
+hotplug ports with the latest release (I guess it's the RS3 release) but
+only when there is a special ACPI _DSD property ("HotPlugSupportInD3")
+associated with the root port. I think we can take advantage of that in
+Linux as well and I already have a patch series to enable runtime PM for
+such ports but I haven't been able to test it properly yet.
