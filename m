@@ -1,37 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:31776 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751359AbeBVWHs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Feb 2018 17:07:48 -0500
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "MRustad@gmail.com" <MRustad@gmail.com>,
-        "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
-        "mst@redhat.com" <mst@redhat.com>
-Subject: Re: [RFC PATCH V2] virtio_pci: Add SR-IOV support
-Date: Thu, 22 Feb 2018 22:07:45 +0000
-Message-ID: <A2CEFBAB-8FD1-4C55-B87A-770C9F080EC2@intel.com>
-References: <20180222175250.97135.98386.stgit@mdrustad-mac04.local>
- <20180222182622.GA13815@infradead.org>
-In-Reply-To: <20180222182622.GA13815@infradead.org>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180226171617.10016-3-embedded24@evers-fischer.de>
+References: <20180226171617.10016-1-embedded24@evers-fischer.de> <20180226171617.10016-3-embedded24@evers-fischer.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Mon, 26 Feb 2018 21:12:08 +0200
+Message-ID: <CAHp75VcYas_2i8r1G1J=DXnwmor_4tbWm0GZtP_VorVMK1vKpw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] pci: endpoint: Fix kernel panic after put_device()
+To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Feb 22, 2018, at 10:26 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> 
-> Can we move this into common code as a a generic_sriov_configure
-> helper?  Nothing is really virtio specific, and it seems like
-> some other drivers could also use it, e.g. ena or nvme.
+On Mon, Feb 26, 2018 at 7:16 PM, Rolf Evers-Fischer
+<embedded24@evers-fischer.de> wrote:
+> From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+>
+> 'put_device()' calls the relase function 'pci_epf_dev_release()',
+> which already frees 'epf->name' and 'epf'.
+>
+> Therefore we must not free them again after 'put_device()'.
 
-That seems like a good idea to me, especially if PCI developers concur.
+>  put_dev:
+>         put_device(dev);
+> -       kfree(epf->name);
+> +       return ERR_PTR(ret);
+
+Ouch, if it's double free (sounds like it is) it should be fixed up to
+initial commit which brought that.
+Thus, Fixes tag would be good to see.
 
 -- 
-Mark Rustad, Networking Division, Intel Corporation
+With Best Regards,
+Andy Shevchenko
