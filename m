@@ -1,33 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:46194 "EHLO
-        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755283AbeBOKc4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Feb 2018 05:32:56 -0500
-Date: Thu, 15 Feb 2018 11:32:55 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] lspci: Add support of JSON output format
-Message-ID: <mj+md-20180215.103138.21596.nikam@ucw.cz>
-References: <20180214160741.8958-1-viktor.prutyanov@virtuozzo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180214160741.8958-1-viktor.prutyanov@virtuozzo.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:35925 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751654AbeBZRR1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Feb 2018 12:17:27 -0500
+From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+To: kishon@ti.com
+Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        andy.shevchenko@gmail.com,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+Subject: [PATCH v2 2/2] pci: endpoint: Fix kernel panic after put_device()
+Date: Mon, 26 Feb 2018 18:16:17 +0100
+Message-Id: <20180226171617.10016-3-embedded24@evers-fischer.de>
+In-Reply-To: <20180226171617.10016-1-embedded24@evers-fischer.de>
+References: <20180226171617.10016-1-embedded24@evers-fischer.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
 
-> This collection of patches adds support of printing PCI info in JSON format
+'put_device()' calls the relase function 'pci_epf_dev_release()',
+which already frees 'epf->name' and 'epf'.
 
-First of all, I would really like to hear the reasons behind that --
-especially why the current machine-readable format is not sufficient.
+Therefore we must not free them again after 'put_device()'.
 
-Generally, adding 1000 lines of code which duplicate a lot of existing
-logic should have a strong reason.
+Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+---
+ drivers/pci/endpoint/pci-epf-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-				Have a nice fortnight
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index 1f2506f32bb9..1878a6776519 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -232,7 +232,7 @@ struct pci_epf *pci_epf_create(const char *name)
+ 
+ put_dev:
+ 	put_device(dev);
+-	kfree(epf->name);
++	return ERR_PTR(ret);
+ 
+ free_epf:
+ 	kfree(epf);
 -- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-return(ENOTOBACCO); /* Read on an empty pipe */
+2.16.2
