@@ -1,70 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:51037 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750879AbeBWGLB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 01:11:01 -0500
-Subject: Re: [PATCH 1/2] pci: endpoint: Free func_name after last usage
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rolf Evers-Fischer <embedded24@evers-fischer.de>
-References: <20180221124707.26308-1-embedded24@evers-fischer.de>
- <20180221124707.26308-2-embedded24@evers-fischer.de>
- <20180222181901.GA13694@e107981-ln.cambridge.arm.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <9cdc8c1c-b448-b00b-d5b8-b664bd96f856@ti.com>
-Date: Fri, 23 Feb 2018 11:40:49 +0530
-MIME-Version: 1.0
-In-Reply-To: <20180222181901.GA13694@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v3 3/5] PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+Date: Mon, 26 Feb 2018 16:21:10 +0300
+Message-Id: <20180226132112.81447-4-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+After suspend/resume cycle the Presence Detect or Data Link Layer Status
+Changed bits might be set and if we don't clear them those events will
+not fire anymore and nothing happens for instance when a device is now
+hot-unplugged.
 
-On Thursday 22 February 2018 11:49 PM, Lorenzo Pieralisi wrote:
-> On Wed, Feb 21, 2018 at 01:47:06PM +0100, Rolf Evers-Fischer wrote:
->> From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
->>
->> This commit decreases the number of jump labels and ensures
->> that the next commit doesn't increase the number of occurrences
->> of 'kfree(func_name)'.
->>
->> Change-Id: I0d1b6fd652395b85f82b11c43bf9b7db512854d1
->> Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
->> Signed-off-by: Rolf Evers-Fischer <embedded24@evers-fischer.de>
->> ---
->>  drivers/pci/endpoint/pci-epf-core.c | 7 ++-----
->>  1 file changed, 2 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
->> index 766ce1dca2ec..23d0e128d1a5 100644
->> --- a/drivers/pci/endpoint/pci-epf-core.c
->> +++ b/drivers/pci/endpoint/pci-epf-core.c
->> @@ -220,9 +220,10 @@ struct pci_epf *pci_epf_create(const char *name)
->>  	*buf = '\0';
->>  
->>  	epf->name = kstrdup(func_name, GFP_KERNEL);
->> +	kfree(func_name);
-> 
-> I am certainly missing something but what if we reworked the code
-> and just:
-> 
-> kstrdup(name, GFP_KERNEL);
-> 
-> once instead of allocating another local copy (that we then have to
-> free) ?
+Fix this by clearing those bits in a newly introduced function
+pcie_reenable_notification(). This should be fine because immediately
+after we check if the adapter is still present by reading directly from
+the status register.
 
-name will be something like pci_epf_test.0 and in epf->name we want to just
-have pci_epf_test.
-> 
-> Reworded: why
-> 
-> epf->name = func_name;
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/hotplug/pciehp.h      |  2 +-
+ drivers/pci/hotplug/pciehp_core.c |  2 +-
+ drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
-memory should be allocated for epf->name before it can be initialized. IMO
-without kstrdup, there will be a null pointer exception.
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 636ed8f4b869..5abf864eae35 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -120,7 +120,7 @@ struct controller *pcie_init(struct pcie_device *dev);
+ int pcie_init_notification(struct controller *ctrl);
+ int pciehp_enable_slot(struct slot *p_slot);
+ int pciehp_disable_slot(struct slot *p_slot);
+-void pcie_enable_notification(struct controller *ctrl);
++void pcie_reenable_notification(struct controller *ctrl);
+ int pciehp_power_on_slot(struct slot *slot);
+ void pciehp_power_off_slot(struct slot *slot);
+ void pciehp_get_power_status(struct slot *slot, u8 *status);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 332b723ff9e6..44a6a63802d5 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
+ 	ctrl = get_service_data(dev);
+ 
+ 	/* reinitialize the chipset's event detection logic */
+-	pcie_enable_notification(ctrl);
++	pcie_reenable_notification(ctrl);
+ 
+ 	slot = ctrl->slot;
+ 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8f5dc5..98ea75aa32c7 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	return handled;
+ }
+ 
+-void pcie_enable_notification(struct controller *ctrl)
++static void pcie_enable_notification(struct controller *ctrl)
+ {
+ 	u16 cmd, mask;
+ 
+@@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+ }
+ 
++void pcie_reenable_notification(struct controller *ctrl)
++{
++	/*
++	 * Clear both Presence and Data Link Layer Changed to make sure
++	 * those events still fire after we have re-enabled them.
++	 */
++	pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
++				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
++	pcie_enable_notification(ctrl);
++}
++
+ static void pcie_disable_notification(struct controller *ctrl)
+ {
+ 	u16 mask;
+-- 
+2.16.1
 
-Thanks
-Kishon
