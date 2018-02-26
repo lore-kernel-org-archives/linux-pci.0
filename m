@@ -1,139 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <SRS0=CXPL=FU=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=CXPL=FU=linux.intel.com=mika.westerberg@kernel.org>
+Date: Mon, 26 Feb 2018 14:35:18 +0200
 From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v3 2/5] PCI: Take bridge window alignment into account when distributing resources
-Date: Mon, 26 Feb 2018 16:21:09 +0300
-Message-Id: <20180226132112.81447-3-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
-References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Valdis Kletnieks <Valdis.Kletnieks@vt.edu>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Peter Wu <peter@lekensteyn.nl>, Qipeng Zha <qipeng.zha@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Dave Airlie <airlied@gmail.com>, Qi Zheng <qi.zheng@intel.com>
+Subject: Re: [PATCH v1 2/2] PCI: Allow user to request power management of
+ conventional and hotplug bridges
+Message-ID: <20180226123518.GP27191@lahna.fi.intel.com>
+References: <151908155159.37696.9710083237704994886.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <151908204614.37696.12828004282495415825.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0irpPi4PXPHWaSpa3=MpUY4Sg3C-iHd0LPQN+FN-VTRpQ@mail.gmail.com>
+ <20180220181554.GA32228@bhelgaas-glaptop.roam.corp.google.com>
+ <20180222131834.GA5527@wunner.de>
+ <20180226120534.GO27191@lahna.fi.intel.com>
+ <20180226122243.GA25450@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180226122243.GA25450@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-When connecting a Thunderbolt endpoint which itself has internal PCIe
-switch (not the integrated one) the way we currently distribute
-resources does not always work well because devices below non-hotplug
-bridges might need to have their MMIO resources aligned to something
-else than 1 MB boundary. As an example connecting a server grade 4-port
-GbE add in card adds another PCIe switch leading to GbE devices that
-want to have their MMIO resources aligned to 2 MB boundary instead.
+On Mon, Feb 26, 2018 at 01:22:43PM +0100, Lukas Wunner wrote:
+> On Mon, Feb 26, 2018 at 02:05:34PM +0200, Mika Westerberg wrote:
+> > On Thu, Feb 22, 2018 at 02:18:34PM +0100, Lukas Wunner wrote:
+> > > We do need runtime PM on hotplug ports to power off Thunderbolt
+> > > controllers when nothing is plugged in.  That saves 1.5 W, so a
+> > > noticeable amount of power.  I was going to respin the series one
+> > > of these days, I think the best I can do is continue to forbid
+> > > runtime PM on hotplug ports by default, but whitelist it for
+> > > Thunderbolt and allow manually enabling it on other platforms via
+> > > the command line.  That way, vendors are put in a position to
+> > > validate their platforms for runtime PM of hotplug ports, and
+> > > perhaps someday we can enable it for all platforms by default,
+> > > but with a BIOS cut-off date.
+> > 
+> > AFAIK Windows started to enable runtime PM (RTD3) for native PCIe
+> > hotplug ports with the latest release (I guess it's the RS3 release) but
+> > only when there is a special ACPI _DSD property ("HotPlugSupportInD3")
+> > associated with the root port. I think we can take advantage of that in
+> > Linux as well and I already have a patch series to enable runtime PM for
+> > such ports but I haven't been able to test it properly yet.
+> 
+> Okay.  Well it would be trivial to whitelist those ports with
+> device_property_present("HotPlugSupportInD3").  In how far are
+> your patches identical with the patches I submitted last May?
 
-Current resource distribution code does not take this alignment into
-account and might try to add too much resources for the extension
-hotplug bridges. The resulting bridge window is then too big which makes
-Linux to re-allocate minimal amount of resources, making future
-extension impossible.
+My patches pretty much only touch the whitelist part not the other fixes
+you made for pciehp in your series. We can add those on top of your
+series or I can send them out separately.
 
-Make this work better by substracting properly aligned non-hotplug
-downstream bridge window size from the remaining resources.
+> I've started reworking them for v2 but that would be a waste of
+> time if you're working on this issue in parallel.
 
-Fixes: 1a5767725cec ("PCI: Distribute available resources to hotplug-capable bridges")
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/pci/setup-bus.c | 41 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 40 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 3cce29a069e6..f1e6172734f0 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1882,6 +1882,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 	resource_size_t available_mmio, resource_size_t available_mmio_pref)
- {
- 	resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
-+	resource_size_t io_start, mmio_start, mmio_pref_start;
- 	unsigned int normal_bridges = 0, hotplug_bridges = 0;
- 	struct resource *io_res, *mmio_res, *mmio_pref_res;
- 	struct pci_dev *dev, *bridge = bus->self;
-@@ -1946,11 +1947,16 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 			remaining_mmio_pref -= resource_size(res);
- 	}
- 
-+	io_start = io_res->start;
-+	mmio_start = mmio_res->start;
-+	mmio_pref_start = mmio_pref_res->start;
-+
- 	/*
- 	 * Go over devices on this bus and distribute the remaining
- 	 * resource space between hotplug bridges.
- 	 */
- 	for_each_pci_bridge(dev, bus) {
-+		resource_size_t align;
- 		struct pci_bus *b;
- 
- 		b = dev->subordinate;
-@@ -1968,7 +1974,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 				available_io, available_mmio,
- 				available_mmio_pref);
- 		} else if (dev->is_hotplug_bridge) {
--			resource_size_t align, io, mmio, mmio_pref;
-+			resource_size_t io, mmio, mmio_pref;
- 
- 			/*
- 			 * Distribute available extra resources equally
-@@ -1981,11 +1987,13 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 			io = div64_ul(available_io, hotplug_bridges);
- 			io = min(ALIGN(io, align), remaining_io);
- 			remaining_io -= io;
-+			io_start += io;
- 
- 			align = pci_resource_alignment(bridge, mmio_res);
- 			mmio = div64_ul(available_mmio, hotplug_bridges);
- 			mmio = min(ALIGN(mmio, align), remaining_mmio);
- 			remaining_mmio -= mmio;
-+			mmio_start += mmio;
- 
- 			align = pci_resource_alignment(bridge, mmio_pref_res);
- 			mmio_pref = div64_ul(available_mmio_pref,
-@@ -1993,9 +2001,40 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 			mmio_pref = min(ALIGN(mmio_pref, align),
- 					remaining_mmio_pref);
- 			remaining_mmio_pref -= mmio_pref;
-+			mmio_pref_start += mmio_pref;
- 
- 			pci_bus_distribute_available_resources(b, add_list, io,
- 							       mmio, mmio_pref);
-+		} else {
-+			/*
-+			 * For normal bridges, track start of the parent
-+			 * bridge window to make sure we align the
-+			 * remaining space which is distributed to the
-+			 * hotplug bridges properly.
-+			 */
-+			resource_size_t aligned;
-+			struct resource *res;
-+
-+			res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
-+			io_start += resource_size(res);
-+			aligned = ALIGN(io_start,
-+					pci_resource_alignment(dev, res));
-+			if (aligned > io_start)
-+				remaining_io -= aligned - io_start;
-+
-+			res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
-+			mmio_start += resource_size(res);
-+			aligned = ALIGN(mmio_start,
-+					pci_resource_alignment(dev, res));
-+			if (aligned > mmio_start)
-+				remaining_mmio -= aligned - mmio_start;
-+
-+			res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
-+			mmio_pref_start += resource_size(res);
-+			aligned = ALIGN(mmio_pref_start,
-+					pci_resource_alignment(dev, res));
-+			if (aligned > mmio_pref_start)
-+				remaining_mmio_pref -= aligned - mmio_pref_start;
- 		}
- 	}
- }
--- 
-2.16.1
-
+Please continue with your v2 :) I can provide testing assistance if you
+need any.
