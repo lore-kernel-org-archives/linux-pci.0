@@ -1,73 +1,79 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <0a30452f-34eb-d0b5-2001-ab6b866c53e2@huawei.com>
-References: <1516725385-24535-1-git-send-email-john.garry@huawei.com>
- <1516725385-24535-8-git-send-email-john.garry@huawei.com> <0a30452f-34eb-d0b5-2001-ab6b866c53e2@huawei.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Mon, 5 Feb 2018 15:16:03 +0200
-Message-ID: <CAHp75VfXoAHNH2BnfNLbFfdCqUk3rxU_QWfxTx7ZyLgV0qxotQ@mail.gmail.com>
-Subject: Re: [PATCH v12 7/9] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-To: John Garry <john.garry@huawei.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Hanjun Guo <hanjun.guo@linaro.org>, dann.frazier@canonical.com,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, linux-pci@vger.kernel.org,
-        Corey Minyard <minyard@acm.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20180227003123-mutt-send-email-mst@kernel.org>
+References: <20180226044837.19543.12267.stgit@mdrustad-mac04.local>
+ <CAKgT0UcMth9Jxovoj7xo0q2t+MuY0K1Upf+Mqs3zgXdriui-tA@mail.gmail.com> <20180227003123-mutt-send-email-mst@kernel.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 26 Feb 2018 14:38:01 -0800
+Message-ID: <CAKgT0UfGsQbONBWpoHmT4pM8gxonjovuD0BWraeA9D7q1SCtaw@mail.gmail.com>
+Subject: Re: [RFC PATCH V4] pci: virtio_pci: Add SR-IOV support for virtio_pci devices
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Mark Rustad <mark.d.rustad@intel.com>,
+        virtio-dev@lists.oasis-open.org, Netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+        "Daly, Dan" <dan.daly@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Mark Rustad <MRustad@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 1, 2018 at 1:32 PM, John Garry <john.garry@huawei.com> wrote:
+On Mon, Feb 26, 2018 at 2:32 PM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> On Mon, Feb 26, 2018 at 07:26:14AM -0800, Alexander Duyck wrote:
+>> On Sun, Feb 25, 2018 at 8:48 PM, Mark Rustad <mark.d.rustad@intel.com> wrote:
+>> > Hardware-realized virtio_pci devices can implement SR-IOV, so this
+>> > patch enables its use. The device in question is an upcoming Intel
+>> > NIC that implements both a virtio_net PF and virtio_net VFs. These
+>> > are hardware realizations of what has been up to now been a software
+>> > interface.
+>> >
+>> > The device in question has the following 4-part PCI IDs:
+>> >
+>> > PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+>> > VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
+>> >
+>> > The patch needs no check for device ID, because the callback will
+>> > never be made for devices that do not assert the capability or
+>> > when run on a platform incapable of SR-IOV.
+>> >
+>> > One reason for this patch is because the hardware requires the
+>> > vendor ID of a VF to be the same as the vendor ID of the PF that
+>> > created it. So it seemed logical to simply have a fully-functioning
+>> > virtio_net PF create the VFs. This patch makes that possible.
+>> >
+>> > Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+>> > Reviewed-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>>
+>> Mark,
+>>
+>> In the future please don't put my "Reviewed-by" on a patch that I
+>> haven't reviewed. I believe I reviewed one of the earlier patches, but
+>> I hadn't reviewed this version.
+>>
+>> Also, after thinking about it over the weekend we may want to look at
+>> just coming up with a truly "generic" solution that is applied to
+>> SR-IOV capable devices that don't have a SR-IOV capable driver loaded
+>> on them. That would allow us to handle the uio, vfio, pci-stub, and
+>> virtio cases all in one fell swoop. I think us going though and
+>> modifying one patch at a time to do this kind of thing isn't going to
+>> scale.
+>
+> uio really can't support VFs properly - without proper IOMMU
+> support any MSIs can corrupt kernel memory, and VFs are
+> limited to MSIs.
 
+UIO wasn't being run on the VFs, it was just running the PF. The point
+is that there have been about 4 attempts, including this one, to add
+SR-IOV support to drivers that don't actually do any VF management
+internally. They were just being used as a shim so that they could add
+the sriov_configure function to a driver that would load on the PF.
 
-I'm not going through all patch, by one thing I would like you to pay
-attention on, i.e.
-printing resource_size_t and struct resource
+If we make the solution generic I think it should turn out pretty
+clean. Most of the work just needs to happen in the sysfs function for
+storing the value that is written to sriov_numvfs. I'm working with
+Mark and a few other people now to get this addressed and I hope that
+we can have a patch available shortly.
 
->> +               dev_err(dev, "translate bus-addr(0x%llx) fail!\n",
->> +                       resource->start);
+Thanks.
 
-resource_size_t is dynamic width type, you will see a compiler
-warning. For this we have
-%pap specifier.
-
-Moreover, in some cases it's useful to print struct resource via %pR or %pr.
-
-Consider reading kernel documentation about these (printk-formats.rst).
-
->> +struct acpi_indirectio_host_data {
->> +       resource_size_t io_size;
->> +       resource_size_t io_start;
->> +};
-
-Why not utilize struct resource?
-
-If it's coming from platform / firmware it should *never* have types
-like size_t, unsigned long, resource_size_t, etc.
-
->> +/* All the host devices which apply indirect-IO can be listed here. */
->> +static const struct acpi_device_id acpi_indirect_host_id[] = {
->> +       {""},
->> +};
-
-The idea of terminator is to be such (remove comma there). And it's
-basically redundant to have an empty string there. Moreover, it's a
-waste of resources in ro section.
-
--- 
-With Best Regards,
-Andy Shevchenko
+- Alex
