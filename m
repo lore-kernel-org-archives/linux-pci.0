@@ -1,32 +1,97 @@
-Return-Path: <SRS0=2t+/=FO=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=2t+/=FO=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, George Cherian <george.cherian@cavium.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, bhelgaas@google.com, Jayachandran.Nair@cavium.com, Robert.Richter@cavium.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
-Date: Tue, 20 Feb 2018 11:58:50 +0100
-Message-ID: <2624962.WE3pJu07T1@aspire.rjw.lan>
-In-Reply-To: <20180220015433.GA9656@wunner.de>
-References: <1517554846-16703-1-git-send-email-george.cherian@cavium.com> <2858019.9TUCWsDpTB@aspire.rjw.lan> <20180220015433.GA9656@wunner.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices with
+ unmet dependencies
+To: "Moore, Robert" <robert.moore@intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "Schmauss, Erik" <erik.schmauss@intel.com>,
+        "Box, David E" <david.e.box@intel.com>
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@acpica.org" <devel@acpica.org>
+References: <20180122085135.16732-1-hdegoede@redhat.com>
+ <3281375.11fh90aaLK@aspire.rjw.lan>
+ <7efce3e1-4cb7-fa68-9024-73fa124b9171@redhat.com>
+ <94F2FBAB4432B54E8AACC7DFDE6C92E3B7570FA0@ORSMSX110.amr.corp.intel.com>
+ <a62364ba-7b79-6bb0-20a3-c66cb166e923@redhat.com>
+ <94F2FBAB4432B54E8AACC7DFDE6C92E3B7572CE8@ORSMSX110.amr.corp.intel.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <e9264ac3-2219-f337-026f-9f97ffe9ce65@redhat.com>
+Date: Mon, 26 Feb 2018 09:42:20 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <94F2FBAB4432B54E8AACC7DFDE6C92E3B7572CE8@ORSMSX110.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, February 20, 2018 2:54:33 AM CET Lukas Wunner wrote:
-> On Mon, Feb 19, 2018 at 12:21:56PM +0100, Rafael J. Wysocki wrote:
-> > On Friday, February 16, 2018 9:34:34 PM CET Bjorn Helgaas wrote:
-> > > On Fri, Feb 16, 2018 at 01:40:37PM +0100, Rafael J. Wysocki wrote:
-> > > > On Friday, February 16, 2018 12:39:00 AM CET Bjorn Helgaas wrote:
-> > > > > On Thu, Feb 15, 2018 at 10:57:25PM +0100, Rafael J. Wysocki wrote:
-> > > > > > On Wednesday, February 14, 2018 9:16:53 PM CET Bjorn Helgaas wrote:
-> > > > > > > I don't know how this runtime PM works, but maybe Rafael can help
-> > > > > > > us out.
-> 
-> This has nothing to do with runtime PM AFAICS.
-> 
-> The device seems to be in D3hot on boot, is that correct?
-> The PCI core assumes that unbound devices remain in D0
-> (see comments in pci_pm_runtime_resume() / pci_pm_runtime_suspend()).
+Hi,
 
-Which may not be the case when user space fiddles with the runtime PM
-sysfs for them IIRC.
+On 14-02-18 16:28, Moore, Robert wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: Hans de Goede [mailto:hdegoede@redhat.com]
+>> Sent: Wednesday, February 14, 2018 2:33 AM
+>> To: Moore, Robert <robert.moore@intel.com>; Rafael J. Wysocki
+>> <rjw@rjwysocki.net>; linux-acpi@vger.kernel.org; Schmauss, Erik
+>> <erik.schmauss@intel.com>; Box, David E <david.e.box@intel.com>
+>> Cc: Len Brown <lenb@kernel.org>; Bjorn Helgaas <bhelgaas@google.com>;
+>> linux-pci@vger.kernel.org; devel@acpica.org
+>> Subject: Re: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices
+>> with unmet dependencies
+>>
+>> Hi,
+>>
+>> On 08-02-18 18:34, Moore, Robert wrote:
+>>>
+>>>
+>>>>> The last one needs to go in via ACPICA anyway or we'll need to carry
+>>>>> a Linux-specific replacement for acpi_get_object_info().
+>>>>
+>>>> Ack, I'm discussing how to proceed with this with the ACPICA people.
+>>>>
+>>>> Regards,
+>>>>
+>>>> Hans
+>>>
+>>>
+>>> I normally don't like to change external interfaces (the biggest
+>> reason being the sheer number of different OS vendors that use ACPICA),
+>> but in this case, I feel it may be OK. This interface is probably not
+>> heavily used, and there is precedent for this when the invocation of
+>> _SUB was removed.
+>>>
+>>> On the other hand, I think I saw it mentioned that Linux calls this
+>> interface only once, is this correct?
+>>
+>> More or less, Linux calls it once when enumerating all the devices and a
+>> few ACPI drivers call it again to get some extra info they need.
+>>
+>>> If so, perhaps it would be easiest to simply remove this call and use
+>> direct control method invocations to obtain the desired data.
+>>
+>> If we go this route we would probably end up copying the function, since
+>> as said several drivers use it too.
+>>
+>>> If we go ahead and make this change to ACPICA: I have not seen the
+>> patch, but please make sure that all vestiges of this are removed. This
+>> includes all invocations within ACPICA that examine the result of the
+>> _STA invocation, the CurrentStatus field of ACPI_DEVICE_INFO, the
+>> ACPI_VALID_STA flag, etc.
+>>
+>> The patch already does that:
+>>
+>> https://patchwork.kernel.org/patch/10186195/
+>>
+> 
+> 
+> Of course, we will need the ACPICA version of the patch, not the "linuxized" version.
+> Bob
+
+Ok, I've submitted a pull-request with an ACPICA version of the patch here:
+
+https://github.com/acpica/acpica/pull/364
+
+Regards,
+
+Hans
