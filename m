@@ -1,52 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from thoth.sbs.de ([192.35.17.2]:47578 "EHLO thoth.sbs.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966069AbeCAFlK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 00:41:10 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH v3 6/6] MAINTAINERS: Add entry for Jailhouse
-Date: Thu,  1 Mar 2018 06:40:49 +0100
-Message-Id: <35c7685c09f406c8497c60408dd861ab1dcc3941.1519882849.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1519882849.git.jan.kiszka@siemens.com>
-References: <cover.1519882849.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1519882849.git.jan.kiszka@siemens.com>
-References: <cover.1519882849.git.jan.kiszka@siemens.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:50497 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751811AbeBZRR0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Feb 2018 12:17:26 -0500
+From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+To: kishon@ti.com
+Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        andy.shevchenko@gmail.com,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+Subject: [PATCH v2 1/2] pci: endpoint: Simplify name allocation for epf device
+Date: Mon, 26 Feb 2018 18:16:16 +0100
+Message-Id: <20180226171617.10016-2-embedded24@evers-fischer.de>
+In-Reply-To: <20180226171617.10016-1-embedded24@evers-fischer.de>
+References: <20180226171617.10016-1-embedded24@evers-fischer.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+This commit replaces allocating and freeing the intermediate
+'buf'/'func_name' with a combination of 'kstrndup()' and 'len'.
+
+'len' is the required length of 'epf->name'.
+'epf->name' should be either the first part of 'name' preceding the '.'
+or the complete 'name', if there is no '.' in the name.
+
+Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
 ---
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/pci/endpoint/pci-epf-core.c | 22 ++++------------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 93a12af4f180..4b889f282c77 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7521,6 +7521,13 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
- S:	Maintained
- F:	drivers/media/dvb-frontends/ix2505v*
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index 766ce1dca2ec..1f2506f32bb9 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -200,8 +200,7 @@ struct pci_epf *pci_epf_create(const char *name)
+ 	int ret;
+ 	struct pci_epf *epf;
+ 	struct device *dev;
+-	char *func_name;
+-	char *buf;
++	int len;
  
-+JAILHOUSE HYPERVISOR INTERFACE
-+M:	Jan Kiszka <jan.kiszka@siemens.com>
-+L:	jailhouse-dev@googlegroups.com
-+S:	Maintained
-+F:	arch/x86/kernel/jailhouse.c
-+F:	arch/x86/include/asm/jailhouse_para.h
-+
- JC42.4 TEMPERATURE SENSOR DRIVER
- M:	Guenter Roeck <linux@roeck-us.net>
- L:	linux-hwmon@vger.kernel.org
+ 	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
+ 	if (!epf) {
+@@ -209,20 +208,11 @@ struct pci_epf *pci_epf_create(const char *name)
+ 		goto err_ret;
+ 	}
+ 
+-	buf = kstrdup(name, GFP_KERNEL);
+-	if (!buf) {
+-		ret = -ENOMEM;
+-		goto free_epf;
+-	}
+-
+-	func_name = buf;
+-	buf = strchrnul(buf, '.');
+-	*buf = '\0';
+-
+-	epf->name = kstrdup(func_name, GFP_KERNEL);
++	len = strchrnul(name, '.') - name;
++	epf->name = kstrndup(name, len, GFP_KERNEL);
+ 	if (!epf->name) {
+ 		ret = -ENOMEM;
+-		goto free_func_name;
++		goto free_epf;
+ 	}
+ 
+ 	dev = &epf->dev;
+@@ -238,16 +228,12 @@ struct pci_epf *pci_epf_create(const char *name)
+ 	if (ret)
+ 		goto put_dev;
+ 
+-	kfree(func_name);
+ 	return epf;
+ 
+ put_dev:
+ 	put_device(dev);
+ 	kfree(epf->name);
+ 
+-free_func_name:
+-	kfree(func_name);
+-
+ free_epf:
+ 	kfree(epf);
+ 
 -- 
-2.13.6
+2.16.2
