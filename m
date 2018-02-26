@@ -1,101 +1,149 @@
-Return-Path: <SRS0=frT5=E3=realsil.com.cn=rui_feng@kernel.org>
-Return-Path: <SRS0=frT5=E3=realsil.com.cn=rui_feng@kernel.org>
-From: =?utf-8?B?5Yav6ZSQ?= <rui_feng@realsil.com.cn>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "lee.jones@linaro.org" <lee.jones@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Hans de Goede
-	<hdegoede@redhat.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IOetlOWkjTog562U5aSNOiBbUEFUQ0ggdjZdIG1m?= =?utf-8?Q?d:_Add_support_for_RTS5250S_power_saving?=
-Date: Thu, 1 Feb 2018 08:45:47 +0000
-Message-ID: <2A308283684ECD4B896628E09AF5361E01A8ACA4@RS-MBS01.realsil.com.cn>
-References: <1504772799-15173-1-git-send-email-rui_feng@realsil.com.cn>
- <20171214222522.GL30595@bhelgaas-glaptop.roam.corp.google.com>
- <2A308283684ECD4B896628E09AF5361E01A8150B@RS-MBS01.realsil.com.cn>
- <20171215151522.GT30595@bhelgaas-glaptop.roam.corp.google.com>
- <2A308283684ECD4B896628E09AF5361E01A8193C@RS-MBS01.realsil.com.cn>
- <20171227233750.GB79892@bhelgaas-glaptop.roam.corp.google.com>
- <20180117210121.GD7039@bhelgaas-glaptop.roam.corp.google.com>
- <2A308283684ECD4B896628E09AF5361E01A8A102@RS-MBS01.realsil.com.cn>
- <20180130191827.GI232763@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180130191827.GI232763@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=BsMt=FU=xilinx.com=bharatku@kernel.org>
+Return-Path: <SRS0=BsMt=FU=xilinx.com=bharatku@kernel.org>
+From: Bharat Kumar Gogada <bharatku@xilinx.com>
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Multi MSI with multiple End Points
+Date: Mon, 26 Feb 2018 09:13:29 +0000
+Message-ID: <BLUPR0201MB150530CBA42729AFD6603519A5C10@BLUPR0201MB1505.namprd02.prod.outlook.com>
+Content-Type: multipart/alternative;
+	boundary="_000_BLUPR0201MB150530CBA42729AFD6603519A5C10BLUPR0201MB1505_"
 MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-PiANCj4gT24gRnJpLCBKYW4gMTksIDIwMTggYXQgMDc6Mzg6MjJBTSArMDAwMCwg5Yav6ZSQIHdy
-b3RlOg0KPiA+ID4gT24gV2VkLCBEZWMgMjcsIDIwMTcgYXQgMDU6Mzc6NTBQTSAtMDYwMCwgQmpv
-cm4gSGVsZ2FhcyB3cm90ZToNCj4gPiA+ID4gT24gVHVlLCBEZWMgMTksIDIwMTcgYXQgMDg6MTU6
-MjRBTSArMDAwMCwg5Yav6ZSQIHdyb3RlOg0KPiA+ID4gPiA+ID4gT24gRnJpLCBEZWMgMTUsIDIw
-MTcgYXQgMDk6NDI6NDVBTSArMDAwMCwg5Yav6ZSQIHdyb3RlOg0KPiA+ID4gPiA+ID4gPiA+IFsr
-Y2MgSGFucywgRGF2ZSwgbGludXgtcGNpXQ0KPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+
-ID4gT24gVGh1LCBTZXAgMDcsIDIwMTcgYXQgMDQ6MjY6MzlQTSArMDgwMCwNCj4gPiA+ID4gPiA+
-ID4gPiBydWlfZmVuZ0ByZWFsc2lsLmNvbS5jbg0KPiA+ID4gPiA+ID4gd3JvdGU6DQo+ID4gPiA+
-ID4gPiA+ID4gPiBGcm9tOiBSdWkgRmVuZyA8cnVpX2ZlbmdAcmVhbHNpbC5jb20uY24+DQo+ID4g
-PiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPiBJIHdpc2ggdGhpcyBoYWQgYmVlbiBwb3N0ZWQg
-dG8gbGludXgtcGNpIGJlZm9yZSBiZWluZyBtZXJnZWQuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+
-ID4gPiA+ID4gPiBJJ20gY29uY2VybmVkIGJlY2F1c2Ugc29tZSBvZiB0aGlzIGFwcGVhcnMgdG8g
-b3ZlcmxhcCBhbmQNCj4gPiA+ID4gPiA+ID4gPiBjb25mbGljdCB3aXRoIFBDSSBjb3JlIG1hbmFn
-ZW1lbnQgb2YgQVNQTS4NCj4gPiA+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gPiA+IEkgYXNzdW1l
-IHRoZXNlIGRldmljZXMgYWR2ZXJ0aXNlIEFTUE0gc3VwcG9ydCBpbiB0aGVpcg0KPiA+ID4gPiA+
-ID4gPiA+IExpbmsgQ2FwYWJpbGl0ZXMgcmVnaXN0ZXJzLCByaWdodD8gIElmIHNvLCB3aHkgaXNu
-J3QgdGhlDQo+ID4gPiA+ID4gPiA+ID4gZXhpc3RpbmcgUENJIGNvcmUgQVNQTSBzdXBwb3J0IHN1
-ZmZpY2llbnQ/DQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gV2hlbiBMMVNTIGlzIGNv
-bmZpZ3VyZWQsIHRoZSBkZXZpY2UoaGFyZHdhcmUpIGNhbid0IGVudGVyDQo+ID4gPiA+ID4gPiA+
-IEwxU1Mgc3RhdHVzIGF1dG9tYXRpY2FsbHksIGl0IG5lZWQgZHJpdmVyKHNvZnR3YXJlKSB0byBk
-bw0KPiA+ID4gPiA+ID4gPiBzb21lIHdvcmsgdG8gYWNoaWV2ZSB0aGUNCj4gPiA+ID4gPiA+IGZ1
-bmN0aW9uLg0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IFNvIHRoaXMgaXMgYSBoYXJkd2FyZSBk
-ZWZlY3QgaW4gdGhlIGRldmljZT8gIEFzIGZhciBhcyBJIGtub3csDQo+ID4gPiA+ID4gPiBBU1BN
-IGFuZCBMMVNTIGFyZSBzcGVjaWZpZWQgc3VjaCB0aGF0IHRoZXkgc2hvdWxkIHdvcmsgd2l0aG91
-dA0KPiA+ID4gPiA+ID4gc3BlY2lhbA0KPiA+ID4gZHJpdmVyIHN1cHBvcnQuDQo+ID4gPiA+ID4g
-Pg0KPiA+ID4gPiA+IFllcywgeW91IGNhbiBzYXkgdGhhdC4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+
-ID4gPiA+ID4gRW5hYmxlIHBvd2VyIHNhdmluZyBmb3IgUlRTNTI1MFMgYXMgZm9sbG93aW5nIHN0
-ZXBzOg0KPiA+ID4gPiA+ID4gPiA+ID4gMS5TZXQgMHhGRTU4IHRvIGVuYWJsZSBjbG9jayBwb3dl
-ciBtYW5hZ2VtZW50Lg0KPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+ID4gSXMgdGhpcyBj
-bG9jayBwb3dlciBtYW5hZ2VtZW50IHNvbWV0aGluZyBzcGVjaWZpYyB0bw0KPiA+ID4gPiA+ID4g
-PiA+IFJUUzUyNTBTLCBvciBpcyBpdCBzdGFuZGFyZCBQQ0llIGFyY2hpdGVjdGVkIHN0dWZmPw0K
-PiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+IDB4RkU1OCBpcyBzcGVjaWZpYyByZWdpc3Rl
-ciB0byBSVFM1MjUwUyBub3Qgc3RhbmRhcmQgUENJZQ0KPiA+ID4gPiA+ID4gPiBhcmNoaXRlY3Rl
-ZA0KPiA+ID4gc3R1ZmYuDQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gT0suICBJIGFza2VkIGJl
-Y2F1c2UgZGV2aWNlcyBvZnRlbiBtaXJyb3IgYXJjaGl0ZWN0ZWQgUENJZQ0KPiA+ID4gPiA+ID4g
-Y29uZmlnIHRoaW5ncyBpbiBkZXZpY2Utc3BlY2lmaWMgTU1JTyBzcGFjZSwgYW5kIGlmIEkgc3F1
-aW50DQo+ID4gPiA+ID4gPiBqdXN0IHJpZ2h0LCBJIGNhbiBzb3J0IG9mIG1hdGNoIHVwIHRoZSBy
-ZWdpc3RlciBiaXRzIHlvdSB1c2VkDQo+ID4gPiA+ID4gPiB3aXRoIHRoaW5ncyBpbiB0aGUgUENJ
-ZQ0KPiA+ID4gc3BlYy4NCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+ID4gPiAyLkNoZWNrIGNm
-ZyBzcGFjZSB3aGV0aGVyIHN1cHBvcnQgTDFTUyBvciBub3QuDQo+ID4gPiA+ID4gPiA+ID4NCj4g
-PiA+ID4gPiA+ID4gPiBUaGlzIHNvdW5kcyBsaWtlIHN0YW5kYXJkIFBDSWUgQVNQTSBMMSBTdWJz
-dGF0ZXMsIHJpZ2h0Pw0KPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+IFllcy4NCj4gPiA+
-ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPiA+IDMuSWYgc3VwcG9ydCBMMVNTLCBzZXQgMHhGRjAz
-IHRvIGZyZWUgY2xrcmVxLg0KPiA+ID4gPiA+ID4gPiA+ID4gNC5XaGVuIGVudGVyaW5nIGlkbGUg
-c3RhdHVzLCBlbmFibGUgYXNwbQ0KPiA+ID4gPiA+ID4gPiA+ID4gICBhbmQgc2V0IHBhcmFtZXRl
-cnMgZm9yIEwxU1MgYW5kIExUUi4NCj4gPiA+ID4gPiA+ID4gPiA+IDUuV25lbiBlbnRlcmluZyBy
-dW4gc3RhdHVzLCBkaXNhYmxlIGFzcG0NCj4gPiA+ID4gPiA+ID4gPiA+ICAgYW5kIHNldCBwYXJh
-bWV0ZXJzIGZvciBMMVNTIGFuZCBMVFIuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4g
-PiBJbiBnZW5lcmFsLCBkcml2ZXJzIHNob3VsZCBub3QgY29uZmlndXJlIEFTUE0sIEwxU1MsIGFu
-ZA0KPiA+ID4gPiA+ID4gPiA+IExUUiB0aGVtc2VsdmVzOyB0aGUgUENJIGNvcmUgc2hvdWxkIGRv
-IHRoYXQuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gPiBJZiBhIGRyaXZlciBuZWVk
-cyB0byB0d2VhayBBU1BNIGF0IHJ1bi10aW1lLCBpdCBzaG91bGQgdXNlDQo+ID4gPiA+ID4gPiA+
-ID4gaW50ZXJmYWNlcyBleHBvcnRlZCBieSB0aGUgUENJIGNvcmUgdG8gZG8gc28uDQo+ID4gPiA+
-ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gV2hpY2ggaW50ZXJmYWNlIEkgY2FuIHVzZSB0byBzZXQg
-QVNQTT8gSSB1c2UNCj4gInBjaV93cml0ZV9jb25maWdfYnl0ZSINCj4gPiA+IG5vdy4NCj4gPiA+
-ID4gPiA+DQo+ID4gPiA+ID4gPiBXaGF0IGRvIHlvdSBuZWVkIHRvIGRvPyAgaW5jbHVkZS9saW51
-eC9wY2ktYXNwbS5oIGV4cG9ydHMNCj4gPiA+ID4gPiA+IHBjaV9kaXNhYmxlX2xpbmtfc3RhdGUo
-KSwgd2hpY2ggaXMgbWFpbmx5IHVzZWQgdG8gYXZvaWQgQVNQTQ0KPiA+ID4gPiA+ID4gc3RhdGVz
-IHRoYXQgaGF2ZSBoYXJkd2FyZSBlcnJhdGEuDQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+IEkgd2Fu
-dCB0byBlbmFibGUgQVNQTShMMCAtPiBMMSkgYW5kIGRpc2FibGUgQVNQTShMMSAtPiBMMCksDQo+
-ID4gPiA+ID4gd2hpY2ggaW50ZXJmYWNlIGNhbiBJIHVzZT8NCj4gPiA+ID4NCj4gPiA+ID4gWW91
-IGNhbiB1c2UgcGNpX2Rpc2FibGVfbGlua19zdGF0ZSgpIHRvIGRpc2FibGUgdXNhZ2Ugb2YgTDEu
-DQo+ID4gPiA+DQo+ID4gPiA+IEN1cnJlbnRseSB0aGVyZSBpcyBubyBjb3JyZXNwb25kaW5nIHBj
-aV9lbmFibGVfbGlua19zdGF0ZSgpLiAgV2hhdA0KPiA+ID4gPiBpZiB3ZSBhZGRlZCBzb21ldGhp
-bmcgbGlrZSB0aGUgZm9sbG93aW5nICh1bnRlc3RlZCk/ICBXb3VsZCB0aGF0DQo+ID4gPiA+IHdv
-cmsgZm9yIHlvdT8NCj4gPiA+DQo+ID4gPiBIaSBSdWksDQo+ID4gPg0KPiA+ID4gQW55IHRob3Vn
-aHRzIG9uIHRoZSBwYXRjaCBiZWxvdz8NCj4gPg0KPiA+IEknbSBidXN5IHdpdGggb3RoZXIgd29y
-aywgdGhlIHBhdGNoIHNlZW1zIG9rLCBJIHdpbGwgdGVzdCBpdCBsYXRlci4NCj4gDQo+IEFueSBp
-ZGVhIHdoZW4geW91IG1pZ2h0IGdldCBiYWNrIHRvIHRoaXM/DQo+IA0KPiBJZiB5b3UgY2FuJ3Qg
-ZG8gaXQsIEkgY2FuIHRyeSBkb2luZyBpdCBteXNlbGYsIGJ1dCBvZiBjb3Vyc2UsIEkgZG9uJ3Qg
-a25vdyB0aGUgZGV0YWlscw0KPiBhYm91dCB0aGUgZGV2aWNlIGVycmF0YSBhbmQgSSB3b3VsZG4n
-dCBiZSBhYmxlIHRvIHRlc3QgaXQuDQo+IA0KT2YgY291cnNlLCB5b3UgY2FuIGRvIGl0IGZpcnN0
-Lg0KDQo+IEJqb3JuDQo+IA0KPiAtLS0tLS1QbGVhc2UgY29uc2lkZXIgdGhlIGVudmlyb25tZW50
-IGJlZm9yZSBwcmludGluZyB0aGlzIGUtbWFpbC4NCg==
+--_000_BLUPR0201MB150530CBA42729AFD6603519A5C10BLUPR0201MB1505_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+A switch is connected to an RC with 2 EP's, the RC supports multi MSI.
+1st EP requests one MSI vector, 2nd EP requests 4 MSI vectors.
+
+If we are programming hwirq as MSI data (hwirq being obtained from bitmap_f=
+ind_next_zero_area,
+with number of zeroed bits being requested based on number of irq's being r=
+equested).
+This gives 1st EP is given zero as hwirq, 2nd EP is given one as hwirq.
+
+If we use msi data to retrieve virq (use msi data as hwirq), Since as per P=
+CI spec lower 2 bits of MSI data
+are modifiable  for 2nd EP, if an interrupt is raised by 2nd EP on msi data=
+ zero, but this is already used by 1st EP, so the
+current EP's interrupt will never be served.
+One way to deal with this issue is, using bit shift operations on hwriq bef=
+ore programming to msi data
+and at retrieving.
+
+Is there any other better way to handle this ?
+
+Regards,
+Bharat
+
+
+--_000_BLUPR0201MB150530CBA42729AFD6603519A5C10BLUPR0201MB1505_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
+//www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
+>
+<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:#954F72;
+	text-decoration:underline;}
+span.EmailStyle17
+	{mso-style-type:personal;
+	font-family:"Calibri",sans-serif;
+	color:windowtext;}
+span.EmailStyle18
+	{mso-style-type:personal;
+	font-family:"Calibri",sans-serif;
+	color:#1F497D;}
+span.EmailStyle19
+	{mso-style-type:personal;
+	font-family:"Calibri",sans-serif;
+	color:windowtext;}
+span.EmailStyle20
+	{mso-style-type:personal-reply;
+	font-family:"Calibri",sans-serif;
+	color:#1F497D;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-size:10.0pt;}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]-->
+</head>
+<body lang=3D"EN-US" link=3D"#0563C1" vlink=3D"#954F72">
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal">Hi,<br>
+<br>
+A switch is connected to an RC with 2 EP&#8217;s, the RC supports multi MSI=
+.<o:p></o:p></p>
+<p class=3D"MsoNormal">1<sup>st</sup> EP requests one MSI vector, 2<sup>nd<=
+/sup> EP requests 4 MSI vectors.<br>
+<br>
+If we are programming hwirq as MSI data (hwirq being obtained from bitmap_f=
+ind_next_zero_area,<o:p></o:p></p>
+<p class=3D"MsoNormal">with number of zeroed bits being requested based on =
+number of irq&#8217;s being requested).
+<o:p></o:p></p>
+<p class=3D"MsoNormal">This gives 1<sup>st </sup>EP is given zero as hwirq,=
+ 2<sup>nd</sup> EP is given one as hwirq.<br>
+<br>
+If we use msi data to retrieve virq (use msi data as hwirq), Since as per P=
+CI spec lower 2 bits of MSI data
+<o:p></o:p></p>
+<p class=3D"MsoNormal">are modifiable&nbsp; for 2<sup>nd</sup> EP, if an in=
+terrupt is raised by 2<sup>nd</sup> EP on msi data zero, but this is alread=
+y used by 1<sup>st</sup> EP, so the
+<o:p></o:p></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:12.0pt">current EP&#8217;s in=
+terrupt will never be served.<o:p></o:p></p>
+<p class=3D"MsoNormal">One way to deal with this issue is, using bit shift =
+operations on hwriq before programming to msi data<o:p></o:p></p>
+<p class=3D"MsoNormal">and at retrieving.<o:p></o:p></p>
+<p class=3D"MsoNormal"><br>
+Is there any other better way to handle this ? <o:p></o:p></p>
+<p class=3D"MsoNormal"><br>
+Regards,<br>
+Bharat<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+</div>
+</body>
+</html>
+
+--_000_BLUPR0201MB150530CBA42729AFD6603519A5C10BLUPR0201MB1505_--
