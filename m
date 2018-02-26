@@ -1,393 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:42081 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751276AbeBWBWe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 20:22:34 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 3/6] PCI: rockchip: Spilt out common function to init controller
-Date: Fri, 23 Feb 2018 09:16:46 +0800
-Message-Id: <1519348606-243485-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:49710 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751697AbeBZSJD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Feb 2018 13:09:03 -0500
+Date: Mon, 26 Feb 2018 12:09:01 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>, kishon@ti.com,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/3] misc: pci_endpoint_test: Handle 64-bit BARs
+ properly
+Message-ID: <20180226180901.GB25159@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180208123346.20784-1-niklas.cassel@axis.com>
+ <20180208123346.20784-3-niklas.cassel@axis.com>
+ <20180226172618.GA26815@e107981-ln.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180226172618.GA26815@e107981-ln.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Most of the operations are used for both of host and EP driver,
-so this patch spilt them out to a new function, rockchip_pcie_init_port
-in pcie-rockchip.c and rename the original function to
-rockchip_pcie_host_init_port to avoid confusion. No functional
-changed intended.
+On Mon, Feb 26, 2018 at 05:26:18PM +0000, Lorenzo Pieralisi wrote:
+> On Thu, Feb 08, 2018 at 01:33:45PM +0100, Niklas Cassel wrote:
+> > A 64-bit BAR uses the succeeding BAR for the upper bits,
+> > so we cannot simply call pci_ioremap_bar() on every single BAR.
+> > 
+> > Ignore BARs that does not have a valid resource length.
+> > 
+> > pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
+> > pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
+> > pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
+> > pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
+> > pci-endpoint-test 0000:01:00.0: failed to read BAR1
+> > pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
+> > pci-endpoint-test 0000:01:00.0: failed to read BAR3
+> > pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
+> > pci-endpoint-test 0000:01:00.0: failed to read BAR5
+> > 
+> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > ---
+> > Lorenzo/Bjorn: pci_resource_len() seems to fix my problem,
+> > but is it the correct function to use here?
+> > If BAR[x] is a 64-bit BAR, I'm assuming that pci_resource_len() on BAR[x+1]
+> > will always return 0 (since BAR[x+1] cannot have any prefetchable/type bits
+> > when BAR[x] is 64-bit).
+> > 
+> >  drivers/misc/pci_endpoint_test.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> > index 320276f42653..3af31bfdcfdd 100644
+> > --- a/drivers/misc/pci_endpoint_test.c
+> > +++ b/drivers/misc/pci_endpoint_test.c
+> > @@ -534,6 +534,8 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+> >  	}
+> >  
+> >  	for (bar = BAR_0; bar <= BAR_5; bar++) {
+> > +		if (pci_resource_len(pdev, bar) == 0)
+> > +			continue;
+> 
+> Should not it be handled by checking the resource flags as you loop
+> through the bar counter and incrementing the bar counter (+1) if
+> IORESOURCE_MEM_64 is detected ?
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+I agree, pci_resource_len() is the wrong thing here.  The length
+(actually the entire resource[x]) *should* be zero if the slot
+corresponds to the upper bits of a 64-bit BAR, but I think it would be
+more natural to do this:
 
-Changes in v2: None
+  if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM)
+    base = pci_ioremap_bar(pdev, bar);
 
- drivers/pci/rockchip/pcie-rockchip-host.c | 131 ++-------------------------
- drivers/pci/rockchip/pcie-rockchip.c      | 141 ++++++++++++++++++++++++++++++
- drivers/pci/rockchip/pcie-rockchip.h      |   3 +
- 3 files changed, 151 insertions(+), 124 deletions(-)
+You *could* check for IORESOURCE_MEM_64 and increment "bar" if you
+find it, but I don't think that's really idiomatic, and it builds in a
+little bit of unnecessary knowledge about how the PCI core maps BAR
+registers to the resource[] array.
 
-diff --git a/drivers/pci/rockchip/pcie-rockchip-host.c b/drivers/pci/rockchip/pcie-rockchip-host.c
-index 079949c..f5b0492 100644
---- a/drivers/pci/rockchip/pcie-rockchip-host.c
-+++ b/drivers/pci/rockchip/pcie-rockchip-host.c
-@@ -294,134 +294,17 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
-  * rockchip_pcie_init_port - Initialize hardware
-  * @rockchip: PCIe port information
-  */
--static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
-+static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
--	int err, i;
-+	int err, i = MAX_LANE_NUM;
- 	u32 status;
- 
- 	gpiod_set_value_cansleep(rockchip->ep_gpio, 0);
- 
--	err = reset_control_assert(rockchip->aclk_rst);
--	if (err) {
--		dev_err(dev, "assert aclk_rst err %d\n", err);
--		return err;
--	}
--
--	err = reset_control_assert(rockchip->pclk_rst);
--	if (err) {
--		dev_err(dev, "assert pclk_rst err %d\n", err);
--		return err;
--	}
--
--	err = reset_control_assert(rockchip->pm_rst);
--	if (err) {
--		dev_err(dev, "assert pm_rst err %d\n", err);
-+	err = rockchip_pcie_init_port(rockchip);
-+	if (err)
- 		return err;
--	}
--
--	for (i = 0; i < MAX_LANE_NUM; i++) {
--		err = phy_init(rockchip->phys[i]);
--		if (err) {
--			dev_err(dev, "init phy%d err %d\n", i, err);
--			goto err_exit_phy;
--		}
--	}
--
--	err = reset_control_assert(rockchip->core_rst);
--	if (err) {
--		dev_err(dev, "assert core_rst err %d\n", err);
--		goto err_exit_phy;
--	}
--
--	err = reset_control_assert(rockchip->mgmt_rst);
--	if (err) {
--		dev_err(dev, "assert mgmt_rst err %d\n", err);
--		goto err_exit_phy;
--	}
--
--	err = reset_control_assert(rockchip->mgmt_sticky_rst);
--	if (err) {
--		dev_err(dev, "assert mgmt_sticky_rst err %d\n", err);
--		goto err_exit_phy;
--	}
--
--	err = reset_control_assert(rockchip->pipe_rst);
--	if (err) {
--		dev_err(dev, "assert pipe_rst err %d\n", err);
--		goto err_exit_phy;
--	}
--
--	udelay(10);
--
--	err = reset_control_deassert(rockchip->pm_rst);
--	if (err) {
--		dev_err(dev, "deassert pm_rst err %d\n", err);
--		goto err_exit_phy;
--	}
--
--	err = reset_control_deassert(rockchip->aclk_rst);
--	if (err) {
--		dev_err(dev, "deassert aclk_rst err %d\n", err);
--		goto err_exit_phy;
--	}
--
--	err = reset_control_deassert(rockchip->pclk_rst);
--	if (err) {
--		dev_err(dev, "deassert pclk_rst err %d\n", err);
--		goto err_exit_phy;
--	}
--
--	if (rockchip->link_gen == 2)
--		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
--				    PCIE_CLIENT_CONFIG);
--	else
--		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
--				    PCIE_CLIENT_CONFIG);
--
--	rockchip_pcie_write(rockchip,
--			    PCIE_CLIENT_CONF_ENABLE |
--			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
--			    PCIE_CLIENT_ARI_ENABLE |
--			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
--			    PCIE_CLIENT_MODE_RC,
--			    PCIE_CLIENT_CONFIG);
--
--	for (i = 0; i < MAX_LANE_NUM; i++) {
--		err = phy_power_on(rockchip->phys[i]);
--		if (err) {
--			dev_err(dev, "power on phy%d err %d\n", i, err);
--			goto err_power_off_phy;
--		}
--	}
--
--	/*
--	 * Please don't reorder the deassert sequence of the following
--	 * four reset pins.
--	 */
--	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
--	if (err) {
--		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
--		goto err_power_off_phy;
--	}
--
--	err = reset_control_deassert(rockchip->core_rst);
--	if (err) {
--		dev_err(dev, "deassert core_rst err %d\n", err);
--		goto err_power_off_phy;
--	}
--
--	err = reset_control_deassert(rockchip->mgmt_rst);
--	if (err) {
--		dev_err(dev, "deassert mgmt_rst err %d\n", err);
--		goto err_power_off_phy;
--	}
--
--	err = reset_control_deassert(rockchip->pipe_rst);
--	if (err) {
--		dev_err(dev, "deassert pipe_rst err %d\n", err);
--		goto err_power_off_phy;
--	}
- 
- 	/* Fix the transmitted FTS count desired to exit from L0s. */
- 	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL_PLC1);
-@@ -514,8 +397,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- err_power_off_phy:
- 	while (i--)
- 		phy_power_off(rockchip->phys[i]);
-+
- 	i = MAX_LANE_NUM;
--err_exit_phy:
- 	while (i--)
- 		phy_exit(rockchip->phys[i]);
- 	return err;
-@@ -1034,7 +917,7 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
- 	if (err)
- 		goto err_disable_0v9;
- 
--	err = rockchip_pcie_init_port(rockchip);
-+	err = rockchip_pcie_host_init_port(rockchip);
- 	if (err)
- 		goto err_pcie_resume;
- 
-@@ -1099,7 +982,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		goto err_set_vpcie;
- 	}
- 
--	err = rockchip_pcie_init_port(rockchip);
-+	err = rockchip_pcie_host_init_port(rockchip);
- 	if (err)
- 		goto err_vpcie;
- 
-diff --git a/drivers/pci/rockchip/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip.c
-index 6c0063d..d03508c 100644
---- a/drivers/pci/rockchip/pcie-rockchip.c
-+++ b/drivers/pci/rockchip/pcie-rockchip.c
-@@ -12,6 +12,7 @@
-  */
- 
- #include <linux/clk.h>
-+#include <linux/delay.h>
- #include <linux/gpio/consumer.h>
- #include <linux/of_pci.h>
- #include <linux/phy/phy.h>
-@@ -144,6 +145,146 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 	return 0;
- }
- 
-+int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
-+{
-+	struct device *dev = rockchip->dev;
-+	int err, i;
-+	u32 regs;
-+
-+	err = reset_control_assert(rockchip->aclk_rst);
-+	if (err) {
-+		dev_err(dev, "assert aclk_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	err = reset_control_assert(rockchip->pclk_rst);
-+	if (err) {
-+		dev_err(dev, "assert pclk_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	err = reset_control_assert(rockchip->pm_rst);
-+	if (err) {
-+		dev_err(dev, "assert pm_rst err %d\n", err);
-+		return err;
-+	}
-+
-+	for (i = 0; i < MAX_LANE_NUM; i++) {
-+		err = phy_init(rockchip->phys[i]);
-+		if (err) {
-+			dev_err(dev, "init phy%d err %d\n", i, err);
-+			goto err_exit_phy;
-+		}
-+	}
-+
-+	err = reset_control_assert(rockchip->core_rst);
-+	if (err) {
-+		dev_err(dev, "assert core_rst err %d\n", err);
-+		goto err_exit_phy;
-+	}
-+
-+	err = reset_control_assert(rockchip->mgmt_rst);
-+	if (err) {
-+		dev_err(dev, "assert mgmt_rst err %d\n", err);
-+		goto err_exit_phy;
-+	}
-+
-+	err = reset_control_assert(rockchip->mgmt_sticky_rst);
-+	if (err) {
-+		dev_err(dev, "assert mgmt_sticky_rst err %d\n", err);
-+		goto err_exit_phy;
-+	}
-+
-+	err = reset_control_assert(rockchip->pipe_rst);
-+	if (err) {
-+		dev_err(dev, "assert pipe_rst err %d\n", err);
-+		goto err_exit_phy;
-+	}
-+
-+	udelay(10);
-+
-+	err = reset_control_deassert(rockchip->pm_rst);
-+	if (err) {
-+		dev_err(dev, "deassert pm_rst err %d\n", err);
-+		goto err_exit_phy;
-+	}
-+
-+	err = reset_control_deassert(rockchip->aclk_rst);
-+	if (err) {
-+		dev_err(dev, "deassert aclk_rst err %d\n", err);
-+		goto err_exit_phy;
-+	}
-+
-+	err = reset_control_deassert(rockchip->pclk_rst);
-+	if (err) {
-+		dev_err(dev, "deassert pclk_rst err %d\n", err);
-+		goto err_exit_phy;
-+	}
-+
-+	if (rockchip->link_gen == 2)
-+		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
-+				    PCIE_CLIENT_CONFIG);
-+	else
-+		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
-+				    PCIE_CLIENT_CONFIG);
-+
-+	regs = PCIE_CLIENT_LINK_TRAIN_ENABLE | PCIE_CLIENT_ARI_ENABLE |
-+		   PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes);
-+
-+	if (rockchip->is_rc)
-+		regs |= PCIE_CLIENT_CONF_ENABLE | PCIE_CLIENT_MODE_RC;
-+	else
-+		regs |= PCIE_CLIENT_CONF_DISABLE | PCIE_CLIENT_MODE_EP;
-+
-+	rockchip_pcie_write(rockchip, regs, PCIE_CLIENT_CONFIG);
-+
-+	for (i = 0; i < MAX_LANE_NUM; i++) {
-+		err = phy_power_on(rockchip->phys[i]);
-+		if (err) {
-+			dev_err(dev, "power on phy%d err %d\n", i, err);
-+			goto err_power_off_phy;
-+		}
-+	}
-+
-+	/*
-+	 * Please don't reorder the deassert sequence of the following
-+	 * four reset pins.
-+	 */
-+	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
-+	if (err) {
-+		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
-+		goto err_power_off_phy;
-+	}
-+
-+	err = reset_control_deassert(rockchip->core_rst);
-+	if (err) {
-+		dev_err(dev, "deassert core_rst err %d\n", err);
-+		goto err_power_off_phy;
-+	}
-+
-+	err = reset_control_deassert(rockchip->mgmt_rst);
-+	if (err) {
-+		dev_err(dev, "deassert mgmt_rst err %d\n", err);
-+		goto err_power_off_phy;
-+	}
-+
-+	err = reset_control_deassert(rockchip->pipe_rst);
-+	if (err) {
-+		dev_err(dev, "deassert pipe_rst err %d\n", err);
-+		goto err_power_off_phy;
-+	}
-+
-+	return 0;
-+err_power_off_phy:
-+	while (i--)
-+		phy_power_off(rockchip->phys[i]);
-+	i = MAX_LANE_NUM;
-+err_exit_phy:
-+	while (i--)
-+		phy_exit(rockchip->phys[i]);
-+	return err;
-+}
-+
- int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
-diff --git a/drivers/pci/rockchip/pcie-rockchip.h b/drivers/pci/rockchip/pcie-rockchip.h
-index c0f84d9..af3e74f 100644
---- a/drivers/pci/rockchip/pcie-rockchip.h
-+++ b/drivers/pci/rockchip/pcie-rockchip.h
-@@ -27,10 +27,12 @@
- #define PCIE_CLIENT_BASE		0x0
- #define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
- #define   PCIE_CLIENT_CONF_ENABLE	  HIWORD_UPDATE_BIT(0x0001)
-+#define   PCIE_CLIENT_CONF_DISABLE	  HIWORD_UPDATE(0x0001, 0)
- #define   PCIE_CLIENT_LINK_TRAIN_ENABLE	  HIWORD_UPDATE_BIT(0x0002)
- #define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
- #define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
- #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
-+#define   PCIE_CLIENT_MODE_EP		  HIWORD_UPDATE(0x0040, 0)
- #define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
- #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
- #define PCIE_CLIENT_DEBUG_OUT_0		(PCIE_CLIENT_BASE + 0x3c)
-@@ -238,6 +240,7 @@ static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
- }
- 
- int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip);
-+int rockchip_pcie_init_port(struct rockchip_pcie *rockchip);
- int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip);
- void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip);
- int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip);
--- 
-1.9.1
+> >  		base = pci_ioremap_bar(pdev, bar);
+> >  		if (!base) {
+> >  			dev_err(dev, "failed to read BAR%d\n", bar);
+> > -- 
+> > 2.14.2
+> > 
