@@ -1,88 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50726 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752359AbeBJUvX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 10 Feb 2018 15:51:23 -0500
-Date: Sat, 10 Feb 2018 14:51:18 -0600
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 26 Feb 2018 12:19:43 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH kernel v3] powerpc/pci: Fix broken INTx configuration via
- OF
-Message-ID: <20180210205118.GG206223@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180209062358.33457-1-aik@ozlabs.ru>
- <20180209180741.GB206223@bhelgaas-glaptop.roam.corp.google.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 4/4] pci: Re-use new dmi_get_bios_year() helper
+Message-ID: <20180226181943.GC25159@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
+ <20180222125923.57385-4-andriy.shevchenko@linux.intel.com>
+ <20180223214051.GN14632@bhelgaas-glaptop.roam.corp.google.com>
+ <1519565224.10722.148.camel@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180209180741.GB206223@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1519565224.10722.148.camel@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 09, 2018 at 12:07:41PM -0600, Bjorn Helgaas wrote:
-> On Fri, Feb 09, 2018 at 05:23:58PM +1100, Alexey Kardashevskiy wrote:
-> > Commit 59f47eff03a0 ("powerpc/pci: Use of_irq_parse_and_map_pci() helper")
-> > replaced of_irq_parse_pci() + irq_create_of_mapping() with
-> > of_irq_parse_and_map_pci() but this change lost virq returned by
-> > irq_create_of_mapping() so virq remained zero causing INTx
-> > misconfiguration.
+On Sun, Feb 25, 2018 at 03:27:04PM +0200, Andy Shevchenko wrote:
+> On Fri, 2018-02-23 at 15:40 -0600, Bjorn Helgaas wrote:
+> > On Thu, Feb 22, 2018 at 02:59:23PM +0200, Andy Shevchenko wrote:
+> > > ...instead of open coding its functionality.
 > > 
-> > This fixes pci_read_irq_line() not to loose a virq returned by
-> > of_irq_parse_and_map_pci().
+> > Same comment about making the changelog complete, independent of the
+> > subject.
 > 
-> s/not to loose a/to not lose the/
-> 
-> > Fixes: 59f47eff03a0 "powerpc/pci: Use of_irq_parse_and_map_pci() helper"
-> > Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> 
-> I'm fine with this version.
-> 
-> Since you started applying a previous version, Michael, I'll assume
-> you will handle this unless you tell me otherwise.  One way or another
-> it would be good to get this in before -rc1.
+> Any suggestion how it would look like? (Same question for previous
+> comment)
 
-I went ahead and applied this and asked Linus to pull it.
+  PCI: Re-use new dmi_get_bios_year() helper
 
-> > ---
-> > Changes:
-> > v3:
-> > * change virq from unsigned to int as of_irq_parse_and_map_pci returns int
-> > and even though it only returns non-negative values now, this may change
-> > in the future
-> > 
-> > v2:
-> > * changed the condition from <=0 to !=0 as by design
-> > of_irq_parse_and_map_pci() can only return 0 for an error and virq>0.
-> > ---
-> >  arch/powerpc/kernel/pci-common.c | 5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> > index ae2ede4..446c796 100644
-> > --- a/arch/powerpc/kernel/pci-common.c
-> > +++ b/arch/powerpc/kernel/pci-common.c
-> > @@ -362,7 +362,7 @@ struct pci_controller* pci_find_hose_for_OF_device(struct device_node* node)
-> >   */
-> >  static int pci_read_irq_line(struct pci_dev *pci_dev)
-> >  {
-> > -	unsigned int virq = 0;
-> > +	int virq;
-> >  
-> >  	pr_debug("PCI: Try to map irq for %s...\n", pci_name(pci_dev));
-> >  
-> > @@ -370,7 +370,8 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
-> >  	memset(&oirq, 0xff, sizeof(oirq));
-> >  #endif
-> >  	/* Try to get a mapping from the device-tree */
-> > -	if (!of_irq_parse_and_map_pci(pci_dev, 0, 0)) {
-> > +	virq = of_irq_parse_and_map_pci(pci_dev, 0, 0);
-> > +	if (virq <= 0) {
-> >  		u8 line, pin;
-> >  
-> >  		/* If that fails, lets fallback to what is in the config
-> > -- 
-> > 2.11.0
-> > 
+  Use new dmi_get_bios_year() helper instead of open-coding its
+  functionality.
+
+The usual document structure is something like:
+
+  TITLE
+
+  This abstract contains a summary of the entire document, in a few
+  paragraphs of complete sentences.
+
+Where "TITLE" makes sense all by itself, even without reading the
+body, and "Body" is a complete statement that also makes sense all by
+itself without having to read "TITLE" first.
+
+Granted, it's trivial, but following the convention improves
+readability slightly because it fits the reader's expectations.
+
+When the body is "...instead of open coding its functionality", it's a
+bit of a hiccup because I have to start over and look back up to the
+title to re-read the thing as a whole.
+
+Bjorn
