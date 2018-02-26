@@ -1,51 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:36296 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751470AbeBBPLE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Feb 2018 10:11:04 -0500
-Date: Fri, 2 Feb 2018 17:11:00 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Stefan Roese <sr@denx.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH] PCI: pciehp: Add module parameter to enable
- debouncing of HP link events
-Message-ID: <20180202151100.GP27654@lahna.fi.intel.com>
-References: <20180130084121.18653-1-sr@denx.de>
- <20180130102840.GF27654@lahna.fi.intel.com>
- <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
- <20180202135659.GN27654@lahna.fi.intel.com>
- <15ddf930-66e2-fae8-09c7-1d1ad7d5b07a@denx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <15ddf930-66e2-fae8-09c7-1d1ad7d5b07a@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v3 5/5] ACPI / hotplug / PCI: Mark stale PCI devices disconnected
+Date: Mon, 26 Feb 2018 16:21:12 +0300
+Message-Id: <20180226132112.81447-6-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 02, 2018 at 03:50:55PM +0100, Stefan Roese wrote:
-> I've already sent a patch regarding a libata problem while unplugging
-> an AHCI controller:
-> 
-> https://www.spinics.net/lists/linux-ide/msg55038.html
+Following PCIehp mark the unplugged PCI devices disconnected. This makes
+sure PCI core code leaves the now missing hardware registers alone.
 
-Great :)
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-> > BTW, have you checked whether presence detect actually toggles similarly
-> > or is it only triggered when the link is fully up? Since currently we
-> > prioritize link up/down higher than presence detect but it may be that
-> > we should do the opposite.
-> 
-> As seen in the log sent in my previous mail, presence detect also
-> toggles. Here again:
-> 
-> [   41.260667] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-> [   41.260731] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-> [   41.290650] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
-> [   41.295837] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-> [   41.320664] pciehp 0000:00:1c.1:pcie004: Slot(1): Card not present
-> [   41.330042] pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-> [   41.330110] pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-> [   41.375950] pci 0000:02:00.0: [1b4b:9215] type 00 class 0x010601
-> ...
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 5efa21cdddc9..0aef35ee665a 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -651,6 +651,11 @@ static void trim_stale_devices(struct pci_dev *dev)
+ 		alive = pci_device_is_present(dev);
+ 
+ 	if (!alive) {
++		pci_dev_set_disconnected(dev, NULL);
++		if (pci_has_subordinate(dev))
++			pci_walk_bus(dev->subordinate, pci_dev_set_disconnected,
++				     NULL);
++
+ 		pci_stop_and_remove_bus_device(dev);
+ 		if (adev)
+ 			acpi_bus_trim(adev);
+-- 
+2.16.1
 
-Indeed, it seems to follow link status changes closely. So changing the
-"priority" here would not help.
