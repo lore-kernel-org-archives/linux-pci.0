@@ -1,157 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0073.outbound.protection.outlook.com ([104.47.1.73]:51903
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752012AbeB0MRi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Feb 2018 07:17:38 -0500
-Subject: Re: [PATCH next V1 3/7] PCI: Calculate BW limitation for PCI devices
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>
-References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
- <1516030541-6626-4-git-send-email-talgi@mellanox.com>
- <20180222202151.GD16519@bhelgaas-glaptop.roam.corp.google.com>
-From: Tal Gilboa <talgi@mellanox.com>
-Message-ID: <e69fdc36-1f2a-be5a-bc54-48ec47ae47ad@mellanox.com>
-Date: Tue, 27 Feb 2018 14:17:28 +0200
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53400 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750767AbeBZR02 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Feb 2018 12:26:28 -0500
+Date: Mon, 26 Feb 2018 17:26:18 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: kishon@ti.com, Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/3] misc: pci_endpoint_test: Handle 64-bit BARs
+ properly
+Message-ID: <20180226172618.GA26815@e107981-ln.cambridge.arm.com>
+References: <20180208123346.20784-1-niklas.cassel@axis.com>
+ <20180208123346.20784-3-niklas.cassel@axis.com>
 MIME-Version: 1.0
-In-Reply-To: <20180222202151.GD16519@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180208123346.20784-3-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/22/2018 10:21 PM, Bjorn Helgaas wrote:
-> On Mon, Jan 15, 2018 at 05:35:37PM +0200, Tal Gilboa wrote:
->> pcie_get_link_limits() function, which is based on
->> pcie_get_minimum_link(), iterates over the PCI chain
->> and calculates maximum BW in addition to minimum speed and
->> width. The BW calculation at each level is speed * width, so
->> even if, for instance, a level has lower width, than the device max
->> capabilities, it still might not cause a BW limitation if it has a
->> higher speed. pcie_get_minimum_link() is kept for compatibility.
->>
->> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
->> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
->> ---
->>   drivers/pci/pci.c   | 31 ++++++++++++++++++++++++++++---
->>   include/linux/pci.h |  8 ++++++++
->>   2 files changed, 36 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index cf0401d..f0c60dc 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -5012,16 +5012,37 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
->>    * @speed: storage for minimum speed
->>    * @width: storage for minimum width
->>    *
->> - * This function will walk up the PCI device chain and determine the minimum
->> - * link width and speed of the device.
->> + * This function use pcie_get_link_limits() for determining the minimum
->> + * link width and speed of the device. Legacy code is kept for compatibility.
->>    */
->>   int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->>   			  enum pcie_link_width *width)
->>   {
->> +	int bw;
->> +
->> +	return pcie_get_link_limits(dev, speed, width, &bw);
->> +}
->> +EXPORT_SYMBOL(pcie_get_minimum_link);
->> +
->> +/**
->> + * pcie_get_link_limits - determine minimum link settings of a PCI
->> +			  device and its BW limitation
->> + * @dev: PCI device to query
->> + * @speed: storage for minimum speed
->> + * @width: storage for minimum width
->> + * @bw: storage for BW limitation
->> + *
->> + * This function walks up the PCI device chain and determines the link
->> + * limitations - minimum width, minimum speed and max possible BW of the device.
+On Thu, Feb 08, 2018 at 01:33:45PM +0100, Niklas Cassel wrote:
+> A 64-bit BAR uses the succeeding BAR for the upper bits,
+> so we cannot simply call pci_ioremap_bar() on every single BAR.
 > 
-> I don't really like this interface because it mixes two separate
-> things: (1) the speed/width capabilities of the current device, and
-> (2) the minimum speed/width of the path leading to the device (and
-> these minimums might even be at different points in the path).
+> Ignore BARs that does not have a valid resource length.
 > 
-> I think what we want is a way to get the max bandwidth a device can
-> use, i.e., pcie_get_speed_cap() * pcie_get_width_cap().
+> pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
+> pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
+> pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
+> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
+> pci-endpoint-test 0000:01:00.0: failed to read BAR1
+> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
+> pci-endpoint-test 0000:01:00.0: failed to read BAR3
+> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
+> pci-endpoint-test 0000:01:00.0: failed to read BAR5
 > 
-> If we also had a way to find the minimum bandwidth point leading to a
-> device, e.g., a pcie_get_minimum_bandwidth() that returned a pci_dev
-> and its bandwidth (and maybe the link speed and width corresponding to
-> that device), then you could print a meaningful message like "this
-> device is capable of X, but upstream device Y limits us to Z".
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+> Lorenzo/Bjorn: pci_resource_len() seems to fix my problem,
+> but is it the correct function to use here?
+> If BAR[x] is a 64-bit BAR, I'm assuming that pci_resource_len() on BAR[x+1]
+> will always return 0 (since BAR[x+1] cannot have any prefetchable/type bits
+> when BAR[x] is 64-bit).
 > 
-> I think the current pcie_print_link_status() is a little misleading
-> because it prints the minimum link speed and width from the path, but
-> those might be from different devices, which doesn't really make
-> sense.
+>  drivers/misc/pci_endpoint_test.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> index 320276f42653..3af31bfdcfdd 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -534,6 +534,8 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+>  	}
+>  
+>  	for (bar = BAR_0; bar <= BAR_5; bar++) {
+> +		if (pci_resource_len(pdev, bar) == 0)
+> +			continue;
 
-I see. We started out with simply checking speed and width only for the 
-device. If the chain bandwidth check is misleading I'll revert back to 
-the original behavior. No need to calculate bandwidth IMO. Checking 
-current speed and width and comparing to max capabilities should be enough.
+Should not it be handled by checking the resource flags as you loop
+through the bar counter and incrementing the bar counter (+1) if
+IORESOURCE_MEM_64 is detected ?
 
+I would like to get Bjorn's point of view on this since it is definitely
+more comprehensive than mine.
+
+Thanks,
+Lorenzo
+
+>  		base = pci_ioremap_bar(pdev, bar);
+>  		if (!base) {
+>  			dev_err(dev, "failed to read BAR%d\n", bar);
+> -- 
+> 2.14.2
 > 
->> + */
->> +int pcie_get_link_limits(struct pci_dev *dev, enum pci_bus_speed *speed,
->> +			 enum pcie_link_width *width, int *bw)
->> +{
->>   	int ret;
->>   
->>   	*speed = PCI_SPEED_UNKNOWN;
->>   	*width = PCIE_LNK_WIDTH_UNKNOWN;
->> +	*bw = 0;
->>   
->>   	while (dev) {
->>   		u16 lnksta;
->> @@ -5042,12 +5063,16 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->>   		if (next_width < *width)
->>   			*width = next_width;
->>   
->> +		/* Check if current level in the chain limits the total BW */
->> +		if (!(*bw) || *bw > (next_width) * PCIE_SPEED2MBS(next_speed))
->> +			*bw = (next_width) * PCIE_SPEED2MBS(next_speed);
->> +
->>   		dev = dev->bus->self;
->>   	}
->>   
->>   	return 0;
->>   }
->> -EXPORT_SYMBOL(pcie_get_minimum_link);
->> +EXPORT_SYMBOL(pcie_get_link_limits);
->>   
->>   /**
->>    * pcie_get_speed_cap - queries for the PCI device's link speed capability
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 27dc070..88e23eb 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -265,6 +265,12 @@ enum pci_bus_speed {
->>   	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
->>   	 "Unknown speed")
->>   
->> +#define PCIE_SPEED2MBS(speed) \
->> +	((speed) == PCIE_SPEED_8_0GT ? 8000 : \
->> +	 (speed) == PCIE_SPEED_5_0GT ? 5000 : \
->> +	 (speed) == PCIE_SPEED_2_5GT ? 2500 : \
->> +	 0)
->> +
->>   struct pci_cap_saved_data {
->>   	u16		cap_nr;
->>   	bool		cap_extended;
->> @@ -1088,6 +1094,8 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->>   			  enum pcie_link_width *width);
->>   int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
->>   int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
->> +int pcie_get_link_limits(struct pci_dev *dev, enum pci_bus_speed *speed,
->> +			 enum pcie_link_width *width, int *bw);
->>   void pcie_flr(struct pci_dev *dev);
->>   int __pci_reset_function_locked(struct pci_dev *dev);
->>   int pci_reset_function(struct pci_dev *dev);
->> -- 
->> 1.8.3.1
->>
