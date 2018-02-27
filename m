@@ -1,49 +1,46 @@
-Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
-Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Greg KH <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
-	Michael Moese <mmoese@suse.de>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	linux-pci@vger.kernel.org,
-	Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v2 0/2] MCB Update for v4.17 
-Date: Wed, 28 Feb 2018 09:44:16 +0100
-Message-Id: <20180228084418.7566-1-jthumshirn@suse.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:33638 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753312AbeB0Psh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 10:48:37 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <17710852-a221-c707-0438-44031666028e@siemens.com>
+References: <cover.1516601570.git.jan.kiszka@siemens.com> <66bfcfc6dc1832baa3fbd8e4879764d36aa9c1e7.1516601570.git.jan.kiszka@siemens.com>
+ <CAHp75VcssoPE8ZCiHOt8-BKcponpr3xpzn42KZGx=Y+nMmZjYw@mail.gmail.com> <17710852-a221-c707-0438-44031666028e@siemens.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 27 Feb 2018 17:48:35 +0200
+Message-ID: <CAHp75Vc+DpKPwm7us+1kDYU3e5UMF25MjmqLBfghdih8_FSWtw@mail.gmail.com>
+Subject: Re: [PATCH 2/6] pci: Scan all functions when probing while running
+ over Jailhouse
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Benedikt Spranger <b.spranger@linutronix.de>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Greg or Bjorn,
+On Tue, Feb 27, 2018 at 9:22 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
+> On 2018-02-23 14:23, Andy Shevchenko wrote:
+>> On Mon, Jan 22, 2018 at 8:12 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
 
-here's a small mcb update for the 4.17 window. The first patch makes
-the PCI Vendor ID of Altera generally available in pci_ids.h and
-removes it from the two private implementations before I would have to
-add a 3rd one.
+>>>  #include <linux/acpi.h>
+>>>  #include <linux/irqdomain.h>
+>>>  #include <linux/pm_runtime.h>
+>>> +#include <linux/hypervisor.h>
+>>
+>> Ditto.
+>>
+>
+> Despite the context suggesting it, this file has no ordering.
 
-The 2nd patch adds the Altera's PCI vendor ID to the mcb pci driver
-which enables at least one carrier board. This was reported and tested
-by Ben Turner.
-
-Bjorn asked me to Cc linux-pci@ in his response, so I'm not sure if he want's
-to merge these two patches. I'm fine either way.
-
-Thanks,
-	Johannes
-
-Changes to v1:
-* Removed redundant pci_ids.h include
-
-Johannes Thumshirn (2):
-  PCI: add vendor id for Altera
-  mcb: add Altera PCI ID to mcb-pci
-
- drivers/char/xillybus/xillybus_pcie.c | 1 -
- drivers/fpga/altera-cvp.c             | 2 --
- drivers/mcb/mcb-pci.c                 | 1 +
- include/linux/pci_ids.h               | 2 ++
- 4 files changed, 3 insertions(+), 3 deletions(-)
+At least you might not increase disordering by putting the line after acpi.h.
 
 -- 
-2.13.6
+With Best Regards,
+Andy Shevchenko
