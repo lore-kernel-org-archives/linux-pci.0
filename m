@@ -1,139 +1,157 @@
-Return-Path: <SRS0=oV23=FK=xilinx.com=bharatku@kernel.org>
-Return-Path: <SRS0=oV23=FK=xilinx.com=bharatku@kernel.org>
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Multi MSI with multiple End Points
-Date: Fri, 16 Feb 2018 14:32:36 +0000
-Message-ID: <BLUPR0201MB1505492D1A8DA07CD3BA42A3A5CB0@BLUPR0201MB1505.namprd02.prod.outlook.com>
-Content-Type: multipart/alternative;
-	boundary="_000_BLUPR0201MB1505492D1A8DA07CD3BA42A3A5CB0BLUPR0201MB1505_"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ve1eur01on0073.outbound.protection.outlook.com ([104.47.1.73]:51903
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752012AbeB0MRi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Feb 2018 07:17:38 -0500
+Subject: Re: [PATCH next V1 3/7] PCI: Calculate BW limitation for PCI devices
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>
+References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+ <1516030541-6626-4-git-send-email-talgi@mellanox.com>
+ <20180222202151.GD16519@bhelgaas-glaptop.roam.corp.google.com>
+From: Tal Gilboa <talgi@mellanox.com>
+Message-ID: <e69fdc36-1f2a-be5a-bc54-48ec47ae47ad@mellanox.com>
+Date: Tue, 27 Feb 2018 14:17:28 +0200
 MIME-Version: 1.0
+In-Reply-To: <20180222202151.GD16519@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_BLUPR0201MB1505492D1A8DA07CD3BA42A3A5CB0BLUPR0201MB1505_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On 2/22/2018 10:21 PM, Bjorn Helgaas wrote:
+> On Mon, Jan 15, 2018 at 05:35:37PM +0200, Tal Gilboa wrote:
+>> pcie_get_link_limits() function, which is based on
+>> pcie_get_minimum_link(), iterates over the PCI chain
+>> and calculates maximum BW in addition to minimum speed and
+>> width. The BW calculation at each level is speed * width, so
+>> even if, for instance, a level has lower width, than the device max
+>> capabilities, it still might not cause a BW limitation if it has a
+>> higher speed. pcie_get_minimum_link() is kept for compatibility.
+>>
+>> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+>> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+>> ---
+>>   drivers/pci/pci.c   | 31 ++++++++++++++++++++++++++++---
+>>   include/linux/pci.h |  8 ++++++++
+>>   2 files changed, 36 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index cf0401d..f0c60dc 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -5012,16 +5012,37 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+>>    * @speed: storage for minimum speed
+>>    * @width: storage for minimum width
+>>    *
+>> - * This function will walk up the PCI device chain and determine the minimum
+>> - * link width and speed of the device.
+>> + * This function use pcie_get_link_limits() for determining the minimum
+>> + * link width and speed of the device. Legacy code is kept for compatibility.
+>>    */
+>>   int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>>   			  enum pcie_link_width *width)
+>>   {
+>> +	int bw;
+>> +
+>> +	return pcie_get_link_limits(dev, speed, width, &bw);
+>> +}
+>> +EXPORT_SYMBOL(pcie_get_minimum_link);
+>> +
+>> +/**
+>> + * pcie_get_link_limits - determine minimum link settings of a PCI
+>> +			  device and its BW limitation
+>> + * @dev: PCI device to query
+>> + * @speed: storage for minimum speed
+>> + * @width: storage for minimum width
+>> + * @bw: storage for BW limitation
+>> + *
+>> + * This function walks up the PCI device chain and determines the link
+>> + * limitations - minimum width, minimum speed and max possible BW of the device.
+> 
+> I don't really like this interface because it mixes two separate
+> things: (1) the speed/width capabilities of the current device, and
+> (2) the minimum speed/width of the path leading to the device (and
+> these minimums might even be at different points in the path).
+> 
+> I think what we want is a way to get the max bandwidth a device can
+> use, i.e., pcie_get_speed_cap() * pcie_get_width_cap().
+> 
+> If we also had a way to find the minimum bandwidth point leading to a
+> device, e.g., a pcie_get_minimum_bandwidth() that returned a pci_dev
+> and its bandwidth (and maybe the link speed and width corresponding to
+> that device), then you could print a meaningful message like "this
+> device is capable of X, but upstream device Y limits us to Z".
+> 
+> I think the current pcie_print_link_status() is a little misleading
+> because it prints the minimum link speed and width from the path, but
+> those might be from different devices, which doesn't really make
+> sense.
 
-Hi,
+I see. We started out with simply checking speed and width only for the 
+device. If the chain bandwidth check is misleading I'll revert back to 
+the original behavior. No need to calculate bandwidth IMO. Checking 
+current speed and width and comparing to max capabilities should be enough.
 
-A switch is connected to an RC with 2 EP's, the RC supports multi MSI.
-1st EP requests one MSI vector, 2nd EP requests 4 MSI vectors.
-
-If we are programming hwirq as MSI data (hwirq being obtained from bitmap_f=
-ind_next_zero_area,
-with number of zeroed bits being requested based on number of irq's being r=
-equested).
-This gives 1st EP is given zero as hwirq, 2nd EP is given one as hwirq.
-
-If we use msi data to retrieve virq (use msi data as hwirq), Since as per P=
-CI spec lower 2 bits of MSI data
-are modifiable  for 2nd EP, if an interrupt is raised by 2nd EP on msi data=
- zero, but this is already used by 1st EP, so the
-current EP's interrupt will never be served.
-
-One way to deal with this issue is, using bit shift operations on hwriq bef=
-ore programming to msi data
-and at retrieving.
-
-Is there any other better way to handle this ?
-
-Regards,
-Bharat
-
---_000_BLUPR0201MB1505492D1A8DA07CD3BA42A3A5CB0BLUPR0201MB1505_
-Content-Type: text/html; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
-osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
-//www.w3.org/TR/REC-html40">
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
->
-<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
-<style><!--
-/* Font Definitions */
-@font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0in;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri",sans-serif;}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:#0563C1;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:#954F72;
-	text-decoration:underline;}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:"Calibri",sans-serif;
-	color:windowtext;}
-.MsoChpDefault
-	{mso-style-type:export-only;
-	font-size:10.0pt;
-	font-family:"Calibri",sans-serif;}
-@page WordSection1
-	{size:8.5in 11.0in;
-	margin:1.0in 1.0in 1.0in 1.0in;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]-->
-</head>
-<body lang=3D"EN-US" link=3D"#0563C1" vlink=3D"#954F72">
-<div class=3D"WordSection1">
-<p class=3D"MsoNormal">Hi,<br>
-<br>
-A switch is connected to an RC with 2 EP&#8217;s, the RC supports multi MSI=
-.<o:p></o:p></p>
-<p class=3D"MsoNormal">1<sup>st</sup> EP requests one MSI vector, 2<sup>nd<=
-/sup> EP requests 4 MSI vectors.<br>
-<br>
-If we are programming hwirq as MSI data (hwirq being obtained from bitmap_f=
-ind_next_zero_area,<o:p></o:p></p>
-<p class=3D"MsoNormal">with number of zeroed bits being requested based on =
-number of irq&#8217;s being requested).
-<o:p></o:p></p>
-<p class=3D"MsoNormal">This gives 1<sup>st </sup>EP is given zero as hwirq,=
- 2<sup>nd</sup> EP is given one as hwirq.<br>
-<br>
-If we use msi data to retrieve virq (use msi data as hwirq), Since as per P=
-CI spec lower 2 bits of MSI data
-<o:p></o:p></p>
-<p class=3D"MsoNormal">are modifiable&nbsp; for 2<sup>nd</sup> EP, if an in=
-terrupt is raised by 2<sup>nd</sup> EP on msi data zero, but this is alread=
-y used by 1<sup>st</sup> EP, so the
-<o:p></o:p></p>
-<p class=3D"MsoNormal">current EP&#8217;s interrupt will never be served.<b=
-r>
-<br>
-<o:p></o:p></p>
-<p class=3D"MsoNormal">One way to deal with this issue is, using bit shift =
-operations on hwriq before programming to msi data<o:p></o:p></p>
-<p class=3D"MsoNormal">and at retrieving.<o:p></o:p></p>
-<p class=3D"MsoNormal"><br>
-Is there any other better way to handle this ? <o:p></o:p></p>
-<p class=3D"MsoNormal"><br>
-Regards,<br>
-Bharat<o:p></o:p></p>
-</div>
-</body>
-</html>
-
---_000_BLUPR0201MB1505492D1A8DA07CD3BA42A3A5CB0BLUPR0201MB1505_--
+> 
+>> + */
+>> +int pcie_get_link_limits(struct pci_dev *dev, enum pci_bus_speed *speed,
+>> +			 enum pcie_link_width *width, int *bw)
+>> +{
+>>   	int ret;
+>>   
+>>   	*speed = PCI_SPEED_UNKNOWN;
+>>   	*width = PCIE_LNK_WIDTH_UNKNOWN;
+>> +	*bw = 0;
+>>   
+>>   	while (dev) {
+>>   		u16 lnksta;
+>> @@ -5042,12 +5063,16 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>>   		if (next_width < *width)
+>>   			*width = next_width;
+>>   
+>> +		/* Check if current level in the chain limits the total BW */
+>> +		if (!(*bw) || *bw > (next_width) * PCIE_SPEED2MBS(next_speed))
+>> +			*bw = (next_width) * PCIE_SPEED2MBS(next_speed);
+>> +
+>>   		dev = dev->bus->self;
+>>   	}
+>>   
+>>   	return 0;
+>>   }
+>> -EXPORT_SYMBOL(pcie_get_minimum_link);
+>> +EXPORT_SYMBOL(pcie_get_link_limits);
+>>   
+>>   /**
+>>    * pcie_get_speed_cap - queries for the PCI device's link speed capability
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 27dc070..88e23eb 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -265,6 +265,12 @@ enum pci_bus_speed {
+>>   	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
+>>   	 "Unknown speed")
+>>   
+>> +#define PCIE_SPEED2MBS(speed) \
+>> +	((speed) == PCIE_SPEED_8_0GT ? 8000 : \
+>> +	 (speed) == PCIE_SPEED_5_0GT ? 5000 : \
+>> +	 (speed) == PCIE_SPEED_2_5GT ? 2500 : \
+>> +	 0)
+>> +
+>>   struct pci_cap_saved_data {
+>>   	u16		cap_nr;
+>>   	bool		cap_extended;
+>> @@ -1088,6 +1094,8 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>>   			  enum pcie_link_width *width);
+>>   int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
+>>   int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
+>> +int pcie_get_link_limits(struct pci_dev *dev, enum pci_bus_speed *speed,
+>> +			 enum pcie_link_width *width, int *bw);
+>>   void pcie_flr(struct pci_dev *dev);
+>>   int __pci_reset_function_locked(struct pci_dev *dev);
+>>   int pci_reset_function(struct pci_dev *dev);
+>> -- 
+>> 1.8.3.1
+>>
