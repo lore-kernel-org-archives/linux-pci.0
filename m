@@ -1,106 +1,221 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Feb 2018 16:40:05 -0700
-Message-Id: <20180228234006.21093-10-logang@deltatee.com>
-In-Reply-To: <20180228234006.21093-1-logang@deltatee.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
-Subject: [PATCH v2 09/10] nvme-pci: Add a quirk for a pseudo CMB
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:35512 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753081AbeB0NZg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Feb 2018 08:25:36 -0500
+Subject: Re: MSI-X diagnostic problems
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, lorenzo.pieralisi@arm.com,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <959dfbab-7d90-f10c-f4aa-7f0bf5a6af3e@synopsys.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <2050bd39-12cd-4d21-3127-4282392c555f@arm.com>
+Date: Tue, 27 Feb 2018 13:25:33 +0000
+MIME-Version: 1.0
+In-Reply-To: <959dfbab-7d90-f10c-f4aa-7f0bf5a6af3e@synopsys.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a quirk to use CMB-like memory on older devices that have
-an exposed BAR but do not advertise support for using CMBLOC and
-CMBSIZE.
+Hi Gustavo,
 
-We'd like to use some of these older cards to test P2P memory.
+On 27/02/18 12:42, Gustavo Pimentel wrote:
+> Hi Marc,
+> 
+> I'm having some problems in my setup related to MSI-X, maybe you could help me
+> debugging where could be the problem.
+> 
+> Currently I have a RC (bridge) with 1 MSI-X interrupt and a commercial USB 3.0
+> EP capable of 8 MSI-X interrupts, however the xhci driver only uses 2 interrupts.
+> 
+> I have posted below some debug info gathered during my tests.
+> 
+> 
+> # cat /proc/interrupts
+>            CPU0
+>   3:      10014  ARC In-core Intc   3  Timer0 (per-cpu-tick)
+>   4:          0  dw-apb-ictl   4  eth0
+>   8:          1  dw-apb-ictl   8  ehci_hcd:usb1, ohci_hcd:usb2
+>   9:         38  dw-apb-ictl   7  dw-mci
+>  14:          0  dw-apb-ictl  14  e001d000.i2c
+>  16:          0  dw-apb-ictl  16  e001f000.i2c
+>  19:       4065  dw-apb-ictl  19  ttyS3
+>  46:          0   PCI-MSI   0  aerdrv
+>  47:          1   PCI-MSI 524288  xhci_hcd
+>  48:          0   PCI-MSI 524289  xhci_hcd
+> #
+> #
+> # find /sys/ | grep msi
+> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_bus
+> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_irqs
+> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/msi_irqs/46
+> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_bus
+> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs
+> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs/48
+> /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/msi_irqs/47
+> #
+> #
+> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/ms
+> i_bus
+> 1
+> #
+> #
+> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/ms
+> i_irqs/46
+> msix
+> #
+> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
+> 00:01:00.0/msi_bus
+> 1
+> #
+> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
+> 00:01:00.0/msi_irqs/48
+> msix
+> #
+> #
+> # cat /sys/devices/platform/haps_tunnel/dfc00000.pcie/pci0000:00/0000:00:00.0/00
+> 00:01:00.0/msi_irqs/47
+> msix
+> 
+> 
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:dw_pcie_host_init:449) pp->num_vectors = 64
+> (GP:dw_pcie_host_init:453) dw_pcie_allocate_domains
+> (GP:dw_pcie_allocate_domains:277) pp->num_vectors = 64
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:pci_alloc_irq_vectors_affinity:1214) MSI-X
+> (GP:__pci_enable_msix_range:1132) min=1, max=32
+> (GP:__pci_enable_msix:975)
+> (GP:__pci_enable_msix:981) nr_entries = 1, nvec = 32
+> (GP:__pci_enable_msix_range:1145) rc=1
+> (GP:__pci_enable_msix:975)
+> (GP:__pci_enable_msix:981) nr_entries = 1, nvec = 1
+> (GP:__pci_enable_msix:987)
+> (GP:msix_capability_init:773)
+> (GP:msix_capability_init:777) Disable MSI-X
+> (GP:msix_capability_init:780) Control register 0x00000000
+> (GP:msix_map_region:682) Table offset = 0x00000000, bir = 0)
+> (GP:msix_map_region:685) phys_addr = 0xD0500000, nr_entries = 1, ENTRY_SIZE = 16
+> bytes, table size = 16 bytes)
+> (GP:msix_setup_entries:701) Allocate MSI entries 0/1
+> (GP:msix_setup_entries:719)
+> (GP:msix_setup_entries:725) dev->irq = 45, base = d0500000,
+> entry->msi_attrib.entry_nr = 0
+> (GP:pci_msi_setup_msi_irqs:53) msi_domain_alloc_irqs
+> (GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
+> (GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
+> (GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
+> (GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 46, bit + 0 = 0
+> (GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:__irq_domain_activate_irq:1521)
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:msi_domain_activate:107)
+> (GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000000, msg->address_hi = 0x9A228000,
+> msg->data = 0x00000000, hwirq = 0
+> (GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
+> 0x00000000, msg->data = 0x00000000
+> (GP:msix_capability_init:804) Mask all MSI-X and enable MSI-X
+> (GP:msix_program_entries:743)
+> (GP:msix_capability_init:810) Populating MSI sysfs
+> (GP:msix_capability_init:818) Unmask all MSI-X
+> (GP:__pci_enable_msix_range:1145) rc=0
+> (GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:xhci_setup_msix:264)
+> (GP:pci_alloc_irq_vectors_affinity:1214) MSI-X
+> (GP:__pci_enable_msix_range:1132) min=2, max=2
+> (GP:__pci_enable_msix:975)
+> (GP:__pci_enable_msix:981) nr_entries = 8, nvec = 2
+> (GP:__pci_enable_msix:987)
+> (GP:msix_capability_init:773)
+> (GP:msix_capability_init:777) Disable MSI-X
+> (GP:msix_capability_init:780) Control register 0x00000007
+> (GP:msix_map_region:682) Table offset = 0x00002000, bir = 0)
+> (GP:msix_map_region:685) phys_addr = 0xD0402000, nr_entries = 8, ENTRY_SIZE = 16
+> bytes, table size = 128 bytes)
+> (GP:msix_setup_entries:701) Allocate MSI entries 0/2
+> (GP:msix_setup_entries:719)
+> (GP:msix_setup_entries:725) dev->irq = 45, base = d0402000,
+> entry->msi_attrib.entry_nr = 0
+> (GP:msix_setup_entries:701) Allocate MSI entries 1/2
+> (GP:msix_setup_entries:719)
+> (GP:msix_setup_entries:725) dev->irq = 45, base = d0402000,
+> entry->msi_attrib.entry_nr = 1
+> (GP:pci_msi_setup_msi_irqs:53) msi_domain_alloc_irqs
+> (GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
+> (GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
+> (GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
+> (GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 47, bit + 0 = 1
+> (GP:dw_pcie_irq_domain_alloc:231) nr_irqs = 1
+> (GP:dw_pcie_irq_domain_alloc:232) pp->num_vectors = 64
+> (GP:dw_pcie_irq_domain_alloc:233) order_base_2(nr_irqs) = 0
+> (GP:dw_pcie_irq_domain_alloc:245) virq + 0 = 48, bit + 0 = 2
+> (GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:__irq_domain_activate_irq:1521)
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:msi_domain_activate:107)
+> (GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000001, msg->address_hi = 0x9A228000,
+> msg->data = 0x00000000, hwirq = 1
+> (GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
+> 0x00000000, msg->data = 0x00000001
+> (GP:msi_domain_alloc_irqs:399) IRQ_DOMAIN_ACTIVATE_IRQ
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:__irq_domain_activate_irq:1521)
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:msi_domain_activate:107)
+> (GP:dw_pci_setup_msi_msg:142) msg_lo = 0x00000002, msg->address_hi = 0x9A228000,
+> msg->data = 0x00000000, hwirq = 2
+> (GP:__pci_write_msi_msg:320) msg->address_lo = 0x9A228000, msg->address_hi =
+> 0x00000000, msg->data = 0x00000002
+> (GP:msix_capability_init:804) Mask all MSI-X and enable MSI-X
+> (GP:msix_program_entries:743)
+> (GP:msix_capability_init:810) Populating MSI sysfs
+> (GP:msix_capability_init:818) Unmask all MSI-X
+> (GP:__pci_enable_msix_range:1145) rc=0
+> (GP:xhci_setup_msix:285) 0/2
+> (GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
+> (GP:xhci_setup_msix:285) 1/2
+> (GP:irq_domain_activate_irq:1556) ALREADY ACTIVATED
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> (GP:irq_domain_activate_irq:1552) NOT ACTIVATED
+> (GP:__irq_domain_activate_irq:1516)
+> 
+> Me and João have looked to the sequence and this seems to be correct, however we
+> are not receiving any interrupts and that originates the xhci to abort...
+> 
+> xhci_hcd 0000:01:00.0: Abort failed to stop command ring: -110
+> xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
+> xhci_hcd 0000:01:00.0: HC died; cleaning up
+> xhci_hcd 0000:01:00.0: Error while assigning device slot ID
+> xhci_hcd 0000:01:00.0: Max number of devices this xHCI host supports is 64.
+> usb usb3-port1: couldn't allocate usb_device
+> 
+> Any clue? Thanks in advance.
+It is hard to dig in such a trace. One thing that strikes me is that I
+don't see any trace that suggest that the interrupts get unmasked. That
+should happen when the driver issues a request_irq.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/nvme/host/nvme.h |  7 +++++++
- drivers/nvme/host/pci.c  | 24 ++++++++++++++++++++----
- 2 files changed, 27 insertions(+), 4 deletions(-)
+I'd suggest you investigate that area.
 
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index e38beb1917e2..c84a1b9580c8 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -83,6 +83,13 @@ enum nvme_quirks {
- 	 * Supports the LighNVM command set if indicated in vs[1].
- 	 */
- 	NVME_QUIRK_LIGHTNVM			= (1 << 6),
-+
-+	/*
-+	 * Pseudo CMB Support on BAR 4. For adapters like the Microsemi
-+	 * NVRAM that have CMB-like memory on a BAR but does not set
-+	 * CMBLOC or CMBSZ.
-+	 */
-+	NVME_QUIRK_PSEUDO_CMB_BAR4		= (1 << 7),
- };
- 
- /*
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index b896a78225cb..2ad20fb9f05d 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -1679,6 +1679,13 @@ static ssize_t nvme_cmb_show(struct device *dev,
- }
- static DEVICE_ATTR(cmb, S_IRUGO, nvme_cmb_show, NULL);
- 
-+static u32 nvme_pseudo_cmbsz(struct pci_dev *pdev, int bar)
-+{
-+	return NVME_CMBSZ_WDS | NVME_CMBSZ_RDS |
-+		(((ilog2(SZ_16M) - 12) / 4) << NVME_CMBSZ_SZU_SHIFT) |
-+		((pci_resource_len(pdev, bar) / SZ_16M) << NVME_CMBSZ_SZ_SHIFT);
-+}
-+
- static u64 nvme_cmb_size_unit(struct nvme_dev *dev)
- {
- 	u8 szu = (dev->cmbsz >> NVME_CMBSZ_SZU_SHIFT) & NVME_CMBSZ_SZU_MASK;
-@@ -1698,10 +1705,15 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev->dev);
- 	int bar;
- 
--	dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
--	if (!dev->cmbsz)
--		return;
--	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
-+	if (dev->ctrl.quirks & NVME_QUIRK_PSEUDO_CMB_BAR4) {
-+		dev->cmbsz = nvme_pseudo_cmbsz(pdev, 4);
-+		dev->cmbloc = 4;
-+	} else {
-+		dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
-+		if (!dev->cmbsz)
-+			return;
-+		dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
-+	}
- 
- 	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
- 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
-@@ -2715,6 +2727,10 @@ static const struct pci_device_id nvme_id_table[] = {
- 		.driver_data = NVME_QUIRK_LIGHTNVM, },
- 	{ PCI_DEVICE(0x1d1d, 0x2807),	/* CNEX WL */
- 		.driver_data = NVME_QUIRK_LIGHTNVM, },
-+	{ PCI_DEVICE(0x11f8, 0xf117),	/* Microsemi NVRAM adaptor */
-+		.driver_data = NVME_QUIRK_PSEUDO_CMB_BAR4, },
-+	{ PCI_DEVICE(0x1db1, 0x0002),	/* Everspin nvNitro adaptor */
-+		.driver_data = NVME_QUIRK_PSEUDO_CMB_BAR4,  },
- 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2001) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2003) },
+Thanks,
+
+	M.
 -- 
-2.11.0
+Jazz is not dead. It just smells funny...
