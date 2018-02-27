@@ -1,40 +1,49 @@
-Return-Path: <SRS0=yRpG=FG=chelsio.com=leedom@kernel.org>
-Return-Path: <SRS0=yRpG=FG=chelsio.com=leedom@kernel.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>, Bjorn Helgaas
-	<helgaas@kernel.org>
-CC: Arjun V. <arjun@chelsio.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, David Miller
-	<davem@davemloft.net>, Netdev <netdev@vger.kernel.org>, Santosh Rastapur
-	<santosh@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>, "Nirranjan
- Kirubaharan" <nirranjan@chelsio.com>, Kumar A S <kumaras@chelsio.com>, "SWise
- OGC" <swise@opengridcomputing.com>, Hannes Reinecke <hare@suse.de>
-Subject: Re: [REGRESSION, bisect] pci: cxgb4 probe fails after commit
- 104daa71b3961434 ("PCI: Determine actual VPD size on first access")
-Date: Mon, 12 Feb 2018 18:06:50 +0000
-Message-ID: <BY2PR1201MB0983BD00DFBB77041758E897C8F70@BY2PR1201MB0983.namprd12.prod.outlook.com>
-References: <1516710549-26660-1-git-send-email-arjun@chelsio.com>
- <20180212174341.GC75542@bhelgaas-glaptop.roam.corp.google.com>,<CAKgT0Ucr7SZURefYtCSziNhPF_cc66tT7GzSp0u43-2tJ=Lt_A@mail.gmail.com>
-In-Reply-To: <CAKgT0Ucr7SZURefYtCSziNhPF_cc66tT7GzSp0u43-2tJ=Lt_A@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:58825 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752309AbeB0L7T (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 06:59:19 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Niklas Cassel <niklass@axis.com>,
+        John Keeping <john@metanate.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 1/3] PCI: endpoint: Handle 64-bit BARs properly
+Date: Tue, 27 Feb 2018 12:59:05 +0100
+Message-Id: <20180227115908.14593-2-niklas.cassel@axis.com>
+In-Reply-To: <20180227115908.14593-1-niklas.cassel@axis.com>
+References: <20180227115908.14593-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  Yes, the issue is not that random stack garbage is being copied.  It's
-that the VPD Read silently returns without any error if the read exceeds th=
-e
-computed/set size (something I'm still not comfortable with).
+A 64-bit BAR uses the succeeding BAR for the upper bits, therefore
+we cannot call pci_epc_set_bar() on a BAR that follows a 64-bit BAR.
 
-  And yes, we did try to address this with kernel.org commit cb92148b where
-I introduced the new pci_set_vpd_size() API.  Later, in commit 1c7de2b4ff88=
-,
-Alexey Kardashevskiy introduced the cxgb3 PCIe Quirk using the new
-pci_set_vpd_size() API for our T3-based adapters rather than modifying the
-driver code as I'd done for cxgb4.  In talking with Bjorn I think that
-Alexey's approach is better and I'm going to work up a patch to do the same
-for all of our adapters.
+If pci_epc_set_bar() is called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
+it has to be up to the controller driver to write both BAR[x] and BAR[x+1]
+(and BAR_mask[x] and BAR_mask[x+1]).
 
-  Thanks to everyone for helping talk through this!
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Casey
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 64d8a17f8094..ecbf6a7750dc 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -382,6 +382,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
+ 			if (bar == test_reg_bar)
+ 				return ret;
+ 		}
++		if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
++			bar++;
+ 	}
+ 
+ 	return 0;
+-- 
+2.14.2
