@@ -1,31 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: kishon@ti.com
-Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Rolf Evers-Fischer <embedded24@evers-fischer.de>
-Subject: [PATCH 0/2] pci: endpoint: Fix double free in pci_epf_create()
-Date: Wed, 21 Feb 2018 13:47:05 +0100
-Message-Id: <20180221124707.26308-1-embedded24@evers-fischer.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:39298 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750952AbeB0R6B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Feb 2018 12:58:01 -0500
+Date: Tue, 27 Feb 2018 17:57:56 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+Cc: kishon@ti.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+Subject: Re: [PATCH v3 2/2] pci: endpoint: Fix kernel panic after put_device()
+Message-ID: <20180227175756.GB12756@e107981-ln.cambridge.arm.com>
+References: <20180227100231.22561-1-embedded24@evers-fischer.de>
+ <20180227100231.22561-3-embedded24@evers-fischer.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180227100231.22561-3-embedded24@evers-fischer.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When I accidentally created a new endpoint device with an empty name,
-the kernel warned about "attempted to be registered with empty name!"
-and crashed afterwards.
+On Tue, Feb 27, 2018 at 11:02:30AM +0100, Rolf Evers-Fischer wrote:
+> From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+> 
+> 'put_device()' calls the relase function 'pci_epf_dev_release()',
+> which already frees 'epf->name' and 'epf'.
+> 
+> Therefore we must not free them again after 'put_device()'.
+> 
+> Fixes: 5e8cb4033807 ("PCI: endpoint: Add EP core layer to enable EP controller and EP functions")
+> 
+> Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+> ---
+>  drivers/pci/endpoint/pci-epf-core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+> index 1f2506f32bb9..1878a6776519 100644
+> --- a/drivers/pci/endpoint/pci-epf-core.c
+> +++ b/drivers/pci/endpoint/pci-epf-core.c
+> @@ -232,7 +232,7 @@ struct pci_epf *pci_epf_create(const char *name)
+>  
+>  put_dev:
+>  	put_device(dev);
+> -	kfree(epf->name);
+> +	return ERR_PTR(ret);
 
-It turned out that the crash was not caused by the 'device_add()'
-function itself, but by a double kfree of 'epf->name' and 'epf'.
+Another thing you could do, which would get rid of these multiple return
+statements (yes there is another one) would consist in removing the goto
+labels completely and handle the errors at the respective call site and
+just return instead of jumping around.
 
-The first patch just simplifies the code, while the second patch
-fixes the problem.
-
-Rolf Evers-Fischer (2):
-  pci: endpoint: Free func_name after last usage
-  pci: endpoint: Fix kernel panic after put_device()
-
- drivers/pci/endpoint/pci-epf-core.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
-
--- 
-2.16.2
+Thanks,
+Lorenzo
