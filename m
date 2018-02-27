@@ -1,49 +1,47 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
-        <olof@lixom.net>, <dann.frazier@canonical.com>,
-        <andy.shevchenko@gmail.com>, <robh@kernel.org>
-CC: <joe@perches.com>, <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <minyard@acm.org>, <devicetree@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>
-Subject: [PATCH v14 2/9] PCI: Remove unused __weak attribute in pci_register_io_range()
-Date: Tue, 20 Feb 2018 01:48:33 +0800
-Message-ID: <1519062520-198902-3-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
-References: <1519062520-198902-1-git-send-email-john.garry@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:22314 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751754AbeB0WpV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Feb 2018 17:45:21 -0500
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: David Miller <davem@davemloft.net>
+CC: "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "MRustad@gmail.com" <MRustad@gmail.com>,
+        "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
+        "mst@redhat.com" <mst@redhat.com>
+Subject: Re: [RFC PATCH V3] virtio_pci: Add SR-IOV support
+Date: Tue, 27 Feb 2018 22:45:19 +0000
+Message-ID: <CABB6175-4FC3-4742-9C54-FCDEE3E5A608@intel.com>
+References: <20180226031911.18980.80488.stgit@mdrustad-mac04.local>
+ <20180227.103502.2160088807348773566.davem@davemloft.net>
+In-Reply-To: <20180227.103502.2160088807348773566.davem@davemloft.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> On Feb 27, 2018, at 7:35 AM, David Miller <davem@davemloft.net> wrote:
+> 
+> I don't like these helpers on many different levels.
 
-Currently pci_register_io_range() has only one definition;
-therefore there is no use of the __weak attribute.
+<snip much embarrassment>
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> So kill off pci_sriov_enable() helper completely, it is unnecessary,
+> and rename the disable helper so that it says something meaningful to
+> the reader.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd1..4666a01 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3455,7 +3455,7 @@ struct io_range {
-  * Record the PCI IO range (expressed as CPU physical address + size).
-  * Return a negative value if an error has occured, zero otherwise
-  */
--int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+int pci_register_io_range(phys_addr_t addr, resource_size_t size)
- {
- 	int err = 0;
- 
+Yes. Once pointed out, I completely agree with your comments and wish that I had seen those things myself.
+
+> Thanks.
+
+V3 was junk, but your comments apply to V4 as well, so please ignore it.
+
+Thank you for your valuable review.
+
 -- 
-1.9.1
+Mark Rustad, Networking Division, Intel Corporation
