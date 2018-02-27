@@ -1,73 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:40780 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751353AbeBWBVS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 20:21:18 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 0/6] Add endpoint driver for Rockchip PCIe controller
-Date: Fri, 23 Feb 2018 09:15:03 +0800
-Message-Id: <1519348503-243259-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:39252 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751554AbeB0RuE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Feb 2018 12:50:04 -0500
+Date: Tue, 27 Feb 2018 17:49:57 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix possible NULL pointer dereference for
+ of_pci_bus_find_domain_nr
+Message-ID: <20180227174957.GA12756@e107981-ln.cambridge.arm.com>
+References: <1519526762-136838-1-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519526762-136838-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sun, Feb 25, 2018 at 10:46:02AM +0800, Shawn Lin wrote:
+> pci_register_host_bridge records bus->domain_nr from
+> pci_bus_find_domain_nr but not guarantee not to pass a NULL
+> struct device *parent to it which could be explained by the hint
+> of checkcing for parent device before calling set_dev_node(),
+> just lines after that. So of_pci_bus_find_domain_nr wisely check
+> the parent pointer at the very beginning, but forgot to check it
+> again when trying to get of_node from parent, which could causes
+> a NULL pointer dereference. Fix it by dumping the NULL pointer
+> address simply, if no parent available.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+>  drivers/pci/pci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f6a4dd1..ef18c48 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5612,7 +5612,7 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
+>  		domain = pci_get_new_domain_nr();
+>  	} else {
+>  		dev_err(parent, "Node %pOF has inconsistent \"linux,pci-domain\" property in DT\n",
+> -			parent->of_node);
+> +			parent ? parent->of_node : NULL);
 
-Patch 1 firstly move the whole Rockchip PCIe host driver from
-drivers/pci/host to a new folder, driver/pci/rockchip/, and rename
-pcie-rockchip.c to pcie-rockchip-host.c. It also update the
-Kconfig/Makefile etc to repect this change.
+I really need to get rid of this function in its current form. In the
+interim, I think that printing NULL as faulting node gives no
+information whatsoever so this patch should be updated either by
+avoiding to print or better by demoting the dev_err() to a pr_err(),
+whatever works better for Bjorn.
 
-Then patch 2 and patch 3 are trying to spilt out some common code in
-preparation for adding endponit controller driver support.
+Thanks,
+Lorenzo
 
-Patch 4 rename rockchip-pcie.txt to rockchip-pcie-host.txt.
-
-Patch 5 adds endpoint controller driver support as well as the new
-documentation, rockchip-pcie-ep.txt, introduced by patch 6.
-
-
-Changes in v2:
-- remove rockchip,rk3399-pcie-host compatible(Suggested by Rob)
-- fix some error handling
-
-Shawn Lin (6):
-  PCI: rockchip: Create individual folder for rockchip drivers
-  PCI: rockchip: Split out common function to parse DT
-  PCI: rockchip: Spilt out common function to init controller
-  dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to
-    rockchip-pcie-host.txt
-  PCI: rockchip: Add Endpoint controller driver for Rockchip PCIe
-    controller
-  dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint
-    controller
-
- .../devicetree/bindings/pci/rockchip-pcie-ep.txt   |  62 ++
- .../{rockchip-pcie.txt => rockchip-pcie-host.txt}  |   0
- MAINTAINERS                                        |   4 +-
- drivers/pci/Kconfig                                |   1 +
- drivers/pci/Makefile                               |   2 +
- drivers/pci/host/Kconfig                           |  11 -
- drivers/pci/host/Makefile                          |   1 -
- drivers/pci/rockchip/Kconfig                       |  32 +
- drivers/pci/rockchip/Makefile                      |   4 +
- drivers/pci/rockchip/pcie-rockchip-ep.c            | 641 +++++++++++++++++++++
- .../pcie-rockchip-host.c}                          | 594 +------------------
- drivers/pci/rockchip/pcie-rockchip.c               | 417 ++++++++++++++
- drivers/pci/rockchip/pcie-rockchip.h               | 343 +++++++++++
- 13 files changed, 1517 insertions(+), 595 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
- rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (100%)
- create mode 100644 drivers/pci/rockchip/Kconfig
- create mode 100644 drivers/pci/rockchip/Makefile
- create mode 100644 drivers/pci/rockchip/pcie-rockchip-ep.c
- rename drivers/pci/{host/pcie-rockchip.c => rockchip/pcie-rockchip-host.c} (61%)
- create mode 100644 drivers/pci/rockchip/pcie-rockchip.c
- create mode 100644 drivers/pci/rockchip/pcie-rockchip.h
-
--- 
-1.9.1
+>  		domain = -1;
+>  	}
+>  
+> -- 
+> 1.9.1
+> 
+> 
