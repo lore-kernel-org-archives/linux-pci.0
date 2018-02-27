@@ -1,312 +1,242 @@
-Return-Path: <ndprkm@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:60556 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752330AbeB0JgT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Feb 2018 04:36:19 -0500
+Date: Tue, 27 Feb 2018 09:36:11 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: thierry.reding@gmail.com, bhelgaas@google.com, cyndis@kapsi.fi,
+        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH V8 3/4] PCI: tegra: Broadcast PME_Turn_Off message before
+ link goes to L2
+Message-ID: <20180227093611.GA26238@e107981-ln.cambridge.arm.com>
+References: <1518535450-24400-1-git-send-email-mmaddireddy@nvidia.com>
+ <1518535450-24400-4-git-send-email-mmaddireddy@nvidia.com>
+ <20180226155449.GC23806@e107981-ln.cambridge.arm.com>
+ <f3bc3d39-9903-53a3-0e61-a3c62a2ad739@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <CAP8qiGBz8rC_pGt+r9cbEU3E9CGn=00rajugnDkOiLbRGcOqbQ@mail.gmail.com>
-References: <CAP8qiGCNN4xgfDAtQf7H2rpBLJuLyWet0z6rau5WG7kVBj_NTg@mail.gmail.com>
- <20180213184435.GE75542@bhelgaas-glaptop.roam.corp.google.com> <CAP8qiGBz8rC_pGt+r9cbEU3E9CGn=00rajugnDkOiLbRGcOqbQ@mail.gmail.com>
-From: Kallol Biswas <ndprkm@gmail.com>
-Date: Tue, 20 Feb 2018 22:23:25 -0800
-Message-ID: <CAP8qiGBeo6bshCL9jr-qnZ3SsEkv5P24RniVCLtyG_NvKmkhEA@mail.gmail.com>
-Subject: Re: enabling multiple MSI vectors for a DS port
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bjorn.helgaas@gmail.com>
-Content-Type: multipart/alternative; boundary="001a114d37bafe121f0565b2f6bb"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f3bc3d39-9903-53a3-0e61-a3c62a2ad739@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a114d37bafe121f0565b2f6bb
-Content-Type: text/plain; charset="UTF-8"
+On Tue, Feb 27, 2018 at 12:14:12PM +0530, Manikanta Maddireddy wrote:
+> 
+> 
+> On 26-Feb-18 9:24 PM, Lorenzo Pieralisi wrote:
+> > On Tue, Feb 13, 2018 at 08:54:09PM +0530, Manikanta Maddireddy wrote:
+> >> Per PCIe r3.0, sec 5.3.3.2.1, PCIe root port shoould broadcast PME_Turn_Off
+> > 
+> > s/shoould/should
+> > 
+> >> message before PCIe link goes to L2. PME_Turn_Off broadcast mechanism is
+> >> implemented in AFI module. Each Tegra PCIe root port has its own
+> >> PME_Turn_Off and PME_TO_Ack bitmap in AFI_PME register, program this
+> >> register to broadcast PME_Turn_Off message.
+> >>
+> >> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> >> Acked-by: Thierry Reding <treding@nvidia.com>
+> >> Tested-by: Thierry Reding <treding@nvidia.com>
+> >> ---
+> >> V2:
+> >> * no change in this patch
+> >> V3:
+> >> * add PME bitmap in soc data instead of using compatible string
+> >> * replace while loop with readl_poll_timeout() for polling
+> >> * commit log correction
+> >> V4:
+> >> * no change in this patch
+> >> V5:
+> >> * Rebased on linux-next
+> >> V6:
+> >> * no change in this patch
+> >> V7:
+> >> * Per port soc data is added for pme bits
+> >> * list_for_each_entry_safe is changed to list_for_each_entry for pme turnoff
+> >> V8:
+> >> * Rebased on top of latest patch-2
+> >>
+> >>  drivers/pci/host/pci-tegra.c | 66 ++++++++++++++++++++++++++++++++++++++++++++
+> >>  1 file changed, 66 insertions(+)
+> >>
+> >> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> >> index 17ccb5e3ba04..60b1d5e1cfa4 100644
+> >> --- a/drivers/pci/host/pci-tegra.c
+> >> +++ b/drivers/pci/host/pci-tegra.c
+> >> @@ -31,6 +31,7 @@
+> >>  #include <linux/delay.h>
+> >>  #include <linux/export.h>
+> >>  #include <linux/interrupt.h>
+> >> +#include <linux/iopoll.h>
+> >>  #include <linux/irq.h>
+> >>  #include <linux/irqdomain.h>
+> >>  #include <linux/kernel.h>
+> >> @@ -153,6 +154,8 @@
+> >>  #define  AFI_INTR_EN_FPCI_TIMEOUT	(1 << 7)
+> >>  #define  AFI_INTR_EN_PRSNT_SENSE	(1 << 8)
+> >>  
+> >> +#define AFI_PCIE_PME		0xf0
+> >> +
+> >>  #define AFI_PCIE_CONFIG					0x0f8
+> >>  #define  AFI_PCIE_CONFIG_PCIE_DISABLE(x)		(1 << ((x) + 1))
+> >>  #define  AFI_PCIE_CONFIG_PCIE_DISABLE_ALL		0xe
+> >> @@ -233,6 +236,8 @@
+> >>  #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
+> >>  #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
+> >>  
+> >> +#define PME_ACK_TIMEOUT 10000
+> >> +
+> >>  struct tegra_msi {
+> >>  	struct msi_controller chip;
+> >>  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+> >> @@ -244,8 +249,16 @@ struct tegra_msi {
+> >>  };
+> >>  
+> >>  /* used to differentiate between Tegra SoC generations */
+> >> +struct tegra_pcie_port_soc {
+> >> +	struct {
+> >> +		u8 turnoff_bit;
+> >> +		u8 ack_bit;
+> >> +	} pme;
+> >> +};
+> >> +
+> >>  struct tegra_pcie_soc {
+> >>  	unsigned int num_ports;
+> >> +	const struct tegra_pcie_port_soc *ports;
+> >>  	unsigned int msi_base_shift;
+> >>  	u32 pads_pll_ctl;
+> >>  	u32 tx_ref_sel;
+> >> @@ -1358,6 +1371,32 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
+> >>  	return 0;
+> >>  }
+> >>  
+> >> +static void tegra_pcie_pme_turnoff(struct tegra_pcie_port *port)
+> >> +{
+> >> +	struct tegra_pcie *pcie = port->pcie;
+> >> +	const struct tegra_pcie_soc *soc = pcie->soc;
+> >> +	int err;
+> >> +	u32 val;
+> >> +	u8 ack_bit;
+> >> +
+> >> +	val = afi_readl(pcie, AFI_PCIE_PME);
+> >> +	val |= (0x1 << soc->ports[port->index].pme.turnoff_bit);
+> >> +	afi_writel(pcie, val, AFI_PCIE_PME);
+> >> +
+> >> +	ack_bit = soc->ports[port->index].pme.ack_bit;
+> >> +	err = readl_poll_timeout(pcie->afi + AFI_PCIE_PME, val,
+> >> +				 val & (0x1 << ack_bit), 1, PME_ACK_TIMEOUT);
+> >> +	if (err)
+> >> +		dev_err(pcie->dev, "PME Ack is not received on port: %d\n",
+> >> +			port->index);
+> >> +
+> >> +	usleep_range(10000, 11000);
+> >> +
+> >> +	val = afi_readl(pcie, AFI_PCIE_PME);
+> >> +	val &= ~(0x1 << soc->ports[port->index].pme.turnoff_bit);
+> >> +	afi_writel(pcie, val, AFI_PCIE_PME);
+> >> +}
+> >> +
+> >>  static int tegra_msi_alloc(struct tegra_msi *chip)
+> >>  {
+> >>  	int msi;
+> >> @@ -2103,8 +2142,14 @@ static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
+> >>  	}
+> >>  }
+> >>  
+> >> +static const struct tegra_pcie_port_soc tegra20_pcie_ports[] = {
+> >> +	{ .pme.turnoff_bit = 0, .pme.ack_bit =  5 },
+> >> +	{ .pme.turnoff_bit = 8, .pme.ack_bit = 10 },
+> >> +};
+> >> +
+> >>  static const struct tegra_pcie_soc tegra20_pcie = {
+> >>  	.num_ports = 2,
+> >> +	.ports = tegra20_pcie_ports,
+> >>  	.msi_base_shift = 0,
+> >>  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
+> >>  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
+> >> @@ -2118,8 +2163,15 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+> >>  	.program_uphy = true,
+> >>  };
+> >>  
+> >> +static const struct tegra_pcie_port_soc tegra30_pcie_ports[] = {
+> >> +	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
+> >> +	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
+> >> +	{ .pme.turnoff_bit = 16, .pme.ack_bit = 18 },
+> >> +};
+> >> +
+> >>  static const struct tegra_pcie_soc tegra30_pcie = {
+> >>  	.num_ports = 3,
+> >> +	.ports = tegra30_pcie_ports,
+> >>  	.msi_base_shift = 8,
+> >>  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+> >>  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+> >> @@ -2136,6 +2188,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+> >>  
+> >>  static const struct tegra_pcie_soc tegra124_pcie = {
+> >>  	.num_ports = 2,
+> >> +	.ports = tegra20_pcie_ports,
+> >>  	.msi_base_shift = 8,
+> >>  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+> >>  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+> >> @@ -2151,6 +2204,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+> >>  
+> >>  static const struct tegra_pcie_soc tegra210_pcie = {
+> >>  	.num_ports = 2,
+> >> +	.ports = tegra20_pcie_ports,
+> >>  	.msi_base_shift = 8,
+> >>  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+> >>  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+> >> @@ -2164,8 +2218,15 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+> >>  	.program_uphy = true,
+> >>  };
+> >>  
+> >> +static const struct tegra_pcie_port_soc tegra186_pcie_ports[] = {
+> >> +	{ .pme.turnoff_bit =  0, .pme.ack_bit =  5 },
+> >> +	{ .pme.turnoff_bit =  8, .pme.ack_bit = 10 },
+> >> +	{ .pme.turnoff_bit = 12, .pme.ack_bit = 14 },
+> >> +};
+> >> +
+> >>  static const struct tegra_pcie_soc tegra186_pcie = {
+> >>  	.num_ports = 3,
+> >> +	.ports = tegra186_pcie_ports,
+> >>  	.msi_base_shift = 8,
+> >>  	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+> >>  	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+> >> @@ -2399,12 +2460,17 @@ static int tegra_pcie_remove(struct platform_device *pdev)
+> >>  {
+> >>  	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
+> >>  	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+> >> +	struct tegra_pcie_port *port;
+> >>  
+> >>  	if (IS_ENABLED(CONFIG_DEBUG_FS))
+> >>  		tegra_pcie_debugfs_exit(pcie);
+> >>  
+> >>  	pci_stop_root_bus(host->bus);
+> >>  	pci_remove_root_bus(host->bus);
+> >> +
+> >> +	list_for_each_entry(port, &pcie->ports, list)
+> >> +		tegra_pcie_pme_turnoff(port);
+> >> +
+> > 
+> > IIUC how it works this patch and the previous one should be swapped,
+> > otherwise the driver removal may not work correctly.
+> > 
+> > It is just for my own understanding (and bisection reasons).
+> > 
+> > Thanks,
+> > Lorenzo
+> > 
+> Hi Lorenzo,
+> 
+> Previous patch implements the driver removal code, without that
+> we cannot add PME_TurnOff logic. IMO we need squash previous
+> patch & this one to have working removal code with single patch.
+> This takes care of bisection issue as well.
 
-Hello Bjorn,
-                We have worked around the issue by ack'ing dpc interrupt in
-irq handler than in worker thread.
+Yes that makes sense (inclusive of a merged commit log that explains
+the HW requirements to ensure a working removal code).
 
-Regarding sharing the output of lspci -vv, we are not authorized to send
-customer system's detail, otherwise we would be happy to do so.
-
-
-Anyway, is there a good document on linux PCIe hotplug?
-
-
-
----------------------------------------------
-static irqreturn_t dpc_irq(int irq, void *context)
-{
-
-struct dpc_dev *dpc = (struct dpc_dev *)context;
-
-struct pci_dev *pdev = dpc->dev->port;
-
-u16 status, source;
-
-
-pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
-
-pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_SOURCE_ID,
-
-&source);
-
-if (!status)
-
-return IRQ_NONE;
-
-
-dev_info(&dpc->dev->device, "DPC containment event, status:%#06x
-source:%#06x\n",
-
-status, source);
-
-
-if (status & PCI_EXP_DPC_STATUS_TRIGGER) {
-
-          u16 reason = (status >> 1) & 0x3;
-
-         pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
-
-                   PCI_EXP_DPC_STATUS_INTERRUPT);
-
-
-
-         dev_warn(&dpc->dev->device, "DPC %s triggered, remove downstream
-devices\n",
-
-         (reason == 0) ? "unmasked uncorrectable error" :
-
-         (reason == 1) ? "ERR_NONFATAL" :
-
-         (reason == 2) ? "ERR_FATAL" : "extended error");
-
-          schedule_work(&dpc->work);
-
-}
-
-return IRQ_HANDLED;
-
-
-
-On Tue, Feb 20, 2018 at 10:20 PM, Kallol Biswas <ndprkm@gmail.com> wrote:
-
-> Hello Bjorn,
->                 We have worked around the issue by ack'ing dpc interrupt
-> in irq handler than in worker thread.
->
-> Regarding sharing the output of lspci -vv, we are not authorized to send
-> customer system's detail, otherwise we would be happy to do so.
->
->
-> Anyway, is there a good document on linux PCIe hotplug?
->
->
->
-> ---------------------------------------------
-> static irqreturn_t dpc_irq(int irq, void *context)
-> {
->
-> struct dpc_dev *dpc = (struct dpc_dev *)context;
->
-> struct pci_dev *pdev = dpc->dev->port;
->
-> u16 status, source;
->
->
-> pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
->
-> pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_SOURCE_ID,
->
-> &source);
->
-> if (!status)
->
-> return IRQ_NONE;
->
->
-> dev_info(&dpc->dev->device, "DPC containment event, status:%#06x
-> source:%#06x\n",
->
-> status, source);
->
->
-> if (status & PCI_EXP_DPC_STATUS_TRIGGER) {
->
->           u16 reason = (status >> 1) & 0x3;
->
->          pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
->
->                    PCI_EXP_DPC_STATUS_INTERRUPT);
->
->
->
->          dev_warn(&dpc->dev->device, "DPC %s triggered, remove downstream
-> devices\n",
->
->          (reason == 0) ? "unmasked uncorrectable error" :
->
->          (reason == 1) ? "ERR_NONFATAL" :
->
->          (reason == 2) ? "ERR_FATAL" : "extended error");
->
->           schedule_work(&dpc->work);
->
-> }
->
-> return IRQ_HANDLED;
->
-> On Tue, Feb 13, 2018 at 10:44 AM, Bjorn Helgaas <helgaas@kernel.org>
-> wrote:
->
->> Hi Kallol,
->>
->> On Tue, Feb 13, 2018 at 10:21:04AM -0800, Kallol Biswas wrote:
->> > Hi Bjorn,
->> >             I am facing an interrupt generation issue when single MSI
->> > is shared by both dpc and hotplug interrupt.
->> >
->> > The DS port is multi-MSI capable. What I have noticed that if I move
->> > the switch (with DS port) and OS disk to a different system multiple
->> > MSI vectors are allocated and dpc isr and hotplug isr are on different
->> > vectors.
->> >
->> > It seems that BIOS controls allocation of MSI vectors. Is there anyway
->> > to force linux kernel to allocate multiple vectors when port is
->> > capable?
->>
->> BIOS doesn't control the allocation of MSI vectors.  That's done by
->> Linux in pcie_init_service_irqs(), and it depends on many things: what
->> services are supported by Linux (hotplug, PME, AER, DPC), which ones
->> Linux is allowed to use (based on the ACPI _OSC method, so this part
->> can be influenced by the BIOS), etc.
->>
->> If you can share the "lspci -vv" and dmesg output for these two
->> systems, we can probably work out what's going on.
->>
->> Things should *work* even if DPC and hotplug need to share an
->> interrupt.  If that doesn't work, that's a Linux bug that should be
->> fixed.
->>
->> Bjorn
->>
->
->
-
---001a114d37bafe121f0565b2f6bb
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div dir=3D"ltr" style=3D"color:rgb(34,34,34);font-family:=
-arial,sans-serif;font-size:small;font-style:normal;font-variant-ligatures:n=
-ormal;font-variant-caps:normal;font-weight:400;letter-spacing:normal;text-a=
-lign:start;text-indent:0px;text-transform:none;white-space:normal;word-spac=
-ing:0px;background-color:rgb(255,255,255);text-decoration-style:initial;tex=
-t-decoration-color:initial">Hello Bjorn,<br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 We have worked around the issue by ack&#39;ing dpc=
- interrupt in irq handler than in worker thread.<div><br></div><div>Regardi=
-ng sharing the output of lspci -vv, we are not authorized to send customer =
-system&#39;s detail, otherwise we would be happy to do so.</div><div><br></=
-div><div><br></div><div>Anyway, is there a good document on linux PCIe hotp=
-lug?=C2=A0<br><br><br><br>------------------------------<wbr>--------------=
--<br>static irqreturn_t dpc_irq(int irq, void *context)<br>{<br><br>struct =
-dpc_dev *dpc =3D (struct dpc_dev *)context;<br><br>struct pci_dev *pdev =3D=
- dpc-&gt;dev-&gt;port;<br><br>u16 status, source;<br><br><br>pci_read_confi=
-g_word(pdev, dpc-&gt;cap_pos + PCI_EXP_DPC_STATUS, &amp;status);<br><br>pci=
-_read_config_word(pdev, dpc-&gt;cap_pos + PCI_EXP_DPC_SOURCE_ID,<br><br>&am=
-p;source);<br><br>if (!status)<br><br>return IRQ_NONE;<br><br><br>dev_info(=
-&amp;dpc-&gt;dev-&gt;device, &quot;DPC containment event, status:%#06x sour=
-ce:%#06x\n&quot;,<br><br>status, source);<br><br><br>if (status &amp; PCI_E=
-XP_DPC_STATUS_TRIGGER) {<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 u16 reas=
-on =3D (status &gt;&gt; 1) &amp; 0x3;<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0<font color=3D"#ff0000">pci_write_config_word(pdev, dpc-&gt;cap_pos +=
- PCI_EXP_DPC_STATUS,<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0PCI_EXP_DPC_STATUS_INTERRUPT)<wbr>;<br></font><br><=
-br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dev_warn(&amp;dpc-&gt;dev-&gt;devi=
-ce, &quot;DPC %s triggered, remove downstream devices\n&quot;,<br><br>=C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(reason =3D=3D 0) ? &quot;unmasked uncorrect=
-able error&quot; :<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(reason =3D=3D =
-1) ? &quot;ERR_NONFATAL&quot; :<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(r=
-eason =3D=3D 2) ? &quot;ERR_FATAL&quot; : &quot;extended error&quot;);<br><=
-br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 schedule_work(&amp;dpc-&gt;work);<br>=
-<br>}<br><br>return IRQ_HANDLED;</div></div><div class=3D"gmail-HOEnZb" sty=
-le=3D"color:rgb(34,34,34);font-family:arial,sans-serif;font-size:small;font=
--style:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-w=
-eight:400;letter-spacing:normal;text-align:start;text-indent:0px;text-trans=
-form:none;white-space:normal;word-spacing:0px;background-color:rgb(255,255,=
-255);text-decoration-style:initial;text-decoration-color:initial"><div clas=
-s=3D"gmail-h5" style=3D"display:block;color:rgb(80,0,80)"><br class=3D"gmai=
-l-Apple-interchange-newline"></div></div><br><div class=3D"gmail_extra"><br=
-><div class=3D"gmail_quote">On Tue, Feb 20, 2018 at 10:20 PM, Kallol Biswas=
- <span dir=3D"ltr">&lt;<a href=3D"mailto:ndprkm@gmail.com" target=3D"_blank=
-">ndprkm@gmail.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quot=
-e" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">=
-<div dir=3D"ltr">Hello Bjorn,<br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 We have worked around the issue by ack&#39;ing dpc interrupt =
-in irq handler than in worker thread.<div><br></div><div>Regarding sharing =
-the output of lspci -vv, we are not authorized to send customer system&#39;=
-s detail, otherwise we would be happy to do so.</div><div><br></div><div><b=
-r></div><div>Anyway, is there a good document on linux PCIe hotplug?=C2=A0<=
-br><br><br><br>------------------------------<wbr>---------------<br>static=
- irqreturn_t dpc_irq(int irq, void *context)<br>{<br><br>struct dpc_dev *dp=
-c =3D (struct dpc_dev *)context;<br><br>struct pci_dev *pdev =3D dpc-&gt;de=
-v-&gt;port;<br><br>u16 status, source;<br><br><br>pci_read_config_word(pdev=
-, dpc-&gt;cap_pos + PCI_EXP_DPC_STATUS, &amp;status);<br><br>pci_read_confi=
-g_word(pdev, dpc-&gt;cap_pos + PCI_EXP_DPC_SOURCE_ID,<br><br>&amp;source);<=
-br><br>if (!status)<br><br>return IRQ_NONE;<br><br><br>dev_info(&amp;dpc-&g=
-t;dev-&gt;device, &quot;DPC containment event, status:%#06x source:%#06x\n&=
-quot;,<br><br>status, source);<br><br><br>if (status &amp; PCI_EXP_DPC_STAT=
-US_TRIGGER) {<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 u16 reason =3D (sta=
-tus &gt;&gt; 1) &amp; 0x3;<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0<font c=
-olor=3D"#ff0000">pci_write_config_word(pdev, dpc-&gt;cap_pos + PCI_EXP_DPC_=
-STATUS,<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0PCI_EXP_DPC_STATUS_INTERRUPT)<wbr>;<br></font><br><br><br>=C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0dev_warn(&amp;dpc-&gt;dev-&gt;device, &quot;DPC =
-%s triggered, remove downstream devices\n&quot;,<br><br>=C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0(reason =3D=3D 0) ? &quot;unmasked uncorrectable error&quo=
-t; :<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(reason =3D=3D 1) ? &quot;ERR=
-_NONFATAL&quot; :<br><br>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0(reason =3D=3D 2=
-) ? &quot;ERR_FATAL&quot; : &quot;extended error&quot;);<br><br>=C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 schedule_work(&amp;dpc-&gt;work);<br><br>}<br><br>=
-return IRQ_HANDLED;</div></div><div class=3D"m_-5419959492489506394HOEnZb">=
-<div class=3D"m_-5419959492489506394h5"><div class=3D"gmail_extra"><br><div=
- class=3D"gmail_quote">On Tue, Feb 13, 2018 at 10:44 AM, Bjorn Helgaas <spa=
-n dir=3D"ltr">&lt;<a href=3D"mailto:helgaas@kernel.org" target=3D"_blank">h=
-elgaas@kernel.org</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote=
-" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">H=
-i Kallol,<br>
-<span><br>
-On Tue, Feb 13, 2018 at 10:21:04AM -0800, Kallol Biswas wrote:<br>
-&gt; Hi Bjorn,<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0I am facing an interrup=
-t generation issue when single MSI<br>
-&gt; is shared by both dpc and hotplug interrupt.<br>
-&gt;<br>
-&gt; The DS port is multi-MSI capable. What I have noticed that if I move<b=
-r>
-&gt; the switch (with DS port) and OS disk to a different system multiple<b=
-r>
-&gt; MSI vectors are allocated and dpc isr and hotplug isr are on different=
-<br>
-&gt; vectors.<br>
-&gt;<br>
-&gt; It seems that BIOS controls allocation of MSI vectors. Is there anyway=
-<br>
-&gt; to force linux kernel to allocate multiple vectors when port is<br>
-&gt; capable?<br>
-<br>
-</span>BIOS doesn&#39;t control the allocation of MSI vectors.=C2=A0 That&#=
-39;s done by<br>
-Linux in pcie_init_service_irqs(), and it depends on many things: what<br>
-services are supported by Linux (hotplug, PME, AER, DPC), which ones<br>
-Linux is allowed to use (based on the ACPI _OSC method, so this part<br>
-can be influenced by the BIOS), etc.<br>
-<br>
-If you can share the &quot;lspci -vv&quot; and dmesg output for these two<b=
-r>
-systems, we can probably work out what&#39;s going on.<br>
-<br>
-Things should *work* even if DPC and hotplug need to share an<br>
-interrupt.=C2=A0 If that doesn&#39;t work, that&#39;s a Linux bug that shou=
-ld be<br>
-fixed.<br>
-<span class=3D"m_-5419959492489506394m_5423980344503870363HOEnZb"><font col=
-or=3D"#888888"><br>
-Bjorn<br>
-</font></span></blockquote></div><br></div>
-</div></div></blockquote></div><br></div></div>
-
---001a114d37bafe121f0565b2f6bb--
+Thanks,
+Lorenzo
