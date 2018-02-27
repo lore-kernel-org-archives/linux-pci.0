@@ -1,61 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45832 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752156AbeBZU4e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Feb 2018 15:56:34 -0500
-Date: Mon, 26 Feb 2018 14:56:32 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?=
-        <ckoenig.leichtzumerken@gmail.com>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: stop crashing in pci_release_resource v2
-Message-ID: <20180226205632.GB63171@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180221090715.2853-1-christian.koenig@amd.com>
+Return-Path: <SRS0=PSar=FV=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=PSar=FV=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180221090715.2853-1-christian.koenig@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 27 Feb 2018 10:46:34 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
+ <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v11 3/7] PCI/ERR: add mutex to synchronize recovery
+In-Reply-To: <20180223234525.GQ14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+ <1519374244-20539-4-git-send-email-poza@codeaurora.org>
+ <20180223234525.GQ14632@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <34e4c9a98a9ed3494a0295d00e181fe9@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 21, 2018 at 10:07:15AM +0100, Christian König wrote:
-> Is it entirely possible that the BIOS wasn't able to assign resources to
-> a device. In this case don't crash in pci_release_resource() when we try
-> to resize the resource.
+On 2018-02-24 05:15, Bjorn Helgaas wrote:
+> On Fri, Feb 23, 2018 at 01:54:00PM +0530, Oza Pawandeep wrote:
+>> This patch protects pci_do_recovery with mutex.
 > 
-> v2: keep printing the info that we try to release the BAR
+> pcie_do_recovery()
 > 
-> Signed-off-by: Christian König <christian.koenig@amd.com>
-> CC: stable@vger.kernel.org
-
-I think we probably want this in v4.16, since it seems to be a fix for
-8bb705e3e79d ("PCI: Add pci_resize_resource() for resizing BARs"),
-which appeared in v4.15.
-
-What does the crash look like?  I might include a few lines in the
-changelog to help people find the fix.
-
-I added a Fixes: tag and Andy's Reviewed-by already.
-
-> ---
->  drivers/pci/setup-res.c | 4 ++++
->  1 file changed, 4 insertions(+)
+> Please explain why the mutex is necessary.  What bad things happen
+> without the mutex?
 > 
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index e815111f3f81..c0f091614805 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -402,6 +402,10 @@ void pci_release_resource(struct pci_dev *dev, int resno)
->  	struct resource *res = dev->resource + resno;
->  
->  	dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
-> +
-> +	if (!res->parent)
-> +		return;
-> +
->  	release_resource(res);
->  	res->end = resource_size(res) - 1;
->  	res->start = 0;
-> -- 
-> 2.14.1
+> You named (some) of the other things "pcie"; maybe use "pcie" in the
+> mutex name as well so they look the same.
 > 
+
+PCIe specification: 6.2.10
+When DPC is triggered due to receipt of an uncorrectable error Message, 
+the Requester ID from the Message is recorded in the DPC Error Source ID 
+register and that Message is discarded and not forwarded Upstream.
+
+So, having said that, what we think is we dont need Mutex, because in 
+DPC enabled system either AER or DPC can be triggered, not both.
+so right now there is no need of guarding pcie_do_recovery() with mutex.
+
+but I was in a thought that; since pcie_do_recovery is supposed to be 
+used by error clients,
+from sw architecture point of view, adding mutex takes care of 
+concurrency if it exists (in corner cases, faulty hw where both AER and 
+DPC triggered etc..)
+
+We can choose to drop this patch, since we dont require mutex.
+Bjorn, please advise.
+
+
+>> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+>> 
+>> diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
+>> index fcd5add..f830975 100644
+>> --- a/drivers/pci/pcie/pcie-err.c
+>> +++ b/drivers/pci/pcie/pcie-err.c
+>> @@ -20,6 +20,8 @@
+>>  #include <linux/pcieport_if.h>
+>>  #include "portdrv.h"
+>> 
+>> +static DEFINE_MUTEX(pci_err_recovery_lock);
+>> +
+>>  struct aer_broadcast_data {
+>>  	enum pci_channel_state state;
+>>  	enum pci_ers_result result;
+>> @@ -283,6 +285,8 @@ void pcie_do_recovery(struct pci_dev *dev, int 
+>> severity)
+>>  	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+>>  	enum pci_channel_state state;
+>> 
+>> +	mutex_lock(&pci_err_recovery_lock);
+>> +
+>>  	if (severity == AER_FATAL)
+>>  		state = pci_channel_io_frozen;
+>>  	else
+>> @@ -326,9 +330,11 @@ void pcie_do_recovery(struct pci_dev *dev, int 
+>> severity)
+>>  				report_resume);
+>> 
+>>  	dev_info(&dev->dev, "Device recovery successful\n");
+>> +	mutex_unlock(&pci_err_recovery_lock);
+>>  	return;
+>> 
+>>  failed:
+>>  	/* TODO: Should kernel panic here? */
+>>  	dev_info(&dev->dev, "Device recovery failed\n");
+>> +	mutex_unlock(&pci_err_recovery_lock);
+>>  }
+>> --
+>> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm 
+>> Technologies, Inc.,
+>> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+>> Linux Foundation Collaborative Project.
+>> 
