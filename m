@@ -1,54 +1,88 @@
-Return-Path: <SRS0=0j6w=FR=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=0j6w=FR=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <helgaas@kernel.org>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org, torvalds@linux-foundation.org, ruscur@russell.cc, jjalvare@linux.vnet.ibm.com
-Subject: Re: [PATCH] PCI/AER: Move pci_uevent_ers() out of pci.h
-In-Reply-To: <20180222231236.GB14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180208122035.9305-1-mpe@ellerman.id.au> <dcfc6411-20cf-5b3f-20c5-14167de54700@linux.vnet.ibm.com> <20180222231236.GB14632@bhelgaas-glaptop.roam.corp.google.com>
-Date: Fri, 23 Feb 2018 15:10:18 +1100
-Message-ID: <87h8q8pcr9.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:45111 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751956AbeB0KQM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 05:16:12 -0500
+Date: Tue, 27 Feb 2018 11:15:58 +0100 (CET)
+From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+cc: Rolf Evers-Fischer <embedded24@evers-fischer.de>,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        andy.shevchenko@gmail.com,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+Subject: Re: [PATCH v3 1/2] pci: endpoint: Simplify name allocation for epf
+ device
+In-Reply-To: <76904bbe-ebef-9b8f-5f30-e876f73b28fe@ti.com>
+Message-ID: <alpine.LNX.2.20.1802271112310.22764@5HSWXM1.fritz.box>
+References: <20180227100231.22561-1-embedded24@evers-fischer.de> <20180227100231.22561-2-embedded24@evers-fischer.de> <76904bbe-ebef-9b8f-5f30-e876f73b28fe@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+Hi,
 
-> On Thu, Feb 08, 2018 at 09:05:45AM -0600, Bryant G. Ly wrote:
->> 
->> On 2/8/18 6:20 AM, Michael Ellerman wrote:
->> 
->> > There's no reason pci_uevent_ers() needs to be inline in pci.h, so
->> > move it out to a C file.
->> >
->> > Given it's used by AER the obvious location would be somewhere in
->> > drivers/pci/pcie/aer, but because it's also used by powerpc EEH code
->> > unfortunately that doesn't work in the case where EEH is enabled but
->> > PCIEPORTBUS is not.
->> >
->> > So for now put it in pci-driver.c, next to pci_uevent(), with an
->> > appropriate #ifdef so it's not built if AER and EEH are both disabled.
->> >
->> > While we're moving it also fix up the kernel doc comment for @pdev to
->> > be accurate.
->> >
->> > Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
->> > Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
->> > ---
->> >  drivers/pci/pci-driver.c | 36 ++++++++++++++++++++++++++++++++++++
->> >  include/linux/pci.h      | 38 +++-----------------------------------
->> >  2 files changed, 39 insertions(+), 35 deletions(-)
->> 
->> Looks good, thanks for fixing it!
->> 
->> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
->
-> This would normally be a "Reviewed-by" unless you actually
-> participated in developing the patch, and in that case, your
-> "Signed-off-by" would normally be included in the original posting.
->
-> What do you intend?  I'll be glad to add either.
+On Tue, 27 Feb 2018, Kishon Vijay Abraham I wrote:
 
-I wrote the patch, so Bryant meant Reviewed-by or maybe Acked-by.
+> Hi,
+> 
+> On Tuesday 27 February 2018 03:32 PM, Rolf Evers-Fischer wrote:
+> > From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+> > 
+> > This commit replaces allocating and freeing the intermediate
+> > 'buf'/'func_name' with a combination of 'kstrndup()' and 'len'.
+> > 
+> > 'len' is the required length of 'epf->name'.
+> > 'epf->name' should be either the first part of 'name' preceding the '.'
+> > or the complete 'name', if there is no '.' in the name.
+> > 
+> > Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+> > ---
+> >  drivers/pci/endpoint/pci-epf-core.c | 22 ++++------------------
+> >  1 file changed, 4 insertions(+), 18 deletions(-)
+> > 
+> > diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+> > index 766ce1dca2ec..1f2506f32bb9 100644
+> > --- a/drivers/pci/endpoint/pci-epf-core.c
+> > +++ b/drivers/pci/endpoint/pci-epf-core.c
+> > @@ -200,8 +200,7 @@ struct pci_epf *pci_epf_create(const char *name)
+> >  	int ret;
+> >  	struct pci_epf *epf;
+> >  	struct device *dev;
+> > -	char *func_name;
+> > -	char *buf;
+> > +	int len;
+> >  
+> >  	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
+> >  	if (!epf) {
+> > @@ -209,20 +208,11 @@ struct pci_epf *pci_epf_create(const char *name)
+> >  		goto err_ret;
+> >  	}
+> >  
+> > -	buf = kstrdup(name, GFP_KERNEL);
+> > -	if (!buf) {
+> > -		ret = -ENOMEM;
+> > -		goto free_epf;
+> > -	}
+> > -
+> > -	func_name = buf;
+> > -	buf = strchrnul(buf, '.');
+> > -	*buf = '\0';
+> > -
+> > -	epf->name = kstrdup(func_name, GFP_KERNEL);
+> > +	len = strchrnul(name, '.') - name;
+> > +	epf->name = kstrndup(name, len, GFP_KERNEL);
+> 
+> shouldn't the string end with '\0'?
+> 
 
-cheers
+I agree, it should end with '\0', but fortunately the 'kstrndup()' 
+function already adds it for us, see mm/util.c, line 100:
+	(...)
+	memcpy(buf, s, len);
+	buf[len] = '\0';
+	(...)
+
+Kind regards
+ Rolf
