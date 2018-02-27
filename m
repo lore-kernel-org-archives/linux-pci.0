@@ -1,132 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:39065 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967603AbeBNMZV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Feb 2018 07:25:21 -0500
-Received: by mail-wr0-f194.google.com with SMTP id w77so7475771wrc.6
-        for <linux-pci@vger.kernel.org>; Wed, 14 Feb 2018 04:25:20 -0800 (PST)
-From: srinivas.kandagatla@linaro.org
-To: stanimir.varbanov@linaro.org, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: [PATCH] PCI: qcom: use regulator bluk api for apq8064 supplies
-Date: Wed, 14 Feb 2018 12:23:15 +0000
-Message-Id: <20180214122315.2069-1-srinivas.kandagatla@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 4/6] x86: Consolidate PCI_MMCONFIG configs
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+References: <cover.1516601570.git.jan.kiszka@siemens.com>
+ <5dcaec50bb59140c1cb63c35ce566ccc02188bcb.1516601570.git.jan.kiszka@siemens.com>
+ <CAHp75Vd3AsdOayA0FSaug6L4K+Xx5pk=Eeh4F5mZQsKiV3RxwA@mail.gmail.com>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+Message-ID: <45f0d934-c4cf-fdc7-d7ca-17373c01e733@siemens.com>
+Date: Tue, 27 Feb 2018 08:19:55 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAHp75Vd3AsdOayA0FSaug6L4K+Xx5pk=Eeh4F5mZQsKiV3RxwA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+On 2018-01-28 18:26, Andy Shevchenko wrote:
+> On Mon, Jan 22, 2018 at 8:12 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
+>> From: Jan Kiszka <jan.kiszka@siemens.com>
+>>
+>> Not sure if those two worked by design or just by chance so far. In any
+>> case, it's at least cleaner and clearer to express this in a single
+>> config statement.
+> 
+> Congrats! You found by the way a bug in
+> 
+> commit e279b6c1d329e50b766bce96aacc197eae8a053b
+> Author: Sam Ravnborg <sam@ravnborg.org>
+> Date:   Tue Nov 6 20:41:05 2007 +0100
+> 
+>    x86: start unification of arch/x86/Kconfig.*
+> 
+> ...and proper fix seems to split PCI stuff to common + X86_32 only + X86_64 only
+> 
 
-This patch converts existing regulators to use regulator bulk apis,
-to make it consistent with msm8996 changes also cut down some redundant code.
+Hmm, is that a change request on this patch?
 
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
----
- drivers/pci/dwc/pcie-qcom.c | 52 +++++++++++++--------------------------------
- 1 file changed, 15 insertions(+), 37 deletions(-)
+Jan
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 519a2ae416eb..ba923cfeaa25 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -79,6 +79,7 @@
- #define PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE	0x358
- #define SLV_ADDR_SPACE_SZ			0x10000000
- 
-+#define QCOM_PCIE_2_1_0_MAX_SUPPLY	3
- struct qcom_pcie_resources_2_1_0 {
- 	struct clk *iface_clk;
- 	struct clk *core_clk;
-@@ -88,9 +89,7 @@ struct qcom_pcie_resources_2_1_0 {
- 	struct reset_control *ahb_reset;
- 	struct reset_control *por_reset;
- 	struct reset_control *phy_reset;
--	struct regulator *vdda;
--	struct regulator *vdda_phy;
--	struct regulator *vdda_refclk;
-+	struct regulator_bulk_data supplies[QCOM_PCIE_2_1_0_MAX_SUPPLY];
- };
- 
- struct qcom_pcie_resources_1_0_0 {
-@@ -217,18 +216,15 @@ static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
-+	int ret;
- 
--	res->vdda = devm_regulator_get(dev, "vdda");
--	if (IS_ERR(res->vdda))
--		return PTR_ERR(res->vdda);
--
--	res->vdda_phy = devm_regulator_get(dev, "vdda_phy");
--	if (IS_ERR(res->vdda_phy))
--		return PTR_ERR(res->vdda_phy);
--
--	res->vdda_refclk = devm_regulator_get(dev, "vdda_refclk");
--	if (IS_ERR(res->vdda_refclk))
--		return PTR_ERR(res->vdda_refclk);
-+	res->supplies[0].supply = "vdda";
-+	res->supplies[1].supply = "vdda_phy";
-+	res->supplies[1].supply = "vdda_refclk";
-+	ret = devm_regulator_bulk_get(dev, QCOM_PCIE_2_1_0_MAX_SUPPLY,
-+				      res->supplies);
-+	if (ret)
-+		return ret;
- 
- 	res->iface_clk = devm_clk_get(dev, "iface");
- 	if (IS_ERR(res->iface_clk))
-@@ -274,9 +270,7 @@ static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
- 	clk_disable_unprepare(res->iface_clk);
- 	clk_disable_unprepare(res->core_clk);
- 	clk_disable_unprepare(res->phy_clk);
--	regulator_disable(res->vdda);
--	regulator_disable(res->vdda_phy);
--	regulator_disable(res->vdda_refclk);
-+	regulator_bulk_disable(QCOM_PCIE_2_1_0_MAX_SUPPLY, res->supplies);
- }
- 
- static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
-@@ -287,24 +281,12 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- 	u32 val;
- 	int ret;
- 
--	ret = regulator_enable(res->vdda);
--	if (ret) {
--		dev_err(dev, "cannot enable vdda regulator\n");
-+	ret = regulator_bulk_enable(QCOM_PCIE_2_1_0_MAX_SUPPLY, res->supplies);
-+	if (ret < 0) {
-+		dev_err(dev, "cannot enable regulators\n");
- 		return ret;
- 	}
- 
--	ret = regulator_enable(res->vdda_refclk);
--	if (ret) {
--		dev_err(dev, "cannot enable vdda_refclk regulator\n");
--		goto err_refclk;
--	}
--
--	ret = regulator_enable(res->vdda_phy);
--	if (ret) {
--		dev_err(dev, "cannot enable vdda_phy regulator\n");
--		goto err_vdda_phy;
--	}
--
- 	ret = reset_control_assert(res->ahb_reset);
- 	if (ret) {
- 		dev_err(dev, "cannot assert ahb reset\n");
-@@ -388,11 +370,7 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
- err_clk_phy:
- 	clk_disable_unprepare(res->iface_clk);
- err_assert_ahb:
--	regulator_disable(res->vdda_phy);
--err_vdda_phy:
--	regulator_disable(res->vdda_refclk);
--err_refclk:
--	regulator_disable(res->vdda);
-+	regulator_bulk_disable(QCOM_PCIE_2_1_0_MAX_SUPPLY, res->supplies);
- 
- 	return ret;
- }
 -- 
-2.15.1
+Siemens AG, Corporate Technology, CT RDA IOT SES-DE
+Corporate Competence Center Embedded Linux
