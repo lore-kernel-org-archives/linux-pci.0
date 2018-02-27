@@ -1,99 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:56496 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750821AbeBVTXq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 14:23:46 -0500
-Subject: Re: [PATCH v9 7/7] PCI/DPC: Enumerate the devices after DPC trigger
- event
-To: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
- <1519285571-5634-8-git-send-email-poza@codeaurora.org>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <d8da89bf-aaa1-c6ed-d21a-4cd51265d4a2@infradead.org>
-Date: Thu, 22 Feb 2018 11:23:28 -0800
+Received: from mail.kernel.org ([198.145.29.99]:44244 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753463AbeB0OrI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Feb 2018 09:47:08 -0500
+Date: Tue, 27 Feb 2018 08:47:06 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Vincent-Cross <me@tvc.id.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add function 1 DMA alias quirk for 88SE9220
+Message-ID: <20180227144706.GB112033@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180227092035.GA16727@cornetto.lan>
 MIME-Version: 1.0
-In-Reply-To: <1519285571-5634-8-git-send-email-poza@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180227092035.GA16727@cornetto.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/21/2018 11:46 PM, Oza Pawandeep wrote:
-> Implement error_resume callback in DPC so, after DPC trigger event
-> enumerates the devices beneath.
+On Tue, Feb 27, 2018 at 08:20:36PM +1100, Thomas Vincent-Cross wrote:
+> Add Marvell 88SE9220 DMA quirk as found and tested on bug 42679.
 > 
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> Signed-off-by: Thomas Vincent-Cross <me@tvc.id.au>
+
+Applied to pci/virtualization for v4.17, thanks!
+
+> ---
+>  drivers/pci/quirks.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-> index fce4518..59c01c7 100644
-> --- a/drivers/pci/pcie/pcie-dpc.c
-> +++ b/drivers/pci/pcie/pcie-dpc.c
-> @@ -129,6 +129,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
->  }
->  
->  /**
-> + * dpc_error_resume - enumerate the devices beneath
-> + * @dev: pointer to Root Port's pci_dev data structure
-
-    * @pdev: ...
-
-> + *
-> + * Invoked by Port Bus driver during nonfatal recovery.
-> + */
-> +static void dpc_error_resume(struct pci_dev *pdev)
-> +{
-> +	bool active = true;
-> +
-> +	if (pci_wait_for_link(pdev, active)) {
-> +		pci_lock_rescan_remove();
-> +		pci_rescan_bus(pdev->bus);
-> +		pci_unlock_rescan_remove();
-> +	}
-> +}
-> +
-> +/**
->   * dpc_reset_link - reset link DPC  routine
->   * @dev: pointer to Root Port's pci_dev data structure
->   *
-> diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-> index 6844347..4950f49 100644
-> --- a/drivers/pci/pcie/pcie-err.c
-> +++ b/drivers/pci/pcie/pcie-err.c
-> @@ -256,6 +258,15 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
->  		result_data.result = PCI_ERS_RESULT_RECOVERED;
->  
->  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +		/* If DPC is triggered, call resume error hanlder
-
-		                                          handler
-
-Kernel multi-line comment style is:
-		/*
-		 * Begin comment here.
-		 * foo bar blah
-		 */
-
-> +		 * because, at this point we can safely assume that
-> +		 * link recovery has happened.
-> +		 */
-> +		if ((severity == DPC_FATAL) &&
-> +			(cb == report_resume)) {
-> +			cb(dev, NULL);
-> +			return PCI_ERS_RESULT_RECOVERED;
-> +		}
->  		/*
->  		 * If the error is reported by a bridge, we think this error
->  		 * is related to the downstream link of the bridge, so we
-
-thanks,
--- 
-~Randy
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index fc734014206f..70a7c337463f 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3896,6 +3896,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9182,
+>  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
+>  			 quirk_dma_func1_alias);
+> +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c127 */
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9220,
+> +			 quirk_dma_func1_alias);
+>  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
+>  			 quirk_dma_func1_alias);
+> -- 
+> 2.16.2
+> 
