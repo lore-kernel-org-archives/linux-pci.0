@@ -1,52 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:48459 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933193AbeBVQVb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 11:21:31 -0500
-Date: Thu, 22 Feb 2018 17:21:13 +0100 (CET)
-From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-cc: Rolf Evers-Fischer <embedded24@evers-fischer.de>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Subject: Re: [PATCH 1/2] pci: endpoint: Free func_name after last usage
-In-Reply-To: <CAHp75VfgqqkLq0PbC0SBMCyCLqqoNZcUW0xngjacEL0VtAskmg@mail.gmail.com>
-Message-ID: <alpine.LNX.2.20.1802221710110.1801@5HSWXM1.fritz.box>
-References: <20180221124707.26308-1-embedded24@evers-fischer.de> <20180221124707.26308-2-embedded24@evers-fischer.de> <CAHp75VfgqqkLq0PbC0SBMCyCLqqoNZcUW0xngjacEL0VtAskmg@mail.gmail.com>
+Received: from mail-ve1eur01on0057.outbound.protection.outlook.com ([104.47.1.57]:42705
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752160AbeB0MSv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Feb 2018 07:18:51 -0500
+Subject: Re: [PATCH next V1 4/7] PCI: Print PCI device link status in kernel
+ log
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>
+References: <1516030541-6626-1-git-send-email-talgi@mellanox.com>
+ <1516030541-6626-5-git-send-email-talgi@mellanox.com>
+ <20180222195744.GB16519@bhelgaas-glaptop.roam.corp.google.com>
+ <02c5c188-fb1f-4582-541a-2770fd13da3c@mellanox.com>
+Message-ID: <e47f3628-b56c-4d0a-f18b-5ffaf261ccc0@mellanox.com>
+Date: Tue, 27 Feb 2018 14:18:41 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <02c5c188-fb1f-4582-541a-2770fd13da3c@mellanox.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Wed, 21 Feb 2018, Andy Shevchenko wrote:
-
-> > Change-Id: I0d1b6fd652395b85f82b11c43bf9b7db512854d1
+On 2/25/2018 11:30 AM, Tal Gilboa wrote:
+> On 2/22/2018 9:57 PM, Bjorn Helgaas wrote:>
+>> Suggested text:
+>>
+>>    pci_info(dev, "available bandwidth %dGB/s (capable of %dGB/s)\n", ...
+>>
+>> I'm not sure this merits a pci_warn().  In some cases a user might be
+>> able to move the device to a different slot or something, but I'm sure
+>> there are platforms where it is impossible for the user to do anything
+>> about this, and I don't think we need to warn about that.
 > 
-> First of all, this shouldn't be here.
->
-Please excuse me. I know that I have to remove this, but
-unfortunately I forgot to do so (here and also in the other patch).
- 
-> > Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-> > Signed-off-by: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-> 
-> Looks like bipolar disorder?
->
-You are right: One "Signed-off" should be enough.
- 
-> To the topic.
-> This is a slow path and your change makes code slightly less readable
-> b/c of patterns used in the kernel.
-> 
-I see. It is probably not a good idea to free the
-memory in the middle of the function.
-If you don't mind, I will remove this patch and change the other
-one accordingly.
+> We face a lot of customer "bugs" due to lower than expected PCIe 
+> bandwidth. I think an info print would be too light in this case. Even 
+> if the user has nothing to do it should be aware of the problem.
 
-With best regards,
-Rolf Evers-Fischer
+We actually got some feedback saying the warnings are a bit too much. 
+I'll remove most of them and change the remaining to pci_info().
