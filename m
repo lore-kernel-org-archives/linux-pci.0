@@ -1,118 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:41411 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753149AbeB1QKd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 11:10:33 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
-Subject: [PATCH v9 3/3] PCI: dwc: Expand maximum number of IRQs from 32 to 256
-Date: Wed, 28 Feb 2018 16:10:25 +0000
-Message-Id: <c20a705416bc58edabbeee664da355fe0fd25f77.1519834018.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:22917 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752708AbeB0Knx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 05:43:53 -0500
+Subject: Re: [PATCH v3 2/2] pci: endpoint: Fix kernel panic after put_device()
+To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+References: <20180227100231.22561-1-embedded24@evers-fischer.de>
+ <20180227100231.22561-3-embedded24@evers-fischer.de>
+CC: <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <andy.shevchenko@gmail.com>,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <ab1fb0a5-f1b0-f53d-d986-b5ee62ca6f75@ti.com>
+Date: Tue, 27 Feb 2018 16:13:41 +0530
+MIME-Version: 1.0
+In-Reply-To: <20180227100231.22561-3-embedded24@evers-fischer.de>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Synopsys PCIe Root Complex supports up to 256 IRQs distributed by 8
-controller registers.
 
-Having this in mind, the number of the maximum number of IRQs was changed
-to 256 and now the number of controllers is calculated based on the number
-of vectors used by the specific SoC driver.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- New patch file.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Patch renamed from v3-0009 to v4-0010.
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
-Change v5->v6:
-- Nothing changed, just to follow the patch set version.
-Change v6->v7:
-- Nothing changed, just to follow the patch set version.
-Change v7->v8:
-- Rebased against v4.16-rc1.
-Change v8->v9:
-- Changed patch indexation, due patch series squash.
+On Tuesday 27 February 2018 03:32 PM, Rolf Evers-Fischer wrote:
+> From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+> 
+> 'put_device()' calls the relase function 'pci_epf_dev_release()',
+> which already frees 'epf->name' and 'epf'.
+> 
+> Therefore we must not free them again after 'put_device()'.
+> 
+> Fixes: 5e8cb4033807 ("PCI: endpoint: Add EP core layer to enable EP controller and EP functions")
+> 
+> Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
 
- drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
- drivers/pci/dwc/pcie-designware.h      | 10 +++-------
- 2 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 3678818..4da8807 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -76,11 +76,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
- /* MSI int handler */
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- {
--	u32 val;
- 	int i, pos, irq;
-+	u32 val, num_ctrls;
- 	irqreturn_t ret = IRQ_NONE;
- 
--	for (i = 0; i < MAX_MSI_CTRLS; i++) {
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
-+	for (i = 0; i < num_ctrls; i++) {
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
- 				    &val);
- 		if (!val)
-@@ -641,13 +643,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
- 
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
--	u32 val, ctrl;
-+	u32 val, ctrl, num_ctrls;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
- 	dw_pcie_setup(pci);
- 
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
- 	/* Initialize IRQ Status array */
--	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
-+	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
- 				    &pp->irq_status[ctrl]);
- 	/* setup RC BARs */
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 5807f3f..04e1c22 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -107,13 +107,9 @@
- #define MSI_MESSAGE_DATA_32		0x58
- #define MSI_MESSAGE_DATA_64		0x5C
- 
--/*
-- * Maximum number of MSI IRQs can be 256 per controller. But keep
-- * it 32 as of now. Probably we will never need more than 32. If needed,
-- * then increment it in multiple of 32.
-- */
--#define MAX_MSI_IRQS			32
--#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
-+#define MAX_MSI_IRQS			256
-+#define MAX_MSI_IRQS_PER_CTRL		32
-+#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
--- 
-2.7.4
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/endpoint/pci-epf-core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+> index 1f2506f32bb9..1878a6776519 100644
+> --- a/drivers/pci/endpoint/pci-epf-core.c
+> +++ b/drivers/pci/endpoint/pci-epf-core.c
+> @@ -232,7 +232,7 @@ struct pci_epf *pci_epf_create(const char *name)
+>  
+>  put_dev:
+>  	put_device(dev);
+> -	kfree(epf->name);
+> +	return ERR_PTR(ret);
+>  
+>  free_epf:
+>  	kfree(epf);
+> 
