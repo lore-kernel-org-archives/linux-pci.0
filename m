@@ -1,137 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: qcom: add missing supplies required for msm8996
-To: srinivas.kandagatla@linaro.org, stanimir.varbanov@linaro.org,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh+dt@kernel.org, devicetree@vger.kernel.org
-References: <20180214120616.23428-1-srinivas.kandagatla@linaro.org>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <79820f4c-5166-852f-1bc5-8cef2ff81a00@mm-sol.com>
-Date: Wed, 14 Feb 2018 18:00:00 +0200
+Return-Path: <SRS0=PSar=FV=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=PSar=FV=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180214120616.23428-1-srinivas.kandagatla@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 27 Feb 2018 11:42:08 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
+ <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v11 5/7] PCI/AER: Unify aer error defines at single space
+In-Reply-To: <20180224153621.GS14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+ <1519374244-20539-6-git-send-email-poza@codeaurora.org>
+ <20180224153621.GS14632@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <72ebd20432dacac5d494eae3006bc575@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Srini,
-
-Thanks for the patch!
-
-On 02/14/2018 02:06 PM, srinivas.kandagatla@linaro.org wrote:
-> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+On 2018-02-24 21:06, Bjorn Helgaas wrote:
+> On Fri, Feb 23, 2018 at 01:54:02PM +0530, Oza Pawandeep wrote:
+>> This patch moves AER error defines to drivers/pci/pci.h.
+>> So that it unifies the error repoting codes at single place along with 
+>> dpc
 > 
-> This patch adds supplies that are required for msm8996. vdda
-> is analog supply that go in to controller, and vddpe_3v3 is
-> supply to PCIe endpoint.
+> s/repoting/reporting/
+> s/dpc/DPC/ (in English text)
 > 
-> Without these supplies PCIe endpoints which require power supplies are
-> not enumerated at all, as there is no one to power it up.
+>> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+>> 
+>> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+>> index 1efefe9..7ae9bb3 100644
+>> --- a/drivers/acpi/apei/ghes.c
+>> +++ b/drivers/acpi/apei/ghes.c
+>> @@ -56,6 +56,7 @@
+>>  #include <ras/ras_event.h>
+>> 
+>>  #include "apei-internal.h"
+>> +#include "../../pci/pci.h"
 > 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> ---
-> Changes since v1:
-> 	- specify only one vddpe as suggested by Stan
+> You're right, it's ugly to use this sort of path to a private PCI
+> header file from outside drivers/pci.
 > 
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  4 ++++
->  drivers/pci/dwc/pcie-qcom.c                        | 24 ++++++++++++++++++++--
->  2 files changed, 26 insertions(+), 2 deletions(-)
+> Could you just add DPC_FATAL to include/linux/aer.h?  Maybe we
+> discarded that for some reason?  Having pcie-dpc.c include linux/aer.h
+> seems like it would be better than having this ACPI code include
+> "../../pci/pci.h"
+
+pcie-dpc already includes #include "aer/aerdrv.h", which in turn 
+includes aer.h
+so aer.h is the place where DPC_FATAL should go.
+
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> index 3c9d321b3d3b..1fd703bd73e0 100644
-> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> @@ -189,6 +189,10 @@
->  	Value type: <phandle>
->  	Definition: A phandle to the analog power supply for IC which generates
->  		    reference clock
-> +- vddpe-3v3-supply:
-
-shouldn't it be vddpe_3v3-supply to be aligned with the other supplies?
-
-> +	Usage: optional
-> +	Value type: <phandle>
-> +	Definition: A phandle to the PCIe endpoint power supply
->  
->  - phys:
->  	Usage: required for apq8084
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 3e89909f8cb9..519a2ae416eb 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -101,13 +101,14 @@ struct qcom_pcie_resources_1_0_0 {
->  	struct reset_control *core;
->  	struct regulator *vdda;
->  };
-> -
-
-please keep above blank line.
-
-> +#define QCOM_PCIE_2_3_2_MAX_SUPPLY	2
->  struct qcom_pcie_resources_2_3_2 {
->  	struct clk *aux_clk;
->  	struct clk *master_clk;
->  	struct clk *slave_clk;
->  	struct clk *cfg_clk;
->  	struct clk *pipe_clk;
-> +	struct regulator_bulk_data supplies[QCOM_PCIE_2_3_2_MAX_SUPPLY];
->  };
->  
->  struct qcom_pcie_resources_2_4_0 {
-> @@ -521,6 +522,14 @@ static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
->  	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
->  	struct dw_pcie *pci = pcie->pci;
->  	struct device *dev = pci->dev;
-> +	int ret;
-> +
-> +	res->supplies[0].supply = "vdda";
-> +	res->supplies[1].supply = "vddpe-3v3";
-> +	ret = devm_regulator_bulk_get(dev, QCOM_PCIE_2_3_2_MAX_SUPPLY,
-> +				      res->supplies);
-> +	if (ret)
-> +		return ret;
->  
->  	res->aux_clk = devm_clk_get(dev, "aux");
->  	if (IS_ERR(res->aux_clk))
-> @@ -550,6 +559,8 @@ static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
->  	clk_disable_unprepare(res->master_clk);
->  	clk_disable_unprepare(res->cfg_clk);
->  	clk_disable_unprepare(res->aux_clk);
-> +
-> +	regulator_bulk_disable(QCOM_PCIE_2_3_2_MAX_SUPPLY, res->supplies);
->  }
->  
->  static void qcom_pcie_post_deinit_2_3_2(struct qcom_pcie *pcie)
-> @@ -567,10 +578,16 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
->  	u32 val;
->  	int ret;
->  
-> +	ret = regulator_bulk_enable(QCOM_PCIE_2_3_2_MAX_SUPPLY, res->supplies);
-> +	if (ret < 0) {
-> +		dev_err(dev, "cannot enable regulators\n");
-> +		return ret;
-> +	}
-> +
->  	ret = clk_prepare_enable(res->aux_clk);
->  	if (ret) {
->  		dev_err(dev, "cannot prepare/enable aux clock\n");
-> -		return ret;
-> +		goto err_aux_clk;
->  	}
->  
->  	ret = clk_prepare_enable(res->cfg_clk);
-> @@ -621,6 +638,9 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
->  err_cfg_clk:
->  	clk_disable_unprepare(res->aux_clk);
->  
-> +err_aux_clk:
-> +	regulator_bulk_disable(QCOM_PCIE_2_3_2_MAX_SUPPLY, res->supplies);
-> +
->  	return ret;
->  }
->  
-> 
-
--- 
-regards,
-Stan
+>>  #define GHES_PFX	"GHES: "
+>> 
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index f8575da..c8394ec 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -343,7 +343,11 @@ static inline resource_size_t 
+>> pci_resource_alignment(struct pci_dev *dev,
+>>  void pci_enable_acs(struct pci_dev *dev);
+>> 
+>>  /* PCI error reporting and recovery */
+>> -#define DPC_FATAL	4
+>> +#define AER_NONFATAL		0
+>> +#define AER_FATAL		1
+>> +#define AER_CORRECTABLE		2
+>> +
+>> +#define DPC_FATAL		4
+>> 
+>>  void pcie_do_recovery(struct pci_dev *dev, int severity);
+>> 
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c 
+>> b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> index 6a352e6..4c59f37 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> @@ -19,6 +19,7 @@
+>>  #include <linux/cper.h>
+>> 
+>>  #include "aerdrv.h"
+>> +#include "../../pci.h"
+>>  #include <ras/ras_event.h>
+>> 
+>>  #define AER_AGENT_RECEIVER		0
+>> diff --git a/include/linux/aer.h b/include/linux/aer.h
+>> index 8f87bbe..3eac8ed 100644
+>> --- a/include/linux/aer.h
+>> +++ b/include/linux/aer.h
+>> @@ -11,10 +11,6 @@
+>>  #include <linux/errno.h>
+>>  #include <linux/types.h>
+>> 
+>> -#define AER_NONFATAL			0
+>> -#define AER_FATAL			1
+>> -#define AER_CORRECTABLE			2
+>> -
+>>  struct pci_dev;
+>> 
+>>  struct aer_header_log_regs {
+>> diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+>> index 9c68986..d75c75b 100644
+>> --- a/include/ras/ras_event.h
+>> +++ b/include/ras/ras_event.h
+>> @@ -13,6 +13,7 @@
+>>  #include <linux/aer.h>
+>>  #include <linux/cper.h>
+>>  #include <linux/mm.h>
+>> +#include "../../../drivers/pci/pci.h"
+>> 
+>>  /*
+>>   * MCE Extended Error Log trace event
+>> --
+>> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm 
+>> Technologies, Inc.,
+>> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+>> Linux Foundation Collaborative Project.
+>> 
