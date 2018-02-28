@@ -1,176 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:44072 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934086AbeBMLkI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 06:40:08 -0500
-Date: Tue, 13 Feb 2018 12:39:53 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V7  2/4] PCI: tegra: Add loadable kernel module support
-Message-ID: <20180213113953.GD6764@ulmo>
-References: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
- <1517289851-14111-3-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:57178 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751682AbeB1Dcb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Feb 2018 22:32:31 -0500
+Date: Tue, 27 Feb 2018 21:32:28 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kenny Ballou <kballou@devnulllabs.io>
+Cc: linux-pci@vger.kernel.org, googlegot@yahooo.com,
+        bhelgaas@google.com
+Subject: Re: [PATCH] pci: use kstrtobool over ad hoc string parsing
+Message-ID: <20180228033228.GE127842@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180212230457.23181-1-kballou@devnulllabs.io>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="3Pql8miugIZX0722"
-In-Reply-To: <1517289851-14111-3-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180212230457.23181-1-kballou@devnulllabs.io>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---3Pql8miugIZX0722
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Jan 30, 2018 at 10:54:09AM +0530, Manikanta Maddireddy wrote:
-> Implement remove callback function for Tegra PCIe driver to add
-> loadable kernel module support. Change PCI_TEGRA config to tristate to
-> allow pci-tegra driver to be build as a module.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> Acked-by: Thierry Reding <treding@nvidia.com>
+On Mon, Feb 12, 2018 at 04:04:57PM -0700, Kenny Ballou wrote:
+> Convert ROM read access enable/disable string parsing to use the
+> `kstrtobool` function.
+> 
+> This fixes Bugzilla Bug 111301 -- Sysfs PCI rom file functionality does
+> not match documentation.
+> 
+> bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111301
+> 
+> Reported-by: googlegot@yahoo.com
+> Signed-off-by: Kenny Ballou <kballou@devnulllabs.io>
 > ---
-> V2:
-> * no change in this patch
-> V3:
-> * use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_ini=
-t()
-> V4:
-> * no change in this patch
-> V5:
-> * Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-> rebased on linux-next
-> V6:
-> * no change in this patch
-> V7:
-> * no change in this patch
->=20
->  drivers/pci/host/Kconfig     |  2 +-
->  drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
->  2 files changed, 32 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 38d12980db0f..6fd2a5937804 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -34,7 +34,7 @@ config PCI_FTPCI100
->  	default ARCH_GEMINI
-> =20
->  config PCI_TEGRA
-> -	bool "NVIDIA Tegra PCIe controller"
-> +	tristate "NVIDIA Tegra PCIe controller"
->  	depends on ARCH_TEGRA
->  	help
->  	  Say Y here if you want support for the PCIe host controller found
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index e68507f658d8..981f126b14d6 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -35,6 +35,7 @@
->  #include <linux/irqdomain.h>
->  #include <linux/kernel.h>
->  #include <linux/init.h>
-> +#include <linux/module.h>
->  #include <linux/msi.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> @@ -2276,6 +2277,12 @@ static const struct file_operations tegra_pcie_por=
-ts_ops =3D {
->  	.release =3D seq_release,
->  };
-> =20
-> +static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
-> +{
-> +	debugfs_remove_recursive(pcie->debugfs);
-> +	pcie->debugfs =3D NULL;
-> +}
-> +
->  static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
+>  drivers/pci/pci-sysfs.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index eb6bee8724cc..3cde1f25e786 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1424,10 +1424,12 @@ static ssize_t pci_write_rom(struct file *filp, struct kobject *kobj,
 >  {
->  	struct dentry *file;
-> @@ -2292,8 +2299,7 @@ static int tegra_pcie_debugfs_init(struct tegra_pci=
-e *pcie)
->  	return 0;
-> =20
->  remove:
-> -	debugfs_remove_recursive(pcie->debugfs);
-> -	pcie->debugfs =3D NULL;
-> +	tegra_pcie_debugfs_exit(pcie);
->  	return -ENOMEM;
->  }
-> =20
-> @@ -2311,6 +2317,7 @@ static int tegra_pcie_probe(struct platform_device =
-*pdev)
-> =20
->  	pcie =3D pci_host_bridge_priv(host);
->  	host->sysdata =3D pcie;
-> +	platform_set_drvdata(pdev, pcie);
-> =20
->  	pcie->soc =3D of_device_get_match_data(dev);
->  	INIT_LIST_HEAD(&pcie->ports);
-> @@ -2388,6 +2395,25 @@ static int tegra_pcie_probe(struct platform_device=
- *pdev)
->  	return err;
->  }
-> =20
-> +static int tegra_pcie_remove(struct platform_device *pdev)
-> +{
-> +	struct tegra_pcie *pcie =3D platform_get_drvdata(pdev);
-> +	struct pci_host_bridge *host =3D pci_host_bridge_from_priv(pcie);
+>  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+>  
+> -	if ((off ==  0) && (*buf == '0') && (count == 2))
+> -		pdev->rom_attr_enabled = 0;
+> -	else
+> +	bool res = false;
 > +
-> +	if (IS_ENABLED(CONFIG_DEBUG_FS))
-> +		tegra_pcie_debugfs_exit(pcie);
-> +	pci_stop_root_bus(host->bus);
-> +	pci_remove_root_bus(host->bus);
-> +	tegra_pcie_disable_ports(pcie);
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		tegra_pcie_disable_msi(pcie);
-> +	tegra_pcie_free_resources(pcie);
-> +	tegra_pcie_disable_controller(pcie);
-> +	tegra_pcie_put_resources(pcie);
+> +	if (kstrtobool(buf, &res) == 0 && res)
+>  		pdev->rom_attr_enabled = 1;
+> +	else
+> +		pdev->rom_attr_enabled = 0;
+>  
+>  	return count;
+>  }
 
-I prefer blank lines around conditional blocks for readability, so the
-above would be:
+I know I proposed kstrtobool().  But looking closer, I don't think
+it's the right answer because:
 
-	if (IS_ENABLED(CONFIG_DEBUG_FS))
-		tegra_pcie_debugfs_exit(pcie);
+  - kstrtobool() assumes a NULL-terminated string, and sysfs does not
+    guarantee that.  This is a binary file and we can write arbitrary
+    data to it.  kstrtobool_from_user() makes sure the string is
+    NULL-terminated, but it does a copy_from_user() that we don't want
+    in the sysfs case.
 
-	pci_stop_root_bus(host->bus);
-	pci_remove_root_bus(host->bus);
-	tegra_pcie_disable_ports(pcie);
+  - The current behavior is that only 2-byte writes starting with '0'
+    disable the ROM, and all other writes enable it.
+    
+    Using kstrtobool() would enable the ROM only for writes starting
+    with y/Y/1/on/oN/On/ON, and all other writes would disable it.
 
-	if (IS_ENABLED(CONFIG_PCI_MSI))
-		tegra_pcie_disable_msi(pcie);
+    That changes the behavior for most writes, e.g., writing "2"
+    currently enables, but would now disable.  This feels
+    unnecessarily risky because we don't know what programs are
+    writing to enable the ROM.  The doc says to write "1", but the
+    code comment says "anything except 0".
 
-	tegra_pcie_free_resources(pcie);
-	tegra_pcie_disable_controller(pcie);
-	tegra_pcie_put_resources(pcie);
+We *could* change the code to accept a single-byte '0' write, but I
+think the simplest solution would be to change the documentation to
+explicitly require a 2-byte "0\n" write to disable the ROM. 
 
-Not sure if Lorenzo or Bjorn have any specific preferences, though. My
-Acked-by remains valid, though, since this is nitpicky.
+Sorry for dithering on this.
 
---3Pql8miugIZX0722
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqCzokACgkQ3SOs138+
-s6HPAxAAv8oFy2b4PF04DBqejoalfEuC/Pi63s/wBqqb1duYkPLuCfGIN9kSHw7v
-/11xx4qsPUiW9MzxJ05ADn7kdhxmK1aLRJPG5c0F5q4QQqTS3WCmpx+vlrYo/wDU
-pAYvf3atRm8ZWwLAU5AMirn0sdn3uu5bb+rYWTTmJTga7Yr1hAr3hKeTNPrDB0wm
-gL7BpuTMGocwN9CbrVEAAH4RXjGwtnTij0t5nveKmjN59vm5EvZ9HkhArZPfCkrL
-L5/IG/GTDazigteok632p01GyRU/TVLQDU1s6tptaZstfA+j+8Aslu87OukoOG4m
-kF//g9yTMW1s97Tb1y6yzWBUoVJHaXb45HUAHK2/Fdy4/pLb01QxSpy+AMpbncOk
-Ggcz5kqG94XJKOG8mI2xGn/eSDuKRyERaS88OcyDhF3P+toj+LGYO9OlRmQc3+w8
-/wlJWmHauZm1tU0vpYobBafTdEyLRcnoKlh1Nb2ypFeIAaA5Eg3Y6DkglzvyggSw
-ohvxJnuFhET/HMcUL+NkI95SQ4Qb1ExFMDUdWfrso3t+kaVkzFcdBap+rlI1n++2
-DmRHXhQbDvTFXdCv7qV+6KyQ100y5B1Cojn/fIL/BrSTOfC2xPCTSGEEemHoxPz8
-omjBgE6CkIaJ+biYUM+IlSjEn2hu2tCgor7ITtPtrmVipIyy31M=
-=xAsq
------END PGP SIGNATURE-----
-
---3Pql8miugIZX0722--
+Bjorn
