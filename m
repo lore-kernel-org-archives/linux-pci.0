@@ -1,53 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55002 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750827AbeBWOGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Feb 2018 09:06:50 -0500
-Date: Fri, 23 Feb 2018 14:06:43 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Simon Horman <horms@verge.net.au>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar-gen2: remove duplicated bit-wise or of
- RCAR_PCI_INT_SIGRETABORT
-Message-ID: <20180223140643.GA24211@e107981-ln.cambridge.arm.com>
-References: <20180223122949.24291-1-colin.king@canonical.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 28 Feb 2018 13:56:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Feng Kan <fkan@apm.com>
+Subject: Re: [PATCH] PM / core: move device and its children to end of dpm list
+Message-ID: <20180228195641.GI127842@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519843555-982-1-git-send-email-fkan@apm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180223122949.24291-1-colin.king@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1519843555-982-1-git-send-email-fkan@apm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, linux-pm@vger.kernel.org,
+ linux-pci@vger.kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
+ Toan Le <toanle@apm.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 23, 2018 at 12:29:49PM +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
+On Wed, Feb 28, 2018 at 10:45:55AM -0800, Feng Kan wrote:
+> When bridge and its endpoint is enumated the devices are added to the
+> dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
+> This causes the bridge to be moved to the end of the dpm list when deferred
+> probe kicks in. The order of the dpm list for bridge and endpoint is
+> reversed.
 > 
-> Bit pattern RCAR_PCI_INT_SIGRETABORT is being bit-wise or'd twice;
-> remove the redundant 2nd RCAR_PCI_INT_SIGRETABORT.
+> Add reordering code to re-position the bridge and its children so the order
+> for suspend and resume is not altered.
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/pci/host/pci-rcar-gen2.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+> Signed-off-by: Feng Kan <fkan@apm.com>
+> Signed-off-by: Toan Le <toanle@apm.com>
 
-Applied to pci/rcar for v4.17, thanks !
+> diff --git a/include/linux/device.h b/include/linux/device.h
+> index 9d32000..1ec12d5 100644
+> --- a/include/linux/device.h
+> +++ b/include/linux/device.h
+> @@ -1272,6 +1272,9 @@ extern void devm_device_remove_group(struct device *dev,
+>  /* debugging and troubleshooting/diagnostic helpers. */
+>  extern const char *dev_driver_string(const struct device *dev);
+>  
+> +/* reorder device and its children to end of dpm list */
+> +void device_pm_reorder(struct device *dev);
 
-Lorenzo
+Do you expect drivers to use this, or only the driver core in
+drivers/base/?  There is a drivers/base/base.h; maybe this would fit
+there rather than being exposed to the rest of the kernel via
+include/linux/device.h?
 
-> index a28370bb2b2a..dd4f1a6b57c5 100644
-> --- a/drivers/pci/host/pci-rcar-gen2.c
-> +++ b/drivers/pci/host/pci-rcar-gen2.c
-> @@ -52,7 +52,6 @@
->  #define RCAR_PCI_INT_B			(1 << 17)
->  #define RCAR_PCI_INT_PME		(1 << 19)
->  #define RCAR_PCI_INT_ALLERRORS (RCAR_PCI_INT_SIGTABORT		| \
-> -				RCAR_PCI_INT_SIGRETABORT	| \
->  				RCAR_PCI_INT_SIGRETABORT	| \
->  				RCAR_PCI_INT_REMABORT		| \
->  				RCAR_PCI_INT_PERR		| \
+>  /* Device links interface. */
+>  struct device_link *device_link_add(struct device *consumer,
+>  				    struct device *supplier, u32 flags);
 > -- 
-> 2.15.1
+> 1.8.3.1
 > 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
