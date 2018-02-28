@@ -1,197 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:50215 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751873AbeBWPKm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 10:10:42 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
-Subject: [PATCH v7 7/9] PCI: dwc: keystone: Switch to use the new IRQ API
-Date: Fri, 23 Feb 2018 15:10:30 +0000
-Message-Id: <e370c7110fb37a167627d54edffae989d3f275d6.1519318663.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45164 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932208AbeB1RE5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 12:04:57 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v12 5/6] PCI: Unify wait for link active into generic PCI
+Date: Wed, 28 Feb 2018 22:34:16 +0530
+Message-Id: <1519837457-3596-6-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes KeyStone SoC specific driver to use the new IRQ API available
-in pcie-designware.
+Clients such as HP, DPC are using pcie_wait_link_active(), which waits
+till the link becomes active or inactive.
 
-Adds new callback (ks_dw_pcie_msi_irq_ack) to dw_pcie_host_ops to handle a
-specific KeyStone behavior.
+Made generic function and moved it to drivers/pci/pci.c
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Removed hardcoded num_vectors configuration (now it is done in the core
-driver by default).
-Change v2->v3:
-- Added Kishon's fixes (PCI end point error and a dra7xx warning).
-Change v3->v4:
-- Moved Kishon's fixes to v4-0001 patch file.
-- Moved msi_host_init function signature change to a new v4-0008 patch file.
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Fix rebase problem.
-- Implemented Kishon's suggestion.
-Change v5->v6:
-- Nothing changed, just to follow the patch set version.
-Change v6->v7:
-- Nothing changed, just to follow the patch set version.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
- drivers/pci/dwc/pci-keystone-dw.c | 89 ++-------------------------------------
- drivers/pci/dwc/pci-keystone.c    |  1 +
- drivers/pci/dwc/pci-keystone.h    |  1 +
- 3 files changed, 6 insertions(+), 85 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
-index 2fb20b8..ace498e 100644
---- a/drivers/pci/dwc/pci-keystone-dw.c
-+++ b/drivers/pci/dwc/pci-keystone-dw.c
-@@ -124,20 +124,15 @@ void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie, int offset)
- 	}
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8..e0c2b8e 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller *ctrl)
+ 	return ret;
  }
  
--static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
-+void ks_dw_pcie_msi_irq_ack(int irq, struct pcie_port *pp)
+-static void __pcie_wait_link_active(struct controller *ctrl, bool active)
+-{
+-	int timeout = 1000;
+-
+-	if (pciehp_check_link_active(ctrl) == active)
+-		return;
+-	while (timeout > 0) {
+-		msleep(10);
+-		timeout -= 10;
+-		if (pciehp_check_link_active(ctrl) == active)
+-			return;
+-	}
+-	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
+-			active ? "set" : "cleared");
+-}
+-
+ static void pcie_wait_link_active(struct controller *ctrl)
  {
--	u32 offset, reg_offset, bit_pos;
-+	u32 reg_offset, bit_pos;
- 	struct keystone_pcie *ks_pcie;
--	struct msi_desc *msi;
--	struct pcie_port *pp;
- 	struct dw_pcie *pci;
- 
--	msi = irq_data_get_msi_desc(d);
--	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
- 	pci = to_dw_pcie_from_pp(pp);
- 	ks_pcie = to_keystone_pcie(pci);
--	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
--	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
-+	update_reg_offset_bit_pos(irq, &reg_offset, &bit_pos);
- 
- 	ks_dw_app_writel(ks_pcie, MSI0_IRQ_STATUS + (reg_offset << 4),
- 			 BIT(bit_pos));
-@@ -166,85 +161,9 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
- 			 BIT(bit_pos));
+-	__pcie_wait_link_active(ctrl, true);
++	struct pci_dev *pdev = ctrl_dev(ctrl);
++
++	pcie_wait_for_link(pdev, true);
  }
  
--static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
--{
--	struct msi_desc *msi;
--	struct pcie_port *pp;
--	u32 offset;
--
--	msi = irq_data_get_msi_desc(d);
--	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
--	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
--
--	/* Mask the end point if PVM implemented */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		if (msi->msi_attrib.maskbit)
--			pci_msi_mask_irq(d);
--	}
--
--	ks_dw_pcie_msi_clear_irq(pp, offset);
--}
--
--static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
--{
--	struct msi_desc *msi;
--	struct pcie_port *pp;
--	u32 offset;
--
--	msi = irq_data_get_msi_desc(d);
--	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
--	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
--
--	/* Mask the end point if PVM implemented */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		if (msi->msi_attrib.maskbit)
--			pci_msi_unmask_irq(d);
--	}
--
--	ks_dw_pcie_msi_set_irq(pp, offset);
--}
--
--static struct irq_chip ks_dw_pcie_msi_irq_chip = {
--	.name = "Keystone-PCIe-MSI-IRQ",
--	.irq_ack = ks_dw_pcie_msi_irq_ack,
--	.irq_mask = ks_dw_pcie_msi_irq_mask,
--	.irq_unmask = ks_dw_pcie_msi_irq_unmask,
--};
--
--static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
--			      irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
--				 handle_level_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops ks_dw_pcie_msi_domain_ops = {
--	.map = ks_dw_pcie_msi_map,
--};
--
- int ks_dw_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
+ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f6a4dd1..bbea997 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4176,6 +4176,35 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++/**
++ * pcie_wait_for_link - Wait for link till it's active/inactive
++ * @pdev: Bridge device
++ * @active: waiting for active or inactive ?
++ *
++ * Use this to wait till link becomes active or inactive.
++ */
++bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
++{
++	int timeout = 1000;
++	bool ret;
++	u16 lnk_status;
++
++	for (;;) {
++		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++		if (ret == active)
++			return true;
++		if (timeout <= 0)
++			break;
++		timeout -= 10;
++	}
++
++	pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
++		 active ? "set" : "cleared");
++
++	return false;
++}
++
+ void pci_reset_secondary_bus(struct pci_dev *dev)
  {
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
--	struct device *dev = pci->dev;
--	int i;
--
--	pp->irq_domain = irq_domain_add_linear(ks_pcie->msi_intc_np,
--					MAX_MSI_IRQS,
--					&ks_dw_pcie_msi_domain_ops,
--					chip);
--	if (!pp->irq_domain) {
--		dev_err(dev, "irq domain init failed\n");
--		return -ENXIO;
+ 	u16 ctrl;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index abc514e..5c44fbc 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -345,6 +345,8 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ /* PCI error reporting and recovery */
+ void pcie_do_recovery(struct pci_dev *dev, int severity);
+ 
++bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
++
+ #ifdef CONFIG_PCIEASPM
+ void pcie_aspm_init_link_state(struct pci_dev *pdev);
+ void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 517c8b4..8e1553b 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -95,19 +95,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ 
+ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ {
+-	unsigned long timeout = jiffies + HZ;
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	struct device *dev = &dpc->dev->device;
+-	u16 lnk_status;
+ 
+-	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
+-					!time_after(jiffies, timeout)) {
+-		msleep(10);
+-		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
 -	}
--
--	for (i = 0; i < MAX_MSI_IRQS; i++)
--		irq_create_mapping(pp->irq_domain, i);
--
--	return 0;
-+	return dw_pcie_allocate_domains(pp);
+-	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
+-		dev_warn(dev, "Link state not disabled for DPC event\n");
++	pcie_wait_for_link(pdev, false);
  }
  
- void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
-diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-index 3940559..3909c50 100644
---- a/drivers/pci/dwc/pci-keystone.c
-+++ b/drivers/pci/dwc/pci-keystone.c
-@@ -300,6 +300,7 @@ static const struct dw_pcie_host_ops keystone_pcie_host_ops = {
- 	.msi_clear_irq = ks_dw_pcie_msi_clear_irq,
- 	.get_msi_addr = ks_dw_pcie_get_msi_addr,
- 	.msi_host_init = ks_dw_pcie_msi_host_init,
-+	.msi_irq_ack = ks_dw_pcie_msi_irq_ack,
- 	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
- };
- 
-diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
-index 30b7bc2..aed3c73 100644
---- a/drivers/pci/dwc/pci-keystone.h
-+++ b/drivers/pci/dwc/pci-keystone.h
-@@ -53,6 +53,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		unsigned int devfn, int where, int size, u32 *val);
- void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie);
- void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie);
-+void ks_dw_pcie_msi_irq_ack(int i, struct pcie_port *pp);
- void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp);
+ /**
 -- 
-2.7.4
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
