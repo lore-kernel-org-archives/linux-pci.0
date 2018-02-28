@@ -1,76 +1,120 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Hans de Goede <hdegoede@redhat.com>, linux-acpi@vger.kernel.org
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        linux-pci@vger.kernel.org, devel@acpica.org
-Subject: Re: [PATCH v2 0/5] ACPI: Do not call _STA on battery devices with unmet dependencies
-Date: Thu, 08 Feb 2018 10:57:24 +0100
-Message-ID: <3281375.11fh90aaLK@aspire.rjw.lan>
-In-Reply-To: <20180122085135.16732-1-hdegoede@redhat.com>
-References: <20180122085135.16732-1-hdegoede@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Feb 2018 16:40:01 -0700
+Message-Id: <20180228234006.21093-6-logang@deltatee.com>
+In-Reply-To: <20180228234006.21093-1-logang@deltatee.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+Subject: [PATCH v2 05/10] block: Introduce PCI P2P flags for request and request queue
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 22, 2018 9:51:30 AM CET Hans de Goede wrote:
-> Hi All,
-> 
-> Here is v2 of this set, new in v2 is the addressing of Bjorn's comments
-> to the "PCI: acpiphp_ibm: prepare for acpi_get_object_info no longer
-> returning status" patch and a new patch (the first patch in v2) which
-> exports acpi_bus_get_status_handle() for use in modules as acpiphp_ibm
-> will now depend on it.
-> 
-> Here is the old coverletter from v1 (adjusted for the new patch):
-> 
-> The ACPI code already contains quite a bit of code to not bind the
-> ACPI-battery until all deps for an ACPI battery device have been met,
-> but on some devices calling _STA before all deps are met is a problem
-> too because the _STA method uses an i2c OpRegion there.
-> 
-> Here is the DSDT of the device I'm seeing this on:
-> https://fedorapeople.org/~jwrdegoede/toshiba-click-mini-dsdt.dsl
-> 
-> This series modifies the kernel to not call _STA until all deps are met,
-> mirroring the binding behavior of the battery driver.
-> 
-> Without this series a total of 32 ACPI errors get printend to the console
-> on boot, there are 4 errors per _STA call, 2 battery devices on this
-> system and 4 _STA calls per battery device.
-> 
-> The first 2 commits are preparation commits for making the ACPICA changes
-> in the 4th commit, these commits are necessary to not break things after
-> the ACPICA changes.
-> 
-> The 3th commit modifies acpi_bus_get_status to not call _STA on
-> battery devices until all deps are met. This fixes 2 of the 4 too early
-> _STA calls triggering these errors.
-> 
-> The 4th commit makes the device instantiation code use
-> acpi_bus_get_status instead of acpi_bus_get_status_handle so that the
-> code to get the initial status also does not makes 1 too early _STA call.
-> 
-> The 5th commit changes the ACPICA acpi_get_object_info function to not
-> call _STA. Only 1 user (which is fixed in the first commit) cares about
-> acpi_device_info.current_status. And the ACPICA code has this comment:
-> 
->  * Note: This interface is intended to be used during the initial device
->  * discovery namespace traversal. Therefore, no complex methods can be
->  * executed, especially those that access operation regions. Therefore, do
->  * not add any additional methods that could cause problems in this area.
->  * Because of this reason support for the following methods has been removed:
->  * this was the fate of the _SUB method which was found to cause such
->  * problems and was removed (11/2015).
-> 
-> The described problems with the _SUB method clearly also apply to the _STA
-> method, so removing it from acpi_get_object_info seems like it is the right
-> thing to do here. This too fixes 1 too early _STA call, so that with all
-> 5 patches in place we've fixed all 4 too early _STA calls.
+QUEUE_FLAG_PCI_P2P is introduced meaning a driver's request queue
+supports targeting P2P memory.
 
-I've applied [1-4/5] from this series.
+REQ_PCI_P2P is introduced to indicate a particular bio request is
+directed to/from PCI P2P memory. A request with this flag is not
+accepted unless the corresponding queues have the QUEUE_FLAG_PCI_P2P
+flag set.
 
-The last one needs to go in via ACPICA anyway or we'll need to carry
-a Linux-specific replacement for acpi_get_object_info().
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ block/blk-core.c          |  3 +++
+ include/linux/blk_types.h | 18 +++++++++++++++++-
+ include/linux/blkdev.h    |  3 +++
+ 3 files changed, 23 insertions(+), 1 deletion(-)
 
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 2d1a7bbe0634..36a6a304a559 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2183,6 +2183,9 @@ generic_make_request_checks(struct bio *bio)
+ 	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_rq_based(q))
+ 		goto not_supported;
+ 
++	if ((bio->bi_opf & REQ_PCI_P2PDMA) && !blk_queue_pci_p2pdma(q))
++		goto not_supported;
++
+ 	if (should_fail_bio(bio))
+ 		goto end_io;
+ 
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index bf18b95ed92d..490122c85b3f 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -274,6 +274,10 @@ enum req_flag_bits {
+ 	__REQ_BACKGROUND,	/* background IO */
+ 	__REQ_NOWAIT,           /* Don't wait if request will block */
+ 
++#ifdef CONFIG_PCI_P2PDMA
++	__REQ_PCI_P2PDMA,	/* request is to/from P2P memory */
++#endif
++
+ 	/* command specific flags for REQ_OP_WRITE_ZEROES: */
+ 	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
+ 
+@@ -298,6 +302,18 @@ enum req_flag_bits {
+ #define REQ_BACKGROUND		(1ULL << __REQ_BACKGROUND)
+ #define REQ_NOWAIT		(1ULL << __REQ_NOWAIT)
+ 
++#ifdef CONFIG_PCI_P2PDMA
++/*
++ * Currently SGLs do not support mixed P2P and regular memory so
++ * requests with P2P memory must not be merged.
++ */
++#define REQ_PCI_P2PDMA		(1ULL << __REQ_PCI_P2PDMA)
++#define REQ_IS_PCI_P2PDMA(req)	((req)->cmd_flags & REQ_PCI_P2PDMA)
++#else
++#define REQ_PCI_P2PDMA		0
++#define REQ_IS_PCI_P2PDMA(req)	0
++#endif /* CONFIG_PCI_P2PDMA */
++
+ #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
+ 
+ #define REQ_DRV			(1ULL << __REQ_DRV)
+@@ -306,7 +322,7 @@ enum req_flag_bits {
+ 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+ 
+ #define REQ_NOMERGE_FLAGS \
+-	(REQ_NOMERGE | REQ_PREFLUSH | REQ_FUA)
++	(REQ_NOMERGE | REQ_PREFLUSH | REQ_FUA | REQ_PCI_P2PDMA)
+ 
+ #define bio_op(bio) \
+ 	((bio)->bi_opf & REQ_OP_MASK)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index ed63f3b69c12..0b4a386c73ea 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -698,6 +698,7 @@ struct request_queue {
+ #define QUEUE_FLAG_SCSI_PASSTHROUGH 27	/* queue supports SCSI commands */
+ #define QUEUE_FLAG_QUIESCED    28	/* queue has been quiesced */
+ #define QUEUE_FLAG_PREEMPT_ONLY	29	/* only process REQ_PREEMPT requests */
++#define QUEUE_FLAG_PCI_P2PDMA  30	/* device supports pci p2p requests */
+ 
+ #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+ 				 (1 << QUEUE_FLAG_SAME_COMP)	|	\
+@@ -793,6 +794,8 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+ #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
+ #define blk_queue_scsi_passthrough(q)	\
+ 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
++#define blk_queue_pci_p2pdma(q)	\
++	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
+ 
+ #define blk_noretry_request(rq) \
+ 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
+-- 
+2.11.0
