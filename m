@@ -1,43 +1,68 @@
-Return-Path: <SRS0=7pt4=FG=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=7pt4=FG=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <helgaas@kernel.org>, Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH kernel v3] powerpc/pci: Fix broken INTx configuration via OF
-In-Reply-To: <20180210205118.GG206223@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180209062358.33457-1-aik@ozlabs.ru> <20180209180741.GB206223@bhelgaas-glaptop.roam.corp.google.com> <20180210205118.GG206223@bhelgaas-glaptop.roam.corp.google.com>
-Date: Mon, 12 Feb 2018 14:49:32 +1100
-Message-ID: <87k1vix3xv.fsf@concordia.ellerman.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <SRS0=xdSo=FW=linux.intel.com=andriy.shevchenko@kernel.org>
+Return-Path: <SRS0=xdSo=FW=linux.intel.com=andriy.shevchenko@kernel.org>
+Message-ID: <1519812742.10722.251.camel@linux.intel.com>
+Subject: Re: [PATCH v1 4/4] pci: Re-use new dmi_get_bios_year() helper
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, "Rafael
+ J. Wysocki" <rjw@rjwysocki.net>, linux-acpi@vger.kernel.org, Thomas
+ Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter
+ Anvin" <hpa@zytor.com>, x86@kernel.org, Jean Delvare <jdelvare@suse.com>,
+ linux-kernel@vger.kernel.org
+Date: Wed, 28 Feb 2018 12:12:22 +0200
+In-Reply-To: <20180226181943.GC25159@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
+	 <20180222125923.57385-4-andriy.shevchenko@linux.intel.com>
+	 <20180223214051.GN14632@bhelgaas-glaptop.roam.corp.google.com>
+	 <1519565224.10722.148.camel@linux.intel.com>
+	 <20180226181943.GC25159@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+On Mon, 2018-02-26 at 12:19 -0600, Bjorn Helgaas wrote:
+> On Sun, Feb 25, 2018 at 03:27:04PM +0200, Andy Shevchenko wrote:
+> > On Fri, 2018-02-23 at 15:40 -0600, Bjorn Helgaas wrote:
+> > > On Thu, Feb 22, 2018 at 02:59:23PM +0200, Andy Shevchenko wrote:
+> > > > ...instead of open coding its functionality.
+> > > 
+> > > Same comment about making the changelog complete, independent of
+> > > the
+> > > subject.
+> > 
+> > Any suggestion how it would look like? (Same question for previous
+> > comment)
+> 
+>   PCI: Re-use new dmi_get_bios_year() helper
+> 
+>   Use new dmi_get_bios_year() helper instead of open-coding its
+>   functionality.
+> 
+> The usual document structure is something like:
+> 
+>   TITLE
+> 
+>   This abstract contains a summary of the entire document, in a few
+>   paragraphs of complete sentences.
+> 
+> Where "TITLE" makes sense all by itself, even without reading the
+> body, and "Body" is a complete statement that also makes sense all by
+> itself without having to read "TITLE" first.
+> 
 
-> On Fri, Feb 09, 2018 at 12:07:41PM -0600, Bjorn Helgaas wrote:
->> On Fri, Feb 09, 2018 at 05:23:58PM +1100, Alexey Kardashevskiy wrote:
->> > Commit 59f47eff03a0 ("powerpc/pci: Use of_irq_parse_and_map_pci() helper")
->> > replaced of_irq_parse_pci() + irq_create_of_mapping() with
->> > of_irq_parse_and_map_pci() but this change lost virq returned by
->> > irq_create_of_mapping() so virq remained zero causing INTx
->> > misconfiguration.
->> > 
->> > This fixes pci_read_irq_line() not to loose a virq returned by
->> > of_irq_parse_and_map_pci().
->> 
->> s/not to loose a/to not lose the/
->> 
->> > Fixes: 59f47eff03a0 "powerpc/pci: Use of_irq_parse_and_map_pci() helper"
->> > Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
->> 
->> I'm fine with this version.
->> 
->> Since you started applying a previous version, Michael, I'll assume
->> you will handle this unless you tell me otherwise.  One way or another
->> it would be good to get this in before -rc1.
->
-> I went ahead and applied this and asked Linus to pull it.
+Thank you for a hint!
 
-Thanks.
+> Granted, it's trivial, but following the convention improves
+> readability slightly because it fits the reader's expectations.
 
-cheers
+> When the body is "...instead of open coding its functionality", it's a
+> bit of a hiccup because I have to start over and look back up to the
+> title to re-read the thing as a whole.
+
+OK, I got your point, though I don't like duplication in the subject and
+body.
+
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
