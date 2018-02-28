@@ -1,50 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout3.hostsharing.net ([176.9.242.62]:54267 "EHLO
-        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752018AbeBBNye (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Feb 2018 08:54:34 -0500
-Date: Fri, 2 Feb 2018 14:47:10 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Stefan Roese <sr@denx.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH] PCI: pciehp: Add module parameter to enable
- debouncing of HP link events
-Message-ID: <20180202134710.GA24377@wunner.de>
-References: <20180130084121.18653-1-sr@denx.de>
- <20180130102840.GF27654@lahna.fi.intel.com>
- <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a91f095b-87d3-d1ab-7dea-e9a0bcfd9e01@denx.de>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:53842 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752206AbeB1MEh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 07:04:37 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
+Subject: [PATCH v8 2/9] PCI: dwc: exynos: Switch to use the new IRQ API
+Date: Wed, 28 Feb 2018 12:04:15 +0000
+Message-Id: <a58b9da41b09cc7dc241de34f7b28fd540d9fd7c.1519819020.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 02, 2018 at 02:38:34PM +0100, Stefan Roese wrote:
-> > On Tue, Jan 30, 2018 at 09:41:21AM +0100, Stefan Roese wrote:
-> >> Hotplugging of some PCIe devices on our platform sometimes leads to a
-> >> bounce of link-up and link-down events, resulting in problems in the
-> >> corresponding PCI drivers.
-> >>
-> >> Here an example of such a hotplug event bounce for a AHCI PCIe card:
-> >> ...
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up event ignored; already powering on
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Down
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Card present
-> >> pciehp 0000:00:1c.1:pcie004: Slot(1): Link Up
-> 
-> I'm open for other / better ideas on how to solve this situation, we
-> are seeing on our systems.
+Changes Exynos SoC specific driver to use the new IRQ API available in
+pcie-designware.
 
-If a Link Up event is received and there is already a Link Up / Link Down
-pair in the queue, the Link Down event can be dequeued and the newly
-received Link Up event need not be queued.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
+Change v5->v6:
+- Nothing changed, just to follow the patch set version.
+Change v6->v7:
+- Nothing changed, just to follow the patch set version.
+Change v7->v8:
+- Rebased against v4.16-rc1.
 
-Same if a Link Down event is received and there is already a Link Down /
-Link Up pair in the queue.
+ drivers/pci/dwc/pci-exynos.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-Thanks,
-
-Lukas
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index ca62781..4cc1e5d 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -294,15 +294,6 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct exynos_pcie *ep = arg;
+-	struct dw_pcie *pci = ep->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static void exynos_pcie_msi_init(struct exynos_pcie *ep)
+ {
+ 	struct dw_pcie *pci = ep->pci;
+@@ -428,15 +419,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+ 			dev_err(dev, "failed to get msi irq\n");
+ 			return pp->msi_irq;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					exynos_pcie_msi_irq_handler,
+-					IRQF_SHARED | IRQF_NO_THREAD,
+-					"exynos-pcie", ep);
+-		if (ret) {
+-			dev_err(dev, "failed to request msi irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.7.4
