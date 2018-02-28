@@ -1,33 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:55363 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751566AbeB1Bml (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 20:42:41 -0500
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail.bootlin.com ([62.4.15.54]:42519 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933011AbeB1Qfp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 11:35:45 -0500
+From: Gregory CLEMENT <gregory.clement@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix possible NULL pointer dereference for
- of_pci_bus_find_domain_nr
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1519526762-136838-1-git-send-email-shawn.lin@rock-chips.com>
- <20180227174957.GA12756@e107981-ln.cambridge.arm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <9fde4c77-cb07-a520-0114-683d331beeb7@rock-chips.com>
-Date: Wed, 28 Feb 2018 09:42:39 +0800
-MIME-Version: 1.0
-In-Reply-To: <20180227174957.GA12756@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory CLEMENT <gregory.clement@bootlin.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Shadi Ammouri <shadi@marvell.com>,
+        Omri Itach <omrii@marvell.com>,
+        Hanna Hawa <hannah@marvell.com>,
+        Igal Liberman <igall@marvell.com>,
+        Marcin Wojtas <mw@semihalf.com>
+Subject: [PATCH v2 1/2] PCI: armada8k: Remove useless test before clk_disable_unprepare
+Date: Wed, 28 Feb 2018 17:35:29 +0100
+Message-Id: <20180228163530.25389-2-gregory.clement@bootlin.com>
+In-Reply-To: <20180228163530.25389-1-gregory.clement@bootlin.com>
+References: <20180228163530.25389-1-gregory.clement@bootlin.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Lorenzo,
+clk_disable_unprepare() already checks that the clock pointer is valid.
+No need to test it before calling it.
 
-On 2018/2/28 1:49, Lorenzo Pieralisi wrote:
-> On Sun, Feb 25, 2018 at 10:46:02AM +0800, Shawn Lin wrote:
-> I really need to get rid of this function in its current form. In the
-> interim, I think that printing NULL as faulting node gives no
-> information whatsoever so this patch should be updated either by
-> avoiding to print or better by demoting the dev_err() to a pr_err(),
-> whatever works better for Bjorn.
-> 
+Signed-off-by: Gregory CLEMENT <gregory.clement@bootlin.com>
+---
+ drivers/pci/dwc/pcie-armada8k.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Ok, that sounds reasonable to me, so which ways is preferred, Bjorn?
+diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
+index b587352f8b9f..f9b1aec25c5c 100644
+--- a/drivers/pci/dwc/pcie-armada8k.c
++++ b/drivers/pci/dwc/pcie-armada8k.c
+@@ -247,8 +247,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ fail:
+-	if (!IS_ERR(pcie->clk))
+-		clk_disable_unprepare(pcie->clk);
++	clk_disable_unprepare(pcie->clk);
+ 
+ 	return ret;
+ }
+-- 
+2.16.1
