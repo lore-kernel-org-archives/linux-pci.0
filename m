@@ -1,132 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:45692 "EHLO foss.arm.com"
+Received: from thoth.sbs.de ([192.35.17.2]:53979 "EHLO thoth.sbs.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752943AbeBLScR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Feb 2018 13:32:17 -0500
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, okaya@codeaurora.org,
-        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
-        bharatku@xilinx.com
-Subject: [PATCH 14/37] iommu/arm-smmu-v3: Link domains and devices
-Date: Mon, 12 Feb 2018 18:33:29 +0000
-Message-Id: <20180212183352.22730-15-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+        id S1751707AbeB1GfN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 01:35:13 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: [PATCH v2 3/6] x86/jailhouse: Enable PCI mmconfig access in inmates
+Date: Wed, 28 Feb 2018 07:34:48 +0100
+Message-Id: <d0a39c4d5ee792c4adbf064079870f12bb06e4c4.1519799691.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
+References: <cover.1519799691.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
+References: <cover.1519799691.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When removing a mapping from a domain, we need to send an invalidation to
-all devices that might have stored it in their Address Translation Cache
-(ATC). In addition when updating the context descriptor of a live domain,
-we'll need to send invalidations for all devices attached to it.
+From: Otavio Pontes <otavio.pontes@intel.com>
 
-Maintain a list of devices in each domain, protected by a spinlock. It is
-updated every time we attach or detach devices to and from domains.
+Use the PCI mmconfig base address exported by jailhouse in boot
+parameters in order to access the memory mapped PCI configuration space.
 
-It needs to be a spinlock because we'll invalidate ATC entries from
-within hardirq-safe contexts, but it may be possible to relax the read
-side with RCU later.
-
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Signed-off-by: Otavio Pontes <otavio.pontes@intel.com>
+[Jan: rebased, fixed !CONFIG_PCI_MMCONFIG]
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
- drivers/iommu/arm-smmu-v3.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ arch/x86/include/asm/pci_x86.h | 2 ++
+ arch/x86/kernel/jailhouse.c    | 7 +++++++
+ arch/x86/pci/mmconfig-shared.c | 4 ++--
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 3f2f1fc68b52..fb2507ffcdaf 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -652,6 +652,11 @@ struct arm_smmu_device {
- struct arm_smmu_master_data {
- 	struct arm_smmu_device		*smmu;
- 	struct arm_smmu_strtab_ent	ste;
-+
-+	struct arm_smmu_domain		*domain;
-+	struct list_head		list; /* domain->devices */
-+
-+	struct device			*dev;
- };
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index eb66fa9cd0fc..959d618dbb17 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -151,6 +151,8 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			       phys_addr_t addr);
+ extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
++extern struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
++							int end, u64 addr);
  
- /* SMMU private data for an IOMMU domain */
-@@ -675,6 +680,9 @@ struct arm_smmu_domain {
- 	};
+ extern struct list_head pci_mmcfg_list;
  
- 	struct iommu_domain		domain;
+diff --git a/arch/x86/kernel/jailhouse.c b/arch/x86/kernel/jailhouse.c
+index b68fd895235a..7fe2a73da0b3 100644
+--- a/arch/x86/kernel/jailhouse.c
++++ b/arch/x86/kernel/jailhouse.c
+@@ -124,6 +124,13 @@ static int __init jailhouse_pci_arch_init(void)
+ 	if (pcibios_last_bus < 0)
+ 		pcibios_last_bus = 0xff;
+ 
++#ifdef CONFIG_PCI_MMCONFIG
++	if (setup_data.pci_mmconfig_base) {
++		pci_mmconfig_add(0, 0, 0xff, setup_data.pci_mmconfig_base);
++		pci_mmcfg_arch_init();
++	}
++#endif
 +
-+	struct list_head		devices;
-+	spinlock_t			devices_lock;
- };
- 
- struct arm_smmu_option_prop {
-@@ -1540,6 +1548,9 @@ static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
- 	}
- 
- 	mutex_init(&smmu_domain->init_mutex);
-+	INIT_LIST_HEAD(&smmu_domain->devices);
-+	spin_lock_init(&smmu_domain->devices_lock);
-+
- 	return &smmu_domain->domain;
+ 	return 0;
  }
  
-@@ -1754,7 +1765,17 @@ static void arm_smmu_install_ste_for_dev(struct iommu_fwspec *fwspec)
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 96684d0adcf9..0e590272366b 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -94,8 +94,8 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+ 	return new;
+ }
  
- static void arm_smmu_detach_dev(struct device *dev)
+-static struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
+-							int end, u64 addr)
++struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
++						 int end, u64 addr)
  {
-+	unsigned long flags;
- 	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
-+	struct arm_smmu_domain *smmu_domain = master->domain;
-+
-+	if (smmu_domain) {
-+		spin_lock_irqsave(&smmu_domain->devices_lock, flags);
-+		list_del(&master->list);
-+		spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
-+
-+		master->domain = NULL;
-+	}
- 
- 	master->ste.assigned = false;
- 	arm_smmu_install_ste_for_dev(dev->iommu_fwspec);
-@@ -1763,6 +1784,7 @@ static void arm_smmu_detach_dev(struct device *dev)
- static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- {
- 	int ret = 0;
-+	unsigned long flags;
- 	struct arm_smmu_device *smmu;
- 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
- 	struct arm_smmu_master_data *master;
-@@ -1798,6 +1820,11 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- 	}
- 
- 	ste->assigned = true;
-+	master->domain = smmu_domain;
-+
-+	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
-+	list_add(&master->list, &smmu_domain->devices);
-+	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
- 
- 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_BYPASS) {
- 		ste->s1_cfg = NULL;
-@@ -1916,6 +1943,7 @@ static int arm_smmu_add_device(struct device *dev)
- 			return -ENOMEM;
- 
- 		master->smmu = smmu;
-+		master->dev = dev;
- 		fwspec->iommu_priv = master;
- 	}
+ 	struct pci_mmcfg_region *new;
  
 -- 
-2.15.1
+2.13.6
