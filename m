@@ -1,203 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
-        <olof@lixom.net>, <dann.frazier@canonical.com>,
-        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
-        <andriy.shevchenko@linux.intel.com>
-CC: <joe@perches.com>, <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <minyard@acm.org>, <devicetree@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
-        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
-        <frowand.list@gmail.com>, <agraf@suse.de>
-Subject: [PATCH v15 4/9] PCI: Apply the new generic I/O management on PCI IO hosts
-Date: Tue, 27 Feb 2018 00:40:44 +0800
-Message-ID: <1519663249-9850-5-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1519663249-9850-1-git-send-email-john.garry@huawei.com>
-References: <1519663249-9850-1-git-send-email-john.garry@huawei.com>
+Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
+Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Greg KH <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
+	Michael Moese <mmoese@suse.de>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	linux-pci@vger.kernel.org,
+	Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH v2 0/2] MCB Update for v4.17 
+Date: Wed, 28 Feb 2018 09:44:16 +0100
+Message-Id: <20180228084418.7566-1-jthumshirn@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Hi Greg or Bjorn,
 
-After introducing the new generic I/O space management(Logical PIO), the
-original PCI MMIO relevant helpers need to be updated based on the new
-interfaces defined in logical PIO.
-This patch adapts the corresponding code to match the changes introduced
-by logical PIO.
+here's a small mcb update for the 4.17 window. The first patch makes
+the PCI Vendor ID of Altera generally available in pci_ids.h and
+removes it from the two private implementations before I would have to
+add a 3rd one.
 
-Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Tested-by: dann frazier <dann.frazier@canonical.com>
----
- drivers/pci/pci.c        | 92 +++++++++---------------------------------------
- include/asm-generic/io.h |  2 +-
- 2 files changed, 18 insertions(+), 76 deletions(-)
+The 2nd patch adds the Altera's PCI vendor ID to the mcb pci driver
+which enables at least one carrier board. This was reported and tested
+by Ben Turner.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 07290a3..83a263f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -22,6 +22,7 @@
- #include <linux/spinlock.h>
- #include <linux/string.h>
- #include <linux/log2.h>
-+#include <linux/logic_pio.h>
- #include <linux/pci-aspm.h>
- #include <linux/pm_wakeup.h>
- #include <linux/interrupt.h>
-@@ -3440,17 +3441,6 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
- }
- EXPORT_SYMBOL(pci_request_regions_exclusive);
- 
--#ifdef PCI_IOBASE
--struct io_range {
--	struct list_head list;
--	phys_addr_t start;
--	resource_size_t size;
--};
--
--static LIST_HEAD(io_range_list);
--static DEFINE_SPINLOCK(io_range_lock);
--#endif
--
- /*
-  * Record the PCI IO range (expressed as CPU physical address + size).
-  * Return a negative value if an error has occured, zero otherwise
-@@ -3458,51 +3448,28 @@ struct io_range {
- int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
- 			resource_size_t	size)
- {
--	int err = 0;
--
-+	int ret = 0;
- #ifdef PCI_IOBASE
--	struct io_range *range;
--	resource_size_t allocated_size = 0;
--
--	/* check if the range hasn't been previously recorded */
--	spin_lock(&io_range_lock);
--	list_for_each_entry(range, &io_range_list, list) {
--		if (addr >= range->start && addr + size <= range->start + size) {
--			/* range already registered, bail out */
--			goto end_register;
--		}
--		allocated_size += range->size;
--	}
-+	struct logic_pio_hwaddr *range;
- 
--	/* range not registed yet, check for available space */
--	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
--		/* if it's too big check if 64K space can be reserved */
--		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
--			err = -E2BIG;
--			goto end_register;
--		}
--
--		size = SZ_64K;
--		pr_warn("Requested IO range too big, new size set to 64K\n");
--	}
-+	if (!size || addr + size < addr)
-+		return -EINVAL;
- 
--	/* add the range to the list */
- 	range = kzalloc(sizeof(*range), GFP_ATOMIC);
--	if (!range) {
--		err = -ENOMEM;
--		goto end_register;
--	}
-+	if (!range)
-+		return -ENOMEM;
- 
--	range->start = addr;
-+	range->fwnode = fwnode;
- 	range->size = size;
-+	range->hw_start = addr;
-+	range->flags = LOGIC_PIO_CPU_MMIO;
- 
--	list_add_tail(&range->list, &io_range_list);
--
--end_register:
--	spin_unlock(&io_range_lock);
-+	ret = logic_pio_register_range(range);
-+	if (ret)
-+		kfree(range);
- #endif
- 
--	return err;
-+	return ret;
- }
- 
- phys_addr_t pci_pio_to_address(unsigned long pio)
-@@ -3510,21 +3477,10 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
- 	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
- 
- #ifdef PCI_IOBASE
--	struct io_range *range;
--	resource_size_t allocated_size = 0;
--
--	if (pio > IO_SPACE_LIMIT)
-+	if (pio >= MMIO_UPPER_LIMIT)
- 		return address;
- 
--	spin_lock(&io_range_lock);
--	list_for_each_entry(range, &io_range_list, list) {
--		if (pio >= allocated_size && pio < allocated_size + range->size) {
--			address = range->start + pio - allocated_size;
--			break;
--		}
--		allocated_size += range->size;
--	}
--	spin_unlock(&io_range_lock);
-+	address = logic_pio_to_hwaddr(pio);
- #endif
- 
- 	return address;
-@@ -3533,21 +3489,7 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
- unsigned long __weak pci_address_to_pio(phys_addr_t address)
- {
- #ifdef PCI_IOBASE
--	struct io_range *res;
--	resource_size_t offset = 0;
--	unsigned long addr = -1;
--
--	spin_lock(&io_range_lock);
--	list_for_each_entry(res, &io_range_list, list) {
--		if (address >= res->start && address < res->start + res->size) {
--			addr = address - res->start + offset;
--			break;
--		}
--		offset += res->size;
--	}
--	spin_unlock(&io_range_lock);
--
--	return addr;
-+	return logic_pio_trans_cpuaddr(address);
- #else
- 	if (address > IO_SPACE_LIMIT)
- 		return (unsigned long)-1;
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index f76fbd6..0016413 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -901,7 +901,7 @@ static inline void __iomem *ioremap_wt(phys_addr_t offset, size_t size)
- #define ioport_map ioport_map
- static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
- {
--	return PCI_IOBASE + (port & IO_SPACE_LIMIT);
-+	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
- }
- #endif
- 
+Bjorn asked me to Cc linux-pci@ in his response, so I'm not sure if he want's
+to merge these two patches. I'm fine either way.
+
+Thanks,
+	Johannes
+
+Changes to v1:
+* Removed redundant pci_ids.h include
+
+Johannes Thumshirn (2):
+  PCI: add vendor id for Altera
+  mcb: add Altera PCI ID to mcb-pci
+
+ drivers/char/xillybus/xillybus_pcie.c | 1 -
+ drivers/fpga/altera-cvp.c             | 2 --
+ drivers/mcb/mcb-pci.c                 | 1 +
+ include/linux/pci_ids.h               | 2 ++
+ 4 files changed, 3 insertions(+), 3 deletions(-)
+
 -- 
-1.9.1
-
+2.13.6
