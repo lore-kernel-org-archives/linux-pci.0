@@ -1,206 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47650 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751245AbeBZWcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Feb 2018 17:32:50 -0500
-Date: Tue, 27 Feb 2018 00:32:47 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Mark Rustad <mark.d.rustad@intel.com>,
-        virtio-dev@lists.oasis-open.org, Netdev <netdev@vger.kernel.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        "Daly, Dan" <dan.daly@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>, MRustad@gmail.com
-Subject: Re: [RFC PATCH V4] pci: virtio_pci: Add SR-IOV support for
- virtio_pci devices
-Message-ID: <20180227003123-mutt-send-email-mst@kernel.org>
-References: <20180226044837.19543.12267.stgit@mdrustad-mac04.local>
- <CAKgT0UcMth9Jxovoj7xo0q2t+MuY0K1Upf+Mqs3zgXdriui-tA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKgT0UcMth9Jxovoj7xo0q2t+MuY0K1Upf+Mqs3zgXdriui-tA@mail.gmail.com>
+Received: from mail.bootlin.com ([62.4.15.54]:35474 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752679AbeB1OrP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 09:47:15 -0500
+From: Gregory CLEMENT <gregory.clement@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        linux-pci@vger.kernel.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory CLEMENT <gregory.clement@bootlin.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Shadi Ammouri <shadi@marvell.com>,
+        Omri Itach <omrii@marvell.com>,
+        Hanna Hawa <hannah@marvell.com>,
+        Igal Liberman <igall@marvell.com>,
+        Marcin Wojtas <mw@semihalf.com>
+Subject: [PATCH 2/2] PCI: armada8k: Fix clock resource by adding a register clock
+Date: Wed, 28 Feb 2018 15:47:04 +0100
+Message-Id: <20180228144704.12947-3-gregory.clement@bootlin.com>
+In-Reply-To: <20180228144704.12947-1-gregory.clement@bootlin.com>
+References: <20180228144704.12947-1-gregory.clement@bootlin.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 26, 2018 at 07:26:14AM -0800, Alexander Duyck wrote:
-> On Sun, Feb 25, 2018 at 8:48 PM, Mark Rustad <mark.d.rustad@intel.com> wrote:
-> > Hardware-realized virtio_pci devices can implement SR-IOV, so this
-> > patch enables its use. The device in question is an upcoming Intel
-> > NIC that implements both a virtio_net PF and virtio_net VFs. These
-> > are hardware realizations of what has been up to now been a software
-> > interface.
-> >
-> > The device in question has the following 4-part PCI IDs:
-> >
-> > PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
-> > VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
-> >
-> > The patch needs no check for device ID, because the callback will
-> > never be made for devices that do not assert the capability or
-> > when run on a platform incapable of SR-IOV.
-> >
-> > One reason for this patch is because the hardware requires the
-> > vendor ID of a VF to be the same as the vendor ID of the PF that
-> > created it. So it seemed logical to simply have a fully-functioning
-> > virtio_net PF create the VFs. This patch makes that possible.
-> >
-> > Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-> > Reviewed-by: Alexander Duyck <alexander.h.duyck@intel.com>
-> 
-> Mark,
-> 
-> In the future please don't put my "Reviewed-by" on a patch that I
-> haven't reviewed. I believe I reviewed one of the earlier patches, but
-> I hadn't reviewed this version.
-> 
-> Also, after thinking about it over the weekend we may want to look at
-> just coming up with a truly "generic" solution that is applied to
-> SR-IOV capable devices that don't have a SR-IOV capable driver loaded
-> on them. That would allow us to handle the uio, vfio, pci-stub, and
-> virtio cases all in one fell swoop. I think us going though and
-> modifying one patch at a time to do this kind of thing isn't going to
-> scale.
+On Armada 7K/8K we need to explicitly enable the register clock. This
+clock is optional because not all the SoCs using this IP need it but at
+least for Armada 7K/8K it is actually mandatory.
 
-uio really can't support VFs properly - without proper IOMMU
-support any MSIs can corrupt kernel memory, and VFs are
-limited to MSIs.
+The binding documentation is updated accordingly.
 
-> I'll try to do some digging and find the VFIO approach we had been
-> working on. I think with a couple tweaks we can probably make that
-> truly generic and ready for submission.
-> 
-> Thanks.
-> 
-> - Alex
-> 
-> > ---
-> > Changes in V4:
-> > - V3 was a mis-send, this has what was intended
-> > - Move most code to new helpers in pci/iov.c, pci_sriov_configure_generic
-> >   and pci_sriov_disable_generic
-> > - Correct mislabeling of vendor and device IDs
-> > - Other minor changelog fixes
-> > - Rebased to pci/master, since most changes are in that area now
-> > - No new ifdefs with this approach (yay)
-> > Changes in V3:
-> > - Missent patch, please disregard
-> > Changes in V2:
-> > - Simplified logic from previous version, removed added driver variable
-> > - Disable SR-IOV on driver removal except when VFs are assigned
-> > - Sent as RFC to virtio-dev, linux-pci, netdev, lkml and others
-> > ---
-> >  drivers/pci/iov.c                  |   50 ++++++++++++++++++++++++++++++++++++
-> >  drivers/virtio/virtio_pci_common.c |    2 +
-> >  include/linux/pci.h                |   10 +++++++
-> >  3 files changed, 62 insertions(+)
-> >
-> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> > index 677924ae0350..4b110e169b7c 100644
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> > @@ -367,6 +367,56 @@ static void sriov_disable(struct pci_dev *dev)
-> >         pci_iov_set_numvfs(dev, 0);
-> >  }
-> >
-> > +/**
-> > + * pci_sriov_disable_generic - standard helper to disable SR-IOV
-> > + * @dev:the PCI PF device whose VFs are to be disabled
-> > + */
-> > +int pci_sriov_disable_generic(struct pci_dev *dev)
-> > +{
-> > +       /*
-> > +        * If vfs are assigned we cannot shut down SR-IOV without causing
-> > +        * issues, so just leave the hardware available.
-> > +        */
-> > +       if (pci_vfs_assigned(dev)) {
-> > +               pci_warn(dev,
-> > +                        "Cannot disable SR-IOV while VFs are assigned - VFs will not be deallocated\n");
-> > +               return -EPERM;
-> > +       }
-> > +       pci_disable_sriov(dev);
-> > +       return 0;
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_sriov_disable_generic);
-> > +
-> > +static int pci_sriov_enable(struct pci_dev *dev, int num_vfs)
-> > +{
-> > +       int rc;
-> > +
-> > +       if (pci_num_vf(dev))
-> > +               return -EINVAL;
-> > +
-> > +       rc = pci_enable_sriov(dev, num_vfs);
-> > +       if (rc) {
-> > +               pci_warn(dev, "Failed to enable PCI sriov: %d\n", rc);
-> > +               return rc;
-> > +       }
-> > +       pci_info(dev, "SR-IOV enabled with %d VFs\n", num_vfs);
-> > +       return num_vfs;
-> > +}
-> > +
-> > +/**
-> > + * pci_sriov_configure_generic - standard helper to configure SR-IOV
-> > + * @dev: the PCI PF device that is configuring SR-IOV
-> > + */
-> > +int pci_sriov_configure_generic(struct pci_dev *dev, int num_vfs)
-> > +{
-> > +       if (num_vfs)
-> > +               return pci_sriov_enable(dev, num_vfs);
-> > +       if (!pci_num_vf(dev))
-> > +               return -EINVAL;
-> > +       return pci_sriov_disable_generic(dev);
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_sriov_configure_generic);
-> > +
-> >  static int sriov_init(struct pci_dev *dev, int pos)
-> >  {
-> >         int i, bar64;
-> > diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-> > index 48d4d1cf1cb6..d7679377131f 100644
-> > --- a/drivers/virtio/virtio_pci_common.c
-> > +++ b/drivers/virtio/virtio_pci_common.c
-> > @@ -584,6 +584,7 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
-> >         else
-> >                 virtio_pci_modern_remove(vp_dev);
-> >
-> > +       pci_sriov_disable_generic(pci_dev);
-> >         pci_disable_device(pci_dev);
-> >         put_device(dev);
-> >  }
-> > @@ -596,6 +597,7 @@ static struct pci_driver virtio_pci_driver = {
-> >  #ifdef CONFIG_PM_SLEEP
-> >         .driver.pm      = &virtio_pci_pm_ops,
-> >  #endif
-> > +       .sriov_configure = pci_sriov_configure_generic,
-> >  };
-> >
-> >  module_pci_driver(virtio_pci_driver);
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 024a1beda008..937124d4e098 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -1947,6 +1947,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
-> >
-> >  int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
-> >  void pci_disable_sriov(struct pci_dev *dev);
-> > +int pci_sriov_disable_generic(struct pci_dev *dev);
-> > +int pci_sriov_configure_generic(struct pci_dev *dev, int num_vfs);
-> >  int pci_iov_add_virtfn(struct pci_dev *dev, int id);
-> >  void pci_iov_remove_virtfn(struct pci_dev *dev, int id);
-> >  int pci_num_vf(struct pci_dev *dev);
-> > @@ -1973,6 +1975,14 @@ static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id)
-> >  static inline void pci_iov_remove_virtfn(struct pci_dev *dev,
-> >                                          int id) { }
-> >  static inline void pci_disable_sriov(struct pci_dev *dev) { }
-> > +static inline int pci_sriov_disable_generic(struct pci_dev *dev)
-> > +{
-> > +       return -ENODEV;
-> > +}
-> > +static inline int pci_sriov_configure_generic(struct pci_dev *dev, int num_vfs)
-> > +{
-> > +       return -ENODEV;
-> > +}
-> >  static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
-> >  static inline int pci_vfs_assigned(struct pci_dev *dev)
-> >  { return 0; }
-> >
+Signed-off-by: Gregory CLEMENT <gregory.clement@bootlin.com>
+---
+ Documentation/devicetree/bindings/pci/pci-armada8k.txt |  6 +++++-
+ drivers/pci/dwc/pcie-armada8k.c                        | 11 +++++++++++
+ 2 files changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/pci-armada8k.txt b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+index c1e4c3d10a74..9948b1e9a8e5 100644
+--- a/Documentation/devicetree/bindings/pci/pci-armada8k.txt
++++ b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+@@ -12,7 +12,11 @@ Required properties:
+    - "ctrl" for the control register region
+    - "config" for the config space region
+ - interrupts: Interrupt specifier for the PCIe controler
+-- clocks: reference to the PCIe controller clock
++- clocks: reference to the PCIe controller clocks
++- clock-names: mandatory if there is a second clock, in this case the
++   name must be "core" for the first clock and "reg" for the second
++   one
++
+ 
+ Example:
+ 
+diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
+index f9b1aec25c5c..aa4e5cc4ab7b 100644
+--- a/drivers/pci/dwc/pcie-armada8k.c
++++ b/drivers/pci/dwc/pcie-armada8k.c
+@@ -28,6 +28,7 @@
+ struct armada8k_pcie {
+ 	struct dw_pcie *pci;
+ 	struct clk *clk;
++	struct clk *clk_reg;
+ };
+ 
+ #define PCIE_VENDOR_REGS_OFFSET		0x8000
+@@ -229,6 +230,15 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	if (IS_ERR(pcie->clk_reg) && PTR_ERR(pcie->clk_reg) == -EPROBE_DEFER) {
++		clk_disable_unprepare(pcie->clk);
++		return -EPROBE_DEFER;
++	}
++	if (!IS_ERR(pcie->clk_reg)) {
++		ret = clk_prepare_enable(pcie->clk_reg);
++		if (ret)
++			goto fail;
++	}
+ 	/* Get the dw-pcie unit configuration/control registers base. */
+ 	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
+ 	pci->dbi_base = devm_pci_remap_cfg_resource(dev, base);
+@@ -247,6 +257,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ fail:
++	clk_disable_unprepare(pcie->clk_reg);
+ 	clk_disable_unprepare(pcie->clk);
+ 
+ 	return ret;
+-- 
+2.16.1
