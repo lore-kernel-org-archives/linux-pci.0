@@ -1,145 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52372 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751577AbeBVXMx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Feb 2018 18:12:53 -0500
-Date: Thu, 22 Feb 2018 17:12:51 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@ozlabs.org, torvalds@linux-foundation.org,
-        ruscur@russell.cc, bryantly@linux.vnet.ibm.com,
-        jjalvare@linux.vnet.ibm.com
-Subject: Re: [PATCH] PCI/AER: Move pci_uevent_ers() out of pci.h
-Message-ID: <20180222231251.GC14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180208122035.9305-1-mpe@ellerman.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180208122035.9305-1-mpe@ellerman.id.au>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
+Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Greg KH <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
+	Michael Moese <mmoese@suse.de>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	linux-pci@vger.kernel.org,
+	Johannes Thumshirn <jthumshirn@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Eli Billauer <eli.billauer@gmail.com>,
+	Anatolij Gustschin <agust@denx.de>
+Subject: [PATCH v2 1/2] PCI: add vendor id for Altera
+Date: Wed, 28 Feb 2018 09:44:17 +0100
+Message-Id: <20180228084418.7566-2-jthumshirn@suse.de>
+In-Reply-To: <20180228084418.7566-1-jthumshirn@suse.de>
+References: <20180228084418.7566-1-jthumshirn@suse.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 08, 2018 at 11:20:35PM +1100, Michael Ellerman wrote:
-> There's no reason pci_uevent_ers() needs to be inline in pci.h, so
-> move it out to a C file.
-> 
-> Given it's used by AER the obvious location would be somewhere in
-> drivers/pci/pcie/aer, but because it's also used by powerpc EEH code
-> unfortunately that doesn't work in the case where EEH is enabled but
-> PCIEPORTBUS is not.
-> 
-> So for now put it in pci-driver.c, next to pci_uevent(), with an
-> appropriate #ifdef so it's not built if AER and EEH are both disabled.
-> 
-> While we're moving it also fix up the kernel doc comment for @pdev to
-> be accurate.
-> 
-> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
+Add the Altera PCI Vendor id to pci_ids.h and remove the private
+definitions from xillybus_pcie.c and altera-cvp.c.
 
-Applied to pci/aer for v4.17, thanks!
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Eli Billauer <eli.billauer@gmail.com>
+Cc: Anatolij Gustschin <agust@denx.de>
 
-> ---
->  drivers/pci/pci-driver.c | 36 ++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h      | 38 +++-----------------------------------
->  2 files changed, 39 insertions(+), 35 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3bed6beda051..f21e8b1bef80 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1517,6 +1517,42 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
->  	return 0;
->  }
->  
-> +#if defined(CONFIG_PCIEAER) || defined(CONFIG_EEH)
-> +/**
-> + * pci_uevent_ers - emit a uevent during recovery path of pci device
-> + * @pdev: pci device undergoing error recovery
-> + * @err_type: type of error event
-> + */
-> +void pci_uevent_ers(struct pci_dev *pdev, enum pci_ers_result err_type)
-> +{
-> +	int idx = 0;
-> +	char *envp[3];
-> +
-> +	switch (err_type) {
-> +	case PCI_ERS_RESULT_NONE:
-> +	case PCI_ERS_RESULT_CAN_RECOVER:
-> +		envp[idx++] = "ERROR_EVENT=BEGIN_RECOVERY";
-> +		envp[idx++] = "DEVICE_ONLINE=0";
-> +		break;
-> +	case PCI_ERS_RESULT_RECOVERED:
-> +		envp[idx++] = "ERROR_EVENT=SUCCESSFUL_RECOVERY";
-> +		envp[idx++] = "DEVICE_ONLINE=1";
-> +		break;
-> +	case PCI_ERS_RESULT_DISCONNECT:
-> +		envp[idx++] = "ERROR_EVENT=FAILED_RECOVERY";
-> +		envp[idx++] = "DEVICE_ONLINE=0";
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +
-> +	if (idx > 0) {
-> +		envp[idx++] = NULL;
-> +		kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, envp);
-> +	}
-> +}
-> +#endif
-> +
->  static int pci_bus_num_vf(struct device *dev)
->  {
->  	return pci_num_vf(to_pci_dev(dev));
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 024a1beda008..19c1dbcff0c6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -2280,41 +2280,9 @@ static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
->  	return false;
->  }
->  
-> -/**
-> - * pci_uevent_ers - emit a uevent during recovery path of pci device
-> - * @pdev: pci device to check
-> - * @err_type: type of error event
-> - *
-> - */
-> -static inline void pci_uevent_ers(struct pci_dev *pdev,
-> -				  enum  pci_ers_result err_type)
-> -{
-> -	int idx = 0;
-> -	char *envp[3];
-> -
-> -	switch (err_type) {
-> -	case PCI_ERS_RESULT_NONE:
-> -	case PCI_ERS_RESULT_CAN_RECOVER:
-> -		envp[idx++] = "ERROR_EVENT=BEGIN_RECOVERY";
-> -		envp[idx++] = "DEVICE_ONLINE=0";
-> -		break;
-> -	case PCI_ERS_RESULT_RECOVERED:
-> -		envp[idx++] = "ERROR_EVENT=SUCCESSFUL_RECOVERY";
-> -		envp[idx++] = "DEVICE_ONLINE=1";
-> -		break;
-> -	case PCI_ERS_RESULT_DISCONNECT:
-> -		envp[idx++] = "ERROR_EVENT=FAILED_RECOVERY";
-> -		envp[idx++] = "DEVICE_ONLINE=0";
-> -		break;
-> -	default:
-> -		break;
-> -	}
-> -
-> -	if (idx > 0) {
-> -		envp[idx++] = NULL;
-> -		kobject_uevent_env(&pdev->dev.kobj, KOBJ_CHANGE, envp);
-> -	}
-> -}
-> +#if defined(CONFIG_PCIEAER) || defined(CONFIG_EEH)
-> +void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
-> +#endif
->  
->  /* Provide the legacy pci_dma_* API */
->  #include <linux/pci-dma-compat.h>
-> -- 
-> 2.14.1
-> 
+---
+Changes to v1:
+- Remove redundant pci_ids.h include (Andy)
+---
+ drivers/char/xillybus/xillybus_pcie.c | 1 -
+ drivers/fpga/altera-cvp.c             | 2 --
+ include/linux/pci_ids.h               | 2 ++
+ 3 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/char/xillybus/xillybus_pcie.c b/drivers/char/xillybus/xillybus_pcie.c
+index dff2d1538164..05e5324f60bd 100644
+--- a/drivers/char/xillybus/xillybus_pcie.c
++++ b/drivers/char/xillybus/xillybus_pcie.c
+@@ -24,7 +24,6 @@ MODULE_LICENSE("GPL v2");
+ 
+ #define PCI_DEVICE_ID_XILLYBUS		0xebeb
+ 
+-#define PCI_VENDOR_ID_ALTERA		0x1172
+ #define PCI_VENDOR_ID_ACTEL		0x11aa
+ #define PCI_VENDOR_ID_LATTICE		0x1204
+ 
+diff --git a/drivers/fpga/altera-cvp.c b/drivers/fpga/altera-cvp.c
+index 00e73d28077c..77b04e4b3254 100644
+--- a/drivers/fpga/altera-cvp.c
++++ b/drivers/fpga/altera-cvp.c
+@@ -384,8 +384,6 @@ static int altera_cvp_probe(struct pci_dev *pdev,
+ 			    const struct pci_device_id *dev_id);
+ static void altera_cvp_remove(struct pci_dev *pdev);
+ 
+-#define PCI_VENDOR_ID_ALTERA	0x1172
+-
+ static struct pci_device_id altera_cvp_id_tbl[] = {
+ 	{ PCI_VDEVICE(ALTERA, PCI_ANY_ID) },
+ 	{ }
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index a6b30667a331..6a96a70fb462 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1561,6 +1561,8 @@
+ #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
+ #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
+ 
++#define PCI_VENDOR_ID_ALTERA		0x1172
++
+ #define PCI_VENDOR_ID_SBE		0x1176
+ #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
+ #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
+-- 
+2.13.6
