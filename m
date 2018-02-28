@@ -1,81 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56810 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750827AbeBWFUw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 00:20:52 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 23 Feb 2018 10:50:50 +0530
-From: poza@codeaurora.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
+Received: from mout.kundenserver.de ([212.227.17.24]:41685 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932138AbeB1NIB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 08:08:01 -0500
+From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+To: kishon@ti.com
+Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v9 4/7] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <fc5351ba-1310-5ccf-b0cb-8565679d4c22@infradead.org>
-References: <1519285571-5634-1-git-send-email-poza@codeaurora.org>
- <1519285571-5634-5-git-send-email-poza@codeaurora.org>
- <fc5351ba-1310-5ccf-b0cb-8565679d4c22@infradead.org>
-Message-ID: <5e3c1878229d1524a918b85d94b5bf82@codeaurora.org>
+        andy.shevchenko@gmail.com,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+Subject: [PATCH v4 1/3] PCI: endpoint: Simplify name allocation for EPF device
+Date: Wed, 28 Feb 2018 14:07:17 +0100
+Message-Id: <20180228130719.31218-2-embedded24@evers-fischer.de>
+In-Reply-To: <20180228130719.31218-1-embedded24@evers-fischer.de>
+References: <20180228130719.31218-1-embedded24@evers-fischer.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-02-23 00:53, Randy Dunlap wrote:
-> On 02/21/2018 11:46 PM, Oza Pawandeep wrote:
->> Current DPC driver does not do recovery, e.g. calling end-point's 
->> driver's
->> callbacks, which sanitize the sw.
->> 
->> DPC driver implements link_reset callback, and calls pci_do_recovery.
-> 
-> Hi,
-> What does DPC mean?
-> 
+From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
 
-DPC (Downstream port containment) is PCIe RP or Switch feature, which if 
-detects FATAL error messages
-halts the outgoing traffic, and PCIe link reset and quiescence 
-activities are taken care by HW, and recovery is made.
-followed by that; normal operation can be resumed.
+This commit replaces allocating and freeing the intermediate
+'buf'/'func_name' with a combination of 'kstrndup()' and 'len'.
 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> 
-> 
->> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
->> index 38e40c6..208b427 100644
->> --- a/drivers/pci/pcie/pcie-dpc.c
->> +++ b/drivers/pci/pcie/pcie-dpc.c
-> 
->> @@ -82,12 +137,25 @@ static void dpc_wait_link_inactive(struct dpc_dev 
->> *dpc)
->>  		dev_warn(dev, "Link state not disabled for DPC event\n");
->>  }
->> 
->> +/**
->> + * dpc_reset_link - reset link DPC  routine
->  + * @dev: pointer to Root Port's pci_dev data structure
-> 
->    * @pdev: ...
-> 
->> + *
->> + * Invoked by Port Bus driver when performing link reset at Root 
->> Port.
->> + */
->> +static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->>  {
-> 
-> You can use 'make W=1 ...' to find kernel-doc warnings like this.
-> 
+'len' is the required length of 'epf->name'.
+'epf->name' should be either the first part of 'name' preceding the '.'
+or the complete 'name', if there is no '.' in the name.
 
-sure thanks for this tip.
+Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+---
+ drivers/pci/endpoint/pci-epf-core.c | 22 ++++------------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
 
-ps: I am going to post v11 to address some comments.
-> thanks,
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index 766ce1dca2ec..1f2506f32bb9 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -200,8 +200,7 @@ struct pci_epf *pci_epf_create(const char *name)
+ 	int ret;
+ 	struct pci_epf *epf;
+ 	struct device *dev;
+-	char *func_name;
+-	char *buf;
++	int len;
+ 
+ 	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
+ 	if (!epf) {
+@@ -209,20 +208,11 @@ struct pci_epf *pci_epf_create(const char *name)
+ 		goto err_ret;
+ 	}
+ 
+-	buf = kstrdup(name, GFP_KERNEL);
+-	if (!buf) {
+-		ret = -ENOMEM;
+-		goto free_epf;
+-	}
+-
+-	func_name = buf;
+-	buf = strchrnul(buf, '.');
+-	*buf = '\0';
+-
+-	epf->name = kstrdup(func_name, GFP_KERNEL);
++	len = strchrnul(name, '.') - name;
++	epf->name = kstrndup(name, len, GFP_KERNEL);
+ 	if (!epf->name) {
+ 		ret = -ENOMEM;
+-		goto free_func_name;
++		goto free_epf;
+ 	}
+ 
+ 	dev = &epf->dev;
+@@ -238,16 +228,12 @@ struct pci_epf *pci_epf_create(const char *name)
+ 	if (ret)
+ 		goto put_dev;
+ 
+-	kfree(func_name);
+ 	return epf;
+ 
+ put_dev:
+ 	put_device(dev);
+ 	kfree(epf->name);
+ 
+-free_func_name:
+-	kfree(func_name);
+-
+ free_epf:
+ 	kfree(epf);
+ 
+-- 
+2.16.2
