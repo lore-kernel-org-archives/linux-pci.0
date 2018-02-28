@@ -1,81 +1,116 @@
-Return-Path: <SRS0=TFWA=FW=gmail.com=eli.billauer@kernel.org>
-Return-Path: <SRS0=TFWA=FW=gmail.com=eli.billauer@kernel.org>
-Message-ID: <5A9699A7.6060801@gmail.com>
-Date: Wed, 28 Feb 2018 13:59:35 +0200
-From: Eli Billauer <eli.billauer@gmail.com>
-MIME-Version: 1.0
-To: Johannes Thumshirn <jthumshirn@suse.de>
-CC: Greg KH <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <helgaas@kernel.org>,
- Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
- Michael Moese <mmoese@suse.de>,
- Andy Shevchenko <andy.shevchenko@gmail.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- Anatolij Gustschin <agust@denx.de>
-Subject: Re: [PATCH v2 1/2] PCI: add vendor id for Altera
-References: <20180228084418.7566-1-jthumshirn@suse.de> <20180228084418.7566-2-jthumshirn@suse.de>
-In-Reply-To: <20180228084418.7566-2-jthumshirn@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:44472 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752783AbeB1REh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 12:04:37 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v12 0/6] Address error and recovery for AER and DPC
+Date: Wed, 28 Feb 2018 22:34:11 +0530
+Message-Id: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks.
+This patch set brings in error handling support for DPC
 
-Acked-by: Eli Billauer <eli.billauer@gmail.com>
+The current implementation of AER and error message broadcasting to the
+EP driver is tightly coupled and limited to AER service driver.
+It is important to factor out broadcasting and other link handling
+callbacks. So that not only when AER gets triggered, but also when DPC get
+triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
 
-On 28/02/18 10:44, Johannes Thumshirn wrote:
-> Add the Altera PCI Vendor id to pci_ids.h and remove the private
-> definitions from xillybus_pcie.c and altera-cvp.c.
->
-> Signed-off-by: Johannes Thumshirn<jthumshirn@suse.de>
-> Cc: Bjorn Helgaas<bhelgaas@google.com>
-> Cc: Eli Billauer<eli.billauer@gmail.com>
-> Cc: Anatolij Gustschin<agust@denx.de>
->
-> ---
-> Changes to v1:
-> - Remove redundant pci_ids.h include (Andy)
-> ---
->   drivers/char/xillybus/xillybus_pcie.c | 1 -
->   drivers/fpga/altera-cvp.c             | 2 --
->   include/linux/pci_ids.h               | 2 ++
->   3 files changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/char/xillybus/xillybus_pcie.c b/drivers/char/xillybus/xillybus_pcie.c
-> index dff2d1538164..05e5324f60bd 100644
-> --- a/drivers/char/xillybus/xillybus_pcie.c
-> +++ b/drivers/char/xillybus/xillybus_pcie.c
-> @@ -24,7 +24,6 @@ MODULE_LICENSE("GPL v2");
->
->   #define PCI_DEVICE_ID_XILLYBUS		0xebeb
->
-> -#define PCI_VENDOR_ID_ALTERA		0x1172
->   #define PCI_VENDOR_ID_ACTEL		0x11aa
->   #define PCI_VENDOR_ID_LATTICE		0x1204
->
-> diff --git a/drivers/fpga/altera-cvp.c b/drivers/fpga/altera-cvp.c
-> index 00e73d28077c..77b04e4b3254 100644
-> --- a/drivers/fpga/altera-cvp.c
-> +++ b/drivers/fpga/altera-cvp.c
-> @@ -384,8 +384,6 @@ static int altera_cvp_probe(struct pci_dev *pdev,
->   			    const struct pci_device_id *dev_id);
->   static void altera_cvp_remove(struct pci_dev *pdev);
->
-> -#define PCI_VENDOR_ID_ALTERA	0x1172
-> -
->   static struct pci_device_id altera_cvp_id_tbl[] = {
->   	{ PCI_VDEVICE(ALTERA, PCI_ANY_ID) },
->   	{ }
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index a6b30667a331..6a96a70fb462 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -1561,6 +1561,8 @@
->   #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
->   #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
->
-> +#define PCI_VENDOR_ID_ALTERA		0x1172
-> +
->   #define PCI_VENDOR_ID_SBE		0x1176
->   #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
->   #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
->    
+DPC should enumerate the devices after recovering the link, which is
+achieved by implementing error_resume callback.
+
+Changes since v11:
+    Bjorn's comments addressed.
+	> rename pcie-err.c to err.c
+	> removed EXPORT_SYMBOL
+	> made generic find_serivce function in port driver.
+	> removed mutex patch as no need to have mutex in pcie_do_recovery
+	> brough in DPC_FATAL in aer.h
+	> so now all the error codes (AER and DPC) are unified in aer.h
+Changes since v10:
+    Christoph Hellwig's, David Laight's and Randy Dunlap's
+    comments addressed.
+        > renamed pci_do_recovery to pcie_do_recovery
+        > removed inner braces in conditional statements.
+        > restrctured the code in pci_wait_for_link
+        > EXPORT_SYMBOL_GPL
+Changes since v9:
+    Sinan's comments addressed.
+        > bool active = true; unnecessary variable removed.
+Changes since v8:
+    Fixed Kbuild errors.
+Changes since v7:
+    Rebased the code on pci master
+        > https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
+Changes since v6:
+    Sinan's and Stefan's comments implemented.
+        > reordered patch 6 and 7
+        > cleaned up
+Changes since v5:
+    Sinan's and Keith's comments incorporated.
+        > made separate patch for mutex
+        > unified error repotting codes into driver/pci/pci.h
+        > got rid of wait link active/inactive and
+          made generic function in driver/pci/pci.c
+Changes since v4:
+    Bjorn's comments incorporated.
+        > Renamed only do_recovery.
+        > moved the things more locally to drivers/pci/pci.h
+Changes since v3:
+    Bjorn's comments incorporated.
+        > Made separate patch renaming generic pci_err.c
+        > Introduce pci_err.h to contain all the error types and recovery
+        > removed all the dependencies on pci.h
+Changes since v2:
+    Based on feedback from Keith:
+    "
+    When DPC is triggered due to receipt of an uncorrectable error Message,
+    the Requester ID from the Message is recorded in the DPC Error
+    Source ID register and that Message is discarded and not forwarded Upstream.
+    "
+    Removed the patch where AER checks if DPC service is active
+Changes since v1:
+    Kbuild errors fixed:
+        > pci_find_dpc_dev made static
+        > ras_event.h updated
+        > pci_find_aer_service call with CONFIG check
+        > pci_find_dpc_service call with CONFIG check
+
+Oza Pawandeep (6):
+  PCI/AER: Rename error recovery to generic PCI naming
+  PCI/AER: Factor out error reporting from AER
+  PCI/PORTDRV: Implement generic find service
+  PCI/DPC: Unify and plumb error handling into DPC
+  PCI: Unify wait for link active into generic PCI
+  PCI/DPC: Enumerate the devices after DPC trigger event
+
+ drivers/pci/hotplug/pciehp_hpc.c   |  20 +--
+ drivers/pci/pci.c                  |  29 +++
+ drivers/pci/pci.h                  |   5 +
+ drivers/pci/pcie/Makefile          |   2 +-
+ drivers/pci/pcie/aer/aerdrv.h      |  30 ----
+ drivers/pci/pcie/aer/aerdrv_core.c | 317 +-------------------------------
+ drivers/pci/pcie/err.c             | 359 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/pcie-dpc.c        |  90 ++++++++--
+ drivers/pci/pcie/portdrv.h         |   2 +
+ drivers/pci/pcie/portdrv_core.c    |  43 +++++
+ include/linux/aer.h                |   2 +
+ 11 files changed, 521 insertions(+), 378 deletions(-)
+ create mode 100644 drivers/pci/pcie/err.c
+
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
