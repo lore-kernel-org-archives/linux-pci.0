@@ -1,88 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:45111 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751956AbeB0KQM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 05:16:12 -0500
-Date: Tue, 27 Feb 2018 11:15:58 +0100 (CET)
-From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-cc: Rolf Evers-Fischer <embedded24@evers-fischer.de>,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        andy.shevchenko@gmail.com,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Subject: Re: [PATCH v3 1/2] pci: endpoint: Simplify name allocation for epf
- device
-In-Reply-To: <76904bbe-ebef-9b8f-5f30-e876f73b28fe@ti.com>
-Message-ID: <alpine.LNX.2.20.1802271112310.22764@5HSWXM1.fritz.box>
-References: <20180227100231.22561-1-embedded24@evers-fischer.de> <20180227100231.22561-2-embedded24@evers-fischer.de> <76904bbe-ebef-9b8f-5f30-e876f73b28fe@ti.com>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:35346 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935089AbeB1QUZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 11:20:25 -0500
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Ben Hutchings <ben@decadent.org.uk>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+CC: akpm@linux-foundation.org,
+        "Dave Hansen" <dave.hansen@linux.intel.com>,
+        "Thomas Gleixner" <tglx@linutronix.de>,
+        "Bjorn Helgaas" <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        "Ingo Molnar" <mingo@kernel.org>,
+        "Linux PCI" <linux-pci@vger.kernel.org>
+Date: Wed, 28 Feb 2018 15:20:18 +0000
+Message-ID: <lsq.1519831218.329460370@decadent.org.uk>
+Subject: [PATCH 3.16 059/254] x86/PCI: Make broadcom_postcore_init() check
+ acpi_disabled
+In-Reply-To: <lsq.1519831217.271785318@decadent.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+3.16.55-rc1 review patch.  If anyone has any objections, please let me know.
 
-On Tue, 27 Feb 2018, Kishon Vijay Abraham I wrote:
+------------------
 
-> Hi,
-> 
-> On Tuesday 27 February 2018 03:32 PM, Rolf Evers-Fischer wrote:
-> > From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-> > 
-> > This commit replaces allocating and freeing the intermediate
-> > 'buf'/'func_name' with a combination of 'kstrndup()' and 'len'.
-> > 
-> > 'len' is the required length of 'epf->name'.
-> > 'epf->name' should be either the first part of 'name' preceding the '.'
-> > or the complete 'name', if there is no '.' in the name.
-> > 
-> > Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-> > ---
-> >  drivers/pci/endpoint/pci-epf-core.c | 22 ++++------------------
-> >  1 file changed, 4 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-> > index 766ce1dca2ec..1f2506f32bb9 100644
-> > --- a/drivers/pci/endpoint/pci-epf-core.c
-> > +++ b/drivers/pci/endpoint/pci-epf-core.c
-> > @@ -200,8 +200,7 @@ struct pci_epf *pci_epf_create(const char *name)
-> >  	int ret;
-> >  	struct pci_epf *epf;
-> >  	struct device *dev;
-> > -	char *func_name;
-> > -	char *buf;
-> > +	int len;
-> >  
-> >  	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
-> >  	if (!epf) {
-> > @@ -209,20 +208,11 @@ struct pci_epf *pci_epf_create(const char *name)
-> >  		goto err_ret;
-> >  	}
-> >  
-> > -	buf = kstrdup(name, GFP_KERNEL);
-> > -	if (!buf) {
-> > -		ret = -ENOMEM;
-> > -		goto free_epf;
-> > -	}
-> > -
-> > -	func_name = buf;
-> > -	buf = strchrnul(buf, '.');
-> > -	*buf = '\0';
-> > -
-> > -	epf->name = kstrdup(func_name, GFP_KERNEL);
-> > +	len = strchrnul(name, '.') - name;
-> > +	epf->name = kstrndup(name, len, GFP_KERNEL);
-> 
-> shouldn't the string end with '\0'?
-> 
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 
-I agree, it should end with '\0', but fortunately the 'kstrndup()' 
-function already adds it for us, see mm/util.c, line 100:
-	(...)
-	memcpy(buf, s, len);
-	buf[len] = '\0';
-	(...)
+commit ddec3bdee05b06f1dda20ded003c3e10e4184cab upstream.
 
-Kind regards
- Rolf
+acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
+is set, but the host bridge information from the ACPI tables is not going
+to be used in that case and the Broadcom host bridge initialization should
+not be skipped then, So make broadcom_postcore_init() check acpi_disabled
+too to avoid this issue.
+
+Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
+Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ arch/x86/pci/broadcom_bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/arch/x86/pci/broadcom_bus.c
++++ b/arch/x86/pci/broadcom_bus.c
+@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init
+ 	 * We should get host bridge information from ACPI unless the BIOS
+ 	 * doesn't support it.
+ 	 */
+-	if (acpi_os_get_root_pointer())
++	if (!acpi_disabled && acpi_os_get_root_pointer())
+ 		return 0;
+ #endif
+ 
