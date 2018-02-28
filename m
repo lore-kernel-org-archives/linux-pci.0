@@ -1,68 +1,53 @@
-Return-Path: <SRS0=fr7Z=FR=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=fr7Z=FR=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 23 Feb 2018 11:52:50 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54216 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932236AbeB1RAR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 12:00:17 -0500
+Date: Wed, 28 Feb 2018 17:00:12 +0000
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ulf Magnusson <ulfalizer@gmail.com>
-Cc: helgaas@kernel.org, linux-kernel@vger.kernel.org,
-	linux-kbuild@vger.kernel.org, tfiga@chromium.org,
-	paul.burton@mips.com, m.szyprowski@samsung.com,
-	egtvedt@samfundet.no, linus.walleij@linaro.org, vgupta@synopsys.com,
-	mgorman@techsingularity.net, hch@lst.de, mina86@mina86.com,
-	robh@kernel.org, sboyd@codeaurora.org, paulus@ozlabs.org,
-	will.deacon@arm.com, tony@atomide.com, npiggin@gmail.com,
-	yamada.masahiro@socionext.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 20/20] x86/PCI: VMD: Fix malformed Kconfig default
-Message-ID: <20180223115242.GA21946@e107981-ln.cambridge.arm.com>
-References: <0180206191126.GB98765@bhelgaas-glaptop.roam.corp.google.com>
- <20180206221106.16620-1-ulfalizer@gmail.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Ley Foon Tan <lftan@altera.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        rfi@lists.rocketboards.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+Subject: Re: [PATCH] PCI: altera: Fix bool initialization in tlp_read_packet
+Message-ID: <20180228170012.GB14610@e107981-ln.cambridge.arm.com>
+References: <20180120032651.GA14512@embeddedgus>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180206221106.16620-1-ulfalizer@gmail.com>
+In-Reply-To: <20180120032651.GA14512@embeddedgus>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 06, 2018 at 11:11:06PM +0100, Ulf Magnusson wrote:
-> 'default N' should be 'default n', though they happen to have the same
-> effect here, due to undefined symbols (N in this case) evaluating to n
-> in a tristate sense.
+On Fri, Jan 19, 2018 at 09:26:51PM -0600, Gustavo A. R. Silva wrote:
+> Bool initializations should use true and false.
 > 
-> Remove the default instead of changing it. bool and tristate symbols
-> implicitly default to n.
+> This issue was detected with the help of Coccinelle.
 > 
-> Discovered with the
-> https://github.com/ulfalizer/Kconfiglib/blob/master/examples/list_undefined.py
-> script.
+> Fixes: eaa6111b70a7 ("PCI: altera: Add Altera PCIe host controller driver")
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>  drivers/pci/host/pcie-altera.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-I have remove this link - it can become stale so I do not think it is
-worth adding it to the log.
+Applied to pci/altera for v4.17, thanks.
 
-I have also reworded the $SUBJECT.
-
-Applied to pci/host/misc for v4.17, let me know if that's fine for you.
-
-Thanks,
 Lorenzo
 
-> Signed-off-by: Ulf Magnusson <ulfalizer@gmail.com>
-> ---
-> Changes in v2:
-> Make it clear that Kconfig is involved.
-> 
->  drivers/pci/host/Kconfig | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index a4ed7484d127..dc8a2a175f19 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -215,7 +215,6 @@ config PCIE_TANGO_SMP8759
->  config VMD
->  	depends on PCI_MSI && X86_64 && SRCU
->  	tristate "Intel Volume Management Device Driver"
-> -	default N
->  	---help---
->  	  Adds support for the Intel Volume Management Device (VMD). VMD is a
->  	  secondary PCI host bridge that allows PCI Express root ports,
+> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> index 5cc4f59..f9ee090 100644
+> --- a/drivers/pci/host/pcie-altera.c
+> +++ b/drivers/pci/host/pcie-altera.c
+> @@ -156,7 +156,7 @@ static bool altera_pcie_valid_device(struct altera_pcie *pcie,
+>  static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
+>  {
+>  	int i;
+> -	bool sop = 0;
+> +	bool sop = false;
+>  	u32 ctrl;
+>  	u32 reg0, reg1;
+>  	u32 comp_status = 1;
 > -- 
-> 2.14.1
+> 2.7.4
 > 
