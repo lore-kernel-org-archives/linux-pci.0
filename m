@@ -1,176 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35576 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750826AbeBXPlS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 24 Feb 2018 10:41:18 -0500
-Date: Sat, 24 Feb 2018 09:41:15 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v11 6/7] PCI: Unify wait for link active into generic pci
-Message-ID: <20180224154115.GT14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
- <1519374244-20539-7-git-send-email-poza@codeaurora.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:40653 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932235AbeB1OqR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 09:46:17 -0500
+Date: Wed, 28 Feb 2018 15:46:04 +0100 (CET)
+From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+cc: Rolf Evers-Fischer <embedded24@evers-fischer.de>, kishon@ti.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+Subject: Re: [PATCH v4 3/3] PCI: endpoint: pci_epf_create: remove goto
+ labels
+In-Reply-To: <20180228133323.GB21854@e107981-ln.cambridge.arm.com>
+Message-ID: <alpine.LNX.2.20.1802281440001.31400@5HSWXM1.fritz.box>
+References: <20180228130719.31218-1-embedded24@evers-fischer.de> <20180228130719.31218-4-embedded24@evers-fischer.de> <20180228133323.GB21854@e107981-ln.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519374244-20539-7-git-send-email-poza@codeaurora.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In subject:
+Hi Kishon and Lorenzo,
 
-s/pci/PCI/
+On Wed, 28 Feb 2018, Lorenzo Pieralisi wrote:
 
-On Fri, Feb 23, 2018 at 01:54:03PM +0530, Oza Pawandeep wrote:
-> Clients such as pciehp, dpc are using pcie_wait_link_active, which waits
-> till the link becomes active or inactive.
-
-Use "()" after function names so we have a visual clue that they are
-functions.
-
-> Made generic function and moved it to drivers/pci/pci.c
+> On Wed, Feb 28, 2018 at 02:07:19PM +0100, Rolf Evers-Fischer wrote:
+> > From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+> > 
+> > Removes the goto labels completely, handles the errors at the
+> > respective call site and just returns instead of jumping around.
+> > 
+> > Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+> > ---
+> >  drivers/pci/endpoint/pci-epf-core.c | 30 +++++++++---------------------
+> >  1 file changed, 9 insertions(+), 21 deletions(-)
+> > 
+> > diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+> > index 1878a6776519..cf2c4f6590a0 100644
+> > --- a/drivers/pci/endpoint/pci-epf-core.c
+> > +++ b/drivers/pci/endpoint/pci-epf-core.c
+> > @@ -203,16 +203,14 @@ struct pci_epf *pci_epf_create(const char *name)
+> >  	int len;
+> >  
+> >  	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
+> > -	if (!epf) {
+> > -		ret = -ENOMEM;
+> > -		goto err_ret;
+> > -	}
+> > +	if (!epf)
+> > +		return ERR_PTR(-ENOMEM);
+> >  
+> >  	len = strchrnul(name, '.') - name;
+> >  	epf->name = kstrndup(name, len, GFP_KERNEL);
+> >  	if (!epf->name) {
+> > -		ret = -ENOMEM;
+> > -		goto free_epf;
+> > +		kfree(epf);
+> > +		return ERR_PTR(-ENOMEM);
+> >  	}
+> >  
+> >  	dev = &epf->dev;
+> > @@ -221,24 +219,14 @@ struct pci_epf *pci_epf_create(const char *name)
+> >  	dev->type = &pci_epf_type;
+> >  
+> >  	ret = dev_set_name(dev, "%s", name);
+> > -	if (ret)
+> > -		goto put_dev;
+> > -
+> > -	ret = device_add(dev);
+> > -	if (ret)
+> > -		goto put_dev;
+> > -
+> > -	return epf;
+> > +	if (!ret) {
+> > +		ret = device_add(dev);
+> > +		if (!ret)
+> > +			return epf;
+> > +	}
 > 
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> This is ugly, sorry. I should have been more explicit, I prefer
+> this construct:
 > 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 18a42f8..de9b0ea 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller *ctrl)
->  	return ret;
->  }
->  
-> -static void __pcie_wait_link_active(struct controller *ctrl, bool active)
-> +static bool pcie_wait_link_active(struct controller *ctrl)
->  {
-> -	int timeout = 1000;
-> -
-> -	if (pciehp_check_link_active(ctrl) == active)
-> -		return;
-> -	while (timeout > 0) {
-> -		msleep(10);
-> -		timeout -= 10;
-> -		if (pciehp_check_link_active(ctrl) == active)
-> -			return;
-> -	}
-> -	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
-> -			active ? "set" : "cleared");
-> -}
-> +	struct pci_dev *pdev = ctrl_dev(ctrl);
->  
-> -static void pcie_wait_link_active(struct controller *ctrl)
-> -{
-> -	__pcie_wait_link_active(ctrl, true);
-> +	return pci_wait_for_link(pdev, true);
->  }
->  
->  static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index f6a4dd1..f8d44b4 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4176,6 +4176,37 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
->  	return 0;
->  }
->  
-> +/**
-> + * pci_wait_for_link - Wait for link till its active/inactive
+> ret = dev_set_name(dev, "%s", name);
+> if (ret) {
+> 	kfree(epf->name);
+> 	kfree(epf);
+> 	return ERR_PTR(ret);
+> }
+> 
+> ret = device_add(dev);
+> if (ret) {
+> 	put_device(dev);
+> 	return ERR_PTR(ret);
+> }
+> 
+> return epf;
+> 
+> Please send a v5 and let's be done with it.
+> 
 
-s/its/it's/
+Thank you for your feedback. I agree with you. Hiding the correct return 
+value under two levels of 'if' is not the best idea.
 
-> + * @pdev: Bridge device
-> + * @active: waiting for active or inactive ?
-> + *
-> + * Use this to wait till link becomes active or inactive.
-> + */
-> +bool pci_wait_for_link(struct pci_dev *pdev, bool active)
+I will send a v5 containing the proposal from Lorenzo. There is only one
+difference: We must call 'put_device()' in both error cases, because
+we have already initialized the device before. We had also jumped into
+'put_dev:' in both situations before.
 
-I think this should be "pcie_wait_for_link()".  There's no concept of a
-link in conventional PCI.
+The modified code will then look like this:
 
-> +{
-> +	int timeout = 1000;
-> +	bool ret;
-> +	u16 lnk_status;
-> +
-> +	for (;;) {
-> +		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-> +		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
-> +		if (ret == active)
-> +			return true;
-> +		if (timeout <= 0)
-> +			break;
-> +		timeout -= 10;
-> +	}
-> +
-> +	dev_printk(KERN_DEBUG, &pdev->dev,
+ ret = dev_set_name(dev, "%s", name);
+ if (ret) {
+ 	put_device(dev);
+ 	return ERR_PTR(ret);
+ }
 
-pci_info().  Distros often seem to have logging configured so
-KERN_DEBUG things aren't captured, and this definitely seems worth
-capturing.
+ ret = device_add(dev);
+ if (ret) {
+ 	put_device(dev);
+ 	return ERR_PTR(ret);
+ }
 
-> +		   "Data Link Layer Link Active not %s in 1000 msec\n",
-> +		   active ? "set" : "cleared");
-> +
-> +	return false;
-> +}
-> +EXPORT_SYMBOL(pci_wait_for_link);
+ return epf;
 
-I don't think this needs to be exported.
+Best regards,
+ Rolf
 
->  void pci_reset_secondary_bus(struct pci_dev *dev)
->  {
->  	u16 ctrl;
-> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-> index 5c01c63..e15bcda 100644
-> --- a/drivers/pci/pcie/pcie-dpc.c
-> +++ b/drivers/pci/pcie/pcie-dpc.c
-> @@ -120,19 +120,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
->  
->  static void dpc_wait_link_inactive(struct dpc_dev *dpc)
->  {
-> -	unsigned long timeout = jiffies + HZ;
->  	struct pci_dev *pdev = dpc->dev->port;
-> -	struct device *dev = &dpc->dev->device;
-> -	u16 lnk_status;
->  
-> -	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-> -	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
-> -					!time_after(jiffies, timeout)) {
-> -		msleep(10);
-> -		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-> -	}
-> -	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
-> -		dev_warn(dev, "Link state not disabled for DPC event\n");
-> +	pci_wait_for_link(pdev, false);
->  }
->  
->  /**
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 024a1be..cb674c3 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1195,6 +1195,7 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
->  int pci_request_selected_regions(struct pci_dev *, int, const char *);
->  int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
->  void pci_release_selected_regions(struct pci_dev *, int);
-> +bool pci_wait_for_link(struct pci_dev *pdev, bool active);
-
-I don't think this needs to be available outside the PCI core, so this
-could probably be declared in drivers/pci/pci.h
-
->  /* drivers/pci/bus.c */
->  struct pci_bus *pci_bus_get(struct pci_bus *bus);
-> -- 
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> > -put_dev:
+> >  	put_device(dev);
+> >  	return ERR_PTR(ret);
+> > -
+> > -free_epf:
+> > -	kfree(epf);
+> > -
+> > -err_ret:
+> > -	return ERR_PTR(ret);
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_epf_create);
+> >  
+> > -- 
+> > 2.16.2
+> > 
 > 
