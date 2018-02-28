@@ -1,119 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60308 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750872AbeBWF24 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 00:28:56 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 23 Feb 2018 10:58:54 +0530
-From: poza@codeaurora.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v10 4/7] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <20180222183954.GD6267@infradead.org>
-References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
- <1519315332-26852-5-git-send-email-poza@codeaurora.org>
- <20180222183954.GD6267@infradead.org>
-Message-ID: <29cde9310bb4977ab10c747d104dcb21@codeaurora.org>
+Received: from david.siemens.de ([192.35.17.14]:46006 "EHLO david.siemens.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751758AbeB1GfS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 01:35:18 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [PATCH v2 1/6] jailhouse: Provide detection for non-x86 systems
+Date: Wed, 28 Feb 2018 07:34:46 +0100
+Message-Id: <558f5cbae432ae029e2d8ee9b0ef44d837318625.1519799691.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
+References: <cover.1519799691.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
+References: <cover.1519799691.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-02-23 00:09, Christoph Hellwig wrote:
-> On Thu, Feb 22, 2018 at 09:32:09PM +0530, Oza Pawandeep wrote:
->> Current DPC driver does not do recovery, e.g. calling end-point's 
->> driver's
->> callbacks, which sanitize the sw.
->> 
->> DPC driver implements link_reset callback, and calls pci_do_recovery.
->> 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> 
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index a5a79f0..124f42e 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -343,6 +343,8 @@ static inline resource_size_t 
->> pci_resource_alignment(struct pci_dev *dev,
->>  void pci_enable_acs(struct pci_dev *dev);
->> 
->>  /* PCI error reporting and recovery */
->> +#define DPC_FATAL	4
->> +
->>  void pci_do_recovery(struct pci_dev *dev, int severity);
->> 
->>  #ifdef CONFIG_PCIEASPM
->> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
->> index 38e40c6..208b427 100644
->> --- a/drivers/pci/pcie/pcie-dpc.c
->> +++ b/drivers/pci/pcie/pcie-dpc.c
->> @@ -13,6 +13,7 @@
->>  #include <linux/pcieport_if.h>
->>  #include "../pci.h"
->>  #include "aer/aerdrv.h"
->> +#include "portdrv.h"
->> 
->>  struct dpc_dev {
->>  	struct pcie_device	*dev;
->> @@ -45,6 +46,60 @@ struct dpc_dev {
->>  	"Memory Request Completion Timeout",		 /* Bit Position 18 */
->>  };
->> 
->> +static int find_dpc_dev_iter(struct device *device, void *data)
->> +{
->> +	struct pcie_port_service_driver *service_driver;
->> +	struct device **dev;
->> +
->> +	dev = (struct device **) data;
->> +
->> +	if (device->bus == &pcie_port_bus_type && device->driver) {
->> +		service_driver = to_service_driver(device->driver);
-> 
-> Please move the initial assignment to the declaration line to
-> clean this up a bit:
-> 
-> 	struct device **dev = (struct device **)data;
-> 
-> Same thing happens a couple more times in this patch.
-> 
->> +EXPORT_SYMBOL(pci_find_dpc_service);
-> 
-> EXPORT_SYMBOL_GPL for PCI layer internals again - and ditto for
-> probably about everything in this series.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-will take care of all these comments.
+Implement jailhouse_paravirt() via device tree probing on architectures
+!= x86. Will be used by the PCI core.
 
-> 
->>  #if IS_ENABLED(CONFIG_PCIEAER)
->> -	/* Use the aer driver of the component firstly */
->> -	driver = pci_find_aer_service(udev);
->> +	if ((severity == AER_FATAL) ||
->> +	    (severity == AER_NONFATAL) ||
->> +	    (severity == AER_CORRECTABLE))
->> +		driver = pci_find_aer_service(udev);
->>  #endif
-> 
-> No need for the inner braces here.
-> 
->> -	if (severity == AER_FATAL)
->> +	if ((severity == AER_FATAL) ||
->> +	    (severity == DPC_FATAL))
->>  		state = pci_channel_io_frozen;
->>  	else
->>  		state = pci_channel_io_normal;
-> 
-> Same here and a few more times below.
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Mark Rutland <mark.rutland@arm.com>
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
+ arch/x86/include/asm/jailhouse_para.h           |  2 +-
+ include/linux/hypervisor.h                      | 17 +++++++++++++++--
+ 3 files changed, 24 insertions(+), 3 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
 
-will take care
-Thanks,
-Oza.
+diff --git a/Documentation/devicetree/bindings/jailhouse.txt b/Documentation/devicetree/bindings/jailhouse.txt
+new file mode 100644
+index 000000000000..2901c25ff340
+--- /dev/null
++++ b/Documentation/devicetree/bindings/jailhouse.txt
+@@ -0,0 +1,8 @@
++Jailhouse non-root cell device tree bindings
++--------------------------------------------
++
++When running in a non-root Jailhouse cell (partition), the device tree of this
++platform shall have a top-level "hypervisor" node with the following
++properties:
++
++- compatible = "jailhouse,cell"
+diff --git a/arch/x86/include/asm/jailhouse_para.h b/arch/x86/include/asm/jailhouse_para.h
+index 875b54376689..b885a961a150 100644
+--- a/arch/x86/include/asm/jailhouse_para.h
++++ b/arch/x86/include/asm/jailhouse_para.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: GPL2.0 */
+ 
+ /*
+- * Jailhouse paravirt_ops implementation
++ * Jailhouse paravirt detection
+  *
+  * Copyright (c) Siemens AG, 2015-2017
+  *
+diff --git a/include/linux/hypervisor.h b/include/linux/hypervisor.h
+index b19563f9a8eb..fc08b433c856 100644
+--- a/include/linux/hypervisor.h
++++ b/include/linux/hypervisor.h
+@@ -8,15 +8,28 @@
+  */
+ 
+ #ifdef CONFIG_X86
++
++#include <asm/jailhouse_para.h>
+ #include <asm/x86_init.h>
++
+ static inline void hypervisor_pin_vcpu(int cpu)
+ {
+ 	x86_platform.hyper.pin_vcpu(cpu);
+ }
+-#else
++
++#else /* !CONFIG_X86 */
++
++#include <linux/of.h>
++
+ static inline void hypervisor_pin_vcpu(int cpu)
+ {
+ }
+-#endif
++
++static inline bool jailhouse_paravirt(void)
++{
++	return of_find_compatible_node(NULL, NULL, "jailhouse,cell");
++}
++
++#endif /* !CONFIG_X86 */
+ 
+ #endif /* __LINUX_HYPEVISOR_H */
+-- 
+2.13.6
