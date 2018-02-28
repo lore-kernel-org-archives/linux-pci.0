@@ -1,85 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:36311 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751425AbeBWPKk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 10:10:40 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
-Subject: [PATCH v7 3/9] PCI: dwc: imx6: Switch to use the new IRQ API
-Date: Fri, 23 Feb 2018 15:10:26 +0000
-Message-Id: <0ee5ece63af72de49055c41fa9140690df4ca352.1519318663.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
-References: <cover.1519318663.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Feb 2018 16:40:05 -0700
+Message-Id: <20180228234006.21093-10-logang@deltatee.com>
+In-Reply-To: <20180228234006.21093-1-logang@deltatee.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+Subject: [PATCH v2 09/10] nvme-pci: Add a quirk for a pseudo CMB
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes iMX6 SoC specific driver to use the new IRQ API available in
-pcie-designware.
+Introduce a quirk to use CMB-like memory on older devices that have
+an exposed BAR but do not advertise support for using CMBLOC and
+CMBSIZE.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+We'd like to use some of these older cards to test P2P memory.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
-Change v5->v6:
-- Nothing changed, just to follow the patch set version.
-Change v6->v7:
-- Nothing changed, just to follow the patch set version.
+ drivers/nvme/host/nvme.h |  7 +++++++
+ drivers/nvme/host/pci.c  | 24 ++++++++++++++++++++----
+ 2 files changed, 27 insertions(+), 4 deletions(-)
 
- drivers/pci/dwc/pci-imx6.c | 18 ------------------
- 1 file changed, 18 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index b734835..d2314cb 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -545,15 +545,6 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
- 	return -EINVAL;
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index e38beb1917e2..c84a1b9580c8 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -83,6 +83,13 @@ enum nvme_quirks {
+ 	 * Supports the LighNVM command set if indicated in vs[1].
+ 	 */
+ 	NVME_QUIRK_LIGHTNVM			= (1 << 6),
++
++	/*
++	 * Pseudo CMB Support on BAR 4. For adapters like the Microsemi
++	 * NVRAM that have CMB-like memory on a BAR but does not set
++	 * CMBLOC or CMBSZ.
++	 */
++	NVME_QUIRK_PSEUDO_CMB_BAR4		= (1 << 7),
+ };
+ 
+ /*
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index b896a78225cb..2ad20fb9f05d 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -1679,6 +1679,13 @@ static ssize_t nvme_cmb_show(struct device *dev,
  }
+ static DEVICE_ATTR(cmb, S_IRUGO, nvme_cmb_show, NULL);
  
--static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
--{
--	struct imx6_pcie *imx6_pcie = arg;
--	struct dw_pcie *pci = imx6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
++static u32 nvme_pseudo_cmbsz(struct pci_dev *pdev, int bar)
++{
++	return NVME_CMBSZ_WDS | NVME_CMBSZ_RDS |
++		(((ilog2(SZ_16M) - 12) / 4) << NVME_CMBSZ_SZU_SHIFT) |
++		((pci_resource_len(pdev, bar) / SZ_16M) << NVME_CMBSZ_SZ_SHIFT);
++}
++
+ static u64 nvme_cmb_size_unit(struct nvme_dev *dev)
  {
- 	struct dw_pcie *pci = imx6_pcie->pci;
-@@ -677,15 +668,6 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- 			dev_err(dev, "failed to get MSI irq\n");
- 			return -ENODEV;
- 		}
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       imx6_pcie_msi_handler,
--				       IRQF_SHARED | IRQF_NO_THREAD,
--				       "mx6-pcie-msi", imx6_pcie);
--		if (ret) {
--			dev_err(dev, "failed to request MSI irq\n");
--			return ret;
--		}
- 	}
+ 	u8 szu = (dev->cmbsz >> NVME_CMBSZ_SZU_SHIFT) & NVME_CMBSZ_SZU_MASK;
+@@ -1698,10 +1705,15 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+ 	int bar;
  
- 	pp->root_bus_nr = -1;
+-	dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
+-	if (!dev->cmbsz)
+-		return;
+-	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
++	if (dev->ctrl.quirks & NVME_QUIRK_PSEUDO_CMB_BAR4) {
++		dev->cmbsz = nvme_pseudo_cmbsz(pdev, 4);
++		dev->cmbloc = 4;
++	} else {
++		dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
++		if (!dev->cmbsz)
++			return;
++		dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
++	}
+ 
+ 	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
+ 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
+@@ -2715,6 +2727,10 @@ static const struct pci_device_id nvme_id_table[] = {
+ 		.driver_data = NVME_QUIRK_LIGHTNVM, },
+ 	{ PCI_DEVICE(0x1d1d, 0x2807),	/* CNEX WL */
+ 		.driver_data = NVME_QUIRK_LIGHTNVM, },
++	{ PCI_DEVICE(0x11f8, 0xf117),	/* Microsemi NVRAM adaptor */
++		.driver_data = NVME_QUIRK_PSEUDO_CMB_BAR4, },
++	{ PCI_DEVICE(0x1db1, 0x0002),	/* Everspin nvNitro adaptor */
++		.driver_data = NVME_QUIRK_PSEUDO_CMB_BAR4,  },
+ 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2001) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2003) },
 -- 
-2.7.4
+2.11.0
