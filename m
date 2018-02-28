@@ -1,147 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60840 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751581AbeBWIYo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 03:24:44 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v11 7/7] PCI/DPC: Enumerate the devices after DPC trigger event
-Date: Fri, 23 Feb 2018 13:54:04 +0530
-Message-Id: <1519374244-20539-8-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
-References: <1519374244-20539-1-git-send-email-poza@codeaurora.org>
+Received: from david.siemens.de ([192.35.17.14]:45982 "EHLO david.siemens.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751686AbeB1GfN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 01:35:13 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: [PATCH v2 5/6] x86/jailhouse: Allow to use PCI_MMCONFIG without ACPI
+Date: Wed, 28 Feb 2018 07:34:50 +0100
+Message-Id: <c6c3a5fd2881e8f63a5c4fe0b3006f2a66e645de.1519799691.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
+References: <cover.1519799691.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519799691.git.jan.kiszka@siemens.com>
+References: <cover.1519799691.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement error_resume callback in DPC so, after DPC trigger event
-enumerates the devices beneath.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Jailhouse does not use ACPI, but it does support MMCONFIG. Make sure the
+latter can be built without having to enable ACPI as well. Primarily, we
+need to make the AMD mmconf-fam10h_64 depend upon MMCONFIG and ACPI,
+instead of just the former.
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index e15bcda..751efc0 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -126,6 +126,21 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- }
+Saves some bytes in the Jailhouse non-root kernel.
+
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ arch/x86/Kconfig          | 6 +++++-
+ arch/x86/kernel/Makefile  | 2 +-
+ arch/x86/kernel/cpu/amd.c | 2 +-
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 63e85e7da12e..5b0ac52e357a 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2643,7 +2643,7 @@ config PCI_DIRECT
+ config PCI_MMCONFIG
+ 	bool "Support mmconfig PCI config space access" if X86_64
+ 	default y
+-	depends on PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY || X86_64)
++	depends on PCI && (ACPI || SFI || JAILHOUSE_GUEST) && (PCI_GOMMCONFIG || PCI_GOANY || X86_64)
  
- /**
-+ * dpc_error_resume - enumerate the devices beneath
-+ * @dev: pointer to Root Port's pci_dev data structure
-+ *
-+ * Invoked by Port Bus driver during fatal recovery.
-+ */
-+static void dpc_error_resume(struct pci_dev *pdev)
-+{
-+	if (pci_wait_for_link(pdev, true)) {
-+		pci_lock_rescan_remove();
-+		pci_rescan_bus(pdev->bus);
-+		pci_unlock_rescan_remove();
-+	}
-+}
+ config PCI_OLPC
+ 	def_bool y
+@@ -2658,6 +2658,10 @@ config PCI_DOMAINS
+ 	def_bool y
+ 	depends on PCI
+ 
++config MMCONF_FAM10H
++	def_bool y
++	depends on PCI_MMCONFIG && ACPI
 +
-+/**
-  * dpc_reset_link - reset link DPC  routine
-  * @dev: pointer to Root Port's pci_dev data structure
-  *
-@@ -364,6 +379,7 @@ static void dpc_remove(struct pcie_device *dev)
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
- 	.reset_link     = dpc_reset_link,
-+	.error_resume	= dpc_error_resume,
- };
+ config PCI_CNB20LE_QUIRK
+ 	bool "Read CNB20LE Host Bridge Windows" if EXPERT
+ 	depends on PCI
+diff --git a/arch/x86/kernel/Makefile b/arch/x86/kernel/Makefile
+index 29786c87e864..73ccf80c09a2 100644
+--- a/arch/x86/kernel/Makefile
++++ b/arch/x86/kernel/Makefile
+@@ -146,6 +146,6 @@ ifeq ($(CONFIG_X86_64),y)
+ 	obj-$(CONFIG_GART_IOMMU)	+= amd_gart_64.o aperture_64.o
+ 	obj-$(CONFIG_CALGARY_IOMMU)	+= pci-calgary_64.o tce_64.o
  
- static int __init dpc_service_init(void)
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 1ea4b9a..1e1bf98 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -236,6 +236,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
-  * @state: error state
-  * @error_mesg: message to print
-  * @cb: callback to be broadcast
-+ * @severity: error severity
-  *
-  * Invoked during error recovery process. Once being invoked, the content
-  * of error severity will be broadcast to all downstream drivers in a
-@@ -244,7 +245,8 @@ static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
- static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 	enum pci_channel_state state,
- 	char *error_mesg,
--	int (*cb)(struct pci_dev *, void *))
-+	int (*cb)(struct pci_dev *, void *),
-+	int severity)
+-	obj-$(CONFIG_PCI_MMCONFIG)	+= mmconf-fam10h_64.o
++	obj-$(CONFIG_MMCONF_FAM10H)	+= mmconf-fam10h_64.o
+ 	obj-y				+= vsmp_64.o
+ endif
+diff --git a/arch/x86/kernel/cpu/amd.c b/arch/x86/kernel/cpu/amd.c
+index f0e6456ca7d3..12bc0a1139da 100644
+--- a/arch/x86/kernel/cpu/amd.c
++++ b/arch/x86/kernel/cpu/amd.c
+@@ -716,7 +716,7 @@ static void init_amd_k8(struct cpuinfo_x86 *c)
+ 
+ static void init_amd_gh(struct cpuinfo_x86 *c)
  {
- 	struct aer_broadcast_data result_data;
- 
-@@ -256,6 +258,17 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 		result_data.result = PCI_ERS_RESULT_RECOVERED;
- 
- 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		/* If DPC is triggered, call resume error handler
-+		 * because, at this point we can safely assume that
-+		 * link recovery has happened, this is only handled if
-+		 * callback is resume, as this function can be called
-+		 * with multiple callbacks.
-+		 */
-+		if ((severity == DPC_FATAL) &&
-+		    (cb == report_resume)) {
-+			cb(dev, NULL);
-+			return PCI_ERS_RESULT_RECOVERED;
-+		}
- 		/*
- 		 * If the error is reported by a bridge, we think this error
- 		 * is related to the downstream link of the bridge, so we
-@@ -305,7 +318,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
- 	status = broadcast_error_message(dev,
- 			state,
- 			"error_detected",
--			report_error_detected);
-+			report_error_detected,
-+			severity);
- 
- 	if (severity == AER_FATAL ||
- 	    severity == DPC_FATAL) {
-@@ -321,7 +335,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
- 		status = broadcast_error_message(dev,
- 				state,
- 				"mmio_enabled",
--				report_mmio_enabled);
-+				report_mmio_enabled,
-+				severity);
- 
- 	if (status == PCI_ERS_RESULT_NEED_RESET) {
- 		/*
-@@ -332,7 +347,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
- 		status = broadcast_error_message(dev,
- 				state,
- 				"slot_reset",
--				report_slot_reset);
-+				report_slot_reset,
-+				severity);
- 	}
- 
- 	if (status != PCI_ERS_RESULT_RECOVERED)
-@@ -342,7 +358,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
- 	broadcast_error_message(dev,
- 				state,
- 				"resume",
--				report_resume);
-+				report_resume,
-+				severity);
- 
- 	dev_info(&dev->dev, "Device recovery successful\n");
- 	mutex_unlock(&pci_err_recovery_lock);
+-#ifdef CONFIG_X86_64
++#ifdef CONFIG_MMCONF_FAM10H
+ 	/* do this for boot cpu */
+ 	if (c == &boot_cpu_data)
+ 		check_enable_amd_mmconf_dmi();
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.13.6
