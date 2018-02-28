@@ -1,54 +1,69 @@
-Return-Path: <SRS0=lebd=FC=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=lebd=FC=ti.com=kishon@kernel.org>
-Subject: Re: understanding DMA in PCI drivers
-To: Shawn Lin <shawn.lin@rock-chips.com>, Bjorn Helgaas <helgaas@kernel.org>,
-        Ran Shalit <ranshalit@gmail.com>
-References: <CAJ2oMhKJ5ECtr5-F1M_PjO+ev_8-UfpLu+jT9hG7XEwoDV0A_Q@mail.gmail.com>
- <20180207143954.GA30525@bhelgaas-glaptop.roam.corp.google.com>
- <3d427721-7489-040e-791d-4963a1d5941c@rock-chips.com>
-CC: <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <3d80da48-dfb6-495e-1448-5d142b3e709e@ti.com>
-Date: Thu, 8 Feb 2018 14:00:45 +0530
-MIME-Version: 1.0
-In-Reply-To: <3d427721-7489-040e-791d-4963a1d5941c@rock-chips.com>
-Content-Type: text/plain; charset="gbk"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.bootlin.com ([62.4.15.54]:42511 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932656AbeB1Qfo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 11:35:44 -0500
+From: Gregory CLEMENT <gregory.clement@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        linux-pci@vger.kernel.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory CLEMENT <gregory.clement@bootlin.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Shadi Ammouri <shadi@marvell.com>,
+        Omri Itach <omrii@marvell.com>,
+        Hanna Hawa <hannah@marvell.com>,
+        Igal Liberman <igall@marvell.com>,
+        Marcin Wojtas <mw@semihalf.com>
+Subject: [PATCH v2 0/2] PCI: armada8k: Fix clock resource for Armada 7K/8K
+Date: Wed, 28 Feb 2018 17:35:28 +0100
+Message-Id: <20180228163530.25389-1-gregory.clement@bootlin.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 Hi,
 
-On Thursday 08 February 2018 07:11 AM, Shawn Lin wrote:
-> Hi Bjorn,
-> 
-> [+ Kishon]
-> 
-> On 2018/2/7 22:39, Bjorn Helgaas wrote:
-> 
->>> 2. How does device triggers DMA from device to cpu, is it by simply
->>> writing to BAR ?
->>
->> In most cases the device itself performs the DMA.  It sounds like
->> you have a case where the DMA engine is not part of the device itself.
->> I don't know how that would be programmed, except to say that the DMA
->> engine presumably operates on DMA addresses, and something would still
->> have to DMA-map buffers to obtain those.
-> 
-> I have a question that why it's always device to performs the DMA for
-> no matter memory read and write? We have builtin DMA engine inside the
-The PCI devices are supposed to work with different host controllers and
-instead of relying on host controller capabilities (in this case DMA), the
-device can use it's own DMA.
+This short series fixes the way the clocks are used for the PCIe host
+controller embedded in the Marvell Armada 7K/8K SoCs. On these SoCs a
+second one is needed in order to clock the registers. It was not
+noticed until now because we relied on the bootloader and also because
+the clock driver was wrong.
 
-> PCIe RC controller, so could the function driver submit the DMA request
-> to the PCIe RC controller driver and let it fire the DMA to access
-> device's internal memory? Given that we now support PCIe EP framework,
+Thanks to this fix, it would be possible to fix the clock driver
+without introducing a regression.
 
-As Bjorne mentioned before, RC accessing the EP memory is mostly for
-configuring the device and not in the data path. Having said that, there can be
-a pci_driver which DMAs to a BAR region, if thats your usecase.
-> and now linux-pci behave like a *device* per your saying, so that is
-> quite possible for us to consider how we would submit DMA request with
-> current PCIe EP stuff.
+The first patch is just a small cleanup found when I wrote the main
+patch.
 
-Thanks
-Kishon
+Changelog:
+v1 -> v2:
+
+ - Removed a unneeded new line in the binding documentation, pointed
+   by Thomas Petazzoni.
+
+ - Added a new line in driver code, pointed by Thomas Petazzoni.
+
+ - Managed the failure of clk_prepare_enable for the clk_reg in a
+   separate case, pointed by Thomas Petazzoni.
+
+ - Simplified the -EPROBE_DEFER case for the clk_reg, suggested by
+   Russell King
+
+ - Added backed the line getting the reg clock that disappeared in the
+   first version.
+
+Gregory CLEMENT (2):
+  PCI: armada8k: Remove useless test before clk_disable_unprepare
+  PCI: armada8k: Fix clock resource by adding a register clock
+
+ .../devicetree/bindings/pci/pci-armada8k.txt        |  5 ++++-
+ drivers/pci/dwc/pcie-armada8k.c                     | 21 +++++++++++++++++----
+ 2 files changed, 21 insertions(+), 5 deletions(-)
+
+-- 
+2.16.1
