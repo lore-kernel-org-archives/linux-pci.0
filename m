@@ -1,259 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:19505 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752050AbeB1KA5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 05:00:57 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
-CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V9 1/3] PCI: tegra: Free resources on probe failure
-Date: Wed, 28 Feb 2018 15:30:32 +0530
-Message-ID: <1519812034-11120-2-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:37768 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752295AbeB1MEi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 07:04:38 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
+Subject: [PATCH v8 9/9] PCI: dwc: Expand maximum number of IRQs from 32 to 256
+Date: Wed, 28 Feb 2018 12:04:22 +0000
+Message-Id: <5e7119dd2c83c221b5968bc8ad053b86e2103afc.1519819020.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519819020.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-tegra_pcie_probe() can fail in multiple instances, this patch takes care
-of freeing the resources which are allocated before probe fail.
+The Synopsys PCIe Root Complex supports up to 256 IRQs distributed by 8
+controller registers.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
-Tested-by: Thierry Reding <treding@nvidia.com>
+Having this in mind, the number of the maximum number of IRQs was changed
+to 256 and now the number of controllers is calculated based on the number
+of vectors used by the specific SoC driver.
+
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
-V2:
-* no change in this patch
-V3:
-* change 'if check' to 'legacy_phy is true' for tegra_pcie_phys_put_legacy()
-* commit log correction
-V4:
-* no change in this patch
-V5:
-* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-rebased on linux-next
-V6:
-* no change in this patch
-V7:
-* no change in this patch
-V8:
-* no change in this patch
-V9:
-* no change in this patch
+Change v1->v2:
+- New patch file.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Patch renamed from v3-0009 to v4-0010.
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
+Change v5->v6:
+- Nothing changed, just to follow the patch set version.
+Change v6->v7:
+- Nothing changed, just to follow the patch set version.
+Change v7->v8:
+- Rebased against v4.16-rc1.
 
- drivers/pci/host/pci-tegra.c | 99 +++++++++++++++++++++++++++++++++++---------
- 1 file changed, 79 insertions(+), 20 deletions(-)
+ drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
+ drivers/pci/dwc/pcie-designware.h      | 10 +++-------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index e4b47ebc91fe..e68507f658d8 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -562,14 +562,25 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- 	pci_add_resource(windows, &pcie->busn);
- 
- 	err = devm_request_pci_bus_resources(dev, windows);
--	if (err < 0)
-+	if (err < 0) {
-+		pci_free_resource_list(windows);
- 		return err;
-+	}
- 
- 	pci_remap_iospace(&pcie->pio, pcie->io.start);
- 
- 	return 0;
- }
- 
-+static void tegra_pcie_free_resources(struct tegra_pcie *pcie)
-+{
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct list_head *windows = &host->windows;
-+
-+	pci_unmap_iospace(&pcie->pio);
-+	pci_free_resource_list(windows);
-+}
-+
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 3678818..4da8807 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -76,11 +76,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+ /* MSI int handler */
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
  {
- 	struct tegra_pcie *pcie = pdev->bus->sysdata;
-@@ -979,24 +990,35 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 	return 0;
- }
+-	u32 val;
+ 	int i, pos, irq;
++	u32 val, num_ctrls;
+ 	irqreturn_t ret = IRQ_NONE;
  
--static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
+-	for (i = 0; i < MAX_MSI_CTRLS; i++) {
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
++	for (i = 0; i < num_ctrls; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+ 				    &val);
+ 		if (!val)
+@@ -641,13 +643,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
  {
--	struct device *dev = pcie->dev;
--	const struct tegra_pcie_soc *soc = pcie->soc;
- 	int err;
+-	u32 val, ctrl;
++	u32 val, ctrl, num_ctrls;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
  
--	/* TODO: disable and unprepare clocks? */
-+	reset_control_assert(pcie->pcie_xrst);
+ 	dw_pcie_setup(pci);
  
--	if (soc->program_uphy) {
-+	if (pcie->soc->program_uphy) {
- 		err = tegra_pcie_phy_power_off(pcie);
- 		if (err < 0)
--			dev_err(dev, "failed to power off PHY(s): %d\n", err);
-+			dev_err(pcie->dev, "failed to power off PHY(s): %d\n",
-+				err);
- 	}
-+}
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
 +
-+static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+{
-+	struct device *dev = pcie->dev;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	int err;
+ 	/* Initialize IRQ Status array */
+-	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
++	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+ 				    &pp->irq_status[ctrl]);
+ 	/* setup RC BARs */
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 5807f3f..04e1c22 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -107,13 +107,9 @@
+ #define MSI_MESSAGE_DATA_32		0x58
+ #define MSI_MESSAGE_DATA_64		0x5C
  
--	reset_control_assert(pcie->pcie_xrst);
- 	reset_control_assert(pcie->afi_rst);
- 	reset_control_assert(pcie->pex_rst);
+-/*
+- * Maximum number of MSI IRQs can be 256 per controller. But keep
+- * it 32 as of now. Probably we will never need more than 32. If needed,
+- * then increment it in multiple of 32.
+- */
+-#define MAX_MSI_IRQS			32
+-#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
++#define MAX_MSI_IRQS			256
++#define MAX_MSI_IRQS_PER_CTRL		32
++#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+ #define MSI_DEF_NUM_VECTORS		32
  
-+	clk_disable_unprepare(pcie->pll_e);
-+	if (soc->has_cml_clk)
-+		clk_disable_unprepare(pcie->cml_clk);
-+	clk_disable_unprepare(pcie->afi_clk);
-+	clk_disable_unprepare(pcie->pex_clk);
-+
- 	if (!dev->pm_domain)
- 		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
- 
-@@ -1205,6 +1227,30 @@ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_phys_put(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port;
-+	struct device *dev = pcie->dev;
-+	int err, i;
-+
-+	if (pcie->legacy_phy) {
-+		err = phy_exit(pcie->phy);
-+		if (err < 0)
-+			dev_err(dev, "failed to teardown PHY: %d\n", err);
-+		return;
-+	}
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		for (i = 0; i < port->lanes; i++) {
-+			err = phy_exit(port->phys[i]);
-+			if (err < 0)
-+				dev_err(dev, "failed to teardown PHY#%u: %d\n",
-+					i, err);
-+		}
-+	}
-+}
-+
-+
- static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -1236,7 +1282,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	err = tegra_pcie_power_on(pcie);
- 	if (err) {
- 		dev_err(dev, "failed to power up: %d\n", err);
--		return err;
-+		goto phys_put;
- 	}
- 
- 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
-@@ -1288,6 +1334,9 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 
- 	return 0;
- 
-+phys_put:
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- poweroff:
- 	tegra_pcie_power_off(pcie);
- 	return err;
-@@ -1295,20 +1344,15 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- {
--	struct device *dev = pcie->dev;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
--	int err;
- 
- 	if (pcie->irq > 0)
- 		free_irq(pcie->irq, pcie);
- 
- 	tegra_pcie_power_off(pcie);
- 
--	if (soc->program_uphy) {
--		err = phy_exit(pcie->phy);
--		if (err < 0)
--			dev_err(dev, "failed to teardown PHY: %d\n", err);
--	}
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- 
- 	return 0;
- }
-@@ -2048,6 +2092,16 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 	}
- }
- 
-+static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port, *tmp;
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-+		tegra_pcie_port_disable(port);
-+		tegra_pcie_port_free(port);
-+	}
-+}
-+
- static const struct tegra_pcie_soc tegra20_pcie = {
- 	.num_ports = 2,
- 	.msi_base_shift = 0,
-@@ -2278,7 +2332,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	err = tegra_pcie_request_resources(pcie);
- 	if (err)
--		goto put_resources;
-+		goto disable_controller;
- 
- 	/* setup the AFI address translations */
- 	tegra_pcie_setup_translations(pcie);
-@@ -2287,7 +2341,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		err = tegra_pcie_enable_msi(pcie);
- 		if (err < 0) {
- 			dev_err(dev, "failed to enable MSI support: %d\n", err);
--			goto put_resources;
-+			goto free_resources;
- 		}
- 	}
- 
-@@ -2302,7 +2356,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	err = pci_scan_root_bus_bridge(host);
- 	if (err < 0) {
- 		dev_err(dev, "failed to register host: %d\n", err);
--		goto disable_msi;
-+		goto disable_ports;
- 	}
- 
- 	pci_bus_size_bridges(host->bus);
-@@ -2321,9 +2375,14 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	return 0;
- 
--disable_msi:
-+disable_ports:
-+	tegra_pcie_disable_ports(pcie);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_disable_msi(pcie);
-+free_resources:
-+	tegra_pcie_free_resources(pcie);
-+disable_controller:
-+	tegra_pcie_disable_controller(pcie);
- put_resources:
- 	tegra_pcie_put_resources(pcie);
- 	return err;
+ /* Maximum number of inbound/outbound iATUs */
 -- 
-2.1.4
+2.7.4
