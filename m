@@ -1,60 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:40558 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751881AbeBAQLd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Feb 2018 11:11:33 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] misc: pci_endpoint_test: Handle 64-bit BARs properly
-Date: Thu,  1 Feb 2018 17:11:18 +0100
-Message-Id: <20180201161119.3852-3-niklas.cassel@axis.com>
-In-Reply-To: <20180201161119.3852-1-niklas.cassel@axis.com>
-References: <20180201161119.3852-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 28 Feb 2018 20:21:44 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 2/4] x86/pci: Re-use new dmi_get_bios_year() helper
+Message-ID: <20180228202144.2ae8149f@endymion>
+In-Reply-To: <CAJZ5v0hOvU25zWfVjBw-2iz5Y7V2FkSwoTZVZTpjEG9KOCQ6oQ@mail.gmail.com>
+References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
+        <20180222125923.57385-2-andriy.shevchenko@linux.intel.com>
+        <20180226172832.7bf82336@endymion>
+        <1519813744.10722.258.camel@linux.intel.com>
+        <CAJZ5v0hOvU25zWfVjBw-2iz5Y7V2FkSwoTZVZTpjEG9KOCQ6oQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A 64-bit BAR uses the succeeding BAR for the upper bits,
-so we cannot simply call pci_ioremap_bar() on every single BAR.
+On Wed, 28 Feb 2018 11:33:39 +0100, Rafael J. Wysocki wrote:
+> On Wed, Feb 28, 2018 at 11:29 AM, Andy Shevchenko
+> <andriy.shevchenko@linux.intel.com> wrote:
+> > I would assume that no BIOS date is related to prehistoric firmwares and
+> >  using _CRS would sound weird on them.  
+> 
+> Careful here.
+> 
+> You seem to be assuming that the DMI information is always valid
+> and/or complete which is know to not be the case sometimes.
 
-Ignore BARs that does not have a valid resource length.
+True. While the BIOS date is not the worst offender when it comes to
+broken DMI data, you must remember that the date comes as a string, and
+older SMBIOS specifications did not even recommend a specific format
+for that string. As a matter of fact, my collection of DMI tables
+includes a few creative samples like "Jul  7 2016" or "09-16-08" which
+the kernel fails to parse.
 
-pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
-pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
-pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
-pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
-pci-endpoint-test 0000:01:00.0: failed to read BAR1
-pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
-pci-endpoint-test 0000:01:00.0: failed to read BAR3
-pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
-pci-endpoint-test 0000:01:00.0: failed to read BAR5
+So the default behavior at the driver level shouldn't be based on what
+older systems are most likely to enjoy. The default behavior must be
+the safest option, regardless of the age of the system.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-Lorenzo/Bjorn: pci_resource_len() seems to fix my problem,
-but is it the correct function to use here?
-If BAR[x] is a 64-bit BAR, I'm assuming that pci_resource_len() on BAR[x+1]
-will always return 0 (since BAR[x+1] cannot have any prefetchable/type bits
-when BAR[x] is 64-bit).
-
- drivers/misc/pci_endpoint_test.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 320276f42653..3af31bfdcfdd 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -534,6 +534,8 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	}
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		if (pci_resource_len(pdev, bar) == 0)
-+			continue;
- 		base = pci_ioremap_bar(pdev, bar);
- 		if (!base) {
- 			dev_err(dev, "failed to read BAR%d\n", bar);
 -- 
-2.14.2
+Jean Delvare
+SUSE L3 Support
