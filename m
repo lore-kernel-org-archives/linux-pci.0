@@ -1,589 +1,847 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 13 Feb 2018 23:18:21 -0800
-From: Jacob Pan <jacob.jun.pan@linux.intel.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, okaya@codeaurora.org,
-        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        yi.l.liu@intel.com, ashok.raj@intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com,
-        jacob.jun.pan@linux.intel.com
-Subject: Re: [PATCH 07/37] iommu: Add a page fault handler
-Message-ID: <20180213231821.5863ef99@jacob-builder>
-In-Reply-To: <20180212183352.22730-8-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-        <20180212183352.22730-8-jean-philippe.brucker@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:60170 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965056AbeB1XkZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 18:40:25 -0500
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Feb 2018 16:39:57 -0700
+Message-Id: <20180228234006.21093-2-logang@deltatee.com>
+In-Reply-To: <20180228234006.21093-1-logang@deltatee.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v2 01/10] PCI/P2PDMA: Support peer to peer memory
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 12 Feb 2018 18:33:22 +0000
-Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
+Some PCI devices may have memory mapped in a BAR space that's
+intended for use in Peer-to-Peer transactions. In order to enable
+such transactions the memory must be registered with ZONE_DEVICE pages
+so it can be used by DMA interfaces in existing drivers.
 
-> Some systems allow devices to handle IOMMU translation faults in the
-> core mm. For example systems supporting the PCI PRI extension or Arm
-> SMMU stall model. Infrastructure for reporting such recoverable page
-> faults was recently added to the IOMMU core, for SVA virtualization.
-> Extend iommu_report_device_fault() to handle host page faults as well.
-> 
-> * IOMMU drivers instantiate a fault workqueue, using
->   iommu_fault_queue_init() and iommu_fault_queue_destroy().
-> 
-> * When it receives a fault event, supposedly in an IRQ handler, the
-> IOMMU driver reports the fault using iommu_report_device_fault()
-> 
-> * If the device driver registered a handler (e.g. VFIO), pass down the
->   fault event. Otherwise submit it to the fault queue, to be handled
-> in a thread.
-> 
-> * When the fault corresponds to an io_mm, call the mm fault handler
-> on it (in next patch).
-> 
-> * Once the fault is handled, the mm wrapper or the device driver
-> reports success of failure with iommu_page_response(). The
-> translation is either retried or aborted, depending on the response
-> code.
-> 
-Hi Jean,
-Seems a good approach to consolidate page fault. I will try to test
-intel-svm code with this flow. more comments inline.
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> ---
->  drivers/iommu/Kconfig      |  10 ++
->  drivers/iommu/Makefile     |   1 +
->  drivers/iommu/io-pgfault.c | 282
-> +++++++++++++++++++++++++++++++++++++++++++++
-> drivers/iommu/iommu-sva.c  |   3 - drivers/iommu/iommu.c      |  31
-> ++--- include/linux/iommu.h      |  34 +++++-
->  6 files changed, 339 insertions(+), 22 deletions(-)
->  create mode 100644 drivers/iommu/io-pgfault.c
-> 
-> diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-> index 146eebe9a4bb..e751bb9958ba 100644
-> --- a/drivers/iommu/Kconfig
-> +++ b/drivers/iommu/Kconfig
-> @@ -85,6 +85,15 @@ config IOMMU_SVA
->  
->  	  If unsure, say N here.
->  
-> +config IOMMU_FAULT
-> +	bool "Fault handler for the IOMMU API"
-> +	select IOMMU_API
-> +	help
-> +	  Enable the generic fault handler for the IOMMU API, that
-> handles
-> +	  recoverable page faults or inject them into guests.
-> +
-> +	  If unsure, say N here.
-> +
->  config FSL_PAMU
->  	bool "Freescale IOMMU support"
->  	depends on PCI
-> @@ -156,6 +165,7 @@ config INTEL_IOMMU
->  	select IOMMU_API
->  	select IOMMU_IOVA
->  	select DMAR_TABLE
-> +	select IOMMU_FAULT
->  	help
->  	  DMA remapping (DMAR) devices support enables independent
-> address translations for Direct Memory Access (DMA) from devices.
-> diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
-> index 1dbcc89ebe4c..f4324e29035e 100644
-> --- a/drivers/iommu/Makefile
-> +++ b/drivers/iommu/Makefile
-> @@ -4,6 +4,7 @@ obj-$(CONFIG_IOMMU_API) += iommu-traces.o
->  obj-$(CONFIG_IOMMU_API) += iommu-sysfs.o
->  obj-$(CONFIG_IOMMU_DMA) += dma-iommu.o
->  obj-$(CONFIG_IOMMU_SVA) += iommu-sva.o
-> +obj-$(CONFIG_IOMMU_FAULT) += io-pgfault.o
->  obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
->  obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
->  obj-$(CONFIG_IOMMU_IO_PGTABLE_LPAE) += io-pgtable-arm.o
-> diff --git a/drivers/iommu/io-pgfault.c b/drivers/iommu/io-pgfault.c
-> new file mode 100644
-> index 000000000000..33309ed316d2
-> --- /dev/null
-> +++ b/drivers/iommu/io-pgfault.c
-> @@ -0,0 +1,282 @@
-> +/*
-> + * Handle device page faults
-> + *
-> + * Copyright (C) 2018 ARM Ltd.
-> + * Author: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> + *
-> + * SPDX-License-Identifier: GPL-2.0
-> + */
-> +
-> +#include <linux/iommu.h>
-> +#include <linux/list.h>
-> +#include <linux/slab.h>
-> +#include <linux/workqueue.h>
-> +
-> +static struct workqueue_struct *iommu_fault_queue;
-> +static DECLARE_RWSEM(iommu_fault_queue_sem);
-> +static refcount_t iommu_fault_queue_refs = REFCOUNT_INIT(0);
-> +static BLOCKING_NOTIFIER_HEAD(iommu_fault_queue_flush_notifiers);
-> +
-> +/* Used to store incomplete fault groups */
-> +static LIST_HEAD(iommu_partial_faults);
-> +static DEFINE_SPINLOCK(iommu_partial_faults_lock);
-> +
-should partial fault list be per iommu?
-> +struct iommu_fault_context {
-> +	struct device			*dev;
-> +	struct iommu_fault_event	evt;
-> +	struct list_head		head;
-> +};
-> +
-> +struct iommu_fault_group {
-> +	struct iommu_domain		*domain;
-> +	struct iommu_fault_context	last_fault;
-> +	struct list_head		faults;
-> +	struct work_struct		work;
-> +};
-> +
-> +/*
-> + * iommu_fault_complete() - Finish handling a fault
-> + *
-> + * Send a response if necessary and pass on the sanitized status code
-> + */
-> +static int iommu_fault_complete(struct iommu_domain *domain, struct
-> device *dev,
-> +				struct iommu_fault_event *evt, int
-> status) +{
-> +	struct page_response_msg resp = {
-> +		.addr		= evt->addr,
-> +		.pasid		= evt->pasid,
-> +		.pasid_present	= evt->pasid_valid,
-> +		.page_req_group_id = evt->page_req_group_id,
-> +		.type		= IOMMU_PAGE_GROUP_RESP,
-> +		.private_data	= evt->iommu_private,
-> +	};
-> +
-> +	/*
-> +	 * There is no "handling" an unrecoverable fault, so the
-> only valid
-> +	 * return values are 0 or an error.
-> +	 */
-> +	if (evt->type == IOMMU_FAULT_DMA_UNRECOV)
-> +		return status > 0 ? 0 : status;
-> +
-> +	/* Someone took ownership of the fault and will complete it
-> later */
-> +	if (status == IOMMU_PAGE_RESP_HANDLED)
-> +		return 0;
-> +
-> +	/*
-> +	 * There was an internal error with handling the recoverable
-> fault. Try
-> +	 * to complete the fault if possible.
-> +	 */
-> +	if (status < 0)
-> +		status = IOMMU_PAGE_RESP_INVALID;
-> +
-> +	if (WARN_ON(!domain->ops->page_response))
-> +		/*
-> +		 * The IOMMU driver shouldn't have submitted
-> recoverable faults
-> +		 * if it cannot receive a response.
-> +		 */
-> +		return -EINVAL;
-> +
-> +	resp.resp_code = status;
-> +	return domain->ops->page_response(domain, dev, &resp);
-> +}
-> +
-> +static int iommu_fault_handle_single(struct iommu_fault_context
-> *fault) +{
-> +	/* TODO */
-> +	return -ENODEV;
-> +}
-> +
-> +static void iommu_fault_handle_group(struct work_struct *work)
-> +{
-> +	struct iommu_fault_group *group;
-> +	struct iommu_fault_context *fault, *next;
-> +	int status = IOMMU_PAGE_RESP_SUCCESS;
-> +
-> +	group = container_of(work, struct iommu_fault_group, work);
-> +
-> +	list_for_each_entry_safe(fault, next, &group->faults, head) {
-> +		struct iommu_fault_event *evt = &fault->evt;
-> +		/*
-> +		 * Errors are sticky: don't handle subsequent faults
-> in the
-> +		 * group if there is an error.
-> +		 */
-> +		if (status == IOMMU_PAGE_RESP_SUCCESS)
-> +			status = iommu_fault_handle_single(fault);
-> +
-> +		if (!evt->last_req)
-> +			kfree(fault);
-> +	}
-> +
-> +	iommu_fault_complete(group->domain, group->last_fault.dev,
-> +			     &group->last_fault.evt, status);
-> +	kfree(group);
-> +}
-> +
-> +static int iommu_queue_fault(struct iommu_domain *domain, struct
-> device *dev,
-> +			     struct iommu_fault_event *evt)
-> +{
-> +	struct iommu_fault_group *group;
-> +	struct iommu_fault_context *fault, *next;
-> +
-> +	if (!iommu_fault_queue)
-> +		return -ENOSYS;
-> +
-> +	if (!evt->last_req) {
-> +		fault = kzalloc(sizeof(*fault), GFP_KERNEL);
-> +		if (!fault)
-> +			return -ENOMEM;
-> +
-> +		fault->evt = *evt;
-> +		fault->dev = dev;
-> +
-> +		/* Non-last request of a group. Postpone until the
-> last one */
-> +		spin_lock(&iommu_partial_faults_lock);
-> +		list_add_tail(&fault->head, &iommu_partial_faults);
-> +		spin_unlock(&iommu_partial_faults_lock);
-> +
-> +		return IOMMU_PAGE_RESP_HANDLED;
-> +	}
-> +
-> +	group = kzalloc(sizeof(*group), GFP_KERNEL);
-> +	if (!group)
-> +		return -ENOMEM;
-> +
-> +	group->last_fault.evt = *evt;
-> +	group->last_fault.dev = dev;
-> +	group->domain = domain;
-> +	INIT_LIST_HEAD(&group->faults);
-> +	list_add(&group->last_fault.head, &group->faults);
-> +	INIT_WORK(&group->work, iommu_fault_handle_group);
-> +
-> +	/* See if we have pending faults for this group */
-> +	spin_lock(&iommu_partial_faults_lock);
-> +	list_for_each_entry_safe(fault, next, &iommu_partial_faults,
-> head) {
-> +		if (fault->evt.page_req_group_id ==
-> evt->page_req_group_id &&
-> +		    fault->dev == dev) {
-> +			list_del(&fault->head);
-> +			/* Insert *before* the last fault */
-> +			list_add(&fault->head, &group->faults);
-> +		}
-> +	}
-> +	spin_unlock(&iommu_partial_faults_lock);
-> +
-> +	queue_work(iommu_fault_queue, &group->work);
-> +
-> +	/* Postpone the fault completion */
-> +	return IOMMU_PAGE_RESP_HANDLED;
-> +}
-> +
-> +/**
-> + * iommu_report_device_fault() - Handle fault in device driver or mm
-> + *
-> + * If the device driver expressed interest in handling fault, report
-> it through
-> + * the callback. If the fault is recoverable, try to page in the
-> address.
-> + */
-> +int iommu_report_device_fault(struct device *dev, struct
-> iommu_fault_event *evt) +{
-> +	int ret = -ENOSYS;
-> +	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
-> +
-> +	if (!domain)
-> +		return -ENODEV;
-> +
-> +	/*
-> +	 * if upper layers showed interest and installed a fault
-> handler,
-> +	 * invoke it.
-> +	 */
-> +	if (iommu_has_device_fault_handler(dev)) {
-I think Alex pointed out this is racy, so adding a mutex to the
-iommu_fault_param and acquire it would help. Do we really
-atomic handler?
-> +		struct iommu_fault_param *param =
-> dev->iommu_param->fault_param; +
-> +		return param->handler(evt, param->data);
-Even upper layer (VFIO) registered handler to propagate PRQ to a guest
-to fault in the pages, we may still need to keep track of the page
-requests that need page response later, i.e. last page in group or
-stream request in vt-d. This will allow us sanitize the page response
-come back from the guest/VFIO.
-In my next round, I am adding a per device list under iommu_fault_param
-for pending page request. This will also address the situation where
-guest failed to send response. We can enforce time or credit limit of
-pending requests based on this list.
+A kernel interface is provided so that other subsystems can find and
+allocate chunks of P2P memory as necessary to facilitate transfers
+between two PCI peers. Depending on hardware, this may reduce the
+bandwidth of the transfer but would significantly reduce pressure
+on system memory. This may be desirable in many cases: for example a
+system could be designed with a small CPU connected to a PCI switch by a
+small number of lanes which would maximize the number of lanes available
+to connect to NVME devices.
 
-> +	}
-> +
-> +	/* If the handler is blocking, handle fault in the workqueue
-> */
-> +	if (evt->type == IOMMU_FAULT_PAGE_REQ)
-> +		ret = iommu_queue_fault(domain, dev, evt);
-> +
-> +	return iommu_fault_complete(domain, dev, evt, ret);
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_report_device_fault);
-> +
-> +/**
-> + * iommu_fault_queue_register() - register an IOMMU driver to the
-> fault queue
-> + * @flush_notifier: a notifier block that is called before the fault
-> queue is
-> + * flushed. The IOMMU driver should commit all faults that are
-> pending in its
-> + * low-level queues at the time of the call, into the fault queue.
-> The notifier
-> + * takes a device pointer as argument, hinting what endpoint is
-> causing the
-> + * flush. When the device is NULL, all faults should be committed.
-> + */
-> +int iommu_fault_queue_register(struct notifier_block *flush_notifier)
-> +{
-> +	/*
-> +	 * The WQ is unordered because the low-level handler
-> enqueues faults by
-> +	 * group. PRI requests within a group have to be ordered,
-> but once
-> +	 * that's dealt with, the high-level function can handle
-> groups out of
-> +	 * order.
-> +	 */
-> +	down_write(&iommu_fault_queue_sem);
-> +	if (!iommu_fault_queue) {
-> +		iommu_fault_queue =
-> alloc_workqueue("iommu_fault_queue",
-> +						    WQ_UNBOUND, 0);
-> +		if (iommu_fault_queue)
-> +			refcount_set(&iommu_fault_queue_refs, 1);
-> +	} else {
-> +		refcount_inc(&iommu_fault_queue_refs);
-> +	}
-> +	up_write(&iommu_fault_queue_sem);
-> +
-> +	if (!iommu_fault_queue)
-> +		return -ENOMEM;
-> +
-> +	if (flush_notifier)
-> +
-> blocking_notifier_chain_register(&iommu_fault_queue_flush_notifiers,
-> +						 flush_notifier);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_fault_queue_register);
-> +
-> +/**
-> + * iommu_fault_queue_flush() - Ensure that all queued faults have
-> been
-> + * processed.
-> + * @dev: the endpoint whose faults need to be flushed. If NULL,
-> flush all
-> + *       pending faults.
-> + *
-> + * Users must call this function when releasing a PASID, to ensure
-> that all
-> + * pending faults affecting this PASID have been handled, and won't
-> affect the
-> + * address space of a subsequent process that reuses this PASID.
-> + */
-> +void iommu_fault_queue_flush(struct device *dev)
-> +{
-> +
-> blocking_notifier_call_chain(&iommu_fault_queue_flush_notifiers, 0,
-> dev); +
-> +	down_read(&iommu_fault_queue_sem);
-> +	/*
-> +	 * Don't flush the partial faults list. All PRGs with the
-> PASID are
-> +	 * complete and have been submitted to the queue.
-> +	 */
-> +	if (iommu_fault_queue)
-> +		flush_workqueue(iommu_fault_queue);
-> +	up_read(&iommu_fault_queue_sem);
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_fault_queue_flush);
-> +
-> +/**
-> + * iommu_fault_queue_unregister() - Unregister an IOMMU driver from
-> the fault
-> + * queue.
-> + * @flush_notifier: same parameter as iommu_fault_queue_register
-> + */
-> +void iommu_fault_queue_unregister(struct notifier_block
-> *flush_notifier) +{
-> +	down_write(&iommu_fault_queue_sem);
-> +	if (refcount_dec_and_test(&iommu_fault_queue_refs)) {
-> +		destroy_workqueue(iommu_fault_queue);
-> +		iommu_fault_queue = NULL;
-> +	}
-> +	up_write(&iommu_fault_queue_sem);
-> +
-> +	if (flush_notifier)
-> +
-> blocking_notifier_chain_unregister(&iommu_fault_queue_flush_notifiers,
-> +						   flush_notifier);
-> +}
-> +EXPORT_SYMBOL_GPL(iommu_fault_queue_unregister);
-> diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
-> index 4bc2a8c12465..d7b231cd7355 100644
-> --- a/drivers/iommu/iommu-sva.c
-> +++ b/drivers/iommu/iommu-sva.c
-> @@ -102,9 +102,6 @@
->   * the device table and PASID 0 would be available to the allocator.
->   */
->  
-> -/* TODO: stub for the fault queue. Remove later. */
-> -#define iommu_fault_queue_flush(...)
-> -
->  struct iommu_bond {
->  	struct io_mm		*io_mm;
->  	struct device		*dev;
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index 1d60b32a6744..c475893ec7dc 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -798,6 +798,17 @@ int iommu_group_unregister_notifier(struct
-> iommu_group *group, }
->  EXPORT_SYMBOL_GPL(iommu_group_unregister_notifier);
->  
-> +/**
-> + * iommu_register_device_fault_handler() - Register a device fault
-> handler
-> + * @dev: the device
-> + * @handler: the fault handler
-> + * @data: private data passed as argument to the callback
-> + *
-> + * When an IOMMU fault event is received, call this handler with the
-> fault event
-> + * and data as argument.
-> + *
-> + * Return 0 if the fault handler was installed successfully, or an
-> error.
-> + */
->  int iommu_register_device_fault_handler(struct device *dev,
->  					iommu_dev_fault_handler_t
-> handler, void *data)
-> @@ -825,6 +836,13 @@ int iommu_register_device_fault_handler(struct
-> device *dev, }
->  EXPORT_SYMBOL_GPL(iommu_register_device_fault_handler);
->  
-> +/**
-> + * iommu_unregister_device_fault_handler() - Unregister the device
-> fault handler
-> + * @dev: the device
-> + *
-> + * Remove the device fault handler installed with
-> + * iommu_register_device_fault_handler().
-> + */
->  int iommu_unregister_device_fault_handler(struct device *dev)
->  {
->  	struct iommu_param *idata = dev->iommu_param;
-> @@ -840,19 +858,6 @@ int iommu_unregister_device_fault_handler(struct
-> device *dev) }
->  EXPORT_SYMBOL_GPL(iommu_unregister_device_fault_handler);
->  
-> -
-> -int iommu_report_device_fault(struct device *dev, struct
-> iommu_fault_event *evt) -{
-> -	/* we only report device fault if there is a handler
-> registered */
-> -	if (!dev->iommu_param || !dev->iommu_param->fault_param ||
-> -		!dev->iommu_param->fault_param->handler)
-> -		return -ENOSYS;
-> -
-> -	return dev->iommu_param->fault_param->handler(evt,
-> -
-> dev->iommu_param->fault_param->data); -}
-> -EXPORT_SYMBOL_GPL(iommu_report_device_fault);
-> -
->  /**
->   * iommu_group_id - Return ID for a group
->   * @group: the group to ID
-> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-> index 226ab4f3ae0e..65e56f28e0ce 100644
-> --- a/include/linux/iommu.h
-> +++ b/include/linux/iommu.h
-> @@ -205,6 +205,7 @@ struct page_response_msg {
->  	u32 resp_code:4;
->  #define IOMMU_PAGE_RESP_SUCCESS	0
->  #define IOMMU_PAGE_RESP_INVALID	1
-> +#define IOMMU_PAGE_RESP_HANDLED	2
->  #define IOMMU_PAGE_RESP_FAILURE	0xF
->  
->  	u32 pasid_present:1;
-> @@ -534,7 +535,6 @@ extern int
-> iommu_register_device_fault_handler(struct device *dev, 
->  extern int iommu_unregister_device_fault_handler(struct device *dev);
->  
-> -extern int iommu_report_device_fault(struct device *dev, struct
-> iommu_fault_event *evt); extern int iommu_page_response(struct
-> iommu_domain *domain, struct device *dev, struct page_response_msg
-> *msg); 
-> @@ -836,11 +836,6 @@ static inline bool
-> iommu_has_device_fault_handler(struct device *dev) return false;
->  }
->  
-> -static inline int iommu_report_device_fault(struct device *dev,
-> struct iommu_fault_event *evt) -{
-> -	return 0;
-> -}
-> -
->  static inline int iommu_page_response(struct iommu_domain *domain,
-> struct device *dev, struct page_response_msg *msg)
->  {
-> @@ -1005,4 +1000,31 @@ static inline struct mm_struct
-> *iommu_sva_find(int pasid) }
->  #endif /* CONFIG_IOMMU_SVA */
->  
-> +#ifdef CONFIG_IOMMU_FAULT
-> +extern int iommu_fault_queue_register(struct notifier_block
-> *flush_notifier); +extern void iommu_fault_queue_flush(struct device
-> *dev); +extern void iommu_fault_queue_unregister(struct
-> notifier_block *flush_notifier); +extern int
-> iommu_report_device_fault(struct device *dev,
-> +				     struct iommu_fault_event *evt);
-> +#else /* CONFIG_IOMMU_FAULT */
-> +static inline int iommu_fault_queue_register(struct notifier_block
-> *flush_notifier) +{
-> +	return -ENODEV;
-> +}
-> +
-> +static inline void iommu_fault_queue_flush(struct device *dev)
-> +{
-> +}
-> +
-> +static inline void iommu_fault_queue_unregister(struct
-> notifier_block *flush_notifier) +{
-> +}
-> +
-> +static inline int iommu_report_device_fault(struct device *dev,
-> +					    struct iommu_fault_event
-> *evt) +{
-> +	return 0;
-> +}
-> +#endif /* CONFIG_IOMMU_FAULT */
-> +
->  #endif /* __LINUX_IOMMU_H */
+The interface requires a user driver to collect a list of client devices
+involved in the transaction with the pci_p2pmem_add_client*() functions
+then call pci_p2pmem_find() to obtain any suitable P2P memory. Once
+this is done the list is bound to the memory and the calling driver is
+free to add and remove clients as necessary. The ACS bits on the
+downstream switch port will be managed for all the registered clients.
 
-[Jacob Pan]
+The code is designed to only utilize the p2pmem device if all the devices
+involved in a transfer are behind the same PCI switch. This is because
+using P2P transactions through the PCI root complex can have performance
+limitations or, worse, might not work at all. Finding out how well a
+particular RC supports P2P transfers is non-trivial. Additionally, the
+benefits of P2P transfers that go through the RC is limited to only
+reducing DRAM usage.
+
+This commit includes significant rework and feedback from Christoph
+Hellwig.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/Kconfig        |  16 ++
+ drivers/pci/Makefile       |   1 +
+ drivers/pci/p2pdma.c       | 568 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/memremap.h   |  18 ++
+ include/linux/pci-p2pdma.h |  87 +++++++
+ include/linux/pci.h        |   4 +
+ 6 files changed, 694 insertions(+)
+ create mode 100644 drivers/pci/p2pdma.c
+ create mode 100644 include/linux/pci-p2pdma.h
+
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 34b56a8f8480..840831418cbd 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -124,6 +124,22 @@ config PCI_PASID
+ 
+ 	  If unsure, say N.
+ 
++config PCI_P2PDMA
++	bool "PCI Peer to Peer transfer support"
++	depends on ZONE_DEVICE
++	select GENERIC_ALLOCATOR
++	help
++	  Enableѕ drivers to do PCI peer to peer transactions to and from
++	  BARs that are exposed in other devices that are the part of
++	  the hierarchy where peer-to-peer DMA is guaranteed by the PCI
++	  specification to work (ie. anything below a single PCI bridge).
++
++	  Many PCIe root complexes do not support P2P transactions and
++	  it's hard to tell which support it with good performance, so
++	  at this time you will need a PCIe switch.
++
++	  If unsure, say N.
++
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	depends on PCI
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 941970936840..45e0ff6f3213 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -26,6 +26,7 @@ obj-$(CONFIG_PCI_MSI) += msi.o
+ 
+ obj-$(CONFIG_PCI_ATS) += ats.o
+ obj-$(CONFIG_PCI_IOV) += iov.o
++obj-$(CONFIG_PCI_P2PDMA) += p2pdma.o
+ 
+ #
+ # ACPI Related PCI FW Functions
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+new file mode 100644
+index 000000000000..ec0a6cb9e500
+--- /dev/null
++++ b/drivers/pci/p2pdma.c
+@@ -0,0 +1,568 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * PCI Peer 2 Peer DMA support.
++ *
++ * Copyright (c) 2016-2017, Microsemi Corporation
++ * Copyright (c) 2017, Christoph Hellwig.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ */
++
++#include <linux/pci-p2pdma.h>
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/genalloc.h>
++#include <linux/memremap.h>
++#include <linux/percpu-refcount.h>
++
++struct pci_p2pdma {
++	struct percpu_ref devmap_ref;
++	struct completion devmap_ref_done;
++	struct gen_pool *pool;
++	bool published;
++};
++
++static void pci_p2pdma_percpu_release(struct percpu_ref *ref)
++{
++	struct pci_p2pdma *p2p =
++		container_of(ref, struct pci_p2pdma, devmap_ref);
++
++	complete_all(&p2p->devmap_ref_done);
++}
++
++static void pci_p2pdma_percpu_kill(void *data)
++{
++	struct percpu_ref *ref = data;
++
++	if (percpu_ref_is_dying(ref))
++		return;
++
++	percpu_ref_kill(ref);
++}
++
++static void pci_p2pdma_release(void *data)
++{
++	struct pci_dev *pdev = data;
++
++	wait_for_completion(&pdev->p2pdma->devmap_ref_done);
++	percpu_ref_exit(&pdev->p2pdma->devmap_ref);
++
++	gen_pool_destroy(pdev->p2pdma->pool);
++	pdev->p2pdma = NULL;
++}
++
++static int pci_p2pdma_setup(struct pci_dev *pdev)
++{
++	int error = -ENOMEM;
++	struct pci_p2pdma *p2p;
++
++	p2p = devm_kzalloc(&pdev->dev, sizeof(*p2p), GFP_KERNEL);
++	if (!p2p)
++		return -ENOMEM;
++
++	p2p->pool = gen_pool_create(PAGE_SHIFT, dev_to_node(&pdev->dev));
++	if (!p2p->pool)
++		goto out;
++
++	init_completion(&p2p->devmap_ref_done);
++	error = percpu_ref_init(&p2p->devmap_ref,
++			pci_p2pdma_percpu_release, 0, GFP_KERNEL);
++	if (error)
++		goto out_pool_destroy;
++
++	percpu_ref_switch_to_atomic_sync(&p2p->devmap_ref);
++
++	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_release, pdev);
++	if (error)
++		goto out_pool_destroy;
++
++	pdev->p2pdma = p2p;
++
++	return 0;
++
++out_pool_destroy:
++	gen_pool_destroy(p2p->pool);
++out:
++	devm_kfree(&pdev->dev, p2p);
++	return error;
++}
++
++/**
++ * pci_p2pdma_add_resource - add memory for use as p2p memory
++ * @pci: the device to add the memory to
++ * @bar: PCI BAR to add
++ * @size: size of the memory to add, may be zero to use the whole BAR
++ * @offset: offset into the PCI BAR
++ *
++ * The memory will be given ZONE_DEVICE struct pages so that it may
++ * be used with any dma request.
++ */
++int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
++			    u64 offset)
++{
++	struct dev_pagemap *pgmap;
++	void *addr;
++	int error;
++
++	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM))
++		return -EINVAL;
++
++	if (offset >= pci_resource_len(pdev, bar))
++		return -EINVAL;
++
++	if (!size)
++		size = pci_resource_len(pdev, bar) - offset;
++
++	if (size + offset > pci_resource_len(pdev, bar))
++		return -EINVAL;
++
++	if (!pdev->p2pdma) {
++		error = pci_p2pdma_setup(pdev);
++		if (error)
++			return error;
++	}
++
++	pgmap = devm_kzalloc(&pdev->dev, sizeof(*pgmap), GFP_KERNEL);
++	if (!pgmap)
++		return -ENOMEM;
++
++	pgmap->res.start = pci_resource_start(pdev, bar) + offset;
++	pgmap->res.end = pgmap->res.start + size - 1;
++	pgmap->res.flags = pci_resource_flags(pdev, bar);
++	pgmap->ref = &pdev->p2pdma->devmap_ref;
++	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
++
++	addr = devm_memremap_pages(&pdev->dev, pgmap);
++	if (IS_ERR(addr))
++		return PTR_ERR(addr);
++
++	error = gen_pool_add_virt(pdev->p2pdma->pool, (uintptr_t)addr,
++			pci_bus_address(pdev, bar) + offset,
++			resource_size(&pgmap->res), dev_to_node(&pdev->dev));
++	if (error)
++		return error;
++
++	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_percpu_kill,
++					  &pdev->p2pdma->devmap_ref);
++	if (error)
++		return error;
++
++	dev_info(&pdev->dev, "added peer-to-peer DMA memory %pR\n",
++		 &pgmap->res);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_add_resource);
++
++static struct pci_dev *find_parent_pci_dev(struct device *dev)
++{
++	struct device *parent;
++
++	dev = get_device(dev);
++
++	while (dev) {
++		if (dev_is_pci(dev))
++			return to_pci_dev(dev);
++
++		parent = get_device(dev->parent);
++		put_device(dev);
++		dev = parent;
++	}
++
++	return NULL;
++}
++
++/*
++ * If a device is behind a switch, we try to find the upstream bridge
++ * port of the switch. This requires two calls to pci_upstream_bridge:
++ * one for the upstream port on the switch, one on the upstream port
++ * for the next level in the hierarchy. Because of this, devices connected
++ * to the root port will be rejected.
++ */
++static struct pci_dev *get_upstream_bridge_port(struct pci_dev *pdev)
++{
++	struct pci_dev *up1, *up2;
++
++	if (!pdev)
++		return NULL;
++
++	up1 = pci_dev_get(pci_upstream_bridge(pdev));
++	if (!up1)
++		return NULL;
++
++	up2 = pci_dev_get(pci_upstream_bridge(up1));
++	pci_dev_put(up1);
++
++	return up2;
++}
++
++static bool __upstream_bridges_match(struct pci_dev *upstream,
++				     struct pci_dev *client)
++{
++	struct pci_dev *dma_up;
++	bool ret = true;
++
++	dma_up = get_upstream_bridge_port(client);
++
++	if (!dma_up) {
++		dev_dbg(&client->dev, "not a PCI device behind a bridge\n");
++		ret = false;
++		goto out;
++	}
++
++	if (upstream != dma_up) {
++		dev_dbg(&client->dev,
++			"does not reside on the same upstream bridge\n");
++		ret = false;
++		goto out;
++	}
++
++out:
++	pci_dev_put(dma_up);
++	return ret;
++}
++
++static bool upstream_bridges_match(struct pci_dev *pdev,
++				   struct pci_dev *client)
++{
++	struct pci_dev *upstream;
++	bool ret;
++
++	upstream = get_upstream_bridge_port(pdev);
++	if (!upstream) {
++		dev_warn(&pdev->dev, "not behind a PCI bridge\n");
++		return false;
++	}
++
++	ret = __upstream_bridges_match(upstream, client);
++
++	pci_dev_put(upstream);
++
++	return ret;
++}
++
++struct pci_p2pdma_client {
++	struct list_head list;
++	struct pci_dev *client;
++	struct pci_dev *p2pdma;
++};
++
++/**
++ * pci_p2pdma_add_client - allocate a new element in a client device list
++ * @head: list head of p2pdma clients
++ * @dev: device to add to the list
++ *
++ * This adds @dev to a list of clients used by a p2pdma device.
++ * This list should be passed to p2pmem_find(). Once p2pmem_find() has
++ * been called successfully, the list will be bound to a specific p2pdma
++ * device and new clients can only be added to the list if they are
++ * supported by that p2pdma device.
++ *
++ * The caller is expected to have a lock which protects @head as necessary
++ * so that none of the pci_p2p functions can be called concurrently
++ * on that list.
++ *
++ * Returns 0 if the client was successfully added.
++ */
++int pci_p2pdma_add_client(struct list_head *head, struct device *dev)
++{
++	struct pci_p2pdma_client *item, *new_item;
++	struct pci_dev *p2pdma = NULL;
++	struct pci_dev *client;
++	int ret;
++
++	if (IS_ENABLED(CONFIG_DMA_VIRT_OPS) && dev->dma_ops == &dma_virt_ops) {
++		dev_warn(dev,
++			 "cannot be used for peer-to-peer DMA because the driver makes use of dma_virt_ops\n");
++		return -ENODEV;
++	}
++
++
++	client = find_parent_pci_dev(dev);
++	if (!client) {
++		dev_warn(dev,
++			 "cannot be used for peer-to-peer DMA as it is not a PCI device\n");
++		return -ENODEV;
++	}
++
++	item = list_first_entry_or_null(head, struct pci_p2pdma_client, list);
++	if (item && item->p2pdma) {
++		p2pdma = item->p2pdma;
++
++		if (!upstream_bridges_match(p2pdma, client)) {
++			ret = -EXDEV;
++			goto put_client;
++		}
++	}
++
++	new_item = kzalloc(sizeof(*new_item), GFP_KERNEL);
++	if (!new_item) {
++		ret = -ENOMEM;
++		goto put_client;
++	}
++
++	new_item->client = client;
++	new_item->p2pdma = pci_dev_get(p2pdma);
++
++	list_add_tail(&new_item->list, head);
++
++	return 0;
++
++put_client:
++	pci_dev_put(client);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_add_client);
++
++static void pci_p2pdma_client_free(struct pci_p2pdma_client *item)
++{
++	list_del(&item->list);
++	pci_dev_put(item->client);
++	pci_dev_put(item->p2pdma);
++	kfree(item);
++}
++
++/**
++ * pci_p2pdma_remove_client - remove and free a new p2pdma client
++ * @head: list head of p2pdma clients
++ * @dev: device to remove from the list
++ *
++ * This removes @dev from a list of clients used by a p2pdma device.
++ * The caller is expected to have a lock which protects @head as necessary
++ * so that none of the pci_p2p functions can be called concurrently
++ * on that list.
++ */
++void pci_p2pdma_remove_client(struct list_head *head, struct device *dev)
++{
++	struct pci_p2pdma_client *pos, *tmp;
++	struct pci_dev *pdev;
++
++	pdev = find_parent_pci_dev(dev);
++	if (!pdev)
++		return;
++
++	list_for_each_entry_safe(pos, tmp, head, list) {
++		if (pos->client != pdev)
++			continue;
++
++		pci_p2pdma_client_free(pos);
++	}
++
++	pci_dev_put(pdev);
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_remove_client);
++
++/**
++ * pci_p2pdma_client_list_free - free an entire list of p2pdma clients
++ * @head: list head of p2pdma clients
++ *
++ * This removes all devices in a list of clients used by a p2pdma device.
++ * The caller is expected to have a lock which protects @head as necessary
++ * so that none of the pci_p2pdma functions can be called concurrently
++ * on that list.
++ */
++void pci_p2pdma_client_list_free(struct list_head *head)
++{
++	struct pci_p2pdma_client *pos, *tmp;
++
++	list_for_each_entry_safe(pos, tmp, head, list)
++		pci_p2pdma_client_free(pos);
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_client_list_free);
++
++static bool upstream_bridges_match_list(struct pci_dev *pdev,
++					struct list_head *head)
++{
++	struct pci_p2pdma_client *pos;
++	struct pci_dev *upstream;
++	bool ret;
++
++	upstream = get_upstream_bridge_port(pdev);
++	if (!upstream) {
++		dev_warn(&pdev->dev, "not behind a PCI bridge\n");
++		return false;
++	}
++
++	list_for_each_entry(pos, head, list) {
++		ret = __upstream_bridges_match(upstream, pos->client);
++		if (!ret)
++			break;
++	}
++
++	pci_dev_put(upstream);
++	return ret;
++}
++
++/**
++ * pci_p2pmem_find - find a peer-to-peer DMA memory device compatible with
++ *	the specified list of clients
++ * @dev: list of devices to check (NULL-terminated)
++ *
++ * For now, we only support cases where the devices that will transfer to the
++ * p2pmem device are behind the same bridge. This cuts out cases that may work
++ * but is safest for the user.
++ *
++ * Returns a pointer to the PCI device with a reference taken (use pci_dev_put
++ * to return the reference) or NULL if no compatible device is found.
++ */
++struct pci_dev *pci_p2pmem_find(struct list_head *clients)
++{
++	struct pci_dev *pdev = NULL;
++	struct pci_p2pdma_client *pos;
++
++	while ((pdev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, pdev))) {
++		if (!pdev->p2pdma || !pdev->p2pdma->published)
++			continue;
++
++		if (!upstream_bridges_match_list(pdev, clients))
++			continue;
++
++		list_for_each_entry(pos, clients, list)
++			pos->p2pdma = pdev;
++
++		return pdev;
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(pci_p2pmem_find);
++
++/**
++ * pci_alloc_p2p_mem - allocate peer-to-peer DMA memory
++ * @pdev:	the device to allocate memory from
++ * @size:	number of bytes to allocate
++ *
++ * Returns the allocated memory or NULL on error.
++ */
++void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size)
++{
++	void *ret;
++
++	if (unlikely(!pdev->p2pdma))
++		return NULL;
++
++	if (unlikely(!percpu_ref_tryget_live(&pdev->p2pdma->devmap_ref)))
++		return NULL;
++
++	ret = (void *)(uintptr_t)gen_pool_alloc(pdev->p2pdma->pool, size);
++
++	if (unlikely(!ret))
++		percpu_ref_put(&pdev->p2pdma->devmap_ref);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(pci_alloc_p2pmem);
++
++/**
++ * pci_free_p2pmem - allocate peer-to-peer DMA memory
++ * @pdev:	the device the memory was allocated from
++ * @addr:	address of the memory that was allocated
++ * @size:	number of bytes that was allocated
++ */
++void pci_free_p2pmem(struct pci_dev *pdev, void *addr, size_t size)
++{
++	gen_pool_free(pdev->p2pdma->pool, (uintptr_t)addr, size);
++	percpu_ref_put(&pdev->p2pdma->devmap_ref);
++}
++EXPORT_SYMBOL_GPL(pci_free_p2pmem);
++
++/**
++ * pci_virt_to_bus - return the PCI bus address for a given virtual
++ *	address obtained with pci_alloc_p2pmem
++ * @pdev:	the device the memory was allocated from
++ * @addr:	address of the memory that was allocated
++ */
++pci_bus_addr_t pci_p2pmem_virt_to_bus(struct pci_dev *pdev, void *addr)
++{
++	if (!addr)
++		return 0;
++	if (!pdev->p2pdma)
++		return 0;
++
++	/*
++	 * Note: when we added the memory to the pool we used the PCI
++	 * bus address as the physical address. So gen_pool_virt_to_phys()
++	 * actually returns the bus address despite the misleading name.
++	 */
++	return gen_pool_virt_to_phys(pdev->p2pdma->pool, (unsigned long)addr);
++}
++EXPORT_SYMBOL_GPL(pci_p2pmem_virt_to_bus);
++
++/**
++ * pci_p2pmem_alloc_sgl - allocate peer-to-peer DMA memory in an scatterlist
++ * @pdev:	the device to allocate memory from
++ * @sgl:	the allocated scatterlist
++ * @nents:      the number of SG entries in the list
++ * @length:     number of bytes to allocate
++ *
++ * Returns 0 on success
++ */
++int pci_p2pmem_alloc_sgl(struct pci_dev *pdev, struct scatterlist **sgl,
++			 unsigned int *nents, u32 length)
++{
++	struct scatterlist *sg;
++	void *addr;
++
++	sg = kzalloc(sizeof(*sg), GFP_KERNEL);
++	if (!sg)
++		return -ENOMEM;
++
++	sg_init_table(sg, 1);
++
++	addr = pci_alloc_p2pmem(pdev, length);
++	if (!addr)
++		goto out_free_sg;
++
++	sg_set_buf(sg, addr, length);
++	*sgl = sg;
++	*nents = 1;
++	return 0;
++
++out_free_sg:
++	kfree(sg);
++	return -ENOMEM;
++}
++EXPORT_SYMBOL_GPL(pci_p2pmem_alloc_sgl);
++
++/**
++ * pci_p2pmem_free_sgl - free a scatterlist  allocated by pci_p2pmem_alloc_sgl
++ * @pdev:	the device to allocate memory from
++ * @sgl:	the allocated scatterlist
++ * @nents:      the number of SG entries in the list
++ */
++void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl,
++			 unsigned int nents)
++{
++	struct scatterlist *sg;
++	int count;
++
++	if (!sgl || !nents)
++		return;
++
++	for_each_sg(sgl, sg, nents, count)
++		pci_free_p2pmem(pdev, sg_virt(sg), sg->length);
++	kfree(sgl);
++}
++EXPORT_SYMBOL_GPL(pci_p2pmem_free_sgl);
++
++/**
++ * pci_p2pmem_publish - publish the peer-to-peer DMA memory for use by
++ *	other devices with pci_p2pmem_find
++ * @pdev:	the device with peer-to-peer DMA memory to publish
++ * @publish:	set to true to publish the memory, false to unpublish it
++ */
++void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
++{
++	if (publish && !pdev->p2pdma)
++		return;
++
++	pdev->p2pdma->published = publish;
++}
++EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 7b4899c06f49..9e907c338a44 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -53,11 +53,16 @@ struct vmem_altmap {
+  * driver can hotplug the device memory using ZONE_DEVICE and with that memory
+  * type. Any page of a process can be migrated to such memory. However no one
+  * should be allow to pin such memory so that it can always be evicted.
++ *
++ * MEMORY_DEVICE_PCI_P2PDMA:
++ * Device memory residing in a PCI BAR intended for use with Peer-to-Peer
++ * transactions.
+  */
+ enum memory_type {
+ 	MEMORY_DEVICE_HOST = 0,
+ 	MEMORY_DEVICE_PRIVATE,
+ 	MEMORY_DEVICE_PUBLIC,
++	MEMORY_DEVICE_PCI_P2PDMA,
+ };
+ 
+ /*
+@@ -161,6 +166,19 @@ static inline void vmem_altmap_free(struct vmem_altmap *altmap,
+ }
+ #endif /* CONFIG_ZONE_DEVICE */
+ 
++#ifdef CONFIG_PCI_P2PDMA
++static inline bool is_pci_p2pdma_page(const struct page *page)
++{
++	return is_zone_device_page(page) &&
++		page->pgmap->type == MEMORY_DEVICE_PCI_P2PDMA;
++}
++#else /* CONFIG_PCI_P2PDMA */
++static inline bool is_pci_p2pdma_page(const struct page *page)
++{
++	return false;
++}
++#endif /* CONFIG_PCI_P2PDMA */
++
+ #if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
+ static inline bool is_device_private_page(const struct page *page)
+ {
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+new file mode 100644
+index 000000000000..c0dde3d3aac4
+--- /dev/null
++++ b/include/linux/pci-p2pdma.h
+@@ -0,0 +1,87 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (c) 2016-2017, Microsemi Corporation
++ * Copyright (c) 2017, Christoph Hellwig.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ */
++
++#ifndef _LINUX_PCI_P2PDMA_H
++#define _LINUX_PCI_P2PDMA_H
++
++#include <linux/pci.h>
++
++struct block_device;
++struct scatterlist;
++
++#ifdef CONFIG_PCI_P2PDMA
++int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
++		u64 offset);
++int pci_p2pdma_add_client(struct list_head *head, struct device *dev);
++void pci_p2pdma_remove_client(struct list_head *head, struct device *dev);
++void pci_p2pdma_client_list_free(struct list_head *head);
++struct pci_dev *pci_p2pmem_find(struct list_head *clients);
++void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size);
++void pci_free_p2pmem(struct pci_dev *pdev, void *addr, size_t size);
++pci_bus_addr_t pci_p2pmem_virt_to_bus(struct pci_dev *pdev, void *addr);
++int pci_p2pmem_alloc_sgl(struct pci_dev *pdev, struct scatterlist **sgl,
++		unsigned int *nents, u32 length);
++void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl,
++		unsigned int nents);
++void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
++#else /* CONFIG_PCI_P2PDMA */
++static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
++		size_t size, u64 offset)
++{
++	return 0;
++}
++static inline int pci_p2pdma_add_client(struct list_head *head,
++		struct device *dev)
++{
++	return 0;
++}
++static inline void pci_p2pdma_remove_client(struct list_head *head,
++		struct device *dev)
++{
++}
++static inline void pci_p2pdma_client_list_free(struct list_head *head)
++{
++}
++static inline struct pci_dev *pci_p2pmem_find(struct list_head *clients)
++{
++	return NULL;
++}
++static inline void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size)
++{
++	return NULL;
++}
++static inline void pci_free_p2pmem(struct pci_dev *pdev, void *addr,
++		size_t size)
++{
++}
++static inline pci_bus_addr_t pci_p2pmem_virt_to_bus(struct pci_dev *pdev,
++						    void *addr)
++{
++	return 0;
++}
++static inline int pci_p2pmem_alloc_sgl(struct pci_dev *pdev,
++		struct scatterlist **sgl, unsigned int *nents, u32 length)
++{
++	return -ENODEV;
++}
++static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
++		struct scatterlist *sgl, unsigned int nents)
++{
++}
++static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
++{
++}
++#endif /* CONFIG_PCI_P2PDMA */
++#endif /* _LINUX_PCI_P2P_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 024a1beda008..437e42615896 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -276,6 +276,7 @@ struct pcie_link_state;
+ struct pci_vpd;
+ struct pci_sriov;
+ struct pci_ats;
++struct pci_p2pdma;
+ 
+ /* The pci_dev structure describes PCI devices */
+ struct pci_dev {
+@@ -429,6 +430,9 @@ struct pci_dev {
+ #ifdef CONFIG_PCI_PASID
+ 	u16		pasid_features;
+ #endif
++#ifdef CONFIG_PCI_P2PDMA
++	struct pci_p2pdma *p2pdma;
++#endif
+ 	phys_addr_t	rom;		/* Physical address if not from BAR */
+ 	size_t		romlen;		/* Length if not from BAR */
+ 	char		*driver_override; /* Driver name to force a match */
+-- 
+2.11.0
