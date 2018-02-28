@@ -1,53 +1,50 @@
-Return-Path: <SRS0=xdSo=FW=linux.intel.com=andriy.shevchenko@kernel.org>
-Return-Path: <SRS0=xdSo=FW=linux.intel.com=andriy.shevchenko@kernel.org>
-Message-ID: <1519812844.10722.253.camel@linux.intel.com>
-Subject: Re: [PATCH v1 1/4] dmi: Introduce dmi_get_bios_year() helper
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-  Linux PCI <linux-pci@vger.kernel.org>, "Rafael J. Wysocki"
- <rjw@rjwysocki.net>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H.
- Peter Anvin" <hpa@zytor.com>, the arch/x86 maintainers <x86@kernel.org>,
- Jean Delvare <jdelvare@suse.com>, Linux Kernel Mailing List
- <linux-kernel@vger.kernel.org>
-Date: Wed, 28 Feb 2018 12:14:04 +0200
-In-Reply-To: <CAJZ5v0hK3fvgL42qowQFBbcG5JABec42R781vBbia0Z2MQy31w@mail.gmail.com>
-References: <20180222125923.57385-1-andriy.shevchenko@linux.intel.com>
-	 <20180223213552.GL14632@bhelgaas-glaptop.roam.corp.google.com>
-	 <1519565039.10722.145.camel@linux.intel.com>
-	 <CAJZ5v0hK3fvgL42qowQFBbcG5JABec42R781vBbia0Z2MQy31w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
+Return-Path: <SRS0=aFX3=FW=suse.de=jthumshirn@kernel.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Greg KH <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
+	Michael Moese <mmoese@suse.de>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	linux-pci@vger.kernel.org,
+	Johannes Thumshirn <jthumshirn@suse.de>,
+	=?UTF-8?q?Andreas=20Gei=C3=9Fler?= <andreas.geissler@men.de>
+Subject: [PATCH v2 2/2] mcb: add Altera PCI ID to mcb-pci
+Date: Wed, 28 Feb 2018 09:44:18 +0100
+Message-Id: <20180228084418.7566-3-jthumshirn@suse.de>
+In-Reply-To: <20180228084418.7566-1-jthumshirn@suse.de>
+References: <20180228084418.7566-1-jthumshirn@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2018-02-26 at 10:29 +0100, Rafael J. Wysocki wrote:
-> On Sun, Feb 25, 2018 at 2:23 PM, Andy Shevchenko
-> <andriy.shevchenko@linux.intel.com> wrote:
-> > On Fri, 2018-02-23 at 15:35 -0600, Bjorn Helgaas wrote:
+Some older PCI attached MEN FPGAs use an Altera PCI Vendor ID instead
+of the MEN one. Add it to the PCI ID table so the driver automatically
+attaches to it.
 
-> > > but making this inline looks similar to this, which
-> > > wasn't well-received:
-> > > 
-> > > https://lkml.kernel.org/r/CA+55aFypU331cQy-
-> > > 6ZJ6szF=2KVLqcbwCUGd+gTwPViRqRWN+g@mail.gmail.com
-> > 
-> > "Yes, that header file is already full of random inline functions,
-> > but
-> > they are generally wrapper functions that don't really do anything,
-> > ..."
-> > 
-> > I think the function above is exactly from the "wrapper that doesn't
-> > really do anything" category.
-> 
-> Yes, but honestly does it need to be inline even so?
-> 
-> Why don't you simply put the wrapper into dmi_scan.c and export it?
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reported-by: Ben Turner <ben.turner@21net.com>
+Tested-by: Ben Turner <ben.turner@21net.com>
+Cc: Andreas Geißler <andreas.geissler@men.de>
 
-Taking into consideration that there are few comments to be addressed
-and series had been applied, I will send a fix up series where I move
-this to be a normal function.
+---
+Changes to v1:
+- Removed redundant include of pci_ids.h
+---
+ drivers/mcb/mcb-pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/mcb/mcb-pci.c b/drivers/mcb/mcb-pci.c
+index af4d2f26f1c6..c2d69e33bf2b 100644
+--- a/drivers/mcb/mcb-pci.c
++++ b/drivers/mcb/mcb-pci.c
+@@ -117,6 +117,7 @@ static void mcb_pci_remove(struct pci_dev *pdev)
+ 
+ static const struct pci_device_id mcb_pci_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MEN, PCI_DEVICE_ID_MEN_CHAMELEON) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_ALTERA, PCI_DEVICE_ID_MEN_CHAMELEON) },
+ 	{ 0 },
+ };
+ MODULE_DEVICE_TABLE(pci, mcb_pci_tbl);
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.13.6
