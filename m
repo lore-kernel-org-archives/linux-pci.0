@@ -1,50 +1,86 @@
-Return-Path: <SRS0=GaQ6=FR=fireburn.co.uk=mike@kernel.org>
-Return-Path: <SRS0=GaQ6=FR=fireburn.co.uk=mike@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180222131343.GA205018@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
- <CAHbf0-Exsu14dBmmfYy8Tcb4R58eYJKLFPPoM9RkqxHWDkqwXQ@mail.gmail.com>
- <20180212152122.GB75542@bhelgaas-glaptop.roam.corp.google.com>
- <CAHbf0-HffVDu0vxyTrSfgCtJ5rGtu_4HqAoo2sseG3HoE-1djw@mail.gmail.com> <20180222131343.GA205018@bhelgaas-glaptop.roam.corp.google.com>
-From: Mike Lothian <mike@fireburn.co.uk>
-Date: Fri, 23 Feb 2018 10:14:48 +0000
-Message-ID: <CAHbf0-FUhpmJat5zo4iGNL8zbSVmhkfNDgzTLNdGvj8DJx-ddg@mail.gmail.com>
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Check presence of slot itself in get_slot_status()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:44604 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753495AbeB1REk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 12:04:40 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v12 1/6] PCI/AER: Rename error recovery to generic PCI naming
+Date: Wed, 28 Feb 2018 22:34:12 +0530
+Message-Id: <1519837457-3596-2-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22 February 2018 at 13:13, Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> Not on your end.  But thanks fo the reminder, and also for the hint
-> that you'd like it in -rc3.  It's not likely to make -rc3 because I
-> like things to at least be in -next for a few days before I ask Linus
-> to pull them.
->
-> But more importantly, what's the justification for adding this after
-> the merge window?  It doesn't look like a regression or a fix for
-> something we broke in the merge window.  It certainly *could* still be
-> merged for v4.16, but the default target would be v4.17.
->
-> Bjorn
+This patch renames error recovery to generic name with pcie prefix
 
-Hi Bjorn
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Apologies, I thought all fixes got into the release candidates rather
-than just regressions
-
-I was hoping the original fix was going to make it into the merge
-window that just passed
-
-I just wanted to make sure the patch doesn't fall through the cracks
-
-I'm carrying this patch locally so it doesn't make too much difference
-to me which route it takes
-
-Thanks again
-
-Mike
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index fcd8191..abc514e 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -342,6 +342,9 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ 
+ void pci_enable_acs(struct pci_dev *dev);
+ 
++/* PCI error reporting and recovery */
++void pcie_do_recovery(struct pci_dev *dev, int severity);
++
+ #ifdef CONFIG_PCIEASPM
+ void pcie_aspm_init_link_state(struct pci_dev *pdev);
+ void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index a4bfea5..aeb83a0 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -478,7 +478,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ }
+ 
+ /**
+- * do_recovery - handle nonfatal/fatal error recovery process
++ * pcie_do_recovery - handle nonfatal/fatal error recovery process
+  * @dev: pointer to a pci_dev data structure of agent detecting an error
+  * @severity: error severity type
+  *
+@@ -486,7 +486,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+  * error detected message to all downstream drivers within a hierarchy in
+  * question and return the returned code.
+  */
+-static void do_recovery(struct pci_dev *dev, int severity)
++static void pcie_do_recovery(struct pci_dev *dev, int severity)
+ {
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+@@ -566,7 +566,7 @@ static void handle_error_source(struct pcie_device *aerdev,
+ 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 					info->status);
+ 	} else
+-		do_recovery(dev, info->severity);
++		pcie_do_recovery(dev, info->severity);
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -631,7 +631,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		}
+ 		cper_print_aer(pdev, entry.severity, entry.regs);
+ 		if (entry.severity != AER_CORRECTABLE)
+-			do_recovery(pdev, entry.severity);
++			pcie_do_recovery(pdev, entry.severity);
+ 		pci_dev_put(pdev);
+ 	}
+ }
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
