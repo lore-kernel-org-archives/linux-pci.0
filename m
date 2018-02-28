@@ -1,59 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50270 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750752AbeBVSeF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Feb 2018 13:34:05 -0500
-Date: Thu, 22 Feb 2018 10:34:03 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+To: kishon@ti.com
+Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v10 1/7] PCI/AER: Rename error recovery to generic pci
- naming
-Message-ID: <20180222183403.GA6267@infradead.org>
-References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
- <1519315332-26852-2-git-send-email-poza@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519315332-26852-2-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+        andy.shevchenko@gmail.com,
+        Rolf Evers-Fischer <embedded24@evers-fischer.de>
+Subject: [PATCH v4 0/3] pci: endpoint: Fix double free in pci_epf_create()
+Date: Wed, 28 Feb 2018 14:07:16 +0100
+Message-Id: <20180228130719.31218-1-embedded24@evers-fischer.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 22, 2018 at 09:32:06PM +0530, Oza Pawandeep wrote:
-> This patch renames error recovery to generic name with pci prefix
-> 
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index a4bfea5..306bf2f 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -478,7 +478,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
->  }
->  
->  /**
-> - * do_recovery - handle nonfatal/fatal error recovery process
-> + * pci_do_recovery - handle nonfatal/fatal error recovery process
->   * @dev: pointer to a pci_dev data structure of agent detecting an error
->   * @severity: error severity type
->   *
-> @@ -486,7 +486,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
->   * error detected message to all downstream drivers within a hierarchy in
->   * question and return the returned code.
->   */
-> -static void do_recovery(struct pci_dev *dev, int severity)
-> +static void pci_do_recovery(struct pci_dev *dev, int severity)
+This is version 4 of a patchset to avoid double free in function
+'pci_epf_create()'.
 
-Maybe pcie_do_recovery?
+When I accidentally created a new endpoint device with an empty name,
+the kernel warned about "attempted to be registered with empty name!"
+and crashed afterwards.
 
-Otherwise looks fine:
+It turned out that the crash was not caused by the 'device_add()'
+function itself, but by a double kfree of 'epf->name' and 'epf'.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The first patch just simplifies the code, while the second patch
+fixes the problem. The third patch removes the goto labels.
+
+Thank you Andy and Kishon for your Ack/Review on v3 for patches 1 and 2.
+In v4 of these patches only the first lines of the commit messages
+have been changed.
+
+Changes in v4:
+- s/pci/PCI and s/epf/EPF in the first line of
+  recent commit messages (thanks, Bjorn!)
+- The new patch #3 removes the goto labels
+  in function 'pci_epf_create()' (thanks, Lorenzo!)
+
+Changes in v3:
+- Matched to other pending pci endpoint commits (thanks, Bjorn!)
+- Added "Fixes" tag in patch 2 (thanks, Andy!)
+
+Changes in v2:
+- Based on feedback from Lorenzo, Andy and Kishon (thanks!)
+- Change IDs removed
+- First patch completely reworked in order to eliminate the
+  need for the second 'kstrdup' allocation and the 'kfree' of
+  the first allocation.
+  It was tested with name="pci_epf_test.0" and name="pci_epb":
+  The 'epf->name' was "pci_epf_test" or "pci_epb" (=unchanged).
+
+Rolf Evers-Fischer (3):
+  PCI: endpoint: Simplify name allocation for EPF device
+  PCI: endpoint: Fix kernel panic after put_device()
+  PCI: endpoint: pci_epf_create: remove goto labels
+
+ drivers/pci/endpoint/pci-epf-core.c | 50 +++++++++----------------------------
+ 1 file changed, 12 insertions(+), 38 deletions(-)
+
+-- 
+2.16.2
