@@ -1,101 +1,193 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-CC: Mark Rutland <Mark.Rutland@arm.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        Catalin Marinas <Catalin.Marinas@arm.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        Sudeep Holla <Sudeep.Holla@arm.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        Joerg Roedel <joro@8bytes.org>
-Subject: RE: [PATCH 01/37] iommu: Introduce Shared Virtual Addressing API
-Date: Tue, 13 Feb 2018 23:43:08 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D191003B1B@SHSMSX101.ccr.corp.intel.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-2-jean-philippe.brucker@arm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D191002823@SHSMSX101.ccr.corp.intel.com>
- <b3c190e7-1a33-971e-b86c-a9725118ba05@arm.com>
-In-Reply-To: <b3c190e7-1a33-971e-b86c-a9725118ba05@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 3/3] PCI: dra7xx: Enable x2 mode support for dra74x,
+ dra76x and dra72x
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20171219085823.8695-1-kishon@ti.com>
+ <20171219085823.8695-4-kishon@ti.com>
+ <20180226103058.GB19841@e107981-ln.cambridge.arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        <linux-omap@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <ad8c490f-2691-6c58-96a1-59788b88fc84@ti.com>
+Date: Wed, 28 Feb 2018 17:34:34 +0530
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180226103058.GB19841@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Jean-Philippe Brucker
-> Sent: Tuesday, February 13, 2018 8:40 PM
-> 
-> 
-> [...]
-> >> +
-> >> +/**
-> >> + * iommu_sva_device_init() - Initialize Shared Virtual Addressing for a
-> >> device
-> >> + * @dev: the device
-> >> + * @features: bitmask of features that need to be initialized
-> >> + * @max_pasid: max PASID value supported by the device
-> >> + *
-> >> + * Users of the bind()/unbind() API must call this function to initialize all
-> >> + * features required for SVA.
-> >> + *
-> >> + * - If the device should support multiple address spaces (e.g. PCI
-> PASID),
-> >> + *   IOMMU_SVA_FEAT_PASID must be requested.
-> >
-> > I think it is by default assumed when using this API, based on definition of
-> > SVA. Can you elaborate the situation where this flag can be cleared?
-> 
-> When passing a device to userspace, you could also share its non-pasid
-> address space with the process. It requires a new domain type so is left
-> as a TODO in patch 2/37. I did get requests for this feature, though I
-> think it was mostly for prototyping. I guess I could remove the flag, and
-> reintroduce it as IOMMU_SVA_FEAT_NO_PASID later on.
+Hi Lorenzo,
 
-sorry I still didn't get the definition of non-pasid address space. 
-Did you mean the GPA/IOVA address space and no_pasid implies
-actually some default PASID associated?
+On Monday 26 February 2018 04:00 PM, Lorenzo Pieralisi wrote:
+> On Tue, Dec 19, 2017 at 02:28:23PM +0530, Kishon Vijay Abraham I wrote:
+>> dra74x/dra76x and dra72x has separate compatible strings. Add support
+> 
+> s/has/have
+> 
+>> for these compatible strings in pci-dra7xx driver to perform syscon
+>> configurations required to get x2 mode working.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/pci/dwc/pci-dra7xx.c | 90 ++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 90 insertions(+)
+>>
+>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>> index e77a4ceed74c..3b4427c10228 100644
+>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>> @@ -83,11 +83,15 @@
+>>  #define MSI_REQ_GRANT					BIT(0)
+>>  #define MSI_VECTOR_SHIFT				7
+>>  
+>> +#define PCIE_1LANE_2LANE_SELECTION			BIT(13)
+>> +#define PCIE_B1C0_MODE_SEL				BIT(2)
+>> +
+>>  struct dra7xx_pcie {
+>>  	struct dw_pcie		*pci;
+>>  	void __iomem		*base;		/* DT ti_conf */
+>>  	int			phy_count;	/* DT phy-names count */
+>>  	struct phy		**phy;
+>> +	u32			*b1c0_mask;
+> 
+> This looks unused in the current patch.
 
+yeah, I'll remove it while sending the next revision.
 > 
-> [...]
-> >> +	ret = domain->ops->sva_device_init(dev, features, &min_pasid,
-> >> +					   &max_pasid);
-> >> +	if (ret)
-> >> +		return ret;
-> >> +
-> >> +	/* FIXME: racy. Next version should have a mutex (same as fault
-> >> handler) */
-> >> +	dev_param->sva_features = features;
-> >> +	dev_param->min_pasid = min_pasid;
-> >> +	dev_param->max_pasid = max_pasid;
-> >
-> > what's the point of min_pasid here?
+>>  	int			link_gen;
+>>  	struct irq_domain	*irq_domain;
+>>  	enum dw_pcie_device_mode mode;
+>> @@ -95,6 +99,7 @@ struct dra7xx_pcie {
+>>  
+>>  struct dra7xx_pcie_of_data {
+>>  	enum dw_pcie_device_mode mode;
+>> +	u32 b1co_mode_sel_mask;
+>>  };
+>>  
+>>  #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
+>> @@ -533,6 +538,26 @@ static const struct dra7xx_pcie_of_data dra7xx_pcie_ep_of_data = {
+>>  	.mode = DW_PCIE_EP_TYPE,
+>>  };
+>>  
+>> +static const struct dra7xx_pcie_of_data dra746_pcie_rc_of_data = {
+>> +	.b1co_mode_sel_mask = BIT(2),
 > 
-> Arm SMMUv3 uses entry 0 of the PASID table for the default (non-pasid)
-> context, so it needs to set min_pasid to 1. AMD IOMMU recently added a
-> similar feature (GIoSup), if I understood correctly.
+> Nit: DT guys are more familiar than me on how this data should be
+> encoded but maybe bit offset + length can be better ? I do not know, I
+> have no problem leaving them as masks.
 > 
+>> +	.mode = DW_PCIE_RC_TYPE,
+>> +};
+>> +
+>> +static const struct dra7xx_pcie_of_data dra726_pcie_rc_of_data = {
+>> +	.b1co_mode_sel_mask = GENMASK(3, 2),
+>> +	.mode = DW_PCIE_RC_TYPE,
+>> +};
+>> +
+>> +static const struct dra7xx_pcie_of_data dra746_pcie_ep_of_data = {
+>> +	.b1co_mode_sel_mask = BIT(2),
+>> +	.mode = DW_PCIE_EP_TYPE,
+>> +};
+>> +
+>> +static const struct dra7xx_pcie_of_data dra726_pcie_ep_of_data = {
+>> +	.b1co_mode_sel_mask = GENMASK(3, 2),
+>> +	.mode = DW_PCIE_EP_TYPE,
+>> +};
+>> +
+>>  static const struct of_device_id of_dra7xx_pcie_match[] = {
+>>  	{
+>>  		.compatible = "ti,dra7-pcie",
+>> @@ -542,6 +567,22 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+>>  		.compatible = "ti,dra7-pcie-ep",
+>>  		.data = &dra7xx_pcie_ep_of_data,
+>>  	},
+>> +	{
+>> +		.compatible = "ti,dra746-pcie-rc",
+>> +		.data = &dra746_pcie_rc_of_data,
+>> +	},
+>> +	{
+>> +		.compatible = "ti,dra726-pcie-rc",
+>> +		.data = &dra726_pcie_rc_of_data,
+>> +	},
+>> +	{
+>> +		.compatible = "ti,dra746-pcie-ep",
+>> +		.data = &dra746_pcie_ep_of_data,
+>> +	},
+>> +	{
+>> +		.compatible = "ti,dra726-pcie-ep",
+>> +		.data = &dra726_pcie_ep_of_data,
+>> +	},
+>>  	{},
+>>  };
+>>  
+>> @@ -587,6 +628,47 @@ static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+>>  	return ret;
+>>  }
+>>  
+>> +static int dra7xx_pcie_configure_two_lane(struct device *dev,
+>> +					  u32 b1co_mode_sel_mask)
+>> +{
+>> +	struct device_node *np = dev->of_node;
+>> +	struct regmap *pcie_syscon;
+>> +	unsigned int pcie_reg;
+>> +
+>> +	pcie_syscon = syscon_regmap_lookup_by_phandle(np,
+>> +						      "ti,syscon-lane-conf");
+>> +	if (IS_ERR(pcie_syscon)) {
+>> +		dev_err(dev, "unable to get ti,syscon-lane-conf\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	if (of_property_read_u32_index(np, "ti,syscon-lane-conf", 1,
+>> +				       &pcie_reg)) {
+>> +		dev_err(dev, "couldn't get lane configuration reg offset\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	regmap_update_bits(pcie_syscon, pcie_reg, PCIE_1LANE_2LANE_SELECTION,
+>> +			   PCIE_1LANE_2LANE_SELECTION);
+> 
+> I do not know if this can create issues but the regmap should clear
+> those bits in the error path ?
 
-just for such purpose maybe we should just define a reserved_pasid
-otherwise there will be some waste if an implementation allows it
-non-zero.
+hmm yeah, maybe we should try to fall back to 1 lane mode.
+> 
+>> +
+>> +	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "ti,syscon-lane-sel");
+>> +	if (IS_ERR(pcie_syscon)) {
+>> +		dev_err(dev, "unable to get ti,syscon-lane-sel\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	if (of_property_read_u32_index(np, "ti,syscon-lane-sel", 1,
+>> +				       &pcie_reg)) {
+>> +		dev_err(dev, "couldn't get lane selection reg offset\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	regmap_update_bits(pcie_syscon, pcie_reg, b1co_mode_sel_mask,
+>> +			   PCIE_B1C0_MODE_SEL);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>  static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>>  {
+>>  	u32 reg;
+>> @@ -608,6 +690,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>>  	const struct of_device_id *match;
+>>  	const struct dra7xx_pcie_of_data *data;
+>>  	enum dw_pcie_device_mode mode;
+>> +	u32 b1co_mode_sel_mask;
+> 
+> Again, do you need this temporary variable (given that you pass the
+> value below) ?
+
+I used so that we don't cross the 80 line character limit below.
 
 Thanks
-Kevin
- 
+Kishon
