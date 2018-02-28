@@ -1,43 +1,250 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59464 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750962AbeBWF1y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 00:27:54 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 23 Feb 2018 10:57:53 +0530
-From: poza@codeaurora.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v10 3/7] PCI/ERR: add mutex to synchronize recovery
-In-Reply-To: <20180222183602.GC6267@infradead.org>
-References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
- <1519315332-26852-4-git-send-email-poza@codeaurora.org>
- <20180222183602.GC6267@infradead.org>
-Message-ID: <2f79e5c643858e13f5ac9d6aef6e536c@codeaurora.org>
+Received: from ale.deltatee.com ([207.54.116.67]:60180 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965039AbeB1XkZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 18:40:25 -0500
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Feb 2018 16:40:02 -0700
+Message-Id: <20180228234006.21093-7-logang@deltatee.com>
+In-Reply-To: <20180228234006.21093-1-logang@deltatee.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+Subject: [PATCH v2 06/10] IB/core: Add optional PCI P2P flag to rdma_rw_ctx_[init|destroy]()
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-02-23 00:06, Christoph Hellwig wrote:
-> On Thu, Feb 22, 2018 at 09:32:08PM +0530, Oza Pawandeep wrote:
->> This patch protects pci_do_recovery with mutex.
-> 
-> Do we really want a global mutex for this and not one per root complex
-> at very least?
+In order to use PCI P2P memory pci_p2pmem_[un]map_sg() functions must be
+called to map the correct DMA address. To do this, we add a flags
+variable and the RDMA_RW_CTX_FLAG_PCI_P2P flag. When the flag is
+specified use the appropriate map function.
 
-This protects pcie_do_recovery, which is called by port service drivers.
-mainly aer and dpc as of now. so the association is not root complex 
-agents
-instead service drivers who attempts to do link recovery.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/infiniband/core/rw.c            | 21 +++++++++++++++++----
+ drivers/infiniband/ulp/isert/ib_isert.c |  5 +++--
+ drivers/infiniband/ulp/srpt/ib_srpt.c   |  7 ++++---
+ drivers/nvme/target/rdma.c              |  6 +++---
+ include/rdma/rw.h                       |  7 +++++--
+ net/sunrpc/xprtrdma/svc_rdma_rw.c       |  6 +++---
+ 6 files changed, 35 insertions(+), 17 deletions(-)
 
-so I think we are good here.
+diff --git a/drivers/infiniband/core/rw.c b/drivers/infiniband/core/rw.c
+index c8963e91f92a..775a9f8b15a6 100644
+--- a/drivers/infiniband/core/rw.c
++++ b/drivers/infiniband/core/rw.c
+@@ -12,6 +12,7 @@
+  */
+ #include <linux/moduleparam.h>
+ #include <linux/slab.h>
++#include <linux/pci-p2pdma.h>
+ #include <rdma/mr_pool.h>
+ #include <rdma/rw.h>
+ 
+@@ -269,18 +270,24 @@ static int rdma_rw_init_single_wr(struct rdma_rw_ctx *ctx, struct ib_qp *qp,
+  * @remote_addr:remote address to read/write (relative to @rkey)
+  * @rkey:	remote key to operate on
+  * @dir:	%DMA_TO_DEVICE for RDMA WRITE, %DMA_FROM_DEVICE for RDMA READ
++ * @flags:      any of the RDMA_RW_CTX_FLAG_* flags
+  *
+  * Returns the number of WQEs that will be needed on the workqueue if
+  * successful, or a negative error code.
+  */
+ int rdma_rw_ctx_init(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
+ 		struct scatterlist *sg, u32 sg_cnt, u32 sg_offset,
+-		u64 remote_addr, u32 rkey, enum dma_data_direction dir)
++		u64 remote_addr, u32 rkey, enum dma_data_direction dir,
++		unsigned int flags)
+ {
+ 	struct ib_device *dev = qp->pd->device;
+ 	int ret;
+ 
+-	ret = ib_dma_map_sg(dev, sg, sg_cnt, dir);
++	if (flags & RDMA_RW_CTX_FLAG_PCI_P2PDMA)
++		ret = pci_p2pdma_map_sg(dev->dma_device, sg, sg_cnt, dir);
++	else
++		ret = ib_dma_map_sg(dev, sg, sg_cnt, dir);
++
+ 	if (!ret)
+ 		return -ENOMEM;
+ 	sg_cnt = ret;
+@@ -579,9 +586,11 @@ EXPORT_SYMBOL(rdma_rw_ctx_post);
+  * @sg:		scatterlist that was used for the READ/WRITE
+  * @sg_cnt:	number of entries in @sg
+  * @dir:	%DMA_TO_DEVICE for RDMA WRITE, %DMA_FROM_DEVICE for RDMA READ
++ * @flags:      the same flags used to init the context
+  */
+ void rdma_rw_ctx_destroy(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
+-		struct scatterlist *sg, u32 sg_cnt, enum dma_data_direction dir)
++		struct scatterlist *sg, u32 sg_cnt, enum dma_data_direction dir,
++		unsigned int flags)
+ {
+ 	int i;
+ 
+@@ -602,7 +611,11 @@ void rdma_rw_ctx_destroy(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
+ 		break;
+ 	}
+ 
+-	ib_dma_unmap_sg(qp->pd->device, sg, sg_cnt, dir);
++	if (flags & RDMA_RW_CTX_FLAG_PCI_P2PDMA)
++		pci_p2pdma_unmap_sg(qp->pd->device->dma_device, sg,
++				    sg_cnt, dir);
++	else
++		ib_dma_unmap_sg(qp->pd->device, sg, sg_cnt, dir);
+ }
+ EXPORT_SYMBOL(rdma_rw_ctx_destroy);
+ 
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index fff40b097947..933200645262 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -1497,7 +1497,8 @@ isert_rdma_rw_ctx_destroy(struct isert_cmd *cmd, struct isert_conn *conn)
+ 				se_cmd->t_prot_nents, dir);
+ 	} else {
+ 		rdma_rw_ctx_destroy(&cmd->rw, conn->qp, conn->cm_id->port_num,
+-				se_cmd->t_data_sg, se_cmd->t_data_nents, dir);
++				se_cmd->t_data_sg, se_cmd->t_data_nents,
++				dir, 0);
+ 	}
+ 
+ 	cmd->rw.nr_ops = 0;
+@@ -2152,7 +2153,7 @@ isert_rdma_rw_ctx_post(struct isert_cmd *cmd, struct isert_conn *conn,
+ 	} else {
+ 		ret = rdma_rw_ctx_init(&cmd->rw, conn->qp, port_num,
+ 				se_cmd->t_data_sg, se_cmd->t_data_nents,
+-				offset, addr, rkey, dir);
++				offset, addr, rkey, dir, 0);
+ 	}
+ 
+ 	if (ret < 0) {
+diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
+index 0373b7c40902..5dcbe0a18db8 100644
+--- a/drivers/infiniband/ulp/srpt/ib_srpt.c
++++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
+@@ -899,7 +899,8 @@ static int srpt_alloc_rw_ctxs(struct srpt_send_ioctx *ioctx,
+ 			goto unwind;
+ 
+ 		ret = rdma_rw_ctx_init(&ctx->rw, ch->qp, ch->sport->port,
+-				ctx->sg, ctx->nents, 0, remote_addr, rkey, dir);
++				ctx->sg, ctx->nents, 0, remote_addr, rkey,
++				dir, 0);
+ 		if (ret < 0) {
+ 			target_free_sgl(ctx->sg, ctx->nents);
+ 			goto unwind;
+@@ -928,7 +929,7 @@ static int srpt_alloc_rw_ctxs(struct srpt_send_ioctx *ioctx,
+ 		struct srpt_rw_ctx *ctx = &ioctx->rw_ctxs[i];
+ 
+ 		rdma_rw_ctx_destroy(&ctx->rw, ch->qp, ch->sport->port,
+-				ctx->sg, ctx->nents, dir);
++				ctx->sg, ctx->nents, dir, 0);
+ 		target_free_sgl(ctx->sg, ctx->nents);
+ 	}
+ 	if (ioctx->rw_ctxs != &ioctx->s_rw_ctx)
+@@ -946,7 +947,7 @@ static void srpt_free_rw_ctxs(struct srpt_rdma_ch *ch,
+ 		struct srpt_rw_ctx *ctx = &ioctx->rw_ctxs[i];
+ 
+ 		rdma_rw_ctx_destroy(&ctx->rw, ch->qp, ch->sport->port,
+-				ctx->sg, ctx->nents, dir);
++				ctx->sg, ctx->nents, dir, 0);
+ 		target_free_sgl(ctx->sg, ctx->nents);
+ 	}
+ 
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index 978e169c11bf..020354e11351 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -427,7 +427,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
+ 	if (rsp->n_rdma) {
+ 		rdma_rw_ctx_destroy(&rsp->rw, queue->cm_id->qp,
+ 				queue->cm_id->port_num, rsp->req.sg,
+-				rsp->req.sg_cnt, nvmet_data_dir(&rsp->req));
++				rsp->req.sg_cnt, nvmet_data_dir(&rsp->req), 0);
+ 	}
+ 
+ 	if (rsp->req.sg != &rsp->cmd->inline_sg)
+@@ -510,7 +510,7 @@ static void nvmet_rdma_read_data_done(struct ib_cq *cq, struct ib_wc *wc)
+ 	atomic_add(rsp->n_rdma, &queue->sq_wr_avail);
+ 	rdma_rw_ctx_destroy(&rsp->rw, queue->cm_id->qp,
+ 			queue->cm_id->port_num, rsp->req.sg,
+-			rsp->req.sg_cnt, nvmet_data_dir(&rsp->req));
++			rsp->req.sg_cnt, nvmet_data_dir(&rsp->req), 0);
+ 	rsp->n_rdma = 0;
+ 
+ 	if (unlikely(wc->status != IB_WC_SUCCESS)) {
+@@ -579,7 +579,7 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
+ 
+ 	ret = rdma_rw_ctx_init(&rsp->rw, cm_id->qp, cm_id->port_num,
+ 			rsp->req.sg, rsp->req.sg_cnt, 0, addr, key,
+-			nvmet_data_dir(&rsp->req));
++			nvmet_data_dir(&rsp->req), 0);
+ 	if (ret < 0)
+ 		return NVME_SC_INTERNAL;
+ 	rsp->req.transfer_len += len;
+diff --git a/include/rdma/rw.h b/include/rdma/rw.h
+index a3cbbc7b6417..dbc342b53901 100644
+--- a/include/rdma/rw.h
++++ b/include/rdma/rw.h
+@@ -59,12 +59,15 @@ struct rdma_rw_ctx {
+ 	};
+ };
+ 
++#define RDMA_RW_CTX_FLAG_PCI_P2PDMA  (1 << 0)
++
+ int rdma_rw_ctx_init(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
+ 		struct scatterlist *sg, u32 sg_cnt, u32 sg_offset,
+-		u64 remote_addr, u32 rkey, enum dma_data_direction dir);
++		u64 remote_addr, u32 rkey, enum dma_data_direction dir,
++		unsigned int flags);
+ void rdma_rw_ctx_destroy(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
+ 		struct scatterlist *sg, u32 sg_cnt,
+-		enum dma_data_direction dir);
++		enum dma_data_direction dir, unsigned int flags);
+ 
+ int rdma_rw_ctx_signature_init(struct rdma_rw_ctx *ctx, struct ib_qp *qp,
+ 		u8 port_num, struct scatterlist *sg, u32 sg_cnt,
+diff --git a/net/sunrpc/xprtrdma/svc_rdma_rw.c b/net/sunrpc/xprtrdma/svc_rdma_rw.c
+index 12b9a7e0b6d2..4364a8e98470 100644
+--- a/net/sunrpc/xprtrdma/svc_rdma_rw.c
++++ b/net/sunrpc/xprtrdma/svc_rdma_rw.c
+@@ -140,7 +140,7 @@ static void svc_rdma_cc_release(struct svc_rdma_chunk_ctxt *cc,
+ 
+ 		rdma_rw_ctx_destroy(&ctxt->rw_ctx, rdma->sc_qp,
+ 				    rdma->sc_port_num, ctxt->rw_sg_table.sgl,
+-				    ctxt->rw_nents, dir);
++				    ctxt->rw_nents, dir, 0);
+ 		svc_rdma_put_rw_ctxt(rdma, ctxt);
+ 	}
+ 	svc_xprt_put(&rdma->sc_xprt);
+@@ -433,7 +433,7 @@ svc_rdma_build_writes(struct svc_rdma_write_info *info,
+ 		ret = rdma_rw_ctx_init(&ctxt->rw_ctx, rdma->sc_qp,
+ 				       rdma->sc_port_num, ctxt->rw_sg_table.sgl,
+ 				       ctxt->rw_nents, 0, seg_offset,
+-				       seg_handle, DMA_TO_DEVICE);
++				       seg_handle, DMA_TO_DEVICE, 0);
+ 		if (ret < 0)
+ 			goto out_initerr;
+ 
+@@ -639,7 +639,7 @@ static int svc_rdma_build_read_segment(struct svc_rdma_read_info *info,
+ 	ret = rdma_rw_ctx_init(&ctxt->rw_ctx, cc->cc_rdma->sc_qp,
+ 			       cc->cc_rdma->sc_port_num,
+ 			       ctxt->rw_sg_table.sgl, ctxt->rw_nents,
+-			       0, offset, rkey, DMA_FROM_DEVICE);
++			       0, offset, rkey, DMA_FROM_DEVICE, 0);
+ 	if (ret < 0)
+ 		goto out_initerr;
+ 
+-- 
+2.11.0
