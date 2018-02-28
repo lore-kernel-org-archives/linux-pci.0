@@ -1,54 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:42519 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933011AbeB1Qfp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Feb 2018 11:35:45 -0500
-From: Gregory CLEMENT <gregory.clement@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        linux-pci@vger.kernel.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory CLEMENT <gregory.clement@bootlin.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Omri Itach <omrii@marvell.com>,
-        Hanna Hawa <hannah@marvell.com>,
-        Igal Liberman <igall@marvell.com>,
-        Marcin Wojtas <mw@semihalf.com>
-Subject: [PATCH v2 1/2] PCI: armada8k: Remove useless test before clk_disable_unprepare
-Date: Wed, 28 Feb 2018 17:35:29 +0100
-Message-Id: <20180228163530.25389-2-gregory.clement@bootlin.com>
-In-Reply-To: <20180228163530.25389-1-gregory.clement@bootlin.com>
-References: <20180228163530.25389-1-gregory.clement@bootlin.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:41382 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752615AbeB1QKc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 11:10:32 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
+Subject: [PATCH v9 0/3] PCI: dwc: Enables MSI-X driver support
+Date: Wed, 28 Feb 2018 16:10:22 +0000
+Message-Id: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-clk_disable_unprepare() already checks that the clock pointer is valid.
-No need to test it before calling it.
+Changes into a new IRQ handler mechanism (multiplexed IRQ domain hierarchy)
+more suitable and appropriate to use on pcie-designware and on each SoC
+specific driver in order to allow new and more complex features like MSI-X.
 
-Signed-off-by: Gregory CLEMENT <gregory.clement@bootlin.com>
----
- drivers/pci/dwc/pcie-armada8k.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Adds Synopsys Root Complex driver support for MSI-X feature.
 
-diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-index b587352f8b9f..f9b1aec25c5c 100644
---- a/drivers/pci/dwc/pcie-armada8k.c
-+++ b/drivers/pci/dwc/pcie-armada8k.c
-@@ -247,8 +247,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 	return 0;
- 
- fail:
--	if (!IS_ERR(pcie->clk))
--		clk_disable_unprepare(pcie->clk);
-+	clk_disable_unprepare(pcie->clk);
- 
- 	return ret;
- }
+Expands the maximum number of IRQs from 32 to 256 distributed by
+a maximum of 8 controller registers.
+
+The patch set was made against the Bjorn's master branch (v4.16-rc1).
+
+Gustavo Pimentel (3):
+  PCI: dwc: Add new IRQ API
+  PCI: dwc: Remove old IRQ API
+  PCI: dwc: Expand maximum number of IRQs from 32 to 256
+
+ drivers/pci/dwc/pci-exynos.c           |  18 --
+ drivers/pci/dwc/pci-imx6.c             |  18 --
+ drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
+ drivers/pci/dwc/pci-keystone.c         |   1 +
+ drivers/pci/dwc/pci-keystone.h         |   4 +-
+ drivers/pci/dwc/pci-layerscape.c       |   3 +-
+ drivers/pci/dwc/pcie-artpec6.c         |  18 --
+ drivers/pci/dwc/pcie-designware-host.c | 398 +++++++++++++++++++--------------
+ drivers/pci/dwc/pcie-designware-plat.c |  16 --
+ drivers/pci/dwc/pcie-designware.h      |  30 ++-
+ drivers/pci/dwc/pcie-qcom.c            |  16 --
+ 11 files changed, 258 insertions(+), 355 deletions(-)
+
 -- 
-2.16.1
+2.7.4
