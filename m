@@ -1,63 +1,241 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, okaya@codeaurora.org,
-        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com, christian.koenig@amd.com,
-        bharatku@xilinx.com
-Subject: [PATCH 33/37] iommu/arm-smmu-v3: Disable tagged pointers
-Date: Mon, 12 Feb 2018 18:33:48 +0000
-Message-Id: <20180212183352.22730-34-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45022 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752561AbeB1REx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 12:04:53 -0500
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v12 4/6] PCI/DPC: Unify and plumb error handling into DPC
+Date: Wed, 28 Feb 2018 22:34:15 +0530
+Message-Id: <1519837457-3596-5-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ARM architecture has a "Top Byte Ignore" (TBI) option that makes the
-MMU mask out bits [63:56] of an address, allowing a userspace application
-to store data in its pointers. This option is incompatible with PCI ATS.
+Current DPC driver does not do recovery, e.g. calling end-point's driver's
+callbacks, which sanitize the sw.
 
-If TBI is enabled in the SMMU and userspace triggers DMA transactions on
-tagged pointers, the endpoint might create ATC entries for addresses that
-include a tag. Software would then have to send ATC invalidation packets
-for each 255 possible alias of an address, or just wipe the whole address
-space. This is not a viable option, so disable TBI.
+DPC driver implements link_reset callback, and calls pci_do_recovery().
 
-The impact of this change is unclear, since there are very few users of
-tagged pointers, much less SVA. But the requirement introduced by this
-patch doesn't seem excessive: a userspace application using both tagged
-pointers and SVA should now sanitize addresses (clear the tag) before
-using them for device DMA.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3-context.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/iommu/arm-smmu-v3-context.c b/drivers/iommu/arm-smmu-v3-context.c
-index eaeba1bec2e9..0479cae5249c 100644
---- a/drivers/iommu/arm-smmu-v3-context.c
-+++ b/drivers/iommu/arm-smmu-v3-context.c
-@@ -221,7 +221,6 @@ static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_context_cfg *cfg, u64 tcr)
- 	val |= ARM_SMMU_TCR2CD(tcr, EPD0);
- 	val |= ARM_SMMU_TCR2CD(tcr, EPD1);
- 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
--	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 98aeec4..9f1c983 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -19,6 +19,7 @@
+ #include <linux/aer.h>
+ #include <linux/pcieport_if.h>
+ #include "portdrv.h"
++#include "./../pci.h"
  
- 	if (cfg->hw_access)
- 		val |= ARM_SMMU_TCR2CD(tcr, HA);
+ struct aer_broadcast_data {
+ 	enum pci_channel_state state;
+@@ -179,11 +180,12 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+-static pci_ers_result_t reset_link(struct pci_dev *dev)
++static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+ {
+ 	struct pci_dev *udev;
+ 	pci_ers_result_t status;
+ 	struct pcie_port_service_driver *driver = NULL;
++	u32 service;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+ 		/* Reset this port for all subordinates */
+@@ -193,8 +195,12 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 		udev = dev->bus->self;
+ 	}
+ 
+-	/* Use the aer driver of the component firstly */
+-	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
++	if (severity == DPC_FATAL)
++		service = PCIE_PORT_SERVICE_DPC;
++	else
++		service = PCIE_PORT_SERVICE_AER;
++
++	driver = pcie_port_find_service(udev, service);
+ 
+ 	if (driver && driver->reset_link) {
+ 		status = driver->reset_link(udev);
+@@ -281,7 +287,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+ 
+-	if (severity == AER_FATAL)
++	if ((severity == AER_FATAL) ||
++	    (severity == DPC_FATAL))
+ 		state = pci_channel_io_frozen;
+ 	else
+ 		state = pci_channel_io_normal;
+@@ -291,10 +298,13 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+ 			"error_detected",
+ 			report_error_detected);
+ 
+-	if (severity == AER_FATAL) {
+-		result = reset_link(dev);
++	if ((severity == AER_FATAL) ||
++	    (severity == DPC_FATAL)) {
++		result = reset_link(dev, severity);
+ 		if (result != PCI_ERS_RESULT_RECOVERED)
+ 			goto failed;
++		else if (severity == DPC_FATAL)
++			goto resume;
+ 	}
+ 
+ 	if (status == PCI_ERS_RESULT_CAN_RECOVER)
+@@ -318,6 +328,7 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+ 		goto failed;
+ 
++resume:
+ 	broadcast_error_message(dev,
+ 				state,
+ 				"resume",
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 38e40c6..517c8b4 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -13,6 +13,7 @@
+ #include <linux/pcieport_if.h>
+ #include "../pci.h"
+ #include "aer/aerdrv.h"
++#include "portdrv.h"
+ 
+ struct dpc_dev {
+ 	struct pcie_device	*dev;
+@@ -45,6 +46,33 @@ struct dpc_dev {
+ 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+ };
+ 
++static int find_dpc_dev_iter(struct device *device, void *data)
++{
++	struct pcie_port_service_driver *service_driver;
++	struct device **dev;
++
++	dev = (struct device **) data;
++
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		service_driver = to_service_driver(device->driver);
++		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
++			*dev = device;
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++static struct device *pci_find_dpc_dev(struct pci_dev *pdev)
++{
++	struct device *dev = NULL;
++
++	device_for_each_child(&pdev->dev, &dev, find_dpc_dev_iter);
++
++	return dev;
++}
++
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ {
+ 	unsigned long timeout = jiffies + HZ;
+@@ -82,12 +110,25 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 		dev_warn(dev, "Link state not disabled for DPC event\n");
+ }
+ 
+-static void dpc_work(struct work_struct *work)
++/**
++ * dpc_reset_link - reset link DPC routine
++ * @pdev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver when performing link reset at Root Port.
++ */
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ {
+-	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+-	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
+-	u16 cap = dpc->cap_pos, ctl;
++	struct pci_dev *dev, *temp;
++	struct dpc_dev *dpc;
++	struct pcie_device *pciedev;
++	struct device *devdpc;
++	u16 cap, ctl;
++
++	devdpc = pci_find_dpc_dev(pdev);
++	pciedev = to_pcie_device(devdpc);
++	dpc = get_service_data(pciedev);
++	cap = dpc->cap_pos;
+ 
+ 	pci_lock_rescan_remove();
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+@@ -104,21 +145,31 @@ static void dpc_work(struct work_struct *work)
+ 
+ 	dpc_wait_link_inactive(dpc);
+ 	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
+-		return;
++		return PCI_ERS_RESULT_DISCONNECT;
+ 	if (dpc->rp_extensions && dpc->rp_pio_status) {
+ 		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+ 				       dpc->rp_pio_status);
+ 		dpc->rp_pio_status = 0;
+ 	}
+ 
+-	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
++	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+ 
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+ 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
++
++	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
++static void dpc_work(struct work_struct *work)
++{
++	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
++	struct pci_dev *pdev = dpc->dev->port;
++
++	/* From DPC point of view error is always FATAL. */
++	pcie_do_recovery(pdev, DPC_FATAL);
++}
+ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+ {
+ 	struct device *dev = &dpc->dev->device;
+@@ -297,6 +348,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.reset_link     = dpc_reset_link,
+ };
+ 
+ static int __init dpc_service_init(void)
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 8f87bbe..9cfd0b8 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -15,6 +15,8 @@
+ #define AER_FATAL			1
+ #define AER_CORRECTABLE			2
+ 
++#define DPC_FATAL			4
++
+ struct pci_dev;
+ 
+ struct aer_header_log_regs {
 -- 
-2.15.1
-
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
