@@ -1,45 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([148.251.95.138]:50148 "EHLO
-        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750909AbeAVWL0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jan 2018 17:11:26 -0500
-Received: (from localhost user: 'ladis' uid#1021 fake: STDIN
-        (ladis@eddie.linux-mips.org)) by eddie.linux-mips.org
-        id S23992781AbeAVVvBG1wxV (ORCPT <rfc822;linux-pci@vger.kernel.org>
-        + 1 other); Mon, 22 Jan 2018 22:51:01 +0100
-Date: Mon, 22 Jan 2018 22:50:57 +0100
-From: Ladislav Michl <ladis@linux-mips.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/5] devres: Move managed io function declarations into
- device.h
-Message-ID: <20180122215056.GA27905@lenoch>
-References: <20180121211432.GA15151@lenoch>
- <20180121211508.GB15151@lenoch>
- <20180122174903.z5ijxouq5bw2s36r@dtor-ws>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180122174903.z5ijxouq5bw2s36r@dtor-ws>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:41411 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753149AbeB1QKd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 11:10:33 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com, gustavo.pimentel@synopsys.com
+Subject: [PATCH v9 3/3] PCI: dwc: Expand maximum number of IRQs from 32 to 256
+Date: Wed, 28 Feb 2018 16:10:25 +0000
+Message-Id: <c20a705416bc58edabbeee664da355fe0fd25f77.1519834018.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
+References: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 22, 2018 at 09:49:03AM -0800, Dmitry Torokhov wrote:
-> On Sun, Jan 21, 2018 at 10:15:08PM +0100, Ladislav Michl wrote:
-> > Moving managed io function declarations into device.h allows
-> > removing forward struct device and resource definitions from
-> > io(port).h
-> 
-> In the face of it, what is the issue with forward declarations of device
-> and resource structures? device.h is supposed to be about Linux device
-> model, not hardware. You would not want all devm_* functions to go into
-> device.h (clock, regulator, input, rtc, hwmon, etc, etc devm API),
-> right? Why would we want ioport there?
+The Synopsys PCIe Root Complex supports up to 256 IRQs distributed by 8
+controller registers.
 
-Allright, point taken. Then I would assume devm_ioremap_resource should
-be moved from device.h into io.h, to get some consistency, right?
-Any other comment (mainly to devm_ioremap_shared_resource) before v2?
+Having this in mind, the number of the maximum number of IRQs was changed
+to 256 and now the number of controllers is calculated based on the number
+of vectors used by the specific SoC driver.
 
-Thank you,
-	ladis
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- New patch file.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Patch renamed from v3-0009 to v4-0010.
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
+Change v5->v6:
+- Nothing changed, just to follow the patch set version.
+Change v6->v7:
+- Nothing changed, just to follow the patch set version.
+Change v7->v8:
+- Rebased against v4.16-rc1.
+Change v8->v9:
+- Changed patch indexation, due patch series squash.
+
+ drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
+ drivers/pci/dwc/pcie-designware.h      | 10 +++-------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 3678818..4da8807 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -76,11 +76,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+ /* MSI int handler */
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ {
+-	u32 val;
+ 	int i, pos, irq;
++	u32 val, num_ctrls;
+ 	irqreturn_t ret = IRQ_NONE;
+ 
+-	for (i = 0; i < MAX_MSI_CTRLS; i++) {
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
++	for (i = 0; i < num_ctrls; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+ 				    &val);
+ 		if (!val)
+@@ -641,13 +643,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+-	u32 val, ctrl;
++	u32 val, ctrl, num_ctrls;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 
+ 	dw_pcie_setup(pci);
+ 
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
+ 	/* Initialize IRQ Status array */
+-	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
++	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+ 				    &pp->irq_status[ctrl]);
+ 	/* setup RC BARs */
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 5807f3f..04e1c22 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -107,13 +107,9 @@
+ #define MSI_MESSAGE_DATA_32		0x58
+ #define MSI_MESSAGE_DATA_64		0x5C
+ 
+-/*
+- * Maximum number of MSI IRQs can be 256 per controller. But keep
+- * it 32 as of now. Probably we will never need more than 32. If needed,
+- * then increment it in multiple of 32.
+- */
+-#define MAX_MSI_IRQS			32
+-#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
++#define MAX_MSI_IRQS			256
++#define MAX_MSI_IRQS_PER_CTRL		32
++#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+ #define MSI_DEF_NUM_VECTORS		32
+ 
+ /* Maximum number of inbound/outbound iATUs */
+-- 
+2.7.4
