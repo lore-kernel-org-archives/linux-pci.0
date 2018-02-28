@@ -1,53 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0040.outbound.protection.outlook.com ([104.47.36.40]:36423
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750729AbeBGGM2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Feb 2018 01:12:28 -0500
-From: Ravikiran Gummaluri <rgummal@xilinx.com>
-To: Ran Shalit <ranshalit@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: understanding DMA in PCI drivers
-Date: Wed, 7 Feb 2018 06:12:25 +0000
-Message-ID: <CY4PR02MB3221824AF76CFC24FC7B9A99DAFC0@CY4PR02MB3221.namprd02.prod.outlook.com>
-References: <CAJ2oMhKJ5ECtr5-F1M_PjO+ev_8-UfpLu+jT9hG7XEwoDV0A_Q@mail.gmail.com>
-In-Reply-To: <CAJ2oMhKJ5ECtr5-F1M_PjO+ev_8-UfpLu+jT9hG7XEwoDV0A_Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gregory CLEMENT <gregory.clement@bootlin.com>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Subject: Re: [PATCH 2/2] PCI: armada8k: Fix clock resource by adding a
+ register clock
+References: <20180228144704.12947-1-gregory.clement@bootlin.com>
+ <20180228144704.12947-3-gregory.clement@bootlin.com>
+ <20180228152756.GV9418@n2100.armlinux.org.uk>
+Date: Wed, 28 Feb 2018 16:31:16 +0100
+In-Reply-To: <20180228152756.GV9418@n2100.armlinux.org.uk> (Russell King's
+ message of "Wed, 28 Feb 2018 15:27:57 +0000")
+Message-ID: <878tbdf7wb.fsf@bootlin.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrew Lunn <andrew@lunn.ch>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jason Cooper <jason@lakedaemon.net>,
+ Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
+ Hanna Hawa <hannah@marvell.com>, Omri Itach <omrii@marvell.com>,
+ Nadav Haklai <nadavh@marvell.com>, Shadi Ammouri <shadi@marvell.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+ =?utf-8?Q?Miqu=C3=A8l?= Raynal <miquel.raynal@bootlin.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Marcin Wojtas <mw@semihalf.com>,
+ Igal Liberman <igall@marvell.com>,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SSBhbSBhc3N1bWluZyBETUEgYXMgb24gSG9zdCBzaWRlLiBJbiB0aGlzIGNhc2UgSG9zdCBETUEg
-d2lsbCBtZSBtYXN0ZXIgZm9yIGFsbCB0cmFuc2FjdGlvbnMoVHggb3IgUngpLg0KIFBvaW50IDQg
-bWF5IGJlIG5vdCByZWxldmFudCAsYXMgRE1BIG9uIGhvc3QgaXMgcmVzcG9uc2libGUgaW4gUlgg
-YWxzby4NCiBBbGwgdGhpcyBwb2ludHMgd2lsbCBiZSByZWxldmFudCB3aGVuIERNQSBpcyB3b3Jr
-aW5nIG9uIG1lbW9yeSBtYXBwZWQgbW9kZSBtZWFuaW5nIHRyYW5zZmVycmluZyBmcm9tIEhvc3Qg
-bWVtb3J5IHRvIEVQIG1lbW9yeS4gDQpJbiBhIHNpbXBsZSBleGFtcGxlICwgVHggZGlyZWN0aW9u
-IERNQSBkZXNjcmlwdG9ycyB3aWxsIGJlIHByb2dyYW1tZWQgd2l0aCBIb3N0IGJ1ZmZlciBhbmQg
-QkFSIGFkZHJlc3MuIEhvc3Qgd2lsbCBwcm9ncmFtIERNQSByZWdpc3RlciB0byB0cmlnZ2VyIHRy
-YW5zZmVyLiBETUEgb24gaG9zdCB3aWxsIG1vdmUgRGF0YSBmcm9tIEhvc3QgdG8gRVAuIA0KSU4g
-UlggZGlyZWN0aW9uICwgRE1BIHdpbGwgYmUgcHJlcHJvZ3JhbW1lZCB3aXRoIGhvc3QgYnVmZmVy
-cywgSG9zdCB3aWxsIHByb2dyYW0gRE1BIHJlZ2lzdGVycyB0byBmZXRjaCBkYXRhIGZyb20gRVAg
-dG8gSG9zdC4gDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgt
-cGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJAdmdl
-ci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgUmFuIFNoYWxpdA0KPiBTZW50OiBXZWRuZXNkYXks
-IEZlYnJ1YXJ5IDcsIDIwMTggMTI6MzMgQU0NCj4gVG86IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5v
-cmcNCj4gU3ViamVjdDogdW5kZXJzdGFuZGluZyBETUEgaW4gUENJIGRyaXZlcnMNCj4gDQo+IEhl
-bGxvLA0KPiANCj4gSSB3cml0ZSBhIHBjaSBsaW51eCBkcml2ZXIsIGFuZCBhZnRlciByZXZpZXdp
-bmcgc29tZSBleGFtcGxlcyBpbiBrZXJuZWwsIHRoZXJlDQo+IGlzIGlzc3VlIEkgYW0gbm90IHN1
-cmUgYWJvdXQ6DQo+IERNQSBzZWVtcyB0byBmb2xsb3cgdGhlIGZvbGxvd2luZyBzdGVwcyBpbiBQ
-Q0k6DQo+IDEuICBkcml2ZXIgYWxsb2NhdGUgZG1hIGJ1ZmZlcnMgYW5kIG1hcCB0aGVtIHRvIEJB
-Ui4NCj4gMi4gZHJpdmVyIGluaXRpYWxpemUgZGV2aWNlIHRvIGJlIGZhbWlsaWFyIHdpdGggZG1h
-IGFkZHJlc3Nlcy4NCj4gMy4gdHggZnJvbSBjcHUgdG8gZGV2aWNlOiBkcml2ZXIgdHJpZ2dlciBk
-bWEsIGJ5IHdyaXRpbmcgaW50byBkZXZpY2UgQkFScy4NCj4gNC4gcnggZnJvbSBkZXZpY2UgdG8g
-Y3B1OiBkZXZpY2UgaXMgcmVzcG9uc2libGUgZm9yIHRyaWdnZXJpbmcgRE1BIChkcml2ZXIgZG9l
-cw0KPiBub3QgZG8gYW55dGhpbmcgaGVyZSkgNS4gdHgvcnggY29tcGxldGlvbjogaW50ZXJydXB0
-IGZyb20gRE1BIChpbiBjcHUpIDYuDQo+IGludGVycnVwdCBoYW5kbGVyIG9mIHNlY3Rpb24gNSBh
-Ym92ZSBjaGVja3MgdGhhdCBkZXZpY2UgZmluaXNoZWQgdHgvcnguDQo+IA0KPiBJcyB0aGUgYWJv
-dmUgdW5kZXJzdGFuZGluZyBjb3JyZWN0ID8NCj4gMS4gQXMgdG8gNiwgSSBhbSBub3Qgc3VyZSBh
-Ym91dCwgaXMgaXQgdGhhdCBkZXZpY2Uga25vd3MgdGhhdCB0cmFuc2FjdGlvbiBpcw0KPiBmaW5p
-c2hlZCAoRE1BIGlzIGluIHNvYyAsIG5vdCBkZXZpY2UpID8NCj4gMi4gSG93IGRvZXMgZGV2aWNl
-IHRyaWdnZXJzIERNQSBmcm9tIGRldmljZSB0byBjcHUsIGlzIGl0IGJ5IHNpbXBseSB3cml0aW5n
-IHRvDQo+IEJBUiA/DQo+IDMuIEhvdyBkb2VzIGRldmljZSB0cmlnZ2VycyBETUEgZnJvbSBjcHUg
-dG8gZGV2aWNlLCBpcyBpdCBieSBzaW1wbHkgcmVhZGluZw0KPiBmcm9tIEJBUiA/DQo+IA0KPiBU
-aGFuayB5b3UsDQo+IFJhbg0K
+SGkgUnVzc2VsbCBLaW5nLAogCiBPbiBtZXIuLCBmw6l2ci4gMjggMjAxOCwgUnVzc2VsbCBLaW5n
+IC0gQVJNIExpbnV4IDxsaW51eEBhcm1saW51eC5vcmcudWs+IHdyb3RlOgoKPiBPbiBXZWQsIEZl
+YiAyOCwgMjAxOCBhdCAwMzo0NzowNFBNICswMTAwLCBHcmVnb3J5IENMRU1FTlQgd3JvdGU6Cj4+
+IEBAIC0yMjksNiArMjMwLDE1IEBAIHN0YXRpYyBpbnQgYXJtYWRhOGtfcGNpZV9wcm9iZShzdHJ1
+Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQo+PiAgCWlmIChyZXQpCj4+ICAJCXJldHVybiByZXQ7
+Cj4+ICAKPj4gKwlpZiAoSVNfRVJSKHBjaWUtPmNsa19yZWcpICYmIFBUUl9FUlIocGNpZS0+Y2xr
+X3JlZykgPT0gLUVQUk9CRV9ERUZFUikgewo+Cj4gWW91IGRvIHJlYWxpc2UgdGhpcyBpcyBuZWVk
+bGVzc2x5IGNvbXBsZXguCj4KPiBQb2ludGVyIGVycm9ycyBhcmUgdW5pcXVlLCBzbzoKPgo+IAlp
+ZiAocGNpZS0+Y2xrX3JlZyA9PSBFUlJfUFRSKC1FUFJPQkVfREVGRVIpKSB7Cj4KPiB3aWxsIGRv
+IHRoZSBzYW1lIHRoaW5nIGJ1dCB3aXRob3V0IHRoZSBjb21wbGV4aXR5LiAgVHJhbnNmb3JtaW5n
+IHRoZQo+IGNvbnN0YW50IHJhdGhlciB0aGFuIHRoZSB2YXJpYWJsZSBpcyBhbHNvIGEgZ29vZCBo
+YWJiaXQgdG8gZ2V0IGludG8gLQo+IHRoZSBjb21waWxlciBjYW4gb3B0aW1pc2UgdHJhbnNmb3Jt
+cyB0byBjb25zdGFudHMsIGJ1dCBjYW4ndCB3aXRoCj4gdmFyaWFibGVzLCBzbyBjb21wYXJpc29u
+cyBpbnZvbHZpbmcgdGhpbmdzIGxpa2UgZW5kaWFuIGNvbnZlcnNpb24KPiBzaG91bGQgYWx3YXlz
+IGJlIGRvbmUgYnkgdHJhbnNmb3JtaW5nIHRoZSBjb25zdGFudCBub3QgdGhlIHZhcmlhYmxlLgoK
+VGhhbmtzIGZvciB0aGUgdGlwLCBJIHdpbGwgdXNlIGl0IGluIHRoZSBuZXh0IHZlcnNpb24uCgpH
+cmVnb3J5Cgo+Cj4gLS0gCj4gUk1LJ3MgUGF0Y2ggc3lzdGVtOiBodHRwOi8vd3d3LmFybWxpbnV4
+Lm9yZy51ay9kZXZlbG9wZXIvcGF0Y2hlcy8KPiBGVFRDIGJyb2FkYmFuZCBmb3IgMC44bWlsZSBs
+aW5lIGluIHN1YnVyYmlhOiBzeW5jIGF0IDguOE1icHMgZG93biA2MzBrYnBzIHVwCj4gQWNjb3Jk
+aW5nIHRvIHNwZWVkdGVzdC5uZXQ6IDguMjFNYnBzIGRvd24gNTEwa2JwcyB1cAoKLS0gCkdyZWdv
+cnkgQ2xlbWVudCwgQm9vdGxpbiAoZm9ybWVybHkgRnJlZSBFbGVjdHJvbnMpCkVtYmVkZGVkIExp
+bnV4IGFuZCBLZXJuZWwgZW5naW5lZXJpbmcKaHR0cDovL2Jvb3RsaW4uY29tCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1h
+aWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xp
+c3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
