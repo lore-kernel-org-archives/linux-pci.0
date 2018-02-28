@@ -1,131 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:56242 "EHLO foss.arm.com"
+Received: from mail.bootlin.com ([62.4.15.54]:36089 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935107AbeBMM30 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Feb 2018 07:29:26 -0500
-Date: Tue, 13 Feb 2018 12:29:20 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-        "thomas.petazzoni@free-electrons.com"
-        <thomas.petazzoni@free-electrons.com>,
-        "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>,
-        "mingkai.hu@freescale.com" <mingkai.hu@freescale.com>,
-        "tie-fei.zang@freescale.com" <tie-fei.zang@freescale.com>,
-        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "wangzhou1@hisilicon.com" <wangzhou1@hisilicon.com>,
-        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
-        "nsekhar@ti.com" <nsekhar@ti.com>
-Subject: Re: [PATCH v6 0/9] PCI: dwc: MSI-X feature
-Message-ID: <20180213122920.GB8981@e107981-ln.cambridge.arm.com>
-References: <cover.1516984229.git.gustavo.pimentel@synopsys.com>
- <20180212122334.GA25396@e107981-ln.cambridge.arm.com>
- <47720ab7-1eb5-0605-5711-80595b358f7d@synopsys.com>
+        id S1752395AbeB1Oxw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 09:53:52 -0500
+Date: Wed, 28 Feb 2018 15:53:50 +0100
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Gregory CLEMENT <gregory.clement@bootlin.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        =?UTF-8?B?TWlxdcOobA==?= Raynal <miquel.raynal@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Shadi Ammouri <shadi@marvell.com>,
+        Omri Itach <omrii@marvell.com>,
+        Hanna Hawa <hannah@marvell.com>,
+        Igal Liberman <igall@marvell.com>,
+        Marcin Wojtas <mw@semihalf.com>
+Subject: Re: [PATCH 2/2] PCI: armada8k: Fix clock resource by adding a
+ register clock
+Message-ID: <20180228155350.0221a90f@windsurf.lan>
+In-Reply-To: <20180228144704.12947-3-gregory.clement@bootlin.com>
+References: <20180228144704.12947-1-gregory.clement@bootlin.com>
+        <20180228144704.12947-3-gregory.clement@bootlin.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47720ab7-1eb5-0605-5711-80595b358f7d@synopsys.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 12, 2018 at 06:14:29PM +0000, Gustavo Pimentel wrote:
-> Hi Lorenzo,
+Hello,
+
+On Wed, 28 Feb 2018 15:47:04 +0100, Gregory CLEMENT wrote:
+> On Armada 7K/8K we need to explicitly enable the register clock. This
+> clock is optional because not all the SoCs using this IP need it but at
+> least for Armada 7K/8K it is actually mandatory.
 > 
-> On 12/02/2018 12:23, Lorenzo Pieralisi wrote:
-> > On Fri, Jan 26, 2018 at 04:35:35PM +0000, Gustavo Pimentel wrote:
-> >> Replaces the use of IRQ domain hierarchy by the IRQ chained used by
-> >> pcie-designware and each SoC specific driver in order to allow new and
-> >> complex features like MSI-X.
-> >>
-> >> Adds Synopsys Root Complex support for MSI-X feature.
-> > 
-> > Hi Gustavo,
-> > 
-> > please CC me for future patch versions. I have a question for you,
-> > the series definitely looks like it is going in the right direction
-> > but I do not understand the cover letter.
-> > 
-> > - You are not replacing the IRQ domain hierarchy, you are actually
-> >   introducing it properly. It may be just nomenclature but I though
-> >   I would mention that.
-> > - I really do not understand why this series is advertised as
-> >   "implementing MSI-X". I want to understand why MSI-X it is not
-> >   currently supported and why this series would enable it, I
-> >   honestly do not understand the reasoning behind this, it looks
-> >   a bit fuzzy.
-> > 
-> > Please note I am just asking clarifications on the $SUBJECT for my own
-> > understanding, the series is definitely the right thing to do and I am
-> > happy to target v4.17 for it.
+> The binding documentation is updated accordingly.
 > 
-> Marc Zyngier also pointed out like you that the description is confusing and
-> does not correspond to what is done in the code and now I also see it now.
+> Signed-off-by: Gregory CLEMENT <gregory.clement@bootlin.com>
+> ---
+>  Documentation/devicetree/bindings/pci/pci-armada8k.txt |  6 +++++-
+>  drivers/pci/dwc/pcie-armada8k.c                        | 11 +++++++++++
+>  2 files changed, 16 insertions(+), 1 deletion(-)
 > 
-> Please fell free to review and point out something wrong, only in this way can I
-> evolve. :)
+> diff --git a/Documentation/devicetree/bindings/pci/pci-armada8k.txt b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+> index c1e4c3d10a74..9948b1e9a8e5 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+> @@ -12,7 +12,11 @@ Required properties:
+>     - "ctrl" for the control register region
+>     - "config" for the config space region
+>  - interrupts: Interrupt specifier for the PCIe controler
+> -- clocks: reference to the PCIe controller clock
+> +- clocks: reference to the PCIe controller clocks
+> +- clock-names: mandatory if there is a second clock, in this case the
+> +   name must be "core" for the first clock and "reg" for the second
+> +   one
+> +
 
-Sure. Let's start by discussing this:
+Unneeded new line added here.
 
-https://patchwork.kernel.org/patch/5708521/
+>  
+>  Example:
+>  
+> diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
+> index f9b1aec25c5c..aa4e5cc4ab7b 100644
+> --- a/drivers/pci/dwc/pcie-armada8k.c
+> +++ b/drivers/pci/dwc/pcie-armada8k.c
+> @@ -28,6 +28,7 @@
+>  struct armada8k_pcie {
+>  	struct dw_pcie *pci;
+>  	struct clk *clk;
+> +	struct clk *clk_reg;
+>  };
+>  
+>  #define PCIE_VENDOR_REGS_OFFSET		0x8000
+> @@ -229,6 +230,15 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+>  	if (ret)
+>  		return ret;
+>  
+> +	if (IS_ERR(pcie->clk_reg) && PTR_ERR(pcie->clk_reg) == -EPROBE_DEFER) {
+> +		clk_disable_unprepare(pcie->clk);
+> +		return -EPROBE_DEFER;
+> +	}
+> +	if (!IS_ERR(pcie->clk_reg)) {
+> +		ret = clk_prepare_enable(pcie->clk_reg);
+> +		if (ret)
+> +			goto fail;
+> +	}
+>  	/* Get the dw-pcie unit configuration/control registers base. */
 
-If it is a HW issue your patches can't solve it. If it is a SW issue
-patch above (and current mainline code - commit 19c5392eb1c1) is wrong.
+Missing new line between the end of the block and the next comment.
 
-Before updating the code I want to understand what the problem is with
-MSI-X in current mainline.
+Regarding the error handling, doesn't it make more sense to also use a
+goto label to disable pcie->clk when getting the second clock gets a
+-EPROBE_DEFER ?
 
-To be as clear as I can: this series is doing the *right* thing, I want
-to understand what the current driver is doing with MSIs and why, so
-that we can help you update the code correctly.
+>  	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
+>  	pci->dbi_base = devm_pci_remap_cfg_resource(dev, base);
+> @@ -247,6 +257,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+>  	return 0;
+>  
+>  fail:
+> +	clk_disable_unprepare(pcie->clk_reg);
 
-Lorenzo
+So you are disabling/unpreparing the clock, which failed to
+prepare/enable ?
 
-> > Thanks,
-> > Lorenzo
-> > 
-> >> Expands the maximum number of IRQs from 32 to 256 distributed by
-> >> a maximum of 8 controller registers.
-> >>
-> >> The patch set was made against the Bjorn's next branch.
-> >>
-> >> Gustavo Pimentel (9):
-> >>   PCI: dwc: Add IRQ chained API support
-> >>   PCI: dwc: exynos: Switch to use the IRQ chained API
-> >>   PCI: dwc: imx6: Switch to use the IRQ chained API
-> >>   PCI: dwc: artpec6: Switch to use the IRQ chained API
-> >>   PCI: dwc: designware: Switch to use the IRQ chained API
-> >>   PCI: dwc: qcom: Switch to use the IRQ chained API
-> >>   PCI: dwc: keystone: Switch to use the IRQ chained API
-> >>   PCI: dwc: Remove IRQ domain hierarchy API support
-> >>   PCI: dwc: Expand maximum number of IRQs from 32 to 256
-> >>
-> >>  drivers/pci/dwc/pci-exynos.c           |  18 --
-> >>  drivers/pci/dwc/pci-imx6.c             |  18 --
-> >>  drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
-> >>  drivers/pci/dwc/pci-keystone.c         |   1 +
-> >>  drivers/pci/dwc/pci-keystone.h         |   4 +-
-> >>  drivers/pci/dwc/pci-layerscape.c       |   3 +-
-> >>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
-> >>  drivers/pci/dwc/pcie-designware-host.c | 402 +++++++++++++++++++--------------
-> >>  drivers/pci/dwc/pcie-designware-plat.c |  16 --
-> >>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
-> >>  drivers/pci/dwc/pcie-qcom.c            |  16 --
-> >>  11 files changed, 260 insertions(+), 357 deletions(-)
-> >>
-> >> -- 
-> >> 2.7.4
-> >>
-> >>
-> 
-> Thanks,
-> Gustavo
-> 
+>  	clk_disable_unprepare(pcie->clk);
+>  
+>  	return ret;
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
+Embedded Linux and Kernel engineering
+http://bootlin.com
