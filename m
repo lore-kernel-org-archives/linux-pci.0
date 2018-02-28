@@ -1,59 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1517956309.2312.172.camel@kernel.crashing.org>
-Subject: Re: [PATCH 1/2] of_pci_irq: add a check to fallback to standard
- device tree parsing
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Ryder Lee <ryder.lee@mediatek.com>
-Date: Wed, 07 Feb 2018 09:31:49 +1100
-In-Reply-To: <1517895732.23319.21.camel@mtkswgap22>
-References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
- <CAL_JsqLZqrxxpuEnoWEGkT2WCuyjqn0bM1DP8PdAwnQsso8kOA@mail.gmail.com>
- <1517563970.24622.9.camel@mtkswgap22>
- <1517866584.2312.140.camel@kernel.crashing.org>
- <1517884738.16010.27.camel@mtkswgap22>
- <1517889903.2312.151.camel@kernel.crashing.org>
- <1517891471.20869.6.camel@mtkswgap22>
- <1517892624.2312.167.camel@kernel.crashing.org>
- <1517895732.23319.21.camel@mtkswgap22>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
- "moderated list:ARM/FREESCALE IMX /
- MXC ARM ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from goliath.siemens.de ([192.35.17.28]:35123 "EHLO
+        goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751646AbeB1GfR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 01:35:17 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Benedikt Spranger <b.spranger@linutronix.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Otavio Pontes <otavio.pontes@intel.com>,
+        Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH v2 0/6] jailhouse: Enhance secondary Jailhouse guest support /wrt PCI
+Date: Wed, 28 Feb 2018 07:34:45 +0100
+Message-Id: <cover.1519799691.git.jan.kiszka@siemens.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-02-06 at 13:42 +0800, Ryder Lee wrote:
-> Thanks for explanation.
-> 
-> So I guess the better way to achieve my aim - one IRQ per slot that is
-> connected to all INTx and get propagated through the bridges (and for
-> those root ports own interrupts (PME ..)} is to add interrupt-map
-> properties in both parent and root port nodes.
-> 
-> Something like this: https://patchwork.kernel.org/patch/9970923// ,right?
+Basic x86 support [1] for running Linux as secondary Jailhouse [2] guest
+is currently pending in the tip tree. This builds on top and enhances
+the PCI support for x86 and also ARM guests (ARM[64] does not require
+platform patches and works already).
 
-Yup.
+Key elements of this series are:
+ - detection of Jailhouse via device tree hypervisor node
+ - function-level PCI scan if Jailhouse is detected
+ - MMCONFIG support for x86 guests
 
-Cheers,
-Ben.
+As most changes affect x86, I would suggest to route the series also via
+tip after the necessary acks are collected.
 
+Changes in v2:
+ - adjusted commit log and include ordering in patch 2
+ - rebased over Linus master
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Jan
+
+[1] https://lkml.org/lkml/2017/11/27/125
+[2] http://jailhouse-project.org
+
+CC: Benedikt Spranger <b.spranger@linutronix.de>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Otavio Pontes <otavio.pontes@intel.com>
+CC: Rob Herring <robh+dt@kernel.org>
+
+Jan Kiszka (5):
+  jailhouse: Provide detection for non-x86 systems
+  PCI: Scan all functions when running over Jailhouse
+  x86: Consolidate PCI_MMCONFIG configs
+  x86/jailhouse: Allow to use PCI_MMCONFIG without ACPI
+  MAINTAINERS: Add entry for Jailhouse
+
+Otavio Pontes (1):
+  x86/jailhouse: Enable PCI mmconfig access in inmates
+
+ Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
+ MAINTAINERS                                     |  7 +++++++
+ arch/x86/Kconfig                                | 11 ++++++-----
+ arch/x86/include/asm/jailhouse_para.h           |  2 +-
+ arch/x86/include/asm/pci_x86.h                  |  2 ++
+ arch/x86/kernel/Makefile                        |  2 +-
+ arch/x86/kernel/cpu/amd.c                       |  2 +-
+ arch/x86/kernel/jailhouse.c                     |  7 +++++++
+ arch/x86/pci/legacy.c                           |  4 +++-
+ arch/x86/pci/mmconfig-shared.c                  |  4 ++--
+ drivers/pci/probe.c                             |  4 +++-
+ include/linux/hypervisor.h                      | 17 +++++++++++++++--
+ 12 files changed, 56 insertions(+), 14 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
+
+-- 
+2.13.6
