@@ -1,71 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58452 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751432AbeBWFYh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Feb 2018 00:24:37 -0500
+Received: from lucky1.263xmail.com ([211.157.147.132]:55363 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751566AbeB1Bml (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Feb 2018 20:42:41 -0500
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix possible NULL pointer dereference for
+ of_pci_bus_find_domain_nr
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1519526762-136838-1-git-send-email-shawn.lin@rock-chips.com>
+ <20180227174957.GA12756@e107981-ln.cambridge.arm.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <9fde4c77-cb07-a520-0114-683d331beeb7@rock-chips.com>
+Date: Wed, 28 Feb 2018 09:42:39 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 23 Feb 2018 10:54:35 +0530
-From: poza@codeaurora.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v10 1/7] PCI/AER: Rename error recovery to generic pci
- naming
-In-Reply-To: <20180222183403.GA6267@infradead.org>
-References: <1519315332-26852-1-git-send-email-poza@codeaurora.org>
- <1519315332-26852-2-git-send-email-poza@codeaurora.org>
- <20180222183403.GA6267@infradead.org>
-Message-ID: <4388ff68e84185bd825abf7ff4ae952d@codeaurora.org>
+In-Reply-To: <20180227174957.GA12756@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-02-23 00:04, Christoph Hellwig wrote:
-> On Thu, Feb 22, 2018 at 09:32:06PM +0530, Oza Pawandeep wrote:
->> This patch renames error recovery to generic name with pci prefix
->> 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> 
->> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c 
->> b/drivers/pci/pcie/aer/aerdrv_core.c
->> index a4bfea5..306bf2f 100644
->> --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> @@ -478,7 +478,7 @@ static pci_ers_result_t reset_link(struct pci_dev 
->> *dev)
->>  }
->> 
->>  /**
->> - * do_recovery - handle nonfatal/fatal error recovery process
->> + * pci_do_recovery - handle nonfatal/fatal error recovery process
->>   * @dev: pointer to a pci_dev data structure of agent detecting an 
->> error
->>   * @severity: error severity type
->>   *
->> @@ -486,7 +486,7 @@ static pci_ers_result_t reset_link(struct pci_dev 
->> *dev)
->>   * error detected message to all downstream drivers within a 
->> hierarchy in
->>   * question and return the returned code.
->>   */
->> -static void do_recovery(struct pci_dev *dev, int severity)
->> +static void pci_do_recovery(struct pci_dev *dev, int severity)
-> 
-> Maybe pcie_do_recovery?
+Dear Lorenzo,
+
+On 2018/2/28 1:49, Lorenzo Pieralisi wrote:
+> On Sun, Feb 25, 2018 at 10:46:02AM +0800, Shawn Lin wrote:
+> I really need to get rid of this function in its current form. In the
+> interim, I think that printing NULL as faulting node gives no
+> information whatsoever so this patch should be updated either by
+> avoiding to print or better by demoting the dev_err() to a pr_err(),
+> whatever works better for Bjorn.
 > 
 
-sure will take care.
-Thanks.
-
-> Otherwise looks fine:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Ok, that sounds reasonable to me, so which ways is preferred, Bjorn?
