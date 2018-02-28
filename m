@@ -1,81 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:60753 "EHLO
+Received: from mout.kundenserver.de ([212.227.17.24]:60345 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752096AbeB1Kfk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 05:35:40 -0500
-Date: Wed, 28 Feb 2018 11:35:32 +0100 (CET)
+        with ESMTP id S932170AbeB1NIK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 08:08:10 -0500
 From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rolf Evers-Fischer <embedded24@evers-fischer.de>,
-        kishon@ti.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com
-Subject: Re: [PATCH v3 0/2] pci: endpoint: Fix double free in
- pci_epf_create()
-In-Reply-To: <20180227145231.GC112033@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.LNX.2.20.1802281130190.29501@5HSWXM1.fritz.box>
-References: <20180227100231.22561-1-embedded24@evers-fischer.de> <20180227102030.GB26238@e107981-ln.cambridge.arm.com> <20180227145231.GC112033@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: kishon@ti.com
+Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        andy.shevchenko@gmail.com,
+        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+Subject: [PATCH v4 3/3] PCI: endpoint: pci_epf_create: remove goto labels
+Date: Wed, 28 Feb 2018 14:07:19 +0100
+Message-Id: <20180228130719.31218-4-embedded24@evers-fischer.de>
+In-Reply-To: <20180228130719.31218-1-embedded24@evers-fischer.de>
+References: <20180228130719.31218-1-embedded24@evers-fischer.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn!
+From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
 
-On Tue, 27 Feb 2018, Bjorn Helgaas wrote:
+Removes the goto labels completely, handles the errors at the
+respective call site and just returns instead of jumping around.
 
-> On Tue, Feb 27, 2018 at 10:20:30AM +0000, Lorenzo Pieralisi wrote:
-> > On Tue, Feb 27, 2018 at 11:02:28AM +0100, Rolf Evers-Fischer wrote:
-> > > This is version 3 of a patchset to avoid double free in function
-> > > 'pci_epf_create()'.
-> > > 
-> > > When I accidentally created a new endpoint device with an empty name,
-> > > the kernel warned about "attempted to be registered with empty name!"
-> > > and crashed afterwards.
-> > > 
-> > > It turned out that the crash was not caused by the 'device_add()'
-> > > function itself, but by a double kfree of 'epf->name' and 'epf'.
-> > > 
-> > > The first patch just simplifies the code, while the second patch
-> > > fixes the problem.
-> > > 
-> > > Changes in v3:
-> > > - Matched to other pending pci endpoint commits (thanks, Bjorn!)
-> > > - Added "Fixes" tag in patch 2 (thanks, Andy!)
-> > > 
-> > > Changes in v2:
-> > > - Based on feedback from Lorenzo, Andy and Kishon (thanks!)
-> > > - Change IDs removed
-> > > - First patch completely reworked in order to eliminate the
-> > >   need for the second 'kstrdup' allocation and the 'kfree' of
-> > >   the first allocation.
-> > >   It was tested with name="pci_epf_test.0" and name="pci_epb":
-> > >   The 'epf->name' was "pci_epf_test" or "pci_epb" (=unchanged).
-> > > 
-> > > Rolf Evers-Fischer (2):
-> > >   pci: endpoint: Simplify name allocation for epf device
-> > >   pci: endpoint: Fix kernel panic after put_device()
-> >     ^^^
-> > 
-> > s/pci/PCI
-> > 
-> > Bjorn pointed that out too, I can do it when merging the patches myself
-> > just a hint in case you have to respin it again, no problem.
-> 
-> I wonder if Rolf posted the wrong version accidentally, since he
-> mentioned making these match, but I don't see anything different in
-> this posting.  Oh, never mind, I see the response about rebasing.
-> I should have been more clear about what I was looking for.
-> 
-> Also s/epf/EPF/, since "epf" isn't a real word.
-> 
+Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+---
+ drivers/pci/endpoint/pci-epf-core.c | 30 +++++++++---------------------
+ 1 file changed, 9 insertions(+), 21 deletions(-)
 
-It was my mistake. I should have asked you to clarify your request - 
-especially after detecting that rebasing the commits didn't change 
-anything.
-
-Nevertheless, it seems that there will be soon a v4, where the s/pci/PCI 
-and the s/epf/EPF can be done along with.
-
-Best regards,
- Rolf
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index 1878a6776519..cf2c4f6590a0 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -203,16 +203,14 @@ struct pci_epf *pci_epf_create(const char *name)
+ 	int len;
+ 
+ 	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
+-	if (!epf) {
+-		ret = -ENOMEM;
+-		goto err_ret;
+-	}
++	if (!epf)
++		return ERR_PTR(-ENOMEM);
+ 
+ 	len = strchrnul(name, '.') - name;
+ 	epf->name = kstrndup(name, len, GFP_KERNEL);
+ 	if (!epf->name) {
+-		ret = -ENOMEM;
+-		goto free_epf;
++		kfree(epf);
++		return ERR_PTR(-ENOMEM);
+ 	}
+ 
+ 	dev = &epf->dev;
+@@ -221,24 +219,14 @@ struct pci_epf *pci_epf_create(const char *name)
+ 	dev->type = &pci_epf_type;
+ 
+ 	ret = dev_set_name(dev, "%s", name);
+-	if (ret)
+-		goto put_dev;
+-
+-	ret = device_add(dev);
+-	if (ret)
+-		goto put_dev;
+-
+-	return epf;
++	if (!ret) {
++		ret = device_add(dev);
++		if (!ret)
++			return epf;
++	}
+ 
+-put_dev:
+ 	put_device(dev);
+ 	return ERR_PTR(ret);
+-
+-free_epf:
+-	kfree(epf);
+-
+-err_ret:
+-	return ERR_PTR(ret);
+ }
+ EXPORT_SYMBOL_GPL(pci_epf_create);
+ 
+-- 
+2.16.2
