@@ -1,116 +1,259 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:45311 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964846AbeBMNvn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Feb 2018 08:51:43 -0500
-Date: Tue, 13 Feb 2018 14:51:39 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V7 2/4] PCI: tegra: Add loadable kernel module support
-Message-ID: <20180213135139.GA15842@ulmo>
-References: <1517289851-14111-1-git-send-email-mmaddireddy@nvidia.com>
- <1517289851-14111-3-git-send-email-mmaddireddy@nvidia.com>
- <20180213130718.GE6764@ulmo>
- <eeab925c-3da4-38ae-2060-f77458abaaea@nvidia.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:19505 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752050AbeB1KA5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 05:00:57 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <cyndis@kapsi.fi>
+CC: <jonathanh@nvidia.com>, <linux-pci@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <vidyas@nvidia.com>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V9 1/3] PCI: tegra: Free resources on probe failure
+Date: Wed, 28 Feb 2018 15:30:32 +0530
+Message-ID: <1519812034-11120-2-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
-In-Reply-To: <eeab925c-3da4-38ae-2060-f77458abaaea@nvidia.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+tegra_pcie_probe() can fail in multiple instances, this patch takes care
+of freeing the resources which are allocated before probe fail.
 
---azLHFNyN32YCQGCU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+Tested-by: Thierry Reding <treding@nvidia.com>
+---
+V2:
+* no change in this patch
+V3:
+* change 'if check' to 'legacy_phy is true' for tegra_pcie_phys_put_legacy()
+* commit log correction
+V4:
+* no change in this patch
+V5:
+* Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
+rebased on linux-next
+V6:
+* no change in this patch
+V7:
+* no change in this patch
+V8:
+* no change in this patch
+V9:
+* no change in this patch
 
-On Tue, Feb 13, 2018 at 06:48:49PM +0530, Manikanta Maddireddy wrote:
->=20
->=20
-> On 13-Feb-18 6:37 PM, Thierry Reding wrote:
-> > On Tue, Jan 30, 2018 at 10:54:09AM +0530, Manikanta Maddireddy wrote:
-> >> Implement remove callback function for Tegra PCIe driver to add
-> >> loadable kernel module support. Change PCI_TEGRA config to tristate to
-> >> allow pci-tegra driver to be build as a module.
-> >>
-> >> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> >> Acked-by: Thierry Reding <treding@nvidia.com>
-> >> ---
-> >> V2:
-> >> * no change in this patch
-> >> V3:
-> >> * use tegra_pcie_debugfs_exit() helper function in tegra_pcie_debugfs_=
-init()
-> >> V4:
-> >> * no change in this patch
-> >> V5:
-> >> * Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-> >> rebased on linux-next
-> >> V6:
-> >> * no change in this patch
-> >> V7:
-> >> * no change in this patch
-> >>
-> >>  drivers/pci/host/Kconfig     |  2 +-
-> >>  drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++---
-> >>  2 files changed, 32 insertions(+), 4 deletions(-)
-> >=20
-> > Trying to build this as a module I get a link failure because
-> > irq_set_msi_desc() is not exported. I thought a patch to do that had
-> > been part of an earlier version of this series. Has that not been merged
-> > yet?
-> >=20
-> > Thierry
-> >=20
-> I got a review comment to use generic MSI model instead of deprecated API.
-> source: https://patchwork.ozlabs.org/patch/841111/
->=20
-> Also arm32 compilation will fail because of missing EXPORT of
-> tegra_cpuidle_pcie_irqs_in_use()
-> source: https://patchwork.ozlabs.org/patch/841119/
->=20
-> I need to put some time to prepare patches for these two cases.
-> Meanwhile I want to get the basic driver structure for LKM to be merged.
-> I verified locally with these two symbols exported.
+ drivers/pci/host/pci-tegra.c | 99 +++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 79 insertions(+), 20 deletions(-)
 
-Okay, that's fine. However, you can't request these patches to be merged
-if they will break builds. There are people that run automated builders
-that will check random configurations, which is bound to eventually get
-us a bug report about how this fails to build.
-
-Perhaps in order to get loadable module support merged without these
-issues you could omit the Kconfig change making this a tristate symbol.
-That way we can get all the structural changes ready and you can work
-on the necessary exports or MSI model patches so that we can eventually
-flip the symbol to tristate.
-
-By the way, if you do respin for the tristate change, do you mind taking
-a look at the blank line changes for readability I mentioned earlier?
-
-Thierry
-
---azLHFNyN32YCQGCU
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqC7WgACgkQ3SOs138+
-s6HeKA/5AfpqUtIa4iyaxxwRVq1sYrSM3mlt8KqhgZ39jshOSKqRl7X2pHAWtL0D
-QgI6/UvdevGnBhPjegfpOF+M7UD9CGhbxejeZCaNqf1EMRqqYvOGsxQ6sCVUY4NS
-olDdEW5Qk/mdNi0kEUTNkJf1UOzOv3SwqzasYmGlaC2kWKM0VCfN8GO2Cna3CFRi
-Pqi20k7BCgcRuLdnnjpjIcytuzPsFzFL/ncF3opG6dyEHZruFKQj25kpJEJWeeu5
-jooWLkF0F9svl7fjZ08JaVpuv0ilLEZR4kOJ0v+BTOEMBfmRDP1qs62qdsIhpBgg
-d/8hfrrQXKQGQTaU8R+7HwLVPZFWC043Z25ELdds3xX2BWdjDBRWYGvBzkR3Ggzq
-yvbf5otj+HuW0LPLOOg90mXZJxOR5hAPWdeXhhpQ41jOimrKU6p2RHjZlskpUOss
-q3x3+06GVlxW/59LDARs/d5AtLeqjmd3QTK8Tmsu5l6DKYD1DM2pGebOvGnWfjME
-WL+t2qDfQyG9axnAb7/GCbMpsr3VDN23t2gwsn9LHIRvyc9gCnKqzGIdIR8OJOVH
-xzjXadFlQRvfCRnvZCKlyygD2OUzHGI/h4BL5Dii7KGhIJeDvCpQ/qJ6jmI2Lx1M
-xj498mSCqYcQxw+mD09Qx7RH/7fTUfPctNSfSwwbWqyRX6f+eyA=
-=+ltN
------END PGP SIGNATURE-----
-
---azLHFNyN32YCQGCU--
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index e4b47ebc91fe..e68507f658d8 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -562,14 +562,25 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
+ 	pci_add_resource(windows, &pcie->busn);
+ 
+ 	err = devm_request_pci_bus_resources(dev, windows);
+-	if (err < 0)
++	if (err < 0) {
++		pci_free_resource_list(windows);
+ 		return err;
++	}
+ 
+ 	pci_remap_iospace(&pcie->pio, pcie->io.start);
+ 
+ 	return 0;
+ }
+ 
++static void tegra_pcie_free_resources(struct tegra_pcie *pcie)
++{
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct list_head *windows = &host->windows;
++
++	pci_unmap_iospace(&pcie->pio);
++	pci_free_resource_list(windows);
++}
++
+ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	struct tegra_pcie *pcie = pdev->bus->sysdata;
+@@ -979,24 +990,35 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static void tegra_pcie_power_off(struct tegra_pcie *pcie)
++static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
+-	const struct tegra_pcie_soc *soc = pcie->soc;
+ 	int err;
+ 
+-	/* TODO: disable and unprepare clocks? */
++	reset_control_assert(pcie->pcie_xrst);
+ 
+-	if (soc->program_uphy) {
++	if (pcie->soc->program_uphy) {
+ 		err = tegra_pcie_phy_power_off(pcie);
+ 		if (err < 0)
+-			dev_err(dev, "failed to power off PHY(s): %d\n", err);
++			dev_err(pcie->dev, "failed to power off PHY(s): %d\n",
++				err);
+ 	}
++}
++
++static void tegra_pcie_power_off(struct tegra_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++	const struct tegra_pcie_soc *soc = pcie->soc;
++	int err;
+ 
+-	reset_control_assert(pcie->pcie_xrst);
+ 	reset_control_assert(pcie->afi_rst);
+ 	reset_control_assert(pcie->pex_rst);
+ 
++	clk_disable_unprepare(pcie->pll_e);
++	if (soc->has_cml_clk)
++		clk_disable_unprepare(pcie->cml_clk);
++	clk_disable_unprepare(pcie->afi_clk);
++	clk_disable_unprepare(pcie->pex_clk);
++
+ 	if (!dev->pm_domain)
+ 		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+ 
+@@ -1205,6 +1227,30 @@ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
++static void tegra_pcie_phys_put(struct tegra_pcie *pcie)
++{
++	struct tegra_pcie_port *port;
++	struct device *dev = pcie->dev;
++	int err, i;
++
++	if (pcie->legacy_phy) {
++		err = phy_exit(pcie->phy);
++		if (err < 0)
++			dev_err(dev, "failed to teardown PHY: %d\n", err);
++		return;
++	}
++
++	list_for_each_entry(port, &pcie->ports, list) {
++		for (i = 0; i < port->lanes; i++) {
++			err = phy_exit(port->phys[i]);
++			if (err < 0)
++				dev_err(dev, "failed to teardown PHY#%u: %d\n",
++					i, err);
++		}
++	}
++}
++
++
+ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+@@ -1236,7 +1282,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 	err = tegra_pcie_power_on(pcie);
+ 	if (err) {
+ 		dev_err(dev, "failed to power up: %d\n", err);
+-		return err;
++		goto phys_put;
+ 	}
+ 
+ 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
+@@ -1288,6 +1334,9 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 
+ 	return 0;
+ 
++phys_put:
++	if (soc->program_uphy)
++		tegra_pcie_phys_put(pcie);
+ poweroff:
+ 	tegra_pcie_power_off(pcie);
+ 	return err;
+@@ -1295,20 +1344,15 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 
+ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
+ 	const struct tegra_pcie_soc *soc = pcie->soc;
+-	int err;
+ 
+ 	if (pcie->irq > 0)
+ 		free_irq(pcie->irq, pcie);
+ 
+ 	tegra_pcie_power_off(pcie);
+ 
+-	if (soc->program_uphy) {
+-		err = phy_exit(pcie->phy);
+-		if (err < 0)
+-			dev_err(dev, "failed to teardown PHY: %d\n", err);
+-	}
++	if (soc->program_uphy)
++		tegra_pcie_phys_put(pcie);
+ 
+ 	return 0;
+ }
+@@ -2048,6 +2092,16 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ 	}
+ }
+ 
++static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
++{
++	struct tegra_pcie_port *port, *tmp;
++
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
++		tegra_pcie_port_disable(port);
++		tegra_pcie_port_free(port);
++	}
++}
++
+ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.num_ports = 2,
+ 	.msi_base_shift = 0,
+@@ -2278,7 +2332,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = tegra_pcie_request_resources(pcie);
+ 	if (err)
+-		goto put_resources;
++		goto disable_controller;
+ 
+ 	/* setup the AFI address translations */
+ 	tegra_pcie_setup_translations(pcie);
+@@ -2287,7 +2341,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 		err = tegra_pcie_enable_msi(pcie);
+ 		if (err < 0) {
+ 			dev_err(dev, "failed to enable MSI support: %d\n", err);
+-			goto put_resources;
++			goto free_resources;
+ 		}
+ 	}
+ 
+@@ -2302,7 +2356,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	err = pci_scan_root_bus_bridge(host);
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to register host: %d\n", err);
+-		goto disable_msi;
++		goto disable_ports;
+ 	}
+ 
+ 	pci_bus_size_bridges(host->bus);
+@@ -2321,9 +2375,14 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ 
+-disable_msi:
++disable_ports:
++	tegra_pcie_disable_ports(pcie);
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		tegra_pcie_disable_msi(pcie);
++free_resources:
++	tegra_pcie_free_resources(pcie);
++disable_controller:
++	tegra_pcie_disable_controller(pcie);
+ put_resources:
+ 	tegra_pcie_put_resources(pcie);
+ 	return err;
+-- 
+2.1.4
