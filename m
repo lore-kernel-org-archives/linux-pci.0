@@ -1,147 +1,343 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0071.outbound.protection.outlook.com ([104.47.37.71]:43744
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751732AbeBBHBG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Feb 2018 02:01:06 -0500
-From: George Cherian <george.cherian@cavium.com>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: bhelgaas@google.com, Jayachandran.Nair@cavium.com,
-        Robert.Richter@cavium.com,
-        George Cherian <george.cherian@cavium.com>
-Subject: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
-Date: Fri,  2 Feb 2018 07:00:46 +0000
-Message-Id: <1517554846-16703-1-git-send-email-george.cherian@cavium.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56722 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964824AbeB1W7z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 17:59:55 -0500
+Date: Wed, 28 Feb 2018 15:59:49 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Alexander Duyck <alexander.h.duyck@intel.com>,
+        virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>, dwmw@amazon.co.uk
+Subject: Re: [PATCH] pci-iov: Add support for unmanaged SR-IOV
+Message-ID: <20180228155949.00fde8ae@w520.home>
+In-Reply-To: <CAKgT0Ufq7EHCErECEbK2urHczZSpOoJKR2a5GWn5BxhZshx0vA@mail.gmail.com>
+References: <20180227190520.3273.79728.stgit@localhost.localdomain>
+        <20180227144015.228d4f5c@w520.home>
+        <CAKgT0Ucq8vF9Kxx31QMG=OUwRr61vurHCPw5NCjxPhR_2JM5MQ@mail.gmail.com>
+        <CAKgT0Ufq7EHCErECEbK2urHczZSpOoJKR2a5GWn5BxhZshx0vA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe Controller on Cavium ThunderX2 processors does not
-respond to downstream CFG/ECFG cycles when root port is
-in power management D3-hot state.
+On Wed, 28 Feb 2018 09:49:21 -0800
+Alexander Duyck <alexander.duyck@gmail.com> wrote:
 
-In our tests the above mentioned errata causes the following crash when
-the downstream endpoint config space is accessed, while root port is in
-D3 state.
+> On Tue, Feb 27, 2018 at 2:25 PM, Alexander Duyck
+> <alexander.duyck@gmail.com> wrote:
+> > On Tue, Feb 27, 2018 at 1:40 PM, Alex Williamson
+> > <alex.williamson@redhat.com> wrote:  
+> >> On Tue, 27 Feb 2018 11:06:54 -0800
+> >> Alexander Duyck <alexander.duyck@gmail.com> wrote:
+> >>  
+> >>> From: Alexander Duyck <alexander.h.duyck@intel.com>
+> >>>
+> >>> This patch is meant to add support for SR-IOV on devices when the VFs are
+> >>> not managed by the kernel. Examples of recent patches attempting to do this
+> >>> include:  
+> >>
+> >> It appears to enable sriov when the _pf_ is not managed by the
+> >> kernel, but by "managed" we mean that either there is no pf driver or
+> >> the pf driver doesn't provide an sriov_configure callback,
+> >> intentionally or otherwise.
+> >>  
+> >>> virto - https://patchwork.kernel.org/patch/10241225/
+> >>> pci-stub - https://patchwork.kernel.org/patch/10109935/
+> >>> vfio - https://patchwork.kernel.org/patch/10103353/
+> >>> uio - https://patchwork.kernel.org/patch/9974031/  
+> >>
+> >> So is the goal to get around the issues with enabling sriov on each of
+> >> the above drivers by doing it under the covers or are you really just
+> >> trying to enable sriov for a truly unmanage (no pf driver) case?  For
+> >> example, should a driver explicitly not wanting sriov enabled implement
+> >> a dummy sriov_configure function?
+> >>  
+> >>> Since this is quickly blowing up into a multi-driver problem it is probably
+> >>> best to implement this solution in one spot.
+> >>>
+> >>> This patch is an attempt to do that. What we do with this patch is provide
+> >>> a generic call to enable SR-IOV in the case that the PF driver is either
+> >>> not present, or the PF driver doesn't support configuring SR-IOV.
+> >>>
+> >>> A new sysfs value called sriov_unmanaged_autoprobe has been added. This
+> >>> value is used as the drivers_autoprobe setting of the VFs when they are
+> >>> being managed by an external entity such as userspace or device firmware
+> >>> instead of being managed by the kernel.  
+> >>
+> >> Documentation/ABI/testing/sysfs-bus-pci update is missing.  
+> >
+> > I can make sure to update that in the next version.
+> >  
+> >>> One side effect of this change is that the sriov_drivers_autoprobe and
+> >>> sriov_unmanaged_autoprobe will only apply their updates when SR-IOV is
+> >>> disabled. Attempts to update them when SR-IOV is in use will only update
+> >>> the local value and will not update sriov->autoprobe.  
+> >>
+> >> And we expect users to understand when sriov_drivers_autoprobe applies
+> >> vs sriov_unmanaged_autoprobe, even though they're using the same
+> >> interfaces to enable sriov?  Are all combinations expected to work, ex.
+> >> unmanaged sriov is enabled, a native pf driver loads, vfs work?  Not
+> >> only does it seems like there's opportunity to use this incorrectly, I
+> >> think maybe it might be difficult to use correctly.
+> >>  
+> >>> I based my patch set originally on the patch by Mark Rustad but there isn't
+> >>> much left after going through and cleaning out the bits that were no longer
+> >>> needed, and after incorporating the feedback from David Miller.
+> >>>
+> >>> I have included the authors of the original 4 patches above in the Cc here.
+> >>> My hope is to get feedback and/or review on if this works for their use
+> >>> cases.
+> >>>
+> >>> Cc: Mark Rustad <mark.d.rustad@intel.com>
+> >>> Cc: Maximilian Heyne <mheyne@amazon.de>
+> >>> Cc: Liang-Min Wang <liang-min.wang@intel.com>
+> >>> Cc: David Woodhouse <dwmw@amazon.co.uk>
+> >>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> >>> ---
+> >>>  drivers/pci/iov.c        |   27 +++++++++++++++++++-
+> >>>  drivers/pci/pci-driver.c |    2 +
+> >>>  drivers/pci/pci-sysfs.c  |   62 +++++++++++++++++++++++++++++++++++++++++-----
+> >>>  drivers/pci/pci.h        |    4 ++-
+> >>>  include/linux/pci.h      |    1 +
+> >>>  5 files changed, 86 insertions(+), 10 deletions(-)
+> >>>
+> >>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> >>> index 677924ae0350..7b8858bd8d03 100644
+> >>> --- a/drivers/pci/iov.c
+> >>> +++ b/drivers/pci/iov.c
+> >>> @@ -446,6 +446,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+> >>>       pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
+> >>>       iov->pgsz = pgsz;
+> >>>       iov->self = dev;
+> >>> +     iov->autoprobe = true;
+> >>>       iov->drivers_autoprobe = true;
+> >>>       pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+> >>>       pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
+> >>> @@ -643,8 +644,11 @@ void pci_restore_iov_state(struct pci_dev *dev)
+> >>>   */
+> >>>  void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool auto_probe)
+> >>>  {
+> >>> -     if (dev->is_physfn)
+> >>> +     if (dev->is_physfn) {
+> >>>               dev->sriov->drivers_autoprobe = auto_probe;
+> >>> +             if (!dev->sriov->num_VFs)
+> >>> +                     dev->sriov->autoprobe = auto_probe;  
+> >>
+> >> Why is dev->sriov->autoprobe set any time other than immediately prior
+> >> to enabling VFs?  
+> >
+> > My concern here was drivers that are still floating around with the
+> > old module parameter option for enabling SR-IOV. In the unlikely event
+> > that somebody was to use such a driver I wanted to make certain that
+> > the drivers_autoprobe state was pre-populated.
 
-[   12.775202] Unhandled fault: synchronous external abort (0x96000610) at 0x0000000000000000
-[   12.783453] Internal error: : 96000610 [#1] SMP
-[   12.787971] Modules linked in: aes_neon_blk ablk_helper cryptd
-[   12.793799] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.8.0-32-generic #34
-[   12.800659] Hardware name: Cavium Inc. Unknown/Unknown, BIOS 1.0 01/01/2018
-[   12.807607] task: ffff808f346b8d80 task.stack: ffff808f346b4000
-[   12.813518] PC is at pci_generic_config_read+0x5c/0xf0
-[   12.818643] LR is at pci_generic_config_read+0x48/0xf0
-[   12.823767] pc : [<ffff000008506f34>] lr : [<ffff000008506f20>] pstate: 204000c9
-[   12.831148] sp : ffff808f346b7bf0
-[   12.834449] x29: ffff808f346b7bf0 x28: ffff000008e2b848
-[   12.839750] x27: ffff000008dc3070 x26: ffff000008d516c0
-[   12.845050] x25: 0000000000000040 x24: ffff00000937a480
-[   12.850351] x23: 000000000000006c x22: 0000000000000000
-[   12.855651] x21: ffff808f346b7c84 x20: 0000000000000004
-[   12.860951] x19: ffff808f31076000 x18: 0000000000000000
-[   12.866251] x17: 000000001b3613e6 x16: 000000007f330457
-[   12.871551] x15: 0000000067268ad7 x14: 000000005c6254ac
-[   12.876851] x13: 00000000f1e100cb x12: 0000000000000030
-[   12.882151] x11: 0101010101010101 x10: 7f7f7f7f7f7f7f7f
-[   12.887452] x9 : ff656d6e626d686f x8 : 7f7f7f7f7f7f7f7f
-[   12.892752] x7 : ffff808f310da108 x6 : 0000000000000000
-[   12.898052] x5 : 0000000000000003 x4 : ffff808f3107a800
-[   12.903352] x3 : 000000000030006c x2 : 0000000000000014
-[   12.908652] x1 : ffff000020000000 x0 : ffff00002030006c
-[   12.913952]
-[   12.915431] Process swapper/0 (pid: 1, stack limit = 0xffff808f346b4020)
-[   12.922118] Stack: (0xffff808f346b7bf0 to 0xffff808f346b8000)
-[   12.927850] 7be0:                                   ffff808f346b7c30 ffff000008506e2c
-[   12.935665] 7c00: ffff000009185000 000000000000006c ffff808f31076000 ffff808f346b7d14
-[   12.943481] 7c20: 0000000000000000 ffff000008309488 ffff808f346b7c90 ffff0000085089f4
-[   12.951296] 7c40: 0000000000000004 ffff808f310d4000 0000000000000000 ffff808f346b7d14
-[   12.959111] 7c60: 0000000000000068 ffff000008dc3078 ffff000008d604c8 ffff0000085089d8
-[   12.966927] 7c80: 0000000000000004 000000000004080b ffff808f346b7cd0 ffff000008513d28
-[   12.974742] 7ca0: ffff000009185000 00000000ffffffe7 0000000000000001 ffff808f310d4000
-[   12.982557] 7cc0: ffff0000092ae000 ffff808f310d4000 ffff808f346b7d20 ffff0000085142d4
-[   12.990372] 7ce0: ffff808f310d4000 ffff808f310d4000 ffff000009214000 ffff808f310d40b0
-[   12.998188] 7d00: ffff0000092ae000 ffff808f310d40b0 00000000092ae000 000000000004080b
-[   13.006003] 7d20: ffff808f346b7d40 ffff000008518754 0000000000000000 ffff808f310d4000
-[   13.013818] 7d40: ffff808f346b7d80 ffff000008d9a974 0000000000000000 ffff808f310d4000
-[   13.021634] 7d60: ffff000008d9a93c 0000000000000000 ffff0000092ae000 000000000004080b
-[   13.029449] 7d80: ffff808f346b7da0 ffff000008083b4c ffff000009185000 ffff808f346b4000
-[   13.037264] 7da0: ffff808f346b7e30 ffff000008d60dfc 00000000000000f5 ffff000009185000
-[   13.045079] 7dc0: ffff0000092ae000 0000000000000007 ffff0000092ae000 ffff000008dc3078
-[   13.052895] 7de0: ffff000008d604c8 ffff000008d51600 ffff000008dc3070 ffff000008e2b720
-[   13.060710] 7e00: ffff0000091a68d8 ffff000008c09678 0000000000000000 0000000700000007
-[   13.068526] 7e20: 0000000000000000 000000000004080b ffff808f346b7ea0 ffff000008980d90
-[   13.076342] 7e40: ffff000008980d78 0000000000000000 0000000000000000 0000000000000000
-[   13.084157] 7e60: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.091972] 7e80: 0000000000000000 0000000000000000 0000000000000000 000000000004080b
-[   13.099788] 7ea0: 0000000000000000 ffff000008083690 ffff000008980d78 0000000000000000
-[   13.107603] 7ec0: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.115418] 7ee0: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.123233] 7f00: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.131048] 7f20: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.138864] 7f40: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.146679] 7f60: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.154494] 7f80: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.162309] 7fa0: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.170125] 7fc0: 0000000000000000 0000000000000005 0000000000000000 0000000000000000
-[   13.177940] 7fe0: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-[   13.185755] Call trace:
-[   13.188190] Exception stack(0xffff808f346b7a00 to 0xffff808f346b7b30)
-[   13.194616] 7a00: ffff808f31076000 0001000000000000 ffff808f346b7bf0 ffff000008506f34
-[   13.202432] 7a20: 00000000204000c9 0000000000000003 ffff000009660000 0000000000000007
-[   13.210247] 7a40: ffff000000000000 0000000000000000 ffff0000092c2d3b 414d48203a6d7665
-[   13.218062] 7a60: 3a73727474612043 0000000000000024 0000000005f5e0ff 0000000000000006
-[   13.225878] 7a80: 0000000000000007 ffff0000092c2d25 ffff808f346b7aa0 ffff00000849bc1c
-[   13.233693] 7aa0: ffff808f346b7b20 ffff00000849c100 0000000000000000 000000000004080b
-[   13.241508] 7ac0: ffff00002030006c ffff000020000000 0000000000000014 000000000030006c
-[   13.249323] 7ae0: ffff808f3107a800 0000000000000003 0000000000000000 ffff808f310da108
-[   13.257139] 7b00: 7f7f7f7f7f7f7f7f ff656d6e626d686f 7f7f7f7f7f7f7f7f 0101010101010101
-[   13.264953] 7b20: 0000000000000030 00000000f1e100cb
-[   13.269819] [<ffff000008506f34>] pci_generic_config_read+0x5c/0xf0
-[   13.275987] [<ffff000008506e2c>] pci_bus_read_config_dword+0xb4/0xd8
-[   13.282328] [<ffff0000085089f4>] pcie_capability_read_dword+0x64/0xb8
-[   13.288757] [<ffff000008513d28>] __pci_dev_reset+0x90/0x328
-[   13.294317] [<ffff0000085142d4>] pci_probe_reset_function+0x24/0x30
-[   13.300571] [<ffff000008518754>] pci_create_sysfs_dev_files+0x18c/0x2a0
-[   13.307173] [<ffff000008d9a974>] pci_sysfs_init+0x38/0x60
-[   13.312560] [<ffff000008083b4c>] do_one_initcall+0x5c/0x170
-[   13.318122] [<ffff000008d60dfc>] kernel_init_freeable+0x1c0/0x27c
-[   13.324205] [<ffff000008980d90>] kernel_init+0x18/0x110
-[   13.329416] [<ffff000008083690>] ret_from_fork+0x10/0x40
-[   13.334716] Code: 7100069f 540003c0 71000a9f 54000240 (b9400001)
-[   13.340805] ---[ end trace fc992038acd29ec3 ]---
+Good point, but maybe that just means we should be setting it in
+sriov_enable()?
+  
+> >>> +     }
+> >>>  }
+> >>>
+> >>>  /**
+> >>> @@ -703,6 +707,27 @@ void pci_disable_sriov(struct pci_dev *dev)
+> >>>  EXPORT_SYMBOL_GPL(pci_disable_sriov);
+> >>>
+> >>>  /**
+> >>> + * pci_sriov_configure_unmanaged - helper to configure unmanaged SR-IOV
+> >>> + * @dev: the PCI device
+> >>> + * @nr_virtfn: number of virtual functions to enable, 0 to disable
+> >>> + *
+> >>> + * Used to provide generic enable/disable SR-IOV option for devices
+> >>> + * that do not manage the VFs generated by their driver, or have no
+> >>> + * driver present.
+> >>> + */
+> >>> +int pci_sriov_configure_unmanaged(struct pci_dev *dev, int nr_virtfn)
+> >>> +{
+> >>> +     int rc = 0;
+> >>> +
+> >>> +     if (!nr_virtfn)
+> >>> +             pci_disable_sriov(dev);
+> >>> +     else
+> >>> +             rc = pci_enable_sriov(dev, nr_virtfn);
+> >>> +
+> >>> +     return rc ? rc : nr_virtfn;
+> >>> +}
+> >>> +
+> >>> +/**
+> >>>   * pci_num_vf - return number of VFs associated with a PF device_release_driver
+> >>>   * @dev: the PCI device
+> >>>   *
+> >>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> >>> index 3bed6beda051..2cc68dff6130 100644
+> >>> --- a/drivers/pci/pci-driver.c
+> >>> +++ b/drivers/pci/pci-driver.c
+> >>> @@ -398,7 +398,7 @@ void __weak pcibios_free_irq(struct pci_dev *dev)
+> >>>  #ifdef CONFIG_PCI_IOV
+> >>>  static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> >>>  {
+> >>> -     return (!pdev->is_virtfn || pdev->physfn->sriov->drivers_autoprobe);
+> >>> +     return (!pdev->is_virtfn || pdev->physfn->sriov->autoprobe);
+> >>>  }
+> >>>  #else
+> >>>  static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> >>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> >>> index eb6bee8724cc..e701b6dbc267 100644
+> >>> --- a/drivers/pci/pci-sysfs.c
+> >>> +++ b/drivers/pci/pci-sysfs.c
+> >>> @@ -605,6 +605,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+> >>>                                 struct device_attribute *attr,
+> >>>                                 const char *buf, size_t count)
+> >>>  {
+> >>> +     int (*sriov_configure)(struct pci_dev *dev, int num_vfs);
+> >>>       struct pci_dev *pdev = to_pci_dev(dev);
+> >>>       int ret;
+> >>>       u16 num_vfs;
+> >>> @@ -622,15 +623,20 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+> >>>               goto exit;
+> >>>
+> >>>       /* is PF driver loaded w/callback */
+> >>> -     if (!pdev->driver || !pdev->driver->sriov_configure) {
+> >>> -             pci_info(pdev, "Driver doesn't support SRIOV configuration via sysfs\n");
+> >>> -             ret = -ENOENT;
+> >>> -             goto exit;
+> >>> -     }
+> >>> +     if (pdev->driver && pdev->driver->sriov_configure)
+> >>> +             sriov_configure = pdev->driver->sriov_configure;
+> >>> +     else
+> >>> +             sriov_configure = pci_sriov_configure_unmanaged;  
+> >>
+> >> So an unwitting user is now able to enable vfs, independent of the
+> >> pf... the trouble being that they're probably going to expect them to
+> >> work and the more common case is that they won't.  For instance, what
+> >> can you do with an igbvf when igb isn't managing the pf?  
+> >
+> > Well the VFs wouldn't be able to do anything. Basically they would be
+> > sitting there with no driver loaded on them unless they are assigned
+> > to a guest, or the root user had enabled the unmanaged option. If you
+> > did load a driver on it the VF would sit there with link down unless
+> > either the PF driver is loaded or some user-space entity steps in to
+> > start managing the PF.
+> >
+> > In reality this can already happen as last I recall igb and ixgbe were
+> > already capable of having the PF driver removed when SR-IOV was
+> > enabled and VFs were assigned. Basically the VFs just report link down
+> > and don't do anything. Reloading the PF driver would have it take over
+> > in the case of igb and ixgbe since they were designed to handle that
+> > type of scenario.
 
-Fix this by adding a quirk that prevents the root port from 
-entering D3 state. This is seen on both Ax/Bx variants of the processor.
+I think only ixgbe behaves this way between the two, igb disables sriov
+in its remove function unless we're hung up by that silly
+pci_vfs_assigned() check, which doesn't apply to vfio assignment.
+Regardless, yes, some pf drivers do leave sriov enabled on remove,
+whether that's useful or reasonable is another question.
 
-Signed-off-by: George Cherian <george.cherian@cavium.com>
----
- drivers/pci/quirks.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+> >> Or what happens when vfio-pci owns the pf, sriov is enabled via the
+> >> unmanaged interface, and the pf user driver segfaults and gets killed,
+> >> causing vfio-pci to restore the pf state, including wiping the sriov
+> >> config?  
+> >
+> > Wiping the config shouldn't have any effect on the allocated VF pci
+> > devices. It will cause the VFs to act as though they have fallen off
+> > of the bus though and the guests would see a surprise remove type
+> > behavior if I am not mistaken. The MMIO and config accesses would fail
+> > until the SR-IOV configuration is restored. Really this shouldn't be a
+> > problem as long as the SR-IOV is enabled prior to loading the vfio-pci
+> > driver as I would assume it would restore the state an re-enable
+> > SR-IOV.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 10684b1..2eb08a8 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1154,6 +1154,18 @@ static void quirk_ide_samemode(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_10, quirk_ide_samemode);
- 
- /*
-+ * Cavium's Thunder-X2 Processors root port doesnot handle cfg/ecfg access to
-+ * downstream properly if root port is put into D3
-+ */
-+
-+static void quirk_no_rootport_d3(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM, 0x9084, quirk_no_rootport_d3);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xaf84, quirk_no_rootport_d3);
-+
-+/*
-  * Some ATA devices break if put into D3
-  */
- 
--- 
-2.1.4
+Nope, sriov does not appear to be part of the device state saved and
+restored around reset, so I think we just end up in an inconsistent
+state.  Also, vfio-pci stores a copy of the saved state of a device
+prior to giving the user access to the device and tries to restore that
+copy when released by the user, so anything that's part of the save
+state and modified via side-channels while the device is opened, would
+still be lost.
+
+> > In the grand scheme of things how would the situation you describe be
+> > any different than someone using the "reset" sysfs control on the PF
+> > while using SR-IOV with driver supported SR-IOV?
+
+Similar, but the pf driver has enabled sriov and can register the
+reset_done error handler to be notified to re-enable sriov or perform
+other cleanup.  If the pf driver is not participating in sriov, it
+would seem exceptional to support this.  Triggering reset via sysfs
+also falls more closely to shooting yourself in the foot than I think
+we want to design into driver/subsystem APIs.
+
+> > I suppose if you really wanted we could add a new call that you could
+> > put into the sriov_configure pointer that would just make it always
+> > return error. Then that way the configuration could be locked until
+> > the driver is unloaded.
+> >  
+> >> I guess I don't understand how vfs can operate fully independent of the
+> >> pf and why vfio-pci wouldn't just implement a dummy sriov_configure to
+> >> avoid contending with such issues.  
+> >
+> > This approach isn't without risk, but it isn't as if it is really a
+> > new risk we are introducing, and we could do further work to help
+> > smooth out issues like this. Much of this depends on the design of the
+> > device and the drivers involved. What is happening in this case is
+> > that the VFs are managed outside of the kernel itself either by some
+> > user-space entity or by a firmware entity.  
+
+But we can't simply split vfs and pfs as separate resources, the vf is
+dependent on the pf and that implies a privilege hierarchy, if not at
+least cooperation.  The pf driver can intentionally or unintentionally
+disconnect the vfs at any point in time, possibly leading to data loss
+or at least denial of service for the vf consumer.  I also don't trust
+that there aren't numerous sriov implementations where the pf isn't
+privileged to the point of being able to snoop data from the vf.  So
+what sort of usage models are we enabling for the vf?  A firmware owned
+vf subject to these conditions seems mostly pointless.
+
+> So I was thinking about this some more. In the case of vfio-pci things
+> are a bit different since you are essentially taking a given device
+> and handing it to a VM or userspace and it doesn't guarantee a
+> communication between the two.
+
+Doesn't guarantee communication or cooperation or even trust.
+
+> My thought is to look at making SR-IOV configuration static or treat
+> it as read-only when the vfio-pci driver is loaded on a given
+> interface. In addition I would set the TAINT_USER flag and add a
+> warning about loading vfio-pci on an active PF, and provide the number
+> of VFs that were allocated.
+> 
+> The idea with all of this being that we would at least have a partial
+> lock on all of this so that you can allocate some number of VFs, and
+> then start partitioning things up where you could assign the PF and
+> VFs as needed to the various interfaces. Once the PF is assigned to
+> the vfio-pci driver it would be locked in terms of the number of VFs
+> that are provided so there would be no need for an extra communication
+> channel between the PF driver and the host to deal with changes.
+> 
+> Thoughts?
+
+Is an sriov configuration ever static?  vfio is the most prolific user
+of the pci reset interfaces, AFAIK.  Even if we add support for
+restoring the sriov configuration and even if the pf user isn't trying
+to be malicious, vf users would need to be prepared for their device
+arbitrarily dropping off the bus, mmio randomly (from their
+perspective) being disabled, and maybe other side-effects of the user
+just trying to use the pf device.  Is there even any guarantee that a
+pf driver can operate identically, regardless of the state of sriov on
+the pf?  It seems like the pf driver needs to be aware of which queues
+are available for itself vs the vfs in some designs.  Is there still
+long term value in a solution for this if the kernel is tainted?
+
+Minimally, it seems like the pf driver (the user driver, not vfio-pci)
+needs to be a cooperating party in this exchange.  How do we determine
+that and what QoS guarantees are they providing by agreeing to it?
+Otherwise it doesn't seem like sriov provides the sort of static, hard
+partitioning of the device that you're asking for.  A vf is a piece of
+the pf and we've released ownership and control of the pf to a user.
+Thanks,
+
+Alex
