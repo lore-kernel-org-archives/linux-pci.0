@@ -1,184 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v2 4/5] ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
-Date: Thu, 15 Feb 2018 17:39:58 +0300
-Message-Id: <20180215144000.60456-5-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180215144000.60456-1-mika.westerberg@linux.intel.com>
-References: <20180215144000.60456-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gregory CLEMENT <gregory.clement@bootlin.com>
+To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCH 2/2] PCI: armada8k: Fix clock resource by adding a
+ register clock
+References: <20180228144704.12947-1-gregory.clement@bootlin.com>
+ <20180228144704.12947-3-gregory.clement@bootlin.com>
+ <20180228155350.0221a90f@windsurf.lan>
+Date: Wed, 28 Feb 2018 16:37:24 +0100
+In-Reply-To: <20180228155350.0221a90f@windsurf.lan> (Thomas Petazzoni's
+ message of "Wed, 28 Feb 2018 15:53:50 +0100")
+Message-ID: <874lm1f7m3.fsf@bootlin.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrew Lunn <andrew@lunn.ch>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jason Cooper <jason@lakedaemon.net>,
+ Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
+ Hanna Hawa <hannah@marvell.com>, Omri Itach <omrii@marvell.com>,
+ Nadav Haklai <nadavh@marvell.com>, Shadi Ammouri <shadi@marvell.com>,
+ Igal Liberman <igall@marvell.com>,
+ =?utf-8?Q?Miqu=C3=A8l?= Raynal <miquel.raynal@bootlin.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Marcin Wojtas <mw@semihalf.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a system is using native PCIe hotplug for Thunderbolt and the
-controller is not enabled for full RTD3 (runtime D3) it will be only
-present in the system when there is a device connected. This pretty much
-follows the BIOS assisted hotplug behaviour.
-
-Thunderbolt host controller integrated PCIe switch has two additional
-PCIe downstream ports that lead to NHI (Thunderbolt host controller) and
-xHCI (USB 3 host controller) respectively. These downstream ports are
-not marked being hotplug capable. Reason for that is to preserve
-resources. Otherwise the OS would distribute remaining resources between
-all downstream ports making these two ports consume too much resources
-they don't really need (both NHI and xHCI only need 1 MB of MMIO space,
-and no extra buses).
-
-Now, because these ports are not marked being hotplug capable the OS
-will not enable hotplug interrupt for them either and will not receive
-interrupt when devices below them are hotplugged. Solution to this is
-that the BIOS sends ACPI Notify() for the root port to notify the OS it
-needs to rescan for added devices.
-
-However, the current ACPI hotplug implementation scans the whole slot
-regardless whether native PCIe is used or not and it expects that the
-BIOS has configured bridge resources upfront. If that's not the case it
-assigns resources using minimal allocation (everything currently found
-just barely fit) preventing future extension. In addition to that, if
-there is another native PCIe hotplug going on we may find the new PCIe
-switch only partially ready (all links are not fully trained yet)
-confusing PCIehp when it finally starts to enumerate new devices.
-
-To make this work better with the native PCIe hotplug driver (PCIehp),
-we let it to handle all slot management and resource allocation for
-hotplug bridges and restrict ACPI hotplug to non-hotplug bridges.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/pci/hotplug/acpiphp.h      |  1 +
- drivers/pci/hotplug/acpiphp_glue.c | 73 ++++++++++++++++++++++++++++++--------
- 2 files changed, 59 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index e438a2d734f2..8dcfd623ef1d 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -158,6 +158,7 @@ struct acpiphp_attention_info
- 
- #define SLOT_ENABLED		(0x00000001)
- #define SLOT_IS_GOING_AWAY	(0x00000002)
-+#define SLOT_IS_NATIVE		(0x00000004)
- 
- /* function flags */
- 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index b45b375c0e6c..5efa21cdddc9 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -282,6 +282,9 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
- 	slot->device = device;
- 	INIT_LIST_HEAD(&slot->funcs);
- 
-+	if (pdev && pciehp_is_native(pdev))
-+		slot->flags |= SLOT_IS_NATIVE;
-+
- 	list_add_tail(&slot->node, &bridge->slots);
- 
- 	/*
-@@ -291,7 +294,7 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
- 	 * expose slots to user space in those cases.
- 	 */
- 	if ((acpi_pci_check_ejectable(pbus, handle) || is_dock_device(adev))
--	    && !(pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev))) {
-+	    && !(slot->flags & SLOT_IS_NATIVE && pdev->is_hotplug_bridge)) {
- 		unsigned long long sun;
- 		int retval;
- 
-@@ -430,6 +433,29 @@ static int acpiphp_rescan_slot(struct acpiphp_slot *slot)
- 	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
- }
- 
-+static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
-+{
-+	struct pci_bus *bus = bridge->subordinate;
-+	struct pci_dev *dev;
-+	int max;
-+
-+	if (!bus)
-+		return;
-+
-+	max = bus->busn_res.start;
-+	/* Scan already configured non-hotplug bridges */
-+	for_each_pci_bridge(dev, bus) {
-+		if (!dev->is_hotplug_bridge)
-+			max = pci_scan_bridge(bus, dev, max, 0);
-+	}
-+
-+	/* Scan non-hotplug bridges that need to be reconfigured */
-+	for_each_pci_bridge(dev, bus) {
-+		if (!dev->is_hotplug_bridge)
-+			max = pci_scan_bridge(bus, dev, max, 1);
-+	}
-+}
-+
- /**
-  * enable_slot - enable, configure a slot
-  * @slot: slot to be enabled
-@@ -442,25 +468,42 @@ static void enable_slot(struct acpiphp_slot *slot)
- 	struct pci_dev *dev;
- 	struct pci_bus *bus = slot->bus;
- 	struct acpiphp_func *func;
--	int max, pass;
--	LIST_HEAD(add_list);
- 
--	acpiphp_rescan_slot(slot);
--	max = acpiphp_max_busnr(bus);
--	for (pass = 0; pass < 2; pass++) {
-+	if (slot->flags & SLOT_IS_NATIVE) {
-+		/*
-+		 * If native PCIe hotplug is used, it will take care of
-+		 * hotplug slot management and resource allocation for
-+		 * hotplug bridges. However, ACPI hotplug may still be
-+		 * used for non-hotplug bridges to bring in additional
-+		 * devices such as Thunderbolt host controller.
-+		 */
- 		for_each_pci_bridge(dev, bus) {
--			if (PCI_SLOT(dev->devfn) != slot->device)
--				continue;
--
--			max = pci_scan_bridge(bus, dev, max, pass);
--			if (pass && dev->subordinate) {
--				check_hotplug_bridge(slot, dev);
--				pcibios_resource_survey_bus(dev->subordinate);
--				__pci_bus_size_bridges(dev->subordinate, &add_list);
-+			if (PCI_SLOT(dev->devfn) == slot->device)
-+				acpiphp_native_scan_bridge(dev);
-+		}
-+		pci_assign_unassigned_bridge_resources(bus->self);
-+	} else {
-+		LIST_HEAD(add_list);
-+		int max, pass;
-+
-+		acpiphp_rescan_slot(slot);
-+		max = acpiphp_max_busnr(bus);
-+		for (pass = 0; pass < 2; pass++) {
-+			for_each_pci_bridge(dev, bus) {
-+				if (PCI_SLOT(dev->devfn) != slot->device)
-+					continue;
-+
-+				max = pci_scan_bridge(bus, dev, max, pass);
-+				if (pass && dev->subordinate) {
-+					check_hotplug_bridge(slot, dev);
-+					pcibios_resource_survey_bus(dev->subordinate);
-+					__pci_bus_size_bridges(dev->subordinate,
-+							       &add_list);
-+				}
- 			}
- 		}
-+		__pci_bus_assign_resources(bus, &add_list, NULL);
- 	}
--	__pci_bus_assign_resources(bus, &add_list, NULL);
- 
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
--- 
-2.15.1
-
+SGkgVGhvbWFzLAogCiBPbiBtZXIuLCBmw6l2ci4gMjggMjAxOCwgVGhvbWFzIFBldGF6em9uaSA8
+dGhvbWFzLnBldGF6em9uaUBib290bGluLmNvbT4gd3JvdGU6Cgo+IEhlbGxvLAo+Cj4gT24gV2Vk
+LCAyOCBGZWIgMjAxOCAxNTo0NzowNCArMDEwMCwgR3JlZ29yeSBDTEVNRU5UIHdyb3RlOgo+PiBP
+biBBcm1hZGEgN0svOEsgd2UgbmVlZCB0byBleHBsaWNpdGx5IGVuYWJsZSB0aGUgcmVnaXN0ZXIg
+Y2xvY2suIFRoaXMKPj4gY2xvY2sgaXMgb3B0aW9uYWwgYmVjYXVzZSBub3QgYWxsIHRoZSBTb0Nz
+IHVzaW5nIHRoaXMgSVAgbmVlZCBpdCBidXQgYXQKPj4gbGVhc3QgZm9yIEFybWFkYSA3Sy84SyBp
+dCBpcyBhY3R1YWxseSBtYW5kYXRvcnkuCj4+IAo+PiBUaGUgYmluZGluZyBkb2N1bWVudGF0aW9u
+IGlzIHVwZGF0ZWQgYWNjb3JkaW5nbHkuCj4+IAo+PiBTaWduZWQtb2ZmLWJ5OiBHcmVnb3J5IENM
+RU1FTlQgPGdyZWdvcnkuY2xlbWVudEBib290bGluLmNvbT4KPj4gLS0tCj4+ICBEb2N1bWVudGF0
+aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3BjaS1hcm1hZGE4ay50eHQgfCAgNiArKysrKy0K
+Pj4gIGRyaXZlcnMvcGNpL2R3Yy9wY2llLWFybWFkYThrLmMgICAgICAgICAgICAgICAgICAgICAg
+ICB8IDExICsrKysrKysrKysrCj4+ICAyIGZpbGVzIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKyks
+IDEgZGVsZXRpb24oLSkKPj4gCj4+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRy
+ZWUvYmluZGluZ3MvcGNpL3BjaS1hcm1hZGE4ay50eHQgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRy
+ZWUvYmluZGluZ3MvcGNpL3BjaS1hcm1hZGE4ay50eHQKPj4gaW5kZXggYzFlNGMzZDEwYTc0Li45
+OTQ4YjFlOWE4ZTUgMTAwNjQ0Cj4+IC0tLSBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5k
+aW5ncy9wY2kvcGNpLWFybWFkYThrLnR4dAo+PiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRy
+ZWUvYmluZGluZ3MvcGNpL3BjaS1hcm1hZGE4ay50eHQKPj4gQEAgLTEyLDcgKzEyLDExIEBAIFJl
+cXVpcmVkIHByb3BlcnRpZXM6Cj4+ICAgICAtICJjdHJsIiBmb3IgdGhlIGNvbnRyb2wgcmVnaXN0
+ZXIgcmVnaW9uCj4+ICAgICAtICJjb25maWciIGZvciB0aGUgY29uZmlnIHNwYWNlIHJlZ2lvbgo+
+PiAgLSBpbnRlcnJ1cHRzOiBJbnRlcnJ1cHQgc3BlY2lmaWVyIGZvciB0aGUgUENJZSBjb250cm9s
+ZXIKPj4gLS0gY2xvY2tzOiByZWZlcmVuY2UgdG8gdGhlIFBDSWUgY29udHJvbGxlciBjbG9jawo+
+PiArLSBjbG9ja3M6IHJlZmVyZW5jZSB0byB0aGUgUENJZSBjb250cm9sbGVyIGNsb2Nrcwo+PiAr
+LSBjbG9jay1uYW1lczogbWFuZGF0b3J5IGlmIHRoZXJlIGlzIGEgc2Vjb25kIGNsb2NrLCBpbiB0
+aGlzIGNhc2UgdGhlCj4+ICsgICBuYW1lIG11c3QgYmUgImNvcmUiIGZvciB0aGUgZmlyc3QgY2xv
+Y2sgYW5kICJyZWciIGZvciB0aGUgc2Vjb25kCj4+ICsgICBvbmUKPj4gKwo+Cj4gVW5uZWVkZWQg
+bmV3IGxpbmUgYWRkZWQgaGVyZS4Kd2lsbCByZW1vdmVkIGl0Cgo+Cj4+ICAKPj4gIEV4YW1wbGU6
+Cj4+ICAKPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2R3Yy9wY2llLWFybWFkYThrLmMgYi9k
+cml2ZXJzL3BjaS9kd2MvcGNpZS1hcm1hZGE4ay5jCj4+IGluZGV4IGY5YjFhZWMyNWM1Yy4uYWE0
+ZTVjYzRhYjdiIDEwMDY0NAo+PiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpZS1hcm1hZGE4ay5j
+Cj4+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2llLWFybWFkYThrLmMKPj4gQEAgLTI4LDYgKzI4
+LDcgQEAKPj4gIHN0cnVjdCBhcm1hZGE4a19wY2llIHsKPj4gIAlzdHJ1Y3QgZHdfcGNpZSAqcGNp
+Owo+PiAgCXN0cnVjdCBjbGsgKmNsazsKPj4gKwlzdHJ1Y3QgY2xrICpjbGtfcmVnOwo+PiAgfTsK
+Pj4gIAo+PiAgI2RlZmluZSBQQ0lFX1ZFTkRPUl9SRUdTX09GRlNFVAkJMHg4MDAwCj4+IEBAIC0y
+MjksNiArMjMwLDE1IEBAIHN0YXRpYyBpbnQgYXJtYWRhOGtfcGNpZV9wcm9iZShzdHJ1Y3QgcGxh
+dGZvcm1fZGV2aWNlICpwZGV2KQo+PiAgCWlmIChyZXQpCj4+ICAJCXJldHVybiByZXQ7Cj4+ICAK
+Pj4gKwlpZiAoSVNfRVJSKHBjaWUtPmNsa19yZWcpICYmIFBUUl9FUlIocGNpZS0+Y2xrX3JlZykg
+PT0gLUVQUk9CRV9ERUZFUikgewo+PiArCQljbGtfZGlzYWJsZV91bnByZXBhcmUocGNpZS0+Y2xr
+KTsKPj4gKwkJcmV0dXJuIC1FUFJPQkVfREVGRVI7Cj4+ICsJfQo+PiArCWlmICghSVNfRVJSKHBj
+aWUtPmNsa19yZWcpKSB7Cj4+ICsJCXJldCA9IGNsa19wcmVwYXJlX2VuYWJsZShwY2llLT5jbGtf
+cmVnKTsKPj4gKwkJaWYgKHJldCkKPj4gKwkJCWdvdG8gZmFpbDsKPj4gKwl9Cj4+ICAJLyogR2V0
+IHRoZSBkdy1wY2llIHVuaXQgY29uZmlndXJhdGlvbi9jb250cm9sIHJlZ2lzdGVycyBiYXNlLiAq
+Lwo+Cj4gTWlzc2luZyBuZXcgbGluZSBiZXR3ZWVuIHRoZSBlbmQgb2YgdGhlIGJsb2NrIGFuZCB0
+aGUgbmV4dCBjb21tZW50Lgo+Ck9LCgo+IFJlZ2FyZGluZyB0aGUgZXJyb3IgaGFuZGxpbmcsIGRv
+ZXNuJ3QgaXQgbWFrZSBtb3JlIHNlbnNlIHRvIGFsc28gdXNlIGEKPiBnb3RvIGxhYmVsIHRvIGRp
+c2FibGUgcGNpZS0+Y2xrIHdoZW4gZ2V0dGluZyB0aGUgc2Vjb25kIGNsb2NrIGdldHMgYQo+IC1F
+UFJPQkVfREVGRVIgPwo+Cj4+ICAJYmFzZSA9IHBsYXRmb3JtX2dldF9yZXNvdXJjZV9ieW5hbWUo
+cGRldiwgSU9SRVNPVVJDRV9NRU0sICJjdHJsIik7Cj4+ICAJcGNpLT5kYmlfYmFzZSA9IGRldm1f
+cGNpX3JlbWFwX2NmZ19yZXNvdXJjZShkZXYsIGJhc2UpOwo+PiBAQCAtMjQ3LDYgKzI1Nyw3IEBA
+IHN0YXRpYyBpbnQgYXJtYWRhOGtfcGNpZV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpw
+ZGV2KQo+PiAgCXJldHVybiAwOwo+PiAgCj4+ICBmYWlsOgo+PiArCWNsa19kaXNhYmxlX3VucHJl
+cGFyZShwY2llLT5jbGtfcmVnKTsKPgo+IFNvIHlvdSBhcmUgZGlzYWJsaW5nL3VucHJlcGFyaW5n
+IHRoZSBjbG9jaywgd2hpY2ggZmFpbGVkIHRvCj4gcHJlcGFyZS9lbmFibGUgPwoKSSB3YXMgdGhp
+bmtpbmcgdG8gYSBzaW5nbGUgdXNlciwgaW4gdGhpcyBjYXNlIGlmIHRoZSBwcmVwYXJlL2VuYWJs
+ZQpmYWlsZWQgdGhlbiB0aGUgZGlzYWJsaW5nL3VucHJlcGFyaW5nIGRvIG5vdGhpbmcgYmVjYXVz
+ZSB0aGUgY291bnRlciBpcwphbHJlYWR5IHRvIDAuIEJ1dCBpbmRlZWQgaW4gY2FzZSBvZiBtdWx0
+aXBsZSB1c2VycyBvZiB0aGUgY2xvY2ssIHRoZW4gdGhlCmNvdW50ZXIgY291bGQgYmUgd3Jvbmds
+eSBkZWNyZWFzZS4gSSB3aWxsIG1vZGlmeSBpdCBieSBhZGRpbmcgYSBvdGhlcgpsYWJlbC4KClRo
+YW5rcywKCkdyZWdvcnkKCj4KPj4gIAljbGtfZGlzYWJsZV91bnByZXBhcmUocGNpZS0+Y2xrKTsK
+Pj4gIAo+PiAgCXJldHVybiByZXQ7Cj4KPiBUaG9tYXMKPiAtLSAKPiBUaG9tYXMgUGV0YXp6b25p
+LCBDVE8sIEJvb3RsaW4gKGZvcm1lcmx5IEZyZWUgRWxlY3Ryb25zKQo+IEVtYmVkZGVkIExpbnV4
+IGFuZCBLZXJuZWwgZW5naW5lZXJpbmcKPiBodHRwOi8vYm9vdGxpbi5jb20KCi0tIApHcmVnb3J5
+IENsZW1lbnQsIEJvb3RsaW4gKGZvcm1lcmx5IEZyZWUgRWxlY3Ryb25zKQpFbWJlZGRlZCBMaW51
+eCBhbmQgS2VybmVsIGVuZ2luZWVyaW5nCmh0dHA6Ly9ib290bGluLmNvbQoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWls
+aW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0
+cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
