@@ -1,59 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45837 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:48458 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751373AbeCLQ2i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Mar 2018 12:28:38 -0400
-Date: Mon, 12 Mar 2018 10:28:36 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>,
+        id S1033501AbeCARtp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 12:49:45 -0500
+Date: Thu, 1 Mar 2018 11:49:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, keith.busch@intel.com,
-        netanel@amazon.com, Maximilian Heyne <mheyne@amazon.de>,
-        "Wang, Liang-min" <liang-min.wang@intel.com>,
-        "Rustad, Mark D" <mark.d.rustad@intel.com>,
-        David Woodhouse <dwmw2@infradead.org>, dwmw@amazon.co.uk
-Subject: Re: [pci PATCH v4 1/4] pci-iov: Add support for unmanaged SR-IOV
-Message-ID: <20180312102836.6db05ef8@w520.home>
-In-Reply-To: <CAKgT0UcJz7go-vRd88M6uo1mqbG9BfedkZmR0CXZ92m6KfRPzw@mail.gmail.com>
-References: <20180308185507.5433.98830.stgit@localhost.localdomain>
-        <20180308190047.5433.77952.stgit@localhost.localdomain>
-        <20180311215909.16ed4bf1@t450s.home>
-        <20180312075907.GA5342@lst.de>
-        <CAKgT0UcJz7go-vRd88M6uo1mqbG9BfedkZmR0CXZ92m6KfRPzw@mail.gmail.com>
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v2 03/10] PCI/P2PDMA: Add PCI p2pmem dma mappings to
+ adjust the bus offset
+Message-ID: <20180301174941.GG13722@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-4-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180228234006.21093-4-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 12 Mar 2018 09:01:54 -0700
-Alexander Duyck <alexander.duyck@gmail.com> wrote:
-
-> On Mon, Mar 12, 2018 at 12:59 AM, Christoph Hellwig <hch@lst.de> wrote:
-> > On Sun, Mar 11, 2018 at 09:59:09PM -0600, Alex Williamson wrote:  
-> >> I still struggle to understand why we need this "unmanaged"
-> >> complication and how a user of the sysfs API is expected to have any
-> >> idea whether a PF is managed or unmanaged and why they should care.
-> >> Can't we just have a pci_simple_sriov_configure() helper and ignore
-> >> this unmanaged business?  Thanks,  
-> >
-> > Just a pci_simple_sriov_configure is exactly what I envisioned originally.  
+On Wed, Feb 28, 2018 at 04:39:59PM -0700, Logan Gunthorpe wrote:
+> The DMA address used when mapping PCI P2P memory must be the PCI bus
+> address. Thus, introduce pci_p2pmem_[un]map_sg() to map the correct
+> addresses when using P2P memory.
 > 
-> I can drop the "unmanaged" bits if that is what is wanted, but based
-> on previous conversations I thought there was some concern about the
-> kernel loading VFs when there was some foreign entity managing the VFs
-> other than the kernel.
+> For this, we assume that an SGL passed to these functions contain all
+> p2p memory or no p2p memory.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
+>  drivers/pci/p2pdma.c       | 51 ++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/memremap.h   |  1 +
+>  include/linux/pci-p2pdma.h | 13 ++++++++++++
+>  3 files changed, 65 insertions(+)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index a57df78f6a32..4e1c81f64b29 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -188,6 +188,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+>  	pgmap->res.flags = pci_resource_flags(pdev, bar);
+>  	pgmap->ref = &pdev->p2pdma->devmap_ref;
+>  	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
+> +	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
+> +		pci_resource_start(pdev, bar);
+>  
+>  	addr = devm_memremap_pages(&pdev->dev, pgmap);
+>  	if (IS_ERR(addr))
+> @@ -616,3 +618,52 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+>  	pdev->p2pdma->published = publish;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
+> +
+> +/*
+> + * pci_p2pdma_map_sg - map a PCI peer-to-peer sg for DMA
+> + * @dev:        device doing the DMA request
+> + * @sg:		scatter list to map
+> + * @nents:	elements in the scatterlist
+> + * @dir:        DMA direction
 
-My concern has always been whether the PF driver is trusted and by
-dropping the vfio bits, the remaining drivers here are native, trusted,
-host drivers, so I don't see that we have any reason to consider the
-VFs as anything other than trusted as well.  It's VFs where the PF
-driver is untrusted, such as a userspace driver, which needs some kind
-of quarantine, imo.  Thanks,
+Can you fix these so the descriptions all have a single space after
+the "@dev:", which seems to be the existing convention in this file?
+The indentation looks pretty random now.
 
-Alex
+> + *
+> + * Returns the number of SG entries mapped
+> + */
+> +int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+> +		      enum dma_data_direction dir)
+
+Same question as before about why the mixture of "pci_*" interfaces
+that take "struct device *" parameters.
+
+> +{
+> +	struct dev_pagemap *pgmap;
+> +	struct scatterlist *s;
+> +	phys_addr_t paddr;
+> +	int i;
+> +
+> +	/*
+> +	 * p2pdma mappings are not compatible with devices that use
+> +	 * dma_virt_ops.
+> +	 */
+> +	if (IS_ENABLED(CONFIG_DMA_VIRT_OPS) && dev->dma_ops == &dma_virt_ops)
+> +		return 0;
+> +
+> +	for_each_sg(sg, s, nents, i) {
+> +		pgmap = sg_page(s)->pgmap;
+> +		paddr = sg_phys(s);
+> +
+> +		s->dma_address = paddr - pgmap->pci_p2pdma_bus_offset;
+> +		sg_dma_len(s) = s->length;
+> +	}
+> +
+> +	return nents;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
+> +
+> +/**
+> + * pci_p2pdma_unmap_sg - unmap a PCI peer-to-peer sg for DMA
+> + * @dev:        device doing the DMA request
+> + * @sg:		scatter list to map
+> + * @nents:	elements in the scatterlist
+> + * @dir:        DMA direction
+
+Same whitespace comment as above.
+
+> + */
+> +void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
+> +			 enum dma_data_direction dir)
+> +{
+> +}
+> +EXPORT_SYMBOL_GPL(pci_p2pdma_unmap_sg);
+> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+> index 9e907c338a44..1660f64ce96f 100644
+> --- a/include/linux/memremap.h
+> +++ b/include/linux/memremap.h
+> @@ -125,6 +125,7 @@ struct dev_pagemap {
+>  	struct device *dev;
+>  	void *data;
+>  	enum memory_type type;
+> +	u64 pci_p2pdma_bus_offset;
+>  };
+>  
+>  #ifdef CONFIG_ZONE_DEVICE
+> diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+> index c0dde3d3aac4..126eca697ab3 100644
+> --- a/include/linux/pci-p2pdma.h
+> +++ b/include/linux/pci-p2pdma.h
+> @@ -36,6 +36,10 @@ int pci_p2pmem_alloc_sgl(struct pci_dev *pdev, struct scatterlist **sgl,
+>  void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl,
+>  		unsigned int nents);
+>  void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
+> +int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+> +		      enum dma_data_direction dir);
+> +void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
+> +			 enum dma_data_direction dir);
+>  #else /* CONFIG_PCI_P2PDMA */
+>  static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+>  		size_t size, u64 offset)
+> @@ -83,5 +87,14 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
+>  static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+>  {
+>  }
+> +static inline int pci_p2pdma_map_sg(struct device *dev,
+> +	struct scatterlist *sg, int nents, enum dma_data_direction dir)
+> +{
+> +	return 0;
+> +}
+> +static inline void pci_p2pdma_unmap_sg(struct device *dev,
+> +	struct scatterlist *sg, int nents, enum dma_data_direction dir)
+> +{
+> +}
+>  #endif /* CONFIG_PCI_P2PDMA */
+>  #endif /* _LINUX_PCI_P2P_H */
+> -- 
+> 2.11.0
+> 
