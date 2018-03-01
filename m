@@ -1,182 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0125.outbound.protection.outlook.com ([104.47.37.125]:22304
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932111AbeCCQJt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 3 Mar 2018 11:09:49 -0500
-From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Jack Morgenstein <jackm@mellanox.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH 2/3] PCI: hv: serialize the present/eject work items
-Date: Sat, 3 Mar 2018 16:09:46 +0000
-Message-ID: <DM5PR2101MB1030BC8E7A263D65A1A64B26DCC40@DM5PR2101MB1030.namprd21.prod.outlook.com>
-References: <20180303001947.20564-1-decui@microsoft.com>
- <20180303001947.20564-2-decui@microsoft.com>
-In-Reply-To: <20180303001947.20564-2-decui@microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.99]:49318 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1033661AbeCASC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 13:02:59 -0500
+Date: Thu, 1 Mar 2018 12:02:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Message-ID: <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-5-logang@deltatee.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180228234006.21093-5-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-kernel-owner@vger.kernel.org <linux-kernel-owner@vger.kernel.=
-org> On Behalf
-> Of Dexuan Cui
-> Sent: Friday, March 2, 2018 4:21 PM
-> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan <kys@mi=
-crosoft.com>;
-> Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;=
- Haiyang Zhang
-> <haiyangz@microsoft.com>; olaf@aepfle.de; apw@canonical.com; jasowang@red=
-hat.com;
-> vkuznets@redhat.com; marcelo.cerri@canonical.com; Dexuan Cui <decui@micro=
-soft.com>;
-> Jack Morgenstein <jackm@mellanox.com>; stable@vger.kernel.org
-> Subject: [PATCH 2/3] PCI: hv: serialize the present/eject work items
->=20
-> When we hot-remove the device, we first receive a PCI_EJECT message and
-> then receive a PCI_BUS_RELATIONS message with bus_rel->device_count =3D=
-=3D 0.
->=20
-> The first message is offloaded to hv_eject_device_work(), and the second
-> is offloaded to pci_devices_present_work(). Both the paths can be running
-> list_del(&hpdev->list_entry), causing general protection fault, because
-> system_wq can run them concurrently.
->=20
-> The patch eliminates the race condition.
+On Wed, Feb 28, 2018 at 04:40:00PM -0700, Logan Gunthorpe wrote:
+> For peer-to-peer transactions to work the downstream ports in each
+> switch must not have the ACS flags set. At this time there is no way
+> to dynamically change the flags and update the corresponding IOMMU
+> groups so this is done at enumeration time before the the groups are
+> assigned.
 
-With this patch, the enum_sem field in struct hv_pcibus_device
-is no longer needed.  The semaphore serializes execution in
-hv_pci_devices_present_work(), and that serialization is now done
-with the ordered workqueue.  Also, the last paragraph of the top level
-comment for hv_pci_devices_present_work() should be updated to
-reflect the new ordering assumptions.
+s/the the/the/
 
-Separately, an unrelated bug:  At the top of hv_eject_device_work(),
-the first test may do a put_pcichild() and return.  This exit path also
-needs to do put_hvpcibus() to balance the ref counts, or do a goto
-the last two lines at the bottom of the function.
-
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
-> Tested-by: Chris Valean <v-chvale@microsoft.com>
-> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> Cc: Jack Morgenstein <jackm@mellanox.com>
-> Cc: stable@vger.kernel.org
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> This effectively means that if CONFIG_PCI_P2PDMA is selected then
+> all devices behind any switch will be in the same IOMMU group.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 > ---
->  drivers/pci/host/pci-hyperv.c | 19 ++++++++++++++++---
->  1 file changed, 16 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 1233300f41c6..57b1fb3ebdb9 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -461,6 +461,8 @@ struct hv_pcibus_device {
->  	struct retarget_msi_interrupt retarget_msi_interrupt_params;
->=20
->  	spinlock_t retarget_msi_interrupt_lock;
+>  drivers/pci/Kconfig        |  4 ++++
+>  drivers/pci/p2pdma.c       | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.c          |  4 ++++
+>  include/linux/pci-p2pdma.h |  5 +++++
+>  4 files changed, 57 insertions(+)
+> 
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 840831418cbd..a430672f0ad4 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -138,6 +138,10 @@ config PCI_P2PDMA
+>  	  it's hard to tell which support it with good performance, so
+>  	  at this time you will need a PCIe switch.
+>  
+> +	  Enabling this option will also disable ACS on all ports behind
+> +	  any PCIe switch. This effictively puts all devices behind any
+> +	  switch into the same IOMMU group.
+
+s/effictively/effectively/
+
+Does this really mean "all devices behind the same Root Port"?
+
+What does this mean in terms of device security?  I assume it means,
+at least, that individual devices can't be assigned to separate VMs.
+
+I don't mind admitting that this patch makes me pretty nervous, and I
+don't have a clear idea of what the implications of this are, or how
+to communicate those to end users.  "The same IOMMU group" is a pretty
+abstract idea.
+
+>  	  If unsure, say N.
+>  
+>  config PCI_LABEL
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 4e1c81f64b29..61af07acd21a 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -255,6 +255,50 @@ static struct pci_dev *get_upstream_bridge_port(struct pci_dev *pdev)
+>  	return up2;
+>  }
+>  
+> +/*
+> + * pci_p2pdma_disable_acs - disable ACS flags for ports in PCI
+> + *	bridges/switches
+> + * @pdev: device to disable ACS flags for
+> + *
+> + * The ACS flags for P2P Request Redirect and P2P Completion Redirect need
+> + * to be disabled on any downstream port in any switch in order for
+> + * the TLPs to not be forwarded up to the RC which is not what we want
+> + * for P2P.
+> + *
+> + * This function is called when the devices are first enumerated and
+> + * will result in all devices behind any switch to be in the same IOMMU
+> + * group. At this time there is no way to "hotplug" IOMMU groups so we rely
+> + * on this largish hammer. If you need the devices to be in separate groups
+> + * don't enable CONFIG_PCI_P2PDMA.
+> + *
+> + * Returns 1 if the ACS bits for this device were cleared, otherwise 0.
+> + */
+> +int pci_p2pdma_disable_acs(struct pci_dev *pdev)
+> +{
+> +	struct pci_dev *up;
+> +	int pos;
+> +	u16 ctrl;
 > +
-> +	struct workqueue_struct *wq;
->  };
->=20
->  /*
-> @@ -1770,7 +1772,7 @@ static void hv_pci_devices_present(struct hv_pcibus=
-_device *hbus,
->  	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
->=20
->  	get_hvpcibus(hbus);
-> -	schedule_work(&dr_wrk->wrk);
-> +	queue_work(hbus->wq, &dr_wrk->wrk);
+> +	up = get_upstream_bridge_port(pdev);
+> +	if (!up)
+> +		return 0;
+> +	pci_dev_put(up);
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+> +	if (!pos)
+> +		return 0;
+> +
+> +	dev_info(&pdev->dev, "disabling ACS flags for peer-to-peer DMA\n");
+> +
+> +	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+> +
+> +	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR);
+> +
+> +	pci_write_config_word(pdev, pos + PCI_ACS_CTRL, ctrl);
+> +
+> +	return 1;
+> +}
+> +
+>  static bool __upstream_bridges_match(struct pci_dev *upstream,
+>  				     struct pci_dev *client)
+>  {
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f6a4dd10d9b0..95ad3cf288c8 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/of.h>
+>  #include <linux/of_pci.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-p2pdma.h>
+>  #include <linux/pm.h>
+>  #include <linux/slab.h>
+>  #include <linux/module.h>
+> @@ -2826,6 +2827,9 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+>   */
+>  void pci_enable_acs(struct pci_dev *dev)
+>  {
+> +	if (pci_p2pdma_disable_acs(dev))
+> +		return;
 
-This invocation of get_hvpcibus() and queue_work() could be made
-conditional on whether the preceding list_add_tail() transitioned
-the list from empty to non-empty.  If the list was already non-empty,
-a previously queued invocation of hv_pci_devices_present_work()
-will find the new entry and process it.   But this is an
-optimization in a non-perf sensitive code path, so may not be
-worth it.
+This doesn't read naturally to me.  I do see that when
+CONFIG_PCI_P2PDMA is not set, pci_p2pdma_disable_acs() does nothing
+and returns 0, so we'll go ahead and try to enable ACS as before.
 
->  }
->=20
->  /**
-> @@ -1848,7 +1850,7 @@ static void hv_pci_eject_device(struct hv_pci_dev *=
-hpdev)
->  	get_pcichild(hpdev, hv_pcidev_ref_pnp);
->  	INIT_WORK(&hpdev->wrk, hv_eject_device_work);
->  	get_hvpcibus(hpdev->hbus);
-> -	schedule_work(&hpdev->wrk);
-> +	queue_work(hpdev->hbus->wq, &hpdev->wrk);
->  }
->=20
->  /**
-> @@ -2463,11 +2465,17 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
->  	sema_init(&hbus->enum_sem, 1);
->  	init_completion(&hbus->remove_event);
-> +	hbus->wq =3D alloc_ordered_workqueue("hv_pci_%x", 0,
-> +					   hbus->sysdata.domain);
-> +	if (!hbus->wq) {
-> +		ret =3D -ENOMEM;
-> +		goto free_bus;
-> +	}
->=20
->  	ret =3D vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0=
-,
->  			 hv_pci_onchannelcallback, hbus);
->  	if (ret)
-> -		goto free_bus;
-> +		goto destroy_wq;
->=20
->  	hv_set_drvdata(hdev, hbus);
->=20
-> @@ -2536,6 +2544,9 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	hv_free_config_window(hbus);
->  close:
->  	vmbus_close(hdev->channel);
-> +destroy_wq:
-> +	drain_workqueue(hbus->wq);
+But I think it would be clearer to have an #ifdef CONFIG_PCI_P2PDMA
+right here so it's more obvious that we only disable ACS when it's
+selected.
 
-The drain_workqueue() call isn't necessary.  destroy_workqueue() calls
-drain_workqueue() and there better not be anything in the workqueue
-anyway since all the ref counts are zero.
-
-> +	destroy_workqueue(hbus->wq);
->  free_bus:
->  	free_page((unsigned long)hbus);
->  	return ret;
-> @@ -2615,6 +2626,8 @@ static int hv_pci_remove(struct hv_device *hdev)
->  	irq_domain_free_fwnode(hbus->sysdata.fwnode);
->  	put_hvpcibus(hbus);
->  	wait_for_completion(&hbus->remove_event);
-> +	drain_workqueue(hbus->wq);
-
-Same here -- drain_workqueue() isn't needed.  The workqueue
-must be empty anyway since the remove_event has completed
-and the ref counts will all be zero.
-
-> +	destroy_workqueue(hbus->wq);
->  	free_page((unsigned long)hbus);
->  	return 0;
->  }
-> --
-> 2.7.4
+>  	if (!pci_acs_enable)
+>  		return;
+>  
+> diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+> index 126eca697ab3..f537f521f60c 100644
+> --- a/include/linux/pci-p2pdma.h
+> +++ b/include/linux/pci-p2pdma.h
+> @@ -22,6 +22,7 @@ struct block_device;
+>  struct scatterlist;
+>  
+>  #ifdef CONFIG_PCI_P2PDMA
+> +int pci_p2pdma_disable_acs(struct pci_dev *pdev);
+>  int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+>  		u64 offset);
+>  int pci_p2pdma_add_client(struct list_head *head, struct device *dev);
+> @@ -41,6 +42,10 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+>  void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
+>  			 enum dma_data_direction dir);
+>  #else /* CONFIG_PCI_P2PDMA */
+> +static inline int pci_p2pdma_disable_acs(struct pci_dev *pdev)
+> +{
+> +	return 0;
+> +}
+>  static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+>  		size_t size, u64 offset)
+>  {
+> -- 
+> 2.11.0
+> 
