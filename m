@@ -1,61 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:54296 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752064AbeCUOnR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 10:43:17 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <lftan@altera.com>
-Subject: [PATCH v2 05/10] PCI: faraday: struct faraday_pci_variant can be static
-Date: Wed, 21 Mar 2018 14:42:49 +0000
-Message-Id: <20180321144254.7406-6-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
-References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36352 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033399AbeCARoa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 12:44:30 -0500
+To: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        "shankerd@codeaurora.org" <shankerd@codeaurora.org>,
+        Vikram Sethi <vikrams@codeaurora.org>,
+        "Goel, Sameer" <sgoel@codeaurora.org>, kexec@lists.infradead.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: RFC on Kdump and PCIe on ARM64
+Message-ID: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
+Date: Thu, 1 Mar 2018 12:44:26 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fengguang Wu <fengguang.wu@intel.com>
+Hi,
 
-This was generated from 0-day builder.
+We are seeing IOMMU faults when booting the kdump kernel on ARM64.
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-[lorenzo.pieralisi@arm.com: reworked/split patch]
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/pci/host/pci-ftpci100.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+[    7.220162] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x02 received:
+[    7.226123] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000010000000002
+[    7.232023] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
+[    7.237925] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
+[    7.243827] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
 
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-index b9617d1c1d48..5008fd87956a 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -586,11 +586,11 @@ static int faraday_pci_probe(struct platform_device *pdev)
-  * We encode bridge variants here, we have at least two so it doesn't
-  * hurt to have infrastructure to encompass future variants as well.
-  */
--const struct faraday_pci_variant faraday_regular = {
-+static const struct faraday_pci_variant faraday_regular = {
- 	.cascaded_irq = true,
- };
- 
--const struct faraday_pci_variant faraday_dual = {
-+static const struct faraday_pci_variant faraday_dual = {
- 	.cascaded_irq = false,
- };
- 
+This is Nate's interpretation of the fault:
+
+"The PCI device is sending transactions just after the SMMU was reset/reinitialized
+which is problematic because the device has not yet been added to the SMMU
+and thus should not be doing *any* DMA.  DMA from the PCI devices should be
+quiesced prior to starting the crashdump kernel or you risk overwriting portions
+of memory you meant to preserve. In this case the SMMU was actually doing you a favor
+by blocking these errant DMA operations!!"
+
+I think this makes sense especially for the IOMMU enabled case on the host where an
+IOVA can overlap with the region of memory kdump reserved for itself.
+
+Apparently, there has been similar concerns in the past.
+
+https://www.fujitsu.com/jp/documents/products/software/os/linux/catalog/LinuxConJapan2013-Indoh.pdf
+
+and was not addressed globally due to IOMMU+PCI driver ordering issues and bugs in
+HW due to hot reset.
+
+https://lkml.org/lkml/2012/8/3/160
+
+Hot reset as mentioned is destructive and may not be the best implementation choice. 
+However, most of the modern endpoints support PCIE function level reset.
+
+One other solution is for SMMUv3 driver to reserve the kdump used IOVA addresses.
+
+Another solution is for the SMMUv3 driver to disable PCIe devices behind the SMMU
+if it see SMMU is already enabled.
+
+Appreciate the feedback,
+Sinan
+
 -- 
-2.15.0
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
