@@ -1,349 +1,442 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:58243 "EHLO
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:33879 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752159AbeC1Lio (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:38:44 -0400
+        with ESMTP id S1030485AbeCAMuq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 07:50:46 -0500
+Subject: Re: [PATCH v9 1/3] PCI: dwc: Add new IRQ API
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+        "thomas.petazzoni@free-electrons.com"
+        <thomas.petazzoni@free-electrons.com>,
+        "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>,
+        "mingkai.hu@freescale.com" <mingkai.hu@freescale.com>,
+        "tie-fei.zang@freescale.com" <tie-fei.zang@freescale.com>,
+        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+        "wangzhou1@hisilicon.com" <wangzhou1@hisilicon.com>,
+        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
+        "nsekhar@ti.com" <nsekhar@ti.com>
+References: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
+ <92c84aeb09c0dd52da6879239ee9cf57cc982e13.1519834018.git.gustavo.pimentel@synopsys.com>
+ <20180301113336.GA30460@e107981-ln.cambridge.arm.com>
 From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 6/8] PCI: dwc: Replace lower into upper case characters
-Date: Wed, 28 Mar 2018 12:38:36 +0100
-Message-Id: <e3c679c8bd516602d1f7cf5182cf718414e74089.1522235224.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+Message-ID: <25eafe3e-4fc9-59bd-25aa-4e2bb1c19d96@synopsys.com>
+Date: Thu, 1 Mar 2018 12:50:20 +0000
+MIME-Version: 1.0
+In-Reply-To: <20180301113336.GA30460@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replaces lower into upper case characters in comments and debug printks.
+Hi Lorenzo,
 
-This is an attempt to keep the messages coherent within the designware
-driver.
+On 01/03/2018 11:33, Lorenzo Pieralisi wrote:
+> On Wed, Feb 28, 2018 at 04:10:23PM +0000, Gustavo Pimentel wrote:
+> 
+> [...]
+> 
+>> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+>> index 8de2d5c..b252673 100644
+>> --- a/drivers/pci/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> 
+> [...]
+> 
+>> +static int dw_pcie_irq_domain_alloc(struct irq_domain *domain,
+>> +				    unsigned int virq, unsigned int nr_irqs,
+>> +				    void *args)
+>> +{
+>> +	struct pcie_port *pp = domain->host_data;
+>> +	unsigned long flags;
+>> +	unsigned long bit;
+>> +	u32 i;
+>> +
+>> +	raw_spin_lock_irqsave(&pp->lock, flags);
+>> +
+>> +	bit = bitmap_find_free_region(pp->msi_irq_in_use, pp->num_vectors,
+>> +				      order_base_2(nr_irqs));
+>> +
+>> +	if (bit < 0) {
+>> +		raw_spin_unlock_irqrestore(&pp->lock, flags);
+>> +		return -ENOSPC;
+>> +	}
+>> +
+>> +	raw_spin_unlock_irqrestore(&pp->lock, flags);
+> 
+> I've rewritten this as:
+> 
+> raw_spin_unlock_irqrestore(&pp->lock, flags);
+> 
+> if (bit < 0)
+> 	return -ENOSPC;
+> 
+> Since the unlock path is ugly and there is no need to protect the bit
+> variable, we should just protect the bitmap.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- drivers/pci/dwc/pcie-designware-ep.c   | 16 ++++++++--------
- drivers/pci/dwc/pcie-designware-host.c | 35 ++++++++++++++++++----------------
- drivers/pci/dwc/pcie-designware.c      | 22 ++++++++++-----------
- 3 files changed, 38 insertions(+), 35 deletions(-)
+Agree. Very well spotted!
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 9236b99..dcab4cf 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -65,7 +65,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
- 
- 	free_win = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
- 	if (free_win >= ep->num_ib_windows) {
--		dev_err(pci->dev, "no free inbound window\n");
-+		dev_err(pci->dev, "No free inbound window\n");
- 		return -EINVAL;
- 	}
- 
-@@ -90,7 +90,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- 
- 	free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
- 	if (free_win >= ep->num_ob_windows) {
--		dev_err(pci->dev, "no free outbound window\n");
-+		dev_err(pci->dev, "No free outbound window\n");
- 		return -EINVAL;
- 	}
- 
-@@ -184,7 +184,7 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
- 
- 	ret = dw_pcie_ep_outbound_atu(ep, addr, pci_addr, size);
- 	if (ret) {
--		dev_err(pci->dev, "failed to enable address\n");
-+		dev_err(pci->dev, "Failed to enable address\n");
- 		return ret;
- 	}
- 
-@@ -328,21 +328,21 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 
- 	ret = of_property_read_u32(np, "num-ib-windows", &ep->num_ib_windows);
- 	if (ret < 0) {
--		dev_err(dev, "unable to read *num-ib-windows* property\n");
-+		dev_err(dev, "Unable to read *num-ib-windows* property\n");
- 		return ret;
- 	}
- 	if (ep->num_ib_windows > MAX_IATU_IN) {
--		dev_err(dev, "invalid *num-ib-windows*\n");
-+		dev_err(dev, "Invalid *num-ib-windows*\n");
- 		return -EINVAL;
- 	}
- 
- 	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
- 	if (ret < 0) {
--		dev_err(dev, "unable to read *num-ob-windows* property\n");
-+		dev_err(dev, "Unable to read *num-ob-windows* property\n");
- 		return ret;
- 	}
- 	if (ep->num_ob_windows > MAX_IATU_OUT) {
--		dev_err(dev, "invalid *num-ob-windows*\n");
-+		dev_err(dev, "Invalid *num-ob-windows*\n");
- 		return -EINVAL;
- 	}
- 
-@@ -369,7 +369,7 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 
- 	epc = devm_pci_epc_create(dev, &epc_ops);
- 	if (IS_ERR(epc)) {
--		dev_err(dev, "failed to create epc device\n");
-+		dev_err(dev, "Failed to create epc device\n");
- 		return PTR_ERR(epc);
- 	}
- 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 550fdbb..03e9b82 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -248,8 +248,10 @@ static void dw_pcie_irq_domain_free(struct irq_domain *domain,
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&pp->lock, flags);
-+
- 	bitmap_release_region(pp->msi_irq_in_use, data->hwirq,
- 			      order_base_2(nr_irqs));
-+
- 	raw_spin_unlock_irqrestore(&pp->lock, flags);
- }
- 
-@@ -266,7 +268,7 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
- 	pp->irq_domain = irq_domain_create_linear(fwnode, pp->num_vectors,
- 					       &dw_pcie_msi_domain_ops, pp);
- 	if (!pp->irq_domain) {
--		dev_err(pci->dev, "failed to create IRQ domain\n");
-+		dev_err(pci->dev, "Failed to create IRQ domain\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -274,7 +276,7 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
- 						   &dw_pcie_msi_domain_info,
- 						   pp->irq_domain);
- 	if (!pp->msi_domain) {
--		dev_err(pci->dev, "failed to create MSI domain\n");
-+		dev_err(pci->dev, "Failed to create MSI domain\n");
- 		irq_domain_remove(pp->irq_domain);
- 		return -ENOMEM;
- 	}
-@@ -301,13 +303,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	page = alloc_page(GFP_KERNEL);
- 	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
- 	if (dma_mapping_error(dev, pp->msi_data)) {
--		dev_err(dev, "failed to map MSI data\n");
-+		dev_err(dev, "Failed to map MSI data\n");
- 		__free_page(page);
- 		return;
- 	}
- 	msi_target = (u64)pp->msi_data;
- 
--	/* program the msi_data */
-+	/* Program the msi_data */
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
- 			    lower_32_bits(msi_target));
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
-@@ -335,7 +337,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
- 	} else if (!pp->va_cfg0_base) {
--		dev_err(dev, "missing *config* reg space\n");
-+		dev_err(dev, "Missing *config* reg space\n");
- 	}
- 
- 	bridge = pci_alloc_host_bridge(0);
-@@ -357,7 +359,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		case IORESOURCE_IO:
- 			ret = pci_remap_iospace(win->res, pp->io_base);
- 			if (ret) {
--				dev_warn(dev, "error %d: failed to map resource %pR\n",
-+				dev_warn(dev, "Error %d: failed to map resource %pR\n",
- 					 ret, win->res);
- 				resource_list_destroy_entry(win);
- 			} else {
-@@ -391,7 +393,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 						pp->cfg->start,
- 						resource_size(pp->cfg));
- 		if (!pci->dbi_base) {
--			dev_err(dev, "error with ioremap\n");
-+			dev_err(dev, "Error with ioremap\n");
- 			ret = -ENOMEM;
- 			goto error;
- 		}
-@@ -403,7 +405,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
- 					pp->cfg0_base, pp->cfg0_size);
- 		if (!pp->va_cfg0_base) {
--			dev_err(dev, "error with ioremap in function\n");
-+			dev_err(dev, "Error with ioremap in function\n");
- 			ret = -ENOMEM;
- 			goto error;
- 		}
-@@ -414,7 +416,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 						pp->cfg1_base,
- 						pp->cfg1_size);
- 		if (!pp->va_cfg1_base) {
--			dev_err(dev, "error with ioremap\n");
-+			dev_err(dev, "Error with ioremap\n");
- 			ret = -ENOMEM;
- 			goto error;
- 		}
-@@ -586,7 +588,7 @@ static int dw_pcie_valid_device(struct pcie_port *pp, struct pci_bus *bus,
- 			return 0;
- 	}
- 
--	/* access only one slot on each root port */
-+	/* Access only one slot on each root port */
- 	if (bus->number == pp->root_bus_nr && dev > 0)
- 		return 0;
- 
-@@ -652,11 +654,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
- 				    &pp->irq_status[ctrl]);
--	/* setup RC BARs */
-+
-+	/* Setup RC BARs */
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0x00000000);
- 
--	/* setup interrupt pins */
-+	/* Setup interrupt pins */
- 	dw_pcie_dbi_ro_wr_en(pci);
- 	val = dw_pcie_readl_dbi(pci, PCI_INTERRUPT_LINE);
- 	val &= 0xffff00ff;
-@@ -664,13 +667,13 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
--	/* setup bus numbers */
-+	/* Setup bus numbers */
- 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
- 	val &= 0xff000000;
- 	val |= 0x00010100;
- 	dw_pcie_writel_dbi(pci, PCI_PRIMARY_BUS, val);
- 
--	/* setup command register */
-+	/* Setup command register */
- 	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
- 	val &= 0xffff0000;
- 	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
-@@ -683,7 +686,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	 * we should not program the ATU here.
- 	 */
- 	if (!pp->ops->rd_other_conf) {
--		/* get iATU unroll support */
-+		/* Get iATU unroll support */
- 		pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
- 		dev_dbg(pci->dev, "iATU unroll: %s\n",
- 			pci->iatu_unroll_enabled ? "enabled" : "disabled");
-@@ -701,7 +704,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	/* Enable write permission for the DBI read-only register */
- 	dw_pcie_dbi_ro_wr_en(pci);
--	/* program correct class for RC */
-+	/* Program correct class for RC */
- 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
- 	/* Better disable write permission right after the update */
- 	dw_pcie_dbi_ro_wr_dis(pci);
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 1b7282e..778c4f7 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -69,7 +69,7 @@ u32 __dw_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
- 
- 	ret = dw_pcie_read(base + reg, size, &val);
- 	if (ret)
--		dev_err(pci->dev, "read DBI address failed\n");
-+		dev_err(pci->dev, "Read DBI address failed\n");
- 
- 	return val;
- }
-@@ -86,7 +86,7 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
- 
- 	ret = dw_pcie_write(base + reg, size, val);
- 	if (ret)
--		dev_err(pci->dev, "write DBI address failed\n");
-+		dev_err(pci->dev, "Write DBI address failed\n");
- }
- 
- static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
-@@ -137,7 +137,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
- 
- 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
- 	}
--	dev_err(pci->dev, "outbound iATU is not being enabled\n");
-+	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
- }
- 
- void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
-@@ -180,7 +180,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 
- 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
- 	}
--	dev_err(pci->dev, "outbound iATU is not being enabled\n");
-+	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
- }
- 
- static u32 dw_pcie_readl_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg)
-@@ -238,7 +238,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
- 
- 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
- 	}
--	dev_err(pci->dev, "inbound iATU is not being enabled\n");
-+	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
- 
- 	return -EBUSY;
- }
-@@ -284,7 +284,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
- 
- 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
- 	}
--	dev_err(pci->dev, "inbound iATU is not being enabled\n");
-+	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
- 
- 	return -EBUSY;
- }
-@@ -313,16 +313,16 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
- {
- 	int retries;
- 
--	/* check if the link is up or not */
-+	/* Check if the link is up or not */
- 	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
- 		if (dw_pcie_link_up(pci)) {
--			dev_info(pci->dev, "link up\n");
-+			dev_info(pci->dev, "Link up\n");
- 			return 0;
- 		}
- 		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
- 	}
- 
--	dev_err(pci->dev, "phy link never came up\n");
-+	dev_err(pci->dev, "Phy link never came up\n");
- 
- 	return -ETIMEDOUT;
- }
-@@ -351,7 +351,7 @@ void dw_pcie_setup(struct dw_pcie *pci)
- 	if (ret)
- 		lanes = 0;
- 
--	/* set the number of lanes */
-+	/* Set the number of lanes */
- 	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
- 	val &= ~PORT_LINK_MODE_MASK;
- 	switch (lanes) {
-@@ -373,7 +373,7 @@ void dw_pcie_setup(struct dw_pcie *pci)
- 	}
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
- 
--	/* set link width speed control register */
-+	/* Set link width speed control register */
- 	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
- 	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
- 	switch (lanes) {
--- 
-2.7.4
+> 
+> Have a look at my pci/dwc-msi branch to check if that's what
+> you expect.
+> 
+> Everything else is OK to me, patches queued in my pci/dwc-msi
+> branch for v4.17, please have a look.
+
+All seems to be OK to me. Once again thanks.
+
+> 
+> Thanks !
+> Lorenzo
+> 
+>> +
+>> +	for (i = 0; i < nr_irqs; i++)
+>> +		irq_domain_set_info(domain, virq + i, bit + i,
+>> +				    &dw_pci_msi_bottom_irq_chip,
+>> +				    pp, handle_edge_irq,
+>> +				    NULL, NULL);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static void dw_pcie_irq_domain_free(struct irq_domain *domain,
+>> +				    unsigned int virq, unsigned int nr_irqs)
+>> +{
+>> +	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
+>> +	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
+>> +	unsigned long flags;
+>> +
+>> +	raw_spin_lock_irqsave(&pp->lock, flags);
+>> +	bitmap_release_region(pp->msi_irq_in_use, data->hwirq,
+>> +			      order_base_2(nr_irqs));
+>> +	raw_spin_unlock_irqrestore(&pp->lock, flags);
+>> +}
+>> +
+>> +static const struct irq_domain_ops dw_pcie_msi_domain_ops = {
+>> +	.alloc	= dw_pcie_irq_domain_alloc,
+>> +	.free	= dw_pcie_irq_domain_free,
+>> +};
+>> +
+>> +int dw_pcie_allocate_domains(struct pcie_port *pp)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pci->dev->of_node);
+>> +
+>> +	pp->irq_domain = irq_domain_create_linear(fwnode, pp->num_vectors,
+>> +					       &dw_pcie_msi_domain_ops, pp);
+>> +	if (!pp->irq_domain) {
+>> +		dev_err(pci->dev, "failed to create IRQ domain\n");
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	pp->msi_domain = pci_msi_create_irq_domain(fwnode,
+>> +						   &dw_pcie_msi_domain_info,
+>> +						   pp->irq_domain);
+>> +	if (!pp->msi_domain) {
+>> +		dev_err(pci->dev, "failed to create MSI domain\n");
+>> +		irq_domain_remove(pp->irq_domain);
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void dw_pcie_free_msi(struct pcie_port *pp)
+>> +{
+>> +	irq_set_chained_handler(pp->msi_irq, NULL);
+>> +	irq_set_handler_data(pp->msi_irq, NULL);
+>> +
+>> +	irq_domain_remove(pp->msi_domain);
+>> +	irq_domain_remove(pp->irq_domain);
+>> +}
+>> +
+>>  void dw_pcie_msi_init(struct pcie_port *pp)
+>>  {
+>>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> @@ -96,20 +317,21 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+>>  
+>>  	/* program the msi_data */
+>>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+>> -			    (u32)(msi_target & 0xffffffff));
+>> +			    lower_32_bits(msi_target));
+>>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+>> -			    (u32)(msi_target >> 32 & 0xffffffff));
+>> +			    upper_32_bits(msi_target));
+>>  }
+>>  
+>>  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+>>  {
+>> -	unsigned int res, bit, val;
+>> +	unsigned int res, bit, ctrl;
+>>  
+>> -	res = (irq / 32) * 12;
+>> +	ctrl = irq / 32;
+>> +	res = ctrl * 12;
+>>  	bit = irq % 32;
+>> -	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+>> -	val &= ~(1 << bit);
+>> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
+>> +	pp->irq_status[ctrl] &= ~(1 << bit);
+>> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+>> +			    pp->irq_status[ctrl]);
+>>  }
+>>  
+>>  static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
+>> @@ -131,13 +353,14 @@ static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
+>>  
+>>  static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+>>  {
+>> -	unsigned int res, bit, val;
+>> +	unsigned int res, bit, ctrl;
+>>  
+>> -	res = (irq / 32) * 12;
+>> +	ctrl = irq / 32;
+>> +	res = ctrl * 12;
+>>  	bit = irq % 32;
+>> -	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+>> -	val |= 1 << bit;
+>> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
+>> +	pp->irq_status[ctrl] |= 1 << bit;
+>> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+>> +			    pp->irq_status[ctrl]);
+>>  }
+>>  
+>>  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>> @@ -285,11 +508,13 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>  	struct device *dev = pci->dev;
+>>  	struct device_node *np = dev->of_node;
+>>  	struct platform_device *pdev = to_platform_device(dev);
+>> +	struct resource_entry *win, *tmp;
+>>  	struct pci_bus *bus, *child;
+>>  	struct pci_host_bridge *bridge;
+>>  	struct resource *cfg_res;
+>> -	int i, ret;
+>> -	struct resource_entry *win, *tmp;
+>> +	int ret;
+>> +
+>> +	spin_lock_init(&pci->pp.lock);
+>>  
+>>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+>>  	if (cfg_res) {
+>> @@ -388,18 +613,33 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>  		pci->num_viewport = 2;
+>>  
+>>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>> -		if (!pp->ops->msi_host_init) {
+>> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
+>> -						MAX_MSI_IRQS, &msi_domain_ops,
+>> -						&dw_pcie_msi_chip);
+>> -			if (!pp->irq_domain) {
+>> -				dev_err(dev, "irq domain init failed\n");
+>> -				ret = -ENXIO;
+>> +		/*
+>> +		 * If a specific SoC driver needs to change the
+>> +		 * default number of vectors, it needs to implement
+>> +		 * the set_num_vectors callback.
+>> +		 */
+>> +		if (!pp->ops->set_num_vectors) {
+>> +			pp->num_vectors = MSI_DEF_NUM_VECTORS;
+>> +		} else {
+>> +			pp->ops->set_num_vectors(pp);
+>> +
+>> +			if (pp->num_vectors > MAX_MSI_IRQS ||
+>> +			    pp->num_vectors == 0) {
+>> +				dev_err(dev,
+>> +					"Invalid number of vectors\n");
+>>  				goto error;
+>>  			}
+>> +		}
+>>  
+>> -			for (i = 0; i < MAX_MSI_IRQS; i++)
+>> -				irq_create_mapping(pp->irq_domain, i);
+>> +		if (!pp->ops->msi_host_init) {
+>> +			ret = dw_pcie_allocate_domains(pp);
+>> +			if (ret)
+>> +				goto error;
+>> +
+>> +			if (pp->msi_irq)
+>> +				irq_set_chained_handler_and_data(pp->msi_irq,
+>> +							    dw_chained_msi_isr,
+>> +							    pp);
+>>  		} else {
+>>  			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
+>>  			if (ret < 0)
+>> @@ -421,10 +661,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>  	bridge->ops = &dw_pcie_ops;
+>>  	bridge->map_irq = of_irq_parse_and_map_pci;
+>>  	bridge->swizzle_irq = pci_common_swizzle;
+>> -	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>> -		bridge->msi = &dw_pcie_msi_chip;
+>> -		dw_pcie_msi_chip.dev = dev;
+>> -	}
+>>  
+>>  	ret = pci_scan_root_bus_bridge(bridge);
+>>  	if (ret)
+>> @@ -593,11 +829,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+>>  
+>>  void dw_pcie_setup_rc(struct pcie_port *pp)
+>>  {
+>> -	u32 val;
+>> +	u32 val, ctrl;
+>>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>>  
+>>  	dw_pcie_setup(pci);
+>>  
+>> +	/* Initialize IRQ Status array */
+>> +	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
+>> +		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+>> +				    &pp->irq_status[ctrl]);
+>>  	/* setup RC BARs */
+>>  	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
+>>  	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0x00000000);
+>> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+>> index ebdf28b..5416aa8 100644
+>> --- a/drivers/pci/dwc/pcie-designware-plat.c
+>> +++ b/drivers/pci/dwc/pcie-designware-plat.c
+>> @@ -25,13 +25,6 @@ struct dw_plat_pcie {
+>>  	struct dw_pcie		*pci;
+>>  };
+>>  
+>> -static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
+>> -{
+>> -	struct pcie_port *pp = arg;
+>> -
+>> -	return dw_handle_msi_irq(pp);
+>> -}
+>> -
+>>  static int dw_plat_pcie_host_init(struct pcie_port *pp)
+>>  {
+>>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> @@ -63,15 +56,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+>>  		pp->msi_irq = platform_get_irq(pdev, 0);
+>>  		if (pp->msi_irq < 0)
+>>  			return pp->msi_irq;
+>> -
+>> -		ret = devm_request_irq(dev, pp->msi_irq,
+>> -					dw_plat_pcie_msi_irq_handler,
+>> -					IRQF_SHARED | IRQF_NO_THREAD,
+>> -					"dw-plat-pcie-msi", pp);
+>> -		if (ret) {
+>> -			dev_err(dev, "failed to request MSI IRQ\n");
+>> -			return ret;
+>> -		}
+>>  	}
+>>  
+>>  	pp->root_bus_nr = -1;
+>> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+>> index 11b1386..de383c0 100644
+>> --- a/drivers/pci/dwc/pcie-designware.h
+>> +++ b/drivers/pci/dwc/pcie-designware.h
+>> @@ -114,6 +114,7 @@
+>>   */
+>>  #define MAX_MSI_IRQS			32
+>>  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+>> +#define MSI_DEF_NUM_VECTORS		32
+>>  
+>>  /* Maximum number of inbound/outbound iATUs */
+>>  #define MAX_IATU_IN			256
+>> @@ -149,7 +150,9 @@ struct dw_pcie_host_ops {
+>>  	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
+>>  	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
+>>  	void (*scan_bus)(struct pcie_port *pp);
+>> +	void (*set_num_vectors)(struct pcie_port *pp);
+>>  	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
+>> +	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
+>>  };
+>>  
+>>  struct pcie_port {
+>> @@ -174,7 +177,11 @@ struct pcie_port {
+>>  	const struct dw_pcie_host_ops *ops;
+>>  	int			msi_irq;
+>>  	struct irq_domain	*irq_domain;
+>> +	struct irq_domain	*msi_domain;
+>>  	dma_addr_t		msi_data;
+>> +	u32			num_vectors;
+>> +	u32			irq_status[MAX_MSI_CTRLS];
+>> +	spinlock_t		lock;
+>>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+>>  };
+>>  
+>> @@ -316,8 +323,10 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+>>  #ifdef CONFIG_PCIE_DW_HOST
+>>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+>>  void dw_pcie_msi_init(struct pcie_port *pp);
+>> +void dw_pcie_free_msi(struct pcie_port *pp);
+>>  void dw_pcie_setup_rc(struct pcie_port *pp);
+>>  int dw_pcie_host_init(struct pcie_port *pp);
+>> +int dw_pcie_allocate_domains(struct pcie_port *pp);
+>>  #else
+>>  static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>>  {
+>> @@ -328,6 +337,10 @@ static inline void dw_pcie_msi_init(struct pcie_port *pp)
+>>  {
+>>  }
+>>  
+>> +static inline void dw_pcie_free_msi(struct pcie_port *pp)
+>> +{
+>> +}
+>> +
+>>  static inline void dw_pcie_setup_rc(struct pcie_port *pp)
+>>  {
+>>  }
+>> @@ -336,6 +349,11 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
+>>  {
+>>  	return 0;
+>>  }
+>> +
+>> +static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+>> +{
+>> +	return 0;
+>> +}
+>>  #endif
+>>  
+>>  #ifdef CONFIG_PCIE_DW_EP
+>> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+>> index 6310c66..89e5cc5 100644
+>> --- a/drivers/pci/dwc/pcie-qcom.c
+>> +++ b/drivers/pci/dwc/pcie-qcom.c
+>> @@ -180,13 +180,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+>>  	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+>>  }
+>>  
+>> -static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
+>> -{
+>> -	struct pcie_port *pp = arg;
+>> -
+>> -	return dw_handle_msi_irq(pp);
+>> -}
+>> -
+>>  static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
+>>  {
+>>  	struct dw_pcie *pci = pcie->pci;
+>> @@ -1262,15 +1255,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>>  		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+>>  		if (pp->msi_irq < 0)
+>>  			return pp->msi_irq;
+>> -
+>> -		ret = devm_request_irq(dev, pp->msi_irq,
+>> -				       qcom_pcie_msi_irq_handler,
+>> -				       IRQF_SHARED | IRQF_NO_THREAD,
+>> -				       "qcom-pcie-msi", pp);
+>> -		if (ret) {
+>> -			dev_err(dev, "cannot request msi irq\n");
+>> -			return ret;
+>> -		}
+>>  	}
+>>  
+>>  	ret = phy_init(pcie->phy);
+>> -- 
+>> 2.7.4
+>>
+>>
+
+Regards,
+Gustavo
