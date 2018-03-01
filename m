@@ -1,109 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57070 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752122AbeCURt0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 13:49:26 -0400
-Date: Wed, 21 Mar 2018 18:49:24 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "zajec5@gmail.com" <zajec5@gmail.com>,
-        "andy.gross@linaro.org" <andy.gross@linaro.org>,
-        "david.brown@linaro.org" <david.brown@linaro.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "vinod.koul@intel.com" <vinod.koul@intel.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
-        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        "johan@kernel.org" <johan@kernel.org>,
-        "msuchanek@suse.de" <msuchanek@suse.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bharat Bhushan <bharat.bhushan@nxp.com>,
-        Leo Li <leoyang.li@nxp.com>
-Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
-Message-ID: <20180321174924.GA11141@kroah.com>
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
- <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
- <20180321093525.GT14085@kroah.com>
- <HE1PR0401MB2425644F72A063ED42B79D5FE6AA0@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+Received: from mail.kernel.org ([198.145.29.99]:58542 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1034023AbeCASxM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 13:53:12 -0500
+Date: Thu, 1 Mar 2018 12:53:09 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RESEND PATCH v2] PCI: Fix possible NULL pointer dereference for
+ of_pci_bus_find_domain_nr
+Message-ID: <20180301185309.GJ13722@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519867615-37327-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <HE1PR0401MB2425644F72A063ED42B79D5FE6AA0@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+In-Reply-To: <1519867615-37327-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 04:28:46PM +0000, Nipun Gupta wrote:
+On Thu, Mar 01, 2018 at 09:26:55AM +0800, Shawn Lin wrote:
+> If the "parent" pointer passed to of_pci_bus_find_domain_nr() is NULL,
+> don't dereference it.
 > 
-> 
-> > -----Original Message-----
-> > From: Greg KH [mailto:gregkh@linuxfoundation.org]
-> > Sent: Wednesday, March 21, 2018 15:05
-> > To: Nipun Gupta <nipun.gupta@nxp.com>
-> > Cc: robin.murphy@arm.com; hch@lst.de; linux@armlinux.org.uk;
-> > m.szyprowski@samsung.com; bhelgaas@google.com; zajec5@gmail.com;
-> > andy.gross@linaro.org; david.brown@linaro.org; dan.j.williams@intel.com;
-> > vinod.koul@intel.com; thierry.reding@gmail.com; robh+dt@kernel.org;
-> > frowand.list@gmail.com; jarkko.sakkinen@linux.intel.com;
-> > rafael.j.wysocki@intel.com; dmitry.torokhov@gmail.com; johan@kernel.org;
-> > msuchanek@suse.de; linux-kernel@vger.kernel.org; iommu@lists.linux-
-> > foundation.org; linux-wireless@vger.kernel.org; linux-arm-
-> > msm@vger.kernel.org; linux-soc@vger.kernel.org; dmaengine@vger.kernel.org;
-> > dri-devel@lists.freedesktop.org; linux-tegra@vger.kernel.org;
-> > devicetree@vger.kernel.org; linux-pci@vger.kernel.org; Bharat Bhushan
-> > <bharat.bhushan@nxp.com>; Leo Li <leoyang.li@nxp.com>
-> > Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
-> > 
-> > On Wed, Mar 21, 2018 at 12:25:23PM +0530, Nipun Gupta wrote:
-> > > With each bus implementing its own DMA configuration callback,
-> > > there is no need for bus to explicitly have force_dma in its
-> > > global structure. This patch modifies of_dma_configure API to
-> > > accept an input parameter which specifies if implicit DMA
-> > > configuration is required even when it is not described by the
-> > > firmware.
-> > 
-> > Having to "remember" what that bool variable means on the end of the
-> > function call is a royal pain over time, right?
-> > 
-> > Why not just create a new function:
-> > 	dma_common_configure_force(dma)
-> > that always does this?  Leave "dma_common_configure()" alone, and then
-> > wrap the old code with these two helper functions that call the 'core'
-> > code with the bool set properly?
-> > 
-> > That way you do not have to "know" what that parameter is, the function
-> > name just documents it automatically, so when you see it in the
-> > bus-specific code, no need to go and have to hunt for anything.  And if
-> > you are reading the dma core code, it's obvious what is happening as the
-> > functions are all right there.
-> 
-> How about we do not pass any flag in 'dma_common_configure()', and inside this
-> API we pass "true" to 'of_dma_configure()'? I am saying this because currently
-> both the busses (platform and AMBA) which uses 'dma_common_configure()' passes
-> "true" value. If we create additional 'dma_common_configure_force()', then
-> 'dma_common_configure()' will not be used anytime and will become redundant.
-> 
-> If someday new busses come and they needs to use similar functionality which
-> 'dma_common_configure()' provides, but with passing "false" to 'of_dma_configure()',
-> then what you suggests of having two separate such API's will be more reasonable
-> and can be implemented?
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-If that makes things "simple", yes, sounds good.
+Applied to pci/misc for v4.17, thanks!
 
-greg k-h
+> ---
+> 
+> Changes in v2:
+> - Convert to use pr_err and only print valid device node if 'parent'
+> isn't NULL.
+> 
+>  drivers/pci/pci.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index ae654e2..06f7f9d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5607,8 +5607,9 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
+>  		use_dt_domains = 0;
+>  		domain = pci_get_new_domain_nr();
+>  	} else {
+> -		dev_err(parent, "Node %pOF has inconsistent \"linux,pci-domain\" property in DT\n",
+> -			parent->of_node);
+> +		if (parent)
+> +			pr_err("Node %pOF has ", parent->of_node);
+> +		pr_err("Inconsistent \"linux,pci-domain\" property in DT\n");
+>  		domain = -1;
+>  	}
+>  
+> -- 
+> 1.9.1
+> 
+> 
