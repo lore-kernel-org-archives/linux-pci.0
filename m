@@ -1,59 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47460 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750983AbeCZOBV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Mar 2018 10:01:21 -0400
-Date: Mon, 26 Mar 2018 09:01:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+Received: from mail-it0-f68.google.com ([209.85.214.68]:33837 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161204AbeCAWbZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 17:31:25 -0500
+MIME-Version: 1.0
+In-Reply-To: <1519942012.4592.31.camel@au1.ibm.com>
+References: <20180228234006.21093-1-logang@deltatee.com> <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com> <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+ <1519936477.4592.23.camel@au1.ibm.com> <1519936815.4592.25.camel@au1.ibm.com>
+ <20180301205315.GJ19007@ziepe.ca> <1519942012.4592.31.camel@au1.ibm.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 1 Mar 2018 14:31:23 -0800
+Message-ID: <CA+55aFy-oAiFJ3WDx4giR1enj65y-YJnZZhY6geFw0ygFyKXfQ@mail.gmail.com>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+To: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        linux-nvme <linux-nvme@lists.infradead.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-block <linux-block@vger.kernel.org>,
         Stephen Bates <sbates@raithlin.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Keith Busch <keith.busch@intel.com>,
         Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
         Alex Williamson <alex.williamson@redhat.com>,
-        Eric Wehage <Eric.Wehage@huawei.com>
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-Message-ID: <20180326140118.GA221690@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <20180326121138.00005e30@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180326121138.00005e30@huawei.com>
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 26, 2018 at 12:11:38PM +0100, Jonathan Cameron wrote:
-> On Tue, 13 Mar 2018 10:43:55 -0600
-> Logan Gunthorpe <logang@deltatee.com> wrote:
-> > It turns out that root ports that support P2P are far less common than 
-> > anyone thought. So it will likely have to be a white list.
-> 
-> This came as a bit of a surprise to our PCIe architect.
-> 
-> His follow up was whether it was worth raising an ECR for the PCIe spec
-> to add a capability bit to allow this to be discovered.  This might
-> long term avoid the need to maintain the white list for new devices.
-> 
-> So is it worth having a long term solution for making this discoverable?
+On Thu, Mar 1, 2018 at 2:06 PM, Benjamin Herrenschmidt <benh@au1.ibm.com> wrote:
+>
+> Could be that x86 has the smarts to do the right thing, still trying to
+> untangle the code :-)
 
-It was surprising to me that there's no architected way to discover
-this.  It seems like such an obvious thing that I guess I assumed the
-omission was intentional, i.e., maybe there's something that makes it
-impractical, but it would be worth at least asking somebody in the
-SIG.  It seems like for root ports in the same root complex, at least,
-there could be a bit somewhere in the root port or the RCRB (which
-Linux doesn't support yet).
+Afaik, x86 will not cache PCI unless the system is misconfigured, and
+even then it's more likely to just raise a machine check exception
+than cache things.
+
+The last-level cache is going to do fills and spills directly to the
+memory controller, not to the PCIe side of things.
+
+(I guess you *can* do things differently, and I wouldn't be surprised
+if some people inside Intel did try to do things differently with
+trying nvram over PCIe, but in general I think the above is true)
+
+You won't find it in the kernel code either. It's in hardware with
+firmware configuration of what addresses are mapped to the memory
+controllers (and _how_ they are mapped) and which are not.
+
+You _might_ find it in the BIOS, assuming you understood the tables
+and had the BIOS writer's guide to unravel the magic registers.
+
+But you might not even find it there. Some of the memory unit timing
+programming is done very early, and by code that Intel doesn't even
+release to the BIOS writers except as a magic encrypted blob, afaik.
+Some of the magic might even be in microcode.
+
+The page table settings for cacheability are more like a hint, and
+only _part_ of the whole picture. The memory type range registers are
+another part. And magic low-level uarch, northbridge and memory unit
+specific magic is yet another part.
+
+So you can disable caching for memory, but I'm pretty sure you can't
+enable caching for PCIe at least in the common case. At best you can
+affect how the store buffer works for PCIe.
+
+              Linus
