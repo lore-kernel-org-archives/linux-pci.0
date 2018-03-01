@@ -1,97 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46071 "EHLO newverein.lst.de"
+Received: from ale.deltatee.com ([207.54.116.67]:38608 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752476AbeCVIPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Mar 2018 04:15:33 -0400
-Date: Thu, 22 Mar 2018 09:15:30 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
-        david.brown@linaro.org, dan.j.williams@intel.com,
-        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com
-Subject: Re: [PATCH v2 1/2] dma-mapping: move dma configuration to bus
-        infrastructure
-Message-ID: <20180322081530.GA29444@lst.de>
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
+        id S1033870AbeCAVPM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 16:15:12 -0500
+To: Jerome Glisse <jglisse@redhat.com>
+Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+ <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
+ <1519936195.4592.18.camel@au1.ibm.com> <20180301205548.GA6742@redhat.com>
+ <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
+ <20180301211036.GB6742@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <8ed955f8-55c9-a2bd-1d58-90bf1dcfa055@deltatee.com>
+Date: Thu, 1 Mar 2018 14:15:01 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <20180301211036.GB6742@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> +static int amba_dma_configure(struct device *dev)
-> +{
-> +	return dma_common_configure(dev);
-> +}
 
-So it turns out we only end with two callers of dma_common_configure
-after this series.  Based ont hat I'm tempted with the suggestion
-from Robin to just have amba call platform_dma_configure, and move
-the code from dma_common_configure to platform_dma_configure.
 
-> +int dma_configure(struct device *dev)
-> +{
-> +	if (dev->bus->dma_configure)
-> +		return dev->bus->dma_configure(dev);
-> +
-> +	return 0;
-> +}
->  void dma_deconfigure(struct device *dev)
+On 01/03/18 02:10 PM, Jerome Glisse wrote:
+> It seems people miss-understand HMM :( you do not have to use all of
+> its features. If all you care about is having struct page then just
+> use that for instance in your case only use those following 3 functions:
+> 
+> hmm_devmem_add() or hmm_devmem_add_resource() and hmm_devmem_remove()
+> for cleanup.
 
-As grep pointed out this wants a blank line after the function, and while
-in nitpicking mode I'd suggest to remove the blank line above the return
-statement while at it.
+To what benefit over just using devm_memremap_pages()? If I'm using the 
+hmm interface and disabling all the features, I don't see the point. 
+We've also cleaned up the devm_memremap_pages() interface to be more 
+usefully generic in such a way that I'd hope HMM starts using it too and 
+gets rid of the code duplication.
 
-> diff --git a/drivers/gpu/host1x/bus.c b/drivers/gpu/host1x/bus.c
-> index 88a3558..fa9896d 100644
-> --- a/drivers/gpu/host1x/bus.c
-> +++ b/drivers/gpu/host1x/bus.c
-> @@ -314,6 +314,14 @@ static int host1x_device_match(struct device *dev, struct device_driver *drv)
->  	return strcmp(dev_name(dev), drv->name) == 0;
->  }
->  
-> +static int host1x_dma_configure(struct device *dev)
-> +{
-> +	if (dev->of_node)
-> +		return of_dma_configure(dev, dev->of_node);
-> +
-> +	return 0;
-
-Same here.
-
-> + */
-> +static int pci_dma_configure(struct device *dev)
-> +{
-> +	struct device *bridge;
-> +	enum dev_dma_attr attr;
-> +	int ret = 0;
-> +
-> +	bridge = pci_get_host_bridge_device(to_pci_dev(dev));
-> +
-> +	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
-> +	    bridge->parent->of_node) {
-> +		ret = of_dma_configure(dev, bridge->parent->of_node);
-> +	} else if (has_acpi_companion(bridge)) {
-> +		attr = acpi_get_dma_attr(to_acpi_device_node(bridge->fwnode));
-> +		if (attr != DEV_DMA_NOT_SUPPORTED)
-> +			ret = acpi_dma_configure(dev, attr);
-> +	}
-
-The attr declaration can be moved into the inner scope here.
-
-> +	pci_put_host_bridge_device(bridge);
-> +
-> +	return ret;
-
-Drop the blank line after the return, please.
+Logan
