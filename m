@@ -1,74 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 13 Mar 2018 11:45:37 +0100
-From: Jean Delvare <jdelvare@suse.de>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-Subject: Re: [PATCH v2 2/4] x86/PCI: Simplify code by using the new
- dmi_get_bios_year() helper
-Message-ID: <20180313114537.59cbc766@endymion>
-In-Reply-To: <20180301180220.11333-3-andriy.shevchenko@linux.intel.com>
-References: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
-        <20180301180220.11333-3-andriy.shevchenko@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45554 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1161816AbeCAVZq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 16:25:46 -0500
+Date: Thu, 1 Mar 2018 16:25:42 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Message-ID: <20180301212541.GD6742@redhat.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+ <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
+ <1519936195.4592.18.camel@au1.ibm.com>
+ <20180301205548.GA6742@redhat.com>
+ <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
+ <20180301211036.GB6742@redhat.com>
+ <8ed955f8-55c9-a2bd-1d58-90bf1dcfa055@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <8ed955f8-55c9-a2bd-1d58-90bf1dcfa055@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andy,
-
-On Thu,  1 Mar 2018 20:02:18 +0200, Andy Shevchenko wrote:
-> Use new dmi_get_bios_year() helper instead of open-coding its
-> functionality.
+On Thu, Mar 01, 2018 at 02:15:01PM -0700, Logan Gunthorpe wrote:
 > 
-> No changes in functionality.
 > 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  arch/x86/pci/acpi.c            | 10 +++++-----
->  arch/x86/pci/direct.c          |  5 ++---
->  arch/x86/pci/mmconfig-shared.c |  9 ++-------
->  3 files changed, 9 insertions(+), 15 deletions(-)
+> On 01/03/18 02:10 PM, Jerome Glisse wrote:
+> > It seems people miss-understand HMM :( you do not have to use all of
+> > its features. If all you care about is having struct page then just
+> > use that for instance in your case only use those following 3 functions:
+> > 
+> > hmm_devmem_add() or hmm_devmem_add_resource() and hmm_devmem_remove()
+> > for cleanup.
 > 
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 7df49c40665e..52b22137243f 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -138,14 +138,14 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
->  	{}
->  };
->  
-> +#define in_range(b, first, len) ((b) >= (first) && (b) <= (first) + (len) - 1)
-> +
->  void __init pci_acpi_crs_quirks(void)
->  {
-> -	int year;
-> +	int year = dmi_get_bios_year();
->  
-> -	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year < 2008) {
-> -		if (iomem_resource.end <= 0xffffffff)
-> -			pci_use_crs = false;
-> -	}
-> +	if (in_range(year, 0, 2008) && iomem_resource.end <= 0xffffffff)
+> To what benefit over just using devm_memremap_pages()? If I'm using the hmm
+> interface and disabling all the features, I don't see the point. We've also
+> cleaned up the devm_memremap_pages() interface to be more usefully generic
+> in such a way that I'd hope HMM starts using it too and gets rid of the code
+> duplication.
+> 
 
-I don't like this, sorry. I find "in_range" confusing, there are many
-definitions of it throughout the kernel which differ in the details
-(some take a length as 3rd parameter, others take upper boundary, some
-include the boundaries, some do not...) The following:
+The first HMM variant find a hole and do not require a resource as input
+parameter. Beside that internaly for PCIE device memory devm_memremap_pages()
+does not do the right thing last time i check it always create a linear
+mapping of the range ie HMM call add_pages() while devm_memremap_pages()
+call arch_add_memory()
 
-	if (year >= 0 && year < 2008 && iomem_resource.end <= 0xffffffff)
+When i upstreamed HMM, Dan didn't want me to touch devm_memremap_pages()
+to match my need. I am more than happy to modify devm_memremap_pages() to
+also handle HMM needs.
 
-is a lot more readable in my opinion. No need to look-up a tricky macro
-definition to figure what happens if year is 2008.
+Note that the intention of HMM is to be a middle layer between low level
+infrastructure and device driver. Idea is that such impedance layer should
+make it easier down the road to change how thing are handled down below
+without having to touch many device driver.
 
-> +		pci_use_crs = false;
->  
->  	dmi_check_system(pci_crs_quirks);
-
--- 
-Jean Delvare
-SUSE L3 Support
+Cheers,
+Jérôme
