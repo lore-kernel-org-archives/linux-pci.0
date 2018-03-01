@@ -1,216 +1,173 @@
-Return-Path: <SRS0=cIp0=GJ=amazon.com=prvs=6098dda2b=karahmed@kernel.org>
-Return-Path: <SRS0=cIp0=GJ=amazon.com=prvs=6098dda2b=karahmed@kernel.org>
-From: KarimAllah Ahmed <karahmed@amazon.de>
-To: linux-kernel@vger.kernel.org
-Cc: KarimAllah Ahmed <karahmed@amazon.de>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v4 1/2] PCI/IOV: Use VF0 cached config registers for other VFs
-Date: Mon, 19 Mar 2018 21:06:00 +0100
-Message-Id: <1521489961-18291-1-git-send-email-karahmed@amazon.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:37388 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1034046AbeCAS4P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 13:56:15 -0500
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-2-logang@deltatee.com>
+ <20180301173752.GE13722@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <b81503c2-9f07-b5f6-df06-64d1fdc53386@deltatee.com>
+Date: Thu, 1 Mar 2018 11:55:51 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180301173752.GE13722@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 01/10] PCI/P2PDMA: Support peer to peer memory
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cache some config data from VF0 and use it for all other VFs instead of
-reading it from the config space of each VF.  We assume these items are the
-same across all associated VFs:
+Hi Bjorn,
 
-   Revision ID
-   Class Code
-   Subsystem Vendor ID
-   Subsystem ID
+Thanks for the review. I'll correct all the nits for the next version.
 
-This is an optimization when enabling SR-IOV on a device with many VFs.
+On 01/03/18 10:37 AM, Bjorn Helgaas wrote:
+> On Wed, Feb 28, 2018 at 04:39:57PM -0700, Logan Gunthorpe wrote:
+>> Some PCI devices may have memory mapped in a BAR space that's
+>> intended for use in Peer-to-Peer transactions. In order to enable
+>> such transactions the memory must be registered with ZONE_DEVICE pages
+>> so it can be used by DMA interfaces in existing drivers.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: KarimAllah Ahmed <karahmed@amazon.de>
-[bhelgaas: changelog, simplify comments, remove unused "device"]
-Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
----
-v3->v4:
-- Restructure the code to handle CONFIG_PCI_ATS
+> Is there anything about this memory that makes it specifically
+> intended for peer-to-peer transactions?  I assume the device can't
+> really tell whether a transaction is from a CPU or a peer.
 
- drivers/pci/iov.c   | 42 +++++++++++++++++++++++++++++++++++-------
- drivers/pci/pci.h   |  4 ++++
- drivers/pci/probe.c | 47 ++++++++++++++++++++++++++++++++++++++++++-----
- 3 files changed, 81 insertions(+), 12 deletions(-)
+No there's nothing special about the memory and it can still be accessed 
+by the CPU. This is just the intended purpose. You could use this PCI 
+memory as regular DMA buffers or regular memory but I'm not sure why you 
+would. It would probably be pretty bad performance-wise.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 677924a..30bf8f7 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -114,6 +114,29 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
- 
-+static void pci_read_vf_config_common(struct pci_dev *virtfn)
-+{
-+	struct pci_dev *physfn = virtfn->physfn;
-+
-+	/*
-+	 * Some config registers are the same across all associated VFs.
-+	 * Read them once from VF0 so we can skip reading them from the
-+	 * other VFs.
-+	 *
-+	 * PCIe r4.0, sec 9.3.4.1, technically doesn't require all VFs to
-+	 * have the same Revision ID and Subsystem ID, but we assume they
-+	 * do.
-+	 */
-+	pci_read_config_dword(virtfn, PCI_CLASS_REVISION,
-+			      &physfn->sriov->class);
-+	pci_read_config_byte(virtfn, PCI_HEADER_TYPE,
-+			     &physfn->sriov->hdr_type);
-+	pci_read_config_word(virtfn, PCI_SUBSYSTEM_VENDOR_ID,
-+			     &physfn->sriov->subsystem_vendor);
-+	pci_read_config_word(virtfn, PCI_SUBSYSTEM_ID,
-+			     &physfn->sriov->subsystem_device);
-+}
-+
- int pci_iov_add_virtfn(struct pci_dev *dev, int id)
- {
- 	int i;
-@@ -136,13 +159,17 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
- 	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	virtfn->device = iov->vf_device;
-+	virtfn->is_virtfn = 1;
-+	virtfn->physfn = pci_dev_get(dev);
-+
-+	if (id == 0)
-+		pci_read_vf_config_common(virtfn);
-+
- 	rc = pci_setup_device(virtfn);
- 	if (rc)
--		goto failed0;
-+		goto failed1;
- 
- 	virtfn->dev.parent = dev->dev.parent;
--	virtfn->physfn = pci_dev_get(dev);
--	virtfn->is_virtfn = 1;
- 	virtfn->multifunction = 0;
- 
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-@@ -163,10 +190,10 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
- 	sprintf(buf, "virtfn%u", id);
- 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
- 	if (rc)
--		goto failed1;
-+		goto failed2;
- 	rc = sysfs_create_link(&virtfn->dev.kobj, &dev->dev.kobj, "physfn");
- 	if (rc)
--		goto failed2;
-+		goto failed3;
- 
- 	kobject_uevent(&virtfn->dev.kobj, KOBJ_CHANGE);
- 
-@@ -174,11 +201,12 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
- 
- 	return 0;
- 
--failed2:
-+failed3:
- 	sysfs_remove_link(&dev->dev.kobj, buf);
-+failed2:
-+	pci_stop_and_remove_bus_device(virtfn);
- failed1:
- 	pci_dev_put(dev);
--	pci_stop_and_remove_bus_device(virtfn);
- failed0:
- 	virtfn_remove_bus(dev->bus, bus);
- failed:
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fcd8191..bdb4ba2 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -271,6 +271,10 @@ struct pci_sriov {
- 	u16		driver_max_VFs;	/* Max num VFs driver supports */
- 	struct pci_dev	*dev;		/* Lowest numbered PF */
- 	struct pci_dev	*self;		/* This PF */
-+	u32		class;		/* VF device */
-+	u8		hdr_type;	/* VF header type */
-+	u16		subsystem_vendor; /* VF subsystem vendor */
-+	u16		subsystem_device; /* VF subsystem device */
- 	resource_size_t	barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
- 	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
- };
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ef53774..21ee1c3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1389,6 +1389,43 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 	return PCI_CFG_SPACE_SIZE;
- }
- 
-+static int pci_cfg_space_class(struct pci_dev *dev)
-+{
-+	int class;
-+
-+#ifdef CONFIG_PCI_ATS
-+	if (dev->is_virtfn)
-+		return dev->physfn->sriov->class;
-+#endif
-+	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class);
-+	return class;
-+}
-+
-+static void pci_cfg_space_subsystem(struct pci_dev *dev, u16 *vendor, u16 *device)
-+{
-+#ifdef CONFIG_PCI_ATS
-+	if (dev->is_virtfn) {
-+		*vendor = dev->physfn->sriov->subsystem_vendor;
-+		*device = dev->physfn->sriov->subsystem_device;
-+		return;
-+	}
-+#endif
-+	pci_read_config_word(dev, PCI_SUBSYSTEM_VENDOR_ID, vendor);
-+	pci_read_config_word(dev, PCI_SUBSYSTEM_ID, device);
-+}
-+
-+static u8 pci_cfg_space_hdr_type(struct pci_dev *dev)
-+{
-+	u8 hdr_type;
-+
-+#ifdef CONFIG_PCI_ATS
-+	if (dev->is_virtfn)
-+		return dev->physfn->sriov->hdr_type;
-+#endif
-+	pci_read_config_byte(dev, PCI_HEADER_TYPE, &hdr_type);
-+	return hdr_type;
-+}
-+
- #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
- 
- static void pci_msi_setup_pci_dev(struct pci_dev *dev)
-@@ -1454,8 +1491,7 @@ int pci_setup_device(struct pci_dev *dev)
- 	struct pci_bus_region region;
- 	struct resource *res;
- 
--	if (pci_read_config_byte(dev, PCI_HEADER_TYPE, &hdr_type))
--		return -EIO;
-+	hdr_type = pci_cfg_space_hdr_type(dev);
- 
- 	dev->sysdata = dev->bus->sysdata;
- 	dev->dev.parent = dev->bus->bridge;
-@@ -1477,7 +1513,8 @@ int pci_setup_device(struct pci_dev *dev)
- 		     dev->bus->number, PCI_SLOT(dev->devfn),
- 		     PCI_FUNC(dev->devfn));
- 
--	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class);
-+	class = pci_cfg_space_class(dev);
-+
- 	dev->revision = class & 0xff;
- 	dev->class = class >> 8;		    /* upper 3 bytes */
- 
-@@ -1517,8 +1554,8 @@ int pci_setup_device(struct pci_dev *dev)
- 			goto bad;
- 		pci_read_irq(dev);
- 		pci_read_bases(dev, 6, PCI_ROM_ADDRESS);
--		pci_read_config_word(dev, PCI_SUBSYSTEM_VENDOR_ID, &dev->subsystem_vendor);
--		pci_read_config_word(dev, PCI_SUBSYSTEM_ID, &dev->subsystem_device);
-+
-+		pci_cfg_space_subsystem(dev, &dev->subsystem_vendor, &dev->subsystem_device);
- 
- 		/*
- 		 * Do the ugly legacy mode stuff here rather than broken chip
--- 
-2.7.4
+
+> BTW, maybe there could be some kind of guide for device driver writers
+> in Documentation/PCI/?
+Makes sense we can look at writing something for the next iteration.
+
+> I think it would be clearer and sufficient to simply say that we have
+> no way to know whether peer-to-peer routing between PCIe Root Ports is
+> supported (PCIe r4.0, sec 1.3.1).
+
+Fair enough.
+
+> The fact that you use the PCIe term "switch" suggests that a PCIe
+> Switch is required, but isn't it sufficient for the peers to be below
+> the same "PCI bridge", which would include PCIe Root Ports, PCIe
+> Switch Downstream Ports, and conventional PCI bridges?
+> The comments at get_upstream_bridge_port() suggest that this isn't
+> enough, and the peers actually do have to be below the same PCIe
+> Switch, but I don't know why.
+
+I do mean Switch as we do need to keep the traffic off the root complex. 
+Seeing, as stated above, we don't know if it actually support it. (While 
+we can be certain any PCI switch does). So we specifically want to 
+exclude PCIe Root ports and I'm not sure about the support of PCI 
+bridges but I can't imagine anyone wanting to do P2P around them so I'd 
+rather be safe than sorry and exclude them.
+
+
+>> +	addr = devm_memremap_pages(&pdev->dev, pgmap);
+>> +	if (IS_ERR(addr))
+> 
+> Free pgmap here?  And in the other error case below?  Or maybe this
+> happens via the devm_* magic?  If so, when would that actually happen?
+> Would pgmap be effectively leaked until the pdev is destroyed?
+
+Yes, it happens via the devm magic as that's the way the 
+devm_memremap_pages() interface was designed. If I remember correctly, 
+in my testing, it would be de-allocated when the driver gets unbound.
+
+>> +		return PTR_ERR(addr);
+>> +
+>> +	error = gen_pool_add_virt(pdev->p2pdma->pool, (uintptr_t)addr,
+>> +			pci_bus_address(pdev, bar) + offset,
+>> +			resource_size(&pgmap->res), dev_to_node(&pdev->dev));
+>> +	if (error)
+>> +		return error;
+>> +
+>> +	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_percpu_kill,
+>> +					  &pdev->p2pdma->devmap_ref);
+>> +	if (error)
+>> +		return error;
+>> +
+>> +	dev_info(&pdev->dev, "added peer-to-peer DMA memory %pR\n",
+>> +		 &pgmap->res);
+> 
+> s/dev_info/pci_info/ (also similar usages below, except for the one or
+> two cases where you don't have a pci_dev).
+
+Oh, nice, I didn't notice that was added.
+
+> This whole thing is confusing to me.  Why do you want to reject peers
+> directly connected to the same root port?  Why do you require the same
+> Switch Upstream Port?  You don't exclude conventional PCI, but it
+> looks like you would require peers to share *two* upstream PCI-to-PCI
+> bridges?  I would think a single shared upstream bridge (conventional,
+> PCIe Switch Downstream Port, or PCIe Root Port) would be sufficient?
+
+Hmm, yes, this may just be laziness on my part. Finding the shared 
+upstream bridge is a bit more tricky than just showing that they are on 
+the same switch. So as coded, a fabric of switches with peers on 
+different legs of the fabric are not supported. But yes, maybe they just 
+need to be two devices with a single shared upstream bridge that is not 
+the root port. Again, we need to reject the root port because we can't 
+know if the root complex can support P2P traffic.
+
+> Since "pci_p2pdma_add_client()" includes "pci_" in its name, it seems
+> sort of weird that callers supply a non-PCI device and then we look up
+> a PCI device here.  I assume you have some reason for this; if you
+> added a writeup in Documentation/PCI, that would be a good place to
+> elaborate on that, maybe with a one-line clue here.
+
+Well yes, but this is much more convenient for callers which don't need 
+to care if the device they are attempting to add (which in the NVMe 
+target case, could be a random block device) is a pci device or not. 
+Especially seeing find_parent_pci_dev() is non-trivial.
+
+>> +void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size)
+>> +{
+>> +	void *ret;
+>> +
+>> +	if (unlikely(!pdev->p2pdma))
+> 
+> Is this a hot path?  I'm not sure it's worth cluttering
+> non-performance paths with likely/unlikely.
+
+I'd say it can be pretty hot given that we need to allocate and free 
+buffers at multiple GB/s for the NVMe target case. I don't exactly have 
+benchmarks or anything to show this though...
+
+>> +		return NULL;
+>> +
+>> +	if (unlikely(!percpu_ref_tryget_live(&pdev->p2pdma->devmap_ref)))
+>> +		return NULL;
+>> +
+>> +	ret = (void *)(uintptr_t)gen_pool_alloc(pdev->p2pdma->pool, size);
+> 
+> Why the double cast?  Wouldn't "(void *)" be sufficient?
+
+Oh, hmm, I can't remember now. I suspect I added it to fix a kbuild test 
+robot error. I'll check and see if it can be removed.
+
+
+> In v4.6-rc1, gen_pool_free() takes "unsigned long addr".  I know this
+> is based on -rc3; is this something that changed between -rc1 and
+> -rc3?
+
+Yes, I think it's taken an unsigned long for a while now. Per the above, 
+I can't remember exactly why I casted it this way and I'll take a look 
+again.
+
+Logan
