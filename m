@@ -1,163 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:49368 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754308AbeCGMAJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Mar 2018 07:00:09 -0500
-Date: Wed, 7 Mar 2018 12:00:04 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com
-Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
- port
-Message-ID: <20180307120004.GB15139@e107981-ln.cambridge.arm.com>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
- <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
- <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
- <20171213140848.GA1736@red-moon>
- <b72dda91-5307-f024-9810-d6abadf7f337@nvidia.com>
- <20171213183417.GD4060@red-moon>
- <a9bc0f46-69e1-d7ca-8cd3-e54259c4a92d@nvidia.com>
- <20171214095724.GA697@e107981-ln.cambridge.arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Jason Gunthorpe <jgg@ziepe.ca>, Stephen Bates <sbates@raithlin.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-11-logang@deltatee.com>
+ <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
+ <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
+ <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
+ <20180301184249.GI19007@ziepe.ca>
+ <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
+ <20180301224540.GL19007@ziepe.ca>
+ <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
+ <20180301232038.GO19007@ziepe.ca>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <bb1bb433-1a7c-2088-f150-e8627f46b884@deltatee.com>
+Date: Thu, 1 Mar 2018 16:29:19 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171214095724.GA697@e107981-ln.cambridge.arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180301232038.GO19007@ziepe.ca>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 14, 2017 at 09:57:24AM +0000, Lorenzo Pieralisi wrote:
-> On Thu, Dec 14, 2017 at 12:57:28AM +0530, Manikanta Maddireddy wrote:
-> > 
-> > 
-> > On 14-Dec-17 12:04 AM, Lorenzo Pieralisi wrote:
-> > > On Wed, Dec 13, 2017 at 10:02:02PM +0530, Manikanta Maddireddy wrote:
-> > >>
-> > >>
-> > >> On 13-Dec-17 7:38 PM, Lorenzo Pieralisi wrote:
-> > >>> On Wed, Dec 13, 2017 at 05:20:39PM +0530, Manikanta Maddireddy wrote:
-> > >>>>
-> > >>>>
-> > >>>> On 12-Dec-17 5:02 PM, Lorenzo Pieralisi wrote:
-> > >>>>> On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
-> > >>>>>> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
-> > >>>>>> after all the required root port register programming is completed.
-> > >>>>>>
-> > >>>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> > >>>>>> ---
-> > >>>>>> V3:
-> > >>>>>> * no change in this patch
-> > >>>>>> V2:
-> > >>>>>> * no change in this patch
-> > >>>>>>
-> > >>>>>>  drivers/pci/host/pci-tegra.c | 9 +++++----
-> > >>>>>>  1 file changed, 5 insertions(+), 4 deletions(-)
-> > >>>>>>
-> > >>>>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> > >>>>>> index 96e8038c3019..b41c60c7414c 100644
-> > >>>>>> --- a/drivers/pci/host/pci-tegra.c
-> > >>>>>> +++ b/drivers/pci/host/pci-tegra.c
-> > >>>>>> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
-> > >>>>>>  		}
-> > >>>>>>  	}
-> > >>>>>>  
-> > >>>>>> -	/* take the PCIe interface module out of reset */
-> > >>>>>> -	reset_control_deassert(pcie->pcie_xrst);
-> > >>>>>> -
-> > >>>>>>  	/* finally enable PCIe */
-> > >>>>>>  	value = afi_readl(pcie, AFI_CONFIGURATION);
-> > >>>>>>  	value |= AFI_CONFIGURATION_EN_FPCI;
-> > >>>>>> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-> > >>>>>>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
-> > >>>>>>  	}
-> > >>>>>>  
-> > >>>>>> -	reset_control_assert(pcie->pcie_xrst);
-> > >>>>>
-> > >>>>> This does not look like it is part of the reset de-assertion code move.
-> > >>>>>
-> > >>>>> tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
-> > >>>>>
-> > >>>>> in other words, why are you removing it ?
-> > >>>>>
-> > >>>>> Lorenzo
-> > >>>>
-> > >>>> Hi Lorenzo,
-> > >>>>
-> > >>>> Host driver should start LTSSM after programming all controller registers.
-> > >>>> In tegra_pcie_enable_controller() bunch of AFI module programming is done and
-> > >>>> I am adding PCIe register programming in this series.
-> > >>>> So I moved deasserting of pcie_xrst(which starts LTSSM) to tegra_pcie_enable_ports(),
-> > >>>> which is right after sending RST pulse(tegra_pcie_port_reset()) to endpoint.
-> > >>>
-> > >>> I asked why you removed the reset assertion in tegra_pcie_power_off(),
-> > >>> it is not clear to me. You still call tegra_pcie_power_off() in
-> > >>> the tegra_pcie_probe() error path and I see no reason why the reset
-> > >>> assertion - called through:
-> > >>>
-> > >>> tegra_pcie_put_resources()
-> > >>> 	-> tegra_pcie_power_of()
-> > >>> 	
-> > >>> is removed, if it was needed previously.
-> > >>>
-> > >>> Lorenzo
-> > >>>
-> > >>
-> > >> New sequence with this patch will be
-> > >> tegra_pcie_enable_controller() -> tegra_pcie_request_resources() -> tegra_pcie_enable_ports()
-> > >>                                    ->goto put_resources on fail        -> reset_control_deassert(pcie->pcie_xrst);
-> > >>
-> > >> Since pcie_xrst deassert happens after tegra_pcie_request_resources(), there is no need to assert pcie_xrst on put_resource failure.
-> > > 
-> > > I do not understand you, sorry for being blunt.
-> > > 
-> > > What has tegra_pcie_request_resources() to do with the reset
-> > > assertion/deassertion ?
-> > > 
-> > > This patch moves:
-> > > 
-> > > reset_control_deassert(pcie->pcie_xrst);
-> > > 
-> > > from:
-> > > 
-> > > tegra_pcie_enable_controller()
-> > > 
-> > > to
-> > > 
-> > > tegra_pcie_enable_ports()
-> > > 
-> > > if:
-> > > 
-> > > reset_control_assert(pcie->pcie_xrst);
-> > > 
-> > > was needed before this patch in tegra_pcie_power_off()
-> > > 
-> > > why it is not needed there after this patch is applied ?
-> > > 
-> > > Lorenzo
-> > > 
-> > Opposite of tegra_pcie_enable_ports() is missing on disable_msi
-> > failure in current driver. So I took care of assert pcie_xrst
-> > in https://patchwork.ozlabs.org/patch/846043/ along with other
-> > resources.
+
+
+On 01/03/18 04:20 PM, Jason Gunthorpe wrote:
+> On Thu, Mar 01, 2018 at 11:00:51PM +0000, Stephen  Bates wrote:
+
+> No, locality matters. If you have a bunch of NICs and bunch of drives
+> and the allocator chooses to put all P2P memory on a single drive your
+> performance will suck horribly even if all the traffic is offloaded.
 > 
-> Which is in another series. This patch has to be self-contained with a
-> single logical change that is applicable on its own. Even if we end up
-> merging the series above every patch has to make sense on its own. This
-> does not.
-> 
-> So I would start with re-posting this series as a self contained one,
-> addressing all review comments; we will get to other series later when
-> this is sorted.
+> Performance will suck if you have speed differences between the PCI-E
+> devices. Eg a bunch of Gen 3 x8 NVMe cards paired with a Gen 4 x16 NIC
+> will not reach full performance unless the p2p buffers are properly
+> balanced between all cards.
 
-Hi Manikanta,
+This would be solved better by choosing the closest devices in the 
+hierarchy in the p2pmem_find function (ie. preferring devices involved 
+in the transaction). Also, based on the current code, it's a bit of a 
+moot point seeing it requires all devices to be on the same switch. So 
+unless you have a giant switch hidden somewhere you're not going to get 
+too many NIC/NVME pairs.
 
-I wanted to check with you where are we with this series. I would mark
-it with "Changes requested", waiting for you to rebase it and update it
-according to review comments.
+In any case, we are looking at changing both those things so distance in 
+the topology is preferred and the ability to span multiple switches is 
+allowed. We're also discussing changing it to "user picks" which 
+simplifies all of this.
 
-Please let me know if that's OK with you.
-
-Thanks,
-Lorenzo
+Logan
