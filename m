@@ -1,41 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:37764 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751817AbeCVLtc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Mar 2018 07:49:32 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 4/6] dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to rockchip-pcie-host.txt
-Date: Thu, 22 Mar 2018 19:43:00 +0800
-Message-Id: <1521718980-160283-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1521718925-160084-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1521718925-160084-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:35775 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161286AbeCATVO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 14:21:14 -0500
+Received: by mail-oi0-f43.google.com with SMTP id x10so5336163oig.2
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 11:21:14 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1519876569.4592.4.camel@au1.ibm.com>
+References: <20180228234006.21093-1-logang@deltatee.com> <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 1 Mar 2018 11:21:13 -0800
+Message-ID: <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+To: benh@au1.ibm.com
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just make it more obvious that this documentation is referenced for
-adding Rockchip PCIe controller as root complex mode.
+On Wed, Feb 28, 2018 at 7:56 PM, Benjamin Herrenschmidt
+<benh@au1.ibm.com> wrote:
+> On Thu, 2018-03-01 at 14:54 +1100, Benjamin Herrenschmidt wrote:
+>> On Wed, 2018-02-28 at 16:39 -0700, Logan Gunthorpe wrote:
+>> > Hi Everyone,
+>>
+>>
+>> So Oliver (CC) was having issues getting any of that to work for us.
+>>
+>> The problem is that acccording to him (I didn't double check the latest
+>> patches) you effectively hotplug the PCIe memory into the system when
+>> creating struct pages.
+>>
+>> This cannot possibly work for us. First we cannot map PCIe memory as
+>> cachable. (Note that doing so is a bad idea if you are behind a PLX
+>> switch anyway since you'd ahve to manage cache coherency in SW).
+>
+> Note: I think the above means it won't work behind a switch on x86
+> either, will it ?
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-Reviewed-by: Rob Herring <robh@kernel.org>
----
-
-Changes in v4: None
-Changes in v2:
-- remove rockchip,rk3399-pcie-host compatible(Suggested by Rob)
-
- .../devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} | 0
- 1 file changed, 0 insertions(+), 0 deletions(-)
- rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (100%)
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt
-similarity index 100%
-rename from Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-rename to Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt
--- 
-1.9.1
+The devm_memremap_pages() infrastructure allows placing the memmap in
+"System-RAM" even if the hotplugged range is in PCI space. So, even if
+it is an issue on some configurations, it's just a simple adjustment
+to where the memmap is placed.
