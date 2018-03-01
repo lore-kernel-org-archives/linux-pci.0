@@ -1,72 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:45298 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932386AbeCLRXF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 13:23:05 -0400
-Subject: [pci PATCH v5 2/4] virtio_pci: Add support for unmanaged SR-IOV on
- virtio_pci devices
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
-        liang-min.wang@intel.com, mark.d.rustad@intel.com,
-        dwmw2@infradead.org, hch@lst.de, dwmw@amazon.co.uk
-Date: Mon, 12 Mar 2018 10:23:02 -0700
-Message-ID: <20180312172136.3487.95702.stgit@localhost.localdomain>
-In-Reply-To: <20180312171813.3487.94803.stgit@localhost.localdomain>
-References: <20180312171813.3487.94803.stgit@localhost.localdomain>
-MIME-Version: 1.0
+Received: from mail-eopbgr660114.outbound.protection.outlook.com ([40.107.66.114]:55373
+        "EHLO CAN01-QB1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1163266AbeCAXcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 18:32:50 -0500
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+CC: Logan Gunthorpe <logang@deltatee.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "Christoph Hellwig" <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
+Date: Thu, 1 Mar 2018 23:32:46 +0000
+Message-ID: <2F4ADC7B-0A78-4FA3-9DE3-B20FB0C537E7@raithlin.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-11-logang@deltatee.com>
+ <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
+ <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
+ <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
+ <20180301184249.GI19007@ziepe.ca>
+ <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
+ <20180301224540.GL19007@ziepe.ca>
+ <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
+ <20180301232038.GO19007@ziepe.ca>
+In-Reply-To: <20180301232038.GO19007@ziepe.ca>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexander Duyck <alexander.h.duyck@intel.com>
-
-Hardware-realized virtio_pci devices can implement SR-IOV, so this
-patch enables its use. The device in question is an upcoming Intel
-NIC that implements both a virtio_net PF and virtio_net VFs. These
-are hardware realizations of what has been up to now been a software
-interface.
-
-The device in question has the following 4-part PCI IDs:
-
-PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
-VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
-
-The patch currently needs no check for device ID, because the callback
-will never be made for devices that do not assert the capability or
-when run on a platform incapable of SR-IOV.
-
-One reason for this patch is because the hardware requires the
-vendor ID of a VF to be the same as the vendor ID of the PF that
-created it. So it seemed logical to simply have a fully-functioning
-virtio_net PF create the VFs. This patch makes that possible.
-
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
----
-
-v4: Dropped call to pci_disable_sriov in virtio_pci_remove function
-v5: Replaced call to pci_sriov_configure_unmanaged with
-        pci_sriov_configure_simple
-
- drivers/virtio/virtio_pci_common.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-index 48d4d1cf1cb6..41938d36b0cb 100644
---- a/drivers/virtio/virtio_pci_common.c
-+++ b/drivers/virtio/virtio_pci_common.c
-@@ -596,6 +596,9 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
- #ifdef CONFIG_PM_SLEEP
- 	.driver.pm	= &virtio_pci_pm_ops,
- #endif
-+#ifdef CONFIG_PCI_IOV
-+	.sriov_configure = pci_sriov_configure_simple,
-+#endif
- };
- 
- module_pci_driver(virtio_pci_driver);
+PiAgIE5vLCBsb2NhbGl0eSBtYXR0ZXJzLiBJZiB5b3UgaGF2ZSBhIGJ1bmNoIG9mIE5JQ3MgYW5k
+IGJ1bmNoIG9mIGRyaXZlcw0KPiAgIGFuZCB0aGUgYWxsb2NhdG9yIGNob29zZXMgdG8gcHV0IGFs
+bCBQMlAgbWVtb3J5IG9uIGEgc2luZ2xlIGRyaXZlIHlvdXINCj4gICBwZXJmb3JtYW5jZSB3aWxs
+IHN1Y2sgaG9ycmlibHkgZXZlbiBpZiBhbGwgdGhlIHRyYWZmaWMgaXMgb2ZmbG9hZGVkLg0KICAg
+IA0KU2FnaSBicm91Z2h0IHRoaXMgdXAgZWFybGllciBpbiBoaXMgY29tbWVudHMgYWJvdXQgdGhl
+IF9maW5kXyBmdW5jdGlvbi4gV2UgYXJlIHBsYW5uaW5nIHRvIGRvIHNvbWV0aGluZyBhYm91dCB0
+aGlzIGluIHRoZSBuZXh0IHZlcnNpb24uIFRoaXMgbWlnaHQgYmUgYSByYW5kb21pemF0aW9uIG9y
+IGEgInVzZXItcGljayIgYW5kIGluY2x1ZGUgYSBydWxlIGFyb3VuZCB1c2luZyB0aGUgcDJwX2Rl
+diBvbiB0aGUgRVAgaWYgdGhhdCBFUCBpcyBwYXJ0IG9mIHRoZSB0cmFuc2FjdGlvbi4NCg0KU3Rl
+cGhlbg0KDQoNCiAgICANCg0K
