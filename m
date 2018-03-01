@@ -1,41 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180221124707.26308-2-embedded24@evers-fischer.de>
-References: <20180221124707.26308-1-embedded24@evers-fischer.de> <20180221124707.26308-2-embedded24@evers-fischer.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 21 Feb 2018 21:00:51 +0200
-Message-ID: <CAHp75VfgqqkLq0PbC0SBMCyCLqqoNZcUW0xngjacEL0VtAskmg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] pci: endpoint: Free func_name after last usage
-To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:59496 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752427AbeCABRR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 20:17:17 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2] PCI: Fix possible NULL pointer dereference for of_pci_bus_find_domain_nr
+Date: Thu,  1 Mar 2018 09:11:25 +0800
+Message-Id: <1519866685-26271-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 21, 2018 at 2:47 PM, Rolf Evers-Fischer
-<embedded24@evers-fischer.de> wrote:
+If the "parent" pointer passed to of_pci_bus_find_domain_nr() is NULL,
+don't dereference it.
 
-> This commit decreases the number of jump labels and ensures
-> that the next commit doesn't increase the number of occurrences
-> of 'kfree(func_name)'.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-> Change-Id: I0d1b6fd652395b85f82b11c43bf9b7db512854d1
+---
 
-First of all, this shouldn't be here.
+Changes in v2:
+- Convert to use pr_err and only print valid device node if 'parent'
+isn't NULL.
 
-> Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-> Signed-off-by: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+ drivers/pci/pci.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Looks like bipolar disorder?
-
-To the topic.
-This is a slow path and your change makes code slightly less readable
-b/c of patterns used in the kernel.
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ae654e2..06f7f9d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5607,8 +5607,9 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
+ 		use_dt_domains = 0;
+ 		domain = pci_get_new_domain_nr();
+ 	} else {
+-		dev_err(parent, "Node %pOF has inconsistent \"linux,pci-domain\" property in DT\n",
+-			parent->of_node);
++		if (parent)
++			pr_err("Node %pOF has ", parent->of_node)
++		pr_err("Inconsistent \"linux,pci-domain\" property in DT\n");
+ 		domain = -1;
+ 	}
+ 
 -- 
-With Best Regards,
-Andy Shevchenko
+1.9.1
