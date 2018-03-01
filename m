@@ -1,69 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:32982 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750946AbeC2IkT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:40:19 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Victor Gu <xigu@marvell.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v4 3/6] PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-Date: Thu, 29 Mar 2018 10:39:43 +0200
-Message-Id: <20180329083946.25970-4-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
-References: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=9Yry=FX=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=9Yry=FX=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 1 Mar 2018 18:11:19 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Shawn Guo <shawn.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Fabio Estevam <festevam@gmail.com>,
+	Jianguo Sun <sunjianguo1@huawei.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Jiancheng Xue <xuejiancheng@hisilicon.com>
+Subject: Re: [PATCH v2 0/2] Add power control for pcie-histb driver
+Message-ID: <20180301181119.GA5674@e107981-ln.cambridge.arm.com>
+References: <1516722337-1533-1-git-send-email-shawn.guo@linaro.org>
+ <20180301012241.GA28619@dragon>
+ <20180301150822.GA13722@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180301150822.GA13722@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+On Thu, Mar 01, 2018 at 09:08:22AM -0600, Bjorn Helgaas wrote:
+> [+cc Lorenzo]
+> 
+> On Thu, Mar 01, 2018 at 09:22:46AM +0800, Shawn Guo wrote:
+> > On Tue, Jan 23, 2018 at 11:45:35PM +0800, Shawn Guo wrote:
+> > > The first patch is a small fix which is useful for the second one.
+> > > This version basically follows Fabio's suggestion to reimplement the
+> > > first version patch, using a regulator that can be backed by GPIO to
+> > > control the power to PCIe port.
+> > > 
+> > > Shawn Guo (2):
+> > >   PCI: histb: fix error path of histb_pcie_host_enable()
+> > >   PCI: histb: add an optional regulator for PCIe port power control
+> > > 
+> > >  .../bindings/pci/hisilicon-histb-pcie.txt          |  1 +
+> > >  drivers/pci/dwc/pcie-histb.c                       | 28 ++++++++++++++++++----
+> > >  2 files changed, 25 insertions(+), 4 deletions(-)
+> > 
+> > Hi Bjorn,
+> > 
+> > Did you get a chance to look at the series?
+> 
+> I cc'd Lorenzo, who is now taking care of this area.
+> 
+> If/when you repost this, please incorporate Rob's ack and capitalize
+> the first word of your summary ("Fix", "Add") to match the drivers/pci
+> convention.
+> 
+> Also, the original post used "PCI: hisi:", but here you use
+> "PCI: histb:".  It probably does make sense to distinguish
+> "hisi" from "histb", but I want it to be a conscious choice
+> so future patches can be consistent with it.
 
-When setting the PIO_ADDR_LS register during a configuration read, we
-were properly passing the device number, function number and register
-number, but not the bus number, causing issues when reading the
-configuration of PCIe devices.
+I suspect that using histb makes more sense but I will wait Shawn's
+feedback on this, this series was on my radar anyway but thanks
+for the flag up.
 
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Wilson Ding <dingwei@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
-Changes since v2:
- - Drop PCIE_BDF() macro, since it's no longer used. Noticed by Bjorn
-   Helgaas.
----
- drivers/pci/host/pci-aardvark.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 9d7f9f1c6837..2d0f8148ae9b 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -172,8 +172,6 @@
- #define PCIE_CONFIG_WR_TYPE0			0xa
- #define PCIE_CONFIG_WR_TYPE1			0xb
- 
--/* PCI_BDF shifts 8bit, so we need extra 4bit shift */
--#define PCIE_BDF(dev)				(dev << 4)
- #define PCIE_CONF_BUS(bus)			(((bus) & 0xff) << 20)
- #define PCIE_CONF_DEV(dev)			(((dev) & 0x1f) << 15)
- #define PCIE_CONF_FUNC(fun)			(((fun) & 0x7)	<< 12)
-@@ -465,7 +463,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	advk_writel(pcie, reg, PIO_CTRL);
- 
- 	/* Program the address registers */
--	reg = PCIE_BDF(devfn) | PCIE_CONF_REG(where);
-+	reg = PCIE_CONF_ADDR(bus->number, devfn, where);
- 	advk_writel(pcie, reg, PIO_ADDR_LS);
- 	advk_writel(pcie, 0, PIO_ADDR_MS);
- 
--- 
-2.14.3
+Lorenzo
