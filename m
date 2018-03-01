@@ -1,103 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0063.outbound.protection.outlook.com ([104.47.2.63]:37472
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753079AbeCEULJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 15:11:09 -0500
-Date: Mon, 5 Mar 2018 13:10:53 -0700
-From: Jason Gunthorpe <jgg@mellanox.com>
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: Keith Busch <keith.busch@intel.com>, Oliver <oohall@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-block@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage
- the CMB
-Message-ID: <20180305201053.GK11337@mellanox.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-8-logang@deltatee.com>
- <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
- <20180305160004.GA30975@localhost.localdomain>
- <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:35206 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966528AbeCAK2r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 05:28:47 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
+In-Reply-To: <2b4c650d27e59c81903fa4c2526bf18a2cf2d243.1519882849.git.jan.kiszka@siemens.com>
+References: <cover.1519882849.git.jan.kiszka@siemens.com> <2b4c650d27e59c81903fa4c2526bf18a2cf2d243.1519882849.git.jan.kiszka@siemens.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 1 Mar 2018 12:28:45 +0200
+Message-ID: <CAHp75VcKqgmVV7-sj9kfzcAyO-sTCt54vpPx3RL3TMcRp5i=EA@mail.gmail.com>
+Subject: Re: [PATCH v3 2/6] PCI: Scan all functions when running over Jailhouse
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Benedikt Spranger <b.spranger@linutronix.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 05, 2018 at 09:57:27PM +0200, Sagi Grimberg wrote:
+On Thu, Mar 1, 2018 at 7:40 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
+> From: Jan Kiszka <jan.kiszka@siemens.com>
+>
+> Per PCIe r4.0, sec 7.5.1.1.9, multi-function devices are required to
+> have a function 0.  Therefore, Linux scans for devices at function 0
+> (devfn 0/8/16/...) and only scans for other functions if function 0
+> has its Multi-Function Device bit set or ARI or SR-IOV indicate
+> there are more functions.
+>
+> The Jailhouse hypervisor may pass individual functions of a
+> multi-function device to a guest without passing function 0, which
+> means a Linux guest won't find them.
+>
+> Change Linux PCI probing so it scans all function numbers when
+> running as a guest over Jailhouse.
+>
+> This is technically prohibited by the spec, so it is possible that
+> PCI devices without the Multi-Function Device bit set may have
+> unexpected behavior in response to this probe.
+>
+> Derived from original patch by Benedikt Spranger.
+>
 
-> Keith, while we're on this, regardless of cmb, is SQE memcopy and DB update
-> ordering always guaranteed?
-> 
-> If you look at mlx4 (rdma device driver) that works exactly the same as
-> nvme you will find:
+FWIW,
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+
+One nit below.
+
+> CC: Benedikt Spranger <b.spranger@linutronix.de>
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/x86/pci/legacy.c |  4 +++-
+>  drivers/pci/probe.c   | 22 +++++++++++++++++++---
+>  2 files changed, 22 insertions(+), 4 deletions(-)
+>
+> diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+> index 1cb01abcb1be..dfbe6ac38830 100644
+> --- a/arch/x86/pci/legacy.c
+> +++ b/arch/x86/pci/legacy.c
+> @@ -4,6 +4,7 @@
+>  #include <linux/init.h>
+>  #include <linux/export.h>
+>  #include <linux/pci.h>
+> +#include <asm/jailhouse_para.h>
+>  #include <asm/pci_x86.h>
+>
+>  /*
+> @@ -34,13 +35,14 @@ int __init pci_legacy_init(void)
+>
+>  void pcibios_scan_specific_bus(int busn)
+>  {
+> +       int stride = jailhouse_paravirt() ? 1 : 8;
+>         int devfn;
+>         u32 l;
+>
+>         if (pci_find_bus(0, busn))
+>                 return;
+>
+> -       for (devfn = 0; devfn < 256; devfn += 8) {
+> +       for (devfn = 0; devfn < 256; devfn += stride) {
+>                 if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
+>                     l != 0x0000 && l != 0xffff) {
+>                         DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ef5377438a1e..da22d6d216f8 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/pci-aspm.h>
+>  #include <linux/aer.h>
+>  #include <linux/acpi.h>
+> +#include <linux/hypervisor.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/pm_runtime.h>
+>  #include "pci.h"
+> @@ -2518,14 +2519,29 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+>  {
+>         unsigned int used_buses, normal_bridges = 0, hotplug_bridges = 0;
+>         unsigned int start = bus->busn_res.start;
+> -       unsigned int devfn, cmax, max = start;
+> +       unsigned int devfn, fn, cmax, max = start;
+>         struct pci_dev *dev;
+> +       int nr_devs;
+>
+>         dev_dbg(&bus->dev, "scanning bus\n");
+>
+>         /* Go find them, Rover! */
+> -       for (devfn = 0; devfn < 0x100; devfn += 8)
+> -               pci_scan_slot(bus, devfn);
+
+> +       for (devfn = 0; devfn < 0x100; devfn += 8) {
+
+Since you touch this line perhaps make sense to unify with above, i.e.
+0x100 -> 256 ?
+
+> +               nr_devs = pci_scan_slot(bus, devfn);
+> +
+> +               /*
+> +                * The Jailhouse hypervisor may pass individual functions of a
+> +                * multi-function device to a guest without passing function 0.
+> +                * Look for them as well.
+> +                */
+> +               if (jailhouse_paravirt() && nr_devs == 0) {
+> +                       for (fn = 1; fn < 8; fn++) {
+> +                               dev = pci_scan_single_device(bus, devfn + fn);
+> +                               if (dev)
+> +                                       dev->multifunction = 1;
+> +                       }
+> +               }
+> +       }
+>
+>         /* Reserve buses for SR-IOV capability */
+>         used_buses = pci_iov_bus_range(bus);
 > --
->                 qp->sq.head += nreq;
-> 
->                 /*
->                  * Make sure that descriptors are written before
->                  * doorbell record.
->                  */
->                 wmb();
-> 
->                 writel(qp->doorbell_qpn,
->                        to_mdev(ibqp->device)->uar_map + MLX4_SEND_DOORBELL);
-> 
->                 /*
->                  * Make sure doorbells don't leak out of SQ spinlock
->                  * and reach the HCA out of order.
->                  */
->                 mmiowb();
-> --
-> 
-> That seems to explicitly make sure to place a barrier before updating
-> the doorbell. So as I see it, either ordering is guaranteed and the
-> above code is redundant, or nvme needs to do the same.
+> 2.13.6
+>
 
-A wmb() is always required before operations that can trigger DMA.
 
-The reason ARM has a barrier in writel() is not to make it ordered
-with respect to CPU stores to cachable memory, but to make it ordered
-with respect to *other* writels.
 
-Eg Linux defines this:
-
-writel(A, mem);
-writel(B, mem);
-
-To always produce two TLPs on PCI-E when mem is UC BAR memory.
-
-And ARM cannot guarentee that without the extra barrier.
-
-So now we see stuff like this:
-
-writel_relaxed(A, mem);
-writel_relaxed(B, mem+4);
-
-Which says the TLPs to A and B can be issued in any order..
-
-So when reading the above mlx code, we see the first wmb() being used
-to ensure that CPU stores to cachable memory are visible to the DMA
-triggered by the doorbell ring.
-
-The mmiowb() is used to ensure that DB writes are not combined and not
-issued in any order other than implied by the lock that encloses the
-whole thing. This is needed because uar_map is WC memory.
-
-We don't have ordering with respect to two writel's here, so if ARM
-performance was a concern the writel could be switched to
-writel_relaxed().
-
-Presumably nvme has similar requirments, although I guess the DB
-register is mapped UC not WC?
-
-Jason
+-- 
+With Best Regards,
+Andy Shevchenko
