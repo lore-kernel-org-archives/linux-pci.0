@@ -1,90 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:41685 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932138AbeB1NIB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 08:08:01 -0500
-From: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-To: kishon@ti.com
-Cc: lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        andy.shevchenko@gmail.com,
-        Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
-Subject: [PATCH v4 1/3] PCI: endpoint: Simplify name allocation for EPF device
-Date: Wed, 28 Feb 2018 14:07:17 +0100
-Message-Id: <20180228130719.31218-2-embedded24@evers-fischer.de>
-In-Reply-To: <20180228130719.31218-1-embedded24@evers-fischer.de>
-References: <20180228130719.31218-1-embedded24@evers-fischer.de>
+Received: from lucky1.263xmail.com ([211.157.147.130]:46364 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932134AbeCABct (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Feb 2018 20:32:49 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [RESEND PATCH v2] PCI: Fix possible NULL pointer dereference for of_pci_bus_find_domain_nr
+Date: Thu,  1 Mar 2018 09:26:55 +0800
+Message-Id: <1519867615-37327-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
+If the "parent" pointer passed to of_pci_bus_find_domain_nr() is NULL,
+don't dereference it.
 
-This commit replaces allocating and freeing the intermediate
-'buf'/'func_name' with a combination of 'kstrndup()' and 'len'.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-'len' is the required length of 'epf->name'.
-'epf->name' should be either the first part of 'name' preceding the '.'
-or the complete 'name', if there is no '.' in the name.
-
-Signed-off-by: Rolf Evers-Fischer <rolf.evers.fischer@aptiv.com>
 ---
- drivers/pci/endpoint/pci-epf-core.c | 22 ++++------------------
- 1 file changed, 4 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 766ce1dca2ec..1f2506f32bb9 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -200,8 +200,7 @@ struct pci_epf *pci_epf_create(const char *name)
- 	int ret;
- 	struct pci_epf *epf;
- 	struct device *dev;
--	char *func_name;
--	char *buf;
-+	int len;
- 
- 	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
- 	if (!epf) {
-@@ -209,20 +208,11 @@ struct pci_epf *pci_epf_create(const char *name)
- 		goto err_ret;
+Changes in v2:
+- Convert to use pr_err and only print valid device node if 'parent'
+isn't NULL.
+
+ drivers/pci/pci.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ae654e2..06f7f9d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5607,8 +5607,9 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
+ 		use_dt_domains = 0;
+ 		domain = pci_get_new_domain_nr();
+ 	} else {
+-		dev_err(parent, "Node %pOF has inconsistent \"linux,pci-domain\" property in DT\n",
+-			parent->of_node);
++		if (parent)
++			pr_err("Node %pOF has ", parent->of_node);
++		pr_err("Inconsistent \"linux,pci-domain\" property in DT\n");
+ 		domain = -1;
  	}
- 
--	buf = kstrdup(name, GFP_KERNEL);
--	if (!buf) {
--		ret = -ENOMEM;
--		goto free_epf;
--	}
--
--	func_name = buf;
--	buf = strchrnul(buf, '.');
--	*buf = '\0';
--
--	epf->name = kstrdup(func_name, GFP_KERNEL);
-+	len = strchrnul(name, '.') - name;
-+	epf->name = kstrndup(name, len, GFP_KERNEL);
- 	if (!epf->name) {
- 		ret = -ENOMEM;
--		goto free_func_name;
-+		goto free_epf;
- 	}
- 
- 	dev = &epf->dev;
-@@ -238,16 +228,12 @@ struct pci_epf *pci_epf_create(const char *name)
- 	if (ret)
- 		goto put_dev;
- 
--	kfree(func_name);
- 	return epf;
- 
- put_dev:
- 	put_device(dev);
- 	kfree(epf->name);
- 
--free_func_name:
--	kfree(func_name);
--
- free_epf:
- 	kfree(epf);
  
 -- 
-2.16.2
+1.9.1
