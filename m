@@ -1,63 +1,76 @@
-Return-Path: <SRS0=UNj1=FY=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Return-Path: <SRS0=UNj1=FY=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Reply-To: christian.koenig@amd.com
-Subject: Re: [PATCH] PCI: stop crashing in pci_release_resource v2
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20180221090715.2853-1-christian.koenig@amd.com>
- <20180301184957.GI13722@bhelgaas-glaptop.roam.corp.google.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
-Message-ID: <d850105e-3ce1-2957-de79-98f7eda2dcee@gmail.com>
-Date: Fri, 2 Mar 2018 08:55:03 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180301184957.GI13722@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:50504 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1033679AbeCASC0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 13:02:26 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 1/4] firmware: dmi_scan: Introduce the dmi_get_bios_year() helper
+Date: Thu,  1 Mar 2018 20:02:17 +0200
+Message-Id: <20180301180220.11333-2-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
+References: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 01.03.2018 um 19:49 schrieb Bjorn Helgaas:
-> On Wed, Feb 21, 2018 at 10:07:15AM +0100, Christian König wrote:
->> Is it entirely possible that the BIOS wasn't able to assign resources to
->> a device. In this case don't crash in pci_release_resource() when we try
->> to resize the resource.
->>
->> v2: keep printing the info that we try to release the BAR
->>
->> Signed-off-by: Christian König <christian.koenig@amd.com>
->> CC: stable@vger.kernel.org
-> I was hoping for a dmesg snippet, but I added a Fixes: tag and applied
-> this to for-linus for v4.16.
+The pattern to only extract the year portion of date is used in
+several places and more users may come.
 
-Sorry, been on vacation and missed your mail.
+By using this helper they may create slightly cleaner code.
 
-I don't have a dmesg of hand either, cause the reporter provided only a 
-mail with a picture of the crash :)
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/firmware/dmi_scan.c | 11 +++++++++++
+ include/linux/dmi.h         |  2 ++
+ 2 files changed, 13 insertions(+)
 
-But he confirmed that the patch worked.
-
-Thanks,
-Christian.
-
->
->> ---
->>   drivers/pci/setup-res.c | 4 ++++
->>   1 file changed, 4 insertions(+)
->>
->> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
->> index e815111f3f81..c0f091614805 100644
->> --- a/drivers/pci/setup-res.c
->> +++ b/drivers/pci/setup-res.c
->> @@ -402,6 +402,10 @@ void pci_release_resource(struct pci_dev *dev, int resno)
->>   	struct resource *res = dev->resource + resno;
->>   
->>   	dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
->> +
->> +	if (!res->parent)
->> +		return;
->> +
->>   	release_resource(res);
->>   	res->end = resource_size(res) - 1;
->>   	res->start = 0;
->> -- 
->> 2.14.1
->>
+diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+index 6ce299926196..616ec17cc802 100644
+--- a/drivers/firmware/dmi_scan.c
++++ b/drivers/firmware/dmi_scan.c
+@@ -1015,6 +1015,17 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+ }
+ EXPORT_SYMBOL(dmi_get_date);
+ 
++int dmi_get_bios_year(void)
++{
++	bool exists;
++	int year;
++
++	exists = dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
++
++	return exists ? year : -ENODATA;
++}
++EXPORT_SYMBOL(dmi_get_bios_year);
++
+ /**
+  *	dmi_walk - Walk the DMI table and get called back for every record
+  *	@decode: Callback function
+diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+index 46e151172d95..6a86d8db16d9 100644
+--- a/include/linux/dmi.h
++++ b/include/linux/dmi.h
+@@ -106,6 +106,7 @@ extern void dmi_scan_machine(void);
+ extern void dmi_memdev_walk(void);
+ extern void dmi_set_dump_stack_arch_desc(void);
+ extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
++extern int dmi_get_bios_year(void);
+ extern int dmi_name_in_vendors(const char *str);
+ extern int dmi_name_in_serial(const char *str);
+ extern int dmi_available;
+@@ -133,6 +134,7 @@ static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+ 		*dayp = 0;
+ 	return false;
+ }
++static inline int dmi_get_bios_year(void) { return -ENXIO; }
+ static inline int dmi_name_in_vendors(const char *s) { return 0; }
+ static inline int dmi_name_in_serial(const char *s) { return 0; }
+ #define dmi_available 0
+-- 
+2.16.1
