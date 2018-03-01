@@ -1,65 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0086.outbound.protection.outlook.com ([104.47.42.86]:7288
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751150AbeC2Qtx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Mar 2018 12:49:53 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Niklas Cassel <niklas.cassel@axis.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "cyrille.pitchen@free-electrons.com"
-        <cyrille.pitchen@free-electrons.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: RE: [PATCH v5 07/12] PCI: cadence: Set PCI_BASE_ADDRESS_MEM_TYPE_64
- if a 64-bit BAR was set-up
-Date: Thu, 29 Mar 2018 16:49:51 +0000
-Message-ID: <CO2PR07MB97249009D56FA041EAD1146D8A20@CO2PR07MB972.namprd07.prod.outlook.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
- <20180328115018.31921-8-niklas.cassel@axis.com>
- <CO2PR07MB97221CD6D90F81C2D81D65BD8A30@CO2PR07MB972.namprd07.prod.outlook.com>
- <20180328193717.GA97213@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180328193717.GA97213@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-5-logang@deltatee.com>
+ <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
+ <0D05579B-789C-4A19-B3A2-C1A630BE31C0@raithlin.com>
+ <20180301142155.5966c4c0@w520.home>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <8202ea69-f0ed-db10-a0d3-9fd470c1c441@deltatee.com>
+Date: Thu, 1 Mar 2018 14:26:57 -0700
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180301142155.5966c4c0@w520.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 28, 2018 at 20:37, Bjorn Helgaas wrote:
-> On Wed, Mar 28, 2018 at 01:24:10PM +0000, Alan Douglas wrote:
-> > > On 28/03/2018 12:51, Niklas Cassel wrote:
-> > > cdns_pcie_ep_set_bar() does some round-up of the BAR size, which
-> > > means that a 64-bit BAR can be set-up, even when the flag
-> > > PCI_BASE_ADDRESS_MEM_TYPE_64 isn't set.
-> >
-> > > If a 64-bit BAR was set-up, set the flag
-> PCI_BASE_ADDRESS_MEM_TYPE_64, so that the calling function can know
-> what BAR width that was actually set-up.
-> >
-> > > I'm not sure why cdns_pcie_ep_set_bar() doesn't obey the flag
-> PCI_BASE_ADDRESS_MEM_TYPE_64, but I leave this for the MAINTAINER to
-> fix, since there might be a reason why > this flag is ignored.
-> > Will investigate and fix this in future patch
-> >
-> > > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > > ---
-> > >  drivers/pci/cadence/pcie-cadence-ep.c | 3 +++
-> > >  1 file changed, 3 insertions(+)
-> > >
-> > Change looks good to me.
->=20
-> It will be helpful to Lorenzo if you spell this out, e.g.,
->=20
->   Acked-by: Alan Douglas <adouglas@cadence.com>
-Acked-by: Alan Douglas <adouglas@cadence.com>
->=20
-> Also, it looks like we need a MAINTAINERS update to add drivers/pci/caden=
-ce/
-> to the "PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS"
-> filename patterns.
-Lorenzo please let me know if I should create a patch for this, it sounds g=
-ood to me.
+
+
+On 01/03/18 02:21 PM, Alex Williamson wrote:
+> This is still a pretty terrible solution though, your kernel provider
+> needs to decide whether they favor device assignment or p2p, because we
+> can't do both, unless there's a patch I haven't seen yet that allows
+> boot time rather than compile time configuration.  There are absolutely
+> supported device assignment cases of switches proving isolation between
+> devices allowing the downstream EPs to be used independently.  I think
+> this is a non-starter for distribution support without boot time or
+> dynamic configuration.  I could imagine dynamic configuration through
+> sysfs that might trigger a soft remove and rescan of the affected
+> devices in order to rebuild the IOMMU group.  The hard part might be
+> determining which points to allow that to guarantee correctness.  For
+> instance, upstream switch ports don't actually support ACS, but they'd
+> otherwise be an obvious concentration point to trigger a
+> reconfiguration.  Thanks,
+
+At this point, I don't expect this to be enabled in any distribution. 
+The use case is for custom hardware intended to do P2P which means they 
+can have a custom kernel with P2P enabled. The default for 
+CONFIG_PCI_P2P is 'no' and I expect it to stay that way for a long time.
+
+Another boot option which has to be set for this to work isn't something 
+we'd like to see.
+
+Logan
