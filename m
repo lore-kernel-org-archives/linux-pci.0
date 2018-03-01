@@ -1,179 +1,182 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-fw-33001.amazon.com ([207.171.190.10]:55185 "EHLO
-        smtp-fw-33001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752657AbeBSNAE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Feb 2018 08:00:04 -0500
-From: David Woodhouse <dwmw@amazon.co.uk>
-To: mpe@ellerman.id.au, benh@kernel.crashing.org, bhelgaas@google.com,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] powerpc: Use generic pci_mmap_resource_range()
-Date: Mon, 19 Feb 2018 12:59:51 +0000
-Message-Id: <1519045191-22145-1-git-send-email-dwmw@amazon.co.uk>
+Received: from gate.crashing.org ([63.228.1.57]:40550 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965752AbeCAD4N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Feb 2018 22:56:13 -0500
+Message-ID: <1519876489.4592.3.camel@kernel.crashing.org>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI
+ Memory
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Date: Thu, 01 Mar 2018 14:54:49 +1100
+In-Reply-To: <20180228234006.21093-1-logang@deltatee.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit f719582435 ("PCI: Add pci_mmap_resource_range() and use it for
-ARM64") added this generic function with the intent of using it
-everywhere and ultimately killing the old arch-specific implementations.
+On Wed, 2018-02-28 at 16:39 -0700, Logan Gunthorpe wrote:
+> Hi Everyone,
 
-Let's get on with that eradication...
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/powerpc/include/asm/pci.h   |   9 ++--
- arch/powerpc/kernel/pci-common.c | 106 ++++-----------------------------------
- 2 files changed, 15 insertions(+), 100 deletions(-)
+So Oliver (CC) was having issues getting any of that to work for us.
 
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index d82802f..401c62a 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -76,10 +76,11 @@ extern int pci_proc_domain(struct pci_bus *bus);
- 
- struct vm_area_struct;
- 
--/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() and it does WC */
--#define HAVE_PCI_MMAP		1
--#define arch_can_pci_mmap_io()	1
--#define arch_can_pci_mmap_wc()	1
-+/* Tell PCI code what kind of PCI resource mappings we support */
-+#define HAVE_PCI_MMAP			1
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
-+#define arch_can_pci_mmap_io()		1
-+#define arch_can_pci_mmap_wc()		1
- 
- extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
- 			   size_t count);
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 446c796..fe9733f 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -410,72 +410,22 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- }
- 
- /*
-- * Platform support for /proc/bus/pci/X/Y mmap()s,
-- * modelled on the sparc64 implementation by Dave Miller.
-+ * Platform support for /proc/bus/pci/X/Y mmap()s.
-  *  -- paulus.
-  */
--
--/*
-- * Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
--					       resource_size_t *offset,
--					       enum pci_mmap_state mmap_state)
-+int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
- {
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	unsigned long io_offset = 0;
--	int i, res_bit;
--
--	if (hose == NULL)
--		return NULL;		/* should never happen */
--
--	/* If memory, add on the PCI bridge address offset */
--	if (mmap_state == pci_mmap_mem) {
--#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
--		*offset += hose->pci_mem_offset;
--#endif
--		res_bit = IORESOURCE_MEM;
--	} else {
--		io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		*offset += io_offset;
--		res_bit = IORESOURCE_IO;
--	}
--
--	/*
--	 * Check that the offset requested corresponds to one of the
--	 * resources of the device.
--	 */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &dev->resource[i];
--		int flags = rp->flags;
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
-+	resource_size_t ioaddr = pci_resource_start(pdev, bar);
- 
--		/* treat ROM as memory (should be already) */
--		if (i == PCI_ROM_RESOURCE)
--			flags |= IORESOURCE_MEM;
--
--		/* Active and same type? */
--		if ((flags & res_bit) == 0)
--			continue;
--
--		/* In the range of this resource? */
--		if (*offset < (rp->start & PAGE_MASK) || *offset > rp->end)
--			continue;
-+	if (!hose)
-+		return -EINVAL;
- 
--		/* found it! construct the final physical address */
--		if (mmap_state == pci_mmap_io)
--			*offset += hose->io_base_phys - io_offset;
--		return rp;
--	}
-+	/* Convert to an offset within this PCI controller */
-+	ioaddr -= (unsigned long)hose->io_base_virt - _IO_BASE;
- 
--	return NULL;
-+	vma->vm_pgoff += (ioaddr + hose->io_base_phys) >> PAGE_SHIFT;
-+	return 0;
- }
- 
- /*
-@@ -527,42 +477,6 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
- 	return prot;
- }
- 
--
--/*
-- * Perform the actual remap of the pages for a PCI device mapping, as
-- * appropriate for this architecture.  The region in the process to map
-- * is described by vm_start and vm_end members of VMA, the base physical
-- * address is found in vm_pgoff.
-- * The pci device structure is provided so that architectures may make mapping
-- * decisions on a per-device or per-bus basis.
-- *
-- * Returns a negative error code on failure, zero on success.
-- */
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	resource_size_t offset =
--		((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
--	struct resource *rp;
--	int ret;
--
--	rp = __pci_mmap_make_offset(dev, &offset, mmap_state);
--	if (rp == NULL)
--		return -EINVAL;
--
--	vma->vm_pgoff = offset >> PAGE_SHIFT;
--	if (write_combine)
--		vma->vm_page_prot = pgprot_noncached_wc(vma->vm_page_prot);
--	else
--		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
--
--	ret = remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			       vma->vm_end - vma->vm_start, vma->vm_page_prot);
--
--	return ret;
--}
--
- /* This provides legacy IO read access on a bus */
- int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val, size_t size)
- {
--- 
-2.7.4
+The problem is that acccording to him (I didn't double check the latest
+patches) you effectively hotplug the PCIe memory into the system when
+creating struct pages.
+
+This cannot possibly work for us. First we cannot map PCIe memory as
+cachable. (Note that doing so is a bad idea if you are behind a PLX
+switch anyway since you'd ahve to manage cache coherency in SW).
+
+Then our MMIO space is so far away from our memory space that there is
+not enough vmemmap virtual space to be able to do that.
+
+So this can only work accross achitectures by using something like HMM
+to create special device struct page's.
+
+Ben.
+
+
+> Here's v2 of our series to introduce P2P based copy offload to NVMe
+> fabrics. This version has been rebased onto v4.16-rc3 which already
+> includes Christoph's devpagemap work the previous version was based
+> off as well as a couple of the cleanup patches that were in v1.
+> 
+> Additionally, we've made the following changes based on feedback:
+> 
+> * Renamed everything to 'p2pdma' per the suggestion from Bjorn as well
+>   as a bunch of cleanup and spelling fixes he pointed out in the last
+>   series.
+> 
+> * To address Alex's ACS concerns, we change to a simpler method of
+>   just disabling ACS behind switches for any kernel that has
+>   CONFIG_PCI_P2PDMA.
+> 
+> * We also reject using devices that employ 'dma_virt_ops' which should
+>   fairly simply handle Jason's concerns that this work might break with
+>   the HFI, QIB and rxe drivers that use the virtual ops to implement
+>   their own special DMA operations.
+> 
+> Thanks,
+> 
+> Logan
+> 
+> --
+> 
+> This is a continuation of our work to enable using Peer-to-Peer PCI
+> memory in NVMe fabrics targets. Many thanks go to Christoph Hellwig who
+> provided valuable feedback to get these patches to where they are today.
+> 
+> The concept here is to use memory that's exposed on a PCI BAR as
+> data buffers in the NVME target code such that data can be transferred
+> from an RDMA NIC to the special memory and then directly to an NVMe
+> device avoiding system memory entirely. The upside of this is better
+> QoS for applications running on the CPU utilizing memory and lower
+> PCI bandwidth required to the CPU (such that systems could be designed
+> with fewer lanes connected to the CPU). However, presently, the
+> trade-off is currently a reduction in overall throughput. (Largely due
+> to hardware issues that would certainly improve in the future).
+> 
+> Due to these trade-offs we've designed the system to only enable using
+> the PCI memory in cases where the NIC, NVMe devices and memory are all
+> behind the same PCI switch. This will mean many setups that could likely
+> work well will not be supported so that we can be more confident it
+> will work and not place any responsibility on the user to understand
+> their topology. (We chose to go this route based on feedback we
+> received at the last LSF). Future work may enable these transfers behind
+> a fabric of PCI switches or perhaps using a white list of known good
+> root complexes.
+> 
+> In order to enable this functionality, we introduce a few new PCI
+> functions such that a driver can register P2P memory with the system.
+> Struct pages are created for this memory using devm_memremap_pages()
+> and the PCI bus offset is stored in the corresponding pagemap structure.
+> 
+> Another set of functions allow a client driver to create a list of
+> client devices that will be used in a given P2P transactions and then
+> use that list to find any P2P memory that is supported by all the
+> client devices. This list is then also used to selectively disable the
+> ACS bits for the downstream ports behind these devices.
+> 
+> In the block layer, we also introduce a P2P request flag to indicate a
+> given request targets P2P memory as well as a flag for a request queue
+> to indicate a given queue supports targeting P2P memory. P2P requests
+> will only be accepted by queues that support it. Also, P2P requests
+> are marked to not be merged seeing a non-homogenous request would
+> complicate the DMA mapping requirements.
+> 
+> In the PCI NVMe driver, we modify the existing CMB support to utilize
+> the new PCI P2P memory infrastructure and also add support for P2P
+> memory in its request queue. When a P2P request is received it uses the
+> pci_p2pmem_map_sg() function which applies the necessary transformation
+> to get the corrent pci_bus_addr_t for the DMA transactions.
+> 
+> In the RDMA core, we also adjust rdma_rw_ctx_init() and
+> rdma_rw_ctx_destroy() to take a flags argument which indicates whether
+> to use the PCI P2P mapping functions or not.
+> 
+> Finally, in the NVMe fabrics target port we introduce a new
+> configuration boolean: 'allow_p2pmem'. When set, the port will attempt
+> to find P2P memory supported by the RDMA NIC and all namespaces. If
+> supported memory is found, it will be used in all IO transfers. And if
+> a port is using P2P memory, adding new namespaces that are not supported
+> by that memory will fail.
+> 
+> Logan Gunthorpe (10):
+>   PCI/P2PDMA: Support peer to peer memory
+>   PCI/P2PDMA: Add sysfs group to display p2pmem stats
+>   PCI/P2PDMA: Add PCI p2pmem dma mappings to adjust the bus offset
+>   PCI/P2PDMA: Clear ACS P2P flags for all devices behind switches
+>   block: Introduce PCI P2P flags for request and request queue
+>   IB/core: Add optional PCI P2P flag to rdma_rw_ctx_[init|destroy]()
+>   nvme-pci: Use PCI p2pmem subsystem to manage the CMB
+>   nvme-pci: Add support for P2P memory in requests
+>   nvme-pci: Add a quirk for a pseudo CMB
+>   nvmet: Optionally use PCI P2P memory
+> 
+>  Documentation/ABI/testing/sysfs-bus-pci |  25 ++
+>  block/blk-core.c                        |   3 +
+>  drivers/infiniband/core/rw.c            |  21 +-
+>  drivers/infiniband/ulp/isert/ib_isert.c |   5 +-
+>  drivers/infiniband/ulp/srpt/ib_srpt.c   |   7 +-
+>  drivers/nvme/host/core.c                |   4 +
+>  drivers/nvme/host/nvme.h                |   8 +
+>  drivers/nvme/host/pci.c                 | 118 ++++--
+>  drivers/nvme/target/configfs.c          |  29 ++
+>  drivers/nvme/target/core.c              |  95 ++++-
+>  drivers/nvme/target/io-cmd.c            |   3 +
+>  drivers/nvme/target/nvmet.h             |  10 +
+>  drivers/nvme/target/rdma.c              |  43 +-
+>  drivers/pci/Kconfig                     |  20 +
+>  drivers/pci/Makefile                    |   1 +
+>  drivers/pci/p2pdma.c                    | 713 ++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.c                       |   4 +
+>  include/linux/blk_types.h               |  18 +-
+>  include/linux/blkdev.h                  |   3 +
+>  include/linux/memremap.h                |  19 +
+>  include/linux/pci-p2pdma.h              | 105 +++++
+>  include/linux/pci.h                     |   4 +
+>  include/rdma/rw.h                       |   7 +-
+>  net/sunrpc/xprtrdma/svc_rdma_rw.c       |   6 +-
+>  24 files changed, 1204 insertions(+), 67 deletions(-)
+>  create mode 100644 drivers/pci/p2pdma.c
+>  create mode 100644 include/linux/pci-p2pdma.h
+> 
+> --
+> 2.11.0
