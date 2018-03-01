@@ -1,149 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50130 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1161854AbeCAVDn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 16:03:43 -0500
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w21Kx1OK041042
+        for <linux-pci@vger.kernel.org>; Thu, 1 Mar 2018 16:03:43 -0500
+Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2gep8e78yd-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 16:03:41 -0500
+Received: from localhost
+        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+        Thu, 1 Mar 2018 21:03:39 -0000
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI
+ Memory
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Reply-To: benh@au1.ibm.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Keith Busch <keith.busch@intel.com>,
         Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
         Alex Williamson <alex.williamson@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 12 Mar 2018 13:35:17 -0600
-Message-Id: <20180312193525.2855-4-logang@deltatee.com>
-In-Reply-To: <20180312193525.2855-1-logang@deltatee.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
-Subject: [PATCH v3 03/11] PCI/P2PDMA: Add PCI p2pmem dma mappings to adjust the bus offset
-Sender: linux-kernel-owner@vger.kernel.org
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Date: Fri, 02 Mar 2018 08:03:30 +1100
+In-Reply-To: <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+         <1519876489.4592.3.camel@kernel.crashing.org>
+         <1519876569.4592.4.camel@au1.ibm.com>
+         <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Message-Id: <1519938210.4592.30.camel@au1.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The DMA address used when mapping PCI P2P memory must be the PCI bus
-address. Thus, introduce pci_p2pmem_[un]map_sg() to map the correct
-addresses when using P2P memory.
+On Thu, 2018-03-01 at 11:21 -0800, Dan Williams wrote:
+> 
+> 
+> The devm_memremap_pages() infrastructure allows placing the memmap in
+> "System-RAM" even if the hotplugged range is in PCI space. So, even if
+> it is an issue on some configurations, it's just a simple adjustment
+> to where the memmap is placed.
 
-For this, we assume that an SGL passed to these functions contain all
-P2P memory or no P2P memory.
+Actually can you explain a bit more here ?
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/pci/p2pdma.c       | 51 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/memremap.h   |  1 +
- include/linux/pci-p2pdma.h | 13 ++++++++++++
- 3 files changed, 65 insertions(+)
+devm_memremap_pages() doesn't take any specific argument about what to
+do with the memory.
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index fd4789566a56..ab810c3a93eb 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -190,6 +190,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 	pgmap->res.flags = pci_resource_flags(pdev, bar);
- 	pgmap->ref = &pdev->p2pdma->devmap_ref;
- 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
-+	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
-+		pci_resource_start(pdev, bar);
- 
- 	addr = devm_memremap_pages(&pdev->dev, pgmap);
- 	if (IS_ERR(addr)) {
-@@ -731,3 +733,52 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
- 	pdev->p2pdma->p2pmem_published = publish;
- }
- EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
-+
-+/**
-+ * pci_p2pdma_map_sg - map a PCI peer-to-peer sg for DMA
-+ * @dev: device doing the DMA request
-+ * @sg: scatter list to map
-+ * @nents: elements in the scatterlist
-+ * @dir: DMA direction
-+ *
-+ * Returns the number of SG entries mapped
-+ */
-+int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
-+		      enum dma_data_direction dir)
-+{
-+	struct dev_pagemap *pgmap;
-+	struct scatterlist *s;
-+	phys_addr_t paddr;
-+	int i;
-+
-+	/*
-+	 * p2pdma mappings are not compatible with devices that use
-+	 * dma_virt_ops.
-+	 */
-+	if (IS_ENABLED(CONFIG_DMA_VIRT_OPS) && dev->dma_ops == &dma_virt_ops)
-+		return 0;
-+
-+	for_each_sg(sg, s, nents, i) {
-+		pgmap = sg_page(s)->pgmap;
-+		paddr = sg_phys(s);
-+
-+		s->dma_address = paddr - pgmap->pci_p2pdma_bus_offset;
-+		sg_dma_len(s) = s->length;
-+	}
-+
-+	return nents;
-+}
-+EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
-+
-+/**
-+ * pci_p2pdma_unmap_sg - unmap a PCI peer-to-peer sg for DMA
-+ * @dev: device doing the DMA request
-+ * @sg: scatter list to map
-+ * @nents: elements in the scatterlist
-+ * @dir: DMA direction
-+ */
-+void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
-+			 enum dma_data_direction dir)
-+{
-+}
-+EXPORT_SYMBOL_GPL(pci_p2pdma_unmap_sg);
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 9e907c338a44..1660f64ce96f 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -125,6 +125,7 @@ struct dev_pagemap {
- 	struct device *dev;
- 	void *data;
- 	enum memory_type type;
-+	u64 pci_p2pdma_bus_offset;
- };
- 
- #ifdef CONFIG_ZONE_DEVICE
-diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-index 1f7856ff098b..59eb218bdb25 100644
---- a/include/linux/pci-p2pdma.h
-+++ b/include/linux/pci-p2pdma.h
-@@ -36,6 +36,10 @@ int pci_p2pmem_alloc_sgl(struct pci_dev *pdev, struct scatterlist **sgl,
- void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl,
- 		unsigned int nents);
- void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
-+int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
-+		      enum dma_data_direction dir);
-+void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
-+			 enum dma_data_direction dir);
- #else /* CONFIG_PCI_P2PDMA */
- static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
- 		size_t size, u64 offset)
-@@ -97,5 +101,14 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
- static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
- {
- }
-+static inline int pci_p2pdma_map_sg(struct device *dev,
-+	struct scatterlist *sg, int nents, enum dma_data_direction dir)
-+{
-+	return 0;
-+}
-+static inline void pci_p2pdma_unmap_sg(struct device *dev,
-+	struct scatterlist *sg, int nents, enum dma_data_direction dir)
-+{
-+}
- #endif /* CONFIG_PCI_P2PDMA */
- #endif /* _LINUX_PCI_P2P_H */
--- 
-2.11.0
+It does create the vmemmap sections etc... but does so by calling
+arch_add_memory(). So __add_memory() isn't called, which means the
+pages aren't added to the linear mapping. Then you manually add them to
+ZONE_DEVICE.
+
+Am I correct ?
+
+In that case, they indeed can't be used as normal memory pages, which
+is good, and if they are indeed not in the linear mapping, then there
+is no caching issues.
+
+However, what happens if anything calls page_address() on them ? Some
+DMA ops do that for example, or some devices might ...
+
+This is all quite convoluted with no documentation I can find that
+explains the various expectations.
+
+So the question is are those pages landing in the linear mapping, and
+if yes, by what code path ?
+
+The next question is if we ever want that to work on ppc64, we need a
+way to make this fit in our linear mapping and map it non-cachable,
+which will require some wrangling on how we handle that mapping.
+
+Cheers,
+Ben.
