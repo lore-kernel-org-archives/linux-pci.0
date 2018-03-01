@@ -1,35 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41211 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751771AbeCUJXN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 05:23:13 -0400
-Date: Wed, 21 Mar 2018 10:23:11 +0100
-From: Christoph Hellwig <hch@lst.de>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:38205 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162664AbeCAWps (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 17:45:48 -0500
+Received: by mail-wr0-f195.google.com with SMTP id n7so8231733wrn.5
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 14:45:47 -0800 (PST)
+Date: Thu, 1 Mar 2018 15:45:40 -0700
+From: Jason Gunthorpe <jgg@ziepe.ca>
 To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
+Cc: Sagi Grimberg <sagi@grimberg.me>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v3 09/11] nvme-pci: Add support for P2P memory in
-        requests
-Message-ID: <20180321092311.GA7098@lst.de>
-References: <20180312193525.2855-1-logang@deltatee.com> <20180312193525.2855-10-logang@deltatee.com>
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
+Message-ID: <20180301224540.GL19007@ziepe.ca>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-11-logang@deltatee.com>
+ <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
+ <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
+ <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
+ <20180301184249.GI19007@ziepe.ca>
+ <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180312193525.2855-10-logang@deltatee.com>
+In-Reply-To: <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looks good,
+On Thu, Mar 01, 2018 at 12:27:03PM -0700, Logan Gunthorpe wrote:
+> 
+> 
+> On 01/03/18 11:42 AM, Jason Gunthorpe wrote:
+> >On Thu, Mar 01, 2018 at 08:35:55PM +0200, Sagi Grimberg wrote:
+> >This is also why I don't entirely understand why this series has a
+> >generic allocator for p2p mem, it makes little sense to me.
+> 
+> >Why wouldn't the nmve driver just claim the entire CMB of its local
+> >device for its own use? Why involve p2p core code in this?
+> 
+> We'd prefer to have a generic way to get p2pmem instead of restricting
+> ourselves to only using CMBs. We did work in the past where the P2P memory
+> was part of an IB adapter and not the NVMe card. So this won't work if it's
+> an NVMe only interface.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+It just seems like it it making it too complicated.
+
+In 99% of cases locality is important and you don't want to accidently
+use a buffer in a 3rd device that has no relation to the two doing the
+transfer just because it happened to be returned by the generic
+allocator.
+
+I can appreciate you might have some special use case for that, but it
+absolutely should require special configuration and not just magically
+happen.
+
+You bring up IB adaptor memory - if we put that into the allocator
+then what is to stop the NMVe driver just using it instead of the CMB
+buffer? That would be totally wrong in almost all cases.
+
+Seems like a very subtle and hard to debug performance trap to leave
+for the users, and pretty much the only reason to use P2P is
+performance... So why have such a dangerous interface?
+
+Jason
