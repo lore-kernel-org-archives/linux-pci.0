@@ -1,38 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:39057 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752411AbeCMLN6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 07:13:58 -0400
-Subject: Re: PCI enumeration broken on Ventana gw5200
-To: Fabio Estevam <festevam@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <b440214a-0768-38a4-9410-9eedc7a79dca@green-communications.fr>
- <CAOMZO5DeTvR2YiJa1ei7vW=m1FukJRhdO-DaoeKLrFeSvFO0QA@mail.gmail.com>
-From: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
-Message-ID: <b09e3fc8-683b-10f8-9ccc-b3fafd7146a1@green-communications.fr>
-Date: Tue, 13 Mar 2018 12:13:52 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5DeTvR2YiJa1ei7vW=m1FukJRhdO-DaoeKLrFeSvFO0QA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1519936477.4592.23.camel@au1.ibm.com>
+References: <20180228234006.21093-1-logang@deltatee.com> <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com> <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+ <1519936477.4592.23.camel@au1.ibm.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 1 Mar 2018 13:37:03 -0800
+Message-ID: <CAPcyv4goHsYytq60ehJUori8Xq+Z0p8dV-8_oRALj244H4YtwQ@mail.gmail.com>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+To: benh@au1.ibm.com
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/03/2018 11:54, Fabio Estevam wrote:
-> Hi Nicolas,
-> 
-> On Tue, Mar 13, 2018 at 7:45 AM, Nicolas Cavallari
-> <Nicolas.Cavallari@green-communications.fr> wrote:
->> When testing v4.16-rc2 on a Ventana gw5200, the mini-PCIe cards were
->> not recognised.  Only the bridge was recognised.
-> 
-> Please try 4.16-rc5 instead.
-> 
-> Koen's commit should fix the issue you described:
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/pci/dwc?h=v4.16-rc5&id=fc110ebdd014dd1368c98e7685b47789c31fab42
-> 
+On Thu, Mar 1, 2018 at 12:34 PM, Benjamin Herrenschmidt
+<benh@au1.ibm.com> wrote:
+> On Thu, 2018-03-01 at 11:21 -0800, Dan Williams wrote:
+>> On Wed, Feb 28, 2018 at 7:56 PM, Benjamin Herrenschmidt
+>> <benh@au1.ibm.com> wrote:
+>> > On Thu, 2018-03-01 at 14:54 +1100, Benjamin Herrenschmidt wrote:
+>> > > On Wed, 2018-02-28 at 16:39 -0700, Logan Gunthorpe wrote:
+>> > > > Hi Everyone,
+>> > >
+>> > >
+>> > > So Oliver (CC) was having issues getting any of that to work for us.
+>> > >
+>> > > The problem is that acccording to him (I didn't double check the latest
+>> > > patches) you effectively hotplug the PCIe memory into the system when
+>> > > creating struct pages.
+>> > >
+>> > > This cannot possibly work for us. First we cannot map PCIe memory as
+>> > > cachable. (Note that doing so is a bad idea if you are behind a PLX
+>> > > switch anyway since you'd ahve to manage cache coherency in SW).
+>> >
+>> > Note: I think the above means it won't work behind a switch on x86
+>> > either, will it ?
+>>
+>> The devm_memremap_pages() infrastructure allows placing the memmap in
+>> "System-RAM" even if the hotplugged range is in PCI space. So, even if
+>> it is an issue on some configurations, it's just a simple adjustment
+>> to where the memmap is placed.
+>
+> But what happens with that PCI memory ? Is it effectively turned into
+> nromal memory (ie, usable for normal allocations, potentially used to
+> populate user pages etc...) or is it kept aside ?
+>
+> Also on ppc64, the physical addresses of PCIe make it so far appart
+> that there's no way we can map them into the linear mapping at the
+> normal offset of PAGE_OFFSET + (pfn << PAGE_SHIFT), so things like
+> page_address or virt_to_page cannot work as-is on PCIe addresses.
 
-Oh, i only looked for changes in probe.c since 4.16-rc2, didn't think that it
-could get fixed in the dwc driver.
-
-I just tested 4.16-rc5 and indeed the issue is fixed. Thanks !
+Ah ok, I'd need to look at the details. I had been assuming that
+sparse-vmemmap could handle such a situation, but that could indeed be
+a broken assumption.
