@@ -1,8 +1,15 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 1 Mar 2018 17:45:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:42743 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162893AbeCAXUq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 18:20:46 -0500
+Received: by mail-wr0-f181.google.com with SMTP id k9so8278697wre.9
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 15:20:45 -0800 (PST)
+Date: Thu, 1 Mar 2018 16:20:38 -0700
+From: Jason Gunthorpe <jgg@ziepe.ca>
 To: Stephen Bates <sbates@raithlin.com>
 Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
@@ -11,56 +18,51 @@ Cc: Logan Gunthorpe <logang@deltatee.com>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v2 01/10] PCI/P2PDMA: Support peer to peer memory
-Message-ID: <20180301234519.GC74737@bhelgaas-glaptop.roam.corp.google.com>
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
+Message-ID: <20180301232038.GO19007@ziepe.ca>
 References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-2-logang@deltatee.com>
- <20180301173752.GE13722@bhelgaas-glaptop.roam.corp.google.com>
- <b81503c2-9f07-b5f6-df06-64d1fdc53386@deltatee.com>
- <20180301230032.GA74737@bhelgaas-glaptop.roam.corp.google.com>
- <b3121c36-4ef5-0d8e-e8ef-418b48de9589@deltatee.com>
- <9B84B347-2CCF-4250-89ED-B29892E76597@raithlin.com>
+ <20180228234006.21093-11-logang@deltatee.com>
+ <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
+ <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
+ <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
+ <20180301184249.GI19007@ziepe.ca>
+ <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
+ <20180301224540.GL19007@ziepe.ca>
+ <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9B84B347-2CCF-4250-89ED-B29892E76597@raithlin.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 11:14:46PM +0000, Stephen  Bates wrote:
-> > I'm pretty sure the spec disallows routing-to-self so doing a P2P 
-> > transaction in that sense isn't going to work unless the device 
-> > specifically supports it and intercepts the traffic before it gets to 
-> > the port.
+On Thu, Mar 01, 2018 at 11:00:51PM +0000, Stephen  Bates wrote:
+
+> > Seems like a very subtle and hard to debug performance trap to leave
+> > for the users, and pretty much the only reason to use P2P is
+> > performance... So why have such a dangerous interface?
 > 
-> This is correct. Unless the device intercepts the TLP before it hits
-> the root-port then this would be considered a "route to self"
-> violation and an error event would occur. The same holds for the
-> downstream port on a PCI switch (unless route-to-self violations are
-> disabled which violates the spec but which I have seen done in
-> certain applications).
+> P2P is about offloading the memory and PCI subsystem of the host CPU
+> and this is achieved no matter which p2p_dev is used.
 
-I agree that a function doing DMA to a sibling within the same
-multi-function device would probably not generate a TLP for it (I
-would be curious to read about this in the spec if you have a
-pointer).
+No, locality matters. If you have a bunch of NICs and bunch of drives
+and the allocator chooses to put all P2P memory on a single drive your
+performance will suck horribly even if all the traffic is offloaded.
 
-More fundamentally, is there some multi-function-specific restriction
-on peer-to-peer DMA?  In conventional PCI, single-function devices on
-the same bus can DMA to each other.  The transactions will appear on
-the bus, but the upstream bridge will ignore them because the address
-is inside the bridge's memory window.  As far as I know, the same
-should happen on PCIe.
+Performance will suck if you have speed differences between the PCI-E
+devices. Eg a bunch of Gen 3 x8 NVMe cards paired with a Gen 4 x16 NIC
+will not reach full performance unless the p2p buffers are properly
+balanced between all cards.
 
-I don't know what happens with functions of a multi-function device,
-either in conventional PCI or PCIe.  I don't remember a restriction on
-whether they can DMA to each other, but maybe there is.
+This is why I think putting things in one big pool and pretending like
+any P2P mem is interchangable with any other makes zero sense to me,
+it is not how the system actually works. Proper locality matters a
+lot.
 
-Bjorn
+Jason
