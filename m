@@ -1,52 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:53974 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752932AbeC1LvD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:51:03 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
-        Alan Douglas <adouglas@cadence.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 07/12] PCI: cadence: Set PCI_BASE_ADDRESS_MEM_TYPE_64 if a 64-bit BAR was set-up
-Date: Wed, 28 Mar 2018 13:50:12 +0200
-Message-Id: <20180328115018.31921-8-niklas.cassel@axis.com>
-In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
+Received: from ale.deltatee.com ([207.54.116.67]:38684 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161923AbeCAVXK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 16:23:10 -0500
+To: Jerome Glisse <jglisse@redhat.com>
+Cc: benh@au1.ibm.com, Dan Williams <dan.j.williams@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+ <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+ <1519938210.4592.30.camel@au1.ibm.com>
+ <1de70207-40ce-29f0-6093-337112852475@deltatee.com>
+ <20180301211817.GC6742@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <25034ee7-de03-ed77-78e0-2333f46897cc@deltatee.com>
+Date: Thu, 1 Mar 2018 14:22:56 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180301211817.GC6742@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-cdns_pcie_ep_set_bar() does some round-up of the BAR size, which means
-that a 64-bit BAR can be set-up, even when the flag
-PCI_BASE_ADDRESS_MEM_TYPE_64 isn't set.
 
-If a 64-bit BAR was set-up, set the flag PCI_BASE_ADDRESS_MEM_TYPE_64,
-so that the calling function can know what BAR width that was actually
-set-up.
 
-I'm not sure why cdns_pcie_ep_set_bar() doesn't obey the flag
-PCI_BASE_ADDRESS_MEM_TYPE_64, but I leave this for the MAINTAINER to
-fix, since there might be a reason why this flag is ignored.
+On 01/03/18 02:18 PM, Jerome Glisse wrote:
+> This is pretty easy to do with HMM:
+> 
+> unsigned long hmm_page_to_phys_pfn(struct page *page)
+This is not useful unless you want to go through all the kernel paths we 
+are using and replace page_to_phys() and friends with something else 
+that calls an HMM function when appropriate...
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/cadence/pcie-cadence-ep.c | 3 +++
- 1 file changed, 3 insertions(+)
+The problem isn't getting the physical address from a page, it's that we 
+are passing these pages through various kernel interfaces which expect 
+pages that work in the usual manner. (Look at the code: we quite simply 
+provide a way to get the PCI bus address from a page when necessary).
 
-diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-index cef36cd6b710..2905e098678c 100644
---- a/drivers/pci/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/cadence/pcie-cadence-ep.c
-@@ -106,6 +106,9 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
- 		if (is_64bits && (bar & 1))
- 			return -EINVAL;
- 
-+		if (is_64bits && !(flags & PCI_BASE_ADDRESS_MEM_TYPE_64))
-+			epf_bar->flags |= PCI_BASE_ADDRESS_MEM_TYPE_64;
-+
- 		if (is_64bits && is_prefetch)
- 			ctrl = CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_64BITS;
- 		else if (is_prefetch)
--- 
-2.14.2
+Logan
