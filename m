@@ -1,133 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-hk2apc01on0116.outbound.protection.outlook.com ([104.47.124.116]:65315
-        "EHLO APC01-HK2-obe.outbound.protection.outlook.com"
+Received: from mail-eopbgr660097.outbound.protection.outlook.com ([40.107.66.97]:45311
+        "EHLO CAN01-QB1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754553AbeCGVkU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Mar 2018 16:40:20 -0500
-From: Dexuan Cui <decui@microsoft.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        id S1034075AbeCASyD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 13:54:03 -0500
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Jack Morgenstein <jackm@mellanox.com>
-Subject: RE: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
-Date: Wed, 7 Mar 2018 21:40:03 +0000
-Message-ID: <KL1P15301MB0006B22926A4DC338BFEB78DBFD80@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-References: <20180306182128.23281-1-decui@microsoft.com>
- <20180306182128.23281-7-decui@microsoft.com>
- <20180307123441.GD15139@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20180307123441.GD15139@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="us-ascii"
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "Christoph Hellwig" <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Date: Thu, 1 Mar 2018 18:54:01 +0000
+Message-ID: <0D05579B-789C-4A19-B3A2-C1A630BE31C0@raithlin.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-5-logang@deltatee.com>
+ <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Sent: Wednesday, March 7, 2018 04:35
-> On Tue, Mar 06, 2018 at 06:21:56PM +0000, Dexuan Cui wrote:
-> > 1. With the patch "x86/vector/msi: Switch to global reservation mode"
-> > (4900be8360), the recent v4.15 and newer kernels always hang for 1-vCPU
-> > Hyper-V VM with SR-IOV. This is because when we reach
-> hv_compose_msi_msg()
-> > by request_irq()  -> request_threaded_irq() -> __setup_irq()->irq_start=
-up()
-> >  -> __irq_startup() -> irq_domain_activate_irq() -> ... ->
-> > msi_domain_activate() -> ... -> hv_compose_msi_msg(), local irq is
-> > disabled in __setup_irq().
-> >
-> > Fix this by polling the channel.
-> >
-> > 2. If the host is ejecting the VF device before we reach
-> > hv_compose_msi_msg(), in a UP VM, we can hang in hv_compose_msi_msg()
-> > forever, because at this time the host doesn't respond to the
-> > CREATE_INTERRUPT request. This issue also happens to old kernels like
-> > v4.14, v4.13, etc.
->
-> If you are fixing a problem you should report what commit you are fixing
-> with a Fixes: tag and add a CC: stable@vger.kernel.org to the commit log
-> to send it to stable kernels to which it should be applied; mentioning
-> kernel versions in the commit log is useless and should be omitted.
-
-Hi Lorenzo,
-Thanks for your comments!
-This patch does have a "Cc: stable@vger.kernel.org" in the sign-off area. :=
--)
-
-Here the patch is made to resolve 2 issues:
-#1 is triggered by the x86 global reservation mode (4900be8360) patch.
-4900be8360 in itself is good. It's just that drivers/pci/host/pci-hyperv.c
-should be fixed.
-
-#2 is a longstanding issue since the first day the pci-hyperv driver was
-accepted into the kernel.
-
-So IMO actually we don't really need to add a Fixes: tag, which is usually
-used to specify a specific commit that introduces a bug that is being fixed=
-.
-
-> Side note: you should not have stable@vger.kernel.org in the email
-> addresses CC list you are sending the patches to (you mark patches for
-> stable by adding an appropriate CC tag in the commit log).
-
-Sorry, I didn't know this, but actually I didn't add stable@vger.kernel.org
-manually. Instead I used "git send-email" to send this patchset, and it tol=
-d
-me "The Cc list above has been expanded by additional addresses found
-in the patch commit message."
-
-I didn't find a way to disable this behavior of "git send-email" by checkin=
-g
-its manual and googling it. This is strange.
-
-> Here:
->
-> git.kernel.org/.../Documentation/process/stable-kernel-rules.rst
->
-> Last but not least, most of the patches in this series do not justify
-> sending them to stable kernels at all so you should remove the
-> corresponding tag from the patches.
-
-I hope at least these 2 patches can go into the stable kernels:
-[PATCH v3 3/6] PCI: hv: serialize the present/eject work items
-[PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
-Especially the second one, which fixes a real hang issue for UP virtual
-machines running v4.15 and newer.
-And,  IMO the patches are small enough (<100 lines) , but definitely
-the maintainers make the final call.
-
->
-> Thanks,
-> Lorenzo
->
-> > Fix this by polling the channel for the PCI_EJECT message and
-> > hpdev->state, and by checking the PCI vendor ID.
-> >
-> > Note: actually the above issues also happen to a SMP VM, if
-> > "hbus->hdev->channel->target_cpu =3D=3D smp_processor_id()" is true.
-> >
-> > Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> > Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
-> > Tested-by: Chris Valean <v-chvale@microsoft.com>
-> > Cc: stable@vger.kernel.org
-> > Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> > Cc: K. Y. Srinivasan <kys@microsoft.com>
-> > Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> > Cc: Jack Morgenstein <jackm@mellanox.com>
-> > ---
-> >  drivers/pci/host/pci-hyperv.c | 58
-
-
-Thanks,
--- Dexuan
+VGhhbmtzIGZvciB0aGUgZGV0YWlsZWQgcmV2aWV3IEJqb3JuIQ0KDQo+PiAgDQo+PiArCSAgRW5h
+YmxpbmcgdGhpcyBvcHRpb24gd2lsbCBhbHNvIGRpc2FibGUgQUNTIG9uIGFsbCBwb3J0cyBiZWhp
+bmQNCj4+ICsJICBhbnkgUENJZSBzd2l0Y2guIFRoaXMgZWZmaWN0aXZlbHkgcHV0cyBhbGwgZGV2
+aWNlcyBiZWhpbmQgYW55DQo+PiArCSAgc3dpdGNoIGludG8gdGhlIHNhbWUgSU9NTVUgZ3JvdXAu
+DQoNCj4NCj4gIERvZXMgdGhpcyByZWFsbHkgbWVhbiAiYWxsIGRldmljZXMgYmVoaW5kIHRoZSBz
+YW1lIFJvb3QgUG9ydCI/DQoNCk5vdCBuZWNlc3NhcmlseS4gWW91IG1pZ2h0IGhhdmUgYSBjYXNj
+YWRlIG9mIHN3aXRjaGVzIChpLmUgc3dpdGNoZXMgYmVsb3cgYSBzd2l0Y2gpIHRvIGFjaGlldmUg
+YSB2ZXJ5IGxhcmdlIGZhbi1vdXQgKGluIGFuIE5WTWUgU1NEIGFycmF5IGZvciBleGFtcGxlKSBh
+bmQgd2Ugd2lsbCBvbmx5IGRpc2FibGUgQUNTIG9uIHRoZSBwb3J0cyBiZWxvdyB0aGUgcmVsZXZh
+bnQgc3dpdGNoLg0KDQo+IFdoYXQgZG9lcyB0aGlzIG1lYW4gaW4gdGVybXMgb2YgZGV2aWNlIHNl
+Y3VyaXR5PyAgSSBhc3N1bWUgaXQgbWVhbnMsDQo+IGF0IGxlYXN0LCB0aGF0IGluZGl2aWR1YWwg
+ZGV2aWNlcyBjYW4ndCBiZSBhc3NpZ25lZCB0byBzZXBhcmF0ZSBWTXMuDQoNClRoaXMgd2FzIGRp
+c2N1c3NlZCBkdXJpbmcgdjEgWzFdLiBEaXNhYmxpbmcgQUNTIG9uIGFsbCBkb3duc3RyZWFtIHBv
+cnRzIG9mIHRoZSBzd2l0Y2ggbWVhbnMgdGhhdCBhbGwgdGhlIEVQcyBiZWxvdyBpdCBoYXZlIHRv
+IHBhcnQgb2YgdGhlIHNhbWUgSU9NTVUgZ3JvdXBpbmcuIEhvd2V2ZXIgaXQgd2FzIGFsc28gYWdy
+ZWVkIHRoYXQgYXMgbG9uZyBhcyB0aGUgQUNTIGRpc2FibGUgb2NjdXJyZWQgYXQgYm9vdCB0aW1l
+ICh3aGljaCBpcyBkb2VzIGluIHYyKSB0aGVuIHRoZSB2aXJ0dWFsaXphdGlvbiBsYXllciB3aWxs
+IGJlIGF3YXJlIG9mIGl0IGFuZCB3aWxsIHBlcmZvcm0gdGhlIElPTU1VIGdyb3VwIGZvcm1hdGlv
+biBjb3JyZWN0bHkuDQogICAgDQo+IEkgZG9uJ3QgbWluZCBhZG1pdHRpbmcgdGhhdCB0aGlzIHBh
+dGNoIG1ha2VzIG1lIHByZXR0eSBuZXJ2b3VzLCBhbmQgSQ0KPiBkb24ndCBoYXZlIGEgY2xlYXIg
+aWRlYSBvZiB3aGF0IHRoZSBpbXBsaWNhdGlvbnMgb2YgdGhpcyBhcmUsIG9yIGhvdw0KPiB0byBj
+b21tdW5pY2F0ZSB0aG9zZSB0byBlbmQgdXNlcnMuICAiVGhlIHNhbWUgSU9NTVUgZ3JvdXAiIGlz
+IGEgcHJldHR5DQo+IGFic3RyYWN0IGlkZWEuDQogICAgDQpBbGV4IGdhdmUgYSBnb29kIG92ZXJ2
+aWV3IG9mIHRoZSBpbXBsaWNhdGlvbnMgaW4gWzFdLg0KDQpTdGVwaGVuIA0KDQpbMV0gaHR0cHM6
+Ly9tYXJjLmluZm8vP2w9bGludXgtcGNpJm09MTUxNTEyMzIwMDMxNzM5Jnc9Mg0KDQo=
