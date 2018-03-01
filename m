@@ -1,48 +1,249 @@
-Return-Path: <SRS0=CBFd=GN=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=CBFd=GN=gmail.com=rjwysocki@kernel.org>
-MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20180323210857.GA210003@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAJZ5v0gOrQhXzLHDnABEYHxGbHVY89Nij9uQzqx-oyYmFwzuSg@mail.gmail.com>
- <20180314120547.GB2703@lahna.fi.intel.com> <20180314123332.GC19651@wunner.de>
- <20180320104508.GF2703@lahna.fi.intel.com> <20180320113556.GA24197@wunner.de>
- <20180322104517.GA20389@wunner.de> <20180322165317.GI2703@lahna.fi.intel.com>
- <20180322173903.GA15503@wunner.de> <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
- <20180323111856.GO2703@lahna.fi.intel.com> <20180323210857.GA210003@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 23 Mar 2018 22:11:53 +0100
-Message-ID: <CAJZ5v0iFSgC4gbWCi09Nr4rwa7r4QfAQ__Oz88cagMZ3Z_NnKg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, "Rafael J . Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
-	Keith Busch <keith.busch@intel.com>, Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1519933855.10722.364.camel@linux.intel.com>
+Subject: Re: [PATCH v15 8/9] HISI LPC: Add ACPI support
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: John Garry <john.garry@huawei.com>,
+        mika.westerberg@linux.intel.com, rafael@kernel.org,
+        lorenzo.pieralisi@arm.com, rjw@rjwysocki.net,
+        hanjun.guo@linaro.org, robh+dt@kernel.org, bhelgaas@google.com,
+        arnd@arndb.de, mark.rutland@arm.com, olof@lixom.net,
+        dann.frazier@canonical.com, andy.shevchenko@gmail.com,
+        robh@kernel.org
+Cc: joe@perches.com, benh@kernel.crashing.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linuxarm@huawei.com, minyard@acm.org,
+        devicetree@vger.kernel.org, linux-arch@vger.kernel.org,
+        rdunlap@infradead.org, gregkh@linuxfoundation.org,
+        akpm@linux-foundation.org, frowand.list@gmail.com, agraf@suse.de
+Date: Thu, 01 Mar 2018 21:50:55 +0200
+In-Reply-To: <1519663249-9850-9-git-send-email-john.garry@huawei.com>
+References: <1519663249-9850-1-git-send-email-john.garry@huawei.com>
+         <1519663249-9850-9-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 23, 2018 at 10:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Mar 23, 2018 at 01:18:56PM +0200, Mika Westerberg wrote:
->> On Thu, Mar 22, 2018 at 02:36:30PM -0500, Bjorn Helgaas wrote:
->> > I hope we can avoid adding suspend_late/resume_early callbacks in
->> > struct pcie_port_service_driver, and I also hope we can avoid adding
->> > device links.  Those both sound pretty complicated.
->> >
->> > Can you do something like the patch below, which does something
->> > similar for PME?
->>
->> AFAICT the core PCI PM code follows the same ordering than what PM core
->> does so it may be possible that not all service drivers get
->> resumed/suspended before other children (PCI buses). Basically this
->> would be the same than just using core PM ops in DPC driver (in which
->> case DPC specific things are still kept in DPC driver not in PCI core).
->
-> I'm not sure I follow this.  I assume the core PCI PM code guarantees
-> that a bridge is suspended after its children and resumed before them.
-> Are you saying that's not the case?
+On Tue, 2018-02-27 at 00:40 +0800, John Garry wrote:
+> Based on the previous patches, this patch supports the
+> LPC host on hip06/hip07 for ACPI FW.
+> 
+> It is the responsibility of the LPC host driver to
+> enumerate the child devices, as the ACPI scan code will
+> not enumerate children of "indirect IO" hosts.
+> 
+> The ACPI table for the LPC host controller and the child
+> devices is in the following format:
+>   Device (LPC0) {
+>     Name (_HID, "HISI0191")  // HiSi LPC
+>     Name (_CRS, ResourceTemplate () {
+>       Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
+>     })
+>   }
+> 
+>   Device (LPC0.IPMI) {
+>     Name (_HID, "IPI0001")
+>     Name (LORS, ResourceTemplate() {
+>       QWordIO (
+>         ResourceConsumer,
+> 	MinNotFixed,     // _MIF
+> 	MaxNotFixed,     // _MAF
+> 	PosDecode,
+> 	EntireRange,
+> 	0x0,             // _GRA
+> 	0xe4,            // _MIN
+> 	0x3fff,          // _MAX
+> 	0x0,             // _TRA
+> 	0x04,            // _LEN
+> 	, ,
+> 	BTIO
+>       )
+>     })
+> 
+> Since the IO resources of the child devices need to be
+> translated from LPC bus addresses to logical PIO addresses,
+> and we shouldn't modify the resources of the devices
+> generated in the FW scan, a per-child MFD is created as
+> a substitute. The MFD IO resources will be the translated
+> bus addresses of the ACPI child.
 
-if this is a PCIe port, then there are two categories of childres:
-port services and the PCI devices below it.
+Ok, this needs to be thought about a bit more.
 
-There are no ordering constraints between the former and the latter,
-which appears to be a problem here.
+I guess I understand what's is the problem with PNP IDs in the driver.
+
+You probe your LPC device quite late.
+One option is to move from classical probe to a event-driven model, i.e.
+via registering a notifier (see acpi_lpss.c), preparing necessary stuff
+at earlier stages and then register devices by their enumeration and
+appearance.
+
+Though, if I would be you I would seek a opinion from Rafael and Mika
+(maybe others as well).
+
+See also some comments below.
+
+> +#ifdef CONFIG_ACPI
+> +#define MFD_CHILD_NAME_PREFIX DRV_NAME"-"
+
+> +#define MFD_CHILD_NAME_LEN (ACPI_ID_LEN +
+> sizeof(MFD_CHILD_NAME_PREFIX))
+
+..._PREFIX) - 1)
+
+?
+
+> +static int hisi_lpc_acpi_xlat_io_res(struct acpi_device *adev,
+> +				     struct acpi_device *host,
+> +				     struct resource *res)
+> +{
+> +	unsigned long sys_port;
+
+> +	resource_size_t len = res->end - res->start;
+
+resource_size()
+
+> +	return 0;
+> +}
+
+
+> +static int hisi_lpc_acpi_set_io_res(struct device *child,
+> +				    struct device *hostdev,
+> +				    const struct resource **res,
+> +				    int *num_res)
+> +{
+
+> +	/*
+> +	 * The following code segment to retrieve the resources is
+> common to
+> +	 * acpi_create_platform_device(), so consider a common helper
+> function
+> +	 * in future.
+> +	 */
+> +	count = acpi_dev_get_resources(adev, &resource_list, NULL,
+> NULL);
+> +	if (count <= 0) {
+> +		dev_dbg(child, "failed to get resources\n");
+
+> +		return count ? count : -EIO;
+
+count == 0 --> return 0;
+
+Is it by design? (I didn't check acpi_create_platform_device() though)
+
+> +	}
+> +
+> +	resources = devm_kcalloc(hostdev, count, sizeof(*resources),
+> +				 GFP_KERNEL);
+> +	if (!resources) {
+> +		dev_warn(hostdev, "could not allocate memory for %d
+> resources\n",
+> +			 count);
+> +		acpi_dev_free_resource_list(&resource_list);
+> +		return -ENOMEM;
+> +	}
+> +	count = 0;
+> +	list_for_each_entry(rentry, &resource_list, node)
+> +		resources[count++] = *rentry->res;
+> +
+> +	acpi_dev_free_resource_list(&resource_list);
+
+> +
+> +	return 0;
+> +}
+
+> +
+> +/*
+> + * hisi_lpc_acpi_probe - probe children for ACPI FW
+> + * @hostdev: LPC host device pointer
+> + *
+> + * Returns 0 when successful, and a negative value for failure.
+> + *
+> + * Scan all child devices and create a per-device MFD with
+> + * logical PIO translated IO resources.
+> + */
+> +static int hisi_lpc_acpi_probe(struct device *hostdev)
+> +{
+> +	struct acpi_device *adev = ACPI_COMPANION(hostdev);
+> +	struct hisi_lpc_mfd_cell *hisi_lpc_mfd_cells;
+> +	struct mfd_cell *mfd_cells;
+> +	struct acpi_device *child;
+> +	int size, ret, count = 0, cell_num = 0;
+> +
+> +	list_for_each_entry(child, &adev->children, node)
+> +		cell_num++;
+> +
+> +	/* allocate the mfd cell and companion acpi info, one per
+> child */
+> +	size = sizeof(*mfd_cells) + sizeof(*hisi_lpc_mfd_cells);
+> +	mfd_cells = devm_kcalloc(hostdev, cell_num, size,
+> GFP_KERNEL);
+> +	if (!mfd_cells)
+> +		return -ENOMEM;
+> +
+
+> +	hisi_lpc_mfd_cells = (struct hisi_lpc_mfd_cell *)
+> +					&mfd_cells[cell_num];
+
+One line, please.
+
+Just noticed that calloc() memory layout is not the same how you are
+using it.
+
+> +	/* Only consider the children of the host */
+> +	list_for_each_entry(child, &adev->children, node) {
+> +		struct mfd_cell *mfd_cell = &mfd_cells[count];
+> +		struct hisi_lpc_mfd_cell *hisi_lpc_mfd_cell =
+> +					&hisi_lpc_mfd_cells[count];
+> +		struct mfd_cell_acpi_match *acpi_match =
+> +					&hisi_lpc_mfd_cell-
+> >acpi_match;
+> +		char *name = hisi_lpc_mfd_cell[count].name;
+> +		char *pnpid = hisi_lpc_mfd_cell[count].pnpid;
+> +		struct mfd_cell_acpi_match match = {
+> +			.pnpid = pnpid,
+> +		};
+> +
+
+> +		snprintf(name, MFD_CHILD_NAME_LEN,
+> MFD_CHILD_NAME_PREFIX"%s",
+> +			 acpi_device_hid(child));
+
+No possibility of identical devices?
+
+> +		snprintf(pnpid, ACPI_ID_LEN, "%s",
+> acpi_device_hid(child));
+> +
+> +		memcpy(acpi_match, &match, sizeof(*acpi_match));
+> +		mfd_cell->name = name;
+> +		mfd_cell->acpi_match = acpi_match;
+> +
+> +		ret = hisi_lpc_acpi_set_io_res(&child->dev, &adev-
+> >dev,
+> +					       &mfd_cell->resources,
+> +					       &mfd_cell-
+> >num_resources);
+> +		if (ret) {
+> +			dev_warn(&child->dev, "set resource
+> fail(%d)\n", ret);
+> +			return ret;
+> +		}
+> +		count++;
+> +	}
+> +
+> +	ret = mfd_add_devices(hostdev, 
+
+> PLATFORM_DEVID_NONE,
+
+You mean it's not possible to have more than one identical device?
+
+> +			      mfd_cells, cell_num, NULL, 0, NULL);
+> +	if (ret) {
+> +		dev_err(hostdev, "failed to add mfd cells (%d)\n",
+> ret);
+> +		return ret;
+> +	}
+
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
