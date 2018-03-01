@@ -1,71 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:33428 "EHLO
-        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034460AbeCBQ5i (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 11:57:38 -0500
-MIME-Version: 1.0
-In-Reply-To: <1520010446.2693.19.camel@hpe.com>
-References: <20180228234006.21093-1-logang@deltatee.com> <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com> <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
- <1519936477.4592.23.camel@au1.ibm.com> <1519936815.4592.25.camel@au1.ibm.com>
- <20180301205315.GJ19007@ziepe.ca> <1519942012.4592.31.camel@au1.ibm.com>
- <CA+55aFy-oAiFJ3WDx4giR1enj65y-YJnZZhY6geFw0ygFyKXfQ@mail.gmail.com>
- <1519943658.4592.34.camel@kernel.crashing.org> <1520010446.2693.19.camel@hpe.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 2 Mar 2018 08:57:36 -0800
-Message-ID: <CA+55aFztf2D4NwEkRxnJkD6kK62CWKxmERbALMGoMgFEGLEJZA@mail.gmail.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-To: "Kani, Toshi" <toshi.kani@hpe.com>
-Cc: "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+Received: from mail-eopbgr660126.outbound.protection.outlook.com ([40.107.66.126]:48048
+        "EHLO CAN01-QB1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1163538AbeCAX5p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 18:57:45 -0500
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Keith Busch <keith.busch@intel.com>
+CC: Jason Gunthorpe <jgg@ziepe.ca>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>, "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "jglisse@redhat.com" <jglisse@redhat.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "maxg@mellanox.com" <maxg@mellanox.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "keith.busch@intel.com" <keith.busch@intel.com>,
-        "oliveroh@au1.ibm.com" <oliveroh@au1.ibm.com>,
-        "jgg@ziepe.ca" <jgg@ziepe.ca>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
+Date: Thu, 1 Mar 2018 23:57:43 +0000
+Message-ID: <CE2A5D93-E735-4414-8DC1-B308B74A1C5B@raithlin.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-11-logang@deltatee.com>
+ <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
+ <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
+ <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
+ <20180301184249.GI19007@ziepe.ca>
+ <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
+ <20180301224540.GL19007@ziepe.ca>
+ <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
+ <20180301234930.GG14799@localhost.localdomain>
+In-Reply-To: <20180301234930.GG14799@localhost.localdomain>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 2, 2018 at 8:22 AM, Kani, Toshi <toshi.kani@hpe.com> wrote:
->
-> FWIW, this thing is called MTRRs on x86, which are initialized by BIOS.
-
-No.
-
-Or rather, that's simply just another (small) part of it all - and an
-architected and documented one at that.
-
-Like the page table caching entries, the memory type range registers
-are really just "secondary information". They don't actually select
-between PCIe and RAM, they just affect the behavior on top of that.
-
-The really nitty-gritty stuff is not architected, and generally not
-documented outside (possibly) the BIOS writer's guide that is not made
-public.
-
-Those magical registers contain details like how the DRAM is
-interleaved (if it is), what the timings are, where which memory
-controller handles which memory range, and what are goes to PCIe etc.
-
-Basically all the actual *steering* information is very much hidden
-away from the kernel (and often from the BIOS too). The parts we see
-at a higher level are just tuning and tweaks.
-
-Note: the details differ _enormously_ between different chips. The
-setup can be very different, with things like Knights Landing having
-the external cache that can also act as local memory that isn't a
-cache but maps at a different physical address instead etc. That's the
-kind of steering I'm talking about - at a low level how physical
-addresses get mapped to different cache partitions, memory
-controllers, or to the IO system etc.
-
-                  Linus
+PiBXZSBkb24ndCB3YW50IHRvIGx1bXAgdGhlc2UgYWxsIHRvZ2V0aGVyIHdpdGhvdXQga25vd2lu
+ZyB3aGljaCByZWdpb24geW91J3JlIGFsbG9jYXRpbmcgZnJvbSwgcmlnaHQ/DQoNCkluIGFsbCBz
+ZXJpb3VzbmVzcyBJIGRvIGFncmVlIHdpdGggeW91IG9uIHRoZXNlIEtlaXRoIGluIHRoZSBsb25n
+IHRlcm0uIFdlIHdvdWxkIGNvbnNpZGVyIGFkZGluZyBwcm9wZXJ0eSBmbGFncyBmb3IgdGhlIG1l
+bW9yeSBhcyBpdCBpcyBhZGRlZCB0byB0aGUgcDJwIGNvcmUgYW5kIHRoZW4gdGhlIGFsbG9jYXRv
+ciBjb3VsZCBldm9sdmUgdG8gaW50ZWxsaWdlbnRseSBkaXNoIGl0IG91dC4gQXR0cmlidXRlcyBs
+aWtlIGVuZHVyYW5jZSwgbGF0ZW5jeSBhbmQgc3BlY2lhbCB3cml0ZSBjb21taXQgcmVxdWlyZW1l
+bnRzIGNvdWxkIGFsbCBiZWNvbWUgYXR0cmlidXRlcyBpbiB0aW1lLiBQZXJoYXBzIG9uZSBtb3Jl
+IHJlYXNvbiBmb3IgYSBjZW50cmFsIGVudGl0eSBmb3IgcDJwIG1lbW9yeSBhbGxvY2F0aW9uIHNv
+IHRoaXMgY29kZSBkb2VzIG5vdCBlbmQgdXAgaGF2aW5nIHRvIGdvIGludG8gbWFueSBkaWZmZXJl
+bnQgZHJpdmVycz8NCg0KU3RlcGhlbg0KICAgIA0KDQo=
