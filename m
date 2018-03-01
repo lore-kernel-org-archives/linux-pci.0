@@ -1,263 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 8 Mar 2018 17:44:54 +0000
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <kvm@vger.kernel.org>, <joro@8bytes.org>, <robh+dt@kernel.org>,
-        <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <lorenzo.pieralisi@arm.com>,
-        <hanjun.guo@linaro.org>, <sudeep.holla@arm.com>,
-        <rjw@rjwysocki.net>, <lenb@kernel.org>, <robin.murphy@arm.com>,
-        <bhelgaas@google.com>, <alex.williamson@redhat.com>,
-        <tn@semihalf.com>, <liubo95@huawei.com>,
-        <thunder.leizhen@huawei.com>, <xieyisheng1@huawei.com>,
-        <xuzaibo@huawei.com>, <ilias.apalodimas@linaro.org>,
-        <shunyong.yang@hxt-semitech.com>, <nwatters@codeaurora.org>,
-        <okaya@codeaurora.org>, <jcrouse@codeaurora.org>,
-        <rfranz@cavium.com>, <dwmw2@infradead.org>,
-        <jacob.jun.pan@linux.intel.com>, <yi.l.liu@intel.com>,
-        <ashok.raj@intel.com>, <robdclark@gmail.com>,
-        <christian.koenig@amd.com>, <bharatku@xilinx.com>
-Subject: Re: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
-Message-ID: <20180308184454.00000b4e@huawei.com>
-In-Reply-To: <20180212183352.22730-28-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-        <20180212183352.22730-28-jean-philippe.brucker@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44486 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1161764AbeCAVKm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 16:10:42 -0500
+Date: Thu, 1 Mar 2018 16:10:36 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Message-ID: <20180301211036.GB6742@redhat.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+ <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
+ <1519936195.4592.18.camel@au1.ibm.com>
+ <20180301205548.GA6742@redhat.com>
+ <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 12 Feb 2018 18:33:42 +0000
-Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
-
-> When using PRI or Stall, the PRI or event handler enqueues faults into the
-> core fault queue. Register it based on the SMMU features.
+On Thu, Mar 01, 2018 at 02:03:26PM -0700, Logan Gunthorpe wrote:
 > 
-> When the core stops using a PASID, it notifies the SMMU to flush all
-> instances of this PASID from the PRI queue. Add a way to flush the PRI and
-> event queue. PRI and event thread now take a spinlock while processing the
-> queue. The flush handler takes this lock to inspect the queue state.
-> We avoid livelock, where the SMMU adds fault to the queue faster than we
-> can consume them, by incrementing a 'batch' number on every cycle so the
-> flush handler only has to wait a complete cycle (two batch increments.)
 > 
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-I think you have a potential incorrect free issue... See inline.
-
-Jonathan
-> ---
->  drivers/iommu/Kconfig       |   1 +
->  drivers/iommu/arm-smmu-v3.c | 103 +++++++++++++++++++++++++++++++++++++++++++-
->  2 files changed, 103 insertions(+), 1 deletion(-)
+> On 01/03/18 01:55 PM, Jerome Glisse wrote:
+> > Well this again a new user of struct page for device memory just for
+> > one usecase. I wanted HMM to be more versatile so that it could be use
+> > for this kind of thing too. I guess the message didn't go through. I
+> > will take some cycles tomorrow to look into this patchset to ascertain
+> > how struct page is use in this context.
 > 
-> diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-> index d434f7085dc2..d79c68754bb9 100644
-> --- a/drivers/iommu/Kconfig
-> +++ b/drivers/iommu/Kconfig
-> @@ -354,6 +354,7 @@ config ARM_SMMU_V3
->  	depends on ARM64
->  	select IOMMU_API
->  	select IOMMU_SVA
-> +	select IOMMU_FAULT
->  	select IOMMU_IO_PGTABLE_LPAE
->  	select ARM_SMMU_V3_CONTEXT
->  	select GENERIC_MSI_IRQ_DOMAIN
-> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-> index 8528704627b5..c5b3a43becaf 100644
-> --- a/drivers/iommu/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm-smmu-v3.c
-> @@ -494,6 +494,10 @@ struct arm_smmu_queue {
->  
->  	u32 __iomem			*prod_reg;
->  	u32 __iomem			*cons_reg;
-> +
-> +	/* Event and PRI */
-> +	u64				batch;
-> +	wait_queue_head_t		wq;
->  };
->  
->  struct arm_smmu_cmdq {
-> @@ -610,6 +614,9 @@ struct arm_smmu_device {
->  
->  	/* IOMMU core code handle */
->  	struct iommu_device		iommu;
-> +
-> +	/* Notifier for the fault queue */
-> +	struct notifier_block		faultq_nb;
->  };
->  
->  /* SMMU private data for each master */
-> @@ -1247,14 +1254,23 @@ static int arm_smmu_init_l2_strtab(struct arm_smmu_device *smmu, u32 sid)
->  static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
->  {
->  	int i;
-> +	int num_handled = 0;
->  	struct arm_smmu_device *smmu = dev;
->  	struct arm_smmu_queue *q = &smmu->evtq.q;
-> +	size_t queue_size = 1 << q->max_n_shift;
->  	u64 evt[EVTQ_ENT_DWORDS];
->  
-> +	spin_lock(&q->wq.lock);
->  	do {
->  		while (!queue_remove_raw(q, evt)) {
->  			u8 id = evt[0] >> EVTQ_0_ID_SHIFT & EVTQ_0_ID_MASK;
->  
-> +			if (++num_handled == queue_size) {
-> +				q->batch++;
-> +				wake_up_locked(&q->wq);
-> +				num_handled = 0;
-> +			}
-> +
->  			dev_info(smmu->dev, "event 0x%02x received:\n", id);
->  			for (i = 0; i < ARRAY_SIZE(evt); ++i)
->  				dev_info(smmu->dev, "\t0x%016llx\n",
-> @@ -1272,6 +1288,11 @@ static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
->  
->  	/* Sync our overflow flag, as we believe we're up to speed */
->  	q->cons = Q_OVF(q, q->prod) | Q_WRP(q, q->cons) | Q_IDX(q, q->cons);
-> +
-> +	q->batch++;
-> +	wake_up_locked(&q->wq);
-> +	spin_unlock(&q->wq.lock);
-> +
->  	return IRQ_HANDLED;
->  }
->  
-> @@ -1315,13 +1336,24 @@ static void arm_smmu_handle_ppr(struct arm_smmu_device *smmu, u64 *evt)
->  
->  static irqreturn_t arm_smmu_priq_thread(int irq, void *dev)
->  {
-> +	int num_handled = 0;
->  	struct arm_smmu_device *smmu = dev;
->  	struct arm_smmu_queue *q = &smmu->priq.q;
-> +	size_t queue_size = 1 << q->max_n_shift;
->  	u64 evt[PRIQ_ENT_DWORDS];
->  
-> +	spin_lock(&q->wq.lock);
->  	do {
-> -		while (!queue_remove_raw(q, evt))
-> +		while (!queue_remove_raw(q, evt)) {
-> +			spin_unlock(&q->wq.lock);
->  			arm_smmu_handle_ppr(smmu, evt);
-> +			spin_lock(&q->wq.lock);
-> +			if (++num_handled == queue_size) {
-> +				q->batch++;
-> +				wake_up_locked(&q->wq);
-> +				num_handled = 0;
-> +			}
-> +		}
->  
->  		if (queue_sync_prod(q) == -EOVERFLOW)
->  			dev_err(smmu->dev, "PRIQ overflow detected -- requests lost\n");
-> @@ -1329,9 +1361,65 @@ static irqreturn_t arm_smmu_priq_thread(int irq, void *dev)
->  
->  	/* Sync our overflow flag, as we believe we're up to speed */
->  	q->cons = Q_OVF(q, q->prod) | Q_WRP(q, q->cons) | Q_IDX(q, q->cons);
-> +
-> +	q->batch++;
-> +	wake_up_locked(&q->wq);
-> +	spin_unlock(&q->wq.lock);
-> +
->  	return IRQ_HANDLED;
->  }
->  
-> +/*
-> + * arm_smmu_flush_queue - wait until all events/PPRs currently in the queue have
-> + * been consumed.
-> + *
-> + * Wait until the queue thread finished a batch, or until the queue is empty.
-> + * Note that we don't handle overflows on q->batch. If it occurs, just wait for
-> + * the queue to be empty.
-> + */
-> +static int arm_smmu_flush_queue(struct arm_smmu_device *smmu,
-> +				struct arm_smmu_queue *q, const char *name)
-> +{
-> +	int ret;
-> +	u64 batch;
-> +
-> +	spin_lock(&q->wq.lock);
-> +	if (queue_sync_prod(q) == -EOVERFLOW)
-> +		dev_err(smmu->dev, "%s overflow detected -- requests lost\n", name);
-> +
-> +	batch = q->batch;
-> +	ret = wait_event_interruptible_locked(q->wq, queue_empty(q) ||
-> +					      q->batch >= batch + 2);
-> +	spin_unlock(&q->wq.lock);
-> +
-> +	return ret;
-> +}
-> +
-> +static int arm_smmu_flush_queues(struct notifier_block *nb,
-> +				 unsigned long action, void *data)
-> +{
-> +	struct arm_smmu_device *smmu = container_of(nb, struct arm_smmu_device,
-> +						    faultq_nb);
-> +	struct device *dev = data;
-> +	struct arm_smmu_master_data *master = NULL;
-> +
-> +	if (dev)
-> +		master = dev->iommu_fwspec->iommu_priv;
-> +
-> +	if (master) {
-> +		/* TODO: add support for PRI and Stall */
-> +		return 0;
-> +	}
-> +
-> +	/* No target device, flush all queues. */
-> +	if (smmu->features & ARM_SMMU_FEAT_STALLS)
-> +		arm_smmu_flush_queue(smmu, &smmu->evtq.q, "evtq");
-> +	if (smmu->features & ARM_SMMU_FEAT_PRI)
-> +		arm_smmu_flush_queue(smmu, &smmu->priq.q, "priq");
-> +
-> +	return 0;
-> +}
-> +
->  static int arm_smmu_device_disable(struct arm_smmu_device *smmu);
->  
->  static irqreturn_t arm_smmu_gerror_handler(int irq, void *dev)
-> @@ -2288,6 +2376,10 @@ static int arm_smmu_init_one_queue(struct arm_smmu_device *smmu,
->  		     << Q_BASE_LOG2SIZE_SHIFT;
->  
->  	q->prod = q->cons = 0;
-> +
-> +	init_waitqueue_head(&q->wq);
-> +	q->batch = 0;
-> +
->  	return 0;
->  }
->  
-> @@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
->  	if (ret)
->  		return ret;
->  
-> +	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
-> +		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
-> +		ret = iommu_fault_queue_register(&smmu->faultq_nb);
-Here you register only if this smmu supports stalls or pri which is fine, but
-see the unregister path.
+> We looked at it but didn't see how any of it was applicable to our needs.
+> 
 
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
->  	/* And we're up. Go go go! */
->  	ret = iommu_device_sysfs_add(&smmu->iommu, dev, NULL,
->  				     "smmu3.%pa", &ioaddr);
-> @@ -3210,6 +3309,8 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
->  {
->  	struct arm_smmu_device *smmu = platform_get_drvdata(pdev);
->  
-> +	iommu_fault_queue_unregister(&smmu->faultq_nb);
+It seems people miss-understand HMM :( you do not have to use all of
+its features. If all you care about is having struct page then just
+use that for instance in your case only use those following 3 functions:
 
-Here you unregister from the fault queue unconditionally.  That is mostly
-safe but it seems to decrement and potentially destroy the work queue that
-is in use by another smmu instance that does support page faulting.
+hmm_devmem_add() or hmm_devmem_add_resource() and hmm_devmem_remove()
+for cleanup.
 
-> +
->  	arm_smmu_device_disable(smmu);
->  
->  	return 0;
+You can set the fault callback to an empty stub that always do return
+VM_SIGBUS or a patch to allow NULL callback inside HMM.
 
+You don't have to use the free callback if you don't care and if there
+is something that doesn't quite match what you want HMM can always be
+ajusted to address this.
+
+The intention of HMM is to be useful for all device memory that wish
+to have struct page for various reasons.
+
+Cheers,
+Jérôme
