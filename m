@@ -1,60 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:35256 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752414AbeCMUrC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 16:47:02 -0400
-To: Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+ Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-2-logang@deltatee.com>
+ <20180301173752.GE13722@bhelgaas-glaptop.roam.corp.google.com>
+ <b81503c2-9f07-b5f6-df06-64d1fdc53386@deltatee.com>
+ <20180301230032.GA74737@bhelgaas-glaptop.roam.corp.google.com>
 From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
-Date: Tue, 13 Mar 2018 14:46:31 -0600
+Message-ID: <b3121c36-4ef5-0d8e-e8ef-418b48de9589@deltatee.com>
+Date: Thu, 1 Mar 2018 16:06:47 -0700
 MIME-Version: 1.0
-In-Reply-To: <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180301230032.GA74737@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 01/10] PCI/P2PDMA: Support peer to peer memory
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 13/03/18 01:53 PM, Sinan Kaya wrote:
-> I agree disabling globally would be bad. Somebody can always say I have
-> ten switches on my system. I want to do peer-to-peer on one switch only. Now,
-> this change weakened security for the other switches that I had no intention
-> with doing P2P.
+> I don't think this is correct.  A Root Port defines a hierarchy domain
+> (I'm looking at PCIe r4.0, sec 1.3.1).  The capability to route
+> peer-to-peer transactions *between* hierarchy domains is optional.  I
+> think this means a Root Complex is not required to route transactions
+> from one Root Port to another Root Port.
 > 
-> Isn't this a problem?
+> This doesn't say anything about routing between two different devices
+> below a Root Port.  Those would be in the same hierarchy domain and
+> should follow the conventional PCI routing rules.  Of course, since a
+> Root Port has one link that leads to one device, they would probably
+> be different functions of a single multi-function device, so I don't
+> know how practical it would be to test this.
 
-Well, if it's a problem for someone they'll have to solve it. We're
-targeting JBOFs that have no use for ACS / IOMMU groups at all.
+Yes, given that there's only one device below a root port it will either 
+be a switch or a multi-function device. In the multi-function device 
+case, I'm pretty sure the spec disallows routing-to-self so doing a P2P 
+transaction in that sense isn't going to work unless the device 
+specifically supports it and intercepts the traffic before it gets to 
+the port.
 
-> Can we specify the BDF of the downstream device we want P2P with during boot via
-> kernel command line?
-
-That's a painful configuration burden. And then things might stop
-working if you change your topology at all and now have to change boot
-parameters.
+But, if we're talking about multi-function devices it should be able to 
+do everything within it's own driver so it's not exactly Peer-to-Peer. 
+Still, if someone has such hardware I think it's up to them to add 
+support for this odd situation.
 
 Logan
