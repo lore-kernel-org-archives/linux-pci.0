@@ -1,47 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:56763 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751666AbeCMIyp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 04:54:45 -0400
-Date: Tue, 13 Mar 2018 09:54:42 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-        Alexander Duyck <alexander.duyck@gmail.com>,
-        bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        kvm@vger.kernel.org, netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
-        liang-min.wang@intel.com, mark.d.rustad@intel.com
-Subject: Re: [pci PATCH v5 3/4] ena: Migrate over to unmanaged SR-IOV
-        support
-Message-ID: <20180313085442.GA1537@lst.de>
-References: <20180312171813.3487.94803.stgit@localhost.localdomain> <20180312172309.3487.76690.stgit@localhost.localdomain> <1520928772.28745.53.camel@infradead.org> <20180313081628.GA618@lst.de> <1520930719.11412.2.camel@infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 1 Mar 2018 15:55:49 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+To: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Message-ID: <20180301205548.GA6742@redhat.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+ <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
+ <1519936195.4592.18.camel@au1.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1520930719.11412.2.camel@infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1519936195.4592.18.camel@au1.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 08:45:19AM +0000, David Woodhouse wrote:
-> 
-> 
-> On Tue, 2018-03-13 at 09:16 +0100, Christoph Hellwig wrote:
-> > On Tue, Mar 13, 2018 at 08:12:52AM +0000, David Woodhouse wrote:
+On Fri, Mar 02, 2018 at 07:29:55AM +1100, Benjamin Herrenschmidt wrote:
+> On Thu, 2018-03-01 at 11:04 -0700, Logan Gunthorpe wrote:
+> > 
+> > On 28/02/18 08:56 PM, Benjamin Herrenschmidt wrote:
+> > > On Thu, 2018-03-01 at 14:54 +1100, Benjamin Herrenschmidt wrote:
+> > > > The problem is that acccording to him (I didn't double check the latest
+> > > > patches) you effectively hotplug the PCIe memory into the system when
+> > > > creating struct pages.
+> > > > 
+> > > > This cannot possibly work for us. First we cannot map PCIe memory as
+> > > > cachable. (Note that doing so is a bad idea if you are behind a PLX
+> > > > switch anyway since you'd ahve to manage cache coherency in SW).
 > > > 
-> > > I'd also *really* like to see a way to enable this for PFs which don't
-> > > have (and don't need) a driver. We seem to have lost that along the
-> > > way.
-> > We've been forth and back on that.  I agree that not having any driver
-> > just seems dangerous.  If your PF really does nothing we should just
-> > have a trivial pf_stub driver that does nothing but wiring up
-> > pci_sriov_configure_simple.  We can then add PCI IDs to it either
-> > statically, or using the dynamic ids mechanism.
+> > > Note: I think the above means it won't work behind a switch on x86
+> > > either, will it ?
+> > 
+> > This works perfectly fine on x86 behind a switch and we've tested it on 
+> > multiple machines. We've never had an issue of running out of virtual 
+> > space despite our PCI bars typically being located with an offset of 
+> > 56TB or more. The arch code on x86 also somehow figures out not to map 
+> > the memory as cachable so that's not an issue (though, at this point, 
+> > the CPU never accesses the memory so even if it were, it wouldn't affect 
+> > anything).
 > 
-> Or just add it to the existing pci-stub. What's the point in having a
-> new driver? 
+> Oliver can you look into this ? You sais the memory was effectively
+> hotplug'ed into the system when creating the struct pages. That would
+> mean to me that it's a) mapped (which for us is cachable, maybe x86 has
+> tricks to avoid that) and b) potentially used to populate userspace
+> pages (that will definitely be cachable). Unless there's something in
+> there you didn't see that prevents it.
+> 
+> > We also had this working on ARM64 a while back but it required some out 
+> > of tree ZONE_DEVICE patches and some truly horrid hacks to it's arch 
+> > code to ioremap the memory into the page map.
+> > 
+> > You didn't mention what architecture you were trying this on.
+> 
+> ppc64.
+> 
+> > It may make sense at this point to make this feature dependent on x86 
+> > until more work is done to make it properly portable. Something like 
+> > arch functions that allow adding IO memory pages to with a specific 
+> > cache setting. Though, if an arch has such restrictive limits on the map 
+> > size it would probably need to address that too somehow.
+> 
+> Not fan of that approach.
+> 
+> So there are two issues to consider here:
+> 
+>  - Our MMIO space is very far away from memory (high bits set in the
+> address) which causes problem with things like vmmemmap, page_address,
+> virt_to_page etc... Do you have similar issues on arm64 ?
 
-Because binding to pci-stub means that you'd now enable the simple
-SR-IOV for any device bound to PCI stub.  Which often might be the wrong
-thing.
+HMM private (HMM public is different) works around that by looking for
+"hole" in address space and using those for hotplug (ie page_to_pfn()
+!= physical pfn of the memory). This is ok for HMM because the memory
+is never map by the CPU and we can find the physical pfn with a little
+bit of math (page_to_pfn() - page->pgmap->res->start + page->pgmap->dev->
+physical_base_address).
+
+To avoid anything going bad i actually do not populate the kernel linear
+mapping for the range hence definitly no CPU access at all through those
+struct page. CPU can still access PCIE bar through usual mmio map.
+
+> 
+>  - We need to ensure that the mechanism (which I'm not familiar with)
+> that you use to create the struct page's for the device don't end up
+> turning those device pages into normal "general use" pages for the
+> system. Oliver thinks it does, you say it doesn't, ... 
+> 
+> Jerome (Glisse), what's your take on this ? Smells like something that
+> could be covered by HMM...
+
+Well this again a new user of struct page for device memory just for
+one usecase. I wanted HMM to be more versatile so that it could be use
+for this kind of thing too. I guess the message didn't go through. I
+will take some cycles tomorrow to look into this patchset to ascertain
+how struct page is use in this context.
+
+Note that i also want peer to peer for HMM users but with ACS and using
+IOMMU ie having to populate IOMMU page table of one device to point to
+bar of another device. I need to test on how many platform this work,
+hardware engineer are unable/unwilling to commit on wether this work or
+not.
+
+
+> Logan, the only reason you need struct page's to begin with is for the
+> DMA API right ? Or am I missing something here ?
+
+If it is only needed for that this sounds like a waste of memory for
+struct page. Thought i understand this allow new API to match previous
+one.
+
+Cheers,
+Jérôme
