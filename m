@@ -1,54 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr660135.outbound.protection.outlook.com ([40.107.66.135]:39520
-        "EHLO CAN01-QB1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933051AbeCBUvq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Mar 2018 15:51:46 -0500
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@kernel.dk>,
-        "Alex Williamson" <alex.williamson@redhat.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Steve Wise <swise@opengridcomputing.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from ale.deltatee.com ([207.54.116.67]:39570 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1162811AbeCAXUP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 18:20:15 -0500
+To: benh@au1.ibm.com, Dan Williams <dan.j.williams@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Max Gurtovoy <maxg@mellanox.com>,
         Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
-Date: Fri, 2 Mar 2018 20:51:42 +0000
-Message-ID: <F7179402-E931-45DB-903E-5D92608A464E@raithlin.com>
-References: <20180228234006.21093-11-logang@deltatee.com>
- <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
- <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
- <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
- <20180301184249.GI19007@ziepe.ca>
- <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
- <20180301224540.GL19007@ziepe.ca>
- <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
- <20180301234930.GG14799@localhost.localdomain>
- <6B6A0FD9-14F5-4AF2-A74A-DAA562C34AB9@raithlin.com>
- <20180302155322.GA5934@infradead.org>
-In-Reply-To: <20180302155322.GA5934@infradead.org>
-Content-Type: text/plain; charset="utf-8"
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+ <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+ <1519936477.4592.23.camel@au1.ibm.com>
+ <CAPcyv4goHsYytq60ehJUori8Xq+Z0p8dV-8_oRALj244H4YtwQ@mail.gmail.com>
+ <2079ba48-5ae5-5b44-cce1-8175712dd395@deltatee.com>
+ <43ba615f-a6e1-9444-65e1-494169cb415d@deltatee.com>
+ <1519945204.4592.45.camel@au1.ibm.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <595acefb-18fc-e650-e172-bae271263c4c@deltatee.com>
+Date: Thu, 1 Mar 2018 16:19:59 -0700
 MIME-Version: 1.0
+In-Reply-To: <1519945204.4592.45.camel@au1.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAgICBodHRwOi8vbnZtZXhwcmVzcy5vcmcvd3AtY29udGVudC91cGxvYWRzL05WTS1FeHByZXNz
-LTEuMy1SYXRpZmllZC1UUHMuemlwDQoNCkBLZWl0aCAtIG15IGFwb2xvZ2llcy4NCg0KQENocmlz
-dG9waCAtIHRoYW5rcyBmb3IgdGhlIGxpbmsNCg0KU28gbXkgdW5kZXJzdGFuZGluZyBvZiB3aGVu
-IHRoZSB0ZWNobmljYWwgY29udGVudCBzdXJyb3VuZGluZyBuZXcgTlZNZSBUZWNobmljYWwgUHJv
-cG9zYWxzIChUUHMpIHdhcyB3cm9uZy4gSSB0aG91Z2ggdGhlIFRQIGNvbnRlbnQgY291bGQgb25s
-eSBiZSBkaXNjdXNzZWQgb25jZSBkaXNjbG9zZWQgaW4gdGhlIHB1YmxpYyBzdGFuZGFyZC4gSSBo
-YXZlIG5vdyBsZWFybnQgdGhhdCBvbmNlIHRoZSBUUHMgYXJlIHJhdGlmaWVkIHRoZXkgYXJlIHB1
-YmxpY2FsbHkgYXZhaWxhYmxlIQ0KDQpIb3dldmVyLCBhcyBMb2dhbiBwb2ludGVkIG91dCwgUE1S
-cyBhcmUgbm90IHJlbGV2YW50IHRvIHRoaXMgc2VyaWVzIHNvIGxldCdzIGRlZmVyIGRpc2N1c3Np
-b24gb24gaG93IHRvIHN1cHBvcnQgdGhlbSB0byBhIGxhdGVyIGRhdGUhDQoNClN0ZXBoZW4NCiAg
-ICANCg0K
+
+
+On 01/03/18 04:00 PM, Benjamin Herrenschmidt wrote:
+> We use only 52 in practice but yes.
+> 
+>>   That's 64PB. If you use need
+>> a sparse vmemmap for the entire space it will take 16TB which leaves you
+>> with 63.98PB of address space left. (Similar calculations for other
+>> numbers of address bits.)
+> 
+> We only have 52 bits of virtual space for the kernel with the radix
+> MMU.
+
+Ok, assuming you only have 52 bits of physical address space: the sparse 
+vmemmap takes 1TB and you're left with 3.9PB of address space for other 
+things. So, again, why doesn't that work? Is my math wrong?
+
+Logan
