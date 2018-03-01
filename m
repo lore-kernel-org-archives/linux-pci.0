@@ -1,81 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:42474 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755302AbeCSKAY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 06:00:24 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc: bhelgaas@google.com, rafael.j.wysocki@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] PCI / PM: Always check PME wakeup capability for runtime wakeup support
-Date: Mon, 19 Mar 2018 11:00:52 +0100
-Message-ID: <2242415.DLYj1vY8hi@aspire.rjw.lan>
-In-Reply-To: <20180318191215.10005-1-kai.heng.feng@canonical.com>
-References: <20180318191215.10005-1-kai.heng.feng@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:55661 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1163389AbeCAXhg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 18:37:36 -0500
+Received: by mail-wm0-f65.google.com with SMTP id q83so28748wme.5
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 15:37:35 -0800 (PST)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: Thierry Reding <thierry.reding@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [RFC 5/5] PCI: tegra: use seq_open_data
+Date: Fri,  2 Mar 2018 00:37:24 +0100
+Message-Id: <20180301233724.20440-5-linux@rasmusvillemoes.dk>
+In-Reply-To: <20180301233724.20440-1-linux@rasmusvillemoes.dk>
+References: <20180301233724.20440-1-linux@rasmusvillemoes.dk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, March 18, 2018 8:12:15 PM CET Kai-Heng Feng wrote:
-> USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
-> core: Drop run_wake flag from struct dev_pm_info").
-> 
-> The device in question is not power managed by platform firmware,
-> furthermore, it only supports PME# from D3cold:
-> Capabilities: [78] Power Management version 3
->        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
->        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Simplify the code slightly by having seq_open_data do the ->private
+assignment.
 
-That's somewhat unusual, but OK.
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/pci/host/pci-tegra.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-> Before the commit, the device never gets runtime suspended. After the
-> commit, the device gets runtime suspended, so it does not respond to any
-> PME#.
-> 
-> usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
-> device_can_wakeup() in pci_dev_run_wake() always returns true.
-> 
-> So pci_dev_run_wake() needs to check PME wakeup capability as its first
-> condition.
-> 
-> Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct dev_pm_info")
-> Cc: stable@vger.kernel.org # 4.13+
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> ---
->  drivers/pci/pci.c | 11 ++++-------
->  1 file changed, 4 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index f6a4dd10d9b0..e026d8f313ec 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2125,16 +2125,13 @@ bool pci_dev_run_wake(struct pci_dev *dev)
->  {
->  	struct pci_bus *bus = dev->bus;
->  
-> -	if (device_can_wakeup(&dev->dev))
-> -		return true;
-> -
-> -	if (!dev->pme_support)
-> -		return false;
-
-Why are you removing this check?
-
-> -
->  	/* PME-capable in principle, but not from the target power state */
-> -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
-> +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
->  		return false;
->  
-> +	if (device_can_wakeup(&dev->dev))
-> +		return true;
-> +
->  	while (bus->parent) {
->  		struct pci_dev *bridge = bus->self;
->  
-> 
-
-Thanks,
-Rafael
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index dd9b3bcc41c3..7921428786aa 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -2188,17 +2188,8 @@ static const struct seq_operations tegra_pcie_ports_seq_ops = {
+ static int tegra_pcie_ports_open(struct inode *inode, struct file *file)
+ {
+ 	struct tegra_pcie *pcie = inode->i_private;
+-	struct seq_file *s;
+-	int err;
+-
+-	err = seq_open(file, &tegra_pcie_ports_seq_ops);
+-	if (err)
+-		return err;
+-
+-	s = file->private_data;
+-	s->private = pcie;
+ 
+-	return 0;
++	return seq_open_data(file, &tegra_pcie_ports_seq_ops, pcie);
+ }
+ 
+ static const struct file_operations tegra_pcie_ports_ops = {
+-- 
+2.15.1
