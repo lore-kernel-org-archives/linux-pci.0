@@ -1,85 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 20 Feb 2018 15:19:33 -0800
-From: Jacob Pan <jacob.jun.pan@linux.intel.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, shunyong.yang@hxt-semitech.com,
-        nwatters@codeaurora.org, okaya@codeaurora.org,
-        jcrouse@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        yi.l.liu@intel.com, ashok.raj@intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com,
-        jacob.jun.pan@linux.intel.com
-Subject: Re: [PATCH 09/37] iommu/fault: Let handler return a fault response
-Message-ID: <20180220151933.022f1036@jacob-builder>
-In-Reply-To: <20180212183352.22730-10-jean-philippe.brucker@arm.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
-        <20180212183352.22730-10-jean-philippe.brucker@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from david.siemens.de ([192.35.17.14]:59741 "EHLO david.siemens.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966063AbeCAFlK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 00:41:10 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH v3 3/6] x86/jailhouse: Enable PCI mmconfig access in inmates
+Date: Thu,  1 Mar 2018 06:40:46 +0100
+Message-Id: <188edc11aa5fa11d4915097831a2a4a153f6ed83.1519882849.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519882849.git.jan.kiszka@siemens.com>
+References: <cover.1519882849.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519882849.git.jan.kiszka@siemens.com>
+References: <cover.1519882849.git.jan.kiszka@siemens.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 12 Feb 2018 18:33:24 +0000
-Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
+From: Otavio Pontes <otavio.pontes@intel.com>
 
->  
-> +/**
-> + * enum page_response_code - Return status of fault handlers,
-> telling the IOMMU
-> + * driver how to proceed with the fault.
-> + *
-> + * @IOMMU_FAULT_STATUS_HANDLED: Stop processing the fault, and do
-> not send a
-> + *	reply to the device.
-> + * @IOMMU_FAULT_STATUS_CONTINUE: Fault was not handled. Call the
-> next handler,
-> + *	or terminate.
-> + * @IOMMU_FAULT_STATUS_SUCCESS: Fault has been handled and the page
-> tables
-> + *	populated, retry the access. This is "Success" in PCI PRI.
-> + * @IOMMU_FAULT_STATUS_FAILURE: General error. Drop all subsequent
-> faults from
-> + *	this device if possible. This is "Response Failure" in PCI
-> PRI.
-> + * @IOMMU_FAULT_STATUS_INVALID: Could not handle this fault, don't
-> retry the
-> + *	access. This is "Invalid Request" in PCI PRI.
-> + */
-> +enum page_response_code {
-> +	IOMMU_PAGE_RESP_HANDLED = 0,
-> +	IOMMU_PAGE_RESP_CONTINUE,
-> +	IOMMU_PAGE_RESP_SUCCESS,
-> +	IOMMU_PAGE_RESP_INVALID,
-> +	IOMMU_PAGE_RESP_FAILURE,
-> +};
-it seems to me two things are mixed here:
-1. driver handler response status (HANDLED, CONTINUE)
-2. PCI standard page response code (the rest)
-Can we leave them separate? then we don't have to convert this enum
-to/from PCI ATS page response code.
+Use the PCI mmconfig base address exported by jailhouse in boot
+parameters in order to access the memory mapped PCI configuration space.
 
-> +
->  /**
->   * Generic page response information based on PCI ATS and PASID spec.
->   * @addr: servicing page address
-> @@ -202,12 +225,7 @@ enum page_response_type {
->  struct page_response_msg {
->  	u64 addr;
->  	u32 pasid;
-> -	u32 resp_code:4;
-> -#define IOMMU_PAGE_RESP_SUCCESS	0
-> -#define IOMMU_PAGE_RESP_INVALID	1
-> -#define IOMMU_PAGE_RESP_HANDLED	2
-> -#define IOMMU_PAGE_RESP_FAILURE	0xF
-> -
-[Jacob Pan]
+Signed-off-by: Otavio Pontes <otavio.pontes@intel.com>
+[Jan: rebased, fixed !CONFIG_PCI_MMCONFIG]
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ arch/x86/include/asm/pci_x86.h | 2 ++
+ arch/x86/kernel/jailhouse.c    | 7 +++++++
+ arch/x86/pci/mmconfig-shared.c | 4 ++--
+ 3 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index eb66fa9cd0fc..959d618dbb17 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -151,6 +151,8 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			       phys_addr_t addr);
+ extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
++extern struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
++							int end, u64 addr);
+ 
+ extern struct list_head pci_mmcfg_list;
+ 
+diff --git a/arch/x86/kernel/jailhouse.c b/arch/x86/kernel/jailhouse.c
+index b68fd895235a..7fe2a73da0b3 100644
+--- a/arch/x86/kernel/jailhouse.c
++++ b/arch/x86/kernel/jailhouse.c
+@@ -124,6 +124,13 @@ static int __init jailhouse_pci_arch_init(void)
+ 	if (pcibios_last_bus < 0)
+ 		pcibios_last_bus = 0xff;
+ 
++#ifdef CONFIG_PCI_MMCONFIG
++	if (setup_data.pci_mmconfig_base) {
++		pci_mmconfig_add(0, 0, 0xff, setup_data.pci_mmconfig_base);
++		pci_mmcfg_arch_init();
++	}
++#endif
++
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 96684d0adcf9..0e590272366b 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -94,8 +94,8 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+ 	return new;
+ }
+ 
+-static struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
+-							int end, u64 addr)
++struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
++						 int end, u64 addr)
+ {
+ 	struct pci_mmcfg_region *new;
+ 
+-- 
+2.13.6
