@@ -1,70 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:53571 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750993AbeC0JeA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Mar 2018 05:34:00 -0400
-Date: Tue, 27 Mar 2018 11:33:56 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v4 1/2] firmware: dmi_scan: Uninline dmi_get_bios_year()
- helper
-Message-ID: <20180327093356.hxk5p4qt456nwejf@gmail.com>
-References: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
- <20180320180800.63179-2-andriy.shevchenko@linux.intel.com>
+Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, Stephen Bates <sbates@raithlin.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-5-logang@deltatee.com>
+ <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
+ <0D05579B-789C-4A19-B3A2-C1A630BE31C0@raithlin.com>
+ <20180301231536.GB74737@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <f876746d-ed91-511d-7fd9-d16232f40bd3@deltatee.com>
+Date: Thu, 1 Mar 2018 16:59:27 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180320180800.63179-2-andriy.shevchenko@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180301231536.GB74737@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
 List-ID: <linux-pci.vger.kernel.org>
 
 
-* Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-> Uninline dmi_get_bios_year() which, in particular, allows us
-> to optimize it in the future.
-> 
-> While doing this, convert the function to return an error code
-> when BIOS date is not present or not parsable, or CONFIG_DMI=n.
-> 
-> Additionally, during the move, add a bit of documentation.
-> 
-> Fixes: 492a1abd61e4 ("dmi: Introduce the dmi_get_bios_year() helper function")
-> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-> Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
-> Reviewed-by: Jean Delvare <jdelvare@suse.de>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
->  include/linux/dmi.h         | 11 ++---------
->  2 files changed, 22 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
-> index ae4f1b181c23..bfb6ce6abc83 100644
-> --- a/drivers/firmware/dmi_scan.c
-> +++ b/drivers/firmware/dmi_scan.c
-> @@ -1040,6 +1040,26 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
->  }
->  EXPORT_SYMBOL(dmi_get_date);
->  
-> +/**
-> + *	dmi_get_bios_year - get a year out of DMI_BIOS_DATE field
-> + *
-> + *	Returns year on success, -ENXIO if DMI is not selected,
-> + *	or a different negative error code if DMI field is not present
-> + *	or not parsable.
+On 01/03/18 04:15 PM, Bjorn Helgaas wrote:
+> The question is what the relevant switch is.  We call pci_enable_acs()
+> on every PCI device, including Root Ports.  It looks like this relies
+> on get_upstream_bridge_port() to filter out some things.  I don't
+> think get_upstream_bridge_port() is doing the right thing, so we need
+> to sort that out first, I guess.
 
-s/parsable/parseable
+Yes, well if a port has an upstream bridge port and that port has an 
+upstream bridge port we are almost certainly looking at a port in a 
+switch. If you have a better suggestion to only disable ACS bits on 
+downstream switch ports I'd be happy to consider it.
 
-I have fixed this in the version I've applied - which I'll push out if it passes 
-testing.
 
-Thanks,
+> This might be a good start, but whatever the implications are, they
+> need to be distilled and made clear directly in the changelog and the
+> Kconfig help text.
 
-	Ingo
+Well, I tried. I'll expand on it for v3.
+
+Logan
