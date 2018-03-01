@@ -1,83 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:52119 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752334AbeC0OJY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Mar 2018 10:09:24 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        stable@vger.kernel.org
-Subject: [PATCH v3 1/6] PCI: aardvark: introduce an advk_pcie_valid_device() helper
-Date: Tue, 27 Mar 2018 16:08:14 +0200
-Message-Id: <20180327140819.23501-9-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
-References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 2/4] x86/PCI: Simplify code by using the new dmi_get_bios_year() helper
+Date: Thu,  1 Mar 2018 20:02:18 +0200
+Message-Id: <20180301180220.11333-3-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
+References: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Use new dmi_get_bios_year() helper instead of open-coding its
+functionality.
 
-In other to mimic other PCIe host controller drivers, introduce an
-advk_pcie_valid_device() helper, used in the configuration read/write
-functions.
+No changes in functionality.
 
-This patch by itself is not a fix, but it is required for a follow-up
-patch that is a fix, hence the Fixes tag and the Cc to stable.
-
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
-Changes since v2:
- - New patch
----
- drivers/pci/host/pci-aardvark.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ arch/x86/pci/acpi.c            | 10 +++++-----
+ arch/x86/pci/direct.c          |  5 ++---
+ arch/x86/pci/mmconfig-shared.c |  9 ++-------
+ 3 files changed, 9 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index b04d37b3c5de..ccd0304a0c21 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -430,6 +430,15 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
- 	return -ETIMEDOUT;
- }
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 7df49c40665e..52b22137243f 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -138,14 +138,14 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
+ 	{}
+ };
  
-+static int advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
-+				  int devfn)
-+{
-+	if (PCI_SLOT(devfn) != 0)
-+		return false;
++#define in_range(b, first, len) ((b) >= (first) && (b) <= (first) + (len) - 1)
 +
-+	return true;
-+}
-+
- static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 			     int where, int size, u32 *val)
+ void __init pci_acpi_crs_quirks(void)
  {
-@@ -437,7 +446,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	u32 reg;
- 	int ret;
+-	int year;
++	int year = dmi_get_bios_year();
  
--	if (PCI_SLOT(devfn) != 0) {
-+	if (!advk_pcie_valid_device(pcie, bus, devfn)) {
- 		*val = 0xffffffff;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
-@@ -491,7 +500,7 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	int offset;
- 	int ret;
+-	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year < 2008) {
+-		if (iomem_resource.end <= 0xffffffff)
+-			pci_use_crs = false;
+-	}
++	if (in_range(year, 0, 2008) && iomem_resource.end <= 0xffffffff)
++		pci_use_crs = false;
  
--	if (PCI_SLOT(devfn) != 0)
-+	if (!advk_pcie_valid_device(pcie, bus, devfn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	dmi_check_system(pci_crs_quirks);
  
- 	if (where % size)
+diff --git a/arch/x86/pci/direct.c b/arch/x86/pci/direct.c
+index 2d9503323d10..a51074c55982 100644
+--- a/arch/x86/pci/direct.c
++++ b/arch/x86/pci/direct.c
+@@ -195,14 +195,13 @@ static const struct pci_raw_ops pci_direct_conf2 = {
+ static int __init pci_sanity_check(const struct pci_raw_ops *o)
+ {
+ 	u32 x = 0;
+-	int year, devfn;
++	int devfn;
+ 
+ 	if (pci_probe & PCI_NO_CHECKS)
+ 		return 1;
+ 	/* Assume Type 1 works for newer systems.
+ 	   This handles machines that don't have anything on PCI Bus 0. */
+-	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
+-	if (year >= 2001)
++	if (dmi_get_bios_year() >= 2001)
+ 		return 1;
+ 
+ 	for (devfn = 0; devfn < 0x100; devfn++) {
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 96684d0adcf9..5b93f9933562 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -547,19 +547,14 @@ static void __init pci_mmcfg_reject_broken(int early)
+ static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+ 					struct acpi_mcfg_allocation *cfg)
+ {
+-	int year;
+-
+ 	if (cfg->address < 0xFFFFFFFF)
+ 		return 0;
+ 
+ 	if (!strncmp(mcfg->header.oem_id, "SGI", 3))
+ 		return 0;
+ 
+-	if (mcfg->header.revision >= 1) {
+-		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
+-		    year >= 2010)
+-			return 0;
+-	}
++	if (mcfg->header.revision >= 1 && dmi_get_bios_year() >= 2010)
++		return 0;
+ 
+ 	pr_err(PREFIX "MCFG region for %04x [bus %02x-%02x] at %#llx "
+ 	       "is above 4GB, ignored\n", cfg->pci_segment,
 -- 
-2.14.3
+2.16.1
+
