@@ -1,28 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1520412364-2680-1-git-send-email-wei.guo.simon@gmail.com>
-To: wei.guo.simon@gmail.com, linuxppc-dev@lists.ozlabs.org
-From: Michael Ellerman <patch-notifications@ellerman.id.au>
-Cc: Simon Guo <wei.guo.simon@gmail.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: PCI/hotplug: ppc: correct a php_slot usage after free
-Message-Id: <401RHS1y6kz9sRX@ozlabs.org>
-Date: Wed, 14 Mar 2018 20:28:43 +1100 (AEDT)
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+ Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-5-logang@deltatee.com>
+ <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <bab9fb8b-1449-4b87-94de-7da26a279331@deltatee.com>
+Date: Thu, 1 Mar 2018 12:13:10 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-03-07 at 08:46:04 UTC, wei.guo.simon@gmail.com wrote:
-> From: Simon Guo <wei.guo.simon@gmail.com>
-> 
-> In pnv_php_unregister_one(), pnv_php_put_slot() might kfree
-> php_slot structure. But there is pci_hp_deregister() after
-> that with php_slot reference.
-> 
-> This patch moves pnv_php_put_slot() to the end of function.
-> 
-> Signed-off-by: Simon Guo <wei.guo.simon@gmail.com>
 
-Applied to powerpc next, thanks.
 
-https://git.kernel.org/powerpc/c/97c6f25d5828b497e3e802b1f7c701
+On 01/03/18 11:02 AM, Bjorn Helgaas wrote:
+>>   void pci_enable_acs(struct pci_dev *dev)
+>>   {
+>> +	if (pci_p2pdma_disable_acs(dev))
+>> +		return;
+> 
+> This doesn't read naturally to me.  I do see that when
+> CONFIG_PCI_P2PDMA is not set, pci_p2pdma_disable_acs() does nothing
+> and returns 0, so we'll go ahead and try to enable ACS as before.
+> 
+> But I think it would be clearer to have an #ifdef CONFIG_PCI_P2PDMA
+> right here so it's more obvious that we only disable ACS when it's
+> selected.
 
-cheers
+I could do this... however, I wrote it this way because I've read Linus 
+dislikes using #ifdef's inside function bodies and I personally agree 
+with that sentiment.
+
+Logan
