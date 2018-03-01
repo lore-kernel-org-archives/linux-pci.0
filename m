@@ -1,224 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56568 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932197AbeCMW0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 18:26:48 -0400
-Subject: [PATCH v1 2/4] PCI/VPD: Move VPD sysfs code to vpd.c
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Tue, 13 Mar 2018 17:26:41 -0500
-Message-ID: <152097999840.37832.2831547542821143769.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152097990638.37832.15000151673990461303.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152097990638.37832.15000151673990461303.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=9H7/=FX=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=9H7/=FX=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180301151359.GC13722@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1519882849.git.jan.kiszka@siemens.com> <8527c92b2e2920b8cd9096ddcbbb6d0f4004eb69.1519882849.git.jan.kiszka@siemens.com>
+ <20180301151359.GC13722@bhelgaas-glaptop.roam.corp.google.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 1 Mar 2018 18:35:50 +0200
+Message-ID: <CAHp75VcmGCAARtuL5xBNWRN7SLcoh_Gxfkf1shgktTKTDjHn9Q@mail.gmail.com>
+Subject: Re: [PATCH v3 4/6] x86: Consolidate PCI_MMCONFIG configs
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jan Kiszka <jan.kiszka@siemens.com>, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, "H . Peter Anvin" <hpa@zytor.com>, Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jailhouse-dev@googlegroups.com,
+	linux-pci@vger.kernel.org, virtualization@lists.linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Mar 1, 2018 at 5:13 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Mar 01, 2018 at 06:40:47AM +0100, Jan Kiszka wrote:
+>> From: Jan Kiszka <jan.kiszka@siemens.com>
+>>
+>> Since e279b6c1d329 ("x86: start unification of arch/x86/Kconfig.*"), we
+>> have two PCI_MMCONFIG entries, one from the original i386 and another
+>> from x86_64. This consolidates both entries into a single one.
+>>
+>> The logic for x86_32, where this option was not under user control,
+>> remains identical. On x86_64, PCI_MMCONFIG becomes additionally
+>> configurable for SFI systems even if ACPI was disabled. This just
+>> simplifies the logic without restricting the configurability in any way.
+>
+> Thanks for mentioning this difference.  It's probably trivial, but if
+> you have any other reason to respin this series, I would split this
+> into two patches:
+>
+>   - allow PCI_MMCONFIG on x86_64 with SFI
+>   - consolidate PCI_MMCONFIG with no logical change at all
+>
+>> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+>
+> But either way,
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
 
-Move the VPD-related sysfs code from pci-sysfs.c to vpd.c.  This follows
-the pattern of pcie_aspm_create_sysfs_dev_files().  The goal is to
-encapsulate all the VPD code and structures in vpd.c.
+If you going to respin I would suggest one more trivia
 
-No functional change intended.
+Split long depends on to two lines, like
+-      depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY ||
+PCI_GOOLPC || PCI_GOMMCONFIG))
++      depends on PCI
++      depends on X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC
+|| PCI_GOMMCONFIG)
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci-sysfs.c |   67 ++---------------------------------------------
- drivers/pci/pci.h       |    2 +
- drivers/pci/vpd.c       |   67 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 72 insertions(+), 64 deletions(-)
+...
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index eb6bee8724cc..4415e624cf7e 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -982,38 +982,6 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
- 	return count;
- }
- 
--static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
--			     struct bin_attribute *bin_attr, char *buf,
--			     loff_t off, size_t count)
--{
--	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
--
--	if (bin_attr->size > 0) {
--		if (off > bin_attr->size)
--			count = 0;
--		else if (count > bin_attr->size - off)
--			count = bin_attr->size - off;
--	}
--
--	return pci_read_vpd(dev, off, count, buf);
--}
--
--static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
--			      struct bin_attribute *bin_attr, char *buf,
--			      loff_t off, size_t count)
--{
--	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
--
--	if (bin_attr->size > 0) {
--		if (off > bin_attr->size)
--			count = 0;
--		else if (count > bin_attr->size - off)
--			count = bin_attr->size - off;
--	}
--
--	return pci_write_vpd(dev, off, count, buf);
--}
--
- #ifdef HAVE_PCI_LEGACY
- /**
-  * pci_read_legacy_io - read byte(s) from legacy I/O port space
-@@ -1517,29 +1485,8 @@ static struct device_attribute reset_attr = __ATTR(reset, 0200, NULL, reset_stor
- static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- {
- 	int retval;
--	struct bin_attribute *attr;
--
--	/* If the device has VPD, try to expose it in sysfs. */
--	if (dev->vpd) {
--		attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
--		if (!attr)
--			return -ENOMEM;
- 
--		sysfs_bin_attr_init(attr);
--		attr->size = 0;
--		attr->attr.name = "vpd";
--		attr->attr.mode = S_IRUSR | S_IWUSR;
--		attr->read = read_vpd_attr;
--		attr->write = write_vpd_attr;
--		retval = sysfs_create_bin_file(&dev->dev.kobj, attr);
--		if (retval) {
--			kfree(attr);
--			return retval;
--		}
--		dev->vpd->attr = attr;
--	}
--
--	/* Active State Power Management */
-+	pcie_vpd_create_sysfs_dev_files(dev);
- 	pcie_aspm_create_sysfs_dev_files(dev);
- 
- 	if (!pci_probe_reset_function(dev)) {
-@@ -1552,11 +1499,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- 
- error:
- 	pcie_aspm_remove_sysfs_dev_files(dev);
--	if (dev->vpd && dev->vpd->attr) {
--		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
--		kfree(dev->vpd->attr);
--	}
--
-+	pcie_vpd_remove_sysfs_dev_files(dev);
- 	return retval;
- }
- 
-@@ -1630,11 +1573,7 @@ int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
- 
- static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
- {
--	if (dev->vpd && dev->vpd->attr) {
--		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
--		kfree(dev->vpd->attr);
--	}
--
-+	pcie_vpd_remove_sysfs_dev_files(dev);
- 	pcie_aspm_remove_sysfs_dev_files(dev);
- 	if (dev->reset_fn) {
- 		device_remove_file(&dev->dev, &reset_attr);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fcd81911b127..1191320a44d5 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -123,6 +123,8 @@ struct pci_vpd {
- 
- int pci_vpd_init(struct pci_dev *dev);
- void pci_vpd_release(struct pci_dev *dev);
-+void pcie_vpd_create_sysfs_dev_files(struct pci_dev *dev);
-+void pcie_vpd_remove_sysfs_dev_files(struct pci_dev *dev);
- 
- /* PCI /proc functions */
- #ifdef CONFIG_PROC_FS
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 4596452d58bf..55477f24d8b9 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -378,6 +378,73 @@ void pci_vpd_release(struct pci_dev *dev)
- 	kfree(dev->vpd);
- }
- 
-+static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
-+			     struct bin_attribute *bin_attr, char *buf,
-+			     loff_t off, size_t count)
-+{
-+	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
-+
-+	if (bin_attr->size > 0) {
-+		if (off > bin_attr->size)
-+			count = 0;
-+		else if (count > bin_attr->size - off)
-+			count = bin_attr->size - off;
-+	}
-+
-+	return pci_read_vpd(dev, off, count, buf);
-+}
-+
-+static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
-+			      struct bin_attribute *bin_attr, char *buf,
-+			      loff_t off, size_t count)
-+{
-+	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
-+
-+	if (bin_attr->size > 0) {
-+		if (off > bin_attr->size)
-+			count = 0;
-+		else if (count > bin_attr->size - off)
-+			count = bin_attr->size - off;
-+	}
-+
-+	return pci_write_vpd(dev, off, count, buf);
-+}
-+
-+void pcie_vpd_create_sysfs_dev_files(struct pci_dev *dev)
-+{
-+	int retval;
-+	struct bin_attribute *attr;
-+
-+	if (!dev->vpd)
-+		return;
-+
-+	attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
-+	if (!attr)
-+		return;
-+
-+	sysfs_bin_attr_init(attr);
-+	attr->size = 0;
-+	attr->attr.name = "vpd";
-+	attr->attr.mode = S_IRUSR | S_IWUSR;
-+	attr->read = read_vpd_attr;
-+	attr->write = write_vpd_attr;
-+	retval = sysfs_create_bin_file(&dev->dev.kobj, attr);
-+	if (retval) {
-+		kfree(attr);
-+		return;
-+	}
-+
-+	dev->vpd->attr = attr;
-+}
-+
-+void pcie_vpd_remove_sysfs_dev_files(struct pci_dev *dev)
-+{
-+	if (dev->vpd && dev->vpd->attr) {
-+		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
-+		kfree(dev->vpd->attr);
-+	}
-+}
-+
- int pci_vpd_find_tag(const u8 *buf, unsigned int off, unsigned int len, u8 rdt)
- {
- 	int i;
+      depends on PCI && (ACPI || SFI) && (X86_64 || (PCI_GOANY ||
+PCI_GOMMCONFIG))
++     depends on PCI && (ACPI || SFI)
++     depends on X86_64 || (PCI_GOANY || PCI_GOMMCONFIG)
+
+(perhaps in a separate change)
+
+>> ---
+>>  arch/x86/Kconfig | 9 +++------
+>>  1 file changed, 3 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+>> index eb7f43f23521..aef9d67ac186 100644
+>> --- a/arch/x86/Kconfig
+>> +++ b/arch/x86/Kconfig
+>> @@ -2641,8 +2641,9 @@ config PCI_DIRECT
+>>       depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC || PCI_GOMMCONFIG))
+>>
+>>  config PCI_MMCONFIG
+>> -     def_bool y
+>> -     depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
+>> +     bool "Support mmconfig PCI config space access" if X86_64
+>> +     default y
+>> +     depends on PCI && (ACPI || SFI) && (X86_64 || (PCI_GOANY || PCI_GOMMCONFIG))
+>>
+>>  config PCI_OLPC
+>>       def_bool y
+>> @@ -2657,10 +2658,6 @@ config PCI_DOMAINS
+>>       def_bool y
+>>       depends on PCI
+>>
+>> -config PCI_MMCONFIG
+>> -     bool "Support mmconfig PCI config space access"
+>> -     depends on X86_64 && PCI && ACPI
+>> -
+>>  config PCI_CNB20LE_QUIRK
+>>       bool "Read CNB20LE Host Bridge Windows" if EXPERT
+>>       depends on PCI
+>> --
+>> 2.13.6
+>>
+
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
