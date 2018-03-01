@@ -1,48 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Jason Gunthorpe <jgg@mellanox.com>
-Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46214 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1161595AbeCAUk3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 15:40:29 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w21Kd3vC019342
+        for <linux-pci@vger.kernel.org>; Thu, 1 Mar 2018 15:40:29 -0500
+Received: from e06smtp11.uk.ibm.com (e06smtp11.uk.ibm.com [195.75.94.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2gercc8yrf-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 15:40:28 -0500
+Received: from localhost
+        by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+        Thu, 1 Mar 2018 20:40:25 -0000
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI
+ Memory
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Reply-To: benh@au1.ibm.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Keith Busch <keith.busch@intel.com>,
         Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
         Alex Williamson <alex.williamson@redhat.com>,
-        Eric Wehage <Eric.Wehage@huawei.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <20180326121138.00005e30@huawei.com> <20180326164129.GF15530@mellanox.com>
- <6ead7f19-c0e5-5584-2518-1e1889a007e4@deltatee.com>
- <20180326193502.GI15530@mellanox.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <45fcaa2d-214c-f0a9-94d4-b26692b9a5f3@deltatee.com>
-Date: Mon, 26 Mar 2018 14:42:05 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180326193502.GI15530@mellanox.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-Sender: linux-kernel-owner@vger.kernel.org
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Date: Fri, 02 Mar 2018 07:40:15 +1100
+In-Reply-To: <1519936477.4592.23.camel@au1.ibm.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+         <1519876489.4592.3.camel@kernel.crashing.org>
+         <1519876569.4592.4.camel@au1.ibm.com>
+         <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+         <1519936477.4592.23.camel@au1.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Message-Id: <1519936815.4592.25.camel@au1.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, 2018-03-02 at 07:34 +1100, Benjamin Herrenschmidt wrote:
+> 
+> But what happens with that PCI memory ? Is it effectively turned into
+> nromal memory (ie, usable for normal allocations, potentially used to
+> populate user pages etc...) or is it kept aside ?
 
+(What I mean is is it added to the page allocator basically)
 
-On 26/03/18 01:35 PM, Jason Gunthorpe wrote:
-> I think this is another case of the HW can do it but the SW support is
-> missing. IOMMU configuration and maybe firmware too, for instance.
+Also we need to be able to hard block MEMREMAP_WB mappings of non-RAM
+on ppc64 (maybe via an arch hook as it might depend on the processor
+family). Server powerpc cannot do cachable accesses on IO memory
+(unless it's special OpenCAPI or nVlink, but not on PCIe).
 
-Nope, not sure how you can make this leap. We've been specifically told
-that peer-to-peer PCIe DMA is not supported on P9. We've also been told
-there is a very limited (ie. store only), low performance mode designed
-for poking mailboxes but it is disabled by default and must be enable
-with some kind of special firmware calls.
+> Also on ppc64, the physical addresses of PCIe make it so far appart
+> that there's no way we can map them into the linear mapping at the
+> normal offset of PAGE_OFFSET + (pfn << PAGE_SHIFT), so things like
+> page_address or virt_to_page cannot work as-is on PCIe addresses.
 
-Logan
+Talking of which ... is there any documentation on the whole
+memremap_page ? my grep turned out empty...
+
+Cheers,
+Ben.
