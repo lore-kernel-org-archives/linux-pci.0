@@ -1,69 +1,58 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
-References: <1519280641-30258-1-git-send-email-xieyisheng1@huawei.com>
- <1519280641-30258-27-git-send-email-xieyisheng1@huawei.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <f2841aac-4c5e-4ac2-fa4d-81d6b2857503@huawei.com>
-Date: Mon, 19 Mar 2018 19:03:41 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:39006 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1162136AbeCAV50 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 16:57:26 -0500
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Dan Williams <dan.j.williams@intel.com>, benh@au1.ibm.com
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+ <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+ <1519936477.4592.23.camel@au1.ibm.com>
+ <CAPcyv4goHsYytq60ehJUori8Xq+Z0p8dV-8_oRALj244H4YtwQ@mail.gmail.com>
+ <2079ba48-5ae5-5b44-cce1-8175712dd395@deltatee.com>
+Message-ID: <43ba615f-a6e1-9444-65e1-494169cb415d@deltatee.com>
+Date: Thu, 1 Mar 2018 14:57:06 -0700
 MIME-Version: 1.0
-In-Reply-To: <1519280641-30258-27-git-send-email-xieyisheng1@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>, ilias.apalodimas@linaro.org,
- kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
- jonathan.cameron@huawei.com, Will Deacon <Will.Deacon@arm.com>,
- okaya@codeaurora.org, robh@kernel.org, Lorenzo
- Pieralisi <Lorenzo.Pieralisi@arm.com>, ashok.raj@intel.com, tn@semihalf.com,
- joro@8bytes.org, robdclark@gmail.com, bharatku@xilinx.com,
- linux-acpi@vger.kernel.org, Catalin Marinas <Catalin.Marinas@arm.com>,
- rfranz@cavium.com, lenb@kernel.org, devicetree@vger.kernel.org,
- jacob.jun.pan@linux.intel.com, alex.williamson@redhat.com, yi.l.liu@intel.com,
- thunder.leizhen@huawei.com, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, shunyong.yang@hxt-semitech.com,
- dwmw2@infradead.org, liubo95@huawei.com, rjw@rjwysocki.net,
- jcrouse@codeaurora.org, iommu@lists.linux-foundation.org,
- hanjun.guo@linaro.org, Sudeep Holla <Sudeep.Holla@arm.com>,
- Robin Murphy <Robin.Murphy@arm.com>, christian.koenig@amd.com,
- nwatters@codeaurora.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <2079ba48-5ae5-5b44-cce1-8175712dd395@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
-
-[...]
-> @@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
->  	if (ret)
->  		return ret;
->  
-> +	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
-> +		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
-> +		ret = iommu_fault_queue_register(&smmu->faultq_nb);
-> +		if (ret)
-> +			return ret;
-
-I find a case here: CONFIG_IOMMU_FAULT=n, and smmu support feature STALLS or PRI,
-the device probe will failed here, is this what we want?
-
-Thanks
-Yisheng
-
-> +	}
-> +
->  	/* And we're up. Go go go! */
->  	ret = iommu_device_sysfs_add(&smmu->iommu, dev, NULL,
->  				     "smmu3.%pa", &ioaddr);
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 01/03/18 02:45 PM, Logan Gunthorpe wrote:
+> It handles it fine for many situations. But when you try to map 
+> something that is at the end of the physical address space then the 
+> spares-vmemmap needs virtual address space that's the size of the 
+> physical address space divided by PAGE_SIZE which may be a little bit 
+> too large...
+
+Though, considering this more, maybe this shouldn't be a problem...
+
+Lets say you have 56bits of address space. That's 64PB. If you use need 
+a sparse vmemmap for the entire space it will take 16TB which leaves you 
+with 63.98PB of address space left. (Similar calculations for other 
+numbers of address bits.)
+
+So I'm not sure what the problem with this is.
+
+We still have to ensure all the arches map the memory with the right 
+cache bits but that should be relatively easy to solve.
+
+Logan
