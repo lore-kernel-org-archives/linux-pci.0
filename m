@@ -1,96 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v15 0/9] LPC: legacy ISA I/O support
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
-        <olof@lixom.net>, <dann.frazier@canonical.com>,
-        <andy.shevchenko@gmail.com>, <robh@kernel.org>
-References: <1519663249-9850-1-git-send-email-john.garry@huawei.com>
- <1519933978.10722.366.camel@linux.intel.com>
-CC: <joe@perches.com>, <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <minyard@acm.org>, <devicetree@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
-        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
-        <frowand.list@gmail.com>, <agraf@suse.de>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <5b7024af-33c8-48c8-22bc-8d36ca3eadd8@huawei.com>
-Date: Fri, 2 Mar 2018 10:48:21 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:39860 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1163339AbeCAXwk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 18:52:40 -0500
+To: Keith Busch <keith.busch@intel.com>,
+        Stephen Bates <sbates@raithlin.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Sagi Grimberg <sagi@grimberg.me>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-11-logang@deltatee.com>
+ <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
+ <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
+ <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
+ <20180301184249.GI19007@ziepe.ca>
+ <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
+ <20180301224540.GL19007@ziepe.ca>
+ <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
+ <20180301234930.GG14799@localhost.localdomain>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <34dc518d-b566-3e2a-8ad9-65d4f5d08a44@deltatee.com>
+Date: Thu, 1 Mar 2018 16:52:23 -0700
 MIME-Version: 1.0
-In-Reply-To: <1519933978.10722.366.camel@linux.intel.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180301234930.GG14799@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/03/2018 19:52, Andy Shevchenko wrote:
-> On Tue, 2018-02-27 at 00:40 +0800, John Garry wrote:
->> > This patchset supports the IPMI-bt device attached to the Low-Pin-
->> > Count
->> > interface implemented on Hisilicon Hip06/Hip07 SoC.
->> >                         -----------
->> >                         | LPC host|
->> >                         |         |
->> >                         -----------
->> >                              |
->> >                 _____________V_______________LPC
->> >                   |                       |
->> >                   V                       V
->> >                                      ------------
->> >                                      |  BT(ipmi)|
->> >                                      ------------
->> >
->> > When master accesses those peripherals beneath the Hip06/Hip07 LPC, a
->> > specific
->> > LPC driver is needed to make LPC host generate the standard LPC I/O
->> > cycles with
->> > the target peripherals'I/O port addresses. But on curent arm64 world,
->> > there is
->> > no real I/O accesses. All the I/O operations through in/out accessors
->> > are based
->> > on MMIO ranges; on Hip06/Hip07 LPC the I/O accesses are performed
->> > through driver
->> > specific accessors rather than MMIO.
->> > To solve this issue and keep the relevant existing peripherals'
->> > drivers untouched,
->> > this patchset:
->> >    - introduces a generic I/O space management framework, logical PIO,
->> > to support
->> >       I/O operations on host controllers operating either on MMIO
->> > buses or on buses
->> >      requiring specific driver I/O accessors;
->> >    - redefines the in/out accessors to provide a unified interface for
->> > both MMIO
->> >      and driver specific I/O operations. Using logical PIO, th call of
->> > in/out() from
->> >      the host children drivers, such as ipmi-si, will be redirected to
->> > the
->> >      corresponding device-specific I/O hooks to perform the I/O
->> > accesses.
->> >
->> > Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC
->> > peripherals can
->> > be supported without any changes on the existing ipmi-si driver.
->> >
->> > The whole patchset has been tested on Hip07 D05 board both using DTB
->> > and ACPI.
->> >
-> I did a review and don't see the patch 8 is ready to go.
->
-> So, to move things forward I may suggest to reorder series that some
-> small preparation stuff can go first w/o dependency to the actual Logic
-> PIO / LPC.
->
 
 
-Hi Andy,
+On 01/03/18 04:49 PM, Keith Busch wrote:
+> On Thu, Mar 01, 2018 at 11:00:51PM +0000, Stephen  Bates wrote:
+>>
+>> P2P is about offloading the memory and PCI subsystem of the host CPU
+>> and this is achieved no matter which p2p_dev is used.
+> 
+> Even within a device, memory attributes for its various regions may not be
+> the same. There's a meaningful difference between writing to an NVMe CMB
+> vs PMR, and a single device could have both. We don't want to lump these
+> all together without knowing which region you're allocating from, right?
 
-As mentioned in the reply to patch #8, as a practical exercise I don't 
-see the reason to change it now. Let's conclude that issue first before 
-deciding on patchset revising.
+Yes, PMRs are a whole other beast. I have no idea what anyone is going 
+to actually do with those yet. But no one is proposing to publish them 
+as p2pmem with this code.
 
-Thanks very much,
-John
-
+Logan
