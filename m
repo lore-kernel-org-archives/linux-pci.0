@@ -1,44 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH 5/5] ACPI / hotplug / PCI: Mark stale PCI devices disconnected
-Date: Tue, 13 Feb 2018 19:32:00 +0300
-Message-Id: <20180213163200.8787-6-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180213163200.8787-1-mika.westerberg@linux.intel.com>
-References: <20180213163200.8787-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=eJnL=FX=davemloft.net=davem@kernel.org>
+Return-Path: <SRS0=eJnL=FX=davemloft.net=davem@kernel.org>
+Date: Wed, 28 Feb 2018 22:28:53 -0500 (EST)
+Message-Id: <20180228.222853.1570972177848923005.davem@davemloft.net>
+To: helgaas@kernel.org
+Cc: dwmw2@infradead.org, sparclinux@vger.kernel.org, bhelgaas@google.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] sparc: Use generic pci_mmap_resource_range()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180228230828.GR127842@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519053858.7876.84.camel@infradead.org>
+	<20180219.103025.1676484157305869188.davem@davemloft.net>
+	<20180228230828.GR127842@bhelgaas-glaptop.roam.corp.google.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-Following PCIehp mark the unplugged PCI devices disconnected. This makes
-sure PCI core code leaves the now missing hardware registers alone.
+From: Bjorn Helgaas <helgaas@kernel.org>
+Date: Wed, 28 Feb 2018 17:08:29 -0600
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c | 5 +++++
- 1 file changed, 5 insertions(+)
+> On Mon, Feb 19, 2018 at 10:30:25AM -0500, David Miller wrote:
+>> From: David Woodhouse <dwmw2@infradead.org>
+>> Date: Mon, 19 Feb 2018 15:24:18 +0000
+>> =
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 5efa21cdddc9..0aef35ee665a 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -651,6 +651,11 @@ static void trim_stale_devices(struct pci_dev *dev)
- 		alive = pci_device_is_present(dev);
- 
- 	if (!alive) {
-+		pci_dev_set_disconnected(dev, NULL);
-+		if (pci_has_subordinate(dev))
-+			pci_walk_bus(dev->subordinate, pci_dev_set_disconnected,
-+				     NULL);
-+
- 		pci_stop_and_remove_bus_device(dev);
- 		if (adev)
- 			acpi_bus_trim(adev);
--- 
-2.15.1
+>> >> For one, the sparc specific code allows mmap'ing any address rang=
+e
+>> >> within a PCI bus device.=A0=A0The generic code does not allow tha=
+t.
+>> > =
 
+>> > =
+
+>> > You mean any address range in a given PCI bus even if there is no
+>> > actual device with a BAR at the corresponding address?
+>> > =
+
+>> > Would I be right to assume this was only available through the leg=
+acy
+>> > procfs API? I think it should be possible to accommodate it, and i=
+t
+>> > does look like I'd missed this requirement the first time round; t=
+hanks
+>> > for pointing it out.
+>> =
+
+>> It was probably the case that only procfs could do it.
+>> =
+
+>> It is the mechanism by which we were able to let the X server poke
+>> around in VGA ISA space.  It does a bus I/O space map for the bus
+>> device above the VGA card.
+> =
+
+> What's the bottom line?  Do we want this for sparc?  If so, do you
+> want to take it, Dave M, or would you like me to?
+
+The bottom line is that David W.'s patch would break sparc so
+we don't want this.
