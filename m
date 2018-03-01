@@ -1,112 +1,74 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: Re: [PATCH v16 0/9] LPC: legacy ISA I/O support
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
- <1520335317.10722.416.camel@linux.intel.com>
- <b4459d98-ebd4-7b13-07ec-613845579558@huawei.com>
- <CAJZ5v0gnf6rDYtKLBNfKjC=g3W=2XUed_R=AO+GeGYuubP_zWw@mail.gmail.com>
- <3ef757ff-8430-017f-59d3-ff67f49f5a80@huawei.com>
- <CAJZ5v0jTJ-LwyPUO7mbS47KyZ35pZeBfqkjxqubZjEGC=OJ82Q@mail.gmail.com>
-CC: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "Hanjun Guo" <hanjun.guo@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Dann Frazier <dann.frazier@canonical.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
-        "Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34670 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1162954AbeCAXZq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 18:25:46 -0500
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w21NJ1JB075320
+        for <linux-pci@vger.kernel.org>; Thu, 1 Mar 2018 18:25:46 -0500
+Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2gerprwn3m-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 18:25:45 -0500
+Received: from localhost
+        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+        Thu, 1 Mar 2018 23:25:42 -0000
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI
+ Memory
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Reply-To: benh@au1.ibm.com
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Dan Williams <dan.j.williams@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Alexander Graf <agraf@suse.de>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <fb457950-b0d7-0d77-02c5-f9531ea71d90@huawei.com>
-Date: Tue, 13 Mar 2018 10:42:22 +0000
-MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0jTJ-LwyPUO7mbS47KyZ35pZeBfqkjxqubZjEGC=OJ82Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-arch-owner@vger.kernel.org
+        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+Date: Fri, 02 Mar 2018 10:25:34 +1100
+In-Reply-To: <595acefb-18fc-e650-e172-bae271263c4c@deltatee.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+         <1519876489.4592.3.camel@kernel.crashing.org>
+         <1519876569.4592.4.camel@au1.ibm.com>
+         <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+         <1519936477.4592.23.camel@au1.ibm.com>
+         <CAPcyv4goHsYytq60ehJUori8Xq+Z0p8dV-8_oRALj244H4YtwQ@mail.gmail.com>
+         <2079ba48-5ae5-5b44-cce1-8175712dd395@deltatee.com>
+         <43ba615f-a6e1-9444-65e1-494169cb415d@deltatee.com>
+         <1519945204.4592.45.camel@au1.ibm.com>
+         <595acefb-18fc-e650-e172-bae271263c4c@deltatee.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Message-Id: <1519946734.4592.48.camel@au1.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/03/2018 10:22, Rafael J. Wysocki wrote:
-> On Tue, Mar 6, 2018 at 5:22 PM, John Garry <john.garry@huawei.com> wrote:
->>>>>>
->>>>>> Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC
->>>>>> peripherals can
->>>>>> be supported without any changes on the existing ipmi-si driver.
->>>>>>
->>>>>> The whole patchset has been tested on Hip07 D05 board both using DTB
->>>>>> and ACPI.
->>>>>>
->>>>>
->>>>>> V15 thread here: https://lkml.org/lkml/2018/2/26/584
->>>>>
->>>>>
->>>>>
->>>>> Thanks for an update.
->>>>> Though I answered to previous thread.
->>>>>
->>>>> Summary: I'm fine with the series as long as maintainers are fine
->>>>> (Rafael et al.). On personal side I think that the handler approach is
->>>>> better. Details are in v15 thread.
->>>>
->>>>
->>>>
->>>> Hi Andy,
->>>>
->>>> Thanks for your input and continued support. As I mentioned in reply in
->>>> v15,
->>>> the handler support would (or has) faced issues. And Rafael seems fine
->>>> with
->>>> deferring the probe to the LLDD in Patch #7/9
->>>
->>>
->>
->> Hi Rafael,
->>
->>> Well, the only sort-of concern is that these devices may not be
->>> "serial bus slaves" in general, so the naming is slightly confusing.
->>>
->>
->> Right, the name.
->>
->> The key point is that we model the bus the same as other serial buses like
->> I2C or SPI, so require the same treatment from the ACPI scan.
->>
->> Would you prefer acpi_is_serial_bus_slave() and
->> acpi_device_flags.serial_bus_slave symbols be modified also?
->
-> Yeah, preferably.
->
-> You can rename them to acpi_device_enumeration_by_parent() and
-> acpi_device_flags.enumeration_by_parent, respectively, as far as I'm
-> concerned.
->
-> At least the names would match the purpose then. :-)
->
-> And please update the comment in acpi_default_enumeration() while at it.
+On Thu, 2018-03-01 at 16:19 -0700, Logan Gunthorpe wrote:
+> 
+> On 01/03/18 04:00 PM, Benjamin Herrenschmidt wrote:
+> > We use only 52 in practice but yes.
+> > 
+> > >   That's 64PB. If you use need
+> > > a sparse vmemmap for the entire space it will take 16TB which leaves you
+> > > with 63.98PB of address space left. (Similar calculations for other
+> > > numbers of address bits.)
+> > 
+> > We only have 52 bits of virtual space for the kernel with the radix
+> > MMU.
+> 
+> Ok, assuming you only have 52 bits of physical address space: the sparse 
+> vmemmap takes 1TB and you're left with 3.9PB of address space for other 
+> things. So, again, why doesn't that work? Is my math wrong
 
-Hi Rafael,
+The big problem is not the vmemmap, it's the linear mapping.
 
-That should be ok. I can just add this mentioned modification to my 
-series and send for review.
-
-All the best,
-John
-
->
-> .
->
+Cheers,
+Ben.
