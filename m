@@ -1,90 +1,88 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
-        <olof@lixom.net>, <dann.frazier@canonical.com>,
-        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
-        <andriy.shevchenko@linux.intel.com>
-CC: <joe@perches.com>, <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <minyard@acm.org>, <devicetree@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
-        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
-        <frowand.list@gmail.com>, <agraf@suse.de>
-Subject: [PATCH v17 08/10] ACPI / scan: do not enumerate Indirect IO host children
-Date: Thu, 15 Mar 2018 02:15:57 +0800
-Message-ID: <1521051359-34473-9-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
-References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:48754 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1162620AbeCAWf1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 17:35:27 -0500
+Message-ID: <1519943658.4592.34.camel@kernel.crashing.org>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI
+ Memory
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        linux-nvme <linux-nvme@lists.infradead.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Date: Fri, 02 Mar 2018 09:34:18 +1100
+In-Reply-To: <CA+55aFy-oAiFJ3WDx4giR1enj65y-YJnZZhY6geFw0ygFyKXfQ@mail.gmail.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+         <1519876489.4592.3.camel@kernel.crashing.org>
+         <1519876569.4592.4.camel@au1.ibm.com>
+         <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+         <1519936477.4592.23.camel@au1.ibm.com>
+         <1519936815.4592.25.camel@au1.ibm.com> <20180301205315.GJ19007@ziepe.ca>
+         <1519942012.4592.31.camel@au1.ibm.com>
+         <CA+55aFy-oAiFJ3WDx4giR1enj65y-YJnZZhY6geFw0ygFyKXfQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Through the logical PIO framework systems which otherwise have
-no IO space access to legacy ISA/LPC devices may access these
-devices through so-called "indirect IO" method. In this, IO
-space accesses for non-PCI hosts are redirected to a host
-LLDD to manually generate the IO space (bus) accesses. Hosts
-are able to register a region in logical PIO space to map to
-its bus address range.
+On Thu, 2018-03-01 at 14:31 -0800, Linus Torvalds wrote:
+> On Thu, Mar 1, 2018 at 2:06 PM, Benjamin Herrenschmidt <benh@au1.ibm.com> wrote:
+> > 
+> > Could be that x86 has the smarts to do the right thing, still trying to
+> > untangle the code :-)
+> 
+> Afaik, x86 will not cache PCI unless the system is misconfigured, and
+> even then it's more likely to just raise a machine check exception
+> than cache things.
+> 
+> The last-level cache is going to do fills and spills directly to the
+> memory controller, not to the PCIe side of things.
+> 
+> (I guess you *can* do things differently, and I wouldn't be surprised
+> if some people inside Intel did try to do things differently with
+> trying nvram over PCIe, but in general I think the above is true)
+> 
+> You won't find it in the kernel code either. It's in hardware with
+> firmware configuration of what addresses are mapped to the memory
+> controllers (and _how_ they are mapped) and which are not.
 
-Indirect IO child devices have an associated host-specific bus
-address. Special translation is required to map between
-a logical PIO address for a device and it's host bus address.
+Ah thanks ! Thanks explains. We can fix that on ppc64 in our linear
+mapping code by checking the address vs. memblocks to chose the right
+page table attributes.
 
-Since in the ACPI tables the child device IO resources would
-be the host-specific values, it is required the ACPI scan code
-should not enumerate these devices, and that this should be
-the responsibility of the host driver so that it can "fixup"
-the resources so that they map to the appropriate logical PIO
-addresses.
+So the main problem on our side is to figure out the problem of too big
+PFNs. I need to look at this with Aneesh, we might be able to make
+things fit with a bit of wrangling.
 
-To avoid enumerating these child devices, we add a check from
-acpi_device_enumeration_by_parent() as to whether the parent
-for a device is a member of a known list of "indirect IO" hosts.
-For now, the HiSilicon LPC host controller ID is added.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Tested-by: dann frazier <dann.frazier@canonical.com>
----
- drivers/acpi/scan.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index f9e7904..a4cbf3e 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1524,11 +1524,25 @@ static int acpi_check_serial_bus_slave(struct acpi_resource *ares, void *data)
- 	return -1;
- }
- 
-+static bool acpi_is_indirect_io_slave(struct acpi_device *device)
-+{
-+	struct acpi_device *parent = device->parent;
-+	const struct acpi_device_id indirect_io_hosts[] = {
-+		{"HISI0191", 0},
-+		{}
-+	};
-+
-+	return parent && !acpi_match_device_ids(parent, indirect_io_hosts);
-+}
-+
- static bool acpi_device_enumeration_by_parent(struct acpi_device *device)
- {
- 	struct list_head resource_list;
- 	bool is_serial_bus_slave = false;
- 
-+	if (acpi_is_indirect_io_slave(device))
-+		return true;
-+
- 	/* Macs use device properties in lieu of _CRS resources */
- 	if (x86_apple_machine &&
- 	    (fwnode_property_present(&device->fwnode, "spiSclkPeriod") ||
--- 
-1.9.1
+> You _might_ find it in the BIOS, assuming you understood the tables
+> and had the BIOS writer's guide to unravel the magic registers.
+> 
+> But you might not even find it there. Some of the memory unit timing
+> programming is done very early, and by code that Intel doesn't even
+> release to the BIOS writers except as a magic encrypted blob, afaik.
+> Some of the magic might even be in microcode.
+> 
+> The page table settings for cacheability are more like a hint, and
+> only _part_ of the whole picture. The memory type range registers are
+> another part. And magic low-level uarch, northbridge and memory unit
+> specific magic is yet another part.
+> 
+> So you can disable caching for memory, but I'm pretty sure you can't
+> enable caching for PCIe at least in the common case. At best you can
+> affect how the store buffer works for PCIe.
