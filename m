@@ -1,62 +1,145 @@
-Return-Path: <SRS0=+GVI=GQ=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=+GVI=GQ=deltatee.com=logang@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
- Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Eric Wehage <Eric.Wehage@huawei.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <20180326121138.00005e30@huawei.com>
- <20180326140118.GA221690@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <c717eb06-1e83-f0f3-4d6c-15531aa808e0@deltatee.com>
-Date: Mon, 26 Mar 2018 09:46:24 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180326140118.GA221690@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1519931483.10722.342.camel@linux.intel.com>
+Subject: Re: [PATCH v15 1/9] LIB: Introduce a generic PIO mapping method
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: John Garry <john.garry@huawei.com>,
+        mika.westerberg@linux.intel.com, rafael@kernel.org,
+        lorenzo.pieralisi@arm.com, rjw@rjwysocki.net,
+        hanjun.guo@linaro.org, robh+dt@kernel.org, bhelgaas@google.com,
+        arnd@arndb.de, mark.rutland@arm.com, olof@lixom.net,
+        dann.frazier@canonical.com, andy.shevchenko@gmail.com,
+        robh@kernel.org
+Cc: joe@perches.com, benh@kernel.crashing.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linuxarm@huawei.com, minyard@acm.org,
+        devicetree@vger.kernel.org, linux-arch@vger.kernel.org,
+        rdunlap@infradead.org, gregkh@linuxfoundation.org,
+        akpm@linux-foundation.org, frowand.list@gmail.com, agraf@suse.de
+Date: Thu, 01 Mar 2018 21:11:23 +0200
+In-Reply-To: <1519663249-9850-2-git-send-email-john.garry@huawei.com>
+References: <1519663249-9850-1-git-send-email-john.garry@huawei.com>
+         <1519663249-9850-2-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 26/03/18 08:01 AM, Bjorn Helgaas wrote:
-> On Mon, Mar 26, 2018 at 12:11:38PM +0100, Jonathan Cameron wrote:
->> On Tue, 13 Mar 2018 10:43:55 -0600
->> Logan Gunthorpe <logang@deltatee.com> wrote:
->>> It turns out that root ports that support P2P are far less common than 
->>> anyone thought. So it will likely have to be a white list.
->>
->> This came as a bit of a surprise to our PCIe architect.
->>
->> His follow up was whether it was worth raising an ECR for the PCIe spec
->> to add a capability bit to allow this to be discovered.  This might
->> long term avoid the need to maintain the white list for new devices.
->>
->> So is it worth having a long term solution for making this discoverable?
+On Tue, 2018-02-27 at 00:40 +0800, John Garry wrote:
+> From: Zhichang Yuan <yuanzhichang@hisilicon.com>
 > 
-> It was surprising to me that there's no architected way to discover
-> this.  It seems like such an obvious thing that I guess I assumed the
-> omission was intentional, i.e., maybe there's something that makes it
-> impractical, but it would be worth at least asking somebody in the
-> SIG.  It seems like for root ports in the same root complex, at least,
-> there could be a bit somewhere in the root port or the RCRB (which
-> Linux doesn't support yet).
+> In commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
+> pci_pio_to_address()"), a new I/O space management was supported. With
+> that driver, the I/O ranges configured for PCI/PCIe hosts on some
+> architectures can be mapped to logical PIO, converted easily between
+> CPU address and the corresponding logicial PIO. Based on this, PCI
+> I/O devices can be accessed in a memory read/write way through the
+> unified in/out accessors.
+> 
+> But on some archs/platforms, there are bus hosts which access I/O
+> peripherals with host-local I/O port addresses rather than memory
+> addresses after memory-mapped.
+> 
+> To support those devices, a more generic I/O mapping method is
+> introduced
+> here. Through this patch, both the CPU addresses and the host-local
+> port
+> can be mapped into the logical PIO space with different logical/fake
+> PIOs.
+> After this, all the I/O accesses to either PCI MMIO devices or host-
+> local
+> I/O peripherals can be unified into the existing I/O accessors defined
+> in
+> asm-generic/io.h and be redirected to the right device-specific hooks
+> based on the input logical PIO.
+> 
 
-Yes, I agree. It would be a good long term solution to have this bit in
-the spec. That would avoid us needing to create a white list for new
-hardware. However, I expect it would be years before we can rely on it
-so someone may yet implement that white list.
+A bit more small comments.
 
-Logan
+
+> +#ifndef __LINUX_LOGIC_PIO_H
+> +#define __LINUX_LOGIC_PIO_H
+> +
+
+> +#ifdef __KERNEL__
+
+Hmm... How the header in include/linux/ can be non-kernel?
+
+> +	list_for_each_entry_rcu(range, &io_range_list, list) {
+
+> +		if (range->flags == LOGIC_PIO_CPU_MMIO &&
+> +				new_range->flags ==
+> LOGIC_PIO_CPU_MMIO) {
+
+It's rather fancy indentation.
+
+> +			if (start >= range->hw_start + range->size ||
+> +			    end < range->hw_start)
+
+Misses {}
+
+> +				allocated_mmio_size += range->size;
+> +			else {
+> +				ret = -EFAULT;
+> +				goto end_register;
+> +			}
+
+> +		if (allocated_mmio_size + new_range->size - 1 >
+> +			MMIO_UPPER_LIMIT) {
+
+Fancy indentation.
+
+> +			if (allocated_mmio_size + SZ_64K - 1 >
+> +			MMIO_UPPER_LIMIT) {
+
+Ditto.
+
+> +		if (allocated_iio_size + new_range->size - 1 >
+> +		    IO_SPACE_LIMIT) {
+
+While this is nothing wrong, like above I would consider to check how
+long it is and consider putting on one line.
+
+> +/**
+> + * logic_pio_to_hwaddr - translate logical PIO to HW address
+> + * @pio: logical PIO value
+> + *
+> + * Returns HW address if valid, -1 otherwise
+
+It can't return -1 when the return type is unsigned.
+
+> + *
+> + * Translate the input logical pio to the corresponding hardware
+> address.
+> + * The input pio should be unique in the whole logical PIO space.
+> + */
+> +resource_size_t logic_pio_to_hwaddr(unsigned long pio)
+> +{
+> +	struct logic_pio_hwaddr *range;
+
+> +	resource_size_t hwaddr = (resource_size_t)-1;
+
+Ditto.
+
+> +	return hwaddr;
+> +}
+
+> +	list_for_each_entry_rcu(range, &io_range_list, list) {
+> +		if (range->flags != LOGIC_PIO_CPU_MMIO)
+> +			continue;
+
+> +		if (addr >= range->hw_start &&
+> +		    addr < range->hw_start + range->size)
+
+Perhaps you may copy'n'paste in_range() macro from fs/ext* files and use
+in this module. At some point it would be good to make it generic.
+
+> +			return addr - range->hw_start +
+> +				range->io_start;
+
+
+> +	}
+
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
