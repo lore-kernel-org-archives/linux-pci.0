@@ -1,166 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-fw-6001.amazon.com ([52.95.48.154]:23263 "EHLO
-        smtp-fw-6001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752638AbeBSNCn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Feb 2018 08:02:43 -0500
-From: David Woodhouse <dwmw@amazon.co.uk>
-To: chris@zankel.net, jcmvbkbc@gmail.com,
-        linux-xtensa@linux-xtensa.org, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH] xtensa: Use generic pci_mmap_resource_range()
-Date: Mon, 19 Feb 2018 13:02:33 +0000
-Message-Id: <1519045353-22496-1-git-send-email-dwmw@amazon.co.uk>
+Received: from thoth.sbs.de ([192.35.17.2]:47579 "EHLO thoth.sbs.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966068AbeCAFlK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 00:41:10 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Benedikt Spranger <b.spranger@linutronix.de>
+Subject: [PATCH v3 2/6] PCI: Scan all functions when running over Jailhouse
+Date: Thu,  1 Mar 2018 06:40:45 +0100
+Message-Id: <2b4c650d27e59c81903fa4c2526bf18a2cf2d243.1519882849.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519882849.git.jan.kiszka@siemens.com>
+References: <cover.1519882849.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1519882849.git.jan.kiszka@siemens.com>
+References: <cover.1519882849.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit f719582435 ("PCI: Add pci_mmap_resource_range() and use it for
-ARM64") added this generic function with the intent of using it
-everywhere and ultimately killing the old arch-specific implementations.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Let's get on with that eradication...
+Per PCIe r4.0, sec 7.5.1.1.9, multi-function devices are required to
+have a function 0.  Therefore, Linux scans for devices at function 0
+(devfn 0/8/16/...) and only scans for other functions if function 0
+has its Multi-Function Device bit set or ARI or SR-IOV indicate
+there are more functions.
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+The Jailhouse hypervisor may pass individual functions of a
+multi-function device to a guest without passing function 0, which
+means a Linux guest won't find them.
+
+Change Linux PCI probing so it scans all function numbers when
+running as a guest over Jailhouse.
+
+This is technically prohibited by the spec, so it is possible that
+PCI devices without the Multi-Function Device bit set may have
+unexpected behavior in response to this probe.
+
+Derived from original patch by Benedikt Spranger.
+
+CC: Benedikt Spranger <b.spranger@linutronix.de>
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/xtensa/include/asm/pci.h |  7 ++--
- arch/xtensa/kernel/pci.c      | 94 ++++---------------------------------------
- 2 files changed, 12 insertions(+), 89 deletions(-)
+ arch/x86/pci/legacy.c |  4 +++-
+ drivers/pci/probe.c   | 22 +++++++++++++++++++---
+ 2 files changed, 22 insertions(+), 4 deletions(-)
 
-diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
-index 5c83798..d5a8215 100644
---- a/arch/xtensa/include/asm/pci.h
-+++ b/arch/xtensa/include/asm/pci.h
-@@ -44,9 +44,10 @@ extern struct pci_controller* pcibios_alloc_controller(void);
- 
- #define PCI_DMA_BUS_IS_PHYS	(1)
- 
--/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
--#define HAVE_PCI_MMAP		1
--#define arch_can_pci_mmap_io()	1
-+/* Tell PCI code what kind of PCI resource mappings we support */
-+#define HAVE_PCI_MMAP			1
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
-+#define arch_can_pci_mmap_io()		1
- 
- #endif /* __KERNEL__ */
- 
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index d981f01..b7c7a60 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -39,7 +39,6 @@
-  * pcibios_align_resource
-  * pcibios_fixup_bus
-  * pci_bus_add_device
-- * pci_mmap_page_range
-  */
- 
- struct pci_controller* pci_ctrl_head;
-@@ -258,98 +257,21 @@ pci_controller_num(struct pci_dev *dev)
- #endif /* CONFIG_PROC_FS */
+diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
+index 1cb01abcb1be..dfbe6ac38830 100644
+--- a/arch/x86/pci/legacy.c
++++ b/arch/x86/pci/legacy.c
+@@ -4,6 +4,7 @@
+ #include <linux/init.h>
+ #include <linux/export.h>
+ #include <linux/pci.h>
++#include <asm/jailhouse_para.h>
+ #include <asm/pci_x86.h>
  
  /*
-- * Platform support for /proc/bus/pci/X/Y mmap()s,
-- * modelled on the sparc64 implementation by Dave Miller.
-+ * Platform support for /proc/bus/pci/X/Y mmap()s.
-  *  -- paulus.
-  */
+@@ -34,13 +35,14 @@ int __init pci_legacy_init(void)
  
--/*
-- * Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static __inline__ int
--__pci_mmap_make_offset(struct pci_dev *dev, struct vm_area_struct *vma,
--		       enum pci_mmap_state mmap_state)
-+int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
+ void pcibios_scan_specific_bus(int busn)
  {
--	struct pci_controller *pci_ctrl = (struct pci_controller*) dev->sysdata;
--	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
--	unsigned long io_offset = 0;
--	int i, res_bit;
-+	struct pci_controller *pci_ctrl = (struct pci_controller*) pdev->sysdata;
-+	resource_size_t ioaddr = pci_resource_start(pdev, bar);
++	int stride = jailhouse_paravirt() ? 1 : 8;
+ 	int devfn;
+ 	u32 l;
  
- 	if (pci_ctrl == 0)
- 		return -EINVAL;		/* should never happen */
+ 	if (pci_find_bus(0, busn))
+ 		return;
  
--	/* If memory, add on the PCI bridge address offset */
--	if (mmap_state == pci_mmap_mem) {
--		res_bit = IORESOURCE_MEM;
--	} else {
--		io_offset = (unsigned long)pci_ctrl->io_space.base;
--		offset += io_offset;
--		res_bit = IORESOURCE_IO;
--	}
--
--	/*
--	 * Check that the offset requested corresponds to one of the
--	 * resources of the device.
--	 */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &dev->resource[i];
--		int flags = rp->flags;
--
--		/* treat ROM as memory (should be already) */
--		if (i == PCI_ROM_RESOURCE)
--			flags |= IORESOURCE_MEM;
--
--		/* Active and same type? */
--		if ((flags & res_bit) == 0)
--			continue;
--
--		/* In the range of this resource? */
--		if (offset < (rp->start & PAGE_MASK) || offset > rp->end)
--			continue;
--
--		/* found it! construct the final physical address */
--		if (mmap_state == pci_mmap_io)
--			offset += pci_ctrl->io_space.start - io_offset;
--		vma->vm_pgoff = offset >> PAGE_SHIFT;
--		return 0;
--	}
--
--	return -EINVAL;
--}
-+	/* Convert to an offset within this PCI controller */
-+	ioaddr -= (unsigned long)pci_ctrl->io_space.base;
+-	for (devfn = 0; devfn < 256; devfn += 8) {
++	for (devfn = 0; devfn < 256; devfn += stride) {
+ 		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
+ 		    l != 0x0000 && l != 0xffff) {
+ 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ef5377438a1e..da22d6d216f8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -16,6 +16,7 @@
+ #include <linux/pci-aspm.h>
+ #include <linux/aer.h>
+ #include <linux/acpi.h>
++#include <linux/hypervisor.h>
+ #include <linux/irqdomain.h>
+ #include <linux/pm_runtime.h>
+ #include "pci.h"
+@@ -2518,14 +2519,29 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+ {
+ 	unsigned int used_buses, normal_bridges = 0, hotplug_bridges = 0;
+ 	unsigned int start = bus->busn_res.start;
+-	unsigned int devfn, cmax, max = start;
++	unsigned int devfn, fn, cmax, max = start;
+ 	struct pci_dev *dev;
++	int nr_devs;
  
--/*
-- * Perform the actual remap of the pages for a PCI device mapping, as
-- * appropriate for this architecture.  The region in the process to map
-- * is described by vm_start and vm_end members of VMA, the base physical
-- * address is found in vm_pgoff.
-- * The pci device structure is provided so that architectures may make mapping
-- * decisions on a per-device or per-bus basis.
-- *
-- * Returns a negative error code on failure, zero on success.
-- */
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state,
--			int write_combine)
--{
--	int ret;
--
--	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
--	if (ret < 0)
--		return ret;
--
--	vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
--
--	ret = io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			         vma->vm_end - vma->vm_start,vma->vm_page_prot);
--
--	return ret;
-+	vma->vm_pgoff += (ioaddr + pci_ctrl->io_space.start) >> PAGE_SHIFT;
-+	return 0;
- }
+ 	dev_dbg(&bus->dev, "scanning bus\n");
+ 
+ 	/* Go find them, Rover! */
+-	for (devfn = 0; devfn < 0x100; devfn += 8)
+-		pci_scan_slot(bus, devfn);
++	for (devfn = 0; devfn < 0x100; devfn += 8) {
++		nr_devs = pci_scan_slot(bus, devfn);
++
++		/*
++		 * The Jailhouse hypervisor may pass individual functions of a
++		 * multi-function device to a guest without passing function 0.
++		 * Look for them as well.
++		 */
++		if (jailhouse_paravirt() && nr_devs == 0) {
++			for (fn = 1; fn < 8; fn++) {
++				dev = pci_scan_single_device(bus, devfn + fn);
++				if (dev)
++					dev->multifunction = 1;
++			}
++		}
++	}
+ 
+ 	/* Reserve buses for SR-IOV capability */
+ 	used_buses = pci_iov_bus_range(bus);
 -- 
-2.7.4
+2.13.6
