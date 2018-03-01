@@ -1,14 +1,15 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56548 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751901AbeCMTKw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 15:10:52 -0400
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+Received: from mail.kernel.org ([198.145.29.99]:59878 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1162828AbeCAXAg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 18:00:36 -0500
+Date: Thu, 1 Mar 2018 17:00:32 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Keith Busch <keith.busch@intel.com>,
         Sagi Grimberg <sagi@grimberg.me>,
@@ -16,54 +17,128 @@ Cc: Stephen Bates <sbates@raithlin.com>,
         Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Alex Williamson <alex.williamson@redhat.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
-Date: Tue, 13 Mar 2018 15:10:48 -0400
+Subject: Re: [PATCH v2 01/10] PCI/P2PDMA: Support peer to peer memory
+Message-ID: <20180301230032.GA74737@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-2-logang@deltatee.com>
+ <20180301173752.GE13722@bhelgaas-glaptop.roam.corp.google.com>
+ <b81503c2-9f07-b5f6-df06-64d1fdc53386@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b81503c2-9f07-b5f6-df06-64d1fdc53386@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/13/2018 2:44 PM, Logan Gunthorpe wrote:
->> Do you think you can keep a pointer to the parent bridge instead of querying it
->> via get_upstream_bridge_port() here so that we can reuse your
->> pci_p2pdma_disable_acs() in the future.
+On Thu, Mar 01, 2018 at 11:55:51AM -0700, Logan Gunthorpe wrote:
+> Hi Bjorn,
 > 
-> Keep a pointer where? pci_p2pdma_disable_acs() and pci_p2pdma_add_client() are used in completely different cases on completely different devices. There really is no overlap and no obvious place to store the port pointer (except in the struct pci_dev itself, in which case why not just call the function again).
+> Thanks for the review. I'll correct all the nits for the next version.
+> 
+> On 01/03/18 10:37 AM, Bjorn Helgaas wrote:
+> > On Wed, Feb 28, 2018 at 04:39:57PM -0700, Logan Gunthorpe wrote:
+> > > Some PCI devices may have memory mapped in a BAR space that's
+> > > intended for use in Peer-to-Peer transactions. In order to enable
+> > > such transactions the memory must be registered with ZONE_DEVICE pages
+> > > so it can be used by DMA interfaces in existing drivers.
+> 
+> > Is there anything about this memory that makes it specifically
+> > intended for peer-to-peer transactions?  I assume the device can't
+> > really tell whether a transaction is from a CPU or a peer.
+> 
+> No there's nothing special about the memory and it can still be accessed by
+> the CPU. This is just the intended purpose. You could use this PCI memory as
+> regular DMA buffers or regular memory but I'm not sure why you would. It
+> would probably be pretty bad performance-wise.
+> 
+> 
+> > BTW, maybe there could be some kind of guide for device driver writers
+> > in Documentation/PCI/?
+> Makes sense we can look at writing something for the next iteration.
+> 
+> > I think it would be clearer and sufficient to simply say that we have
+> > no way to know whether peer-to-peer routing between PCIe Root Ports is
+> > supported (PCIe r4.0, sec 1.3.1).
+> 
+> Fair enough.
+> 
+> > The fact that you use the PCIe term "switch" suggests that a PCIe
+> > Switch is required, but isn't it sufficient for the peers to be below
+> > the same "PCI bridge", which would include PCIe Root Ports, PCIe
+> > Switch Downstream Ports, and conventional PCI bridges?
+> > The comments at get_upstream_bridge_port() suggest that this isn't
+> > enough, and the peers actually do have to be below the same PCIe
+> > Switch, but I don't know why.
+> 
+> I do mean Switch as we do need to keep the traffic off the root complex.
+> Seeing, as stated above, we don't know if it actually support it. (While we
+> can be certain any PCI switch does). So we specifically want to exclude PCIe
+> Root ports and I'm not sure about the support of PCI bridges but I can't
+> imagine anyone wanting to do P2P around them so I'd rather be safe than
+> sorry and exclude them.
 
-I was thinking of this for the pci_p2pdma_add_client() case for the
-parent pointer.
+I don't think this is correct.  A Root Port defines a hierarchy domain
+(I'm looking at PCIe r4.0, sec 1.3.1).  The capability to route
+peer-to-peer transactions *between* hierarchy domains is optional.  I
+think this means a Root Complex is not required to route transactions
+from one Root Port to another Root Port.
 
-+struct pci_p2pdma_client {
-+	struct list_head list;
-+	struct pci_dev *client;
-+	struct pci_dev *provider;
-+};
+This doesn't say anything about routing between two different devices
+below a Root Port.  Those would be in the same hierarchy domain and
+should follow the conventional PCI routing rules.  Of course, since a
+Root Port has one link that leads to one device, they would probably
+be different functions of a single multi-function device, so I don't
+know how practical it would be to test this.
 
-You are right second code seems to be there to disable ACS altogether
-when this kernel configuration is selected.
+> > This whole thing is confusing to me.  Why do you want to reject peers
+> > directly connected to the same root port?  Why do you require the same
+> > Switch Upstream Port?  You don't exclude conventional PCI, but it
+> > looks like you would require peers to share *two* upstream PCI-to-PCI
+> > bridges?  I would think a single shared upstream bridge (conventional,
+> > PCIe Switch Downstream Port, or PCIe Root Port) would be sufficient?
+> 
+> Hmm, yes, this may just be laziness on my part. Finding the shared upstream
+> bridge is a bit more tricky than just showing that they are on the same
+> switch. So as coded, a fabric of switches with peers on different legs of
+> the fabric are not supported. But yes, maybe they just need to be two
+> devices with a single shared upstream bridge that is not the root port.
+> Again, we need to reject the root port because we can't know if the root
+> complex can support P2P traffic.
 
-It doesn't have any relationship to the client code.
+This sounds like the same issue as above, so we just need to resolve
+that.
 
-But then, Why bother searching for the switch at all?
+> > Since "pci_p2pdma_add_client()" includes "pci_" in its name, it seems
+> > sort of weird that callers supply a non-PCI device and then we look up
+> > a PCI device here.  I assume you have some reason for this; if you
+> > added a writeup in Documentation/PCI, that would be a good place to
+> > elaborate on that, maybe with a one-line clue here.
+> 
+> Well yes, but this is much more convenient for callers which don't need to
+> care if the device they are attempting to add (which in the NVMe target
+> case, could be a random block device) is a pci device or not. Especially
+> seeing find_parent_pci_dev() is non-trivial.
 
-Even if the switch is there, there is no guarantee that it is currently
-being used for P2P.
+OK.  I accept that it might be convenient, but I still think it leads
+to a weird API.  Maybe that's OK; I don't know enough about the
+scenario in the caller to do anything more than say "hmm, strange".
 
-It seems that we are going with the assumption that enabling this config
-option implies you want P2P, then we can simplify this code as well.
+> > > +void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size)
+> > > +{
+> > > +	void *ret;
+> > > +
+> > > +	if (unlikely(!pdev->p2pdma))
+> > 
+> > Is this a hot path?  I'm not sure it's worth cluttering
+> > non-performance paths with likely/unlikely.
+> 
+> I'd say it can be pretty hot given that we need to allocate and free buffers
+> at multiple GB/s for the NVMe target case. I don't exactly have benchmarks
+> or anything to show this though...
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+OK, I'll take your word for that.  I'm fine with this as long as it is
+performance-sensitive.
+
+Bjorn
