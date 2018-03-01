@@ -1,46 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:54035 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753029AbeC1LvZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:51:25 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 11/12] PCI: designware-ep: Make dw_pcie_ep_reset_bar() handle 64-bit BARs properly
-Date: Wed, 28 Mar 2018 13:50:16 +0200
-Message-Id: <20180328115018.31921-12-niklas.cassel@axis.com>
-In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
+Received: from foss.arm.com ([217.140.101.70]:37358 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030345AbeCAMXH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 07:23:07 -0500
+Date: Thu, 1 Mar 2018 12:22:55 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
+Cc: kishon@ti.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com
+Subject: Re: [PATCH v5 0/3] pci: endpoint: Fix double free in pci_epf_create()
+Message-ID: <20180301122247.GA31651@e107981-ln.cambridge.arm.com>
+References: <20180228173220.544-1-embedded24@evers-fischer.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180228173220.544-1-embedded24@evers-fischer.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since a 64-bit BAR consists of a BAR pair, we need to write to both
-BARs in the BAR pair to clear the BAR properly.
+On Wed, Feb 28, 2018 at 06:32:17PM +0100, Rolf Evers-Fischer wrote:
+> This is version 5 of a patchset to avoid double free in function
+> 'pci_epf_create()'.
+> 
+> When I accidentally created a new endpoint device with an empty name,
+> the kernel warned about "attempted to be registered with empty name!"
+> and crashed afterwards.
+> 
+> It turned out that the crash was not caused by the 'device_add()'
+> function itself, but by a double kfree of 'epf->name' and 'epf'.
+> 
+> The first patch just simplifies the code, while the second patch
+> fixes the problem. The third patch removes the goto labels.
+> 
+> Thank you Andy and Kishon for your Ack/Review on v3 for patches 1 and 2.
+> In v4 of these patches only the first lines of the commit messages
+> have been changed. In v5 these two patches have not been changed.
+> Therefore the 'Acked-By'/'Reviewed-By' lines have been added. I hope
+> that's acceptable.
+> 
+> Changes in v5:
+> - Beautified the ugly part of Patch #3 (v4), where the correct return
+>   value was hidden under two levels of 'if'.
+> 
+> Changes in v4:
+> - s/pci/PCI and s/epf/EPF in the first line of
+>   recent commit messages (thanks, Bjorn!)
+> - The new patch #3 removes the goto labels
+>   in function 'pci_epf_create()' (thanks, Lorenzo!)
+> 
+> Changes in v3:
+> - Matched to other pending pci endpoint commits (thanks, Bjorn!)
+> - Added "Fixes" tag in patch 2 (thanks, Andy!)
+> 
+> Changes in v2:
+> - Based on feedback from Lorenzo, Andy and Kishon (thanks!)
+> - Change IDs removed
+> - First patch completely reworked in order to eliminate the
+>   need for the second 'kstrdup' allocation and the 'kfree' of
+>   the first allocation.
+>   It was tested with name="pci_epf_test.0" and name="pci_epb":
+>   The 'epf->name' was "pci_epf_test" or "pci_epb" (=unchanged).
+> 
+> Rolf Evers-Fischer (3):
+>   PCI: endpoint: Simplify name allocation for EPF device
+>   PCI: endpoint: Fix kernel panic after put_device()
+>   PCI: endpoint: pci_epf_create: remove goto labels
+> 
+>  drivers/pci/endpoint/pci-epf-core.c | 52 +++++++++++--------------------------
+>  1 file changed, 15 insertions(+), 37 deletions(-)
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-designware-ep.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Applied to pci/endpoint for v4.17, thanks.
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index cc4d8381c1dc..4d304e3ccf24 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -28,6 +28,10 @@ static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar,
- 	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writel_dbi2(pci, reg, 0x0);
- 	dw_pcie_writel_dbi(pci, reg, 0x0);
-+	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-+		dw_pcie_writel_dbi2(pci, reg + 4, 0x0);
-+		dw_pcie_writel_dbi(pci, reg + 4, 0x0);
-+	}
- 	dw_pcie_dbi_ro_wr_dis(pci);
- }
- 
--- 
-2.14.2
+Lorenzo
