@@ -1,93 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0107.outbound.protection.outlook.com ([104.47.42.107]:29664
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754230AbeCRWk6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 18 Mar 2018 18:40:58 -0400
-From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 1/2] pci: host: pci-hyperv: Replace GFP_ATOMIC with
- GFP_KERNEL in hv_pci_onchannelcallback
-Date: Sun, 18 Mar 2018 22:40:55 +0000
-Message-ID: <DM5PR2101MB1030145AB251BF2F31FBA4BEDCD50@DM5PR2101MB1030.namprd21.prod.outlook.com>
-References: <1521384782-23539-1-git-send-email-baijiaju1990@gmail.com>
-In-Reply-To: <1521384782-23539-1-git-send-email-baijiaju1990@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56252 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1161579AbeCAUaJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 15:30:09 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w21KT7sG136387
+        for <linux-pci@vger.kernel.org>; Thu, 1 Mar 2018 15:30:08 -0500
+Received: from e06smtp11.uk.ibm.com (e06smtp11.uk.ibm.com [195.75.94.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2gercc8key-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 15:30:08 -0500
+Received: from localhost
+        by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+        Thu, 1 Mar 2018 20:30:04 -0000
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI
+ Memory
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Reply-To: benh@au1.ibm.com
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Date: Fri, 02 Mar 2018 07:29:55 +1100
+In-Reply-To: <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+         <1519876489.4592.3.camel@kernel.crashing.org>
+         <1519876569.4592.4.camel@au1.ibm.com>
+         <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Message-Id: <1519936195.4592.18.camel@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-kernel-owner@vger.kernel.org <linux-kernel-owner@vger.kernel.=
-org> On Behalf
-> Of Jia-Ju Bai
-> Sent: Sunday, March 18, 2018 7:53 AM
-> To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang <haiyangz@microsoft.=
-com>; Stephen
-> Hemminger <sthemmin@microsoft.com>; bhelgaas@google.com
-> Cc: devel@linuxdriverproject.org; linux-pci@vger.kernel.org; linux-kernel=
-@vger.kernel.org;
-> Jia-Ju Bai <baijiaju1990@gmail.com>
-> Subject: [PATCH 1/2] pci: host: pci-hyperv: Replace GFP_ATOMIC with GFP_K=
-ERNEL in
-> hv_pci_onchannelcallback
->=20
-> hv_pci_onchannelcallback() is not called in atomic context.
->=20
-> The call chain ending up at hv_pci_onchannelcallback() is:
-> [1] hv_pci_onchannelcallback() <- hv_pci_probe()
-> hv_pci_probe() is only set as ".probe" in hv_driver
-> structure "hv_pci_drv".
->=20
-> Despite never getting called from atomic context,
+On Thu, 2018-03-01 at 11:04 -0700, Logan Gunthorpe wrote:
+> 
+> On 28/02/18 08:56 PM, Benjamin Herrenschmidt wrote:
+> > On Thu, 2018-03-01 at 14:54 +1100, Benjamin Herrenschmidt wrote:
+> > > The problem is that acccording to him (I didn't double check the latest
+> > > patches) you effectively hotplug the PCIe memory into the system when
+> > > creating struct pages.
+> > > 
+> > > This cannot possibly work for us. First we cannot map PCIe memory as
+> > > cachable. (Note that doing so is a bad idea if you are behind a PLX
+> > > switch anyway since you'd ahve to manage cache coherency in SW).
+> > 
+> > Note: I think the above means it won't work behind a switch on x86
+> > either, will it ?
+> 
+> This works perfectly fine on x86 behind a switch and we've tested it on 
+> multiple machines. We've never had an issue of running out of virtual 
+> space despite our PCI bars typically being located with an offset of 
+> 56TB or more. The arch code on x86 also somehow figures out not to map 
+> the memory as cachable so that's not an issue (though, at this point, 
+> the CPU never accesses the memory so even if it were, it wouldn't affect 
+> anything).
 
-Not true.   hv_pci_probe() registers hv_pci_onchannelcallback() as
-a callback function that is invoked from the VMbus interrupt handler.
-So GFP_ATOMIC is appropriate.
+Oliver can you look into this ? You sais the memory was effectively
+hotplug'ed into the system when creating the struct pages. That would
+mean to me that it's a) mapped (which for us is cachable, maybe x86 has
+tricks to avoid that) and b) potentially used to populate userspace
+pages (that will definitely be cachable). Unless there's something in
+there you didn't see that prevents it.
 
-Michael
+> We also had this working on ARM64 a while back but it required some out 
+> of tree ZONE_DEVICE patches and some truly horrid hacks to it's arch 
+> code to ioremap the memory into the page map.
+> 
+> You didn't mention what architecture you were trying this on.
 
-> hv_pci_onchannelcallback() calls kmalloc with GFP_ATOMIC,
-> which waits busily for allocation.
-> GFP_ATOMIC is not necessary and can be replaced with GFP_KERNEL
-> to avoid busy waiting.
->=20
-> This is found by a static analysis tool named DCNS written by myself.
->=20
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-> ---
->  drivers/pci/host/pci-hyperv.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 0fe3ea1..c5c8a99 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1887,7 +1887,7 @@ static void hv_pci_onchannelcallback(void *context)
->  	struct pci_dev_incoming *dev_message;
->  	struct hv_pci_dev *hpdev;
->=20
-> -	buffer =3D kmalloc(bufferlen, GFP_ATOMIC);
-> +	buffer =3D kmalloc(bufferlen, GFP_KERNEL);
->  	if (!buffer)
->  		return;
->=20
-> @@ -1899,7 +1899,7 @@ static void hv_pci_onchannelcallback(void *context)
->  			kfree(buffer);
->  			/* Handle large packet */
->  			bufferlen =3D bytes_recvd;
-> -			buffer =3D kmalloc(bytes_recvd, GFP_ATOMIC);
-> +			buffer =3D kmalloc(bytes_recvd, GFP_KERNEL);
->  			if (!buffer)
->  				return;
->  			continue;
-> --
-> 1.9.1
+ppc64.
+
+> It may make sense at this point to make this feature dependent on x86 
+> until more work is done to make it properly portable. Something like 
+> arch functions that allow adding IO memory pages to with a specific 
+> cache setting. Though, if an arch has such restrictive limits on the map 
+> size it would probably need to address that too somehow.
+
+Not fan of that approach.
+
+So there are two issues to consider here:
+
+ - Our MMIO space is very far away from memory (high bits set in the
+address) which causes problem with things like vmmemmap, page_address,
+virt_to_page etc... Do you have similar issues on arm64 ?
+
+ - We need to ensure that the mechanism (which I'm not familiar with)
+that you use to create the struct page's for the device don't end up
+turning those device pages into normal "general use" pages for the
+system. Oliver thinks it does, you say it doesn't, ... 
+
+Jerome (Glisse), what's your take on this ? Smells like something that
+could be covered by HMM...
+
+Logan, the only reason you need struct page's to begin with is for the
+DMA API right ? Or am I missing something here ?
+
+Cheers,
+Ben.
+
+> Thanks,
+> 
+> Logan
+> 
