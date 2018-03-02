@@ -1,106 +1,54 @@
-Return-Path: <SRS0=8z5t=F6=aosc.io=icenowy@kernel.org>
-Return-Path: <SRS0=8z5t=F6=aosc.io=icenowy@kernel.org>
-Message-ID: <1520488103.13063.1.camel@aosc.io>
-Subject: Re: Question about a quirky (DesignWare) PCIe RC in Allwinner H6
-From: Icenowy Zheng <icenowy@aosc.io>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Maxime Ripard
- <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
- linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>, Lorenzo
- Pieralisi <lorenzo.pieralisi@arm.com>, Jingoo Han <jingoohan1@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Marc Gonzalez
- <marc_gonzalez@sigmadesigns.com>
-Date: Thu, 08 Mar 2018 13:48:23 +0800
-In-Reply-To: <20180306233832.GC33706@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520261458.33502.10.camel@aosc.io>
-	 <20180305214718.GC255556@bhelgaas-glaptop.roam.corp.google.com>
-	 <1520308623.33502.13.camel@aosc.io>
-	 <20180306233832.GC33706@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <SRS0=SU4p=FY=arm.com=will.deacon@kernel.org>
+Return-Path: <SRS0=SU4p=FY=arm.com=will.deacon@kernel.org>
+Date: Fri, 2 Mar 2018 18:02:20 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+	Nate Watterson <nwatters@codeaurora.org>,
+	"shankerd@codeaurora.org" <shankerd@codeaurora.org>,
+	Vikram Sethi <vikrams@codeaurora.org>,
+	"Goel, Sameer" <sgoel@codeaurora.org>, kexec@lists.infradead.org,
+	Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: RFC on Kdump and PCIe on ARM64
+Message-ID: <20180302180219.GB20579@arm.com>
+References: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
+ <20180301190552.GK13722@bhelgaas-glaptop.roam.corp.google.com>
+ <2b2de17c-8527-e49b-2ef2-2a3d1801e4f9@codeaurora.org>
+ <20180302000303.GD74737@bhelgaas-glaptop.roam.corp.google.com>
+ <20180302103032.GB19323@arm.com>
+ <84121a8d-5294-0567-6c6b-f57e85dc4961@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <84121a8d-5294-0567-6c6b-f57e85dc4961@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-在 2018-03-06二的 17:38 -0600，Bjorn Helgaas写道：
-> [+cc Marc]
+On Fri, Mar 02, 2018 at 09:12:29AM -0500, Sinan Kaya wrote:
+> On 3/2/2018 5:30 AM, Will Deacon wrote:
+> >> Do you really have to reset the IOMMU?  Can you just give it new page
+> >> tables that start out with all IOVAs from all devices being invalid,
+> >> then add valid mappings as drivers need them (presumably after the
+> >> driver has done whatever it needs to so the device stops using the old
+> >> DMA addresses)?
+> > We already have the option to do that via the command line using the
+> > disable_bypass option, so it just sounds like we need to take this into
+> > account when resetting the SMMU to take care that GBPA is configured so
+> > that transactions are terminated when SMMUEN=0.
 > 
-> On Tue, Mar 06, 2018 at 11:57:03AM +0800, Icenowy Zheng wrote:
-> > 在 2018-03-05一的 15:47 -0600，Bjorn Helgaas写道：
-> > > On Mon, Mar 05, 2018 at 10:50:58PM +0800, Icenowy Zheng wrote:
-> > > > Hi everyone,
-> > > > 
-> > > > I'm trying to implement a driver for the quirky (DW) PCIe RC in
-> > > > the
-> > > > Allwinner H6 SoC.
-> > > > 
-> > > > The quirk is that only the "dbi" space is always mapped, but at
-> > > > the
-> > > > same time only 64KiB of other spaces (config, downstream IO and
-> > > > non-
-> > > > prefetchable memory) are accessible. To access a certain
-> > > > address
-> > > > the
-> > > > high 16-bit of the address (all bus addresses in H6 SoC are 32-
-> > > > bit
-> > > > despite the CPU is 64-bit) needs to be written into the
-> > > > PCIE_ADDR_PAGE_CFG register (a vendor-defined register in DBI
-> > > > space).
-> > > > So the access to these spaces cannot be processed correctly
-> > > > with
-> > > > just
-> > > > readl/writel, as the existing code does.
-> > > > 
-> > > > Is it possible to workaround this in the PCI subsystem of
-> > > > Linux?
-> > > > 
-> > > > (I have thought a workaround that only maps the current
-> > > > accessible
-> > > > 64KiB with the MMU, and when accessing the non-accessible part,
-> > > > catch
-> > > > the page fault and re-setup the map to the new 64KiB page. But
-> > > > surely
-> > > > it will kill the performance.)
-> > > 
-> > > If you only need to write to PCIE_ADDR_PAGE_CFG for *config*
-> > > accesses,
-> > > this should be easy.  All config accesses go through wrappers
-> > > (pci_read_config_word(), etc) and several host bridge drivers
-> > > have to
-> > > update a register with parts of the config address, e.g.,
-> > > advk_pcie_rd_conf(), mvebu_pcie_hw_rd_conf().
-> > > 
-> > > It sounds like you also need to update PCIE_ADDR_PAGE_CFG for I/O
-> > > port
-> > > accesses.  I/O port accesses do go through a wrapper (inb(),
-> > > etc), so
-> > > it might be possible in principle to intercept these, although
-> > > much
-> > > more difficult than config accesses, because the config accesses
-> > > are
-> > > already set up with per-host bridge hooks, while the I/O port
-> > > accessors are mostly per-arch.
-> > > 
-> > > But if you have to update PCIE_ADDR_PAGE_CFG for memory accesses,
-> > > that's really a problem because drivers are allowed to
-> > > essentially
-> > > read a memory BAR, convert that bus address to a CPU physical
-> > > memory
-> > > address, ioremap() it, then directly access the PCIe memory with
-> > > loads
-> > > and stores.
-> > 
-> > Unfortunately this is the case. All above (config, IO, memory)
-> > needs
-> > PCIE_ADDR_PAGE_CFG update.
-> 
-> tango_pcie_probe() has a similar issue.  We don't have a good
-> solution
-> there, so we just live with the fact that the platform will be
-> unreliable.
+> How about the points that Baoquan highlighted in his email regarding the
+> solution from AMD and X86?
 
-It's still less quirky than Allwinner H6 PCIe. It's only a config/MMIO
-mux on tango; however on H6 PCIe both config space and MMIO space are
-splitted to many pages. So on H6 if no solution is worked out, it will
-not be unreliable -- it will be unusable instead.
+Which specific points do you think this proposal doesn't address?
 
-> 
-> Bjorn
+> I have not read the entire thread but, is this just a matter of following
+> what Bjorn recommended or there is more to it?
+
+I'm trying to say how I think Bjorn's idea can be implemented for SMMUv3.
+I basically want to avoid a situation where the SMMU driver tries to walk
+the in-memory data structures left by a previous kernel and infer the
+setup from that.
+
+Will
