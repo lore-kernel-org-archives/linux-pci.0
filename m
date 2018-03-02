@@ -1,134 +1,104 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=1EEN=FY=redhat.com=bhe@kernel.org>
+Return-Path: <SRS0=1EEN=FY=redhat.com=bhe@kernel.org>
+Date: Fri, 2 Mar 2018 09:44:02 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Vikram Sethi <vikrams@codeaurora.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
+	iommu@lists.linux-foundation.org,
+	"shankerd@codeaurora.org" <shankerd@codeaurora.org>,
+	linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+	"Goel, Sameer" <sgoel@codeaurora.org>,
+	David Woodhouse <dwmw2@infradead.org>, kexec@lists.infradead.org,
+	Nate Watterson <nwatters@codeaurora.org>
+Subject: Re: RFC on Kdump and PCIe on ARM64
+Message-ID: <20180302014402.GA32509@localhost.localdomain>
+References: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
+ <20180301190552.GK13722@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1519843555-982-1-git-send-email-fkan@apm.com>
-References: <1519843555-982-1-git-send-email-fkan@apm.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 1 Mar 2018 10:59:48 +0100
-Message-ID: <CAJZ5v0jMOLSEzC9F67TJpgP6Z0JN1dr2uwjfrNfwDkTR8OVGyg@mail.gmail.com>
-Subject: Re: [PATCH] PM / core: move device and its children to end of dpm list
-To: Feng Kan <fkan@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Linux PM <linux-pm@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <bhelgaas@google.com>,
- Toan Le <toanle@apm.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180301190552.GK13722@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 28, 2018 at 7:45 PM, Feng Kan <fkan@apm.com> wrote:
-> When bridge and its endpoint is enumated the devices are added to the
-> dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
-> This causes the bridge to be moved to the end of the dpm list when deferred
-> probe kicks in. The order of the dpm list for bridge and endpoint is
-> reversed.
->
-> Add reordering code to re-position the bridge and its children so the order
-> for suspend and resume is not altered.
->
-> Signed-off-by: Feng Kan <fkan@apm.com>
-> Signed-off-by: Toan Le <toanle@apm.com>
-> ---
->  drivers/base/core.c    | 20 ++++++++++++++++++++
->  drivers/base/dd.c      |  8 ++++----
->  include/linux/device.h |  3 +++
->  3 files changed, 27 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 110230d..0b4ad99 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -148,6 +148,26 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
->  }
->
->  /**
-> + * device_pm_reorder - reorder device and its children to end of dpm list
+On 03/01/18 at 01:05pm, Bjorn Helgaas wrote:
+> [+cc Joerg, David, iommu list]
+> 
+> On Thu, Mar 01, 2018 at 12:44:26PM -0500, Sinan Kaya wrote:
+> > Hi,
+> > 
+> > We are seeing IOMMU faults when booting the kdump kernel on ARM64.
+> > 
+> > [    7.220162] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x02 received:
+> > [    7.226123] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000010000000002
+> > [    7.232023] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
+> > [    7.237925] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
+> > [    7.243827] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
+> > 
+> > This is Nate's interpretation of the fault:
+> > 
+> > "The PCI device is sending transactions just after the SMMU was
+> > reset/reinitialized which is problematic because the device has not
+> > yet been added to the SMMU and thus should not be doing *any* DMA.
+> > DMA from the PCI devices should be quiesced prior to starting the
+> > crashdump kernel or you risk overwriting portions of memory you
+> > meant to preserve. In this case the SMMU was actually doing you a
+> > favor by blocking these errant DMA operations!!"
 
-Not just the children and not just dpm_list.
+This seems an known issue which existed on x86 arch with intel vt-d
+or amd-vi iommu deployed. Both of them have been fixed on x86. The root
+cause is that kexec/kdump jumping is a warm reboot, it skips
+bios/firmware. That left behind on-flight DMA which is started in 1st
+kernel, and on-going during kdump kernel bootup. Then iommu devices
+init will cause the on-flight DMA being stray and access those memory
+region violently until pci devices initialization.
 
-> + * @dev: current device pointer
-> + *
-> + * This is a lock held version of reordering the device to dpm list tail.
-> + * This will move the device to the end of the dpm list if it not registered.
-> + * Afterward, it will iterate through its children and do the same for them.
+On x86, for intel vt-d iommu, patches and discussion can be found here:
+https://lists.onap.org/pipermail/iommu/2015-May/012948.html
 
-This isn't entirely accurate as device_reorder_to_tail() does more than that.
+Finally, Joerg made a formal fix to make it.
 
-> + */
-> +void device_pm_reorder(struct device *dev)
+On amd-iommu, I made a patchset with Joerg's help.
 
-I'd call it device_pm_move_to_tail() as that's what it does.
+http://linux.kernel.narkive.com/Przi0Xaf/patch-v10-00-12-fix-the-on-flight-dma-issue-on-system-with-amd-iommu
 
-"Reorder" is sort of overly generic IMO.
+On arm64, not sure how different the smmu is, you might need to do the
+similar thing. Personal opinion, just for reference.
 
-> +{
-> +       int idx;
-> +
-> +       idx = device_links_read_lock();
-> +       device_pm_lock();
-> +       device_reorder_to_tail(dev, NULL);
-> +       device_pm_unlock();
-> +       device_links_read_unlock(idx);
-> +}
-> +EXPORT_SYMBOL_GPL(device_pm_reorder);
+Thanks
+Baoquan
 
-It is not necessary to export this symbol.
-
-> +
-> +/**
->   * device_link_add - Create a link between two devices.
->   * @consumer: Consumer end of the link.
->   * @supplier: Supplier end of the link.
-> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-> index 2c964f5..3223a30 100644
-> --- a/drivers/base/dd.c
-> +++ b/drivers/base/dd.c
-> @@ -121,11 +121,11 @@ static void deferred_probe_work_func(struct work_struct *work)
->                  * Force the device to the end of the dpm_list since
->                  * the PM code assumes that the order we add things to
->                  * the list is a good order for suspend but deferred
-> -                * probe makes that very unsafe.
-> +                * probe makes that very unsafe. Also move any children
-> +                * belong to the device to the end of the list as well.
-> +                * This way the suspend resume order won't be corrupted.
->                  */
-> -               device_pm_lock();
-> -               device_pm_move_last(dev);
-> -               device_pm_unlock();
-> +               device_pm_reorder(dev);
->
->                 dev_dbg(dev, "Retrying from deferred list\n");
->                 if (initcall_debug && !initcalls_done)
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index 9d32000..1ec12d5 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -1272,6 +1272,9 @@ extern void devm_device_remove_group(struct device *dev,
->  /* debugging and troubleshooting/diagnostic helpers. */
->  extern const char *dev_driver_string(const struct device *dev);
->
-> +/* reorder device and its children to end of dpm list */
-> +void device_pm_reorder(struct device *dev);
-
-And this header can go into drivers/base/base.h as Bjorn said.
-
-> +
->  /* Device links interface. */
->  struct device_link *device_link_add(struct device *consumer,
->                                     struct device *supplier, u32 flags);
-> --
-> 1.8.3.1
->
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > 
+> > I think this makes sense especially for the IOMMU enabled case on
+> > the host where an IOVA can overlap with the region of memory kdump
+> > reserved for itself.
+> > 
+> > Apparently, there has been similar concerns in the past.
+> > 
+> > https://www.fujitsu.com/jp/documents/products/software/os/linux/catalog/LinuxConJapan2013-Indoh.pdf
+> > 
+> > and was not addressed globally due to IOMMU+PCI driver ordering
+> > issues and bugs in HW due to hot reset.
+> > 
+> > https://lkml.org/lkml/2012/8/3/160
+> > 
+> > Hot reset as mentioned is destructive and may not be the best
+> > implementation choice.  However, most of the modern endpoints
+> > support PCIE function level reset.
+> > 
+> > One other solution is for SMMUv3 driver to reserve the kdump used
+> > IOVA addresses.
+> > 
+> > Another solution is for the SMMUv3 driver to disable PCIe devices
+> > behind the SMMU if it see SMMU is already enabled.
+> 
+> What problem are you trying to solve?  If the IOMMU is blocking DMA
+> after the kdump kernel starts up, that sounds like the desired
+> behavior.
+> 
+> _______________________________________________
+> kexec mailing list
+> kexec@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/kexec
