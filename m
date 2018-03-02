@@ -1,114 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55682 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1031666AbeCAPJM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 10:09:12 -0500
-Date: Thu, 1 Mar 2018 09:09:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Fabio Estevam <festevam@gmail.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        project-aspen-dev@linaro.org
-Subject: Re: [PATCH v2 2/2] PCI: histb: add an optional regulator for PCIe
- port power control
-Message-ID: <20180301150910.GB13722@bhelgaas-glaptop.roam.corp.google.com>
-References: <1516722337-1533-1-git-send-email-shawn.guo@linaro.org>
- <1516722337-1533-3-git-send-email-shawn.guo@linaro.org>
+Received: from mail-it0-f41.google.com ([209.85.214.41]:51678 "EHLO
+        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1428218AbeCBReo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 12:34:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1516722337-1533-3-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <CA+55aFztf2D4NwEkRxnJkD6kK62CWKxmERbALMGoMgFEGLEJZA@mail.gmail.com>
+References: <20180228234006.21093-1-logang@deltatee.com> <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com> <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+ <1519936477.4592.23.camel@au1.ibm.com> <1519936815.4592.25.camel@au1.ibm.com>
+ <20180301205315.GJ19007@ziepe.ca> <1519942012.4592.31.camel@au1.ibm.com>
+ <CA+55aFy-oAiFJ3WDx4giR1enj65y-YJnZZhY6geFw0ygFyKXfQ@mail.gmail.com>
+ <1519943658.4592.34.camel@kernel.crashing.org> <1520010446.2693.19.camel@hpe.com>
+ <CA+55aFztf2D4NwEkRxnJkD6kK62CWKxmERbALMGoMgFEGLEJZA@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 2 Mar 2018 09:34:42 -0800
+Message-ID: <CA+55aFzc_d3EsWZbSWDY6MKRMXEcBpYAjB2h8DxZJTuvXf1DcQ@mail.gmail.com>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+To: "Kani, Toshi" <toshi.kani@hpe.com>
+Cc: "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "hch@lst.de" <hch@lst.de>, "axboe@kernel.dk" <axboe@kernel.dk>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "jglisse@redhat.com" <jglisse@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "maxg@mellanox.com" <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "keith.busch@intel.com" <keith.busch@intel.com>,
+        "oliveroh@au1.ibm.com" <oliveroh@au1.ibm.com>,
+        "jgg@ziepe.ca" <jgg@ziepe.ca>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 23, 2018 at 11:45:37PM +0800, Shawn Guo wrote:
-> The power supply to PCIe port are often controlled by GPIO on some board
-> designs.  Let's add an optional regulator which can be backed by GPIO to
-> control the power.
-> 
-> Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-> ---
->  .../bindings/pci/hisilicon-histb-pcie.txt           |  1 +
->  drivers/pci/dwc/pcie-histb.c                        | 21 +++++++++++++++++++++
->  2 files changed, 22 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-> index c84bc027930b..f995664e6d7f 100644
-> --- a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-> @@ -34,6 +34,7 @@ Required properties
->  
->  Optional properties:
->  - reset-gpios: The gpio to generate PCIe PERST# assert and deassert signal.
-> +- vpcie-supply: Should specify the regulator in charge of PCIe port power.
+On Fri, Mar 2, 2018 at 8:57 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> Like the page table caching entries, the memory type range registers
+> are really just "secondary information". They don't actually select
+> between PCIe and RAM, they just affect the behavior on top of that.
 
-s/Should specify the/The/
+Side note: historically the two may have been almost the same, since
+the CPU only had one single unified bus for "memory" (whether that was
+memory-mapped PCI or actual RAM). The steering was external.
 
->  - phys: List of phandle and phy mode specifier, should be 0.
->  - phy-names: Must be "phy".
->  
-> diff --git a/drivers/pci/dwc/pcie-histb.c b/drivers/pci/dwc/pcie-histb.c
-> index 6395394be5b4..8eb3028432b3 100644
-> --- a/drivers/pci/dwc/pcie-histb.c
-> +++ b/drivers/pci/dwc/pcie-histb.c
-> @@ -64,6 +64,7 @@ struct histb_pcie {
->  	struct reset_control *bus_reset;
->  	void __iomem *ctrl;
->  	int reset_gpio;
-> +	struct regulator *vpcie;
->  };
->  
->  static u32 histb_pcie_readl(struct histb_pcie *histb_pcie, u32 reg)
-> @@ -230,6 +231,9 @@ static void histb_pcie_host_disable(struct histb_pcie *hipcie)
->  
->  	if (gpio_is_valid(hipcie->reset_gpio))
->  		gpio_set_value_cansleep(hipcie->reset_gpio, 0);
-> +
-> +	if (hipcie->vpcie)
-> +		regulator_disable(hipcie->vpcie);
->  }
->  
->  static int histb_pcie_host_enable(struct pcie_port *pp)
-> @@ -240,6 +244,14 @@ static int histb_pcie_host_enable(struct pcie_port *pp)
->  	int ret;
->  
->  	/* power on PCIe device if have */
-> +	if (hipcie->vpcie) {
-> +		ret = regulator_enable(hipcie->vpcie);
-> +		if (ret) {
-> +			dev_err(dev, "failed to enable regulator: %d\n", ret);
-> +			return ret;
-> +		}
-> +	}
-> +
->  	if (gpio_is_valid(hipcie->reset_gpio))
->  		gpio_set_value_cansleep(hipcie->reset_gpio, 1);
->  
-> @@ -285,6 +297,8 @@ static int histb_pcie_host_enable(struct pcie_port *pp)
->  err_sys_clk:
->  	clk_disable_unprepare(hipcie->bus_clk);
->  err_bus_clk:
-> +	if (hipcie->vpcie)
-> +		regulator_disable(hipcie->vpcie);
->  
->  	return ret;
->  }
-> @@ -334,6 +348,13 @@ static int histb_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(pci->dbi_base);
->  	}
->  
-> +	hipcie->vpcie = devm_regulator_get_optional(dev, "vpcie");
-> +	if (IS_ERR(hipcie->vpcie)) {
-> +		if (PTR_ERR(hipcie->vpcie) == -EPROBE_DEFER)
-> +			return -EPROBE_DEFER;
-> +		hipcie->vpcie = NULL;
-> +	}
-> +
->  	hipcie->reset_gpio = of_get_named_gpio_flags(np,
->  				"reset-gpios", 0, &of_flags);
->  	if (of_flags & OF_GPIO_ACTIVE_LOW)
-> -- 
-> 1.9.1
-> 
+But even back then you had extended bits to specify things like how
+the 640k-1M region got remapped - which could depend on not just the
+address, but on whether you read or wrote to it.  The "lost" 384kB of
+RAM could either be remapped at a different address, or could be used
+for shadowing the (slow) ROM contents, or whatever.
+
+              Linus
