@@ -1,89 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:46229 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750933AbeCFKkx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 05:40:53 -0500
+Return-Path: <SRS0=SU4p=FY=arm.com=will.deacon@kernel.org>
+Return-Path: <SRS0=SU4p=FY=arm.com=will.deacon@kernel.org>
+Date: Fri, 2 Mar 2018 10:30:32 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+	Nate Watterson <nwatters@codeaurora.org>,
+	"shankerd@codeaurora.org" <shankerd@codeaurora.org>,
+	Vikram Sethi <vikrams@codeaurora.org>,
+	"Goel, Sameer" <sgoel@codeaurora.org>, kexec@lists.infradead.org,
+	Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: RFC on Kdump and PCIe on ARM64
+Message-ID: <20180302103032.GB19323@arm.com>
+References: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
+ <20180301190552.GK13722@bhelgaas-glaptop.roam.corp.google.com>
+ <2b2de17c-8527-e49b-2ef2-2a3d1801e4f9@codeaurora.org>
+ <20180302000303.GD74737@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <416d8d27-200f-befb-1c30-14544fffcba0@deltatee.com>
-References: <20180228234006.21093-1-logang@deltatee.com> <20180228234006.21093-8-logang@deltatee.com>
- <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
- <20180305160004.GA30975@localhost.localdomain> <3f56c76d-6a5c-7c2f-5442-c9209749b598@deltatee.com>
- <CAOSf1CHvaz0QTCkptQwsdyPp6uvvHqtM51N0MfrO9RqYf9W0tg@mail.gmail.com> <416d8d27-200f-befb-1c30-14544fffcba0@deltatee.com>
-From: Oliver <oohall@gmail.com>
-Date: Tue, 6 Mar 2018 21:40:51 +1100
-Message-ID: <CAOSf1CG3jdx9RdhCgq+d0fdYLLByhknsXfkUYwigzQzZM0xfGw@mail.gmail.com>
-Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the CMB
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180302000303.GD74737@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 6, 2018 at 12:14 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->
-> On 05/03/18 05:49 PM, Oliver wrote:
->>
->> It's in arch/powerpc/kernel/io.c as _memcpy_toio() and it has two full
->> barriers!
->>
->> Awesome!
->>
->> Our io.h indicates that our iomem accessors are designed to provide x86ish
->> strong ordering of accesses to MMIO space. The git log indicates
->> arch/powerpc/kernel/io.c has barely been touched in the last decade so
->> odds are most of that code was written in the elder days when people
->> were less aware of ordering issues. It might just be overly conservative
->> by today's standards, but maybe not (see below).
->
->
-> Yes, that seems overly conservative.
->
->> (I'm not going to suggest ditching the lwsync trick. mpe is not going
->> to take that patch
->> without a really good reason)
->
->
-> Well, that's pretty gross. Is this not exactly the situation mmiowb() is
-> meant to solve? See [1].
+On Thu, Mar 01, 2018 at 06:03:03PM -0600, Bjorn Helgaas wrote:
+> On Thu, Mar 01, 2018 at 02:19:09PM -0500, Sinan Kaya wrote:
+> > On 3/1/2018 2:05 PM, Bjorn Helgaas wrote:
+> > > On Thu, Mar 01, 2018 at 12:44:26PM -0500, Sinan Kaya wrote:
+> > >> Hi,
+> > >>
+> > >> We are seeing IOMMU faults when booting the kdump kernel on ARM64.
+> > >>
+> > >> [    7.220162] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x02 received:
+> > >> [    7.226123] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000010000000002
+> > >> [    7.232023] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
+> > >> [    7.237925] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
+> > >> [    7.243827] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
+> > >>
+> > >> This is Nate's interpretation of the fault:
+> > >>
+> > >> "The PCI device is sending transactions just after the SMMU was
+> > >> reset/reinitialized which is problematic because the device has not
+> > >> yet been added to the SMMU and thus should not be doing *any* DMA.
+> > >> DMA from the PCI devices should be quiesced prior to starting the
+> > >> crashdump kernel or you risk overwriting portions of memory you
+> > >> meant to preserve. In this case the SMMU was actually doing you a
+> > >> favor by blocking these errant DMA operations!!"
+> > >>
+> > >> I think this makes sense especially for the IOMMU enabled case on
+> > >> the host where an IOVA can overlap with the region of memory kdump
+> > >> reserved for itself.
+> > >>
+> > >> Apparently, there has been similar concerns in the past.
+> > >>
+> > >> https://www.fujitsu.com/jp/documents/products/software/os/linux/catalog/LinuxConJapan2013-Indoh.pdf
+> > >>
+> > >> and was not addressed globally due to IOMMU+PCI driver ordering
+> > >> issues and bugs in HW due to hot reset.
+> > >>
+> > >> https://lkml.org/lkml/2012/8/3/160
+> > >>
+> > >> Hot reset as mentioned is destructive and may not be the best
+> > >> implementation choice.  However, most of the modern endpoints
+> > >> support PCIE function level reset.
+> > >>
+> > >> One other solution is for SMMUv3 driver to reserve the kdump used
+> > >> IOVA addresses.
+> > >>
+> > >> Another solution is for the SMMUv3 driver to disable PCIe devices
+> > >> behind the SMMU if it see SMMU is already enabled.
+> > > 
+> > > What problem are you trying to solve?  If the IOMMU is blocking DMA
+> > > after the kdump kernel starts up, that sounds like the desired
+> > > behavior.
+> > > 
+> > 
+> > Three issues:
+> > 1. I'm seeing a flood of SMMUv3 faults due to adapter using
+> > addresses from the previous kernel. This might be OK. 
+> 
+> Yep.  That's cosmetic and we could suppress the messages if they were
+> a problem.
+> 
+> Isn't part of the point of an IOMMU protection against malicious
+> devices and drivers?  If so, we should be able to withstand an
+> arbitrary number of faults.
+> 
+> > 2. When the SMMUv3 driver sees that it is enabled, it resets itself
+> > and configures it one more time. 
+> > 
+> > [    7.018304] arm-smmu-v3 arm-smmu-v3.0.auto: ias 44-bit, oas 44-bit (features 0x00001fef)
+> > [    7.026379] arm-smmu-v3 arm-smmu-v3.0.auto: SMMU currently enabled! Resetting...
+> > 
+> > From the moment IOMMU is disabled to the point where IOMMU get
+> > enabled again, there is a potential for the PCIE device to corrupt
+> > the kdump kernel memory as the bus master and memory enable bits are
+> > left enabled.
+> 
+> Do you really have to reset the IOMMU?  Can you just give it new page
+> tables that start out with all IOVAs from all devices being invalid,
+> then add valid mappings as drivers need them (presumably after the
+> driver has done whatever it needs to so the device stops using the old
+> DMA addresses)?
 
-Yep, mmiowb() is supposed to be used in this situation. According to BenH,
-author of that io_sync hack, we implement the stronger semantics
-so that we don't break existing drivers that assume spin_unlock() does
-order i/o even though it's not supposed to. At a guess the x86 version of
-spin_unlock() happens to do that so the rest of us need to either live
-with it or fix all the bugs :)
+We already have the option to do that via the command line using the
+disable_bypass option, so it just sounds like we need to take this into
+account when resetting the SMMU to take care that GBPA is configured so
+that transactions are terminated when SMMUEN=0.
 
-> Though, you're right in principle. Even if power was similar to other
-> systems in this way, it's still a risk that if these pages get passed
-> somewhere in the kernel that uses a spin lock like that without an mmiowb()
-> call, then it's going to have a bug. For now, the risk is pretty low as we
-> know exactly where all the p2pmem pages will be used but if it gets into
-> other places, all bets are off.
-
-Yeah this was my main concern with the whole approach. For ioremap()ed
-memory we have the __iomem annotation to help with tracking when we
-need to be careful, but we'd lose that entirely here.
-
-> I did do some work trying to make a safe
-> version of io-pages and also trying to change from pages to pfn_t in large
-> areas but neither approach seemed likely to get any traction in the
-> community, at least not in the near term.
-
-It's a tricky problem. HMM with DEVICE_PRIVATE might be more
-palatable than the pfn_t conversion since there would still be struct pages
-backing the device memory. That said, there are probably other issues with
-device private memory not being part of the linear mapping, but HMM
-provides some assistance there.
-
-Oliver
+Will
