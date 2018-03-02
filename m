@@ -1,59 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40632 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751455AbeCUJf2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 05:35:28 -0400
-Date: Wed, 21 Mar 2018 10:35:25 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        m.szyprowski@samsung.com, bhelgaas@google.com, zajec5@gmail.com,
-        andy.gross@linaro.org, david.brown@linaro.org,
-        dan.j.williams@intel.com, vinod.koul@intel.com,
-        thierry.reding@gmail.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com
-Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
-Message-ID: <20180321093525.GT14085@kroah.com>
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
- <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:39670 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1946347AbeCBKgj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Mar 2018 05:36:39 -0500
+From: Hans de Goede <hdegoede@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-pci@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: [PATCH 2/2] PCI: Add function 1 DMA alias quirk for Highpoint RocketRAID 644L
+Date: Fri,  2 Mar 2018 11:36:33 +0100
+Message-Id: <20180302103633.10592-3-hdegoede@redhat.com>
+In-Reply-To: <20180302103633.10592-1-hdegoede@redhat.com>
+References: <20180302103633.10592-1-hdegoede@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 12:25:23PM +0530, Nipun Gupta wrote:
-> With each bus implementing its own DMA configuration callback,
-> there is no need for bus to explicitly have force_dma in its
-> global structure. This patch modifies of_dma_configure API to
-> accept an input parameter which specifies if implicit DMA
-> configuration is required even when it is not described by the
-> firmware.
+The Highpoint RocketRAID 644L uses a Marvel 88SE9235 controller, as with
+other Marvel controllers this needs a function 1 DMA alias quirk.
 
-Having to "remember" what that bool variable means on the end of the
-function call is a royal pain over time, right?
+Note the RocketRAID 642L uses the same Marvel 88SE9235 controller and
+already is listed with a function 1 DMA alias quirk.
 
-Why not just create a new function:
-	dma_common_configure_force(dma)
-that always does this?  Leave "dma_common_configure()" alone, and then
-wrap the old code with these two helper functions that call the 'core'
-code with the bool set properly?
+Cc: stable@vger.kernel.org
+BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1534106
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/pci/quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-That way you do not have to "know" what that parameter is, the function
-name just documents it automatically, so when you see it in the
-bus-specific code, no need to go and have to hunt for anything.  And if
-you are reading the dma core code, it's obvious what is happening as the
-functions are all right there.
-
-thanks,
-
-greg k-h
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 8b14bd326d4a..46d47bd6ca1f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3908,6 +3908,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
+ 			 quirk_dma_func1_alias);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0642,
+ 			 quirk_dma_func1_alias);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0645,
++			 quirk_dma_func1_alias);
+ /* https://bugs.gentoo.org/show_bug.cgi?id=497630 */
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+ 			 PCI_DEVICE_ID_JMICRON_JMB388_ESD,
+-- 
+2.14.3
