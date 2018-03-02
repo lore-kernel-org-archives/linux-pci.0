@@ -1,59 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f176.google.com ([209.85.216.176]:38151 "EHLO
-        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750910AbeCNPb0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 11:31:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180314085601.GD28796@lst.de>
-References: <20180313212508.3553.65326.stgit@localhost.localdomain>
- <20180313213054.3553.89366.stgit@localhost.localdomain> <20180314085601.GD28796@lst.de>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Wed, 14 Mar 2018 08:31:24 -0700
-Message-ID: <CAKgT0UcotCGAQZjT8SWp0+HeHasyt0UV8M_Ev_zi08jV1uvp8w@mail.gmail.com>
-Subject: Re: [pci PATCH v6 5/5] pci-pf-stub: Add PF driver stub for PFs that
- function only to enable VFs
-To: Christoph Hellwig <hch@lst.de>
+Received: from foss.arm.com ([217.140.101.70]:55724 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1424525AbeCBOJR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Mar 2018 09:09:17 -0500
+Date: Fri, 2 Mar 2018 14:09:08 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Guo <shawn.guo@linaro.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
-        Don Dutile <ddutile@redhat.com>,
-        Maximilian Heyne <mheyne@amazon.de>,
-        "Wang, Liang-min" <liang-min.wang@intel.com>,
-        "Rustad, Mark D" <mark.d.rustad@intel.com>,
-        David Woodhouse <dwmw2@infradead.org>, dwmw@amazon.co.uk
-Content-Type: text/plain; charset="UTF-8"
+        Rob Herring <robh+dt@kernel.org>,
+        Fabio Estevam <festevam@gmail.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Jiancheng Xue <xuejiancheng@hisilicon.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 0/2] Add power control for pcie-histb driver
+Message-ID: <20180302140908.GA15719@e107981-ln.cambridge.arm.com>
+References: <1519953121-28218-1-git-send-email-shawn.guo@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519953121-28218-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 1:56 AM, Christoph Hellwig <hch@lst.de> wrote:
->> +
->> +/**
->> + * pci_pf_stub_white_list - White list of devices to bind pci-pf-stub onto
->> + *
->> + * This table provides the list of IDs this driver is supposed to bind
->> + * onto. You could think of this as a list of "quirked" devices where we
->> + * are adding support for SR-IOV here since there are no other drivers
->> + * that they would be running under.
->> + *
->> + * Layout of the table below is as follows:
->> + * { Vendor ID, Device ID,
->> + *   SubVendor ID, SubDevice ID,
->> + *   Class, Class Mask,
->> + *   private data (not used) }
->> + */
->
-> No need to document the PCI device table format in a random driver.
+On Fri, Mar 02, 2018 at 09:11:59AM +0800, Shawn Guo wrote:
+> It adds power control support for pcie-histb driver, by utilizing
+> regulator infrastructural.
+> 
+> Changes for v3:
+>  - Incorporate Rob's ACK on bindings doc.
+>  - Capitalize  the first word of patch subject to match drivers/pci
+>    convention.
+>  - Reword vpcie-supply description a bit as per Bjorn's suggestion.
+> 
+> Shawn Guo (2):
+>   PCI: histb: Fix error path of histb_pcie_host_enable()
+>   PCI: histb: Add an optional regulator for PCIe port power control
+> 
+>  .../bindings/pci/hisilicon-histb-pcie.txt          |  1 +
+>  drivers/pci/dwc/pcie-histb.c                       | 28 ++++++++++++++++++----
+>  2 files changed, 25 insertions(+), 4 deletions(-)
 
-I realize this probably isn't necessary, but I wanted to document it
-to make it clear in terms of layout so that it is't confused with the
-quirk structure layout since this has been referred to as a "quirk"
-driver a few times.
+Series applied to pci/dwc for v4.17, thanks.
 
-> Otherwise looks fine:
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Lorenzo
