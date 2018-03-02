@@ -1,71 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60120 "EHLO mail.kernel.org"
+Received: from mga14.intel.com ([192.55.52.115]:2929 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752416AbeC1ThT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Mar 2018 15:37:19 -0400
-Date: Wed, 28 Mar 2018 14:37:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alan Douglas <adouglas@cadence.com>
-Cc: Niklas Cassel <niklas.cassel@axis.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "cyrille.pitchen@free-electrons.com"
-        <cyrille.pitchen@free-electrons.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
+        id S935863AbeCBGyW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Mar 2018 01:54:22 -0500
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Alexander Duyck <alexander.duyck@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v5 07/12] PCI: cadence: Set PCI_BASE_ADDRESS_MEM_TYPE_64
- if a 64-bit BAR was set-up
-Message-ID: <20180328193717.GA97213@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
- <20180328115018.31921-8-niklas.cassel@axis.com>
- <CO2PR07MB97221CD6D90F81C2D81D65BD8A30@CO2PR07MB972.namprd07.prod.outlook.com>
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        "dwmw@amazon.co.uk" <dwmw@amazon.co.uk>,
+        Ilya Lesokhin <ilyal@mellanox.com>,
+        Don Dutile <ddutile@redhat.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>
+Subject: RE: [PATCH] pci-iov: Add support for unmanaged SR-IOV
+Date: Fri, 2 Mar 2018 06:54:17 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D1910253B9@SHSMSX101.ccr.corp.intel.com>
+References: <20180227190520.3273.79728.stgit@localhost.localdomain>
+        <20180227144015.228d4f5c@w520.home>
+        <CAKgT0Ucq8vF9Kxx31QMG=OUwRr61vurHCPw5NCjxPhR_2JM5MQ@mail.gmail.com>
+        <CAKgT0Ufq7EHCErECEbK2urHczZSpOoJKR2a5GWn5BxhZshx0vA@mail.gmail.com>
+        <20180228155949.00fde8ae@w520.home>
+        <CAKgT0UeVZUB7h6g=Eqppt-6VP=X4=Ko3=kB_rh_1JanFJXZF9g@mail.gmail.com>
+ <20180301132224.1ca06949@w520.home>
+In-Reply-To: <20180301132224.1ca06949@w520.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CO2PR07MB97221CD6D90F81C2D81D65BD8A30@CO2PR07MB972.namprd07.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo]
-
-On Wed, Mar 28, 2018 at 01:24:10PM +0000, Alan Douglas wrote:
-> > On 28/03/2018 12:51, Niklas Cassel wrote:
-> > cdns_pcie_ep_set_bar() does some round-up of the BAR size, which means that a 64-bit BAR can be set-up, even when the flag
-> > PCI_BASE_ADDRESS_MEM_TYPE_64 isn't set.
+> From: Alex Williamson
+> Sent: Friday, March 2, 2018 4:22 AM
+> >
+> > I am pretty sure that you are describing is true of some, but not for
+> > all. I think the Amazon solutions and the virtio solution are doing
+> > hard partitioning of the part. I will leave it to those guys to speak
+> > for themselves since I don't know anything about the hardware design
+> > of those parts.
 > 
-> > If a 64-bit BAR was set-up, set the flag PCI_BASE_ADDRESS_MEM_TYPE_64, so that the calling function can know what BAR width that was actually set-up.
+> I think we'd need device specific knowledge and enablement to be able
+> to take advantage of any hardware partitioning, otherwise we need to
+> assume the pf is privileged, as implemented in other sriov devices.
 > 
-> > I'm not sure why cdns_pcie_ep_set_bar() doesn't obey the flag PCI_BASE_ADDRESS_MEM_TYPE_64, but I leave this for the MAINTAINER to fix, since there might be a reason why > this flag is ignored.
-> Will investigate and fix this in future patch
+> I'm also trying to imagine whether there's a solution via the new
+> vfio/mdev interface, where the mdev vendor driver would bind to the pf
+> and effectively present itself as the mdev device.  The vendor driver
+> could provide sriov capabilities and bear the burden of ensuring that
+> the pf is used cooperatively.  The only existing mdev vendor drivers are
+> vGPUs and rely on on-device DMA translation and isolation, such as
+> through GTTs, but there have been some thoughts on providing IOMMU
+> based
+> isolation of mdev/sriov mixed devices (assuming DMA is even required
+> for userspace management of the pf in this use case).  [Cc Kirti]
+> Thanks,
 > 
-> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > ---
-> >  drivers/pci/cadence/pcie-cadence-ep.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-> > index cef36cd6b710..2905e098678c 100644
-> > --- a/drivers/pci/cadence/pcie-cadence-ep.c
-> > +++ b/drivers/pci/cadence/pcie-cadence-ep.c
-> > @@ -106,6 +106,9 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
-> >  		if (is_64bits && (bar & 1))
-> >  			return -EINVAL;
-> >  
-> > +		if (is_64bits && !(flags & PCI_BASE_ADDRESS_MEM_TYPE_64))
-> > +			epf_bar->flags |= PCI_BASE_ADDRESS_MEM_TYPE_64;
-> > +
-> >  		if (is_64bits && is_prefetch)
-> >  			ctrl = CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_64BITS;
-> >  		else if (is_prefetch)
-> > --
-> > 2.14.2
-> Change looks good to me.
 
-It will be helpful to Lorenzo if you spell this out, e.g.,
+Hope not distracting this thread, but above sounds like an interesting
+idea. Actually we ever brainstormed similar thought for another 
+potential usage - supporting VF live migration. We are already working
+on an generic extension to allow state save/restore of mdev instance.
+If vendor driver could further wrap pf as a mdev instance, it could 
+leverage the same framework for a clean state migration on VF. based
+on mmap callback the vendor driver can easily switch back-and-forth
+between pass through and trap/emulation of the VF resources. Of
+course doing so alone doesn't address all the demands of VF live
+migration (e.g. dirty page tracking still requires other techniques), 
+but it does pave a way toward a general framework to support VF
+live migration.
 
-  Acked-by: Alan Douglas <adouglas@cadence.com>
+If above is feasible, finally we could use one mdev framework to
+manage both mdev and pf/vf assignment, while providing added
+values which are difficult to achieve today. :-)
 
-Also, it looks like we need a MAINTAINERS update to add
-drivers/pci/cadence/ to the "PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS"
-filename patterns.
+Thanks
+Kevin
