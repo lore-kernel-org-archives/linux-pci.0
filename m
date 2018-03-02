@@ -1,56 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr670093.outbound.protection.outlook.com ([40.107.67.93]:15047
-        "EHLO CAN01-TO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1162686AbeCAXAy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 18:00:54 -0500
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>,
-        Logan Gunthorpe <logang@deltatee.com>
-CC: Sagi Grimberg <sagi@grimberg.me>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 2 Mar 2018 11:42:07 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        "Alex Williamson" <alex.williamson@redhat.com>,
-        Steve Wise <swise@opengridcomputing.com>
-Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
-Date: Thu, 1 Mar 2018 23:00:51 +0000
-Message-ID: <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-11-logang@deltatee.com>
- <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
- <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
- <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
- <20180301184249.GI19007@ziepe.ca>
- <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
- <20180301224540.GL19007@ziepe.ca>
-In-Reply-To: <20180301224540.GL19007@ziepe.ca>
-Content-Type: text/plain; charset="utf-8"
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC 5/5] PCI: tegra: use seq_open_data
+Message-ID: <20180302104207.GB27178@ulmo>
+References: <20180301233724.20440-1-linux@rasmusvillemoes.dk>
+ <20180301233724.20440-5-linux@rasmusvillemoes.dk>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="CUfgB8w4ZwR/yMy5"
+In-Reply-To: <20180301233724.20440-5-linux@rasmusvillemoes.dk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pj4gV2UnZCBwcmVmZXIgdG8gaGF2ZSBhIGdlbmVyaWMgd2F5IHRvIGdldCBwMnBtZW0gaW5zdGVh
-ZCBvZiByZXN0cmljdGluZw0KPj4gb3Vyc2VsdmVzIHRvIG9ubHkgdXNpbmcgQ01Ccy4gV2UgZGlk
-IHdvcmsgaW4gdGhlIHBhc3Qgd2hlcmUgdGhlIFAyUCBtZW1vcnkNCiA+PiB3YXMgcGFydCBvZiBh
-biBJQiBhZGFwdGVyIGFuZCBub3QgdGhlIE5WTWUgY2FyZC4gU28gdGhpcyB3b24ndCB3b3JrIGlm
-IGl0J3MNCiAgPj4gYW4gTlZNZSBvbmx5IGludGVyZmFjZS4NCiAgICANCiA+IEl0IGp1c3Qgc2Vl
-bXMgbGlrZSBpdCBpdCBtYWtpbmcgaXQgdG9vIGNvbXBsaWNhdGVkLg0KDQpJIGRpc2FncmVlLiBI
-YXZpbmcgYSBjb21tb24gYWxsb2NhdG9yIChpbnN0ZWFkIG9mIHNvbWUgc2VwYXJhdGUgYWxsb2Nh
-dG9yIHBlciBkcml2ZXIpIG1ha2VzIHRoaW5ncyBzaW1wbGVyLg0KDQo+IFNlZW1zIGxpa2UgYSB2
-ZXJ5IHN1YnRsZSBhbmQgaGFyZCB0byBkZWJ1ZyBwZXJmb3JtYW5jZSB0cmFwIHRvIGxlYXZlDQo+
-IGZvciB0aGUgdXNlcnMsIGFuZCBwcmV0dHkgbXVjaCB0aGUgb25seSByZWFzb24gdG8gdXNlIFAy
-UCBpcw0KPiBwZXJmb3JtYW5jZS4uLiBTbyB3aHkgaGF2ZSBzdWNoIGEgZGFuZ2Vyb3VzIGludGVy
-ZmFjZT8NCg0KUDJQIGlzIGFib3V0IG9mZmxvYWRpbmcgdGhlIG1lbW9yeSBhbmQgUENJIHN1YnN5
-c3RlbSBvZiB0aGUgaG9zdCBDUFUgYW5kIHRoaXMgaXMgYWNoaWV2ZWQgbm8gbWF0dGVyIHdoaWNo
-IHAycF9kZXYgaXMgdXNlZC4NCg0KU3RlcGhlbg0KICAgIA0KDQo=
+
+--CUfgB8w4ZwR/yMy5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Mar 02, 2018 at 12:37:24AM +0100, Rasmus Villemoes wrote:
+> Simplify the code slightly by having seq_open_data do the ->private
+> assignment.
+>=20
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> ---
+>  drivers/pci/host/pci-tegra.c | 11 +----------
+>  1 file changed, 1 insertion(+), 10 deletions(-)
+
+I had to go hunt for patch 1/5 to be able to tell if this is indeed
+equivalent. It is, so:
+
+Reviewed-by: Thierry Reding <treding@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+--CUfgB8w4ZwR/yMy5
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqZKn8ACgkQ3SOs138+
+s6EmyRAAkzu5grx2iNvsqWgE/4+9sRZ97eRSEc4muVz5vPvuNNZ0aviU4rXZ9OCi
+1R73r8tc73U1LOTlHozRLIwvXiWMiv8vE9YzgUyoaj0Pllh44P0GK7PXiuPmktyo
+hUMpQwxEfQNtTR18svAFb0iKexFzLUhTndAvgRwmUb9stTkfEXX0HUMYb5vOD1t5
+NWbw8sO9lCUq++NUkiyKG9+mGK1M2YLAsGtbewYqqBqP0g68NPYBPHBaDzATZrvF
+z61G0Y0SzUg9F1oNmkDgUghDKlDzouhWxYBRVk37sCNg2CVkW+9+Exlcwi3lSNQI
+pDgykezDrCcC/sYJJ2wGQBiElrvtfGwJUJmI3eozKoDqvSI8o4r15EZozAuaAexL
+CBoJy9NfQBhqbFBl0HcteEqCLdqXmmA6sIleBbadQWjW+fvGsIyfyS4lGL2Cs8Sl
+qgkVe+iKhg4jRYFBTVKRbADdxxpBZ8hoty5I9ew+tcpWOWwOyjc1AZHM9n54J/IA
+Poj0tJmDgbfeC4J/AnSYpYXCm+P+2YxwprTzuOdIe2N8XMkiCj8jYKWOydWzZAEW
+eMHZ8vnyvmUWVgmHpo2KPo0nMGMc8KGqMAVOjbThUvh3ETvczyd+XhizMV/G9AvW
+W9/Ry5co8MP/2Eder/JT6ylcjwVcnVN3MtvMB8bjn2Xw3I2hHTE=
+=QeI3
+-----END PGP SIGNATURE-----
+
+--CUfgB8w4ZwR/yMy5--
