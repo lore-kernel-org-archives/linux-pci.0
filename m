@@ -1,107 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:50538 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751779AbeCET5f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Mar 2018 14:57:35 -0500
-Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the
- CMB
-To: Keith Busch <keith.busch@intel.com>, Oliver <oohall@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-block@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-8-logang@deltatee.com>
- <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
- <20180305160004.GA30975@localhost.localdomain>
-From: Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
-Date: Mon, 5 Mar 2018 21:57:27 +0200
+Received: from mail-io0-f194.google.com ([209.85.223.194]:36027 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935015AbeCBXpX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 18:45:23 -0500
+Subject: [PATCH 3/3] virtio_pci: Add support for unmanaged SR-IOV on
+ virtio_pci devices
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, dwmw@amazon.co.uk
+Date: Fri, 02 Mar 2018 15:45:20 -0800
+Message-ID: <20180302234459.3337.5625.stgit@localhost.localdomain>
+In-Reply-To: <20180302234218.3337.16486.stgit@localhost.localdomain>
+References: <20180302234218.3337.16486.stgit@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20180305160004.GA30975@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
->>> -       if (nvmeq->sq_cmds_io)
->>> -               memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
->>> -       else
->>> -               memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
->>> +       memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
->>
->> Hmm, how safe is replacing memcpy_toio() with regular memcpy()? On PPC
->> the _toio() variant enforces alignment, does the copy with 4 byte
->> stores, and has a full barrier after the copy. In comparison our
->> regular memcpy() does none of those things and may use unaligned and
->> vector load/stores. For normal (cacheable) memory that is perfectly
->> fine, but they can cause alignment faults when targeted at MMIO
->> (cache-inhibited) memory.
->>
->> I think in this particular case it might be ok since we know SEQs are
->> aligned to 64 byte boundaries and the copy is too small to use our
->> vectorised memcpy(). I'll assume we don't need explicit ordering
->> between writes of SEQs since the existing code doesn't seem to care
->> unless the doorbell is being rung, so you're probably fine there too.
->> That said, I still think this is a little bit sketchy and at the very
->> least you should add a comment explaining what's going on when the CMB
->> is being used. If someone more familiar with the NVMe driver could
->> chime in I would appreciate it.
-> 
-> I may not be understanding the concern, but I'll give it a shot.
-> 
-> You're right, the start of any SQE is always 64-byte aligned, so that
-> should satisfy alignment requirements.
-> 
-> The order when writing multiple/successive SQEs in a submission queue
-> does matter, and this is currently serialized through the q_lock.
-> 
-> The order in which the bytes of a single SQE is written doesn't really
-> matter as long as the entire SQE is written into the CMB prior to writing
-> that SQ's doorbell register.
-> 
-> The doorbell register is written immediately after copying a command
-> entry into the submission queue (ignore "shadow buffer" features),
-> so the doorbells written to commands submitted is 1:1.
-> 
-> If a CMB SQE and DB order is not enforced with the memcpy, then we do
-> need a barrier after the SQE's memcpy and before the doorbell's writel.
+Hardware-realized virtio_pci devices can implement SR-IOV, so this
+patch enables its use. The device in question is an upcoming Intel
+NIC that implements both a virtio_net PF and virtio_net VFs. These
+are hardware realizations of what has been up to now been a software
+interface.
 
-Keith, while we're on this, regardless of cmb, is SQE memcopy and DB 
-update ordering always guaranteed?
+The device in question has the following 4-part PCI IDs:
 
-If you look at mlx4 (rdma device driver) that works exactly the same as
-nvme you will find:
---
-                 qp->sq.head += nreq;
+PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
 
-                 /*
-                  * Make sure that descriptors are written before
-                  * doorbell record.
-                  */
-                 wmb();
+The patch currently needs no check for device ID, because the callback
+will never be made for devices that do not assert the capability or
+when run on a platform incapable of SR-IOV.
 
-                 writel(qp->doorbell_qpn,
-                        to_mdev(ibqp->device)->uar_map + 
-MLX4_SEND_DOORBELL);
+One reason for this patch is because the hardware requires the
+vendor ID of a VF to be the same as the vendor ID of the PF that
+created it. So it seemed logical to simply have a fully-functioning
+virtio_net PF create the VFs. This patch makes that possible.
 
-                 /*
-                  * Make sure doorbells don't leak out of SQ spinlock
-                  * and reach the HCA out of order.
-                  */
-                 mmiowb();
---
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+---
+ drivers/virtio/virtio_pci_common.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-That seems to explicitly make sure to place a barrier before updating
-the doorbell. So as I see it, either ordering is guaranteed and the
-above code is redundant, or nvme needs to do the same.
-
-Thoughts?
+diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+index 48d4d1cf1cb6..ca1549393255 100644
+--- a/drivers/virtio/virtio_pci_common.c
++++ b/drivers/virtio/virtio_pci_common.c
+@@ -584,6 +584,7 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+ 	else
+ 		virtio_pci_modern_remove(vp_dev);
+ 
++	pci_disable_sriov(pci_dev);
+ 	pci_disable_device(pci_dev);
+ 	put_device(dev);
+ }
+@@ -596,6 +597,9 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+ #ifdef CONFIG_PM_SLEEP
+ 	.driver.pm	= &virtio_pci_pm_ops,
+ #endif
++#ifdef CONFIG_PCI_IOV
++	.sriov_configure = pci_sriov_configure_unmanaged,
++#endif
+ };
+ 
+ module_pci_driver(virtio_pci_driver);
