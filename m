@@ -1,71 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51588 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751649AbeCNQf1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 12:35:27 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w2EGXjrU007829
-        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 12:35:27 -0400
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2gq446293e-1
-        (version=TLSv1.2 cipher=AES256-SHA256 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 12:35:27 -0400
-Received: from localhost
-        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <desnesn@linux.vnet.ibm.com>;
-        Wed, 14 Mar 2018 10:35:26 -0600
-From: "Desnes A. Nunes do Rosario" <desnesn@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
-        mpe@ellerman.id.au, ruscur@russell.cc, aik@ozlabs.ru,
-        david@gibson.dropbear.id.au, fbarrat@linux.vnet.ibm.com,
-        brking@linux.vnet.ibm.com
-Subject: [PATCH 0/2] Silent PCI realignment messages during boot
-Date: Wed, 14 Mar 2018 13:34:53 -0300
-Message-Id: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:45838 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936395AbeCBQSp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 11:18:45 -0500
+Received: by mail-pg0-f68.google.com with SMTP id i133so3950054pgc.12
+        for <linux-pci@vger.kernel.org>; Fri, 02 Mar 2018 08:18:44 -0800 (PST)
+Date: Fri, 2 Mar 2018 09:18:42 -0700
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Stephen Bates <sbates@raithlin.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
+Message-ID: <20180302161842.GB14861@ziepe.ca>
+References: <20180228234006.21093-11-logang@deltatee.com>
+ <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
+ <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
+ <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
+ <20180301184249.GI19007@ziepe.ca>
+ <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
+ <20180301224540.GL19007@ziepe.ca>
+ <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
+ <20180301234930.GG14799@localhost.localdomain>
+ <CE2A5D93-E735-4414-8DC1-B308B74A1C5B@raithlin.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CE2A5D93-E735-4414-8DC1-B308B74A1C5B@raithlin.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset introduces PCI_DEV_FLAGS_QUIET_PCI_REALIGN attribute in
-pci_dev_flags which informs the pci subsystem to suppress all realignment
-messages.
+On Thu, Mar 01, 2018 at 11:57:43PM +0000, Stephen  Bates wrote:
+> > We don't want to lump these all together without knowing which region you're allocating from, right?
+> 
+> In all seriousness I do agree with you on these Keith in the long
+> term. We would consider adding property flags for the memory as it
+> is added to the p2p core and then the allocator could evolve to
+> intelligently dish it out. Attributes like endurance, latency and
+> special write commit requirements could all become attributes in
+> time. Perhaps one more reason for a central entity for p2p memory
+> allocation so this code does not end up having to go into many
+> different drivers?
 
-Powerpc has aligned all of its PCI resources to its PAGE_SIZE, and this
-feature can be easily used on any other arch through the __weak
-pcibios_default_alignment() interface.
+I fear we will find that every kind of P2P memory has special
+allocator requirements and dumping it all into one giant pool is not
+going to be helpful.
 
-However, since all PCI resources will be now realigned during boot, the
-following messages will not only flood the system logs, but can be inter-
-preted as a false positive for total PCI failure on the system.
+This allocator is already seems not useful for the P2P target memory
+on a Mellanox NIC due to the way it has a special allocation flow
+(windowing) and special usage requirements..
 
-[root@system user]# dmesg | grep -i disabling
-[    0.692270] pci 0000:00:00.0: Disabling memory decoding and releasing memory resources
-[    0.692324] pci 0000:00:00.0: disabling bridge mem windows
-[    0.729134] pci 0001:00:00.0: Disabling memory decoding and releasing memory resources
-[    0.737352] pci 0001:00:00.0: disabling bridge mem windows
-[    0.776295] pci 0002:00:00.0: Disabling memory decoding and releasing memory resources
-[    0.784509] pci 0002:00:00.0: disabling bridge mem windows
-... and goes on for all PCI devices ...
+Nor can it be usefull for the doorbell memory in the NIC.
 
-Thus, this patchset provides a way for drivers to silent these messages if
-the PCI_DEV_FLAGS_QUIET_PCI_REALIGN is turned on. Moreover, it also
-tweaks this flag during boot on powerpc.
+Both of these are existing use cases for P2P with out of tree patches..
 
-Fixes: 38274637699 ("powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned")
-Signed-off-by: Desnes A. Nunes do Rosario <desnesn@linux.vnet.ibm.com>
+The allocator seems to only be able to solve the CMB problem, and I
+think due to that it is better to put this allocator in the NVMe
+driver and not the core code.. At least until we find a 2nd user that
+needs the same allocation scheme...
 
-Desnes A. Nunes do Rosario (2):
-  pci: Addition of PCI_DEV_FLAGS_QUIET_PCI_REALIGN attribute to the PCI
-    subsystem
-  powerpc/powernv: Tweak PCI_DEV_FLAGS_QUIET_PCI_REALIGN on/off during
-    boot
-
- arch/powerpc/platforms/powernv/pci.c | 14 ++++++++++++++
- drivers/pci/pci.c                    |  3 ++-
- drivers/pci/setup-res.c              |  3 ++-
- include/linux/pci.h                  |  2 ++
- 4 files changed, 20 insertions(+), 2 deletions(-)
-
--- 
-2.14.3
+Jason
