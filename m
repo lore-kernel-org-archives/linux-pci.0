@@ -1,61 +1,70 @@
-Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
-Date: Mon, 12 Mar 2018 11:33:01 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: poza@codeaurora.org
-Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philippe Ombredanne <pombredanne@nexb.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kate Stewart <kstewart@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
-	Timur Tabi <timur@codeaurora.org>, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
-Message-ID: <20180312173301.GD18494@localhost.localdomain>
-References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
- <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
- <04ade52e-d1ea-fe67-bb26-246621d159e6@codeaurora.org>
- <20180312142551.GB18494@localhost.localdomain>
- <3e1a2036675de6b8456145a022640f3d@codeaurora.org>
- <20180312145823.GC18494@localhost.localdomain>
- <eb2810113f98c2ff8201da1a0f827493@codeaurora.org>
+Return-Path: <SRS0=TzPi=FY=linaro.org=shawn.guo@kernel.org>
+Return-Path: <SRS0=TzPi=FY=linaro.org=shawn.guo@kernel.org>
+Date: Fri, 2 Mar 2018 08:43:04 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Fabio Estevam <festevam@gmail.com>,
+	Jianguo Sun <sunjianguo1@huawei.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Jiancheng Xue <xuejiancheng@hisilicon.com>
+Subject: Re: [PATCH v2 0/2] Add power control for pcie-histb driver
+Message-ID: <20180302004301.GB28619@dragon>
+References: <1516722337-1533-1-git-send-email-shawn.guo@linaro.org>
+ <20180301012241.GA28619@dragon>
+ <20180301150822.GA13722@bhelgaas-glaptop.roam.corp.google.com>
+ <20180301181119.GA5674@e107981-ln.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <eb2810113f98c2ff8201da1a0f827493@codeaurora.org>
+In-Reply-To: <20180301181119.GA5674@e107981-ln.cambridge.arm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 09:04:47PM +0530, poza@codeaurora.org wrote:
-> On 2018-03-12 20:28, Keith Busch wrote:
-> > I'm not sure I understand. The link is disabled while DPC is triggered,
-> > so if anything, you'd want to un-enumerate everything below the
-> > contained
-> > port (that's what it does today).
+On Thu, Mar 01, 2018 at 06:11:19PM +0000, Lorenzo Pieralisi wrote:
+> On Thu, Mar 01, 2018 at 09:08:22AM -0600, Bjorn Helgaas wrote:
+> > [+cc Lorenzo]
 > > 
-> > After releasing a slot from DPC, the link is allowed to retrain. If
-> > there
-> > is a working device on the other side, a link up event occurs. That
-> > event is handled by the pciehp driver, and that schedules enumeration
-> > no matter what you do to the DPC driver.
+> > On Thu, Mar 01, 2018 at 09:22:46AM +0800, Shawn Guo wrote:
+> > > On Tue, Jan 23, 2018 at 11:45:35PM +0800, Shawn Guo wrote:
+> > > > The first patch is a small fix which is useful for the second one.
+> > > > This version basically follows Fabio's suggestion to reimplement the
+> > > > first version patch, using a regulator that can be backed by GPIO to
+> > > > control the power to PCIe port.
+> > > > 
+> > > > Shawn Guo (2):
+> > > >   PCI: histb: fix error path of histb_pcie_host_enable()
+> > > >   PCI: histb: add an optional regulator for PCIe port power control
+> > > > 
+> > > >  .../bindings/pci/hisilicon-histb-pcie.txt          |  1 +
+> > > >  drivers/pci/dwc/pcie-histb.c                       | 28 ++++++++++++++++++----
+> > > >  2 files changed, 25 insertions(+), 4 deletions(-)
+> > > 
+> > > Hi Bjorn,
+> > > 
+> > > Did you get a chance to look at the series?
+> > 
+> > I cc'd Lorenzo, who is now taking care of this area.
+> > 
+> > If/when you repost this, please incorporate Rob's ack and capitalize
+> > the first word of your summary ("Fix", "Add") to match the drivers/pci
+> > convention.
+> > 
+> > Also, the original post used "PCI: hisi:", but here you use
+> > "PCI: histb:".  It probably does make sense to distinguish
+> > "hisi" from "histb", but I want it to be a conscious choice
+> > so future patches can be consistent with it.
 > 
-> yes, that is what i current, but this patch-set makes DPC aware of error
-> handling driver callbacks.
+> I suspect that using histb makes more sense but I will wait Shawn's
+> feedback on this,
 
-I've been questioning the utility of doing that since the very first
-version of this patch set.
+Yes, we want to distinguish the driver pcie-histb.c from pcie-hisi.c,
+and will consistently use "PCI: histb:" for this driver.
 
-> besides, in absence of pciehp there is nobody to do enumeration.
+> this series was on my radar anyway but thanks
+> for the flag up.
 
-If you configure your kernel to not have a feature, you don't get to
-expect the feature works.
+Cool.  I will keep you posted on v3.
 
-You can still manually rescan through sysfs, /sys/bus/pci/rescan.
- 
-> And, I was talking about pci_stop_and_remove_bus_device() in dpc.
-> if DPC calls driver's error callbacks, is it required to stop the devices  ?
+Thanks, Bjorn, Lorenzo.
 
-DPC is PCIe's preferred surprise removal mechanism. If you don't want
-the DPC driver to handle removing devices downstream the containment,
-how do you want those devices get removed? Just calling driver's error
-callbacks leaves the kernel's view of the topology in the wrong state.
+Shawn
