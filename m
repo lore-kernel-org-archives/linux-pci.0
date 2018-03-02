@@ -1,138 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:52114 "EHLO mail.bootlin.com"
+Received: from ale.deltatee.com ([207.54.116.67]:39994 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752139AbeC0OJY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Mar 2018 10:09:24 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Evan Wang <xswang@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v3 6/6] PCI: aardvark: remove PCIe outbound window configuration
-Date: Tue, 27 Mar 2018 16:08:12 +0200
-Message-Id: <20180327140819.23501-7-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
-References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
+        id S1163541AbeCBADT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Mar 2018 19:03:19 -0500
+To: Stephen Bates <sbates@raithlin.com>,
+        Keith Busch <keith.busch@intel.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Sagi Grimberg <sagi@grimberg.me>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-11-logang@deltatee.com>
+ <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
+ <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
+ <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
+ <20180301184249.GI19007@ziepe.ca>
+ <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
+ <20180301224540.GL19007@ziepe.ca>
+ <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
+ <20180301234930.GG14799@localhost.localdomain>
+ <CE2A5D93-E735-4414-8DC1-B308B74A1C5B@raithlin.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <9de7d9d1-3469-c315-ce47-0faa67a4e4c4@deltatee.com>
+Date: Thu, 1 Mar 2018 17:03:09 -0700
+MIME-Version: 1.0
+In-Reply-To: <CE2A5D93-E735-4414-8DC1-B308B74A1C5B@raithlin.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Evan Wang <xswang@marvell.com>
 
-Outbound window is used to translate CPU space addresses to PCIe space
-addresses when the CPU initiates PCIe transactions.
 
-According to the suggestion of the HW designers, the recommended
-solution is to use the default outbound parameters, even though the
-current outbound window setting does not cause any known functional
-issue.
+On 01/03/18 04:57 PM, Stephen  Bates wrote:
+>> We don't want to lump these all together without knowing which region you're allocating from, right?
+> 
+> In all seriousness I do agree with you on these Keith in the long term. We would consider adding property flags for the memory as it is added to the p2p core and then the allocator could evolve to intelligently dish it out. Attributes like endurance, latency and special write commit requirements could all become attributes in time. Perhaps one more reason for a central entity for p2p memory allocation so this code does not end up having to go into many different drivers?
 
-This patch doesn't address any known functional issue, but aligns to
-HW design guidelines, and removes code that isn't needed.
+Ugh, I don't know... An allocator for PMR is going to be quite a 
+different animal. It would probably need to look more like a filesystem 
+given you'd need to access the same regions across reboots. I don't 
+think it fits the p2pmem paradigm at all. I think it's something 
+entirely new all together and who knows exactly what it will look like.
 
-Signed-off-by: Evan Wang <xswang@marvell.com>
-Reviewed-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-aardvark.c | 55 -----------------------------------------
- 1 file changed, 55 deletions(-)
-
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index d0688dc6b6d9..d0559152b8e1 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -109,24 +109,6 @@
- #define PCIE_MSI_MASK_REG			(CONTROL_BASE_ADDR + 0x5C)
- #define PCIE_MSI_PAYLOAD_REG			(CONTROL_BASE_ADDR + 0x9C)
- 
--/* PCIe window configuration */
--#define OB_WIN_BASE_ADDR			0x4c00
--#define OB_WIN_BLOCK_SIZE			0x20
--#define OB_WIN_REG_ADDR(win, offset)		(OB_WIN_BASE_ADDR + \
--						 OB_WIN_BLOCK_SIZE * (win) + \
--						 (offset))
--#define OB_WIN_MATCH_LS(win)			OB_WIN_REG_ADDR(win, 0x00)
--#define OB_WIN_MATCH_MS(win)			OB_WIN_REG_ADDR(win, 0x04)
--#define OB_WIN_REMAP_LS(win)			OB_WIN_REG_ADDR(win, 0x08)
--#define OB_WIN_REMAP_MS(win)			OB_WIN_REG_ADDR(win, 0x0c)
--#define OB_WIN_MASK_LS(win)			OB_WIN_REG_ADDR(win, 0x10)
--#define OB_WIN_MASK_MS(win)			OB_WIN_REG_ADDR(win, 0x14)
--#define OB_WIN_ACTIONS(win)			OB_WIN_REG_ADDR(win, 0x18)
--
--/* PCIe window types */
--#define OB_PCIE_MEM				0x0
--#define OB_PCIE_IO				0x4
--
- /* LMI registers base address and register offsets */
- #define LMI_BASE_ADDR				0x6000
- #define CFG_REG					(LMI_BASE_ADDR + 0x0)
-@@ -245,34 +227,9 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
- 	return -ETIMEDOUT;
- }
- 
--/*
-- * Set PCIe address window register which could be used for memory
-- * mapping.
-- */
--static void advk_pcie_set_ob_win(struct advk_pcie *pcie,
--				 u32 win_num, u32 match_ms,
--				 u32 match_ls, u32 mask_ms,
--				 u32 mask_ls, u32 remap_ms,
--				 u32 remap_ls, u32 action)
--{
--	advk_writel(pcie, match_ls, OB_WIN_MATCH_LS(win_num));
--	advk_writel(pcie, match_ms, OB_WIN_MATCH_MS(win_num));
--	advk_writel(pcie, mask_ms, OB_WIN_MASK_MS(win_num));
--	advk_writel(pcie, mask_ls, OB_WIN_MASK_LS(win_num));
--	advk_writel(pcie, remap_ms, OB_WIN_REMAP_MS(win_num));
--	advk_writel(pcie, remap_ls, OB_WIN_REMAP_LS(win_num));
--	advk_writel(pcie, action, OB_WIN_ACTIONS(win_num));
--	advk_writel(pcie, match_ls | BIT(0), OB_WIN_MATCH_LS(win_num));
--}
--
- static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- {
- 	u32 reg;
--	int i;
--
--	/* Point PCIe unit MBUS decode windows to DRAM space */
--	for (i = 0; i < 8; i++)
--		advk_pcie_set_ob_win(pcie, i, 0, 0, 0, 0, 0, 0, 0);
- 
- 	/* Set to Direct mode */
- 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
-@@ -851,12 +808,6 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
--			advk_pcie_set_ob_win(pcie, 1,
--					     upper_32_bits(res->start),
--					     lower_32_bits(res->start),
--					     0,	0xF8000000, 0,
--					     lower_32_bits(res->start),
--					     OB_PCIE_IO);
- 			err = pci_remap_iospace(res, iobase);
- 			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
-@@ -865,12 +816,6 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 			}
- 			break;
- 		case IORESOURCE_MEM:
--			advk_pcie_set_ob_win(pcie, 0,
--					     upper_32_bits(res->start),
--					     lower_32_bits(res->start),
--					     0x0, 0xF8000000, 0,
--					     lower_32_bits(res->start),
--					     (2 << 20) | OB_PCIE_MEM);
- 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
- 			break;
- 		case IORESOURCE_BUS:
--- 
-2.14.3
+Logan
