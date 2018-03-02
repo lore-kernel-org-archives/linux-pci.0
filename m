@@ -1,74 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45554 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1161816AbeCAVZq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 16:25:46 -0500
-Date: Thu, 1 Mar 2018 16:25:42 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Message-ID: <20180301212541.GD6742@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
- <1519936195.4592.18.camel@au1.ibm.com>
- <20180301205548.GA6742@redhat.com>
- <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
- <20180301211036.GB6742@redhat.com>
- <8ed955f8-55c9-a2bd-1d58-90bf1dcfa055@deltatee.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <8ed955f8-55c9-a2bd-1d58-90bf1dcfa055@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
+References: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 2 Mar 2018 12:10:59 +0100
+Message-ID: <CAJZ5v0jY-psSy51ZvrgHKidGg5CK_4hK1UGbhnzXD_QQxyCvZg@mail.gmail.com>
+Subject: Re: [PATCH v2 0/4] x86, dmi: introduce and use dmi_get_bios_year()
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        Jean Delvare <jdelvare@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 02:15:01PM -0700, Logan Gunthorpe wrote:
-> 
-> 
-> On 01/03/18 02:10 PM, Jerome Glisse wrote:
-> > It seems people miss-understand HMM :( you do not have to use all of
-> > its features. If all you care about is having struct page then just
-> > use that for instance in your case only use those following 3 functions:
-> > 
-> > hmm_devmem_add() or hmm_devmem_add_resource() and hmm_devmem_remove()
-> > for cleanup.
-> 
-> To what benefit over just using devm_memremap_pages()? If I'm using the hmm
-> interface and disabling all the features, I don't see the point. We've also
-> cleaned up the devm_memremap_pages() interface to be more usefully generic
-> in such a way that I'd hope HMM starts using it too and gets rid of the code
-> duplication.
-> 
+On Thu, Mar 1, 2018 at 7:02 PM, Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+> Introduce a new helper to extract a year from DMI BIOS date since there
+> are most existing users do and newcomers would utilize as well.
+>
+> Ingo, this is respin of the patches in x86/platform. I think, if it's
+> possible to rebase, would be easier just to replace existing ones.
+>
+> Otherwise I would reorganize them as a series of fixups.
+>
+> Bjorn, Jean, Rafael, thank you for your reviews!
+>
+> Since v1:
+> - move the helper to be regular function (Bjorn, Rafael)
+> - fix a potential regression introduced in pci_acpi_crs_quirks() (Jean)
+> - adjust subject lines and commit message bodies (Bjorn)
+> - add tags (Bjorn, Jean)
+>
+> Andy Shevchenko (4):
+>   firmware: dmi_scan: Introduce the dmi_get_bios_year() helper
+>   x86/PCI: Simplify code by using the new dmi_get_bios_year() helper
+>   ACPI / sleep: Simplify code by using the new dmi_get_bios_year()
+>     helper
+>   PCI: Simplify code by using the new dmi_get_bios_year() helper
 
-The first HMM variant find a hole and do not require a resource as input
-parameter. Beside that internaly for PCIE device memory devm_memremap_pages()
-does not do the right thing last time i check it always create a linear
-mapping of the range ie HMM call add_pages() while devm_memremap_pages()
-call arch_add_memory()
+I can apply this or if you want to route it differently, please feel free to add
 
-When i upstreamed HMM, Dan didn't want me to touch devm_memremap_pages()
-to match my need. I am more than happy to modify devm_memremap_pages() to
-also handle HMM needs.
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Note that the intention of HMM is to be a middle layer between low level
-infrastructure and device driver. Idea is that such impedance layer should
-make it easier down the road to change how thing are handled down below
-without having to touch many device driver.
+to all of the patches in the series.
 
-Cheers,
-Jérôme
+Thanks!
