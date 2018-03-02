@@ -1,11 +1,13 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:39860 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1163339AbeCAXwk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 18:52:40 -0500
-To: Keith Busch <keith.busch@intel.com>,
-        Stephen Bates <sbates@raithlin.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Sagi Grimberg <sagi@grimberg.me>,
+Received: from mail-eopbgr670120.outbound.protection.outlook.com ([40.107.67.120]:34080
+        "EHLO CAN01-TO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933995AbeCBVis (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Mar 2018 16:38:48 -0500
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Jerome Glisse <jglisse@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+CC: Benjamin Herrenschmidt <benh@au1.ibm.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
@@ -13,48 +15,49 @@ Cc: Jason Gunthorpe <jgg@ziepe.ca>, Sagi Grimberg <sagi@grimberg.me>,
         "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Alex Williamson <alex.williamson@redhat.com>,
-        Steve Wise <swise@opengridcomputing.com>
+        Oliver OHalloran <oliveroh@au1.ibm.com>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Date: Fri, 2 Mar 2018 21:38:43 +0000
+Message-ID: <8D3B5C26-39E0-478D-B51F-A22B3F36C4D7@raithlin.com>
 References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-11-logang@deltatee.com>
- <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
- <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
- <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
- <20180301184249.GI19007@ziepe.ca>
- <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
- <20180301224540.GL19007@ziepe.ca>
- <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
- <20180301234930.GG14799@localhost.localdomain>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <34dc518d-b566-3e2a-8ad9-65d4f5d08a44@deltatee.com>
-Date: Thu, 1 Mar 2018 16:52:23 -0700
+ <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+ <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
+ <1519936195.4592.18.camel@au1.ibm.com> <20180301205548.GA6742@redhat.com>
+ <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
+ <20180301211036.GB6742@redhat.com>
+In-Reply-To: <20180301211036.GB6742@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180301234930.GG14799@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 01/03/18 04:49 PM, Keith Busch wrote:
-> On Thu, Mar 01, 2018 at 11:00:51PM +0000, Stephen  Bates wrote:
->>
->> P2P is about offloading the memory and PCI subsystem of the host CPU
->> and this is achieved no matter which p2p_dev is used.
-> 
-> Even within a device, memory attributes for its various regions may not be
-> the same. There's a meaningful difference between writing to an NVMe CMB
-> vs PMR, and a single device could have both. We don't want to lump these
-> all together without knowing which region you're allocating from, right?
-
-Yes, PMRs are a whole other beast. I have no idea what anyone is going 
-to actually do with those yet. But no one is proposing to publish them 
-as p2pmem with this code.
-
-Logan
+PiBJdCBzZWVtcyBwZW9wbGUgbWlzcy11bmRlcnN0YW5kIEhNTSA6KCANCg0KSGkgSmVyb21lDQoN
+CllvdXIgdW5oYXBweSBmYWNlIGVtb3RpY29uIG1hZGUgbWUgc2FkIHNvIEkgd2VudCBvZmYgdG8g
+KHJlKXJlYWQgdXAgb24gSE1NLiBBbG9uZyB0aGUgd2F5IEkgY2FtZSB1cCB3aXRoIGEgY291cGxl
+IG9mIHRoaW5ncy4NCg0KV2hpbGUgaG1tLnR4dCBpcyByZWFsbHkgbmljZSB0byByZWFkIGl0IG1h
+a2VzIG5vIG1lbnRpb24gb2YgREVWSUNFX1BSSVZBVEUgYW5kIERFVklDRV9QVUJMSUMuIEl0IGFs
+c28gZ2l2ZXMgbm8gaW5kaWNhdGlvbiB3aGVuIG9uZSBtaWdodCBjaG9vc2UgdG8gdXNlIG9uZSBv
+dmVyIHRoZSBvdGhlci4gV291bGQgaXQgYmUgcG9zc2libGUgdG8gdXBkYXRlIGhtbS50eHQgdG8g
+aW5jbHVkZSBzb21lIGRpc2N1c3Npb24gb24gdGhpcz8gSSB1bmRlcnN0YW5kIHRoYXQgREVWSUNF
+X1BVQkxJQyBjcmVhdGVzIGEgbWFwcGluZyBpbiB0aGUga2VybmVsJ3MgbGluZWFyIGFkZHJlc3Mg
+c3BhY2UgZm9yIHRoZSBkZXZpY2UgbWVtb3J5IGFuZCBERVZJQ0VfUFJJVkFURSBkb2VzIG5vdC4g
+SG93ZXZlciwgbGlrZSBJIHNhaWQsIEkgYW0gbm90IHN1cmUgd2hlbiB5b3Ugd291bGQgdXNlIGVp
+dGhlciBvbmUgYW5kIHRoZSBwcm9zIGFuZCBjb25zIG9mIGRvaW5nIHNvLiBJIGFjdHVhbGx5IGVu
+ZGVkIHVwIGZpbmRpbmcgc29tZSB1c2VmdWwgaW5mb3JtYXRpb24gaW4gbWVtcmVtYXAuaCBidXQg
+SSBkb24ndCB0aGluayBpdCBpcyBmYWlyIHRvIGV4cGVjdCBwZW9wbGUgdG8gZGlnICp0aGF0KiBk
+ZWVwIHRvIGZpbmQgdGhpcyBpbmZvcm1hdGlvbiA7LSkuDQoNCkEgcXVpY2sgZ3JlcCBzaG93cyBu
+byBkcml2ZXJzIHVzaW5nIHRoZSBITU0gQVBJIGluIHRoZSB1cHN0cmVhbSBjb2RlIHRvZGF5LiBJ
+cyB0aGlzIGNvcnJlY3Q/IEFyZSB0aGVyZSBhbnkgZXhhbXBsZXMgb2Ygb3V0IG9mIHRyZWUgZHJp
+dmVycyB0aGF0IHVzZSBITU0geW91IGNhbiBwb2ludCBtZSB0b28/IEFzIGEgZHJpdmVyIGRldmVs
+b3BlciB3aGF0IHJlc291cmNlcyBleGlzdCB0byBoZWxwIG1lIHdyaXRlIGEgSE1NIGF3YXJlIGRy
+aXZlcj8NCg0KVGhlICh2ZXJ5IG5pY2UpIGhtbS50eHQgZG9jdW1lbnQgaXMgbm90IHJlZmVyZW5j
+ZXMgaW4gdGhlIE1BSU5UQUlORVJTIGZpbGU/IFlvdSBtaWdodCB3YW50IHRvIGZpeCB0aGF0IHdo
+ZW4geW91IGhhdmUgYSBtb21lbnQuDQoNClN0ZXBoZW4NCg0KDQo=
