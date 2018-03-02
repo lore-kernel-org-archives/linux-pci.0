@@ -1,129 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:58209 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751232AbeCLMG1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 08:06:27 -0400
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V3 4/5] net/mlx4_core: Report PCI properties using dedicated function
-Date: Mon, 12 Mar 2018 14:06:09 +0200
-Message-Id: <1520856370-15404-5-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
-References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Hans de Goede <hdegoede@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-pci@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: [PATCH 1/2] ahci: Add PCI-id for the Highpoint Rocketraid 644L card
+Date: Fri,  2 Mar 2018 11:36:32 +0100
+Message-Id: <20180302103633.10592-2-hdegoede@redhat.com>
+In-Reply-To: <20180302103633.10592-1-hdegoede@redhat.com>
+References: <20180302103633.10592-1-hdegoede@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change mlx4 method of checking and reporting PCI status and
-maximum capabilities to use the pci driver functions instead
-of implementing them in the driver code.
+Like the Highpoint Rocketraid 642L and cards using a Marvel 88SE9235
+controller in general, this RAID card also supports AHCI mode and short
+of a custom driver, this is the only way to make it work under Linux.
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+Note that even though the card is called to 644L, it has a product-id
+of 0x0645.
+
+Cc: stable@vger.kernel.org
+BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1534106
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/net/ethernet/mellanox/mlx4/main.c | 81 +------------------------------
- 1 file changed, 1 insertion(+), 80 deletions(-)
+ drivers/ata/ahci.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-index 4d84cab..30cacac 100644
---- a/drivers/net/ethernet/mellanox/mlx4/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-@@ -623,85 +623,6 @@ static int mlx4_dev_cap(struct mlx4_dev *dev, struct mlx4_dev_cap *dev_cap)
- 	return 0;
- }
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 355a95a83a34..1ff17799769d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -550,7 +550,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
+ 	  .driver_data = board_ahci_yes_fbs },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0642),
++	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0642), /* highpoint rocketraid 642L */
++	  .driver_data = board_ahci_yes_fbs },
++	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0645), /* highpoint rocketraid 644L */
+ 	  .driver_data = board_ahci_yes_fbs },
  
--static int mlx4_get_pcie_dev_link_caps(struct mlx4_dev *dev,
--				       enum pci_bus_speed *speed,
--				       enum pcie_link_width *width)
--{
--	u32 lnkcap1, lnkcap2;
--	int err1, err2;
--
--#define  PCIE_MLW_CAP_SHIFT 4	/* start of MLW mask in link capabilities */
--
--	*speed = PCI_SPEED_UNKNOWN;
--	*width = PCIE_LNK_WIDTH_UNKNOWN;
--
--	err1 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP,
--					  &lnkcap1);
--	err2 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP2,
--					  &lnkcap2);
--	if (!err2 && lnkcap2) { /* PCIe r3.0-compliant */
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
--			*speed = PCIE_SPEED_8_0GT;
--		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
--			*speed = PCIE_SPEED_5_0GT;
--		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
--			*speed = PCIE_SPEED_2_5GT;
--	}
--	if (!err1) {
--		*width = (lnkcap1 & PCI_EXP_LNKCAP_MLW) >> PCIE_MLW_CAP_SHIFT;
--		if (!lnkcap2) { /* pre-r3.0 */
--			if (lnkcap1 & PCI_EXP_LNKCAP_SLS_5_0GB)
--				*speed = PCIE_SPEED_5_0GT;
--			else if (lnkcap1 & PCI_EXP_LNKCAP_SLS_2_5GB)
--				*speed = PCIE_SPEED_2_5GT;
--		}
--	}
--
--	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN) {
--		return err1 ? err1 :
--			err2 ? err2 : -EINVAL;
--	}
--	return 0;
--}
--
--static void mlx4_check_pcie_caps(struct mlx4_dev *dev)
--{
--	enum pcie_link_width width, width_cap;
--	enum pci_bus_speed speed, speed_cap;
--	int err;
--
--#define PCIE_SPEED_STR(speed) \
--	(speed == PCIE_SPEED_8_0GT ? "8.0GT/s" : \
--	 speed == PCIE_SPEED_5_0GT ? "5.0GT/s" : \
--	 speed == PCIE_SPEED_2_5GT ? "2.5GT/s" : \
--	 "Unknown")
--
--	err = mlx4_get_pcie_dev_link_caps(dev, &speed_cap, &width_cap);
--	if (err) {
--		mlx4_warn(dev,
--			  "Unable to determine PCIe device BW capabilities\n");
--		return;
--	}
--
--	err = pcie_get_minimum_link(dev->persist->pdev, &speed, &width);
--	if (err || speed == PCI_SPEED_UNKNOWN ||
--	    width == PCIE_LNK_WIDTH_UNKNOWN) {
--		mlx4_warn(dev,
--			  "Unable to determine PCI device chain minimum BW\n");
--		return;
--	}
--
--	if (width != width_cap || speed != speed_cap)
--		mlx4_warn(dev,
--			  "PCIe BW is different than device's capability\n");
--
--	mlx4_info(dev, "PCIe link speed is %s, device supports %s\n",
--		  PCIE_SPEED_STR(speed), PCIE_SPEED_STR(speed_cap));
--	mlx4_info(dev, "PCIe link width is x%d, device supports x%d\n",
--		  width, width_cap);
--	return;
--}
--
- /*The function checks if there are live vf, return the num of them*/
- static int mlx4_how_many_lives_vf(struct mlx4_dev *dev)
- {
-@@ -3475,7 +3396,7 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
- 	 * express device capabilities are under-satisfied by the bus.
- 	 */
- 	if (!mlx4_is_slave(dev))
--		mlx4_check_pcie_caps(dev);
-+		pcie_print_link_status(dev->persist->pdev);
- 
- 	/* In master functions, the communication channel must be initialized
- 	 * after obtaining its address from fw */
+ 	/* Promise */
 -- 
-1.8.3.1
+2.14.3
