@@ -1,84 +1,41 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 1 Mar 2018 13:05:52 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: RFC on Kdump and PCIe on ARM64
-Message-ID: <20180301190552.GK13722@bhelgaas-glaptop.roam.corp.google.com>
-References: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Vikram Sethi <vikrams@codeaurora.org>, Linux PCI <linux-pci@vger.kernel.org>,
- Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
- iommu@lists.linux-foundation.org,
- "shankerd@codeaurora.org" <shankerd@codeaurora.org>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>, "Goel,
- Sameer" <sgoel@codeaurora.org>, David Woodhouse <dwmw2@infradead.org>,
- kexec@lists.infradead.org, Nate Watterson <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:41295 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1163289AbeCBBMd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 20:12:33 -0500
+Received: by mail-pg0-f66.google.com with SMTP id q27so3076777pgn.8
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 17:12:32 -0800 (PST)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Fabio Estevam <festevam@gmail.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Jiancheng Xue <xuejiancheng@hisilicon.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v3 0/2] Add power control for pcie-histb driver
+Date: Fri,  2 Mar 2018 09:11:59 +0800
+Message-Id: <1519953121-28218-1-git-send-email-shawn.guo@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joerg, David, iommu list]
+It adds power control support for pcie-histb driver, by utilizing
+regulator infrastructural.
 
-On Thu, Mar 01, 2018 at 12:44:26PM -0500, Sinan Kaya wrote:
-> Hi,
-> 
-> We are seeing IOMMU faults when booting the kdump kernel on ARM64.
-> 
-> [    7.220162] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x02 received:
-> [    7.226123] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000010000000002
-> [    7.232023] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
-> [    7.237925] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
-> [    7.243827] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
-> 
-> This is Nate's interpretation of the fault:
-> 
-> "The PCI device is sending transactions just after the SMMU was
-> reset/reinitialized which is problematic because the device has not
-> yet been added to the SMMU and thus should not be doing *any* DMA.
-> DMA from the PCI devices should be quiesced prior to starting the
-> crashdump kernel or you risk overwriting portions of memory you
-> meant to preserve. In this case the SMMU was actually doing you a
-> favor by blocking these errant DMA operations!!"
-> 
-> I think this makes sense especially for the IOMMU enabled case on
-> the host where an IOVA can overlap with the region of memory kdump
-> reserved for itself.
-> 
-> Apparently, there has been similar concerns in the past.
-> 
-> https://www.fujitsu.com/jp/documents/products/software/os/linux/catalog/LinuxConJapan2013-Indoh.pdf
-> 
-> and was not addressed globally due to IOMMU+PCI driver ordering
-> issues and bugs in HW due to hot reset.
-> 
-> https://lkml.org/lkml/2012/8/3/160
-> 
-> Hot reset as mentioned is destructive and may not be the best
-> implementation choice.  However, most of the modern endpoints
-> support PCIE function level reset.
-> 
-> One other solution is for SMMUv3 driver to reserve the kdump used
-> IOVA addresses.
-> 
-> Another solution is for the SMMUv3 driver to disable PCIe devices
-> behind the SMMU if it see SMMU is already enabled.
+Changes for v3:
+ - Incorporate Rob's ACK on bindings doc.
+ - Capitalize  the first word of patch subject to match drivers/pci
+   convention.
+ - Reword vpcie-supply description a bit as per Bjorn's suggestion.
 
-What problem are you trying to solve?  If the IOMMU is blocking DMA
-after the kdump kernel starts up, that sounds like the desired
-behavior.
+Shawn Guo (2):
+  PCI: histb: Fix error path of histb_pcie_host_enable()
+  PCI: histb: Add an optional regulator for PCIe port power control
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ .../bindings/pci/hisilicon-histb-pcie.txt          |  1 +
+ drivers/pci/dwc/pcie-histb.c                       | 28 ++++++++++++++++++----
+ 2 files changed, 25 insertions(+), 4 deletions(-)
+
+-- 
+1.9.1
