@@ -1,91 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:46379 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933156AbeCSK41 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 06:56:27 -0400
-Subject: Re: [PATCH 1/2] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Simon Horman <horms@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20180318105253.30532-1-marek.vasut+renesas@gmail.com>
- <20180319083839.h3qdt4obbsbqlx73@verge.net.au>
- <b7dad289-c9de-ae19-a0d2-3eb127e0955a@gmail.com>
- <CAMuHMdVjU=1ndTK1jTU90Vw2sgPsTRRsH56vvY6nuuoDWUo-Aw@mail.gmail.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <618f1841-f8b9-7fdb-5887-01a080a231db@gmail.com>
-Date: Mon, 19 Mar 2018 11:56:24 +0100
+Received: from ale.deltatee.com ([207.54.116.67]:47022 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932131AbeCBWYq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Mar 2018 17:24:46 -0500
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Dan Williams <dan.j.williams@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+        Oliver OHalloran <oliveroh@au1.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <1519876489.4592.3.camel@kernel.crashing.org>
+ <1519876569.4592.4.camel@au1.ibm.com>
+ <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+ <1519936477.4592.23.camel@au1.ibm.com>
+ <CAPcyv4goHsYytq60ehJUori8Xq+Z0p8dV-8_oRALj244H4YtwQ@mail.gmail.com>
+ <2079ba48-5ae5-5b44-cce1-8175712dd395@deltatee.com>
+ <43ba615f-a6e1-9444-65e1-494169cb415d@deltatee.com>
+ <1519945204.4592.45.camel@au1.ibm.com>
+ <595acefb-18fc-e650-e172-bae271263c4c@deltatee.com>
+ <1519946734.4592.48.camel@au1.ibm.com>
+ <1520027052.4592.60.camel@kernel.crashing.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <cd3ff8cf-a5a7-1a92-d92a-689edcde51d6@deltatee.com>
+Date: Fri, 2 Mar 2018 15:24:36 -0700
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdVjU=1ndTK1jTU90Vw2sgPsTRRsH56vvY6nuuoDWUo-Aw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1520027052.4592.60.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/19/2018 11:53 AM, Geert Uytterhoeven wrote:
-> Hi Marek,
-> 
-> On Mon, Mar 19, 2018 at 10:53 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
->> On 03/19/2018 09:38 AM, Simon Horman wrote:
->>> On Sun, Mar 18, 2018 at 11:52:52AM +0100, Marek Vasut wrote:
->>>> The data link active signal usually takes ~20 uSec to be asserted,
->>>> poll the bit more often to avoid useless delays in this function.
->>>>
->>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>>> Cc: linux-renesas-soc@vger.kernel.org
->>>
->>> Unless my eyes deceive me this seems to be quite a lot (100x) more often,
->>> but so be it.
->>
->> It's just a higher frequency to avoid slowdown when bringing the link up.
-> 
-> No it isn't: you replaced a sleep by a delay, thus making it blocking.
-
-For much shorter period of time.
-
-> So this can spin for up to 50 ms (+ overhead)?
-
-That's what it did before too , it used msleep and now it uses udelay.
-
->>>> --- a/drivers/pci/host/pcie-rcar.c
->>>> +++ b/drivers/pci/host/pcie-rcar.c
->>>> @@ -528,13 +528,13 @@ static void phy_write_reg(struct rcar_pcie *pcie,
->>>>
->>>>  static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
->>>>  {
->>>> -    unsigned int timeout = 10;
->>>> +    unsigned int timeout = 10000;
->>>>
->>>>      while (timeout--) {
->>>>              if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
->>>>                      return 0;
->>>>
->>>> -            msleep(5);
->>>> +            udelay(5);
->>>>      }
->>>>
->>>>      return -ETIMEDOUT;
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
-> 
 
 
--- 
-Best regards,
-Marek Vasut
+On 02/03/18 02:44 PM, Benjamin Herrenschmidt wrote:
+> Allright, so, I think I have a plan to fix this, but it will take a
+> little bit of time.
+> 
+> Basically the idea is to have firmware pass to Linux a region that's
+> known to not have anything in it that it can use for the vmalloc space
+> rather than have linux arbitrarily cut the address space in half.
+> 
+> I'm pretty sure I can always find large enough "holes" in the physical
+> address space that are outside of both RAM/OpenCAPI/Nvlink and
+> PCIe/MMIO space. If anything, unused chip IDs. But I don't want Linux
+> to have to know about the intimate HW details so I'll pass it from FW.
+> 
+> It will take some time to adjust Linux and get updated FW around
+> though.
+> 
+> Once that's done, I'll be able to have the linear mapping go through
+> the entire 52-bit space (minus that hole). Of course the hole need to
+> be large enough to hold a vmemmap for a 52-bit space, so that's about
+> 4TB. So I probably need a hole that's at least 8TB.
+> 
+> As for the mapping attributes, it should be easy for my linear mapping
+> code to ensure anything that isn't actual RAM is mapped NC.
+
+Very cool. I'm glad to hear you found a way to fix this.
+
+Thanks,
+
+Logan
