@@ -1,55 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:43671 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752246AbeC2KDb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 06:03:31 -0400
-Subject: Re: [PATCH v5 11/12] PCI: designware-ep: Make dw_pcie_ep_reset_bar()
- handle 64-bit BARs properly
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        <cyrille.pitchen@free-electrons.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
- <20180328115018.31921-12-niklas.cassel@axis.com>
-CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <db3f2460-706e-0d93-2038-5abeef23aa85@ti.com>
-Date: Thu, 29 Mar 2018 15:33:16 +0530
+Received: from g2t1383g.austin.hpe.com ([15.233.16.89]:52478 "EHLO
+        g2t1383g.austin.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935226AbeCBQWa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 11:22:30 -0500
+From: "Kani, Toshi" <toshi.kani@hpe.com>
+To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "hch@lst.de" <hch@lst.de>, "axboe@kernel.dk" <axboe@kernel.dk>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "jglisse@redhat.com" <jglisse@redhat.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "maxg@mellanox.com" <maxg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "keith.busch@intel.com" <keith.busch@intel.com>,
+        "oliveroh@au1.ibm.com" <oliveroh@au1.ibm.com>,
+        "jgg@ziepe.ca" <jgg@ziepe.ca>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Date: Fri, 2 Mar 2018 16:22:24 +0000
+Message-ID: <1520010446.2693.19.camel@hpe.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+         <1519876489.4592.3.camel@kernel.crashing.org>
+         <1519876569.4592.4.camel@au1.ibm.com>
+         <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
+         <1519936477.4592.23.camel@au1.ibm.com>
+         <1519936815.4592.25.camel@au1.ibm.com> <20180301205315.GJ19007@ziepe.ca>
+         <1519942012.4592.31.camel@au1.ibm.com>
+         <CA+55aFy-oAiFJ3WDx4giR1enj65y-YJnZZhY6geFw0ygFyKXfQ@mail.gmail.com>
+         <1519943658.4592.34.camel@kernel.crashing.org>
+In-Reply-To: <1519943658.4592.34.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180328115018.31921-12-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
-> Since a 64-bit BAR consists of a BAR pair, we need to write to both
-> BARs in the BAR pair to clear the BAR properly.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/dwc/pcie-designware-ep.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index cc4d8381c1dc..4d304e3ccf24 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -28,6 +28,10 @@ static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar,
->  	dw_pcie_dbi_ro_wr_en(pci);
->  	dw_pcie_writel_dbi2(pci, reg, 0x0);
->  	dw_pcie_writel_dbi(pci, reg, 0x0);
-> +	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-> +		dw_pcie_writel_dbi2(pci, reg + 4, 0x0);
-> +		dw_pcie_writel_dbi(pci, reg + 4, 0x0);
-> +	}
->  	dw_pcie_dbi_ro_wr_dis(pci);
->  }
->  
-> 
+T24gRnJpLCAyMDE4LTAzLTAyIGF0IDA5OjM0ICsxMTAwLCBCZW5qYW1pbiBIZXJyZW5zY2htaWR0
+IHdyb3RlOg0KPiBPbiBUaHUsIDIwMTgtMDMtMDEgYXQgMTQ6MzEgLTA4MDAsIExpbnVzIFRvcnZh
+bGRzIHdyb3RlOg0KPiA+IE9uIFRodSwgTWFyIDEsIDIwMTggYXQgMjowNiBQTSwgQmVuamFtaW4g
+SGVycmVuc2NobWlkdCA8YmVuaEBhdTEuaWJtLmNvbT4gd3JvdGU6DQo+ID4gPiANCj4gPiA+IENv
+dWxkIGJlIHRoYXQgeDg2IGhhcyB0aGUgc21hcnRzIHRvIGRvIHRoZSByaWdodCB0aGluZywgc3Rp
+bGwgdHJ5aW5nIHRvDQo+ID4gPiB1bnRhbmdsZSB0aGUgY29kZSA6LSkNCj4gPiANCj4gPiBBZmFp
+aywgeDg2IHdpbGwgbm90IGNhY2hlIFBDSSB1bmxlc3MgdGhlIHN5c3RlbSBpcyBtaXNjb25maWd1
+cmVkLCBhbmQNCj4gPiBldmVuIHRoZW4gaXQncyBtb3JlIGxpa2VseSB0byBqdXN0IHJhaXNlIGEg
+bWFjaGluZSBjaGVjayBleGNlcHRpb24NCj4gPiB0aGFuIGNhY2hlIHRoaW5ncy4NCj4gPiANCj4g
+PiBUaGUgbGFzdC1sZXZlbCBjYWNoZSBpcyBnb2luZyB0byBkbyBmaWxscyBhbmQgc3BpbGxzIGRp
+cmVjdGx5IHRvIHRoZQ0KPiA+IG1lbW9yeSBjb250cm9sbGVyLCBub3QgdG8gdGhlIFBDSWUgc2lk
+ZSBvZiB0aGluZ3MuDQo+ID4gDQo+ID4gKEkgZ3Vlc3MgeW91ICpjYW4qIGRvIHRoaW5ncyBkaWZm
+ZXJlbnRseSwgYW5kIEkgd291bGRuJ3QgYmUgc3VycHJpc2VkDQo+ID4gaWYgc29tZSBwZW9wbGUg
+aW5zaWRlIEludGVsIGRpZCB0cnkgdG8gZG8gdGhpbmdzIGRpZmZlcmVudGx5IHdpdGgNCj4gPiB0
+cnlpbmcgbnZyYW0gb3ZlciBQQ0llLCBidXQgaW4gZ2VuZXJhbCBJIHRoaW5rIHRoZSBhYm92ZSBp
+cyB0cnVlKQ0KPiA+IA0KPiA+IFlvdSB3b24ndCBmaW5kIGl0IGluIHRoZSBrZXJuZWwgY29kZSBl
+aXRoZXIuIEl0J3MgaW4gaGFyZHdhcmUgd2l0aA0KPiA+IGZpcm13YXJlIGNvbmZpZ3VyYXRpb24g
+b2Ygd2hhdCBhZGRyZXNzZXMgYXJlIG1hcHBlZCB0byB0aGUgbWVtb3J5DQo+ID4gY29udHJvbGxl
+cnMgKGFuZCBfaG93XyB0aGV5IGFyZSBtYXBwZWQpIGFuZCB3aGljaCBhcmUgbm90Lg0KPiANCj4g
+QWggdGhhbmtzICEgVGhhbmtzIGV4cGxhaW5zLiBXZSBjYW4gZml4IHRoYXQgb24gcHBjNjQgaW4g
+b3VyIGxpbmVhcg0KPiBtYXBwaW5nIGNvZGUgYnkgY2hlY2tpbmcgdGhlIGFkZHJlc3MgdnMuIG1l
+bWJsb2NrcyB0byBjaG9zZSB0aGUgcmlnaHQNCj4gcGFnZSB0YWJsZSBhdHRyaWJ1dGVzLg0KDQpG
+V0lXLCB0aGlzIHRoaW5nIGlzIGNhbGxlZCBNVFJScyBvbiB4ODYsIHdoaWNoIGFyZSBpbml0aWFs
+aXplZCBieSBCSU9TLg0KVGhlc2UgcmVnaXN0ZXJzIGVmZmVjdGl2ZWx5IG92ZXJ3cml0ZSBwYWdl
+IHRhYmxlIHNldHVwcy4gIEludGVsIFNETQ0KZGVmaW5lcyB0aGUgZWZmZWN0IGFzIGZvbGxvd3Mu
+ICAnUEFUIEVudHJ5IFZhbHVlJyBpcyB0aGUgcGFnZSB0YWJsZQ0Kc2V0dXAuDQoNCk1UUlIgTWVt
+b3J5IFR5cGUgIFBBVCBFbnRyeSBWYWx1ZSAgRWZmZWN0aXZlIE1lbW9yeSBUeXBlDQotLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KVUMgICAg
+ICAgICAgICAgICAgVUMgICAgICAgICAgICAgICBVQw0KVUMgICAgICAgICAgICAgICAgV0MgICAg
+ICAgICAgICAgICBXQw0KVUMgICAgICAgICAgICAgICAgV1QgICAgICAgICAgICAgICBVQw0KVUMg
+ICAgICAgICAgICAgICAgV0IgICAgICAgICAgICAgICBVQw0KVUMgICAgICAgICAgICAgICAgV1Ag
+ICAgICAgICAgICAgICBVQyANCg0KT24gbXkgc3lzdGVtLCBCSU9TIHNldHMgTVRSUnMgdG8gY292
+ZXIgdGhlIGVudGlyZSBNTUlPIHJhbmdlcyB3aXRoIFVDLg0KT3RoZXIgQklPU2VzIG1heSBzaW1w
+bHkgc2V0IHRoZSBNVFJSIGRlZmF1bHQgdHlwZSB0byBVQywgaS5lLiB1bmNvdmVyZWQNCnJhbmdl
+cyBiZWNvbWUgVUMuDQoNCiMgY2F0IC9wcm9jL210cnINCiA6DQpyZWcwMTogYmFzZT0weGMwMDAw
+MDAwMDAwICgxMjU4MjkxMk1CKSwgc2l6ZT0yMDk3MTUyTUIsIGNvdW50PTE6DQp1bmNhY2hhYmxl
+DQogOg0KDQojIGNhdCAvcHJvYy9pb21lbSB8IGdyZXAgJ1BDSSBCdXMnDQogOg0KYzAwMDAwMDAw
+MDAtYzNmZmZmZmZmZmYgOiBQQ0kgQnVzIDAwMDA6MDANCmM0MDAwMDAwMDAwLWM3ZmZmZmZmZmZm
+IDogUENJIEJ1cyAwMDAwOjExDQpjODAwMDAwMDAwMC1jYmZmZmZmZmZmZiA6IFBDSSBCdXMgMDAw
+MDozNg0KY2MwMDAwMDAwMDAtY2ZmZmZmZmZmZmYgOiBQQ0kgQnVzIDAwMDA6NWINCmQwMDAwMDAw
+MDAwLWQzZmZmZmZmZmZmIDogUENJIEJ1cyAwMDAwOjgwDQpkNDAwMDAwMDAwMC1kN2ZmZmZmZmZm
+ZiA6IFBDSSBCdXMgMDAwMDo4NQ0KZDgwMDAwMDAwMDAtZGJmZmZmZmZmZmYgOiBQQ0kgQnVzIDAw
+MDA6YWUNCmRjMDAwMDAwMDAwLWRmZmZmZmZmZmZmIDogUENJIEJ1cyAwMDAwOmQ3DQoNCi1Ub3No
+aQ0KDQoNCg==
