@@ -1,104 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v4 1/2] firmware: dmi_scan: Uninline dmi_get_bios_year() helper
-Date: Tue, 20 Mar 2018 20:07:59 +0200
-Message-Id: <20180320180800.63179-2-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
-References: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=FAy1=FY=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=FAy1=FY=codeaurora.org=okaya@kernel.org>
+Subject: Re: RFC on Kdump and PCIe on ARM64
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ Will Deacon <will.deacon@arm.com>, Linux PCI <linux-pci@vger.kernel.org>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+ Nate Watterson <nwatters@codeaurora.org>,
+ "shankerd@codeaurora.org" <shankerd@codeaurora.org>,
+ Vikram Sethi <vikrams@codeaurora.org>, "Goel, Sameer"
+ <sgoel@codeaurora.org>, kexec@lists.infradead.org,
+ Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
+ David Woodhouse <dwmw2@infradead.org>
+References: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
+ <20180301190552.GK13722@bhelgaas-glaptop.roam.corp.google.com>
+ <2b2de17c-8527-e49b-2ef2-2a3d1801e4f9@codeaurora.org>
+ <20180302000303.GD74737@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <feeab007-951d-7743-70e6-122486feddf7@codeaurora.org>
+Date: Fri, 2 Mar 2018 09:20:54 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180302000303.GD74737@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Uninline dmi_get_bios_year() which, in particular, allows us
-to optimize it in the future.
+On 3/1/2018 7:03 PM, Bjorn Helgaas wrote:
+>> 3. The last one is adapter gets into fuzzy state due to not coming
+>> out of clean state in the second time init and being rejected by
+>> SMMUv3 multiple times.
+>>
+>> [   16.093441] pci 0000:01:00.0: aer_status: 0x00040000, aer_mask: 0x00000000
+>> [   16.099356] pci 0000:01:00.0: Malformed TLP
+>> [   16.103522] pci 0000:01:00.0: aer_layer=Transaction Layer, aer_agent=Receiver ID
+>> [   16.110900] pci 0000:01:00.0: aer_uncor_severity: 0x00062011
+>> [   16.116543] pci 0000:01:00.0:   TLP Header: 0a00a000 00008100 01010100 00000000
+> I'm not clear on this.  I don't remember what an IOMMU fault looks
+> like to an Endpoint.  Are you saying that if an Endpoint sees too many
+> of those faults, it gets into this "fuzzy state" (whatever that is :))?
+> Is this a hardware defect?  Do we care (this is a kdump kernel, after
+> all)?  If we do care, can we fix the device by resetting it?
 
-While doing this, convert the function to return an error code
-when BIOS date is not present or not parsable, or CONFIG_DMI=n.
+fuzzy=funky=funny=wierd
 
-Additionally, during the move, add a bit of documentation.
+Regardless of what we do in the IOMMU driver, I think we still have to reset
+the endpoint in order to have a clean initialization.
 
-Fixes: 492a1abd61e4 ("dmi: Introduce the dmi_get_bios_year() helper function")
-Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
-Reviewed-by: Jean Delvare <jdelvare@suse.de>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
- include/linux/dmi.h         | 11 ++---------
- 2 files changed, 22 insertions(+), 9 deletions(-)
+I'm not sure if all endpoint drivers can recover an adapter from a live state.
 
-diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
-index ae4f1b181c23..bfb6ce6abc83 100644
---- a/drivers/firmware/dmi_scan.c
-+++ b/drivers/firmware/dmi_scan.c
-@@ -1040,6 +1040,26 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
- }
- EXPORT_SYMBOL(dmi_get_date);
- 
-+/**
-+ *	dmi_get_bios_year - get a year out of DMI_BIOS_DATE field
-+ *
-+ *	Returns year on success, -ENXIO if DMI is not selected,
-+ *	or a different negative error code if DMI field is not present
-+ *	or not parsable.
-+ */
-+int dmi_get_bios_year(void)
-+{
-+	bool exists;
-+	int year;
-+
-+	exists = dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
-+	if (!exists)
-+		return -ENODATA;
-+
-+	return year ? year : -ERANGE;
-+}
-+EXPORT_SYMBOL(dmi_get_bios_year);
-+
- /**
-  *	dmi_walk - Walk the DMI table and get called back for every record
-  *	@decode: Callback function
-diff --git a/include/linux/dmi.h b/include/linux/dmi.h
-index b5b8c26b04fb..c46fdb36700b 100644
---- a/include/linux/dmi.h
-+++ b/include/linux/dmi.h
-@@ -106,6 +106,7 @@ extern void dmi_scan_machine(void);
- extern void dmi_memdev_walk(void);
- extern void dmi_set_dump_stack_arch_desc(void);
- extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
-+extern int dmi_get_bios_year(void);
- extern int dmi_name_in_vendors(const char *str);
- extern int dmi_name_in_serial(const char *str);
- extern int dmi_available;
-@@ -134,6 +135,7 @@ static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
- 		*dayp = 0;
- 	return false;
- }
-+static inline int dmi_get_bios_year(void) { return -ENXIO; }
- static inline int dmi_name_in_vendors(const char *s) { return 0; }
- static inline int dmi_name_in_serial(const char *s) { return 0; }
- #define dmi_available 0
-@@ -149,13 +151,4 @@ static inline const struct dmi_system_id *
- 
- #endif
- 
--static inline int dmi_get_bios_year(void)
--{
--	int year;
--
--	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
--
--	return year;
--}
--
- #endif	/* __DMI_H__ */
+I wasn't expecting to see a Malformed TLP error. I was guessing that this was
+caused by SMMU giving a CA or UR to the endpoint or having a live adapter
+in the middle of driver initialization. 
+
+I think we do care about the adapter coming up properly otherwise how would
+you collect the dumps from the system?
+
+I was expecting to come through the network interface and download it from
+the target.
+
+That's why, I was suggesting FLR/PM reset etc. when we know that we are
+booting a kdump kernel.
+
 -- 
-2.16.2
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
