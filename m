@@ -1,67 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0093.outbound.protection.outlook.com ([104.47.33.93]:38750
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932435AbeCITid (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Mar 2018 14:38:33 -0500
-From: Haiyang Zhang <haiyangz@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        Jack Morgenstein <jackm@mellanox.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH v3 5/6] PCI: hv: hv_pci_devices_present(): only queue a
- new work when necessary
-Date: Fri, 9 Mar 2018 19:37:54 +0000
-Message-ID: <BL0PR2101MB11083951371835374EFB4966CADE0@BL0PR2101MB1108.namprd21.prod.outlook.com>
-References: <20180306182128.23281-1-decui@microsoft.com>
- <20180306182128.23281-6-decui@microsoft.com>
-In-Reply-To: <20180306182128.23281-6-decui@microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:43316 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1163354AbeCBBMn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 20:12:43 -0500
+Received: by mail-pl0-f67.google.com with SMTP id f23-v6so4704705plr.10
+        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 17:12:43 -0800 (PST)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Fabio Estevam <festevam@gmail.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Jiancheng Xue <xuejiancheng@hisilicon.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v3 2/2] PCI: histb: Add an optional regulator for PCIe port power control
+Date: Fri,  2 Mar 2018 09:12:01 +0800
+Message-Id: <1519953121-28218-3-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <1519953121-28218-1-git-send-email-shawn.guo@linaro.org>
+References: <1519953121-28218-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The power supply to PCIe port are often controlled by GPIO on some board
+designs.  Let's add an optional regulator which can be backed by GPIO to
+control the power.
 
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ .../bindings/pci/hisilicon-histb-pcie.txt           |  1 +
+ drivers/pci/dwc/pcie-histb.c                        | 21 +++++++++++++++++++++
+ 2 files changed, 22 insertions(+)
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Tuesday, March 6, 2018 1:22 PM
-> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan
-> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
-> olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
-> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
-> Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
-> marcelo.cerri@canonical.com; Michael Kelley (EOSG)
-> <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microsoft.com>; Jack
-> Morgenstein <jackm@mellanox.com>; stable@vger.kernel.org
-> Subject: [PATCH v3 5/6] PCI: hv: hv_pci_devices_present(): only queue a n=
-ew
-> work when necessary
->=20
-> If there is a pending work, we just need to add the new dr into the dr_li=
-st.
->=20
-> This is suggested by Michael Kelley.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> Cc: Jack Morgenstein <jackm@mellanox.com>
-> Cc: stable@vger.kernel.org
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
-> ---
-
-Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+index c84bc027930b..760b4d740616 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+@@ -34,6 +34,7 @@ Required properties
+ 
+ Optional properties:
+ - reset-gpios: The gpio to generate PCIe PERST# assert and deassert signal.
++- vpcie-supply: The regulator in charge of PCIe port power.
+ - phys: List of phandle and phy mode specifier, should be 0.
+ - phy-names: Must be "phy".
+ 
+diff --git a/drivers/pci/dwc/pcie-histb.c b/drivers/pci/dwc/pcie-histb.c
+index 17ed604f5741..4cef0a514944 100644
+--- a/drivers/pci/dwc/pcie-histb.c
++++ b/drivers/pci/dwc/pcie-histb.c
+@@ -61,6 +61,7 @@ struct histb_pcie {
+ 	struct reset_control *bus_reset;
+ 	void __iomem *ctrl;
+ 	int reset_gpio;
++	struct regulator *vpcie;
+ };
+ 
+ static u32 histb_pcie_readl(struct histb_pcie *histb_pcie, u32 reg)
+@@ -227,6 +228,9 @@ static void histb_pcie_host_disable(struct histb_pcie *hipcie)
+ 
+ 	if (gpio_is_valid(hipcie->reset_gpio))
+ 		gpio_set_value_cansleep(hipcie->reset_gpio, 0);
++
++	if (hipcie->vpcie)
++		regulator_disable(hipcie->vpcie);
+ }
+ 
+ static int histb_pcie_host_enable(struct pcie_port *pp)
+@@ -237,6 +241,14 @@ static int histb_pcie_host_enable(struct pcie_port *pp)
+ 	int ret;
+ 
+ 	/* power on PCIe device if have */
++	if (hipcie->vpcie) {
++		ret = regulator_enable(hipcie->vpcie);
++		if (ret) {
++			dev_err(dev, "failed to enable regulator: %d\n", ret);
++			return ret;
++		}
++	}
++
+ 	if (gpio_is_valid(hipcie->reset_gpio))
+ 		gpio_set_value_cansleep(hipcie->reset_gpio, 1);
+ 
+@@ -282,6 +294,8 @@ static int histb_pcie_host_enable(struct pcie_port *pp)
+ err_sys_clk:
+ 	clk_disable_unprepare(hipcie->bus_clk);
+ err_bus_clk:
++	if (hipcie->vpcie)
++		regulator_disable(hipcie->vpcie);
+ 
+ 	return ret;
+ }
+@@ -331,6 +345,13 @@ static int histb_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pci->dbi_base);
+ 	}
+ 
++	hipcie->vpcie = devm_regulator_get_optional(dev, "vpcie");
++	if (IS_ERR(hipcie->vpcie)) {
++		if (PTR_ERR(hipcie->vpcie) == -EPROBE_DEFER)
++			return -EPROBE_DEFER;
++		hipcie->vpcie = NULL;
++	}
++
+ 	hipcie->reset_gpio = of_get_named_gpio_flags(np,
+ 				"reset-gpios", 0, &of_flags);
+ 	if (of_flags & OF_GPIO_ACTIVE_LOW)
+-- 
+1.9.1
