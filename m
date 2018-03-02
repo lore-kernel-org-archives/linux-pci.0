@@ -1,103 +1,139 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v16 0/9] LPC: legacy ISA I/O support
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
-        <olof@lixom.net>, <dann.frazier@canonical.com>,
-        <andy.shevchenko@gmail.com>, <robh@kernel.org>
-References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
- <1520335317.10722.416.camel@linux.intel.com>
-CC: <joe@perches.com>, <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <minyard@acm.org>, <devicetree@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
-        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
-        <frowand.list@gmail.com>, <agraf@suse.de>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <b4459d98-ebd4-7b13-07ec-613845579558@huawei.com>
-Date: Tue, 6 Mar 2018 11:36:27 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33032 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1425298AbeCBJLJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 04:11:09 -0500
 MIME-Version: 1.0
-In-Reply-To: <1520335317.10722.416.camel@linux.intel.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1519942514-3350-1-git-send-email-fkan@apm.com>
+References: <1519942514-3350-1-git-send-email-fkan@apm.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 2 Mar 2018 10:11:06 +0100
+Message-ID: <CAJZ5v0gncVMpQCc=kvuSdyy-+zPrdYOiA=pA54d538zTDz6rEA@mail.gmail.com>
+Subject: Re: [PATCH V2] PM / core: fix deferred probe breaking suspend resume order
+To: Feng Kan <fkan@apm.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Toan Le <toanle@apm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/03/2018 11:21, Andy Shevchenko wrote:
-> On Tue, 2018-03-06 at 18:47 +0800, John Garry wrote:
->> This patchset supports the IPMI-bt device attached to the Low-Pin-
->> Count
->> interface implemented on Hisilicon Hip06/Hip07 SoC.
->>                         -----------
->>                         | LPC host|
->>                         |         |
->>                         -----------
->>                              |
->>                 _____________V_______________LPC
->>                   |                       |
->>                   V                       V
->>                                      ------------
->>                                      |  BT(ipmi)|
->>                                      ------------
->>
->> When master accesses those peripherals beneath the Hip06/Hip07 LPC, a
->> specific
->> LPC driver is needed to make LPC host generate the standard LPC I/O
->> cycles with
->> the target peripherals'I/O port addresses. But on curent arm64 world,
->> there is
->> no real I/O accesses. All the I/O operations through in/out accessors
->> are based
->> on MMIO ranges; on Hip06/Hip07 LPC the I/O accesses are performed
->> through driver
->> specific accessors rather than MMIO.
->> To solve this issue and keep the relevant existing peripherals'
->> drivers untouched,
->> this patchset:
->>    - introduces a generic I/O space management framework, logical PIO,
->> to support
->>       I/O operations on host controllers operating either on MMIO
->> buses or on buses
->>      requiring specific driver I/O accessors;
->>    - redefines the in/out accessors to provide a unified interface for
->> both MMIO
->>      and driver specific I/O operations. Using logical PIO, th call of
->> in/out() from
->>      the host children drivers, such as ipmi-si, will be redirected to
->> the
->>      corresponding device-specific I/O hooks to perform the I/O
->> accesses.
->>
->> Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC
->> peripherals can
->> be supported without any changes on the existing ipmi-si driver.
->>
->> The whole patchset has been tested on Hip07 D05 board both using DTB
->> and ACPI.
->>
+[+Greg]
+
+On Thu, Mar 1, 2018 at 11:15 PM, Feng Kan <fkan@apm.com> wrote:
+> When bridge and its endpoint is enumerated the devices are added to the
+> dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
+> This causes the bridge to be moved to the end of the dpm list when
+> deferred probe kicks in. The order of the dpm list for bridge and
+> endpoint is reversed.
 >
->> V15 thread here: https://lkml.org/lkml/2018/2/26/584
+> Add reordering code to move the bridge and its children and consumers to
+> the end of the pm list so the order for suspend and resume is not altered.
+> The code also move device and its children and consumers to the tail of
+> device_kset list if it is registered.
+
+I assume that this has been tested and works as expected.
+
+> Signed-off-by: Feng Kan <fkan@apm.com>
+> Signed-off-by: Toan Le <toanle@apm.com>
+> ---
+>  V2:
+>         1. change patch title from "move device and its children..."
+>         2. move define based on Bjorn's comment
+>         3. rename function name and comment content
+>  drivers/base/base.h |  3 +++
+>  drivers/base/core.c | 22 ++++++++++++++++++++++
+>  drivers/base/dd.c   |  8 ++++----
+>  3 files changed, 29 insertions(+), 4 deletions(-)
 >
-> Thanks for an update.
-> Though I answered to previous thread.
+> diff --git a/drivers/base/base.h b/drivers/base/base.h
+> index d800de6..a75c302 100644
+> --- a/drivers/base/base.h
+> +++ b/drivers/base/base.h
+> @@ -161,3 +161,6 @@ static inline void module_remove_driver(struct device_driver *drv) { }
+>  extern void device_links_no_driver(struct device *dev);
+>  extern bool device_links_busy(struct device *dev);
+>  extern void device_links_unbind_consumers(struct device *dev);
+> +
+> +/* device pm support */
+> +void device_pm_move_to_tail(struct device *dev);
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index 110230d..0a0756b 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -148,6 +148,28 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
+>  }
 >
-> Summary: I'm fine with the series as long as maintainers are fine
-> (Rafael et al.). On personal side I think that the handler approach is
-> better. Details are in v15 thread.
+>  /**
+> + * device_pm_move_to_tail - move device and its children and consumers to end of
+> + *                          pm and device kset list
 
-Hi Andy,
+This has to be one line.  Maybe something like "Move set of devices to
+the end of device lists" and then describe how it works below.
 
-Thanks for your input and continued support. As I mentioned in reply in 
-v15, the handler support would (or has) faced issues. And Rafael seems 
-fine with deferring the probe to the LLDD in Patch #7/9
+> + * @dev: current device pointer
+> + *
+> + * This is a lock held version of the device_reorder_to_tail.
 
-Anyway, let's wait for any more input.
+I'd say "This is a device_reorder_to_tail() wrapper taking the
+requisite locks." and put an empty comment line after that.
 
-Much appreciated,
-John
+> +  Function checks
 
+"It checks"
+
+> + * if the device is registered and moves it to the end of device_kset list. Also
+> + * if the device is pm initialized, move the device to the end of the pm list.
+> + * Then the function iterate through the children and device link consumers to
+> + * do the same for each found.
+
+But generally I'd say "It moves the device along with all of its
+children and all of its consumers to the ends of the device_kset and
+dpm_list lists, recursively".
+
+> + */
+> +void device_pm_move_to_tail(struct device *dev)
+> +{
+> +       int idx;
+> +
+> +       idx = device_links_read_lock();
+> +       device_pm_lock();
+> +       device_reorder_to_tail(dev, NULL);
+> +       device_pm_unlock();
+> +       device_links_read_unlock(idx);
+> +}
+> +
+> +/**
+>   * device_link_add - Create a link between two devices.
+>   * @consumer: Consumer end of the link.
+>   * @supplier: Supplier end of the link.
+> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+> index 2c964f5..7e9d1ef 100644
+> --- a/drivers/base/dd.c
+> +++ b/drivers/base/dd.c
+> @@ -121,11 +121,11 @@ static void deferred_probe_work_func(struct work_struct *work)
+>                  * Force the device to the end of the dpm_list since
+>                  * the PM code assumes that the order we add things to
+>                  * the list is a good order for suspend but deferred
+> -                * probe makes that very unsafe.
+> +                * probe makes that very unsafe. Move any children and
+> +                * consumers belong to the device to the end of the list.
+> +                * This way the suspend resume order won't be corrupted.
+
+Why do you need to change this comment?
+
+>                  */
+> -               device_pm_lock();
+> -               device_pm_move_last(dev);
+> -               device_pm_unlock();
+> +               device_pm_move_to_tail(dev);
 >
-
-
+>                 dev_dbg(dev, "Retrying from deferred list\n");
+>                 if (initcall_debug && !initcalls_done)
+> --
+> 1.8.3.1
+>
