@@ -1,61 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:25571 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751372AbeCUFyg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 01:54:36 -0400
-Subject: Re: [PATCH v4 3/5] PCI: designware-ep: Make dw_pcie_ep_reset_bar()
- handle 64-bit BARs properly
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20180308133331.19464-1-niklas.cassel@axis.com>
- <20180308133331.19464-4-niklas.cassel@axis.com>
-CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <1ba89717-2eb7-c6af-632c-6ed8483002cb@ti.com>
-Date: Wed, 21 Mar 2018 11:24:25 +0530
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:42171 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932890AbeCCAUc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 19:20:32 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180308133331.19464-4-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20180302165919.423cd45b@t450s.home>
+References: <20180302234218.3337.16486.stgit@localhost.localdomain>
+ <20180302234412.3337.71321.stgit@localhost.localdomain> <20180302165919.423cd45b@t450s.home>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Fri, 2 Mar 2018 16:20:30 -0800
+Message-ID: <CAKgT0UcXf+w6P2=EbbZKzOxfK5vAf2tgtnTeLh9mRaysKJStwQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] pci-iov: Add support for unmanaged SR-IOV
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas,
+On Fri, Mar 2, 2018 at 3:59 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Fri, 02 Mar 2018 15:44:25 -0800
+> Alexander Duyck <alexander.duyck@gmail.com> wrote:
+>
+>> From: Alexander Duyck <alexander.h.duyck@intel.com>
+>>
+>> This patch is meant to add some basic functionality to support for SR-IOV
+>> on devices when the VFs are not managed by the kernel. The functions
+>> provided here can be used by drivers such as vfio-pci and virtio to enable
+>> SR-IOV on devices that are either managed by userspace, or by some sort of
+>> firmware entity respectively.
+>>
+>> A new sysfs value called sriov_unmanaged_autoprobe has been added. This
+>> value is used as the drivers_autoprobe setting of the VFs when they are
+>> being managed by an external entity such as userspace or device firmware
+>> instead of being managed by the kernel.
+>>
+>> One side effect of this change is that the sriov_drivers_autoprobe and
+>> sriov_unmanaged_autoprobe will only apply their updates when SR-IOV is
+>> disabled. Attempts to update them when SR-IOV is in use will only update
+>> the local value and will not update sriov->autoprobe.
+>>
+>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> ---
+>>  Documentation/ABI/testing/sysfs-bus-pci |   17 ++++++++++++++
+>>  drivers/pci/iov.c                       |   37 +++++++++++++++++++++++++++++++
+>>  drivers/pci/pci-driver.c                |    2 +-
+>>  drivers/pci/pci-sysfs.c                 |   29 ++++++++++++++++++++++++
+>>  drivers/pci/pci.h                       |    4 +++
+>>  include/linux/pci.h                     |    1 +
+>>  6 files changed, 88 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+>> index 44d4b2be92fd..ff0b6c19cb1a 100644
+>> --- a/Documentation/ABI/testing/sysfs-bus-pci
+>> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+>> @@ -323,3 +323,20 @@ Description:
+>>
+>>               This is similar to /sys/bus/pci/drivers_autoprobe, but
+>>               affects only the VFs associated with a specific PF.
+>> +
+>> +What:                /sys/bus/pci/devices/.../sriov_unmanaged_autoprobe
+>> +Date:                March 2018
+>> +Contact:     Alexander Duyck <alexander.h.duyck@intel.com>
+>> +Description:
+>> +             This file is associated with the PF of a device that
+>> +             supports SR-IOV.  It determines whether newly-enabled VFs
+>> +             are immediately bound to a driver when the PF driver does
+>> +             not manage the VFs itself.  It initially contains 0, which
+>> +             means the kernel will not automatically bind VFs to a driver.
+>> +             If an application writes 1 to the file before enabling VFs,
+>> +             the kernel will bind VFs to a compatible driver immediately
+>> +             after they are enabled.
+>> +
+>> +             This overrides /sys/bus/pci/devices/.../sriov_drivers_autoprobe
+>> +             when a PF driver is not present to manage a device, or the PF
+>> +             driver does not provide functionality to support SR-IOV.
+>
+>
+> Given a pf, how does a user determine whether it is managed or unmanaged
+> and therefore which autoprobe attributes are in effect?  Thanks,
+>
+> Alex
 
-On Thursday 08 March 2018 07:03 PM, Niklas Cassel wrote:
-> Since a 64-bit BAR consists of a BAR pair, we need to write to both
-> BARs in the BAR pair to clear the BAR properly.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/dwc/pcie-designware-ep.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index 946bbdf53c4d..b20b2651caf9 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -22,11 +22,18 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
->  void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->  {
->  	u32 reg;
-> +	u32 val;
->  
->  	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
-> +	val = dw_pcie_readl_dbi(pci, reg);
->  	dw_pcie_dbi_ro_wr_en(pci);
->  	dw_pcie_writel_dbi2(pci, reg, 0x0);
->  	dw_pcie_writel_dbi(pci, reg, 0x0);
-> +	if (!(val & PCI_BASE_ADDRESS_SPACE_IO) &&
-> +	    (val & PCI_BASE_ADDRESS_MEM_TYPE_64)) {
-> +		dw_pcie_writel_dbi2(pci, reg + 4, 0x0);
-> +		dw_pcie_writel_dbi(pci, reg + 4, 0x0);
-> +	}
+Basically it comes down to what driver is loaded on it. For now
+vfio-pci and virtio would be the only two using the "unmanaged"
+version of things.
 
-same comment as previous patch apply here too.
+Really you don't know which autoprobe is in effect until SR-IOV is
+enabled by whatever driver. As such you should really be setting both
+the drivers_autoprobe and the unmanaged_autoprobe based on the
+expected use case.
 
-Thanks
-Kishon
+- Alex
