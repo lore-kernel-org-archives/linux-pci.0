@@ -1,78 +1,182 @@
-Return-Path: <SRS0=7qmK=GF=oracle.com=martin.petersen@kernel.org>
-Return-Path: <SRS0=7qmK=GF=oracle.com=martin.petersen@kernel.org>
-To: "Stephen Bates" <sbates@raithlin.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe
- <logang@deltatee.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya
- <okaya@codeaurora.org>,
-        "linux-kernel\@vger.kernel.org"
- <linux-kernel@vger.kernel.org>,
-        "linux-pci\@vger.kernel.org"
- <linux-pci@vger.kernel.org>,
-        "linux-nvme\@lists.infradead.org"
- <linux-nvme@lists.infradead.org>,
-        "linux-rdma\@vger.kernel.org"
- <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm\@lists.01.org"
- <linux-nvdimm@lists.01.org>,
-        "linux-block\@vger.kernel.org"
- <linux-block@vger.kernel.org>,
-        "Christoph Hellwig" <hch@lst.de>, Jens
- Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>, Sagi
- Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason
- Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin
- Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson
- <alex.williamson@redhat.com>
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
-	<3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
-	<4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
-	<757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
-	<4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
-	<BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
-	<20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
-	<8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
-	<20180314025639.GA50067@bhelgaas-glaptop.roam.corp.google.com>
-	<112493af-ccd0-455b-6600-b50764f7ab7e@deltatee.com>
-	<20180314185159.GD179719@bhelgaas-glaptop.roam.corp.google.com>
-	<b75e83ad-bb83-1f8d-1751-0989cc2493f1@deltatee.com>
-	<CAPcyv4g-A6fqdTahxX=aONSCgp1eEvBb=ZVMzbZUWUDmqBbj7Q@mail.gmail.com>
-	<AA646409-BB63-4757-A250-CE7118D4D3B8@raithlin.com>
-Date: Thu, 15 Mar 2018 00:00:27 -0400
-In-Reply-To: <AA646409-BB63-4757-A250-CE7118D4D3B8@raithlin.com> (Stephen
-	Bates's message of "Wed, 14 Mar 2018 19:34:53 +0000")
-Message-ID: <yq1fu529eec.fsf@oracle.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0125.outbound.protection.outlook.com ([104.47.37.125]:22304
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932111AbeCCQJt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 3 Mar 2018 11:09:49 -0500
+From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH 2/3] PCI: hv: serialize the present/eject work items
+Date: Sat, 3 Mar 2018 16:09:46 +0000
+Message-ID: <DM5PR2101MB1030BC8E7A263D65A1A64B26DCC40@DM5PR2101MB1030.namprd21.prod.outlook.com>
+References: <20180303001947.20564-1-decui@microsoft.com>
+ <20180303001947.20564-2-decui@microsoft.com>
+In-Reply-To: <20180303001947.20564-2-decui@microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> -----Original Message-----
+> From: linux-kernel-owner@vger.kernel.org <linux-kernel-owner@vger.kernel.=
+org> On Behalf
+> Of Dexuan Cui
+> Sent: Friday, March 2, 2018 4:21 PM
+> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan <kys@mi=
+crosoft.com>;
+> Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;=
+ Haiyang Zhang
+> <haiyangz@microsoft.com>; olaf@aepfle.de; apw@canonical.com; jasowang@red=
+hat.com;
+> vkuznets@redhat.com; marcelo.cerri@canonical.com; Dexuan Cui <decui@micro=
+soft.com>;
+> Jack Morgenstein <jackm@mellanox.com>; stable@vger.kernel.org
+> Subject: [PATCH 2/3] PCI: hv: serialize the present/eject work items
+>=20
+> When we hot-remove the device, we first receive a PCI_EJECT message and
+> then receive a PCI_BUS_RELATIONS message with bus_rel->device_count =3D=
+=3D 0.
+>=20
+> The first message is offloaded to hv_eject_device_work(), and the second
+> is offloaded to pci_devices_present_work(). Both the paths can be running
+> list_del(&hpdev->list_entry), causing general protection fault, because
+> system_wq can run them concurrently.
+>=20
+> The patch eliminates the race condition.
 
-Stephen,
+With this patch, the enum_sem field in struct hv_pcibus_device
+is no longer needed.  The semaphore serializes execution in
+hv_pci_devices_present_work(), and that serialization is now done
+with the ordered workqueue.  Also, the last paragraph of the top level
+comment for hv_pci_devices_present_work() should be updated to
+reflect the new ordering assumptions.
 
->> It would be useful if those configurations were not left behind so
->> that Linux could feasibly deploy offload code to a controller in the
->> PCI domain.
->    
-> Agreed. I think this would be great. Kind of like the XCOPY framework
-> that was proposed a while back for SCSI devices [1] but updated to also
-> include NVMe devices. That is definitely a use case we would like this
-> framework to support.
+Separately, an unrelated bug:  At the top of hv_eject_device_work(),
+the first test may do a put_pcichild() and return.  This exit path also
+needs to do put_hvpcibus() to balance the ref counts, or do a goto
+the last two lines at the bottom of the function.
 
-I'm on my umpteenth rewrite of the block/SCSI offload code. It is not as
-protocol-agnostic as I would like in the block layer facing downwards.
-It has proven quite hard to reconcile token-based and EXTENDED COPY
-semantics along with the desire to support stacking. But from an
-application/filesystem perspective everything looks the same regardless
-of the intricacies of the device. Nothing is preventing us from
-supporting other protocols...
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
+> Tested-by: Chris Valean <v-chvale@microsoft.com>
+> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Cc: Jack Morgenstein <jackm@mellanox.com>
+> Cc: stable@vger.kernel.org
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 19 ++++++++++++++++---
+>  1 file changed, 16 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
+c
+> index 1233300f41c6..57b1fb3ebdb9 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -461,6 +461,8 @@ struct hv_pcibus_device {
+>  	struct retarget_msi_interrupt retarget_msi_interrupt_params;
+>=20
+>  	spinlock_t retarget_msi_interrupt_lock;
+> +
+> +	struct workqueue_struct *wq;
+>  };
+>=20
+>  /*
+> @@ -1770,7 +1772,7 @@ static void hv_pci_devices_present(struct hv_pcibus=
+_device *hbus,
+>  	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+>=20
+>  	get_hvpcibus(hbus);
+> -	schedule_work(&dr_wrk->wrk);
+> +	queue_work(hbus->wq, &dr_wrk->wrk);
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+This invocation of get_hvpcibus() and queue_work() could be made
+conditional on whether the preceding list_add_tail() transitioned
+the list from empty to non-empty.  If the list was already non-empty,
+a previously queued invocation of hv_pci_devices_present_work()
+will find the new entry and process it.   But this is an
+optimization in a non-perf sensitive code path, so may not be
+worth it.
+
+>  }
+>=20
+>  /**
+> @@ -1848,7 +1850,7 @@ static void hv_pci_eject_device(struct hv_pci_dev *=
+hpdev)
+>  	get_pcichild(hpdev, hv_pcidev_ref_pnp);
+>  	INIT_WORK(&hpdev->wrk, hv_eject_device_work);
+>  	get_hvpcibus(hpdev->hbus);
+> -	schedule_work(&hpdev->wrk);
+> +	queue_work(hpdev->hbus->wq, &hpdev->wrk);
+>  }
+>=20
+>  /**
+> @@ -2463,11 +2465,17 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
+>  	sema_init(&hbus->enum_sem, 1);
+>  	init_completion(&hbus->remove_event);
+> +	hbus->wq =3D alloc_ordered_workqueue("hv_pci_%x", 0,
+> +					   hbus->sysdata.domain);
+> +	if (!hbus->wq) {
+> +		ret =3D -ENOMEM;
+> +		goto free_bus;
+> +	}
+>=20
+>  	ret =3D vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0=
+,
+>  			 hv_pci_onchannelcallback, hbus);
+>  	if (ret)
+> -		goto free_bus;
+> +		goto destroy_wq;
+>=20
+>  	hv_set_drvdata(hdev, hbus);
+>=20
+> @@ -2536,6 +2544,9 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	hv_free_config_window(hbus);
+>  close:
+>  	vmbus_close(hdev->channel);
+> +destroy_wq:
+> +	drain_workqueue(hbus->wq);
+
+The drain_workqueue() call isn't necessary.  destroy_workqueue() calls
+drain_workqueue() and there better not be anything in the workqueue
+anyway since all the ref counts are zero.
+
+> +	destroy_workqueue(hbus->wq);
+>  free_bus:
+>  	free_page((unsigned long)hbus);
+>  	return ret;
+> @@ -2615,6 +2626,8 @@ static int hv_pci_remove(struct hv_device *hdev)
+>  	irq_domain_free_fwnode(hbus->sysdata.fwnode);
+>  	put_hvpcibus(hbus);
+>  	wait_for_completion(&hbus->remove_event);
+> +	drain_workqueue(hbus->wq);
+
+Same here -- drain_workqueue() isn't needed.  The workqueue
+must be empty anyway since the remove_event has completed
+and the ref counts will all be zero.
+
+> +	destroy_workqueue(hbus->wq);
+>  	free_page((unsigned long)hbus);
+>  	return 0;
+>  }
+> --
+> 2.7.4
