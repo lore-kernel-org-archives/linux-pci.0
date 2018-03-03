@@ -1,147 +1,156 @@
-Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
-Date: Mon, 12 Mar 2018 17:26:26 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Oza Pawandeep <poza@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philippe Ombredanne <pombredanne@nexb.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kate Stewart <kstewart@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
-	Timur Tabi <timur@codeaurora.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
-Message-ID: <20180312232626.GI18494@localhost.localdomain>
-References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
- <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
- <04ade52e-d1ea-fe67-bb26-246621d159e6@codeaurora.org>
- <20180312142551.GB18494@localhost.localdomain>
- <20180312194236.GA12195@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sg2apc01on0106.outbound.protection.outlook.com ([104.47.125.106]:49948
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S935421AbeCCAU5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Mar 2018 19:20:57 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Jack Morgenstein <jackm@mellanox.com>
+Subject: [PATCH 3/3] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
+Date: Sat, 3 Mar 2018 00:20:47 +0000
+Message-ID: <20180303001947.20564-3-decui@microsoft.com>
+References: <20180303001947.20564-1-decui@microsoft.com>
+In-Reply-To: <20180303001947.20564-1-decui@microsoft.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180312194236.GA12195@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 02:47:30PM -0500, Bjorn Helgaas wrote:
-> [+cc Alex]
-> 
-> On Mon, Mar 12, 2018 at 08:25:51AM -0600, Keith Busch wrote:
-> > On Sun, Mar 11, 2018 at 11:03:58PM -0400, Sinan Kaya wrote:
-> > > On 3/11/2018 6:03 PM, Bjorn Helgaas wrote:
-> > > > On Wed, Feb 28, 2018 at 10:34:11PM +0530, Oza Pawandeep wrote:
-> > > 
-> > > > That difference has been there since the beginning of DPC, so it has
-> > > > nothing to do with *this* series EXCEPT for the fact that it really
-> > > > complicates the logic you're adding to reset_link() and
-> > > > broadcast_error_message().
-> > > > 
-> > > > We ought to be able to simplify that somehow because the only real
-> > > > difference between AER and DPC should be that DPC automatically
-> > > > disables the link and AER does it in software.
-> > > 
-> > > I agree this should be possible. Code execution path should be almost
-> > > identical to fatal error case.
-> > > 
-> > > Is there any reason why you went to stop driver path, Keith?
-> > 
-> > The fact is the link is truly down during a DPC event. When the link
-> > is enabled again, you don't know at that point if the device(s) on the
-> > other side have changed.
-> 
-> When DPC is triggered, the port takes the link down.  When we handle
-> an uncorrectable (nonfatal or fatal) AER event, software takes the
-> link down.
-> 
-> In both cases, devices on the other side are at least reset.  Whenever
-> the link goes down, it's conceivable the device could be replaced with
-> a different one before the link comes back up.  Is this why you remove
-> and re-enumerate?  (See tangent [1] below.)
+1. With the patch "x86/vector/msi: Switch to global reservation mode"
+(4900be8360), the recent v4.15 and newer kernels always hang for 1-vCPU
+Hyper-V VM with SR-IOV. This is because when we reach hv_compose_msi_msg()
+by request_irq()  -> request_threaded_irq() -> __setup_irq()->irq_startup()
+ -> __irq_startup() -> irq_domain_activate_irq() -> ... ->
+msi_domain_activate() -> ... -> hv_compose_msi_msg(), local irq is
+disabled in __setup_irq().
 
-Yes. Truthfully, DPC events due to changing topologies was the motivating
-use case when we initially developed this. We were also going for
-simplicity (at least initially), and remove + re-enumerate seemed
-safe without concerning this driver with other capability regsiters, or
-coordinating with/depending on other drivers. For example, a successful
-reset may depend on any particular driver calling pci_restore_state from
-a good saved state.
+Fix this by polling the channel.
 
-> The point is that from the device's hardware perspective, these
-> scenarios are the same (it sent a ERR_NONFATAL or ERR_FATAL message
-> and it sees the link go down).  I think we should make them the same
-> on the software side, too: the driver should see the same callbacks,
-> in the same order, whether we're doing AER or DPC.
-> 
-> If removing and re-enumerating is the right thing for DPC, I think
-> that means it's also the right thing for AER.
-> 
-> Along this line, we had a question a while back about logging AER
-> information after a DPC trigger.  Obviously we can't collect any
-> logged information from the downstream devices while link is down, but
-> I noticed the AER status bits are RW1CS, which means they're sticky
-> and are not modified by hot reset or FLR.
-> 
-> So we may be able to read and log the AER information after the DPC
-> driver brings the link back up.  We may want to do the same with AER,
-> i.e., reset the downstream devices first, then collect the AER status
-> bits after the link comes back up.
+2. If the host is ejecting the VF device before we reach
+hv_compose_msi_msg(), in a UP VM, we can hang in hv_compose_msi_msg()
+forever, because at this time the host doesn't respond to the
+CREATE_INTERRUPT request. This issue also happens to old kernels like
+v4.14, v4.13, etc.
 
-I totally agree. We could consult Slot and AER status to guide a
-smarter approach.
+Fix this by polling the channel for the PCI_EJECT message and
+hpdev->state, and by checking the PCI vendor ID.
 
-> > Calling a driver's error handler for the wrong device in an unknown
-> > state may have undefined results. Enumerating the slot from scratch
-> > should be safe, and will assign resources, tune bus settings, and
-> > bind to the matching driver.
-> 
-> I agree with this; I think this is heading toward doing
-> remove/re-enumerate on AER errors as well because it has also reset
-> the device.
-> 
-> > Per spec, DPC is the recommended way for handling surprise removal
-> > events and even recommends DPC capable slots *not* set 'Surprise'
-> > in Slot Capabilities so that removals are always handled by DPC. This
-> > service driver was developed with that use in mind.
-> 
-> Thanks for this tip.  The only thing I've found so far is the mention
-> of Surprise Down triggering DPC in the last paragraph of sec 6.7.5.
-> Are there other references I should look at?  I haven't found the
-> recommendation about not setting 'Surprise' in Slot Capabilities yet.
+Note: actually the above issues also happen to a SMP VM, if
+"hbus->hdev->channel->target_cpu =3D=3D smp_processor_id()" is true.
 
-No problem, it's in the "IMPLEMENTATION NOTE" at the end of 6.2.10.4,
-"Avoid Disabled Link and Hot-Plug Surprise Use with DPC".
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
+Tested-by: Chris Valean <v-chvale@microsoft.com>
+Cc: stable@vger.kernel.org
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Jack Morgenstein <jackm@mellanox.com>
+---
+ drivers/pci/host/pci-hyperv.c | 58 +++++++++++++++++++++++++++++++++++++++=
++++-
+ 1 file changed, 57 insertions(+), 1 deletion(-)
 
-Outside the spec, Microsemi as one of the PCI-SIG contributors and early
-adopters of the capability published a white paper "Hot and Surprise
-Plug Recommendations for Enterprise PCIe" providing guidance for OS
-drivers using DPC. We originally developed to that guidance. The paper
-unfortunately appears to be pay-walled now. :(
-
-DPC triggers don't necessarily mean a surprise removal occurred, and
-I understand those conditions are motivating motivating these current
-proposals. I've no qualms adding smarter handling as long as we don't
-break removals: there are installations relying on this.
-
-> [1] Tangent: I have similar concerns with the device reset paths.  We
-> currently save some config state, reset the device, and restore the
-> config state.  It's theoretically possible that the device was
-> replaced or came up with different firmware after the reset, so I
-> would really prefer to remove and re-enumerate there, too.  But that
-> would make it hard for things up the stack that want to reset the
-> device but not re-setup the whole stack.
-> 
-> I wonder if DPC is going to cause trouble for that scenario.  That's
-> not an argument against DPC, but it might be a stronger reason to
-> figure out how to deal with remove/re-enumerate in those stacks.
-
-Indeed, that's a great point. From a storage perspective, when a removal
-tears down the block devices, re-adding the same device initializes as a
-new block handle. Applications with open file descriptors on old handles
-are going to have a bad time. You can open through device mappers to
-avoid those problems, but inflight IO may be aborted.
-
-I assume other classes of devices have similar implications to consider,
-so I agree expanding remove/re-enumerate may need to be considered
-carefully.
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 57b1fb3ebdb9..32d6b03cdd40 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -522,6 +522,8 @@ struct hv_pci_compl {
+ 	s32 completion_status;
+ };
+=20
++static void hv_pci_onchannelcallback(void *context);
++
+ /**
+  * hv_pci_generic_compl() - Invoked for a completion packet
+  * @context:		Set up by the sender of the packet.
+@@ -666,6 +668,31 @@ static void _hv_pcifront_read_config(struct hv_pci_dev=
+ *hpdev, int where,
+ 	}
+ }
+=20
++static u16 hv_pcifront_get_vendor_id(struct hv_pci_dev *hpdev)
++{
++	u16 ret;
++	unsigned long flags;
++	void __iomem *addr =3D hpdev->hbus->cfg_addr + CFG_PAGE_OFFSET +
++			     PCI_VENDOR_ID;
++
++	spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
++
++	/* Choose the function to be read. (See comment above) */
++	writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
++	/* Make sure the function was chosen before we start reading. */
++	mb();
++	/* Read from that function's config space. */
++	ret =3D readw(addr);
++	/*
++	 * mb() is not required here, because the spin_unlock_irqrestore()
++	 * is a barrier.
++	 */
++
++	spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
++
++	return ret;
++}
++
+ /**
+  * _hv_pcifront_write_config() - Internal PCI config write
+  * @hpdev:	The PCI driver's representation of the device
+@@ -1108,8 +1135,37 @@ static void hv_compose_msi_msg(struct irq_data *data=
+, struct msi_msg *msg)
+ 	 * Since this function is called with IRQ locks held, can't
+ 	 * do normal wait for completion; instead poll.
+ 	 */
+-	while (!try_wait_for_completion(&comp.comp_pkt.host_event))
++	while (!try_wait_for_completion(&comp.comp_pkt.host_event)) {
++		/* 0xFFFF means an invalid PCI VENDOR ID. */
++		if (hv_pcifront_get_vendor_id(hpdev) =3D=3D 0xFFFF) {
++			dev_err_once(&hbus->hdev->device,
++				     "the device has gone\n");
++			goto free_int_desc;
++		}
++
++		/*
++		 * When the higher level interrupt code calls us with
++		 * interrupt disabled, we must poll the channel by calling
++		 * the channel callback directly when channel->target_cpu is
++		 * the current CPU. When the higher level interrupt code
++		 * calls us with interrupt enabled, let's add the
++		 * local_bh_disable()/enable() to avoid race.
++		 */
++		local_bh_disable();
++
++		if (hbus->hdev->channel->target_cpu =3D=3D smp_processor_id())
++			hv_pci_onchannelcallback(hbus);
++
++		local_bh_enable();
++
++		if (hpdev->state =3D=3D hv_pcichild_ejecting) {
++			dev_err_once(&hbus->hdev->device,
++				     "the device is being ejected\n");
++			goto free_int_desc;
++		}
++
+ 		udelay(100);
++	}
+=20
+ 	if (comp.comp_pkt.completion_status < 0) {
+ 		dev_err(&hbus->hdev->device,
+--=20
+2.7.4
