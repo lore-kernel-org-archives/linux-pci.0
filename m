@@ -1,74 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:36027 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935015AbeCBXpX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 18:45:23 -0500
-Subject: [PATCH 3/3] virtio_pci: Add support for unmanaged SR-IOV on
- virtio_pci devices
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, mheyne@amazon.de,
-        liang-min.wang@intel.com, mark.d.rustad@intel.com,
-        dwmw2@infradead.org, dwmw@amazon.co.uk
-Date: Fri, 02 Mar 2018 15:45:20 -0800
-Message-ID: <20180302234459.3337.5625.stgit@localhost.localdomain>
-In-Reply-To: <20180302234218.3337.16486.stgit@localhost.localdomain>
-References: <20180302234218.3337.16486.stgit@localhost.localdomain>
+Return-Path: <SRS0=VrDU=F2=gmail.com=htejun@kernel.org>
+Return-Path: <SRS0=VrDU=F2=gmail.com=htejun@kernel.org>
+Sender: Tejun Heo <htejun@gmail.com>
+Date: Sun, 4 Mar 2018 12:36:40 -0800
+From: Tejun Heo <tj@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] ahci/pci-quirks: Add PCI-id for the Highpoint
+ Rocketraid 644L card
+Message-ID: <20180304203640.GF231488@devbig577.frc2.facebook.com>
+References: <20180302103633.10592-1-hdegoede@redhat.com>
+ <20180302192907.GB202062@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180302192907.GB202062@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+On Fri, Mar 02, 2018 at 01:29:07PM -0600, Bjorn Helgaas wrote:
+> On Fri, Mar 02, 2018 at 11:36:31AM +0100, Hans de Goede wrote:
+> > Hi All,
+> > 
+> > Here are 2 patches adding support for Highpoint Rocketraid 644L cards,
+> > they can be merged independently from each-other into their resp. subsys,
+> > but since they belong together I'm sending them out as a series.
+> 
+> Seems like it'd be nice to keep these together, so Tejun, feel free to
+> take both patches with my
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> on the pci/quirks.c patch.  If you'd prefer me to take them, just let
+> me know.
 
-Hardware-realized virtio_pci devices can implement SR-IOV, so this
-patch enables its use. The device in question is an upcoming Intel
-NIC that implements both a virtio_net PF and virtio_net VFs. These
-are hardware realizations of what has been up to now been a software
-interface.
+Applied both to libata/for-4.16-fixes with ack added.
 
-The device in question has the following 4-part PCI IDs:
+Thanks.
 
-PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
-VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
-
-The patch currently needs no check for device ID, because the callback
-will never be made for devices that do not assert the capability or
-when run on a platform incapable of SR-IOV.
-
-One reason for this patch is because the hardware requires the
-vendor ID of a VF to be the same as the vendor ID of the PF that
-created it. So it seemed logical to simply have a fully-functioning
-virtio_net PF create the VFs. This patch makes that possible.
-
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
----
- drivers/virtio/virtio_pci_common.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-index 48d4d1cf1cb6..ca1549393255 100644
---- a/drivers/virtio/virtio_pci_common.c
-+++ b/drivers/virtio/virtio_pci_common.c
-@@ -584,6 +584,7 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
- 	else
- 		virtio_pci_modern_remove(vp_dev);
- 
-+	pci_disable_sriov(pci_dev);
- 	pci_disable_device(pci_dev);
- 	put_device(dev);
- }
-@@ -596,6 +597,9 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
- #ifdef CONFIG_PM_SLEEP
- 	.driver.pm	= &virtio_pci_pm_ops,
- #endif
-+#ifdef CONFIG_PCI_IOV
-+	.sriov_configure = pci_sriov_configure_unmanaged,
-+#endif
- };
- 
- module_pci_driver(virtio_pci_driver);
+-- 
+tejun
