@@ -1,77 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:45986 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932296AbeCSKxW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 06:53:22 -0400
+Return-Path: <SRS0=0dlP=F3=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=0dlP=F3=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+ Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-5-logang@deltatee.com>
+ <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
+ <bab9fb8b-1449-4b87-94de-7da26a279331@deltatee.com>
+ <20180305222821.GA33706@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <a379d024-e192-e78d-e0e1-71e1f9bcd7e3@deltatee.com>
+Date: Mon, 5 Mar 2018 16:01:20 -0700
 MIME-Version: 1.0
-In-Reply-To: <b7dad289-c9de-ae19-a0d2-3eb127e0955a@gmail.com>
-References: <20180318105253.30532-1-marek.vasut+renesas@gmail.com>
- <20180319083839.h3qdt4obbsbqlx73@verge.net.au> <b7dad289-c9de-ae19-a0d2-3eb127e0955a@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 19 Mar 2018 11:53:21 +0100
-Message-ID: <CAMuHMdVjU=1ndTK1jTU90Vw2sgPsTRRsH56vvY6nuuoDWUo-Aw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Simon Horman <horms@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180305222821.GA33706@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
 
-On Mon, Mar 19, 2018 at 10:53 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> On 03/19/2018 09:38 AM, Simon Horman wrote:
->> On Sun, Mar 18, 2018 at 11:52:52AM +0100, Marek Vasut wrote:
->>> The data link active signal usually takes ~20 uSec to be asserted,
->>> poll the bit more often to avoid useless delays in this function.
->>>
->>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>> Cc: linux-renesas-soc@vger.kernel.org
->>
->> Unless my eyes deceive me this seems to be quite a lot (100x) more often,
->> but so be it.
->
-> It's just a higher frequency to avoid slowdown when bringing the link up.
 
-No it isn't: you replaced a sleep by a delay, thus making it blocking.
-So this can spin for up to 50 ms (+ overhead)?
+On 05/03/18 03:28 PM, Bjorn Helgaas wrote:
+> If you put the #ifdef right here, then it's easier to read because we
+> can see that "oh, this is a special and uncommon case that I can
+> probably ignore".
 
->>> --- a/drivers/pci/host/pcie-rcar.c
->>> +++ b/drivers/pci/host/pcie-rcar.c
->>> @@ -528,13 +528,13 @@ static void phy_write_reg(struct rcar_pcie *pcie,
->>>
->>>  static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
->>>  {
->>> -    unsigned int timeout = 10;
->>> +    unsigned int timeout = 10000;
->>>
->>>      while (timeout--) {
->>>              if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
->>>                      return 0;
->>>
->>> -            msleep(5);
->>> +            udelay(5);
->>>      }
->>>
->>>      return -ETIMEDOUT;
+Makes sense. I'll do that.
 
-Gr{oetje,eeting}s,
+Thanks,
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Logan
