@@ -1,115 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36060 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:58832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751300AbeCMWtT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 18:49:19 -0400
-To: Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
- <016dc910-f96a-8a60-4bda-fa24eea98ea5@codeaurora.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <2b152932-2f44-408b-e3ed-b4608d95f82e@deltatee.com>
-Date: Tue, 13 Mar 2018 16:48:55 -0600
+        id S1751880AbeCETfm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 14:35:42 -0500
+Date: Mon, 5 Mar 2018 13:35:39 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kenny Ballou <kballou@devnulllabs.io>
+Cc: linux-pci@vger.kernel.org, googlegot@yahoo.com, bhelgaas@google.com
+Subject: Re: [PATCH] pci: use kstrtobool over ad hoc string parsing
+Message-ID: <20180305193539.GB255556@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180212230457.23181-1-kballou@devnulllabs.io>
+ <20180228033228.GE127842@bhelgaas-glaptop.roam.corp.google.com>
+ <878tbavy4b.fsf@devnulllabs.io>
+ <20180305142840.GA255556@bhelgaas-glaptop.roam.corp.google.com>
+ <87606aeepz.fsf@devnulllabs.io>
 MIME-Version: 1.0
-In-Reply-To: <016dc910-f96a-8a60-4bda-fa24eea98ea5@codeaurora.org>
 Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+In-Reply-To: <87606aeepz.fsf@devnulllabs.io>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 13/03/18 04:29 PM, Sinan Kaya wrote:
-> If hardware doesn't support it, blacklisting should have been the right
-> path and I still think that you should remove all switch business from the code.
-> I did not hear enough justification for having a switch requirement
-> for P2P.
-
-I disagree.
-
-> You are also saying that root ports have issues not because of functionality but
-> because of performance. 
-
-No... performance can also be an issue but the main justification for
-this is that many root ports do not support P2P at all and can fail in
-different ways (usually just dropping the TLPs).
-
-> What if I come up with a very cheap/crappy switch (something like used in data
-> mining)?
-
-Good luck. That's not how hardware is designed. PCIe switches that have
-any hope to compete with the existing market will need features like
-NTB, non-transparent ports, etc... and that implies a certain symmetry
-(ie there isn't a special host port because there may be more than one
-and it may move around) which implies that packets will always be able
-to forward between each ports which implies P2P will work.
-
-> I have been doing my best to provide feedback. It feels like you are throwing
-> them over the wall to be honest.
+On Mon, Mar 05, 2018 at 08:15:04AM -0700, Kenny Ballou wrote:
 > 
-> You keep implying "not my problem".
-
-Well, the fact of the matter is that extending this in all the ways
-people like you want face huge problems on all sides. These are not
-trivial issues and holding back work that works for our problem because
-it doesn't solve your problem is IMO just going to grind development in
-this area to a halt. We have to have something we can agree on which is
-safe to start building on. The building can't just emerge fully formed
-in one go.
-
-P2P proposal go back a long time and have never gotten anywhere because
-there are limitations and people want it to do things that are hard but
-don't want to contribute the work to solving those problems.
-
->> Well, if it's a problem for someone they'll have to solve it. We're
->> targeting JBOFs that have no use for ACS / IOMMU groups at all.
+> On 2018年03月05日 14:28 GMT, Bjorn Helgaas wrote:
+> > On Fri, Mar 02, 2018 at 04:47:16PM -0700, Kenny Ballou wrote:
+> >>
+> >> On 2018年02月28日 03:32 GMT, Bjorn Helgaas wrote:
+> >> > On Mon, Feb 12, 2018 at 04:04:57PM -0700, Kenny Ballou wrote:
+> >> >> Convert ROM read access enable/disable string parsing to use the
+> >> >> `kstrtobool` function.
+> >> >>
+> >> >> This fixes Bugzilla Bug 111301 -- Sysfs PCI rom file functionality does
+> >> >> not match documentation.
+> >> >>
+> >> >> bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111301
+> >> >>
+> >> >> Reported-by: googlegot@yahoo.com
+> >> >> Signed-off-by: Kenny Ballou <kballou@devnulllabs.io>
+> >> >> ---
+> >> >>  drivers/pci/pci-sysfs.c | 8 +++++---
+> >> >>  1 file changed, 5 insertions(+), 3 deletions(-)
+> >> >>
+> >> >> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> >> >> index eb6bee8724cc..3cde1f25e786 100644
+> >> >> --- a/drivers/pci/pci-sysfs.c
+> >> >> +++ b/drivers/pci/pci-sysfs.c
+> >> >> @@ -1424,10 +1424,12 @@ static ssize_t pci_write_rom(struct file *filp, struct kobject *kobj,
+> >> >>  {
+> >> >>  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+> >> >>
+> >> >> -	if ((off ==  0) && (*buf == '0') && (count == 2))
+> >> >> -		pdev->rom_attr_enabled = 0;
+> >> >> -	else
+> >> >> +	bool res = false;
+> >> >> +
+> >> >> +	if (kstrtobool(buf, &res) == 0 && res)
+> >> >>  		pdev->rom_attr_enabled = 1;
+> >> >> +	else
+> >> >> +		pdev->rom_attr_enabled = 0;
+> >> >>
+> >> >>  	return count;
+> >> >>  }
+> >> >
+> >> > I know I proposed kstrtobool().  But looking closer, I don't think
+> >> > it's the right answer because:
+> >> >
+> >> >   - kstrtobool() assumes a NULL-terminated string, and sysfs does not
+> >> >     guarantee that.  This is a binary file and we can write arbitrary
+> >> >     data to it.  kstrtobool_from_user() makes sure the string is
+> >> >     NULL-terminated, but it does a copy_from_user() that we don't want
+> >> >     in the sysfs case.
+> >> >
+> >> >   - The current behavior is that only 2-byte writes starting with '0'
+> >> >     disable the ROM, and all other writes enable it.
+> >> >
+> >> >     Using kstrtobool() would enable the ROM only for writes starting
+> >> >     with y/Y/1/on/oN/On/ON, and all other writes would disable it.
+> >> >
+> >> >     That changes the behavior for most writes, e.g., writing "2"
+> >> >     currently enables, but would now disable.  This feels
+> >> >     unnecessarily risky because we don't know what programs are
+> >> >     writing to enable the ROM.  The doc says to write "1", but the
+> >> >     code comment says "anything except 0".
+> >> >
+> >> > We *could* change the code to accept a single-byte '0' write, but I
+> >> > think the simplest solution would be to change the documentation to
+> >> > explicitly require a 2-byte "0\n" write to disable the ROM.
+> >> >
+> >> > Sorry for dithering on this.
+> >> >
+> >> > Bjorn
+> >>
+> >> I was not under the impression that this particular device needed data
+> >> written to it(?).  If it is the case that arbitrary data needs to be
+> >> written, your argument makes sense, and I can put together a patch for
+> >> the documentation instead.
+> >
+> > I'm not sure I understand your question, but here's a stab at
+> > answering it:
+> >
+> > The sysfs "rom" file has a read method (pci_read_rom()) and a write
+> > method (pci_write_rom()).  User-space software can open the file and
+> > do a read() system call to read the contents of the ROM from the
+> > device, so pci_read_rom() is directly connected to the PCI hardware
+> > device.
+> >
+> > The write method doesn't touch the hardware device at all; it's only a
+> > software switch, and the data written to the sysfs "rom" file is never
+> > written to the PCI hardware device at all.  It doesn't need any
+> > particular data written to it.  The data can be whatever we decide it
+> > should be, and we can interpret that data in any way we like since
+> > it's purely a software construct.
+> >
+> > However, there is user-space software that assumes certain behavior
+> > (enabling/disabling read access to the ROM).  We don't want to break
+> > that software.  Using kstrtobool() would change the interpretation of
+> > some writes.  We *could* assume that user-space software always writes
+> > "1" to enable reads of the ROM and "0" to disable reads, but it's
+> > impossible to be certain of that.
+> >
+> > So the safest thing in terms of not breaking the ABI is to leave the
+> > code unchanged but update the documentation.  Does that make sense?
+> >
+> > Bjorn
 > 
-> IMO, you (not somebody) should address this one way or the other before this
-> series land in upstream.
+> Perfectly clear.  Thank you for the explanation.  That confirms that I
+> was thinking about it correctly, but your desire to leave it unchanged
+> had me thinking I didn't understand how this all worked.
+> 
+> I, however, was not thinking about the broader context where such a
+> change is likely to break existing behaviour.  Thank you for keeping
+> that in mind.
+> 
+> The off-topic question would then be: how would one go about changing it
+> so that it's using a more consolidated string library, if that's at all
+> desired.  Would that be something where we have both code paths, the old
+> input handler and the `kstrtobool()` code, reporting warnings when they
+> differ in interpretation of user input?  I'm not suggesting it, but I'm
+> trying to understand how something like that _could_ change.
 
-The real way to address this (as I've mentioned before) is with some way
-of doing ACS and iomem groups dynamically. But this is a huge project in
-itself and is never going to be part of the P2P patchset.
+It's conceivable we could do something like emit warnings about a
+change in interpretation, and then after a few years, make the change
+permanent.  In this particular case, I don't think it's worth the
+trouble.
 
-> Another assumption: There are other architectures like ARM64 where IOMMU
-> is enabled by default even if you don't use VMs for security reasons.
-> IOMMU blocks stray transactions.
+If making the change fixed a security issue, we would just do it
+immediately and accept the fact that some user applications might
+break.  But I think the existing code is safe.
 
-True, but it doesn't change my point: ACS is not a requirement for Linux
-many many systems do not have it on at all or by default.
-
-> Didn't the ACS behavior change suddenly for no good reason when we enabled
-> your code even though I might not be using the P2P but I happen to have
-> a kernel with P2P config option?
-
-Well no, presumably you made a conscious choice to turn the config
-option on and build a custom kernel for your box. That doesn't seem very
-sudden and the reason is that the two concepts are very much at odds
-with each other: you can't have isolation and still have transactions
-between devices.
-
-Logan
+Bjorn
