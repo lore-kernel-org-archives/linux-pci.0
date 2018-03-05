@@ -1,81 +1,194 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57486 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751847AbeCWVut (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Mar 2018 17:50:49 -0400
-Date: Fri, 23 Mar 2018 16:50:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-Message-ID: <20180323215046.GC210003@bhelgaas-glaptop.roam.corp.google.com>
-References: <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
- <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
- <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
- <C90AA66C-FFC6-4CCA-B959-7BBECA65509C@raithlin.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53076 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751779AbeCEQTg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 11:19:36 -0500
+Date: Mon, 5 Mar 2018 16:19:28 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: kishon@ti.com, Bjorn Helgaas <bhelgaas@google.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        John Keeping <john@metanate.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] PCI: endpoint: Handle 64-bit BARs properly
+Message-ID: <20180305161928.GA30407@e107981-ln.cambridge.arm.com>
+References: <20180227115908.14593-1-niklas.cassel@axis.com>
+ <20180227115908.14593-2-niklas.cassel@axis.com>
+ <20180228142148.GD21854@e107981-ln.cambridge.arm.com>
+ <20180301144030.GA2348@axis.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <C90AA66C-FFC6-4CCA-B959-7BBECA65509C@raithlin.com>
+In-Reply-To: <20180301144030.GA2348@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 22, 2018 at 10:57:32PM +0000, Stephen  Bates wrote:
-> >  I've seen the response that peers directly below a Root Port could not
-> > DMA to each other through the Root Port because of the "route to self"
-> > issue, and I'm not disputing that.  
+On Thu, Mar 01, 2018 at 03:40:30PM +0100, Niklas Cassel wrote:
+> On Wed, Feb 28, 2018 at 02:21:48PM +0000, Lorenzo Pieralisi wrote:
+> > On Tue, Feb 27, 2018 at 12:59:05PM +0100, Niklas Cassel wrote:
+> > > A 64-bit BAR uses the succeeding BAR for the upper bits, therefore
+> > > we cannot call pci_epc_set_bar() on a BAR that follows a 64-bit BAR.
+> > > 
+> > > If pci_epc_set_bar() is called with flag PCI_BASE_ADDRESS_MEM_TYPE_64,
+> > 
+> > PCI_BASE_ADDRESS_MEM_TYPE_64 is detected through a sizeof(dma_addr_t).
+> > 
+> > I thought we decided to describe the BARs not as dma_addr_t + size but
+> > as resources, which would allow you to have flags describing their
+> > actual size.
+> > 
+> > Current code has a fixed BAR size defined by the dma_addr_t type size
+> > and I do not think that's what we really want.
 > 
-> Bjorn 
+> You suggested to Kishon that the bar member array should be refactored
+> to be an array of struct resources:
 > 
-> You asked me for a reference to RTS in the PCIe specification. As
-> luck would have it I ended up in an Irish bar with Peter Onufryk
-> this week at OCP Summit. We discussed the topic. It is not
-> explicitly referred to as "Route to Self" and it's certainly not
-> explicit (or obvious) but r6.2.8.1 of the PCIe 4.0 specification
-> discusses error conditions for virtual PCI bridges. One of these
-> conditions (given in the very first bullet in that section) applies
-> to a request that is destined for the same port it came in on. When
-> this occurs the request must be terminated as a UR.
+> https://marc.info/?l=linux-pci&m=151851776921594&w=2
+> 
+> That refactoring would be a good thing,
+> but can't it be done after the merge of this patch?
 
-Thanks for that reference!
+This patch does not look right to me - a BAR size should not be
+determined by sizeof(dma_addr_t) and on top of that this code is not
+easy to comprehend.
 
-I suspect figure 10-3 in sec 10.1.1 might also be relevant, although
-it's buried in the ATS section.  It shows internal routing between
-functions of a multifunction device.  That suggests that the functions
-should be able to DMA to each other without those transactions ever
-appearing on the link.
+> I'm guessing that one of the reasons why you want this
+> refactoring is so that you can actually call pci_epc_set_bar()
+> on each array member, so that you don't need my patch:
+> > > +           if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
+> > > +                   bar++;
+> 
+> However, if we want to omit this, I think that other changes would be needed.
+> 
+> Let's say that resource[x] is 64-bit, then resource[x+1] must not have
+> (IORESOURCE_MEM or IORESOURCE_IO) set.
+> 
+> It is important that BAR[x+1] == 0, for a 64-bit BAR.
+> 
+> So either pci_epc_set_bar() or epc->ops->set_bar()
+> must know to not touch its BAR (or BAR mask) register
+> if neither of those flags are set.
+> 
+> It's probably easier to change pci_epc_set_bar(), rather than
+> changing all epc->ops->set_bar() implementations,
+> here is e.g. part of set_bar() for DesignWare:
+> 
+> static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+>                               enum pci_barno bar,
+>                               dma_addr_t bar_phys, size_t size, int flags)
+> {
+>         int ret;
+>         struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>         struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>         enum dw_pcie_as_type as_type;
+>         u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+> 
+>         if (!(flags & PCI_BASE_ADDRESS_SPACE))
+>                 as_type = DW_PCIE_AS_MEM;
+>         else
+>                 as_type = DW_PCIE_AS_IO;
+> 
+> 
+> So I still see a point in having this patch, at least until
+> someone has refactored the code to use resource + modified pci_epc_set_bar().
 
-Popping way up the stack, my original point was that I'm trying to
-remove restrictions on what devices can participate in peer-to-peer
-DMA.  I think it's fairly clear that in conventional PCI, any devices
-in the same PCI hierarchy, i.e., below the same host-to-PCI bridge,
-should be able to DMA to each other.
+But the point is that, IIUC (because again - this code path is really
+confusing) it is up to the specific implementation to turn a struct
+pci_epf_bar into a *real* BAR and that's implementation specific
+(even though there must be a 1:1 relationship between
+struct pci_epf_bar.size and the actual BAR size in the device, ie
+if struct pci_epf_bar.size exceeds 32-bit space we need a 64-bit
+BAR to represent it).
 
-The routing behavior of PCIe is supposed to be compatible with
-conventional PCI, and I would argue that this effectively requires
-multi-function PCIe devices to have the internal routing required to
-avoid the route-to-self issue.
+I assume the problem here is having a 1:1 index mapping between the
+struct pci_epf.bar[6] array and the BAR index programmed into the
+device. If that's the case - I see two options:
 
-Bjorn
+- Use struct epf_bar.size to drive the reg increment (ie reg++ if
+  size > 4G)
+- Add a return value to struct pci_epc.ops.set_bar() that returns
+  whether a 64-bit BAR was set-up (which is the same __pci_read_base()
+  does in PCI core)
+
+Please let me know if I have not got this right so that we can make
+progress.
+
+Thanks,
+Lorenzo
+
+> > How is (in HW I mean) actually the BAR size configured in a given EPF ?
+> 
+> For the DesignWare PCIe controller (assuming it has been synthesized with
+> Programmable Masks), to configure a BAR, you set the usual prefetch+type bits
+> in the standard PCI BAR register, but then the controller also has, for each
+> bar, a special BAR mask register, which dw_pcie_ep_set_bar() sets to (size-1),
+> this defines which bits that will be writable by the RC (and the RC can figure
+> out the size of the BAR by writing all 1's as usual).
+> 
+> For a 64-bit Memory Space BAR of size 16 GiB (prefetchable), you would set:
+> BAR[x]        = 0000 0000 0000 0000 0000 0000 0000 1100
+> BAR[x+1]      = 0000 0000 0000 0000 0000 0000 0000 0000
+> 
+> BAR_MASK[x]   = 1111 1111 1111 1111 1111 1111 1111 1111
+> BAR_MASK[x+1] = 0000 0000 0000 0000 0000 0000 0000 0011
+> 
+> 
+> 
+> I guess that instead of patch 3/3 in this patch series,
+> we could do:
+> 
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -136,8 +136,15 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+>                 return ret;
+>  
+>         dw_pcie_dbi_ro_wr_en(pci);
+> -       dw_pcie_writel_dbi2(pci, reg, size - 1);
+> -       dw_pcie_writel_dbi(pci, reg, flags);
+> +       if (upper_32_bits(size)) {
+> +               dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
+> +               dw_pcie_writel_dbi(pci, reg, flags);
+> +               dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
+> +               dw_pcie_writel_dbi(pci, reg + 4, 0);
+> +       } else {
+> +               dw_pcie_writel_dbi2(pci, reg, size - 1);
+> +               dw_pcie_writel_dbi(pci, reg, flags);
+> +       }
+>         dw_pcie_dbi_ro_wr_dis(pci);
+>  
+>         return 0;
+> 
+> However, since I don't have access to a 64-bit CPU with loads of RAM,
+> that has the DesignWare PCIe controller, that patch is completely untested.
+> But if everyone agrees, we could replace 3/3 of this series with that.
+> 
+> 
+> > 
+> > Thanks,
+> > Lorenzo
+> > 
+> > > it has to be up to the controller driver to write both BAR[x] and BAR[x+1]
+> > > (and BAR_mask[x] and BAR_mask[x+1]).
+> > > 
+> > > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > > ---
+> > >  drivers/pci/endpoint/functions/pci-epf-test.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > index 64d8a17f8094..ecbf6a7750dc 100644
+> > > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > @@ -382,6 +382,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
+> > >  			if (bar == test_reg_bar)
+> > >  				return ret;
+> > >  		}
+> > > +		if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
+> > > +			bar++;
+> > >  	}
+> > >  
+> > >  	return 0;
+> > > -- 
+> > > 2.14.2
+> > > 
