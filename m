@@ -1,78 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:49621 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753098AbeC1Nrw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 09:47:52 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] pci: move pcie_pme_root_status_cleanup into SUSPEND section
-Date: Wed, 28 Mar 2018 15:47:18 +0200
-Message-Id: <20180328134747.2062348-1-arnd@arndb.de>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:50538 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751779AbeCET5f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Mar 2018 14:57:35 -0500
+Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the
+ CMB
+To: Keith Busch <keith.busch@intel.com>, Oliver <oohall@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-block@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-8-logang@deltatee.com>
+ <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
+ <20180305160004.GA30975@localhost.localdomain>
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
+Date: Mon, 5 Mar 2018 21:57:27 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180305160004.GA30975@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The power management code in pci-driver.c is a maze of #ifdefs, and
-the newly added pcie_pme_root_status_cleanup function ended up in the
-wrong one of them, causing a harmless warning in some configurations:
 
-drivers/pci/pci-driver.c:527:13: error: 'pcie_pme_root_status_cleanup' defined but not used [-Werror=unused-function]
- static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
-             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>>> -       if (nvmeq->sq_cmds_io)
+>>> -               memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
+>>> -       else
+>>> -               memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
+>>> +       memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
+>>
+>> Hmm, how safe is replacing memcpy_toio() with regular memcpy()? On PPC
+>> the _toio() variant enforces alignment, does the copy with 4 byte
+>> stores, and has a full barrier after the copy. In comparison our
+>> regular memcpy() does none of those things and may use unaligned and
+>> vector load/stores. For normal (cacheable) memory that is perfectly
+>> fine, but they can cause alignment faults when targeted at MMIO
+>> (cache-inhibited) memory.
+>>
+>> I think in this particular case it might be ok since we know SEQs are
+>> aligned to 64 byte boundaries and the copy is too small to use our
+>> vectorised memcpy(). I'll assume we don't need explicit ordering
+>> between writes of SEQs since the existing code doesn't seem to care
+>> unless the doorbell is being rung, so you're probably fine there too.
+>> That said, I still think this is a little bit sketchy and at the very
+>> least you should add a comment explaining what's going on when the CMB
+>> is being used. If someone more familiar with the NVMe driver could
+>> chime in I would appreciate it.
+> 
+> I may not be understanding the concern, but I'll give it a shot.
+> 
+> You're right, the start of any SQE is always 64-byte aligned, so that
+> should satisfy alignment requirements.
+> 
+> The order when writing multiple/successive SQEs in a submission queue
+> does matter, and this is currently serialized through the q_lock.
+> 
+> The order in which the bytes of a single SQE is written doesn't really
+> matter as long as the entire SQE is written into the CMB prior to writing
+> that SQ's doorbell register.
+> 
+> The doorbell register is written immediately after copying a command
+> entry into the submission queue (ignore "shadow buffer" features),
+> so the doorbells written to commands submitted is 1:1.
+> 
+> If a CMB SQE and DB order is not enforced with the memcpy, then we do
+> need a barrier after the SQE's memcpy and before the doorbell's writel.
 
-This moves the definition into the correct #ifdef section.
+Keith, while we're on this, regardless of cmb, is SQE memcopy and DB 
+update ordering always guaranteed?
 
-Fixes: 6c4dfc1389e1 ("PCI/PM: Clear PCIe PME Status bit in core, not PCIe port driver")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/pci/pci-driver.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+If you look at mlx4 (rdma device driver) that works exactly the same as
+nvme you will find:
+--
+                 qp->sq.head += nreq;
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index b9bca74e9eff..6ace47099fc5 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -524,19 +524,6 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
- 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
- }
- 
--static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
--{
--	/*
--	 * Some BIOSes forget to clear Root PME Status bits after system
--	 * wakeup, which breaks ACPI-based runtime wakeup on PCI Express.
--	 * Clear those bits now just in case (shouldn't hurt).
--	 */
--	if (pci_is_pcie(pci_dev) &&
--	    (pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT ||
--	     pci_pcie_type(pci_dev) == PCI_EXP_TYPE_RC_EC))
--		pcie_clear_root_pme_status(pci_dev);
--}
--
- /*
-  * Default "suspend" method for devices that have no driver provided suspend,
-  * or not even a driver at all (second part).
-@@ -726,6 +713,18 @@ static void pci_pm_complete(struct device *dev)
- #endif /* !CONFIG_PM_SLEEP */
- 
- #ifdef CONFIG_SUSPEND
-+static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
-+{
-+	/*
-+	 * Some BIOSes forget to clear Root PME Status bits after system
-+	 * wakeup, which breaks ACPI-based runtime wakeup on PCI Express.
-+	 * Clear those bits now just in case (shouldn't hurt).
-+	 */
-+	if (pci_is_pcie(pci_dev) &&
-+	    (pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT ||
-+	     pci_pcie_type(pci_dev) == PCI_EXP_TYPE_RC_EC))
-+		pcie_clear_root_pme_status(pci_dev);
-+}
- 
- static int pci_pm_suspend(struct device *dev)
- {
--- 
-2.9.0
+                 /*
+                  * Make sure that descriptors are written before
+                  * doorbell record.
+                  */
+                 wmb();
+
+                 writel(qp->doorbell_qpn,
+                        to_mdev(ibqp->device)->uar_map + 
+MLX4_SEND_DOORBELL);
+
+                 /*
+                  * Make sure doorbells don't leak out of SQ spinlock
+                  * and reach the HCA out of order.
+                  */
+                 mmiowb();
+--
+
+That seems to explicitly make sure to place a barrier before updating
+the doorbell. So as I see it, either ordering is guaranteed and the
+above code is redundant, or nvme needs to do the same.
+
+Thoughts?
