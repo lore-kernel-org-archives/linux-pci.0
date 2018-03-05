@@ -1,129 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sg2apc01on0106.outbound.protection.outlook.com ([104.47.125.106]:49948
-        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932890AbeCCAUz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Mar 2018 19:20:55 -0500
-From: Dexuan Cui <decui@microsoft.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Jack Morgenstein <jackm@mellanox.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: [PATCH 2/3] PCI: hv: serialize the present/eject work items
-Date: Sat, 3 Mar 2018 00:20:46 +0000
-Message-ID: <20180303001947.20564-2-decui@microsoft.com>
-References: <20180303001947.20564-1-decui@microsoft.com>
-In-Reply-To: <20180303001947.20564-1-decui@microsoft.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 35/37] iommu/arm-smmu-v3: Add support for PRI
+To: Dongdong Liu <liudongdong3@huawei.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-36-jean-philippe.brucker@arm.com>
+ <6f55afcf-04b0-0dc4-6c75-064b70e6851c@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <d4e8ad96-fe68-d869-a5ba-c901d4b436aa@arm.com>
+Date: Mon, 5 Mar 2018 13:09:19 +0000
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <6f55afcf-04b0-0dc4-6c75-064b70e6851c@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ Catalin Marinas <Catalin.Marinas@arm.com>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we hot-remove the device, we first receive a PCI_EJECT message and
-then receive a PCI_BUS_RELATIONS message with bus_rel->device_count =3D=3D =
-0.
+On 05/03/18 12:29, Dongdong Liu wrote:
+>>
+>> +static int arm_smmu_enable_pri(struct arm_smmu_master_data *master)
+>> +{
+>> +	int ret, pos;
+>> +	struct pci_dev *pdev;
+>> +	/*
+>> +	 * TODO: find a good inflight PPR number. We should divide the PRI queue
+>> +	 * by the number of PRI-capable devices, but it's impossible to know
+>> +	 * about current and future (hotplugged) devices. So we're at risk of
+>> +	 * dropping PPRs (and leaking pending requests in the FQ).
+>> +	 */
+>> +	size_t max_inflight_pprs = 16;
+>> +	struct arm_smmu_device *smmu = master->smmu;
+>> +
+>> +	if (!(smmu->features & ARM_SMMU_FEAT_PRI) || !dev_is_pci(master->dev))
+>> +		return -ENOSYS;
+>> +
+>> +	pdev = to_pci_dev(master->dev);
+>> +
+>  From here
+>> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+>> +	if (!pos)
+>> +		return -ENOSYS;
+> to here, seems this code is not needed as it is already done in
+> pci_reset_pri().
 
-The first message is offloaded to hv_eject_device_work(), and the second
-is offloaded to pci_devices_present_work(). Both the paths can be running
-list_del(&hpdev->list_entry), causing general protection fault, because
-system_wq can run them concurrently.
+Indeed, thanks. It would allow to differentiate a device that doesn't
+support PRI from a reset error, but since we ignore the return value at
+the moment I'll remove it.
 
-The patch eliminates the race condition.
+Thanks,
+Jean
 
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
-Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
-Tested-by: Chris Valean <v-chvale@microsoft.com>
-Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: Jack Morgenstein <jackm@mellanox.com>
-Cc: stable@vger.kernel.org
-Cc: Stephen Hemminger <sthemmin@microsoft.com>
-Cc: K. Y. Srinivasan <kys@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 1233300f41c6..57b1fb3ebdb9 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -461,6 +461,8 @@ struct hv_pcibus_device {
- 	struct retarget_msi_interrupt retarget_msi_interrupt_params;
-=20
- 	spinlock_t retarget_msi_interrupt_lock;
-+
-+	struct workqueue_struct *wq;
- };
-=20
- /*
-@@ -1770,7 +1772,7 @@ static void hv_pci_devices_present(struct hv_pcibus_d=
-evice *hbus,
- 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
-=20
- 	get_hvpcibus(hbus);
--	schedule_work(&dr_wrk->wrk);
-+	queue_work(hbus->wq, &dr_wrk->wrk);
- }
-=20
- /**
-@@ -1848,7 +1850,7 @@ static void hv_pci_eject_device(struct hv_pci_dev *hp=
-dev)
- 	get_pcichild(hpdev, hv_pcidev_ref_pnp);
- 	INIT_WORK(&hpdev->wrk, hv_eject_device_work);
- 	get_hvpcibus(hpdev->hbus);
--	schedule_work(&hpdev->wrk);
-+	queue_work(hpdev->hbus->wq, &hpdev->wrk);
- }
-=20
- /**
-@@ -2463,11 +2465,17 @@ static int hv_pci_probe(struct hv_device *hdev,
- 	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
- 	sema_init(&hbus->enum_sem, 1);
- 	init_completion(&hbus->remove_event);
-+	hbus->wq =3D alloc_ordered_workqueue("hv_pci_%x", 0,
-+					   hbus->sysdata.domain);
-+	if (!hbus->wq) {
-+		ret =3D -ENOMEM;
-+		goto free_bus;
-+	}
-=20
- 	ret =3D vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
- 			 hv_pci_onchannelcallback, hbus);
- 	if (ret)
--		goto free_bus;
-+		goto destroy_wq;
-=20
- 	hv_set_drvdata(hdev, hbus);
-=20
-@@ -2536,6 +2544,9 @@ static int hv_pci_probe(struct hv_device *hdev,
- 	hv_free_config_window(hbus);
- close:
- 	vmbus_close(hdev->channel);
-+destroy_wq:
-+	drain_workqueue(hbus->wq);
-+	destroy_workqueue(hbus->wq);
- free_bus:
- 	free_page((unsigned long)hbus);
- 	return ret;
-@@ -2615,6 +2626,8 @@ static int hv_pci_remove(struct hv_device *hdev)
- 	irq_domain_free_fwnode(hbus->sysdata.fwnode);
- 	put_hvpcibus(hbus);
- 	wait_for_completion(&hbus->remove_event);
-+	drain_workqueue(hbus->wq);
-+	destroy_workqueue(hbus->wq);
- 	free_page((unsigned long)hbus);
- 	return 0;
- }
---=20
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
