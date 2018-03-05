@@ -1,351 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:37662 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752925AbeCVLtN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Mar 2018 07:49:13 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 2/6] PCI: rockchip: Split out common function to parse DT
-Date: Thu, 22 Mar 2018 19:42:40 +0800
-Message-Id: <1521718960-160181-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1521718925-160084-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1521718925-160084-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-pu1apc01on0122.outbound.protection.outlook.com ([104.47.126.122]:13753
+        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751144AbeCEFLv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 00:11:51 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH 2/3] PCI: hv: serialize the present/eject work items
+Date: Mon, 5 Mar 2018 05:11:35 +0000
+Message-ID: <KL1P15301MB0006F7C015D8D113FC2ACD1DBFDA0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <20180303001947.20564-1-decui@microsoft.com>
+ <20180303001947.20564-2-decui@microsoft.com>
+ <DM5PR2101MB1030BC8E7A263D65A1A64B26DCC40@DM5PR2101MB1030.namprd21.prod.outlook.com>
+In-Reply-To: <DM5PR2101MB1030BC8E7A263D65A1A64B26DCC40@DM5PR2101MB1030.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Most of the DT properties are used for both of host and
-EP drivrs, so this patch spilt them out to new function,
-rockchip_pcie_parse_dt in pcie-rockchip.c and rename the
-original function to rockchip_pcie_parse_host_dt to avoid
-confusion. No functional changed intended.
+> From: Michael Kelley (EOSG)
+> Sent: Saturday, March 3, 2018 08:10
+> > From: linux-kernel-owner@vger.kernel.org <linux-kernel-
+> owner@vger.kernel.org> On Behalf Of Dexuan Cui
+> > Sent: Friday, March 2, 2018 4:21 PM
+> > When we hot-remove the device, we first receive a PCI_EJECT message and
+> > then receive a PCI_BUS_RELATIONS message with bus_rel->device_count =3D=
+=3D
+> 0.
+> >
+> > The first message is offloaded to hv_eject_device_work(), and the secon=
+d
+> > is offloaded to pci_devices_present_work(). Both the paths can be runni=
+ng
+> > list_del(&hpdev->list_entry), causing general protection fault, because
+> > system_wq can run them concurrently.
+> >
+> > The patch eliminates the race condition.
+>=20
+> With this patch, the enum_sem field in struct hv_pcibus_device
+> is no longer needed.  The semaphore serializes execution in
+> hv_pci_devices_present_work(), and that serialization is now done
+> with the ordered workqueue.  Also, the last paragraph of the top level
+> comment for hv_pci_devices_present_work() should be updated to
+> reflect the new ordering assumptions.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+Thanks! I'll make an extra patch for this.
 
-Changes in v4: None
-Changes in v2: None
+> Separately, an unrelated bug:  At the top of hv_eject_device_work(),
+> the first test may do a put_pcichild() and return.  This exit path also
+> needs to do put_hvpcibus() to balance the ref counts, or do a goto
+> the last two lines at the bottom of the function.
 
- drivers/pci/rockchip/pcie-rockchip-host.c | 119 ++-------------------------
- drivers/pci/rockchip/pcie-rockchip.c      | 128 ++++++++++++++++++++++++++++++
- drivers/pci/rockchip/pcie-rockchip.h      |   2 +
- 3 files changed, 135 insertions(+), 114 deletions(-)
+When we're in hv_eject_device_work(), IMO hpdev->state must be=20
+hv_pcichild_ejecting, so I'm going to make a patch like this:
 
-diff --git a/drivers/pci/rockchip/pcie-rockchip-host.c b/drivers/pci/rockchip/pcie-rockchip-host.c
-index 563f696..079949c 100644
---- a/drivers/pci/rockchip/pcie-rockchip-host.c
-+++ b/drivers/pci/rockchip/pcie-rockchip-host.c
-@@ -703,130 +703,20 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
- }
- 
- /**
-- * rockchip_pcie_parse_dt - Parse Device Tree
-+ * rockchip_pcie_parse_host_dt - Parse Device Tree
-  * @rockchip: PCIe port information
-  *
-  * Return: '0' on success and error value on failure
-  */
--static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
-+static int rockchip_pcie_parse_host_dt(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
--	struct platform_device *pdev = to_platform_device(dev);
--	struct device_node *node = dev->of_node;
--	struct resource *regs;
- 	int err;
- 
--	regs = platform_get_resource_byname(pdev,
--					    IORESOURCE_MEM,
--					    "axi-base");
--	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
--	if (IS_ERR(rockchip->reg_base))
--		return PTR_ERR(rockchip->reg_base);
--
--	regs = platform_get_resource_byname(pdev,
--					    IORESOURCE_MEM,
--					    "apb-base");
--	rockchip->apb_base = devm_ioremap_resource(dev, regs);
--	if (IS_ERR(rockchip->apb_base))
--		return PTR_ERR(rockchip->apb_base);
--
--	err = rockchip_pcie_get_phys(rockchip);
-+	err = rockchip_pcie_parse_dt(rockchip);
- 	if (err)
- 		return err;
- 
--	rockchip->lanes = 1;
--	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
--	if (!err && (rockchip->lanes == 0 ||
--		     rockchip->lanes == 3 ||
--		     rockchip->lanes > 4)) {
--		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
--		rockchip->lanes = 1;
--	}
--
--	rockchip->link_gen = of_pci_get_max_link_speed(node);
--	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
--		rockchip->link_gen = 2;
--
--	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
--	if (IS_ERR(rockchip->core_rst)) {
--		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
--			dev_err(dev, "missing core reset property in node\n");
--		return PTR_ERR(rockchip->core_rst);
--	}
--
--	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
--	if (IS_ERR(rockchip->mgmt_rst)) {
--		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
--			dev_err(dev, "missing mgmt reset property in node\n");
--		return PTR_ERR(rockchip->mgmt_rst);
--	}
--
--	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
--								     "mgmt-sticky");
--	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
--		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
--			dev_err(dev, "missing mgmt-sticky reset property in node\n");
--		return PTR_ERR(rockchip->mgmt_sticky_rst);
--	}
--
--	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
--	if (IS_ERR(rockchip->pipe_rst)) {
--		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
--			dev_err(dev, "missing pipe reset property in node\n");
--		return PTR_ERR(rockchip->pipe_rst);
--	}
--
--	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
--	if (IS_ERR(rockchip->pm_rst)) {
--		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
--			dev_err(dev, "missing pm reset property in node\n");
--		return PTR_ERR(rockchip->pm_rst);
--	}
--
--	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
--	if (IS_ERR(rockchip->pclk_rst)) {
--		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
--			dev_err(dev, "missing pclk reset property in node\n");
--		return PTR_ERR(rockchip->pclk_rst);
--	}
--
--	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
--	if (IS_ERR(rockchip->aclk_rst)) {
--		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
--			dev_err(dev, "missing aclk reset property in node\n");
--		return PTR_ERR(rockchip->aclk_rst);
--	}
--
--	rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
--	if (IS_ERR(rockchip->ep_gpio)) {
--		dev_err(dev, "missing ep-gpios property in node\n");
--		return PTR_ERR(rockchip->ep_gpio);
--	}
--
--	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
--	if (IS_ERR(rockchip->aclk_pcie)) {
--		dev_err(dev, "aclk clock not found\n");
--		return PTR_ERR(rockchip->aclk_pcie);
--	}
--
--	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
--	if (IS_ERR(rockchip->aclk_perf_pcie)) {
--		dev_err(dev, "aclk_perf clock not found\n");
--		return PTR_ERR(rockchip->aclk_perf_pcie);
--	}
--
--	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
--	if (IS_ERR(rockchip->hclk_pcie)) {
--		dev_err(dev, "hclk clock not found\n");
--		return PTR_ERR(rockchip->hclk_pcie);
--	}
--
--	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
--	if (IS_ERR(rockchip->clk_pcie_pm)) {
--		dev_err(dev, "pm clock not found\n");
--		return PTR_ERR(rockchip->clk_pcie_pm);
--	}
--
- 	err = rockchip_pcie_setup_irq(rockchip);
- 	if (err)
- 		return err;
-@@ -1193,8 +1083,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 
- 	platform_set_drvdata(pdev, rockchip);
- 	rockchip->dev = dev;
-+	rockchip->is_rc = true;
- 
--	err = rockchip_pcie_parse_dt(rockchip);
-+	err = rockchip_pcie_parse_host_dt(rockchip);
- 	if (err)
- 		return err;
- 
-diff --git a/drivers/pci/rockchip/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip.c
-index d7fd327..0040c34 100644
---- a/drivers/pci/rockchip/pcie-rockchip.c
-+++ b/drivers/pci/rockchip/pcie-rockchip.c
-@@ -12,10 +12,138 @@
-  */
- 
- #include <linux/clk.h>
-+#include <linux/gpio/consumer.h>
-+#include <linux/of_pci.h>
- #include <linux/phy/phy.h>
-+#include <linux/platform_device.h>
-+#include <linux/reset.h>
- 
- #include "pcie-rockchip.h"
- 
-+int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
-+{
-+	struct device *dev = rockchip->dev;
-+	struct platform_device *pdev = to_platform_device(dev);
-+	struct device_node *node = dev->of_node;
-+	struct resource *regs;
-+	int err;
-+
-+	regs = platform_get_resource_byname(pdev,
-+					    IORESOURCE_MEM,
-+					    "axi-base");
-+	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
-+	if (IS_ERR(rockchip->reg_base))
-+		return PTR_ERR(rockchip->reg_base);
-+
-+	regs = platform_get_resource_byname(pdev,
-+					    IORESOURCE_MEM,
-+					    "apb-base");
-+	rockchip->apb_base = devm_ioremap_resource(dev, regs);
-+	if (IS_ERR(rockchip->apb_base))
-+		return PTR_ERR(rockchip->apb_base);
-+
-+	err = rockchip_pcie_get_phys(rockchip);
-+	if (err)
-+		return err;
-+
-+	rockchip->lanes = 1;
-+	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
-+	if (!err && (rockchip->lanes == 0 ||
-+		     rockchip->lanes == 3 ||
-+		     rockchip->lanes > 4)) {
-+		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
-+		rockchip->lanes = 1;
-+	}
-+
-+	rockchip->link_gen = of_pci_get_max_link_speed(node);
-+	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
-+		rockchip->link_gen = 2;
-+
-+	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
-+	if (IS_ERR(rockchip->core_rst)) {
-+		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing core reset property in node\n");
-+		return PTR_ERR(rockchip->core_rst);
-+	}
-+
-+	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
-+	if (IS_ERR(rockchip->mgmt_rst)) {
-+		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing mgmt reset property in node\n");
-+		return PTR_ERR(rockchip->mgmt_rst);
-+	}
-+
-+	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
-+								     "mgmt-sticky");
-+	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
-+		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing mgmt-sticky reset property in node\n");
-+		return PTR_ERR(rockchip->mgmt_sticky_rst);
-+	}
-+
-+	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
-+	if (IS_ERR(rockchip->pipe_rst)) {
-+		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing pipe reset property in node\n");
-+		return PTR_ERR(rockchip->pipe_rst);
-+	}
-+
-+	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
-+	if (IS_ERR(rockchip->pm_rst)) {
-+		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing pm reset property in node\n");
-+		return PTR_ERR(rockchip->pm_rst);
-+	}
-+
-+	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
-+	if (IS_ERR(rockchip->pclk_rst)) {
-+		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing pclk reset property in node\n");
-+		return PTR_ERR(rockchip->pclk_rst);
-+	}
-+
-+	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
-+	if (IS_ERR(rockchip->aclk_rst)) {
-+		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
-+			dev_err(dev, "missing aclk reset property in node\n");
-+		return PTR_ERR(rockchip->aclk_rst);
-+	}
-+
-+	if (rockchip->is_rc) {
-+		rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
-+		if (IS_ERR(rockchip->ep_gpio)) {
-+			dev_err(dev, "missing ep-gpios property in node\n");
-+			return PTR_ERR(rockchip->ep_gpio);
-+		}
-+	}
-+
-+	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
-+	if (IS_ERR(rockchip->aclk_pcie)) {
-+		dev_err(dev, "aclk clock not found\n");
-+		return PTR_ERR(rockchip->aclk_pcie);
-+	}
-+
-+	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
-+	if (IS_ERR(rockchip->aclk_perf_pcie)) {
-+		dev_err(dev, "aclk_perf clock not found\n");
-+		return PTR_ERR(rockchip->aclk_perf_pcie);
-+	}
-+
-+	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
-+	if (IS_ERR(rockchip->hclk_pcie)) {
-+		dev_err(dev, "hclk clock not found\n");
-+		return PTR_ERR(rockchip->hclk_pcie);
-+	}
-+
-+	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
-+	if (IS_ERR(rockchip->clk_pcie_pm)) {
-+		dev_err(dev, "pm clock not found\n");
-+		return PTR_ERR(rockchip->clk_pcie_pm);
-+	}
-+
-+	return 0;
-+}
-+
- int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
-diff --git a/drivers/pci/rockchip/pcie-rockchip.h b/drivers/pci/rockchip/pcie-rockchip.h
-index d27941e..473e74f 100644
---- a/drivers/pci/rockchip/pcie-rockchip.h
-+++ b/drivers/pci/rockchip/pcie-rockchip.h
-@@ -222,6 +222,7 @@ struct rockchip_pcie {
- 	u32     mem_size;
- 	phys_addr_t msg_bus_addr;
- 	phys_addr_t mem_bus_addr;
-+	bool is_rc;
- };
- 
- static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
-@@ -235,6 +236,7 @@ static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
- 	writel(val, rockchip->apb_base + reg);
- }
- 
-+int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip);
- int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip);
- void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip);
- int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip);
--- 
-1.9.1
+@@ -1867,10 +1867,7 @@ static void hv_eject_device_work(struct work_struct =
+*work)
+
+        hpdev =3D container_of(work, struct hv_pci_dev, wrk);
+
+-       if (hpdev->state !=3D hv_pcichild_ejecting) {
+-               put_pcichild(hpdev, hv_pcidev_ref_pnp);
+-               return;
+-       }
++       WARN_ON(hpdev->state !=3D hv_pcichild_ejecting);
+
+        /*
+         * Ejection can come before or after the PCI bus has been set up, s=
+o
+=20
+> > @@ -1770,7 +1772,7 @@ static void hv_pci_devices_present(struct
+> hv_pcibus_device *hbus,
+> >  	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+> >
+> >  	get_hvpcibus(hbus);
+> > -	schedule_work(&dr_wrk->wrk);
+> > +	queue_work(hbus->wq, &dr_wrk->wrk);
+>=20
+> This invocation of get_hvpcibus() and queue_work() could be made
+> conditional on whether the preceding list_add_tail() transitioned
+> the list from empty to non-empty.  If the list was already non-empty,
+> a previously queued invocation of hv_pci_devices_present_work()
+> will find the new entry and process it.   But this is an
+> optimization in a non-perf sensitive code path, so may not be
+> worth it.
+
+Exactly. I'll add the the optimization.
+
+> > @@ -1848,7 +1850,7 @@ static void hv_pci_eject_device(struct hv_pci_dev
+> *hpdev)
+> >  	get_pcichild(hpdev, hv_pcidev_ref_pnp);
+> >  	INIT_WORK(&hpdev->wrk, hv_eject_device_work);
+> >  	get_hvpcibus(hpdev->hbus);
+> > -	schedule_work(&hpdev->wrk);
+> > +	queue_work(hpdev->hbus->wq, &hpdev->wrk);
+> >  }
+> >
+> >  /**
+> > @@ -2463,11 +2465,17 @@ static int hv_pci_probe(struct hv_device *hdev,
+> >  	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
+> >  	sema_init(&hbus->enum_sem, 1);
+> >  	init_completion(&hbus->remove_event);
+> > +	hbus->wq =3D alloc_ordered_workqueue("hv_pci_%x", 0,
+> > +					   hbus->sysdata.domain);
+> > +	if (!hbus->wq) {
+> > +		ret =3D -ENOMEM;
+> > +		goto free_bus;
+> > +	}
+> >
+> >  	ret =3D vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL,=
+ 0,
+> >  			 hv_pci_onchannelcallback, hbus);
+> >  	if (ret)
+> > -		goto free_bus;
+> > +		goto destroy_wq;
+> >
+> >  	hv_set_drvdata(hdev, hbus);
+> >
+> > @@ -2536,6 +2544,9 @@ static int hv_pci_probe(struct hv_device *hdev,
+> >  	hv_free_config_window(hbus);
+> >  close:
+> >  	vmbus_close(hdev->channel);
+> > +destroy_wq:
+> > +	drain_workqueue(hbus->wq);
+>=20
+> The drain_workqueue() call isn't necessary.  destroy_workqueue() calls
+> drain_workqueue() and there better not be anything in the workqueue
+> anyway since all the ref counts are zero.
+
+OK. Will remove it.
+
+> > +	destroy_workqueue(hbus->wq);
+> >  free_bus:
+> >  	free_page((unsigned long)hbus);
+> >  	return ret;
+> > @@ -2615,6 +2626,8 @@ static int hv_pci_remove(struct hv_device *hdev)
+> >  	irq_domain_free_fwnode(hbus->sysdata.fwnode);
+> >  	put_hvpcibus(hbus);
+> >  	wait_for_completion(&hbus->remove_event);
+> > +	drain_workqueue(hbus->wq);
+>=20
+> Same here -- drain_workqueue() isn't needed.  The workqueue
+> must be empty anyway since the remove_event has completed
+> and the ref counts will all be zero.
+
+Will remove it.
+
+> > +	destroy_workqueue(hbus->wq);
+
+I'm going to post a v2 patchset tomorrow.
+
+Thanks,
+-- Dexuan
