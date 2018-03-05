@@ -1,48 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:37714 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:60930 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161227AbeCATa0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 14:30:26 -0500
-To: Dan Williams <dan.j.williams@intel.com>, benh@au1.ibm.com
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        id S1753708AbeCEW2X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 17:28:23 -0500
+Date: Mon, 5 Mar 2018 16:28:21 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Keith Busch <keith.busch@intel.com>,
         Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Message-ID: <20180305222821.GA33706@bhelgaas-glaptop.roam.corp.google.com>
 References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <51bd1c37-e569-379b-0e03-a33a8b5bc94b@deltatee.com>
-Date: Thu, 1 Mar 2018 12:30:17 -0700
+ <20180228234006.21093-5-logang@deltatee.com>
+ <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
+ <bab9fb8b-1449-4b87-94de-7da26a279331@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bab9fb8b-1449-4b87-94de-7da26a279331@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 01/03/18 12:21 PM, Dan Williams wrote:
->> Note: I think the above means it won't work behind a switch on x86
->> either, will it ?
+On Thu, Mar 01, 2018 at 12:13:10PM -0700, Logan Gunthorpe wrote:
 > 
-> The devm_memremap_pages() infrastructure allows placing the memmap in
-> "System-RAM" even if the hotplugged range is in PCI space. So, even if
-> it is an issue on some configurations, it's just a simple adjustment
-> to where the memmap is placed.
+> 
+> On 01/03/18 11:02 AM, Bjorn Helgaas wrote:
+> > >   void pci_enable_acs(struct pci_dev *dev)
+> > >   {
+> > > +	if (pci_p2pdma_disable_acs(dev))
+> > > +		return;
+> > 
+> > This doesn't read naturally to me.  I do see that when
+> > CONFIG_PCI_P2PDMA is not set, pci_p2pdma_disable_acs() does nothing
+> > and returns 0, so we'll go ahead and try to enable ACS as before.
+> > 
+> > But I think it would be clearer to have an #ifdef CONFIG_PCI_P2PDMA
+> > right here so it's more obvious that we only disable ACS when it's
+> > selected.
+> 
+> I could do this... however, I wrote it this way because I've read Linus
+> dislikes using #ifdef's inside function bodies and I personally agree with
+> that sentiment.
 
-Thanks for the confirmation Dan!
+I try to avoid #ifdefs too, but in this case the plain reading of the
+code makes no sense (we're in a function called "enable_acs()", and
+the first thing we do is call a function to "disable_acs()".
 
-Logan
+Disabling ACS is scary for all the security reasons mentioned
+elsewhere, so a reader who knows what ACS does and cares about
+virtualization and security *has* to go look up the definition of
+pci_p2pdma_disable_acs().
+
+If you put the #ifdef right here, then it's easier to read because we
+can see that "oh, this is a special and uncommon case that I can
+probably ignore".
+
+Bjorn
