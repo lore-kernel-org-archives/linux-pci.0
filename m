@@ -1,98 +1,128 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 27 Mar 2018 17:13:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v3 5/5] ACPI / hotplug / PCI: Mark stale PCI devices
- disconnected
-Message-ID: <20180327221317.GH7759@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
- <20180226132112.81447-6-mika.westerberg@linux.intel.com>
- <20180327194512.GD7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180327205236.GA15613@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pu1apc01on0111.outbound.protection.outlook.com ([104.47.126.111]:38336
+        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752935AbeCETWZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 14:22:25 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: [PATCH v2 3/6] PCI: hv: serialize the present/eject work items
+Date: Mon, 5 Mar 2018 19:22:17 +0000
+Message-ID: <20180305192134.32207-4-decui@microsoft.com>
+References: <20180305192134.32207-1-decui@microsoft.com>
+In-Reply-To: <20180305192134.32207-1-decui@microsoft.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180327205236.GA15613@wunner.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Greg]
+When we hot-remove the device, we first receive a PCI_EJECT message and
+then receive a PCI_BUS_RELATIONS message with bus_rel->device_count =3D=3D =
+0.
 
-On Tue, Mar 27, 2018 at 10:52:36PM +0200, Lukas Wunner wrote:
-> On Tue, Mar 27, 2018 at 02:45:12PM -0500, Bjorn Helgaas wrote:
-> > I hate this pci_dev_set_disconnected() thing and hope to remove it
-> > someday.  It's racy and adds additional states that are hard to
-> > manage, e.g., "device has been removed and will not respond to PCI
-> > accesses, but pci_dev_set_disconnected() hasn't been called yet".  If
-> > we can handle that case (and we should), we shouldn't need
-> > pci_dev_set_disconnected().
-> 
-> Absent pci_dev_is_disconnected(), how can the PCI core detect if
-> a device is still there (versus has been hot-removed)?  The only
-> valid method I know of is reading the vendor ID from config space.
-> However reading config spaces takes time.  To properly handle
-> surprise removal, we ought to check presence of the device frequently
-> lest we clutter the logs with errors, unnecessarily occupy the CPU
-> and bus or in some cases hang the machine.  Ideally, we should check
-> presence of the device every time we access it.
+The first message is offloaded to hv_eject_device_work(), and the second
+is offloaded to pci_devices_present_work(). Both the paths can be running
+list_del(&hpdev->list_entry), causing general protection fault, because
+system_wq can run them concurrently.
 
-I'm not proposing a change in pci_dev_is_disconnected() for *this*
-patch, so we can have a discussion here, but I don't think resolving
-this is a precondition for this patch.
+The patch eliminates the race condition.
 
-I was just expressing remorse, which I agree is not constructive, so I
-should have kept quiet.  I know you understand the problem, but to try
-to make amends, I'll recap it here for any onlookers:
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
+Tested-by: Chris Valean <v-chvale@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Jack Morgenstein <jackm@mellanox.com>
+Cc: stable@vger.kernel.org
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
-  - driver calls pci_dev_is_disconnected(), learns device is present
-  - device is removed
-  - driver reads register, believing device is still present
-
-Obviously the register read fails, because the device is gone.  So
-the driver has to be prepared for that failure regardless of whether
-we have pci_dev_is_disconnected().
-
-> Now, imagine every time we access config or mmio space, we read the
-> vendor ID from config space, so we essentially double the number of
-> accesses to the device.  Does that make sense, performance-wise?
-
-No, but I wouldn't advocate that strategy.
-
-> If pci_dev_is_disconnected() returns true, the device is either there
-> or was until very recently, so in general checking that instead of
-> reading the vendor ID should be sufficient and should result in
-> acceptable performance.
-> 
-> I keep hearing these complaints about the PCI_DEV_DISCONNECTED flag,
-> from Greg but now also from you, but I'm not seeing constructive
-> criticism how checking presence of a device should be handled instead,
-> in a way that doesn't negatively impact performance.
-> 
-> IMO it was a mistake to constrain visibility of the flag to the PCI core
-> (at Greg's behest), it should have been made available to drivers so
-> they're afforded a better method to detect surprise removal than just
-> reading the vendor ID every time they access the device.
-
-To avoid the race, drivers have to check for a valid value anyway.  If
-they *also* check pci_dev_is_disconnected(), that clutters the code
-and gives a false sense of security.
-
-When a read fails, it normally returns ~0 as the data to the driver. 
-The driver knows the semantics of the registers it reads, and often it
-can tell immediately that a successful read of the register could
-never return that value, so it doesn't need to try any more accesses
-to Vendor ID or anything else.
-
-If ~0 *is* a possible valid value, the driver can read some other
-register (maybe Vendor ID, or maybe an MMIO register that can be read
-faster).
-
-Bjorn
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 04edb24c92ee..aaee41faf55f 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -461,6 +461,8 @@ struct hv_pcibus_device {
+ 	struct retarget_msi_interrupt retarget_msi_interrupt_params;
+=20
+ 	spinlock_t retarget_msi_interrupt_lock;
++
++	struct workqueue_struct *wq;
+ };
+=20
+ /*
+@@ -1770,7 +1772,7 @@ static void hv_pci_devices_present(struct hv_pcibus_d=
+evice *hbus,
+ 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+=20
+ 	get_hvpcibus(hbus);
+-	schedule_work(&dr_wrk->wrk);
++	queue_work(hbus->wq, &dr_wrk->wrk);
+ }
+=20
+ /**
+@@ -1845,7 +1847,7 @@ static void hv_pci_eject_device(struct hv_pci_dev *hp=
+dev)
+ 	get_pcichild(hpdev, hv_pcidev_ref_pnp);
+ 	INIT_WORK(&hpdev->wrk, hv_eject_device_work);
+ 	get_hvpcibus(hpdev->hbus);
+-	schedule_work(&hpdev->wrk);
++	queue_work(hpdev->hbus->wq, &hpdev->wrk);
+ }
+=20
+ /**
+@@ -2460,11 +2462,17 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
+ 	sema_init(&hbus->enum_sem, 1);
+ 	init_completion(&hbus->remove_event);
++	hbus->wq =3D alloc_ordered_workqueue("hv_pci_%x", 0,
++					   hbus->sysdata.domain);
++	if (!hbus->wq) {
++		ret =3D -ENOMEM;
++		goto free_bus;
++	}
+=20
+ 	ret =3D vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
+ 			 hv_pci_onchannelcallback, hbus);
+ 	if (ret)
+-		goto free_bus;
++		goto destroy_wq;
+=20
+ 	hv_set_drvdata(hdev, hbus);
+=20
+@@ -2533,6 +2541,8 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	hv_free_config_window(hbus);
+ close:
+ 	vmbus_close(hdev->channel);
++destroy_wq:
++	destroy_workqueue(hbus->wq);
+ free_bus:
+ 	free_page((unsigned long)hbus);
+ 	return ret;
+@@ -2612,6 +2622,7 @@ static int hv_pci_remove(struct hv_device *hdev)
+ 	irq_domain_free_fwnode(hbus->sysdata.fwnode);
+ 	put_hvpcibus(hbus);
+ 	wait_for_completion(&hbus->remove_event);
++	destroy_workqueue(hbus->wq);
+ 	free_page((unsigned long)hbus);
+ 	return 0;
+ }
+--=20
+2.7.4
