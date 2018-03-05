@@ -1,63 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0093.outbound.protection.outlook.com ([104.47.42.93]:60600
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751459AbeCOADK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 20:03:10 -0400
-From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3]PCI: hv: fix PCI-BUS domainID corruption
-Date: Thu, 15 Mar 2018 00:03:07 +0000
-Message-ID: <C600E28F-E581-431E-9CD4-47C776E8E70F@microsoft.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from ale.deltatee.com ([207.54.116.67]:35442 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752917AbeCEUNl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 15:13:41 -0500
+To: Sagi Grimberg <sagi@grimberg.me>,
+        Keith Busch <keith.busch@intel.com>, Oliver <oohall@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-block@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-8-logang@deltatee.com>
+ <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
+ <20180305160004.GA30975@localhost.localdomain>
+ <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <e3ca6482-d68c-0e10-dde9-7ccb702d3ac2@deltatee.com>
+Date: Mon, 5 Mar 2018 13:13:20 -0700
 MIME-Version: 1.0
+In-Reply-To: <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the
+ CMB
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-V2hlbmV2ZXIgUENJIGJ1cyBpcyBhZGRlZCwgSHlwZXJWIGd1YXJhbnRlZXMgdGhlIEJVUyBpZCBp
-cyB1bmlxdWUuIEV2ZW4NCndpdGggdGhhdCB3aGVuIGEgZmlyc3QgZGV2aWNlIGlzIGFkZGVkIHRv
-IHRoZSBidXMsIGl0IG92ZXJyaWRlcyBidXMgZG9tYWluDQpJRCB3aXRoIHRoZSBkZXZpY2Ugc2Vy
-aWFsIG51bWJlci4gU29tZXRpbWUgdGhpcyBjYW4gcmVzdWx0IGluIEJVUyBJRCBub3QNCmJlaW5n
-IHVuaXF1ZS4gSW4gdGhpcyBjYXNlLCB3aGVuIFBDSV9CVVMgYW5kIGEgZGV2aWNlIHRvIGJ1cyBp
-cyBhZGRlZCwgdGhlDQpmaXJzdCBkZXZpY2Ugb3ZlcndyaXRlcyB0aGUgYnVzIGRvbWFpbiBJRCB0
-byB0aGUgZGV2aWNlIHNlcmlhbCBudW1iZXIsDQp3aGljaCBpcyAwLiBTaW5jZSB0aGVyZSBleHNp
-c3QgYSBQQ0kgYnVzIHdpdGggZG9tYWluIElEIDAgYWxyZWFkeSB0aGUgUENJDQpidXMgYWRkaXRp
-b24gZmFpbHMuIFRoaXMgcGF0Y2ggbWFrZSBzdXJlIHdoZW4gYSBkZXZpY2UgaXMgYWRkZWQgdG8g
-YSBidXMsDQppdCBuZXZlciB1cGRhdGVkIHRoZSBidXMgZG9tYWluIElELiBTaW5jZSB3ZSBoYXZl
-IHRoZSB0cmFuc3BhcmVudCBTUklPVg0KbW9kZSBub3csIHRoZSBzaG9ydCBWRiBkZXZpY2UgbmFt
-ZSBpcyBubyBsb25nZXIgbmVlZGVkLg0KDQpGaXhlczogNGE5YjA5MzNiZGZjKCJQQ0k6aHY6VXNl
-IGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSSBkb21haW4iKQ0KQ2M6IHN0YWJsZUB2Z2VyLmtl
-cm5lbC5vcmcNClNpZ25lZC1vZmYtYnk6IFNyaWRoYXIgUGl0Y2hhaSA8c3JwaXRjaGFAbWljcm9z
-b2Z0LmNvbT4NCi0tLQ0KDQpDaGFuZ2VzIGluIHYzOg0KKiBmaXggdGhlIGNvbW1pdCBjb21tZW50
-LiBbS1kgU3Jpbml2YXNhbiwgTWljaGFlbCBLZWxsZXldDQotLS0NCiBkcml2ZXJzL3BjaS9ob3N0
-L3BjaS1oeXBlcnYuYyB8IDExIC0tLS0tLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDExIGRlbGV0
-aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMgYi9k
-cml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYw0KaW5kZXggMmZhZjM4ZS4uYWM2N2U1NiAxMDA2
-NDQNCi0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQorKysgYi9kcml2ZXJzL3Bj
-aS9ob3N0L3BjaS1oeXBlcnYuYw0KQEAgLTE1MTgsMTcgKzE1MTgsNiBAQCBzdGF0aWMgc3RydWN0
-IGh2X3BjaV9kZXYgKm5ld19wY2ljaGlsZF9kZXZpY2Uoc3RydWN0IGh2X3BjaWJ1c19kZXZpY2Ug
-KmhidXMsDQogCWdldF9wY2ljaGlsZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGlsZGxpc3QpOw0K
-IAlzcGluX2xvY2tfaXJxc2F2ZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KIA0K
-LQkvKg0KLQkgKiBXaGVuIGEgZGV2aWNlIGlzIGJlaW5nIGFkZGVkIHRvIHRoZSBidXMsIHdlIHNl
-dCB0aGUgUENJIGRvbWFpbg0KLQkgKiBudW1iZXIgdG8gYmUgdGhlIGRldmljZSBzZXJpYWwgbnVt
-YmVyLCB3aGljaCBpcyBub24temVybyBhbmQNCi0JICogdW5pcXVlIG9uIHRoZSBzYW1lIFZNLiAg
-VGhlIHNlcmlhbCBudW1iZXJzIHN0YXJ0IHdpdGggMSwgYW5kDQotCSAqIGluY3JlYXNlIGJ5IDEg
-Zm9yIGVhY2ggZGV2aWNlLiAgU28gZGV2aWNlIG5hbWVzIGluY2x1ZGluZyB0aGlzDQotCSAqIGNh
-biBoYXZlIHNob3J0ZXIgbmFtZXMgdGhhbiBiYXNlZCBvbiB0aGUgYnVzIGluc3RhbmNlIFVVSUQu
-DQotCSAqIE9ubHkgdGhlIGZpcnN0IGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIHVzZWQgZm9yIGRv
-bWFpbiwgc28gdGhlDQotCSAqIGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRo
-ZSBmaXJzdCBkZXZpY2UgaXMgYWRkZWQuDQotCSAqLw0KLQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+
-Y2hpbGRyZW4pKQ0KLQkJaGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogCWxpc3Rf
-YWRkX3RhaWwoJmhwZGV2LT5saXN0X2VudHJ5LCAmaGJ1cy0+Y2hpbGRyZW4pOw0KIAlzcGluX3Vu
-bG9ja19pcnFyZXN0b3JlKCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogCXJldHVy
-biBocGRldjsNCi0tIA0KMi43LjQgDQoNCg==
+
+
+On 05/03/18 12:57 PM, Sagi Grimberg wrote:
+> Keith, while we're on this, regardless of cmb, is SQE memcopy and DB 
+> update ordering always guaranteed?
+> 
+> If you look at mlx4 (rdma device driver) that works exactly the same as
+> nvme you will find:
+> -- 
+>                  qp->sq.head += nreq;
+> 
+>                  /*
+>                   * Make sure that descriptors are written before
+>                   * doorbell record.
+>                   */
+>                  wmb();
+> 
+>                  writel(qp->doorbell_qpn,
+>                         to_mdev(ibqp->device)->uar_map + 
+> MLX4_SEND_DOORBELL);
+> 
+>                  /*
+>                   * Make sure doorbells don't leak out of SQ spinlock
+>                   * and reach the HCA out of order.
+>                   */
+>                  mmiowb();
+> -- 
+
+To me, it looks like the wmb() is redundant as writel should guarantee 
+the order. (Indeed, per Sinan's comment, writel on arm64 starts with a 
+wmb() which means, on that platform, there are two wmb() calls in a row.)
+
+The mmiowb() call, on the other hand, looks correct per my understanding 
+of it's purpose with respect to the spinlock.
+
+Logan
