@@ -1,105 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38642 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751302AbeCPVms (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Mar 2018 17:42:48 -0400
-Subject: Re: [pci PATCH v7 0/5] Add support for unmanaged SR-IOV
-To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
-        alexander.h.duyck@intel.com, linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
-        liang-min.wang@intel.com, mark.d.rustad@intel.com,
-        dwmw2@infradead.org, hch@lst.de, dwmw@amazon.co.uk
-References: <20180315183449.3102.64791.stgit@localhost.localdomain>
-From: Don Dutile <ddutile@redhat.com>
-Message-ID: <a411bbf7-23ba-60e6-2673-4f200f36db9b@redhat.com>
-Date: Fri, 16 Mar 2018 17:42:44 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Subject: Re: [PATCH V2] PM / core: fix deferred probe breaking suspend resume
+ order
+To: "Rafael J. Wysocki" <rafael@kernel.org>, Feng Kan <fkan@apm.com>
+References: <1519942514-3350-1-git-send-email-fkan@apm.com>
+ <CAJZ5v0gncVMpQCc=kvuSdyy-+zPrdYOiA=pA54d538zTDz6rEA@mail.gmail.com>
+Message-ID: <d24a66fa-de5c-ba02-dafb-ee554a3032a8@ti.com>
+Date: Mon, 5 Mar 2018 13:54:27 -0600
 MIME-Version: 1.0
-In-Reply-To: <20180315183449.3102.64791.stgit@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0gncVMpQCc=kvuSdyy-+zPrdYOiA=pA54d538zTDz6rEA@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Linux PM <linux-pm@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+ "Rafael J.
+ Wysocki" <rjw@rjwysocki.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Toan Le <toanle@apm.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/15/2018 02:40 PM, Alexander Duyck wrote:
-> This series is meant to add support for SR-IOV on devices when the VFs are
-> not managed by the kernel. Examples of recent patches attempting to do this
-> include:
-> virto - https://patchwork.kernel.org/patch/10241225/
-> pci-stub - https://patchwork.kernel.org/patch/10109935/
-> vfio - https://patchwork.kernel.org/patch/10103353/
-> uio - https://patchwork.kernel.org/patch/9974031/
-> 
-> Since this is quickly blowing up into a multi-driver problem it is probably
-> best to implement this solution as generically as possible.
-> 
-> This series is an attempt to do that. What we do with this patch set is
-> provide a generic framework to enable SR-IOV in the case that the PF driver
-> doesn't support managing the VFs itself.
-> 
-> I based my patch set originally on the patch by Mark Rustad but there isn't
-> much left after going through and cleaning out the bits that were no longer
-> needed, and after incorporating the feedback from David Miller. At this point
-> the only items to be fully reused was his patch description which is now
-> present in patch 3 of the set.
-> 
-> This solution is limited in scope to just adding support for devices that
-> provide no functionality for SR-IOV other than allocating the VFs by
-> calling pci_enable_sriov. Previous sets had included patches for VFIO, but
-> for now I am dropping that as the scope of that work is larger then I
-> think I can take on at this time.
-> 
-> v2: Reduced scope back to just virtio_pci and vfio-pci
->      Broke into 3 patch set from single patch
->      Changed autoprobe behavior to always set when num_vfs is set non-zero
-> v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is used
->      Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in kernel
-> v4: Dropped vfio-pci patch
->      Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
->      Dropped pci_disable_sriov call in virtio_pci to be consistent with ena
-> v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
->      Added new patch that enables pci_sriov_configure_simple
->      Updated drivers to use pci_sriov_configure_simple
-> v6: Defined pci_sriov_configure_simple as NULL when SR-IOV is not enabled
->      Updated drivers to drop "#ifdef" checks for IOV
->      Added pci-pf-stub as place for PF-only drivers to add support
-> v7: Dropped pci_id table explanation from pci-pf-stub driver
->      Updated pci_sriov_configure_simple to drop need for err value
->      Fixed comment explaining why pci_sriov_configure_simple is NULL
-> 
-> Cc: Mark Rustad <mark.d.rustad@intel.com>
-> Cc: Maximilian Heyne <mheyne@amazon.de>
-> Cc: Liang-Min Wang <liang-min.wang@intel.com>
-> Cc: David Woodhouse <dwmw@amazon.co.uk>
-> 
-> ---
-> 
-> Alexander Duyck (5):
->        pci: Add pci_sriov_configure_simple for PFs that don't manage VF resources
->        virtio_pci: Add support for unmanaged SR-IOV on virtio_pci devices
->        ena: Migrate over to unmanaged SR-IOV support
->        nvme: Migrate over to unmanaged SR-IOV support
->        pci-pf-stub: Add PF driver stub for PFs that function only to enable VFs
-> 
-> 
->   drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 -------------
->   drivers/nvme/host/pci.c                      |   20 ----------
->   drivers/pci/Kconfig                          |   12 ++++++
->   drivers/pci/Makefile                         |    2 +
->   drivers/pci/iov.c                            |   31 +++++++++++++++
->   drivers/pci/pci-pf-stub.c                    |   54 ++++++++++++++++++++++++++
->   drivers/virtio/virtio_pci_common.c           |    1
->   include/linux/pci.h                          |    3 +
->   include/linux/pci_ids.h                      |    2 +
->   9 files changed, 107 insertions(+), 46 deletions(-)
->   create mode 100644 drivers/pci/pci-pf-stub.c
-> 
-> --
-> 
-For what it's worth.
 
-Good, simpler start for this type of support/effort.
-Thanks for the multiple versions to get to this point.
 
-Reviewed-by: Donald Dutile <ddutile@redhat.com>
+On 03/02/2018 03:11 AM, Rafael J. Wysocki wrote:
+> [+Greg]
+> 
+> On Thu, Mar 1, 2018 at 11:15 PM, Feng Kan <fkan@apm.com> wrote:
+>> When bridge and its endpoint is enumerated the devices are added to the
+>> dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
+>> This causes the bridge to be moved to the end of the dpm list when
+>> deferred probe kicks in. The order of the dpm list for bridge and
+>> endpoint is reversed.
+>>
+>> Add reordering code to move the bridge and its children and consumers to
+>> the end of the pm list so the order for suspend and resume is not altered.
+>> The code also move device and its children and consumers to the tail of
+>> device_kset list if it is registered.
+> 
+> I assume that this has been tested and works as expected.
+
+isn't it the same as https://lkml.org/lkml/2015/9/10/248? (in general)
+
+And wouldn't device links solve the issue?
+
+commit 9ed9895370aedd6032af2a9181c62c394d08223b
+Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Date:   Sun Oct 30 17:32:16 2016 +0100
+
+    driver core: Functional dependencies tracking support
+
+    Currently, there is a problem with taking functional dependencies
+    between devices into account.
+
+My understanding of device links is that they were introduced exactly to fix
+such kind of issues and explicitly define dependencies between devices in code.
+
+But, I could be missing smth... sry if this is the case.
+
+-- 
+regards,
+-grygorii
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
