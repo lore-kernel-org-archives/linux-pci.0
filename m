@@ -1,84 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:26258 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751225AbeC2KAr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 06:00:47 -0400
-Subject: Re: [PATCH v5 09/12] PCI: endpoint: Make
- epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        <cyrille.pitchen@free-electrons.com>,
-        Alan Douglas <adouglas@cadence.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sekhar Nori <nsekhar@ti.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Niklas Cassel <niklass@axis.com>,
-        John Keeping <john@metanate.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
- <20180328115018.31921-10-niklas.cassel@axis.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ac3131cb-468d-5143-62a4-68d6e6b47e82@ti.com>
-Date: Thu, 29 Mar 2018 15:30:23 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 35/37] iommu/arm-smmu-v3: Add support for PRI
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+ <linux-acpi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <iommu@lists.linux-foundation.org>, <kvm@vger.kernel.org>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-36-jean-philippe.brucker@arm.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <6f55afcf-04b0-0dc4-6c75-064b70e6851c@huawei.com>
+Date: Mon, 5 Mar 2018 20:29:26 +0800
 MIME-Version: 1.0
-In-Reply-To: <20180328115018.31921-10-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180212183352.22730-36-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, xieyisheng1@huawei.com, ilias.apalodimas@linaro.org,
+ catalin.marinas@arm.com, xuzaibo@huawei.com, jonathan.cameron@huawei.com,
+ will.deacon@arm.com, okaya@codeaurora.org, yi.l.liu@intel.com,
+ lorenzo.pieralisi@arm.com, ashok.raj@intel.com, tn@semihalf.com,
+ joro@8bytes.org, bharatku@xilinx.com, rfranz@cavium.com, lenb@kernel.org,
+ jacob.jun.pan@linux.intel.com, alex.williamson@redhat.com, robh+dt@kernel.org,
+ thunder.leizhen@huawei.com, bhelgaas@google.com,
+ shunyong.yang@hxt-semitech.com, dwmw2@infradead.org, liubo95@huawei.com,
+ rjw@rjwysocki.net, jcrouse@codeaurora.org, robdclark@gmail.com,
+ hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com,
+ christian.koenig@amd.com, nwatters@codeaurora.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas,
+>
+> +static int arm_smmu_enable_pri(struct arm_smmu_master_data *master)
+> +{
+> +	int ret, pos;
+> +	struct pci_dev *pdev;
+> +	/*
+> +	 * TODO: find a good inflight PPR number. We should divide the PRI queue
+> +	 * by the number of PRI-capable devices, but it's impossible to know
+> +	 * about current and future (hotplugged) devices. So we're at risk of
+> +	 * dropping PPRs (and leaking pending requests in the FQ).
+> +	 */
+> +	size_t max_inflight_pprs = 16;
+> +	struct arm_smmu_device *smmu = master->smmu;
+> +
+> +	if (!(smmu->features & ARM_SMMU_FEAT_PRI) || !dev_is_pci(master->dev))
+> +		return -ENOSYS;
+> +
+> +	pdev = to_pci_dev(master->dev);
+> +
+ From here
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+> +	if (!pos)
+> +		return -ENOSYS;
+to here, seems this code is not needed as it is already done in
+pci_reset_pri().
 
-On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
-> Make epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar.
-> 
-> This is needed so that epc->ops->clear_bar() can clear the BAR pair,
-> if the BAR is 64-bits wide.
-> 
-> This also makes it possible for pci_epc_clear_bar() to sanity check
-> the flags.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/cadence/pcie-cadence-ep.c         |  3 ++-
->  drivers/pci/dwc/pcie-designware-ep.c          | 13 ++++++++++---
->  drivers/pci/endpoint/functions/pci-epf-test.c |  5 ++++-
->  drivers/pci/endpoint/pci-epc-core.c           |  7 ++++---
->  include/linux/pci-epc.h                       |  5 +++--
->  5 files changed, 23 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-> index 2905e098678c..3d8283e450a9 100644
-> --- a/drivers/pci/cadence/pcie-cadence-ep.c
-> +++ b/drivers/pci/cadence/pcie-cadence-ep.c
-> @@ -145,10 +145,11 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
->  }
->  
->  static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
-> -				   enum pci_barno bar)
-> +				   struct pci_epf_bar *epf_bar)
+Thanks,
+Dongdong
+> +
+> +	ret = pci_reset_pri(pdev);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = pci_enable_pri(pdev, max_inflight_pprs);
+> +	if (ret) {
+> +		dev_err(master->dev, "cannot enable PRI: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	master->can_fault = true;
+> +	master->ste.prg_resp_needs_ssid = pci_prg_resp_requires_prefix(pdev);
+> +
+> +	dev_dbg(master->dev, "enabled PRI");
+> +
+> +	return 0;
+> +}
+> +
+>  static void arm_smmu_disable_ats(struct arm_smmu_master_data *master)
 >  {
->  	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
->  	struct cdns_pcie *pcie = &ep->pcie;
-> +	enum pci_barno bar = epf_bar->barno;
->  	u32 reg, cfg, b, ctrl;
->  
->  	if (bar < BAR_4) {
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index 571b90f88d84..cc4d8381c1dc 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -19,7 +19,8 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
->  	pci_epc_linkup(epc);
+>  	struct pci_dev *pdev;
+> @@ -2548,6 +2592,22 @@ static void arm_smmu_disable_ats(struct arm_smmu_master_data *master)
+>  	pci_disable_ats(pdev);
 >  }
->  
-> -void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-> +static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar,
-> +				   int flags)
+>
+> +static void arm_smmu_disable_pri(struct arm_smmu_master_data *master)
+> +{
+> +	struct pci_dev *pdev;
+> +
+> +	if (!dev_is_pci(master->dev))
+> +		return;
+> +
+> +	pdev = to_pci_dev(master->dev);
+> +
+> +	if (!pdev->pri_enabled)
+> +		return;
+> +
+> +	pci_disable_pri(pdev);
+> +	master->can_fault = false;
+> +}
+> +
+>  static int arm_smmu_insert_master(struct arm_smmu_device *smmu,
+>  				  struct arm_smmu_master_data *master)
+>  {
+> @@ -2668,12 +2728,13 @@ static int arm_smmu_add_device(struct device *dev)
+>  		master->ste.can_stall = true;
+>  	}
+>
+> -	arm_smmu_enable_ats(master);
+> +	if (!arm_smmu_enable_ats(master))
+> +		arm_smmu_enable_pri(master);
+>
+>  	group = iommu_group_get_for_dev(dev);
+>  	if (IS_ERR(group)) {
+>  		ret = PTR_ERR(group);
+> -		goto err_disable_ats;
+> +		goto err_disable_pri;
+>  	}
+>
+>  	iommu_group_put(group);
+> @@ -2682,7 +2743,8 @@ static int arm_smmu_add_device(struct device *dev)
+>
+>  	return 0;
+>
+> -err_disable_ats:
+> +err_disable_pri:
+> +	arm_smmu_disable_pri(master);
+>  	arm_smmu_disable_ats(master);
+>
+>  	return ret;
+> @@ -2702,6 +2764,8 @@ static void arm_smmu_remove_device(struct device *dev)
+>  	if (master && master->ste.assigned)
+>  		arm_smmu_detach_dev(dev);
+>  	arm_smmu_remove_master(smmu, master);
+> +
+> +	arm_smmu_disable_pri(master);
+>  	arm_smmu_disable_ats(master);
+>
+>  	iommu_group_remove_device(dev);
+>
 
-Looks like the 'flags' are not used anywhere here?
 
-Thanks
-Kishon
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
