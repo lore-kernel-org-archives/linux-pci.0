@@ -1,91 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0118.outbound.protection.outlook.com ([104.47.32.118]:37703
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-db5eur01on0063.outbound.protection.outlook.com ([104.47.2.63]:37472
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932182AbeCFScc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Mar 2018 13:32:32 -0500
-From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Jack Morgenstein <jackm@mellanox.com>
-Subject: RE: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
-Date: Tue, 6 Mar 2018 18:32:29 +0000
-Message-ID: <DM5PR2101MB1030B09B080E5854B0E7B9A9DCD90@DM5PR2101MB1030.namprd21.prod.outlook.com>
-References: <20180306182128.23281-1-decui@microsoft.com>
- <20180306182128.23281-7-decui@microsoft.com>
-In-Reply-To: <20180306182128.23281-7-decui@microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
+        id S1753079AbeCEULJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 15:11:09 -0500
+Date: Mon, 5 Mar 2018 13:10:53 -0700
+From: Jason Gunthorpe <jgg@mellanox.com>
+To: Sagi Grimberg <sagi@grimberg.me>
+Cc: Keith Busch <keith.busch@intel.com>, Oliver <oohall@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-block@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage
+ the CMB
+Message-ID: <20180305201053.GK11337@mellanox.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-8-logang@deltatee.com>
+ <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
+ <20180305160004.GA30975@localhost.localdomain>
+ <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Tuesday, March 6, 2018 10:22 AM
-> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan <kys@mi=
-crosoft.com>;
-> Stephen Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de; apw@canonical=
-.com;
-> jasowang@redhat.com
-> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;=
- Haiyang Zhang
-> <haiyangz@microsoft.com>; vkuznets@redhat.com; marcelo.cerri@canonical.co=
-m; Michael
-> Kelley (EOSG) <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microso=
-ft.com>;
-> stable@vger.kernel.org; Jack Morgenstein <jackm@mellanox.com>
-> Subject: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg(=
-)
->=20
-> 1. With the patch "x86/vector/msi: Switch to global reservation mode"
-> (4900be8360), the recent v4.15 and newer kernels always hang for 1-vCPU
-> Hyper-V VM with SR-IOV. This is because when we reach hv_compose_msi_msg(=
-)
-> by request_irq()  -> request_threaded_irq() -> __setup_irq()->irq_startup=
-()
->  -> __irq_startup() -> irq_domain_activate_irq() -> ... ->
-> msi_domain_activate() -> ... -> hv_compose_msi_msg(), local irq is
-> disabled in __setup_irq().
->=20
-> Fix this by polling the channel.
->=20
-> 2. If the host is ejecting the VF device before we reach
-> hv_compose_msi_msg(), in a UP VM, we can hang in hv_compose_msi_msg()
-> forever, because at this time the host doesn't respond to the
-> CREATE_INTERRUPT request. This issue also happens to old kernels like
-> v4.14, v4.13, etc.
->=20
-> Fix this by polling the channel for the PCI_EJECT message and
-> hpdev->state, and by checking the PCI vendor ID.
->=20
-> Note: actually the above issues also happen to a SMP VM, if
-> "hbus->hdev->channel->target_cpu =3D=3D smp_processor_id()" is true.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
-> Tested-by: Chris Valean <v-chvale@microsoft.com>
-> Cc: stable@vger.kernel.org
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> Cc: Jack Morgenstein <jackm@mellanox.com>
-> ---
->  drivers/pci/host/pci-hyperv.c | 58 +++++++++++++++++++++++++++++++++++++=
-+++++-
->  1 file changed, 57 insertions(+), 1 deletion(-)
->=20
+On Mon, Mar 05, 2018 at 09:57:27PM +0200, Sagi Grimberg wrote:
 
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+> Keith, while we're on this, regardless of cmb, is SQE memcopy and DB update
+> ordering always guaranteed?
+> 
+> If you look at mlx4 (rdma device driver) that works exactly the same as
+> nvme you will find:
+> --
+>                 qp->sq.head += nreq;
+> 
+>                 /*
+>                  * Make sure that descriptors are written before
+>                  * doorbell record.
+>                  */
+>                 wmb();
+> 
+>                 writel(qp->doorbell_qpn,
+>                        to_mdev(ibqp->device)->uar_map + MLX4_SEND_DOORBELL);
+> 
+>                 /*
+>                  * Make sure doorbells don't leak out of SQ spinlock
+>                  * and reach the HCA out of order.
+>                  */
+>                 mmiowb();
+> --
+> 
+> That seems to explicitly make sure to place a barrier before updating
+> the doorbell. So as I see it, either ordering is guaranteed and the
+> above code is redundant, or nvme needs to do the same.
+
+A wmb() is always required before operations that can trigger DMA.
+
+The reason ARM has a barrier in writel() is not to make it ordered
+with respect to CPU stores to cachable memory, but to make it ordered
+with respect to *other* writels.
+
+Eg Linux defines this:
+
+writel(A, mem);
+writel(B, mem);
+
+To always produce two TLPs on PCI-E when mem is UC BAR memory.
+
+And ARM cannot guarentee that without the extra barrier.
+
+So now we see stuff like this:
+
+writel_relaxed(A, mem);
+writel_relaxed(B, mem+4);
+
+Which says the TLPs to A and B can be issued in any order..
+
+So when reading the above mlx code, we see the first wmb() being used
+to ensure that CPU stores to cachable memory are visible to the DMA
+triggered by the doorbell ring.
+
+The mmiowb() is used to ensure that DB writes are not combined and not
+issued in any order other than implied by the lock that encloses the
+whole thing. This is needed because uar_map is WC memory.
+
+We don't have ordering with respect to two writel's here, so if ARM
+performance was a concern the writel could be switched to
+writel_relaxed().
+
+Presumably nvme has similar requirments, although I guess the DB
+register is mapped UC not WC?
+
+Jason
