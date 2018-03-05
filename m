@@ -1,103 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-References: <1519280641-30258-1-git-send-email-xieyisheng1@huawei.com>
- <1519280641-30258-27-git-send-email-xieyisheng1@huawei.com>
- <f2841aac-4c5e-4ac2-fa4d-81d6b2857503@huawei.com>
- <cabd71fd-c54c-c21a-a5b7-227e69fa4286@arm.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <c4f0a441-e975-395a-fc38-3686db21227d@huawei.com>
-Date: Thu, 22 Mar 2018 09:09:51 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47032 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933485AbeCEJlg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 04:41:36 -0500
+Date: Mon, 5 Mar 2018 09:41:24 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: thierry.reding@gmail.com, bhelgaas@google.com, cyndis@kapsi.fi,
+        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH V9 3/3] PCI: tegra: Add power management support
+Message-ID: <20180305094116.GA28109@e107981-ln.cambridge.arm.com>
+References: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
+ <1519812034-11120-4-git-send-email-mmaddireddy@nvidia.com>
+ <20180302163643.GA18316@e107981-ln.cambridge.arm.com>
+ <19831410-9248-61ff-6e75-249c77dcee9a@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <cabd71fd-c54c-c21a-a5b7-227e69fa4286@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>, Will
- Deacon <Will.Deacon@arm.com>, "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "robh@kernel.org" <robh@kernel.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <19831410-9248-61ff-6e75-249c77dcee9a@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
+On Sat, Mar 03, 2018 at 01:47:38PM +0530, Manikanta Maddireddy wrote:
 
-On 2018/3/21 21:24, Jean-Philippe Brucker wrote:
-> Hi Yisheng,
+[...]
+
+> >> +static int tegra_pcie_pm_resume(struct device *dev)
+> >> +{
+> >> +	struct tegra_pcie *pcie = dev_get_drvdata(dev);
+> >> +	int err;
+> >> +
+> >> +	err = tegra_pcie_power_on(pcie);
+> >> +	if (err) {
+> >> +		dev_err(dev, "tegra pcie power on fail: %d\n", err);
+> >> +		return err;
+> >> +	}
+> >> +	err = tegra_pcie_enable_controller(pcie);
+> >> +	if (err) {
+> >> +		dev_err(dev, "tegra pcie controller enable fail: %d\n", err);
+> >> +		goto poweroff;
+> >> +	}
+> >> +	tegra_pcie_setup_translations(pcie);
+> >> +
+> >> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> >> +		tegra_pcie_enable_msi(pcie);
+> >> +
+> >> +	tegra_pcie_enable_ports(pcie);
+> > 
+> > Is it correct to report a successfull resume if some of the ports fail
+> > to come up (whether within runtime PM or system suspend) ? I think that,
+> > if any of the ports fails to come up, returning a failure is more
+> > appropriate here given that the host bridge is a single device as far as
+> > the kernel is concerned.
+> > 
+> > Thanks,
+> > Lorenzo
+> > 
 > 
-> On 19/03/18 11:03, Yisheng Xie wrote:
->> Hi Jean,
->>
->> [...]
->>> @@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
->>>  	if (ret)
->>>  		return ret;
->>>  
->>> +	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
->>> +		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
->>> +		ret = iommu_fault_queue_register(&smmu->faultq_nb);
->>> +		if (ret)
->>> +			return ret;
->>
->> I find a case here: CONFIG_IOMMU_FAULT=n, and smmu support feature STALLS or PRI,
->> the device probe will failed here, is this what we want?
+> Hi Lorenzo,
 > 
-> Since CONFIG_ARM_SMMU_V3 selects CONFIG_IOMMU_FAULT, I don't think it
-> can happen. 
+> We(Thierry, Vidya Sagar and myself) had a discussion on this topic
+> and we chose not to fail probe/resume because host controller is
+> initialized properly, so failing the probe/resume is not the right
+> thing to do.
 
-But CONFIG_IOMMU_FAULT can be changed after select, maybe can make it as unchangeable.
+What happens then to endpoints downstream a rootport that failed to
+resume but we nonetheless reported that it successfully resume instead ?
 
-Thanks
-Yisheng
+Thanks,
+Lorenzo
 
-> I'm not sure what the best practices are, but I feel like it
-> would be too much work to guard against config combinations that violate
-> an explicit "select" in Kconfig
+> PCIe link may fail to come up if there is no endpoint in the slot
+> or interoperable failure where endpoint specific quirk or work
+> around required. In such cases host controller driver shouldn't
+> fail.
+> 
+> Also user can connect endpoint in only one slot and expect it to be
+> working. Even though host bridge is a single device, driver should
+> allow standalone port to work.
 > 
 > Thanks,
-> Jean
+> Manikanta
 > 
-> .
-> 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> >>  
+> >>  	return 0;
+> >> +
+> >> +poweroff:
+> >> +	tegra_pcie_power_off(pcie);
+> >> +
+> >> +	return err;
+> >>  }
+> >>  
+> >> +static const struct dev_pm_ops tegra_pcie_pm_ops = {
+> >> +	SET_RUNTIME_PM_OPS(tegra_pcie_pm_suspend, tegra_pcie_pm_resume, NULL)
+> >> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(tegra_pcie_pm_suspend,
+> >> +				      tegra_pcie_pm_resume)
+> >> +};
+> >> +
+> >>  static struct platform_driver tegra_pcie_driver = {
+> >>  	.driver = {
+> >>  		.name = "tegra-pcie",
+> >>  		.of_match_table = tegra_pcie_of_match,
+> >>  		.suppress_bind_attrs = true,
+> >> +		.pm = &tegra_pcie_pm_ops,
+> >>  	},
+> >>  	.probe = tegra_pcie_probe,
+> >>  	.remove = tegra_pcie_remove,
+> >> -- 
+> >> 2.1.4
+> >>
