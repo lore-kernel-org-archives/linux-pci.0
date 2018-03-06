@@ -1,70 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:52104 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751152AbeC0OJW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Mar 2018 10:09:22 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        stable@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v3 3/6] PCI: aardvark: set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-Date: Tue, 27 Mar 2018 16:08:09 +0200
-Message-Id: <20180327140819.23501-4-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
-References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:6155 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753423AbeCFKsb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 05:48:31 -0500
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
+        <andriy.shevchenko@linux.intel.com>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
+        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
+        <frowand.list@gmail.com>, <agraf@suse.de>
+Subject: [PATCH v16 7/9] ACPI / scan: do not enumerate Indirect IO host children
+Date: Tue, 6 Mar 2018 18:47:46 +0800
+Message-ID: <1520333268-82754-8-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
+References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+Through the logical PIO framework systems which otherwise have
+no IO space access to legacy ISA/LPC devices may access these
+devices through so-called "indirect IO" method. In this, IO
+space accesses for non-PCI hosts are redirected to a host
+LLDD to manually generate the IO space (bus) accesses. Hosts
+are able to register a region in logical PIO space to map to
+its bus address range.
 
-When setting the PIO_ADDR_LS register during a configuration read, we
-were properly passing the device number, function number and register
-number, but not the bus number, causing issues when reading the
-configuration of PCIe devices.
+Indirect IO child devices have an associated host-specific bus
+address. Special translation is required to map between
+a logical PIO address for a device and it's host bus address.
 
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Wilson Ding <dingwei@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Since in the ACPI tables the child device IO resources would
+be the host-specific values, it is required the ACPI scan code
+should not enumerate these devices, and that this should be
+the responsibility of the host driver so that it can "fixup"
+the resources so that they map to the appropriate logical PIO
+addresses.
+
+To avoid enumerating these child devices, we check whether
+the parent for a device is a member of a known list of
+"indirect IO" hosts. For now, the HiSilicon LPC host
+controller ID is added.
+
+To flag a device to not be enumerated, we reuse the existing
+serial bus slave flag.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Tested-by: dann frazier <dann.frazier@canonical.com>
 ---
-Changes since v2:
- - Drop PCIE_BDF() macro, since it's no longer used. Noticed by Bjorn
-   Helgaas.
----
- drivers/pci/host/pci-aardvark.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/acpi/scan.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index be140dc7109b..4affbf1b826b 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -172,8 +172,6 @@
- #define PCIE_CONFIG_WR_TYPE0			0xa
- #define PCIE_CONFIG_WR_TYPE1			0xb
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 8e63d93..c1a60852 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1524,11 +1524,25 @@ static int acpi_check_serial_bus_slave(struct acpi_resource *ares, void *data)
+ 	return -1;
+ }
  
--/* PCI_BDF shifts 8bit, so we need extra 4bit shift */
--#define PCIE_BDF(dev)				(dev << 4)
- #define PCIE_CONF_BUS(bus)			(((bus) & 0xff) << 20)
- #define PCIE_CONF_DEV(dev)			(((dev) & 0x1f) << 15)
- #define PCIE_CONF_FUNC(fun)			(((fun) & 0x7)	<< 12)
-@@ -465,7 +463,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	advk_writel(pcie, reg, PIO_CTRL);
++static bool acpi_is_indirect_io_slave(struct acpi_device *device)
++{
++	struct acpi_device *parent = device->parent;
++	const struct acpi_device_id indirect_io_hosts[] = {
++		{"HISI0191", 0},
++		{}
++	};
++
++	return parent && !acpi_match_device_ids(parent, indirect_io_hosts);
++}
++
+ static bool acpi_is_serial_bus_slave(struct acpi_device *device)
+ {
+ 	struct list_head resource_list;
+ 	bool is_serial_bus_slave = false;
  
- 	/* Program the address registers */
--	reg = PCIE_BDF(devfn) | PCIE_CONF_REG(where);
-+	reg = PCIE_CONF_ADDR(bus->number, devfn, where);
- 	advk_writel(pcie, reg, PIO_ADDR_LS);
- 	advk_writel(pcie, 0, PIO_ADDR_MS);
- 
++	if (acpi_is_indirect_io_slave(device))
++		return true;
++
+ 	/* Macs use device properties in lieu of _CRS resources */
+ 	if (x86_apple_machine &&
+ 	    (fwnode_property_present(&device->fwnode, "spiSclkPeriod") ||
 -- 
-2.14.3
+1.9.1
