@@ -1,59 +1,71 @@
-Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
-To: Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-5-logang@deltatee.com>
- <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
- <0D05579B-789C-4A19-B3A2-C1A630BE31C0@raithlin.com>
- <20180301142155.5966c4c0@w520.home>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <8202ea69-f0ed-db10-a0d3-9fd470c1c441@deltatee.com>
-Date: Thu, 1 Mar 2018 14:26:57 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180301142155.5966c4c0@w520.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1520308623.33502.13.camel@aosc.io>
+Subject: Re: Question about a quirky (DesignWare) PCIe RC in Allwinner H6
+From: Icenowy Zheng <icenowy@aosc.io>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Date: Tue, 06 Mar 2018 11:57:03 +0800
+In-Reply-To: <20180305214718.GC255556@bhelgaas-glaptop.roam.corp.google.com>
+References: <1520261458.33502.10.camel@aosc.io>
+ <20180305214718.GC255556@bhelgaas-glaptop.roam.corp.google.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+ Maxime Ripard <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
+ linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 01/03/18 02:21 PM, Alex Williamson wrote:
-> This is still a pretty terrible solution though, your kernel provider
-> needs to decide whether they favor device assignment or p2p, because we
-> can't do both, unless there's a patch I haven't seen yet that allows
-> boot time rather than compile time configuration.  There are absolutely
-> supported device assignment cases of switches proving isolation between
-> devices allowing the downstream EPs to be used independently.  I think
-> this is a non-starter for distribution support without boot time or
-> dynamic configuration.  I could imagine dynamic configuration through
-> sysfs that might trigger a soft remove and rescan of the affected
-> devices in order to rebuild the IOMMU group.  The hard part might be
-> determining which points to allow that to guarantee correctness.  For
-> instance, upstream switch ports don't actually support ACS, but they'd
-> otherwise be an obvious concentration point to trigger a
-> reconfiguration.  Thanks,
-
-At this point, I don't expect this to be enabled in any distribution. 
-The use case is for custom hardware intended to do P2P which means they 
-can have a custom kernel with P2P enabled. The default for 
-CONFIG_PCI_P2P is 'no' and I expect it to stay that way for a long time.
-
-Another boot option which has to be set for this to work isn't something 
-we'd like to see.
-
-Logan
+5ZyoIDIwMTgtMDMtMDXkuIDnmoQgMTU6NDcgLTA2MDDvvIxCam9ybiBIZWxnYWFz5YaZ6YGT77ya
+Cj4gT24gTW9uLCBNYXIgMDUsIDIwMTggYXQgMTA6NTA6NThQTSArMDgwMCwgSWNlbm93eSBaaGVu
+ZyB3cm90ZToKPiA+IEhpIGV2ZXJ5b25lLAo+ID4gCj4gPiBJJ20gdHJ5aW5nIHRvIGltcGxlbWVu
+dCBhIGRyaXZlciBmb3IgdGhlIHF1aXJreSAoRFcpIFBDSWUgUkMgaW4gdGhlCj4gPiBBbGx3aW5u
+ZXIgSDYgU29DLgo+ID4gCj4gPiBUaGUgcXVpcmsgaXMgdGhhdCBvbmx5IHRoZSAiZGJpIiBzcGFj
+ZSBpcyBhbHdheXMgbWFwcGVkLCBidXQgYXQgdGhlCj4gPiBzYW1lIHRpbWUgb25seSA2NEtpQiBv
+ZiBvdGhlciBzcGFjZXMgKGNvbmZpZywgZG93bnN0cmVhbSBJTyBhbmQKPiA+IG5vbi0KPiA+IHBy
+ZWZldGNoYWJsZSBtZW1vcnkpIGFyZSBhY2Nlc3NpYmxlLiBUbyBhY2Nlc3MgYSBjZXJ0YWluIGFk
+ZHJlc3MKPiA+IHRoZQo+ID4gaGlnaCAxNi1iaXQgb2YgdGhlIGFkZHJlc3MgKGFsbCBidXMgYWRk
+cmVzc2VzIGluIEg2IFNvQyBhcmUgMzItYml0Cj4gPiBkZXNwaXRlIHRoZSBDUFUgaXMgNjQtYml0
+KSBuZWVkcyB0byBiZSB3cml0dGVuIGludG8gdGhlCj4gPiBQQ0lFX0FERFJfUEFHRV9DRkcgcmVn
+aXN0ZXIgKGEgdmVuZG9yLWRlZmluZWQgcmVnaXN0ZXIgaW4gREJJCj4gPiBzcGFjZSkuCj4gPiBT
+byB0aGUgYWNjZXNzIHRvIHRoZXNlIHNwYWNlcyBjYW5ub3QgYmUgcHJvY2Vzc2VkIGNvcnJlY3Rs
+eSB3aXRoCj4gPiBqdXN0Cj4gPiByZWFkbC93cml0ZWwsIGFzIHRoZSBleGlzdGluZyBjb2RlIGRv
+ZXMuCj4gPiAKPiA+IElzIGl0IHBvc3NpYmxlIHRvIHdvcmthcm91bmQgdGhpcyBpbiB0aGUgUENJ
+IHN1YnN5c3RlbSBvZiBMaW51eD8KPiA+IAo+ID4gKEkgaGF2ZSB0aG91Z2h0IGEgd29ya2Fyb3Vu
+ZCB0aGF0IG9ubHkgbWFwcyB0aGUgY3VycmVudCBhY2Nlc3NpYmxlCj4gPiA2NEtpQiB3aXRoIHRo
+ZSBNTVUsIGFuZCB3aGVuIGFjY2Vzc2luZyB0aGUgbm9uLWFjY2Vzc2libGUgcGFydCwKPiA+IGNh
+dGNoCj4gPiB0aGUgcGFnZSBmYXVsdCBhbmQgcmUtc2V0dXAgdGhlIG1hcCB0byB0aGUgbmV3IDY0
+S2lCIHBhZ2UuIEJ1dAo+ID4gc3VyZWx5Cj4gPiBpdCB3aWxsIGtpbGwgdGhlIHBlcmZvcm1hbmNl
+LikKPiAKPiBJZiB5b3Ugb25seSBuZWVkIHRvIHdyaXRlIHRvIFBDSUVfQUREUl9QQUdFX0NGRyBm
+b3IgKmNvbmZpZyoKPiBhY2Nlc3NlcywKPiB0aGlzIHNob3VsZCBiZSBlYXN5LiAgQWxsIGNvbmZp
+ZyBhY2Nlc3NlcyBnbyB0aHJvdWdoIHdyYXBwZXJzCj4gKHBjaV9yZWFkX2NvbmZpZ193b3JkKCks
+IGV0YykgYW5kIHNldmVyYWwgaG9zdCBicmlkZ2UgZHJpdmVycyBoYXZlIHRvCj4gdXBkYXRlIGEg
+cmVnaXN0ZXIgd2l0aCBwYXJ0cyBvZiB0aGUgY29uZmlnIGFkZHJlc3MsIGUuZy4sCj4gYWR2a19w
+Y2llX3JkX2NvbmYoKSwgbXZlYnVfcGNpZV9od19yZF9jb25mKCkuCj4gCj4gSXQgc291bmRzIGxp
+a2UgeW91IGFsc28gbmVlZCB0byB1cGRhdGUgUENJRV9BRERSX1BBR0VfQ0ZHIGZvciBJL08KPiBw
+b3J0Cj4gYWNjZXNzZXMuICBJL08gcG9ydCBhY2Nlc3NlcyBkbyBnbyB0aHJvdWdoIGEgd3JhcHBl
+ciAoaW5iKCksIGV0YyksIHNvCj4gaXQgbWlnaHQgYmUgcG9zc2libGUgaW4gcHJpbmNpcGxlIHRv
+IGludGVyY2VwdCB0aGVzZSwgYWx0aG91Z2ggbXVjaAo+IG1vcmUgZGlmZmljdWx0IHRoYW4gY29u
+ZmlnIGFjY2Vzc2VzLCBiZWNhdXNlIHRoZSBjb25maWcgYWNjZXNzZXMgYXJlCj4gYWxyZWFkeSBz
+ZXQgdXAgd2l0aCBwZXItaG9zdCBicmlkZ2UgaG9va3MsIHdoaWxlIHRoZSBJL08gcG9ydAo+IGFj
+Y2Vzc29ycyBhcmUgbW9zdGx5IHBlci1hcmNoLgo+IAo+IEJ1dCBpZiB5b3UgaGF2ZSB0byB1cGRh
+dGUgUENJRV9BRERSX1BBR0VfQ0ZHIGZvciBtZW1vcnkgYWNjZXNzZXMsCj4gdGhhdCdzIHJlYWxs
+eSBhIHByb2JsZW0gYmVjYXVzZSBkcml2ZXJzIGFyZSBhbGxvd2VkIHRvIGVzc2VudGlhbGx5Cj4g
+cmVhZCBhIG1lbW9yeSBCQVIsIGNvbnZlcnQgdGhhdCBidXMgYWRkcmVzcyB0byBhIENQVSBwaHlz
+aWNhbCBtZW1vcnkKPiBhZGRyZXNzLCBpb3JlbWFwKCkgaXQsIHRoZW4gZGlyZWN0bHkgYWNjZXNz
+IHRoZSBQQ0llIG1lbW9yeSB3aXRoCj4gbG9hZHMKPiBhbmQgc3RvcmVzLgoKVW5mb3J0dW5hdGVs
+eSB0aGlzIGlzIHRoZSBjYXNlLiBBbGwgYWJvdmUgKGNvbmZpZywgSU8sIG1lbW9yeSkgbmVlZHMK
+UENJRV9BRERSX1BBR0VfQ0ZHIHVwZGF0ZS4KCj4gCj4gQmpvcm4KCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBs
+aXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5m
+cmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
