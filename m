@@ -1,95 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 13 Mar 2018 11:33:13 +0100
-From: Jean Delvare <jdelvare@suse.de>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-Subject: Re: [PATCH v2 1/4] firmware: dmi_scan: Introduce the
- dmi_get_bios_year() helper
-Message-ID: <20180313113313.612d66c6@endymion>
-In-Reply-To: <20180301180220.11333-2-andriy.shevchenko@linux.intel.com>
-References: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
-        <20180301180220.11333-2-andriy.shevchenko@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:39944 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753065AbeCFPR4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 10:17:56 -0500
+Date: Tue, 6 Mar 2018 15:18:20 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, linux-pci@vger.kernel.org,
+        m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        niklas.cassel@axis.com, shawn.guo@linaro.org,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com, nsekhar@ti.com
+Subject: Re: [PATCH v10 1/3] PCI: dwc: Move MSI IRQs allocation to IRQ
+ domains hierarchical API
+Message-ID: <20180306151820.GB7378@red-moon>
+References: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
+ <5feaf8a1308325a3d07f4380413061a63e156ec2.1520336185.git.gustavo.pimentel@synopsys.com>
+ <1520346258.4095.21.camel@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1520346258.4095.21.camel@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andy,
-
-On Thu,  1 Mar 2018 20:02:17 +0200, Andy Shevchenko wrote:
-> The pattern to only extract the year portion of date is used in
-> several places and more users may come.
+On Tue, Mar 06, 2018 at 03:24:18PM +0100, Lucas Stach wrote:
+> Am Dienstag, den 06.03.2018, 11:54 +0000 schrieb Gustavo Pimentel:
+> > Implement a multiplexed IRQ domain hierarchy API in the pcie-designware
+> > host bridge driver that funnels all MSI IRQs into a single parent
+> > interrupt, moving away from the obsolete struct msi_controller based
+> > API.
+> > 
+> > Although the old implementation API is still available, pcie-designware
+> > will now use the multiplexed IRQ domains hierarchical API.
+> > 
+> > Remove all existing dwc based host bridges MSI IRQs handlers, in that the
+> > hierarchical API now handles MSI IRQs through the hierarchical/chained
+> > MSI domain implementation.
+> > 
+> > > Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> > > Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+> > > Tested-by: Shawn Guo <shawn.guo@linaro.org>
+> > > Acked-by: Jingoo Han <jingoohan1@gmail.com>
+> > > Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> > ---
+> [...]
+> > +static int dw_pcie_irq_domain_alloc(struct irq_domain *domain,
+> > > +				    unsigned int virq, unsigned int nr_irqs,
+> > > +				    void *args)
+> > +{
+> > > +	struct pcie_port *pp = domain->host_data;
+> > > +	unsigned long flags;
+> > > +	unsigned long bit;
+> > > +	u32 i;
+> > +
+> > > +	raw_spin_lock_irqsave(&pp->lock, flags);
+> > +
+> > > +	bit = bitmap_find_free_region(pp->msi_irq_in_use, pp->num_vectors,
+> > > +				      order_base_2(nr_irqs));
+> > +
+> > > +	raw_spin_unlock_irqrestore(&pp->lock, flags);
+> > +
+> > > +	if (bit < 0)
+> > +		return -ENOSPC;
 > 
-> By using this helper they may create slightly cleaner code.
+> bit is an unsigned variable here, so this condition will never be true.
+
+I have fixed it up in my pci/dwc-msi branch, thanks for reporting it.
+
+Lorenzo
+
+> > +
+> > > +	for (i = 0; i < nr_irqs; i++)
+> > > +		irq_domain_set_info(domain, virq + i, bit + i,
+> > > +				    &dw_pci_msi_bottom_irq_chip,
+> > > +				    pp, handle_edge_irq,
+> > > +				    NULL, NULL);
+> > +
+> > > +	return 0;
+> > +}
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/firmware/dmi_scan.c | 11 +++++++++++
->  include/linux/dmi.h         |  2 ++
->  2 files changed, 13 insertions(+)
-> 
-> diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
-> index 6ce299926196..616ec17cc802 100644
-> --- a/drivers/firmware/dmi_scan.c
-> +++ b/drivers/firmware/dmi_scan.c
-> @@ -1015,6 +1015,17 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
->  }
->  EXPORT_SYMBOL(dmi_get_date);
->  
-> +int dmi_get_bios_year(void)
-> +{
-> +	bool exists;
-> +	int year;
-> +
-> +	exists = dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
-> +
-> +	return exists ? year : -ENODATA;
-
-If the DMI field exists but year can't be parsed, "exists" is true but
-"year" is 0. From the caller's perspective, it is the same as if the
-field did not exist (year is not available in both cases), but the
-function returns 0 in one case and -ENODATA in the other. Don't you
-think that:
-
-	return year ? year : -ENODATA;
-
-would serve the caller better?
-
-> +}
-> +EXPORT_SYMBOL(dmi_get_bios_year);
-> +
->  /**
->   *	dmi_walk - Walk the DMI table and get called back for every record
->   *	@decode: Callback function
-> diff --git a/include/linux/dmi.h b/include/linux/dmi.h
-> index 46e151172d95..6a86d8db16d9 100644
-> --- a/include/linux/dmi.h
-> +++ b/include/linux/dmi.h
-> @@ -106,6 +106,7 @@ extern void dmi_scan_machine(void);
->  extern void dmi_memdev_walk(void);
->  extern void dmi_set_dump_stack_arch_desc(void);
->  extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
-> +extern int dmi_get_bios_year(void);
->  extern int dmi_name_in_vendors(const char *str);
->  extern int dmi_name_in_serial(const char *str);
->  extern int dmi_available;
-> @@ -133,6 +134,7 @@ static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
->  		*dayp = 0;
->  	return false;
->  }
-> +static inline int dmi_get_bios_year(void) { return -ENXIO; }
->  static inline int dmi_name_in_vendors(const char *s) { return 0; }
->  static inline int dmi_name_in_serial(const char *s) { return 0; }
->  #define dmi_available 0
-
-Looks good otherwise.
-
-Reviewed-by: Jean Delvare <jdelvare@suse.de>
-
--- 
-Jean Delvare
-SUSE L3 Support
+> Regards,
+> Lucas
