@@ -1,55 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56890 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751302AbeCONWO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2018 09:22:14 -0400
-Date: Thu, 15 Mar 2018 14:22:13 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 5/5] misc: pci_endpoint_test: Handle 64-bit BARs
- properly
-Message-ID: <20180315132213.GA8629@kroah.com>
-References: <20180308133331.19464-1-niklas.cassel@axis.com>
- <20180308133331.19464-6-niklas.cassel@axis.com>
+Received: from mail-sg2apc01on0120.outbound.protection.outlook.com ([104.47.125.120]:45036
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752910AbeCFSWE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 13:22:04 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: [PATCH v3 4/6] PCI: hv: remove hbus->enum_sem
+Date: Tue, 6 Mar 2018 18:21:53 +0000
+Message-ID: <20180306182128.23281-5-decui@microsoft.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-1-decui@microsoft.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180308133331.19464-6-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 08, 2018 at 02:33:30PM +0100, Niklas Cassel wrote:
-> A 64-bit BAR consists of a BAR pair, where the second BAR has the
-> upper bits, so we cannot simply call pci_ioremap_bar() on every single
-> BAR index.
-> 
-> The second BAR in a BAR pair will not have the IORESOURCE_MEM resource
-> flag set. Only call ioremap on BARs that have the IORESOURCE_MEM
-> resource flag set.
-> 
-> pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
-> pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
-> pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
-> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
-> pci-endpoint-test 0000:01:00.0: failed to read BAR1
-> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
-> pci-endpoint-test 0000:01:00.0: failed to read BAR3
-> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
-> pci-endpoint-test 0000:01:00.0: failed to read BAR5
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/misc/pci_endpoint_test.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
+Since we serialize the present/eject work items now, we don't need the
+semaphore any more.
 
-Where are the 4 other patches in this series?  I can't just only apply
-the last one, right?
+This is suggested by Michael Kelley.
 
-Please be careful when sending patches to properly notify everyone...
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Jack Morgenstein <jackm@mellanox.com>
+Cc: stable@vger.kernel.org
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 17 ++---------------
+ 1 file changed, 2 insertions(+), 15 deletions(-)
 
-this is now dropped from my patch queue.
-
-greg k-h
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index aaee41faf55f..3a385212f666 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -447,7 +447,6 @@ struct hv_pcibus_device {
+ 	spinlock_t device_list_lock;	/* Protect lists below */
+ 	void __iomem *cfg_addr;
+=20
+-	struct semaphore enum_sem;
+ 	struct list_head resources_for_children;
+=20
+ 	struct list_head children;
+@@ -1592,12 +1591,8 @@ static struct hv_pci_dev *get_pcichild_wslot(struct =
+hv_pcibus_device *hbus,
+  * It must also treat the omission of a previously observed device as
+  * notification that the device no longer exists.
+  *
+- * Note that this function is a work item, and it may not be
+- * invoked in the order that it was queued.  Back to back
+- * updates of the list of present devices may involve queuing
+- * multiple work items, and this one may run before ones that
+- * were sent later. As such, this function only does something
+- * if is the last one in the queue.
++ * Note that this function is serialized with hv_eject_device_work(),
++ * because both are pushed to the ordered workqueue hbus->wq.
+  */
+ static void pci_devices_present_work(struct work_struct *work)
+ {
+@@ -1618,11 +1613,6 @@ static void pci_devices_present_work(struct work_str=
+uct *work)
+=20
+ 	INIT_LIST_HEAD(&removed);
+=20
+-	if (down_interruptible(&hbus->enum_sem)) {
+-		put_hvpcibus(hbus);
+-		return;
+-	}
+-
+ 	/* Pull this off the queue and process it if it was the last one. */
+ 	spin_lock_irqsave(&hbus->device_list_lock, flags);
+ 	while (!list_empty(&hbus->dr_list)) {
+@@ -1639,7 +1629,6 @@ static void pci_devices_present_work(struct work_stru=
+ct *work)
+ 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+=20
+ 	if (!dr) {
+-		up(&hbus->enum_sem);
+ 		put_hvpcibus(hbus);
+ 		return;
+ 	}
+@@ -1726,7 +1715,6 @@ static void pci_devices_present_work(struct work_stru=
+ct *work)
+ 		break;
+ 	}
+=20
+-	up(&hbus->enum_sem);
+ 	put_hvpcibus(hbus);
+ 	kfree(dr);
+ }
+@@ -2460,7 +2448,6 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	spin_lock_init(&hbus->config_lock);
+ 	spin_lock_init(&hbus->device_list_lock);
+ 	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
+-	sema_init(&hbus->enum_sem, 1);
+ 	init_completion(&hbus->remove_event);
+ 	hbus->wq =3D alloc_ordered_workqueue("hv_pci_%x", 0,
+ 					   hbus->sysdata.domain);
+--=20
+2.7.4
