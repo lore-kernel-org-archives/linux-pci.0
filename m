@@ -1,84 +1,314 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:57199 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752067AbeC2Nxo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 09:53:44 -0400
-Subject: Re: [PATCH v5 00/12] PCI endpoint 64-bit BAR fixes
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "cyrille.pitchen@free-electrons.com"
-        <cyrille.pitchen@free-electrons.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Douglas <adouglas@cadence.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Niklas Cassel <niklass@axis.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <e2fb68a0-c860-71cc-1983-2ecf30d5a2aa@synopsys.com>
-Date: Thu, 29 Mar 2018 14:52:56 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
+        <andriy.shevchenko@linux.intel.com>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
+        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
+        <frowand.list@gmail.com>, <agraf@suse.de>
+Subject: [PATCH v16 8/9] HISI LPC: Add ACPI support
+Date: Tue, 6 Mar 2018 18:47:47 +0800
+Message-ID: <1520333268-82754-9-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
+References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas,
+Based on the previous patches, this patch supports the
+LPC host on hip06/hip07 for ACPI FW.
 
-On 28/03/2018 12:50, Niklas Cassel wrote:
-> PCI endpoint fixes to improve the way 64-bit BARs are handled.
-> 
-> 
-> There are still future improvements that could be made:
-> 
-> pci-epf-test.c always allocates space for
-> 6 BARs, even when using 64-bit BARs (which
-> really only requires us to allocate 3 BARs).
-> 
-> pcitest.sh will print "NOT OKAY" for BAR1,
-> BAR3, and BAR5 when using 64-bit BARs.
-> This could probably be improved to say
-> something like "N/A (64-bit BAR)".
-> 
-> Niklas Cassel (12):
->   PCI: endpoint: BAR width should not depend on sizeof dma_addr_t
->   PCI: endpoint: Simplify epc->ops->set_bar()/pci_epc_set_bar()
->   PCI: endpoint: Setting BAR_5 to 64-bits wide is invalid
->   PCI: endpoint: Setting 64-bit/prefetch bit is invalid when IO is set
->   PCI: endpoint: Setting a BAR size > 4 GB is invalid if 64-bit flag is
->     not set
->   PCI: designware-ep: Make dw_pcie_ep_set_bar() handle 64-bit BARs
->     properly
->   PCI: cadence: Set PCI_BASE_ADDRESS_MEM_TYPE_64 if a 64-bit BAR was
->     set-up
->   PCI: endpoint: Handle 64-bit BARs properly
->   PCI: endpoint: Make epc->ops->clear_bar()/pci_epc_clear_bar() take
->     struct *epf_bar
->   PCI: endpoint: Make sure that BAR_5 does not have 64-bit flag set when
->     clearing
->   PCI: designware-ep: Make dw_pcie_ep_reset_bar() handle 64-bit BARs
->     properly
->   misc: pci_endpoint_test: Handle 64-bit BARs properly
-> 
->  drivers/misc/pci_endpoint_test.c              | 12 +++++----
->  drivers/pci/cadence/pcie-cadence-ep.c         | 15 ++++++++---
->  drivers/pci/dwc/pcie-designware-ep.c          | 36 +++++++++++++++++++++------
->  drivers/pci/endpoint/functions/pci-epf-test.c | 28 +++++++++++++--------
->  drivers/pci/endpoint/pci-epc-core.c           | 32 +++++++++++++++---------
->  drivers/pci/endpoint/pci-epf-core.c           |  4 +++
->  include/linux/pci-epc.h                       | 11 ++++----
->  include/linux/pci-epf.h                       |  2 ++
->  8 files changed, 95 insertions(+), 45 deletions(-)
-> 
+It is the responsibility of the LPC host driver to
+enumerate the child devices, as the ACPI scan code will
+not enumerate children of "indirect IO" hosts.
 
-For the whole series:
+The ACPI table for the LPC host controller and the child
+devices is in the following format:
+  Device (LPC0) {
+    Name (_HID, "HISI0191")  // HiSi LPC
+    Name (_CRS, ResourceTemplate () {
+      Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
+    })
+  }
 
-Tested-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+  Device (LPC0.IPMI) {
+    Name (_HID, "IPI0001")
+    Name (LORS, ResourceTemplate() {
+      QWordIO (
+        ResourceConsumer,
+	MinNotFixed,     // _MIF
+	MaxNotFixed,     // _MAF
+	PosDecode,
+	EntireRange,
+	0x0,             // _GRA
+	0xe4,            // _MIN
+	0x3fff,          // _MAX
+	0x0,             // _TRA
+	0x04,            // _LEN
+	, ,
+	BTIO
+      )
+    })
 
-Regards,
-Gustavo
+Since the IO resources of the child devices need to be
+translated from LPC bus addresses to logical PIO addresses,
+and we shouldn't modify the resources of the devices
+generated in the FW scan, a per-child MFD is created as
+a substitute. The MFD IO resources will be the translated
+bus addresses of the ACPI child.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Tested-by: dann frazier <dann.frazier@canonical.com>
+---
+ drivers/bus/hisi_lpc.c | 202 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 202 insertions(+)
+
+diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
+index c331609..9d38cfa 100644
+--- a/drivers/bus/hisi_lpc.c
++++ b/drivers/bus/hisi_lpc.c
+@@ -12,6 +12,7 @@
+ #include <linux/delay.h>
+ #include <linux/io.h>
+ #include <linux/logic_pio.h>
++#include <linux/mfd/core.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+@@ -346,6 +347,204 @@ static void hisi_lpc_comm_out(void *hostdata, unsigned long pio,
+ 	.outs = hisi_lpc_comm_outs,
+ };
+ 
++#ifdef CONFIG_ACPI
++#define MFD_CHILD_NAME_PREFIX DRV_NAME"-"
++#define MFD_CHILD_NAME_LEN (ACPI_ID_LEN + sizeof(MFD_CHILD_NAME_PREFIX) - 1)
++
++struct hisi_lpc_mfd_cell {
++	struct mfd_cell_acpi_match acpi_match;
++	char name[MFD_CHILD_NAME_LEN];
++	char pnpid[ACPI_ID_LEN];
++};
++
++static int hisi_lpc_acpi_xlat_io_res(struct acpi_device *adev,
++				     struct acpi_device *host,
++				     struct resource *res)
++{
++	unsigned long sys_port;
++	resource_size_t len = resource_size(res);
++
++	sys_port = logic_pio_trans_hwaddr(&host->fwnode, res->start, len);
++	if (sys_port == ~0UL)
++		return -EFAULT;
++
++	res->start = sys_port;
++	res->end = sys_port + len;
++
++	return 0;
++}
++
++/*
++ * hisi_lpc_acpi_set_io_res - set the resources for a child's MFD
++ * @child: the device node to be updated the I/O resource
++ * @hostdev: the device node associated with host controller
++ * @res: double pointer to be set to the address of translated resources
++ * @num_res: pointer to variable to hold the number of translated resources
++ *
++ * Returns 0 when successful, and a negative value for failure.
++ *
++ * For a given host controller, each child device will have an associated
++ * host-relative address resource. This function will return the translated
++ * logical PIO addresses for each child devices resources.
++ */
++static int hisi_lpc_acpi_set_io_res(struct device *child,
++				    struct device *hostdev,
++				    const struct resource **res,
++				    int *num_res)
++{
++	struct acpi_device *adev;
++	struct acpi_device *host;
++	struct resource_entry *rentry;
++	LIST_HEAD(resource_list);
++	struct resource *resources;
++	int count;
++	int i;
++
++	if (!child || !hostdev)
++		return -EINVAL;
++
++	host = to_acpi_device(hostdev);
++	adev = to_acpi_device(child);
++
++	/* check the device state */
++	if (!adev->status.present) {
++		dev_dbg(child, "device is not present\n");
++		return -EIO;
++	}
++	/* whether the child had been enumerated? */
++	if (acpi_device_enumerated(adev)) {
++		dev_dbg(child, "has been enumerated\n");
++		return -EIO;
++	}
++
++	/*
++	 * The following code segment to retrieve the resources is common to
++	 * acpi_create_platform_device(), so consider a common helper function
++	 * in future.
++	 */
++	count = acpi_dev_get_resources(adev, &resource_list, NULL, NULL);
++	if (count <= 0) {
++		dev_dbg(child, "failed to get resources\n");
++		return count ? count : -EIO;
++	}
++
++	resources = devm_kcalloc(hostdev, count, sizeof(*resources),
++				 GFP_KERNEL);
++	if (!resources) {
++		dev_warn(hostdev, "could not allocate memory for %d resources\n",
++			 count);
++		acpi_dev_free_resource_list(&resource_list);
++		return -ENOMEM;
++	}
++	count = 0;
++	list_for_each_entry(rentry, &resource_list, node)
++		resources[count++] = *rentry->res;
++
++	acpi_dev_free_resource_list(&resource_list);
++
++	/* translate the I/O resources */
++	for (i = 0; i < count; i++) {
++		int ret;
++
++		if (!(resources[i].flags & IORESOURCE_IO))
++			continue;
++		ret = hisi_lpc_acpi_xlat_io_res(adev, host, &resources[i]);
++		if (ret) {
++			dev_err(child, "translate IO range failed(%d)\n", ret);
++			return ret;
++		}
++	}
++	*res = resources;
++	*num_res = count;
++
++	return 0;
++}
++
++/*
++ * hisi_lpc_acpi_probe - probe children for ACPI FW
++ * @hostdev: LPC host device pointer
++ *
++ * Returns 0 when successful, and a negative value for failure.
++ *
++ * Scan all child devices and create a per-device MFD with
++ * logical PIO translated IO resources.
++ */
++static int hisi_lpc_acpi_probe(struct device *hostdev)
++{
++	struct acpi_device *adev = ACPI_COMPANION(hostdev);
++	struct hisi_lpc_mfd_cell *hisi_lpc_mfd_cells;
++	struct mfd_cell *mfd_cells;
++	struct acpi_device *child;
++	int size, ret, count = 0, cell_num = 0;
++
++	list_for_each_entry(child, &adev->children, node)
++		cell_num++;
++
++	/* allocate the mfd cell and companion ACPI info, one per child */
++	size = sizeof(*mfd_cells) + sizeof(*hisi_lpc_mfd_cells);
++	mfd_cells = devm_kcalloc(hostdev, cell_num, size, GFP_KERNEL);
++	if (!mfd_cells)
++		return -ENOMEM;
++
++	hisi_lpc_mfd_cells = (struct hisi_lpc_mfd_cell *)&mfd_cells[cell_num];
++	/* Only consider the children of the host */
++	list_for_each_entry(child, &adev->children, node) {
++		struct mfd_cell *mfd_cell = &mfd_cells[count];
++		struct hisi_lpc_mfd_cell *hisi_lpc_mfd_cell =
++					&hisi_lpc_mfd_cells[count];
++		struct mfd_cell_acpi_match *acpi_match =
++					&hisi_lpc_mfd_cell->acpi_match;
++		char *name = hisi_lpc_mfd_cell[count].name;
++		char *pnpid = hisi_lpc_mfd_cell[count].pnpid;
++		struct mfd_cell_acpi_match match = {
++			.pnpid = pnpid,
++		};
++
++		/*
++		 * For any instances of this host controller (hip06 and hip07
++		 * are the only chipsets), we would not have multiple slaves
++		 * with the same HID. And in any system we would have just one
++		 * controller active. So don't worrry about MFD name clashes.
++		 */
++		snprintf(name, MFD_CHILD_NAME_LEN, MFD_CHILD_NAME_PREFIX"%s",
++			 acpi_device_hid(child));
++		snprintf(pnpid, ACPI_ID_LEN, "%s", acpi_device_hid(child));
++
++		memcpy(acpi_match, &match, sizeof(*acpi_match));
++		mfd_cell->name = name;
++		mfd_cell->acpi_match = acpi_match;
++
++		ret = hisi_lpc_acpi_set_io_res(&child->dev, &adev->dev,
++					       &mfd_cell->resources,
++					       &mfd_cell->num_resources);
++		if (ret) {
++			dev_warn(&child->dev, "set resource fail(%d)\n", ret);
++			return ret;
++		}
++		count++;
++	}
++
++	ret = mfd_add_devices(hostdev, PLATFORM_DEVID_NONE,
++			      mfd_cells, cell_num, NULL, 0, NULL);
++	if (ret) {
++		dev_err(hostdev, "failed to add mfd cells (%d)\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static const struct acpi_device_id hisi_lpc_acpi_match[] = {
++	{"HISI0191"},
++	{}
++};
++#else
++static int hisi_lpc_acpi_probe(struct device *dev)
++{
++	return -ENODEV;
++}
++#endif // CONFIG_ACPI
++
+ /*
+  * hisi_lpc_probe - the probe callback function for hisi lpc host,
+  *		   will finish all the initialization.
+@@ -391,6 +590,8 @@ static int hisi_lpc_probe(struct platform_device *pdev)
+ 	/* register the LPC host PIO resources */
+ 	if (!acpi_device)
+ 		ret = of_platform_populate(dev->of_node, NULL, NULL, dev);
++	else
++		ret = hisi_lpc_acpi_probe(dev);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -414,6 +615,7 @@ static int hisi_lpc_probe(struct platform_device *pdev)
+ 	.driver = {
+ 		.name           = DRV_NAME,
+ 		.of_match_table = hisi_lpc_of_match,
++		.acpi_match_table = ACPI_PTR(hisi_lpc_acpi_match),
+ 	},
+ 	.probe = hisi_lpc_probe,
+ };
+-- 
+1.9.1
+
