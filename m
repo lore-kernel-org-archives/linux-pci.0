@@ -1,95 +1,91 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 07/37] iommu: Add a page fault handler
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-8-jean-philippe.brucker@arm.com>
- <20180308164035.000065c2@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <d855e893-0f3d-3106-eb75-ce01ad9ce663@arm.com>
-Date: Wed, 14 Mar 2018 13:08:07 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sg2apc01on0120.outbound.protection.outlook.com ([104.47.125.120]:45036
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753923AbeCFSWF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 13:22:05 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: [PATCH v3 5/6] PCI: hv: hv_pci_devices_present(): only queue a new
+ work when necessary
+Date: Tue, 6 Mar 2018 18:21:55 +0000
+Message-ID: <20180306182128.23281-6-decui@microsoft.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-1-decui@microsoft.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20180308164035.000065c2@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>, Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jonathan,
+If there is a pending work, we just need to add the new dr into
+the dr_list.
 
-Thanks for reviewing
+This is suggested by Michael Kelley.
 
-On 08/03/18 15:40, Jonathan Cameron wrote:
->> +/**
->> + * iommu_fault_queue_unregister() - Unregister an IOMMU driver from the fault
->> + * queue.
->> + * @flush_notifier: same parameter as iommu_fault_queue_register
->> + */
->> +void iommu_fault_queue_unregister(struct notifier_block *flush_notifier)
->> +{
->> +	down_write(&iommu_fault_queue_sem);
->> +	if (refcount_dec_and_test(&iommu_fault_queue_refs)) {
->> +		destroy_workqueue(iommu_fault_queue);
->> +		iommu_fault_queue = NULL;
->> +	}
->> +	up_write(&iommu_fault_queue_sem);
->> +
->> +	if (flush_notifier)
->> +		blocking_notifier_chain_unregister(&iommu_fault_queue_flush_notifiers,
->> +						   flush_notifier);
-> I would expect the ordering in queue_unregister to be the reverse of queue
-> register (to make it obvious there are no races).
-> 
-> That would put this last block at the start before potentially destroying
-> the work queue.  If I'm missing something then perhaps a comment to
-> explain why the ordering is not the obvious one?
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Jack Morgenstein <jackm@mellanox.com>
+Cc: stable@vger.kernel.org
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-Sure, I'll fix the order, I don't think there was any good reason for it
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 3a385212f666..265ba11e53e2 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -1733,6 +1733,7 @@ static void hv_pci_devices_present(struct hv_pcibus_d=
+evice *hbus,
+ 	struct hv_dr_state *dr;
+ 	struct hv_dr_work *dr_wrk;
+ 	unsigned long flags;
++	bool pending_dr;
+=20
+ 	dr_wrk =3D kzalloc(sizeof(*dr_wrk), GFP_NOWAIT);
+ 	if (!dr_wrk)
+@@ -1756,11 +1757,21 @@ static void hv_pci_devices_present(struct hv_pcibus=
+_device *hbus,
+ 	}
+=20
+ 	spin_lock_irqsave(&hbus->device_list_lock, flags);
++	/*
++	 * If pending_dr is true, we have already queued a work,
++	 * which will see the new dr. Otherwise, we need to
++	 * queue a new work.
++	 */
++	pending_dr =3D !list_empty(&hbus->dr_list);
+ 	list_add_tail(&dr->list_entry, &hbus->dr_list);
+ 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+=20
+-	get_hvpcibus(hbus);
+-	queue_work(hbus->wq, &dr_wrk->wrk);
++	if (pending_dr) {
++		kfree(dr_wrk);
++	} else {
++		get_hvpcibus(hbus);
++		queue_work(hbus->wq, &dr_wrk->wrk);
++	}
+ }
+=20
+ /**
+--=20
+2.7.4
