@@ -1,66 +1,103 @@
-Return-Path: <SRS0=A2bG=GV=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=A2bG=GV=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v16 0/9] LPC: legacy ISA I/O support
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>
+References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
+ <1520335317.10722.416.camel@linux.intel.com>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
+        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
+        <frowand.list@gmail.com>, <agraf@suse.de>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <b4459d98-ebd4-7b13-07ec-613845579558@huawei.com>
+Date: Tue, 6 Mar 2018 11:36:27 +0000
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20180331091245.GA10720@wunner.de>
-References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
- <20180226132112.81447-2-mika.westerberg@linux.intel.com> <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180328114346.GZ2703@lahna.fi.intel.com> <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180329115911.GN2703@lahna.fi.intel.com> <20180331082903.GA21051@wunner.de>
- <20180331085852.GQ2703@lahna.fi.intel.com> <20180331091245.GA10720@wunner.de>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Sat, 31 Mar 2018 11:19:47 +0200
-Message-ID: <CAJZ5v0gzQuKAg883cFRoot53d4dXtZ4EjQ8WdcSNqekTV=TrKQ@mail.gmail.com>
-Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
- bus number
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
-	Mario Limonciello <Mario.Limonciello@dell.com>, Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <yehezkel.bernat@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1520335317.10722.416.camel@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 31, 2018 at 11:12 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> On Sat, Mar 31, 2018 at 11:58:52AM +0300, Mika Westerberg wrote:
->> On Sat, Mar 31, 2018 at 10:29:03AM +0200, Lukas Wunner wrote:
->> > On Thu, Mar 29, 2018 at 02:59:11PM +0300, Mika Westerberg wrote:
->> > > On Wed, Mar 28, 2018 at 01:09:06PM -0500, Bjorn Helgaas wrote:
->> > > > The same issue could happen on any system where we use acpiphp, so I
->> > > > don't think Thunderbolt is really relevant here, and it's easy to
->> > > > confuse things by mentioning it.
->> > >
->> > > This issue can happen regardless whether acpiphp is used or not.
->> >
->> > If the platform has yielded hotplug control to the OS via _OSC,
->> > I don't see how the platform could hot-add devices.  So surely
->> > reserving a bus number for a bridge without anything below it
->> > can be constrained to the !pciehp_is_native(bridge) case?
+On 06/03/2018 11:21, Andy Shevchenko wrote:
+> On Tue, 2018-03-06 at 18:47 +0800, John Garry wrote:
+>> This patchset supports the IPMI-bt device attached to the Low-Pin-
+>> Count
+>> interface implemented on Hisilicon Hip06/Hip07 SoC.
+>>                         -----------
+>>                         | LPC host|
+>>                         |         |
+>>                         -----------
+>>                              |
+>>                 _____________V_______________LPC
+>>                   |                       |
+>>                   V                       V
+>>                                      ------------
+>>                                      |  BT(ipmi)|
+>>                                      ------------
 >>
->> Nothing prevents ACPI Notify() happening while native PCIe hotplug is
->> used on non-hotplug ports (the ones not controlled by pciehp). And it
->> cannot be constrained to !pciehp_is_native(bridge) because it is the
->> root port that has the _OSC but below it can be non-hotplug ports where
->> ACPI Notify() is used to bring in additional devices.
+>> When master accesses those peripherals beneath the Hip06/Hip07 LPC, a
+>> specific
+>> LPC driver is needed to make LPC host generate the standard LPC I/O
+>> cycles with
+>> the target peripherals'I/O port addresses. But on curent arm64 world,
+>> there is
+>> no real I/O accesses. All the I/O operations through in/out accessors
+>> are based
+>> on MMIO ranges; on Hip06/Hip07 LPC the I/O accesses are performed
+>> through driver
+>> specific accessors rather than MMIO.
+>> To solve this issue and keep the relevant existing peripherals'
+>> drivers untouched,
+>> this patchset:
+>>    - introduces a generic I/O space management framework, logical PIO,
+>> to support
+>>       I/O operations on host controllers operating either on MMIO
+>> buses or on buses
+>>      requiring specific driver I/O accessors;
+>>    - redefines the in/out accessors to provide a unified interface for
+>> both MMIO
+>>      and driver specific I/O operations. Using logical PIO, th call of
+>> in/out() from
+>>      the host children drivers, such as ipmi-si, will be redirected to
+>> the
+>>      corresponding device-specific I/O hooks to perform the I/O
+>> accesses.
+>>
+>> Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC
+>> peripherals can
+>> be supported without any changes on the existing ipmi-si driver.
+>>
+>> The whole patchset has been tested on Hip07 D05 board both using DTB
+>> and ACPI.
+>>
 >
-> That sounds like a violation of the spec to me.
+>> V15 thread here: https://lkml.org/lkml/2018/2/26/584
 >
-> ACPI 6.1 table 6-178 says if OS is granted control over PCIe hotplug,
-> the firmware "must ensure that all hot plug events are routed to device
-> interrupts", which wouldn't be the case for Notify() because the
-> interrupt generated is an SCI, not an MSI or INTx interrupt for the
-> hotplug port itself.
+> Thanks for an update.
+> Though I answered to previous thread.
 >
-> Moreover, "after control is transferred to the OS, firmware must not
-> update the state of hot plug slots, including the state of the
-> indicators and power controller."
->
-> Maybe I've misunderstood the spec all the time, my understanding was
-> that if OS is granted control, the firmware won't do anything with
-> hotplug ports below the host bridge, period.
+> Summary: I'm fine with the series as long as maintainers are fine
+> (Rafael et al.). On personal side I think that the handler approach is
+> better. Details are in v15 thread.
 
-This is in agreement with my understanding of it.
+Hi Andy,
 
-The _OSC at a root port should cover the entire hierarchy below that port.
+Thanks for your input and continued support. As I mentioned in reply in 
+v15, the handler support would (or has) faced issues. And Rafael seems 
+fine with deferring the probe to the LLDD in Patch #7/9
+
+Anyway, let's wait for any more input.
+
+Much appreciated,
+John
+
+>
+
+
