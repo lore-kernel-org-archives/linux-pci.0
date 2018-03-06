@@ -1,85 +1,90 @@
-Return-Path: <SRS0=a/0M=GJ=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=a/0M=GJ=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <helgaas@kernel.org>, Christian Zigotzky <chzigotzky@xenosoft.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Olof Johansson <olof@lixom.net>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH 1/1] PCI set flag PCI_SCAN_ALL_PCIE_DEVS for P.A. Semi boards
-In-Reply-To: <20180319191310.GG77194@bhelgaas-glaptop.roam.corp.google.com>
-References: <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de> <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com> <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de> <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com> <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de> <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com> <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de> <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com> <dc228918-652a-e24c-ce7b-8d1b30153d3b@xenosoft.de> <639e975f-1b3a-4f85-9a40-13fe2473fc28@xenosoft.de> <20180319191310.GG77194@bhelgaas-glaptop.roam.corp.google.com>
-Date: Tue, 20 Mar 2018 09:32:14 +1100
-Message-ID: <87tvtbg0i9.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:41982 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750730AbeCFIX7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 03:23:59 -0500
+Received: by mail-pl0-f66.google.com with SMTP id d9-v6so3973452plo.8
+        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2018 00:23:59 -0800 (PST)
+Date: Tue, 6 Mar 2018 16:23:19 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+        "thomas.petazzoni@free-electrons.com"
+        <thomas.petazzoni@free-electrons.com>,
+        "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>,
+        "mingkai.hu@freescale.com" <mingkai.hu@freescale.com>,
+        "tie-fei.zang@freescale.com" <tie-fei.zang@freescale.com>,
+        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+        "wangzhou1@hisilicon.com" <wangzhou1@hisilicon.com>,
+        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
+        "nsekhar@ti.com" <nsekhar@ti.com>, Vignesh R <vigneshr@ti.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
+Subject: Re: [PATCH v9 0/3] PCI: dwc: Enables MSI-X driver support
+Message-ID: <20180306082316.GH28619@dragon>
+References: <cover.1519834018.git.gustavo.pimentel@synopsys.com>
+ <20180302180320.GA5404@red-moon>
+ <23de1d16-ee47-9e53-c1c4-4437f37cc358@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <23de1d16-ee47-9e53-c1c4-4437f37cc358@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
-
-> On Fri, Mar 16, 2018 at 01:55:36PM +0100, Christian Zigotzky wrote:
->> Bjorn Helgaas created a patch for making PCI_SCAN_ALL_PCIE_DEVS work for
->> Root Ports as well as Downstream. Previously PCI_SCAN_ALL_PCIE_DEVS (set=
- by
->> quirks or the "pci=3Dpcie_scan_all"
->> kernel parameter) only affected Switch Downstream Ports, not Root Ports.=
- The
->> problem is, that we have to add always the boot argument "pci=3Dpcie_sca=
-n_all"
->> for using Bjorn's improvements. Without the boot argument
->> "pci=3Dpcie_scan_all", the kernel doesn't boot on P.A. Semi boards with =
-SB600
->> chipset (SB600 chipset is connected via PCIe x4 to the P.A. Semi=E2=80=
-=99s
->> PA6T-1682M System-on-a-Chip) because the kernel can't find any drives
->> connected to the SB600 anymore. Olof Johansson has created a patch for
->> executing "pci=3Dpcie_scan_all" automatically on P.A. Semi boards. With =
-his
->> patch, we don't need to add 'pci=3Dpcie_scan_all' to the kernel boot arg=
-uments
->> anymore.
->
-> The patch looks fine, but I need a signed-off-by line before I can apply
-> it.  See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.g=
-it/tree/Documentation/process/submitting-patches.rst
-
-I'm happy to take it, I've been meaning to check if Olof sent a SOB in
-his original mail but haven't got to it.
-
+On Mon, Mar 05, 2018 at 06:22:53PM +0000, Gustavo Pimentel wrote:
+> On 02/03/2018 18:03, Lorenzo Pieralisi wrote:
+> > [+cc Shawn, Vignesh, Pratyush]
 ...
+> > Is it correct to leave pcie-histb.c as-is ? I do not think it is.
+> 
+> At the time the first series of this patch came out there wasn't such driver and
+> I just start working on this topic on December... Nevertheless, you are right it
+> should follow the same procedure that others.
+> 
+> diff --git a/drivers/pci/dwc/pcie-histb.c b/drivers/pci/dwc/pcie-histb.c
+> index 70b5c0b..5d47b90 100644
+> --- a/drivers/pci/dwc/pcie-histb.c
+> +++ b/drivers/pci/dwc/pcie-histb.c
+> @@ -207,13 +207,6 @@ static struct dw_pcie_host_ops histb_pcie_host_ops = {
+>  	.host_init = histb_pcie_host_init,
+>  };
+> 
+> -static irqreturn_t histb_pcie_msi_irq_handler(int irq, void *arg)
+> -{
+> -	struct pcie_port *pp = arg;
+> -
+> -	return dw_handle_msi_irq(pp);
+> -}
+> -
+>  static void histb_pcie_host_disable(struct histb_pcie *hipcie)
+>  {
+>  	reset_control_assert(hipcie->soft_reset);
+> @@ -393,14 +386,6 @@ static int histb_pcie_probe(struct platform_device *pdev)
+>  			dev_err(dev, "Failed to get MSI IRQ\n");
+>  			return pp->msi_irq;
+>  		}
+> -
+> -		ret = devm_request_irq(dev, pp->msi_irq,
+> -				       histb_pcie_msi_irq_handler,
+> -				       IRQF_SHARED, "histb-pcie-msi", pp);
+> -		if (ret) {
+> -			dev_err(dev, "cannot request MSI IRQ\n");
+> -			return ret;
+> -		}
+>  	}
+> 
+>  	hipcie->phy = devm_phy_get(dev, "phy");
 
-Yes, he did, see below.
+I manually applied the changes on top of Lorenzo's pci/dwc-msi branch,
+and pcie-histb driver still works fine.
 
-So I'll merge that, I'll add a Tested-by for you Christian.
-
-Christian please don't remove any of the tags when submitting other
-peoples' patches in future.
-
-cheers
-
-
->From a3b390277627b0342c8ccfc16e58679e0d8abdde Mon Sep 17 00:00:00 2001
-From: Olof Johansson <olof@lixom.net>
-Date: Sat, 2 Dec 2017 14:56:36 -0800
-Subject: [PATCH] powerpc/pasemi: set PCI_SCAN_ALL_PCI_DEVS
-
-Needed on Amiga X1000 with SB600.
-
-Reported-by: Christian Zigotzky <chzigotzky@xenosoft.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Olof Johansson <olof@lixom.net>
----
- arch/powerpc/platforms/pasemi/pci.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/p=
-asemi/pci.c
-index 5ff6108..ea54ed2 100644
---- a/arch/powerpc/platforms/pasemi/pci.c
-+++ b/arch/powerpc/platforms/pasemi/pci.c
-@@ -224,6 +224,8 @@ void __init pas_pci_init(void)
-		return;
-	}
-
-+	pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS):
-+
-	for (np =3D NULL; (np =3D of_get_next_child(root, np)) !=3D NULL;)
-		if (np->name && !strcmp(np->name, "pxp") && !pas_add_bridge(np))
-			of_node_get(np);
+Tested-by: Shawn Guo <shawn.guo@linaro.org>
