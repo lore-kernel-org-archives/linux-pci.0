@@ -1,75 +1,57 @@
-Return-Path: <SRS0=kfwO=GG=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=kfwO=GG=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 16 Mar 2018 12:13:50 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: honghui.zhang@mediatek.com, bhelgaas@google.com, matthias.bgg@gmail.com,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
-	ryder.lee@mediatek.com, hongkun.cao@mediatek.com,
-	youlin.pei@mediatek.com, yong.wu@mediatek.com, yt.shen@mediatek.com,
-	sean.wang@mediatek.com, xinping.qian@mediatek.com
-Subject: Re: [PATCH v5 2/2] PCI: mediatek: Set up class type and vendor ID
- for MT7622
-Message-ID: <20180316121350.GB24325@e107981-ln.cambridge.arm.com>
-References: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
- <1514336394-17747-3-git-send-email-honghui.zhang@mediatek.com>
- <20171227184542.GA79892@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-hk2apc01on0139.outbound.protection.outlook.com ([104.47.124.139]:63328
+        "EHLO APC01-HK2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750782AbeCFSVw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 13:21:52 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: [PATCH v3 0/6] some fixes to the pci-hyperv driver.
+Date: Tue, 6 Mar 2018 18:21:45 +0000
+Message-ID: <20180306182128.23281-1-decui@microsoft.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171227184542.GA79892@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 27, 2017 at 12:45:42PM -0600, Bjorn Helgaas wrote:
+Changes in v2 are:
 
-[...]
+Patch 1, 6: no change since v1.
+Patch 2,4,5: I added these new patches, as suggested by Michael Kelley.
+Patch 3: Removed the unnecessary drain_workqueue(), as suggested by Michael=
+ Kelley.
 
-> > +		/* Set up class code for MT7622 */
-> > +		val = PCI_CLASS_BRIDGE_PCI << 16;
-> > +		writel(val, port->base + PCIE_CONF_CLASS);
-> 
-> 1) Your comments mention MT7622 specifically, but this code is run for
-> both mt2712-pcie and mt7622-pcie.  If this code is safe and necessary
-> for both mt2712-pcie and mt7622-pcie, please remove the mention of
-> MT7622.
-> 
-> 2) The first comment mentions both "vendor ID and device ID" but you
-> don't write the device ID.  Since this code applies to both
-> mt2712-pcie and mt7622-pcie, my guess is that you don't *want* to
-> write the device ID.  If that's the case, please fix the comment.
-> 
-> 3) If you only need to set the vendor ID, you're performing a 32-bit
-> write (writel()) to update a 16-bit value.  Please use writew()
-> instead.
-> 
-> 4) If you only need to set the vendor ID, please use a definition like
-> "PCIE_CONF_VENDOR_ID" instead of the ambiguous "PCIE_CONF_ID".
-> 
-> 5) If you only need to set the vendor ID, please update the changelog
-> to mention "vendor ID" specifically instead of the ambiguous "IDs".
-> 
-> 6) Please add a space before the closing "*/" of the first comment.
-> 
-> 7) PCI_CLASS_BRIDGE_PCI is for a PCI-to-PCI bridge, i.e., one that has
-> PCI on both the primary (upstream) side and the secondary (downstream)
-> side.  That kind of bridge has a type 1 config header (see
-> PCI_HEADER_TYPE) and the PCI_PRIMARY_BUS and PCI_SECONDARY_BUS
-> registers tell us the bus number of the primary and secondary sides.
-> 
-> I don't believe this device is a PCI-to-PCI bridge.  I think it's a
-> *host* bridge that has some non-PCI interface on the upstream side and
-> should have a type 0 config header.  If that's the case you should use
-> PCI_CLASS_BRIDGE_HOST instead.
+Changes in v3 are:
 
-I think these registers actually programme the root port register space
-in the RC (whether real or fake - that depends on the RC design) so
-the class is PCI_CLASS_BRIDGE_PCI, that's what most of host bridge
-drivers in drivers/pci/host do.
+Patch 5: minimized the scope of the spinlock, as suggested by Michael Kelle=
+y.
 
-I would like to get to the bottom of this since it is indeed misleading
-(and I do not have HW to test it myself to check my understanding).
+Dexuan Cui (6):
+  PCI: hv: fix a comment typo in _hv_pcifront_read_config()
+  PCI: hv: hv_eject_device_work(): remove the bogus test
+  PCI: hv: serialize the present/eject work items
+  PCI: hv: remove hbus->enum_sem
+  PCI: hv: hv_pci_devices_present(): only queue a new work when
+    necessary
+  PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
 
-Thanks,
-Lorenzo
+ drivers/pci/host/pci-hyperv.c | 116 ++++++++++++++++++++++++++++++++------=
+----
+ 1 file changed, 90 insertions(+), 26 deletions(-)
+
+--=20
+2.7.4
