@@ -1,59 +1,94 @@
-Return-Path: <SRS0=N6jm=GM=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=N6jm=GM=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 22 Mar 2018 11:30:00 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v3 1/6] PCI: rockchip: Create individual folder for
- rockchip drivers
-Message-ID: <20180322113000.GA24976@e107981-ln.cambridge.arm.com>
-References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
- <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
- <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
- <879a4862-d0d5-21fd-6c47-029c795fe78e@rock-chips.com>
- <20180321181940.GA9760@e107981-ln.cambridge.arm.com>
- <7275bd77-016a-2729-482d-2855703d9b56@rock-chips.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40746 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932243AbeCFAKH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 19:10:07 -0500
+Date: Mon, 5 Mar 2018 18:10:04 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v2] PCI: Move declaration of of_irq_parse_and_map_pci
+ under OF_IRQ
+Message-ID: <20180306001004.GB33706@bhelgaas-glaptop.roam.corp.google.com>
+References: <1520292150-15699-1-git-send-email-linux@roeck-us.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7275bd77-016a-2729-482d-2855703d9b56@rock-chips.com>
+In-Reply-To: <1520292150-15699-1-git-send-email-linux@roeck-us.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 22, 2018 at 09:03:58AM +0800, Shawn Lin wrote:
-
-[...]
-
-> How about renaming drivers/pci/host to drivers/pci/controller,
-> and then put all pcie-rockchip* files in there, then we don't
-> need add seperate directory containning trivial Kconfig, Makefile.
-
-Yes we can do that but not at -rc6 tail end.
-
-> >>Certainly, I could do that beased on your suggestion, but I would like
-> >>to know if this's the final agreement both you and Lorenzo reached. :)
-> >
-> >Or we can add all EP drivers into drivers/pci/endpoint but then the problem
-> >is how to share code between host and endpoint directories and it starts
-> >feeling like we are going round in circles.
+On Mon, Mar 05, 2018 at 03:22:30PM -0800, Guenter Roeck wrote:
+> Since commit 4670d610d5923 ("PCI: Move OF-related PCI functions into
+> PCI core"), sparc:allmodconfig fails to build with the following error.
 > 
-> I would prefer to rename it to endpoint-framwrok or whatever to clearly
-> states it is for framework but not the drivers. All the drivers
-> whichever for host or endpoint should be in controller directory.
+> pcie-cadence-host.c:(.text+0x4c4):
+> 	undefined reference to `of_irq_parse_and_map_pci'
+> pcie-cadence-host.c:(.text+0x4c8):
+> 	undefined reference to `of_irq_parse_and_map_pci'
 > 
-> >
-> >I can merge this series as-is as long as we will rework the directory
-> >structure according to this discussion (given that's already late -rc6
-> >so directory moves/renames can be disrupting - if feasible at all).
+> of_irq_parse_and_map_pci is now only available if OF_IRQ is enabled.
+> Make its declaration and its dummy function dependent on OF_IRQ
+> to solve the problem.
 > 
-> This sounds super great to me to make this series into -next for some
-> days before hitting into v4.17. Then we could simultaneously head up to
-> see how we could move forward with this.
+> Fixes: 4670d610d5923 ("PCI: Move OF-related PCI functions into PCI core")
+> Cc: Rob Herring <robh@kernel.org>
+> Acked-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 
-Send a last version asap and I will try to merge it for this cycle,
-keeping in mind that what we discussed above must be implemented as
-soon as a new cycle starts.
+Applied to for-linus for v4.16, thanks!
 
-Thanks,
-Lorenzo
+> ---
+> v2: Added Rob's Ack
+>     Sent to linux-pci mailing list per Rob's request
+> 
+>  include/linux/of_pci.h | 17 ++++++++++-------
+>  1 file changed, 10 insertions(+), 7 deletions(-)
+> 
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index 88865e0ebf4d..091033a6b836 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -13,7 +13,6 @@ struct device_node;
+>  struct device_node *of_pci_find_child_device(struct device_node *parent,
+>  					     unsigned int devfn);
+>  int of_pci_get_devfn(struct device_node *np);
+> -int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+>  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+>  int of_get_pci_domain_nr(struct device_node *node);
+>  int of_pci_get_max_link_speed(struct device_node *node);
+> @@ -34,12 +33,6 @@ static inline int of_pci_get_devfn(struct device_node *np)
+>  }
+>  
+>  static inline int
+> -of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+> -{
+> -	return 0;
+> -}
+> -
+> -static inline int
+>  of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+>  {
+>  	return -EINVAL;
+> @@ -67,6 +60,16 @@ of_pci_get_max_link_speed(struct device_node *node)
+>  static inline void of_pci_check_probe_only(void) { }
+>  #endif
+>  
+> +#if IS_ENABLED(CONFIG_OF_IRQ)
+> +int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+> +#else
+> +static inline int
+> +of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+> +{
+> +	return 0;
+> +}
+> +#endif
+> +
+>  #if defined(CONFIG_OF_ADDRESS)
+>  int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  			unsigned char busno, unsigned char bus_max,
+> -- 
+> 2.7.4
+> 
