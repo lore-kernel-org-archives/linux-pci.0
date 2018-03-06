@@ -1,111 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jay Fang <f.fangjian@huawei.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Jay Fang <f.fangjian@huawei.com>
-Subject: [PATCH] PCI: Support PCIe 4.0 data rate(16.0 GT/s)
-Date: Mon, 12 Mar 2018 17:13:32 +0800
-Message-ID: <1520846012-8294-1-git-send-email-f.fangjian@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f170.google.com ([74.125.82.170]:43539 "EHLO
+        mail-ot0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750817AbeCFPaF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 10:30:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <b4459d98-ebd4-7b13-07ec-613845579558@huawei.com>
+References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
+ <1520335317.10722.416.camel@linux.intel.com> <b4459d98-ebd4-7b13-07ec-613845579558@huawei.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 6 Mar 2018 16:30:03 +0100
+Message-ID: <CAJZ5v0gnf6rDYtKLBNfKjC=g3W=2XUed_R=AO+GeGYuubP_zWw@mail.gmail.com>
+Subject: Re: [PATCH v16 0/9] LPC: legacy ISA I/O support
+To: John Garry <john.garry@huawei.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Alexander Graf <agraf@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe 4.0 provides an effective 16.0 GT/second/lane/direction of raw
-bandwidth. Current PCI driver does not support this new feature.
-For example, when you read a PCIe 4.0 EP's link data rate by sysfs, it
-will return "Unknown speed", not the expected "16.0 GT/s".
+On Tue, Mar 6, 2018 at 12:36 PM, John Garry <john.garry@huawei.com> wrote:
+> On 06/03/2018 11:21, Andy Shevchenko wrote:
+>>
+>> On Tue, 2018-03-06 at 18:47 +0800, John Garry wrote:
+>>>
+>>> This patchset supports the IPMI-bt device attached to the Low-Pin-
+>>> Count
+>>> interface implemented on Hisilicon Hip06/Hip07 SoC.
+>>>                         -----------
+>>>                         | LPC host|
+>>>                         |         |
+>>>                         -----------
+>>>                              |
+>>>                 _____________V_______________LPC
+>>>                   |                       |
+>>>                   V                       V
+>>>                                      ------------
+>>>                                      |  BT(ipmi)|
+>>>                                      ------------
+>>>
+>>> When master accesses those peripherals beneath the Hip06/Hip07 LPC, a
+>>> specific
+>>> LPC driver is needed to make LPC host generate the standard LPC I/O
+>>> cycles with
+>>> the target peripherals'I/O port addresses. But on curent arm64 world,
+>>> there is
+>>> no real I/O accesses. All the I/O operations through in/out accessors
+>>> are based
+>>> on MMIO ranges; on Hip06/Hip07 LPC the I/O accesses are performed
+>>> through driver
+>>> specific accessors rather than MMIO.
+>>> To solve this issue and keep the relevant existing peripherals'
+>>> drivers untouched,
+>>> this patchset:
+>>>    - introduces a generic I/O space management framework, logical PIO,
+>>> to support
+>>>       I/O operations on host controllers operating either on MMIO
+>>> buses or on buses
+>>>      requiring specific driver I/O accessors;
+>>>    - redefines the in/out accessors to provide a unified interface for
+>>> both MMIO
+>>>      and driver specific I/O operations. Using logical PIO, th call of
+>>> in/out() from
+>>>      the host children drivers, such as ipmi-si, will be redirected to
+>>> the
+>>>      corresponding device-specific I/O hooks to perform the I/O
+>>> accesses.
+>>>
+>>> Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC
+>>> peripherals can
+>>> be supported without any changes on the existing ipmi-si driver.
+>>>
+>>> The whole patchset has been tested on Hip07 D05 board both using DTB
+>>> and ACPI.
+>>>
+>>
+>>> V15 thread here: https://lkml.org/lkml/2018/2/26/584
+>>
+>>
+>> Thanks for an update.
+>> Though I answered to previous thread.
+>>
+>> Summary: I'm fine with the series as long as maintainers are fine
+>> (Rafael et al.). On personal side I think that the handler approach is
+>> better. Details are in v15 thread.
+>
+>
+> Hi Andy,
+>
+> Thanks for your input and continued support. As I mentioned in reply in v15,
+> the handler support would (or has) faced issues. And Rafael seems fine with
+> deferring the probe to the LLDD in Patch #7/9
 
-Signed-off-by: Jay Fang <f.fangjian@huawei.com>
-Reviewed-by: Dongdong Liu <liudongdong3@huawei.com>
----
- drivers/pci/pci-sysfs.c       | 6 ++++++
- drivers/pci/probe.c           | 2 +-
- drivers/pci/slot.c            | 1 +
- include/linux/pci.h           | 1 +
- include/uapi/linux/pci_regs.h | 2 ++
- 5 files changed, 11 insertions(+), 1 deletion(-)
+Well, the only sort-of concern is that these devices may not be
+"serial bus slaves" in general, so the naming is slightly confusing.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index eb6bee8..7dc5be5 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -168,6 +168,9 @@ static ssize_t max_link_speed_show(struct device *dev,
- 		return -EINVAL;
- 
- 	switch (linkcap & PCI_EXP_LNKCAP_SLS) {
-+	case PCI_EXP_LNKCAP_SLS_16_0GB:
-+		speed = "16 GT/s";
-+		break;
- 	case PCI_EXP_LNKCAP_SLS_8_0GB:
- 		speed = "8 GT/s";
- 		break;
-@@ -213,6 +216,9 @@ static ssize_t current_link_speed_show(struct device *dev,
- 		return -EINVAL;
- 
- 	switch (linkstat & PCI_EXP_LNKSTA_CLS) {
-+	case PCI_EXP_LNKSTA_CLS_16_0GB:
-+		speed = "16 GT/s";
-+		break;
- 	case PCI_EXP_LNKSTA_CLS_8_0GB:
- 		speed = "8 GT/s";
- 		break;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ef53774..86bf045 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -592,7 +592,7 @@ const unsigned char pcie_link_speed[] = {
- 	PCIE_SPEED_2_5GT,		/* 1 */
- 	PCIE_SPEED_5_0GT,		/* 2 */
- 	PCIE_SPEED_8_0GT,		/* 3 */
--	PCI_SPEED_UNKNOWN,		/* 4 */
-+	PCIE_SPEED_16_0GT,		/* 4 */
- 	PCI_SPEED_UNKNOWN,		/* 5 */
- 	PCI_SPEED_UNKNOWN,		/* 6 */
- 	PCI_SPEED_UNKNOWN,		/* 7 */
-diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-index d10f556..191893e 100644
---- a/drivers/pci/slot.c
-+++ b/drivers/pci/slot.c
-@@ -76,6 +76,7 @@ static const char *pci_bus_speed_strings[] = {
- 	"2.5 GT/s PCIe",	/* 0x14 */
- 	"5.0 GT/s PCIe",	/* 0x15 */
- 	"8.0 GT/s PCIe",	/* 0x16 */
-+	"16.0 GT/s PCIe",	/* 0x17 */
- };
- 
- static ssize_t bus_speed_read(enum pci_bus_speed speed, char *buf)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5adabe2..44ce439 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -259,6 +259,7 @@ enum pci_bus_speed {
- 	PCIE_SPEED_2_5GT		= 0x14,
- 	PCIE_SPEED_5_0GT		= 0x15,
- 	PCIE_SPEED_8_0GT		= 0x16,
-+	PCIE_SPEED_16_0GT		= 0x17,
- 	PCI_SPEED_UNKNOWN		= 0xff,
- };
- 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 0c79eac..c1c4109 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -520,6 +520,7 @@
- #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
- #define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
- #define  PCI_EXP_LNKCAP_SLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
-+#define  PCI_EXP_LNKCAP_SLS_16_0GB 0x00000004 /* LNKCAP2 SLS Vector bit 3 */
- #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
- #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
- #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
-@@ -547,6 +548,7 @@
- #define  PCI_EXP_LNKSTA_CLS_2_5GB 0x0001 /* Current Link Speed 2.5GT/s */
- #define  PCI_EXP_LNKSTA_CLS_5_0GB 0x0002 /* Current Link Speed 5.0GT/s */
- #define  PCI_EXP_LNKSTA_CLS_8_0GB 0x0003 /* Current Link Speed 8.0GT/s */
-+#define  PCI_EXP_LNKSTA_CLS_16_0GB 0x0004 /* Current Link Speed 16.0GT/s */
- #define  PCI_EXP_LNKSTA_NLW	0x03f0	/* Negotiated Link Width */
- #define  PCI_EXP_LNKSTA_NLW_X1	0x0010	/* Current Link Width x1 */
- #define  PCI_EXP_LNKSTA_NLW_X2	0x0020	/* Current Link Width x2 */
--- 
-2.7.4
+But overall this approach and the one based on a scan handler both
+boil down to checking a (list of) device ID(s) and doing something
+special in case of a match.
