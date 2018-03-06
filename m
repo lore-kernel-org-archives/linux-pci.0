@@ -1,229 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 15 Mar 2018 18:10:43 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Vignesh R <vigneshr@ti.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pu1apc01on0099.outbound.protection.outlook.com ([104.47.126.99]:40736
+        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932885AbeCFAR0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 19:17:26 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        gustavo.pimentel@synopsys.com
-Subject: Re: [PATCH 2/3] PCI: dwc: pci-dra7xx: Improve MSI IRQ handling
-Message-ID: <20180315181043.GA12772@red-moon>
-References: <20180209120415.17590-1-vigneshr@ti.com>
- <20180209120415.17590-3-vigneshr@ti.com>
- <20180212175801.GA29070@e107981-ln.cambridge.arm.com>
- <7cfa73af-09fa-d298-aaab-3e74ee7e1dd5@ti.com>
- <20180306151247.GA7378@red-moon>
- <1b1b3842-b3b1-e00f-9879-4f455b9ec647@ti.com>
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH v2 5/6] PCI: hv: hv_pci_devices_present(): only queue a
+ new work when necessary
+Date: Tue, 6 Mar 2018 00:17:06 +0000
+Message-ID: <KL1P15301MB00062E5D982DC248708DF286BFD90@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <20180305192134.32207-1-decui@microsoft.com>
+ <20180305192134.32207-6-decui@microsoft.com>
+ <DM5PR2101MB10300B0494E43D69A20C86B3DCDA0@DM5PR2101MB1030.namprd21.prod.outlook.com>
+In-Reply-To: <DM5PR2101MB10300B0494E43D69A20C86B3DCDA0@DM5PR2101MB1030.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1b1b3842-b3b1-e00f-9879-4f455b9ec647@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[CC'ed Gustavo]
+> From: Michael Kelley (EOSG)
+> Sent: Monday, March 5, 2018 15:48
+> > @@ -1756,11 +1757,23 @@ static void hv_pci_devices_present(struct
+> hv_pcibus_device
+> > *hbus,
+> >  	}
+> >
+> >  	spin_lock_irqsave(&hbus->device_list_lock, flags);
+> > +
+> > +	/*
+> > +	 * If pending_dr is true, we have already queued a work,
+> > +	 * which will see the new dr. Otherwise, we need to
+> > +	 * queue a new work.
+> > +	 */
+> > +	pending_dr =3D !list_empty(&hbus->dr_list);
+> >  	list_add_tail(&dr->list_entry, &hbus->dr_list);
+> > -	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+>=20
+> A minor point:  The spin_unlock_irqrestore() call can
+> stay here.   Once we have the list status in a local variable
+> and the new entry is added to the list, nothing bad can
+> happen if we drop the spin lock.   At worst, and very unlikely,
+> we'll queue work when some other thread has already queued
+> work to process the list entry, but that's no big deal.   I'd argue
+> for keeping the code covered by a spin lock as small as possible.
+>=20
+> Michael
 
-On Fri, Mar 09, 2018 at 09:53:24AM +0530, Vignesh R wrote:
-> 
-> 
-> On Tuesday 06 March 2018 08:42 PM, Lorenzo Pieralisi wrote:
-> > On Thu, Feb 15, 2018 at 09:59:21AM +0530, Vignesh R wrote:
-> >> Hi,
-> >>
-> >> On Monday 12 February 2018 11:28 PM, Lorenzo Pieralisi wrote:
-> >>> On Fri, Feb 09, 2018 at 05:34:14PM +0530, Vignesh R wrote:
-> >>>> We need to ensure that there are no pending MSI IRQ vector set (i.e
-> >>>> PCIE_MSI_INTR0_STATUS reads 0 at least once) before exiting
-> >>>> dra7xx_pcie_msi_irq_handler(). Else, the dra7xx PCIe wrapper will not
-> >>>> register new MSI IRQs even though PCIE_MSI_INTR0_STATUS shows IRQs are
-> >>>> pending. Therefore, keep calling dra7xx_pcie_msi_irq_handler() until it
-> >>>> returns IRQ_NONE, which suggests that PCIE_MSI_INTR0_STATUS is 0.
-> >>>>
-> >>>> This fixes a bug, where PCIe wifi cards with 4 DMA queues like Intel
-> >>>> 8260 used to throw following error and stall during ping/iperf3 tests.
-> >>>>
-> >>>> [   97.776310] iwlwifi 0000:01:00.0: Queue 9 stuck for 2500 ms.
-> >>>>
-> >>>> Signed-off-by: Vignesh R <vigneshr@ti.com>
-> >>>> ---
-> >>>>   drivers/pci/dwc/pci-dra7xx.c | 21 ++++++++++++++++++---
-> >>>>   1 file changed, 18 insertions(+), 3 deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> >>>> index ed8558d638e5..3420cbf7b60a 100644
-> >>>> --- a/drivers/pci/dwc/pci-dra7xx.c
-> >>>> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> >>>> @@ -254,14 +254,31 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
-> >>>>         struct dra7xx_pcie *dra7xx = arg;
-> >>>>         struct dw_pcie *pci = dra7xx->pci;
-> >>>>         struct pcie_port *pp = &pci->pp;
-> >>>> +     int count = 0;
-> >>>>         unsigned long reg;
-> >>>>         u32 virq, bit;
-> >>>>   
-> >>>>         reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
-> >>>> +     dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
-> >>>>   
-> >>>>         switch (reg) {
-> >>>>         case MSI:
-> >>>> -             dw_handle_msi_irq(pp);
-> >>>> +             /*
-> >>>> +              * Need to make sure no MSI IRQs are pending before
-> >>>> +              * exiting handler, else the wrapper will not catch new
-> >>>> +              * IRQs. So loop around till dw_handle_msi_irq() returns
-> >>>> +              * IRQ_NONE
-> >>>> +              */
-> >>>> +             while (dw_handle_msi_irq(pp) != IRQ_NONE && count < 1000)
-> >>>> +                     count++;
-> >>>> +
-> >>>> +             if (count == 1000) {
-> >>>> +                     dev_err(pci->dev, "too much work in msi irq\n");
-> >>>> +                     dra7xx_pcie_writel(dra7xx,
-> >>>> +                                        PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
-> >>>> +                                        reg);
-> >>>> +                     return IRQ_HANDLED;
-> >>>
-> >>> I am not merging any code patching this IRQ handling routine anymore
-> >>> unless you thoroughly explain to me how this CONF_IRQSTATUS_MSI register
-> >>> works (and how it is related to DW registers) and why this specific host
-> >>> controller needs handling that is not required by any other host
-> >>> controller relying on dw_handle_msi_irq().
-> >>
-> >> Unlike other DW PCIe controllers, TI implementation has a wrapper on top
-> >> of DW core. This wrapper latches the DW core level MSI and legacy
-> >> interrupts and then propagates it to GIC.
-> >> PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI register is present in this TI
-> >> wrapper which aggregates all the MSI IRQs(PCIE_MSI_INTR0_STATUS) of DW
-> >> level. They are mapped on the MSI interrupt line of PCIe controller,
-> >> using a single status bit in the PCIECTRL_TI_CONF_IRQSTATUS_MSI register.
-> >>
-> >> So, the irq handler, dra7xx_pcie_msi_irq_handler(), first needs to look
-> >> at PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI[4] to know that its MSI IRQ and
-> >> then call dw_handle_msi_irq() to handle individual MSI vectors.
-> >> Driver has to make sure there are no pending vectors in DW core MSI
-> > 
-> > How can it make *sure* ? And what makes the wrapper latch MSI IRQs
-> > again ?
-> > 
-> 
-> This is the sequence that I got from discussion with internal HW team:
->  1. read CONF_IRQSTATUS_MSI in wrapper and check if MSI bit
->  2. clear CONF_IRQSTATUS_MSI
->  3. read, clear and handle PCIE_MSI_INTR0_STATUS vectors
->  4. repeat step 3 until PCIE_MSI_INTR0_STATUS reads 0
-> 
-> If read of PCIE_MSI_INTR0_STATUS returns 0 at least once, then its
-> guaranteed that the next time any vector is set in PCIE_MSI_INTR0_STATUS
-> register(due to MSI IRQ), wrapper will latch it and raise an IRQ to CPU.
-> 
-> 
-> >> status register before exiting handler. Otherwise next MSI IRQ will not
-> >> be latched by the wrapper.
+I agree.  Will fix this in v3.
 
-Hi Vignesh,
+> >
+> > -	get_hvpcibus(hbus);
+> > -	queue_work(hbus->wq, &dr_wrk->wrk);
+> > +	if (pending_dr) {
+> > +		kfree(dr_wrk);
+> > +	} else {
+> > +		get_hvpcibus(hbus);
+> > +		queue_work(hbus->wq, &dr_wrk->wrk);
+> > +	}
+> > +
+> > +	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+> >  }
 
-thank you for explaining. To me - this looks like it is better to write
-a separate IRQ chip implementation for DRA7XX, let's face it this patch
-is a bit hackish (and will prevent us from removing dw_handle_msi_irq()
-altogether - which is something we want to achieve) and it is clutching
-at straws to re-use DWC MSI code but honestly it is a bit of stretch.
-
-This would duplicate some code, yes but on the other hand it would
-give you full control of the (DWC) HW.
-
-You can have a look at pcie-tango.c or the mobiveil patches I have
-just reviewed:
-
-https://patchwork.ozlabs.org/patch/878494/
-
-Please note Gustavo's reworked DWC MSI handling that is now queued
-for v4.17 in my pci/dwc-msi branch - please do have a look at it
-too (and if Gustavo has comments they are welcome).
-
-I do not like the current implementation - sorry, we have to come
-up with something cleaner, I do not think that's so complicated.
-
-I do not mind reviewing intermediate patches as long as we get to
-a cleaner solution.
+To receive more comments from others,  I'll hold off v3 until tomorrow.
 
 Thanks,
-Lorenzo
-
-> > 
-> > I am sorry but I do not understand how this works - what is the
-> > condition that makes wrapper latch IRQs again ? This is at least
-> > racy, if not outright broken.
-> > 
-> > That count == 1000 is a symptom there is something broken on how this
-> > driver handles IRQs and I have the impression that we are applying
-> > plasters on top of plasters to make it less broken than it actually is.
-> > 
-> 
-> It is an upper bound on how many times driver looks at
-> PCIE_MSI_INTR0_STATUS register, so that there is no infinite looping
-> when there is an IRQ flood due to misbehaving EP. count == 1000
-> condition should not happen and it means something is wrong in the
-> system.  I haven't hit this situation in testing
-> I can either remove this or put a WARN_ON to say this situation should
-> not have happened, if that makes you more comfortable with the patch.
-> 
-> 
-> >>> I suspect there is a code design flaw with the way this host handles
-> >>> IRQs and we are going to find it and fix it the way it should, not with
-> >>> any plaster like this patch.
-> >>>
-> >>
-> >> I agree there has been some churn wrt this wrapper level IRQ handler.
-> >> But, that was because hardware documentation/TRM did not match
-> >> actual behavior and so it took some time to understand how the
-> >> hardware is working.
-> > 
-> > How does HW work :) ? Please explain in detail how this works in HW
-> > then we will get to the code.
-> > 
-> 
-> Software needs to ensure that PCIE_MSI_INTR0_STATUS needs be 0 by
-> reading it. Then, when the next MSI IRQ is raised  CONF_IRQSTATUS_MSI
-> register in the wrapper will latch the next IRQ.
-> 
-> This is my current knowledge, let me know if you need to know anything
-> specifically, I will try to ask HW team.
-> 
-> Regards
-> Vignesh
-> 
-> > Thanks,
-> > Lorenzo
-> > 
-> >> I have extensively tested this series on multiple problematic PCIe USB
-> >> cards and PCIe WiFi cards over week long stress tests. And also had
-> >> some agreement with internal hardware designers.  Hardware
-> >> documentations will also be updated.
-> >>
-> >>
-> >>> Lorenzo
-> >>>
-> >>>> +             }
-> >>>>                 break;
-> >>>>         case INTA:
-> >>>>         case INTB:
-> >>>> @@ -275,8 +292,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
-> >>>>                 break;
-> >>>>         }
-> >>>>   
-> >>>> -     dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
-> >>>> -
-> >>>>         return IRQ_HANDLED;
-> >>>>   }
-> >>>>   
-> >>>> -- 
-> >>>> 2.16.1
-> >>>>
-> >>
-> >> -- 
-> >> Regards
-> >> Vignesh
+-- Dexuan
