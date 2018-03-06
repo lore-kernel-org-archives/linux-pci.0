@@ -1,77 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42336 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:42714 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750951AbeCGGNY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Mar 2018 01:13:24 -0500
-Subject: [PATCH v1 0/9] PCI: Simplify PCIe port driver
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>
-Date: Wed, 07 Mar 2018 00:13:23 -0600
-Message-ID: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1753920AbeCFSW2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 13:22:28 -0500
+Date: Tue, 6 Mar 2018 18:22:15 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, linux-pci@vger.kernel.org,
+        m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        shawn.guo@linaro.org, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, nsekhar@ti.com
+Subject: Re: [PATCH v11 0/4] PCI: dwc: Enables MSI-X driver support
+Message-ID: <20180306182207.GA3208@e107981-ln.cambridge.arm.com>
+References: <cover.1520358461.git.gustavo.pimentel@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1520358461.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an attempt to move a few things out of the port driver.
+On Tue, Mar 06, 2018 at 05:54:26PM +0000, Gustavo Pimentel wrote:
+> Implement a multiplexed IRQ domain hierarchy API in the pcie-designware
+> host bridge driver that funnels all MSI IRQs into a single parent
+> interrupt, moving away from the obsolete struct msi_controller based
+> API.
+> 
+> Remove all existing dwc based host bridges MSI IRQs handlers, in that the
+> hierarchical API now handles MSI IRQs through the hierarchical/chained
+> MSI domain implementation.
+> 
+> The Synopsys PCIe Root Complex supports up to MSI 256 IRQs distributed
+> over 8 controller registers, therefore the maximum number of MSI IRQs
+> can be changed to 256. The number of controllers can be calculated based
+> on the number of vectors used by the specific SoC driver.
+> 
+> Adds Synopsys Root Complex driver support for MSI-X feature.
+> 
+> The patch set was made against the Bjorn's master branch (v4.16-rc1).
+> 
+> Gustavo Pimentel (4):
+>   PCI: dwc: Move MSI IRQs allocation to IRQ domains hierarchical API
+>   PCI: dwc: Remove old MSI IRQs API
+>   PCI: dwc: Expand maximum number of MSI IRQs from 32 to 256
+>   PCI: dwc: Code cleanup
 
-Patches 1-2 move a workaround for a BIOS PME issue from the port driver to
-the PCI core, so it doesn't depend on CONFIG_PCIEPORTBUS.
+Ok, so a couple of suggestions:
 
-Patch 3 extends that workaround so it works for Root Complex Event
-Collectors.  I haven't seen reports of this being a problem, but I think we
-should handle Event Collector PMEs the same as Root Port PMEs.
+0) Remove Gabriele from the CC list - his email must be bouncing for you too
+   right ?
+1) Consider patches on my pci/dwc-msi branch immutable from now onwards,
+   that's important for me and other maintainers CC'ed
+2) Related to (1), first 3 patches must NOT be posted again
+3) Patch (4) is a potpourri of clean-ups. It is tempting to squash
+   all clean ups in one patch but every patch has to be *logically*
+   split so that it contains one logical change. I will comment on it.
+   You will need to split patch (4) and repost it, but first trim the
+   CC list, do not copy any maintainer other than pci/dwc ones on the series
+   resulting from patch (4) rework.
 
-Patch 4 disables the port driver completely for "pcie_ports=compat".  We
-used to register the driver, claim port devices, enable them, etc., as part
-of supporting the above BIOS workaround.
+If there is anything unclear please do let me know.
 
-Patch 5 removes a port driver link order dependency.
-
-Patch 6 removes the unused VC service.
-
-Patch 7 simplifies the _OSC code path by keeping more of the details in the
-ACPI pci_root.c driver.
-
-Patch 8 removes an unnecessary #include.
-
-Patch 9 removes the "pcie_hp=nomsi" parameter.  This was added to work
-around an issue when shutting down devices, but a later patch fixed the
-root cause, and I don't think we need such a specific parameter any more
-(we still have "pci=nomsi").
-
----
-
-Bjorn Helgaas (9):
-      PCI/PM: Move pcie_clear_root_pme_status() to core
-      PCI/PM: Clear PCIe PME Status bit in core, not PCIe port driver
-      PCI/PM: Clear PCIe PME Status bit for Root Complex Event Collectors
-      PCI/portdrv: Disable port driver in compat mode
-      PCI/portdrv: Remove pcie_port_bus_type link order dependency
-      PCI/portdrv: Remove unused PCIE_PORT_SERVICE_VC
-      PCI/portdrv: Simplify PCIe feature permission checking
-      PCI/portdrv: Remove unnecessary include of <linux/pci-aspm.h>
-      PCI/portdrv: Remove "pcie_hp=nomsi" kernel parameter
-
-
- Documentation/admin-guide/kernel-parameters.txt |    4 -
- drivers/acpi/pci_root.c                         |   13 +++-
- drivers/pci/pci-driver.c                        |   60 ++++++++++++++++++
- drivers/pci/pci.c                               |    9 +++
- drivers/pci/pci.h                               |    1 
- drivers/pci/pcie/Makefile                       |    3 -
- drivers/pci/pcie/portdrv.h                      |   27 --------
- drivers/pci/pcie/portdrv_acpi.c                 |    2 -
- drivers/pci/pcie/portdrv_bus.c                  |   56 -----------------
- drivers/pci/pcie/portdrv_core.c                 |   77 ++++++++++-------------
- drivers/pci/pcie/portdrv_pci.c                  |   40 +-----------
- drivers/pci/probe.c                             |   10 +++
- include/linux/pci.h                             |    3 +
- include/linux/pcieport_if.h                     |    4 -
- 14 files changed, 131 insertions(+), 178 deletions(-)
- delete mode 100644 drivers/pci/pcie/portdrv_bus.c
+Thanks,
+Lorenzo
