@@ -1,145 +1,141 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 1/2] PCI: Tidy Makefiles
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Tue, 13 Mar 2018 17:35:30 -0500
-Message-ID: <152098053022.43178.8975082302619060013.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152098048688.43178.2089454526004328425.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152098048688.43178.2089454526004328425.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
+Return-Path: <SRS0=YzL0=F4=amazon.de=prvs=5964f948c=karahmed@kernel.org>
+Return-Path: <SRS0=YzL0=F4=amazon.de=prvs=5964f948c=karahmed@kernel.org>
+From: "Raslan, KarimAllah" <karahmed@amazon.de>
+To: "helgaas@kernel.org" <helgaas@kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v3 1/2] PCI/IOV: Store more data about VFs into the SRIOV
+ struct
+Date: Tue, 6 Mar 2018 10:37:02 +0000
+Message-ID: <1520332621.28771.13.camel@amazon.de>
+References: <1519939897-14596-1-git-send-email-karahmed@amazon.de>
+	 <20180302213639.GC202062@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180302213639.GC202062@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
-
-Indent things so they line up neatly and remove extra blank lines and
-superfluous comments.  No functional change intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/Makefile      |   69 ++++++++++++++++-----------------------------
- drivers/pci/pcie/Makefile |   16 +++-------
- 2 files changed, 29 insertions(+), 56 deletions(-)
-
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 941970936840..952addc7bacf 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -1,61 +1,40 @@
- # SPDX-License-Identifier: GPL-2.0
- #
- # Makefile for the PCI bus specific drivers.
--#
- 
--obj-$(CONFIG_PCI)	+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
--			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
--			irq.o vpd.o setup-bus.o vc.o mmap.o setup-irq.o
-+obj-$(CONFIG_PCI)		+= access.o bus.o probe.o host-bridge.o \
-+				   remove.o pci.o pci-driver.o search.o \
-+				   pci-sysfs.o rom.o setup-res.o irq.o vpd.o \
-+				   setup-bus.o vc.o mmap.o setup-irq.o
- 
- ifdef CONFIG_PCI
--obj-$(CONFIG_PROC_FS) += proc.o
--obj-$(CONFIG_SYSFS) += slot.o
--obj-$(CONFIG_OF) += of.o
-+obj-$(CONFIG_PROC_FS)		+= proc.o
-+obj-$(CONFIG_SYSFS)		+= slot.o
-+obj-$(CONFIG_OF)		+= of.o
- endif
- 
--obj-$(CONFIG_PCI_QUIRKS) += quirks.o
--
--# Build PCI Express stuff if needed
--obj-$(CONFIG_PCIEPORTBUS) += pcie/
--
--# Build the PCI Hotplug drivers if we were asked to
--obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
--
--# Build the PCI MSI interrupt support
--obj-$(CONFIG_PCI_MSI) += msi.o
--
--obj-$(CONFIG_PCI_ATS) += ats.o
--obj-$(CONFIG_PCI_IOV) += iov.o
--
--#
--# ACPI Related PCI FW Functions
--# ACPI _DSM provided firmware instance and string name
--#
--obj-$(CONFIG_ACPI)    += pci-acpi.o
--
--# SMBIOS provided firmware instance and labels
--obj-$(CONFIG_PCI_LABEL) += pci-label.o
--
--# Intel MID platform PM support
--obj-$(CONFIG_X86_INTEL_MID) += pci-mid.o
--
--obj-$(CONFIG_PCI_SYSCALL) += syscall.o
--
--obj-$(CONFIG_PCI_STUB) += pci-stub.o
--
--obj-$(CONFIG_PCI_ECAM) += ecam.o
--
-+obj-$(CONFIG_PCI_QUIRKS)	+= quirks.o
-+obj-$(CONFIG_PCIEPORTBUS)	+= pcie/
-+obj-$(CONFIG_HOTPLUG_PCI)	+= hotplug/
-+obj-$(CONFIG_PCI_MSI)		+= msi.o
-+obj-$(CONFIG_PCI_ATS)		+= ats.o
-+obj-$(CONFIG_PCI_IOV)		+= iov.o
-+obj-$(CONFIG_ACPI)		+= pci-acpi.o
-+obj-$(CONFIG_PCI_LABEL)		+= pci-label.o
-+obj-$(CONFIG_X86_INTEL_MID)	+= pci-mid.o
-+obj-$(CONFIG_PCI_SYSCALL)	+= syscall.o
-+obj-$(CONFIG_PCI_STUB)		+= pci-stub.o
-+obj-$(CONFIG_PCI_ECAM)		+= ecam.o
- obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
- 
--ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
--
--# PCI host controller drivers
--obj-y += host/
--obj-y += switch/
-+obj-y				+= host/
-+obj-y				+= switch/
- 
-+# Endpoint library must be initialized before its users
- obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
- 
--# Endpoint library must be initialized before its users
- obj-$(CONFIG_PCIE_CADENCE)	+= cadence/
- # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
- obj-y				+= dwc/
-+
-+ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index 223e4c34c29a..7d1648bd0766 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -1,20 +1,14 @@
- # SPDX-License-Identifier: GPL-2.0
- #
--# Makefile for PCI-Express PORT Driver
--#
--
--# Build PCI Express ASPM if needed
--obj-$(CONFIG_PCIEASPM)		+= aspm.o
-+# Makefile for PCI Express features and port driver
- 
- pcieportdrv-y			:= portdrv_core.o portdrv_pci.o portdrv_bus.o
- pcieportdrv-$(CONFIG_ACPI)	+= portdrv_acpi.o
- 
- obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
- 
--# Build PCI Express AER if needed
-+obj-$(CONFIG_PCIEASPM)		+= aspm.o
- obj-$(CONFIG_PCIEAER)		+= aer/
--
--obj-$(CONFIG_PCIE_PME) += pme.o
--
--obj-$(CONFIG_PCIE_DPC) += pcie-dpc.o
--obj-$(CONFIG_PCIE_PTM) += ptm.o
-+obj-$(CONFIG_PCIE_PME)		+= pme.o
-+obj-$(CONFIG_PCIE_DPC)		+= pcie-dpc.o
-+obj-$(CONFIG_PCIE_PTM)		+= ptm.o
+T24gRnJpLCAyMDE4LTAzLTAyIGF0IDE1OjM2IC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiBPbiBUaHUsIE1hciAwMSwgMjAxOCBhdCAxMDozMTozNlBNICswMTAwLCBLYXJpbUFsbGFoIEFo
+bWVkIHdyb3RlOg0KPiA+IA0KPiA+IFN0b3JlIG1vcmUgZGF0YSBhYm91dCBQQ0kgVkZzIGludG8g
+dGhlIFNSSU9WIHRvIGF2b2lkIHJlYWRpbmcgdGhlbSBmcm9tIHRoZQ0KPiA+IGNvbmZpZyBzcGFj
+ZSBvZiBhbGwgdGhlIFBDSSBWRnMuIFRoaXMgaXMgc3BlY2lhbGx5IGEgdXNlZnVsIG9wdGltaXph
+dGlvbg0KPiA+IHdoZW4gYnJpbmdpbmcgdXAgdGhvdXNhbmRzIG9mIFZGcy4NCj4gPiANCj4gPiBD
+YzogQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gPiBDYzogbGludXgtcGNp
+QHZnZXIua2VybmVsLm9yZw0KPiA+IENjOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+
+ID4gU2lnbmVkLW9mZi1ieTogS2FyaW1BbGxhaCBBaG1lZCA8a2FyYWhtZWRAYW1hem9uLmRlPg0K
+PiANCj4gQXBwbGllZCB0byBwY2kvdmlydHVhbGl6YXRpb24gZm9yIHY0LjE3LCB0aGFua3MhDQo+
+IA0KPiBJIHJlbW92ZWQgdGhlIHBjaV9zcmlvdi5kZXZpY2UgZmllbGQsIHdoaWNoIHNlZW1lZCB0
+byBiZSB1bnVzZWQsIGFuZA0KPiB0d2Vha2VkIGEgZmV3IG90aGVyIHRoaW5ncywgc28gbWFrZSBz
+dXJlIEkgZGlkbid0IGJyZWFrIGFueXRoaW5nLg0KDQpZdXAsIHN0aWxsIGxvb2tzIGdvb2QgKGFu
+ZCB3b3JrcykgZm9yIG1lLiBUaGFua3MuDQoNCj4gSGVyZSdzIHdoYXQgSSBoYXZlIGN1cnJlbnRs
+eSBhcHBsaWVkOg0KPiANCj4gY29tbWl0IGUxN2I3YjQyOWIwOTUyMDBmOTNhZDM3YzRlZmViN2E5
+OWI2ZmNlM2INCj4gQXV0aG9yOiBLYXJpbUFsbGFoIEFobWVkIDxrYXJhaG1lZEBhbWF6b24uZGU+
+DQo+IERhdGU6ICAgVGh1IE1hciAxIDIyOjMxOjM2IDIwMTggKzAxMDANCj4gDQo+ICAgICBQQ0kv
+SU9WOiBVc2UgVkYwIGNhY2hlZCBjb25maWcgcmVnaXN0ZXJzIGZvciBvdGhlciBWRnMNCj4gICAg
+IA0KPiAgICAgQ2FjaGUgc29tZSBjb25maWcgZGF0YSBmcm9tIFZGMCBhbmQgdXNlIGl0IGZvciBh
+bGwgb3RoZXIgVkZzIGluc3RlYWQgb2YNCj4gICAgIHJlYWRpbmcgaXQgZnJvbSB0aGUgY29uZmln
+IHNwYWNlIG9mIGVhY2ggVkYuICBXZSBhc3N1bWUgdGhlc2UgaXRlbXMgYXJlIHRoZQ0KPiAgICAg
+c2FtZSBhY3Jvc3MgYWxsIGFzc29jaWF0ZWQgVkZzOg0KPiAgICAgDQo+ICAgICAgIFJldmlzaW9u
+IElEDQo+ICAgICAgIENsYXNzIENvZGUNCj4gICAgICAgU3Vic3lzdGVtIFZlbmRvciBJRA0KPiAg
+ICAgICBTdWJzeXN0ZW0gSUQNCj4gICAgIA0KPiAgICAgVGhpcyBpcyBhbiBvcHRpbWl6YXRpb24g
+d2hlbiBlbmFibGluZyBTUi1JT1Ygb24gYSBkZXZpY2Ugd2l0aCBtYW55IFZGcy4NCj4gICAgIA0K
+PiAgICAgU2lnbmVkLW9mZi1ieTogS2FyaW1BbGxhaCBBaG1lZCA8a2FyYWhtZWRAYW1hem9uLmRl
+Pg0KPiAgICAgW2JoZWxnYWFzOiBjaGFuZ2Vsb2csIHNpbXBsaWZ5IGNvbW1lbnRzLCByZW1vdmUg
+dW51c2VkICJkZXZpY2UiXQ0KPiAgICAgU2lnbmVkLW9mZi1ieTogQmpvcm4gSGVsZ2FhcyA8aGVs
+Z2Fhc0BrZXJuZWwub3JnPg0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2lvdi5jIGIv
+ZHJpdmVycy9wY2kvaW92LmMNCj4gaW5kZXggNjc3OTI0YWUwMzUwLi4zMGJmOGY3MDZlZDkgMTAw
+NjQ0DQo+IC0tLSBhL2RyaXZlcnMvcGNpL2lvdi5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2lvdi5j
+DQo+IEBAIC0xMTQsNiArMTE0LDI5IEBAIHJlc291cmNlX3NpemVfdCBwY2lfaW92X3Jlc291cmNl
+X3NpemUoc3RydWN0IHBjaV9kZXYgKmRldiwgaW50IHJlc25vKQ0KPiAgCXJldHVybiBkZXYtPnNy
+aW92LT5iYXJzeltyZXNubyAtIFBDSV9JT1ZfUkVTT1VSQ0VTXTsNCj4gIH0NCj4gIA0KPiArc3Rh
+dGljIHZvaWQgcGNpX3JlYWRfdmZfY29uZmlnX2NvbW1vbihzdHJ1Y3QgcGNpX2RldiAqdmlydGZu
+KQ0KPiArew0KPiArCXN0cnVjdCBwY2lfZGV2ICpwaHlzZm4gPSB2aXJ0Zm4tPnBoeXNmbjsNCj4g
+Kw0KPiArCS8qDQo+ICsJICogU29tZSBjb25maWcgcmVnaXN0ZXJzIGFyZSB0aGUgc2FtZSBhY3Jv
+c3MgYWxsIGFzc29jaWF0ZWQgVkZzLg0KPiArCSAqIFJlYWQgdGhlbSBvbmNlIGZyb20gVkYwIHNv
+IHdlIGNhbiBza2lwIHJlYWRpbmcgdGhlbSBmcm9tIHRoZQ0KPiArCSAqIG90aGVyIFZGcy4NCj4g
+KwkgKg0KPiArCSAqIFBDSWUgcjQuMCwgc2VjIDkuMy40LjEsIHRlY2huaWNhbGx5IGRvZXNuJ3Qg
+cmVxdWlyZSBhbGwgVkZzIHRvDQo+ICsJICogaGF2ZSB0aGUgc2FtZSBSZXZpc2lvbiBJRCBhbmQg
+U3Vic3lzdGVtIElELCBidXQgd2UgYXNzdW1lIHRoZXkNCj4gKwkgKiBkby4NCj4gKwkgKi8NCj4g
+KwlwY2lfcmVhZF9jb25maWdfZHdvcmQodmlydGZuLCBQQ0lfQ0xBU1NfUkVWSVNJT04sDQo+ICsJ
+CQkgICAgICAmcGh5c2ZuLT5zcmlvdi0+Y2xhc3MpOw0KPiArCXBjaV9yZWFkX2NvbmZpZ19ieXRl
+KHZpcnRmbiwgUENJX0hFQURFUl9UWVBFLA0KPiArCQkJICAgICAmcGh5c2ZuLT5zcmlvdi0+aGRy
+X3R5cGUpOw0KPiArCXBjaV9yZWFkX2NvbmZpZ193b3JkKHZpcnRmbiwgUENJX1NVQlNZU1RFTV9W
+RU5ET1JfSUQsDQo+ICsJCQkgICAgICZwaHlzZm4tPnNyaW92LT5zdWJzeXN0ZW1fdmVuZG9yKTsN
+Cj4gKwlwY2lfcmVhZF9jb25maWdfd29yZCh2aXJ0Zm4sIFBDSV9TVUJTWVNURU1fSUQsDQo+ICsJ
+CQkgICAgICZwaHlzZm4tPnNyaW92LT5zdWJzeXN0ZW1fZGV2aWNlKTsNCj4gK30NCj4gKw0KPiAg
+aW50IHBjaV9pb3ZfYWRkX3ZpcnRmbihzdHJ1Y3QgcGNpX2RldiAqZGV2LCBpbnQgaWQpDQo+ICB7
+DQo+ICAJaW50IGk7DQo+IEBAIC0xMzYsMTMgKzE1OSwxNyBAQCBpbnQgcGNpX2lvdl9hZGRfdmly
+dGZuKHN0cnVjdCBwY2lfZGV2ICpkZXYsIGludCBpZCkNCj4gIAl2aXJ0Zm4tPmRldmZuID0gcGNp
+X2lvdl92aXJ0Zm5fZGV2Zm4oZGV2LCBpZCk7DQo+ICAJdmlydGZuLT52ZW5kb3IgPSBkZXYtPnZl
+bmRvcjsNCj4gIAl2aXJ0Zm4tPmRldmljZSA9IGlvdi0+dmZfZGV2aWNlOw0KPiArCXZpcnRmbi0+
+aXNfdmlydGZuID0gMTsNCj4gKwl2aXJ0Zm4tPnBoeXNmbiA9IHBjaV9kZXZfZ2V0KGRldik7DQo+
+ICsNCj4gKwlpZiAoaWQgPT0gMCkNCj4gKwkJcGNpX3JlYWRfdmZfY29uZmlnX2NvbW1vbih2aXJ0
+Zm4pOw0KPiArDQo+ICAJcmMgPSBwY2lfc2V0dXBfZGV2aWNlKHZpcnRmbik7DQo+ICAJaWYgKHJj
+KQ0KPiAtCQlnb3RvIGZhaWxlZDA7DQo+ICsJCWdvdG8gZmFpbGVkMTsNCj4gIA0KPiAgCXZpcnRm
+bi0+ZGV2LnBhcmVudCA9IGRldi0+ZGV2LnBhcmVudDsNCj4gLQl2aXJ0Zm4tPnBoeXNmbiA9IHBj
+aV9kZXZfZ2V0KGRldik7DQo+IC0JdmlydGZuLT5pc192aXJ0Zm4gPSAxOw0KPiAgCXZpcnRmbi0+
+bXVsdGlmdW5jdGlvbiA9IDA7DQo+ICANCj4gIAlmb3IgKGkgPSAwOyBpIDwgUENJX1NSSU9WX05V
+TV9CQVJTOyBpKyspIHsNCj4gQEAgLTE2MywxMCArMTkwLDEwIEBAIGludCBwY2lfaW92X2FkZF92
+aXJ0Zm4oc3RydWN0IHBjaV9kZXYgKmRldiwgaW50IGlkKQ0KPiAgCXNwcmludGYoYnVmLCAidmly
+dGZuJXUiLCBpZCk7DQo+ICAJcmMgPSBzeXNmc19jcmVhdGVfbGluaygmZGV2LT5kZXYua29iaiwg
+JnZpcnRmbi0+ZGV2LmtvYmosIGJ1Zik7DQo+ICAJaWYgKHJjKQ0KPiAtCQlnb3RvIGZhaWxlZDE7
+DQo+ICsJCWdvdG8gZmFpbGVkMjsNCj4gIAlyYyA9IHN5c2ZzX2NyZWF0ZV9saW5rKCZ2aXJ0Zm4t
+PmRldi5rb2JqLCAmZGV2LT5kZXYua29iaiwgInBoeXNmbiIpOw0KPiAgCWlmIChyYykNCj4gLQkJ
+Z290byBmYWlsZWQyOw0KPiArCQlnb3RvIGZhaWxlZDM7DQo+ICANCj4gIAlrb2JqZWN0X3VldmVu
+dCgmdmlydGZuLT5kZXYua29iaiwgS09CSl9DSEFOR0UpOw0KPiAgDQo+IEBAIC0xNzQsMTEgKzIw
+MSwxMiBAQCBpbnQgcGNpX2lvdl9hZGRfdmlydGZuKHN0cnVjdCBwY2lfZGV2ICpkZXYsIGludCBp
+ZCkNCj4gIA0KPiAgCXJldHVybiAwOw0KPiAgDQo+IC1mYWlsZWQyOg0KPiArZmFpbGVkMzoNCj4g
+IAlzeXNmc19yZW1vdmVfbGluaygmZGV2LT5kZXYua29iaiwgYnVmKTsNCj4gK2ZhaWxlZDI6DQo+
+ICsJcGNpX3N0b3BfYW5kX3JlbW92ZV9idXNfZGV2aWNlKHZpcnRmbik7DQo+ICBmYWlsZWQxOg0K
+PiAgCXBjaV9kZXZfcHV0KGRldik7DQo+IC0JcGNpX3N0b3BfYW5kX3JlbW92ZV9idXNfZGV2aWNl
+KHZpcnRmbik7DQo+ICBmYWlsZWQwOg0KPiAgCXZpcnRmbl9yZW1vdmVfYnVzKGRldi0+YnVzLCBi
+dXMpOw0KPiAgZmFpbGVkOg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcGNpLmggYi9kcml2
+ZXJzL3BjaS9wY2kuaA0KPiBpbmRleCBmY2Q4MTkxMWIxMjcuLmRiNzY5MzNiZTg1OSAxMDA2NDQN
+Cj4gLS0tIGEvZHJpdmVycy9wY2kvcGNpLmgNCj4gKysrIGIvZHJpdmVycy9wY2kvcGNpLmgNCj4g
+QEAgLTI3MSw2ICsyNzEsMTAgQEAgc3RydWN0IHBjaV9zcmlvdiB7DQo+ICAJdTE2CQlkcml2ZXJf
+bWF4X1ZGczsJLyogTWF4IG51bSBWRnMgZHJpdmVyIHN1cHBvcnRzICovDQo+ICAJc3RydWN0IHBj
+aV9kZXYJKmRldjsJCS8qIExvd2VzdCBudW1iZXJlZCBQRiAqLw0KPiAgCXN0cnVjdCBwY2lfZGV2
+CSpzZWxmOwkJLyogVGhpcyBQRiAqLw0KPiArCXUzMgkJY2xhc3M7CQkvKiBWRiBjbGFzcyAqLw0K
+PiArCXU4CQloZHJfdHlwZTsJLyogVkYgaGVhZGVyIHR5cGUgKi8NCj4gKwl1MTYJCXN1YnN5c3Rl
+bV92ZW5kb3I7IC8qIFZGIHN1YnN5c3RlbSB2ZW5kb3IgKi8NCj4gKwl1MTYJCXN1YnN5c3RlbV9k
+ZXZpY2U7IC8qIFZGIHN1YnN5c3RlbSBkZXZpY2UgKi8NCj4gIAlyZXNvdXJjZV9zaXplX3QJYmFy
+c3pbUENJX1NSSU9WX05VTV9CQVJTXTsJLyogVkYgQkFSIHNpemUgKi8NCj4gIAlib29sCQlkcml2
+ZXJzX2F1dG9wcm9iZTsgLyogQXV0byBwcm9iaW5nIG9mIFZGcyBieSBkcml2ZXIgKi8NCj4gIH07
+DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wcm9iZS5jIGIvZHJpdmVycy9wY2kvcHJvYmUu
+Yw0KPiBpbmRleCBhMWNkZGNhMzc3OTMuLjc4ZGViOTUwYmRhMSAxMDA2NDQNCj4gLS0tIGEvZHJp
+dmVycy9wY2kvcHJvYmUuYw0KPiArKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jDQo+IEBAIC0xNDYx
+LDcgKzE0NjEsOSBAQCBpbnQgcGNpX3NldHVwX2RldmljZShzdHJ1Y3QgcGNpX2RldiAqZGV2KQ0K
+PiAgCXN0cnVjdCBwY2lfYnVzX3JlZ2lvbiByZWdpb247DQo+ICAJc3RydWN0IHJlc291cmNlICpy
+ZXM7DQo+ICANCj4gLQlpZiAocGNpX3JlYWRfY29uZmlnX2J5dGUoZGV2LCBQQ0lfSEVBREVSX1RZ
+UEUsICZoZHJfdHlwZSkpDQo+ICsJaWYgKGRldi0+aXNfdmlydGZuKQ0KPiArCQloZHJfdHlwZSA9
+IGRldi0+cGh5c2ZuLT5zcmlvdi0+aGRyX3R5cGU7DQo+ICsJZWxzZSBpZiAocGNpX3JlYWRfY29u
+ZmlnX2J5dGUoZGV2LCBQQ0lfSEVBREVSX1RZUEUsICZoZHJfdHlwZSkpDQo+ICAJCXJldHVybiAt
+RUlPOw0KPiAgDQo+ICAJZGV2LT5zeXNkYXRhID0gZGV2LT5idXMtPnN5c2RhdGE7DQo+IEBAIC0x
+NDg0LDcgKzE0ODYsMTAgQEAgaW50IHBjaV9zZXR1cF9kZXZpY2Uoc3RydWN0IHBjaV9kZXYgKmRl
+dikNCj4gIAkJICAgICBkZXYtPmJ1cy0+bnVtYmVyLCBQQ0lfU0xPVChkZXYtPmRldmZuKSwNCj4g
+IAkJICAgICBQQ0lfRlVOQyhkZXYtPmRldmZuKSk7DQo+ICANCj4gLQlwY2lfcmVhZF9jb25maWdf
+ZHdvcmQoZGV2LCBQQ0lfQ0xBU1NfUkVWSVNJT04sICZjbGFzcyk7DQo+ICsJaWYgKGRldi0+aXNf
+dmlydGZuKQ0KPiArCQljbGFzcyA9IGRldi0+cGh5c2ZuLT5zcmlvdi0+Y2xhc3M7DQo+ICsJZWxz
+ZQ0KPiArCQlwY2lfcmVhZF9jb25maWdfZHdvcmQoZGV2LCBQQ0lfQ0xBU1NfUkVWSVNJT04sICZj
+bGFzcyk7DQo+ICAJZGV2LT5yZXZpc2lvbiA9IGNsYXNzICYgMHhmZjsNCj4gIAlkZXYtPmNsYXNz
+ID0gY2xhc3MgPj4gODsJCSAgICAvKiB1cHBlciAzIGJ5dGVzICovDQo+ICANCj4gQEAgLTE1MjQs
+OCArMTUyOSwxMyBAQCBpbnQgcGNpX3NldHVwX2RldmljZShzdHJ1Y3QgcGNpX2RldiAqZGV2KQ0K
+PiAgCQkJZ290byBiYWQ7DQo+ICAJCXBjaV9yZWFkX2lycShkZXYpOw0KPiAgCQlwY2lfcmVhZF9i
+YXNlcyhkZXYsIDYsIFBDSV9ST01fQUREUkVTUyk7DQo+IC0JCXBjaV9yZWFkX2NvbmZpZ193b3Jk
+KGRldiwgUENJX1NVQlNZU1RFTV9WRU5ET1JfSUQsICZkZXYtPnN1YnN5c3RlbV92ZW5kb3IpOw0K
+PiAtCQlwY2lfcmVhZF9jb25maWdfd29yZChkZXYsIFBDSV9TVUJTWVNURU1fSUQsICZkZXYtPnN1
+YnN5c3RlbV9kZXZpY2UpOw0KPiArCQlpZiAoZGV2LT5pc192aXJ0Zm4pIHsNCj4gKwkJCWRldi0+
+c3Vic3lzdGVtX3ZlbmRvciA9IGRldi0+cGh5c2ZuLT5zcmlvdi0+c3Vic3lzdGVtX3ZlbmRvcjsN
+Cj4gKwkJCWRldi0+c3Vic3lzdGVtX2RldmljZSA9IGRldi0+cGh5c2ZuLT5zcmlvdi0+c3Vic3lz
+dGVtX2RldmljZTsNCj4gKwkJfSBlbHNlIHsNCj4gKwkJCXBjaV9yZWFkX2NvbmZpZ193b3JkKGRl
+diwgUENJX1NVQlNZU1RFTV9WRU5ET1JfSUQsICZkZXYtPnN1YnN5c3RlbV92ZW5kb3IpOw0KPiAr
+CQkJcGNpX3JlYWRfY29uZmlnX3dvcmQoZGV2LCBQQ0lfU1VCU1lTVEVNX0lELCAmZGV2LT5zdWJz
+eXN0ZW1fZGV2aWNlKTsNCj4gKwkJfQ0KPiAgDQo+ICAJCS8qDQo+ICAJCSAqIERvIHRoZSB1Z2x5
+IGxlZ2FjeSBtb2RlIHN0dWZmIGhlcmUgcmF0aGVyIHRoYW4gYnJva2VuIGNoaXANCj4gDQpBbWF6
+b24gRGV2ZWxvcG1lbnQgQ2VudGVyIEdlcm1hbnkgR21iSApCZXJsaW4gLSBEcmVzZGVuIC0gQWFj
+aGVuCm1haW4gb2ZmaWNlOiBLcmF1c2Vuc3RyLiAzOCwgMTAxMTcgQmVybGluCkdlc2NoYWVmdHNm
+dWVocmVyOiBEci4gUmFsZiBIZXJicmljaCwgQ2hyaXN0aWFuIFNjaGxhZWdlcgpVc3QtSUQ6IERF
+Mjg5MjM3ODc5CkVpbmdldHJhZ2VuIGFtIEFtdHNnZXJpY2h0IENoYXJsb3R0ZW5idXJnIEhSQiAx
+NDkxNzMgQgo=
