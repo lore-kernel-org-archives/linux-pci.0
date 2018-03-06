@@ -1,79 +1,394 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:6693 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751042AbeCZLMN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Mar 2018 07:12:13 -0400
-Date: Mon, 26 Mar 2018 12:11:38 +0100
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-CC: Sinan Kaya <okaya@codeaurora.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
-        <linux-rdma@vger.kernel.org>, <linux-nvdimm@lists.01.org>,
-        <linux-block@vger.kernel.org>, Stephen Bates <sbates@raithlin.com>,
-        "Christoph Hellwig" <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
-        "Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Eric Wehage <Eric.Wehage@huawei.com>
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-Message-ID: <20180326121138.00005e30@huawei.com>
-In-Reply-To: <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
-        <20180312193525.2855-2-logang@deltatee.com>
-        <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
-        <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from lucky1.263xmail.com ([211.157.147.135]:49199 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753124AbeCFCtv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Mar 2018 21:49:51 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 3/6] PCI: rockchip: Split out common function to init controller
+Date: Tue,  6 Mar 2018 10:43:50 +0800
+Message-Id: <1520304230-234943-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 13 Mar 2018 10:43:55 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+Most of the operations are used for both of host and EP driver,
+so this patch spilt them out to a new function, rockchip_pcie_init_port
+in pcie-rockchip.c and rename the original function to
+rockchip_pcie_host_init_port to avoid confusion. No functional
+changed intended.
 
-> On 12/03/18 09:28 PM, Sinan Kaya wrote:
-> > On 3/12/2018 3:35 PM, Logan Gunthorpe wrote:
-> > Regarding the switch business, It is amazing how much trouble you went into
-> > limit this functionality into very specific hardware.
-> > 
-> > I thought that we reached to an agreement that code would not impose
-> > any limits on what user wants.
-> > 
-> > What happened to all the emails we exchanged?  
-> 
-> It turns out that root ports that support P2P are far less common than 
-> anyone thought. So it will likely have to be a white list.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-This came as a bit of a surprise to our PCIe architect.
+Changes in v3: None
+Changes in v2: None
 
-His follow up was whether it was worth raising an ECR for the PCIe spec
-to add a capability bit to allow this to be discovered.  This might
-long term avoid the need to maintain the white list for new devices.
+ drivers/pci/rockchip/pcie-rockchip-host.c | 131 ++-------------------------
+ drivers/pci/rockchip/pcie-rockchip.c      | 141 ++++++++++++++++++++++++++++++
+ drivers/pci/rockchip/pcie-rockchip.h      |   3 +
+ 3 files changed, 151 insertions(+), 124 deletions(-)
 
-So is it worth having a long term solution for making this discoverable?
-
-Jonathan
-
-> Nobody else 
-> seems keen on allowing the user to enable this on hardware that doesn't 
-> work. The easiest solution is still limiting it to using a switch. From 
-> there, if someone wants to start creating a white-list then that's 
-> probably the way forward to support root ports.
-> 
-> And there's also the ACS problem which means if you want to use P2P on 
-> the root ports you'll have to disable ACS on the entire system. (Or 
-> preferably, the IOMMU groups need to get more sophisticated to allow for 
-> dynamic changes).
-> 
-> Additionally, once you allow for root ports you may find the IOMMU 
-> getting in the way.
-> 
-> So there are great deal more issues to sort out if you don't restrict to 
-> devices behind switches.
-> 
-> Logan
+diff --git a/drivers/pci/rockchip/pcie-rockchip-host.c b/drivers/pci/rockchip/pcie-rockchip-host.c
+index 079949c..f5b0492 100644
+--- a/drivers/pci/rockchip/pcie-rockchip-host.c
++++ b/drivers/pci/rockchip/pcie-rockchip-host.c
+@@ -294,134 +294,17 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
+  * rockchip_pcie_init_port - Initialize hardware
+  * @rockchip: PCIe port information
+  */
+-static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
++static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+-	int err, i;
++	int err, i = MAX_LANE_NUM;
+ 	u32 status;
+ 
+ 	gpiod_set_value_cansleep(rockchip->ep_gpio, 0);
+ 
+-	err = reset_control_assert(rockchip->aclk_rst);
+-	if (err) {
+-		dev_err(dev, "assert aclk_rst err %d\n", err);
+-		return err;
+-	}
+-
+-	err = reset_control_assert(rockchip->pclk_rst);
+-	if (err) {
+-		dev_err(dev, "assert pclk_rst err %d\n", err);
+-		return err;
+-	}
+-
+-	err = reset_control_assert(rockchip->pm_rst);
+-	if (err) {
+-		dev_err(dev, "assert pm_rst err %d\n", err);
++	err = rockchip_pcie_init_port(rockchip);
++	if (err)
+ 		return err;
+-	}
+-
+-	for (i = 0; i < MAX_LANE_NUM; i++) {
+-		err = phy_init(rockchip->phys[i]);
+-		if (err) {
+-			dev_err(dev, "init phy%d err %d\n", i, err);
+-			goto err_exit_phy;
+-		}
+-	}
+-
+-	err = reset_control_assert(rockchip->core_rst);
+-	if (err) {
+-		dev_err(dev, "assert core_rst err %d\n", err);
+-		goto err_exit_phy;
+-	}
+-
+-	err = reset_control_assert(rockchip->mgmt_rst);
+-	if (err) {
+-		dev_err(dev, "assert mgmt_rst err %d\n", err);
+-		goto err_exit_phy;
+-	}
+-
+-	err = reset_control_assert(rockchip->mgmt_sticky_rst);
+-	if (err) {
+-		dev_err(dev, "assert mgmt_sticky_rst err %d\n", err);
+-		goto err_exit_phy;
+-	}
+-
+-	err = reset_control_assert(rockchip->pipe_rst);
+-	if (err) {
+-		dev_err(dev, "assert pipe_rst err %d\n", err);
+-		goto err_exit_phy;
+-	}
+-
+-	udelay(10);
+-
+-	err = reset_control_deassert(rockchip->pm_rst);
+-	if (err) {
+-		dev_err(dev, "deassert pm_rst err %d\n", err);
+-		goto err_exit_phy;
+-	}
+-
+-	err = reset_control_deassert(rockchip->aclk_rst);
+-	if (err) {
+-		dev_err(dev, "deassert aclk_rst err %d\n", err);
+-		goto err_exit_phy;
+-	}
+-
+-	err = reset_control_deassert(rockchip->pclk_rst);
+-	if (err) {
+-		dev_err(dev, "deassert pclk_rst err %d\n", err);
+-		goto err_exit_phy;
+-	}
+-
+-	if (rockchip->link_gen == 2)
+-		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
+-				    PCIE_CLIENT_CONFIG);
+-	else
+-		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
+-				    PCIE_CLIENT_CONFIG);
+-
+-	rockchip_pcie_write(rockchip,
+-			    PCIE_CLIENT_CONF_ENABLE |
+-			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
+-			    PCIE_CLIENT_ARI_ENABLE |
+-			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
+-			    PCIE_CLIENT_MODE_RC,
+-			    PCIE_CLIENT_CONFIG);
+-
+-	for (i = 0; i < MAX_LANE_NUM; i++) {
+-		err = phy_power_on(rockchip->phys[i]);
+-		if (err) {
+-			dev_err(dev, "power on phy%d err %d\n", i, err);
+-			goto err_power_off_phy;
+-		}
+-	}
+-
+-	/*
+-	 * Please don't reorder the deassert sequence of the following
+-	 * four reset pins.
+-	 */
+-	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
+-	if (err) {
+-		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
+-		goto err_power_off_phy;
+-	}
+-
+-	err = reset_control_deassert(rockchip->core_rst);
+-	if (err) {
+-		dev_err(dev, "deassert core_rst err %d\n", err);
+-		goto err_power_off_phy;
+-	}
+-
+-	err = reset_control_deassert(rockchip->mgmt_rst);
+-	if (err) {
+-		dev_err(dev, "deassert mgmt_rst err %d\n", err);
+-		goto err_power_off_phy;
+-	}
+-
+-	err = reset_control_deassert(rockchip->pipe_rst);
+-	if (err) {
+-		dev_err(dev, "deassert pipe_rst err %d\n", err);
+-		goto err_power_off_phy;
+-	}
+ 
+ 	/* Fix the transmitted FTS count desired to exit from L0s. */
+ 	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL_PLC1);
+@@ -514,8 +397,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ err_power_off_phy:
+ 	while (i--)
+ 		phy_power_off(rockchip->phys[i]);
++
+ 	i = MAX_LANE_NUM;
+-err_exit_phy:
+ 	while (i--)
+ 		phy_exit(rockchip->phys[i]);
+ 	return err;
+@@ -1034,7 +917,7 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
+ 	if (err)
+ 		goto err_disable_0v9;
+ 
+-	err = rockchip_pcie_init_port(rockchip);
++	err = rockchip_pcie_host_init_port(rockchip);
+ 	if (err)
+ 		goto err_pcie_resume;
+ 
+@@ -1099,7 +982,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		goto err_set_vpcie;
+ 	}
+ 
+-	err = rockchip_pcie_init_port(rockchip);
++	err = rockchip_pcie_host_init_port(rockchip);
+ 	if (err)
+ 		goto err_vpcie;
+ 
+diff --git a/drivers/pci/rockchip/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip.c
+index 6c0063d..d03508c 100644
+--- a/drivers/pci/rockchip/pcie-rockchip.c
++++ b/drivers/pci/rockchip/pcie-rockchip.c
+@@ -12,6 +12,7 @@
+  */
+ 
+ #include <linux/clk.h>
++#include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/of_pci.h>
+ #include <linux/phy/phy.h>
+@@ -144,6 +145,146 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 	return 0;
+ }
+ 
++int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++	int err, i;
++	u32 regs;
++
++	err = reset_control_assert(rockchip->aclk_rst);
++	if (err) {
++		dev_err(dev, "assert aclk_rst err %d\n", err);
++		return err;
++	}
++
++	err = reset_control_assert(rockchip->pclk_rst);
++	if (err) {
++		dev_err(dev, "assert pclk_rst err %d\n", err);
++		return err;
++	}
++
++	err = reset_control_assert(rockchip->pm_rst);
++	if (err) {
++		dev_err(dev, "assert pm_rst err %d\n", err);
++		return err;
++	}
++
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		err = phy_init(rockchip->phys[i]);
++		if (err) {
++			dev_err(dev, "init phy%d err %d\n", i, err);
++			goto err_exit_phy;
++		}
++	}
++
++	err = reset_control_assert(rockchip->core_rst);
++	if (err) {
++		dev_err(dev, "assert core_rst err %d\n", err);
++		goto err_exit_phy;
++	}
++
++	err = reset_control_assert(rockchip->mgmt_rst);
++	if (err) {
++		dev_err(dev, "assert mgmt_rst err %d\n", err);
++		goto err_exit_phy;
++	}
++
++	err = reset_control_assert(rockchip->mgmt_sticky_rst);
++	if (err) {
++		dev_err(dev, "assert mgmt_sticky_rst err %d\n", err);
++		goto err_exit_phy;
++	}
++
++	err = reset_control_assert(rockchip->pipe_rst);
++	if (err) {
++		dev_err(dev, "assert pipe_rst err %d\n", err);
++		goto err_exit_phy;
++	}
++
++	udelay(10);
++
++	err = reset_control_deassert(rockchip->pm_rst);
++	if (err) {
++		dev_err(dev, "deassert pm_rst err %d\n", err);
++		goto err_exit_phy;
++	}
++
++	err = reset_control_deassert(rockchip->aclk_rst);
++	if (err) {
++		dev_err(dev, "deassert aclk_rst err %d\n", err);
++		goto err_exit_phy;
++	}
++
++	err = reset_control_deassert(rockchip->pclk_rst);
++	if (err) {
++		dev_err(dev, "deassert pclk_rst err %d\n", err);
++		goto err_exit_phy;
++	}
++
++	if (rockchip->link_gen == 2)
++		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
++				    PCIE_CLIENT_CONFIG);
++	else
++		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
++				    PCIE_CLIENT_CONFIG);
++
++	regs = PCIE_CLIENT_LINK_TRAIN_ENABLE | PCIE_CLIENT_ARI_ENABLE |
++		   PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes);
++
++	if (rockchip->is_rc)
++		regs |= PCIE_CLIENT_CONF_ENABLE | PCIE_CLIENT_MODE_RC;
++	else
++		regs |= PCIE_CLIENT_CONF_DISABLE | PCIE_CLIENT_MODE_EP;
++
++	rockchip_pcie_write(rockchip, regs, PCIE_CLIENT_CONFIG);
++
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		err = phy_power_on(rockchip->phys[i]);
++		if (err) {
++			dev_err(dev, "power on phy%d err %d\n", i, err);
++			goto err_power_off_phy;
++		}
++	}
++
++	/*
++	 * Please don't reorder the deassert sequence of the following
++	 * four reset pins.
++	 */
++	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
++	if (err) {
++		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
++		goto err_power_off_phy;
++	}
++
++	err = reset_control_deassert(rockchip->core_rst);
++	if (err) {
++		dev_err(dev, "deassert core_rst err %d\n", err);
++		goto err_power_off_phy;
++	}
++
++	err = reset_control_deassert(rockchip->mgmt_rst);
++	if (err) {
++		dev_err(dev, "deassert mgmt_rst err %d\n", err);
++		goto err_power_off_phy;
++	}
++
++	err = reset_control_deassert(rockchip->pipe_rst);
++	if (err) {
++		dev_err(dev, "deassert pipe_rst err %d\n", err);
++		goto err_power_off_phy;
++	}
++
++	return 0;
++err_power_off_phy:
++	while (i--)
++		phy_power_off(rockchip->phys[i]);
++	i = MAX_LANE_NUM;
++err_exit_phy:
++	while (i--)
++		phy_exit(rockchip->phys[i]);
++	return err;
++}
++
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+diff --git a/drivers/pci/rockchip/pcie-rockchip.h b/drivers/pci/rockchip/pcie-rockchip.h
+index c0f84d9..af3e74f 100644
+--- a/drivers/pci/rockchip/pcie-rockchip.h
++++ b/drivers/pci/rockchip/pcie-rockchip.h
+@@ -27,10 +27,12 @@
+ #define PCIE_CLIENT_BASE		0x0
+ #define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
+ #define   PCIE_CLIENT_CONF_ENABLE	  HIWORD_UPDATE_BIT(0x0001)
++#define   PCIE_CLIENT_CONF_DISABLE	  HIWORD_UPDATE(0x0001, 0)
+ #define   PCIE_CLIENT_LINK_TRAIN_ENABLE	  HIWORD_UPDATE_BIT(0x0002)
+ #define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
+ #define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
+ #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
++#define   PCIE_CLIENT_MODE_EP		  HIWORD_UPDATE(0x0040, 0)
+ #define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
+ #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
+ #define PCIE_CLIENT_DEBUG_OUT_0		(PCIE_CLIENT_BASE + 0x3c)
+@@ -238,6 +240,7 @@ static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
+ }
+ 
+ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip);
++int rockchip_pcie_init_port(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip);
+ void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip);
+-- 
+1.9.1
