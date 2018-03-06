@@ -1,56 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54216 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752064AbeCUOnM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 10:43:12 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Rob Herring <robh@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Subject: [PATCH v2 03/10] PCI: kirin: Fix missing dependency on PCI_MSI_IRQ_DOMAIN
-Date: Wed, 21 Mar 2018 14:42:47 +0000
-Message-Id: <20180321144254.7406-4-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
-References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 6 Mar 2018 17:38:32 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Icenowy Zheng <icenowy@aosc.io>
+Subject: Re: Question about a quirky (DesignWare) PCIe RC in Allwinner H6
+Message-ID: <20180306233832.GC33706@bhelgaas-glaptop.roam.corp.google.com>
+References: <1520261458.33502.10.camel@aosc.io>
+ <20180305214718.GC255556@bhelgaas-glaptop.roam.corp.google.com>
+ <1520308623.33502.13.camel@aosc.io>
+MIME-Version: 1.0
+In-Reply-To: <1520308623.33502.13.camel@aosc.io>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+ Maxime Ripard <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
+ Chen-Yu Tsai <wens@csie.org>, linux-sunxi@googlegroups.com,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-arm-kernel@lists.infradead.org,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rob Herring <robh@kernel.org>
-
-PCIE_DW_HOST depends on PCI_MSI_IRQ_DOMAIN and since kirin selects
-PCIE_DW_HOST, it must also depend on PCI_MSI_IRQ_DOMAIN. This was found
-by 0-day once building on all arches was enabled.
-
-Signed-off-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/pci/dwc/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 0f666b1ce289..2f3f5c50aa48 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -176,6 +176,7 @@ config PCIE_ARTPEC6_EP
- config PCIE_KIRIN
- 	depends on OF && ARM64
- 	bool "HiSilicon Kirin series SoCs PCIe controllers"
-+	depends on PCI_MSI_IRQ_DOMAIN
- 	depends on PCI
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
--- 
-2.15.0
+WytjYyBNYXJjXQoKT24gVHVlLCBNYXIgMDYsIDIwMTggYXQgMTE6NTc6MDNBTSArMDgwMCwgSWNl
+bm93eSBaaGVuZyB3cm90ZToKPiDlnKggMjAxOC0wMy0wNeS4gOeahCAxNTo0NyAtMDYwMO+8jEJq
+b3JuIEhlbGdhYXPlhpnpgZPvvJoKPiA+IE9uIE1vbiwgTWFyIDA1LCAyMDE4IGF0IDEwOjUwOjU4
+UE0gKzA4MDAsIEljZW5vd3kgWmhlbmcgd3JvdGU6Cj4gPiA+IEhpIGV2ZXJ5b25lLAo+ID4gPiAK
+PiA+ID4gSSdtIHRyeWluZyB0byBpbXBsZW1lbnQgYSBkcml2ZXIgZm9yIHRoZSBxdWlya3kgKERX
+KSBQQ0llIFJDIGluIHRoZQo+ID4gPiBBbGx3aW5uZXIgSDYgU29DLgo+ID4gPiAKPiA+ID4gVGhl
+IHF1aXJrIGlzIHRoYXQgb25seSB0aGUgImRiaSIgc3BhY2UgaXMgYWx3YXlzIG1hcHBlZCwgYnV0
+IGF0IHRoZQo+ID4gPiBzYW1lIHRpbWUgb25seSA2NEtpQiBvZiBvdGhlciBzcGFjZXMgKGNvbmZp
+ZywgZG93bnN0cmVhbSBJTyBhbmQKPiA+ID4gbm9uLQo+ID4gPiBwcmVmZXRjaGFibGUgbWVtb3J5
+KSBhcmUgYWNjZXNzaWJsZS4gVG8gYWNjZXNzIGEgY2VydGFpbiBhZGRyZXNzCj4gPiA+IHRoZQo+
+ID4gPiBoaWdoIDE2LWJpdCBvZiB0aGUgYWRkcmVzcyAoYWxsIGJ1cyBhZGRyZXNzZXMgaW4gSDYg
+U29DIGFyZSAzMi1iaXQKPiA+ID4gZGVzcGl0ZSB0aGUgQ1BVIGlzIDY0LWJpdCkgbmVlZHMgdG8g
+YmUgd3JpdHRlbiBpbnRvIHRoZQo+ID4gPiBQQ0lFX0FERFJfUEFHRV9DRkcgcmVnaXN0ZXIgKGEg
+dmVuZG9yLWRlZmluZWQgcmVnaXN0ZXIgaW4gREJJCj4gPiA+IHNwYWNlKS4KPiA+ID4gU28gdGhl
+IGFjY2VzcyB0byB0aGVzZSBzcGFjZXMgY2Fubm90IGJlIHByb2Nlc3NlZCBjb3JyZWN0bHkgd2l0
+aAo+ID4gPiBqdXN0Cj4gPiA+IHJlYWRsL3dyaXRlbCwgYXMgdGhlIGV4aXN0aW5nIGNvZGUgZG9l
+cy4KPiA+ID4gCj4gPiA+IElzIGl0IHBvc3NpYmxlIHRvIHdvcmthcm91bmQgdGhpcyBpbiB0aGUg
+UENJIHN1YnN5c3RlbSBvZiBMaW51eD8KPiA+ID4gCj4gPiA+IChJIGhhdmUgdGhvdWdodCBhIHdv
+cmthcm91bmQgdGhhdCBvbmx5IG1hcHMgdGhlIGN1cnJlbnQgYWNjZXNzaWJsZQo+ID4gPiA2NEtp
+QiB3aXRoIHRoZSBNTVUsIGFuZCB3aGVuIGFjY2Vzc2luZyB0aGUgbm9uLWFjY2Vzc2libGUgcGFy
+dCwKPiA+ID4gY2F0Y2gKPiA+ID4gdGhlIHBhZ2UgZmF1bHQgYW5kIHJlLXNldHVwIHRoZSBtYXAg
+dG8gdGhlIG5ldyA2NEtpQiBwYWdlLiBCdXQKPiA+ID4gc3VyZWx5Cj4gPiA+IGl0IHdpbGwga2ls
+bCB0aGUgcGVyZm9ybWFuY2UuKQo+ID4gCj4gPiBJZiB5b3Ugb25seSBuZWVkIHRvIHdyaXRlIHRv
+IFBDSUVfQUREUl9QQUdFX0NGRyBmb3IgKmNvbmZpZyoKPiA+IGFjY2Vzc2VzLAo+ID4gdGhpcyBz
+aG91bGQgYmUgZWFzeS4gIEFsbCBjb25maWcgYWNjZXNzZXMgZ28gdGhyb3VnaCB3cmFwcGVycwo+
+ID4gKHBjaV9yZWFkX2NvbmZpZ193b3JkKCksIGV0YykgYW5kIHNldmVyYWwgaG9zdCBicmlkZ2Ug
+ZHJpdmVycyBoYXZlIHRvCj4gPiB1cGRhdGUgYSByZWdpc3RlciB3aXRoIHBhcnRzIG9mIHRoZSBj
+b25maWcgYWRkcmVzcywgZS5nLiwKPiA+IGFkdmtfcGNpZV9yZF9jb25mKCksIG12ZWJ1X3BjaWVf
+aHdfcmRfY29uZigpLgo+ID4gCj4gPiBJdCBzb3VuZHMgbGlrZSB5b3UgYWxzbyBuZWVkIHRvIHVw
+ZGF0ZSBQQ0lFX0FERFJfUEFHRV9DRkcgZm9yIEkvTwo+ID4gcG9ydAo+ID4gYWNjZXNzZXMuICBJ
+L08gcG9ydCBhY2Nlc3NlcyBkbyBnbyB0aHJvdWdoIGEgd3JhcHBlciAoaW5iKCksIGV0YyksIHNv
+Cj4gPiBpdCBtaWdodCBiZSBwb3NzaWJsZSBpbiBwcmluY2lwbGUgdG8gaW50ZXJjZXB0IHRoZXNl
+LCBhbHRob3VnaCBtdWNoCj4gPiBtb3JlIGRpZmZpY3VsdCB0aGFuIGNvbmZpZyBhY2Nlc3Nlcywg
+YmVjYXVzZSB0aGUgY29uZmlnIGFjY2Vzc2VzIGFyZQo+ID4gYWxyZWFkeSBzZXQgdXAgd2l0aCBw
+ZXItaG9zdCBicmlkZ2UgaG9va3MsIHdoaWxlIHRoZSBJL08gcG9ydAo+ID4gYWNjZXNzb3JzIGFy
+ZSBtb3N0bHkgcGVyLWFyY2guCj4gPiAKPiA+IEJ1dCBpZiB5b3UgaGF2ZSB0byB1cGRhdGUgUENJ
+RV9BRERSX1BBR0VfQ0ZHIGZvciBtZW1vcnkgYWNjZXNzZXMsCj4gPiB0aGF0J3MgcmVhbGx5IGEg
+cHJvYmxlbSBiZWNhdXNlIGRyaXZlcnMgYXJlIGFsbG93ZWQgdG8gZXNzZW50aWFsbHkKPiA+IHJl
+YWQgYSBtZW1vcnkgQkFSLCBjb252ZXJ0IHRoYXQgYnVzIGFkZHJlc3MgdG8gYSBDUFUgcGh5c2lj
+YWwgbWVtb3J5Cj4gPiBhZGRyZXNzLCBpb3JlbWFwKCkgaXQsIHRoZW4gZGlyZWN0bHkgYWNjZXNz
+IHRoZSBQQ0llIG1lbW9yeSB3aXRoCj4gPiBsb2Fkcwo+ID4gYW5kIHN0b3Jlcy4KPiAKPiBVbmZv
+cnR1bmF0ZWx5IHRoaXMgaXMgdGhlIGNhc2UuIEFsbCBhYm92ZSAoY29uZmlnLCBJTywgbWVtb3J5
+KSBuZWVkcwo+IFBDSUVfQUREUl9QQUdFX0NGRyB1cGRhdGUuCgp0YW5nb19wY2llX3Byb2JlKCkg
+aGFzIGEgc2ltaWxhciBpc3N1ZS4gIFdlIGRvbid0IGhhdmUgYSBnb29kIHNvbHV0aW9uCnRoZXJl
+LCBzbyB3ZSBqdXN0IGxpdmUgd2l0aCB0aGUgZmFjdCB0aGF0IHRoZSBwbGF0Zm9ybSB3aWxsIGJl
+CnVucmVsaWFibGUuCgpCam9ybgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5l
+bEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4v
+bGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
