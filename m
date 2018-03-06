@@ -1,128 +1,203 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42832 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752357AbeC3XWR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 19:22:17 -0400
-Date: Fri, 30 Mar 2018 18:22:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: KarimAllah Ahmed <karahmed@amazon.de>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 2/2] PCI/IOV: Use VF0 cached config space size for
- other VFs
-Message-ID: <20180330232215.GJ9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1521489961-18291-1-git-send-email-karahmed@amazon.de>
- <1521489961-18291-2-git-send-email-karahmed@amazon.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
+        <andriy.shevchenko@linux.intel.com>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
+        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
+        <frowand.list@gmail.com>, <agraf@suse.de>
+Subject: [PATCH v16 4/9] PCI: Apply the new generic I/O management on PCI IO hosts
+Date: Tue, 6 Mar 2018 18:47:43 +0800
+Message-ID: <1520333268-82754-5-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
+References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1521489961-18291-2-git-send-email-karahmed@amazon.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 19, 2018 at 09:06:01PM +0100, KarimAllah Ahmed wrote:
-> Cache the config space size from VF0 and use it for all other VFs instead
-> of reading it from the config space of each VF.  We assume that it will be
-> the same across all associated VFs.
-> 
-> This is an optimization when enabling SR-IOV on a device with many VFs.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: KarimAllah Ahmed <karahmed@amazon.de>
+From: Zhichang Yuan <yuanzhichang@hisilicon.com>
 
-I didn't apply this one because:
+After introducing the new generic I/O space management(Logical PIO), the
+original PCI MMIO relevant helpers need to be updated based on the new
+interfaces defined in logical PIO.
+This patch adapts the corresponding code to match the changes introduced
+by logical PIO.
 
-  - I don't like the "add two leading underscores to the name"
-    disease.  I'd really like pci_cfg_space_size() to be able to
-    figure out whether this is VF0 and do the right thing.  But I
-    don't know if we can tell from the pci_dev whether it is VF0.  We
-    do know that every VF is a PCIe device; maybe that's useful
-    somehow.
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Tested-by: dann frazier <dann.frazier@canonical.com>
+---
+ drivers/pci/pci.c        | 92 +++++++++---------------------------------------
+ include/asm-generic/io.h |  2 +-
+ 2 files changed, 18 insertions(+), 76 deletions(-)
 
-  - Whatever the name ends up being, it should be declared in
-    drivers/pci/pci.h, not include/linux/pci.h, because it shouldn't
-    be used outside the PCI core.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 3f30b7d..09c2490 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -22,6 +22,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/log2.h>
++#include <linux/logic_pio.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/pm_wakeup.h>
+ #include <linux/interrupt.h>
+@@ -3436,17 +3437,6 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_regions_exclusive);
+ 
+-#ifdef PCI_IOBASE
+-struct io_range {
+-	struct list_head list;
+-	phys_addr_t start;
+-	resource_size_t size;
+-};
+-
+-static LIST_HEAD(io_range_list);
+-static DEFINE_SPINLOCK(io_range_lock);
+-#endif
+-
+ /*
+  * Record the PCI IO range (expressed as CPU physical address + size).
+  * Return a negative value if an error has occured, zero otherwise
+@@ -3454,51 +3444,28 @@ struct io_range {
+ int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
+ 			resource_size_t	size)
+ {
+-	int err = 0;
+-
++	int ret = 0;
+ #ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	/* check if the range hasn't been previously recorded */
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (addr >= range->start && addr + size <= range->start + size) {
+-			/* range already registered, bail out */
+-			goto end_register;
+-		}
+-		allocated_size += range->size;
+-	}
++	struct logic_pio_hwaddr *range;
+ 
+-	/* range not registed yet, check for available space */
+-	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+-		/* if it's too big check if 64K space can be reserved */
+-		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
+-			err = -E2BIG;
+-			goto end_register;
+-		}
+-
+-		size = SZ_64K;
+-		pr_warn("Requested IO range too big, new size set to 64K\n");
+-	}
++	if (!size || addr + size < addr)
++		return -EINVAL;
+ 
+-	/* add the range to the list */
+ 	range = kzalloc(sizeof(*range), GFP_ATOMIC);
+-	if (!range) {
+-		err = -ENOMEM;
+-		goto end_register;
+-	}
++	if (!range)
++		return -ENOMEM;
+ 
+-	range->start = addr;
++	range->fwnode = fwnode;
+ 	range->size = size;
++	range->hw_start = addr;
++	range->flags = LOGIC_PIO_CPU_MMIO;
+ 
+-	list_add_tail(&range->list, &io_range_list);
+-
+-end_register:
+-	spin_unlock(&io_range_lock);
++	ret = logic_pio_register_range(range);
++	if (ret)
++		kfree(range);
+ #endif
+ 
+-	return err;
++	return ret;
+ }
+ 
+ phys_addr_t pci_pio_to_address(unsigned long pio)
+@@ -3506,21 +3473,10 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ 	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+ 
+ #ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	if (pio > IO_SPACE_LIMIT)
++	if (pio >= MMIO_UPPER_LIMIT)
+ 		return address;
+ 
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (pio >= allocated_size && pio < allocated_size + range->size) {
+-			address = range->start + pio - allocated_size;
+-			break;
+-		}
+-		allocated_size += range->size;
+-	}
+-	spin_unlock(&io_range_lock);
++	address = logic_pio_to_hwaddr(pio);
+ #endif
+ 
+ 	return address;
+@@ -3529,21 +3485,7 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+ #ifdef PCI_IOBASE
+-	struct io_range *res;
+-	resource_size_t offset = 0;
+-	unsigned long addr = -1;
+-
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(res, &io_range_list, list) {
+-		if (address >= res->start && address < res->start + res->size) {
+-			addr = address - res->start + offset;
+-			break;
+-		}
+-		offset += res->size;
+-	}
+-	spin_unlock(&io_range_lock);
+-
+-	return addr;
++	return logic_pio_trans_cpuaddr(address);
+ #else
+ 	if (address > IO_SPACE_LIMIT)
+ 		return (unsigned long)-1;
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index f76fbd6..0016413 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -901,7 +901,7 @@ static inline void __iomem *ioremap_wt(phys_addr_t offset, size_t size)
+ #define ioport_map ioport_map
+ static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+ {
+-	return PCI_IOBASE + (port & IO_SPACE_LIMIT);
++	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
+ }
+ #endif
+ 
+-- 
+1.9.1
 
-> ---
->  drivers/pci/iov.c   |  3 +++
->  drivers/pci/pci.h   |  1 +
->  drivers/pci/probe.c | 11 ++++++++++-
->  include/linux/pci.h |  1 +
->  4 files changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 30bf8f7..046e0d3 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -135,6 +135,9 @@ static void pci_read_vf_config_common(struct pci_dev *virtfn)
->  			     &physfn->sriov->subsystem_vendor);
->  	pci_read_config_word(virtfn, PCI_SUBSYSTEM_ID,
->  			     &physfn->sriov->subsystem_device);
-> +
-> +	virtfn->class = physfn->sriov->class;
-
-Oops, where did this come from?  It looks like this belongs in a
-different patch because this patch doesn't do anything else with
-virtfn->class.
-
-> +	physfn->sriov->cfg_size = __pci_cfg_space_size(virtfn);
->  }
->  
->  int pci_iov_add_virtfn(struct pci_dev *dev, int id)
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index bdb4ba2..69da57b 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -271,6 +271,7 @@ struct pci_sriov {
->  	u16		driver_max_VFs;	/* Max num VFs driver supports */
->  	struct pci_dev	*dev;		/* Lowest numbered PF */
->  	struct pci_dev	*self;		/* This PF */
-> +	u32		cfg_size;	/* VF config space size */
->  	u32		class;		/* VF device */
->  	u8		hdr_type;	/* VF header type */
->  	u16		subsystem_vendor; /* VF subsystem vendor */
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 21ee1c3..fd21e2b 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1365,7 +1365,7 @@ static int pci_cfg_space_size_ext(struct pci_dev *dev)
->  	return PCI_CFG_SPACE_EXP_SIZE;
->  }
->  
-> -int pci_cfg_space_size(struct pci_dev *dev)
-> +int __pci_cfg_space_size(struct pci_dev *dev)
->  {
->  	int pos;
->  	u32 status;
-> @@ -1389,6 +1389,15 @@ int pci_cfg_space_size(struct pci_dev *dev)
->  	return PCI_CFG_SPACE_SIZE;
->  }
->  
-> +int pci_cfg_space_size(struct pci_dev *dev)
-> +{
-> +#ifdef CONFIG_PCI_ATS
-> +	if (dev->is_virtfn)
-> +		return dev->physfn->sriov->cfg_size;
-> +#endif
-> +	return __pci_cfg_space_size(dev);
-> +}
-> +
->  static int pci_cfg_space_class(struct pci_dev *dev)
->  {
->  	int class;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 024a1be..fcd5d88 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1290,6 +1290,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
->  
->  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
->  		  void *userdata);
-> +int __pci_cfg_space_size(struct pci_dev *dev);
->  int pci_cfg_space_size(struct pci_dev *dev);
->  unsigned char pci_bus_max_busnr(struct pci_bus *bus);
->  void pci_setup_bridge(struct pci_bus *bus);
-> -- 
-> 2.7.4
-> 
