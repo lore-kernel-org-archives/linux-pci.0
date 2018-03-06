@@ -1,55 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Minghuan Lian <Minghuan.Lian@nxp.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] MAINTAINERS: Update Layerscape PCIe driver maintainers list
-Date: Thu, 29 Mar 2018 09:53:01 +0800
-Message-ID: <1522288381-470803-1-git-send-email-Minghuan.Lian@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f66.google.com ([209.85.214.66]:54699 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753466AbeCFTaU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 14:30:20 -0500
+Subject: [pci PATCH v3 3/3] virtio_pci: Add support for unmanaged SR-IOV on
+ virtio_pci devices
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, dwmw@amazon.co.uk
+Date: Tue, 06 Mar 2018 11:30:17 -0800
+Message-ID: <20180306192957.3153.60365.stgit@localhost.localdomain>
+In-Reply-To: <20180306192423.3153.42741.stgit@localhost.localdomain>
+References: <20180306192423.3153.42741.stgit@localhost.localdomain>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
- linux-arm-kernel@lists.infradead.org, Minghuan Lian <Minghuan.Lian@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change Layerscape PCIe driver maintainers' email address
-from freescale to nxp.
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+Hardware-realized virtio_pci devices can implement SR-IOV, so this
+patch enables its use. The device in question is an upcoming Intel
+NIC that implements both a virtio_net PF and virtio_net VFs. These
+are hardware realizations of what has been up to now been a software
+interface.
+
+The device in question has the following 4-part PCI IDs:
+
+PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
+
+The patch currently needs no check for device ID, because the callback
+will never be made for devices that do not assert the capability or
+when run on a platform incapable of SR-IOV.
+
+One reason for this patch is because the hardware requires the
+vendor ID of a VF to be the same as the vendor ID of the PF that
+created it. So it seemed logical to simply have a fully-functioning
+virtio_net PF create the VFs. This patch makes that possible.
+
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
 ---
- MAINTAINERS | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/virtio/virtio_pci_common.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 3bdc260..a0a9524 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10558,9 +10558,9 @@ F:	Documentation/devicetree/bindings/pci/cdns,*.txt
- F:	drivers/pci/cadence/pcie-cadence*
+diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+index 48d4d1cf1cb6..ca1549393255 100644
+--- a/drivers/virtio/virtio_pci_common.c
++++ b/drivers/virtio/virtio_pci_common.c
+@@ -584,6 +584,7 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+ 	else
+ 		virtio_pci_modern_remove(vp_dev);
  
- PCI DRIVER FOR FREESCALE LAYERSCAPE
--M:	Minghuan Lian <minghuan.Lian@freescale.com>
--M:	Mingkai Hu <mingkai.hu@freescale.com>
--M:	Roy Zang <tie-fei.zang@freescale.com>
-+M:	Minghuan Lian <minghuan.Lian@nxp.com>
-+M:	Mingkai Hu <mingkai.hu@nxp.com>
-+M:	Roy Zang <roy.zang@nxp.com>
- L:	linuxppc-dev@lists.ozlabs.org
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org
--- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
++	pci_disable_sriov(pci_dev);
+ 	pci_disable_device(pci_dev);
+ 	put_device(dev);
+ }
+@@ -596,6 +597,9 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+ #ifdef CONFIG_PM_SLEEP
+ 	.driver.pm	= &virtio_pci_pm_ops,
+ #endif
++#ifdef CONFIG_PCI_IOV
++	.sriov_configure = pci_sriov_configure_unmanaged,
++#endif
+ };
+ 
+ module_pci_driver(virtio_pci_driver);
