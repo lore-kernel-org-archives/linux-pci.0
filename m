@@ -1,80 +1,91 @@
-Return-Path: <SRS0=Pv+1=GE=linux.vnet.ibm.com=desnesn@kernel.org>
-Return-Path: <SRS0=Pv+1=GE=linux.vnet.ibm.com=desnesn@kernel.org>
-Subject: Re: [PATCH 1/2, pci] pci: Addition of PCI_DEV_FLAGS_QUIET_PCI_REALIGN
- attribute to the PCI subsystem
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-        benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-        ruscur@russell.cc, aik@ozlabs.ru, david@gibson.dropbear.id.au,
-        fbarrat@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
-References: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
- <20180314163455.15854-2-desnesn@linux.vnet.ibm.com>
- <20180314180642.GC179719@bhelgaas-glaptop.roam.corp.google.com>
-From: =?UTF-8?Q?Desnes_Augusto_Nunes_do_Ros=c3=a1rio?=
- <desnesn@linux.vnet.ibm.com>
-Date: Wed, 14 Mar 2018 15:22:44 -0300
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0118.outbound.protection.outlook.com ([104.47.32.118]:37703
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932182AbeCFScc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 13:32:32 -0500
+From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Jack Morgenstein <jackm@mellanox.com>
+Subject: RE: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
+Date: Tue, 6 Mar 2018 18:32:29 +0000
+Message-ID: <DM5PR2101MB1030B09B080E5854B0E7B9A9DCD90@DM5PR2101MB1030.namprd21.prod.outlook.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+ <20180306182128.23281-7-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-7-decui@microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20180314180642.GC179719@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <30c63477-620b-3f8b-82df-fd1e34cd99b8@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Tuesday, March 6, 2018 10:22 AM
+> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan <kys@mi=
+crosoft.com>;
+> Stephen Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de; apw@canonical=
+.com;
+> jasowang@redhat.com
+> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;=
+ Haiyang Zhang
+> <haiyangz@microsoft.com>; vkuznets@redhat.com; marcelo.cerri@canonical.co=
+m; Michael
+> Kelley (EOSG) <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microso=
+ft.com>;
+> stable@vger.kernel.org; Jack Morgenstein <jackm@mellanox.com>
+> Subject: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg(=
+)
+>=20
+> 1. With the patch "x86/vector/msi: Switch to global reservation mode"
+> (4900be8360), the recent v4.15 and newer kernels always hang for 1-vCPU
+> Hyper-V VM with SR-IOV. This is because when we reach hv_compose_msi_msg(=
+)
+> by request_irq()  -> request_threaded_irq() -> __setup_irq()->irq_startup=
+()
+>  -> __irq_startup() -> irq_domain_activate_irq() -> ... ->
+> msi_domain_activate() -> ... -> hv_compose_msi_msg(), local irq is
+> disabled in __setup_irq().
+>=20
+> Fix this by polling the channel.
+>=20
+> 2. If the host is ejecting the VF device before we reach
+> hv_compose_msi_msg(), in a UP VM, we can hang in hv_compose_msi_msg()
+> forever, because at this time the host doesn't respond to the
+> CREATE_INTERRUPT request. This issue also happens to old kernels like
+> v4.14, v4.13, etc.
+>=20
+> Fix this by polling the channel for the PCI_EJECT message and
+> hpdev->state, and by checking the PCI vendor ID.
+>=20
+> Note: actually the above issues also happen to a SMP VM, if
+> "hbus->hdev->channel->target_cpu =3D=3D smp_processor_id()" is true.
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
+> Tested-by: Chris Valean <v-chvale@microsoft.com>
+> Cc: stable@vger.kernel.org
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Cc: Jack Morgenstein <jackm@mellanox.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 58 +++++++++++++++++++++++++++++++++++++=
++++++-
+>  1 file changed, 57 insertions(+), 1 deletion(-)
+>=20
 
-On 03/14/2018 03:06 PM, Bjorn Helgaas wrote:
-> On Wed, Mar 14, 2018 at 01:34:54PM -0300, Desnes A. Nunes do Rosario wrote:
->> Add PCI_DEV_FLAGS_QUIET_PCI_REALIGN to pci_dev_flags and use it to
->> silent PCI realignment messages if the flag is turned on by a driver.
->>
->> Signed-off-by: Desnes A. Nunes do Rosario <desnesn@linux.vnet.ibm.com>
->> ---
->>   drivers/pci/pci.c       | 3 ++-
->>   drivers/pci/setup-res.c | 3 ++-
->>   include/linux/pci.h     | 2 ++
->>   3 files changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 8c71d1a66cdd..be197c944e5f 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -5505,7 +5505,8 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->>   		return;
->>   	}
->>   
->> -	pci_info(dev, "Disabling memory decoding and releasing memory resources\n");
->> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_QUIET_PCI_REALIGN))
->> +		pci_info(dev, "Disabling memory decoding and releasing memory resources\n");
->>   	pci_read_config_word(dev, PCI_COMMAND, &command);
->>   	command &= ~PCI_COMMAND_MEMORY;
->>   	pci_write_config_word(dev, PCI_COMMAND, command);
->> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
->> index 369d48d6c6f1..00a538def763 100644
->> --- a/drivers/pci/setup-res.c
->> +++ b/drivers/pci/setup-res.c
->> @@ -172,7 +172,8 @@ EXPORT_SYMBOL(pci_claim_resource);
->>   
->>   void pci_disable_bridge_window(struct pci_dev *dev)
->>   {
->> -	pci_info(dev, "disabling bridge mem windows\n");
->> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_QUIET_PCI_REALIGN))
->> +		pci_info(dev, "disabling bridge mem windows\n");
-> 
-> As far as I'm concerned, we can just remove these messages completely.
-> I don't think there's any real value there.
-
-After I found out that this was happening to all PCI devices on powerpc 
-due to the __weak
-pcibios_default_alignment() interface (necessary for VFIO passthrough 
-and performance), I confess that this was my first approach to this 
-matter; however I couldn't vouch the need of these messages on other 
-architectures.
-
-If there are no further concerns, I definitely prefer sending a second 
-version of this patch only eliminating these messages and attesting the 
-reason why.
-
-Thank you very much for your review Bjorn,
-
--- 
-Desnes A. Nunes do Rosário
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
