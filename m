@@ -1,236 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40912 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932666AbeCITAd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Mar 2018 14:00:33 -0500
-Subject: [PATCH v2 08/13] PCI/portdrv: Simplify PCIe feature permission
- checking
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Frederick Lawler <fred@fredlawl.com>
-Date: Fri, 09 Mar 2018 13:00:33 -0600
-Message-ID: <152062203293.77693.8159909590216160503.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:46229 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750933AbeCFKkx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 05:40:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <416d8d27-200f-befb-1c30-14544fffcba0@deltatee.com>
+References: <20180228234006.21093-1-logang@deltatee.com> <20180228234006.21093-8-logang@deltatee.com>
+ <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
+ <20180305160004.GA30975@localhost.localdomain> <3f56c76d-6a5c-7c2f-5442-c9209749b598@deltatee.com>
+ <CAOSf1CHvaz0QTCkptQwsdyPp6uvvHqtM51N0MfrO9RqYf9W0tg@mail.gmail.com> <416d8d27-200f-befb-1c30-14544fffcba0@deltatee.com>
+From: Oliver <oohall@gmail.com>
+Date: Tue, 6 Mar 2018 21:40:51 +1100
+Message-ID: <CAOSf1CG3jdx9RdhCgq+d0fdYLLByhknsXfkUYwigzQzZM0xfGw@mail.gmail.com>
+Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the CMB
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Tue, Mar 6, 2018 at 12:14 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+> On 05/03/18 05:49 PM, Oliver wrote:
+>>
+>> It's in arch/powerpc/kernel/io.c as _memcpy_toio() and it has two full
+>> barriers!
+>>
+>> Awesome!
+>>
+>> Our io.h indicates that our iomem accessors are designed to provide x86ish
+>> strong ordering of accesses to MMIO space. The git log indicates
+>> arch/powerpc/kernel/io.c has barely been touched in the last decade so
+>> odds are most of that code was written in the elder days when people
+>> were less aware of ordering issues. It might just be overly conservative
+>> by today's standards, but maybe not (see below).
+>
+>
+> Yes, that seems overly conservative.
+>
+>> (I'm not going to suggest ditching the lwsync trick. mpe is not going
+>> to take that patch
+>> without a really good reason)
+>
+>
+> Well, that's pretty gross. Is this not exactly the situation mmiowb() is
+> meant to solve? See [1].
 
-Some PCIe features (AER, DPC, hotplug, PME) can be managed by either the
-platform firmware or the OS, so the host bridge driver may have to request
-permission from the platform before using them.  On ACPI systems, this is
-done by negotiate_os_control() in acpi_pci_root_add().
+Yep, mmiowb() is supposed to be used in this situation. According to BenH,
+author of that io_sync hack, we implement the stronger semantics
+so that we don't break existing drivers that assume spin_unlock() does
+order i/o even though it's not supposed to. At a guess the x86 version of
+spin_unlock() happens to do that so the rest of us need to either live
+with it or fix all the bugs :)
 
-The PCIe port driver later uses pcie_port_platform_notify() and
-pcie_port_acpi_setup() to figure out whether it can use these features.
-But all we need is a single bit for each service, so these interfaces are
-needlessly complicated.
+> Though, you're right in principle. Even if power was similar to other
+> systems in this way, it's still a risk that if these pages get passed
+> somewhere in the kernel that uses a spin lock like that without an mmiowb()
+> call, then it's going to have a bug. For now, the risk is pretty low as we
+> know exactly where all the p2pmem pages will be used but if it gets into
+> other places, all bets are off.
 
-Simplify this by adding bits in the struct pci_host_bridge to show when the
-OS has permission to use each feature:
+Yeah this was my main concern with the whole approach. For ioremap()ed
+memory we have the __iomem annotation to help with tracking when we
+need to be careful, but we'd lose that entirely here.
 
-  + unsigned int use_aer:1;       /* OS may use PCIe AER */
-  + unsigned int use_hotplug:1;	  /* OS may use PCIe hotplug */
-  + unsigned int use_pme:1;       /* OS may use PCIe PME */
+> I did do some work trying to make a safe
+> version of io-pages and also trying to change from pages to pfn_t in large
+> areas but neither approach seemed likely to get any traction in the
+> community, at least not in the near term.
 
-These are set when we create a host bridge, and the host bridge driver can
-clear the bits corresponding to any feature the platform doesn't want us to
-use.
+It's a tricky problem. HMM with DEVICE_PRIVATE might be more
+palatable than the pfn_t conversion since there would still be struct pages
+backing the device memory. That said, there are probably other issues with
+device private memory not being part of the linear mapping, but HMM
+provides some assistance there.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/pci_root.c         |   13 ++++++++++--
- drivers/pci/pcie/Makefile       |    1 -
- drivers/pci/pcie/portdrv.h      |   11 ----------
- drivers/pci/pcie/portdrv_core.c |   42 ++++++++++++++++++++++++---------------
- drivers/pci/probe.c             |   10 +++++++++
- include/linux/pci.h             |    3 +++
- 6 files changed, 50 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 6fc204a52493..65ebefb99815 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -871,6 +871,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	struct acpi_device *device = root->device;
- 	int node = acpi_get_node(device->handle);
- 	struct pci_bus *bus;
-+	struct pci_host_bridge *host_bridge;
- 
- 	info->root = root;
- 	info->bridge = device;
-@@ -895,9 +896,17 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	if (!bus)
- 		goto out_release_info;
- 
-+	host_bridge = to_pci_host_bridge(bus->bridge);
-+	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-+		host_bridge->use_hotplug = 0;
-+	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
-+		host_bridge->use_aer = 0;
-+	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
-+		host_bridge->use_pme = 0;
-+
- 	pci_scan_child_bus(bus);
--	pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
--				    acpi_pci_root_release_info, info);
-+	pci_set_host_bridge_release(host_bridge, acpi_pci_root_release_info,
-+				    info);
- 	if (node != NUMA_NO_NODE)
- 		dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n", node);
- 	return bus;
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index e01c10c97b95..11fb633b866c 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -7,7 +7,6 @@
- obj-$(CONFIG_PCIEASPM)		+= aspm.o
- 
- pcieportdrv-y			:= portdrv_core.o portdrv_pci.o
--pcieportdrv-$(CONFIG_ACPI)	+= portdrv_acpi.o
- 
- obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
- 
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 7bfd75f9197b..ed84e767085f 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -123,15 +123,4 @@ static inline bool pcie_pme_no_msi(void) { return false; }
- static inline void pcie_pme_interrupt_enable(struct pci_dev *dev, bool en) {}
- #endif /* !CONFIG_PCIE_PME */
- 
--#ifdef CONFIG_ACPI
--void pcie_port_acpi_setup(struct pci_dev *port, int *mask);
--
--static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask)
--{
--	pcie_port_acpi_setup(port, mask);
--}
--#else /* !CONFIG_ACPI */
--static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
--#endif /* !CONFIG_ACPI */
--
- #endif /* _PORTDRV_H_ */
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index bf851da97947..589960fdd8a8 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -206,19 +206,20 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
-  */
- static int get_port_device_capability(struct pci_dev *dev)
- {
-+	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
-+	bool native;
- 	int services = 0;
--	int cap_mask = 0;
- 
--	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP;
--	if (pci_aer_available())
--		cap_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
--
--	if (pcie_ports_auto)
--		pcie_port_platform_notify(dev, &cap_mask);
-+	/*
-+	 * If the user specified "pcie_ports=native", use the PCIe services
-+	 * regardless of whether the platform has given us permission.  On
-+	 * ACPI systems, this means we ignore _OSC.
-+	 */
-+	native = !pcie_ports_auto;
- 
--	/* Hot-Plug Capable */
--	if ((cap_mask & PCIE_PORT_SERVICE_HP) && dev->is_hotplug_bridge) {
-+	if (dev->is_hotplug_bridge && (native || host->use_hotplug)) {
- 		services |= PCIE_PORT_SERVICE_HP;
-+
- 		/*
- 		 * Disable hot-plug interrupts in case they have been enabled
- 		 * by the BIOS and the hot-plug service driver is not loaded.
-@@ -226,20 +227,27 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		pcie_capability_clear_word(dev, PCI_EXP_SLTCTL,
- 			  PCI_EXP_SLTCTL_CCIE | PCI_EXP_SLTCTL_HPIE);
- 	}
--	/* AER capable */
--	if ((cap_mask & PCIE_PORT_SERVICE_AER)
--	    && pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR)) {
-+
-+	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR) &&
-+	    pci_aer_available() && (native || host->use_aer)) {
- 		services |= PCIE_PORT_SERVICE_AER;
-+
- 		/*
- 		 * Disable AER on this port in case it's been enabled by the
- 		 * BIOS (the AER service driver will enable it when necessary).
- 		 */
- 		pci_disable_pcie_error_reporting(dev);
- 	}
--	/* Root ports are capable of generating PME too */
--	if ((cap_mask & PCIE_PORT_SERVICE_PME)
--	    && pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
-+
-+	/*
-+	 * Root ports are capable of generating PME too.  Root Complex
-+	 * Event Collectors can also generate PMEs, but we don't handle
-+	 * those yet.
-+	 */
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-+	    (native || host->use_pme)) {
- 		services |= PCIE_PORT_SERVICE_PME;
-+
- 		/*
- 		 * Disable PME interrupt on this port in case it's been enabled
- 		 * by the BIOS (the PME service driver will enable it when
-@@ -247,7 +255,9 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		 */
- 		pcie_pme_interrupt_enable(dev, false);
- 	}
--	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC))
-+
-+	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
-+	    pci_aer_available())
- 		services |= PCIE_PORT_SERVICE_DPC;
- 
- 	return services;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ef5377438a1e..839fb0059900 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -540,6 +540,16 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
- 	INIT_LIST_HEAD(&bridge->windows);
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 
-+	/*
-+	 * We assume we can manage these PCIe features.  Some systems may
-+	 * reserve these for use by the platform itself, e.g., an ACPI BIOS
-+	 * may implement its own AER handling and use _OSC to prevent the
-+	 * OS from interfering.
-+	 */
-+	bridge->use_aer = 1;
-+	bridge->use_hotplug = 1;
-+	bridge->use_pme = 1;
-+
- 	return bridge;
- }
- EXPORT_SYMBOL(pci_alloc_host_bridge);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 024a1beda008..40aec7a6fdd9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -469,6 +469,9 @@ struct pci_host_bridge {
- 	struct msi_controller *msi;
- 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
- 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
-+	unsigned int	use_aer:1;		/* OS may use PCIe AER */
-+	unsigned int	use_hotplug:1;		/* OS may use PCIe hotplug */
-+	unsigned int	use_pme:1;		/* OS may use PCIe PME */
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
- 			const struct resource *res,
+Oliver
