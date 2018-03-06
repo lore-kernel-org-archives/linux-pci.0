@@ -1,64 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sg2apc01on0093.outbound.protection.outlook.com ([104.47.125.93]:55200
-        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752548AbeCOOWD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Mar 2018 10:22:03 -0400
-From: Dexuan Cui <decui@microsoft.com>
-To: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
-Subject: [PATCH v4 2/4] PCI: hv: Remove the bogus test in
- hv_eject_device_work()
-Date: Thu, 15 Mar 2018 14:21:43 +0000
-Message-ID: <KL1P15301MB00069CB9573BB682DEAD8404BFD00@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [pci PATCH v3 2/3] vfio: Add support for unmanaged or userspace
+ managed SR-IOV
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, dwmw@amazon.co.uk
+Date: Tue, 06 Mar 2018 11:29:50 -0800
+Message-ID: <20180306192947.3153.20106.stgit@localhost.localdomain>
+In-Reply-To: <20180306192423.3153.42741.stgit@localhost.localdomain>
+References: <20180306192423.3153.42741.stgit@localhost.localdomain>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we're in the function, hpdev->state must be hv_pcichild_ejecting:
-see hv_pci_eject_device().
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
-Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
-Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: Jack Morgenstein <jackm@mellanox.com>
-Cc: Stephen Hemminger <sthemmin@microsoft.com>
-Cc: K. Y. Srinivasan <kys@microsoft.com>
+This patch is meant to allow assignment of an SR-IOV enabled PF, as in VFs
+have been generated, with vfio-pci. My understanding is the primary use
+case for this is something like DPDK running the PF while the VFs are all
+assigned to guests.
+
+A secondary effect of this is that it provides an interface through which
+it would be possible to enable SR-IOV on drivers that may not have a
+physical function that actually manages the device.
+
+Enabling SR-IOV should be pretty straight forward. As long as there are no
+userspace processes currently controlling the interface the number of VFs
+can be changed, and VFs will be generated without drivers being loaded on
+the host. Once the userspace process begins controlling the interface the
+number of VFs cannot be updated via the sysfs until the control is
+released.
+
+Note the VFs will have drivers load on them in the host if the
+sriov_unmanaged_autoprobe is updated to a value of 1. However the behavior
+of the VFs in such a setup cannot be guaranteed as the PF will not be
+available until the userspace process starts and begins to manage the
+device.
+
+For now I am leaving the value as locked when the PF is being controlled
+from userspace as a form of synchronization. Basically this way we cannot
+have the number of VFs change out from under the process so it should not
+require any notification framework, and the configuration can just be read
+out via configuration space accesses.
+
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
 ---
- drivers/pci/host/pci-hyperv.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/vfio/pci/vfio_pci.c |   59 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 28fce2be0a5f..1d2e1cb617f4 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1854,10 +1854,7 @@ static void hv_eject_device_work(struct work_struct =
-*work)
-=20
- 	hpdev =3D container_of(work, struct hv_pci_dev, wrk);
-=20
--	if (hpdev->state !=3D hv_pcichild_ejecting) {
--		put_pcichild(hpdev, hv_pcidev_ref_pnp);
--		return;
--	}
-+	WARN_ON(hpdev->state !=3D hv_pcichild_ejecting);
-=20
- 	/*
- 	 * Ejection can come before or after the PCI bus has been set up, so
---=20
-2.7.4
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index b0f759476900..8025d7336071 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -1224,6 +1224,8 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ 				VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM);
+ 	}
+ 
++	pci_disable_sriov(pdev);
++
+ 	if (!disable_idle_d3)
+ 		pci_set_power_state(pdev, PCI_D0);
+ }
+@@ -1260,12 +1262,69 @@ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
+ 	.error_detected = vfio_pci_aer_err_detected,
+ };
+ 
++#ifdef CONFIG_PCI_IOV
++static int vfio_pci_sriov_configure(struct pci_dev *pdev, int nr_virtfn)
++{
++	struct vfio_pci_device *vdev;
++	struct vfio_device *device;
++	int err;
++
++	device = vfio_device_get_from_dev(&pdev->dev);
++	if (device == NULL)
++		return -ENODEV;
++
++	vdev = vfio_device_data(device);
++	if (vdev == NULL) {
++		vfio_device_put(device);
++		return -ENODEV;
++	}
++
++	/*
++	 * If a userspace process is already using this device just return
++	 * busy and don't allow for any changes.
++	 */
++	if (vdev->refcnt) {
++		pci_warn(pdev,
++			 "PF is currently in use, blocked until released by user\n");
++		return -EBUSY;
++	}
++
++	err = pci_sriov_configure_unmanaged(pdev, nr_virtfn);
++	if (err <= 0)
++		return err;
++
++	/*
++	 * We are now leaving VFs in the control of some unknown PF entity.
++	 *
++	 * Best case is a well behaved userspace PF is expected and any VMs
++	 * that the VFs will be assigned to are dependent on the userspace
++	 * entity anyway. An example being NFV where maybe the PF is acting
++	 * as an accelerated interface for a firewall or switch.
++	 *
++	 * Worst case is somebody really messed up and just enabled SR-IOV
++	 * on a device they were planning to assign to a VM somwhere.
++	 *
++	 * In either case it is probably best for us to set the taint flag
++	 * and warn the user since this could get really ugly really quick
++	 * if this wasn't what they were planning to do.
++	 */
++	add_taint(TAINT_USER, LOCKDEP_STILL_OK);
++	pci_warn(pdev,
++		 "Adding kernel taint for vfio-pci now managing SR-IOV PF device\n");
++
++	return nr_virtfn;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static struct pci_driver vfio_pci_driver = {
+ 	.name		= "vfio-pci",
+ 	.id_table	= NULL, /* only dynamic ids */
+ 	.probe		= vfio_pci_probe,
+ 	.remove		= vfio_pci_remove,
+ 	.err_handler	= &vfio_err_handlers,
++#ifdef CONFIG_PCI_IOV
++	.sriov_configure = vfio_pci_sriov_configure,
++#endif
+ };
+ 
+ struct vfio_devices {
