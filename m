@@ -1,112 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42742 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1163142AbeCBAnR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 19:43:17 -0500
-Date: Thu, 1 Mar 2018 18:43:13 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        mpe@ellerman.id.au, bhelgaas@google.com,
-        bryantly@linux.vnet.ibm.com
-Subject: Re: [PATCH RFC 1/1] powerpc/pseries: fix EEH recovery of IOV devices
-Message-ID: <20180302004313.GE74737@bhelgaas-glaptop.roam.corp.google.com>
-References: <4bd50291799b920b42f8a12f5635c40ccae1302e.1519258921.git.sam.bobroff@au1.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4bd50291799b920b42f8a12f5635c40ccae1302e.1519258921.git.sam.bobroff@au1.ibm.com>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:41179 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753481AbeCFLzH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 06:55:07 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, shawn.guo@linaro.org,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com, nsekhar@ti.com,
+        gustavo.pimentel@synopsys.com
+Subject: [PATCH v10 3/3] PCI: dwc: Expand maximum number of MSI IRQs from 32 to 256
+Date: Tue,  6 Mar 2018 11:54:55 +0000
+Message-Id: <6e81c8aab9adee832f33d0caa580f35aacd41588.1520336186.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
+References: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
+References: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 22, 2018 at 11:23:35AM +1100, Sam Bobroff wrote:
-> Currently EEH recovery will fail on pSeries platforms for
-> passed-through physical devices that support IOV, when CONFIG_PCI_IOV
-> is set and the hypervisor doesn't provide a device tree node
-> "ibm,open-sriov-vf-bar-info" for the device. (Found on an IOV capable
-> device using the ipr driver.)
-> 
-> EEH recovery fails in pci_enable_resources() at the check on
-> r->parent, because r->flags is set and r->parent is not.  This state
-> is due to sriov_init() setting the start, end and flags members of the
-> IOV BARs but the parent not being set later in
-> pseries_pci_fixup_iov_resources(), because the
-> "ibm,open-sriov-vf-bar-info" property is missing, causing it to bail
-> out early.
-> 
-> Correct this by zeroing the IOV resources in the bailout path, so that
-> they are not seen by pci_enable_resources().
-> 
-> Signed-off-by: Sam Bobroff <sam.bobroff@au1.ibm.com>
-> ---
-> Hi,
-> 
-> This is a fix to allow EEH recovery to succeed in a specific
-> situation, which I've tried to explain in the commit message. But
-> while I'm fairly sure of the situation leading up to the problem,
-> I'm not sure how it should be fixed, which is why I've posted this
-> as an RFC.
-> 
-> Just zeroing out the flags is sufficient in my tests but it seemed
-> cleaner to also clear start and end, but other changes would work as
-> well: just clearing the flags, or just removing IORESOURCE_IO and
-> IORESOURCE_MEM or even adding some new flag and also adjusting the
-> test. Perhaps there's something else.  I'm not sure what
-> implications these choices have for the generic PCI code so I would
-> appreciate feedback on it.
->
-> Note that this problem doesn't seem to have been introduced by
-> pseries_pci_fixup_iov_resources() (which was added recently): recovery
-> already failed (in this way) before it's introduction.
-> 
->  arch/powerpc/platforms/pseries/setup.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-> index 372d7ada1a0c..019836ffe53d 100644
-> --- a/arch/powerpc/platforms/pseries/setup.c
-> +++ b/arch/powerpc/platforms/pseries/setup.c
-> @@ -618,13 +618,24 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
->  {
->  	const int *indexes;
->  	struct device_node *dn = pci_device_to_OF_node(pdev);
-> +	int i;
-> +	struct resource *r;
->  
->  	if (!pdev->is_physfn || pdev->is_added)
->  		return;
->  	/*Firmware must support open sriov otherwise dont configure*/
->  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-> -	if (!indexes)
-> +	if (!indexes) {
-> +		/* Hide the BARs we can't configure, otherwise other
-> +		 * code may see r->flags != 0 and r->parent == 0
-> +		 * and raise an error. */
-> +		pci_warn(pdev, "No hypervisor support for SRIOV on this device, IOV BARs disabled.\n");
-> +		for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-> +			r = &pdev->resource[PCI_IOV_RESOURCES + i];
-> +			r->start = r->end = r->flags = 0;
-> +		}
->  		return;
+The Synopsys PCIe Root Complex supports up to MSI 256 IRQs distributed
+over 8 controller registers, therefore the maximum number of MSI IRQs
+can be changed to 256. The number of controllers can be calculated based
+on the number of vectors used by the specific SoC driver.
 
-Just to make sure I'm understanding the situation, "pdev" here is a PF
-(not a VF), right?  And if "ibm,open-sriov-vf-bar-info" existed,
-of_pci_parse_iov_addrs() would fill in the pdev resources
-corresponding to VF BAR0, VF BAR1, etc, in the PF's SR-IOV Capability?
+Update the dwc host bridge driver maximum number of supported MSI
+IRQs.
 
-The VF BARs are only used by the VFs, so I guess it should be safe to
-enable the PF even if the VF BARs are not assigned, so I think this
-patch is OK as far as it goes.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+Tested-by: Shawn Guo <shawn.guo@linaro.org>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+Change v1->v2:
+- New patch file.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Change v3->v4:
+- Patch renamed from v3-0009 to v4-0010.
+- Changed summary line to match the drivers/PCI convention and changelog to
+maintain the consistency (thanks Bjorn).
+Change v4->v5:
+- Nothing changed, just to follow the patch set version.
+Change v5->v6:
+- Nothing changed, just to follow the patch set version.
+Change v6->v7:
+- Nothing changed, just to follow the patch set version.
+Change v7->v8:
+- Rebased against v4.16-rc1.
+Change v8->v9:
+- Changed patch indexation, due patch series squash.
+Change v9->v10:
+- Log commit rewrite to be accurate by Lorenzo (thanks Lorenzo).
 
-But I think you would also want to do something to prevent the VFs
-from being enabled, i.e., we never want to set PCI_SRIOV_CTRL_VFE and
-PCI_SRIOV_CTRL_MSE on this PF.  That would cause VFs to decode memory
-space that we have not configured and don't know about.  I don't know
-off the top of my head what the mechanism for that would be or if we
-even have one.
+ drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
+ drivers/pci/dwc/pcie-designware.h      | 10 +++-------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-> +	}
->  	/* Assign the addresses from device tree*/
->  	of_pci_parse_iov_addrs(pdev, indexes);
->  }
-> -- 
-> 2.16.1.74.g9b0b1f47b
-> 
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 7cf39c9..6df6275 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -76,11 +76,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+ /* MSI int handler */
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ {
+-	u32 val;
+ 	int i, pos, irq;
++	u32 val, num_ctrls;
+ 	irqreturn_t ret = IRQ_NONE;
+ 
+-	for (i = 0; i < MAX_MSI_CTRLS; i++) {
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
++	for (i = 0; i < num_ctrls; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+ 				    &val);
+ 		if (!val)
+@@ -639,13 +641,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+-	u32 val, ctrl;
++	u32 val, ctrl, num_ctrls;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 
+ 	dw_pcie_setup(pci);
+ 
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
+ 	/* Initialize IRQ Status array */
+-	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
++	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+ 				    &pp->irq_status[ctrl]);
+ 	/* setup RC BARs */
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 923f956..fe811db 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -107,13 +107,9 @@
+ #define MSI_MESSAGE_DATA_32		0x58
+ #define MSI_MESSAGE_DATA_64		0x5C
+ 
+-/*
+- * Maximum number of MSI IRQs can be 256 per controller. But keep
+- * it 32 as of now. Probably we will never need more than 32. If needed,
+- * then increment it in multiple of 32.
+- */
+-#define MAX_MSI_IRQS			32
+-#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
++#define MAX_MSI_IRQS			256
++#define MAX_MSI_IRQS_PER_CTRL		32
++#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+ #define MSI_DEF_NUM_VECTORS		32
+ 
+ /* Maximum number of inbound/outbound iATUs */
+-- 
+2.7.4
