@@ -1,91 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from goliath.siemens.de ([192.35.17.28]:60057 "EHLO
-        goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752249AbeCDScO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 4 Mar 2018 13:32:14 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Benedikt Spranger <b.spranger@linutronix.de>,
-        Juergen Gross <jgross@suse.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Otavio Pontes <otavio.pontes@intel.com>,
-        Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH v4 0/7] jailhouse: Enhance secondary Jailhouse guest support /wrt PCI
-Date: Sun,  4 Mar 2018 19:31:32 +0100
-Message-Id: <cover.1520188299.git.jan.kiszka@siemens.com>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:54677 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753484AbeCFLzI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 06:55:08 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, shawn.guo@linaro.org,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com, nsekhar@ti.com,
+        gustavo.pimentel@synopsys.com
+Subject: [PATCH v10 0/3] PCI: dwc: Enables MSI-X driver support
+Date: Tue,  6 Mar 2018 11:54:52 +0000
+Message-Id: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Basic x86 support [1] for running Linux as secondary Jailhouse [2] guest
-is currently pending in the tip tree. This builds on top and enhances
-the PCI support for x86 and also ARM guests (ARM[64] does not require
-platform patches and works already).
+Implement a multiplexed IRQ domain hierarchy API in the pcie-designware
+host bridge driver that funnels all MSI IRQs into a single parent
+interrupt, moving away from the obsolete struct msi_controller based
+API.
 
-Key elements of this series are:
- - detection of Jailhouse via device tree hypervisor node
- - function-level PCI scan if Jailhouse is detected
- - MMCONFIG support for x86 guests
+Remove all existing dwc based host bridges MSI IRQs handlers, in that the
+hierarchical API now handles MSI IRQs through the hierarchical/chained
+MSI domain implementation.
 
-As most changes affect x86, I would suggest to route the series also via
-tip after the necessary acks are collected.
+The Synopsys PCIe Root Complex supports up to MSI 256 IRQs distributed
+over 8 controller registers, therefore the maximum number of MSI IRQs
+can be changed to 256. The number of controllers can be calculated based
+on the number of vectors used by the specific SoC driver.
 
-Changes in v4:
- - slit up Kconfig changes
- - respect pcibios_last_bus during mmconfig setup
- - cosmetic changes requested by Andy
+Adds Synopsys Root Complex driver support for MSI-X feature.
 
-Changes in v3:
- - avoided duplicate scans of PCI functions under Jailhouse
- - reformated PCI_MMCONFIG condition and rephrase related commit log
+The patch set was made against the Bjorn's master branch (v4.16-rc1).
 
-Changes in v2:
- - adjusted commit log and include ordering in patch 2
- - rebased over Linus master
+Gustavo Pimentel (3):
+  PCI: dwc: Move MSI IRQs allocation to IRQ domains hierarchical API
+  PCI: dwc: Remove old MSI IRQs API
+  PCI: dwc: Expand maximum number of MSI IRQs from 32 to 256
 
-Jan
-
-[1] https://lkml.org/lkml/2017/11/27/125
-[2] http://jailhouse-project.org
-
-CC: Benedikt Spranger <b.spranger@linutronix.de>
-CC: Juergen Gross <jgross@suse.com>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Otavio Pontes <otavio.pontes@intel.com>
-CC: Rob Herring <robh+dt@kernel.org>
-
-Jan Kiszka (6):
-  jailhouse: Provide detection for non-x86 systems
-  PCI: Scan all functions when running over Jailhouse
-  x86: Align x86_64 PCI_MMCONFIG with 32-bit variant
-  x86: Consolidate PCI_MMCONFIG configs
-  x86/jailhouse: Allow to use PCI_MMCONFIG without ACPI
-  MAINTAINERS: Add entry for Jailhouse
-
-Otavio Pontes (1):
-  x86/jailhouse: Enable PCI mmconfig access in inmates
-
- Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
- MAINTAINERS                                     |  7 +++++++
- arch/x86/Kconfig                                | 12 +++++++-----
- arch/x86/include/asm/jailhouse_para.h           |  2 +-
- arch/x86/include/asm/pci_x86.h                  |  2 ++
- arch/x86/kernel/Makefile                        |  2 +-
- arch/x86/kernel/cpu/amd.c                       |  2 +-
- arch/x86/kernel/jailhouse.c                     |  8 ++++++++
- arch/x86/pci/legacy.c                           |  4 +++-
- arch/x86/pci/mmconfig-shared.c                  |  4 ++--
- drivers/pci/probe.c                             | 22 +++++++++++++++++++---
- include/linux/hypervisor.h                      | 17 +++++++++++++++--
- 12 files changed, 74 insertions(+), 16 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
+ drivers/pci/dwc/pci-exynos.c           |  18 --
+ drivers/pci/dwc/pci-imx6.c             |  18 --
+ drivers/pci/dwc/pci-keystone-dw.c      |  91 +-------
+ drivers/pci/dwc/pci-keystone.c         |   1 +
+ drivers/pci/dwc/pci-keystone.h         |   4 +-
+ drivers/pci/dwc/pci-layerscape.c       |   3 +-
+ drivers/pci/dwc/pcie-artpec6.c         |  18 --
+ drivers/pci/dwc/pcie-designware-host.c | 396 +++++++++++++++++++--------------
+ drivers/pci/dwc/pcie-designware-plat.c |  16 --
+ drivers/pci/dwc/pcie-designware.h      |  30 ++-
+ drivers/pci/dwc/pcie-histb.c           |  15 --
+ drivers/pci/dwc/pcie-qcom.c            |  16 --
+ 12 files changed, 256 insertions(+), 370 deletions(-)
 
 -- 
-2.13.6
+2.7.4
