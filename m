@@ -1,80 +1,157 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 7 Mar 2018 12:08:24 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 0/7] ARM: dts: dra7: Enable x2 lane mode support
-Message-ID: <20180307120824.GC15139@e107981-ln.cambridge.arm.com>
-References: <20171219093133.16565-1-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sg2apc01on0120.outbound.protection.outlook.com ([104.47.125.120]:45036
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753926AbeCFSWH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 13:22:07 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Jack Morgenstein <jackm@mellanox.com>
+Subject: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
+Date: Tue, 6 Mar 2018 18:21:56 +0000
+Message-ID: <20180306182128.23281-7-decui@microsoft.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-1-decui@microsoft.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20171219093133.16565-1-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Tony Lindgren <tony@atomide.com>, linux-pci@vger.kernel.org, nsekhar@ti.com,
- Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
- Rob Herring <robh+dt@kernel.org>, bcousson@baylibre.com,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 19, 2017 at 03:01:26PM +0530, Kishon Vijay Abraham I wrote:
-> Add properties to enable PCIe x2 lane mode since all dra7
-> based SoCs support x2 lane mode.
-> 
-> However only dra76-evm has a slot which can support x2 lane
-> cards. Hence only enable x2 lane mode in dra76-evm.
-> (am571x-idk can support x2 lane mode but that makes usb port
-> not functional so not including the patch to enable
-> x2 mode in am571x-idk)
-> 
-> Also included in this series is patch to enable PCIe configs
-> (both host and device) in omap2plus_defconfig and
-> multi_v7_defconfig
-> 
-> In order to get x2 mode working [1] is required.
-> 
-> However by keeping the older compatible, this series won't
-> break functionality if this series is merged before [1]
-> 
-> [1] -> https://lkml.org/lkml/2017/12/19/175
-> 
-> Kishon Vijay Abraham I (7):
->   ARM: dts: dra7: Add properties to enable PCIe x2 lane mode
->   ARM: dts: DRA74x: Use PCIe compatible specific to dra74
->   ARM: dts: DRA72x: Use PCIe compatible specific to dra72
->   ARM: dts: dra76-evm: Enable x2 PCIe lanes
->   ARM: dts: dra7: Remove deprecated PCI compatible string
->   ARM: omap2plus_defconfig: Enable CONFIG_PCI_DRA7XX (Host & Device
->     modes)
->   ARM: multi_v7_defconfig: Enable CONFIG_PCI_DRA7XX (Host & Device
->     modes)
-> 
->  arch/arm/boot/dts/dra7.dtsi          |  9 +++++----
->  arch/arm/boot/dts/dra72x.dtsi        | 12 ++++++++++++
->  arch/arm/boot/dts/dra74x.dtsi        | 12 ++++++++++++
->  arch/arm/boot/dts/dra76-evm.dts      | 16 ++++++++++++++++
->  arch/arm/configs/multi_v7_defconfig  |  6 ++++++
->  arch/arm/configs/omap2plus_defconfig |  8 ++++++++
->  6 files changed, 59 insertions(+), 4 deletions(-)
+1. With the patch "x86/vector/msi: Switch to global reservation mode"
+(4900be8360), the recent v4.15 and newer kernels always hang for 1-vCPU
+Hyper-V VM with SR-IOV. This is because when we reach hv_compose_msi_msg()
+by request_irq()  -> request_threaded_irq() -> __setup_irq()->irq_startup()
+ -> __irq_startup() -> irq_domain_activate_irq() -> ... ->
+msi_domain_activate() -> ... -> hv_compose_msi_msg(), local irq is
+disabled in __setup_irq().
 
-Hi Kishon,
+Fix this by polling the channel.
 
-I would like to ask you please what are your expectations with this
-series, which tree these changes are going to be queued through ?
+2. If the host is ejecting the VF device before we reach
+hv_compose_msi_msg(), in a UP VM, we can hang in hv_compose_msi_msg()
+forever, because at this time the host doesn't respond to the
+CREATE_INTERRUPT request. This issue also happens to old kernels like
+v4.14, v4.13, etc.
 
-Please let me know, thanks.
+Fix this by polling the channel for the PCI_EJECT message and
+hpdev->state, and by checking the PCI vendor ID.
 
-Lorenzo
+Note: actually the above issues also happen to a SMP VM, if
+"hbus->hdev->channel->target_cpu =3D=3D smp_processor_id()" is true.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
+Tested-by: Chris Valean <v-chvale@microsoft.com>
+Cc: stable@vger.kernel.org
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Jack Morgenstein <jackm@mellanox.com>
+---
+ drivers/pci/host/pci-hyperv.c | 58 +++++++++++++++++++++++++++++++++++++++=
++++-
+ 1 file changed, 57 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 265ba11e53e2..50cdefe3f6d3 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -521,6 +521,8 @@ struct hv_pci_compl {
+ 	s32 completion_status;
+ };
+=20
++static void hv_pci_onchannelcallback(void *context);
++
+ /**
+  * hv_pci_generic_compl() - Invoked for a completion packet
+  * @context:		Set up by the sender of the packet.
+@@ -665,6 +667,31 @@ static void _hv_pcifront_read_config(struct hv_pci_dev=
+ *hpdev, int where,
+ 	}
+ }
+=20
++static u16 hv_pcifront_get_vendor_id(struct hv_pci_dev *hpdev)
++{
++	u16 ret;
++	unsigned long flags;
++	void __iomem *addr =3D hpdev->hbus->cfg_addr + CFG_PAGE_OFFSET +
++			     PCI_VENDOR_ID;
++
++	spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
++
++	/* Choose the function to be read. (See comment above) */
++	writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
++	/* Make sure the function was chosen before we start reading. */
++	mb();
++	/* Read from that function's config space. */
++	ret =3D readw(addr);
++	/*
++	 * mb() is not required here, because the spin_unlock_irqrestore()
++	 * is a barrier.
++	 */
++
++	spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
++
++	return ret;
++}
++
+ /**
+  * _hv_pcifront_write_config() - Internal PCI config write
+  * @hpdev:	The PCI driver's representation of the device
+@@ -1107,8 +1134,37 @@ static void hv_compose_msi_msg(struct irq_data *data=
+, struct msi_msg *msg)
+ 	 * Since this function is called with IRQ locks held, can't
+ 	 * do normal wait for completion; instead poll.
+ 	 */
+-	while (!try_wait_for_completion(&comp.comp_pkt.host_event))
++	while (!try_wait_for_completion(&comp.comp_pkt.host_event)) {
++		/* 0xFFFF means an invalid PCI VENDOR ID. */
++		if (hv_pcifront_get_vendor_id(hpdev) =3D=3D 0xFFFF) {
++			dev_err_once(&hbus->hdev->device,
++				     "the device has gone\n");
++			goto free_int_desc;
++		}
++
++		/*
++		 * When the higher level interrupt code calls us with
++		 * interrupt disabled, we must poll the channel by calling
++		 * the channel callback directly when channel->target_cpu is
++		 * the current CPU. When the higher level interrupt code
++		 * calls us with interrupt enabled, let's add the
++		 * local_bh_disable()/enable() to avoid race.
++		 */
++		local_bh_disable();
++
++		if (hbus->hdev->channel->target_cpu =3D=3D smp_processor_id())
++			hv_pci_onchannelcallback(hbus);
++
++		local_bh_enable();
++
++		if (hpdev->state =3D=3D hv_pcichild_ejecting) {
++			dev_err_once(&hbus->hdev->device,
++				     "the device is being ejected\n");
++			goto free_int_desc;
++		}
++
+ 		udelay(100);
++	}
+=20
+ 	if (comp.comp_pkt.completion_status < 0) {
+ 		dev_err(&hbus->hdev->device,
+--=20
+2.7.4
