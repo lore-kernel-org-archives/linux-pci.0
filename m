@@ -1,72 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 27 Mar 2018 14:50:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v3 0/6] PCI: aardvark: misc fixes and improvements
-Message-ID: <20180327195054.GE7759@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
- <20180327140819.23501-8-thomas.petazzoni@bootlin.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sg2apc01on0120.outbound.protection.outlook.com ([104.47.125.120]:45036
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753837AbeCFSV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 13:21:58 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: [PATCH v3 2/6] PCI: hv: hv_eject_device_work(): remove the bogus test
+Date: Tue, 6 Mar 2018 18:21:49 +0000
+Message-ID: <20180306182128.23281-3-decui@microsoft.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-1-decui@microsoft.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20180327140819.23501-8-thomas.petazzoni@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo, who is now maintaining drivers/pci/host/]
+When we're in the function, hpdev->state must be hv_pcichild_ejecting:
+see hv_pci_eject_device().
 
-On Tue, Mar 27, 2018 at 04:08:13PM +0200, Thomas Petazzoni wrote:
-> Hello Bjorn,
-> 
-> This patch series brings a number of improvements to the aardvark
-> PCIe. Sorry for being so slow at sending the v3 after the v2 sent in
-> January. Hopefully this time around the series will be fine.
-> 
-> Changes since v2:
-> 
->  - Rebased on v4.16-rc7
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Jack Morgenstein <jackm@mellanox.com>
+Cc: stable@vger.kernel.org
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-No need to rebase to anything other than "master" unless your series
-depends on something already merged.
-
-> Evan Wang (2):
->   PCI: aardvark: fix PCIe max read request size setting
->   PCI: aardvark: remove PCIe outbound window configuration
-> 
-> Thomas Petazzoni (1):
->   PCI: aardvark: introduce an advk_pcie_valid_device() helper
-> 
-> Victor Gu (3):
->   PCI: aardvark: fix logic in advk_pcie_valid_device()
->   PCI: aardvark: set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
->   PCI: aardvark: use isr1 instead of isr0 interrupt in legacy irq mode
-
-Please capitalize the first word of every title, e.g.,
-
-  PCI: aardvark: Remove PCIe outbound window configuration
-
-and proper nouns, e.g., things directly defined by the spec, as "Max
-Read Request Size", as a hint that this has specific meaning and can
-be looked up:
-
-  PCI: aardvark: Fix PCIe Max Read Request Size setting
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 1233300f41c6..04edb24c92ee 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -1796,10 +1796,7 @@ static void hv_eject_device_work(struct work_struct =
+*work)
+=20
+ 	hpdev =3D container_of(work, struct hv_pci_dev, wrk);
+=20
+-	if (hpdev->state !=3D hv_pcichild_ejecting) {
+-		put_pcichild(hpdev, hv_pcidev_ref_pnp);
+-		return;
+-	}
++	WARN_ON(hpdev->state !=3D hv_pcichild_ejecting);
+=20
+ 	/*
+ 	 * Ejection can come before or after the PCI bus has been set up, so
+--=20
+2.7.4
