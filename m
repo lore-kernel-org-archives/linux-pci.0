@@ -1,52 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50120 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753535AbeCFOCb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 09:02:31 -0500
-Subject: Re: [PATCH v12 3/6] PCI/PORTDRV: Implement generic find service
-To: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>
-References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
- <1519837457-3596-4-git-send-email-poza@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <ac53deae-8fad-b896-805f-36343253a34b@codeaurora.org>
-Date: Tue, 6 Mar 2018 09:02:26 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42052 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752931AbeCFRhQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 12:37:16 -0500
+Date: Tue, 6 Mar 2018 17:37:11 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Biju Das <biju.das@bp.renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Simon Horman <horms@verge.net.au>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Chris Paterson <chris.paterson2@renesas.com>,
+        Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v2] dt-bindings: PCI: rcar: Add device tree support for
+ r8a7743
+Message-ID: <20180306173711.GB1605@e107981-ln.cambridge.arm.com>
+References: <1510653543-53770-1-git-send-email-biju.das@bp.renesas.com>
 MIME-Version: 1.0
-In-Reply-To: <1519837457-3596-4-git-send-email-poza@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1510653543-53770-1-git-send-email-biju.das@bp.renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/28/2018 12:04 PM, Oza Pawandeep wrote:
-> +struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
-> +							u32 service)
-> +{
-> +	struct pcie_port_service_driver *drv = NULL;
+On Tue, Nov 14, 2017 at 09:59:03AM +0000, Biju Das wrote:
+> Add support for r8a7743. The Renesas RZ/G1M(R8A7743)PCIe controller
+> is identical to the R-Car Gen2 family.
+> 
+> No driver change is needed due to the fallback compatible value
+> "renesas,pcie-rcar-gen2".
+> Adding the SoC-specific compatible values here has three purposes:
+> 1. Document which SoCs have this hardware module,
+> 2. Allow checkpatch to validate compatible values.
+> 3. Allow the driver to support SoC specific implementations in future
+>    as necessary.
+> 
+> Signed-off-by: Biju Das <biju.das@bp.renesas.com>
+> Reviewed-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+> v1-->v2
+>    Corrected RZ-G1 to RZ/G1.
+> 
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 
-Remove initialization
+Applied to pci/rcar for v4.17, apologies for the delay.
 
-> +	struct portdrv_service_data pdrvs;
-> +
-> +	pdrvs.service = service;
+Thanks,
+Lorenzo
 
-initialize pdrvs.drv = NULL here.
-
-> +	device_for_each_child(&dev->dev, &pdrvs, find_service_iter);
-> +
-> +	drv = pdrvs.drv;
-> +	return drv;
-> +}
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> index 76ba3a6..1fb614e 100644
+> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -1,13 +1,15 @@
+>  * Renesas R-Car PCIe interface
+>  
+>  Required properties:
+> -compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+> +compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
+> +	    "renesas,pcie-r8a7779" for the R8A7779 SoC;
+>  	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
+>  	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
+>  	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
+>  	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
+>  	    "renesas,pcie-r8a7796" for the R8A7796 SoC;
+> -	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
+> +	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
+> +				     RZ/G1 compatible device.
+>  	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
+>  
+>  	    When compatible with the generic version, nodes must list the
+> -- 
+> 1.9.1
+> 
