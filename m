@@ -1,44 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47750 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753710AbeC1PMZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 11:12:25 -0400
+Received: from mail-hk2apc01on0139.outbound.protection.outlook.com ([104.47.124.139]:63328
+        "EHLO APC01-HK2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752910AbeCFSVy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 13:21:54 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: [PATCH v3 1/6] PCI: hv: fix a comment typo in
+ _hv_pcifront_read_config()
+Date: Tue, 6 Mar 2018 18:21:47 +0000
+Message-ID: <20180306182128.23281-2-decui@microsoft.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-1-decui@microsoft.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 28 Mar 2018 20:42:24 +0530
-From: poza@codeaurora.org
-To: "Bjorn Helgaas <bhelgaas@google.com> Keith Busch"
-        <keith.busch@intel.com>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Wei Zhang <wzhang@fb.com>, Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v2] PCI/DPC: Fix PCI legacy interrupt acknowledgement
-In-Reply-To: <20180314205614.GA30695@localhost.localdomain>
-References: <1521042648-20522-1-git-send-email-poza@codeaurora.org>
- <20180314205230.GF29867@localhost.localdomain>
- <20180314205614.GA30695@localhost.localdomain>
-Message-ID: <2c8f07a740aa82aba575574dad3d4566@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-03-15 02:26, Keith Busch wrote:
-> On Wed, Mar 14, 2018 at 02:52:30PM -0600, Keith Busch wrote:
->> 
->> Reviewed-by: Keith Busch <keith
-> 
-> Whoops, I accidentally truncated my message. My correct tag:
-> 
-> Reviewed-by: Keith Busch <keith.busch@intel.com>
+No functional change.
 
-Hi Bjorn,
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Fixes: bdd74440d9e8 ("PCI: hv: Add explicit barriers to config space access=
+")
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: stable@vger.kernel.org
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Can this be merged ?
-
-Regards,
-Oza.
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 2faf38eab785..1233300f41c6 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -653,7 +653,7 @@ static void _hv_pcifront_read_config(struct hv_pci_dev =
+*hpdev, int where,
+ 			break;
+ 		}
+ 		/*
+-		 * Make sure the write was done before we release the spinlock
++		 * Make sure the read was done before we release the spinlock
+ 		 * allowing consecutive reads/writes.
+ 		 */
+ 		mb();
+--=20
+2.7.4
