@@ -1,58 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:6156 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753431AbeCFKsb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Mar 2018 05:48:31 -0500
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
-        <olof@lixom.net>, <dann.frazier@canonical.com>,
-        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
-        <andriy.shevchenko@linux.intel.com>
-CC: <joe@perches.com>, <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <minyard@acm.org>, <devicetree@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
-        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
-        <frowand.list@gmail.com>, <agraf@suse.de>
-Subject: [PATCH v16 2/9] PCI: Remove unused __weak attribute in pci_register_io_range()
-Date: Tue, 6 Mar 2018 18:47:41 +0800
-Message-ID: <1520333268-82754-3-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
-References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:58661 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750838AbeCFOYd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 09:24:33 -0500
+Message-ID: <1520346258.4095.21.camel@pengutronix.de>
+Subject: Re: [PATCH v10 1/3] PCI: dwc: Move MSI IRQs allocation to IRQ
+ domains hierarchical API
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, niklas.cassel@axis.com, shawn.guo@linaro.org,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com, nsekhar@ti.com
+Date: Tue, 06 Mar 2018 15:24:18 +0100
+In-Reply-To: <5feaf8a1308325a3d07f4380413061a63e156ec2.1520336185.git.gustavo.pimentel@synopsys.com>
+References: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
+         <5feaf8a1308325a3d07f4380413061a63e156ec2.1520336185.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Am Dienstag, den 06.03.2018, 11:54 +0000 schrieb Gustavo Pimentel:
+> Implement a multiplexed IRQ domain hierarchy API in the pcie-designware
+> host bridge driver that funnels all MSI IRQs into a single parent
+> interrupt, moving away from the obsolete struct msi_controller based
+> API.
+> 
+> Although the old implementation API is still available, pcie-designware
+> will now use the multiplexed IRQ domains hierarchical API.
+> 
+> Remove all existing dwc based host bridges MSI IRQs handlers, in that the
+> hierarchical API now handles MSI IRQs through the hierarchical/chained
+> MSI domain implementation.
+> 
+> > Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> > Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+> > Tested-by: Shawn Guo <shawn.guo@linaro.org>
+> > Acked-by: Jingoo Han <jingoohan1@gmail.com>
+> > Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+[...]
+> +static int dw_pcie_irq_domain_alloc(struct irq_domain *domain,
+> > +				    unsigned int virq, unsigned int nr_irqs,
+> > +				    void *args)
+> +{
+> > +	struct pcie_port *pp = domain->host_data;
+> > +	unsigned long flags;
+> > +	unsigned long bit;
+> > +	u32 i;
+> +
+> > +	raw_spin_lock_irqsave(&pp->lock, flags);
+> +
+> > +	bit = bitmap_find_free_region(pp->msi_irq_in_use, pp->num_vectors,
+> > +				      order_base_2(nr_irqs));
+> +
+> > +	raw_spin_unlock_irqrestore(&pp->lock, flags);
+> +
+> > +	if (bit < 0)
+> +		return -ENOSPC;
 
-Currently pci_register_io_range() has only one definition;
-therefore there is no use of the __weak attribute.
+bit is an unsigned variable here, so this condition will never be true.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Tested-by: dann frazier <dann.frazier@canonical.com>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> +
+> > +	for (i = 0; i < nr_irqs; i++)
+> > +		irq_domain_set_info(domain, virq + i, bit + i,
+> > +				    &dw_pci_msi_bottom_irq_chip,
+> > +				    pp, handle_edge_irq,
+> > +				    NULL, NULL);
+> +
+> > +	return 0;
+> +}
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ae654e2..ff41a64 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3451,7 +3451,7 @@ struct io_range {
-  * Record the PCI IO range (expressed as CPU physical address + size).
-  * Return a negative value if an error has occured, zero otherwise
-  */
--int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+int pci_register_io_range(phys_addr_t addr, resource_size_t size)
- {
- 	int err = 0;
- 
--- 
-1.9.1
+Regards,
+Lucas
