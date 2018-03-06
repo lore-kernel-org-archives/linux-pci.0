@@ -1,87 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:37022 "EHLO mga14.intel.com"
+Received: from ale.deltatee.com ([207.54.116.67]:37326 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751322AbeC3Q3K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 12:29:10 -0400
-From: "Keller, Jacob E" <jacob.e.keller@intel.com>
-To: Tal Gilboa <talgi@mellanox.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>
-Subject: RE: [PATCH next V4 0/8] Report PCI device link status
-Date: Fri, 30 Mar 2018 16:29:08 +0000
-Message-ID: <02874ECE860811409154E81DA85FBB5882D44EAF@ORSMSX115.amr.corp.intel.com>
-References: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
-Content-Type: text/plain; charset="us-ascii"
+        id S1753039AbeCFBOP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Mar 2018 20:14:15 -0500
+To: Oliver <oohall@gmail.com>
+Cc: Keith Busch <keith.busch@intel.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20180228234006.21093-1-logang@deltatee.com>
+ <20180228234006.21093-8-logang@deltatee.com>
+ <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
+ <20180305160004.GA30975@localhost.localdomain>
+ <3f56c76d-6a5c-7c2f-5442-c9209749b598@deltatee.com>
+ <CAOSf1CHvaz0QTCkptQwsdyPp6uvvHqtM51N0MfrO9RqYf9W0tg@mail.gmail.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <416d8d27-200f-befb-1c30-14544fffcba0@deltatee.com>
+Date: Mon, 5 Mar 2018 18:14:02 -0700
 MIME-Version: 1.0
+In-Reply-To: <CAOSf1CHvaz0QTCkptQwsdyPp6uvvHqtM51N0MfrO9RqYf9W0tg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the
+ CMB
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-> -----Original Message-----
-> From: Tal Gilboa [mailto:talgi@mellanox.com]
-> Sent: Friday, March 30, 2018 12:15 AM
-> To: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Linux PCI <linux-pci@vger.kernel.org>; Tariq Toukan <tariqt@mellanox.com>;
-> Saeed Mahameed <saeedm@mellanox.com>; Keller, Jacob E
-> <jacob.e.keller@intel.com>; Tal Gilboa <talgi@mellanox.com>
-> Subject: [PATCH next V4 0/8] Report PCI device link status
+On 05/03/18 05:49 PM, Oliver wrote:
+> It's in arch/powerpc/kernel/io.c as _memcpy_toio() and it has two full barriers!
 > 
-> These patches introduce the ability to report PCI link width
-> and speed for all PCI devices in kernel log.
-> This would reduce code duplication between drivers and unify
-> the approach for reporting PCI link status.
-> Implemented and tested for Mellanox devices.
+> Awesome!
 > 
-> v4: Reverted most of v2, meaning re-introduced bandwidth limitation calculation.
-> Limiting device is now returned from the available PCIe bandwidth calculation
-> function and is logged in kernel log (suggested by Bjorn Helgaas and Jacob E.
-> Keller).
-> 
-> Applied PCIe encoding overhead to PCIe bandwidth calculation
-> (available/capable).
-> this way upper bandwidth limit of the device is more accurate.
-> 
+> Our io.h indicates that our iomem accessors are designed to provide x86ish
+> strong ordering of accesses to MMIO space. The git log indicates
+> arch/powerpc/kernel/io.c has barely been touched in the last decade so
+> odds are most of that code was written in the elder days when people
+> were less aware of ordering issues. It might just be overly conservative
+> by today's standards, but maybe not (see below).
 
-I didn't find any objections to the series. We can probably remove the old function in the future once no one uses it anymore.
+Yes, that seems overly conservative.
 
-Acked-by: Jacob Keller <jacob.e.keller@intel.com>
+> (I'm not going to suggest ditching the lwsync trick. mpe is not going
+> to take that patch
+> without a really good reason)
 
-> v3: Add Reviewed-by: Tariq Toukan to all commits.
-> 
-> v2: Remove chain BW calculation. This might be a nice feature, but
-> without the ability to know the exact limiting part, it is more
-> confusing than useful.
-> Remove warnings for failed PCI query actions, leaving only the status
-> and gaps from max capabilities report.
-> Use pci_warn()/pci_info() instead of dev_warn()/dev_info().
-> (suggested by Bjorn Helgaas).
-> 
-> v1: Split to multiple patches, calculate BW limitation and remove
-> MACRO definition for LNKCAP shift (suggested by Bjorn Helgaas).
-> Multiple fixes - conventions, typos, function naming and functional
-> (suggested by Tariq Toukan).
-> 
-> Tal Gilboa (8):
->   PCI: Add a query function for PCI device's speed cap
->   PCI: Add a query function for PCI device's width cap
->   PCI: Add device link bandwidth capabilities calculation
->   PCI: Calculate available bandwidth for PCI devices
->   PCI: Print PCI device link status in kernel log
->   net/mlx4_core: Report PCI properties using dedicated function
->   net/mlx5: Report device PCI link status and issues
->   net/mlx5e: Use generic PCI function for bandwidth calculation
-> 
->  drivers/net/ethernet/mellanox/mlx4/main.c         |  81 +----------
->  drivers/net/ethernet/mellanox/mlx5/core/en_main.c |  17 +--
->  drivers/net/ethernet/mellanox/mlx5/core/main.c    |   4 +
->  drivers/pci/pci-sysfs.c                           |  28 ++--
->  drivers/pci/pci.c                                 | 161 +++++++++++++++++++++-
->  include/linux/pci.h                               |  24 ++++
->  6 files changed, 194 insertions(+), 121 deletions(-)
-> 
-> --
-> 1.8.3.1
+Well, that's pretty gross. Is this not exactly the situation mmiowb() is 
+meant to solve? See [1].
+
+Though, you're right in principle. Even if power was similar to other 
+systems in this way, it's still a risk that if these pages get passed 
+somewhere in the kernel that uses a spin lock like that without an 
+mmiowb() call, then it's going to have a bug. For now, the risk is 
+pretty low as we know exactly where all the p2pmem pages will be used 
+but if it gets into other places, all bets are off. I did do some work 
+trying to make a safe version of io-pages and also trying to change from 
+pages to pfn_t in large areas but neither approach seemed likely to get 
+any traction in the community, at least not in the near term.
+
+Logan
+
+[1] ACQUIRES VS I/O ACCESSES in 
+https://www.kernel.org/doc/Documentation/memory-barriers.txt
