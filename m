@@ -1,104 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v3 2/2] firmware: dmi_scan: Uninline dmi_get_bios_year() helper
-Date: Tue, 20 Mar 2018 17:54:23 +0100
-Message-ID: <1916644.cMBn6jUilV@aspire.rjw.lan>
-In-Reply-To: <20180320135410.11627-3-andriy.shevchenko@linux.intel.com>
-References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com> <20180320135410.11627-3-andriy.shevchenko@linux.intel.com>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0093.outbound.protection.outlook.com ([104.47.32.93]:49765
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753901AbeCFSah (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Mar 2018 13:30:37 -0500
+From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH v3 3/6] PCI: hv: serialize the present/eject work items
+Date: Tue, 6 Mar 2018 18:30:33 +0000
+Message-ID: <DM5PR2101MB1030ADC2C68C322A91706011DCD90@DM5PR2101MB1030.namprd21.prod.outlook.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+ <20180306182128.23281-4-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-4-decui@microsoft.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, March 20, 2018 2:54:10 PM CET Andy Shevchenko wrote:
-> Uninline dmi_get_bios_year() which, in particular, allows us
-> to optimize it in the future.
-> 
-> While doing this, convert the function to return an error code
-> when BIOS date is not present, parsable or CONFIG_DMI=n.
-> 
-> Additionally, during the move, add a bit of documentation.
-> 
-> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-> Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Tuesday, March 6, 2018 10:22 AM
+> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan <kys@mi=
+crosoft.com>;
+> Stephen Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de; apw@canonical=
+.com;
+> jasowang@redhat.com
+> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;=
+ Haiyang Zhang
+> <haiyangz@microsoft.com>; vkuznets@redhat.com; marcelo.cerri@canonical.co=
+m; Michael
+> Kelley (EOSG) <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microso=
+ft.com>; Jack
+> Morgenstein <jackm@mellanox.com>; stable@vger.kernel.org
+> Subject: [PATCH v3 3/6] PCI: hv: serialize the present/eject work items
+>=20
+> When we hot-remove the device, we first receive a PCI_EJECT message and
+> then receive a PCI_BUS_RELATIONS message with bus_rel->device_count =3D=
+=3D 0.
+>=20
+> The first message is offloaded to hv_eject_device_work(), and the second
+> is offloaded to pci_devices_present_work(). Both the paths can be running
+> list_del(&hpdev->list_entry), causing general protection fault, because
+> system_wq can run them concurrently.
+>=20
+> The patch eliminates the race condition.
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
+> Tested-by: Chris Valean <v-chvale@microsoft.com>
+> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Cc: Jack Morgenstein <jackm@mellanox.com>
+> Cc: stable@vger.kernel.org
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
 > ---
->  drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
->  include/linux/dmi.h         | 11 ++---------
->  2 files changed, 22 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
-> index ae4f1b181c23..bfb6ce6abc83 100644
-> --- a/drivers/firmware/dmi_scan.c
-> +++ b/drivers/firmware/dmi_scan.c
-> @@ -1040,6 +1040,26 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
->  }
->  EXPORT_SYMBOL(dmi_get_date);
->  
-> +/**
-> + *	dmi_get_bios_year - get a year out of DMI_BIOS_DATE field
-> + *
-> + *	Returns year on success, -ENXIO if DMI is not selected,
-> + *	or a different negative error code if DMI field is not present
-> + *	or not parsable.
-> + */
-> +int dmi_get_bios_year(void)
-> +{
-> +	bool exists;
-> +	int year;
-> +
-> +	exists = dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
-> +	if (!exists)
-> +		return -ENODATA;
-> +
-> +	return year ? year : -ERANGE;
-> +}
-> +EXPORT_SYMBOL(dmi_get_bios_year);
-> +
->  /**
->   *	dmi_walk - Walk the DMI table and get called back for every record
->   *	@decode: Callback function
-> diff --git a/include/linux/dmi.h b/include/linux/dmi.h
-> index b5b8c26b04fb..c46fdb36700b 100644
-> --- a/include/linux/dmi.h
-> +++ b/include/linux/dmi.h
-> @@ -106,6 +106,7 @@ extern void dmi_scan_machine(void);
->  extern void dmi_memdev_walk(void);
->  extern void dmi_set_dump_stack_arch_desc(void);
->  extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
-> +extern int dmi_get_bios_year(void);
->  extern int dmi_name_in_vendors(const char *str);
->  extern int dmi_name_in_serial(const char *str);
->  extern int dmi_available;
-> @@ -134,6 +135,7 @@ static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
->  		*dayp = 0;
->  	return false;
->  }
-> +static inline int dmi_get_bios_year(void) { return -ENXIO; }
->  static inline int dmi_name_in_vendors(const char *s) { return 0; }
->  static inline int dmi_name_in_serial(const char *s) { return 0; }
->  #define dmi_available 0
-> @@ -149,13 +151,4 @@ static inline const struct dmi_system_id *
->  
->  #endif
->  
-> -static inline int dmi_get_bios_year(void)
-> -{
-> -	int year;
-> -
-> -	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
-> -
-> -	return year;
-> -}
-> -
->  #endif	/* __DMI_H__ */
-> 
+>  drivers/pci/host/pci-hyperv.c | 17 ++++++++++++++---
+>  1 file changed, 14 insertions(+), 3 deletions(-)
+>=20
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
