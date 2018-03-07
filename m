@@ -1,57 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:6152 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753385AbeCFKsd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Mar 2018 05:48:33 -0500
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
-        <olof@lixom.net>, <dann.frazier@canonical.com>,
-        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
-        <andriy.shevchenko@linux.intel.com>
-CC: <joe@perches.com>, <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <minyard@acm.org>, <devicetree@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
-        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
-        <frowand.list@gmail.com>, <agraf@suse.de>
-Subject: [PATCH v16 9/9] MAINTAINERS: Add maintainer for HiSilicon LPC driver
-Date: Tue, 6 Mar 2018 18:47:48 +0800
-Message-ID: <1520333268-82754-10-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
-References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180307064612.GA10926@infradead.org>
+References: <20180306192423.3153.42741.stgit@localhost.localdomain> <20180307064612.GA10926@infradead.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Wed, 7 Mar 2018 11:05:58 -0800
+Message-ID: <CAKgT0UdRFxGUPu4jY0xrUuv8Um62ndPnknhHXuF4Abu6D7GEqg@mail.gmail.com>
+Subject: Re: [pci PATCH v3 0/3] Add support for unmanaged SR-IOV
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added maintainer for drivers/bus/hisi_lpc.c
+On Tue, Mar 6, 2018 at 10:46 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Mar 06, 2018 at 11:29:08AM -0800, Alexander Duyck wrote:
+>> This series is meant to add support for SR-IOV on devices when the VFs are
+>> not managed by the kernel. Examples of recent patches attempting to do this
+>> include:
+>> virto - https://patchwork.kernel.org/patch/10241225/
+>> pci-stub - https://patchwork.kernel.org/patch/10109935/
+>> vfio - https://patchwork.kernel.org/patch/10103353/
+>> uio - https://patchwork.kernel.org/patch/9974031/
+>
+> nvme and ema seems to be existing examples.  Care to throw in
+> conversions while you're at it?
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+Yeah, I can do that. I assume you meant "ena" not "ema".
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c187bc8..cd4f9dc 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6403,6 +6403,13 @@ W:	http://www.hisilicon.com
- S:	Maintained
- F:	drivers/net/ethernet/hisilicon/hns3/
- 
-+HISILICON LPC BUS DRIVER
-+M:	john.garry@huawei.com
-+W:	http://www.hisilicon.com
-+S:	Maintained
-+F:	drivers/bus/hisi_lpc.c
-+F:	Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
-+
- HISILICON NETWORK SUBSYSTEM DRIVER
- M:	Yisen Zhuang <yisen.zhuang@huawei.com>
- M:	Salil Mehta <salil.mehta@huawei.com>
--- 
-1.9.1
+I'm probably looking at doing a v4 that will drop the vfio userspace
+driver bits for now as it sounds like there are additional issues that
+still need to be addressed.
+
+Thanks.
+
+- Alex
