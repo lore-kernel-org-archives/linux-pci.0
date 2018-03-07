@@ -1,72 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:38873 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754996AbeCSNsa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 09:48:30 -0400
-Subject: Re: [PATCH 1/2] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-To: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Simon Horman <horms@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20180318105253.30532-1-marek.vasut+renesas@gmail.com>
- <20180319083839.h3qdt4obbsbqlx73@verge.net.au>
- <b7dad289-c9de-ae19-a0d2-3eb127e0955a@gmail.com>
- <CAMuHMdVjU=1ndTK1jTU90Vw2sgPsTRRsH56vvY6nuuoDWUo-Aw@mail.gmail.com>
- <618f1841-f8b9-7fdb-5887-01a080a231db@gmail.com>
- <ebef6e5d-03ac-e1a7-ab9b-11ddfee72355@mentor.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <05d70e5e-4751-9dc7-3b88-f4b6f4c70e82@gmail.com>
-Date: Mon, 19 Mar 2018 14:48:27 +0100
-MIME-Version: 1.0
-In-Reply-To: <ebef6e5d-03ac-e1a7-ab9b-11ddfee72355@mentor.com>
-Content-Type: text/plain; charset=utf-8
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:37804 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754360AbeCGK6L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 05:58:11 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: Joao.Pinto@synopsys.com, bhelgaas@google.com, jg1.han@samsung.com,
+        lorenzo.pieralisi@arm.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 4/4] PCI: dwc: Replace division by 2 to right shift
+Date: Wed,  7 Mar 2018 10:58:00 +0000
+Message-Id: <50e8cd3d18d9cf1ec98f807ba3b01c6cda1a2acb.1520419084.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+References: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+References: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/19/2018 02:43 PM, Vladimir Zapolskiy wrote:
-> On 03/19/2018 12:56 PM, Marek Vasut wrote:
->> On 03/19/2018 11:53 AM, Geert Uytterhoeven wrote:
->>> Hi Marek,
->>>
->>> On Mon, Mar 19, 2018 at 10:53 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
->>>> On 03/19/2018 09:38 AM, Simon Horman wrote:
->>>>> On Sun, Mar 18, 2018 at 11:52:52AM +0100, Marek Vasut wrote:
->>>>>> The data link active signal usually takes ~20 uSec to be asserted,
->>>>>> poll the bit more often to avoid useless delays in this function.
->>>>>>
->>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>>>>> Cc: linux-renesas-soc@vger.kernel.org
->>>>>
->>>>> Unless my eyes deceive me this seems to be quite a lot (100x) more often,
->>>>> but so be it.
->>>>
->>>> It's just a higher frequency to avoid slowdown when bringing the link up.
->>>
->>> No it isn't: you replaced a sleep by a delay, thus making it blocking.
->>
->> For much shorter period of time.
->>
->>> So this can spin for up to 50 ms (+ overhead)?
->>
->> That's what it did before too , it used msleep and now it uses udelay.
->>
-> 
-> msleep() does not spin, it reschedules the process.
-> 
-> Instead to find a balance you may want to play with usleep_range().
+rotation of 1 bit
 
-Which does not work in atomic context, which will be needed when using
-this function in suspend/resume later on.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 7535918..ff43b0f 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -337,8 +337,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+-		pp->cfg0_size = resource_size(cfg_res) / 2;
+-		pp->cfg1_size = resource_size(cfg_res) / 2;
++		pp->cfg0_size = resource_size(cfg_res) >> 1;
++		pp->cfg1_size = resource_size(cfg_res) >> 1;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+@@ -382,8 +382,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			break;
+ 		case 0:
+ 			pp->cfg = win->res;
+-			pp->cfg0_size = resource_size(pp->cfg) / 2;
+-			pp->cfg1_size = resource_size(pp->cfg) / 2;
++			pp->cfg0_size = resource_size(pp->cfg) >> 1;
++			pp->cfg1_size = resource_size(pp->cfg) >> 1;
+ 			pp->cfg0_base = pp->cfg->start;
+ 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+ 			break;
 -- 
-Best regards,
-Marek Vasut
+2.7.4
