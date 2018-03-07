@@ -1,161 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:39880 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753487AbeCFPMY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Mar 2018 10:12:24 -0500
-Date: Tue, 6 Mar 2018 15:12:47 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Vignesh R <vigneshr@ti.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/3] PCI: dwc: pci-dra7xx: Improve MSI IRQ handling
-Message-ID: <20180306151247.GA7378@red-moon>
-References: <20180209120415.17590-1-vigneshr@ti.com>
- <20180209120415.17590-3-vigneshr@ti.com>
- <20180212175801.GA29070@e107981-ln.cambridge.arm.com>
- <7cfa73af-09fa-d298-aaab-3e74ee7e1dd5@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <7cfa73af-09fa-d298-aaab-3e74ee7e1dd5@ti.com>
+Received: from thoth.sbs.de ([192.35.17.2]:49540 "EHLO thoth.sbs.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751141AbeCGHjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 02:39:39 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH v5 6/7] x86/jailhouse: Allow to use PCI_MMCONFIG without ACPI
+Date: Wed,  7 Mar 2018 08:39:17 +0100
+Message-Id: <788bbd5325d1922235e9562c213057425fbc548c.1520408357.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
+References: <cover.1520408357.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
+References: <cover.1520408357.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 15, 2018 at 09:59:21AM +0530, Vignesh R wrote:
-> Hi,
-> 
-> On Monday 12 February 2018 11:28 PM, Lorenzo Pieralisi wrote:
-> > On Fri, Feb 09, 2018 at 05:34:14PM +0530, Vignesh R wrote:
-> >> We need to ensure that there are no pending MSI IRQ vector set (i.e
-> >> PCIE_MSI_INTR0_STATUS reads 0 at least once) before exiting
-> >> dra7xx_pcie_msi_irq_handler(). Else, the dra7xx PCIe wrapper will not
-> >> register new MSI IRQs even though PCIE_MSI_INTR0_STATUS shows IRQs are
-> >> pending. Therefore, keep calling dra7xx_pcie_msi_irq_handler() until it
-> >> returns IRQ_NONE, which suggests that PCIE_MSI_INTR0_STATUS is 0.
-> >> 
-> >> This fixes a bug, where PCIe wifi cards with 4 DMA queues like Intel
-> >> 8260 used to throw following error and stall during ping/iperf3 tests.
-> >> 
-> >> [   97.776310] iwlwifi 0000:01:00.0: Queue 9 stuck for 2500 ms.
-> >> 
-> >> Signed-off-by: Vignesh R <vigneshr@ti.com>
-> >> ---
-> >>  drivers/pci/dwc/pci-dra7xx.c | 21 ++++++++++++++++++---
-> >>  1 file changed, 18 insertions(+), 3 deletions(-)
-> >> 
-> >> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> >> index ed8558d638e5..3420cbf7b60a 100644
-> >> --- a/drivers/pci/dwc/pci-dra7xx.c
-> >> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> >> @@ -254,14 +254,31 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
-> >>        struct dra7xx_pcie *dra7xx = arg;
-> >>        struct dw_pcie *pci = dra7xx->pci;
-> >>        struct pcie_port *pp = &pci->pp;
-> >> +     int count = 0;
-> >>        unsigned long reg;
-> >>        u32 virq, bit;
-> >>  
-> >>        reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
-> >> +     dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
-> >>  
-> >>        switch (reg) {
-> >>        case MSI:
-> >> -             dw_handle_msi_irq(pp);
-> >> +             /*
-> >> +              * Need to make sure no MSI IRQs are pending before
-> >> +              * exiting handler, else the wrapper will not catch new
-> >> +              * IRQs. So loop around till dw_handle_msi_irq() returns
-> >> +              * IRQ_NONE
-> >> +              */
-> >> +             while (dw_handle_msi_irq(pp) != IRQ_NONE && count < 1000)
-> >> +                     count++;
-> >> +
-> >> +             if (count == 1000) {
-> >> +                     dev_err(pci->dev, "too much work in msi irq\n");
-> >> +                     dra7xx_pcie_writel(dra7xx,
-> >> +                                        PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
-> >> +                                        reg);
-> >> +                     return IRQ_HANDLED;
-> > 
-> > I am not merging any code patching this IRQ handling routine anymore
-> > unless you thoroughly explain to me how this CONF_IRQSTATUS_MSI register
-> > works (and how it is related to DW registers) and why this specific host
-> > controller needs handling that is not required by any other host
-> > controller relying on dw_handle_msi_irq().
-> 
-> Unlike other DW PCIe controllers, TI implementation has a wrapper on top
-> of DW core. This wrapper latches the DW core level MSI and legacy
-> interrupts and then propagates it to GIC.
-> PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI register is present in this TI
-> wrapper which aggregates all the MSI IRQs(PCIE_MSI_INTR0_STATUS) of DW
-> level. They are mapped on the MSI interrupt line of PCIe controller,
-> using a single status bit in the PCIECTRL_TI_CONF_IRQSTATUS_MSI register.
-> 
-> So, the irq handler, dra7xx_pcie_msi_irq_handler(), first needs to look
-> at PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI[4] to know that its MSI IRQ and
-> then call dw_handle_msi_irq() to handle individual MSI vectors.
-> Driver has to make sure there are no pending vectors in DW core MSI
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-How can it make *sure* ? And what makes the wrapper latch MSI IRQs
-again ?
+Jailhouse does not use ACPI, but it does support MMCONFIG. Make sure the
+latter can be built without having to enable ACPI as well. Primarily, we
+need to make the AMD mmconf-fam10h_64 depend upon MMCONFIG and ACPI,
+instead of just the former.
 
-> status register before exiting handler. Otherwise next MSI IRQ will not
-> be latched by the wrapper.
+Saves some bytes in the Jailhouse non-root kernel.
 
-I am sorry but I do not understand how this works - what is the
-condition that makes wrapper latch IRQs again ? This is at least
-racy, if not outright broken.
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ arch/x86/Kconfig          | 6 +++++-
+ arch/x86/kernel/Makefile  | 2 +-
+ arch/x86/kernel/cpu/amd.c | 2 +-
+ 3 files changed, 7 insertions(+), 3 deletions(-)
 
-That count == 1000 is a symptom there is something broken on how this
-driver handles IRQs and I have the impression that we are applying
-plasters on top of plasters to make it less broken than it actually is.
-
-> > I suspect there is a code design flaw with the way this host handles
-> > IRQs and we are going to find it and fix it the way it should, not with
-> > any plaster like this patch.
-> > 
-> 
-> I agree there has been some churn wrt this wrapper level IRQ handler.
-> But, that was because hardware documentation/TRM did not match
-> actual behavior and so it took some time to understand how the
-> hardware is working.
-
-How does HW work :) ? Please explain in detail how this works in HW
-then we will get to the code.
-
-Thanks,
-Lorenzo
-
-> I have extensively tested this series on multiple problematic PCIe USB
-> cards and PCIe WiFi cards over week long stress tests. And also had
-> some agreement with internal hardware designers.  Hardware
-> documentations will also be updated.
-> 
-> 
-> > Lorenzo
-> > 
-> >> +             }
-> >>                break;
-> >>        case INTA:
-> >>        case INTB:
-> >> @@ -275,8 +292,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
-> >>                break;
-> >>        }
-> >>  
-> >> -     dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
-> >> -
-> >>        return IRQ_HANDLED;
-> >>  }
-> >>  
-> >> -- 
-> >> 2.16.1
-> >> 
-> 
-> -- 
-> Regards
-> Vignesh
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 8986a6b6e3df..b53340e71f84 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2643,7 +2643,7 @@ config PCI_DIRECT
+ config PCI_MMCONFIG
+ 	bool "Support mmconfig PCI config space access" if X86_64
+ 	default y
+-	depends on PCI && (ACPI || SFI)
++	depends on PCI && (ACPI || SFI || JAILHOUSE_GUEST)
+ 	depends on X86_64 || (PCI_GOANY || PCI_GOMMCONFIG)
+ 
+ config PCI_OLPC
+@@ -2659,6 +2659,10 @@ config PCI_DOMAINS
+ 	def_bool y
+ 	depends on PCI
+ 
++config MMCONF_FAM10H
++	def_bool y
++	depends on X86_64 && PCI_MMCONFIG && ACPI
++
+ config PCI_CNB20LE_QUIRK
+ 	bool "Read CNB20LE Host Bridge Windows" if EXPERT
+ 	depends on PCI
+diff --git a/arch/x86/kernel/Makefile b/arch/x86/kernel/Makefile
+index 29786c87e864..73ccf80c09a2 100644
+--- a/arch/x86/kernel/Makefile
++++ b/arch/x86/kernel/Makefile
+@@ -146,6 +146,6 @@ ifeq ($(CONFIG_X86_64),y)
+ 	obj-$(CONFIG_GART_IOMMU)	+= amd_gart_64.o aperture_64.o
+ 	obj-$(CONFIG_CALGARY_IOMMU)	+= pci-calgary_64.o tce_64.o
+ 
+-	obj-$(CONFIG_PCI_MMCONFIG)	+= mmconf-fam10h_64.o
++	obj-$(CONFIG_MMCONF_FAM10H)	+= mmconf-fam10h_64.o
+ 	obj-y				+= vsmp_64.o
+ endif
+diff --git a/arch/x86/kernel/cpu/amd.c b/arch/x86/kernel/cpu/amd.c
+index f0e6456ca7d3..12bc0a1139da 100644
+--- a/arch/x86/kernel/cpu/amd.c
++++ b/arch/x86/kernel/cpu/amd.c
+@@ -716,7 +716,7 @@ static void init_amd_k8(struct cpuinfo_x86 *c)
+ 
+ static void init_amd_gh(struct cpuinfo_x86 *c)
+ {
+-#ifdef CONFIG_X86_64
++#ifdef CONFIG_MMCONF_FAM10H
+ 	/* do this for boot cpu */
+ 	if (c == &boot_cpu_data)
+ 		check_enable_amd_mmconf_dmi();
+-- 
+2.13.6
