@@ -1,94 +1,109 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <guohanjun@huawei.com>,
-        <jcm@redhat.com>, <toshi.kani@hpe.com>, <tanxiaojun@huawei.com>,
-        <wangzhou1@hisilicon.com>, Yisheng Xie <xieyisheng1@huawei.com>
-Subject: [PATCH v2 1/2] PCI ACPI: Avoid panic when PCI IO resource's size is not page aligned
-Date: Sat, 31 Mar 2018 15:12:22 +0800
-Message-ID: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 2/9] PCI/PM: Clear PCIe PME Status bit in core,
+ not PCIe port driver
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>
+Date: Wed, 07 Mar 2018 00:13:34 -0600
+Message-ID: <152040321483.240786.16597888035806933750.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
+From: Bjorn Helgaas <bhelgaas@google.com>
 
- [    2.470908] kernel BUG at lib/ioremap.c:72!
- [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
- [    2.480551] Modules linked in:
- [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
- [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
- [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
- [    2.505395] pc : ioremap_page_range+0x268/0x36c
- [    2.509912] lr : pci_remap_iospace+0xe4/0x100
- [...]
- [    2.603733] Call trace:
- [    2.606168]  ioremap_page_range+0x268/0x36c
- [    2.610337]  pci_remap_iospace+0xe4/0x100
- [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
- [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
- [    2.624585]  acpi_pci_root_create+0x98/0x214
- [    2.628843]  pci_acpi_scan_root+0x124/0x20c
- [    2.633013]  acpi_pci_root_add+0x224/0x494
- [    2.637096]  acpi_bus_attach+0xf8/0x200
- [    2.640918]  acpi_bus_attach+0x98/0x200
- [    2.644740]  acpi_bus_attach+0x98/0x200
- [    2.648562]  acpi_bus_scan+0x48/0x9c
- [    2.652125]  acpi_scan_init+0x104/0x268
- [    2.655948]  acpi_init+0x308/0x374
- [    2.659337]  do_one_initcall+0x48/0x14c
- [    2.663160]  kernel_init_freeable+0x19c/0x250
- [    2.667504]  kernel_init+0x10/0x100
- [    2.670979]  ret_from_fork+0x10/0x18
+fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
+resume") added a .resume_noirq() callback to the PCIe port driver to clear
+the PME Status bit during resume to work around a BIOS issue.
 
-The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
-not 64KB aligned, however, ioremap_page_range() request the range as page
-aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
-ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
-until trigger BUG_ON, if its incoming end is not page aligned. More detail
-trace is as following:
+The BIOS evidently enabled PME interrupts for ACPI-based runtime wakeups
+but did not clear the PME Status bit during resume, which meant PMEs after
+resume did not trigger interrupts because PME Status did not transition
+from cleared to set.
 
- ioremap_page_range
- -> ioremap_p4d_range
-    -> ioremap_p4d_range
-       -> ioremap_pud_range
-          -> ioremap_pmd_range
-             -> ioremap_pte_range
+The fix was in the PCIe port driver, so it worked when CONFIG_PCIEPORTBUS
+was set.  But I think we *always* want the fix because the platform may use
+PME interrupts even if Linux is built without the PCIe port driver.
 
-This patch fix the bug by align the size of PCI IO resource to PAGE_SIZE.
+Move the fix from the port driver to the PCI core so we can work around
+this "PME doesn't work after waking from a sleep state" issue regardless of
+CONFIG_PCIEPORTBUS.
 
-Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
-Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
-Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-I mark this as v2 for I have post a RFC version:
+ drivers/pci/pci-driver.c       |   14 ++++++++++++++
+ drivers/pci/pcie/portdrv_pci.c |   15 ---------------
+ 2 files changed, 14 insertions(+), 15 deletions(-)
 
- https://lkml.org/lkml/2018/3/30/8
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3bed6beda051..bf0704b75f79 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -525,6 +525,18 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+ 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+ }
  
-v2:
- * Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
-
-Thanks
-Yisheng
-
- drivers/acpi/pci_root.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 6fc204a..b758ca3 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -746,7 +746,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
- 		goto err;
++static void pcie_resume_early(struct pci_dev *pci_dev)
++{
++	/*
++	 * Some BIOSes forget to clear Root PME Status bits after system wakeup
++	 * which breaks ACPI-based runtime wakeup on PCI Express, so clear those
++	 * bits now just in case (shouldn't hurt).
++	 */
++	if (pci_is_pcie(pci_dev) &&
++	    pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT)
++		pcie_clear_root_pme_status(pci_dev);
++}
++
+ /*
+  * Default "suspend" method for devices that have no driver provided suspend,
+  * or not even a driver at all (second part).
+@@ -873,6 +885,8 @@ static int pci_pm_resume_noirq(struct device *dev)
+ 	if (pci_has_legacy_pm_support(pci_dev))
+ 		return pci_legacy_resume_early(dev);
  
- 	res->start = port;
--	res->end = port + length - 1;
-+	res->end = PAGE_ALIGN(port + length) - 1;
- 	entry->offset = port - pci_addr;
++	pcie_resume_early(pci_dev);
++
+ 	if (drv && drv->pm && drv->pm->resume_noirq)
+ 		error = drv->pm->resume_noirq(dev);
  
- 	if (pci_remap_iospace(res, cpu_addr) < 0)
--- 
-1.7.12.4
-
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 4413dd85e923..f91afd09e356 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -62,20 +62,6 @@ static int pcie_portdrv_restore_config(struct pci_dev *dev)
+ }
+ 
+ #ifdef CONFIG_PM
+-static int pcie_port_resume_noirq(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	/*
+-	 * Some BIOSes forget to clear Root PME Status bits after system wakeup
+-	 * which breaks ACPI-based runtime wakeup on PCI Express, so clear those
+-	 * bits now just in case (shouldn't hurt).
+-	 */
+-	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
+-		pcie_clear_root_pme_status(pdev);
+-	return 0;
+-}
+-
+ static int pcie_port_runtime_suspend(struct device *dev)
+ {
+ 	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
+@@ -103,7 +89,6 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.thaw		= pcie_port_device_resume,
+ 	.poweroff	= pcie_port_device_suspend,
+ 	.restore	= pcie_port_device_resume,
+-	.resume_noirq	= pcie_port_resume_noirq,
+ 	.runtime_suspend = pcie_port_runtime_suspend,
+ 	.runtime_resume	= pcie_port_runtime_resume,
+ 	.runtime_idle	= pcie_port_runtime_idle,
