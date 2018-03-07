@@ -1,117 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53714 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751344AbeCMVpw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 17:45:52 -0400
-Subject: [PATCH] PCI/MSI: Don't set up INTx if MSI or MSI-X is enabled
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Mikael Starvik <starvik@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Tony Luck <tony.luck@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        David Howells <dhowells@redhat.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-cris-kernel@axis.com, linux-kernel@vger.kernel.org,
-        linux-ia64@vger.kernel.org, linux-am33-list@redhat.com
-Date: Tue, 13 Mar 2018 16:45:49 -0500
-Message-ID: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-hk2apc01on0116.outbound.protection.outlook.com ([104.47.124.116]:65315
+        "EHLO APC01-HK2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754553AbeCGVkU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 16:40:20 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Jack Morgenstein <jackm@mellanox.com>
+Subject: RE: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
+Date: Wed, 7 Mar 2018 21:40:03 +0000
+Message-ID: <KL1P15301MB0006B22926A4DC338BFEB78DBFD80@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <20180306182128.23281-1-decui@microsoft.com>
+ <20180306182128.23281-7-decui@microsoft.com>
+ <20180307123441.GD15139@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20180307123441.GD15139@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Sent: Wednesday, March 7, 2018 04:35
+> On Tue, Mar 06, 2018 at 06:21:56PM +0000, Dexuan Cui wrote:
+> > 1. With the patch "x86/vector/msi: Switch to global reservation mode"
+> > (4900be8360), the recent v4.15 and newer kernels always hang for 1-vCPU
+> > Hyper-V VM with SR-IOV. This is because when we reach
+> hv_compose_msi_msg()
+> > by request_irq()  -> request_threaded_irq() -> __setup_irq()->irq_start=
+up()
+> >  -> __irq_startup() -> irq_domain_activate_irq() -> ... ->
+> > msi_domain_activate() -> ... -> hv_compose_msi_msg(), local irq is
+> > disabled in __setup_irq().
+> >
+> > Fix this by polling the channel.
+> >
+> > 2. If the host is ejecting the VF device before we reach
+> > hv_compose_msi_msg(), in a UP VM, we can hang in hv_compose_msi_msg()
+> > forever, because at this time the host doesn't respond to the
+> > CREATE_INTERRUPT request. This issue also happens to old kernels like
+> > v4.14, v4.13, etc.
+>
+> If you are fixing a problem you should report what commit you are fixing
+> with a Fixes: tag and add a CC: stable@vger.kernel.org to the commit log
+> to send it to stable kernels to which it should be applied; mentioning
+> kernel versions in the commit log is useless and should be omitted.
 
-If a device already has MSI or MSI-X enabled, there's no need to set up its
-legacy INTx interrupt.
+Hi Lorenzo,
+Thanks for your comments!
+This patch does have a "Cc: stable@vger.kernel.org" in the sign-off area. :=
+-)
 
-bba6f6fc68e7 ("[PATCH] MSI-X: fix resume crash") changed the cris, frv,
-x86, and ia64 arches to skip INTx setup when MSI is enabled.
+Here the patch is made to resolve 2 issues:
+#1 is triggered by the x86 global reservation mode (4900be8360) patch.
+4900be8360 in itself is good. It's just that drivers/pci/host/pci-hyperv.c
+should be fixed.
 
-16cf0ebc35dd ("x86/PCI: Do not use interrupt links for devices using
-MSI-X") extended that by changing x86 to also skip INTx setup when MSI-X is
-enabled.
+#2 is a longstanding issue since the first day the pci-hyperv driver was
+accepted into the kernel.
 
-Change the remaining arches (cris, frv, and ia64) to skip INTx setup when
-either MSI or MSI-X is enabled.
+So IMO actually we don't really need to add a Fixes: tag, which is usually
+used to specify a specific commit that introduces a bug that is being fixed=
+.
 
-Also update mn10300 (which didn't exist at the time of bba6f6fc68e7) to
-follow the same pattern.
+> Side note: you should not have stable@vger.kernel.org in the email
+> addresses CC list you are sending the patches to (you mark patches for
+> stable by adding an appropriate CC tag in the commit log).
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/cris/arch-v32/drivers/pci/bios.c |    2 +-
- arch/frv/mb93090-mb00/pci-vdk.c       |    2 +-
- arch/ia64/pci/pci.c                   |    4 ++--
- arch/mn10300/unit-asb2305/pci.c       |    8 +++++---
- 4 files changed, 9 insertions(+), 7 deletions(-)
+Sorry, I didn't know this, but actually I didn't add stable@vger.kernel.org
+manually. Instead I used "git send-email" to send this patchset, and it tol=
+d
+me "The Cc list above has been expanded by additional addresses found
+in the patch commit message."
 
-diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-index 6b9e6cfaa29e..c2bed0cc060b 100644
---- a/arch/cris/arch-v32/drivers/pci/bios.c
-+++ b/arch/cris/arch-v32/drivers/pci/bios.c
-@@ -68,7 +68,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	if ((err = pcibios_enable_resources(dev, mask)) < 0)
- 		return err;
- 
--	if (!dev->msi_enabled)
-+	if (!pci_dev_msi_enabled(dev))
- 		pcibios_enable_irq(dev);
- 	return 0;
- }
-diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-index f211839e2cae..4a55d1b82d21 100644
---- a/arch/frv/mb93090-mb00/pci-vdk.c
-+++ b/arch/frv/mb93090-mb00/pci-vdk.c
-@@ -413,7 +413,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 
- 	if ((err = pci_enable_resources(dev, mask)) < 0)
- 		return err;
--	if (!dev->msi_enabled)
-+	if (!pci_dev_msi_enabled(dev))
- 		pcibios_enable_irq(dev);
- 	return 0;
- }
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index f5ec736100ee..7ccc64d5fe3e 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -398,7 +398,7 @@ pcibios_enable_device (struct pci_dev *dev, int mask)
- 	if (ret < 0)
- 		return ret;
- 
--	if (!dev->msi_enabled)
-+	if (!pci_dev_msi_enabled(dev))
- 		return acpi_pci_irq_enable(dev);
- 	return 0;
- }
-@@ -407,7 +407,7 @@ void
- pcibios_disable_device (struct pci_dev *dev)
- {
- 	BUG_ON(atomic_read(&dev->enable_cnt));
--	if (!dev->msi_enabled)
-+	if (!pci_dev_msi_enabled(dev))
- 		acpi_pci_irq_disable(dev);
- }
- 
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index 3dfe2d31c67b..4d36ea517679 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -399,10 +399,12 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
- 	int err;
- 
--	err = pci_enable_resources(dev, mask);
--	if (err == 0)
-+	if ((err = pci_enable_resources(dev, mask)) < 0)
-+		return err;
-+
-+	if (!pci_dev_msi_enabled(dev))
- 		pcibios_enable_irq(dev);
--	return err;
-+	return 0;
- }
- 
- /*
+I didn't find a way to disable this behavior of "git send-email" by checkin=
+g
+its manual and googling it. This is strange.
+
+> Here:
+>
+> git.kernel.org/.../Documentation/process/stable-kernel-rules.rst
+>
+> Last but not least, most of the patches in this series do not justify
+> sending them to stable kernels at all so you should remove the
+> corresponding tag from the patches.
+
+I hope at least these 2 patches can go into the stable kernels:
+[PATCH v3 3/6] PCI: hv: serialize the present/eject work items
+[PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
+Especially the second one, which fixes a real hang issue for UP virtual
+machines running v4.15 and newer.
+And,  IMO the patches are small enough (<100 lines) , but definitely
+the maintainers make the final call.
+
+>
+> Thanks,
+> Lorenzo
+>
+> > Fix this by polling the channel for the PCI_EJECT message and
+> > hpdev->state, and by checking the PCI vendor ID.
+> >
+> > Note: actually the above issues also happen to a SMP VM, if
+> > "hbus->hdev->channel->target_cpu =3D=3D smp_processor_id()" is true.
+> >
+> > Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> > Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
+> > Tested-by: Chris Valean <v-chvale@microsoft.com>
+> > Cc: stable@vger.kernel.org
+> > Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> > Cc: K. Y. Srinivasan <kys@microsoft.com>
+> > Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> > Cc: Jack Morgenstein <jackm@mellanox.com>
+> > ---
+> >  drivers/pci/host/pci-hyperv.c | 58
+
+
+Thanks,
+-- Dexuan
