@@ -1,89 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:35655 "EHLO david.siemens.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751130AbeCGHji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Mar 2018 02:39:38 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH v5 3/7] x86/jailhouse: Enable PCI mmconfig access in inmates
-Date: Wed,  7 Mar 2018 08:39:14 +0100
-Message-Id: <2ee9e4401fa22377b3965893a558120f169be82b.1520408357.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
-References: <cover.1520408357.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
-References: <cover.1520408357.git.jan.kiszka@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Keith Busch <keith.busch@intel.com>, Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v1 3/9] PCI/PM: Clear PCIe PME Status bit for Root Complex Event Collectors
+Date: Wed, 07 Mar 2018 11:27:51 +0100
+Message-ID: <1953703.7ExAQMbr3z@aspire.rjw.lan>
+In-Reply-To: <152040322027.240786.13965159319024774656.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com> <152040322027.240786.13965159319024774656.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Otavio Pontes <otavio.pontes@intel.com>
+On Wednesday, March 7, 2018 7:13:40 AM CET Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Per PCIe r4.0, sec 6.1.6, Root Complex Event Collectors can generate PME
+> interrupts on behalf of Root Complex Integrated Endpoints.
+> 
+> Linux does not currently enable PME interrupts from RC Event Collectors,
+> but fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
+> resume") suggests PME interrupts may be enabled by the platform for ACPI-
+> based runtime wakeup.
+> 
+> Clear the PCIe PME Status bit for Root Complex Event Collectors during
+> resume, just like we already do for Root Ports.
+> 
+> If the BIOS enables PME interrupts for an event collector and neglects to
+> clear the status bit on resume, this change should fix the same bug as
+> fe31e69740ed (PMEs not working after waking from a sleep state), but for
+> Root Complex Integrated Endpoints.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pci-driver.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index bf0704b75f79..38ee7c8b4d1a 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -533,7 +533,8 @@ static void pcie_resume_early(struct pci_dev *pci_dev)
+>  	 * bits now just in case (shouldn't hurt).
+>  	 */
+>  	if (pci_is_pcie(pci_dev) &&
+> -	    pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT)
+> +	    (pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT ||
+> +	     pci_pcie_type(pci_dev) == PCI_EXP_TYPE_RC_EC))
+>  		pcie_clear_root_pme_status(pci_dev);
+>  }
+>  
+> 
+> 
 
-Use the PCI mmconfig base address exported by jailhouse in boot
-parameters in order to access the memory mapped PCI configuration space.
-
-Signed-off-by: Otavio Pontes <otavio.pontes@intel.com>
-[Jan: rebased, fixed !CONFIG_PCI_MMCONFIG, used pcibios_last_bus]
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- arch/x86/include/asm/pci_x86.h | 2 ++
- arch/x86/kernel/jailhouse.c    | 8 ++++++++
- arch/x86/pci/mmconfig-shared.c | 4 ++--
- 3 files changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index eb66fa9cd0fc..959d618dbb17 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -151,6 +151,8 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			       phys_addr_t addr);
- extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
- extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
-+extern struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
-+							int end, u64 addr);
- 
- extern struct list_head pci_mmcfg_list;
- 
-diff --git a/arch/x86/kernel/jailhouse.c b/arch/x86/kernel/jailhouse.c
-index b68fd895235a..fa183a131edc 100644
---- a/arch/x86/kernel/jailhouse.c
-+++ b/arch/x86/kernel/jailhouse.c
-@@ -124,6 +124,14 @@ static int __init jailhouse_pci_arch_init(void)
- 	if (pcibios_last_bus < 0)
- 		pcibios_last_bus = 0xff;
- 
-+#ifdef CONFIG_PCI_MMCONFIG
-+	if (setup_data.pci_mmconfig_base) {
-+		pci_mmconfig_add(0, 0, pcibios_last_bus,
-+				 setup_data.pci_mmconfig_base);
-+		pci_mmcfg_arch_init();
-+	}
-+#endif
-+
- 	return 0;
- }
- 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 96684d0adcf9..0e590272366b 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -94,8 +94,8 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
- 	return new;
- }
- 
--static struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
--							int end, u64 addr)
-+struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
-+						 int end, u64 addr)
- {
- 	struct pci_mmcfg_region *new;
- 
--- 
-2.13.6
+Reveiwed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
