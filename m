@@ -1,78 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:45898 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751891AbeCXOHy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Mar 2018 10:07:54 -0400
-Received: by mail-qk0-f194.google.com with SMTP id s9so15825906qke.12
-        for <linux-pci@vger.kernel.org>; Sat, 24 Mar 2018 07:07:53 -0700 (PDT)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>
-Cc: "'Rob Herring'" <robh@kernel.org>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>,
-        "'Linus Walleij'" <linus.walleij@linaro.org>,
-        "'Xiaowei Song'" <songxiaowei@hisilicon.com>,
-        "'Ray Jui'" <rjui@broadcom.com>,
-        "'Scott Branden'" <sbranden@broadcom.com>,
-        "'Jon Mason'" <jonmason@broadcom.com>,
-        "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
-        "'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
-        "'Tanmay Inamdar'" <tinamdar@apm.com>,
-        "'Shawn Lin'" <shawn.lin@rock-chips.com>,
-        "'Ley Foon Tan'" <lftan@altera.com>,
-        "'Fengguang Wu'" <fengguang.wu@intel.com>
-References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com> <20180321144254.7406-11-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20180321144254.7406-11-lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v2 10/10] PCI: Move private DT related functions into private header
-Date: Sat, 24 Mar 2018 10:07:51 -0400
-Message-ID: <000501d3c379$7fc08960$7f419c20$@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
+Received: from goliath.siemens.de ([192.35.17.28]:50321 "EHLO
+        goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751196AbeCGHjl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 02:39:41 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Juergen Gross <jgross@suse.com>
+Subject: [PATCH v5 1/7] jailhouse: Provide detection for non-x86 systems
+Date: Wed,  7 Mar 2018 08:39:12 +0100
+Message-Id: <dae9fe0c6e63141c28ca90492fa5712b4c33ffb5.1520408357.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
+References: <cover.1520408357.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
+References: <cover.1520408357.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, March 21, 2018 10:43 AM, Lorenzo Pieralisi wrote:
-> 
-> From: Rob Herring <robh@kernel.org>
-> 
-> The functions in linux/of_pci.h are primarily used by host bridge
-> drivers, so they can be private to drivers/pci/.
-> 
-> The remaining functions are still used mostly in host bridge drivers
-> that still live in arch specific code. Hopefully someday, those will get
-> moved into drivers/pci as well.
-> 
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Implement jailhouse_paravirt() via device tree probing on architectures
+!= x86. Will be used by the PCI core.
 
-Best regards,
-Jingoo Han
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Juergen Gross <jgross@suse.com>
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Reviewed-by: Juergen Gross <jgross@suse.com>
+---
+ Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
+ arch/x86/include/asm/jailhouse_para.h           |  2 +-
+ include/linux/hypervisor.h                      | 17 +++++++++++++++--
+ 3 files changed, 24 insertions(+), 3 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
 
-
-> ---
->  drivers/pci/dwc/pci-dra7xx.c           |  1 +
->  drivers/pci/dwc/pcie-designware-host.c |  1 +
->  drivers/pci/host/pci-aardvark.c        |  2 ++
->  drivers/pci/host/pci-ftpci100.c        |  2 ++
->  drivers/pci/host/pci-mvebu.c           |  2 ++
->  drivers/pci/host/pci-rcar-gen2.c       |  2 ++
->  drivers/pci/host/pci-tegra.c           |  2 ++
->  drivers/pci/host/pci-v3-semi.c         |  2 ++
->  drivers/pci/host/pci-xgene.c           |  2 ++
->  drivers/pci/host/pcie-altera.c         |  2 ++
->  drivers/pci/host/pcie-iproc-platform.c |  1 +
->  drivers/pci/host/pcie-mediatek.c       |  2 ++
->  drivers/pci/host/pcie-rcar.c           |  2 ++
->  drivers/pci/host/pcie-rockchip.c       |  2 ++
->  drivers/pci/host/pcie-xilinx-nwl.c     |  2 ++
->  drivers/pci/host/pcie-xilinx.c         |  2 ++
->  drivers/pci/pci.h                      | 40
-> ++++++++++++++++++++++++++++++++++
->  include/linux/of_pci.h                 | 34 -----------------------------
->  18 files changed, 69 insertions(+), 34 deletions(-)
-> 
-
-<.....>
+diff --git a/Documentation/devicetree/bindings/jailhouse.txt b/Documentation/devicetree/bindings/jailhouse.txt
+new file mode 100644
+index 000000000000..2901c25ff340
+--- /dev/null
++++ b/Documentation/devicetree/bindings/jailhouse.txt
+@@ -0,0 +1,8 @@
++Jailhouse non-root cell device tree bindings
++--------------------------------------------
++
++When running in a non-root Jailhouse cell (partition), the device tree of this
++platform shall have a top-level "hypervisor" node with the following
++properties:
++
++- compatible = "jailhouse,cell"
+diff --git a/arch/x86/include/asm/jailhouse_para.h b/arch/x86/include/asm/jailhouse_para.h
+index 875b54376689..b885a961a150 100644
+--- a/arch/x86/include/asm/jailhouse_para.h
++++ b/arch/x86/include/asm/jailhouse_para.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: GPL2.0 */
+ 
+ /*
+- * Jailhouse paravirt_ops implementation
++ * Jailhouse paravirt detection
+  *
+  * Copyright (c) Siemens AG, 2015-2017
+  *
+diff --git a/include/linux/hypervisor.h b/include/linux/hypervisor.h
+index b19563f9a8eb..fc08b433c856 100644
+--- a/include/linux/hypervisor.h
++++ b/include/linux/hypervisor.h
+@@ -8,15 +8,28 @@
+  */
+ 
+ #ifdef CONFIG_X86
++
++#include <asm/jailhouse_para.h>
+ #include <asm/x86_init.h>
++
+ static inline void hypervisor_pin_vcpu(int cpu)
+ {
+ 	x86_platform.hyper.pin_vcpu(cpu);
+ }
+-#else
++
++#else /* !CONFIG_X86 */
++
++#include <linux/of.h>
++
+ static inline void hypervisor_pin_vcpu(int cpu)
+ {
+ }
+-#endif
++
++static inline bool jailhouse_paravirt(void)
++{
++	return of_find_compatible_node(NULL, NULL, "jailhouse,cell");
++}
++
++#endif /* !CONFIG_X86 */
+ 
+ #endif /* __LINUX_HYPEVISOR_H */
+-- 
+2.13.6
