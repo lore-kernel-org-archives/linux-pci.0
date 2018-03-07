@@ -1,56 +1,60 @@
-Return-Path: <SRS0=WKef=GA=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=WKef=GA=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <lorenzo.pieralisi@arm.com>
-CC: <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
-	<charles.chenxin@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
-Subject: [RFC PATCH] ARM64/PCI: Set dev->irq=0 before calling acpi_pci_irq_enable()
-Date: Sat, 10 Mar 2018 10:58:12 +0800
-Message-ID: <1520650692-62705-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42488 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751164AbeCGGNl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 01:13:41 -0500
+Subject: [PATCH v1 3/9] PCI/PM: Clear PCIe PME Status bit for Root Complex
+ Event Collectors
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>
+Date: Wed, 07 Mar 2018 00:13:40 -0600
+Message-ID: <152040322027.240786.13965159319024774656.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The init value of dev->irq is from PCI_INTERRUPT_LINE register.The default
-value of dev->irq usually is 255 before calling acpi_pci_irq_enable().
-This will cause a problem When the platform does not support INTx well.
-For example, we do not config _PRT on our HIP07 platform, we met irq 255
-confilict.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-The error message is as below.
-snd_hda_intel 000d:33:00.1: PCI INT B: no GSI
-snd_hda_intel 000d:33:00.1: enabling device (0000 -> 0002)
-snd_hda_intel 000d:33:00.1: Force to snoop mode by module option
-snd_hda_intel 000d:33:00.1: Device has broken 64-bit MSI but arch tried to
-assign one above 4G
-genirq: Flags mismatch irq 255. 00000001 (enahisic2i0-tx1) vs. 00000081
-(snd_hda_intel:card0)
-hns-nic HISI00C2:00 enahisic2i0: request irq(255) fail
+Per PCIe r4.0, sec 6.1.6, Root Complex Event Collectors can generate PME
+interrupts on behalf of Root Complex Integrated Endpoints.
 
-enahisic2i0-tx1: this device is a platform device.
-snd_hda_intel:card0: this device is a PCI device.
+Linux does not currently enable PME interrupts from RC Event Collectors,
+but fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
+resume") suggests PME interrupts may be enabled by the platform for ACPI-
+based runtime wakeup.
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Clear the PCIe PME Status bit for Root Complex Event Collectors during
+resume, just like we already do for Root Ports.
+
+If the BIOS enables PME interrupts for an event collector and neglects to
+clear the status bit on resume, this change should fix the same bug as
+fe31e69740ed (PMEs not working after waking from a sleep state), but for
+Root Complex Integrated Endpoints.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/arm64/kernel/pci.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/pci-driver.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 0e2ea1c..6a77bef 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -28,8 +28,11 @@
-  */
- int pcibios_alloc_irq(struct pci_dev *dev)
- {
--	if (!acpi_disabled)
-+	if (!acpi_disabled) {
-+		dev->irq = 0;
- 		acpi_pci_irq_enable(dev);
-+	}
-+
- 
- 	return 0;
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index bf0704b75f79..38ee7c8b4d1a 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -533,7 +533,8 @@ static void pcie_resume_early(struct pci_dev *pci_dev)
+ 	 * bits now just in case (shouldn't hurt).
+ 	 */
+ 	if (pci_is_pcie(pci_dev) &&
+-	    pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT)
++	    (pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT ||
++	     pci_pcie_type(pci_dev) == PCI_EXP_TYPE_RC_EC))
+ 		pcie_clear_root_pme_status(pci_dev);
  }
--- 
-1.9.1
+ 
