@@ -1,76 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0093.outbound.protection.outlook.com ([104.47.32.93]:49765
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753901AbeCFSah (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Mar 2018 13:30:37 -0500
-From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        Jack Morgenstein <jackm@mellanox.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH v3 3/6] PCI: hv: serialize the present/eject work items
-Date: Tue, 6 Mar 2018 18:30:33 +0000
-Message-ID: <DM5PR2101MB1030ADC2C68C322A91706011DCD90@DM5PR2101MB1030.namprd21.prod.outlook.com>
-References: <20180306182128.23281-1-decui@microsoft.com>
- <20180306182128.23281-4-decui@microsoft.com>
-In-Reply-To: <20180306182128.23281-4-decui@microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:46737 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933746AbeCGPnA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 10:43:00 -0500
+Received: by mail-ot0-f193.google.com with SMTP id g97so2423197otg.13
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2018 07:43:00 -0800 (PST)
+From: Rob Herring <robh@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>
+Subject: [PATCH 8/9] PCI: dw: move CONFIG_PCI depends to menu
+Date: Wed,  7 Mar 2018 09:42:42 -0600
+Message-Id: <20180307154243.3205-9-robh@kernel.org>
+In-Reply-To: <20180307154243.3205-1-robh@kernel.org>
+References: <20180307154243.3205-1-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Tuesday, March 6, 2018 10:22 AM
-> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan <kys@mi=
-crosoft.com>;
-> Stephen Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de; apw@canonical=
-.com;
-> jasowang@redhat.com
-> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;=
- Haiyang Zhang
-> <haiyangz@microsoft.com>; vkuznets@redhat.com; marcelo.cerri@canonical.co=
-m; Michael
-> Kelley (EOSG) <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microso=
-ft.com>; Jack
-> Morgenstein <jackm@mellanox.com>; stable@vger.kernel.org
-> Subject: [PATCH v3 3/6] PCI: hv: serialize the present/eject work items
->=20
-> When we hot-remove the device, we first receive a PCI_EJECT message and
-> then receive a PCI_BUS_RELATIONS message with bus_rel->device_count =3D=
-=3D 0.
->=20
-> The first message is offloaded to hv_eject_device_work(), and the second
-> is offloaded to pci_devices_present_work(). Both the paths can be running
-> list_del(&hpdev->list_entry), causing general protection fault, because
-> system_wq can run them concurrently.
->=20
-> The patch eliminates the race condition.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
-> Tested-by: Chris Valean <v-chvale@microsoft.com>
-> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> Cc: Jack Morgenstein <jackm@mellanox.com>
-> Cc: stable@vger.kernel.org
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->  drivers/pci/host/pci-hyperv.c | 17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
->=20
+There's no need for every config option to explicitly depend on
+CONFIG_PCI, so move it out of individual option to the menu option.
 
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ drivers/pci/dwc/Kconfig | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 6f2b653146bb..2902544f5834 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -1,13 +1,13 @@
+ # SPDX-License-Identifier: GPL-2.0
+ 
+ menu "DesignWare PCI Core Support"
++	depends on PCI
+ 
+ config PCIE_DW
+ 	bool
+ 
+ config PCIE_DW_HOST
+         bool
+-	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+         select PCIE_DW
+ 
+@@ -22,7 +22,7 @@ config PCI_DRA7XX
+ config PCI_DRA7XX_HOST
+ 	bool "TI DRA7xx PCIe controller Host Mode"
+ 	depends on SOC_DRA7XX || COMPILE_TEST
+-	depends on PCI && PCI_MSI_IRQ_DOMAIN
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	select PCIE_DW_HOST
+ 	select PCI_DRA7XX
+@@ -52,7 +52,6 @@ config PCI_DRA7XX_EP
+ 
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
+-	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW_HOST
+ 	---help---
+@@ -65,7 +64,6 @@ config PCIE_DW_PLAT
+ 
+ config PCI_EXYNOS
+ 	bool "Samsung Exynos PCIe controller"
+-	depends on PCI
+ 	depends on SOC_EXYNOS5440 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -73,7 +71,6 @@ config PCI_EXYNOS
+ 
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+-	depends on PCI
+ 	depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -81,7 +78,6 @@ config PCI_IMX6
+ 
+ config PCIE_SPEAR13XX
+ 	bool "STMicroelectronics SPEAr PCIe controller"
+-	depends on PCI
+ 	depends on ARCH_SPEAR13XX || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -91,7 +87,6 @@ config PCIE_SPEAR13XX
+ 
+ config PCI_KEYSTONE
+ 	bool "TI Keystone PCIe controller"
+-	depends on PCI
+ 	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -104,7 +99,6 @@ config PCI_KEYSTONE
+ 
+ config PCI_LAYERSCAPE
+ 	bool "Freescale Layerscape PCIe controller"
+-	depends on PCI
+ 	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+@@ -115,7 +109,6 @@ config PCI_LAYERSCAPE
+ config PCI_HISI
+ 	depends on OF && (ARM64 || COMPILE_TEST)
+ 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+-	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+@@ -126,7 +119,6 @@ config PCI_HISI
+ 
+ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller"
+-	depends on PCI
+ 	depends on OF && (ARCH_QCOM || COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -138,7 +130,6 @@ config PCIE_QCOM
+ 
+ config PCIE_ARMADA_8K
+ 	bool "Marvell Armada-8K PCIe controller"
+-	depends on PCI
+ 	depends on ARCH_MVEBU || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -155,7 +146,7 @@ config PCIE_ARTPEC6
+ config PCIE_ARTPEC6_HOST
+ 	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+ 	depends on MACH_ARTPEC6 || COMPILE_TEST
+-	depends on PCI && PCI_MSI_IRQ_DOMAIN
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	select PCIE_ARTPEC6
+@@ -177,7 +168,6 @@ config PCIE_KIRIN
+ 	depends on OF && (ARM64 || COMPILE_TEST)
+ 	bool "HiSilicon Kirin series SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+-	depends on PCI
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+@@ -187,7 +177,6 @@ config PCIE_KIRIN
+ config PCIE_HISI_STB
+ 	bool "HiSilicon STB SoCs PCIe controllers"
+ 	depends on ARCH_HISI || COMPILE_TEST
+-	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+-- 
+2.14.1
