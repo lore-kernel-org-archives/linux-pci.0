@@ -1,47 +1,45 @@
-Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
- linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
- Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
- Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
- <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-5-logang@deltatee.com>
- <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <bab9fb8b-1449-4b87-94de-7da26a279331@deltatee.com>
-Date: Thu, 1 Mar 2018 12:13:10 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:37810 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754366AbeCGK6L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 05:58:11 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: Joao.Pinto@synopsys.com, bhelgaas@google.com, jg1.han@samsung.com,
+        lorenzo.pieralisi@arm.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 0/4] Code cleanup and small improvements
+Date: Wed,  7 Mar 2018 10:57:56 +0000
+Message-Id: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Sets a callback that defines the maximum number of MSI applied to
+designware driver for future easiness and also as an example, since
+the callback currently defines the default value.
 
+Does a code cleanup by replacing magic numbers without a easy meaning
+by a well known define that helps the human compreension.
 
-On 01/03/18 11:02 AM, Bjorn Helgaas wrote:
->>   void pci_enable_acs(struct pci_dev *dev)
->>   {
->> +	if (pci_p2pdma_disable_acs(dev))
->> +		return;
-> 
-> This doesn't read naturally to me.  I do see that when
-> CONFIG_PCI_P2PDMA is not set, pci_p2pdma_disable_acs() does nothing
-> and returns 0, so we'll go ahead and try to enable ACS as before.
-> 
-> But I think it would be clearer to have an #ifdef CONFIG_PCI_P2PDMA
-> right here so it's more obvious that we only disable ACS when it's
-> selected.
+Fix of the first characters on comments and debug messages to maintain
+coherency.
 
-I could do this... however, I wrote it this way because I've read Linus 
-dislikes using #ifdef's inside function bodies and I personally agree 
-with that sentiment.
+Replaces a division by 2 by a simple right shift rotation of 1 bit.
 
-Logan
+The patch set was made against Lorenzo's dwc-msi branch.
+
+Gustavo Pimentel (4):
+  PCI: dwc: designware: Define maximum number of vectors
+  PCI: dwc: Replace lower into upper case characters in comments and
+    debug printks
+  PCI: dwc: Replace magic number by defines
+  PCI: dwc: Replace division by 2 to right shift
+
+ drivers/pci/dwc/pcie-designware-ep.c   | 16 +++----
+ drivers/pci/dwc/pcie-designware-host.c | 77 +++++++++++++++++++---------------
+ drivers/pci/dwc/pcie-designware-plat.c |  8 +++-
+ drivers/pci/dwc/pcie-designware.c      | 22 +++++-----
+ drivers/pci/dwc/pcie-designware.h      |  1 +
+ 5 files changed, 70 insertions(+), 54 deletions(-)
+
+-- 
+2.7.4
