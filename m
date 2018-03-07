@@ -1,117 +1,288 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56252 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1161579AbeCAUaJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 15:30:09 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w21KT7sG136387
-        for <linux-pci@vger.kernel.org>; Thu, 1 Mar 2018 15:30:08 -0500
-Received: from e06smtp11.uk.ibm.com (e06smtp11.uk.ibm.com [195.75.94.107])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2gercc8key-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 15:30:08 -0500
-Received: from localhost
-        by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-        Thu, 1 Mar 2018 20:30:04 -0000
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI
- Memory
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Reply-To: benh@au1.ibm.com
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Date: Fri, 02 Mar 2018 07:29:55 +1100
-In-Reply-To: <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
-         <1519876489.4592.3.camel@kernel.crashing.org>
-         <1519876569.4592.4.camel@au1.ibm.com>
-         <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1519936195.4592.18.camel@au1.ibm.com>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:44431 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933746AbeCGPm7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 10:42:59 -0500
+Received: by mail-ot0-f195.google.com with SMTP id 79so2431705oth.11
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2018 07:42:58 -0800 (PST)
+From: Rob Herring <robh@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>
+Subject: [PATCH 7/9] PCI: improve host drivers compile test coverage
+Date: Wed,  7 Mar 2018 09:42:41 -0600
+Message-Id: <20180307154243.3205-8-robh@kernel.org>
+In-Reply-To: <20180307154243.3205-1-robh@kernel.org>
+References: <20180307154243.3205-1-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-03-01 at 11:04 -0700, Logan Gunthorpe wrote:
-> 
-> On 28/02/18 08:56 PM, Benjamin Herrenschmidt wrote:
-> > On Thu, 2018-03-01 at 14:54 +1100, Benjamin Herrenschmidt wrote:
-> > > The problem is that acccording to him (I didn't double check the latest
-> > > patches) you effectively hotplug the PCIe memory into the system when
-> > > creating struct pages.
-> > > 
-> > > This cannot possibly work for us. First we cannot map PCIe memory as
-> > > cachable. (Note that doing so is a bad idea if you are behind a PLX
-> > > switch anyway since you'd ahve to manage cache coherency in SW).
-> > 
-> > Note: I think the above means it won't work behind a switch on x86
-> > either, will it ?
-> 
-> This works perfectly fine on x86 behind a switch and we've tested it on 
-> multiple machines. We've never had an issue of running out of virtual 
-> space despite our PCI bars typically being located with an offset of 
-> 56TB or more. The arch code on x86 also somehow figures out not to map 
-> the memory as cachable so that's not an issue (though, at this point, 
-> the CPU never accesses the memory so even if it were, it wouldn't affect 
-> anything).
+Add COMPILE_TEST on driver config options with it. Some ARM drivers
+still have arch dependencies, so we have to keep those dependent on ARM.
 
-Oliver can you look into this ? You sais the memory was effectively
-hotplug'ed into the system when creating the struct pages. That would
-mean to me that it's a) mapped (which for us is cachable, maybe x86 has
-tricks to avoid that) and b) potentially used to populate userspace
-pages (that will definitely be cachable). Unless there's something in
-there you didn't see that prevents it.
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ drivers/pci/dwc/Kconfig  | 24 ++++++++++++------------
+ drivers/pci/host/Kconfig | 33 +++++++++++++++------------------
+ 2 files changed, 27 insertions(+), 30 deletions(-)
 
-> We also had this working on ARM64 a while back but it required some out 
-> of tree ZONE_DEVICE patches and some truly horrid hacks to it's arch 
-> code to ioremap the memory into the page map.
-> 
-> You didn't mention what architecture you were trying this on.
-
-ppc64.
-
-> It may make sense at this point to make this feature dependent on x86 
-> until more work is done to make it properly portable. Something like 
-> arch functions that allow adding IO memory pages to with a specific 
-> cache setting. Though, if an arch has such restrictive limits on the map 
-> size it would probably need to address that too somehow.
-
-Not fan of that approach.
-
-So there are two issues to consider here:
-
- - Our MMIO space is very far away from memory (high bits set in the
-address) which causes problem with things like vmmemmap, page_address,
-virt_to_page etc... Do you have similar issues on arm64 ?
-
- - We need to ensure that the mechanism (which I'm not familiar with)
-that you use to create the struct page's for the device don't end up
-turning those device pages into normal "general use" pages for the
-system. Oliver thinks it does, you say it doesn't, ... 
-
-Jerome (Glisse), what's your take on this ? Smells like something that
-could be covered by HMM...
-
-Logan, the only reason you need struct page's to begin with is for the
-DMA API right ? Or am I missing something here ?
-
-Cheers,
-Ben.
-
-> Thanks,
-> 
-> Logan
-> 
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 2f3f5c50aa48..6f2b653146bb 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -66,7 +66,7 @@ config PCIE_DW_PLAT
+ config PCI_EXYNOS
+ 	bool "Samsung Exynos PCIe controller"
+ 	depends on PCI
+-	depends on SOC_EXYNOS5440
++	depends on SOC_EXYNOS5440 || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+@@ -74,7 +74,7 @@ config PCI_EXYNOS
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+ 	depends on PCI
+-	depends on SOC_IMX6Q
++	depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+@@ -82,7 +82,7 @@ config PCI_IMX6
+ config PCIE_SPEAR13XX
+ 	bool "STMicroelectronics SPEAr PCIe controller"
+ 	depends on PCI
+-	depends on ARCH_SPEAR13XX
++	depends on ARCH_SPEAR13XX || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+@@ -92,7 +92,7 @@ config PCIE_SPEAR13XX
+ config PCI_KEYSTONE
+ 	bool "TI Keystone PCIe controller"
+ 	depends on PCI
+-	depends on ARCH_KEYSTONE
++	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+@@ -105,7 +105,7 @@ config PCI_KEYSTONE
+ config PCI_LAYERSCAPE
+ 	bool "Freescale Layerscape PCIe controller"
+ 	depends on PCI
+-	depends on OF && (ARM || ARCH_LAYERSCAPE)
++	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+ 	select PCIE_DW_HOST
+@@ -113,7 +113,7 @@ config PCI_LAYERSCAPE
+ 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+ 
+ config PCI_HISI
+-	depends on OF && ARM64
++	depends on OF && (ARM64 || COMPILE_TEST)
+ 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+ 	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+@@ -127,7 +127,7 @@ config PCI_HISI
+ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller"
+ 	depends on PCI
+-	depends on ARCH_QCOM && OF
++	depends on OF && (ARCH_QCOM || COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+@@ -139,7 +139,7 @@ config PCIE_QCOM
+ config PCIE_ARMADA_8K
+ 	bool "Marvell Armada-8K PCIe controller"
+ 	depends on PCI
+-	depends on ARCH_MVEBU
++	depends on ARCH_MVEBU || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+@@ -154,7 +154,7 @@ config PCIE_ARTPEC6
+ 
+ config PCIE_ARTPEC6_HOST
+ 	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+-	depends on MACH_ARTPEC6
++	depends on MACH_ARTPEC6 || COMPILE_TEST
+ 	depends on PCI && PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+@@ -165,7 +165,7 @@ config PCIE_ARTPEC6_HOST
+ 
+ config PCIE_ARTPEC6_EP
+ 	bool "Axis ARTPEC-6 PCIe controller Endpoint Mode"
+-	depends on MACH_ARTPEC6
++	depends on MACH_ARTPEC6 || COMPILE_TEST
+ 	depends on PCI_ENDPOINT
+ 	select PCIE_DW_EP
+ 	select PCIE_ARTPEC6
+@@ -174,7 +174,7 @@ config PCIE_ARTPEC6_EP
+ 	  endpoint mode. This uses the DesignWare core.
+ 
+ config PCIE_KIRIN
+-	depends on OF && ARM64
++	depends on OF && (ARM64 || COMPILE_TEST)
+ 	bool "HiSilicon Kirin series SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	depends on PCI
+@@ -186,7 +186,7 @@ config PCIE_KIRIN
+ 
+ config PCIE_HISI_STB
+ 	bool "HiSilicon STB SoCs PCIe controllers"
+-	depends on ARCH_HISI
++	depends on ARCH_HISI || COMPILE_TEST
+ 	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index a4ed7484d127..752d93ce904e 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -5,13 +5,13 @@ menu "PCI host controller drivers"
+ 
+ config PCI_MVEBU
+ 	bool "Marvell EBU PCIe controller"
+-	depends on ARCH_MVEBU || ARCH_DOVE
++	depends on ARCH_MVEBU || ARCH_DOVE || COMPILE_TEST
+ 	depends on ARM
+ 	depends on OF
+ 
+ config PCI_AARDVARK
+ 	bool "Aardvark PCIe controller"
+-	depends on ARCH_MVEBU && ARM64
++	depends on (ARCH_MVEBU && ARM64) || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	help
+@@ -21,7 +21,7 @@ config PCI_AARDVARK
+ 
+ config PCIE_XILINX_NWL
+ 	bool "NWL PCIe Core"
+-	depends on ARCH_ZYNQMP
++	depends on ARCH_ZYNQMP || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	help
+ 	 Say 'Y' here if you want kernel support for Xilinx
+@@ -32,20 +32,19 @@ config PCIE_XILINX_NWL
+ config PCI_FTPCI100
+ 	bool "Faraday Technology FTPCI100 PCI controller"
+ 	depends on OF
+-	depends on ARM
+ 	default ARCH_GEMINI
+ 
+ config PCI_TEGRA
+ 	bool "NVIDIA Tegra PCIe controller"
+-	depends on ARCH_TEGRA
++	depends on ARCH_TEGRA || COMPILE_TEST
+ 	help
+ 	  Say Y here if you want support for the PCIe host controller found
+ 	  on NVIDIA Tegra SoCs.
+ 
+ config PCI_RCAR_GEN2
+ 	bool "Renesas R-Car Gen2 Internal PCI controller"
+-	depends on ARM
+ 	depends on ARCH_RENESAS || COMPILE_TEST
++	depends on ARM
+ 	help
+ 	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
+ 	  There are 3 internal PCI controllers available with a single
+@@ -53,7 +52,7 @@ config PCI_RCAR_GEN2
+ 
+ config PCIE_RCAR
+ 	bool "Renesas R-Car PCIe controller"
+-	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
++	depends on ARCH_RENESAS || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	help
+ 	  Say Y here if you want PCIe controller support on R-Car SoCs.
+@@ -64,7 +63,7 @@ config PCI_HOST_COMMON
+ 
+ config PCI_HOST_GENERIC
+ 	bool "Generic PCI host controller"
+-	depends on (ARM || ARM64) && OF
++	depends on OF
+ 	select PCI_HOST_COMMON
+ 	select IRQ_DOMAIN
+ 	help
+@@ -73,14 +72,14 @@ config PCI_HOST_GENERIC
+ 
+ config PCIE_XILINX
+ 	bool "Xilinx AXI PCIe host bridge support"
+-	depends on ARCH_ZYNQ || MICROBLAZE || (MIPS && PCI_DRIVERS_GENERIC)
++	depends on ARCH_ZYNQ || MICROBLAZE || (MIPS && PCI_DRIVERS_GENERIC) || COMPILE_TEST
+ 	help
+ 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+ 	  Host Bridge driver.
+ 
+ config PCI_XGENE
+ 	bool "X-Gene PCIe controller"
+-	depends on ARM64
++	depends on ARM64 || COMPILE_TEST
+ 	depends on OF || (ACPI && PCI_QUIRKS)
+ 	select PCIEPORTBUS
+ 	help
+@@ -100,7 +99,7 @@ config PCI_XGENE_MSI
+ config PCI_V3_SEMI
+ 	bool "V3 Semiconductor PCI controller"
+ 	depends on OF
+-	depends on ARM
++	depends on ARM || COMPILE_TEST
+ 	default ARCH_INTEGRATOR_AP
+ 
+ config PCI_VERSATILE
+@@ -127,7 +126,7 @@ config PCIE_IPROC_PLATFORM
+ 
+ config PCIE_IPROC_BCMA
+ 	tristate "Broadcom iProc PCIe BCMA bus driver"
+-	depends on ARM && (ARCH_BCM_IPROC || COMPILE_TEST)
++	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
+ 	select PCIE_IPROC
+ 	select BCMA
+ 	default ARCH_BCM_5301X
+@@ -146,8 +145,7 @@ config PCIE_IPROC_MSI
+ 
+ config PCIE_ALTERA
+ 	bool "Altera PCIe controller"
+-	depends on ARM || NIOS2
+-	depends on OF_PCI
++	depends on ARM || NIOS2 || COMPILE_TEST
+ 	select PCI_DOMAINS
+ 	help
+ 	  Say Y here if you want to enable PCIe controller support on Altera
+@@ -163,7 +161,7 @@ config PCIE_ALTERA_MSI
+ 
+ config PCI_HOST_THUNDER_PEM
+ 	bool "Cavium Thunder PCIe controller to off-chip devices"
+-	depends on ARM64
++	depends on ARM64 || COMPILE_TEST
+ 	depends on OF || (ACPI && PCI_QUIRKS)
+ 	select PCI_HOST_COMMON
+ 	help
+@@ -171,7 +169,7 @@ config PCI_HOST_THUNDER_PEM
+ 
+ config PCI_HOST_THUNDER_ECAM
+ 	bool "Cavium Thunder ECAM controller to on-chip devices on pass-1.x silicon"
+-	depends on ARM64
++	depends on ARM64 || COMPILE_TEST
+ 	depends on OF || (ACPI && PCI_QUIRKS)
+ 	select PCI_HOST_COMMON
+ 	help
+@@ -190,9 +188,8 @@ config PCIE_ROCKCHIP
+ 
+ config PCIE_MEDIATEK
+ 	bool "MediaTek PCIe controller"
+-	depends on (ARM || ARM64) && (ARCH_MEDIATEK || COMPILE_TEST)
++	depends on ARCH_MEDIATEK || COMPILE_TEST
+ 	depends on OF
+-	depends on PCI
+ 	select PCIEPORTBUS
+ 	help
+ 	  Say Y here if you want to enable PCIe controller support on
+-- 
+2.14.1
