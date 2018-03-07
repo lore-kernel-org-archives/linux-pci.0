@@ -1,144 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59878 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1162828AbeCAXAg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 18:00:36 -0500
-Date: Thu, 1 Mar 2018 17:00:32 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v2 01/10] PCI/P2PDMA: Support peer to peer memory
-Message-ID: <20180301230032.GA74737@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-2-logang@deltatee.com>
- <20180301173752.GE13722@bhelgaas-glaptop.roam.corp.google.com>
- <b81503c2-9f07-b5f6-df06-64d1fdc53386@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b81503c2-9f07-b5f6-df06-64d1fdc53386@deltatee.com>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:37815 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754363AbeCGK6L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 05:58:11 -0500
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: Joao.Pinto@synopsys.com, bhelgaas@google.com, jg1.han@samsung.com,
+        lorenzo.pieralisi@arm.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 3/4] PCI: dwc: Replace magic number by defines
+Date: Wed,  7 Mar 2018 10:57:59 +0000
+Message-Id: <fc11f571b7a66a0cbdebd75dfae163f939a5a4c9.1520419084.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+References: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+References: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 11:55:51AM -0700, Logan Gunthorpe wrote:
-> Hi Bjorn,
-> 
-> Thanks for the review. I'll correct all the nits for the next version.
-> 
-> On 01/03/18 10:37 AM, Bjorn Helgaas wrote:
-> > On Wed, Feb 28, 2018 at 04:39:57PM -0700, Logan Gunthorpe wrote:
-> > > Some PCI devices may have memory mapped in a BAR space that's
-> > > intended for use in Peer-to-Peer transactions. In order to enable
-> > > such transactions the memory must be registered with ZONE_DEVICE pages
-> > > so it can be used by DMA interfaces in existing drivers.
-> 
-> > Is there anything about this memory that makes it specifically
-> > intended for peer-to-peer transactions?  I assume the device can't
-> > really tell whether a transaction is from a CPU or a peer.
-> 
-> No there's nothing special about the memory and it can still be accessed by
-> the CPU. This is just the intended purpose. You could use this PCI memory as
-> regular DMA buffers or regular memory but I'm not sure why you would. It
-> would probably be pretty bad performance-wise.
-> 
-> 
-> > BTW, maybe there could be some kind of guide for device driver writers
-> > in Documentation/PCI/?
-> Makes sense we can look at writing something for the next iteration.
-> 
-> > I think it would be clearer and sufficient to simply say that we have
-> > no way to know whether peer-to-peer routing between PCIe Root Ports is
-> > supported (PCIe r4.0, sec 1.3.1).
-> 
-> Fair enough.
-> 
-> > The fact that you use the PCIe term "switch" suggests that a PCIe
-> > Switch is required, but isn't it sufficient for the peers to be below
-> > the same "PCI bridge", which would include PCIe Root Ports, PCIe
-> > Switch Downstream Ports, and conventional PCI bridges?
-> > The comments at get_upstream_bridge_port() suggest that this isn't
-> > enough, and the peers actually do have to be below the same PCIe
-> > Switch, but I don't know why.
-> 
-> I do mean Switch as we do need to keep the traffic off the root complex.
-> Seeing, as stated above, we don't know if it actually support it. (While we
-> can be certain any PCI switch does). So we specifically want to exclude PCIe
-> Root ports and I'm not sure about the support of PCI bridges but I can't
-> imagine anyone wanting to do P2P around them so I'd rather be safe than
-> sorry and exclude them.
+Replace magic numbers by a well known define in order to make the code
+human readable and also facilitate the code reusability.
 
-I don't think this is correct.  A Root Port defines a hierarchy domain
-(I'm looking at PCIe r4.0, sec 1.3.1).  The capability to route
-peer-to-peer transactions *between* hierarchy domains is optional.  I
-think this means a Root Complex is not required to route transactions
-from one Root Port to another Root Port.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
+ drivers/pci/dwc/pcie-designware.h      |  1 +
+ 2 files changed, 21 insertions(+), 14 deletions(-)
 
-This doesn't say anything about routing between two different devices
-below a Root Port.  Those would be in the same hierarchy domain and
-should follow the conventional PCI routing rules.  Of course, since a
-Root Port has one link that leads to one device, they would probably
-be different functions of a single multi-function device, so I don't
-know how practical it would be to test this.
-
-> > This whole thing is confusing to me.  Why do you want to reject peers
-> > directly connected to the same root port?  Why do you require the same
-> > Switch Upstream Port?  You don't exclude conventional PCI, but it
-> > looks like you would require peers to share *two* upstream PCI-to-PCI
-> > bridges?  I would think a single shared upstream bridge (conventional,
-> > PCIe Switch Downstream Port, or PCIe Root Port) would be sufficient?
-> 
-> Hmm, yes, this may just be laziness on my part. Finding the shared upstream
-> bridge is a bit more tricky than just showing that they are on the same
-> switch. So as coded, a fabric of switches with peers on different legs of
-> the fabric are not supported. But yes, maybe they just need to be two
-> devices with a single shared upstream bridge that is not the root port.
-> Again, we need to reject the root port because we can't know if the root
-> complex can support P2P traffic.
-
-This sounds like the same issue as above, so we just need to resolve
-that.
-
-> > Since "pci_p2pdma_add_client()" includes "pci_" in its name, it seems
-> > sort of weird that callers supply a non-PCI device and then we look up
-> > a PCI device here.  I assume you have some reason for this; if you
-> > added a writeup in Documentation/PCI, that would be a good place to
-> > elaborate on that, maybe with a one-line clue here.
-> 
-> Well yes, but this is much more convenient for callers which don't need to
-> care if the device they are attempting to add (which in the NVMe target
-> case, could be a random block device) is a pci device or not. Especially
-> seeing find_parent_pci_dev() is non-trivial.
-
-OK.  I accept that it might be convenient, but I still think it leads
-to a weird API.  Maybe that's OK; I don't know enough about the
-scenario in the caller to do anything more than say "hmm, strange".
-
-> > > +void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size)
-> > > +{
-> > > +	void *ret;
-> > > +
-> > > +	if (unlikely(!pdev->p2pdma))
-> > 
-> > Is this a hot path?  I'm not sure it's worth cluttering
-> > non-performance paths with likely/unlikely.
-> 
-> I'd say it can be pretty hot given that we need to allocate and free buffers
-> at multiple GB/s for the NVMe target case. I don't exactly have benchmarks
-> or anything to show this though...
-
-OK, I'll take your word for that.  I'm fine with this as long as it is
-performance-sensitive.
-
-Bjorn
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 03e9b82..7535918 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+ 
+ 	for (i = 0; i < num_ctrls; i++) {
+-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+-				    &val);
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
++					(i * MSI_REG_CTRL_BLOCK_SIZE),
++				    4, &val);
+ 		if (!val)
+ 			continue;
+ 
+ 		ret = IRQ_HANDLED;
+ 		pos = 0;
+-		while ((pos = find_next_bit((unsigned long *) &val, 32,
+-					    pos)) != 32) {
+-			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
++		while ((pos = find_next_bit((unsigned long *) &val,
++					    MAX_MSI_IRQS_PER_CTRL,
++					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
++			irq = irq_find_mapping(pp->irq_domain,
++					       (i * MAX_MSI_IRQS_PER_CTRL) +
++					       pos);
+ 			generic_handle_irq(irq);
+-			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
++			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
++						(i * MSI_REG_CTRL_BLOCK_SIZE),
+ 					    4, 1 << pos);
+ 			pos++;
+ 		}
+@@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
+ 	if (pp->ops->msi_clear_irq) {
+ 		pp->ops->msi_clear_irq(pp, data->hwirq);
+ 	} else {
+-		ctrl = data->hwirq / 32;
+-		res = ctrl * 12;
+-		bit = data->hwirq % 32;
++		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 
+ 		pp->irq_status[ctrl] &= ~(1 << bit);
+ 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+@@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+ 	if (pp->ops->msi_set_irq) {
+ 		pp->ops->msi_set_irq(pp, data->hwirq);
+ 	} else {
+-		ctrl = data->hwirq / 32;
+-		res = ctrl * 12;
+-		bit = data->hwirq % 32;
++		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 
+ 		pp->irq_status[ctrl] |= 1 << bit;
+ 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+@@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 
+ 	/* Initialize IRQ Status array */
+ 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+-				    &pp->irq_status[ctrl]);
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
++					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
++				    4, &pp->irq_status[ctrl]);
+ 
+ 	/* Setup RC BARs */
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index fe811db..bee4e25 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -110,6 +110,7 @@
+ #define MAX_MSI_IRQS			256
+ #define MAX_MSI_IRQS_PER_CTRL		32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
++#define MSI_REG_CTRL_BLOCK_SIZE		12
+ #define MSI_DEF_NUM_VECTORS		32
+ 
+ /* Maximum number of inbound/outbound iATUs */
+-- 
+2.7.4
