@@ -1,171 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48458 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033501AbeCARtp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 12:49:45 -0500
-Date: Thu, 1 Mar 2018 11:49:41 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v2 03/10] PCI/P2PDMA: Add PCI p2pmem dma mappings to
- adjust the bus offset
-Message-ID: <20180301174941.GG13722@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-4-logang@deltatee.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 7 Mar 2018 12:08:24 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 0/7] ARM: dts: dra7: Enable x2 lane mode support
+Message-ID: <20180307120824.GC15139@e107981-ln.cambridge.arm.com>
+References: <20171219093133.16565-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180228234006.21093-4-logang@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171219093133.16565-1-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Tony Lindgren <tony@atomide.com>, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
+ Rob Herring <robh+dt@kernel.org>, bcousson@baylibre.com,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 28, 2018 at 04:39:59PM -0700, Logan Gunthorpe wrote:
-> The DMA address used when mapping PCI P2P memory must be the PCI bus
-> address. Thus, introduce pci_p2pmem_[un]map_sg() to map the correct
-> addresses when using P2P memory.
+On Tue, Dec 19, 2017 at 03:01:26PM +0530, Kishon Vijay Abraham I wrote:
+> Add properties to enable PCIe x2 lane mode since all dra7
+> based SoCs support x2 lane mode.
 > 
-> For this, we assume that an SGL passed to these functions contain all
-> p2p memory or no p2p memory.
+> However only dra76-evm has a slot which can support x2 lane
+> cards. Hence only enable x2 lane mode in dra76-evm.
+> (am571x-idk can support x2 lane mode but that makes usb port
+> not functional so not including the patch to enable
+> x2 mode in am571x-idk)
 > 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->  drivers/pci/p2pdma.c       | 51 ++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/memremap.h   |  1 +
->  include/linux/pci-p2pdma.h | 13 ++++++++++++
->  3 files changed, 65 insertions(+)
+> Also included in this series is patch to enable PCIe configs
+> (both host and device) in omap2plus_defconfig and
+> multi_v7_defconfig
 > 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index a57df78f6a32..4e1c81f64b29 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -188,6 +188,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
->  	pgmap->res.flags = pci_resource_flags(pdev, bar);
->  	pgmap->ref = &pdev->p2pdma->devmap_ref;
->  	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
-> +	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
-> +		pci_resource_start(pdev, bar);
->  
->  	addr = devm_memremap_pages(&pdev->dev, pgmap);
->  	if (IS_ERR(addr))
-> @@ -616,3 +618,52 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
->  	pdev->p2pdma->published = publish;
->  }
->  EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
-> +
-> +/*
-> + * pci_p2pdma_map_sg - map a PCI peer-to-peer sg for DMA
-> + * @dev:        device doing the DMA request
-> + * @sg:		scatter list to map
-> + * @nents:	elements in the scatterlist
-> + * @dir:        DMA direction
-
-Can you fix these so the descriptions all have a single space after
-the "@dev:", which seems to be the existing convention in this file?
-The indentation looks pretty random now.
-
-> + *
-> + * Returns the number of SG entries mapped
-> + */
-> +int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
-> +		      enum dma_data_direction dir)
-
-Same question as before about why the mixture of "pci_*" interfaces
-that take "struct device *" parameters.
-
-> +{
-> +	struct dev_pagemap *pgmap;
-> +	struct scatterlist *s;
-> +	phys_addr_t paddr;
-> +	int i;
-> +
-> +	/*
-> +	 * p2pdma mappings are not compatible with devices that use
-> +	 * dma_virt_ops.
-> +	 */
-> +	if (IS_ENABLED(CONFIG_DMA_VIRT_OPS) && dev->dma_ops == &dma_virt_ops)
-> +		return 0;
-> +
-> +	for_each_sg(sg, s, nents, i) {
-> +		pgmap = sg_page(s)->pgmap;
-> +		paddr = sg_phys(s);
-> +
-> +		s->dma_address = paddr - pgmap->pci_p2pdma_bus_offset;
-> +		sg_dma_len(s) = s->length;
-> +	}
-> +
-> +	return nents;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
-> +
-> +/**
-> + * pci_p2pdma_unmap_sg - unmap a PCI peer-to-peer sg for DMA
-> + * @dev:        device doing the DMA request
-> + * @sg:		scatter list to map
-> + * @nents:	elements in the scatterlist
-> + * @dir:        DMA direction
-
-Same whitespace comment as above.
-
-> + */
-> +void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
-> +			 enum dma_data_direction dir)
-> +{
-> +}
-> +EXPORT_SYMBOL_GPL(pci_p2pdma_unmap_sg);
-> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-> index 9e907c338a44..1660f64ce96f 100644
-> --- a/include/linux/memremap.h
-> +++ b/include/linux/memremap.h
-> @@ -125,6 +125,7 @@ struct dev_pagemap {
->  	struct device *dev;
->  	void *data;
->  	enum memory_type type;
-> +	u64 pci_p2pdma_bus_offset;
->  };
->  
->  #ifdef CONFIG_ZONE_DEVICE
-> diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-> index c0dde3d3aac4..126eca697ab3 100644
-> --- a/include/linux/pci-p2pdma.h
-> +++ b/include/linux/pci-p2pdma.h
-> @@ -36,6 +36,10 @@ int pci_p2pmem_alloc_sgl(struct pci_dev *pdev, struct scatterlist **sgl,
->  void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl,
->  		unsigned int nents);
->  void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
-> +int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
-> +		      enum dma_data_direction dir);
-> +void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
-> +			 enum dma_data_direction dir);
->  #else /* CONFIG_PCI_P2PDMA */
->  static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
->  		size_t size, u64 offset)
-> @@ -83,5 +87,14 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
->  static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
->  {
->  }
-> +static inline int pci_p2pdma_map_sg(struct device *dev,
-> +	struct scatterlist *sg, int nents, enum dma_data_direction dir)
-> +{
-> +	return 0;
-> +}
-> +static inline void pci_p2pdma_unmap_sg(struct device *dev,
-> +	struct scatterlist *sg, int nents, enum dma_data_direction dir)
-> +{
-> +}
->  #endif /* CONFIG_PCI_P2PDMA */
->  #endif /* _LINUX_PCI_P2P_H */
-> -- 
-> 2.11.0
+> In order to get x2 mode working [1] is required.
 > 
+> However by keeping the older compatible, this series won't
+> break functionality if this series is merged before [1]
+> 
+> [1] -> https://lkml.org/lkml/2017/12/19/175
+> 
+> Kishon Vijay Abraham I (7):
+>   ARM: dts: dra7: Add properties to enable PCIe x2 lane mode
+>   ARM: dts: DRA74x: Use PCIe compatible specific to dra74
+>   ARM: dts: DRA72x: Use PCIe compatible specific to dra72
+>   ARM: dts: dra76-evm: Enable x2 PCIe lanes
+>   ARM: dts: dra7: Remove deprecated PCI compatible string
+>   ARM: omap2plus_defconfig: Enable CONFIG_PCI_DRA7XX (Host & Device
+>     modes)
+>   ARM: multi_v7_defconfig: Enable CONFIG_PCI_DRA7XX (Host & Device
+>     modes)
+> 
+>  arch/arm/boot/dts/dra7.dtsi          |  9 +++++----
+>  arch/arm/boot/dts/dra72x.dtsi        | 12 ++++++++++++
+>  arch/arm/boot/dts/dra74x.dtsi        | 12 ++++++++++++
+>  arch/arm/boot/dts/dra76-evm.dts      | 16 ++++++++++++++++
+>  arch/arm/configs/multi_v7_defconfig  |  6 ++++++
+>  arch/arm/configs/omap2plus_defconfig |  8 ++++++++
+>  6 files changed, 59 insertions(+), 4 deletions(-)
+
+Hi Kishon,
+
+I would like to ask you please what are your expectations with this
+series, which tree these changes are going to be queued through ?
+
+Please let me know, thanks.
+
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
