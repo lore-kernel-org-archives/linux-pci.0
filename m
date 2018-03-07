@@ -1,62 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:25359 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750820AbeC2JmO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 05:42:14 -0400
-Subject: Re: [PATCH v5 04/12] PCI: endpoint: Setting 64-bit/prefetch bit is
- invalid when IO is set
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        <cyrille.pitchen@free-electrons.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
- <20180328115018.31921-5-niklas.cassel@axis.com>
-CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <2afdb97d-eb07-031b-bb24-7166d011ee5b@ti.com>
-Date: Thu, 29 Mar 2018 15:12:02 +0530
+Received: from bombadil.infradead.org ([198.137.202.133]:33604 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750989AbeCGGqa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 01:46:30 -0500
+Date: Tue, 6 Mar 2018 22:46:12 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, dwmw@amazon.co.uk
+Subject: Re: [pci PATCH v3 0/3] Add support for unmanaged SR-IOV
+Message-ID: <20180307064612.GA10926@infradead.org>
+References: <20180306192423.3153.42741.stgit@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20180328115018.31921-5-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180306192423.3153.42741.stgit@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Mar 06, 2018 at 11:29:08AM -0800, Alexander Duyck wrote:
+> This series is meant to add support for SR-IOV on devices when the VFs are
+> not managed by the kernel. Examples of recent patches attempting to do this
+> include:
+> virto - https://patchwork.kernel.org/patch/10241225/
+> pci-stub - https://patchwork.kernel.org/patch/10109935/
+> vfio - https://patchwork.kernel.org/patch/10103353/
+> uio - https://patchwork.kernel.org/patch/9974031/
 
-
-On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
-> If flag PCI_BASE_ADDRESS_SPACE_IO is set, also having any
-> PCI_BASE_ADDRESS_MEM_* bit set is invalid.
-> 
-> This sanity check is done in pci_epc_set_bar(), so that we don't need
-> to do this sanity check in all epc->ops->set_bar() implementations.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/endpoint/pci-epc-core.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-> index 109d75f0b7d2..40eea20d21f9 100644
-> --- a/drivers/pci/endpoint/pci-epc-core.c
-> +++ b/drivers/pci/endpoint/pci-epc-core.c
-> @@ -309,10 +309,13 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
->  {
->  	int ret;
->  	unsigned long irq_flags;
-> +	int flags = epf_bar->flags;
->  
->  	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
->  	    (epf_bar->barno == BAR_5 &&
-> -	     epf_bar->flags & PCI_BASE_ADDRESS_MEM_TYPE_64))
-> +	     flags & PCI_BASE_ADDRESS_MEM_TYPE_64) ||
-> +	    (flags & PCI_BASE_ADDRESS_SPACE_IO &&
-> +	     flags & PCI_BASE_ADDRESS_IO_MASK))
->  		return -EINVAL;
-
-If possible I'd like this to be split. But otherwise
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
->  
->  	if (!epc->ops->set_bar)
-> 
+nvme and ema seems to be existing examples.  Care to throw in
+conversions while you're at it?
