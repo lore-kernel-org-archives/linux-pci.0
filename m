@@ -1,93 +1,46 @@
-Return-Path: <SRS0=EkHL=FZ=amazon.de=prvs=5932167e7=karahmed@kernel.org>
-Return-Path: <SRS0=EkHL=FZ=amazon.de=prvs=5932167e7=karahmed@kernel.org>
-From: "Raslan, KarimAllah" <karahmed@amazon.de>
-To: "helgaas@kernel.org" <helgaas@kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 2/2] PCI/IOV: Use the cached VF BARs size instead of
- re-reading them
-Date: Sat, 3 Mar 2018 04:34:10 +0000
-Message-ID: <1520051649.28771.3.camel@amazon.de>
-References: <1519939897-14596-1-git-send-email-karahmed@amazon.de>
-	 <1519939897-14596-2-git-send-email-karahmed@amazon.de>
-	 <20180302214857.GD202062@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180302214857.GD202062@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:49974 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751067AbeCGMlJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 07:41:09 -0500
+Date: Wed, 7 Mar 2018 12:41:05 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC 5/5] PCI: tegra: use seq_open_data
+Message-ID: <20180307124105.GE15139@e107981-ln.cambridge.arm.com>
+References: <20180301233724.20440-1-linux@rasmusvillemoes.dk>
+ <20180301233724.20440-5-linux@rasmusvillemoes.dk>
+ <20180302104207.GB27178@ulmo>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180302104207.GB27178@ulmo>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpLCAyMDE4LTAzLTAyIGF0IDE1OjQ4IC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
-PiBPbiBUaHUsIE1hciAwMSwgMjAxOCBhdCAxMDozMTozN1BNICswMTAwLCBLYXJpbUFsbGFoIEFo
-bWVkIHdyb3RlOg0KPiA+IA0KPiA+IFVzZSB0aGUgY2FjaGVkIFZGIEJBUnMgc2l6ZSBpbnN0ZWFk
-IG9mIHJlLXJlYWRpbmcgdGhlbSBmcm9tIHRoZSBoYXJkd2FyZS4NCj4gPiBUaGF0IGF2b2lkcyBk
-b2luZyB1bm5lY2Vzc2FyaWx5IGJ1cyB0cmFuc2FjdGlvbnMgd2hpY2ggaXMgc3BlY2lhbGx5DQo+
-ID4gbm90aWNhYmxlIHdoZW4geW91IGhhdmUgYSBQRiB3aXRoIGEgbGFyZ2UgbnVtYmVyIG9mIFZG
-cy4NCj4gDQo+IFRoYW5rcyBhIGxvdCBmb3IgYnJlYWtpbmcgdGhpcyBvdXQhICBJdCBzZWVtcyB0
-cml2aWFsLCBidXQgaXQgZGlkIG1ha2UgaXQNCj4gbXVjaCBlYXNpZXIgZm9yIG1lIHRvIHRoaW5r
-IGFib3V0IHRoaXMgb25lLg0KPiANCj4gPiANCj4gPiBDYzogQmpvcm4gSGVsZ2FhcyA8YmhlbGdh
-YXNAZ29vZ2xlLmNvbT4NCj4gPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiA+IENj
-OiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+ID4gU2lnbmVkLW9mZi1ieTogS2FyaW1B
-bGxhaCBBaG1lZCA8a2FyYWhtZWRAYW1hem9uLmRlPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Bj
-aS9wcm9iZS5jIHwgMjQgKysrKysrKysrKysrKysrKysrLS0tLS0tDQo+ID4gIDEgZmlsZSBjaGFu
-Z2VkLCAxOCBpbnNlcnRpb25zKCspLCA2IGRlbGV0aW9ucygtKQ0KPiA+IA0KPiA+IGRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3BjaS9wcm9iZS5jIGIvZHJpdmVycy9wY2kvcHJvYmUuYw0KPiA+IGluZGV4
-IGE5NjgzN2UuLmFlYWExMGEgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvcHJvYmUuYw0K
-PiA+ICsrKyBiL2RyaXZlcnMvcGNpL3Byb2JlLmMNCj4gPiBAQCAtMTgwLDYgKzE4MCw3IEBAIHN0
-YXRpYyBpbmxpbmUgdW5zaWduZWQgbG9uZyBkZWNvZGVfYmFyKHN0cnVjdCBwY2lfZGV2ICpkZXYs
-IHUzMiBiYXIpDQo+ID4gIGludCBfX3BjaV9yZWFkX2Jhc2Uoc3RydWN0IHBjaV9kZXYgKmRldiwg
-ZW51bSBwY2lfYmFyX3R5cGUgdHlwZSwNCj4gPiAgCQkgICAgc3RydWN0IHJlc291cmNlICpyZXMs
-IHVuc2lnbmVkIGludCBwb3MpDQo+ID4gIHsNCj4gPiArCWludCBiYXIgPSByZXMgLSBkZXYtPnJl
-c291cmNlOw0KPiA+ICAJdTMyIGwgPSAwLCBzeiA9IDAsIG1hc2s7DQo+ID4gIAl1NjQgbDY0LCBz
-ejY0LCBtYXNrNjQ7DQo+ID4gIAl1MTYgb3JpZ19jbWQ7DQo+ID4gQEAgLTE5OSw5ICsyMDAsMTMg
-QEAgaW50IF9fcGNpX3JlYWRfYmFzZShzdHJ1Y3QgcGNpX2RldiAqZGV2LCBlbnVtIHBjaV9iYXJf
-dHlwZSB0eXBlLA0KPiA+ICAJcmVzLT5uYW1lID0gcGNpX25hbWUoZGV2KTsNCj4gPiAgDQo+ID4g
-IAlwY2lfcmVhZF9jb25maWdfZHdvcmQoZGV2LCBwb3MsICZsKTsNCj4gPiAtCXBjaV93cml0ZV9j
-b25maWdfZHdvcmQoZGV2LCBwb3MsIGwgfCBtYXNrKTsNCj4gPiAtCXBjaV9yZWFkX2NvbmZpZ19k
-d29yZChkZXYsIHBvcywgJnN6KTsNCj4gPiAtCXBjaV93cml0ZV9jb25maWdfZHdvcmQoZGV2LCBw
-b3MsIGwpOw0KPiA+ICsJaWYgKGRldi0+aXNfdmlydGZuKSB7DQo+ID4gKwkJc3ogPSBkZXYtPnBo
-eXNmbi0+c3Jpb3YtPmJhcnN6W2Jhcl0gJiAweGZmZmZmZmZmOw0KPiA+ICsJfSBlbHNlIHsNCj4g
-PiArCQlwY2lfd3JpdGVfY29uZmlnX2R3b3JkKGRldiwgcG9zLCBsIHwgbWFzayk7DQo+ID4gKwkJ
-cGNpX3JlYWRfY29uZmlnX2R3b3JkKGRldiwgcG9zLCAmc3opOw0KPiA+ICsJCXBjaV93cml0ZV9j
-b25maWdfZHdvcmQoZGV2LCBwb3MsIGwpOw0KPiA+ICsJfQ0KPiANCj4gSSBkb24ndCBxdWl0ZSB1
-bmRlcnN0YW5kIHRoaXMuICBUaGlzIGlzIHJlYWRpbmcgdGhlIHJlZ3VsYXIgQkFScyAoY29uZmln
-DQo+IG9mZnNldHMgMHgxMCwgMHgxNCwgLi4uLCAweDI0KS4gIFBlciBzZWMgOS4zLjQuMS4xMSwg
-dGhlc2UgYXJlIGFsbCBSTyBaZXJvDQo+IGZvciBWRnMuICBUaGF0IHNob3VsZCBtYWtlIHRoZW0g
-bG9vayBsaWtlIHRoZXkncmUgYWxsIHVuaW1wbGVtZW50ZWQuDQo+IA0KPiBCdXQgdGhpcyBwYXRj
-aCBtYWtlcyB1cyB1c2UgdGhlIHNpemUgd2UgZGlzY292ZXJlZCBmcm9tIHRoZSBQRidzIFZGIEJB
-Um4NCj4gcmVnaXN0ZXJzIGluIGl0cyBTUi1JT1YgY2FwYWJpbGl0eS4gIFdvbid0IHRoYXQgY2F1
-c2UgdXMgdG8gZmlsbCBpbiB0aGUNCj4gVkYncyBkZXYtPnJlc291cmNlW25dLCB3aGVuIHdlIGRp
-ZG4ndCBkbyBpdCBiZWZvcmU/DQoNCk9oIC4uIHRoYXQgaXMgY29ycmVjdCEgSSBkaWQgbm90IG5v
-dGljZSB0aGlzIHBhcnQgZnJvbSB0aGUgc3BlYyA6KQ0KDQo+IA0KPiA+IA0KPiA+ICAJLyoNCj4g
-PiAgCSAqIEFsbCBiaXRzIHNldCBpbiBzeiBtZWFucyB0aGUgZGV2aWNlIGlzbid0IHdvcmtpbmcg
-cHJvcGVybHkuDQo+ID4gQEAgLTI0MSw5ICsyNDYsMTQgQEAgaW50IF9fcGNpX3JlYWRfYmFzZShz
-dHJ1Y3QgcGNpX2RldiAqZGV2LCBlbnVtIHBjaV9iYXJfdHlwZSB0eXBlLA0KPiA+ICANCj4gPiAg
-CWlmIChyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU1fNjQpIHsNCj4gPiAgCQlwY2lfcmVhZF9j
-b25maWdfZHdvcmQoZGV2LCBwb3MgKyA0LCAmbCk7DQo+ID4gLQkJcGNpX3dyaXRlX2NvbmZpZ19k
-d29yZChkZXYsIHBvcyArIDQsIH4wKTsNCj4gPiAtCQlwY2lfcmVhZF9jb25maWdfZHdvcmQoZGV2
-LCBwb3MgKyA0LCAmc3opOw0KPiA+IC0JCXBjaV93cml0ZV9jb25maWdfZHdvcmQoZGV2LCBwb3Mg
-KyA0LCBsKTsNCj4gPiArDQo+ID4gKwkJaWYgKGRldi0+aXNfdmlydGZuKSB7DQo+ID4gKwkJCXN6
-ID0gKGRldi0+cGh5c2ZuLT5zcmlvdi0+YmFyc3pbYmFyXSA+PiAzMikgJiAweGZmZmZmZmZmOw0K
-PiA+ICsJCX0gZWxzZSB7DQo+ID4gKwkJCXBjaV93cml0ZV9jb25maWdfZHdvcmQoZGV2LCBwb3Mg
-KyA0LCB+MCk7DQo+ID4gKwkJCXBjaV9yZWFkX2NvbmZpZ19kd29yZChkZXYsIHBvcyArIDQsICZz
-eik7DQo+ID4gKwkJCXBjaV93cml0ZV9jb25maWdfZHdvcmQoZGV2LCBwb3MgKyA0LCBsKTsNCj4g
-PiArCQl9DQo+ID4gIA0KPiA+ICAJCWw2NCB8PSAoKHU2NClsIDw8IDMyKTsNCj4gPiAgCQlzejY0
-IHw9ICgodTY0KXN6IDw8IDMyKTsNCj4gPiBAQCAtMzMyLDYgKzM0Miw4IEBAIHN0YXRpYyB2b2lk
-IHBjaV9yZWFkX2Jhc2VzKHN0cnVjdCBwY2lfZGV2ICpkZXYsIHVuc2lnbmVkIGludCBob3dtYW55
-LCBpbnQgcm9tKQ0KPiA+ICAJZm9yIChwb3MgPSAwOyBwb3MgPCBob3dtYW55OyBwb3MrKykgew0K
-PiA+ICAJCXN0cnVjdCByZXNvdXJjZSAqcmVzID0gJmRldi0+cmVzb3VyY2VbcG9zXTsNCj4gPiAg
-CQlyZWcgPSBQQ0lfQkFTRV9BRERSRVNTXzAgKyAocG9zIDw8IDIpOw0KPiA+ICsJCWlmIChkZXYt
-PmlzX3ZpcnRmbiAmJiBkZXYtPnBoeXNmbi0+c3Jpb3YtPmJhcnN6W3Bvc10gPT0gMCkNCj4gPiAr
-CQkJY29udGludWU7DQo+IA0KPiBTaW5jZSB3ZSBrbm93IHRoZSBWRiBCQVJzIGFyZSBhbGwgemVy
-byAodGhlIG9uZXMgaW4gdGhlIFZGIGNvbmZpZyBzcGFjZSwNCj4gbm90IHRoZSBvbmVzIGluIHRo
-ZSBQRiBTUi1JT1YgY2FwYWJpbGl0eSksIGluY2x1ZGluZyB0aGUgVkYgUk9NIEJBUiwgaXQNCj4g
-d291bGQgbWFrZSBzZW5zZSB0byBtZSB0byB0b3RhbGx5IHNraXAgdGhpcyB3aG9sZSBmdW5jdGlv
-biwgZS5nLiwNCj4gDQo+ICAgaWYgKGRldi0+bm9uX2NvbXBsaWFudF9iYXJzKQ0KPiAgICAgcmV0
-dXJuOw0KPiANCj4gICBpZiAoZGV2LT5pc192aXJ0Zm4pDQo+ICAgICByZXR1cm47DQo+IA0KDQpD
-b3JyZWN0ISBEb25lLg0KDQo+ID4gDQo+ID4gIAkJcG9zICs9IF9fcGNpX3JlYWRfYmFzZShkZXYs
-IHBjaV9iYXJfdW5rbm93biwgcmVzLCByZWcpOw0KPiA+ICAJfQ0KPiA+ICANCj4gPiAtLSANCj4g
-PiAyLjcuNA0KPiA+IA0KPiANCkFtYXpvbiBEZXZlbG9wbWVudCBDZW50ZXIgR2VybWFueSBHbWJI
-CkJlcmxpbiAtIERyZXNkZW4gLSBBYWNoZW4KbWFpbiBvZmZpY2U6IEtyYXVzZW5zdHIuIDM4LCAx
-MDExNyBCZXJsaW4KR2VzY2hhZWZ0c2Z1ZWhyZXI6IERyLiBSYWxmIEhlcmJyaWNoLCBDaHJpc3Rp
-YW4gU2NobGFlZ2VyClVzdC1JRDogREUyODkyMzc4NzkKRWluZ2V0cmFnZW4gYW0gQW10c2dlcmlj
-aHQgQ2hhcmxvdHRlbmJ1cmcgSFJCIDE0OTE3MyBCCg==
+On Fri, Mar 02, 2018 at 11:42:07AM +0100, Thierry Reding wrote:
+> On Fri, Mar 02, 2018 at 12:37:24AM +0100, Rasmus Villemoes wrote:
+> > Simplify the code slightly by having seq_open_data do the ->private
+> > assignment.
+> > 
+> > Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> > ---
+> >  drivers/pci/host/pci-tegra.c | 11 +----------
+> >  1 file changed, 1 insertion(+), 10 deletions(-)
+> 
+> I had to go hunt for patch 1/5 to be able to tell if this is indeed
+> equivalent. It is, so:
+> 
+> Reviewed-by: Thierry Reding <treding@nvidia.com>
+> Acked-by: Thierry Reding <treding@nvidia.com>
+
+I can't apply this patch standalone so I assume this will go via
+some other tree; I will drop it from the PCI patch queue, if I
+should not please do let me know.
+
+Thanks,
+Lorenzo
