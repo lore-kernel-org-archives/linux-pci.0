@@ -1,73 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37358 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1030345AbeCAMXH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 07:23:07 -0500
-Date: Thu, 1 Mar 2018 12:22:55 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Rolf Evers-Fischer <embedded24@evers-fischer.de>
-Cc: kishon@ti.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, andy.shevchenko@gmail.com
-Subject: Re: [PATCH v5 0/3] pci: endpoint: Fix double free in pci_epf_create()
-Message-ID: <20180301122247.GA31651@e107981-ln.cambridge.arm.com>
-References: <20180228173220.544-1-embedded24@evers-fischer.de>
+Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Keith Busch <keith.busch@intel.com>, Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v1 2/9] PCI/PM: Clear PCIe PME Status bit in core, not PCIe port driver
+Date: Wed, 07 Mar 2018 11:27:03 +0100
+Message-ID: <5379448.nrM4VZMk5Q@aspire.rjw.lan>
+In-Reply-To: <152040321483.240786.16597888035806933750.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com> <152040321483.240786.16597888035806933750.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180228173220.544-1-embedded24@evers-fischer.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 28, 2018 at 06:32:17PM +0100, Rolf Evers-Fischer wrote:
-> This is version 5 of a patchset to avoid double free in function
-> 'pci_epf_create()'.
+On Wednesday, March 7, 2018 7:13:34 AM CET Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> When I accidentally created a new endpoint device with an empty name,
-> the kernel warned about "attempted to be registered with empty name!"
-> and crashed afterwards.
+> fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
+> resume") added a .resume_noirq() callback to the PCIe port driver to clear
+> the PME Status bit during resume to work around a BIOS issue.
 > 
-> It turned out that the crash was not caused by the 'device_add()'
-> function itself, but by a double kfree of 'epf->name' and 'epf'.
+> The BIOS evidently enabled PME interrupts for ACPI-based runtime wakeups
+> but did not clear the PME Status bit during resume, which meant PMEs after
+> resume did not trigger interrupts because PME Status did not transition
+> from cleared to set.
 > 
-> The first patch just simplifies the code, while the second patch
-> fixes the problem. The third patch removes the goto labels.
+> The fix was in the PCIe port driver, so it worked when CONFIG_PCIEPORTBUS
+> was set.  But I think we *always* want the fix because the platform may use
+> PME interrupts even if Linux is built without the PCIe port driver.
 > 
-> Thank you Andy and Kishon for your Ack/Review on v3 for patches 1 and 2.
-> In v4 of these patches only the first lines of the commit messages
-> have been changed. In v5 these two patches have not been changed.
-> Therefore the 'Acked-By'/'Reviewed-By' lines have been added. I hope
-> that's acceptable.
+> Move the fix from the port driver to the PCI core so we can work around
+> this "PME doesn't work after waking from a sleep state" issue regardless of
+> CONFIG_PCIEPORTBUS.
 > 
-> Changes in v5:
-> - Beautified the ugly part of Patch #3 (v4), where the correct return
->   value was hidden under two levels of 'if'.
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pci-driver.c       |   14 ++++++++++++++
+>  drivers/pci/pcie/portdrv_pci.c |   15 ---------------
+>  2 files changed, 14 insertions(+), 15 deletions(-)
 > 
-> Changes in v4:
-> - s/pci/PCI and s/epf/EPF in the first line of
->   recent commit messages (thanks, Bjorn!)
-> - The new patch #3 removes the goto labels
->   in function 'pci_epf_create()' (thanks, Lorenzo!)
-> 
-> Changes in v3:
-> - Matched to other pending pci endpoint commits (thanks, Bjorn!)
-> - Added "Fixes" tag in patch 2 (thanks, Andy!)
-> 
-> Changes in v2:
-> - Based on feedback from Lorenzo, Andy and Kishon (thanks!)
-> - Change IDs removed
-> - First patch completely reworked in order to eliminate the
->   need for the second 'kstrdup' allocation and the 'kfree' of
->   the first allocation.
->   It was tested with name="pci_epf_test.0" and name="pci_epb":
->   The 'epf->name' was "pci_epf_test" or "pci_epb" (=unchanged).
-> 
-> Rolf Evers-Fischer (3):
->   PCI: endpoint: Simplify name allocation for EPF device
->   PCI: endpoint: Fix kernel panic after put_device()
->   PCI: endpoint: pci_epf_create: remove goto labels
-> 
->  drivers/pci/endpoint/pci-epf-core.c | 52 +++++++++++--------------------------
->  1 file changed, 15 insertions(+), 37 deletions(-)
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3bed6beda051..bf0704b75f79 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -525,6 +525,18 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+>  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+>  }
+>  
+> +static void pcie_resume_early(struct pci_dev *pci_dev)
 
-Applied to pci/endpoint for v4.17, thanks.
+I'd call it pcie_pme_root_status_cleanup() or similar so it is more clear
+what this function is for.
 
-Lorenzo
+LGTM otherwise.
+
+> +{
+> +	/*
+> +	 * Some BIOSes forget to clear Root PME Status bits after system wakeup
+> +	 * which breaks ACPI-based runtime wakeup on PCI Express, so clear those
+> +	 * bits now just in case (shouldn't hurt).
+> +	 */
+> +	if (pci_is_pcie(pci_dev) &&
+> +	    pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT)
+> +		pcie_clear_root_pme_status(pci_dev);
+> +}
+> +
+>  /*
+>   * Default "suspend" method for devices that have no driver provided suspend,
+>   * or not even a driver at all (second part).
+> @@ -873,6 +885,8 @@ static int pci_pm_resume_noirq(struct device *dev)
+>  	if (pci_has_legacy_pm_support(pci_dev))
+>  		return pci_legacy_resume_early(dev);
+>  
+> +	pcie_resume_early(pci_dev);
+> +
+>  	if (drv && drv->pm && drv->pm->resume_noirq)
+>  		error = drv->pm->resume_noirq(dev);
+>  
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 4413dd85e923..f91afd09e356 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -62,20 +62,6 @@ static int pcie_portdrv_restore_config(struct pci_dev *dev)
+>  }
+>  
+>  #ifdef CONFIG_PM
+> -static int pcie_port_resume_noirq(struct device *dev)
+> -{
+> -	struct pci_dev *pdev = to_pci_dev(dev);
+> -
+> -	/*
+> -	 * Some BIOSes forget to clear Root PME Status bits after system wakeup
+> -	 * which breaks ACPI-based runtime wakeup on PCI Express, so clear those
+> -	 * bits now just in case (shouldn't hurt).
+> -	 */
+> -	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
+> -		pcie_clear_root_pme_status(pdev);
+> -	return 0;
+> -}
+> -
+>  static int pcie_port_runtime_suspend(struct device *dev)
+>  {
+>  	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
+> @@ -103,7 +89,6 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.thaw		= pcie_port_device_resume,
+>  	.poweroff	= pcie_port_device_suspend,
+>  	.restore	= pcie_port_device_resume,
+> -	.resume_noirq	= pcie_port_resume_noirq,
+>  	.runtime_suspend = pcie_port_runtime_suspend,
+>  	.runtime_resume	= pcie_port_runtime_resume,
+>  	.runtime_idle	= pcie_port_runtime_idle,
+> 
+> 
