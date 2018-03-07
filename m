@@ -1,38 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52204 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932354AbeCSK3f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 06:29:35 -0400
-Date: Mon, 19 Mar 2018 13:29:20 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        bhelgaas@google.com, devel@linuxdriverproject.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci: host: pci-hyperv: Replace GFP_ATOMIC with
- GFP_KERNEL in hv_pci_onchannelcallback
-Message-ID: <20180319102920.tx6hpjyyqooij5xi@mwanda>
-References: <1521384782-23539-1-git-send-email-baijiaju1990@gmail.com>
- <20180319083850.tglknmwwybdhahfl@mwanda>
- <63a95bfd-0199-b935-b8d0-2b73d82e8d46@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <63a95bfd-0199-b935-b8d0-2b73d82e8d46@gmail.com>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:43202 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933746AbeCGPmq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 10:42:46 -0500
+Received: by mail-ot0-f195.google.com with SMTP id m22so2430642otf.10
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2018 07:42:46 -0800 (PST)
+From: Rob Herring <robh@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>
+Subject: [PATCH 1/9] PCI: kirin: remove unnecessary asm/compiler.h include
+Date: Wed,  7 Mar 2018 09:42:35 -0600
+Message-Id: <20180307154243.3205-2-robh@kernel.org>
+In-Reply-To: <20180307154243.3205-1-robh@kernel.org>
+References: <20180307154243.3205-1-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Smatch tracks information about every function call.  When a function
-pointer is called it maybe looks something like this:
+compiler.h is unnecessary and doesn't exist on some arches, so remove
+it.
 
-     kernel/module.c |   SYSC_delete_module | (struct module)->exit |    INTERNAL |  -1 |  | void(*)()
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ drivers/pci/dwc/pcie-kirin.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-So then we just have to know what functions are assigned to
-module->exit.
-
-I also filter based on the function signature "void(*)()" because
-there are a couple places where we cut and pasted so the structs can
-have the same name and function pointer name as a member but take
-different arguments.
-
-regards,
-dan carpenter
+diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+index 13d839bd6160..dcc8cedf6e17 100644
+--- a/drivers/pci/dwc/pcie-kirin.c
++++ b/drivers/pci/dwc/pcie-kirin.c
+@@ -8,7 +8,6 @@
+  * Author: Xiaowei Song <songxiaowei@huawei.com>
+  */
+ 
+-#include <asm/compiler.h>
+ #include <linux/compiler.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+-- 
+2.14.1
