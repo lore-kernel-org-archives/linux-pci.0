@@ -1,72 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:38285 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752555AbeCMV3v (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 17:29:51 -0400
-Subject: [pci PATCH v6 2/5] virtio_pci: Add support for unmanaged SR-IOV on
- virtio_pci devices
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
-        mheyne@amazon.de, liang-min.wang@intel.com,
-        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
-        dwmw@amazon.co.uk
-Date: Tue, 13 Mar 2018 14:29:49 -0700
-Message-ID: <20180313212855.3553.97762.stgit@localhost.localdomain>
-In-Reply-To: <20180313212508.3553.65326.stgit@localhost.localdomain>
-References: <20180313212508.3553.65326.stgit@localhost.localdomain>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:34746 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751241AbeCGRXg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 12:23:36 -0500
+Received: by mail-oi0-f43.google.com with SMTP id c83so2262762oib.1
+        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2018 09:23:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180307171308.GA21985@e107981-ln.cambridge.arm.com>
+References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
+ <20180220153947.GA21801@e107981-ln.cambridge.arm.com> <CAOMZO5CSMJz8=Mm-fJR1aJK=V19uTyVO1PXkOGd1g6v64BNHNg@mail.gmail.com>
+ <20180307171308.GA21985@e107981-ln.cambridge.arm.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Wed, 7 Mar 2018 14:23:34 -0300
+Message-ID: <CAOMZO5Aedfy3CfxOAEXSPTQt_1pher2FYjC1_NnXrxiArDEDgQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root subordinate
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>,
+        linux-pci@vger.kernel.org,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Hi Lorenzo,
 
-Hardware-realized virtio_pci devices can implement SR-IOV, so this
-patch enables its use. The device in question is an upcoming Intel
-NIC that implements both a virtio_net PF and virtio_net VFs. These
-are hardware realizations of what has been up to now been a software
-interface.
+On Wed, Mar 7, 2018 at 2:13 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
 
-The device in question has the following 4-part PCI IDs:
+> I asked Bjorn to send it for -rc5 and he kindly accepted, it is now
+> in his for-linus branch.
 
-PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
-VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
-
-The patch currently needs no check for device ID, because the callback
-will never be made for devices that do not assert the capability or
-when run on a platform incapable of SR-IOV.
-
-One reason for this patch is because the hardware requires the
-vendor ID of a VF to be the same as the vendor ID of the PF that
-created it. So it seemed logical to simply have a fully-functioning
-virtio_net PF create the VFs. This patch makes that possible.
-
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
----
-
-v4: Dropped call to pci_disable_sriov in virtio_pci_remove function
-v5: Replaced call to pci_sriov_configure_unmanaged with
-        pci_sriov_configure_simple
-v6: Dropped "#ifdef" checks for IOV wrapping sriov_configure definition
-
- drivers/virtio/virtio_pci_common.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-index 48d4d1cf1cb6..67a227fd7aa0 100644
---- a/drivers/virtio/virtio_pci_common.c
-+++ b/drivers/virtio/virtio_pci_common.c
-@@ -596,6 +596,7 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
- #ifdef CONFIG_PM_SLEEP
- 	.driver.pm	= &virtio_pci_pm_ops,
- #endif
-+	.sriov_configure = pci_sriov_configure_simple,
- };
- 
- module_pci_driver(virtio_pci_driver);
+Excellent, thanks!
