@@ -1,101 +1,101 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 2/2] firmware: dmi_scan: Uninline dmi_get_bios_year() helper
-Date: Tue, 20 Mar 2018 15:54:10 +0200
-Message-Id: <20180320135410.11627-3-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
-References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42386 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750803AbeCGGNa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 01:13:30 -0500
+Subject: [PATCH v1 1/9] PCI/PM: Move pcie_clear_root_pme_status() to core
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>
+Date: Wed, 07 Mar 2018 00:13:29 -0600
+Message-ID: <152040320934.240786.9241781859071768363.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Uninline dmi_get_bios_year() which, in particular, allows us
-to optimize it in the future.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-While doing this, convert the function to return an error code
-when BIOS date is not present, parsable or CONFIG_DMI=n.
+Move pcie_clear_root_pme_status() from the port driver to the PCI core so
+it will be available even when the port driver isn't present.  No
+functional change intended.
 
-Additionally, during the move, add a bit of documentation.
-
-Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
- include/linux/dmi.h         | 11 ++---------
- 2 files changed, 22 insertions(+), 9 deletions(-)
+ drivers/pci/pci.c              |    9 +++++++++
+ drivers/pci/pci.h              |    1 +
+ drivers/pci/pcie/portdrv.h     |    2 --
+ drivers/pci/pcie/portdrv_pci.c |    9 ---------
+ 4 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
-index ae4f1b181c23..bfb6ce6abc83 100644
---- a/drivers/firmware/dmi_scan.c
-+++ b/drivers/firmware/dmi_scan.c
-@@ -1040,6 +1040,26 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f6a4dd10d9b0..120e3393fc35 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1683,6 +1683,15 @@ int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
  }
- EXPORT_SYMBOL(dmi_get_date);
+ EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
  
 +/**
-+ *	dmi_get_bios_year - get a year out of DMI_BIOS_DATE field
-+ *
-+ *	Returns year on success, -ENXIO if DMI is not selected,
-+ *	or a different negative error code if DMI field is not present
-+ *	or not parsable.
++ * pcie_clear_root_pme_status - Clear root port PME interrupt status.
++ * @dev: PCIe root port or event collector.
 + */
-+int dmi_get_bios_year(void)
++void pcie_clear_root_pme_status(struct pci_dev *dev)
 +{
-+	bool exists;
-+	int year;
-+
-+	exists = dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
-+	if (!exists)
-+		return -ENODATA;
-+
-+	return year ? year : -ERANGE;
++	pcie_capability_set_dword(dev, PCI_EXP_RTSTA, PCI_EXP_RTSTA_PME);
 +}
-+EXPORT_SYMBOL(dmi_get_bios_year);
 +
  /**
-  *	dmi_walk - Walk the DMI table and get called back for every record
-  *	@decode: Callback function
-diff --git a/include/linux/dmi.h b/include/linux/dmi.h
-index b5b8c26b04fb..c46fdb36700b 100644
---- a/include/linux/dmi.h
-+++ b/include/linux/dmi.h
-@@ -106,6 +106,7 @@ extern void dmi_scan_machine(void);
- extern void dmi_memdev_walk(void);
- extern void dmi_set_dump_stack_arch_desc(void);
- extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
-+extern int dmi_get_bios_year(void);
- extern int dmi_name_in_vendors(const char *str);
- extern int dmi_name_in_serial(const char *str);
- extern int dmi_available;
-@@ -134,6 +135,7 @@ static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
- 		*dayp = 0;
- 	return false;
- }
-+static inline int dmi_get_bios_year(void) { return -ENXIO; }
- static inline int dmi_name_in_vendors(const char *s) { return 0; }
- static inline int dmi_name_in_serial(const char *s) { return 0; }
- #define dmi_available 0
-@@ -149,13 +151,4 @@ static inline const struct dmi_system_id *
+  * pci_check_pme_status - Check if given device has generated PME.
+  * @dev: Device to check.
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index fcd81911b127..813ca2c895d8 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -71,6 +71,7 @@ void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
+ void pci_power_up(struct pci_dev *dev);
+ void pci_disable_enabled_device(struct pci_dev *dev);
+ int pci_finish_runtime_suspend(struct pci_dev *dev);
++void pcie_clear_root_pme_status(struct pci_dev *dev);
+ int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
+ void pci_pme_restore(struct pci_dev *dev);
+ bool pci_dev_keep_suspended(struct pci_dev *dev);
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index a854bc569117..a4fc44d52206 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -34,8 +34,6 @@ void pcie_port_bus_unregister(void);
  
- #endif
+ struct pci_dev;
  
--static inline int dmi_get_bios_year(void)
+-void pcie_clear_root_pme_status(struct pci_dev *dev);
+-
+ #ifdef CONFIG_HOTPLUG_PCI_PCIE
+ extern bool pciehp_msi_disabled;
+ 
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index fb1c1bb87316..4413dd85e923 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -50,15 +50,6 @@ __setup("pcie_ports=", pcie_port_setup);
+ 
+ /* global data */
+ 
+-/**
+- * pcie_clear_root_pme_status - Clear root port PME interrupt status.
+- * @dev: PCIe root port or event collector.
+- */
+-void pcie_clear_root_pme_status(struct pci_dev *dev)
 -{
--	int year;
--
--	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
--
--	return year;
+-	pcie_capability_set_dword(dev, PCI_EXP_RTSTA, PCI_EXP_RTSTA_PME);
 -}
 -
- #endif	/* __DMI_H__ */
--- 
-2.16.2
-
+ static int pcie_portdrv_restore_config(struct pci_dev *dev)
+ {
+ 	int retval;
