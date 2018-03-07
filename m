@@ -1,121 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52322 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:42652 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751838AbeCEO2m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 09:28:42 -0500
-Date: Mon, 5 Mar 2018 08:28:40 -0600
+        id S1751099AbeCGGN6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 01:13:58 -0500
+Subject: [PATCH v1 6/9] PCI/portdrv: Remove unused PCIE_PORT_SERVICE_VC
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kenny Ballou <kballou@devnulllabs.io>
-Cc: linux-pci@vger.kernel.org, googlegot@yahooo.com,
-        bhelgaas@google.com
-Subject: Re: [PATCH] pci: use kstrtobool over ad hoc string parsing
-Message-ID: <20180305142840.GA255556@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180212230457.23181-1-kballou@devnulllabs.io>
- <20180228033228.GE127842@bhelgaas-glaptop.roam.corp.google.com>
- <878tbavy4b.fsf@devnulllabs.io>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>
+Date: Wed, 07 Mar 2018 00:13:56 -0600
+Message-ID: <152040323671.240786.17190514268346362843.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <878tbavy4b.fsf@devnulllabs.io>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 02, 2018 at 04:47:16PM -0700, Kenny Ballou wrote:
-> 
-> On 2018年02月28日 03:32 GMT, Bjorn Helgaas wrote:
-> > On Mon, Feb 12, 2018 at 04:04:57PM -0700, Kenny Ballou wrote:
-> >> Convert ROM read access enable/disable string parsing to use the
-> >> `kstrtobool` function.
-> >>
-> >> This fixes Bugzilla Bug 111301 -- Sysfs PCI rom file functionality does
-> >> not match documentation.
-> >>
-> >> bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111301
-> >>
-> >> Reported-by: googlegot@yahoo.com
-> >> Signed-off-by: Kenny Ballou <kballou@devnulllabs.io>
-> >> ---
-> >>  drivers/pci/pci-sysfs.c | 8 +++++---
-> >>  1 file changed, 5 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> >> index eb6bee8724cc..3cde1f25e786 100644
-> >> --- a/drivers/pci/pci-sysfs.c
-> >> +++ b/drivers/pci/pci-sysfs.c
-> >> @@ -1424,10 +1424,12 @@ static ssize_t pci_write_rom(struct file *filp, struct kobject *kobj,
-> >>  {
-> >>  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
-> >>
-> >> -	if ((off ==  0) && (*buf == '0') && (count == 2))
-> >> -		pdev->rom_attr_enabled = 0;
-> >> -	else
-> >> +	bool res = false;
-> >> +
-> >> +	if (kstrtobool(buf, &res) == 0 && res)
-> >>  		pdev->rom_attr_enabled = 1;
-> >> +	else
-> >> +		pdev->rom_attr_enabled = 0;
-> >>
-> >>  	return count;
-> >>  }
-> >
-> > I know I proposed kstrtobool().  But looking closer, I don't think
-> > it's the right answer because:
-> >
-> >   - kstrtobool() assumes a NULL-terminated string, and sysfs does not
-> >     guarantee that.  This is a binary file and we can write arbitrary
-> >     data to it.  kstrtobool_from_user() makes sure the string is
-> >     NULL-terminated, but it does a copy_from_user() that we don't want
-> >     in the sysfs case.
-> >
-> >   - The current behavior is that only 2-byte writes starting with '0'
-> >     disable the ROM, and all other writes enable it.
-> >
-> >     Using kstrtobool() would enable the ROM only for writes starting
-> >     with y/Y/1/on/oN/On/ON, and all other writes would disable it.
-> >
-> >     That changes the behavior for most writes, e.g., writing "2"
-> >     currently enables, but would now disable.  This feels
-> >     unnecessarily risky because we don't know what programs are
-> >     writing to enable the ROM.  The doc says to write "1", but the
-> >     code comment says "anything except 0".
-> >
-> > We *could* change the code to accept a single-byte '0' write, but I
-> > think the simplest solution would be to change the documentation to
-> > explicitly require a 2-byte "0\n" write to disable the ROM.
-> >
-> > Sorry for dithering on this.
-> >
-> > Bjorn
-> 
-> I was not under the impression that this particular device needed data
-> written to it(?).  If it is the case that arbitrary data needs to be
-> written, your argument makes sense, and I can put together a patch for
-> the documentation instead.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-I'm not sure I understand your question, but here's a stab at
-answering it:
+No driver registers for PCIE_PORT_SERVICE_VC, so remove it.
 
-The sysfs "rom" file has a read method (pci_read_rom()) and a write
-method (pci_write_rom()).  User-space software can open the file and
-do a read() system call to read the contents of the ROM from the
-device, so pci_read_rom() is directly connected to the PCI hardware
-device.
+This removes the VC "service" files from /sys/bus/pci_express/devices,
+e.g., 0000:07:00.0:pcie108, 0000:08:04.0:pcie208 (all the files that
+contained "8" as the last digit of the "pcieXXX" part).  The port driver
+created these files for PCIe port devices that have a VC Capability.
 
-The write method doesn't touch the hardware device at all; it's only a
-software switch, and the data written to the sysfs "rom" file is never
-written to the PCI hardware device at all.  It doesn't need any
-particular data written to it.  The data can be whatever we decide it
-should be, and we can interpret that data in any way we like since
-it's purely a software construct.  
+Since this reduces PCIE_PORT_DEVICE_MAXSERVICES and moves DPC down into the
+spot where VC used to be, the DPC sysfs files will now be named "pcieXX8".
+I don't think there's anything useful userspace can do with those files, so
+I hope nobody cares about these filenames.
 
-However, there is user-space software that assumes certain behavior
-(enabling/disabling read access to the ROM).  We don't want to break
-that software.  Using kstrtobool() would change the interpretation of
-some writes.  We *could* assume that user-space software always writes
-"1" to enable reads of the ROM and "0" to disable reads, but it's
-impossible to be certain of that.
+There is no VC driver that calls pcie_port_service_register(), so there
+never was a /sys/bus/pci_express/drivers/vc directory.
 
-So the safest thing in terms of not breaking the ABI is to leave the
-code unchanged but update the documentation.  Does that make sense?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/portdrv.h      |    2 +-
+ drivers/pci/pcie/portdrv_acpi.c |    2 +-
+ drivers/pci/pcie/portdrv_core.c |   14 ++++----------
+ include/linux/pcieport_if.h     |    4 +---
+ 4 files changed, 7 insertions(+), 15 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index a4fc44d52206..749d200936d9 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -12,7 +12,7 @@
+ 
+ #include <linux/compiler.h>
+ 
+-#define PCIE_PORT_DEVICE_MAXSERVICES   5
++#define PCIE_PORT_DEVICE_MAXSERVICES   4
+ /*
+  * The PCIe Capability Interrupt Message Number (PCIe r3.1, sec 7.8.2) must
+  * be one of the first 32 MSI-X entries.  Per PCI r3.0, sec 6.8.3.1, MSI
+diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+index 319c94976873..4a1b50867c98 100644
+--- a/drivers/pci/pcie/portdrv_acpi.c
++++ b/drivers/pci/pcie/portdrv_acpi.c
+@@ -48,7 +48,7 @@ void pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+ 
+ 	flags = root->osc_control_set;
+ 
+-	*srv_mask = PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_DPC;
++	*srv_mask = PCIE_PORT_SERVICE_DPC;
+ 	if (flags & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
+ 		*srv_mask |= PCIE_PORT_SERVICE_HP;
+ 	if (flags & OSC_PCI_EXPRESS_PME_CONTROL)
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 9db77c683732..94ce4dc50d1a 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -189,10 +189,8 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ 	if (ret < 0)
+ 		return -ENODEV;
+ 
+-	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
+-		if (i != PCIE_PORT_SERVICE_VC_SHIFT)
+-			irqs[i] = pci_irq_vector(dev, 0);
+-	}
++	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
++		irqs[i] = pci_irq_vector(dev, 0);
+ 
+ 	return 0;
+ }
+@@ -212,8 +210,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	int services = 0;
+ 	int cap_mask = 0;
+ 
+-	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+-			| PCIE_PORT_SERVICE_VC;
++	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP;
+ 	if (pci_aer_available())
+ 		cap_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
+ 
+@@ -240,9 +237,6 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 		 */
+ 		pci_disable_pcie_error_reporting(dev);
+ 	}
+-	/* VC support */
+-	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_VC))
+-		services |= PCIE_PORT_SERVICE_VC;
+ 	/* Root ports are capable of generating PME too */
+ 	if ((cap_mask & PCIE_PORT_SERVICE_PME)
+ 	    && pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
+@@ -332,7 +326,7 @@ int pcie_port_device_register(struct pci_dev *dev)
+ 	 */
+ 	status = pcie_init_service_irqs(dev, irqs, capabilities);
+ 	if (status) {
+-		capabilities &= PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_HP;
++		capabilities &= PCIE_PORT_SERVICE_HP;
+ 		if (!capabilities)
+ 			goto error_disable;
+ 	}
+diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
+index b69769dbf659..28eb21731db6 100644
+--- a/include/linux/pcieport_if.h
++++ b/include/linux/pcieport_if.h
+@@ -20,9 +20,7 @@
+ #define PCIE_PORT_SERVICE_AER		(1 << PCIE_PORT_SERVICE_AER_SHIFT)
+ #define PCIE_PORT_SERVICE_HP_SHIFT	2	/* Native Hotplug */
+ #define PCIE_PORT_SERVICE_HP		(1 << PCIE_PORT_SERVICE_HP_SHIFT)
+-#define PCIE_PORT_SERVICE_VC_SHIFT	3	/* Virtual Channel */
+-#define PCIE_PORT_SERVICE_VC		(1 << PCIE_PORT_SERVICE_VC_SHIFT)
+-#define PCIE_PORT_SERVICE_DPC_SHIFT	4	/* Downstream Port Containment */
++#define PCIE_PORT_SERVICE_DPC_SHIFT	3	/* Downstream Port Containment */
+ #define PCIE_PORT_SERVICE_DPC		(1 << PCIE_PORT_SERVICE_DPC_SHIFT)
+ 
+ struct pcie_device {
