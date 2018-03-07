@@ -1,57 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:58130 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750810AbeCUFuR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 01:50:17 -0400
-Subject: Re: [PATCH v4 2/5] PCI: designware-ep: Make dw_pcie_ep_set_bar()
- handle 64-bit BARs properly
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Received: from david.siemens.de ([192.35.17.14]:35655 "EHLO david.siemens.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751130AbeCGHji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 02:39:38 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-References: <20180308133331.19464-1-niklas.cassel@axis.com>
- <20180308133331.19464-3-niklas.cassel@axis.com>
-CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <e779a6dc-3037-69da-1e92-64c5d8348019@ti.com>
-Date: Wed, 21 Mar 2018 11:19:57 +0530
-MIME-Version: 1.0
-In-Reply-To: <20180308133331.19464-3-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH v5 3/7] x86/jailhouse: Enable PCI mmconfig access in inmates
+Date: Wed,  7 Mar 2018 08:39:14 +0100
+Message-Id: <2ee9e4401fa22377b3965893a558120f169be82b.1520408357.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
+References: <cover.1520408357.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
+References: <cover.1520408357.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas,
+From: Otavio Pontes <otavio.pontes@intel.com>
 
-On Thursday 08 March 2018 07:03 PM, Niklas Cassel wrote:
-> Since a 64-bit BAR consists of a BAR pair, we need to write to both
-> BARs in the BAR pair to setup the BAR properly.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/dwc/pcie-designware-ep.c | 11 +++++++++--
->  1 file changed, 9 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index 9236b998327f..946bbdf53c4d 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -136,8 +136,15 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
->  		return ret;
->  
->  	dw_pcie_dbi_ro_wr_en(pci);
-> -	dw_pcie_writel_dbi2(pci, reg, size - 1);
-> -	dw_pcie_writel_dbi(pci, reg, flags);
-> +	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-> +		dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
-> +		dw_pcie_writel_dbi(pci, reg, flags);
-> +		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
-> +		dw_pcie_writel_dbi(pci, reg + 4, 0);
+Use the PCI mmconfig base address exported by jailhouse in boot
+parameters in order to access the memory mapped PCI configuration space.
 
-I think we should check in pci_epc_set_bar to make sure BAR_5 cannot have
-PCI_BASE_ADDRESS_MEM_TYPE_64 flag set as this might lead undesired result.
+Signed-off-by: Otavio Pontes <otavio.pontes@intel.com>
+[Jan: rebased, fixed !CONFIG_PCI_MMCONFIG, used pcibios_last_bus]
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+---
+ arch/x86/include/asm/pci_x86.h | 2 ++
+ arch/x86/kernel/jailhouse.c    | 8 ++++++++
+ arch/x86/pci/mmconfig-shared.c | 4 ++--
+ 3 files changed, 12 insertions(+), 2 deletions(-)
 
-Thanks
-Kishon
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index eb66fa9cd0fc..959d618dbb17 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -151,6 +151,8 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			       phys_addr_t addr);
+ extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
++extern struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
++							int end, u64 addr);
+ 
+ extern struct list_head pci_mmcfg_list;
+ 
+diff --git a/arch/x86/kernel/jailhouse.c b/arch/x86/kernel/jailhouse.c
+index b68fd895235a..fa183a131edc 100644
+--- a/arch/x86/kernel/jailhouse.c
++++ b/arch/x86/kernel/jailhouse.c
+@@ -124,6 +124,14 @@ static int __init jailhouse_pci_arch_init(void)
+ 	if (pcibios_last_bus < 0)
+ 		pcibios_last_bus = 0xff;
+ 
++#ifdef CONFIG_PCI_MMCONFIG
++	if (setup_data.pci_mmconfig_base) {
++		pci_mmconfig_add(0, 0, pcibios_last_bus,
++				 setup_data.pci_mmconfig_base);
++		pci_mmcfg_arch_init();
++	}
++#endif
++
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 96684d0adcf9..0e590272366b 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -94,8 +94,8 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+ 	return new;
+ }
+ 
+-static struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
+-							int end, u64 addr)
++struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
++						 int end, u64 addr)
+ {
+ 	struct pci_mmcfg_region *new;
+ 
+-- 
+2.13.6
