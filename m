@@ -1,65 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:36274 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbeCUEKE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 00:10:04 -0400
-Date: Wed, 21 Mar 2018 05:10:02 +0100
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lorenzo.pieralisi@arm.com
-Subject: Re: [PATCH v4 0/5] PCI endpoint 64-bit BAR fixes
-Message-ID: <20180321041001.GA29527@axis.com>
-References: <20180308133331.19464-1-niklas.cassel@axis.com>
- <20180319165234.GA12486@e107981-ln.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180319165234.GA12486@e107981-ln.cambridge.arm.com>
+Received: from david.siemens.de ([192.35.17.14]:35652 "EHLO david.siemens.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751112AbeCGHjh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 02:39:37 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH v5 7/7] MAINTAINERS: Add entry for Jailhouse
+Date: Wed,  7 Mar 2018 08:39:18 +0100
+Message-Id: <8be8af4084d862faa43d55c7bae94af7e0da1609.1520408357.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
+References: <cover.1520408357.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
+References: <cover.1520408357.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 19, 2018 at 04:52:34PM +0000, Lorenzo Pieralisi wrote:
-> On Thu, Mar 08, 2018 at 02:33:25PM +0100, Niklas Cassel wrote:
-> > PCI endpoint fixes to improve the way 64-bit BARs are handled.
-> > 
-> > 
-> > There are still future improvements that could be made:
-> > 
-> > pci-epf-test.c always allocates space for
-> > 6 BARs, even when using 64-bit BARs (which
-> > really only requires us to allocate 3 BARs).
-> > 
-> > pcitest.sh will print "NOT OKAY" for BAR1,
-> > BAR3, and BAR5 when using 64-bit BARs.
-> > This could probably be improved to say
-> > something like "N/A (64-bit BAR)".
-> > 
-> > Niklas Cassel (5):
-> >   PCI: endpoint: BAR width should not depend on sizeof dma_addr_t
-> >   PCI: designware-ep: Make dw_pcie_ep_set_bar() handle 64-bit BARs
-> >     properly
-> >   PCI: designware-ep: Make dw_pcie_ep_reset_bar() handle 64-bit BARs
-> >     properly
-> >   PCI: endpoint: Make pci_epc_set_bar() return the BAR width that was
-> >     set-up
-> >   misc: pci_endpoint_test: Handle 64-bit BARs properly
-> > 
-> >  drivers/misc/pci_endpoint_test.c              | 12 +++++++-----
-> >  drivers/pci/cadence/pcie-cadence-ep.c         |  2 +-
-> >  drivers/pci/dwc/pcie-designware-ep.c          | 22 ++++++++++++++++++----
-> >  drivers/pci/endpoint/functions/pci-epf-test.c | 22 +++++++++++++++-------
-> >  4 files changed, 41 insertions(+), 17 deletions(-)
-> 
-> Niklas,
-> 
-> I am fine with the series but I'd need Kishon ACKs (and Greg's for the
-> last patch), I am ready to queue them then.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Hello Kishon,
-
-could you please have a look at this series?
-
-
-Kind regards,
-Niklas
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4623caf8d72d..6dc0b8f3ae0e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7523,6 +7523,13 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
+ S:	Maintained
+ F:	drivers/media/dvb-frontends/ix2505v*
+ 
++JAILHOUSE HYPERVISOR INTERFACE
++M:	Jan Kiszka <jan.kiszka@siemens.com>
++L:	jailhouse-dev@googlegroups.com
++S:	Maintained
++F:	arch/x86/kernel/jailhouse.c
++F:	arch/x86/include/asm/jailhouse_para.h
++
+ JC42.4 TEMPERATURE SENSOR DRIVER
+ M:	Guenter Roeck <linux@roeck-us.net>
+ L:	linux-hwmon@vger.kernel.org
+-- 
+2.13.6
