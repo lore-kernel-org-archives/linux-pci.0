@@ -1,39 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:43636 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751739AbeCNRm3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 13:42:29 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 0/7] ARM: dts: dra7: Enable x2 lane mode support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20171219093133.16565-1-kishon@ti.com>
+ <20180307120824.GC15139@e107981-ln.cambridge.arm.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <6698a64b-8f4d-53fd-ad93-36c742633d0c@ti.com>
+Date: Wed, 7 Mar 2018 17:57:37 +0530
 MIME-Version: 1.0
-In-Reply-To: <CAHp75VdOaE-efzbQV=Mtf+a1-6L5JxF10Uc+uZ+LYz3S757biw@mail.gmail.com>
-References: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
- <20180314163455.15854-2-desnesn@linux.vnet.ibm.com> <CAHp75VdOaE-efzbQV=Mtf+a1-6L5JxF10Uc+uZ+LYz3S757biw@mail.gmail.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 14 Mar 2018 19:42:28 +0200
-Message-ID: <CAHp75VcbY9FhmngPOJ_d7ZxLUFmwPZhi7KdJSaPnqF1Db5UKEg@mail.gmail.com>
-Subject: Re: [PATCH 1/2, pci] pci: Addition of PCI_DEV_FLAGS_QUIET_PCI_REALIGN
- attribute to the PCI subsystem
-To: "Desnes A. Nunes do Rosario" <desnesn@linux.vnet.ibm.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        "open list:LINUX FOR POWERPC PA SEMI PWRFICIENT"
-        <linuxppc-dev@lists.ozlabs.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>, ruscur@russell.cc,
-        aik@ozlabs.ru, david@gibson.dropbear.id.au,
-        fbarrat@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180307120824.GC15139@e107981-ln.cambridge.arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Tony Lindgren <tony@atomide.com>, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
+ Rob Herring <robh+dt@kernel.org>, bcousson@baylibre.com,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 7:41 PM, Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
+Hi Lorenzo,
 
-> I would rather name it _NO_PCI_REALIGN_MSG
+On Wednesday 07 March 2018 05:38 PM, Lorenzo Pieralisi wrote:
+> On Tue, Dec 19, 2017 at 03:01:26PM +0530, Kishon Vijay Abraham I wrote:
+>> Add properties to enable PCIe x2 lane mode since all dra7
+>> based SoCs support x2 lane mode.
+>>
+>> However only dra76-evm has a slot which can support x2 lane
+>> cards. Hence only enable x2 lane mode in dra76-evm.
+>> (am571x-idk can support x2 lane mode but that makes usb port
+>> not functional so not including the patch to enable
+>> x2 mode in am571x-idk)
+>>
+>> Also included in this series is patch to enable PCIe configs
+>> (both host and device) in omap2plus_defconfig and
+>> multi_v7_defconfig
+>>
+>> In order to get x2 mode working [1] is required.
+>>
+>> However by keeping the older compatible, this series won't
+>> break functionality if this series is merged before [1]
+>>
+>> [1] -> https://lkml.org/lkml/2017/12/19/175
+>>
+>> Kishon Vijay Abraham I (7):
+>>   ARM: dts: dra7: Add properties to enable PCIe x2 lane mode
+>>   ARM: dts: DRA74x: Use PCIe compatible specific to dra74
+>>   ARM: dts: DRA72x: Use PCIe compatible specific to dra72
+>>   ARM: dts: dra76-evm: Enable x2 PCIe lanes
+>>   ARM: dts: dra7: Remove deprecated PCI compatible string
+>>   ARM: omap2plus_defconfig: Enable CONFIG_PCI_DRA7XX (Host & Device
+>>     modes)
+>>   ARM: multi_v7_defconfig: Enable CONFIG_PCI_DRA7XX (Host & Device
+>>     modes)
+>>
+>>  arch/arm/boot/dts/dra7.dtsi          |  9 +++++----
+>>  arch/arm/boot/dts/dra72x.dtsi        | 12 ++++++++++++
+>>  arch/arm/boot/dts/dra74x.dtsi        | 12 ++++++++++++
+>>  arch/arm/boot/dts/dra76-evm.dts      | 16 ++++++++++++++++
+>>  arch/arm/configs/multi_v7_defconfig  |  6 ++++++
+>>  arch/arm/configs/omap2plus_defconfig |  8 ++++++++
+>>  6 files changed, 59 insertions(+), 4 deletions(-)
+> 
+> Hi Kishon,
+> 
+> I would like to ask you please what are your expectations with this
+> series, which tree these changes are going to be queued through ?
+> 
+> Please let me know, thanks.
 
-I meant _NO_REALIGN_MSG of course (PCI is already at the beginning).
+Rob has given some comments on the dt [1]. I'll post the driver changes and
+once that gets accepted I'll post the dts changes. dts changes are generally
+merged via linux-omap tree maintained by Tony.
 
--- 
-With Best Regards,
-Andy Shevchenko
+Thanks
+Kishon
+
+https://lkml.org/lkml/2017/12/20/625
+> 
+> Lorenzo
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
