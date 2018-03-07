@@ -1,97 +1,94 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1521161889.13458.1.camel@mtkswgap22>
-Subject: Re: [PATCH 1/2] of_pci_irq: add a check to fallback to standard
- device tree parsing
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Date: Fri, 16 Mar 2018 08:58:09 +0800
-In-Reply-To: <20180315174329.GB22176@e107981-ln.cambridge.arm.com>
-References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
- <20180315174329.GB22176@e107981-ln.cambridge.arm.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org, Bjorn
- Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from thoth.sbs.de ([192.35.17.2]:49659 "EHLO thoth.sbs.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751196AbeCGHjs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 02:39:48 -0500
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: x86@kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Benedikt Spranger <b.spranger@linutronix.de>,
+        Juergen Gross <jgross@suse.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Otavio Pontes <otavio.pontes@intel.com>,
+        Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH v5 0/7] jailhouse: Enhance secondary Jailhouse guest support /wrt PCI
+Date: Wed,  7 Mar 2018 08:39:11 +0100
+Message-Id: <cover.1520408357.git.jan.kiszka@siemens.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-03-15 at 17:43 +0000, Lorenzo Pieralisi wrote:
-> On Wed, Jan 31, 2018 at 03:41:49PM +0800, Ryder Lee wrote:
-> > A root complex usually consist of a host bridge and multiple P2P bridges,
-> > and someone may express that in the form of a root node with many subnodes
-> > and list all four interrupts for each slot (child node) in the root node
-> > like this:
-> > 
-> > 	pcie-controller {
-> > 		...
-> > 		interrupt-map-mask = <0xf800 0 0 7>;
-> > 		interrupt-map = <0x0000 0 0 {INTx} &{interrupt parent} ...>
-> > 				 0x0800 0 0 {INTx} &{interrupt parent} ...>;
-> > 
-> > 		pcie@0,0 {
-> > 			reg = <0x0000 0 0 0 0>;
-> > 			...
-> > 		};
-> > 
-> > 		pcie@1,0 {
-> > 			reg = <0x0800 0 0 0 0>;
-> > 			...
-> > 		};
-> > 	};
-> > 
-> > As shown above, we'd like to propagate IRQs from a root port to the devices
-> > in the hierarchy below it in this way.  However, it seems that the current
-> > parser couldn't handle such cases and will get something unexpected below:
-> > 
-> > 	pcieport 0000:00:01.0: assign IRQ: got 213
-> > 	igb 0000:01:00.0: assign IRQ: got 212
-> > 
-> > There is a device which is connected to 2nd slot, but the port doesn't share
-> > the same IRQ with its downstream devices.  The problem here is that, if the
-> > loop found a P2P bridge, it wouldn't check whether the reg property exists
-> > in ppnode or not but just pass the subordinate devfn to of_irq_parse_raw(),
-> > thus the subsequent flow couldn't correctly resolve them.
-> > 
-> > Fix this by adding a check to fallback to standard device tree parsing.
-> > 
-> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> > ---
-> > Please refer to the previous discussion thread: https://patchwork.ozlabs.org/patch/829108/
-> > ---
-> >  drivers/of/of_pci_irq.c | 14 ++++++++++++--
-> >  1 file changed, 12 insertions(+), 2 deletions(-)
-> 
-> Hi Ryder,
-> 
-> from the thread discussion I gather I can drop this series from the PCI
-> queue and you will update the DT as agreed with Ben, that looks like
-> the most reasonable solution to the problem you are facing, please
-> let me know if there is anything I am missing.
-> 
-> Thanks,
-> Lorenzo
-> 
+Basic x86 support [1] for running Linux as secondary Jailhouse [2] guest
+is currently pending in the tip tree. This builds on top and enhances
+the PCI support for x86 and also ARM guests (ARM[64] does not require
+platform patches and works already).
 
-Yes, please drop the series.
+Key elements of this series are:
+ - detection of Jailhouse via device tree hypervisor node
+ - function-level PCI scan if Jailhouse is detected
+ - MMCONFIG support for x86 guests
 
-Thanks
+As most changes affect x86, I would suggest to route the series also via
+tip after the necessary acks are collected.
 
+Changes in v5:
+ - fix build breakage of patch 6 on i386
 
+Changes in v4:
+ - slit up Kconfig changes
+ - respect pcibios_last_bus during mmconfig setup
+ - cosmetic changes requested by Andy
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Changes in v3:
+ - avoided duplicate scans of PCI functions under Jailhouse
+ - reformated PCI_MMCONFIG condition and rephrase related commit log
+
+Changes in v2:
+ - adjusted commit log and include ordering in patch 2
+ - rebased over Linus master
+
+Jan
+
+[1] https://lkml.org/lkml/2017/11/27/125
+[2] http://jailhouse-project.org
+
+CC: Benedikt Spranger <b.spranger@linutronix.de>
+CC: Juergen Gross <jgross@suse.com>
+CC: Mark Rutland <mark.rutland@arm.com>
+CC: Otavio Pontes <otavio.pontes@intel.com>
+CC: Rob Herring <robh+dt@kernel.org>
+
+Jan Kiszka (6):
+  jailhouse: Provide detection for non-x86 systems
+  PCI: Scan all functions when running over Jailhouse
+  x86: Align x86_64 PCI_MMCONFIG with 32-bit variant
+  x86: Consolidate PCI_MMCONFIG configs
+  x86/jailhouse: Allow to use PCI_MMCONFIG without ACPI
+  MAINTAINERS: Add entry for Jailhouse
+
+Otavio Pontes (1):
+  x86/jailhouse: Enable PCI mmconfig access in inmates
+
+ Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
+ MAINTAINERS                                     |  7 +++++++
+ arch/x86/Kconfig                                | 12 +++++++-----
+ arch/x86/include/asm/jailhouse_para.h           |  2 +-
+ arch/x86/include/asm/pci_x86.h                  |  2 ++
+ arch/x86/kernel/Makefile                        |  2 +-
+ arch/x86/kernel/cpu/amd.c                       |  2 +-
+ arch/x86/kernel/jailhouse.c                     |  8 ++++++++
+ arch/x86/pci/legacy.c                           |  4 +++-
+ arch/x86/pci/mmconfig-shared.c                  |  4 ++--
+ drivers/pci/probe.c                             | 22 +++++++++++++++++++---
+ include/linux/hypervisor.h                      | 17 +++++++++++++++--
+ 12 files changed, 74 insertions(+), 16 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
+
+-- 
+2.13.6
