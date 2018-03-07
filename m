@@ -1,72 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:32956 "EHLO mail.bootlin.com"
+Received: from mail.kernel.org ([198.145.29.99]:60898 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750707AbeC2IkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:40:09 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Victor Gu <xigu@marvell.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v4 0/6] PCI: aardvark: misc fixes and improvements
-Date: Thu, 29 Mar 2018 10:39:40 +0200
-Message-Id: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
+        id S932759AbeCGReG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 12:34:06 -0500
+Date: Wed, 7 Mar 2018 11:34:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: KarimAllah Ahmed <karahmed@amazon.de>, kbuild-all@01.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [pci:next 34/50] drivers/pci/probe.c:1465:19: error: 'struct
+ pci_dev' has no member named 'physfn'; did you mean 'is_physfn'?
+Message-ID: <20180307173405.GA210610@bhelgaas-glaptop.roam.corp.google.com>
+References: <201803080015.CzPERYDN%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201803080015.CzPERYDN%fengguang.wu@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+On Thu, Mar 08, 2018 at 12:57:16AM +0800, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+> head:   36e218fd55522ccfd4463fbf57909353e58280bd
+> commit: 25210702e2122f42f6b2f44e0446e819d44bf113 [34/50] PCI/IOV: Use VF0 cached config registers for other VFs
+> config: x86_64-randconfig-x017-201809 (attached as .config)
+> compiler: gcc-7 (Debian 7.3.0-1) 7.3.0
+> reproduce:
+>         git checkout 25210702e2122f42f6b2f44e0446e819d44bf113
+>         # save the attached .config to linux build tree
+>         make ARCH=x86_64 
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    drivers/pci/probe.c: In function 'pci_setup_device':
+> >> drivers/pci/probe.c:1465:19: error: 'struct pci_dev' has no member named 'physfn'; did you mean 'is_physfn'?
+>       hdr_type = dev->physfn->sriov->hdr_type;
+>                       ^~~~~~
+>                       is_physfn
 
-This patch series brings a number of improvements to the aardvark
-PCIe.
+Oops, my fault, I forgot to wait for the robot to build this patch.
 
-Changes since v3:
+"dev->physfn" only exists if CONFIG_PCI_ATS is defined (probably
+should be CONFIG_PCI_IOV, but that's a separate question).  The
+attached config doesn't define either.
 
- - Made advk_pcie_valid_device() return a bool instead of an int
+KarimAllah, can you update this so it builds without CONFIG_PCI_ATS?
+It'll be sort of annoying to have to clutter that code with #ifdefs;
+maybe you can figure out a nicer solution.
 
- - Properly capitalize the commit titles.
+I dropped this patch from "next" for now.
 
- - Fix my e-mail address to be @bootlin.com instead of
-   @free-electrons.com.
-
-Changes since v2:
-
- - Rebased on v4.16-rc7
-
- - Dropped the patches disabling L0S and aligning the MPS between RC
-   and EP, since we are working on a different solution, implementing
-   a proper root port. Therefore, this patch series only has the
-   (hopefully) non-controversial changes.
-
- - Add a patch (PATCH 1) that factorizes the logic to decide if the
-   target of a configuration space access is a valid device or not
-   into a advk_pcie_valid_device() helper, and adjust PATCH 2
-   accordingly.
-
- - Drop unused PCIE_BDF macro in PATCH 3.
-
-Best regards,
-
-Thomas Petazzoni
-
-Evan Wang (2):
-  PCI: aardvark: Fix PCIe Max Read Request Size setting
-  PCI: aardvark: Remove PCIe outbound window configuration
-
-Thomas Petazzoni (1):
-  PCI: aardvark: Introduce an advk_pcie_valid_device() helper
-
-Victor Gu (3):
-  PCI: aardvark: Fix logic in advk_pcie_valid_device()
-  PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-  PCI: aardvark: Use ISR1 instead of ISR0 interrupt in legacy irq mode
-
- drivers/pci/host/pci-aardvark.c | 117 ++++++++++++++--------------------------
- 1 file changed, 39 insertions(+), 78 deletions(-)
-
--- 
-2.14.3
+Bjorn
