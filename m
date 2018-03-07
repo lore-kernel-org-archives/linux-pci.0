@@ -1,48 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:43307 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751209AbeC1MF7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 08:05:59 -0400
+Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Keith Busch <keith.busch@intel.com>, Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v1 4/9] PCI/portdrv: Disable port driver in compat mode
+Date: Wed, 07 Mar 2018 11:29:15 +0100
+Message-ID: <38992036.3QHJjk5T7c@aspire.rjw.lan>
+In-Reply-To: <152040322576.240786.3375466676254382935.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com> <152040322576.240786.3375466676254382935.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <e3c679c8bd516602d1f7cf5182cf718414e74089.1522235224.git.gustavo.pimentel@synopsys.com>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com> <e3c679c8bd516602d1f7cf5182cf718414e74089.1522235224.git.gustavo.pimentel@synopsys.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Wed, 28 Mar 2018 09:05:57 -0300
-Message-ID: <CAOMZO5AyzTqpVofx6wf4oHsWjwaC=94o8dgbJSs0rhnc8OwPkA@mail.gmail.com>
-Subject: Re: [PATCH 6/8] PCI: dwc: Replace lower into upper case characters
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
-        <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gustavo,
+On Wednesday, March 7, 2018 7:13:45 AM CET Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> The "pcie_ports=compat" kernel parameter sets pcie_ports_disabled, which is
+> intended to disable the PCIe port driver.  But even when it was disabled,
+> we registered pcie_portdriver so we could work around a BIOS PME issue (see
+> fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
+> resume")).
+> 
+> Registering the driver meant that the pcie_portdrv_probe() path called
+> pci_enable_device(), pci_save_state(), pm_runtime_set_autosuspend_delay(),
+> pm_runtime_use_autosuspend(), etc., even when the driver was disabled.
+> 
+> We've since moved the BIOS PME workaround from the port driver to the core,
+> so stop registering the PCIe port driver in compat mode.
+> 
+> This means "pcie_ports=compat" will now be basically the same as turning
+> off CONFIG_PCIEPORTBUS completely.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pcie/portdrv_core.c |    3 ---
+>  drivers/pci/pcie/portdrv_pci.c  |    2 +-
+>  2 files changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index ef3bad4ad010..9db77c683732 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -212,9 +212,6 @@ static int get_port_device_capability(struct pci_dev *dev)
+>  	int services = 0;
+>  	int cap_mask = 0;
+>  
+> -	if (pcie_ports_disabled)
+> -		return 0;
+> -
+>  	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+>  			| PCIE_PORT_SERVICE_VC;
+>  	if (pci_aer_available())
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index f91afd09e356..c08ebd237242 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -262,7 +262,7 @@ static int __init pcie_portdrv_init(void)
+>  	int retval;
+>  
+>  	if (pcie_ports_disabled)
+> -		return pci_register_driver(&pcie_portdriver);
+> +		return -EACCES;
+>  
+>  	dmi_check_system(pcie_portdrv_dmi_table);
+>  
+> 
+> 
 
-On Wed, Mar 28, 2018 at 8:38 AM, Gustavo Pimentel
-<gustavo.pimentel@synopsys.com> wrote:
-
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 550fdbb..03e9b82 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -248,8 +248,10 @@ static void dw_pcie_irq_domain_free(struct irq_domain *domain,
->         unsigned long flags;
->
->         raw_spin_lock_irqsave(&pp->lock, flags);
-> +
->         bitmap_release_region(pp->msi_irq_in_use, data->hwirq,
->                               order_base_2(nr_irqs));
-> +
->         raw_spin_unlock_irqrestore(&pp->lock, flags);
->  }
-
-This looks like an unrelated change.
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
