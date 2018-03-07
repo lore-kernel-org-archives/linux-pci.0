@@ -1,61 +1,73 @@
-Return-Path: <SRS0=YSQq=GE=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=YSQq=GE=deltatee.com=logang@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Stephen Bates <sbates@raithlin.com>, Sinan Kaya <okaya@codeaurora.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>
-References: <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
- <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
- <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
- <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
- <20180314025639.GA50067@bhelgaas-glaptop.roam.corp.google.com>
- <112493af-ccd0-455b-6600-b50764f7ab7e@deltatee.com>
- <20180314185159.GD179719@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <b75e83ad-bb83-1f8d-1751-0989cc2493f1@deltatee.com>
-Date: Wed, 14 Mar 2018 13:03:43 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42518 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751164AbeCGGNr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Mar 2018 01:13:47 -0500
+Subject: [PATCH v1 4/9] PCI/portdrv: Disable port driver in compat mode
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>
+Date: Wed, 07 Mar 2018 00:13:45 -0600
+Message-ID: <152040322576.240786.3375466676254382935.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180314185159.GD179719@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Bjorn Helgaas <bhelgaas@google.com>
 
+The "pcie_ports=compat" kernel parameter sets pcie_ports_disabled, which is
+intended to disable the PCIe port driver.  But even when it was disabled,
+we registered pcie_portdriver so we could work around a BIOS PME issue (see
+fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
+resume")).
 
-On 14/03/18 12:51 PM, Bjorn Helgaas wrote:
-> You are focused on PCIe systems, and in those systems, most topologies
-> do have an upstream switch, which means two upstream bridges.  I'm
-> trying to remove that assumption because I don't think there's a
-> requirement for it in the spec.  Enforcing this assumption complicates
-> the code and makes it harder to understand because the reader says
-> "huh, I know peer-to-peer DMA should work inside any PCI hierarchy*,
-> so why do we need these two bridges?"
+Registering the driver meant that the pcie_portdrv_probe() path called
+pci_enable_device(), pci_save_state(), pm_runtime_set_autosuspend_delay(),
+pm_runtime_use_autosuspend(), etc., even when the driver was disabled.
 
-Yes, as I've said, we focused on being behind a single PCIe Switch
-because it's easier and vaguely safer (we *know* switches will work but
-other types of topology we have to assume will work based on the spec).
-Also, I have my doubts that anyone will ever have a use for this with
-non-PCIe devices.
+We've since moved the BIOS PME workaround from the port driver to the core,
+so stop registering the PCIe port driver in compat mode.
 
-A switch shows up as two or more virtual bridges (per the PCIe v4 Spec
-1.3.3) which explains the existing get_upstream_bridge_port() function.
+This means "pcie_ports=compat" will now be basically the same as turning
+off CONFIG_PCIEPORTBUS completely.
 
-In any case, we'll look at generalizing this by looking for a common
-upstream port in the next revision of the patch set.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/portdrv_core.c |    3 ---
+ drivers/pci/pcie/portdrv_pci.c  |    2 +-
+ 2 files changed, 1 insertion(+), 4 deletions(-)
 
-Logan
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index ef3bad4ad010..9db77c683732 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -212,9 +212,6 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	int services = 0;
+ 	int cap_mask = 0;
+ 
+-	if (pcie_ports_disabled)
+-		return 0;
+-
+ 	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+ 			| PCIE_PORT_SERVICE_VC;
+ 	if (pci_aer_available())
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index f91afd09e356..c08ebd237242 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -262,7 +262,7 @@ static int __init pcie_portdrv_init(void)
+ 	int retval;
+ 
+ 	if (pcie_ports_disabled)
+-		return pci_register_driver(&pcie_portdriver);
++		return -EACCES;
+ 
+ 	dmi_check_system(pcie_portdrv_dmi_table);
+ 
