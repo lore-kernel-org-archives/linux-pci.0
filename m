@@ -1,54 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:38608 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033870AbeCAVPM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 16:15:12 -0500
-To: Jerome Glisse <jglisse@redhat.com>
-Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
- <1519936195.4592.18.camel@au1.ibm.com> <20180301205548.GA6742@redhat.com>
- <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
- <20180301211036.GB6742@redhat.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <8ed955f8-55c9-a2bd-1d58-90bf1dcfa055@deltatee.com>
-Date: Thu, 1 Mar 2018 14:15:01 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180301211036.GB6742@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Received: from bastet.se.axis.com ([195.60.68.11]:60583 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755897AbeCHNdm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2018 08:33:42 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 2/5] PCI: designware-ep: Make dw_pcie_ep_set_bar() handle 64-bit BARs properly
+Date: Thu,  8 Mar 2018 14:33:27 +0100
+Message-Id: <20180308133331.19464-3-niklas.cassel@axis.com>
+In-Reply-To: <20180308133331.19464-1-niklas.cassel@axis.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Since a 64-bit BAR consists of a BAR pair, we need to write to both
+BARs in the BAR pair to setup the BAR properly.
 
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-designware-ep.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-On 01/03/18 02:10 PM, Jerome Glisse wrote:
-> It seems people miss-understand HMM :( you do not have to use all of
-> its features. If all you care about is having struct page then just
-> use that for instance in your case only use those following 3 functions:
-> 
-> hmm_devmem_add() or hmm_devmem_add_resource() and hmm_devmem_remove()
-> for cleanup.
-
-To what benefit over just using devm_memremap_pages()? If I'm using the 
-hmm interface and disabling all the features, I don't see the point. 
-We've also cleaned up the devm_memremap_pages() interface to be more 
-usefully generic in such a way that I'd hope HMM starts using it too and 
-gets rid of the code duplication.
-
-Logan
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 9236b998327f..946bbdf53c4d 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -136,8 +136,15 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+ 		return ret;
+ 
+ 	dw_pcie_dbi_ro_wr_en(pci);
+-	dw_pcie_writel_dbi2(pci, reg, size - 1);
+-	dw_pcie_writel_dbi(pci, reg, flags);
++	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
++		dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
++		dw_pcie_writel_dbi(pci, reg, flags);
++		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
++		dw_pcie_writel_dbi(pci, reg + 4, 0);
++	} else {
++		dw_pcie_writel_dbi2(pci, reg, size - 1);
++		dw_pcie_writel_dbi(pci, reg, flags);
++	}
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	return 0;
+-- 
+2.14.2
