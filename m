@@ -1,112 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3]PCI: hv: fix PCI-BUS domainID corruption
-Date: Fri, 23 Mar 2018 16:09:14 +0000
-Message-ID: <4561FB62-054B-4E2D-9FDD-780FDB1374F6@microsoft.com>
-References: <C600E28F-E581-431E-9CD4-47C776E8E70F@microsoft.com>
- <20180315120522.GA15651@e107981-ln.cambridge.arm.com>
- <DM5PR21MB0826439DF296763A3FA861C3F6D00@DM5PR21MB0826.namprd21.prod.outlook.com>
- <04DBCCAB-4BA7-4E05-A047-44824995963E@microsoft.com>
- <65B4E847-CC40-4166-BE8F-D44049EDB2FF@microsoft.com>
- <20180320183208.GB24991@e107981-ln.cambridge.arm.com>
- <4E6E5EE3-2EFA-4326-BE14-D5465F5F439F@microsoft.com>
- <20180321173047.GA38649@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180321173047.GA38649@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f67.google.com ([209.85.214.67]:40738 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752168AbeCHTAn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2018 14:00:43 -0500
+Subject: [pci PATCH v4 0/4] Add support for unmanaged SR-IOV
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, hch@lst.de, dwmw@amazon.co.uk
+Date: Thu, 08 Mar 2018 11:00:40 -0800
+Message-ID: <20180308185507.5433.98830.stgit@localhost.localdomain>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ICAgID4gUHJldmlvdXNseSwgd2hlbiB1c2luZyB0aGUgYm9uZCBkcml2ZXIsIHVuaXF1ZSBhbmQg
-cGVyc2lzdGVudCBWRiBOSUMgbmFtZQ0KICAgID4gd2FzIHJlcXVpcmVkLCBzbyB3ZSB1c2VkIHNl
-cmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiB3aGljaCBpcyBpbmNsdWRlZCBhcw0KICAgID4gcGFy
-dCBvZiB0aGUgVkYgTklDIG5hbWUuICBUcmFuc3BhcmVudCBTUklPViBtb2RlIHB1dHMgVkYgTklD
-IGJhc2VkIG9uIE1BQw0KICAgID4gbWF0Y2ggYXMgYSBzbGF2ZSBvZiBzeW50aGV0aWMgTklDLCBz
-byBWRiBOSUPigJlzIG5hbWUgaXMgbm8gbG9uZ2VyIGltcG9ydGFudC4NCiAgICANCiAgICBIaSBT
-cmlkaGFyLA0KICAgIA0KICAgIEEgZmV3IGhpbnRzIGFib3V0IHN1Ym1pdHRpbmcgcGF0Y2hlcyBt
-b3JlIGVmZmljaWVudGx5Og0KICAgIA0KICAgIDEpIFlvdSBuZXZlciBoYXZlIHRvIGFzayAiQXJl
-IHdlIE9LIHdpdGggdGhlIGV4cGxhbmF0aW9uPyAgSWYgc28sIEknbGwNCiAgICBzZW5kIGEgcGF0
-Y2ggd2l0aCB1cGRhdGVkIGNoYW5nZWxvZy4iICBUaGF0IGZvcmNlcyBhbiBleHRyYQ0KICAgIHJv
-dW5kLXRyaXAuICBTaW1wbHkgcG9zdCBhIG5ldyB2ZXJzaW9uIHdpdGggeW91ciBwcm9wb3NlZCB1
-cGRhdGUuICBJZg0KICAgIExvcmVuem8gaGFzIG1vcmUgcXVlc3Rpb25zLCBoZSdsbCBzYXkgc28g
-YW5kIHlvdSBjYW4gZG8gYW5vdGhlcg0KICAgIHZlcnNpb24uDQogICAgDQogICAgMikgV2hlbiBM
-b3JlbnpvIGlzIGFza2luZyBmb3IgY2xhcmlmaWNhdGlvbiwgaGUncyBub3QgcmVhbGx5IGFza2lu
-Zw0KICAgIGZvciB0aGUgY2xhcmlmaWNhdGlvbiBpbiBhbiBlbWFpbCByZXNwb25zZSwgYmVjYXVz
-ZSB0aGUgZW1haWwgdGhyZWFkDQogICAgd2lsbCBzb29uIGJlIGZvcmdvdHRlbiBhbmQgbG9zdCBp
-biB0aGUgYXJjaGl2ZXMuICBXaGF0IHdlIHJlYWxseSB3YW50DQogICAgaXMgZm9yIHRoZSBwZXJt
-YW5lbnQgZ2l0IGNoYW5nZWxvZyB0byBtYWtlIHNlbnNlIHRvIHNvbWVvbmUgaW4gdGhlDQogICAg
-ZnV0dXJlLiAgVGhlIGVhc2llc3Qgd2F5IGlzIHRvIHBvc3QgYSBuZXcgcGF0Y2ggdmVyc2lvbiB3
-aXRoIGENCiAgICByZXZpc2VkIGNoYW5nZWxvZyB0aGF0IGFuc3dlcnMgdGhlIHF1ZXN0aW9ucy4N
-CiAgICANCiAgICAzKSBQbGVhc2UgY2FwaXRhbGl6ZSBhbmQgcHVuY3R1YXRlIGNvbnNpc3RlbnRs
-eSB3aXRoIHByZXZpb3VzIGhpc3RvcnksDQogICAgZS5nLiwgIlBDSTogaHY6IEZpeCBkb21haW4g
-SUQgY29ycnVwdGlvbiIgZm9yIHlvdXIgdGl0bGUsICJTUi1JT1YiDQogICAgKG5vdCAiU1JJT1Yi
-KSBhbmQgImJ1cyIgKG5vdCAiQlVTIikgaW4gY2hhbmdlbG9nLiAgQm90aCAicGFyYS12aXJ0dWFs
-Ig0KICAgIGFuZCAicGFyYXZpcnR1YWwiIGFyZSB1c2VkIGluIHRoZSBrZXJuZWwsIGJ1dCAicGFy
-YXZpcnR1YWwiIGlzIG11Y2gNCiAgICBtb3JlIGNvbW1vbi4gIFJ1biAiZ2l0IGxvZyIgYW5kICJn
-aXQgbG9nIC0tb25lbGluZSIgb24geW91ciBmaWxlIGFuZA0KICAgIGZvbGxvdyB0aGUgc2FtZSBz
-dHlsZS4NCiAgICANCiAgICA0KSBXaGVuIHlvdSByZWZlcmVuY2UgYSBwcmV2aW91cyBjb21taXQs
-IHBsZWFzZSB1c2UgdGhpcyBzdHlsZToNCiAgICAwYzE5NTU2N2E4ZjYgKCJuZXR2c2M6IHRyYW5z
-cGFyZW50IFZGIG1hbmFnZW1lbnQiKSwgaS5lLiwgMTItY2hhciBTSEExDQogICAgZm9sbG93ZWQg
-YnkgdGl0bGUuICBZb3Ugc2VlbSB0byBoYXZlIHJlbW92ZWQgc29tZSBzcGFjZXMgZnJvbSB0aGUN
-CiAgICBjb21taXQgeW91IG1lbnRpb24gaW4gdGhlICJGaXhlcyIgdGFnLg0KICAgIA0KICAgIEFu
-ZCBhIGZldyBjb250ZW50IHF1ZXN0aW9ucy9vYnNlcnZhdGlvbnMgb2YgbXkgb3duOg0KICAgIA0K
-ICAgIDEpICJGaXggZG9tYWluIElEIGNvcnJ1cHRpb24iIGlzbid0IGEgdmVyeSBnb29kIHRpdGxl
-IGJlY2F1c2UgaXQNCiAgICBzdWdnZXN0cyB5b3UncmUgZml4aW5nIGEgbWVtb3J5IGNvcnJ1cHRp
-b24gb3Igc2ltaWxhciBkZWZlY3QuICBCdXQgaW4NCiAgICBmYWN0LCBJIHRoaW5rIHlvdSdyZSBy
-ZW1vdmluZyBzb21ldGhpbmcgdGhhdCB1c2VkIHRvIGJlIGEgZmVhdHVyZQ0KICAgIChhZGRlZCBi
-eSA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJ
-DQogICAgZG9tYWluIikpIGJ1dCBpcyBub3cgbm8gbG9uZ2VyIG5lZWRlZCBhbmQgaW4gZmFjdCBu
-b3cgY2F1c2VzIGENCiAgICBwcm9ibGVtLg0KICAgIA0KICAgIDIpIFlvdXIgY2hhbmdlbG9nIGRv
-ZXMgbWVudGlvbiA0YTliMDkzM2JkZmMsIHdoaWNoIGlzIGdvb2QsIGJ1dA0KICAgIHRoZXJlIG11
-c3QgYmUgc29tZSBvdGhlciA8Y29tbWl0IFg+IHRoYXQgbWFrZXMgaXQgc2FmZSB0byByZW1vdmUN
-CiAgICA0YTliMDkzM2JkZmMsIGkuZS4sIDxjb21taXQgWD4gcmVtb3ZlcyB0aGUgbmVlZCBmb3Ig
-dXNpbmcgdGhlIGRldmljZQ0KICAgIHNlcmlhbCBudW1iZXIgYXMgdGhlIFBDSSBkb21haW4uICA8
-Q29tbWl0IFg+ICptdXN0KiBiZSBtZW50aW9uZWQgaW4NCiAgICB0aGUgY2hhbmdlbG9nLiAgT3Ro
-ZXJ3aXNlLCBwZW9wbGUgbWF5IGJhY2twb3J0IHRoaXMgcGF0Y2ggdG8gYSBrZXJuZWwNCiAgICB0
-aGF0IGRvZXNuJ3QgaW5jbHVkZSA8Y29tbWl0IFg+LCBhbmQgdGhpbmdzIHdpbGwgYnJlYWsuDQog
-ICAgDQogICAgMykgSSBkb24ndCB1bmRlcnN0YW5kIHdoYXQgeW91IG1lYW4gYnkgInRyYW5zcGFy
-ZW50IFNSLUlPViBtb2RlIi4gIElzDQogICAgdGhhdCBzb21ldGhpbmcgZGlmZmVyZW50IHRoYW4g
-cmVndWxhciBTUi1JT1Y/ICBJZiBzbywgd2hhdCBleGFjdGx5IGlzDQogICAgdGhlIGRpZmZlcmVu
-Y2U/ICBJIGRvbid0IHRoaW5rIHRoZSBQQ0llIHNwZWNzIG1lbnRpb24gYSAidHJhbnNwYXJlbnQN
-CiAgICBtb2RlIiwgc28gaXMgaXQgYSBIeXBlci1WIHRoaW5nPyAgSXQgc2VlbXMgaW1wb3J0YW50
-LCBidXQgSSBkb24ndCBzZWUNCiAgICBhbnkgcGNpLWh5cGVydi5jIGNvbW1pdHMgdGhhdCBtZW50
-aW9uIGl0Lg0KICAgIA0KICAgIEhlcmUncyBhIHN0YWIgYXQgdGhlIHNvcnQgb2YgY2hhbmdlbG9n
-IEkgd291bGQgYmUgbG9va2luZyBmb3IuDQogICAgT2J2aW91c2x5IEkgZG9uJ3QgdW5kZXJzdGFu
-ZCBtdWNoIGFib3V0IEh5cGVyLVYgYW5kIHBjaS1oeXBlcnYuYywgc28NCiAgICBwbGVhc2UgY29y
-cmVjdCB0aGUgdGhpbmdzIEkgZ290IHdyb25nOg0KICAgIA0KICAgICAgV2hlbiBMaW51eCBydW5z
-IGFzIGEgZ3Vlc3QgaW4gYSBIeXBlci1WIFZNLCBwY2ktaHlwZXJ2LmMNCiAgICAgIHBhcmF2aXJ0
-dWFsaXplcyBhY2Nlc3MgdG8gUENJIGRldmljZXMgYXNzaWduZWQgdG8gdGhlIGd1ZXN0LiAgRm9y
-DQogICAgICBlYWNoIG9mIHRob3NlIGRldmljZXMsIGh2X3BjaV9wcm9iZSgpIGNyZWF0ZXMgYSB2
-aXJ0dWFsIFBDSSBidXMgaW4NCiAgICAgIGl0cyBvd24gdW5pcXVlIFBDSSBkb21haW4uDQogICAg
-DQogICAgICA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIg
-YXMgUENJIGRvbWFpbiIpDQogICAgICBvdmVycm9kZSB0aGF0IHVuaXF1ZSBQQ0kgZG9tYWluIHRv
-IGJlIHRoZSBIeXBlci1WIGRldmljZSBzZXJpYWwNCiAgICAgIG51bWJlciB0byBtYWtlIGRldmlj
-ZSBuYW1lcyBtb3JlIGNvbnZlbmllbnQgPG9yIHdoYXRldmVyIHRoZSByZWFsDQogICAgICByZWFz
-b24gaXM7IEkgZG9uJ3QgcXVpdGUgdW5kZXJzdGFuZCB0aGlzIHBhcnQ+Lg0KICAgIA0KICAgICAg
-T25lIHByb2JsZW0gd2l0aCA0YTliMDkzM2JkZmMgaXMgdGhhdCB0aGUgSHlwZXItViBkZXZpY2Ug
-c2VyaWFsDQogICAgICBudW1iZXIgaXMgbm90IG5lY2Vzc2FyaWx5IHVuaXF1ZSwgc28gd2UgbWF5
-IGVuZCB1cCB3aXRoIHR3byBidXNlcw0KICAgICAgd2l0aCB0aGUgc2FtZSBkb21haW4gYW5kIGJ1
-cyBudW1iZXIsIGFuZCBhZGRpbmcgdGhlIHNlY29uZCBidXMNCiAgICAgIGZhaWxzLg0KICAgIA0K
-ICAgICAgV2Ugbm8gbG9uZ2VyIG5lZWQgdG8gb3ZlcnJpZGUgdGhlIFBDSSBkb21haW4gbnVtYmVy
-cyBiZWNhdXNlIDxjb21taXQNCiAgICAgIFg+IHJlbW92ZWQgdGhlIG5lZWQgZm9yIHRoYXQuDQog
-ICAgDQogICAgICBSZXZlcnQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmljZSBzZXJp
-YWwgbnVtYmVyIGFzIFBDSQ0KICAgICAgZG9tYWluIikgc28gd2UgY2FuIHJlbGlhYmx5IHN1cHBv
-cnQgbXVsdGlwbGUgZGV2aWNlcyBiZWluZyBhc3NpZ25lZA0KICAgICAgdG8gYSBndWVzdC4NCiAg
-ICANCiAgICAgIFRoaXMgcmV2ZXJ0IHNob3VsZCBvbmx5IGJlIGJhY2twb3J0ZWQgdG8ga2VybmVs
-cyB0aGF0IGNvbnRhaW4NCiAgICAgIDxjb21taXQgWD4uDQogICAgDQogICAgQmpvcm4NCg0KVGhh
-bmtzIGZvciB5b3VyIGNvbW1lbnRzIEJqb3JuLiBJIHRvb2sgc29tZSB0aW1lIHRvIGdvIG92ZXIg
-dGhlIGFsbCB0aGUNCmNvbW1lbnRzIGFuZCBzZW5kaW5nIGEgbmV3IHZlcnNpb24gb2YgdGhlIHBh
-dGNoIHdpdGggYWxsIHRoZSBjb21tZW50cyANCmluY29ycG9yYXRlZC4NCg0KVGhhbmtzDQpTcmlk
-aGFyICAgIA0KDQo=
+This series is meant to add support for SR-IOV on devices when the VFs are
+not managed by the kernel. Examples of recent patches attempting to do this
+include:
+virto - https://patchwork.kernel.org/patch/10241225/
+pci-stub - https://patchwork.kernel.org/patch/10109935/
+vfio - https://patchwork.kernel.org/patch/10103353/
+uio - https://patchwork.kernel.org/patch/9974031/
+
+Since this is quickly blowing up into a multi-driver problem it is probably
+best to implement this solution as generically as possible.
+
+This series is an attempt to do that. What we do with this patch set is
+provide a generic framework to enable SR-IOV in the case that the PF driver
+doesn't support managing the VFs itself.
+
+I based my patch set originally on the patch by Mark Rustad but there isn't
+much left after going through and cleaning out the bits that were no longer
+needed, and after incorporating the feedback from David Miller. At this point
+the only items to be fully reused was his patch description which is now
+present in patch 3 of the set.
+
+This solution is limited in scope to just adding support for devices that
+provide no functionality for SR-IOV other than allocating the VFs by
+calling pci_enable_sriov. Previous sets had included patches for VFIO, but
+for now I am dropping that as the scope of that work is larger then I
+think I can take on at this time.
+
+v2: Reduced scope back to just virtio_pci and vfio-pci
+    Broke into 3 patch set from single patch
+    Changed autoprobe behavior to always set when num_vfs is set non-zero
+v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is used
+    Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in kernel
+v4: Dropped vfio-pci patch
+    Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
+    Dropped pci_disable_sriov call in virtio_pci to be consistent with ena
+
+Cc: Mark Rustad <mark.d.rustad@intel.com>
+Cc: Maximilian Heyne <mheyne@amazon.de>
+Cc: Liang-Min Wang <liang-min.wang@intel.com>
+Cc: David Woodhouse <dwmw@amazon.co.uk>
+
+---
+
+Alexander Duyck (4):
+      pci-iov: Add support for unmanaged SR-IOV
+      virtio_pci: Add support for unmanaged SR-IOV on virtio_pci devices
+      ena: Migrate over to "unmanaged SR-IOV" support
+      nvme: Migrate over to "unmanaged SR-IOV" support
+
+
+ Documentation/ABI/testing/sysfs-bus-pci      |   25 +++++++++++++++
+ drivers/net/ethernet/amazon/ena/ena_netdev.c |   30 ++-----------------
+ drivers/nvme/host/pci.c                      |   22 ++------------
+ drivers/pci/iov.c                            |   42 ++++++++++++++++++++++++++
+ drivers/pci/pci-driver.c                     |    2 +
+ drivers/pci/pci-sysfs.c                      |   29 ++++++++++++++++++
+ drivers/pci/pci.h                            |    4 ++
+ drivers/virtio/virtio_pci_common.c           |    3 ++
+ include/linux/pci.h                          |    1 +
+ 9 files changed, 110 insertions(+), 48 deletions(-)
+
+--
