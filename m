@@ -1,234 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42694 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751099AbeCGGOD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Mar 2018 01:14:03 -0500
-Subject: [PATCH v1 7/9] PCI/portdrv: Simplify PCIe feature permission
- checking
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>
-Date: Wed, 07 Mar 2018 00:14:02 -0600
-Message-ID: <152040324229.240786.12446096160159507017.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: Question about a quirky (DesignWare) PCIe RC in Allwinner H6
+To: Icenowy Zheng <icenowy@aosc.io>, Bjorn Helgaas <helgaas@kernel.org>
+References: <1520261458.33502.10.camel@aosc.io>
+ <20180305214718.GC255556@bhelgaas-glaptop.roam.corp.google.com>
+ <1520308623.33502.13.camel@aosc.io>
+ <20180306233832.GC33706@bhelgaas-glaptop.roam.corp.google.com>
+ <1520488103.13063.1.camel@aosc.io>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Message-ID: <bd1b5f52-27db-d323-bde5-926be66e7f58@sigmadesigns.com>
+Date: Thu, 8 Mar 2018 12:55:03 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1520488103.13063.1.camel@aosc.io>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+ Marc Gonzalez <marc.w.gonzalez@free.fr>,
+ Maxime Ripard <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
+ Chen-Yu Tsai <wens@csie.org>, linux-sunxi@googlegroups.com, Lorenzo
+ Pieralisi <lorenzo.pieralisi@arm.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On 08/03/2018 06:48, Icenowy Zheng wrote:
 
-Some PCIe features (AER, DPC, hotplug, PME) can be managed by either the
-platform firmware or the OS, so the host bridge driver may have to request
-permission from the platform before using them.  On ACPI systems, this is
-done by negotiate_os_control() in acpi_pci_root_add().
+> I'm trying to implement a driver for the quirky (DW) PCIe RC in the
+> Allwinner H6 SoC.
+> 
+> The quirk is that only the "dbi" space is always mapped, but at the 
+> same time only 64KiB of other spaces (config, downstream IO and non- 
+> prefetchable memory) are accessible. To access a certain address the 
+> high 16-bit of the address (all bus addresses in H6 SoC are 32- bit 
+> despite the CPU is 64-bit) needs to be written into the 
+> PCIE_ADDR_PAGE_CFG register (a vendor-defined register in DBI 
+> space). So the access to these spaces cannot be processed correctly 
+> with just readl/writel, as the existing code does.
+> 
+> Is it possible to workaround this in the PCI subsystem of Linux?
 
-The PCIe port driver later uses pcie_port_platform_notify() and
-pcie_port_acpi_setup() to figure out whether it can use these features.
-But all we need is a single bit for each service, so these interfaces are
-needlessly complicated.
+I didn't think anyone would come up with something more broken
+than tango's PCIe host bridge...
 
-Simplify this by adding bits in the struct pci_host_bridge to show when the
-OS has permission to use each feature:
+It's hard to understand what's going on inside the minds of these
+HW devs. I mean, if the steps required are
 
-  + unsigned int use_aer:1;       /* OS may use PCIe AER */
-  + unsigned int use_hotplug:1;	  /* OS may use PCIe hotplug */
-  + unsigned int use_pme:1;       /* OS may use PCIe PME */
+	WRITE MAGIC CONFIG REG
+	READ/WRITE ADDRESS REG
 
-These are set when we create a host bridge, and the host bridge driver can
-clear the bits corresponding to any feature the platform doesn't want us to
-use.
+then the whole operation is clearly not atomic, and bad things happen
+when 2+ operations race.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c         |   13 ++++++++++--
- drivers/pci/pcie/Makefile       |    1 -
- drivers/pci/pcie/portdrv.h      |   11 ----------
- drivers/pci/pcie/portdrv_core.c |   42 ++++++++++++++++++++++++---------------
- drivers/pci/probe.c             |   10 +++++++++
- include/linux/pci.h             |    3 +++
- 6 files changed, 50 insertions(+), 30 deletions(-)
+Do they think in terms of single core systems with non-multitasking OS?
+Probably not.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 6fc204a52493..dce53527cdc1 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -871,6 +871,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	struct acpi_device *device = root->device;
- 	int node = acpi_get_node(device->handle);
- 	struct pci_bus *bus;
-+	struct pci_host_bridge *host_bridge;
- 
- 	info->root = root;
- 	info->bridge = device;
-@@ -895,9 +896,17 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	if (!bus)
- 		goto out_release_info;
- 
-+	host_bridge = to_pci_host_bridge(bus->bridge);
-+	if (!(root->osc_control_set & PCIE_PORT_SERVICE_HP))
-+		host_bridge->use_hotplug = 0;
-+	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
-+		host_bridge->use_aer = 0;
-+	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
-+		host_bridge->use_pme = 0;
-+
- 	pci_scan_child_bus(bus);
--	pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
--				    acpi_pci_root_release_info, info);
-+	pci_set_host_bridge_release(host_bridge, acpi_pci_root_release_info,
-+				    info);
- 	if (node != NUMA_NO_NODE)
- 		dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n", node);
- 	return bus;
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index e01c10c97b95..11fb633b866c 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -7,7 +7,6 @@
- obj-$(CONFIG_PCIEASPM)		+= aspm.o
- 
- pcieportdrv-y			:= portdrv_core.o portdrv_pci.o
--pcieportdrv-$(CONFIG_ACPI)	+= portdrv_acpi.o
- 
- obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
- 
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 749d200936d9..2c19cf9ffea2 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -66,15 +66,4 @@ static inline bool pcie_pme_no_msi(void) { return false; }
- static inline void pcie_pme_interrupt_enable(struct pci_dev *dev, bool en) {}
- #endif /* !CONFIG_PCIE_PME */
- 
--#ifdef CONFIG_ACPI
--void pcie_port_acpi_setup(struct pci_dev *port, int *mask);
--
--static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask)
--{
--	pcie_port_acpi_setup(port, mask);
--}
--#else /* !CONFIG_ACPI */
--static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
--#endif /* !CONFIG_ACPI */
--
- #endif /* _PORTDRV_H_ */
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 94ce4dc50d1a..29210e9bfbd3 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -207,19 +207,20 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
-  */
- static int get_port_device_capability(struct pci_dev *dev)
- {
-+	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
-+	bool native;
- 	int services = 0;
--	int cap_mask = 0;
- 
--	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP;
--	if (pci_aer_available())
--		cap_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
--
--	if (pcie_ports_auto)
--		pcie_port_platform_notify(dev, &cap_mask);
-+	/*
-+	 * If the user specified "pcie_ports=native", use the PCIe services
-+	 * regardless of whether the platform has given us permission.  On
-+	 * ACPI systems, this means we ignore _OSC.
-+	 */
-+	native = !pcie_ports_auto;
- 
--	/* Hot-Plug Capable */
--	if ((cap_mask & PCIE_PORT_SERVICE_HP) && dev->is_hotplug_bridge) {
-+	if (dev->is_hotplug_bridge && (native || host->use_hotplug)) {
- 		services |= PCIE_PORT_SERVICE_HP;
-+
- 		/*
- 		 * Disable hot-plug interrupts in case they have been enabled
- 		 * by the BIOS and the hot-plug service driver is not loaded.
-@@ -227,20 +228,27 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		pcie_capability_clear_word(dev, PCI_EXP_SLTCTL,
- 			  PCI_EXP_SLTCTL_CCIE | PCI_EXP_SLTCTL_HPIE);
- 	}
--	/* AER capable */
--	if ((cap_mask & PCIE_PORT_SERVICE_AER)
--	    && pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR)) {
-+
-+	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR) &&
-+	    pci_aer_available() && (native || host->use_aer)) {
- 		services |= PCIE_PORT_SERVICE_AER;
-+
- 		/*
- 		 * Disable AER on this port in case it's been enabled by the
- 		 * BIOS (the AER service driver will enable it when necessary).
- 		 */
- 		pci_disable_pcie_error_reporting(dev);
- 	}
--	/* Root ports are capable of generating PME too */
--	if ((cap_mask & PCIE_PORT_SERVICE_PME)
--	    && pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
-+
-+	/*
-+	 * Root ports are capable of generating PME too.  Root Complex
-+	 * Event Collectors can also generate PMEs, but we don't handle
-+	 * those yet.
-+	 */
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-+	    (native || host->use_pme)) {
- 		services |= PCIE_PORT_SERVICE_PME;
-+
- 		/*
- 		 * Disable PME interrupt on this port in case it's been enabled
- 		 * by the BIOS (the PME service driver will enable it when
-@@ -248,7 +256,9 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		 */
- 		pcie_pme_interrupt_enable(dev, false);
- 	}
--	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC))
-+
-+	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
-+	    pci_aer_available())
- 		services |= PCIE_PORT_SERVICE_DPC;
- 
- 	return services;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ef5377438a1e..839fb0059900 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -540,6 +540,16 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
- 	INIT_LIST_HEAD(&bridge->windows);
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 
-+	/*
-+	 * We assume we can manage these PCIe features.  Some systems may
-+	 * reserve these for use by the platform itself, e.g., an ACPI BIOS
-+	 * may implement its own AER handling and use _OSC to prevent the
-+	 * OS from interfering.
-+	 */
-+	bridge->use_aer = 1;
-+	bridge->use_hotplug = 1;
-+	bridge->use_pme = 1;
-+
- 	return bridge;
- }
- EXPORT_SYMBOL(pci_alloc_host_bridge);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 024a1beda008..40aec7a6fdd9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -469,6 +469,9 @@ struct pci_host_bridge {
- 	struct msi_controller *msi;
- 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
- 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
-+	unsigned int	use_aer:1;		/* OS may use PCIe AER */
-+	unsigned int	use_hotplug:1;		/* OS may use PCIe hotplug */
-+	unsigned int	use_pme:1;		/* OS may use PCIe PME */
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
- 			const struct resource *res,
+Maybe they think it is not a problem to wrap the operation using a
+mutex? I'll confess I have no idea how bad that is for performance.
+However, that is not an option in Linux, because mem space accesses
+are just plain mmio accesses, and it's not possible to rewrite the
+drivers, even as an out-of-tree patch.
+
+I suppose it could be possible to make the first write "magic" in the
+sense that it could "lock" the bus until the second access is performed?
+Sort of like an implicit HW mutex. Actually, tango has explicit HW
+mutexes that work along these lines.
+
+> (I have thought a workaround that only maps the current accessible 
+> 64KiB with the MMU, and when accessing the non-accessible part, 
+> catch the page fault and re-setup the map to the new 64KiB page. But 
+> surely it will kill the performance.)
+
+The implementation might be non-trivial, as well.
+
+> [tango is] still less quirky than Allwinner H6 PCIe. It's only a
+> config/MMIO mux on tango; however on H6 PCIe both config space and
+> MMIO space are splitted to many pages. So on H6 if no solution is
+> worked out, it will not be unreliable -- it will be unusable
+> instead.
+
+I have only limited experience, but it seems that many useful PCIe
+adapters require only very little mem address space.
+
+For example, the USB3 PCIe adapter I tested my implementation with
+requires only 8 KB.
+
+01:00.0 USB controller: Renesas Technology Corp. uPD720201 USB 3.0 Host Controller (rev 03) (prog-if 30 [XHCI])
+        Flags: fast devsel
+        Memory at 50400000 (64-bit, non-prefetchable) [size=8K]
+        Capabilities: [50] Power Management version 3
+        Capabilities: [70] MSI: Enable- Count=1/8 Maskable- 64bit+
+        Capabilities: [90] MSI-X: Enable- Count=8 Masked-
+        Capabilities: [a0] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [150] Latency Tolerance Reporting
+
+
+Same thing for the following WiFi adapter.
+
+01:00.0 Network controller: Intel Corporation Wireless 7260 (rev bb)
+        Subsystem: Intel Corporation Dual Band Wireless-AC 7260
+        Flags: fast devsel, IRQ 22
+        Memory at 50400000 (64-bit, non-prefetchable) [disabled] [size=8K]
+        Capabilities: [c8] Power Management version 3
+        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [40] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Device Serial Number 48-51-b7-ff-ff-84-69-26
+        Capabilities: [14c] Latency Tolerance Reporting
+        Capabilities: [154] Vendor Specific Information: ID=cafe Rev=1 Len=014 <?>
+
+
+Maybe you can decide that you will support only 64 KB?
+
+Regards.
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
