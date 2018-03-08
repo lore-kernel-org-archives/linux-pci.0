@@ -1,456 +1,506 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:54646 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932308AbeCLTfj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Mar 2018 15:35:39 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Steve Wise <swise@opengridcomputing.com>
-Date: Mon, 12 Mar 2018 13:35:25 -0600
-Message-Id: <20180312193525.2855-12-logang@deltatee.com>
-In-Reply-To: <20180312193525.2855-1-logang@deltatee.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 8 Mar 2018 16:17:41 +0000
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <kvm@vger.kernel.org>, <joro@8bytes.org>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <lorenzo.pieralisi@arm.com>,
+        <hanjun.guo@linaro.org>, <sudeep.holla@arm.com>,
+        <rjw@rjwysocki.net>, <lenb@kernel.org>, <robin.murphy@arm.com>,
+        <bhelgaas@google.com>, <alex.williamson@redhat.com>,
+        <tn@semihalf.com>, <liubo95@huawei.com>,
+        <thunder.leizhen@huawei.com>, <xieyisheng1@huawei.com>,
+        <xuzaibo@huawei.com>, <ilias.apalodimas@linaro.org>,
+        <shunyong.yang@hxt-semitech.com>, <nwatters@codeaurora.org>,
+        <okaya@codeaurora.org>, <jcrouse@codeaurora.org>,
+        <rfranz@cavium.com>, <dwmw2@infradead.org>,
+        <jacob.jun.pan@linux.intel.com>, <yi.l.liu@intel.com>,
+        <ashok.raj@intel.com>, <robdclark@gmail.com>,
+        <christian.koenig@amd.com>, <bharatku@xilinx.com>
+Subject: Re: [PATCH 31/37] iommu/arm-smmu-v3: Add support for PCI ATS
+Message-ID: <20180308171725.0000763c@huawei.com>
+In-Reply-To: <20180212183352.22730-32-jean-philippe.brucker@arm.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+        <20180212183352.22730-32-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v3 11/11] nvmet: Optionally use PCI P2P memory
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We create a configfs attribute in each nvme-fabrics target port to
-enable p2p memory use. When enabled, the port will only then use the
-p2p memory if a p2p memory device can be found which is behind the
-same switch as the RDMA port and all the block devices in use. If
-the user enabled it an no devices are found, then the system will
-silently fall back on using regular memory.
+On Mon, 12 Feb 2018 18:33:46 +0000
+Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
 
-If appropriate, that port will allocate memory for the RDMA buffers
-for queues from the p2pmem device falling back to system memory should
-anything fail.
+> PCIe devices can implement their own TLB, named Address Translation Cache
+> (ATC). Enable Address Translation Service (ATS) for devices that support
+> it and send them invalidation requests whenever we invalidate the IOTLBs.
+> 
+>   Range calculation
+>   -----------------
+> 
+> The invalidation packet itself is a bit awkward: range must be naturally
+> aligned, which means that the start address is a multiple of the range
+> size. In addition, the size must be a power of two number of 4k pages. We
+> have a few options to enforce this constraint:
+> 
+> (1) Find the smallest naturally aligned region that covers the requested
+>     range. This is simple to compute and only takes one ATC_INV, but it
+>     will spill on lots of neighbouring ATC entries.
+> 
+> (2) Align the start address to the region size (rounded up to a power of
+>     two), and send a second invalidation for the next range of the same
+>     size. Still not great, but reduces spilling.
+> 
+> (3) Cover the range exactly with the smallest number of naturally aligned
+>     regions. This would be interesting to implement but as for (2),
+>     requires multiple ATC_INV.
+> 
+> As I suspect ATC invalidation packets will be a very scarce resource, I'll
+> go with option (1) for now, and only send one big invalidation. We can
+> move to (2), which is both easier to read and more gentle with the ATC,
+> once we've observed on real systems that we can send multiple smaller
+> Invalidation Requests for roughly the same price as a single big one.
+> 
+> Note that with io-pgtable, the unmap function is called for each page, so
+> this doesn't matter. The problem shows up when sharing page tables with
+> the MMU.
+> 
+>   Timeout
+>   -------
+> 
+> ATC invalidation is allowed to take up to 90 seconds, according to the
+> PCIe spec, so it is possible to hit the SMMU command queue timeout during
+> normal operations.
+> 
+> Some SMMU implementations will raise a CERROR_ATC_INV_SYNC when a CMD_SYNC
+> fails because of an ATC invalidation. Some will just abort the CMD_SYNC.
+> Others might let CMD_SYNC complete and have an asynchronous IMPDEF
+> mechanism to record the error. When we receive a CERROR_ATC_INV_SYNC, we
+> could retry sending all ATC_INV since last successful CMD_SYNC. When a
+> CMD_SYNC fails without CERROR_ATC_INV_SYNC, we could retry sending *all*
+> commands since last successful CMD_SYNC.
+> 
+> We cannot afford to wait 90 seconds in iommu_unmap, let alone MMU
+> notifiers. So we'd have to introduce a more clever system if this timeout
+> becomes a problem, like keeping hold of mappings and invalidating in the
+> background. Implementing safe delayed invalidations is a very complex
+> problem and deserves a series of its own. We'll assess whether more work
+> is needed to properly handle ATC invalidation timeouts once this code runs
+> on real hardware.
+> 
+>   Misc
+>   ----
+> 
+> I didn't put ATC and TLB invalidations in the same functions for three
+> reasons:
+> 
+> * TLB invalidation by range is batched and committed with a single sync.
+>   Batching ATC invalidation is inconvenient, endpoints limit the number of
+>   inflight invalidations. We'd have to count the number of invalidations
+>   queued and send a sync periodically. In addition, I suspect we always
+>   need a sync between TLB and ATC invalidation for the same page.
+> 
+> * Doing ATC invalidation outside tlb_inv_range also allows to send less
+>   requests, since TLB invalidations are done per page or block, while ATC
+>   invalidations target IOVA ranges.
+> 
+> * TLB invalidation by context is performed when freeing the domain, at
+>   which point there isn't any device attached anymore.
+> 
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Few minor error path related comments inline..
 
-Ideally, we'd want to use an NVME CMB buffer as p2p memory. This would
-save an extra PCI transfer as the NVME card could just take the data
-out of it's own memory. However, at this time, cards with CMB buffers
-don't seem to be available.
+> ---
+>  drivers/iommu/arm-smmu-v3.c | 236 ++++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 226 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+> index 8b9f5dd06be0..76513135310f 100644
+> --- a/drivers/iommu/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm-smmu-v3.c
+> @@ -37,6 +37,7 @@
+>  #include <linux/of_iommu.h>
+>  #include <linux/of_platform.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-ats.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/sched/mm.h>
+>  
+> @@ -109,6 +110,7 @@
+>  #define IDR5_OAS_48_BIT			(5 << IDR5_OAS_SHIFT)
+>  
+>  #define ARM_SMMU_CR0			0x20
+> +#define CR0_ATSCHK			(1 << 4)
+>  #define CR0_CMDQEN			(1 << 3)
+>  #define CR0_EVTQEN			(1 << 2)
+>  #define CR0_PRIQEN			(1 << 1)
+> @@ -304,6 +306,7 @@
+>  #define CMDQ_ERR_CERROR_NONE_IDX	0
+>  #define CMDQ_ERR_CERROR_ILL_IDX		1
+>  #define CMDQ_ERR_CERROR_ABT_IDX		2
+> +#define CMDQ_ERR_CERROR_ATC_INV_IDX	3
+>  
+>  #define CMDQ_0_OP_SHIFT			0
+>  #define CMDQ_0_OP_MASK			0xffUL
+> @@ -327,6 +330,15 @@
+>  #define CMDQ_TLBI_1_VA_MASK		~0xfffUL
+>  #define CMDQ_TLBI_1_IPA_MASK		0xfffffffff000UL
+>  
+> +#define CMDQ_ATC_0_SSID_SHIFT		12
+> +#define CMDQ_ATC_0_SSID_MASK		0xfffffUL
+> +#define CMDQ_ATC_0_SID_SHIFT		32
+> +#define CMDQ_ATC_0_SID_MASK		0xffffffffUL
+> +#define CMDQ_ATC_0_GLOBAL		(1UL << 9)
+> +#define CMDQ_ATC_1_SIZE_SHIFT		0
+> +#define CMDQ_ATC_1_SIZE_MASK		0x3fUL
+> +#define CMDQ_ATC_1_ADDR_MASK		~0xfffUL
+> +
+>  #define CMDQ_PRI_0_SSID_SHIFT		12
+>  #define CMDQ_PRI_0_SSID_MASK		0xfffffUL
+>  #define CMDQ_PRI_0_SID_SHIFT		32
+> @@ -425,6 +437,11 @@ module_param_named(disable_bypass, disable_bypass, bool, S_IRUGO);
+>  MODULE_PARM_DESC(disable_bypass,
+>  	"Disable bypass streams such that incoming transactions from devices that are not attached to an iommu domain will report an abort back to the device and will not be allowed to pass through the SMMU.");
+>  
+> +static bool disable_ats_check;
+> +module_param_named(disable_ats_check, disable_ats_check, bool, S_IRUGO);
+> +MODULE_PARM_DESC(disable_ats_check,
+> +	"By default, the SMMU checks whether each incoming transaction marked as translated is allowed by the stream configuration. This option disables the check.");
+> +
+>  enum pri_resp {
+>  	PRI_RESP_DENY,
+>  	PRI_RESP_FAIL,
+> @@ -498,6 +515,16 @@ struct arm_smmu_cmdq_ent {
+>  			u64			addr;
+>  		} tlbi;
+>  
+> +		#define CMDQ_OP_ATC_INV		0x40
+> +		#define ATC_INV_SIZE_ALL	52
+> +		struct {
+> +			u32			sid;
+> +			u32			ssid;
+> +			u64			addr;
+> +			u8			size;
+> +			bool			global;
+> +		} atc;
+> +
+>  		#define CMDQ_OP_PRI_RESP	0x41
+>  		struct {
+>  			u32			sid;
+> @@ -928,6 +955,14 @@ static int arm_smmu_cmdq_build_cmd(u64 *cmd, struct arm_smmu_cmdq_ent *ent)
+>  	case CMDQ_OP_TLBI_EL2_ASID:
+>  		cmd[0] |= (u64)ent->tlbi.asid << CMDQ_TLBI_0_ASID_SHIFT;
+>  		break;
+> +	case CMDQ_OP_ATC_INV:
+> +		cmd[0] |= ent->substream_valid ? CMDQ_0_SSV : 0;
+> +		cmd[0] |= ent->atc.global ? CMDQ_ATC_0_GLOBAL : 0;
+> +		cmd[0] |= ent->atc.ssid << CMDQ_ATC_0_SSID_SHIFT;
+> +		cmd[0] |= (u64)ent->atc.sid << CMDQ_ATC_0_SID_SHIFT;
+> +		cmd[1] |= ent->atc.size << CMDQ_ATC_1_SIZE_SHIFT;
+> +		cmd[1] |= ent->atc.addr & CMDQ_ATC_1_ADDR_MASK;
+> +		break;
+>  	case CMDQ_OP_PRI_RESP:
+>  		cmd[0] |= ent->substream_valid ? CMDQ_0_SSV : 0;
+>  		cmd[0] |= ent->pri.ssid << CMDQ_PRI_0_SSID_SHIFT;
+> @@ -984,6 +1019,7 @@ static void arm_smmu_cmdq_skip_err(struct arm_smmu_device *smmu)
+>  		[CMDQ_ERR_CERROR_NONE_IDX]	= "No error",
+>  		[CMDQ_ERR_CERROR_ILL_IDX]	= "Illegal command",
+>  		[CMDQ_ERR_CERROR_ABT_IDX]	= "Abort on command fetch",
+> +		[CMDQ_ERR_CERROR_ATC_INV_IDX]	= "ATC invalidate timeout",
+>  	};
+>  
+>  	int i;
+> @@ -1003,6 +1039,14 @@ static void arm_smmu_cmdq_skip_err(struct arm_smmu_device *smmu)
+>  		dev_err(smmu->dev, "retrying command fetch\n");
+>  	case CMDQ_ERR_CERROR_NONE_IDX:
+>  		return;
+> +	case CMDQ_ERR_CERROR_ATC_INV_IDX:
+> +		/*
+> +		 * ATC Invalidation Completion timeout. CONS is still pointing
+> +		 * at the CMD_SYNC. Attempt to complete other pending commands
+> +		 * by repeating the CMD_SYNC, though we might well end up back
+> +		 * here since the ATC invalidation may still be pending.
+> +		 */
+> +		return;
+>  	case CMDQ_ERR_CERROR_ILL_IDX:
+>  		/* Fallthrough */
+>  	default:
+> @@ -1261,9 +1305,6 @@ static void arm_smmu_write_strtab_ent(struct arm_smmu_device *smmu, u32 sid,
+>  			 STRTAB_STE_1_S1C_CACHE_WBRA
+>  			 << STRTAB_STE_1_S1COR_SHIFT |
+>  			 STRTAB_STE_1_S1C_SH_ISH << STRTAB_STE_1_S1CSH_SHIFT |
+> -#ifdef CONFIG_PCI_ATS
+> -			 STRTAB_STE_1_EATS_TRANS << STRTAB_STE_1_EATS_SHIFT |
+> -#endif
+>  			 (smmu->features & ARM_SMMU_FEAT_E2H ?
+>  			  STRTAB_STE_1_STRW_EL2 : STRTAB_STE_1_STRW_NSEL1) <<
+>  			 STRTAB_STE_1_STRW_SHIFT);
+> @@ -1300,6 +1341,10 @@ static void arm_smmu_write_strtab_ent(struct arm_smmu_device *smmu, u32 sid,
+>  		val |= STRTAB_STE_0_CFG_S2_TRANS;
+>  	}
+>  
+> +	if (IS_ENABLED(CONFIG_PCI_ATS))
+> +		dst[1] |= cpu_to_le64(STRTAB_STE_1_EATS_TRANS
+> +				      << STRTAB_STE_1_EATS_SHIFT);
+> +
+>  	arm_smmu_sync_ste_for_sid(smmu, sid);
+>  	dst[0] = cpu_to_le64(val);
+>  	arm_smmu_sync_ste_for_sid(smmu, sid);
+> @@ -1680,6 +1725,104 @@ static irqreturn_t arm_smmu_combined_irq_handler(int irq, void *dev)
+>  	return IRQ_WAKE_THREAD;
+>  }
+>  
+> +/* ATS invalidation */
+> +static bool arm_smmu_master_has_ats(struct arm_smmu_master_data *master)
+> +{
+> +	return dev_is_pci(master->dev) && to_pci_dev(master->dev)->ats_enabled;
+> +}
+> +
+> +static void
+> +arm_smmu_atc_inv_to_cmd(int ssid, unsigned long iova, size_t size,
+> +			struct arm_smmu_cmdq_ent *cmd)
+> +{
+> +	size_t log2_span;
+> +	size_t span_mask;
+> +	/* ATC invalidates are always on 4096 bytes pages */
+> +	size_t inval_grain_shift = 12;
+> +	unsigned long page_start, page_end;
+> +
+> +	*cmd = (struct arm_smmu_cmdq_ent) {
+> +		.opcode			= CMDQ_OP_ATC_INV,
+> +		.substream_valid	= !!ssid,
+> +		.atc.ssid		= ssid,
+> +	};
+> +
+> +	if (!size) {
+> +		cmd->atc.size = ATC_INV_SIZE_ALL;
+> +		return;
+> +	}
+> +
+> +	page_start	= iova >> inval_grain_shift;
+> +	page_end	= (iova + size - 1) >> inval_grain_shift;
+> +
+> +	/*
+> +	 * Find the smallest power of two that covers the range. Most
+> +	 * significant differing bit between start and end address indicates the
+> +	 * required span, ie. fls(start ^ end). For example:
+> +	 *
+> +	 * We want to invalidate pages [8; 11]. This is already the ideal range:
+> +	 *		x = 0b1000 ^ 0b1011 = 0b11
+> +	 *		span = 1 << fls(x) = 4
+> +	 *
+> +	 * To invalidate pages [7; 10], we need to invalidate [0; 15]:
+> +	 *		x = 0b0111 ^ 0b1010 = 0b1101
+> +	 *		span = 1 << fls(x) = 16
+> +	 */
+> +	log2_span	= fls_long(page_start ^ page_end);
+> +	span_mask	= (1ULL << log2_span) - 1;
+> +
+> +	page_start	&= ~span_mask;
+> +
+> +	cmd->atc.addr	= page_start << inval_grain_shift;
+> +	cmd->atc.size	= log2_span;
+> +}
+> +
+> +static int arm_smmu_atc_inv_master(struct arm_smmu_master_data *master,
+> +				   struct arm_smmu_cmdq_ent *cmd)
+> +{
+> +	int i;
+> +	struct iommu_fwspec *fwspec = master->dev->iommu_fwspec;
+> +
+> +	if (!arm_smmu_master_has_ats(master))
+> +		return 0;
+> +
+> +	for (i = 0; i < fwspec->num_ids; i++) {
+> +		cmd->atc.sid = fwspec->ids[i];
+> +		arm_smmu_cmdq_issue_cmd(master->smmu, cmd);
+> +	}
+> +
+> +	arm_smmu_cmdq_issue_sync(master->smmu);
+> +
+> +	return 0;
+> +}
+> +
+> +static int arm_smmu_atc_inv_master_all(struct arm_smmu_master_data *master,
+> +				       int ssid)
+> +{
+> +	struct arm_smmu_cmdq_ent cmd;
+> +
+> +	arm_smmu_atc_inv_to_cmd(ssid, 0, 0, &cmd);
+> +	return arm_smmu_atc_inv_master(master, &cmd);
+> +}
+> +
+> +static size_t
+> +arm_smmu_atc_inv_domain(struct arm_smmu_domain *smmu_domain, int ssid,
+> +			unsigned long iova, size_t size)
+> +{
+> +	unsigned long flags;
+> +	struct arm_smmu_cmdq_ent cmd;
+> +	struct arm_smmu_master_data *master;
+> +
+> +	arm_smmu_atc_inv_to_cmd(ssid, iova, size, &cmd);
+> +
+> +	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
+> +	list_for_each_entry(master, &smmu_domain->devices, list)
+> +		arm_smmu_atc_inv_master(master, &cmd);
+> +	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
+> +
+> +	return size;
+> +}
+> +
+>  /* IO_PGTABLE API */
+>  static void __arm_smmu_tlb_sync(struct arm_smmu_device *smmu)
+>  {
+> @@ -2092,6 +2235,8 @@ static void arm_smmu_detach_dev(struct device *dev)
+>  	if (smmu_domain) {
+>  		__iommu_sva_unbind_dev_all(dev);
+>  
+> +		arm_smmu_atc_inv_master_all(master, 0);
+> +
+>  		spin_lock_irqsave(&smmu_domain->devices_lock, flags);
+>  		list_del(&master->list);
+>  		spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
+> @@ -2179,12 +2324,19 @@ static int arm_smmu_map(struct iommu_domain *domain, unsigned long iova,
+>  static size_t
+>  arm_smmu_unmap(struct iommu_domain *domain, unsigned long iova, size_t size)
+>  {
+> -	struct io_pgtable_ops *ops = to_smmu_domain(domain)->pgtbl_ops;
+> +	int ret;
+> +	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
+> +	struct io_pgtable_ops *ops = smmu_domain->pgtbl_ops;
+>  
+>  	if (!ops)
+>  		return 0;
+>  
+> -	return ops->unmap(ops, iova, size);
+> +	ret = ops->unmap(ops, iova, size);
+> +
+> +	if (ret && smmu_domain->smmu->features & ARM_SMMU_FEAT_ATS)
+> +		ret = arm_smmu_atc_inv_domain(smmu_domain, 0, iova, size);
+> +
+> +	return ret;
+>  }
+>  
+>  static void arm_smmu_iotlb_sync(struct iommu_domain *domain)
+> @@ -2342,6 +2494,48 @@ static bool arm_smmu_sid_in_range(struct arm_smmu_device *smmu, u32 sid)
+>  	return sid < limit;
+>  }
+>  
+> +static int arm_smmu_enable_ats(struct arm_smmu_master_data *master)
+> +{
+> +	int ret;
+> +	size_t stu;
+> +	struct pci_dev *pdev;
+> +	struct arm_smmu_device *smmu = master->smmu;
+> +	struct iommu_fwspec *fwspec = master->dev->iommu_fwspec;
+> +
+> +	if (!(smmu->features & ARM_SMMU_FEAT_ATS) || !dev_is_pci(master->dev) ||
+> +	    (fwspec->flags & IOMMU_FWSPEC_PCI_NO_ATS))
+> +		return -ENOSYS;
+> +
+> +	pdev = to_pci_dev(master->dev);
+> +
+> +	/* Smallest Translation Unit: log2 of the smallest supported granule */
+> +	stu = __ffs(smmu->pgsize_bitmap);
+> +
+> +	ret = pci_enable_ats(pdev, stu);
+> +	if (ret)
+> +		return ret;
+> +
+> +	dev_dbg(&pdev->dev, "enabled ATS (STU=%zu, QDEP=%d)\n", stu,
+> +		pci_ats_queue_depth(pdev));
+> +
+> +	return 0;
+> +}
+> +
+> +static void arm_smmu_disable_ats(struct arm_smmu_master_data *master)
+> +{
+> +	struct pci_dev *pdev;
+> +
+> +	if (!dev_is_pci(master->dev))
+> +		return;
+> +
+> +	pdev = to_pci_dev(master->dev);
+> +
+> +	if (!pdev->ats_enabled)
+> +		return;
+> +
+> +	pci_disable_ats(pdev);
+> +}
+> +
+>  static int arm_smmu_insert_master(struct arm_smmu_device *smmu,
+>  				  struct arm_smmu_master_data *master)
+>  {
+> @@ -2462,14 +2656,24 @@ static int arm_smmu_add_device(struct device *dev)
+>  		master->ste.can_stall = true;
+>  	}
+>  
+> +	arm_smmu_enable_ats(master);
+It's a bit nasty not to handle the errors that this could output (other than
+the ENOSYS for when it's not available). Seems that it would be nice to at
+least add a note to the log if people are expecting it to work and it won't
+because some condition or other isn't met.
 
-Signed-off-by: Stephen Bates <sbates@raithlin.com>
-Signed-off-by: Steve Wise <swise@opengridcomputing.com>
-[hch: partial rewrite of the initial code]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/nvme/target/configfs.c |  67 ++++++++++++++++++++++++++
- drivers/nvme/target/core.c     | 106 ++++++++++++++++++++++++++++++++++++++++-
- drivers/nvme/target/io-cmd.c   |   3 ++
- drivers/nvme/target/nvmet.h    |  12 +++++
- drivers/nvme/target/rdma.c     |  32 +++++++++++--
- 5 files changed, 214 insertions(+), 6 deletions(-)
+> +
+>  	group = iommu_group_get_for_dev(dev);
+> -	if (!IS_ERR(group)) {
+> -		arm_smmu_insert_master(smmu, master);
+> -		iommu_group_put(group);
+> -		iommu_device_link(&smmu->iommu, dev);
+> +	if (IS_ERR(group)) {
+> +		ret = PTR_ERR(group);
+> +		goto err_disable_ats;
+>  	}
+>  
+> -	return PTR_ERR_OR_ZERO(group);
+> +	iommu_group_put(group);
+> +	arm_smmu_insert_master(smmu, master);
+> +	iommu_device_link(&smmu->iommu, dev);
+> +
+> +	return 0;
+> +
+> +err_disable_ats:
+> +	arm_smmu_disable_ats(master);
+master is leaked here I think...
+Possibly other things as this doesn't line up with the
+remove which I'd have mostly expected it to do.
 
-diff --git a/drivers/nvme/target/configfs.c b/drivers/nvme/target/configfs.c
-index e6b2d2af81b6..6ca8c712f0d3 100644
---- a/drivers/nvme/target/configfs.c
-+++ b/drivers/nvme/target/configfs.c
-@@ -17,6 +17,8 @@
- #include <linux/slab.h>
- #include <linux/stat.h>
- #include <linux/ctype.h>
-+#include <linux/pci.h>
-+#include <linux/pci-p2pdma.h>
- 
- #include "nvmet.h"
- 
-@@ -867,12 +869,77 @@ static void nvmet_port_release(struct config_item *item)
- 	kfree(port);
- }
- 
-+#ifdef CONFIG_PCI_P2PDMA
-+static ssize_t nvmet_p2pmem_show(struct config_item *item, char *page)
-+{
-+	struct nvmet_port *port = to_nvmet_port(item);
-+
-+	if (!port->use_p2pmem)
-+		return sprintf(page, "none\n");
-+
-+	if (!port->p2p_dev)
-+		return sprintf(page, "auto\n");
-+
-+	return sprintf(page, "%s\n", pci_name(port->p2p_dev));
-+}
-+
-+static ssize_t nvmet_p2pmem_store(struct config_item *item,
-+				  const char *page, size_t count)
-+{
-+	struct nvmet_port *port = to_nvmet_port(item);
-+	struct device *dev;
-+	struct pci_dev *p2p_dev = NULL;
-+	bool use_p2pmem;
-+
-+	switch (page[0]) {
-+	case 'y':
-+	case 'Y':
-+	case 'a':
-+	case 'A':
-+		use_p2pmem = true;
-+		break;
-+	case 'n':
-+	case 'N':
-+		use_p2pmem = false;
-+		break;
-+	default:
-+		dev = bus_find_device_by_name(&pci_bus_type, NULL, page);
-+		if (!dev) {
-+			pr_err("No such PCI device: %s\n", page);
-+			return -ENODEV;
-+		}
-+
-+		use_p2pmem = true;
-+		p2p_dev = to_pci_dev(dev);
-+
-+		if (!pci_has_p2pmem(p2p_dev)) {
-+			pr_err("PCI device has no peer-to-peer memory: %s\n",
-+			       page);
-+			pci_dev_put(p2p_dev);
-+			return -ENODEV;
-+		}
-+	}
-+
-+	down_write(&nvmet_config_sem);
-+	port->use_p2pmem = use_p2pmem;
-+	pci_dev_put(port->p2p_dev);
-+	port->p2p_dev = p2p_dev;
-+	up_write(&nvmet_config_sem);
-+
-+	return count;
-+}
-+CONFIGFS_ATTR(nvmet_, p2pmem);
-+#endif /* CONFIG_PCI_P2PDMA */
-+
- static struct configfs_attribute *nvmet_port_attrs[] = {
- 	&nvmet_attr_addr_adrfam,
- 	&nvmet_attr_addr_treq,
- 	&nvmet_attr_addr_traddr,
- 	&nvmet_attr_addr_trsvcid,
- 	&nvmet_attr_addr_trtype,
-+#ifdef CONFIG_PCI_P2PDMA
-+	&nvmet_attr_p2pmem,
-+#endif
- 	NULL,
- };
- 
-diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index a78029e4e5f4..ab3cc7135ae8 100644
---- a/drivers/nvme/target/core.c
-+++ b/drivers/nvme/target/core.c
-@@ -15,6 +15,7 @@
- #include <linux/module.h>
- #include <linux/random.h>
- #include <linux/rculist.h>
-+#include <linux/pci-p2pdma.h>
- 
- #include "nvmet.h"
- 
-@@ -271,6 +272,25 @@ void nvmet_put_namespace(struct nvmet_ns *ns)
- 	percpu_ref_put(&ns->ref);
- }
- 
-+static int nvmet_p2pdma_add_client(struct nvmet_ctrl *ctrl,
-+				   struct nvmet_ns *ns)
-+{
-+	int ret;
-+
-+	if (!blk_queue_pci_p2pdma(ns->bdev->bd_queue)) {
-+		pr_err("peer-to-peer DMA is not supported by %s\n",
-+		       ns->device_path);
-+		return -EINVAL;
-+	}
-+
-+	ret = pci_p2pdma_add_client(&ctrl->p2p_clients, nvmet_ns_dev(ns));
-+	if (ret)
-+		pr_err("failed to add peer-to-peer DMA client %s: %d\n",
-+		       ns->device_path, ret);
-+
-+	return ret;
-+}
-+
- int nvmet_ns_enable(struct nvmet_ns *ns)
- {
- 	struct nvmet_subsys *subsys = ns->subsys;
-@@ -299,6 +319,14 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
- 	if (ret)
- 		goto out_blkdev_put;
- 
-+	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry) {
-+		if (ctrl->p2p_dev) {
-+			ret = nvmet_p2pdma_add_client(ctrl, ns);
-+			if (ret)
-+				goto out_remove_clients;
-+		}
-+	}
-+
- 	if (ns->nsid > subsys->max_nsid)
- 		subsys->max_nsid = ns->nsid;
- 
-@@ -328,6 +356,9 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
- out_unlock:
- 	mutex_unlock(&subsys->lock);
- 	return ret;
-+out_remove_clients:
-+	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry)
-+		pci_p2pdma_remove_client(&ctrl->p2p_clients, nvmet_ns_dev(ns));
- out_blkdev_put:
- 	blkdev_put(ns->bdev, FMODE_WRITE|FMODE_READ);
- 	ns->bdev = NULL;
-@@ -363,8 +394,10 @@ void nvmet_ns_disable(struct nvmet_ns *ns)
- 	percpu_ref_exit(&ns->ref);
- 
- 	mutex_lock(&subsys->lock);
--	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry)
-+	list_for_each_entry(ctrl, &subsys->ctrls, subsys_entry) {
-+		pci_p2pdma_remove_client(&ctrl->p2p_clients, nvmet_ns_dev(ns));
- 		nvmet_add_async_event(ctrl, NVME_AER_TYPE_NOTICE, 0, 0);
-+	}
- 
- 	if (ns->bdev)
- 		blkdev_put(ns->bdev, FMODE_WRITE|FMODE_READ);
-@@ -764,6 +797,74 @@ bool nvmet_host_allowed(struct nvmet_req *req, struct nvmet_subsys *subsys,
- 		return __nvmet_host_allowed(subsys, hostnqn);
- }
- 
-+/*
-+ * If allow_p2pmem is set, we will try to use P2P memory for the SGL lists for
-+ * Ι/O commands. This requires the PCI p2p device to be compatible with the
-+ * backing device for every namespace on this controller.
-+ */
-+static void nvmet_setup_p2pmem(struct nvmet_ctrl *ctrl, struct nvmet_req *req)
-+{
-+	struct nvmet_ns *ns;
-+	int ret;
-+
-+	if (!req->port->use_p2pmem || !req->p2p_client)
-+		return;
-+
-+	mutex_lock(&ctrl->subsys->lock);
-+
-+	ret = pci_p2pdma_add_client(&ctrl->p2p_clients, req->p2p_client);
-+	if (ret) {
-+		pr_err("failed adding peer-to-peer DMA client %s: %d\n",
-+		       dev_name(req->p2p_client), ret);
-+		goto free_devices;
-+	}
-+
-+	list_for_each_entry_rcu(ns, &ctrl->subsys->namespaces, dev_link) {
-+		ret = nvmet_p2pdma_add_client(ctrl, ns);
-+		if (ret)
-+			goto free_devices;
-+	}
-+
-+	if (req->port->p2p_dev) {
-+		if (!pci_p2pdma_assign_provider(req->port->p2p_dev,
-+						&ctrl->p2p_clients)) {
-+			pr_info("peer-to-peer memory on %s is not supported\n",
-+				pci_name(req->port->p2p_dev));
-+			goto free_devices;
-+		}
-+		ctrl->p2p_dev = pci_dev_get(req->port->p2p_dev);
-+	} else {
-+		ctrl->p2p_dev = pci_p2pmem_find(&ctrl->p2p_clients);
-+		if (!ctrl->p2p_dev) {
-+			pr_info("no supported peer-to-peer memory devices found\n");
-+			goto free_devices;
-+		}
-+	}
-+
-+	mutex_unlock(&ctrl->subsys->lock);
-+
-+	pr_info("using peer-to-peer memory on %s\n", pci_name(ctrl->p2p_dev));
-+	return;
-+
-+free_devices:
-+	pci_p2pdma_client_list_free(&ctrl->p2p_clients);
-+	mutex_unlock(&ctrl->subsys->lock);
-+}
-+
-+static void nvmet_release_p2pmem(struct nvmet_ctrl *ctrl)
-+{
-+	if (!ctrl->p2p_dev)
-+		return;
-+
-+	mutex_lock(&ctrl->subsys->lock);
-+
-+	pci_p2pdma_client_list_free(&ctrl->p2p_clients);
-+	pci_dev_put(ctrl->p2p_dev);
-+	ctrl->p2p_dev = NULL;
-+
-+	mutex_unlock(&ctrl->subsys->lock);
-+}
-+
- u16 nvmet_alloc_ctrl(const char *subsysnqn, const char *hostnqn,
- 		struct nvmet_req *req, u32 kato, struct nvmet_ctrl **ctrlp)
- {
-@@ -803,6 +904,7 @@ u16 nvmet_alloc_ctrl(const char *subsysnqn, const char *hostnqn,
- 
- 	INIT_WORK(&ctrl->async_event_work, nvmet_async_event_work);
- 	INIT_LIST_HEAD(&ctrl->async_events);
-+	INIT_LIST_HEAD(&ctrl->p2p_clients);
- 
- 	memcpy(ctrl->subsysnqn, subsysnqn, NVMF_NQN_SIZE);
- 	memcpy(ctrl->hostnqn, hostnqn, NVMF_NQN_SIZE);
-@@ -858,6 +960,7 @@ u16 nvmet_alloc_ctrl(const char *subsysnqn, const char *hostnqn,
- 		ctrl->kato = DIV_ROUND_UP(kato, 1000);
- 	}
- 	nvmet_start_keep_alive_timer(ctrl);
-+	nvmet_setup_p2pmem(ctrl, req);
- 
- 	mutex_lock(&subsys->lock);
- 	list_add_tail(&ctrl->subsys_entry, &subsys->ctrls);
-@@ -894,6 +997,7 @@ static void nvmet_ctrl_free(struct kref *ref)
- 	flush_work(&ctrl->async_event_work);
- 	cancel_work_sync(&ctrl->fatal_err_work);
- 
-+	nvmet_release_p2pmem(ctrl);
- 	ida_simple_remove(&cntlid_ida, ctrl->cntlid);
- 
- 	kfree(ctrl->sqs);
-diff --git a/drivers/nvme/target/io-cmd.c b/drivers/nvme/target/io-cmd.c
-index 28bbdff4a88b..a213f8fc3bf3 100644
---- a/drivers/nvme/target/io-cmd.c
-+++ b/drivers/nvme/target/io-cmd.c
-@@ -56,6 +56,9 @@ static void nvmet_execute_rw(struct nvmet_req *req)
- 		op = REQ_OP_READ;
- 	}
- 
-+	if (is_pci_p2pdma_page(sg_page(req->sg)))
-+		op_flags |= REQ_PCI_P2PDMA;
-+
- 	sector = le64_to_cpu(req->cmd->rw.slba);
- 	sector <<= (req->ns->blksize_shift - 9);
- 
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index 417f6c0331cc..e05afdbdaa10 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -64,6 +64,11 @@ static inline struct nvmet_ns *to_nvmet_ns(struct config_item *item)
- 	return container_of(to_config_group(item), struct nvmet_ns, group);
- }
- 
-+static inline struct device *nvmet_ns_dev(struct nvmet_ns *ns)
-+{
-+	return disk_to_dev(ns->bdev->bd_disk);
-+}
-+
- struct nvmet_cq {
- 	u16			qid;
- 	u16			size;
-@@ -98,6 +103,8 @@ struct nvmet_port {
- 	struct list_head		referrals;
- 	void				*priv;
- 	bool				enabled;
-+	bool				use_p2pmem;
-+	struct pci_dev			*p2p_dev;
- };
- 
- static inline struct nvmet_port *to_nvmet_port(struct config_item *item)
-@@ -131,6 +138,8 @@ struct nvmet_ctrl {
- 	struct work_struct	fatal_err_work;
- 
- 	struct nvmet_fabrics_ops *ops;
-+	struct pci_dev		*p2p_dev;
-+	struct list_head	p2p_clients;
- 
- 	char			subsysnqn[NVMF_NQN_FIELD_LEN];
- 	char			hostnqn[NVMF_NQN_FIELD_LEN];
-@@ -232,6 +241,9 @@ struct nvmet_req {
- 
- 	void (*execute)(struct nvmet_req *req);
- 	struct nvmet_fabrics_ops *ops;
-+
-+	struct pci_dev *p2p_dev;
-+	struct device *p2p_client;
- };
- 
- static inline void nvmet_set_status(struct nvmet_req *req, u16 status)
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 978e169c11bf..84db1022664f 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -23,6 +23,7 @@
- #include <linux/string.h>
- #include <linux/wait.h>
- #include <linux/inet.h>
-+#include <linux/pci-p2pdma.h>
- #include <asm/unaligned.h>
- 
- #include <rdma/ib_verbs.h>
-@@ -430,8 +431,13 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
- 				rsp->req.sg_cnt, nvmet_data_dir(&rsp->req));
- 	}
- 
--	if (rsp->req.sg != &rsp->cmd->inline_sg)
--		sgl_free(rsp->req.sg);
-+	if (rsp->req.sg != &rsp->cmd->inline_sg) {
-+		if (rsp->req.p2p_dev)
-+			pci_p2pmem_free_sgl(rsp->req.p2p_dev, rsp->req.sg,
-+					    rsp->req.sg_cnt);
-+		else
-+			sgl_free(rsp->req.sg);
-+	}
- 
- 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
- 		nvmet_rdma_process_wr_wait_list(queue);
-@@ -567,15 +573,29 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- 	u64 addr = le64_to_cpu(sgl->addr);
- 	u32 len = get_unaligned_le24(sgl->length);
- 	u32 key = get_unaligned_le32(sgl->key);
-+	struct pci_dev *p2p_dev = NULL;
- 	int ret;
- 
- 	/* no data command? */
- 	if (!len)
- 		return 0;
- 
--	rsp->req.sg = sgl_alloc(len, GFP_KERNEL, &rsp->req.sg_cnt);
--	if (!rsp->req.sg)
--		return NVME_SC_INTERNAL;
-+	if (rsp->queue->nvme_sq.ctrl)
-+		p2p_dev = rsp->queue->nvme_sq.ctrl->p2p_dev;
-+
-+	rsp->req.p2p_dev = NULL;
-+	if (rsp->queue->nvme_sq.qid && p2p_dev) {
-+		ret = pci_p2pmem_alloc_sgl(p2p_dev, &rsp->req.sg,
-+					   &rsp->req.sg_cnt, len);
-+		if (!ret)
-+			rsp->req.p2p_dev = p2p_dev;
-+	}
-+
-+	if (!rsp->req.p2p_dev) {
-+		rsp->req.sg = sgl_alloc(len, GFP_KERNEL, &rsp->req.sg_cnt);
-+		if (!rsp->req.sg)
-+			return NVME_SC_INTERNAL;
-+	}
- 
- 	ret = rdma_rw_ctx_init(&rsp->rw, cm_id->qp, cm_id->port_num,
- 			rsp->req.sg, rsp->req.sg_cnt, 0, addr, key,
-@@ -658,6 +678,8 @@ static void nvmet_rdma_handle_command(struct nvmet_rdma_queue *queue,
- 		cmd->send_sge.addr, cmd->send_sge.length,
- 		DMA_TO_DEVICE);
- 
-+	cmd->req.p2p_client = &queue->dev->device->dev;
-+
- 	if (!nvmet_req_init(&cmd->req, &queue->nvme_cq,
- 			&queue->nvme_sq, &nvmet_rdma_ops))
- 		return;
--- 
-2.11.0
+There are some slightly fishy bits of ordering in the original code
+anyway that I'm not seeing justification for (why is
+the iommu_device_unlink later than one might expect for
+example).
+
+> +
+> +	return ret;
+>  }
+>  
+>  static void arm_smmu_remove_device(struct device *dev)
+> @@ -2486,6 +2690,8 @@ static void arm_smmu_remove_device(struct device *dev)
+>  	if (master && master->ste.assigned)
+>  		arm_smmu_detach_dev(dev);
+>  	arm_smmu_remove_master(smmu, master);
+> +	arm_smmu_disable_ats(master);
+> +
+>  	iommu_group_remove_device(dev);
+>  	iommu_device_unlink(&smmu->iommu, dev);
+>  	kfree(master);
+> @@ -3094,6 +3300,16 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
+>  		}
+>  	}
+>  
+> +	if (smmu->features & ARM_SMMU_FEAT_ATS && !disable_ats_check) {
+> +		enables |= CR0_ATSCHK;
+> +		ret = arm_smmu_write_reg_sync(smmu, enables, ARM_SMMU_CR0,
+> +					      ARM_SMMU_CR0ACK);
+> +		if (ret) {
+> +			dev_err(smmu->dev, "failed to enable ATS check\n");
+> +			return ret;
+> +		}
+> +	}
+> +
+>  	ret = arm_smmu_setup_irqs(smmu);
+>  	if (ret) {
+>  		dev_err(smmu->dev, "failed to setup irqs\n");
+
