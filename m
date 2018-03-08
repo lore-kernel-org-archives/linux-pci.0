@@ -1,62 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0131.outbound.protection.outlook.com ([104.47.32.131]:40444
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932183AbeCITgw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Mar 2018 14:36:52 -0500
-From: Haiyang Zhang <haiyangz@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH v3 1/6] PCI: hv: fix a comment typo in
- _hv_pcifront_read_config()
-Date: Fri, 9 Mar 2018 19:36:49 +0000
-Message-ID: <BL0PR2101MB1108E9E17C9C35BA1A2E5311CADE0@BL0PR2101MB1108.namprd21.prod.outlook.com>
-References: <20180306182128.23281-1-decui@microsoft.com>
- <20180306182128.23281-2-decui@microsoft.com>
-In-Reply-To: <20180306182128.23281-2-decui@microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-it0-f67.google.com ([209.85.214.67]:56297 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752173AbeCHTEJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2018 14:04:09 -0500
+Subject: [pci PATCH v4 4/4] nvme: Migrate over to "unmanaged SR-IOV" support
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, hch@lst.de, dwmw@amazon.co.uk
+Date: Thu, 08 Mar 2018 11:04:06 -0800
+Message-ID: <20180308190401.5433.13861.stgit@localhost.localdomain>
+In-Reply-To: <20180308185507.5433.98830.stgit@localhost.localdomain>
+References: <20180308185507.5433.98830.stgit@localhost.localdomain>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
+Instead of implementing our own version of a SR-IOV configuration stub in
+the nvme driver we can just reuse the existing
+pci_sriov_configure_unmanaged function.
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Tuesday, March 6, 2018 1:22 PM
-> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan
-> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
-> olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
-> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
-> Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
-> marcelo.cerri@canonical.com; Michael Kelley (EOSG)
-> <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microsoft.com>;
-> stable@vger.kernel.org
-> Subject: [PATCH v3 1/6] PCI: hv: fix a comment typo in
-> _hv_pcifront_read_config()
->=20
-> No functional change.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Fixes: bdd74440d9e8 ("PCI: hv: Add explicit barriers to config space acce=
-ss")
-> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> Cc: stable@vger.kernel.org
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> ---
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+---
+ drivers/nvme/host/pci.c |   22 +++-------------------
+ 1 file changed, 3 insertions(+), 19 deletions(-)
 
-Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 6fe7af00a1f4..2c753ccc1771 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2570,24 +2570,6 @@ static void nvme_remove(struct pci_dev *pdev)
+ 	nvme_put_ctrl(&dev->ctrl);
+ }
+ 
+-static int nvme_pci_sriov_configure(struct pci_dev *pdev, int numvfs)
+-{
+-	int ret = 0;
+-
+-	if (numvfs == 0) {
+-		if (pci_vfs_assigned(pdev)) {
+-			dev_warn(&pdev->dev,
+-				"Cannot disable SR-IOV VFs while assigned\n");
+-			return -EPERM;
+-		}
+-		pci_disable_sriov(pdev);
+-		return 0;
+-	}
+-
+-	ret = pci_enable_sriov(pdev, numvfs);
+-	return ret ? ret : numvfs;
+-}
+-
+ #ifdef CONFIG_PM_SLEEP
+ static int nvme_suspend(struct device *dev)
+ {
+@@ -2706,7 +2688,9 @@ static void nvme_error_resume(struct pci_dev *pdev)
+ 	.driver		= {
+ 		.pm	= &nvme_dev_pm_ops,
+ 	},
+-	.sriov_configure = nvme_pci_sriov_configure,
++#ifdef CONFIG_PCI_IOV
++	.sriov_configure = pci_sriov_configure_unmanaged,
++#endif
+ 	.err_handler	= &nvme_err_handler,
+ };
+ 
