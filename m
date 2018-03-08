@@ -1,94 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40746 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932243AbeCFAKH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 19:10:07 -0500
-Date: Mon, 5 Mar 2018 18:10:04 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v2] PCI: Move declaration of of_irq_parse_and_map_pci
- under OF_IRQ
-Message-ID: <20180306001004.GB33706@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520292150-15699-1-git-send-email-linux@roeck-us.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1520292150-15699-1-git-send-email-linux@roeck-us.net>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 3/5] PCI: designware-ep: Make dw_pcie_ep_reset_bar() handle 64-bit BARs properly
+Date: Thu,  8 Mar 2018 14:33:28 +0100
+Message-Id: <20180308133331.19464-4-niklas.cassel@axis.com>
+In-Reply-To: <20180308133331.19464-1-niklas.cassel@axis.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 05, 2018 at 03:22:30PM -0800, Guenter Roeck wrote:
-> Since commit 4670d610d5923 ("PCI: Move OF-related PCI functions into
-> PCI core"), sparc:allmodconfig fails to build with the following error.
-> 
-> pcie-cadence-host.c:(.text+0x4c4):
-> 	undefined reference to `of_irq_parse_and_map_pci'
-> pcie-cadence-host.c:(.text+0x4c8):
-> 	undefined reference to `of_irq_parse_and_map_pci'
-> 
-> of_irq_parse_and_map_pci is now only available if OF_IRQ is enabled.
-> Make its declaration and its dummy function dependent on OF_IRQ
-> to solve the problem.
-> 
-> Fixes: 4670d610d5923 ("PCI: Move OF-related PCI functions into PCI core")
-> Cc: Rob Herring <robh@kernel.org>
-> Acked-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Since a 64-bit BAR consists of a BAR pair, we need to write to both
+BARs in the BAR pair to clear the BAR properly.
 
-Applied to for-linus for v4.16, thanks!
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-designware-ep.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-> ---
-> v2: Added Rob's Ack
->     Sent to linux-pci mailing list per Rob's request
-> 
->  include/linux/of_pci.h | 17 ++++++++++-------
->  1 file changed, 10 insertions(+), 7 deletions(-)
-> 
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index 88865e0ebf4d..091033a6b836 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -13,7 +13,6 @@ struct device_node;
->  struct device_node *of_pci_find_child_device(struct device_node *parent,
->  					     unsigned int devfn);
->  int of_pci_get_devfn(struct device_node *np);
-> -int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
->  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
->  int of_get_pci_domain_nr(struct device_node *node);
->  int of_pci_get_max_link_speed(struct device_node *node);
-> @@ -34,12 +33,6 @@ static inline int of_pci_get_devfn(struct device_node *np)
->  }
->  
->  static inline int
-> -of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
-> -{
-> -	return 0;
-> -}
-> -
-> -static inline int
->  of_pci_parse_bus_range(struct device_node *node, struct resource *res)
->  {
->  	return -EINVAL;
-> @@ -67,6 +60,16 @@ of_pci_get_max_link_speed(struct device_node *node)
->  static inline void of_pci_check_probe_only(void) { }
->  #endif
->  
-> +#if IS_ENABLED(CONFIG_OF_IRQ)
-> +int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
-> +#else
-> +static inline int
-> +of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
-> +{
-> +	return 0;
-> +}
-> +#endif
-> +
->  #if defined(CONFIG_OF_ADDRESS)
->  int of_pci_get_host_bridge_resources(struct device_node *dev,
->  			unsigned char busno, unsigned char bus_max,
-> -- 
-> 2.7.4
-> 
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 946bbdf53c4d..b20b2651caf9 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -22,11 +22,18 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ 	u32 reg;
++	u32 val;
+ 
+ 	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
++	val = dw_pcie_readl_dbi(pci, reg);
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 	dw_pcie_writel_dbi2(pci, reg, 0x0);
+ 	dw_pcie_writel_dbi(pci, reg, 0x0);
++	if (!(val & PCI_BASE_ADDRESS_SPACE_IO) &&
++	    (val & PCI_BASE_ADDRESS_MEM_TYPE_64)) {
++		dw_pcie_writel_dbi2(pci, reg + 4, 0x0);
++		dw_pcie_writel_dbi(pci, reg + 4, 0x0);
++	}
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ }
+ 
+-- 
+2.14.2
