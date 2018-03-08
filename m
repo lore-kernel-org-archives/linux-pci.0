@@ -1,47 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:38460 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161818AbeCAVDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 16:03:35 -0500
-To: Jerome Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
- <1519936195.4592.18.camel@au1.ibm.com> <20180301205548.GA6742@redhat.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
-Date: Thu, 1 Mar 2018 14:03:26 -0700
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:41764 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935981AbeCHRvP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Mar 2018 12:51:15 -0500
+Date: Thu, 8 Mar 2018 17:51:04 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        kbuild test robot <fengguang.wu@intel.com>
+Subject: Re: [PATCH 4/9] PCI: kirin_pcie_driver can be static
+Message-ID: <20180308175104.GA4899@e107981-ln.cambridge.arm.com>
+References: <20180307154243.3205-1-robh@kernel.org>
+ <20180307154243.3205-5-robh@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180301205548.GA6742@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180307154243.3205-5-robh@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Mar 07, 2018 at 09:42:38AM -0600, Rob Herring wrote:
+> From: kbuild test robot <fengguang.wu@intel.com>
+> 
+> This was generated from 0-day builder.
+> 
+> Fixes: c44f2aed62c2 ("PCI: improve compile test coverage")
+> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+> [robh: add commit msg]
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> ---
+>  drivers/pci/dwc/pcie-kirin.c    | 2 +-
+>  drivers/pci/host/pci-ftpci100.c | 4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+> index dcc8cedf6e17..a6b88c7f6e3e 100644
+> --- a/drivers/pci/dwc/pcie-kirin.c
+> +++ b/drivers/pci/dwc/pcie-kirin.c
+> @@ -504,7 +504,7 @@ static const struct of_device_id kirin_pcie_match[] = {
+>  	{},
+>  };
+>  
+> -struct platform_driver kirin_pcie_driver = {
+> +static struct platform_driver kirin_pcie_driver = {
+>  	.probe			= kirin_pcie_probe,
+>  	.driver			= {
+>  		.name			= "kirin-pcie",
+> diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+> index b9617d1c1d48..5008fd87956a 100644
+> --- a/drivers/pci/host/pci-ftpci100.c
+> +++ b/drivers/pci/host/pci-ftpci100.c
+> @@ -586,11 +586,11 @@ static int faraday_pci_probe(struct platform_device *pdev)
+>   * We encode bridge variants here, we have at least two so it doesn't
+>   * hurt to have infrastructure to encompass future variants as well.
+>   */
+> -const struct faraday_pci_variant faraday_regular = {
+> +static const struct faraday_pci_variant faraday_regular = {
+>  	.cascaded_irq = true,
+>  };
+>  
+> -const struct faraday_pci_variant faraday_dual = {
+> +static const struct faraday_pci_variant faraday_dual = {
+>  	.cascaded_irq = false,
+>  };
 
+It is more than kirin_pcie_driver then :), I can update the commit
+log myself.
 
-On 01/03/18 01:55 PM, Jerome Glisse wrote:
-> Well this again a new user of struct page for device memory just for
-> one usecase. I wanted HMM to be more versatile so that it could be use
-> for this kind of thing too. I guess the message didn't go through. I
-> will take some cycles tomorrow to look into this patchset to ascertain
-> how struct page is use in this context.
-
-We looked at it but didn't see how any of it was applicable to our needs.
-
-Logan
+Lorenzo
