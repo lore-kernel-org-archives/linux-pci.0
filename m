@@ -1,70 +1,90 @@
-Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=/KsV=F6=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=/KsV=F6=rjwysocki.net=rjw@kernel.org>
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Keith Busch <keith.busch@intel.com>, Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v1 4/9] PCI/portdrv: Disable port driver in compat mode
-Date: Wed, 07 Mar 2018 11:29:15 +0100
-Message-ID: <38992036.3QHJjk5T7c@aspire.rjw.lan>
-In-Reply-To: <152040322576.240786.3375466676254382935.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com> <152040322576.240786.3375466676254382935.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Keith Busch <keith.busch@intel.com>, Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH v1 2/9] PCI/PM: Clear PCIe PME Status bit in core, not PCIe port driver
+Date: Thu, 08 Mar 2018 10:13:39 +0100
+Message-ID: <8601339.xFspzpXtrk@aspire.rjw.lan>
+In-Reply-To: <20180308080331.GA5671@wunner.de>
+References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com> <152040321483.240786.16597888035806933750.stgit@bhelgaas-glaptop.roam.corp.google.com> <20180308080331.GA5671@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, March 7, 2018 7:13:45 AM CET Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
+On Thursday, March 8, 2018 9:03:31 AM CET Lukas Wunner wrote:
+> On Wed, Mar 07, 2018 at 12:13:34AM -0600, Bjorn Helgaas wrote:
+> > From: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
+> > resume") added a .resume_noirq() callback to the PCIe port driver to clear
+> > the PME Status bit during resume to work around a BIOS issue.
+> > 
+> > The BIOS evidently enabled PME interrupts for ACPI-based runtime wakeups
+> > but did not clear the PME Status bit during resume, which meant PMEs after
+> > resume did not trigger interrupts because PME Status did not transition
+> > from cleared to set.
+> > 
+> > The fix was in the PCIe port driver, so it worked when CONFIG_PCIEPORTBUS
+> > was set.  But I think we *always* want the fix because the platform may use
+> > PME interrupts even if Linux is built without the PCIe port driver.
+> > 
+> > Move the fix from the port driver to the PCI core so we can work around
+> > this "PME doesn't work after waking from a sleep state" issue regardless of
+> > CONFIG_PCIEPORTBUS.
+> > 
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  drivers/pci/pci-driver.c       |   14 ++++++++++++++
+> >  drivers/pci/pcie/portdrv_pci.c |   15 ---------------
+> >  2 files changed, 14 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > index 3bed6beda051..bf0704b75f79 100644
+> > --- a/drivers/pci/pci-driver.c
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -525,6 +525,18 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+> >  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+> >  }
+> >  
+> > +static void pcie_resume_early(struct pci_dev *pci_dev)
+> > +{
+> > +	/*
+> > +	 * Some BIOSes forget to clear Root PME Status bits after system wakeup
+> > +	 * which breaks ACPI-based runtime wakeup on PCI Express, so clear those
+> > +	 * bits now just in case (shouldn't hurt).
+> > +	 */
+> > +	if (pci_is_pcie(pci_dev) &&
+> > +	    pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT)
+> > +		pcie_clear_root_pme_status(pci_dev);
+> > +}
+> > +
+> >  /*
+> >   * Default "suspend" method for devices that have no driver provided suspend,
+> >   * or not even a driver at all (second part).
+> > @@ -873,6 +885,8 @@ static int pci_pm_resume_noirq(struct device *dev)
+> >  	if (pci_has_legacy_pm_support(pci_dev))
+> >  		return pci_legacy_resume_early(dev);
+> >  
+> > +	pcie_resume_early(pci_dev);
 > 
-> The "pcie_ports=compat" kernel parameter sets pcie_ports_disabled, which is
-> intended to disable the PCIe port driver.  But even when it was disabled,
-> we registered pcie_portdriver so we could work around a BIOS PME issue (see
-> fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
-> resume")).
+> I'm wondering if it would be better to implement this as a PCI quirk:
 > 
-> Registering the driver meant that the pcie_portdrv_probe() path called
-> pci_enable_device(), pci_save_state(), pm_runtime_set_autosuspend_delay(),
-> pm_runtime_use_autosuspend(), etc., even when the driver was disabled.
+> DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+> 				     PCI_CLASS_BRIDGE_PCI, 8, ...)
 > 
-> We've since moved the BIOS PME workaround from the port driver to the core,
-> so stop registering the PCIe port driver in compat mode.
+> Then it would also be executed for the ->restore_noirq phase, not only
+> ->resume_noirq.  And it could be constrained to only the affected PCI
+> or DMI IDs.
 > 
-> This means "pcie_ports=compat" will now be basically the same as turning
-> off CONFIG_PCIEPORTBUS completely.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/pcie/portdrv_core.c |    3 ---
->  drivers/pci/pcie/portdrv_pci.c  |    2 +-
->  2 files changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index ef3bad4ad010..9db77c683732 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -212,9 +212,6 @@ static int get_port_device_capability(struct pci_dev *dev)
->  	int services = 0;
->  	int cap_mask = 0;
->  
-> -	if (pcie_ports_disabled)
-> -		return 0;
-> -
->  	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
->  			| PCIE_PORT_SERVICE_VC;
->  	if (pci_aer_available())
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index f91afd09e356..c08ebd237242 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -262,7 +262,7 @@ static int __init pcie_portdrv_init(void)
->  	int retval;
->  
->  	if (pcie_ports_disabled)
-> -		return pci_register_driver(&pcie_portdriver);
-> +		return -EACCES;
->  
->  	dmi_check_system(pcie_portdrv_dmi_table);
->  
-> 
-> 
+> However it would then also be executed on ->runtime_resume, I'm not
+> sure if that's a problem or not.
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+While that may not be a problem strictly speaking (the root port resume
+only takes place when the port itself has been suspended, so this should
+not interfere with PME handling for the devices under it), but it also is
+not necessary in that case, because the platform firmware doesn't mess up
+with the root port's PM registers then.
+
+Or if it does, the whole PCIe PM is managed by AML/SMM and we should not
+even touch this register at all.
