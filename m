@@ -1,51 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:34746 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751241AbeCGRXg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 12:23:36 -0500
-Received: by mail-oi0-f43.google.com with SMTP id c83so2262762oib.1
-        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2018 09:23:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20180307171308.GA21985@e107981-ln.cambridge.arm.com>
-References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
- <20180220153947.GA21801@e107981-ln.cambridge.arm.com> <CAOMZO5CSMJz8=Mm-fJR1aJK=V19uTyVO1PXkOGd1g6v64BNHNg@mail.gmail.com>
- <20180307171308.GA21985@e107981-ln.cambridge.arm.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Wed, 7 Mar 2018 14:23:34 -0300
-Message-ID: <CAOMZO5Aedfy3CfxOAEXSPTQt_1pher2FYjC1_NnXrxiArDEDgQ@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root subordinate
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>,
-        linux-pci@vger.kernel.org,
-        Binghui Wang <wangbinghui@hisilicon.com>,
+Received: from bastet.se.axis.com ([195.60.68.11]:60671 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755824AbeCHNeA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2018 08:34:00 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, Alan Douglas <adouglas@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset="UTF-8"
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 4/5] PCI: endpoint: Make pci_epc_set_bar() return the BAR width that was set-up
+Date: Thu,  8 Mar 2018 14:33:29 +0100
+Message-Id: <20180308133331.19464-5-niklas.cassel@axis.com>
+In-Reply-To: <20180308133331.19464-1-niklas.cassel@axis.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+In order to properly handle 64-bit BARs, we need to know what BAR width
+that was actually set-up by specific pci_epc_set_bar() implementations.
 
-On Wed, Mar 7, 2018 at 2:13 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
+This is done so that we can know if we need to skip a BAR,
+since a 64-bit BAR consists of a BAR pair.
 
-> I asked Bjorn to send it for -rc5 and he kindly accepted, it is now
-> in his for-linus branch.
+It is important to know the BAR width that was actually set-up,
+since some drivers, like the Cadence EP controller, does not
+simply look at PCI_BASE_ADDRESS_MEM_TYPE_64, as it configures
+all BARs larger than 2G as 64-bit.
 
-Excellent, thanks!
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/cadence/pcie-cadence-ep.c         | 2 +-
+ drivers/pci/dwc/pcie-designware-ep.c          | 4 ++--
+ drivers/pci/endpoint/functions/pci-epf-test.c | 7 ++++++-
+ 3 files changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
+index 3c3a97743453..0e4cc4cca56d 100644
+--- a/drivers/pci/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/cadence/pcie-cadence-ep.c
+@@ -135,7 +135,7 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn, enum pci_barno bar,
+ 		CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL(b, ctrl));
+ 	cdns_pcie_writel(pcie, reg, cfg);
+ 
+-	return 0;
++	return is_64bits ? 1 : 0;
+ }
+ 
+ static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index b20b2651caf9..f3c19f8ff8e5 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -139,7 +139,7 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+ 		as_type = DW_PCIE_AS_IO;
+ 
+ 	ret = dw_pcie_ep_inbound_atu(ep, bar, bar_phys, as_type);
+-	if (ret)
++	if (ret < 0)
+ 		return ret;
+ 
+ 	dw_pcie_dbi_ro_wr_en(pci);
+@@ -154,7 +154,7 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+ 	}
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+-	return 0;
++	return (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) ? 1 : 0;
+ }
+ 
+ static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 7c70433b11a7..09878e011284 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -379,12 +379,17 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
+ 		ret = pci_epc_set_bar(epc, epf->func_no, bar,
+ 				      epf_bar->phys_addr,
+ 				      epf_bar->size, bar_flags[bar]);
+-		if (ret) {
++		if (ret < 0) {
+ 			pci_epf_free_space(epf, epf_test->reg[bar], bar);
+ 			dev_err(dev, "failed to set BAR%d\n", bar);
+ 			if (bar == test_reg_bar)
+ 				return ret;
+ 		}
++		/*
++		 * pci_epc_set_bar() returns 1 if a 64-bit BAR was set-up,
++		 * or 0 if a 32-bit BAR was set-up.
++		 */
++		bar += ret;
+ 	}
+ 
+ 	return 0;
+-- 
+2.14.2
