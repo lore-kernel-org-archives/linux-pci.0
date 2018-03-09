@@ -1,74 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 27 Mar 2018 14:45:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v3 5/5] ACPI / hotplug / PCI: Mark stale PCI devices
- disconnected
-Message-ID: <20180327194512.GD7759@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
- <20180226132112.81447-6-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0131.outbound.protection.outlook.com ([104.47.32.131]:40444
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932183AbeCITgw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Mar 2018 14:36:52 -0500
+From: Haiyang Zhang <haiyangz@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH v3 1/6] PCI: hv: fix a comment typo in
+ _hv_pcifront_read_config()
+Date: Fri, 9 Mar 2018 19:36:49 +0000
+Message-ID: <BL0PR2101MB1108E9E17C9C35BA1A2E5311CADE0@BL0PR2101MB1108.namprd21.prod.outlook.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+ <20180306182128.23281-2-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-2-decui@microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180226132112.81447-6-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 26, 2018 at 04:21:12PM +0300, Mika Westerberg wrote:
-> Following PCIehp mark the unplugged PCI devices disconnected. This makes
-> sure PCI core code leaves the now missing hardware registers alone.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Tuesday, March 6, 2018 1:22 PM
+> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan
+> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
+> olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
+> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
+> Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
+> marcelo.cerri@canonical.com; Michael Kelley (EOSG)
+> <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microsoft.com>;
+> stable@vger.kernel.org
+> Subject: [PATCH v3 1/6] PCI: hv: fix a comment typo in
+> _hv_pcifront_read_config()
+>=20
+> No functional change.
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Fixes: bdd74440d9e8 ("PCI: hv: Add explicit barriers to config space acce=
+ss")
+> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Cc: stable@vger.kernel.org
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
 > ---
->  drivers/pci/hotplug/acpiphp_glue.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 5efa21cdddc9..0aef35ee665a 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -651,6 +651,11 @@ static void trim_stale_devices(struct pci_dev *dev)
->  		alive = pci_device_is_present(dev);
->  
->  	if (!alive) {
-> +		pci_dev_set_disconnected(dev, NULL);
-> +		if (pci_has_subordinate(dev))
-> +			pci_walk_bus(dev->subordinate, pci_dev_set_disconnected,
-> +				     NULL);
 
-I hate this pci_dev_set_disconnected() thing and hope to remove it
-someday.  It's racy and adds additional states that are hard to
-manage, e.g., "device has been removed and will not respond to PCI
-accesses, but pci_dev_set_disconnected() hasn't been called yet".  If
-we can handle that case (and we should), we shouldn't need
-pci_dev_set_disconnected().
-
-But I guess I accepted it other places, so now I have to accept it
-here.
-
-I do wonder whether it should be factored into a
-"pci_disconnect_dev()" that does both the device itself and the bus
-walk.
-
-And I wonder whether that should be called form
-pci_stop_and_remove_bus_device(), since some callers do this and
-others don't.
-
-> +
->  		pci_stop_and_remove_bus_device(dev);
->  		if (adev)
->  			acpi_bus_trim(adev);
-> -- 
-> 2.16.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
