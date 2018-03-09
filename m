@@ -1,49 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:41579 "EHLO gate.crashing.org"
+Received: from mail.kernel.org ([198.145.29.99]:40760 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754542AbeCVNqg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Mar 2018 09:46:36 -0400
-Message-ID: <1521726371.16434.307.camel@kernel.crashing.org>
-Subject: Re: PCIe resets/restore and lack of CRS wait
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: okaya@codeaurora.org
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Neuling <michael.neuling@au1.ibm.com>,
-        linux-pci-owner@vger.kernel.org
-Date: Fri, 23 Mar 2018 00:46:11 +1100
-In-Reply-To: <4d1c04efa51db50dd5095ae258c3c52b@codeaurora.org>
-References: <1521691380.16434.287.camel@kernel.crashing.org>
-         <f6af9b6e424c469f433735a106b8ee69@codeaurora.org>
-         <1521695531.16434.294.camel@kernel.crashing.org>
-         <1521699853.16434.301.camel@kernel.crashing.org>
-         <4d1c04efa51db50dd5095ae258c3c52b@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S932669AbeCITAL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Mar 2018 14:00:11 -0500
+Subject: [PATCH v2 04/13] PCI/PM: Clear PCIe PME Status bit for Root Complex
+ Event Collectors
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Frederick Lawler <fred@fredlawl.com>
+Date: Fri, 09 Mar 2018 13:00:11 -0600
+Message-ID: <152062201091.77693.14620978392756642834.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-03-22 at 07:25 -0400, okaya@codeaurora.org wrote:
-> > > > 
-> > 
-> > That tells me that there is no guarantee by spec that we'll get
-> > ffff's, instead we might get HW stalls, or other really nasty
-> > effects when probing a register other than 0 (VID/DID) for CRS.
-> 
-> AFAIK, spec also mentions that sw needs to observe 0xffffffff for all 
-> other registers other than vendor id during CRS period.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-This isnt what's in the 3.1a spec at least ... section 2.3.2 explains
-the specified behaviour which is, for any register other than 0
-(VID/DID), to re-issue the request...
+Per PCIe r4.0, sec 6.1.6, Root Complex Event Collectors can generate PME
+interrupts on behalf of Root Complex Integrated Endpoints.
 
-Now, it can have a timeout, and thus might be completed as a failed
-transaction after a while, but it's a sub-optimal way (ie, we'll end up
-hogging the CPU on loads) and it's not 100% clear that a failed
-transaction returns as all 1's (it should but ...).
+Linux does not currently enable PME interrupts from RC Event Collectors,
+but fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
+resume") suggests PME interrupts may be enabled by the platform for ACPI-
+based runtime wakeup.
 
-I can make sure it happens the way the code expects on powerpc, I'm not
-too worried about that, but I think for such a generic function, it
-would make sense to stick a bit closer to the spec.
+Clear the PCIe PME Status bit for Root Complex Event Collectors during
+resume, just like we already do for Root Ports.
 
-Cheers,
-Ben.
+If the BIOS enables PME interrupts for an event collector and neglects to
+clear the status bit on resume, this change should fix the same bug as
+fe31e69740ed (PMEs not working after waking from a sleep state), but for
+Root Complex Integrated Endpoints.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-driver.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index e561fa0f456c..204d2b54c2a4 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -533,7 +533,8 @@ static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
+ 	 * Clear those bits now just in case (shouldn't hurt).
+ 	 */
+ 	if (pci_is_pcie(pci_dev) &&
+-	    pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT)
++	    (pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT ||
++	     pci_pcie_type(pci_dev) == PCI_EXP_TYPE_RC_EC))
+ 		pcie_clear_root_pme_status(pci_dev);
+ }
+ 
