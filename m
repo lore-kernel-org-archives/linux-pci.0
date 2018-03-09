@@ -1,87 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40572 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:44898 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932124AbeCIS7u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Mar 2018 13:59:50 -0500
-Subject: [PATCH v2 00/13] PCI: Simplify PCIe port driver
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Frederick Lawler <fred@fredlawl.com>
-Date: Fri, 09 Mar 2018 12:59:49 -0600
-Message-ID: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1751102AbeCIPHh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Mar 2018 10:07:37 -0500
+Date: Fri, 9 Mar 2018 15:07:27 +0000
+From: James Hogan <jhogan@kernel.org>
+To: Jim Quinlan <jim2101024@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Russell King <rmk+kernel@armlinux.org.uk>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Jonas Gorski <jonas.gorski@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Kevin Cernekee <cernekee@gmail.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH v4 1/8] SOC: brcmstb: add memory API
+Message-ID: <20180309150727.GH24558@saruman>
+References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
+ <1516058925-46522-2-git-send-email-jim2101024@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="PW0Eas8rCkcu1VkF"
+In-Reply-To: <1516058925-46522-2-git-send-email-jim2101024@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an attempt to move a few things out of the port driver.
 
-I added these new patches since v1:
+--PW0Eas8rCkcu1VkF
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-  Merge pcieport_if.h into portdrv.h
-    Merge pcieport_if.h and portdrv.h to reduce clutter
+On Mon, Jan 15, 2018 at 06:28:38PM -0500, Jim Quinlan wrote:
+> From: Florian Fainelli <f.fainelli@gmail.com>
+>=20
+> This commit adds a memory API suitable for ascertaining the sizes of
+> each of the N memory controllers in a Broadcom STB chip.  Its first
+> user will be the Broadcom STB PCIe root complex driver, which needs
+> to know these sizes to properly set up DMA mappings for inbound
+> regions.
+>=20
+> We cannot use memblock here or anything like what Linux provides
+> because it collapses adjacent regions within a larger block, and here
+> we actually need per-memory controller addresses and sizes, which is
+> why we resort to manual DT parsing.
+>=20
+> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+>=20
+> Conflicts:
+> 	drivers/soc/bcm/brcmstb/Makefile
 
-  Remove unnecessary "pcie_ports=auto" parameter
-    This is the default setting anyway, so specifying the parameter doesn't
-    do anything.
+That can go.
 
-  Encapsulate pcie_ports_auto inside the port driver
-    "pcie_ports_auto" was declared in linux/pci.h even though nobody
-    outside the port driver used it.
+> +++ b/drivers/soc/bcm/brcmstb/memory.c
+=2E..
+> +/* Macro to help extract property data */
+> +#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(*(u32*)(b + offs)))
 
-  Rename and reverse sense of pcie_ports_auto
-    "pcie_ports_auto" is connected with the "pcie_ports=native" parameter,
-    so rename it to match.
+Checkpatch complains about missing whitespace after u32.
 
-Other changes since v1:
-  - Rebase onto my pci/portdrv branch.
-  - Rename pcie_resume_early() to pcie_pme_root_status_cleanup() as
-    suggested by Rafael.
-  - Add Rafael's Reviewed-by tags.
+Cheers
+James
 
-v1: https://lkml.kernel.org/r/152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com
+--PW0Eas8rCkcu1VkF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
----
+-----BEGIN PGP SIGNATURE-----
 
-Bjorn Helgaas (13):
-      PCI/portdrv: Merge pcieport_if.h into portdrv.h
-      PCI/PM: Move pcie_clear_root_pme_status() to core
-      PCI/PM: Clear PCIe PME Status bit in core, not PCIe port driver
-      PCI/PM: Clear PCIe PME Status bit for Root Complex Event Collectors
-      PCI/portdrv: Disable port driver in compat mode
-      PCI/portdrv: Remove pcie_port_bus_type link order dependency
-      PCI/portdrv: Remove unused PCIE_PORT_SERVICE_VC
-      PCI/portdrv: Simplify PCIe feature permission checking
-      PCI/portdrv: Remove unnecessary include of <linux/pci-aspm.h>
-      PCI/portdrv: Remove "pcie_hp=nomsi" kernel parameter
-      PCI/portdrv: Remove unnecessary "pcie_ports=auto" parameter
-      PCI/portdrv: Encapsulate pcie_ports_auto inside the port driver
-      PCI/portdrv: Rename and reverse sense of pcie_ports_auto
+iQIzBAEBCAAdFiEEd80NauSabkiESfLYbAtpk944dnoFAlqioy4ACgkQbAtpk944
+dnrGpQ/6A4EcwZ+zoSJZpxuuicPoZib7aq0pGu8F/Ld2nf+Tr48Slxw3kPhcCzc7
+HXPBL24yqKGrJ7jFbqrDnWCLkjTg7zsjokCbehiLzQI66LUsRolxGCLMYQz6XfvN
+noL4iAQ+mRx9qfhpRomyHXA3xcb3DS+TL0o6TxztDgiF5PGz+Iu9AlaYKQ4Zq0cd
+xuEIGfbJo3fivLDU20H/KyuSY3B3Bg1ayXqtBZSQmxgac1Hkyldjee5Spe8bG0j2
+aOUOZRfJY49FjYQ7wW2itTywSE1RpLTHBfqxpYrrQifSB69Ztwl9H0GqWD0PehjI
+uiKHInsJxqYMNQXMssZxMj4vuHq31v+QbD6jNoinnNrmoctjT8dPaSo6h6t051HE
+a0saFvpCEJrOqozZ6PQgJQPSg9Mz95+YUFMmNApBzKfYCw0TNuPHH5vupy9A9LWD
+D1uAyAatlj5Qb8dU0kBXKXCVPu1Ikq4Jbgq/WMkcUh2WTTD4+2T6uKdS+JSnd08X
+RjevevlDWxgSMJ4DzPoQgZbswKiq/A6Dewg/4hx9O8BnamQ/Sj4pbRThTcdWsNqj
+9xC/Gt6QPJQop/pdz0m+Q0ML1lQRNwe1YbUcwt0cMGlVuNzkN45lM7T3HGbz6nXW
+8kjCKcG+L9tMJ/4zywyXKUqb+EAjBMgp1OWJobxtG9r+wwLYHzs=
+=TGmj
+-----END PGP SIGNATURE-----
 
-
- Documentation/admin-guide/kernel-parameters.txt |   19 ++---
- drivers/acpi/pci_root.c                         |   13 +++
- drivers/pci/hotplug/pciehp.h                    |    2 -
- drivers/pci/pci-driver.c                        |   59 +++++++++++++++
- drivers/pci/pci.c                               |    9 ++
- drivers/pci/pci.h                               |    1 
- drivers/pci/pcie/Makefile                       |    3 -
- drivers/pci/pcie/aer/aerdrv.h                   |    2 -
- drivers/pci/pcie/pcie-dpc.c                     |    2 -
- drivers/pci/pcie/pcieport_if.h                  |   71 -------------------
- drivers/pci/pcie/pme.c                          |    1 
- drivers/pci/pcie/portdrv.h                      |   88 ++++++++++++++++-------
- drivers/pci/pcie/portdrv_acpi.c                 |    3 -
- drivers/pci/pcie/portdrv_bus.c                  |   56 ---------------
- drivers/pci/pcie/portdrv_core.c                 |   73 +++++++------------
- drivers/pci/pcie/portdrv_pci.c                  |   54 ++------------
- drivers/pci/probe.c                             |   10 +++
- include/linux/pci.h                             |    5 +
- 18 files changed, 198 insertions(+), 273 deletions(-)
- delete mode 100644 drivers/pci/pcie/pcieport_if.h
- delete mode 100644 drivers/pci/pcie/portdrv_bus.c
+--PW0Eas8rCkcu1VkF--
