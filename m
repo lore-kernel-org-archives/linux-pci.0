@@ -1,110 +1,126 @@
-Return-Path: <SRS0=HjPR=FX=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=HjPR=FX=codeaurora.org=okaya@kernel.org>
-Subject: Re: RFC on Kdump and PCIe on ARM64
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Will Deacon <will.deacon@arm.com>, Linux PCI <linux-pci@vger.kernel.org>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
- Nate Watterson <nwatters@codeaurora.org>,
- "shankerd@codeaurora.org" <shankerd@codeaurora.org>,
- Vikram Sethi <vikrams@codeaurora.org>, "Goel, Sameer"
- <sgoel@codeaurora.org>, kexec@lists.infradead.org,
- Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
- David Woodhouse <dwmw2@infradead.org>
-References: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
- <20180301190552.GK13722@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <2b2de17c-8527-e49b-2ef2-2a3d1801e4f9@codeaurora.org>
-Date: Thu, 1 Mar 2018 14:19:09 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40892 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932759AbeCITA2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Mar 2018 14:00:28 -0500
+Subject: [PATCH v2 07/13] PCI/portdrv: Remove unused PCIE_PORT_SERVICE_VC
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Frederick Lawler <fred@fredlawl.com>
+Date: Fri, 09 Mar 2018 13:00:27 -0600
+Message-ID: <152062202742.77693.2491710394330502440.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180301190552.GK13722@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/1/2018 2:05 PM, Bjorn Helgaas wrote:
-> [+cc Joerg, David, iommu list]
-> 
-> On Thu, Mar 01, 2018 at 12:44:26PM -0500, Sinan Kaya wrote:
->> Hi,
->>
->> We are seeing IOMMU faults when booting the kdump kernel on ARM64.
->>
->> [    7.220162] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x02 received:
->> [    7.226123] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000010000000002
->> [    7.232023] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
->> [    7.237925] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
->> [    7.243827] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
->>
->> This is Nate's interpretation of the fault:
->>
->> "The PCI device is sending transactions just after the SMMU was
->> reset/reinitialized which is problematic because the device has not
->> yet been added to the SMMU and thus should not be doing *any* DMA.
->> DMA from the PCI devices should be quiesced prior to starting the
->> crashdump kernel or you risk overwriting portions of memory you
->> meant to preserve. In this case the SMMU was actually doing you a
->> favor by blocking these errant DMA operations!!"
->>
->> I think this makes sense especially for the IOMMU enabled case on
->> the host where an IOVA can overlap with the region of memory kdump
->> reserved for itself.
->>
->> Apparently, there has been similar concerns in the past.
->>
->> https://www.fujitsu.com/jp/documents/products/software/os/linux/catalog/LinuxConJapan2013-Indoh.pdf
->>
->> and was not addressed globally due to IOMMU+PCI driver ordering
->> issues and bugs in HW due to hot reset.
->>
->> https://lkml.org/lkml/2012/8/3/160
->>
->> Hot reset as mentioned is destructive and may not be the best
->> implementation choice.  However, most of the modern endpoints
->> support PCIE function level reset.
->>
->> One other solution is for SMMUv3 driver to reserve the kdump used
->> IOVA addresses.
->>
->> Another solution is for the SMMUv3 driver to disable PCIe devices
->> behind the SMMU if it see SMMU is already enabled.
-> 
-> What problem are you trying to solve?  If the IOMMU is blocking DMA
-> after the kdump kernel starts up, that sounds like the desired
-> behavior.
-> 
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Three issues:
-1. I'm seeing a flood of SMMUv3 faults due to adapter using addresses from the
-previous kernel. This might be OK. 
-2. When the SMMUv3 driver sees that it is enabled, it resets itself and
-configures it one more time. 
+No driver registers for PCIE_PORT_SERVICE_VC, so remove it.
 
-[    7.018304] arm-smmu-v3 arm-smmu-v3.0.auto: ias 44-bit, oas 44-bit (features 0x00001fef)
-[    7.026379] arm-smmu-v3 arm-smmu-v3.0.auto: SMMU currently enabled! Resetting...
+This removes the VC "service" files from /sys/bus/pci_express/devices,
+e.g., 0000:07:00.0:pcie108, 0000:08:04.0:pcie208 (all the files that
+contained "8" as the last digit of the "pcieXXX" part).  The port driver
+created these files for PCIe port devices that have a VC Capability.
 
->From the moment IOMMU is disabled to the point where IOMMU get enabled again,
-there is a potential for the PCIE device to corrupt the kdump kernel memory as
-the bus master and memory enable bits are left enabled.
+Since this reduces PCIE_PORT_DEVICE_MAXSERVICES and moves DPC down into the
+spot where VC used to be, the DPC sysfs files will now be named "pcieXX8".
+I don't think there's anything useful userspace can do with those files, so
+I hope nobody cares about these filenames.
 
-[    0.000000] crashkernel reserved: 0x000000007fe00000 - 0x00000000ffe00000 (2048 MB)
+There is no VC driver that calls pcie_port_service_register(), so there
+never was a /sys/bus/pci_express/drivers/vc directory.
 
-This region happens to overlap with the IOVA addresses that SMMUv3 driver on the main
-kernel is allocating.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pcie/portdrv.h      |    6 ++----
+ drivers/pci/pcie/portdrv_acpi.c |    2 +-
+ drivers/pci/pcie/portdrv_core.c |   14 ++++----------
+ 3 files changed, 7 insertions(+), 15 deletions(-)
 
-IOVA addresses start from 0xFFFFFFFF and get decremented on each allocation.
-
-3. The last one is adapter gets into fuzzy state due to not coming out of clean state
-in the second time init and being rejected by SMMUv3 multiple times.
-
-[   16.093441] pci 0000:01:00.0: aer_status: 0x00040000, aer_mask: 0x00000000
-[   16.099356] pci 0000:01:00.0: Malformed TLP
-[   16.103522] pci 0000:01:00.0: aer_layer=Transaction Layer, aer_agent=Receiver ID
-[   16.110900] pci 0000:01:00.0: aer_uncor_severity: 0x00062011
-[   16.116543] pci 0000:01:00.0:   TLP Header: 0a00a000 00008100 01010100 00000000
-
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 7086086e45d0..7bfd75f9197b 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -19,12 +19,10 @@
+ #define PCIE_PORT_SERVICE_AER		(1 << PCIE_PORT_SERVICE_AER_SHIFT)
+ #define PCIE_PORT_SERVICE_HP_SHIFT	2	/* Native Hotplug */
+ #define PCIE_PORT_SERVICE_HP		(1 << PCIE_PORT_SERVICE_HP_SHIFT)
+-#define PCIE_PORT_SERVICE_VC_SHIFT	3	/* Virtual Channel */
+-#define PCIE_PORT_SERVICE_VC		(1 << PCIE_PORT_SERVICE_VC_SHIFT)
+-#define PCIE_PORT_SERVICE_DPC_SHIFT	4	/* Downstream Port Containment */
++#define PCIE_PORT_SERVICE_DPC_SHIFT	3	/* Downstream Port Containment */
+ #define PCIE_PORT_SERVICE_DPC		(1 << PCIE_PORT_SERVICE_DPC_SHIFT)
+ 
+-#define PCIE_PORT_DEVICE_MAXSERVICES   5
++#define PCIE_PORT_DEVICE_MAXSERVICES   4
+ 
+ /* Port Type */
+ #define PCIE_ANY_PORT			(~0)
+diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+index 53f60053bd47..9d12650dc2ae 100644
+--- a/drivers/pci/pcie/portdrv_acpi.c
++++ b/drivers/pci/pcie/portdrv_acpi.c
+@@ -47,7 +47,7 @@ void pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+ 
+ 	flags = root->osc_control_set;
+ 
+-	*srv_mask = PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_DPC;
++	*srv_mask = PCIE_PORT_SERVICE_DPC;
+ 	if (flags & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
+ 		*srv_mask |= PCIE_PORT_SERVICE_HP;
+ 	if (flags & OSC_PCI_EXPRESS_PME_CONTROL)
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 9a41751db332..bf851da97947 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -188,10 +188,8 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ 	if (ret < 0)
+ 		return -ENODEV;
+ 
+-	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
+-		if (i != PCIE_PORT_SERVICE_VC_SHIFT)
+-			irqs[i] = pci_irq_vector(dev, 0);
+-	}
++	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
++		irqs[i] = pci_irq_vector(dev, 0);
+ 
+ 	return 0;
+ }
+@@ -211,8 +209,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	int services = 0;
+ 	int cap_mask = 0;
+ 
+-	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+-			| PCIE_PORT_SERVICE_VC;
++	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP;
+ 	if (pci_aer_available())
+ 		cap_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
+ 
+@@ -239,9 +236,6 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 		 */
+ 		pci_disable_pcie_error_reporting(dev);
+ 	}
+-	/* VC support */
+-	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_VC))
+-		services |= PCIE_PORT_SERVICE_VC;
+ 	/* Root ports are capable of generating PME too */
+ 	if ((cap_mask & PCIE_PORT_SERVICE_PME)
+ 	    && pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
+@@ -331,7 +325,7 @@ int pcie_port_device_register(struct pci_dev *dev)
+ 	 */
+ 	status = pcie_init_service_irqs(dev, irqs, capabilities);
+ 	if (status) {
+-		capabilities &= PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_HP;
++		capabilities &= PCIE_PORT_SERVICE_HP;
+ 		if (!capabilities)
+ 			goto error_disable;
+ 	}
