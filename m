@@ -1,209 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:54658 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:41032 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932315AbeCLTfj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Mar 2018 15:35:39 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        id S932074AbeCITAu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Mar 2018 14:00:50 -0500
+Subject: [PATCH v2 11/13] PCI/portdrv: Remove unnecessary "pcie_ports=auto"
+ parameter
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
         Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 12 Mar 2018 13:35:22 -0600
-Message-Id: <20180312193525.2855-9-logang@deltatee.com>
-In-Reply-To: <20180312193525.2855-1-logang@deltatee.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
-Subject: [PATCH v3 08/11] nvme-pci: Use PCI p2pmem subsystem to manage the CMB
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Frederick Lawler <fred@fredlawl.com>
+Date: Fri, 09 Mar 2018 13:00:49 -0600
+Message-ID: <152062204910.77693.7950471630136609237.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Register the CMB buffer as p2pmem and use the appropriate allocation
-functions to create and destroy the IO SQ.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-If the CMB supports WDS and RDS, publish it for use as P2P memory
-by other devices.
+The "pcie_ports=auto" parameter set pcie_ports_disabled and pcie_ports_auto
+to their compiled-in defaults, so specifying the parameter is the same as
+not using it at all.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Remove the "pcie_ports=auto" parameter and update the documentation.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/nvme/host/pci.c | 75 +++++++++++++++++++++++++++----------------------
- 1 file changed, 41 insertions(+), 34 deletions(-)
+ Documentation/admin-guide/kernel-parameters.txt |   15 +++++++--------
+ drivers/pci/pcie/portdrv_pci.c                  |    3 ---
+ 2 files changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index b6f43b738f03..1fb57fa42dd0 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -29,6 +29,7 @@
- #include <linux/types.h>
- #include <linux/io-64-nonatomic-lo-hi.h>
- #include <linux/sed-opal.h>
-+#include <linux/pci-p2pdma.h>
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 761749562165..26565794a573 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3130,14 +3130,13 @@
+ 		force	Enable ASPM even on devices that claim not to support it.
+ 			WARNING: Forcing ASPM on may cause system lockups.
  
- #include "nvme.h"
+-	pcie_ports=	[PCIE] PCIe ports handling:
+-		auto	Ask the BIOS whether or not to use native PCIe services
+-			associated with PCIe ports (PME, hot-plug, AER).  Use
+-			them only if that is allowed by the BIOS.
+-		native	Use native PCIe services associated with PCIe ports
+-			unconditionally.
+-		compat	Treat PCIe ports as PCI-to-PCI bridges, disable the PCIe
+-			ports driver.
++	pcie_ports=	[PCIE] PCIe port services handling:
++		native	Use native PCIe services (PME, AER, DPC, PCIe hotplug)
++			even if the platform doesn't give the OS permission to
++			use them.  This may cause conflicts if the platform
++			also tries to use these services.
++		compat	Disable native PCIe services (PME, AER, DPC, PCIe
++			hotplug).
  
-@@ -91,9 +92,8 @@ struct nvme_dev {
- 	struct work_struct remove_work;
- 	struct mutex shutdown_lock;
- 	bool subsystem;
--	void __iomem *cmb;
--	pci_bus_addr_t cmb_bus_addr;
- 	u64 cmb_size;
-+	bool cmb_use_sqes;
- 	u32 cmbsz;
- 	u32 cmbloc;
- 	struct nvme_ctrl ctrl;
-@@ -148,7 +148,7 @@ struct nvme_queue {
- 	struct nvme_dev *dev;
- 	spinlock_t q_lock;
- 	struct nvme_command *sq_cmds;
--	struct nvme_command __iomem *sq_cmds_io;
-+	bool sq_cmds_is_io;
- 	volatile struct nvme_completion *cqes;
- 	struct blk_mq_tags **tags;
- 	dma_addr_t sq_dma_addr;
-@@ -429,10 +429,7 @@ static void __nvme_submit_cmd(struct nvme_queue *nvmeq,
- {
- 	u16 tail = nvmeq->sq_tail;
- 
--	if (nvmeq->sq_cmds_io)
--		memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
--	else
--		memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
-+	memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
- 
- 	if (++tail == nvmeq->q_depth)
- 		tail = 0;
-@@ -1287,9 +1284,18 @@ static void nvme_free_queue(struct nvme_queue *nvmeq)
- {
- 	dma_free_coherent(nvmeq->q_dmadev, CQ_SIZE(nvmeq->q_depth),
- 				(void *)nvmeq->cqes, nvmeq->cq_dma_addr);
--	if (nvmeq->sq_cmds)
--		dma_free_coherent(nvmeq->q_dmadev, SQ_SIZE(nvmeq->q_depth),
--					nvmeq->sq_cmds, nvmeq->sq_dma_addr);
-+
-+	if (nvmeq->sq_cmds) {
-+		if (nvmeq->sq_cmds_is_io)
-+			pci_free_p2pmem(to_pci_dev(nvmeq->q_dmadev),
-+					nvmeq->sq_cmds,
-+					SQ_SIZE(nvmeq->q_depth));
-+		else
-+			dma_free_coherent(nvmeq->q_dmadev,
-+					  SQ_SIZE(nvmeq->q_depth),
-+					  nvmeq->sq_cmds,
-+					  nvmeq->sq_dma_addr);
-+	}
- }
- 
- static void nvme_free_queues(struct nvme_dev *dev, int lowest)
-@@ -1369,12 +1375,21 @@ static int nvme_cmb_qdepth(struct nvme_dev *dev, int nr_io_queues,
- static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
- 				int qid, int depth)
- {
--	/* CMB SQEs will be mapped before creation */
--	if (qid && dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS))
--		return 0;
-+	struct pci_dev *pdev = to_pci_dev(dev->dev);
-+
-+	if (qid && dev->cmb_use_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
-+		nvmeq->sq_cmds = pci_alloc_p2pmem(pdev, SQ_SIZE(depth));
-+		nvmeq->sq_dma_addr = pci_p2pmem_virt_to_bus(pdev,
-+						nvmeq->sq_cmds);
-+		nvmeq->sq_cmds_is_io = true;
-+	}
-+
-+	if (!nvmeq->sq_cmds) {
-+		nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
-+					&nvmeq->sq_dma_addr, GFP_KERNEL);
-+		nvmeq->sq_cmds_is_io = false;
-+	}
- 
--	nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
--					    &nvmeq->sq_dma_addr, GFP_KERNEL);
- 	if (!nvmeq->sq_cmds)
- 		return -ENOMEM;
- 	return 0;
-@@ -1450,13 +1465,6 @@ static int nvme_create_queue(struct nvme_queue *nvmeq, int qid)
- 	struct nvme_dev *dev = nvmeq->dev;
- 	int result;
- 
--	if (dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
--		unsigned offset = (qid - 1) * roundup(SQ_SIZE(nvmeq->q_depth),
--						      dev->ctrl.page_size);
--		nvmeq->sq_dma_addr = dev->cmb_bus_addr + offset;
--		nvmeq->sq_cmds_io = dev->cmb + offset;
--	}
--
- 	nvmeq->cq_vector = qid - 1;
- 	result = adapter_alloc_cq(dev, qid, nvmeq);
- 	if (result < 0)
-@@ -1689,9 +1697,6 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 		return;
- 	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
- 
--	if (!use_cmb_sqes)
--		return;
--
- 	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
- 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
- 	bar = NVME_CMB_BIR(dev->cmbloc);
-@@ -1708,11 +1713,15 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 	if (size > bar_size - offset)
- 		size = bar_size - offset;
- 
--	dev->cmb = ioremap_wc(pci_resource_start(pdev, bar) + offset, size);
--	if (!dev->cmb)
-+	if (pci_p2pdma_add_resource(pdev, bar, size, offset))
- 		return;
--	dev->cmb_bus_addr = pci_bus_address(pdev, bar) + offset;
-+
- 	dev->cmb_size = size;
-+	dev->cmb_use_sqes = use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS);
-+
-+	if ((dev->cmbsz & (NVME_CMBSZ_WDS | NVME_CMBSZ_RDS)) ==
-+			(NVME_CMBSZ_WDS | NVME_CMBSZ_RDS))
-+		pci_p2pmem_publish(pdev, true);
- 
- 	if (sysfs_add_file_to_group(&dev->ctrl.device->kobj,
- 				    &dev_attr_cmb.attr, NULL))
-@@ -1722,12 +1731,10 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 
- static inline void nvme_release_cmb(struct nvme_dev *dev)
- {
--	if (dev->cmb) {
--		iounmap(dev->cmb);
--		dev->cmb = NULL;
-+	if (dev->cmb_size) {
- 		sysfs_remove_file_from_group(&dev->ctrl.device->kobj,
- 					     &dev_attr_cmb.attr, NULL);
--		dev->cmbsz = 0;
-+		dev->cmb_size = 0;
- 	}
- }
- 
-@@ -1922,13 +1929,13 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 	if (nr_io_queues == 0)
- 		return 0;
- 
--	if (dev->cmb && (dev->cmbsz & NVME_CMBSZ_SQS)) {
-+	if (dev->cmb_use_sqes) {
- 		result = nvme_cmb_qdepth(dev, nr_io_queues,
- 				sizeof(struct nvme_command));
- 		if (result > 0)
- 			dev->q_depth = result;
- 		else
--			nvme_release_cmb(dev);
-+			dev->cmb_use_sqes = false;
+ 	pcie_port_pm=	[PCIE] PCIe port power management handling:
+ 		off	Disable power management of all PCIe ports
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 1997d9f2743e..8b62192342ac 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -37,9 +37,6 @@ static int __init pcie_port_setup(char *str)
+ 	} else if (!strncmp(str, "native", 6)) {
+ 		pcie_ports_disabled = false;
+ 		pcie_ports_auto = false;
+-	} else if (!strncmp(str, "auto", 4)) {
+-		pcie_ports_disabled = false;
+-		pcie_ports_auto = true;
  	}
  
- 	do {
--- 
-2.11.0
+ 	return 1;
