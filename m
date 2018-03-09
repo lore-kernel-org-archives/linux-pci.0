@@ -1,62 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:42929 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751748AbeCNMGM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 08:06:12 -0400
+Received: from mail-sn1nam01on0118.outbound.protection.outlook.com ([104.47.32.118]:22896
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932183AbeCIThH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Mar 2018 14:37:07 -0500
+From: Haiyang Zhang <haiyangz@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH v3 2/6] PCI: hv: hv_eject_device_work(): remove the bogus
+ test
+Date: Fri, 9 Mar 2018 19:37:03 +0000
+Message-ID: <BL0PR2101MB1108CF77A0EAE6689CE28A23CADE0@BL0PR2101MB1108.namprd21.prod.outlook.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+ <20180306182128.23281-3-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-3-decui@microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20180314114515.GC8564@ulmo>
-References: <20180313115218.2246372-1-arnd@arndb.de> <20180314114515.GC8564@ulmo>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 14 Mar 2018 13:06:11 +0100
-Message-ID: <CAK8P3a3Wr8FNRP4ZYDGk9OL+=0w--pzRX=R6ye_+6nCtnHGVjg@mail.gmail.com>
-Subject: Re: [PATCH] pci: tegra: add MSI dependency
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        "open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 12:45 PM, Thierry Reding
-<thierry.reding@gmail.com> wrote:
-> On Tue, Mar 13, 2018 at 12:52:05PM +0100, Arnd Bergmann wrote:
->> Building the tegra PCIe host driver without MSI results in a link
->> failure:
->>
->> drivers/pci/host/pci-tegra.o:(.data+0x70): undefined reference to `pci_msi_unmask_irq'
->> drivers/pci/host/pci-tegra.o:(.data+0x74): undefined reference to `pci_msi_mask_irq'
->>
->> This adds the same dependency that everyone else uses.
->>
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> ---
->>  drivers/pci/host/Kconfig | 1 +
->>  1 file changed, 1 insertion(+)
->
-> I'm slightly concerned about the dependency. Not that I doubt its
-> correctness, but because it could mean that PCI_TEGRA is not visible in
-> the default configuration. The only reason why it is currently visible
-> is because PCI_MSI is selected by some symbols that also happen to be
-> enabled. However, what if at some point those symbols are disabled or
-> removed?
->
-> Some architectures make sure that PCI_MSI is enabled by selecting it,
-> but that's risky, isn't it, because PCI_MSI is user-visible and could
-> therefore easily lead to conflicts.
->
-> Enabling PCI_MSI in the arm64 defconfig would solve the issue and is
-> good enough for me. I've got a couple of changes to that defconfig in
-> the Tegra tree for v4.17-rc1, I can add a patch to enable PCI_MSI.
->
-> Unless there are any objections.
 
-I looked at it again and found that this on ARM64, PCI_MSI is always
-selected indirectly by ARM_GIC&&PCI, so there is no problem.
 
-The build failure must have been on 32-bit ARM.
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Tuesday, March 6, 2018 1:22 PM
+> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan
+> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
+> olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
+> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
+> Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
+> marcelo.cerri@canonical.com; Michael Kelley (EOSG)
+> <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microsoft.com>; Jack
+> Morgenstein <jackm@mellanox.com>; stable@vger.kernel.org
+> Subject: [PATCH v3 2/6] PCI: hv: hv_eject_device_work(): remove the bogus=
+ test
+>=20
+> When we're in the function, hpdev->state must be hv_pcichild_ejecting:
+> see hv_pci_eject_device().
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Cc: Jack Morgenstein <jackm@mellanox.com>
+> Cc: stable@vger.kernel.org
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
+> ---
 
-       Arnd
+Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
