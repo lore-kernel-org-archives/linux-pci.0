@@ -1,68 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:42743 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1162893AbeCAXUq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 18:20:46 -0500
-Received: by mail-wr0-f181.google.com with SMTP id k9so8278697wre.9
-        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 15:20:45 -0800 (PST)
-Date: Thu, 1 Mar 2018 16:20:38 -0700
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Steve Wise <swise@opengridcomputing.com>
-Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
-Message-ID: <20180301232038.GO19007@ziepe.ca>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-11-logang@deltatee.com>
- <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
- <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
- <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
- <20180301184249.GI19007@ziepe.ca>
- <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
- <20180301224540.GL19007@ziepe.ca>
- <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 9 Mar 2018 10:58:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Koen Vandeputte <koen.vandeputte@ncentric.com>,
+        Guenter Roeck <linux@roeck-us.net>
+Subject: [GIT PULL] PCI fixes for v4.16
+Message-ID: <20180309165817.GA8224@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 11:00:51PM +0000, Stephen  Bates wrote:
+PCI fixes:
 
-> > Seems like a very subtle and hard to debug performance trap to leave
-> > for the users, and pretty much the only reason to use P2P is
-> > performance... So why have such a dangerous interface?
-> 
-> P2P is about offloading the memory and PCI subsystem of the host CPU
-> and this is achieved no matter which p2p_dev is used.
+  - fix sparc build issue when OF_IRQ not enabled (Guenter Roeck) 
 
-No, locality matters. If you have a bunch of NICs and bunch of drives
-and the allocator chooses to put all P2P memory on a single drive your
-performance will suck horribly even if all the traffic is offloaded.
+  - fix enumeration of devices below switches on DesignWare-based
+    controllers (Koen Vandeputte)
 
-Performance will suck if you have speed differences between the PCI-E
-devices. Eg a bunch of Gen 3 x8 NVMe cards paired with a Gen 4 x16 NIC
-will not reach full performance unless the p2p buffers are properly
-balanced between all cards.
 
-This is why I think putting things in one big pool and pretending like
-any P2P mem is interchangable with any other makes zero sense to me,
-it is not how the system actually works. Proper locality matters a
-lot.
+The following changes since commit c37406e05d1e541df40b8b81c4bd40753fcaf414:
 
-Jason
+  PCI: Allow release of resources that were never assigned (2018-02-26 14:51:13 -0600)
+
+are available in the Git repository at:
+
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.16-fixes-3
+
+for you to fetch changes up to fc110ebdd014dd1368c98e7685b47789c31fab42:
+
+  PCI: dwc: Fix enumeration end when reaching root subordinate (2018-03-07 10:46:39 -0600)
+
+----------------------------------------------------------------
+pci-v4.16-fixes-3
+
+----------------------------------------------------------------
+Guenter Roeck (1):
+      PCI: Move of_irq_parse_and_map_pci() declaration under OF_IRQ
+
+Koen Vandeputte (1):
+      PCI: dwc: Fix enumeration end when reaching root subordinate
+
+ drivers/pci/dwc/pcie-designware-host.c |  2 +-
+ include/linux/of_pci.h                 | 17 ++++++++++-------
+ 2 files changed, 11 insertions(+), 8 deletions(-)
