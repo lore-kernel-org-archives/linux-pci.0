@@ -1,47 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38080 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424068AbeCBPxd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 10:53:33 -0500
-Date: Fri, 2 Mar 2018 07:53:22 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@kernel.dk>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Steve Wise <swise@opengridcomputing.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from mail-cys01nam02on0094.outbound.protection.outlook.com ([104.47.37.94]:56480
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750918AbeCIFCh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Mar 2018 00:02:37 -0500
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
-Message-ID: <20180302155322.GA5934@infradead.org>
-References: <20180228234006.21093-11-logang@deltatee.com>
- <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
- <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
- <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
- <20180301184249.GI19007@ziepe.ca>
- <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
- <20180301224540.GL19007@ziepe.ca>
- <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
- <20180301234930.GG14799@localhost.localdomain>
- <6B6A0FD9-14F5-4AF2-A74A-DAA562C34AB9@raithlin.com>
+        Jake Oshins <jakeo@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>
+CC: KY Srinivasan <kys@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: hv: fix bus domain ID corruption
+Date: Fri, 9 Mar 2018 05:02:34 +0000
+Message-ID: <19EE9647-AE9B-443E-ADBD-51CCEFC3EDEA@microsoft.com>
+References: <A9BC9573-36AA-4493-A086-F99F9204BEC9@microsoft.com>
+In-Reply-To: <A9BC9573-36AA-4493-A086-F99F9204BEC9@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6B6A0FD9-14F5-4AF2-A74A-DAA562C34AB9@raithlin.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 11:53:16PM +0000, Stephen  Bates wrote:
-> > There's a meaningful difference between writing to an NVMe CMB vs PMR
-> 
-> When the PMR spec becomes public we can discuss how best to integrate it into the P2P framework (if at all) ;-).
-
-http://nvmexpress.org/wp-content/uploads/NVM-Express-1.3-Ratified-TPs.zip
+V2hlbiBQQ0kgQlVTIGlzIGFkZGVkLCBQQ0lfQlVTIGRvbWFpbiBJRCBpcyBzZXQuIFdoZW4gUENJ
+X0JVUyBhbmQgYSBkZXZpY2UNCmFkZGVkIHRvIHRoZSBidXMgaXMgcmFjaW5nIGFnYWluc3QgZWFj
+aCBvdGhlciwgdGhlIGZpcnN0IGRldmljZSB0ZW5kcyB0bw0Kb3ZlcndyaXRlIHRoZSBkb21haW4g
+SUQuIEluIG9yZGVyIHRvIGF2b2lkIHRoZSByYWNlLCB0aGlzIHBhdGNoIG1ha2Ugc3VyZQ0Kd2hl
+biBhIGRldmljZSBpcyBhZGRlZCB0byBhIGJ1cywgaXQgbmV2ZXIgdXBkYXRlZCB0aGUgYnVzIGRv
+bWFpbiBJRC4gU2luY2UNCndlIGhhdmUgdGhlIHRyYW5zcGFyZW50IFNSSU9WIG1vZGUgbm93LCB0
+aGUgc2hvcnQgVkYgZGV2aWNlIG5hbWUgaXMgbm8NCmxvbmdlciBuZWVkZWQuDQoNCkZpeGVzOiA0
+YTliMDkzM2JkZmMoIlBDSTpodjpVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFp
+biIpDQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KU2lnbmVkLW9mZi1ieTogU3JpZGhhciBQ
+aXRjaGFpIDxzcnBpdGNoYUBtaWNyb3NvZnQuY29tPg0KLS0tDQogZHJpdmVycy9wY2kvaG9zdC9w
+Y2ktaHlwZXJ2LmMgfCAxMSAtLS0tLS0tLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCAxMSBkZWxldGlv
+bnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jIGIvZHJp
+dmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCmluZGV4IDJmYWYzOGUuLmFjNjdlNTYgMTAwNjQ0
+DQotLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYw0KKysrIGIvZHJpdmVycy9wY2kv
+aG9zdC9wY2ktaHlwZXJ2LmMNCkBAIC0xNTE4LDE3ICsxNTE4LDYgQEAgc3RhdGljIHN0cnVjdCBo
+dl9wY2lfZGV2ICpuZXdfcGNpY2hpbGRfZGV2aWNlKHN0cnVjdCBodl9wY2lidXNfZGV2aWNlICpo
+YnVzLA0KIAlnZXRfcGNpY2hpbGQoaHBkZXYsIGh2X3BjaWRldl9yZWZfY2hpbGRsaXN0KTsNCiAJ
+c3Bpbl9sb2NrX2lycXNhdmUoJmhidXMtPmRldmljZV9saXN0X2xvY2ssIGZsYWdzKTsNCiANCi0J
+LyoNCi0JICogV2hlbiBhIGRldmljZSBpcyBiZWluZyBhZGRlZCB0byB0aGUgYnVzLCB3ZSBzZXQg
+dGhlIFBDSSBkb21haW4NCi0JICogbnVtYmVyIHRvIGJlIHRoZSBkZXZpY2Ugc2VyaWFsIG51bWJl
+ciwgd2hpY2ggaXMgbm9uLXplcm8gYW5kDQotCSAqIHVuaXF1ZSBvbiB0aGUgc2FtZSBWTS4gIFRo
+ZSBzZXJpYWwgbnVtYmVycyBzdGFydCB3aXRoIDEsIGFuZA0KLQkgKiBpbmNyZWFzZSBieSAxIGZv
+ciBlYWNoIGRldmljZS4gIFNvIGRldmljZSBuYW1lcyBpbmNsdWRpbmcgdGhpcw0KLQkgKiBjYW4g
+aGF2ZSBzaG9ydGVyIG5hbWVzIHRoYW4gYmFzZWQgb24gdGhlIGJ1cyBpbnN0YW5jZSBVVUlELg0K
+LQkgKiBPbmx5IHRoZSBmaXJzdCBkZXZpY2Ugc2VyaWFsIG51bWJlciBpcyB1c2VkIGZvciBkb21h
+aW4sIHNvIHRoZQ0KLQkgKiBkb21haW4gbnVtYmVyIHdpbGwgbm90IGNoYW5nZSBhZnRlciB0aGUg
+Zmlyc3QgZGV2aWNlIGlzIGFkZGVkLg0KLQkgKi8NCi0JaWYgKGxpc3RfZW1wdHkoJmhidXMtPmNo
+aWxkcmVuKSkNCi0JCWhidXMtPnN5c2RhdGEuZG9tYWluID0gZGVzYy0+c2VyOw0KIAlsaXN0X2Fk
+ZF90YWlsKCZocGRldi0+bGlzdF9lbnRyeSwgJmhidXMtPmNoaWxkcmVuKTsNCiAJc3Bpbl91bmxv
+Y2tfaXJxcmVzdG9yZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KIAlyZXR1cm4g
+aHBkZXY7DQotLSANCjIuNy40DQogDQoNCg==
