@@ -1,80 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0106.outbound.protection.outlook.com ([104.47.32.106]:47631
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752206AbeC3TfI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 15:35:08 -0400
-From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5] PCI: hv: Make sure the bus domain is really unique
-Date: Fri, 30 Mar 2018 19:35:04 +0000
-Message-ID: <105A3FAC-23AF-40F9-8B83-F00DED14EC43@microsoft.com>
-References: <4BF97B43-5339-4750-9704-23D6AAC4A01E@microsoft.com>
-In-Reply-To: <4BF97B43-5339-4750-9704-23D6AAC4A01E@microsoft.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:60358 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751159AbeCIFIn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2018 00:08:43 -0500
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "sbates@raithlin.com" <sbates@raithlin.com>,
+        "logang@deltatee.com" <logang@deltatee.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "jgg@mellanox.com" <jgg@mellanox.com>, "hch@lst.de" <hch@lst.de>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "jglisse@redhat.com" <jglisse@redhat.com>,
+        "maxg@mellanox.com" <maxg@mellanox.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "keith.busch@intel.com" <keith.busch@intel.com>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>
+Subject: Re: [PATCH v2 08/10] nvme-pci: Add support for P2P memory in requests
+Date: Fri, 9 Mar 2018 05:08:36 +0000
+Message-ID: <1520572115.11647.3.camel@wdc.com>
+References: <20180228234006.21093-1-logang@deltatee.com>
+         <20180228234006.21093-9-logang@deltatee.com>
+         <c6639530-48ba-4655-c772-7d88a030e37e@grimberg.me>
+         <1CE68E79-E5FD-4EE2-BD88-B3EE57E43ACE@raithlin.com>
+In-Reply-To: <1CE68E79-E5FD-4EE2-BD88-B3EE57E43ACE@raithlin.com>
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ICA+V2hlbiBMaW51eCBydW5zIGFzIGEgZ3Vlc3QgVk0gaW4gSHlwZXItViBhbmQgSHlwZXItViBh
-ZGRzIHRoZSB2aXJ0dWFsDQogID5QQ0kgYnVzIHRvIHRoZSBndWVzdCwgSHlwZXItViBhbHdheXMg
-cHJvdmlkZXMgdW5pcXVlIFBDSSBkb21haW4uDQogID4NCiAgPmNvbW1pdCA0YTliMDkzM2JkZmMg
-KCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQogID5v
-dmVycm9kZSB1bmlxdWUgZG9tYWluIHdpdGggdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGZpcnN0
-IGRldmljZSBhZGRlZA0KICA+dG8gdGhlIHZpcnR1YWwgUENJIGJ1cy4gVGhlIHJlYXNvbiBmb3Ig
-dGhhdCBwYXRjaCBpcyB0byBoYXZlIGEgY29uc2lzdGVudA0KICA+YW5kIHNob3J0IG5hbWUgZm9y
-IHRoZSBkZXZpY2UuIEJ1dCBjb21taXQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlDQogID5k
-ZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQQ0kgZG9tYWluIikgd2lsbCBub3QgZ3VhcmFudGVlIHVu
-aXF1ZSBkb21haW4gaWQuDQogID5Gb3IgZXhhbXBsZSwgaWYgdGhlIHNlcmlhbCBudW1iZXIgb2Yg
-dGhlIGRldmljZSBpcyAwIGFuZCB0aGVyZSBleGlzdHMgYQ0KICA+UENJIGJ1cyB3aXRoIGRvbWFp
-biAwIGFscmVhZHksIHRoaXMgd2lsbCBjYXVzZSB0aGUgUENJIGJ1cyByZWdpc3RyYXRpb24NCiAg
-PndpdGgga2VybmVsIGZhaWxzLg0KICA+DQogID5jb21taXQgNGE5YjA5MzNiZGZjICgiUENJOiBo
-djogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KICA+ZG9tYWluIikgbmVlZCB0byBi
-ZSByZXZlcnRlZC4gQWxzbywgd2Ugbm8gbG9uZ2VyIG5lZWQgaXQgYXMgY29tbWl0DQogID40YTE2
-MjZkZDIzM2UgKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGIG1hbmFnZW1lbnQiKSByZW1vdmUgdGhl
-DQogID5uZWVkIGZvciBpdC4NCiAgPg0KICA+UmV2ZXJ0IGNvbW1pdCA0YTliMDkzM2JkZmMgKCJQ
-Q0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJDQogID5kb21haW4iKSBzbyB3
-ZSBjYW4gcmVsaWFibHkgc3VwcG9ydCBtdWx0aXBsZSBkZXZpY2VzIGJlaW5nIGFzc2lnbmVkIHRv
-DQogID5hIGd1ZXN0Lg0KICA+DQogID5UaGlzIHJldmVydCBzaG91bGQgb25seSBiZSBiYWNrcG9y
-dGVkIHRvIGtlcm5lbHMgdGhhdCBjb250YWluIGNvbW1pdA0KICA+NGExNjI2ZGQyMzNlICgibmV0
-dnNjOiB0cmFuc3BhcmVudCBWRiBtYW5hZ2VtZW50IikuDQogID4NCiAgPkZpeGVzOiA0YTliMDkz
-M2JkZmMgKCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIp
-DQogID5TaWduZWQtb2ZmLWJ5OiBTcmlkaGFyIFBpdGNoYWkgPHNyaWRoYXIucGl0Y2hhaUBtaWNy
-b3NvZnQuY29tPg0KICA+Q2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcNCiAgPg0KICA+LS0tDQog
-ID5DaGFuZ2VzIGluIHY1Og0KICA+KiBmaXggdGhlIGNvbW1pdCBjb21tZW50LiBbTG9yZW56byBQ
-aWVyYWxpc2ksIEJqb3JuIEhlbGdhYXNdDQogID4qIGZpeGVkIHRoZSBwYXRjaCB3aGl0ZSBzcGFj
-ZS4NCiAgPi0tLQ0KICA+IGRyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jIHwgMTEgLS0tLS0t
-LS0tLS0NCiAgPiAxIGZpbGUgY2hhbmdlZCwgMTEgZGVsZXRpb25zKC0pDQogID4NCiAgPmRpZmYg
-LS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYyBiL2RyaXZlcnMvcGNpL2hvc3Qv
-cGNpLWh5cGVydi5jDQogID5pbmRleCAyZmFmMzhlYWI3ODUuLmFjNjdlNTZlNDUxYSAxMDA2NDQN
-CiAgPi0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQogID4rKysgYi9kcml2ZXJz
-L3BjaS9ob3N0L3BjaS1oeXBlcnYuYw0KICA+QEAgLTE1MTgsMTcgKzE1MTgsNiBAQCBzdGF0aWMg
-c3RydWN0IGh2X3BjaV9kZXYgKm5ld19wY2ljaGlsZF9kZXZpY2Uoc3RydWN0IGh2X3BjaWJ1c19k
-ZXZpY2UgKmhidXMsDQogID4gCWdldF9wY2ljaGlsZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGls
-ZGxpc3QpOw0KICA+IAlzcGluX2xvY2tfaXJxc2F2ZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywg
-ZmxhZ3MpOw0KICA+IA0KICA+LQkvKg0KICA+LQkgKiBXaGVuIGEgZGV2aWNlIGlzIGJlaW5nIGFk
-ZGVkIHRvIHRoZSBidXMsIHdlIHNldCB0aGUgUENJIGRvbWFpbg0KICA+LQkgKiBudW1iZXIgdG8g
-YmUgdGhlIGRldmljZSBzZXJpYWwgbnVtYmVyLCB3aGljaCBpcyBub24temVybyBhbmQNCiAgPi0J
-ICogdW5pcXVlIG9uIHRoZSBzYW1lIFZNLiAgVGhlIHNlcmlhbCBudW1iZXJzIHN0YXJ0IHdpdGgg
-MSwgYW5kDQogID4tCSAqIGluY3JlYXNlIGJ5IDEgZm9yIGVhY2ggZGV2aWNlLiAgU28gZGV2aWNl
-IG5hbWVzIGluY2x1ZGluZyB0aGlzDQogID4tCSAqIGNhbiBoYXZlIHNob3J0ZXIgbmFtZXMgdGhh
-biBiYXNlZCBvbiB0aGUgYnVzIGluc3RhbmNlIFVVSUQuDQogID4tCSAqIE9ubHkgdGhlIGZpcnN0
-IGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIHVzZWQgZm9yIGRvbWFpbiwgc28gdGhlDQogID4tCSAq
-IGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRoZSBmaXJzdCBkZXZpY2UgaXMg
-YWRkZWQuDQogID4tCSAqLw0KICA+LQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+Y2hpbGRyZW4pKQ0K
-ICA+LQkJaGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogID4gCWxpc3RfYWRkX3Rh
-aWwoJmhwZGV2LT5saXN0X2VudHJ5LCAmaGJ1cy0+Y2hpbGRyZW4pOw0KICA+IAlzcGluX3VubG9j
-a19pcnFyZXN0b3JlKCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogID4gCXJldHVy
-biBocGRldjsNCiAgPi0tIA0KPjIuMTQuMQ0KDQpIaSBMb3JlbnpvLA0KRGlkIHlvdSBnZXQgYSBj
-aGFuY2UgdG8gbG9vayBhdCB0aGUgcGF0Y2ggdjUuIFBsZWFzZSBsZXQgbWUga25vdyBpZg0KYW55
-dGhpbmcgSSBuZWVkIHRvIGFkZHJlc3MgZnVydGhlci4NCg0KVGhhbmtzDQpTcmlkaGFyIA0KDQo=
+T24gVGh1LCAyMDE4LTAzLTAxIGF0IDE1OjU4ICswMDAwLCBTdGVwaGVuICBCYXRlcyB3cm90ZToN
+Cj4gPiBBbnkgcGxhbnMgYWRkaW5nIHRoZSBjYXBhYmlsaXR5IHRvIG52bWUtcmRtYT8gU2hvdWxk
+IGJlDQo+ID4gc3RyYWlnaHQtZm9yd2FyZC4uLiBJbiB0aGVvcnksIHRoZSB1c2UtY2FzZSB3b3Vs
+ZCBiZSByZG1hIGJhY2tlbmQNCj4gPiBmYWJyaWMgYmVoaW5kLiBTaG91bGRuJ3QgYmUgaGFyZCB0
+byB0ZXN0IGVpdGhlci4uLg0KPiANCj4gTmljZSBpZGVhIFNhZ2kuIFllcyB3ZSBoYXZlIGJlZW4g
+c3RhcnRpbmcgdG8gbG9vayBhdCB0aGF0LiBUaG91Z2ggYWdhaW4gd2UNCj4gd291bGQgcHJvYmFi
+bHkgd2FudCB0byBpbXBvc2UgdGhlICJhdHRhY2hlZCB0byB0aGUgc2FtZSBQQ0llIHN3aXRjaCIg
+cnVsZQ0KPiB3aGljaCBtaWdodCBiZSBsZXNzIGNvbW1vbiB0byBzYXRpc2Z5IGluIGluaXRpYXRv
+ciBzeXN0ZW1zLiANCj4gDQo+IERvd24gdGhlIHJvYWQgSSB3b3VsZCBhbHNvIGxpa2UgdG8gZGlz
+Y3VzcyB0aGUgYmVzdCB3YXkgdG8gdXNlIHRoaXMgUDJQDQo+IGZyYW1ld29yayB0byBmYWNpbGl0
+YXRlIGNvcGllcyBiZXR3ZWVuIE5WTWUgbmFtZXNwYWNlcyAob24gYm90aCBQQ0llIGFuZA0KPiBm
+YWJyaWMgYXR0YWNoZWQgbmFtZXNwYWNlcykgd2l0aG91dCBoYXZpbmcgdG8gZXhwb3NlIHRoZSBD
+TUIgdXAgdG8gdXNlcg0KPiBzcGFjZS4gV2Fzbid0IHNvbWV0aGluZyBsaWtlIHRoYXQgZG9uZSBp
+biB0aGUgU0NTSSB3b3JsZCBhdCBzb21lIHBvaW50DQo+IE1hcnRpbj8NCg0KQXJlIHlvdSBwZXJo
+YXBzIHJlZmVycmluZyB0byB0aGUgZm9sbG93aW5nIHBhdGNoIHNlcmllczogIkNvcHkgT2ZmbG9h
+ZCINCihodHRwczovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1zY3NpL21zZzc0NjgwLmh0
+bWwgLw0KaHR0cHM6Ly9sd24ubmV0L0FydGljbGVzLzU5MjA5NC8pPyBJIHdpbGwgY29udGFjdCBN
+YXJ0aW4gb2ZmLWxpc3QgYW5kIGluDQpjYXNlIGhlIHdvdWxkbid0IGhhdmUgdGhlIHRpbWUgbXlz
+ZWxmIHRvIHJldml2ZSB0aGF0IHBhdGNoIHNlcmllcyB0aGVuIEkNCndpbGwgZnJlZSB1cCBzb21l
+IHRpbWUgdG8gd29yayBvbiB0aGlzLg0KDQpCYXJ0Lg0KDQoNCg0KDQo=
