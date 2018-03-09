@@ -1,58 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:60358 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751159AbeCIFIn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Mar 2018 00:08:43 -0500
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "sbates@raithlin.com" <sbates@raithlin.com>,
-        "logang@deltatee.com" <logang@deltatee.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "jgg@mellanox.com" <jgg@mellanox.com>, "hch@lst.de" <hch@lst.de>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "jglisse@redhat.com" <jglisse@redhat.com>,
-        "maxg@mellanox.com" <maxg@mellanox.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "keith.busch@intel.com" <keith.busch@intel.com>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>
-Subject: Re: [PATCH v2 08/10] nvme-pci: Add support for P2P memory in requests
-Date: Fri, 9 Mar 2018 05:08:36 +0000
-Message-ID: <1520572115.11647.3.camel@wdc.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
-         <20180228234006.21093-9-logang@deltatee.com>
-         <c6639530-48ba-4655-c772-7d88a030e37e@grimberg.me>
-         <1CE68E79-E5FD-4EE2-BD88-B3EE57E43ACE@raithlin.com>
-In-Reply-To: <1CE68E79-E5FD-4EE2-BD88-B3EE57E43ACE@raithlin.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 12/13] PCI/portdrv: Encapsulate pcie_ports_auto inside
+ the port driver
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Frederick Lawler <fred@fredlawl.com>
+Date: Fri, 09 Mar 2018 13:00:54 -0600
+Message-ID: <152062205448.77693.17566179285103522183.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVGh1LCAyMDE4LTAzLTAxIGF0IDE1OjU4ICswMDAwLCBTdGVwaGVuICBCYXRlcyB3cm90ZToN
-Cj4gPiBBbnkgcGxhbnMgYWRkaW5nIHRoZSBjYXBhYmlsaXR5IHRvIG52bWUtcmRtYT8gU2hvdWxk
-IGJlDQo+ID4gc3RyYWlnaHQtZm9yd2FyZC4uLiBJbiB0aGVvcnksIHRoZSB1c2UtY2FzZSB3b3Vs
-ZCBiZSByZG1hIGJhY2tlbmQNCj4gPiBmYWJyaWMgYmVoaW5kLiBTaG91bGRuJ3QgYmUgaGFyZCB0
-byB0ZXN0IGVpdGhlci4uLg0KPiANCj4gTmljZSBpZGVhIFNhZ2kuIFllcyB3ZSBoYXZlIGJlZW4g
-c3RhcnRpbmcgdG8gbG9vayBhdCB0aGF0LiBUaG91Z2ggYWdhaW4gd2UNCj4gd291bGQgcHJvYmFi
-bHkgd2FudCB0byBpbXBvc2UgdGhlICJhdHRhY2hlZCB0byB0aGUgc2FtZSBQQ0llIHN3aXRjaCIg
-cnVsZQ0KPiB3aGljaCBtaWdodCBiZSBsZXNzIGNvbW1vbiB0byBzYXRpc2Z5IGluIGluaXRpYXRv
-ciBzeXN0ZW1zLiANCj4gDQo+IERvd24gdGhlIHJvYWQgSSB3b3VsZCBhbHNvIGxpa2UgdG8gZGlz
-Y3VzcyB0aGUgYmVzdCB3YXkgdG8gdXNlIHRoaXMgUDJQDQo+IGZyYW1ld29yayB0byBmYWNpbGl0
-YXRlIGNvcGllcyBiZXR3ZWVuIE5WTWUgbmFtZXNwYWNlcyAob24gYm90aCBQQ0llIGFuZA0KPiBm
-YWJyaWMgYXR0YWNoZWQgbmFtZXNwYWNlcykgd2l0aG91dCBoYXZpbmcgdG8gZXhwb3NlIHRoZSBD
-TUIgdXAgdG8gdXNlcg0KPiBzcGFjZS4gV2Fzbid0IHNvbWV0aGluZyBsaWtlIHRoYXQgZG9uZSBp
-biB0aGUgU0NTSSB3b3JsZCBhdCBzb21lIHBvaW50DQo+IE1hcnRpbj8NCg0KQXJlIHlvdSBwZXJo
-YXBzIHJlZmVycmluZyB0byB0aGUgZm9sbG93aW5nIHBhdGNoIHNlcmllczogIkNvcHkgT2ZmbG9h
-ZCINCihodHRwczovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1zY3NpL21zZzc0NjgwLmh0
-bWwgLw0KaHR0cHM6Ly9sd24ubmV0L0FydGljbGVzLzU5MjA5NC8pPyBJIHdpbGwgY29udGFjdCBN
-YXJ0aW4gb2ZmLWxpc3QgYW5kIGluDQpjYXNlIGhlIHdvdWxkbid0IGhhdmUgdGhlIHRpbWUgbXlz
-ZWxmIHRvIHJldml2ZSB0aGF0IHBhdGNoIHNlcmllcyB0aGVuIEkNCndpbGwgZnJlZSB1cCBzb21l
-IHRpbWUgdG8gd29yayBvbiB0aGlzLg0KDQpCYXJ0Lg0KDQoNCg0KDQo=
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+"pcie_ports_auto" is only used inside the PCIe port driver itself, so
+move it from include/linux/pci.h to portdrv.h so it's not visible to the
+whole kernel.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/portdrv.h |    2 ++
+ include/linux/pci.h        |    2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 86368f9341d7..62e28b5afa51 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -12,6 +12,8 @@
+ 
+ #include <linux/compiler.h>
+ 
++extern bool pcie_ports_auto;
++
+ /* Service Type */
+ #define PCIE_PORT_SERVICE_PME_SHIFT	0	/* Power Management Event */
+ #define PCIE_PORT_SERVICE_PME		(1 << PCIE_PORT_SERVICE_PME_SHIFT)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 40aec7a6fdd9..2c0e5d929fd2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1449,10 +1449,8 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
+ 
+ #ifdef CONFIG_PCIEPORTBUS
+ extern bool pcie_ports_disabled;
+-extern bool pcie_ports_auto;
+ #else
+ #define pcie_ports_disabled	true
+-#define pcie_ports_auto		false
+ #endif
+ 
+ #ifdef CONFIG_PCIEASPM
