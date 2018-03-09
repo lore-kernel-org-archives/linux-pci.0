@@ -1,50 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:42515 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935832AbeCAKbJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 05:31:09 -0500
+Received: from mail-bn3nam01on0093.outbound.protection.outlook.com ([104.47.33.93]:38750
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932435AbeCITid (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Mar 2018 14:38:33 -0500
+From: Haiyang Zhang <haiyangz@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH v3 5/6] PCI: hv: hv_pci_devices_present(): only queue a
+ new work when necessary
+Date: Fri, 9 Mar 2018 19:37:54 +0000
+Message-ID: <BL0PR2101MB11083951371835374EFB4966CADE0@BL0PR2101MB1108.namprd21.prod.outlook.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+ <20180306182128.23281-6-decui@microsoft.com>
+In-Reply-To: <20180306182128.23281-6-decui@microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <188edc11aa5fa11d4915097831a2a4a153f6ed83.1519882849.git.jan.kiszka@siemens.com>
-References: <cover.1519882849.git.jan.kiszka@siemens.com> <188edc11aa5fa11d4915097831a2a4a153f6ed83.1519882849.git.jan.kiszka@siemens.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 1 Mar 2018 12:31:08 +0200
-Message-ID: <CAHp75VeH5tBBY4D-1_VVaYiCdRyBG+2vA8ZGg_QBfVujawh=iA@mail.gmail.com>
-Subject: Re: [PATCH v3 3/6] x86/jailhouse: Enable PCI mmconfig access in inmates
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 1, 2018 at 7:40 AM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
-
-> Use the PCI mmconfig base address exported by jailhouse in boot
-> parameters in order to access the memory mapped PCI configuration space.
 
 
-> --- a/arch/x86/kernel/jailhouse.c
-> +++ b/arch/x86/kernel/jailhouse.c
-> @@ -124,6 +124,13 @@ static int __init jailhouse_pci_arch_init(void)
->         if (pcibios_last_bus < 0)
->                 pcibios_last_bus = 0xff;
->
-> +#ifdef CONFIG_PCI_MMCONFIG
-> +       if (setup_data.pci_mmconfig_base) {
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Tuesday, March 6, 2018 1:22 PM
+> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan
+> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
+> olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
+> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
+> Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
+> marcelo.cerri@canonical.com; Michael Kelley (EOSG)
+> <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microsoft.com>; Jack
+> Morgenstein <jackm@mellanox.com>; stable@vger.kernel.org
+> Subject: [PATCH v3 5/6] PCI: hv: hv_pci_devices_present(): only queue a n=
+ew
+> work when necessary
+>=20
+> If there is a pending work, we just need to add the new dr into the dr_li=
+st.
+>=20
+> This is suggested by Michael Kelley.
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Cc: Jack Morgenstein <jackm@mellanox.com>
+> Cc: stable@vger.kernel.org
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
+> ---
 
-> +               pci_mmconfig_add(0, 0, 0xff, setup_data.pci_mmconfig_base);
-
-Hmm... Shouldn't be pcibios_last_bus instead of 0xff?
-
-> +               pci_mmcfg_arch_init();
-> +       }
-> +#endif
-
--- 
-With Best Regards,
-Andy Shevchenko
+Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
