@@ -1,59 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sg2apc01on0110.outbound.protection.outlook.com ([104.47.125.110]:43168
-        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932890AbeCCAUk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Mar 2018 19:20:40 -0500
-From: Dexuan Cui <decui@microsoft.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: [PATCH 1/3] PCI: hv: fix a comment typo in _hv_pcifront_read_config()
-Date: Sat, 3 Mar 2018 00:20:32 +0000
-Message-ID: <20180303001947.20564-1-decui@microsoft.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:54486 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932126AbeCKMAs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Mar 2018 08:00:48 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V2 3/5] PCI: Print PCI device link status in kernel log
+Date: Sun, 11 Mar 2018 13:19:31 +0200
+Message-Id: <1520767173-11090-4-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
+References: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change.
+Add pcie_print_link_status() function for querying and verifying
+a PCI device link status. The PCI speed and width are reported
+in kernel log.
+This provides a unified method for all PCI devices to
+report status and issues, instead of each device reporting in a
+different way, using different code.
 
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
-Fixes: bdd74440d9e8 ("PCI: hv: Add explicit barriers to config space access=
-")
-Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: stable@vger.kernel.org
-Cc: Stephen Hemminger <sthemmin@microsoft.com>
-Cc: K. Y. Srinivasan <kys@microsoft.com>
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
 ---
- drivers/pci/host/pci-hyperv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 2faf38eab785..1233300f41c6 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -653,7 +653,7 @@ static void _hv_pcifront_read_config(struct hv_pci_dev =
-*hpdev, int where,
- 			break;
- 		}
- 		/*
--		 * Make sure the write was done before we release the spinlock
-+		 * Make sure the read was done before we release the spinlock
- 		 * allowing consecutive reads/writes.
- 		 */
- 		mb();
---=20
-2.7.4
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 48b9fd6..ac876c4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5229,6 +5229,31 @@ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
+ EXPORT_SYMBOL(pcie_get_width_cap);
+ 
+ /**
++ * pcie_print_link_status - Reports the PCI device's link speed and width.
++ * @dev: PCI device to query
++ *
++ * This function checks whether the PCI device current speed and width are equal
++ * to the maximum PCI device capabilities.
++ */
++void pcie_print_link_status(struct pci_dev *dev)
++{
++	enum pcie_link_width width, width_cap;
++	enum pci_bus_speed speed, speed_cap;
++
++	pcie_get_speed_cap(dev, &speed_cap);
++	pcie_get_width_cap(dev, &width_cap);
++	pcie_get_minimum_link(dev, &speed, &width);
++
++	if (speed == speed_cap && width == width_cap)
++		pci_info(dev, "%s x%d link\n", PCIE_SPEED2STR(speed), width);
++	else
++		pci_info(dev, "%s x%d link (capable of %s x%d)\n",
++			 PCIE_SPEED2STR(speed), width,
++			 PCIE_SPEED2STR(speed_cap), width_cap);
++}
++EXPORT_SYMBOL(pcie_print_link_status);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8242d3d..4a20870 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1085,6 +1085,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
+ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
++void pcie_print_link_status(struct pci_dev *dev);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.8.3.1
