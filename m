@@ -1,139 +1,99 @@
-Return-Path: <SRS0=v9aX=F4=bp.renesas.com=fabrizio.castro@kernel.org>
-Return-Path: <SRS0=v9aX=F4=bp.renesas.com=fabrizio.castro@kernel.org>
-From: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Biju Das <biju.das@bp.renesas.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>, Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>, Chris Paterson
-	<Chris.Paterson2@renesas.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>
-Subject: RE: [PATCH v2] dt-bindings: PCI: rcar: Add device tree support for
- r8a7743
-Date: Tue, 6 Mar 2018 16:41:15 +0000
-Message-ID: <TY1PR01MB17704F79FA03ACAF7FEF51E5C0D90@TY1PR01MB1770.jpnprd01.prod.outlook.com>
-References: <1510653543-53770-1-git-send-email-biju.das@bp.renesas.com>
- <KL1PR06MB1702B0E1D37DC38E9E3835F1B8370@KL1PR06MB1702.apcprd06.prod.outlook.com>
- <20180110232757.GG241460@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180110232757.GG241460@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:54463 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932126AbeCKMAq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Mar 2018 08:00:46 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V2 2/5] PCI: Add a query function for PCI device's width cap
+Date: Sun, 11 Mar 2018 13:19:30 +0200
+Message-Id: <1520767173-11090-3-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
+References: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ciao Lorenzo,
+pcie_get_width_cap() implements the logic for querying a PCI device's
+maximum width capability. Change max_link_width_show() function to
+use pcie_get_width_cap().
 
-do you think you can take this patch?
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+---
+ drivers/pci/pci-sysfs.c |  6 +++---
+ drivers/pci/pci.c       | 23 +++++++++++++++++++++++
+ include/linux/pci.h     |  1 +
+ 3 files changed, 27 insertions(+), 3 deletions(-)
 
-Thanks,
-Fab
-
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 10 January 2018 23:28
-> To: Biju Das <biju.das@bp.renesas.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>; Rob Herring <robh+dt@kernel.org>=
-; Mark Rutland <mark.rutland@arm.com>; Simon
-> Horman <horms@verge.net.au>; Magnus Damm <magnus.damm@gmail.com>; Chris P=
-aterson <Chris.Paterson2@renesas.com>;
-> Fabrizio Castro <fabrizio.castro@bp.renesas.com>; linux-pci@vger.kernel.o=
-rg; linux-renesas-soc@vger.kernel.org; Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com>
-> Subject: Re: [PATCH v2] dt-bindings: PCI: rcar: Add device tree support f=
-or r8a7743
->
-> On Mon, Dec 11, 2017 at 01:30:37PM +0000, Biju Das wrote:
-> > Hi Bjorn Helgaas,
-> >
-> > Does this patch look okay to you?
->
-> It's OK by me, but Lorenzo (cc'd) would handle this now.
->
-> > > -----Original Message-----
-> > > From: Biju Das [mailto:biju.das@bp.renesas.com]
-> > > Sent: 14 November 2017 09:59
-> > > To: Bjorn Helgaas <bhelgaas@google.com>; Rob Herring
-> > > <robh+dt@kernel.org>; Mark Rutland <mark.rutland@arm.com>
-> > > Cc: Simon Horman <horms@verge.net.au>; Magnus Damm
-> > > <magnus.damm@gmail.com>; Chris Paterson <Chris.Paterson2@renesas.com>=
-;
-> > > Fabrizio Castro <fabrizio.castro@bp.renesas.com>; linux-pci@vger.kern=
-el.org;
-> > > linux-renesas-soc@vger.kernel.org; Biju Das <biju.das@bp.renesas.com>
-> > > Subject: [PATCH v2] dt-bindings: PCI: rcar: Add device tree support f=
-or r8a7743
-> > >
-> > > Add support for r8a7743. The Renesas RZ/G1M(R8A7743)PCIe controller i=
-s
-> > > identical to the R-Car Gen2 family.
-> > >
-> > > No driver change is needed due to the fallback compatible value "rene=
-sas,pcie-
-> > > rcar-gen2".
-> > > Adding the SoC-specific compatible values here has three purposes:
-> > > 1. Document which SoCs have this hardware module, 2. Allow checkpatch=
- to
-> > > validate compatible values.
-> > > 3. Allow the driver to support SoC specific implementations in future
-> > >    as necessary.
-> > >
-> > > Signed-off-by: Biju Das <biju.das@bp.renesas.com>
-> > > Reviewed-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
-> > > Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> > > ---
-> > > v1-->v2
-> > >    Corrected RZ-G1 to RZ/G1.
-> > >
-> > >  Documentation/devicetree/bindings/pci/rcar-pci.txt | 6 ++++--
-> > >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > index 76ba3a6..1fb614e 100644
-> > > --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > @@ -1,13 +1,15 @@
-> > >  * Renesas R-Car PCIe interface
-> > >
-> > >  Required properties:
-> > > -compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
-> > > +compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
-> > > +    "renesas,pcie-r8a7779" for the R8A7779 SoC;
-> > >      "renesas,pcie-r8a7790" for the R8A7790 SoC;
-> > >      "renesas,pcie-r8a7791" for the R8A7791 SoC;
-> > >      "renesas,pcie-r8a7793" for the R8A7793 SoC;
-> > >      "renesas,pcie-r8a7795" for the R8A7795 SoC;
-> > >      "renesas,pcie-r8a7796" for the R8A7796 SoC;
-> > > -    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible dev=
-ice.
-> > > +    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
-> > > +     RZ/G1 compatible device.
-> > >      "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible dev=
-ice.
-> > >
-> > >      When compatible with the generic version, nodes must list the
-> > > --
-> > > 1.9.1
-> >
-> >
-> >
-> > [https://www2.renesas.eu/media/email/unicef_2017.jpg]
-> >
-> > This Christmas, instead of sending out cards, Renesas Electronics Europ=
-e have decided to support Unicef with a donation. For further
-> details click here<https://www.unicef.org/> to find out about the valuabl=
-e work they do, helping children all over the world.
-> > We would like to take this opportunity to wish you a Merry Christmas an=
-d a prosperous New Year.
-> >
-> >
-> >
-> > Renesas Electronics Europe Ltd, Dukes Meadow, Millboard Road, Bourne En=
-d, Buckinghamshire, SL8 5FH, UK. Registered in England
-> & Wales under Registered No. 04586709.
-
-
-
-Renesas Electronics Europe Ltd, Dukes Meadow, Millboard Road, Bourne End, B=
-uckinghamshire, SL8 5FH, UK. Registered in England & Wales under Registered=
- No. 04586709.
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index c8b4854..ae30ba2 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -177,14 +177,14 @@ static ssize_t max_link_width_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	u32 linkcap;
++	enum pcie_link_width width;
+ 	int err;
+ 
+-	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
++	err = pcie_get_width_cap(pci_dev, &width);
+ 	if (err)
+ 		return -EINVAL;
+ 
+-	return sprintf(buf, "%u\n", (linkcap & PCI_EXP_LNKCAP_MLW) >> 4);
++	return sprintf(buf, "%u\n", width);
+ }
+ static DEVICE_ATTR_RO(max_link_width);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7620cc9..48b9fd6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5206,6 +5206,29 @@ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed)
+ EXPORT_SYMBOL(pcie_get_speed_cap);
+ 
+ /**
++ * pcie_get_width_cap - queries for the PCI device's link width capability.
++ * @dev: PCI device to query
++ * @width: storage for link width
++ *
++ * This function queries the PCI device width capability.
++ */
++int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
++{
++	u32 lnkcap;
++	int err;
++
++	*width = PCIE_LNK_WIDTH_UNKNOWN;
++
++	err = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
++	if (!err && lnkcap)
++		/* Shift start of width mask by 4 to get actual speed cap */
++		*width = (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
++
++	return err;
++}
++EXPORT_SYMBOL(pcie_get_width_cap);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 54443e4..8242d3d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1084,6 +1084,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
++int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.8.3.1
