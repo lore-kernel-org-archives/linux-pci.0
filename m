@@ -1,175 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:17699 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933468AbeCGRKa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 12:10:30 -0500
-Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
- port
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
-        <mperttunen@nvidia.com>, <linux-tegra@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <kthota@nvidia.com>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
- <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
- <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
- <20171213140848.GA1736@red-moon>
- <b72dda91-5307-f024-9810-d6abadf7f337@nvidia.com>
- <20171213183417.GD4060@red-moon>
- <a9bc0f46-69e1-d7ca-8cd3-e54259c4a92d@nvidia.com>
- <20171214095724.GA697@e107981-ln.cambridge.arm.com>
- <20180307120004.GB15139@e107981-ln.cambridge.arm.com>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <b7878dad-42de-d348-a48f-88135a05ccbb@nvidia.com>
-Date: Wed, 7 Mar 2018 22:40:06 +0530
-MIME-Version: 1.0
-In-Reply-To: <20180307120004.GB15139@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:54528 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932126AbeCKMAv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Mar 2018 08:00:51 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V2 4/5] net/mlx4_core: Report PCI properties using dedicated function
+Date: Sun, 11 Mar 2018 13:19:32 +0200
+Message-Id: <1520767173-11090-5-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
+References: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Change mlx4 method of checking and reporting PCI status and
+maximum capabilities to use the pci driver functions instead
+of implementing them in the driver code.
 
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+---
+ drivers/net/ethernet/mellanox/mlx4/main.c | 81 +------------------------------
+ 1 file changed, 1 insertion(+), 80 deletions(-)
 
-On 07-Mar-18 5:30 PM, Lorenzo Pieralisi wrote:
-> On Thu, Dec 14, 2017 at 09:57:24AM +0000, Lorenzo Pieralisi wrote:
->> On Thu, Dec 14, 2017 at 12:57:28AM +0530, Manikanta Maddireddy wrote:
->>>
->>>
->>> On 14-Dec-17 12:04 AM, Lorenzo Pieralisi wrote:
->>>> On Wed, Dec 13, 2017 at 10:02:02PM +0530, Manikanta Maddireddy wrote:
->>>>>
->>>>>
->>>>> On 13-Dec-17 7:38 PM, Lorenzo Pieralisi wrote:
->>>>>> On Wed, Dec 13, 2017 at 05:20:39PM +0530, Manikanta Maddireddy wrote:
->>>>>>>
->>>>>>>
->>>>>>> On 12-Dec-17 5:02 PM, Lorenzo Pieralisi wrote:
->>>>>>>> On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
->>>>>>>>> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
->>>>>>>>> after all the required root port register programming is completed.
->>>>>>>>>
->>>>>>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->>>>>>>>> ---
->>>>>>>>> V3:
->>>>>>>>> * no change in this patch
->>>>>>>>> V2:
->>>>>>>>> * no change in this patch
->>>>>>>>>
->>>>>>>>>  drivers/pci/host/pci-tegra.c | 9 +++++----
->>>>>>>>>  1 file changed, 5 insertions(+), 4 deletions(-)
->>>>>>>>>
->>>>>>>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->>>>>>>>> index 96e8038c3019..b41c60c7414c 100644
->>>>>>>>> --- a/drivers/pci/host/pci-tegra.c
->>>>>>>>> +++ b/drivers/pci/host/pci-tegra.c
->>>>>>>>> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->>>>>>>>>  		}
->>>>>>>>>  	}
->>>>>>>>>  
->>>>>>>>> -	/* take the PCIe interface module out of reset */
->>>>>>>>> -	reset_control_deassert(pcie->pcie_xrst);
->>>>>>>>> -
->>>>>>>>>  	/* finally enable PCIe */
->>>>>>>>>  	value = afi_readl(pcie, AFI_CONFIGURATION);
->>>>>>>>>  	value |= AFI_CONFIGURATION_EN_FPCI;
->>>>>>>>> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
->>>>>>>>>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
->>>>>>>>>  	}
->>>>>>>>>  
->>>>>>>>> -	reset_control_assert(pcie->pcie_xrst);
->>>>>>>>
->>>>>>>> This does not look like it is part of the reset de-assertion code move.
->>>>>>>>
->>>>>>>> tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
->>>>>>>>
->>>>>>>> in other words, why are you removing it ?
->>>>>>>>
->>>>>>>> Lorenzo
->>>>>>>
->>>>>>> Hi Lorenzo,
->>>>>>>
->>>>>>> Host driver should start LTSSM after programming all controller registers.
->>>>>>> In tegra_pcie_enable_controller() bunch of AFI module programming is done and
->>>>>>> I am adding PCIe register programming in this series.
->>>>>>> So I moved deasserting of pcie_xrst(which starts LTSSM) to tegra_pcie_enable_ports(),
->>>>>>> which is right after sending RST pulse(tegra_pcie_port_reset()) to endpoint.
->>>>>>
->>>>>> I asked why you removed the reset assertion in tegra_pcie_power_off(),
->>>>>> it is not clear to me. You still call tegra_pcie_power_off() in
->>>>>> the tegra_pcie_probe() error path and I see no reason why the reset
->>>>>> assertion - called through:
->>>>>>
->>>>>> tegra_pcie_put_resources()
->>>>>> 	-> tegra_pcie_power_of()
->>>>>> 	
->>>>>> is removed, if it was needed previously.
->>>>>>
->>>>>> Lorenzo
->>>>>>
->>>>>
->>>>> New sequence with this patch will be
->>>>> tegra_pcie_enable_controller() -> tegra_pcie_request_resources() -> tegra_pcie_enable_ports()
->>>>>                                    ->goto put_resources on fail        -> reset_control_deassert(pcie->pcie_xrst);
->>>>>
->>>>> Since pcie_xrst deassert happens after tegra_pcie_request_resources(), there is no need to assert pcie_xrst on put_resource failure.
->>>>
->>>> I do not understand you, sorry for being blunt.
->>>>
->>>> What has tegra_pcie_request_resources() to do with the reset
->>>> assertion/deassertion ?
->>>>
->>>> This patch moves:
->>>>
->>>> reset_control_deassert(pcie->pcie_xrst);
->>>>
->>>> from:
->>>>
->>>> tegra_pcie_enable_controller()
->>>>
->>>> to
->>>>
->>>> tegra_pcie_enable_ports()
->>>>
->>>> if:
->>>>
->>>> reset_control_assert(pcie->pcie_xrst);
->>>>
->>>> was needed before this patch in tegra_pcie_power_off()
->>>>
->>>> why it is not needed there after this patch is applied ?
->>>>
->>>> Lorenzo
->>>>
->>> Opposite of tegra_pcie_enable_ports() is missing on disable_msi
->>> failure in current driver. So I took care of assert pcie_xrst
->>> in https://patchwork.ozlabs.org/patch/846043/ along with other
->>> resources.
->>
->> Which is in another series. This patch has to be self-contained with a
->> single logical change that is applicable on its own. Even if we end up
->> merging the series above every patch has to make sense on its own. This
->> does not.
->>
->> So I would start with re-posting this series as a self contained one,
->> addressing all review comments; we will get to other series later when
->> this is sorted.
-> 
-> Hi Manikanta,
-> 
-> I wanted to check with you where are we with this series. I would mark
-> it with "Changes requested", waiting for you to rebase it and update it
-> according to review comments.
-> 
-> Please let me know if that's OK with you.
-> 
-> Thanks,
-> Lorenzo
-> 
-
-Hi Lorenzo,
-
-Sure, I will address the review comments and publish rebased series soon.
-
-Thanks,
-Manikanta
+diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+index 4d84cab..30cacac 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/main.c
++++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+@@ -623,85 +623,6 @@ static int mlx4_dev_cap(struct mlx4_dev *dev, struct mlx4_dev_cap *dev_cap)
+ 	return 0;
+ }
+ 
+-static int mlx4_get_pcie_dev_link_caps(struct mlx4_dev *dev,
+-				       enum pci_bus_speed *speed,
+-				       enum pcie_link_width *width)
+-{
+-	u32 lnkcap1, lnkcap2;
+-	int err1, err2;
+-
+-#define  PCIE_MLW_CAP_SHIFT 4	/* start of MLW mask in link capabilities */
+-
+-	*speed = PCI_SPEED_UNKNOWN;
+-	*width = PCIE_LNK_WIDTH_UNKNOWN;
+-
+-	err1 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP,
+-					  &lnkcap1);
+-	err2 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP2,
+-					  &lnkcap2);
+-	if (!err2 && lnkcap2) { /* PCIe r3.0-compliant */
+-		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+-			*speed = PCIE_SPEED_8_0GT;
+-		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
+-			*speed = PCIE_SPEED_5_0GT;
+-		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
+-			*speed = PCIE_SPEED_2_5GT;
+-	}
+-	if (!err1) {
+-		*width = (lnkcap1 & PCI_EXP_LNKCAP_MLW) >> PCIE_MLW_CAP_SHIFT;
+-		if (!lnkcap2) { /* pre-r3.0 */
+-			if (lnkcap1 & PCI_EXP_LNKCAP_SLS_5_0GB)
+-				*speed = PCIE_SPEED_5_0GT;
+-			else if (lnkcap1 & PCI_EXP_LNKCAP_SLS_2_5GB)
+-				*speed = PCIE_SPEED_2_5GT;
+-		}
+-	}
+-
+-	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN) {
+-		return err1 ? err1 :
+-			err2 ? err2 : -EINVAL;
+-	}
+-	return 0;
+-}
+-
+-static void mlx4_check_pcie_caps(struct mlx4_dev *dev)
+-{
+-	enum pcie_link_width width, width_cap;
+-	enum pci_bus_speed speed, speed_cap;
+-	int err;
+-
+-#define PCIE_SPEED_STR(speed) \
+-	(speed == PCIE_SPEED_8_0GT ? "8.0GT/s" : \
+-	 speed == PCIE_SPEED_5_0GT ? "5.0GT/s" : \
+-	 speed == PCIE_SPEED_2_5GT ? "2.5GT/s" : \
+-	 "Unknown")
+-
+-	err = mlx4_get_pcie_dev_link_caps(dev, &speed_cap, &width_cap);
+-	if (err) {
+-		mlx4_warn(dev,
+-			  "Unable to determine PCIe device BW capabilities\n");
+-		return;
+-	}
+-
+-	err = pcie_get_minimum_link(dev->persist->pdev, &speed, &width);
+-	if (err || speed == PCI_SPEED_UNKNOWN ||
+-	    width == PCIE_LNK_WIDTH_UNKNOWN) {
+-		mlx4_warn(dev,
+-			  "Unable to determine PCI device chain minimum BW\n");
+-		return;
+-	}
+-
+-	if (width != width_cap || speed != speed_cap)
+-		mlx4_warn(dev,
+-			  "PCIe BW is different than device's capability\n");
+-
+-	mlx4_info(dev, "PCIe link speed is %s, device supports %s\n",
+-		  PCIE_SPEED_STR(speed), PCIE_SPEED_STR(speed_cap));
+-	mlx4_info(dev, "PCIe link width is x%d, device supports x%d\n",
+-		  width, width_cap);
+-	return;
+-}
+-
+ /*The function checks if there are live vf, return the num of them*/
+ static int mlx4_how_many_lives_vf(struct mlx4_dev *dev)
+ {
+@@ -3475,7 +3396,7 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
+ 	 * express device capabilities are under-satisfied by the bus.
+ 	 */
+ 	if (!mlx4_is_slave(dev))
+-		mlx4_check_pcie_caps(dev);
++		pcie_print_link_status(dev->persist->pdev);
+ 
+ 	/* In master functions, the communication channel must be initialized
+ 	 * after obtaining its address from fw */
+-- 
+1.8.3.1
