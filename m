@@ -1,63 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH v4 5/7] x86: Consolidate PCI_MMCONFIG configs
-Date: Sun,  4 Mar 2018 19:31:37 +0100
-Message-Id: <544801a13f892a18a0cba0a55ab1d8d2885ca8f6.1520188299.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520188299.git.jan.kiszka@siemens.com>
-References: <cover.1520188299.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520188299.git.jan.kiszka@siemens.com>
-References: <cover.1520188299.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54612 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932498AbeCKWE0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 11 Mar 2018 18:04:26 -0400
+Date: Sun, 11 Mar 2018 17:03:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
+Message-ID: <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On Wed, Feb 28, 2018 at 10:34:11PM +0530, Oza Pawandeep wrote:
+> This patch set brings in error handling support for DPC
+> 
+> The current implementation of AER and error message broadcasting to the
+> EP driver is tightly coupled and limited to AER service driver.
+> It is important to factor out broadcasting and other link handling
+> callbacks. So that not only when AER gets triggered, but also when DPC get
+> triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+> 
+> DPC should enumerate the devices after recovering the link, which is
+> achieved by implementing error_resume callback.
 
-Since e279b6c1d329 ("x86: start unification of arch/x86/Kconfig.*"), we
-have two PCI_MMCONFIG entries, one from the original i386 and another
-from x86_64. This consolidates both entries into a single one.
+The main point of this series is to call the driver error handling
+callbacks (error_detected(), mmio_enabled(), slot_reset(), etc.) when
+DPC events occur.  We've always called them for AER events, but prior
+to this series, we didn't call them for DPC events.
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- arch/x86/Kconfig | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+That's a good thing -- we should treat DPC events as much like AER
+events as possible.
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index c19f5342ec2b..8986a6b6e3df 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2641,8 +2641,10 @@ config PCI_DIRECT
- 	depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC || PCI_GOMMCONFIG))
- 
- config PCI_MMCONFIG
--	def_bool y
--	depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
-+	bool "Support mmconfig PCI config space access" if X86_64
-+	default y
-+	depends on PCI && (ACPI || SFI)
-+	depends on X86_64 || (PCI_GOANY || PCI_GOMMCONFIG)
- 
- config PCI_OLPC
- 	def_bool y
-@@ -2657,11 +2659,6 @@ config PCI_DOMAINS
- 	def_bool y
- 	depends on PCI
- 
--config PCI_MMCONFIG
--	bool "Support mmconfig PCI config space access"
--	default y
--	depends on X86_64 && PCI && (ACPI || SFI)
--
- config PCI_CNB20LE_QUIRK
- 	bool "Read CNB20LE Host Bridge Windows" if EXPERT
- 	depends on PCI
--- 
-2.13.6
+This series does make it more obvious that there's still a big
+difference between AER and DPC handling -- for DPC, we remove and
+re-enumerate all the devices, but we don't for AER.  
+
+That difference has been there since the beginning of DPC, so it has
+nothing to do with *this* series EXCEPT for the fact that it really
+complicates the logic you're adding to reset_link() and
+broadcast_error_message().
+
+We ought to be able to simplify that somehow because the only real
+difference between AER and DPC should be that DPC automatically
+disables the link and AER does it in software.
+
+Bjorn
