@@ -1,49 +1,40 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 3/4] ACPI / sleep: Simplify code by using the new dmi_get_bios_year() helper
-Date: Thu,  1 Mar 2018 20:02:19 +0200
-Message-Id: <20180301180220.11333-4-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
-References: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:54550 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932126AbeCKMAx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Mar 2018 08:00:53 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V2 5/5] net/mlx5: Report device PCI link status and issues
+Date: Sun, 11 Mar 2018 13:19:33 +0200
+Message-Id: <1520767173-11090-6-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
+References: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new dmi_get_bios_year() helper instead of open-coding its
-functionality.
+Add a kernel log print for mlx5 PCI device's link status.
 
-No changes in functionality.
-
-Reviewed-by: Jean Delvare <jdelvare@suse.de>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
 ---
- drivers/acpi/sleep.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/net/ethernet/mellanox/mlx5/core/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/acpi/sleep.c b/drivers/acpi/sleep.c
-index c53119740a3c..23d9e6b88504 100644
---- a/drivers/acpi/sleep.c
-+++ b/drivers/acpi/sleep.c
-@@ -376,12 +376,10 @@ void __init acpi_sleep_no_blacklist(void)
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index 2ef641c9..6adad72 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -1043,6 +1043,8 @@ static int mlx5_load_one(struct mlx5_core_dev *dev, struct mlx5_priv *priv,
+ 	dev_info(&pdev->dev, "firmware version: %d.%d.%d\n", fw_rev_maj(dev),
+ 		 fw_rev_min(dev), fw_rev_sub(dev));
  
- static void __init acpi_sleep_dmi_check(void)
- {
--	int year;
--
- 	if (ignore_blacklist)
- 		return;
- 
--	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year >= 2012)
-+	if (dmi_get_bios_year() >= 2012)
- 		acpi_nvs_nosave_s3();
- 
- 	dmi_check_system(acpisleep_dmi_table);
++	pcie_print_link_status(dev->pdev);
++
+ 	/* on load removing any previous indication of internal error, device is
+ 	 * up
+ 	 */
 -- 
-2.16.1
-
+1.8.3.1
