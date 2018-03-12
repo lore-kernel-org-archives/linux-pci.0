@@ -1,46 +1,129 @@
-Return-Path: <robh@kernel.org>
-Return-Path: <robh@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180321211628.GE38649@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
- <20180321144254.7406-3-lorenzo.pieralisi@arm.com> <20180321211628.GE38649@bhelgaas-glaptop.roam.corp.google.com>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 27 Mar 2018 11:39:57 -0500
-Message-ID: <CAL_JsqJDzGHix=C43FTry_AsUszXVrk_W=01OGnb8+EB0Mi9Jw@mail.gmail.com>
-Subject: Re: [PATCH v2 02/10] PCI: iproc: Remove dependency on ARM specific
- struct pci_sys_data
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, Linus Walleij <linus.walleij@linaro.org>,
-	Xiaowei Song <songxiaowei@hisilicon.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Tanmay Inamdar <tinamdar@apm.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>, Ley Foon Tan <lftan@altera.com>,
-	Fengguang Wu <fengguang.wu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:58209 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751232AbeCLMG1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 08:06:27 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V3 4/5] net/mlx4_core: Report PCI properties using dedicated function
+Date: Mon, 12 Mar 2018 14:06:09 +0200
+Message-Id: <1520856370-15404-5-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
+References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 4:16 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Mar 21, 2018 at 02:42:46PM +0000, Lorenzo Pieralisi wrote:
->> From: Rob Herring <robh@kernel.org>
->>
->> The iproc driver is using ARM's struct pci_sys_data simply to store a
->> private data pointer. This is completely unnecessary, so store the
->> private data directly in bus->sysdata as is done on arm64.
->
-> Oh, thank you, this is awesome!
->
-> struct pci_sys_data is still referenced in mvebu and rcar.  I didn't
-> look closely enough to see if they could be similarly simplified.
+Change mlx4 method of checking and reporting PCI status and
+maximum capabilities to use the pci driver functions instead
+of implementing them in the driver code.
 
-I did.
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+---
+ drivers/net/ethernet/mellanox/mlx4/main.c | 81 +------------------------------
+ 1 file changed, 1 insertion(+), 80 deletions(-)
 
-> I guess not, because they use pci_common_init_dev().  They look
-> tantalizingly close to being able to use pci_scan_root_bus_bridge()
-> like everybody else, though.
-
-Yes, that is the problem. It shouldn't be hard, just needs someone
-with h/w to test.
-
-Rob
+diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+index 4d84cab..30cacac 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/main.c
++++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+@@ -623,85 +623,6 @@ static int mlx4_dev_cap(struct mlx4_dev *dev, struct mlx4_dev_cap *dev_cap)
+ 	return 0;
+ }
+ 
+-static int mlx4_get_pcie_dev_link_caps(struct mlx4_dev *dev,
+-				       enum pci_bus_speed *speed,
+-				       enum pcie_link_width *width)
+-{
+-	u32 lnkcap1, lnkcap2;
+-	int err1, err2;
+-
+-#define  PCIE_MLW_CAP_SHIFT 4	/* start of MLW mask in link capabilities */
+-
+-	*speed = PCI_SPEED_UNKNOWN;
+-	*width = PCIE_LNK_WIDTH_UNKNOWN;
+-
+-	err1 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP,
+-					  &lnkcap1);
+-	err2 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP2,
+-					  &lnkcap2);
+-	if (!err2 && lnkcap2) { /* PCIe r3.0-compliant */
+-		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+-			*speed = PCIE_SPEED_8_0GT;
+-		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
+-			*speed = PCIE_SPEED_5_0GT;
+-		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
+-			*speed = PCIE_SPEED_2_5GT;
+-	}
+-	if (!err1) {
+-		*width = (lnkcap1 & PCI_EXP_LNKCAP_MLW) >> PCIE_MLW_CAP_SHIFT;
+-		if (!lnkcap2) { /* pre-r3.0 */
+-			if (lnkcap1 & PCI_EXP_LNKCAP_SLS_5_0GB)
+-				*speed = PCIE_SPEED_5_0GT;
+-			else if (lnkcap1 & PCI_EXP_LNKCAP_SLS_2_5GB)
+-				*speed = PCIE_SPEED_2_5GT;
+-		}
+-	}
+-
+-	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN) {
+-		return err1 ? err1 :
+-			err2 ? err2 : -EINVAL;
+-	}
+-	return 0;
+-}
+-
+-static void mlx4_check_pcie_caps(struct mlx4_dev *dev)
+-{
+-	enum pcie_link_width width, width_cap;
+-	enum pci_bus_speed speed, speed_cap;
+-	int err;
+-
+-#define PCIE_SPEED_STR(speed) \
+-	(speed == PCIE_SPEED_8_0GT ? "8.0GT/s" : \
+-	 speed == PCIE_SPEED_5_0GT ? "5.0GT/s" : \
+-	 speed == PCIE_SPEED_2_5GT ? "2.5GT/s" : \
+-	 "Unknown")
+-
+-	err = mlx4_get_pcie_dev_link_caps(dev, &speed_cap, &width_cap);
+-	if (err) {
+-		mlx4_warn(dev,
+-			  "Unable to determine PCIe device BW capabilities\n");
+-		return;
+-	}
+-
+-	err = pcie_get_minimum_link(dev->persist->pdev, &speed, &width);
+-	if (err || speed == PCI_SPEED_UNKNOWN ||
+-	    width == PCIE_LNK_WIDTH_UNKNOWN) {
+-		mlx4_warn(dev,
+-			  "Unable to determine PCI device chain minimum BW\n");
+-		return;
+-	}
+-
+-	if (width != width_cap || speed != speed_cap)
+-		mlx4_warn(dev,
+-			  "PCIe BW is different than device's capability\n");
+-
+-	mlx4_info(dev, "PCIe link speed is %s, device supports %s\n",
+-		  PCIE_SPEED_STR(speed), PCIE_SPEED_STR(speed_cap));
+-	mlx4_info(dev, "PCIe link width is x%d, device supports x%d\n",
+-		  width, width_cap);
+-	return;
+-}
+-
+ /*The function checks if there are live vf, return the num of them*/
+ static int mlx4_how_many_lives_vf(struct mlx4_dev *dev)
+ {
+@@ -3475,7 +3396,7 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
+ 	 * express device capabilities are under-satisfied by the bus.
+ 	 */
+ 	if (!mlx4_is_slave(dev))
+-		mlx4_check_pcie_caps(dev);
++		pcie_print_link_status(dev->persist->pdev);
+ 
+ 	/* In master functions, the communication channel must be initialized
+ 	 * after obtaining its address from fw */
+-- 
+1.8.3.1
