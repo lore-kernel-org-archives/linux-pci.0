@@ -1,103 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr10088.outbound.protection.outlook.com ([40.107.1.88]:15291
-        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753181AbeCVPNz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Mar 2018 11:13:55 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: Christoph Hellwig <hch@lst.de>
-CC: "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "zajec5@gmail.com" <zajec5@gmail.com>,
-        "andy.gross@linaro.org" <andy.gross@linaro.org>,
-        "david.brown@linaro.org" <david.brown@linaro.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "vinod.koul@intel.com" <vinod.koul@intel.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
-        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        "johan@kernel.org" <johan@kernel.org>,
-        "msuchanek@suse.de" <msuchanek@suse.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bharat Bhushan <bharat.bhushan@nxp.com>,
-        Leo Li <leoyang.li@nxp.com>
-Subject: RE: [PATCH v2 2/2] drivers: remove force dma flag from buses
-Date: Thu, 22 Mar 2018 15:13:49 +0000
-Message-ID: <HE1PR0401MB2425407DADB19FCF6E016456E6A90@HE1PR0401MB2425.eurprd04.prod.outlook.com>
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
- <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
- <20180322081926.GC29444@lst.de>
-In-Reply-To: <20180322081926.GC29444@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:58206 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751180AbeCLMG1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 08:06:27 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V3 2/5] PCI: Add a query function for PCI device's width cap
+Date: Mon, 12 Mar 2018 14:06:07 +0200
+Message-Id: <1520856370-15404-3-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
+References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+pcie_get_width_cap() implements the logic for querying a PCI device's
+maximum width capability. Change max_link_width_show() function to
+use pcie_get_width_cap().
 
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+---
+ drivers/pci/pci-sysfs.c |  6 +++---
+ drivers/pci/pci.c       | 23 +++++++++++++++++++++++
+ include/linux/pci.h     |  1 +
+ 3 files changed, 27 insertions(+), 3 deletions(-)
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@lst.de]
-> Sent: Thursday, March 22, 2018 13:49
-> To: Nipun Gupta <nipun.gupta@nxp.com>
->=20
-> > --- a/drivers/dma/qcom/hidma_mgmt.c
-> > +++ b/drivers/dma/qcom/hidma_mgmt.c
-> > @@ -398,7 +398,7 @@ static int __init
-> hidma_mgmt_of_populate_channels(struct device_node *np)
-> >  		}
-> >  		of_node_get(child);
-> >  		new_pdev->dev.of_node =3D child;
-> > -		of_dma_configure(&new_pdev->dev, child);
-> > +		of_dma_configure(&new_pdev->dev, child, true);
-> >  		/*
-> >  		 * It is assumed that calling of_msi_configure is safe on
-> >  		 * platforms with or without MSI support.
->=20
-> Where did we mark this bus as force_dma before?
-
-I thought these devices to be on the platform bus as the device is of type
-'struct platform_device', though I am not sure then why 'of_dma_configure()=
-'
-is called here. Is this not on platform bus?
-
->=20
-> > diff --git a/drivers/of/of_reserved_mem.c b/drivers/of/of_reserved_mem.=
-c
-> > index 9a4f4246..895c83e 100644
-> > --- a/drivers/of/of_reserved_mem.c
-> > +++ b/drivers/of/of_reserved_mem.c
-> > @@ -353,7 +353,7 @@ int of_reserved_mem_device_init_by_idx(struct devic=
-e
-> *dev,
-> >  		/* ensure that dma_ops is set for virtual devices
-> >  		 * using reserved memory
-> >  		 */
-> > -		of_dma_configure(dev, np);
-> > +		of_dma_configure(dev, np, true);
->=20
-> Did all the callers of this one really force dma?  I have a hard time
-> untangling the call stacks unfortunately.
-
-I see this API being called indirectly from NXP DPAA device driver which
-is for platform bus devices. So I marked 'true' out here. There are more pl=
-aces
-from where it is being called.
-
-Thanks,
-Nipun
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index c8b4854..ae30ba2 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -177,14 +177,14 @@ static ssize_t max_link_width_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	u32 linkcap;
++	enum pcie_link_width width;
+ 	int err;
+ 
+-	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
++	err = pcie_get_width_cap(pci_dev, &width);
+ 	if (err)
+ 		return -EINVAL;
+ 
+-	return sprintf(buf, "%u\n", (linkcap & PCI_EXP_LNKCAP_MLW) >> 4);
++	return sprintf(buf, "%u\n", width);
+ }
+ static DEVICE_ATTR_RO(max_link_width);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7620cc9..48b9fd6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5206,6 +5206,29 @@ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed)
+ EXPORT_SYMBOL(pcie_get_speed_cap);
+ 
+ /**
++ * pcie_get_width_cap - queries for the PCI device's link width capability.
++ * @dev: PCI device to query
++ * @width: storage for link width
++ *
++ * This function queries the PCI device width capability.
++ */
++int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
++{
++	u32 lnkcap;
++	int err;
++
++	*width = PCIE_LNK_WIDTH_UNKNOWN;
++
++	err = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
++	if (!err && lnkcap)
++		/* Shift start of width mask by 4 to get actual speed cap */
++		*width = (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
++
++	return err;
++}
++EXPORT_SYMBOL(pcie_get_width_cap);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 54443e4..8242d3d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1084,6 +1084,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
++int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.8.3.1
