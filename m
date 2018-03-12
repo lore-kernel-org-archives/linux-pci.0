@@ -1,76 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 07/37] iommu: Add a page fault handler
-To: Sinan Kaya <okaya@codeaurora.org>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-8-jean-philippe.brucker@arm.com>
- <77afa195-4842-a112-eba5-409b861b5315@codeaurora.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <430e9754-4cf7-0aa8-7899-fc13e6a2e079@arm.com>
-Date: Tue, 6 Mar 2018 10:46:36 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:42838 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932214AbeCLURC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 16:17:02 -0400
 MIME-Version: 1.0
-In-Reply-To: <77afa195-4842-a112-eba5-409b861b5315@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
- Will Deacon <Will.Deacon@arm.com>, "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180312182321.GG18494@localhost.localdomain>
+References: <20180312171813.3487.94803.stgit@localhost.localdomain>
+ <20180312172031.3487.20651.stgit@localhost.localdomain> <20180312174012.GE18494@localhost.localdomain>
+ <CAKgT0UdWc=Sz-xgd4H3bTDt5d17=-PY8VPWz6A3mAciWV6=97w@mail.gmail.com> <20180312182321.GG18494@localhost.localdomain>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 12 Mar 2018 13:17:00 -0700
+Message-ID: <CAKgT0UfH+xXk__R_hEtFMsm7qkBG02hWC-S=8MgYkeeEx5zweA@mail.gmail.com>
+Subject: Re: [pci PATCH v5 1/4] pci: Add pci_sriov_configure_simple for PFs
+ that don't manage VF resources
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, netanel@amazon.com,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/03/18 21:53, Sinan Kaya wrote:
-> On 2/12/2018 1:33 PM, Jean-Philippe Brucker wrote:
->> +static struct workqueue_struct *iommu_fault_queue;
-> 
-> Is there anyway we can make this fault queue per struct device?
-> Since this is common code, I think it needs some care.
+On Mon, Mar 12, 2018 at 11:23 AM, Keith Busch <keith.busch@intel.com> wrote:
+> On Mon, Mar 12, 2018 at 11:09:34AM -0700, Alexander Duyck wrote:
+>> On Mon, Mar 12, 2018 at 10:40 AM, Keith Busch <keith.busch@intel.com> wrote:
+>> > On Mon, Mar 12, 2018 at 10:21:29AM -0700, Alexander Duyck wrote:
+>> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> >> index 024a1beda008..9cab9d0d51dc 100644
+>> >> --- a/include/linux/pci.h
+>> >> +++ b/include/linux/pci.h
+>> >> @@ -1953,6 +1953,7 @@ static inline void pci_mmcfg_late_init(void) { }
+>> >>  int pci_vfs_assigned(struct pci_dev *dev);
+>> >>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>> >>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>> >> +int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn);
+>> >>  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+>> >>  void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+>> >>  #else
+>> >
+>> > I recommend stubbing 'pci_sriov_configure_simple' or defining it to
+>> > NULL in the '#else' section here so you don't need to repeat the "#ifdef
+>> > CONFIG_PCI_IOV" in each driver wishing to use this function. Otherwise
+>> > looks fine to me.
+>>
+>> My concern with defining it as NULL is that somebody may end up
+>> calling it in the future directly and that may end up causing issues.
+>> One thought I have been debating is moving it to a different file. I
+>> am just not sure where the best place to put something like this would
+>> be. I could move this function to drivers/pci/pci.c if everyone is
+>> okay with it and then I could just strip the contents out by wrapping
+>> them in a #ifdef instead.
+>
+> Okay, instead of NULL, a stub implementation in the header file may
+> suffice when CONFIG_PCI_IOV is not defined:
+>
+> static inline int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn)
+> {
+>         return -ENOSYS;
+> }
+>
+> See pci_iov_virtfn_bus, pci_iov_virtfn_devfn, pci_iov_add_virtfn, or
+> pci_enable_sriov for other examples.
 
-I don't think it's better, the workqueue struct seems large. Maybe having
-one wq per IOMMU is a good compromise? As said in my other reply for this
-patch, doing so isn't completely straightforward. I'll consider adding an
-iommu pointer to the iommu_param struct attached to each device.
+No, I am aware of those. The problem is they aren't accessed as
+function pointers. As such converting them to static inline functions
+is easy. As I am sure you are aware an "inline" function doesn't
+normally generate a function pointer.
 
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Actually my original idea has been complicated further by the fact
+that I realized my code is accessing functions that are static in the
+iov.c file. I'll need to think about how to come up with a better
+solution for this.
