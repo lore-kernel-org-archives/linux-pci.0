@@ -1,131 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:57618 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751395AbeCWHyy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2018 03:54:54 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI: rockchip: Fix compile errors and warnings
-Date: Fri, 23 Mar 2018 15:47:59 +0800
-Message-Id: <1521791279-148357-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:33690 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751824AbeCLQyw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 12:54:52 -0400
+Received: by mail-wm0-f41.google.com with SMTP id s206so14285755wme.0
+        for <linux-pci@vger.kernel.org>; Mon, 12 Mar 2018 09:54:52 -0700 (PDT)
+Date: Mon, 12 Mar 2018 17:54:47 +0100
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Daniel Vetter <daniel@ffwll.ch>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Sean Paul <seanpaul@chromium.org>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pci@vger.kernel.org, Daniel Drake <dan@reactivated.net>,
+        Denis Lisov <dennis.lissov@gmail.com>,
+        Peter Wu <peter@lekensteyn.nl>,
+        Martin Lopatar <lopin@dataplex.cz>,
+        Maik Freudenberg <hhfeuer@gmx.de>,
+        Takashi Iwai <tiwai@suse.com>, Lyude Paul <lyude@redhat.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        alsa-devel@alsa-project.org, Mike Lothian <mike@fireburn.co.uk>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: Re: [PATCH v2 0/7] Modernize vga_switcheroo by using device link for
+ HDA
+Message-ID: <20180312165447.GJ8589@phenom.ffwll.local>
+References: <cover.1520068884.git.lukas@wunner.de>
+ <20180306102940.GG22212@phenom.ffwll.local>
+ <20180311155549.GA11806@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180311155549.GA11806@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie-rockchip.c uses devm_pci_remap_cfg_resource which should
-depends on CONFIG_PCI. And as we could allow to build the host
-driver as a module, we should export the function. This patch
-also make rockchip_pcie_{prog, clear}_ep_ob_atu static.
+On Sun, Mar 11, 2018 at 04:55:49PM +0100, Lukas Wunner wrote:
+> On Tue, Mar 06, 2018 at 11:29:40AM +0100, Daniel Vetter wrote:
+> > On Sat, Mar 03, 2018 at 10:53:24AM +0100, Lukas Wunner wrote:
+> > > Modernize vga_switcheroo by using a device link to enforce a runtime PM
+> > > dependency from an HDA controller to the GPU it's integrated into, v2.
+> > > 
+> > > https://github.com/l1k/linux/commits/switcheroo_devlink_v2
+> > 
+> > This all looks really reasonable and like a good cleanup, but it's a bit
+> > too much detail so I'll punt review to someone else with more clue.
+> 
+> Patches [3/7] to [7/7] were reviewed by Peter Wu, the HDA bits in
+> patch [5/7] additionally by Takashi.
+> 
+> Patch [2/7] was acked by Bjorn.  There was no ack for patch [1/7]
+> (authored by Rafael), but it adressed the objection Bjorn raised
+> against my original patch, so I'm assuming Bjorn is okay with it.
+> (Bjorn, please let me know if that isn't the case.)
 
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Fixes: 52f3757afc06 ("PCI: rockchip: Create individual folder for rockchip drivers");
-Fixes: 7257f9f50c02 ("PCI: rockchip: Add Endpoint controller driver for Rockchip PCIe controller")
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Since it's written by someone else your s-o-b counts as full review (wrt
+drm-misc rules at least as implemented by dim). So sounds like you have
+review for all the bits.
 
- drivers/pci/rockchip/Kconfig            |  1 +
- drivers/pci/rockchip/pcie-rockchip-ep.c | 10 ++++++----
- drivers/pci/rockchip/pcie-rockchip.c    |  7 +++++++
- 3 files changed, 14 insertions(+), 4 deletions(-)
+> The series has been tested on 5 systems, which raises the confidence:
+> 2x AMD PowerXpress (Mike Lothian, Kai Heng Feng)
+> 2x Nvidia Optimus (Denis Lisov, Peter Wu)
+> 1x MacBook Pro
+> 
+> The issues found during Peter Wu's thorough testing appear to all
+> be unrelated to this series, as per my e-mail yesterday.
+> 
+> If there are no objections, I plan to push the series to
+> drm-misc-next by the middle of the coming week so that it
+> would still catch the last train to 4.17.
 
-diff --git a/drivers/pci/rockchip/Kconfig b/drivers/pci/rockchip/Kconfig
-index 668f850..f4ac165 100644
---- a/drivers/pci/rockchip/Kconfig
-+++ b/drivers/pci/rockchip/Kconfig
-@@ -4,6 +4,7 @@ menu "Rockchip PCIe controllers support"
- 
- config PCIE_ROCKCHIP
- 	bool
-+	depends on PCI
- 
- config PCIE_ROCKCHIP_HOST
- 	tristate "Rockchip PCIe host controller"
-diff --git a/drivers/pci/rockchip/pcie-rockchip-ep.c b/drivers/pci/rockchip/pcie-rockchip-ep.c
-index 01997ce..8aa31a3 100644
---- a/drivers/pci/rockchip/pcie-rockchip-ep.c
-+++ b/drivers/pci/rockchip/pcie-rockchip-ep.c
-@@ -49,7 +49,8 @@ struct rockchip_pcie_ep {
- 	u8			irq_pending;
- };
- 
--void rockchip_pcie_clear_ep_ob_atu(struct rockchip_pcie *rockchip, u32 region)
-+static void rockchip_pcie_clear_ep_ob_atu(struct rockchip_pcie *rockchip,
-+					  u32 region)
- {
- 	rockchip_pcie_write(rockchip, 0,
- 			    ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0(region));
-@@ -65,9 +66,10 @@ void rockchip_pcie_clear_ep_ob_atu(struct rockchip_pcie *rockchip, u32 region)
- 			    ROCKCHIP_PCIE_AT_OB_REGION_CPU_ADDR1(region));
- }
- 
--void rockchip_pcie_prog_ep_ob_atu(struct rockchip_pcie *rockchip, u8 fn,
--				  u32 r, u32 type, u64 cpu_addr, u64 pci_addr,
--				  size_t size)
-+static void rockchip_pcie_prog_ep_ob_atu(struct rockchip_pcie *rockchip, u8 fn,
-+					 u32 r, u32 type, u64 cpu_addr,
-+					 u64 pci_addr,
-+					 size_t size)
- {
- 	u64 sz = 1ULL << fls64(size - 1);
- 	int num_pass_bits = ilog2(sz);
-diff --git a/drivers/pci/rockchip/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip.c
-index 9071178..9025a81 100644
---- a/drivers/pci/rockchip/pcie-rockchip.c
-+++ b/drivers/pci/rockchip/pcie-rockchip.c
-@@ -151,6 +151,7 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(rockchip_pcie_parse_dt);
- 
- int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- {
-@@ -291,6 +292,7 @@ int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		phy_exit(rockchip->phys[i]);
- 	return err;
- }
-+EXPORT_SYMBOL_GPL(rockchip_pcie_init_port);
- 
- int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
- {
-@@ -332,6 +334,7 @@ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(rockchip_pcie_get_phys);
- 
- void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
- {
-@@ -344,6 +347,7 @@ void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
- 		phy_exit(rockchip->phys[i]);
- 	}
- }
-+EXPORT_SYMBOL_GPL(rockchip_pcie_deinit_phys);
- 
- int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip)
- {
-@@ -384,6 +388,7 @@ int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip)
- 	clk_disable_unprepare(rockchip->aclk_pcie);
- 	return err;
- }
-+EXPORT_SYMBOL_GPL(rockchip_pcie_enable_clocks);
- 
- void rockchip_pcie_disable_clocks(void *data)
- {
-@@ -394,6 +399,7 @@ void rockchip_pcie_disable_clocks(void *data)
- 	clk_disable_unprepare(rockchip->aclk_perf_pcie);
- 	clk_disable_unprepare(rockchip->aclk_pcie);
- }
-+EXPORT_SYMBOL_GPL(rockchip_pcie_disable_clocks);
- 
- void rockchip_pcie_cfg_configuration_accesses(
- 		struct rockchip_pcie *rockchip, u32 type)
-@@ -414,3 +420,4 @@ void rockchip_pcie_cfg_configuration_accesses(
- 	rockchip_pcie_write(rockchip, ob_desc_0, PCIE_CORE_OB_REGION_DESC0);
- 	rockchip_pcie_write(rockchip, 0x0, PCIE_CORE_OB_REGION_DESC1);
- }
-+EXPORT_SYMBOL_GPL(rockchip_pcie_cfg_configuration_accesses);
+Please make sure all maintainers of other bits are ok with that and have
+given their formal ack for merging through drm-misc. With that you have
+until end of this week (but don't cut it too short) to sneak it into 4.17.
+Otherwise just push and it'll land in 4.18.
+
+I think you've got all the other pieces.
+-Daniel
 -- 
-1.9.1
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
