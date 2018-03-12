@@ -1,56 +1,33 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <guohanjun@huawei.com>,
-        <jcm@redhat.com>, <toshi.kani@hpe.com>, <tanxiaojun@huawei.com>,
-        <wangzhou1@hisilicon.com>, Yisheng Xie <xieyisheng1@huawei.com>
-Subject: [PATCH v2 2/2] PCI: Check phys_addr for pci_remap_iospace
-Date: Sat, 31 Mar 2018 15:12:23 +0800
-Message-ID: <1522480343-37669-2-git-send-email-xieyisheng1@huawei.com>
-In-Reply-To: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
-References: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:51478 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751618AbeCLH7J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Mar 2018 03:59:09 -0400
+Date: Mon, 12 Mar 2018 08:59:07 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
+        alexander.h.duyck@intel.com, linux-pci@vger.kernel.org,
+        virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, hch@lst.de, dwmw@amazon.co.uk
+Subject: Re: [pci PATCH v4 1/4] pci-iov: Add support for unmanaged SR-IOV
+Message-ID: <20180312075907.GA5342@lst.de>
+References: <20180308185507.5433.98830.stgit@localhost.localdomain> <20180308190047.5433.77952.stgit@localhost.localdomain> <20180311215909.16ed4bf1@t450s.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180311215909.16ed4bf1@t450s.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If phys_addr is not page aligned, ioremap_page_range() will align down it
-when get pfn by phys_addr >> PAGE_SHIFT. An example in arm64 system with
-64KB page size:
+On Sun, Mar 11, 2018 at 09:59:09PM -0600, Alex Williamson wrote:
+> I still struggle to understand why we need this "unmanaged"
+> complication and how a user of the sysfs API is expected to have any
+> idea whether a PF is managed or unmanaged and why they should care.
+> Can't we just have a pci_simple_sriov_configure() helper and ignore
+> this unmanaged business?  Thanks,
 
- phys_addr:  0xefff8000
- res->start: 0x0
- res->end:   0x0ffff
- PCI_IOBASE: 0xffff7fdffee00000
-
-This will remap virtual address 0xffff7fdffee00000 to phys_addr 0xefff0000,
-but what we really want is 0xefff8000, which makes later IO access to a
-mess. And users may even donot know this until find some odd phenemenon.
-
-This patch checks whether phys_addr is PAGE_ALIGNED or not to find the
-primary scene.
-
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
----
- drivers/pci/pci.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd1..deb91f0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3576,6 +3576,9 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
- 	if (res->end > IO_SPACE_LIMIT)
- 		return -EINVAL;
- 
-+	if (!PAGE_ALIGNED(phys_addr))
-+		return -EINVAL;
-+
- 	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
- 				  pgprot_device(PAGE_KERNEL));
- #else
--- 
-1.7.12.4
-
+Just a pci_simple_sriov_configure is exactly what I envisioned originally.
