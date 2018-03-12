@@ -1,74 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54190 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752637AbeCUUKT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 16:10:19 -0400
-Date: Wed, 21 Mar 2018 15:10:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Keller, Jacob E" <jacob.e.keller@intel.com>
-Cc: Tal Gilboa <talgi@mellanox.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>
-Subject: Re: [PATCH next V3 3/5] PCI: Print PCI device link status in kernel
- log
-Message-ID: <20180321201017.GD38649@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
- <1520856370-15404-4-git-send-email-talgi@mellanox.com>
- <20180320140527.GL77194@bhelgaas-glaptop.roam.corp.google.com>
- <c513c09c-69d6-3a01-b183-496622daebdc@mellanox.com>
- <20180321194758.GC38649@bhelgaas-glaptop.roam.corp.google.com>
- <02874ECE860811409154E81DA85FBB5882D020D9@ORSMSX115.amr.corp.intel.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:42738 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751442AbeCLNb5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 09:31:57 -0400
+Received: by mail-oi0-f51.google.com with SMTP id c18so12268251oiy.9
+        for <linux-pci@vger.kernel.org>; Mon, 12 Mar 2018 06:31:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <02874ECE860811409154E81DA85FBB5882D020D9@ORSMSX115.amr.corp.intel.com>
+In-Reply-To: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
+References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Mon, 12 Mar 2018 10:31:56 -0300
+Message-ID: <CAOMZO5AnKwhgznXh2rV-7LPCF0y+_nRRxNvc3jEbJFGPhjF=jQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root subordinate
+To: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Cc: linux-pci@vger.kernel.org,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 07:59:21PM +0000, Keller, Jacob E wrote:
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: Wednesday, March 21, 2018 12:48 PM
-> > To: Tal Gilboa <talgi@mellanox.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>; Linux PCI <linux-
-> > pci@vger.kernel.org>; Tariq Toukan <tariqt@mellanox.com>; Keller, Jacob E
-> > <jacob.e.keller@intel.com>
-> > Subject: Re: [PATCH next V3 3/5] PCI: Print PCI device link status in kernel log
-> > 
-> > On Wed, Mar 21, 2018 at 09:43:48AM +0200, Tal Gilboa wrote:
-> > > On 3/20/2018 4:05 PM, Bjorn Helgaas wrote:
-> > > > [+cc Jacob]
-> > > >
-> > > > On Mon, Mar 12, 2018 at 02:06:08PM +0200, Tal Gilboa wrote:
-> > > > > Add pcie_print_link_status() function for querying and verifying
-> > > > > a PCI device link status. The PCI speed and width are reported
-> > > > > in kernel log.
-> > > > > This provides a unified method for all PCI devices to
-> > > > > report status and issues, instead of each device reporting in a
-> > > > > different way, using different code.
+Hi Koen,
 
-> > > So let's see if we agree on the steps:
-> > > 1. my_speed_cap, my_width_cap <- calculate device PCIe caps
-> > > 2. avail_bw, limiting_dev <- calculate PCIe chain bandwidth
-> > > 3. my_bw <- my_speed_cap * my_width_cap
-> > > 4. If avail_bw == my_bw print available bandwidth + PCIe caps
-> > > 5. Else print available bandwidth + limited by + capable bandwidth + PCIe
-> > > caps
-> > >
-> > > What do you think?
-> > 
-> > Steps 2 and 3 might need to be smart enough to apply the effect of
-> > encoding differences between generations.
-> > 
-> > In step 2, we don't have any current user of the "limiting_dev"
-> > information, so I'd omit it until we have somebody who wants it.
-> > 
-> > In step 5, we don't know the "limited by" part (unless you want to add
-> > that).
-> 
-> It might be useful to have the limited by information printed, even
-> if no driver yet bothered to do it today.
+On Mon, Jan 15, 2018 at 7:36 AM, Koen Vandeputte
+<koen.vandeputte@ncentric.com> wrote:
+> The subordinate value indicates the highest bus number which can be
+> reached downstream though a certain device.
+>
+> Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+> parent")
+> ensures that downstream devices cannot assign busnumbers higher than the
+> upstream device subordinate number, which was indeed illogical.
+>
+> By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
+> value of 0x01.
+>
+> Due to this combined with above commit, enumeration stops digging deeper
+> downstream as soon as bus num 0x01 has been assigned, which is always
+> the case for a bridge device.
+>
+> This results in all devices behind a bridge bus to remain undetected, as
+> these would be connected to bus 0x02 or higher.
+>
+> Fix this by initializing the RC to a subordinate value of 0xff, which is
+> not altering hardware behaviour in any way, but informs probing
+> function pci_scan_bridge() later on which reads this value back from
+> register.
+>
+> Following nasty errors during boot are also fixed by this:
+>
+> [    0.459145] pci_bus 0000:02: busn_res: can not insert [bus 02-ff]
+> under [bus 01] (conflicts with (null) [bus 01])
+> ...
+> [    0.464515] pci_bus 0000:03: [bus 03] partially hidden behind bridge
+> 0000:01 [bus 01]
+> ...
+> [    0.464892] pci_bus 0000:04: [bus 04] partially hidden behind bridge
+> 0000:01 [bus 01]
+> ...
+> [    0.466488] pci_bus 0000:05: [bus 05] partially hidden behind bridge
+> 0000:01 [bus 01]
+> [    0.466506] pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to
+> 05
+> [    0.466517] pci_bus 0000:02: busn_res: can not insert [bus 02-05]
+> under [bus 01] (conflicts with (null) [bus 01])
+> [    0.466534] pci_bus 0000:02: [bus 02-05] partially hidden behind
+> bridge 0000:01 [bus 01]
+>
+> Fixes: a20c7f36bd3d ("PCI: Do not allocate more buses than available in
+> parent")
+> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
 
-I wouldn't object to printing that information (although it increases
-the challenge of making the message pithy), and it's basically free to
-collect it.
+This commit is in Linus' tree now as commit fc110ebdd014dd1368.
+
+Could you please prepare a version that could be backported to 4.9
+stable kernel?
+
+Thanks
