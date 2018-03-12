@@ -1,73 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33486 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752339AbeCVLZj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Mar 2018 07:25:39 -0400
+Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
+Date: Mon, 12 Mar 2018 11:33:01 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: poza@codeaurora.org
+Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philippe Ombredanne <pombredanne@nexb.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kate Stewart <kstewart@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
+	Timur Tabi <timur@codeaurora.org>, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
+Message-ID: <20180312173301.GD18494@localhost.localdomain>
+References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+ <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
+ <04ade52e-d1ea-fe67-bb26-246621d159e6@codeaurora.org>
+ <20180312142551.GB18494@localhost.localdomain>
+ <3e1a2036675de6b8456145a022640f3d@codeaurora.org>
+ <20180312145823.GC18494@localhost.localdomain>
+ <eb2810113f98c2ff8201da1a0f827493@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Thu, 22 Mar 2018 07:25:38 -0400
-From: okaya@codeaurora.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Neuling <michael.neuling@au1.ibm.com>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: PCIe resets/restore and lack of CRS wait
-In-Reply-To: <1521699853.16434.301.camel@kernel.crashing.org>
-References: <1521691380.16434.287.camel@kernel.crashing.org>
- <f6af9b6e424c469f433735a106b8ee69@codeaurora.org>
- <1521695531.16434.294.camel@kernel.crashing.org>
- <1521699853.16434.301.camel@kernel.crashing.org>
-Message-ID: <4d1c04efa51db50dd5095ae258c3c52b@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <eb2810113f98c2ff8201da1a0f827493@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-03-22 02:24, Benjamin Herrenschmidt wrote:
-> On Thu, 2018-03-22 at 16:12 +1100, Benjamin Herrenschmidt wrote:
->> 
->> > > I'm keen on doing a rather "blanket" fix by adding a CRS wait inside
->> > > pci_dev_restore(). Would you guys agree ?
->> > >
->> > > Also why does pci_flr_wait() not use vendor/device ID but instead waits
->> > > on the COMMAND register being all 1's ? It's not clear to me ...
->> > > VID/DID will give a very specific signature for CRS which is ffff0001
->> > > while COMMAND could return all 1's for other reasons (device unplugged
->> > > for example).
->> > >
->> >
->> > Because if you read vendor id of a virtual function, you get 0xffffffff
->> 
->> Ah indeed, I forgot about that...
+On Mon, Mar 12, 2018 at 09:04:47PM +0530, poza@codeaurora.org wrote:
+> On 2018-03-12 20:28, Keith Busch wrote:
+> > I'm not sure I understand. The link is disabled while DPC is triggered,
+> > so if anything, you'd want to un-enumerate everything below the
+> > contained
+> > port (that's what it does today).
+> > 
+> > After releasing a slot from DPC, the link is allowed to retrain. If
+> > there
+> > is a working device on the other side, a link up event occurs. That
+> > event is handled by the pciehp driver, and that schedules enumeration
+> > no matter what you do to the DPC driver.
 > 
-> Actually, that makes me a bit nervous, I wonder if we should limit
-> that "trick" to VFs and otherwise do the right thing. As per PCIe
-> spec 3.1a (I haven't looked at 4.0 yet)
-> 
-> <<
-> stalled while the device completes its self-initialization. Software
-> that intends to take advantage of
-> this mechanism must ensure that the first access made to a device
-> following a valid reset condition is
-> a Configuration Read Request accessing both bytes of the Vendor ID
-> field in the device’s
-> Configuration Space header. For this case only, the Root Complex, if
-> enabled, will synthesize a
-> special read-data value for the Vendor ID field to indicate to software
-> that CRS Completion Status
-> has been returned by the device. For other Configuration Requests, or
-> when CRS Software
-> Visibility is not enabled, the Root Complex will generally re-issue the
-> Configuration Request until it
-> completes with a status other than CRS as described in Section 2.3.2.
->>> 
-> 
-> That tells me that there is no guarantee by spec that we'll get
-> ffff's, instead we might get HW stalls, or other really nasty
-> effects when probing a register other than 0 (VID/DID) for CRS.
+> yes, that is what i current, but this patch-set makes DPC aware of error
+> handling driver callbacks.
 
-AFAIK, spec also mentions that sw needs to observe 0xffffffff for all 
-other registers other than vendor id during CRS period.
+I've been questioning the utility of doing that since the very first
+version of this patch set.
 
-> 
-> Cheers,
-> Ben.
+> besides, in absence of pciehp there is nobody to do enumeration.
+
+If you configure your kernel to not have a feature, you don't get to
+expect the feature works.
+
+You can still manually rescan through sysfs, /sys/bus/pci/rescan.
+ 
+> And, I was talking about pci_stop_and_remove_bus_device() in dpc.
+> if DPC calls driver's error callbacks, is it required to stop the devices  ?
+
+DPC is PCIe's preferred surprise removal mechanism. If you don't want
+the DPC driver to handle removing devices downstream the containment,
+how do you want those devices get removed? Just calling driver's error
+callbacks leaves the kernel's view of the topology in the wrong state.
