@@ -1,81 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:54486 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932126AbeCKMAs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Mar 2018 08:00:48 -0400
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V2 3/5] PCI: Print PCI device link status in kernel log
-Date: Sun, 11 Mar 2018 13:19:31 +0200
-Message-Id: <1520767173-11090-4-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
-References: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
+Date: Mon, 12 Mar 2018 11:56:30 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philippe Ombredanne <pombredanne@nexb.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kate Stewart <kstewart@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
+	Timur Tabi <timur@codeaurora.org>, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
+Message-ID: <20180312175630.GF18494@localhost.localdomain>
+References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+ <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
+ <04ade52e-d1ea-fe67-bb26-246621d159e6@codeaurora.org>
+ <20180312142551.GB18494@localhost.localdomain>
+ <3e1a2036675de6b8456145a022640f3d@codeaurora.org>
+ <20180312145823.GC18494@localhost.localdomain>
+ <eb2810113f98c2ff8201da1a0f827493@codeaurora.org>
+ <20180312173301.GD18494@localhost.localdomain>
+ <57d0b245-aecb-1518-c8bb-df8b69a86bcc@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57d0b245-aecb-1518-c8bb-df8b69a86bcc@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pcie_print_link_status() function for querying and verifying
-a PCI device link status. The PCI speed and width are reported
-in kernel log.
-This provides a unified method for all PCI devices to
-report status and issues, instead of each device reporting in a
-different way, using different code.
+On Mon, Mar 12, 2018 at 01:41:07PM -0400, Sinan Kaya wrote:
+> I was just writing a reply to you. You acted first :)
+> 
+> On 3/12/2018 1:33 PM, Keith Busch wrote:
+> >>> After releasing a slot from DPC, the link is allowed to retrain. If
+> >>> there
+> >>> is a working device on the other side, a link up event occurs. That
+> >>> event is handled by the pciehp driver, and that schedules enumeration
+> >>> no matter what you do to the DPC driver.
+> >> yes, that is what i current, but this patch-set makes DPC aware of error
+> >> handling driver callbacks.
+> > I've been questioning the utility of doing that since the very first
+> > version of this patch set.
+> > 
+> 
+> I think we should all agree that shutting down the device drivers with active
+> work is not safe. There could be outstanding work that the endpoint driver
+> needs to take care of. 
+> 
+> That was the motivation for this change so that we give endpoint drivers an 
+> error callback when something goes wrong. 
+> 
+> The rest is implementation detail that we can all figure out.
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
----
- drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 26 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 48b9fd6..ac876c4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5229,6 +5229,31 @@ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
- EXPORT_SYMBOL(pcie_get_width_cap);
- 
- /**
-+ * pcie_print_link_status - Reports the PCI device's link speed and width.
-+ * @dev: PCI device to query
-+ *
-+ * This function checks whether the PCI device current speed and width are equal
-+ * to the maximum PCI device capabilities.
-+ */
-+void pcie_print_link_status(struct pci_dev *dev)
-+{
-+	enum pcie_link_width width, width_cap;
-+	enum pci_bus_speed speed, speed_cap;
-+
-+	pcie_get_speed_cap(dev, &speed_cap);
-+	pcie_get_width_cap(dev, &width_cap);
-+	pcie_get_minimum_link(dev, &speed, &width);
-+
-+	if (speed == speed_cap && width == width_cap)
-+		pci_info(dev, "%s x%d link\n", PCIE_SPEED2STR(speed), width);
-+	else
-+		pci_info(dev, "%s x%d link (capable of %s x%d)\n",
-+			 PCIE_SPEED2STR(speed), width,
-+			 PCIE_SPEED2STR(speed_cap), width_cap);
-+}
-+EXPORT_SYMBOL(pcie_print_link_status);
-+
-+/**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-  * @flags: resource type mask to be selected
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8242d3d..4a20870 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1085,6 +1085,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
- int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
- int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
-+void pcie_print_link_status(struct pci_dev *dev);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
--- 
-1.8.3.1
+I'm not sure if I agree here. All Linux device drivers are supposed to
+cope with sudden/unexpected loss of communication at any time. This
+includes cleaning up appropriately when requested to unbind from an
+inaccessible device with active outstanding work.
