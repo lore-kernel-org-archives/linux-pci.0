@@ -1,71 +1,28 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36960 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033627AbeCASEx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 13:04:53 -0500
-To: benh@au1.ibm.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
-Date: Thu, 1 Mar 2018 11:04:32 -0700
+Return-Path: <SRS0=MBbZ=GC=bombadil.srs.infradead.org=BATV+67f3e043b1e7b26abb15+5314+infradead.org+hch@kernel.org>
+Return-Path: <SRS0=MBbZ=GC=bombadil.srs.infradead.org=BATV+67f3e043b1e7b26abb15+5314+infradead.org+hch@kernel.org>
+Date: Mon, 12 Mar 2018 01:01:47 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+	Keith Busch <keith.busch@intel.com>,
+	Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>,
+	Frederick Lawler <fred@fredlawl.com>
+Subject: Re: [PATCH v2 06/13] PCI/portdrv: Remove pcie_port_bus_type link
+ order dependency
+Message-ID: <20180312080147.GC10358@infradead.org>
+References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152062202196.77693.13201322126291517429.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1519876569.4592.4.camel@au1.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152062202196.77693.13201322126291517429.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+> +	if ((driver->port_type != PCIE_ANY_PORT) &&
+> +	    (driver->port_type != pci_pcie_type(pciedev->port)))
 
+No need for the inner braces here.
 
-On 28/02/18 08:56 PM, Benjamin Herrenschmidt wrote:
-> On Thu, 2018-03-01 at 14:54 +1100, Benjamin Herrenschmidt wrote:
->> The problem is that acccording to him (I didn't double check the latest
->> patches) you effectively hotplug the PCIe memory into the system when
->> creating struct pages.
->>
->> This cannot possibly work for us. First we cannot map PCIe memory as
->> cachable. (Note that doing so is a bad idea if you are behind a PLX
->> switch anyway since you'd ahve to manage cache coherency in SW).
-> 
-> Note: I think the above means it won't work behind a switch on x86
-> either, will it ?
+Otherwise looks good:
 
-This works perfectly fine on x86 behind a switch and we've tested it on 
-multiple machines. We've never had an issue of running out of virtual 
-space despite our PCI bars typically being located with an offset of 
-56TB or more. The arch code on x86 also somehow figures out not to map 
-the memory as cachable so that's not an issue (though, at this point, 
-the CPU never accesses the memory so even if it were, it wouldn't affect 
-anything).
-
-We also had this working on ARM64 a while back but it required some out 
-of tree ZONE_DEVICE patches and some truly horrid hacks to it's arch 
-code to ioremap the memory into the page map.
-
-You didn't mention what architecture you were trying this on.
-
-It may make sense at this point to make this feature dependent on x86 
-until more work is done to make it properly portable. Something like 
-arch functions that allow adding IO memory pages to with a specific 
-cache setting. Though, if an arch has such restrictive limits on the map 
-size it would probably need to address that too somehow.
-
-Thanks,
-
-Logan
+Reviewed-by: Christoph Hellwig <hch@lst.de>
