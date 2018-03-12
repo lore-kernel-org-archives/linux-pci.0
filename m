@@ -1,56 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:51678 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1428218AbeCBReo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 12:34:44 -0500
+Return-Path: <SRS0=wZJV=GC=suse.de=jthumshirn@kernel.org>
+Return-Path: <SRS0=wZJV=GC=suse.de=jthumshirn@kernel.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Greg KH <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
+	Michael Moese <mmoese@suse.de>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	linux-pci@vger.kernel.org,
+	Johannes Thumshirn <jthumshirn@suse.de>,
+	=?UTF-8?q?Andreas=20Gei=C3=9Fler?= <andreas.geissler@men.de>
+Subject: [PATCH v3 2/2] mcb: add Altera PCI ID to mcb-pci
+Date: Mon, 12 Mar 2018 10:41:19 +0100
+Message-Id: <20180312094119.5298-3-jthumshirn@suse.de>
+In-Reply-To: <20180312094119.5298-1-jthumshirn@suse.de>
+References: <20180312094119.5298-1-jthumshirn@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFztf2D4NwEkRxnJkD6kK62CWKxmERbALMGoMgFEGLEJZA@mail.gmail.com>
-References: <20180228234006.21093-1-logang@deltatee.com> <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com> <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
- <1519936477.4592.23.camel@au1.ibm.com> <1519936815.4592.25.camel@au1.ibm.com>
- <20180301205315.GJ19007@ziepe.ca> <1519942012.4592.31.camel@au1.ibm.com>
- <CA+55aFy-oAiFJ3WDx4giR1enj65y-YJnZZhY6geFw0ygFyKXfQ@mail.gmail.com>
- <1519943658.4592.34.camel@kernel.crashing.org> <1520010446.2693.19.camel@hpe.com>
- <CA+55aFztf2D4NwEkRxnJkD6kK62CWKxmERbALMGoMgFEGLEJZA@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 2 Mar 2018 09:34:42 -0800
-Message-ID: <CA+55aFzc_d3EsWZbSWDY6MKRMXEcBpYAjB2h8DxZJTuvXf1DcQ@mail.gmail.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-To: "Kani, Toshi" <toshi.kani@hpe.com>
-Cc: "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>, "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "jglisse@redhat.com" <jglisse@redhat.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "maxg@mellanox.com" <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "keith.busch@intel.com" <keith.busch@intel.com>,
-        "oliveroh@au1.ibm.com" <oliveroh@au1.ibm.com>,
-        "jgg@ziepe.ca" <jgg@ziepe.ca>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 2, 2018 at 8:57 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> Like the page table caching entries, the memory type range registers
-> are really just "secondary information". They don't actually select
-> between PCIe and RAM, they just affect the behavior on top of that.
+Some older PCI attached MEN FPGAs use an Altera PCI Vendor ID instead
+of the MEN one. Add it to the PCI ID table so the driver automatically
+attaches to it.
 
-Side note: historically the two may have been almost the same, since
-the CPU only had one single unified bus for "memory" (whether that was
-memory-mapped PCI or actual RAM). The steering was external.
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reported-by: Ben Turner <ben.turner@21net.com>
+Tested-by: Ben Turner <ben.turner@21net.com>
+Cc: Andreas Geißler <andreas.geissler@men.de>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-But even back then you had extended bits to specify things like how
-the 640k-1M region got remapped - which could depend on not just the
-address, but on whether you read or wrote to it.  The "lost" 384kB of
-RAM could either be remapped at a different address, or could be used
-for shadowing the (slow) ROM contents, or whatever.
+---
+Changes to v2:
+- Add Andy's review
 
-              Linus
+Changes to v1:
+- Removed redundant include of pci_ids.h
+---
+ drivers/mcb/mcb-pci.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/mcb/mcb-pci.c b/drivers/mcb/mcb-pci.c
+index af4d2f26f1c6..c2d69e33bf2b 100644
+--- a/drivers/mcb/mcb-pci.c
++++ b/drivers/mcb/mcb-pci.c
+@@ -117,6 +117,7 @@ static void mcb_pci_remove(struct pci_dev *pdev)
+ 
+ static const struct pci_device_id mcb_pci_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MEN, PCI_DEVICE_ID_MEN_CHAMELEON) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_ALTERA, PCI_DEVICE_ID_MEN_CHAMELEON) },
+ 	{ 0 },
+ };
+ MODULE_DEVICE_TABLE(pci, mcb_pci_tbl);
+-- 
+2.13.6
