@@ -1,72 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:60447 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754216AbeCSOJT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 10:09:19 -0400
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-To: bhelgaas@google.com
-Cc: rafael.j.wysocki@intel.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        stable@vger.kernel.org
-Subject: [PATCH v2] PCI / PM: Always check PME wakeup capability for runtime wakeup support
-Date: Mon, 19 Mar 2018 22:09:10 +0800
-Message-Id: <20180319140910.26496-1-kai.heng.feng@canonical.com>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:33750 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932560AbeCLSJg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 14:09:36 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180312174012.GE18494@localhost.localdomain>
+References: <20180312171813.3487.94803.stgit@localhost.localdomain>
+ <20180312172031.3487.20651.stgit@localhost.localdomain> <20180312174012.GE18494@localhost.localdomain>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 12 Mar 2018 11:09:34 -0700
+Message-ID: <CAKgT0UdWc=Sz-xgd4H3bTDt5d17=-PY8VPWz6A3mAciWV6=97w@mail.gmail.com>
+Subject: Re: [pci PATCH v5 1/4] pci: Add pci_sriov_configure_simple for PFs
+ that don't manage VF resources
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, netanel@amazon.com,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
-core: Drop run_wake flag from struct dev_pm_info").
+On Mon, Mar 12, 2018 at 10:40 AM, Keith Busch <keith.busch@intel.com> wrote:
+> On Mon, Mar 12, 2018 at 10:21:29AM -0700, Alexander Duyck wrote:
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 024a1beda008..9cab9d0d51dc 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1953,6 +1953,7 @@ static inline void pci_mmcfg_late_init(void) { }
+>>  int pci_vfs_assigned(struct pci_dev *dev);
+>>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>> +int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn);
+>>  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+>>  void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+>>  #else
+>
+> I recommend stubbing 'pci_sriov_configure_simple' or defining it to
+> NULL in the '#else' section here so you don't need to repeat the "#ifdef
+> CONFIG_PCI_IOV" in each driver wishing to use this function. Otherwise
+> looks fine to me.
 
-The device in question is not power managed by platform firmware,
-furthermore, it only supports PME# from D3cold:
-Capabilities: [78] Power Management version 3
-       Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
-       Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-
-Before commit de3ef1eb1cd0, the device never gets runtime suspended.
-After that commit, the device gets runtime suspended, so it does not
-respond to any PME#.
-
-usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
-device_can_wakeup() in pci_dev_run_wake() always returns true.
-
-So pci_dev_run_wake() needs to check PME wakeup capability as its first
-condition.
-
-Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct dev_pm_info")
-Cc: stable@vger.kernel.org # 4.13+
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
----
-v2: Explicitly check dev->pme_support.
-
- drivers/pci/pci.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd10d9b0..52821a21fc07 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2125,16 +2125,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
- {
- 	struct pci_bus *bus = dev->bus;
- 
--	if (device_can_wakeup(&dev->dev))
--		return true;
--
- 	if (!dev->pme_support)
- 		return false;
- 
- 	/* PME-capable in principle, but not from the target power state */
--	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
-+	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
- 		return false;
- 
-+	if (device_can_wakeup(&dev->dev))
-+		return true;
-+
- 	while (bus->parent) {
- 		struct pci_dev *bridge = bus->self;
- 
--- 
-2.15.1
+My concern with defining it as NULL is that somebody may end up
+calling it in the future directly and that may end up causing issues.
+One thought I have been debating is moving it to a different file. I
+am just not sure where the best place to put something like this would
+be. I could move this function to drivers/pci/pci.c if everyone is
+okay with it and then I could just strip the contents out by wrapping
+them in a #ifdef instead.
