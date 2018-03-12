@@ -1,58 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54260 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752064AbeCUOnP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 10:43:15 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-        Rob Herring <robh@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <lftan@altera.com>
-Subject: [PATCH v2 04/10] PCI: kirin: struct kirin_pcie_driver can be static
-Date: Wed, 21 Mar 2018 14:42:48 +0000
-Message-Id: <20180321144254.7406-5-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
-References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=QNR6=GC=intel.com=keith.busch@kernel.org>
+Date: Mon, 12 Mar 2018 08:58:24 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: poza@codeaurora.org
+Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philippe Ombredanne <pombredanne@nexb.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kate Stewart <kstewart@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
+	Timur Tabi <timur@codeaurora.org>, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
+Message-ID: <20180312145823.GC18494@localhost.localdomain>
+References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+ <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
+ <04ade52e-d1ea-fe67-bb26-246621d159e6@codeaurora.org>
+ <20180312142551.GB18494@localhost.localdomain>
+ <3e1a2036675de6b8456145a022640f3d@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3e1a2036675de6b8456145a022640f3d@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fengguang Wu <fengguang.wu@intel.com>
+On Mon, Mar 12, 2018 at 08:16:38PM +0530, poza@codeaurora.org wrote:
+> On 2018-03-12 19:55, Keith Busch wrote:
+> > On Sun, Mar 11, 2018 at 11:03:58PM -0400, Sinan Kaya wrote:
+> > > On 3/11/2018 6:03 PM, Bjorn Helgaas wrote:
+> > > > On Wed, Feb 28, 2018 at 10:34:11PM +0530, Oza Pawandeep wrote:
+> > > 
+> > > > That difference has been there since the beginning of DPC, so it has
+> > > > nothing to do with *this* series EXCEPT for the fact that it really
+> > > > complicates the logic you're adding to reset_link() and
+> > > > broadcast_error_message().
+> > > >
+> > > > We ought to be able to simplify that somehow because the only real
+> > > > difference between AER and DPC should be that DPC automatically
+> > > > disables the link and AER does it in software.
+> > > 
+> > > I agree this should be possible. Code execution path should be almost
+> > > identical to fatal error case.
+> > > 
+> > > Is there any reason why you went to stop driver path, Keith?
+> > 
+> > The fact is the link is truly down during a DPC event. When the link
+> > is enabled again, you don't know at that point if the device(s) on the
+> > other side have changed. Calling a driver's error handler for the wrong
+> > device in an unknown state may have undefined results. Enumerating the
+> > slot from scratch should be safe, and will assign resources, tune bus
+> > settings, and bind to the matching driver.
+> > 
+> > Per spec, DPC is the recommended way for handling surprise removal
+> > events and even recommends DPC capable slots *not* set 'Surprise'
+> > in Slot Capabilities so that removals are always handled by DPC. This
+> > service driver was developed with that use in mind.
+> 
+> Now it begs the question, that
+> 
+> after DPC trigger
+> 
+> should we enumerate the devices, ?
+> or
+> error handling callbacks, followed by stop devices followed by enumeration ?
+> or
+> error handling callbacks, followed by enumeration ? (no stop devices)
 
-This was generated from 0-day builder.
+I'm not sure I understand. The link is disabled while DPC is triggered,
+so if anything, you'd want to un-enumerate everything below the contained
+port (that's what it does today).
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-[robh: add commit msg]
-Signed-off-by: Rob Herring <robh@kernel.org>
-[lorenzo.pieralisi@arm.com: reworked the commit log]
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/pci/dwc/pcie-kirin.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
-index dcc8cedf6e17..a6b88c7f6e3e 100644
---- a/drivers/pci/dwc/pcie-kirin.c
-+++ b/drivers/pci/dwc/pcie-kirin.c
-@@ -504,7 +504,7 @@ static const struct of_device_id kirin_pcie_match[] = {
- 	{},
- };
- 
--struct platform_driver kirin_pcie_driver = {
-+static struct platform_driver kirin_pcie_driver = {
- 	.probe			= kirin_pcie_probe,
- 	.driver			= {
- 		.name			= "kirin-pcie",
--- 
-2.15.0
+After releasing a slot from DPC, the link is allowed to retrain. If there
+is a working device on the other side, a link up event occurs. That
+event is handled by the pciehp driver, and that schedules enumeration
+no matter what you do to the DPC driver.
