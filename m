@@ -1,131 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from goliath.siemens.de ([192.35.17.28]:60007 "EHLO
-        goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751935AbeCDSb7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 4 Mar 2018 13:31:59 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Benedikt Spranger <b.spranger@linutronix.de>
-Subject: [PATCH v4 2/7] PCI: Scan all functions when running over Jailhouse
-Date: Sun,  4 Mar 2018 19:31:34 +0100
-Message-Id: <86e0cb9e63cd766c23e9c33f67e094357d1afa87.1520188299.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520188299.git.jan.kiszka@siemens.com>
-References: <cover.1520188299.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520188299.git.jan.kiszka@siemens.com>
-References: <cover.1520188299.git.jan.kiszka@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=5Xs+=GC=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=5Xs+=GC=codeaurora.org=poza@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 12 Mar 2018 20:16:38 +0530
+From: poza@codeaurora.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Wei
+ Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>,
+ linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
+In-Reply-To: <20180312142551.GB18494@localhost.localdomain>
+References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+ <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
+ <04ade52e-d1ea-fe67-bb26-246621d159e6@codeaurora.org>
+ <20180312142551.GB18494@localhost.localdomain>
+Message-ID: <3e1a2036675de6b8456145a022640f3d@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On 2018-03-12 19:55, Keith Busch wrote:
+> On Sun, Mar 11, 2018 at 11:03:58PM -0400, Sinan Kaya wrote:
+>> On 3/11/2018 6:03 PM, Bjorn Helgaas wrote:
+>> > On Wed, Feb 28, 2018 at 10:34:11PM +0530, Oza Pawandeep wrote:
+>> 
+>> > That difference has been there since the beginning of DPC, so it has
+>> > nothing to do with *this* series EXCEPT for the fact that it really
+>> > complicates the logic you're adding to reset_link() and
+>> > broadcast_error_message().
+>> >
+>> > We ought to be able to simplify that somehow because the only real
+>> > difference between AER and DPC should be that DPC automatically
+>> > disables the link and AER does it in software.
+>> 
+>> I agree this should be possible. Code execution path should be almost
+>> identical to fatal error case.
+>> 
+>> Is there any reason why you went to stop driver path, Keith?
+> 
+> The fact is the link is truly down during a DPC event. When the link
+> is enabled again, you don't know at that point if the device(s) on the
+> other side have changed. Calling a driver's error handler for the wrong
+> device in an unknown state may have undefined results. Enumerating the
+> slot from scratch should be safe, and will assign resources, tune bus
+> settings, and bind to the matching driver.
+> 
+> Per spec, DPC is the recommended way for handling surprise removal
+> events and even recommends DPC capable slots *not* set 'Surprise'
+> in Slot Capabilities so that removals are always handled by DPC. This
+> service driver was developed with that use in mind.
 
-Per PCIe r4.0, sec 7.5.1.1.9, multi-function devices are required to
-have a function 0.  Therefore, Linux scans for devices at function 0
-(devfn 0/8/16/...) and only scans for other functions if function 0
-has its Multi-Function Device bit set or ARI or SR-IOV indicate
-there are more functions.
+Now it begs the question, that
 
-The Jailhouse hypervisor may pass individual functions of a
-multi-function device to a guest without passing function 0, which
-means a Linux guest won't find them.
+after DPC trigger
 
-Change Linux PCI probing so it scans all function numbers when
-running as a guest over Jailhouse.
+should we enumerate the devices, ?
+or
+error handling callbacks, followed by stop devices followed by 
+enumeration ?
+or
+error handling callbacks, followed by enumeration ? (no stop devices)
 
-This is technically prohibited by the spec, so it is possible that
-PCI devices without the Multi-Function Device bit set may have
-unexpected behavior in response to this probe.
-
-Derived from original patch by Benedikt Spranger.
-
-CC: Benedikt Spranger <b.spranger@linutronix.de>
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- arch/x86/pci/legacy.c |  4 +++-
- drivers/pci/probe.c   | 22 +++++++++++++++++++---
- 2 files changed, 22 insertions(+), 4 deletions(-)
-
-diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-index 1cb01abcb1be..dfbe6ac38830 100644
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -4,6 +4,7 @@
- #include <linux/init.h>
- #include <linux/export.h>
- #include <linux/pci.h>
-+#include <asm/jailhouse_para.h>
- #include <asm/pci_x86.h>
- 
- /*
-@@ -34,13 +35,14 @@ int __init pci_legacy_init(void)
- 
- void pcibios_scan_specific_bus(int busn)
- {
-+	int stride = jailhouse_paravirt() ? 1 : 8;
- 	int devfn;
- 	u32 l;
- 
- 	if (pci_find_bus(0, busn))
- 		return;
- 
--	for (devfn = 0; devfn < 256; devfn += 8) {
-+	for (devfn = 0; devfn < 256; devfn += stride) {
- 		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
- 		    l != 0x0000 && l != 0xffff) {
- 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ef5377438a1e..3c365dc996e7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -16,6 +16,7 @@
- #include <linux/pci-aspm.h>
- #include <linux/aer.h>
- #include <linux/acpi.h>
-+#include <linux/hypervisor.h>
- #include <linux/irqdomain.h>
- #include <linux/pm_runtime.h>
- #include "pci.h"
-@@ -2518,14 +2519,29 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- {
- 	unsigned int used_buses, normal_bridges = 0, hotplug_bridges = 0;
- 	unsigned int start = bus->busn_res.start;
--	unsigned int devfn, cmax, max = start;
-+	unsigned int devfn, fn, cmax, max = start;
- 	struct pci_dev *dev;
-+	int nr_devs;
- 
- 	dev_dbg(&bus->dev, "scanning bus\n");
- 
- 	/* Go find them, Rover! */
--	for (devfn = 0; devfn < 0x100; devfn += 8)
--		pci_scan_slot(bus, devfn);
-+	for (devfn = 0; devfn < 256; devfn += 8) {
-+		nr_devs = pci_scan_slot(bus, devfn);
-+
-+		/*
-+		 * The Jailhouse hypervisor may pass individual functions of a
-+		 * multi-function device to a guest without passing function 0.
-+		 * Look for them as well.
-+		 */
-+		if (jailhouse_paravirt() && nr_devs == 0) {
-+			for (fn = 1; fn < 8; fn++) {
-+				dev = pci_scan_single_device(bus, devfn + fn);
-+				if (dev)
-+					dev->multifunction = 1;
-+			}
-+		}
-+	}
- 
- 	/* Reserve buses for SR-IOV capability */
- 	used_buses = pci_iov_bus_range(bus);
--- 
-2.13.6
+Regards,
+Oza.
