@@ -1,82 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58690 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751696AbeCNSfG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 14:35:06 -0400
-Date: Wed, 14 Mar 2018 18:34:56 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        "open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci: tegra: add MSI dependency
-Message-ID: <20180314183456.GA3056@e107981-ln.cambridge.arm.com>
-References: <20180313115218.2246372-1-arnd@arndb.de>
- <20180314114515.GC8564@ulmo>
- <CAK8P3a3Wr8FNRP4ZYDGk9OL+=0w--pzRX=R6ye_+6nCtnHGVjg@mail.gmail.com>
- <20180314121314.GE8564@ulmo>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180314121314.GE8564@ulmo>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:58201 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750967AbeCLMG1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 08:06:27 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V3 1/5] PCI: Add a query function for PCI device's speed cap
+Date: Mon, 12 Mar 2018 14:06:06 +0200
+Message-Id: <1520856370-15404-2-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
+References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 01:13:14PM +0100, Thierry Reding wrote:
-> On Wed, Mar 14, 2018 at 01:06:11PM +0100, Arnd Bergmann wrote:
-> > On Wed, Mar 14, 2018 at 12:45 PM, Thierry Reding
-> > <thierry.reding@gmail.com> wrote:
-> > > On Tue, Mar 13, 2018 at 12:52:05PM +0100, Arnd Bergmann wrote:
-> > >> Building the tegra PCIe host driver without MSI results in a link
-> > >> failure:
-> > >>
-> > >> drivers/pci/host/pci-tegra.o:(.data+0x70): undefined reference to `pci_msi_unmask_irq'
-> > >> drivers/pci/host/pci-tegra.o:(.data+0x74): undefined reference to `pci_msi_mask_irq'
-> > >>
-> > >> This adds the same dependency that everyone else uses.
-> > >>
-> > >> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> > >> ---
-> > >>  drivers/pci/host/Kconfig | 1 +
-> > >>  1 file changed, 1 insertion(+)
-> > >
-> > > I'm slightly concerned about the dependency. Not that I doubt its
-> > > correctness, but because it could mean that PCI_TEGRA is not visible in
-> > > the default configuration. The only reason why it is currently visible
-> > > is because PCI_MSI is selected by some symbols that also happen to be
-> > > enabled. However, what if at some point those symbols are disabled or
-> > > removed?
-> > >
-> > > Some architectures make sure that PCI_MSI is enabled by selecting it,
-> > > but that's risky, isn't it, because PCI_MSI is user-visible and could
-> > > therefore easily lead to conflicts.
-> > >
-> > > Enabling PCI_MSI in the arm64 defconfig would solve the issue and is
-> > > good enough for me. I've got a couple of changes to that defconfig in
-> > > the Tegra tree for v4.17-rc1, I can add a patch to enable PCI_MSI.
-> > >
-> > > Unless there are any objections.
-> > 
-> > I looked at it again and found that this on ARM64, PCI_MSI is always
-> > selected indirectly by ARM_GIC&&PCI, so there is no problem.
-> > 
-> > The build failure must have been on 32-bit ARM.
-> 
-> Okay, I had assumed that ARM_GIC_V2M (which selects PCI_MSI) was user-
-> visible and hence could be disabled. But it's not, and always enabled on
-> ARM64. On 32-bit we already explicitly enable PCI_MSI via the default
-> configurations.
-> 
-> I withdraw my concerns. I see that Lorenzo already applied the patch, so
-> just for the record:
+pcie_get_speed_cap() implements the logic for querying a PCI device's
+maximum speed capability. Change max_link_speed_show() function to
+use pcie_get_speed_cap().
 
-Apologies - it fixed an issue and it seemed harmless hence I applied it
-straight away, I should have waited for an ACK.
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+---
+ drivers/pci/pci-sysfs.c | 22 +++++-----------------
+ drivers/pci/pci.c       | 42 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h     |  7 +++++++
+ 3 files changed, 54 insertions(+), 17 deletions(-)
 
-> Acked-by: Thierry Reding <treding@nvidia.com>
-
-Updated - it is important to keep records, that's what tags are for.
-
-Thanks,
-Lorenzo
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 4933f027..c8b4854 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -159,29 +159,17 @@ static ssize_t max_link_speed_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	u32 linkcap;
++	enum pci_bus_speed speed;
++	const char *speed_str;
+ 	int err;
+-	const char *speed;
+ 
+-	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
++	err = pcie_get_speed_cap(pci_dev, &speed);
+ 	if (err)
+ 		return -EINVAL;
+ 
+-	switch (linkcap & PCI_EXP_LNKCAP_SLS) {
+-	case PCI_EXP_LNKCAP_SLS_8_0GB:
+-		speed = "8 GT/s";
+-		break;
+-	case PCI_EXP_LNKCAP_SLS_5_0GB:
+-		speed = "5 GT/s";
+-		break;
+-	case PCI_EXP_LNKCAP_SLS_2_5GB:
+-		speed = "2.5 GT/s";
+-		break;
+-	default:
+-		speed = "Unknown speed";
+-	}
++	speed_str = PCIE_SPEED2STR(speed);
+ 
+-	return sprintf(buf, "%s\n", speed);
++	return sprintf(buf, "%s\n", speed_str);
+ }
+ static DEVICE_ATTR_RO(max_link_speed);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8c71d1a..7620cc9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5164,6 +5164,48 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ EXPORT_SYMBOL(pcie_get_minimum_link);
+ 
+ /**
++ * pcie_get_speed_cap - queries for the PCI device's link speed capability
++ * @dev: PCI device to query
++ * @speed: storage for link speed
++ *
++ * This function queries the PCI device speed capability.
++ */
++int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed)
++{
++	u32 lnkcap;
++	int err1, err2;
++
++	*speed = PCI_SPEED_UNKNOWN;
++
++	err1 = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP,
++					  &lnkcap);
++	if (!err1 && lnkcap) {
++		if (lnkcap & PCI_EXP_LNKCAP_SLS_8_0GB)
++			*speed = PCIE_SPEED_8_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
++			*speed = PCIE_SPEED_5_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
++			*speed = PCIE_SPEED_2_5GT;
++		return 0;
++	}
++
++	err2 = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2,
++					  &lnkcap);
++	if (!err2 && lnkcap) { /* PCIe r3.0-compliant */
++		if (lnkcap & PCI_EXP_LNKCAP2_SLS_8_0GB)
++			*speed = PCIE_SPEED_8_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP2_SLS_5_0GB)
++			*speed = PCIE_SPEED_5_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP2_SLS_2_5GB)
++			*speed = PCIE_SPEED_2_5GT;
++		return 0;
++	}
++
++	return err1 ? err1 : err2;
++}
++EXPORT_SYMBOL(pcie_get_speed_cap);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e057e8c..54443e4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -259,6 +259,12 @@ enum pci_bus_speed {
+ 	PCI_SPEED_UNKNOWN		= 0xff,
+ };
+ 
++#define PCIE_SPEED2STR(speed) \
++	((speed) == PCIE_SPEED_8_0GT ? "8 GT/s" : \
++	 (speed) == PCIE_SPEED_5_0GT ? "5 GT/s" : \
++	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
++	 "Unknown speed")
++
+ struct pci_cap_saved_data {
+ 	u16		cap_nr;
+ 	bool		cap_extended;
+@@ -1077,6 +1083,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
++int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.8.3.1
