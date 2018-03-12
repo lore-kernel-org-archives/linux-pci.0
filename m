@@ -1,58 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 27 Mar 2018 14:57:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v3 0/6] PCI: aardvark: misc fixes and improvements
-Message-ID: <20180327195723.GG7759@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
- <20180327162016.7df5c684@windsurf.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180327162016.7df5c684@windsurf.home>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 12 Mar 2018 10:25:52 -0700
+Message-ID: <CAKgT0Uc3xzQn5-0xw4y=2SixZpucaevAodM3NLUOn4W06UbQ3Q@mail.gmail.com>
+Subject: Re: [pci PATCH v5 0/4] Add support for unmanaged SR-IOV (was: Series
+ short description)
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, keith.busch@intel.com,
+        netanel@amazon.com, Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 27, 2018 at 04:20:16PM +0200, Thomas Petazzoni wrote:
-> On Tue, 27 Mar 2018 16:08:06 +0200, Thomas Petazzoni wrote:
-> 
-> > This patch series brings a number of improvements to the aardvark
-> > PCIe. Sorry for being so slow at sending the v3 after the v2 sent in
-> > January. Hopefully this time around the series will be fine.
-> 
-> Sorry, I screwed up. I'm not sure how, but I did. The series was sent
-> twice, and only the second iteration is correct, the first one lacked
-> some Cc: to stable.
-> 
-> I have marked the bogus patches as Superseded in patchwork, so if you
-> look at patchwork, you will only see the patches worth considering.
-> 
-> Let me know if you would like to resend anyway.
+On Mon, Mar 12, 2018 at 10:20 AM, Alexander Duyck
+<alexander.duyck@gmail.com> wrote:
+> This series is meant to add support for SR-IOV on devices when the VFs are
+> not managed by the kernel. Examples of recent patches attempting to do this
+> include:
+> virto - https://patchwork.kernel.org/patch/10241225/
+> pci-stub - https://patchwork.kernel.org/patch/10109935/
+> vfio - https://patchwork.kernel.org/patch/10103353/
+> uio - https://patchwork.kernel.org/patch/9974031/
+>
+> Since this is quickly blowing up into a multi-driver problem it is probably
+> best to implement this solution as generically as possible.
+>
+> This series is an attempt to do that. What we do with this patch set is
+> provide a generic framework to enable SR-IOV in the case that the PF driver
+> doesn't support managing the VFs itself.
+>
+> I based my patch set originally on the patch by Mark Rustad but there isn't
+> much left after going through and cleaning out the bits that were no longer
+> needed, and after incorporating the feedback from David Miller. At this point
+> the only items to be fully reused was his patch description which is now
+> present in patch 3 of the set.
+>
+> This solution is limited in scope to just adding support for devices that
+> provide no functionality for SR-IOV other than allocating the VFs by
+> calling pci_enable_sriov. Previous sets had included patches for VFIO, but
+> for now I am dropping that as the scope of that work is larger then I
+> think I can take on at this time.
+>
+> v2: Reduced scope back to just virtio_pci and vfio-pci
+>     Broke into 3 patch set from single patch
+>     Changed autoprobe behavior to always set when num_vfs is set non-zero
+> v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is used
+>     Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in kernel
+> v4: Dropped vfio-pci patch
+>     Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
+>     Dropped pci_disable_sriov call in virtio_pci to be consistent with ena
+> v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
+>     Added new patch that enables pci_sriov_configure_simple
+>     Updated drivers to use pci_sriov_configure_simple
+>
+> Cc: Mark Rustad <mark.d.rustad@intel.com>
+> Cc: Maximilian Heyne <mheyne@amazon.de>
+> Cc: Liang-Min Wang <liang-min.wang@intel.com>
+> Cc: David Woodhouse <dwmw@amazon.co.uk>
 
-No worries, no need to resend for that.  And also no need to resend to
-rebase them.
+Ugh. Just realized I forgot to post the correct subject line in the cover page.
 
-Lorenzo is out this week, but I'm sure he'll look at them when he
-returns.  They all look pretty straightforward and obviously only
-affect aardvark, so we may still be able to squeeze them in for v4.17.
+I needed I can resubmit the series, will just leave it for now in case
+there are any other review comments.
 
-Bjorn
+Thanks.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+- Alex
