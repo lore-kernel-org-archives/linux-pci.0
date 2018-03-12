@@ -1,112 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:58796 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbeC3JaS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 05:30:18 -0400
-Received: from mail-pf0-f200.google.com ([209.85.192.200])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1f1qMT-0005E5-4r
-        for linux-pci@vger.kernel.org; Fri, 30 Mar 2018 09:30:17 +0000
-Received: by mail-pf0-f200.google.com with SMTP id 2so7000992pft.4
-        for <linux-pci@vger.kernel.org>; Fri, 30 Mar 2018 02:30:17 -0700 (PDT)
-Content-Type: text/plain;
-        charset=us-ascii;
-        delsp=yes;
-        format=flowed
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Subject: Re: [PATCH v2] PCI / PM: Always check PME wakeup capability for
- runtime wakeup support
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <1748267.LlfkqdCPEG@aspire.rjw.lan>
-Date: Fri, 30 Mar 2018 17:30:10 +0800
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        stable@vger.kernel.org
-Message-Id: <44B8B950-4C07-447E-9F12-AD60C536150F@canonical.com>
-References: <20180319140910.26496-1-kai.heng.feng@canonical.com>
- <5DC805B1-51DA-4D0F-9A43-9D5FE549AB13@canonical.com>
- <1748267.LlfkqdCPEG@aspire.rjw.lan>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 12 Mar 2018 13:35:17 -0600
+Message-Id: <20180312193525.2855-4-logang@deltatee.com>
+In-Reply-To: <20180312193525.2855-1-logang@deltatee.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+Subject: [PATCH v3 03/11] PCI/P2PDMA: Add PCI p2pmem dma mappings to adjust the bus offset
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+The DMA address used when mapping PCI P2P memory must be the PCI bus
+address. Thus, introduce pci_p2pmem_[un]map_sg() to map the correct
+addresses when using P2P memory.
 
-> On Monday, March 26, 2018 7:54:35 AM CEST Kai Heng Feng wrote:
->> Hi Bjorn, Rafael,
->>
->>> On Mar 19, 2018, at 10:09 PM, Kai-Heng Feng <kai.heng.feng@canonical.com>
->>> wrote:
->>>
->>> USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
->>> core: Drop run_wake flag from struct dev_pm_info").
->>>
->>> The device in question is not power managed by platform firmware,
->>> furthermore, it only supports PME# from D3cold:
->>> Capabilities: [78] Power Management version 3
->>>        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
->>>        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
->>>
->>> Before commit de3ef1eb1cd0, the device never gets runtime suspended.
->>> After that commit, the device gets runtime suspended, so it does not
->>> respond to any PME#.
->>>
->>> usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
->>> device_can_wakeup() in pci_dev_run_wake() always returns true.
->>>
->>> So pci_dev_run_wake() needs to check PME wakeup capability as its first
->>> condition.
->>>
->>> Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct
->>> dev_pm_info")
->>> Cc: stable@vger.kernel.org # 4.13+
->>> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
->>
->>
->> Is there any improvement I can address?
->> Or do you have any concern about this patch?
->>
->> Kai-Heng
->>
->>> ---
->>> v2: Explicitly check dev->pme_support.
->>>
->>>  drivers/pci/pci.c | 8 ++++----
->>>  1 file changed, 4 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index f6a4dd10d9b0..52821a21fc07 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -2125,16 +2125,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
->>>  {
->>>  	struct pci_bus *bus = dev->bus;
->>>
->>> -	if (device_can_wakeup(&dev->dev))
->>> -		return true;
->>> -
->>>  	if (!dev->pme_support)
->>>  		return false;
->>>
->>>  	/* PME-capable in principle, but not from the target power state */
->>> -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
->>> +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
->
-> So why do you change 'false' to 'true' here?
->
-> At least that change should be mentioned in the changelog too.
+For this, we assume that an SGL passed to these functions contain all
+P2P memory or no P2P memory.
 
-I'll update the reason in the change log.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/p2pdma.c       | 51 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/memremap.h   |  1 +
+ include/linux/pci-p2pdma.h | 13 ++++++++++++
+ 3 files changed, 65 insertions(+)
 
-Thanks.
-
->
->>> return false;
->>>
->>> +	if (device_can_wakeup(&dev->dev))
->>> +		return true;
->>> +
->>>  	while (bus->parent) {
->>>  		struct pci_dev *bridge = bus->self;
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index fd4789566a56..ab810c3a93eb 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -190,6 +190,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 	pgmap->res.flags = pci_resource_flags(pdev, bar);
+ 	pgmap->ref = &pdev->p2pdma->devmap_ref;
+ 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
++	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
++		pci_resource_start(pdev, bar);
+ 
+ 	addr = devm_memremap_pages(&pdev->dev, pgmap);
+ 	if (IS_ERR(addr)) {
+@@ -731,3 +733,52 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ 	pdev->p2pdma->p2pmem_published = publish;
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
++
++/**
++ * pci_p2pdma_map_sg - map a PCI peer-to-peer sg for DMA
++ * @dev: device doing the DMA request
++ * @sg: scatter list to map
++ * @nents: elements in the scatterlist
++ * @dir: DMA direction
++ *
++ * Returns the number of SG entries mapped
++ */
++int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
++		      enum dma_data_direction dir)
++{
++	struct dev_pagemap *pgmap;
++	struct scatterlist *s;
++	phys_addr_t paddr;
++	int i;
++
++	/*
++	 * p2pdma mappings are not compatible with devices that use
++	 * dma_virt_ops.
++	 */
++	if (IS_ENABLED(CONFIG_DMA_VIRT_OPS) && dev->dma_ops == &dma_virt_ops)
++		return 0;
++
++	for_each_sg(sg, s, nents, i) {
++		pgmap = sg_page(s)->pgmap;
++		paddr = sg_phys(s);
++
++		s->dma_address = paddr - pgmap->pci_p2pdma_bus_offset;
++		sg_dma_len(s) = s->length;
++	}
++
++	return nents;
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
++
++/**
++ * pci_p2pdma_unmap_sg - unmap a PCI peer-to-peer sg for DMA
++ * @dev: device doing the DMA request
++ * @sg: scatter list to map
++ * @nents: elements in the scatterlist
++ * @dir: DMA direction
++ */
++void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
++			 enum dma_data_direction dir)
++{
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_unmap_sg);
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 9e907c338a44..1660f64ce96f 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -125,6 +125,7 @@ struct dev_pagemap {
+ 	struct device *dev;
+ 	void *data;
+ 	enum memory_type type;
++	u64 pci_p2pdma_bus_offset;
+ };
+ 
+ #ifdef CONFIG_ZONE_DEVICE
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index 1f7856ff098b..59eb218bdb25 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -36,6 +36,10 @@ int pci_p2pmem_alloc_sgl(struct pci_dev *pdev, struct scatterlist **sgl,
+ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl,
+ 		unsigned int nents);
+ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
++int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
++		      enum dma_data_direction dir);
++void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
++			 enum dma_data_direction dir);
+ #else /* CONFIG_PCI_P2PDMA */
+ static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+ 		size_t size, u64 offset)
+@@ -97,5 +101,14 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
+ static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ {
+ }
++static inline int pci_p2pdma_map_sg(struct device *dev,
++	struct scatterlist *sg, int nents, enum dma_data_direction dir)
++{
++	return 0;
++}
++static inline void pci_p2pdma_unmap_sg(struct device *dev,
++	struct scatterlist *sg, int nents, enum dma_data_direction dir)
++{
++}
+ #endif /* CONFIG_PCI_P2PDMA */
+ #endif /* _LINUX_PCI_P2P_H */
+-- 
+2.11.0
