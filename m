@@ -1,35 +1,158 @@
-Return-Path: <SRS0=w3ET=GK=davemloft.net=davem@kernel.org>
-Return-Path: <SRS0=w3ET=GK=davemloft.net=davem@kernel.org>
-Date: Tue, 20 Mar 2018 17:04:41 -0400 (EDT)
-Message-Id: <20180320.170441.1570889987094445930.davem@davemloft.net>
-To: helgaas@kernel.org
-Cc: khalid.aziz@oracle.com, yinghai@kernel.org, david.ahern@oracle.com,
- linux@iam.tj, airlied@linux.ie, alex.williamson@redhat.com,
- dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, sparclinux@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] PCI: Sparc 64-bit resource fixups
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <152157662729.167463.14127576964193645242.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152157662729.167463.14127576964193645242.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:54640 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932313AbeCLTfj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Mar 2018 15:35:39 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 12 Mar 2018 13:35:16 -0600
+Message-Id: <20180312193525.2855-3-logang@deltatee.com>
+In-Reply-To: <20180312193525.2855-1-logang@deltatee.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+Subject: [PATCH v3 02/11] PCI/P2PDMA: Add sysfs group to display p2pmem stats
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <helgaas@kernel.org>
-Date: Tue, 20 Mar 2018 15:14:01 -0500
+Add a sysfs group to display statistics about P2P memory that is
+registered in each PCI device.
 
-> These are from an old series from Yinghai [1] that fix some issues on
-> sparc64.  The v1 posting is at [2].
-> 
-> [1] https://lkml.kernel.org/r/20170421050500.13957-1-yinghai@kernel.org
-> [2] https://lkml.kernel.org/r/20180215151118.196756.99622.stgit@bhelgaas-glaptop.roam.corp.google.com
-> 
-> Changes from v1:
-> - In v1, I reserved the "Video ROM" and "System ROM" regions from system
->   memory, not from the PCI bus address space.  In v2, I removed those
->   reservations completely because they seem to be copied from x86 and are
->   not applicable on sparc.
+Attributes in the group display the total amount of P2P memory, the
+amount available and whether it is published or not.
 
-For the series:
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ Documentation/ABI/testing/sysfs-bus-pci | 25 +++++++++++++++
+ drivers/pci/p2pdma.c                    | 54 +++++++++++++++++++++++++++++++++
+ 2 files changed, 79 insertions(+)
 
-Acked-by: David S. Miller <davem@davemloft.net>
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 44d4b2be92fd..044812c816d0 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -323,3 +323,28 @@ Description:
+ 
+ 		This is similar to /sys/bus/pci/drivers_autoprobe, but
+ 		affects only the VFs associated with a specific PF.
++
++What:		/sys/bus/pci/devices/.../p2pmem/available
++Date:		November 2017
++Contact:	Logan Gunthorpe <logang@deltatee.com>
++Description:
++		If the device has any Peer-to-Peer memory registered, this
++	        file contains the amount of memory that has not been
++		allocated (in decimal).
++
++What:		/sys/bus/pci/devices/.../p2pmem/size
++Date:		November 2017
++Contact:	Logan Gunthorpe <logang@deltatee.com>
++Description:
++		If the device has any Peer-to-Peer memory registered, this
++	        file contains the total amount of memory that the device
++		provides (in decimal).
++
++What:		/sys/bus/pci/devices/.../p2pmem/published
++Date:		November 2017
++Contact:	Logan Gunthorpe <logang@deltatee.com>
++Description:
++		If the device has any Peer-to-Peer memory registered, this
++	        file contains a '1' if the memory has been published for
++		use inside the kernel or a '0' if it is only intended
++		for use within the driver that published it.
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 0ee917381dce..fd4789566a56 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -24,6 +24,54 @@ struct pci_p2pdma {
+ 	bool p2pmem_published;
+ };
+ 
++static ssize_t size_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	size_t size = 0;
++
++	if (pdev->p2pdma->pool)
++		size = gen_pool_size(pdev->p2pdma->pool);
++
++	return snprintf(buf, PAGE_SIZE, "%zd\n", size);
++}
++static DEVICE_ATTR_RO(size);
++
++static ssize_t available_show(struct device *dev, struct device_attribute *attr,
++			      char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	size_t avail = 0;
++
++	if (pdev->p2pdma->pool)
++		avail = gen_pool_avail(pdev->p2pdma->pool);
++
++	return snprintf(buf, PAGE_SIZE, "%zd\n", avail);
++}
++static DEVICE_ATTR_RO(available);
++
++static ssize_t published_show(struct device *dev, struct device_attribute *attr,
++			      char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n",
++			pdev->p2pdma->p2pmem_published);
++}
++static DEVICE_ATTR_RO(published);
++
++static struct attribute *p2pmem_attrs[] = {
++	&dev_attr_size.attr,
++	&dev_attr_available.attr,
++	&dev_attr_published.attr,
++	NULL,
++};
++
++static const struct attribute_group p2pmem_group = {
++	.attrs = p2pmem_attrs,
++	.name = "p2pmem",
++};
++
+ static void pci_p2pdma_percpu_release(struct percpu_ref *ref)
+ {
+ 	struct pci_p2pdma *p2p =
+@@ -53,6 +101,7 @@ static void pci_p2pdma_release(void *data)
+ 	percpu_ref_exit(&pdev->p2pdma->devmap_ref);
+ 
+ 	gen_pool_destroy(pdev->p2pdma->pool);
++	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
+ 	pdev->p2pdma = NULL;
+ }
+ 
+@@ -83,9 +132,14 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
+ 
+ 	pdev->p2pdma = p2p;
+ 
++	error = sysfs_create_group(&pdev->dev.kobj, &p2pmem_group);
++	if (error)
++		goto out_pool_destroy;
++
+ 	return 0;
+ 
+ out_pool_destroy:
++	pdev->p2pdma = NULL;
+ 	gen_pool_destroy(p2p->pool);
+ out:
+ 	devm_kfree(&pdev->dev, p2p);
+-- 
+2.11.0
