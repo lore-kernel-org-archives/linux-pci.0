@@ -1,90 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56092 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751595AbeCVT2B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Mar 2018 15:28:01 -0400
-Date: Thu, 22 Mar 2018 14:27:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wolfgang Denk <wd@denx.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PCIe x4 cards not detected on Z370 mainboards
-Message-ID: <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180322184840.E31D4247251@gemini.denx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180322184840.E31D4247251@gemini.denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 12 Mar 2018 13:35:21 -0600
+Message-Id: <20180312193525.2855-8-logang@deltatee.com>
+In-Reply-To: <20180312193525.2855-1-logang@deltatee.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+Subject: [PATCH v3 07/11] IB/core: Ensure we map P2P memory correctly in  rdma_rw_ctx_[init|destroy]()
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 22, 2018 at 07:48:40PM +0100, Wolfgang Denk wrote:
-> Hello,
-> 
-> sorry if this is not an appropriate list for my question - any
-> pointers are welcome.
+In order to use PCI P2P memory pci_p2pmem_[un]map_sg() functions must be
+called to map the correct PCI bus address.
 
-This is a perfect place to ask!
+To do this, check the first page in the scatter list to see if it is P2P
+memory or not. At the moment, scatter lists that contain P2P memory must
+be homogeneous so if the first page is P2P the entire SGL should be P2P.
 
-> Short version:
-> 
-> Both on a GIGABYTE Z370-HD3 and on a MSI Z370 TOMAHAWK mainboard
-> neither of my LSI SAS controllers (SAS3444 E PCIe x4 and
-> SAS3442E-R PCIe x4) gets detected.  Not by the system BIOS, there is
-> not messages from the SAS Controller BIOS, Linux does not see it in
-> the PCI bus scan - nothing.  Both controllers work find in older
-> mainboards.
-> 
-> Is this a known problem?  Can it be fixed?
-> 
-> 
-> More details:
-> 
-> I tried all combinations of PCIe slots with one or with both cards -
-> none is working.
-> 
-> I asked MSI support, who told me:
-> 
-> 	These are old controllers which don't support UEFI/GOP. this
-> 	is the reason they don't work.  Cards which have only legacy
-> 	support cannot be operated in modern mainboards.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/infiniband/core/rw.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-That doesn't make sense to me.  Maybe these controllers have option
-ROMs that aren't compatible with UEFI (though even that sounds
-unlikely to me).  But even in that case, I would expect the card to at
-least be visible in PCI config space, because that's needed even to
-read the option ROM from the card.
-
-We have had issues with LSI devices in the past, e.g.,
-
-  822155100e58 ("PCI: Mark Cavium CN8xxx to avoid bus reset")
-  12d8706963f0 ("Revert "PCI: Make sure bus number resources stay within their parents bounds"")
-
-822155100e58 is a band-aid to avoid bus resets when LSI devices are
-involved.  We don't really have a root cause for that, so it's
-possible you're seeing a similar issue.
-
-12d8706963f0 has to do with a defect in an LSI device where it
-apparently fails to latch its bus number correctly when the OS changes
-it.  You never see the device at all, so the only bus number change
-should be when the BIOS enumerates and programs bus numbers initially.
-But it seems like the BIOS doesn't see the device either.
-
-> Hm...  but I also have a PCIe x 1 Adaptect SCSI controller
-> (29320LPE, firmware version v4.31.4 of 2007) which certainly never
-> heard of UEFI/GOP before, and this is working fine: I see the BIOS
-> messages when it does the SCSI bus scan, I see the initialization
-> under Linux, and I can access the SCSI devices under Linux.
-
-So we know the slot is functional at least for a x1 controller.  The
-spec requires that a xN port can also form a x1 link (PCIe r4.0, sec
-4.2.4.10.1), so I think your x4 controllers *should* be functional at
-least at x1.
-
-I wonder the port leading to that slot is disabled or not negotiating
-the link for some reason.  Can you collect "lspci -vvv" output with
-the working card and with one of the non-working cards?
-
-You could try locating the port leading to the slot and using setpci
-to reset its secondary bus, then using /sys/bus/pci/rescan to rescan
-the bus.
-
-Bjorn
+diff --git a/drivers/infiniband/core/rw.c b/drivers/infiniband/core/rw.c
+index c8963e91f92a..f495e8a7f8ac 100644
+--- a/drivers/infiniband/core/rw.c
++++ b/drivers/infiniband/core/rw.c
+@@ -12,6 +12,7 @@
+  */
+ #include <linux/moduleparam.h>
+ #include <linux/slab.h>
++#include <linux/pci-p2pdma.h>
+ #include <rdma/mr_pool.h>
+ #include <rdma/rw.h>
+ 
+@@ -280,7 +281,11 @@ int rdma_rw_ctx_init(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
+ 	struct ib_device *dev = qp->pd->device;
+ 	int ret;
+ 
+-	ret = ib_dma_map_sg(dev, sg, sg_cnt, dir);
++	if (is_pci_p2pdma_page(sg_page(sg)))
++		ret = pci_p2pdma_map_sg(dev->dma_device, sg, sg_cnt, dir);
++	else
++		ret = ib_dma_map_sg(dev, sg, sg_cnt, dir);
++
+ 	if (!ret)
+ 		return -ENOMEM;
+ 	sg_cnt = ret;
+@@ -602,7 +607,11 @@ void rdma_rw_ctx_destroy(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
+ 		break;
+ 	}
+ 
+-	ib_dma_unmap_sg(qp->pd->device, sg, sg_cnt, dir);
++	if (is_pci_p2pdma_page(sg_page(sg)))
++		pci_p2pdma_unmap_sg(qp->pd->device->dma_device, sg,
++				    sg_cnt, dir);
++	else
++		ib_dma_unmap_sg(qp->pd->device, sg, sg_cnt, dir);
+ }
+ EXPORT_SYMBOL(rdma_rw_ctx_destroy);
+ 
+-- 
+2.11.0
