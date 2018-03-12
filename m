@@ -1,67 +1,84 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: Question about a quirky (DesignWare) PCIe RC in Allwinner H6
-To: Bjorn Helgaas <helgaas@kernel.org>, Icenowy Zheng <icenowy@aosc.io>
-References: <1520261458.33502.10.camel@aosc.io>
- <20180305214718.GC255556@bhelgaas-glaptop.roam.corp.google.com>
- <1520308623.33502.13.camel@aosc.io>
- <20180306233832.GC33706@bhelgaas-glaptop.roam.corp.google.com>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Message-ID: <f68ec4f5-56cb-a997-2c73-ad243bfe33df@sigmadesigns.com>
-Date: Thu, 8 Mar 2018 13:10:08 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180306233832.GC33706@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Maxime Ripard <maxime.ripard@bootlin.com>, Jingoo Han <jingoohan1@gmail.com>,
- Chen-Yu Tsai <wens@csie.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=wZJV=GC=suse.de=jthumshirn@kernel.org>
+Return-Path: <SRS0=wZJV=GC=suse.de=jthumshirn@kernel.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Greg KH <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
+	Michael Moese <mmoese@suse.de>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	linux-pci@vger.kernel.org,
+	Johannes Thumshirn <jthumshirn@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Eli Billauer <eli.billauer@gmail.com>,
+	Anatolij Gustschin <agust@denx.de>
+Subject: [PATCH v3 1/2] PCI: Add Altera vendor ID
+Date: Mon, 12 Mar 2018 10:41:18 +0100
+Message-Id: <20180312094119.5298-2-jthumshirn@suse.de>
+In-Reply-To: <20180312094119.5298-1-jthumshirn@suse.de>
+References: <20180312094119.5298-1-jthumshirn@suse.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/03/2018 00:38, Bjorn Helgaas wrote:
+Add the Altera PCI Vendor id to pci_ids.h and remove the private
+definitions from xillybus_pcie.c and altera-cvp.c.
 
-> [+cc Marc]
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Eli Billauer <eli.billauer@gmail.com>
+Cc: Anatolij Gustschin <agust@denx.de>
+Acked-by: Eli Billauer <eli.billauer@gmail.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-Thanks for the CC.
+---
+Changes to v1:
+- Collected ACKs
+- Reworded Subject according to Bjorn
 
-Please update your address books, by changing
-marc_gonzalez@sigmadesigns.com to marc.w.gonzalez@free.fr
-if you wish to contact me, as Sigma Designs has started the
-the liquidation process.
+Changes to v1:
+- Remove redundant pci_ids.h include (Andy)
+---
+ drivers/char/xillybus/xillybus_pcie.c | 1 -
+ drivers/fpga/altera-cvp.c             | 2 --
+ include/linux/pci_ids.h               | 2 ++
+ 3 files changed, 2 insertions(+), 3 deletions(-)
 
-In related news, I have received the following notice.
-
-> Unfortunately, the PCI-SIG has expired Sigma Designs, Inc's
-> membership.  The annual membership fee of $4,000 US was due upon your
-> renewal date of February 20, 2018.  Several reminders were sent to
-> enable Sigma Designs, Inc to renew their membership, however, the
-> PCI-SIG did not receive your company's renewal payment.  Please
-> understand that the use of your vendor ID number is conditioned upon
-> your maintaining an active membership in the PCI-SIG.
-> 
-> The PCI-SIG does reserve the right to re-assign or revoke any vendor
-> ID previously assigned to former members.  Since we have not received
-> your renewal payment, the PCI-SIG must request that you cease and
-> desist all future use of your vendor ID number on devices
-> manufactured by your company.
-
-So Long, and Thanks for All the Fish :-)
-
-Regards.
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/char/xillybus/xillybus_pcie.c b/drivers/char/xillybus/xillybus_pcie.c
+index dff2d1538164..05e5324f60bd 100644
+--- a/drivers/char/xillybus/xillybus_pcie.c
++++ b/drivers/char/xillybus/xillybus_pcie.c
+@@ -24,7 +24,6 @@ MODULE_LICENSE("GPL v2");
+ 
+ #define PCI_DEVICE_ID_XILLYBUS		0xebeb
+ 
+-#define PCI_VENDOR_ID_ALTERA		0x1172
+ #define PCI_VENDOR_ID_ACTEL		0x11aa
+ #define PCI_VENDOR_ID_LATTICE		0x1204
+ 
+diff --git a/drivers/fpga/altera-cvp.c b/drivers/fpga/altera-cvp.c
+index 00e73d28077c..77b04e4b3254 100644
+--- a/drivers/fpga/altera-cvp.c
++++ b/drivers/fpga/altera-cvp.c
+@@ -384,8 +384,6 @@ static int altera_cvp_probe(struct pci_dev *pdev,
+ 			    const struct pci_device_id *dev_id);
+ static void altera_cvp_remove(struct pci_dev *pdev);
+ 
+-#define PCI_VENDOR_ID_ALTERA	0x1172
+-
+ static struct pci_device_id altera_cvp_id_tbl[] = {
+ 	{ PCI_VDEVICE(ALTERA, PCI_ANY_ID) },
+ 	{ }
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index a6b30667a331..6a96a70fb462 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1561,6 +1561,8 @@
+ #define PCI_DEVICE_ID_SERVERWORKS_CSB6LPC 0x0227
+ #define PCI_DEVICE_ID_SERVERWORKS_HT1100LD 0x0408
+ 
++#define PCI_VENDOR_ID_ALTERA		0x1172
++
+ #define PCI_VENDOR_ID_SBE		0x1176
+ #define PCI_DEVICE_ID_SBE_WANXL100	0x0301
+ #define PCI_DEVICE_ID_SBE_WANXL200	0x0302
+-- 
+2.13.6
