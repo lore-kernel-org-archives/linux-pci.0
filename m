@@ -1,63 +1,87 @@
-Return-Path: <SRS0=HzDk=GQ=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=HzDk=GQ=linux.intel.com=mika.westerberg@kernel.org>
-Date: Mon, 26 Mar 2018 12:55:12 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Keith Busch <keith.busch@intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
-Message-ID: <20180326095512.GZ2703@lahna.fi.intel.com>
-References: <20180314120547.GB2703@lahna.fi.intel.com>
- <20180314123332.GC19651@wunner.de>
- <20180320104508.GF2703@lahna.fi.intel.com>
- <20180320113556.GA24197@wunner.de>
- <20180322104517.GA20389@wunner.de>
- <20180322165317.GI2703@lahna.fi.intel.com>
- <20180322173903.GA15503@wunner.de>
- <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
- <20180324134807.GA2627@wunner.de>
- <20180324140950.GG210003@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:46848 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932525AbeCLRXd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 13:23:33 -0400
+Subject: [pci PATCH v5 3/4] ena: Migrate over to unmanaged SR-IOV support
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, hch@lst.de, dwmw@amazon.co.uk
+Date: Mon, 12 Mar 2018 10:23:28 -0700
+Message-ID: <20180312172309.3487.76690.stgit@localhost.localdomain>
+In-Reply-To: <20180312171813.3487.94803.stgit@localhost.localdomain>
+References: <20180312171813.3487.94803.stgit@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180324140950.GG210003@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 24, 2018 at 09:09:50AM -0500, Bjorn Helgaas wrote:
-> On Sat, Mar 24, 2018 at 02:48:07PM +0100, Lukas Wunner wrote:
-> > On Thu, Mar 22, 2018 at 02:36:30PM -0500, Bjorn Helgaas wrote:
-> > > I hope we can avoid adding suspend_late/resume_early callbacks in
-> > > struct pcie_port_service_driver,
-> > 
-> > I'm fairly certain that we cannot avoid adding at least a ->resume_noirq
-> > callback to struct pcie_port_service_driver to fix a pciehp use case:
-> > 
-> > On ->resume_noirq the PCI core walks down the hierarchy to put every
-> > device in D0 and restore its state (with a few exceptions such as direct
-> > complete).  However with hotplug ports, it's possible that the user has
-> > unplugged devices while the system was asleep, or replaced them with
-> > other devices.  That's a very real use case with Thunderbolt and we're
-> > handling it poorly or not at all currently.  We need to check if the
-> > devices below a hotplug port are still there or have been replaced
-> > (can probably be recognized by looking at vendor/device IDs across the
-> > entire sub-hierarchy) during the ->resume_noirq phase.  We could mark
-> > them with pci_dev_set_disconnected(), then skip putting them into D0
-> > if that flag has been set.
-> 
-> This is definitely a real issue, and I think it affects more than just
-> Thunderbolt.  We've never handled undocks very well either.
-> 
-> I certainly agree we need a way to handle this; I would just rather do
-> it by integrating pciehp and the other services more directly into the
-> PCI core instead of using the port driver.  Maybe we'll need a
-> short-term ->resume_noirq, but I don't think the port driver is a good
-> long-term solution.
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
-For the context of this patch series, I think I'll drop this patch from
-the series now until it is clear what the direction is. I agree moving
-port driver functionality into the PCI core makes sense.
+Instead of implementing our own version of a SR-IOV configuration stub in
+the ena driver we can just reuse the existing
+pci_sriov_configure_simple function.
 
-I'll send out an updated version of the first patch as it does not
-require these hooks.
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+---
+
+v5: Replaced call to pci_sriov_configure_unmanaged with
+        pci_sriov_configure_simple
+
+ drivers/net/ethernet/amazon/ena/ena_netdev.c |   30 +++-----------------------
+ 1 file changed, 3 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/ethernet/amazon/ena/ena_netdev.c b/drivers/net/ethernet/amazon/ena/ena_netdev.c
+index 6975150d144e..868069363bdd 100644
+--- a/drivers/net/ethernet/amazon/ena/ena_netdev.c
++++ b/drivers/net/ethernet/amazon/ena/ena_netdev.c
+@@ -3385,32 +3385,6 @@ static int ena_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ }
+ 
+ /*****************************************************************************/
+-static int ena_sriov_configure(struct pci_dev *dev, int numvfs)
+-{
+-	int rc;
+-
+-	if (numvfs > 0) {
+-		rc = pci_enable_sriov(dev, numvfs);
+-		if (rc != 0) {
+-			dev_err(&dev->dev,
+-				"pci_enable_sriov failed to enable: %d vfs with the error: %d\n",
+-				numvfs, rc);
+-			return rc;
+-		}
+-
+-		return numvfs;
+-	}
+-
+-	if (numvfs == 0) {
+-		pci_disable_sriov(dev);
+-		return 0;
+-	}
+-
+-	return -EINVAL;
+-}
+-
+-/*****************************************************************************/
+-/*****************************************************************************/
+ 
+ /* ena_remove - Device Removal Routine
+  * @pdev: PCI device information struct
+@@ -3525,7 +3499,9 @@ static int ena_resume(struct pci_dev *pdev)
+ 	.suspend    = ena_suspend,
+ 	.resume     = ena_resume,
+ #endif
+-	.sriov_configure = ena_sriov_configure,
++#ifdef CONFIG_PCI_IOV
++	.sriov_configure = pci_sriov_configure_simple,
++#endif
+ };
+ 
+ static int __init ena_init(void)
