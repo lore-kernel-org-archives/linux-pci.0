@@ -1,74 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52956 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S969556AbeCSTsR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Mar 2018 15:48:17 -0400
-Date: Mon, 19 Mar 2018 14:48:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Benedikt Spranger <b.spranger@linutronix.de>,
-        Juergen Gross <jgross@suse.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Otavio Pontes <otavio.pontes@intel.com>,
-        Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH v5 0/7] jailhouse: Enhance secondary Jailhouse guest
- support /wrt PCI
-Message-ID: <20180319194813.GJ77194@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1520408357.git.jan.kiszka@siemens.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [pci PATCH v5 1/4] pci: Add pci_sriov_configure_simple for PFs that
+ don't manage VF resources
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, hch@lst.de, dwmw@amazon.co.uk
+Date: Mon, 12 Mar 2018 10:21:29 -0700
+Message-ID: <20180312172031.3487.20651.stgit@localhost.localdomain>
+In-Reply-To: <20180312171813.3487.94803.stgit@localhost.localdomain>
+References: <20180312171813.3487.94803.stgit@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 07, 2018 at 08:39:11AM +0100, Jan Kiszka wrote:
-> Basic x86 support [1] for running Linux as secondary Jailhouse [2] guest
-> is currently pending in the tip tree. This builds on top and enhances
-> the PCI support for x86 and also ARM guests (ARM[64] does not require
-> platform patches and works already).
-> ...
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
-Hi Jan,
+This patch adds a common configuration function called
+pci_sriov_configure_simple that will allow for managing VFs on devices
+where the PF is not capable of managing VF resources.
 
-What tree do you plan to merge this through?  I was sort of assuming
-x86, since the main point of jailhouse is not PCI, but I do notice
-most of the changes here are PCI-related, so thought I should make
-sure you're not waiting on me.
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+---
 
-> Jan Kiszka (6):
->   jailhouse: Provide detection for non-x86 systems
->   PCI: Scan all functions when running over Jailhouse
->   x86: Align x86_64 PCI_MMCONFIG with 32-bit variant
->   x86: Consolidate PCI_MMCONFIG configs
->   x86/jailhouse: Allow to use PCI_MMCONFIG without ACPI
->   MAINTAINERS: Add entry for Jailhouse
-> 
-> Otavio Pontes (1):
->   x86/jailhouse: Enable PCI mmconfig access in inmates
-> 
->  Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
->  MAINTAINERS                                     |  7 +++++++
->  arch/x86/Kconfig                                | 12 +++++++-----
->  arch/x86/include/asm/jailhouse_para.h           |  2 +-
->  arch/x86/include/asm/pci_x86.h                  |  2 ++
->  arch/x86/kernel/Makefile                        |  2 +-
->  arch/x86/kernel/cpu/amd.c                       |  2 +-
->  arch/x86/kernel/jailhouse.c                     |  8 ++++++++
->  arch/x86/pci/legacy.c                           |  4 +++-
->  arch/x86/pci/mmconfig-shared.c                  |  4 ++--
->  drivers/pci/probe.c                             | 22 +++++++++++++++++++---
->  include/linux/hypervisor.h                      | 17 +++++++++++++++--
->  12 files changed, 74 insertions(+), 16 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
-> 
-> -- 
-> 2.13.6
-> 
+v5: New patch replacing pci_sriov_configure_unmanaged with
+      pci_sriov_configure_simple
+    Dropped bits related to autoprobe changes
+
+ drivers/pci/iov.c   |   32 ++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    1 +
+ 2 files changed, 33 insertions(+)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 677924ae0350..bd7021491fdb 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -807,3 +807,35 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ 	return dev->sriov->total_VFs;
+ }
+ EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
++
++/**
++ * pci_sriov_configure_simple - helper to configure unmanaged SR-IOV
++ * @dev: the PCI device
++ * @nr_virtfn: number of virtual functions to enable, 0 to disable
++ *
++ * Used to provide generic enable/disable SR-IOV option for devices
++ * that do not manage the VFs generated by their driver
++ */
++int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn)
++{
++	int err = -EINVAL;
++
++	might_sleep();
++
++	if (!dev->is_physfn)
++		return -ENODEV;
++
++	if (pci_vfs_assigned(dev)) {
++		pci_warn(dev,
++			 "Cannot modify SR-IOV while VFs are assigned\n");
++		err = -EPERM;
++	} else if (!nr_virtfn) {
++		sriov_disable(dev);
++		err = 0;
++	} else if (!dev->sriov->num_VFs) {
++		err = sriov_enable(dev, nr_virtfn);
++	}
++
++	return err ? err : nr_virtfn;
++}
++EXPORT_SYMBOL_GPL(pci_sriov_configure_simple);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 024a1beda008..9cab9d0d51dc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1953,6 +1953,7 @@ static inline void pci_mmcfg_late_init(void) { }
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
++int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+ #else
