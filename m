@@ -1,62 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC 1/2] pci: dwc: pci-exynos: modify the Kconfig dependency
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh+dt@kernel.org, krzk@kernel.org, jingoohan1@gmail.com,
-        kgene@kernel.org
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Message-id: <39521cb5-07a5-24b5-b545-a01c730f1985@samsung.com>
-Date: Tue, 13 Mar 2018 20:54:46 +0900
-MIME-version: 1.0
-In-reply-to: <20180313111211.GA15480@e107981-ln.cambridge.arm.com>
-Content-type: text/plain; charset="utf-8"
-References: <CGME20171221121409epcas1p2af291857b9df115d2dec9a3d3300e0aa@epcas1p2.samsung.com>
-        <20171221121408.22636-1-jh80.chung@samsung.com>
-        <20180313111211.GA15480@e107981-ln.cambridge.arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 12 Mar 2018 19:18:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org,
+        linuxarm@huawei.com, charles.chenxin@huawei.com,
+        linux-acpi@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [RFC PATCH] ARM64/PCI: Set dev->irq=0 before calling
+ acpi_pci_irq_enable()
+Message-ID: <20180313001830.GA60197@bhelgaas-glaptop.roam.corp.google.com>
+References: <1520650692-62705-1-git-send-email-liudongdong3@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1520650692-62705-1-git-send-email-liudongdong3@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Lorenzo,
+[+cc Rafael, linux-acpi]
 
-On 03/13/2018 08:12 PM, Lorenzo Pieralisi wrote:
-> Hi Jaehoon,
-> 
-> On Thu, Dec 21, 2017 at 09:14:06PM +0900, Jaehoon Chung wrote:
->> PCI_EXYNOS has the dependency with SOC_EXYNOS5440.
->> It's modified to ARCH_EXYNOS from SOC_EXYNOS5440, because other
->> SoCs needs to use this driver.
->>
->> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
->> ---
->>  drivers/pci/dwc/Kconfig | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
->> index 113e09440f85..0ff9795df8e8 100644
->> --- a/drivers/pci/dwc/Kconfig
->> +++ b/drivers/pci/dwc/Kconfig
->> @@ -65,7 +65,7 @@ config PCIE_DW_PLAT
->>  config PCI_EXYNOS
->>  	bool "Samsung Exynos PCIe controller"
->>  	depends on PCI
->> -	depends on SOC_EXYNOS5440
->> +	depends on ARCH_EXYNOS
->>  	depends on PCI_MSI_IRQ_DOMAIN
->>  	select PCIEPORTBUS
->>  	select PCIE_DW_HOST
-> 
-> This patch fell through the cracks, is it still needed ? Please let
-> me know and I will apply it if it is, thank you very much.
+On Sat, Mar 10, 2018 at 10:58:12AM +0800, Dongdong Liu wrote:
+> The init value of dev->irq is from PCI_INTERRUPT_LINE register.The default
+> value of dev->irq usually is 255 before calling acpi_pci_irq_enable().
+> This will cause a problem When the platform does not support INTx well.
+> For example, we do not config _PRT on our HIP07 platform, we met irq 255
+> confilict.
 
-I will resend the patches for supporting exynos5433(TM2 board) without RFC.
-I have already prepared the patches. now i'm doing some more test and cleaning code.
+s/confilict/conflict/
 
-Best Regards,
-Jaehoon Chung
+arm64 calls acpi_pci_irq_enable() in the probe() path instead of in
+the pci_enable_device() path.  I can't remember the reason, and
+unfortunately we didn't add a comment explaining why arm64 has to be
+different.
 
+PCI_INTERRUPT_LINE is used only by software and has no effect on the
+hardware.  If it contains 255 when Linux boots, that means firmware
+must have set it to that value.
+
+We need some comment here about why we should always ignore what
+firmware put there on arm64.  It needs to explain why this is
+different on arm64 than it is on x86 and ia64.  The changelog above
+basically says "we need this to make it work", but that's not very
+informative or convincing.
+
+It sounds like you're saying HIP07 doesn't provide _PRT?  Per the PCI
+Firmware Spec, r3.0, sec 4.4, _PRT is required under all PCI host
+bridges.  So I think you're saying HIP07 doesn't comply with the spec,
+but the workaround here applies to *all* arm64 platforms.  That
+doesn't seem right.
+
+On x86, I think if the _PRT doesn't tell us where an interrupt pin is
+routed, we fall back to looking at PCI_INTERRUPT_LINE.  But here
+you seem to be saying "there's no _PRT" *and* "there's no useful
+information in PCI_INTERRUPT_LINE".
+
+Maybe I'm not understanding what you're saying.
+
+> The error message is as below.
+> snd_hda_intel 000d:33:00.1: PCI INT B: no GSI
+> snd_hda_intel 000d:33:00.1: enabling device (0000 -> 0002)
+> snd_hda_intel 000d:33:00.1: Force to snoop mode by module option
+> snd_hda_intel 000d:33:00.1: Device has broken 64-bit MSI but arch tried to
+> assign one above 4G
+> genirq: Flags mismatch irq 255. 00000001 (enahisic2i0-tx1) vs. 00000081
+> (snd_hda_intel:card0)
+> hns-nic HISI00C2:00 enahisic2i0: request irq(255) fail
 > 
-> Lorenzo
+> enahisic2i0-tx1: this device is a platform device.
+> snd_hda_intel:card0: this device is a PCI device.
 > 
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> ---
+>  arch/arm64/kernel/pci.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
 > 
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 0e2ea1c..6a77bef 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -28,8 +28,11 @@
+>   */
+>  int pcibios_alloc_irq(struct pci_dev *dev)
+>  {
+> -	if (!acpi_disabled)
+> +	if (!acpi_disabled) {
+> +		dev->irq = 0;
+>  		acpi_pci_irq_enable(dev);
+> +	}
+> +
+>  
+>  	return 0;
+>  }
+> -- 
+> 1.9.1
 > 
