@@ -1,109 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48404 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932498AbeCMTxX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 15:53:23 -0400
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
-Date: Tue, 13 Mar 2018 15:53:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52268 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751362AbeCMRez (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 13:34:55 -0400
+Date: Tue, 13 Mar 2018 12:34:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: dri-devel@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        nouveau@lists.freedesktop.org, Imre Deak <imre.deak@intel.com>,
+        Maik Freudenberg <hhfeuer@gmx.de>,
+        Raphael Doursenaud <rdoursenaud@free.fr>,
+        Martin Lopatar <lopin@dataplex.cz>,
+        Daniel Drake <dan@reactivated.net>,
+        Denis Lisov <dennis.lissov@gmail.com>, zigarrre@gmail.com,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/7] PCI: Restore config space on runtime resume
+ despite being unbound
+Message-ID: <20180313173449.GA202215@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1520068884.git.lukas@wunner.de>
+ <92fb6e6ae2730915eb733c08e2f76c6a313e3860.1520068884.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <92fb6e6ae2730915eb733c08e2f76c6a313e3860.1520068884.git.lukas@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/13/2018 3:19 PM, Logan Gunthorpe wrote:
+On Sat, Mar 03, 2018 at 10:53:24AM +0100, Lukas Wunner wrote:
+> From: Rafael J. Wysocki <rjw@rjwysocki.net>
 > 
-> 
-> On 13/03/18 01:10 PM, Sinan Kaya wrote:
->> I was thinking of this for the pci_p2pdma_add_client() case for the
->> parent pointer.
->>
->> +struct pci_p2pdma_client {
->> +	struct list_head list;
->> +	struct pci_dev *client;
->> +	struct pci_dev *provider;
->> +};
-> 
-> Yeah, that structure only exists in a list owned by the client and we
-> only check the upstream bridge once per entry so I don't see the point.
-> 
->> But then, Why bother searching for the switch at all?
-> 
-> Huh? We have to make sure all the client and provider devices are behind
-> the same switch. How can we do that without "searching" for the switch?
-> 
+> We leave PCI devices not bound to a driver in D0 during runtime suspend.
+> But they may have a parent which is bound and can be transitioned to
+> D3cold at runtime.  Once the parent goes to D3cold, the unbound child
+> may go to D3cold as well.  When the child comes out of D3cold, its BARs
+> are uninitialized and thus inaccessible when a driver tries to probe.
 
-Sorry, I was thinking of ACS case you described below. The only thing code
-cares is if the device is behind a switch or not at this moment.
+There's no clear way to tell whether a BAR is uninitialized.  At
+power-up, the writable bits will be zero, which is a valid BAR value.
+If enabled in PCI_COMMAND, the BAR is accessible and may conflict with
+other devices.
 
-> In the ACS case, we only disable ACS on downstream ports of switches. No
-> sense disabling it globally as that's worse from an isolation point of
-> view and not worth it given we require all P2P transactions to be behind
-> a switch.
+Possible alternate wording:
 
-I agree disabling globally would be bad. Somebody can always say I have
-ten switches on my system. I want to do peer-to-peer on one switch only. Now,
-this change weakened security for the other switches that I had no intention
-with doing P2P.
+  When the child goes to D3cold, its internal state, including
+  configuration of BARs, MSI, ASPM, MPS, etc., is lost.
 
-Isn't this a problem?
-
-Can we specify the BDF of the downstream device we want P2P with during boot via
-kernel command line?
-
+> Moreover configuration done during enumeration, e.g. ASPM and MPS, will
+> be lost.
 > 
->> Even if the switch is there, there is no guarantee that it is currently
->> being used for P2P.
+> One example are recent hybrid graphics laptops which cut power to the
+> discrete GPU when the root port above it goes to ACPI power state D3.
+> Users may provoke this by unbinding the GPU driver and allowing runtime
+> PM on the GPU via sysfs:  The PM core will then treat the GPU as
+> "suspended", which in turn allows the root port to runtime suspend,
+> causing the power resources listed in its _PR3 object to be powered off.
+> The GPU's BARs will be uninitialized when a driver later probes it.
 > 
-> IOMMU groups are set at boot time and, at present, there's no way to
-> dynamically change ACS bits without messing up the groups. So switches
-> not used for P2P will not have ACS enabled when CONFIG_PCI_P2PDMA is set
-> and I don't know of any good solution to that. Please see the ACS
-> discussions in v1 and v2.
+> Another example are hybrid graphics laptops where the GPU itself (rather
+> than the root port) is capable of runtime suspending to D3cold.  If the
+> GPU's integrated HDA controller is not bound and the GPU's driver
+> decides to runtime suspend to D3cold, the HDA controller's BARs will be
+> uninitialized when a driver later probes it.
+> 
+> Fix by saving and restoring config space over a runtime suspend cycle
+> even if the device is not bound.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> [lukas: add commit message, bikeshed code comments for clarity]
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-Given the implementation limitations, this might be OK as a short-term
-solution. 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-It depends on if Alex is comfortable with this.
+> ---
+> Changes since v1:
+> - Replace patch to use pci_save_state() / pci_restore_state()
+>   for consistency between runtime PM code path of bound and unbound
+>   devices. (Rafael, Bjorn)
+> 
+>  drivers/pci/pci-driver.c | 17 +++++++++++------
+>  1 file changed, 11 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3bed6beda051..6a67cdbd0e6a 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1224,11 +1224,14 @@ static int pci_pm_runtime_suspend(struct device *dev)
+>  	int error;
+>  
+>  	/*
+> -	 * If pci_dev->driver is not set (unbound), the device should
+> -	 * always remain in D0 regardless of the runtime PM status
+> +	 * If pci_dev->driver is not set (unbound), we leave the device in D0,
+> +	 * but it may go to D3cold when the bridge above it runtime suspends.
+> +	 * Save its config space in case that happens.
 
-> 
->> It seems that we are going with the assumption that enabling this config
->> option implies you want P2P, then we can simplify this code as well.
-> 
-> How so?
-> 
-> Logan
-> 
-> 
-> 
+Thanks for this clarification.
 
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+>  	 */
+> -	if (!pci_dev->driver)
+> +	if (!pci_dev->driver) {
+> +		pci_save_state(pci_dev);
+>  		return 0;
+> +	}
+>  
+>  	if (!pm || !pm->runtime_suspend)
+>  		return -ENOSYS;
+> @@ -1276,16 +1279,18 @@ static int pci_pm_runtime_resume(struct device *dev)
+>  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+>  
+>  	/*
+> -	 * If pci_dev->driver is not set (unbound), the device should
+> -	 * always remain in D0 regardless of the runtime PM status
+> +	 * Restoring config space is necessary even if the device is not bound
+> +	 * to a driver because although we left it in D0, it may have gone to
+> +	 * D3cold when the bridge above it runtime suspended.
+>  	 */
+> +	pci_restore_standard_config(pci_dev);
+> +
+>  	if (!pci_dev->driver)
+>  		return 0;
+>  
+>  	if (!pm || !pm->runtime_resume)
+>  		return -ENOSYS;
+>  
+> -	pci_restore_standard_config(pci_dev);
+>  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+>  	pci_enable_wake(pci_dev, PCI_D0, false);
+>  	pci_fixup_device(pci_fixup_resume, pci_dev);
+> -- 
+> 2.15.1
+> 
