@@ -1,139 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:16760 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750865AbeCFJ45 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 04:56:57 -0500
-Subject: Re: [PATCH V9 3/3] PCI: tegra: Add power management support
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <cyndis@kapsi.fi>, <jonathanh@nvidia.com>,
-        <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <vidyas@nvidia.com>, <kthota@nvidia.com>
-References: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
- <1519812034-11120-4-git-send-email-mmaddireddy@nvidia.com>
- <20180302163643.GA18316@e107981-ln.cambridge.arm.com>
- <19831410-9248-61ff-6e75-249c77dcee9a@nvidia.com>
- <20180305094116.GA28109@e107981-ln.cambridge.arm.com>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <f807a2ad-6d30-70e5-ec42-fd2cf996f7a0@nvidia.com>
-Date: Tue, 6 Mar 2018 15:26:33 +0530
+Received: from mail.kernel.org ([198.145.29.99]:57062 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752729AbeCMWfZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 18:35:25 -0400
+Subject: [PATCH v1 0/2] PCI: Clean up whitespace
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 13 Mar 2018 17:35:21 -0500
+Message-ID: <152098048688.43178.2089454526004328425.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180305094116.GA28109@e107981-ln.cambridge.arm.com>
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Clean up the Makefiles and some comments.  No functional change intended.
+
+---
+
+Bjorn Helgaas (2):
+      PCI: Tidy Makefiles
+      PCI: Tidy comments
 
 
-On 05-Mar-18 3:11 PM, Lorenzo Pieralisi wrote:
-> On Sat, Mar 03, 2018 at 01:47:38PM +0530, Manikanta Maddireddy wrote:
-> 
-> [...]
-> 
->>>> +static int tegra_pcie_pm_resume(struct device *dev)
->>>> +{
->>>> +	struct tegra_pcie *pcie = dev_get_drvdata(dev);
->>>> +	int err;
->>>> +
->>>> +	err = tegra_pcie_power_on(pcie);
->>>> +	if (err) {
->>>> +		dev_err(dev, "tegra pcie power on fail: %d\n", err);
->>>> +		return err;
->>>> +	}
->>>> +	err = tegra_pcie_enable_controller(pcie);
->>>> +	if (err) {
->>>> +		dev_err(dev, "tegra pcie controller enable fail: %d\n", err);
->>>> +		goto poweroff;
->>>> +	}
->>>> +	tegra_pcie_setup_translations(pcie);
->>>> +
->>>> +	if (IS_ENABLED(CONFIG_PCI_MSI))
->>>> +		tegra_pcie_enable_msi(pcie);
->>>> +
->>>> +	tegra_pcie_enable_ports(pcie);
->>>
->>> Is it correct to report a successfull resume if some of the ports fail
->>> to come up (whether within runtime PM or system suspend) ? I think that,
->>> if any of the ports fails to come up, returning a failure is more
->>> appropriate here given that the host bridge is a single device as far as
->>> the kernel is concerned.
->>>
->>> Thanks,
->>> Lorenzo
->>>
->>
->> Hi Lorenzo,
->>
->> We(Thierry, Vidya Sagar and myself) had a discussion on this topic
->> and we chose not to fail probe/resume because host controller is
->> initialized properly, so failing the probe/resume is not the right
->> thing to do.
-> 
-> What happens then to endpoints downstream a rootport that failed to
-> resume but we nonetheless reported that it successfully resume instead ?
-> 
-> Thanks,
-> Lorenzo
-> 
-
-Hi Lorenzo,
-
-If an endpoint comes up in probe & enumeration is completed and if
-the same endpoint doesn't come up during resume I am observing
-PCIe errors because PCIe enumeration hierarchy is unchanged &
-PCI subsystem is trying to restore PCI device. This observation
-is same if host driver returns error.
-
-To handle this case driver needs to remove the respective
-PCIe port enumeration hierarchy if link doesn't come up
-in resume. It will tricky to identify PCI bus structure
-from host port ID in resume, may be some book keeping required
-here.
-
-However if the PCIe link comes up in probe, it should come up
-during resume as well else it will be a bug. Do you see the
-need for changing the PCIe enumeration hierarchy in resume
-based on link up status?
-
-Thanks,
-Manikanta
-
->> PCIe link may fail to come up if there is no endpoint in the slot
->> or interoperable failure where endpoint specific quirk or work
->> around required. In such cases host controller driver shouldn't
->> fail.
->>
->> Also user can connect endpoint in only one slot and expect it to be
->> working. Even though host bridge is a single device, driver should
->> allow standalone port to work.
->>
->> Thanks,
->> Manikanta
->>
->>>>  
->>>>  	return 0;
->>>> +
->>>> +poweroff:
->>>> +	tegra_pcie_power_off(pcie);
->>>> +
->>>> +	return err;
->>>>  }
->>>>  
->>>> +static const struct dev_pm_ops tegra_pcie_pm_ops = {
->>>> +	SET_RUNTIME_PM_OPS(tegra_pcie_pm_suspend, tegra_pcie_pm_resume, NULL)
->>>> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(tegra_pcie_pm_suspend,
->>>> +				      tegra_pcie_pm_resume)
->>>> +};
->>>> +
->>>>  static struct platform_driver tegra_pcie_driver = {
->>>>  	.driver = {
->>>>  		.name = "tegra-pcie",
->>>>  		.of_match_table = tegra_pcie_of_match,
->>>>  		.suppress_bind_attrs = true,
->>>> +		.pm = &tegra_pcie_pm_ops,
->>>>  	},
->>>>  	.probe = tegra_pcie_probe,
->>>>  	.remove = tegra_pcie_remove,
->>>> -- 
->>>> 2.1.4
->>>>
+ drivers/pci/Makefile                   |   59 +++++++++++---------------------
+ drivers/pci/access.c                   |   12 ++++---
+ drivers/pci/ats.c                      |   10 ++---
+ drivers/pci/bus.c                      |    2 -
+ drivers/pci/host-bridge.c              |    2 +
+ drivers/pci/iov.c                      |    8 ++--
+ drivers/pci/mmap.c                     |    2 +
+ drivers/pci/msi.c                      |    3 +-
+ drivers/pci/pci-acpi.c                 |    3 +-
+ drivers/pci/pci-driver.c               |    2 -
+ drivers/pci/pci-label.c                |    5 ++-
+ drivers/pci/pci-stub.c                 |    3 +-
+ drivers/pci/pci-sysfs.c                |    3 --
+ drivers/pci/pci.c                      |    9 +++--
+ drivers/pci/pcie/Makefile              |   16 +++------
+ drivers/pci/pcie/aer/aerdrv.c          |    9 ++---
+ drivers/pci/pcie/aer/aerdrv.h          |    1 -
+ drivers/pci/pcie/aer/aerdrv_acpi.c     |    1 -
+ drivers/pci/pcie/aer/aerdrv_core.c     |   11 ++----
+ drivers/pci/pcie/aer/aerdrv_errprint.c |    3 --
+ drivers/pci/pcie/aer/ecrc.c            |    4 +-
+ drivers/pci/pcie/aspm.c                |    3 +-
+ drivers/pci/pcie/portdrv.h             |    1 -
+ drivers/pci/pcie/portdrv_core.c        |    1 -
+ drivers/pci/pcie/portdrv_pci.c         |    2 -
+ drivers/pci/probe.c                    |    2 +
+ drivers/pci/proc.c                     |    4 +-
+ drivers/pci/quirks.c                   |   14 ++++----
+ drivers/pci/rom.c                      |    4 +-
+ drivers/pci/search.c                   |    8 ++--
+ drivers/pci/setup-bus.c                |    6 +--
+ drivers/pci/setup-irq.c                |    4 +-
+ drivers/pci/setup-res.c                |   10 ++---
+ drivers/pci/slot.c                     |    1 -
+ drivers/pci/syscall.c                  |    9 ++---
+ drivers/pci/vpd.c                      |    3 +-
+ drivers/pci/xen-pcifront.c             |    4 +-
+ 37 files changed, 89 insertions(+), 155 deletions(-)
