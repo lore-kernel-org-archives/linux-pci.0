@@ -1,72 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:41764 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935981AbeCHRvP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Mar 2018 12:51:15 -0500
-Date: Thu, 8 Mar 2018 17:51:04 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        kbuild test robot <fengguang.wu@intel.com>
-Subject: Re: [PATCH 4/9] PCI: kirin_pcie_driver can be static
-Message-ID: <20180308175104.GA4899@e107981-ln.cambridge.arm.com>
-References: <20180307154243.3205-1-robh@kernel.org>
- <20180307154243.3205-5-robh@kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:56598 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751769AbeCMIQa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 04:16:30 -0400
+Date: Tue, 13 Mar 2018 09:16:28 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
+        alexander.h.duyck@intel.com, linux-pci@vger.kernel.org,
+        virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com, hch@lst.de
+Subject: Re: [pci PATCH v5 3/4] ena: Migrate over to unmanaged SR-IOV
+        support
+Message-ID: <20180313081628.GA618@lst.de>
+References: <20180312171813.3487.94803.stgit@localhost.localdomain> <20180312172309.3487.76690.stgit@localhost.localdomain> <1520928772.28745.53.camel@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180307154243.3205-5-robh@kernel.org>
+In-Reply-To: <1520928772.28745.53.camel@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 07, 2018 at 09:42:38AM -0600, Rob Herring wrote:
-> From: kbuild test robot <fengguang.wu@intel.com>
-> 
-> This was generated from 0-day builder.
-> 
-> Fixes: c44f2aed62c2 ("PCI: improve compile test coverage")
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-> [robh: add commit msg]
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
->  drivers/pci/dwc/pcie-kirin.c    | 2 +-
->  drivers/pci/host/pci-ftpci100.c | 4 ++--
->  2 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
-> index dcc8cedf6e17..a6b88c7f6e3e 100644
-> --- a/drivers/pci/dwc/pcie-kirin.c
-> +++ b/drivers/pci/dwc/pcie-kirin.c
-> @@ -504,7 +504,7 @@ static const struct of_device_id kirin_pcie_match[] = {
->  	{},
->  };
->  
-> -struct platform_driver kirin_pcie_driver = {
-> +static struct platform_driver kirin_pcie_driver = {
->  	.probe			= kirin_pcie_probe,
->  	.driver			= {
->  		.name			= "kirin-pcie",
-> diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-> index b9617d1c1d48..5008fd87956a 100644
-> --- a/drivers/pci/host/pci-ftpci100.c
-> +++ b/drivers/pci/host/pci-ftpci100.c
-> @@ -586,11 +586,11 @@ static int faraday_pci_probe(struct platform_device *pdev)
->   * We encode bridge variants here, we have at least two so it doesn't
->   * hurt to have infrastructure to encompass future variants as well.
->   */
-> -const struct faraday_pci_variant faraday_regular = {
-> +static const struct faraday_pci_variant faraday_regular = {
->  	.cascaded_irq = true,
->  };
->  
-> -const struct faraday_pci_variant faraday_dual = {
-> +static const struct faraday_pci_variant faraday_dual = {
->  	.cascaded_irq = false,
->  };
+On Tue, Mar 13, 2018 at 08:12:52AM +0000, David Woodhouse wrote:
+> I'd also *really* like to see a way to enable this for PFs which don't
+> have (and don't need) a driver. We seem to have lost that along the
+> way.
 
-It is more than kirin_pcie_driver then :), I can update the commit
-log myself.
-
-Lorenzo
+We've been forth and back on that.  I agree that not having any driver
+just seems dangerous.  If your PF really does nothing we should just
+have a trivial pf_stub driver that does nothing but wiring up
+pci_sriov_configure_simple.  We can then add PCI IDs to it either
+statically, or using the dynamic ids mechanism.
