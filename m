@@ -1,122 +1,87 @@
-Return-Path: <SRS0=iWcY=GD=cavium.com=George.Cherian@kernel.org>
-Return-Path: <SRS0=iWcY=GD=cavium.com=George.Cherian@kernel.org>
-Subject: Re: [PATCH] PCI: Add quirk for Cavium Thunder-X2 PCIe erratum #173
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- bhelgaas@google.com, Jayachandran.Nair@cavium.com,
- Robert.Richter@cavium.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Huang Ying <ying.huang@intel.com>
-References: <2323301.ORZpb3hFRe@aspire.rjw.lan>
- <20180216203434.GC11014@bhelgaas-glaptop.roam.corp.google.com>
- <2858019.9TUCWsDpTB@aspire.rjw.lan> <20180220015433.GA9656@wunner.de>
- <20180220190037.GB32228@bhelgaas-glaptop.roam.corp.google.com>
- <c8454323-06b2-e758-0d38-550c6b31b15e@caviumnetworks.com>
- <20180221095435.xe5lmes7mpxca3en@wunner.de>
- <d0f6a588-23e7-123e-267c-5257c21bb38a@caviumnetworks.com>
- <20180221232040.GA52685@bhelgaas-glaptop.roam.corp.google.com>
- <305a9d29-4749-12bd-e0ab-903b58cda134@caviumnetworks.com>
- <20180222150947.GB52685@bhelgaas-glaptop.roam.corp.google.com>
-From: George Cherian <gcherian@caviumnetworks.com>
-Message-ID: <c2cb5ee6-570f-bc98-4e31-990a19d43ed1@caviumnetworks.com>
-Date: Tue, 13 Mar 2018 19:43:05 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50998 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752375AbeCMVW5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 17:22:57 -0400
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+ <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+ <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
+ <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
+ <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
+ <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+ <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+ <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
+Date: Tue, 13 Mar 2018 17:22:53 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180222150947.GB52685@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-
-On 02/22/2018 08:39 PM, Bjorn Helgaas wrote:
-> On Thu, Feb 22, 2018 at 06:43:34PM +0530, George Cherian wrote:
->> On 02/22/2018 04:50 AM, Bjorn Helgaas wrote:
->>> On Wed, Feb 21, 2018 at 04:25:08PM +0530, George Cherian wrote:
->>>> On 02/21/2018 03:24 PM, Lukas Wunner wrote:
->>>>> On Wed, Feb 21, 2018 at 02:58:13PM +0530, George Cherian wrote:
->>>>>> I will explain the setup used
->>>>>> To the Cavium ThunderX RC the following PLX device is connected.
->>>>>> PLX Technology, Inc. PEX 8747 48-Lane, 5-Port PCI Express
->>>>>> Gen 3 (8.0 GT/s) Switch
->>>>>> There is no device connected downstream to the PLX switch.
->>>>>>
->>>>>> AFAIU the pcie_port driver probes PLX and enters autosuspend
->>>>>> after 100ms since pci_bridge_d3_possible() returns true.
->>>>>>
->>>>>> And later pci_sysfs_init() ends up doing a config access of
->>>>>> PLX which fails with a "synchronous external abort"
+On 3/13/2018 4:46 PM, Logan Gunthorpe wrote:
 > 
->>>
->>> Thanks for the details!
->>>
->>> This one *should* be fixed by this patch:
->>> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=bf6c089ee2ac67eb22c0ff0ac9cc7f9ccd619d90
->>>
->>> Any chance you could try that out?
+> 
+> On 13/03/18 01:53 PM, Sinan Kaya wrote:
+>> I agree disabling globally would be bad. Somebody can always say I have
+>> ten switches on my system. I want to do peer-to-peer on one switch only. Now,
+>> this change weakened security for the other switches that I had no intention
+>> with doing P2P.
 >>
->> I did try your patch and it works fine on the above failing setup.
+>> Isn't this a problem?
 > 
-> Thanks for testing it!
+> Well, if it's a problem for someone they'll have to solve it. We're
+> targeting JBOFs that have no use for ACS / IOMMU groups at all.
 > 
->>>> I have found another configuration where this fails.
->>>> Following is the configuration
->>>> 1) Connected a PCIe Intel i40 card under the root port.
->>>> 2) unbind the i40 driver and bind with vfio-pci driver.
->>>> 3) Run lspci in a loop. "lspci -s xx:xx.xx -vvv"
->>>>
->>>> I get the same synchronous external abort.
->>>> In this case the vfio-pci driver probe it moves the device (i40) to
->>>> D3hot provided disable_idle_d3 is not set. lspci tries to do
->>>> the config_access which fails with synchronous external abort when
->>>> the root port transitions to D3hot.
+>> Can we specify the BDF of the downstream device we want P2P with during boot via
+>> kernel command line?
 > 
-> <snip>
->> the stack trace for this issue looks like this
->> [<ffff00000851bbfc>] pci_generic_config_read+0x5c/0xf0
->> [<ffff00000851c6e4>] pci_user_read_config_dword+0x84/0x110
->> [<ffff00000851cda8>] pci_vpd_read+0x100/0x208
->> [<ffff00000851bee8>] pci_read_vpd+0x50/0x68
->> [<ffff00000852d6c0>] read_vpd_attr+0x60/0x80
->> [<ffff00000833b224>] sysfs_kf_bin_read+0x6c/0xa8
->> [<ffff00000833a674>] kernfs_fop_read+0xa4/0x1c8
->> [<ffff0000082a6238>] __vfs_read+0x60/0x170
->> [<ffff0000082a63d4>] vfs_read+0x8c/0x148
->> [<ffff0000082a6c64>] SyS_pread64+0xbc/0xd8
->>
->> I have tried adding pci_config_pm_runtime_get/put pair inside
->> pci_vpd_read(), which I guess might be needed, in case the device goes
->> to D3cold. But having said that it didnt fix the problem in our platform.
+> That's a painful configuration burden. And then things might stop
+> working if you change your topology at all and now have to change boot
+> parameters.
 > 
-> Your original patch avoids this problem by setting PCI_DEV_FLAGS_NO_D3
-> on the root port, so it seems like this must be somehow related to the
-> root port's state.
 
-This seems to be another issue and is not related to $SUBJECT.
-Our Hardware team is internally looking into the same and will keep you 
-posted of any further details.
+It sounds like you have very tight hardware expectations for this to work
+at this moment. You also don't want to generalize this code for others and
+address the shortcomings.
 
-Thanks for your time and suggestions.
-> 
-> I assume this VPD read is on the i40 device, right?  Since you're
-> still seeing the problem even after calling
-> pci_config_pm_runtime_get(), I assume the root port is still not in
-> D0.  Can you add a little more instrumentation to read PCI_PM_CTRL and
-> PCI_PM_PPB_EXTENSIONS for the root port and PCI_PM_CTRL for the i40
-> device right after you call pci_config_pm_runtime_get()?
-> 
-> I don't see anything obviously different between the pci_read_config()
-> path and the pci_vpd_read() path except for the
-> pci_config_pm_runtime_get() call that you've already added.  I guess
-> you could try using setpci instead of lspci to see if the failure only
-> happens in the pci_vpd_read() path.  I assume that will be the case
-> because lspci probably does config reads before it does the VPD read,
-> and those initial config reads seemed to work OK.
-> 
-> The VPD path does do config writes in addition to config reads.  Maybe
-> there's something special about writes, although I don't know what
-> that would be.  You can tell I'm running out of ideas here :)
-> 
-> Bjorn
-> 
--George
+To get you going, you should limit this change to the switch products that you have
+validated via white-listing PCI vendor/device ids. Please do not enable this feature
+for all other PCI devices or by default.
+
+I think your code qualifies as a virus until this issue is resolved (so NAK). 
+
+Another option is for your CONFIG to depend on BROKEN/EXPERT.
+
+You are delivering a general purpose P2P code with a lot of holes in it and
+expecting people to jump through it.
+
+Turning security off by default is also not acceptable. Linux requires ACS support
+even though you don't care about it for your particular application.
+
+I'd hate ACS to be broken due to some operating system enabling your CONFIG option.
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
