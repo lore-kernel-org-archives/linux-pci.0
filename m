@@ -1,168 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54414 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752043AbeCUOn3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 10:43:29 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Rob Herring <robh@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Subject: [PATCH v2 09/10] PCI: dwc: Move CONFIG_PCI depends to menu
-Date: Wed, 21 Mar 2018 14:42:53 +0000
-Message-Id: <20180321144254.7406-10-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
-References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=qOBO=GD=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=qOBO=GD=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, Stephen Bates <sbates@raithlin.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+ <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
+ <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
+ <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
+ <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+ <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+ <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+ <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
+ <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
+ <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
+ <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
+Date: Tue, 13 Mar 2018 17:21:20 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rob Herring <robh@kernel.org>
 
-There's no need for every config option to explicitly depend on
-CONFIG_PCI, so move it out of individual option to the menu option.
 
-Signed-off-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/pci/dwc/Kconfig | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+On 13/03/18 05:08 PM, Bjorn Helgaas wrote:
+> On Tue, Mar 13, 2018 at 10:31:55PM +0000, Stephen  Bates wrote:
+> If it *is* necessary because Root Ports and devices below them behave
+> differently than in conventional PCI, I think you should include a
+> reference to the relevant section of the spec and check directly for a
+> Root Port.  I would prefer that over trying to exclude Root Ports by
+> looking for two upstream bridges.
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 6f2b653146bb..2902544f5834 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -1,13 +1,13 @@
- # SPDX-License-Identifier: GPL-2.0
- 
- menu "DesignWare PCI Core Support"
-+	depends on PCI
- 
- config PCIE_DW
- 	bool
- 
- config PCIE_DW_HOST
-         bool
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
-         select PCIE_DW
- 
-@@ -22,7 +22,7 @@ config PCI_DRA7XX
- config PCI_DRA7XX_HOST
- 	bool "TI DRA7xx PCIe controller Host Mode"
- 	depends on SOC_DRA7XX || COMPILE_TEST
--	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on PCI_MSI_IRQ_DOMAIN
- 	depends on OF && HAS_IOMEM && TI_PIPE3
- 	select PCIE_DW_HOST
- 	select PCI_DRA7XX
-@@ -52,7 +52,6 @@ config PCI_DRA7XX_EP
- 
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
- 	---help---
-@@ -65,7 +64,6 @@ config PCIE_DW_PLAT
- 
- config PCI_EXYNOS
- 	bool "Samsung Exynos PCIe controller"
--	depends on PCI
- 	depends on SOC_EXYNOS5440 || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -73,7 +71,6 @@ config PCI_EXYNOS
- 
- config PCI_IMX6
- 	bool "Freescale i.MX6 PCIe controller"
--	depends on PCI
- 	depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -81,7 +78,6 @@ config PCI_IMX6
- 
- config PCIE_SPEAR13XX
- 	bool "STMicroelectronics SPEAr PCIe controller"
--	depends on PCI
- 	depends on ARCH_SPEAR13XX || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -91,7 +87,6 @@ config PCIE_SPEAR13XX
- 
- config PCI_KEYSTONE
- 	bool "TI Keystone PCIe controller"
--	depends on PCI
- 	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -104,7 +99,6 @@ config PCI_KEYSTONE
- 
- config PCI_LAYERSCAPE
- 	bool "Freescale Layerscape PCIe controller"
--	depends on PCI
- 	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select MFD_SYSCON
-@@ -115,7 +109,6 @@ config PCI_LAYERSCAPE
- config PCI_HISI
- 	depends on OF && (ARM64 || COMPILE_TEST)
- 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
-@@ -126,7 +119,6 @@ config PCI_HISI
- 
- config PCIE_QCOM
- 	bool "Qualcomm PCIe controller"
--	depends on PCI
- 	depends on OF && (ARCH_QCOM || COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -138,7 +130,6 @@ config PCIE_QCOM
- 
- config PCIE_ARMADA_8K
- 	bool "Marvell Armada-8K PCIe controller"
--	depends on PCI
- 	depends on ARCH_MVEBU || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -155,7 +146,7 @@ config PCIE_ARTPEC6
- config PCIE_ARTPEC6_HOST
- 	bool "Axis ARTPEC-6 PCIe controller Host Mode"
- 	depends on MACH_ARTPEC6 || COMPILE_TEST
--	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	select PCIE_ARTPEC6
-@@ -177,7 +168,6 @@ config PCIE_KIRIN
- 	depends on OF && (ARM64 || COMPILE_TEST)
- 	bool "HiSilicon Kirin series SoCs PCIe controllers"
- 	depends on PCI_MSI_IRQ_DOMAIN
--	depends on PCI
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	help
-@@ -187,7 +177,6 @@ config PCIE_KIRIN
- config PCIE_HISI_STB
- 	bool "HiSilicon STB SoCs PCIe controllers"
- 	depends on ARCH_HISI || COMPILE_TEST
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
--- 
-2.15.0
+Well we've established that we don't want to allow root ports.
+
+But we need to, at a minimum, do two pci_upstream_bridge() calls...
+
+Remember, we need to check that a number of devices are behind the same
+switch. So we need to find a _common_ upstream port for several devices.
+Excluding the multifunction device case (which I don't think is
+applicable for reasons we've discussed before), this will *never* be the
+first upstream port for a given device. We need to find the upstream
+port of the switch and ensure all devices share that same port. If a
+device is behind a switch, it's pci_upstream_bridge() is the downstream
+switch port which is unique to that device. So a peer device would have
+a different pci_upstream_bridge() port but share the same
+pci_upstream_bridge(pci_upstream_bridge()) port (assuming they are on
+the same switch).
+
+The alternative, is to walk the entire tree of upstream ports and check
+that all devices have a common port somewhere in the tree that isn't the
+root complex. Arguably this is the right way to do it and would support
+a network of switches but is a fair bit more complex to code.
+
+Logan
