@@ -1,77 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:25661 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751040AbeCUFzx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 01:55:53 -0400
-Subject: Re: [PATCH v4 5/5] misc: pci_endpoint_test: Handle 64-bit BARs
- properly
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20180308133331.19464-1-niklas.cassel@axis.com>
- <20180308133331.19464-6-niklas.cassel@axis.com>
-CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <35df3d85-4a75-8b17-c32f-1a00b4b6cae6@ti.com>
-Date: Wed, 21 Mar 2018 11:25:35 +0530
+Received: from mga18.intel.com ([134.134.136.126]:65378 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932590AbeCMXWp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 19:22:45 -0400
+Date: Tue, 13 Mar 2018 17:24:40 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Scott Bauer <scott.bauer@intel.com>
+Subject: Re: [PATCHv2] PCI: vmd: Use affinity to chain child device interrupts
+Message-ID: <20180313232440.GA28358@localhost.localdomain>
+References: <20180206202225.1124-1-keith.busch@intel.com>
+ <20180313171039.GB20373@e107981-ln.cambridge.arm.com>
+ <20180313200840.GA28002@localhost.localdomain>
+ <20180313201807.GA28112@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20180308133331.19464-6-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180313201807.GA28112@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Mar 13, 2018 at 02:18:07PM -0600, Keith Busch wrote:
+> 
+> And since you brought my attention to it, I see the 'if' is off by one.
+> Let me prepare a v3, and I've one other minor optimization to add as
+> well.
 
+Ugh, I may need to request withdrawing this patch entirely. This will
+completely break if the VMD interrupt vector's SMP affinity is a subset
+of the child driver's, and the CPUs in the intersection of those masks
+are set offline after driver initialization.
 
-On Thursday 08 March 2018 07:03 PM, Niklas Cassel wrote:
-> A 64-bit BAR consists of a BAR pair, where the second BAR has the
-> upper bits, so we cannot simply call pci_ioremap_bar() on every single
-> BAR index.
-> 
-> The second BAR in a BAR pair will not have the IORESOURCE_MEM resource
-> flag set. Only call ioremap on BARs that have the IORESOURCE_MEM
-> resource flag set.
-> 
-> pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
-> pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
-> pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
-> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
-> pci-endpoint-test 0000:01:00.0: failed to read BAR1
-> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
-> pci-endpoint-test 0000:01:00.0: failed to read BAR3
-> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
-> pci-endpoint-test 0000:01:00.0: failed to read BAR5
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+That's looking like a pretty tricky problem to fix, all for (somewhat)
+obscure kernel feature... I can't see how without a new hot cpu notifier.
 
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/misc/pci_endpoint_test.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index 320276f42653..fe8897e64635 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -534,12 +534,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
->  	}
->  
->  	for (bar = BAR_0; bar <= BAR_5; bar++) {
-> -		base = pci_ioremap_bar(pdev, bar);
-> -		if (!base) {
-> -			dev_err(dev, "failed to read BAR%d\n", bar);
-> -			WARN_ON(bar == test_reg_bar);
-> +		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
-> +			base = pci_ioremap_bar(pdev, bar);
-> +			if (!base) {
-> +				dev_err(dev, "failed to read BAR%d\n", bar);
-> +				WARN_ON(bar == test_reg_bar);
-> +			}
-> +			test->bar[bar] = base;
->  		}
-> -		test->bar[bar] = base;
->  	}
->  
->  	test->base = test->bar[test_reg_bar];
-> 
+Let me request a pause on this one and I'll get back ASAP.
