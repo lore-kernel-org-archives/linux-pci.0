@@ -1,109 +1,47 @@
-Return-Path: <SRS0=fJCO=GD=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=fJCO=GD=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 13 Mar 2018 10:22:21 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dongdong Liu <liudongdong3@huawei.com>, linux-pci@vger.kernel.org,
-	linuxarm@huawei.com, charles.chenxin@huawei.com,
-	linux-acpi@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [RFC PATCH] ARM64/PCI: Set dev->irq=0 before calling
- acpi_pci_irq_enable()
-Message-ID: <20180313102221.GA14608@e107981-ln.cambridge.arm.com>
-References: <1520650692-62705-1-git-send-email-liudongdong3@huawei.com>
- <20180313001830.GA60197@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:56763 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751666AbeCMIyp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 04:54:45 -0400
+Date: Tue, 13 Mar 2018 09:54:42 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com
+Subject: Re: [pci PATCH v5 3/4] ena: Migrate over to unmanaged SR-IOV
+        support
+Message-ID: <20180313085442.GA1537@lst.de>
+References: <20180312171813.3487.94803.stgit@localhost.localdomain> <20180312172309.3487.76690.stgit@localhost.localdomain> <1520928772.28745.53.camel@infradead.org> <20180313081628.GA618@lst.de> <1520930719.11412.2.camel@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180313001830.GA60197@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1520930719.11412.2.camel@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 07:18:30PM -0500, Bjorn Helgaas wrote:
-> [+cc Rafael, linux-acpi]
+On Tue, Mar 13, 2018 at 08:45:19AM +0000, David Woodhouse wrote:
 > 
-> On Sat, Mar 10, 2018 at 10:58:12AM +0800, Dongdong Liu wrote:
-> > The init value of dev->irq is from PCI_INTERRUPT_LINE register.The default
-> > value of dev->irq usually is 255 before calling acpi_pci_irq_enable().
-> > This will cause a problem When the platform does not support INTx well.
-> > For example, we do not config _PRT on our HIP07 platform, we met irq 255
-> > confilict.
 > 
-> s/confilict/conflict/
+> On Tue, 2018-03-13 at 09:16 +0100, Christoph Hellwig wrote:
+> > On Tue, Mar 13, 2018 at 08:12:52AM +0000, David Woodhouse wrote:
+> > > 
+> > > I'd also *really* like to see a way to enable this for PFs which don't
+> > > have (and don't need) a driver. We seem to have lost that along the
+> > > way.
+> > We've been forth and back on that.  I agree that not having any driver
+> > just seems dangerous.  If your PF really does nothing we should just
+> > have a trivial pf_stub driver that does nothing but wiring up
+> > pci_sriov_configure_simple.  We can then add PCI IDs to it either
+> > statically, or using the dynamic ids mechanism.
 > 
-> arm64 calls acpi_pci_irq_enable() in the probe() path instead of in
-> the pci_enable_device() path.  I can't remember the reason, and
-> unfortunately we didn't add a comment explaining why arm64 has to be
-> different.
-> 
-> PCI_INTERRUPT_LINE is used only by software and has no effect on the
-> hardware.  If it contains 255 when Linux boots, that means firmware
-> must have set it to that value.
-> 
-> We need some comment here about why we should always ignore what
-> firmware put there on arm64.  It needs to explain why this is
-> different on arm64 than it is on x86 and ia64.  The changelog above
-> basically says "we need this to make it work", but that's not very
-> informative or convincing.
-> 
-> It sounds like you're saying HIP07 doesn't provide _PRT?  Per the PCI
-> Firmware Spec, r3.0, sec 4.4, _PRT is required under all PCI host
-> bridges.  So I think you're saying HIP07 doesn't comply with the spec,
-> but the workaround here applies to *all* arm64 platforms.  That
-> doesn't seem right.
-> 
-> On x86, I think if the _PRT doesn't tell us where an interrupt pin is
-> routed, we fall back to looking at PCI_INTERRUPT_LINE.  But here
-> you seem to be saying "there's no _PRT" *and* "there's no useful
-> information in PCI_INTERRUPT_LINE".
+> Or just add it to the existing pci-stub. What's the point in having a
+> new driver? 
 
-I don't think arm64 is doing anything different from x86/ia64 except
-that we route the IRQ at device probe time (it was done to route IRQ at
-the same boot stage in DT and ACPI but I then removed the DT path
-with the pci_fixup_irqs() removal series - moving the IRQ routing at
-pcibios_enable_device() time may well break platforms, x86 has even
-a boot parameter to prevent that :) - ie pci=routeirq).
-
-Regardless, we are not going to patch the kernel to work around
-a specific platform firmware bug - a _PRT object should be added.
-
-Lorenzo
-
-> Maybe I'm not understanding what you're saying.
-> 
-> > The error message is as below.
-> > snd_hda_intel 000d:33:00.1: PCI INT B: no GSI
-> > snd_hda_intel 000d:33:00.1: enabling device (0000 -> 0002)
-> > snd_hda_intel 000d:33:00.1: Force to snoop mode by module option
-> > snd_hda_intel 000d:33:00.1: Device has broken 64-bit MSI but arch tried to
-> > assign one above 4G
-> > genirq: Flags mismatch irq 255. 00000001 (enahisic2i0-tx1) vs. 00000081
-> > (snd_hda_intel:card0)
-> > hns-nic HISI00C2:00 enahisic2i0: request irq(255) fail
-> > 
-> > enahisic2i0-tx1: this device is a platform device.
-> > snd_hda_intel:card0: this device is a PCI device.
-> > 
-> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> > ---
-> >  arch/arm64/kernel/pci.c | 5 ++++-
-> >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > index 0e2ea1c..6a77bef 100644
-> > --- a/arch/arm64/kernel/pci.c
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -28,8 +28,11 @@
-> >   */
-> >  int pcibios_alloc_irq(struct pci_dev *dev)
-> >  {
-> > -	if (!acpi_disabled)
-> > +	if (!acpi_disabled) {
-> > +		dev->irq = 0;
-> >  		acpi_pci_irq_enable(dev);
-> > +	}
-> > +
-> >  
-> >  	return 0;
-> >  }
-> > -- 
-> > 1.9.1
-> > 
+Because binding to pci-stub means that you'd now enable the simple
+SR-IOV for any device bound to PCI stub.  Which often might be the wrong
+thing.
