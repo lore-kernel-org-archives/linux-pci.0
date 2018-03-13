@@ -1,122 +1,163 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1520515116.32168.5.camel@aosc.io>
-Subject: Re: Question about a quirky (DesignWare) PCIe RC in Allwinner H6
-From: Icenowy Zheng <icenowy@aosc.io>
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>, Bjorn Helgaas
- <helgaas@kernel.org>
-Date: Thu, 08 Mar 2018 21:18:36 +0800
-In-Reply-To: <bd1b5f52-27db-d323-bde5-926be66e7f58@sigmadesigns.com>
-References: <1520261458.33502.10.camel@aosc.io>
- <20180305214718.GC255556@bhelgaas-glaptop.roam.corp.google.com>
- <1520308623.33502.13.camel@aosc.io>
- <20180306233832.GC33706@bhelgaas-glaptop.roam.corp.google.com>
- <1520488103.13063.1.camel@aosc.io>
- <bd1b5f52-27db-d323-bde5-926be66e7f58@sigmadesigns.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
- Marc Gonzalez <marc.w.gonzalez@free.fr>,
- Maxime Ripard <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
- Chen-Yu Tsai <wens@csie.org>, linux-sunxi@googlegroups.com,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jingoo Han <jingoohan1@gmail.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=Ezzj=GD=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=Ezzj=GD=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [RFC PATCH] ARM64/PCI: Set dev->irq=0 before calling
+ acpi_pci_irq_enable()
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1520650692-62705-1-git-send-email-liudongdong3@huawei.com>
+ <20180313001830.GA60197@bhelgaas-glaptop.roam.corp.google.com>
+CC: <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>,
+	<linuxarm@huawei.com>, <charles.chenxin@huawei.com>,
+	<linux-acpi@vger.kernel.org>, "Rafael J. Wysocki"
+	<rafael.j.wysocki@intel.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <f5d23376-42d1-7fec-dc1c-45e419acb678@huawei.com>
+Date: Tue, 13 Mar 2018 19:20:10 +0800
+MIME-Version: 1.0
+In-Reply-To: <20180313001830.GA60197@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-5ZyoIDIwMTgtMDMtMDjlm5vnmoQgMTI6NTUgKzAxMDDvvIxNYXJjIEdvbnphbGV65YaZ6YGT77ya
-Cj4gT24gMDgvMDMvMjAxOCAwNjo0OCwgSWNlbm93eSBaaGVuZyB3cm90ZToKPiAKPiA+IEknbSB0
-cnlpbmcgdG8gaW1wbGVtZW50IGEgZHJpdmVyIGZvciB0aGUgcXVpcmt5IChEVykgUENJZSBSQyBp
-biB0aGUKPiA+IEFsbHdpbm5lciBINiBTb0MuCj4gPiAKPiA+IFRoZSBxdWlyayBpcyB0aGF0IG9u
-bHkgdGhlICJkYmkiIHNwYWNlIGlzIGFsd2F5cyBtYXBwZWQsIGJ1dCBhdAo+ID4gdGhlIAo+ID4g
-c2FtZSB0aW1lIG9ubHkgNjRLaUIgb2Ygb3RoZXIgc3BhY2VzIChjb25maWcsIGRvd25zdHJlYW0g
-SU8gYW5kCj4gPiBub24tIAo+ID4gcHJlZmV0Y2hhYmxlIG1lbW9yeSkgYXJlIGFjY2Vzc2libGUu
-IFRvIGFjY2VzcyBhIGNlcnRhaW4gYWRkcmVzcwo+ID4gdGhlIAo+ID4gaGlnaCAxNi1iaXQgb2Yg
-dGhlIGFkZHJlc3MgKGFsbCBidXMgYWRkcmVzc2VzIGluIEg2IFNvQyBhcmUgMzItCj4gPiBiaXQg
-Cj4gPiBkZXNwaXRlIHRoZSBDUFUgaXMgNjQtYml0KSBuZWVkcyB0byBiZSB3cml0dGVuIGludG8g
-dGhlIAo+ID4gUENJRV9BRERSX1BBR0VfQ0ZHIHJlZ2lzdGVyIChhIHZlbmRvci1kZWZpbmVkIHJl
-Z2lzdGVyIGluIERCSSAKPiA+IHNwYWNlKS4gU28gdGhlIGFjY2VzcyB0byB0aGVzZSBzcGFjZXMg
-Y2Fubm90IGJlIHByb2Nlc3NlZAo+ID4gY29ycmVjdGx5IAo+ID4gd2l0aCBqdXN0IHJlYWRsL3dy
-aXRlbCwgYXMgdGhlIGV4aXN0aW5nIGNvZGUgZG9lcy4KPiA+IAo+ID4gSXMgaXQgcG9zc2libGUg
-dG8gd29ya2Fyb3VuZCB0aGlzIGluIHRoZSBQQ0kgc3Vic3lzdGVtIG9mIExpbnV4Pwo+IAo+IEkg
-ZGlkbid0IHRoaW5rIGFueW9uZSB3b3VsZCBjb21lIHVwIHdpdGggc29tZXRoaW5nIG1vcmUgYnJv
-a2VuCj4gdGhhbiB0YW5nbydzIFBDSWUgaG9zdCBicmlkZ2UuLi4KPiAKPiBJdCdzIGhhcmQgdG8g
-dW5kZXJzdGFuZCB3aGF0J3MgZ29pbmcgb24gaW5zaWRlIHRoZSBtaW5kcyBvZiB0aGVzZQo+IEhX
-IGRldnMuIEkgbWVhbiwgaWYgdGhlIHN0ZXBzIHJlcXVpcmVkIGFyZQo+IAo+IAlXUklURSBNQUdJ
-QyBDT05GSUcgUkVHCj4gCVJFQUQvV1JJVEUgQUREUkVTUyBSRUcKPiAKPiB0aGVuIHRoZSB3aG9s
-ZSBvcGVyYXRpb24gaXMgY2xlYXJseSBub3QgYXRvbWljLCBhbmQgYmFkIHRoaW5ncyBoYXBwZW4K
-PiB3aGVuIDIrIG9wZXJhdGlvbnMgcmFjZS4KPiAKPiBEbyB0aGV5IHRoaW5rIGluIHRlcm1zIG9m
-IHNpbmdsZSBjb3JlIHN5c3RlbXMgd2l0aCBub24tbXVsdGl0YXNraW5nCj4gT1M/Cj4gUHJvYmFi
-bHkgbm90Lgo+IAo+IE1heWJlIHRoZXkgdGhpbmsgaXQgaXMgbm90IGEgcHJvYmxlbSB0byB3cmFw
-IHRoZSBvcGVyYXRpb24gdXNpbmcgYQo+IG11dGV4PyBJJ2xsIGNvbmZlc3MgSSBoYXZlIG5vIGlk
-ZWEgaG93IGJhZCB0aGF0IGlzIGZvciBwZXJmb3JtYW5jZS4KPiBIb3dldmVyLCB0aGF0IGlzIG5v
-dCBhbiBvcHRpb24gaW4gTGludXgsIGJlY2F1c2UgbWVtIHNwYWNlIGFjY2Vzc2VzCj4gYXJlIGp1
-c3QgcGxhaW4gbW1pbyBhY2Nlc3NlcywgYW5kIGl0J3Mgbm90IHBvc3NpYmxlIHRvIHJld3JpdGUg
-dGhlCj4gZHJpdmVycywgZXZlbiBhcyBhbiBvdXQtb2YtdHJlZSBwYXRjaC4KPiAKPiBJIHN1cHBv
-c2UgaXQgY291bGQgYmUgcG9zc2libGUgdG8gbWFrZSB0aGUgZmlyc3Qgd3JpdGUgIm1hZ2ljIiBp
-biB0aGUKPiBzZW5zZSB0aGF0IGl0IGNvdWxkICJsb2NrIiB0aGUgYnVzIHVudGlsIHRoZSBzZWNv
-bmQgYWNjZXNzIGlzCj4gcGVyZm9ybWVkPwo+IFNvcnQgb2YgbGlrZSBhbiBpbXBsaWNpdCBIVyBt
-dXRleC4gQWN0dWFsbHksIHRhbmdvIGhhcyBleHBsaWNpdCBIVwo+IG11dGV4ZXMgdGhhdCB3b3Jr
-IGFsb25nIHRoZXNlIGxpbmVzLgoKVW5mb3J0dW5hdGVseSBzdW41MGktaDYgZG9lc24ndCBoYXZl
-IGl0LgoKPiAKPiA+IChJIGhhdmUgdGhvdWdodCBhIHdvcmthcm91bmQgdGhhdCBvbmx5IG1hcHMg
-dGhlIGN1cnJlbnQgYWNjZXNzaWJsZSAKPiA+IDY0S2lCIHdpdGggdGhlIE1NVSwgYW5kIHdoZW4g
-YWNjZXNzaW5nIHRoZSBub24tYWNjZXNzaWJsZSBwYXJ0LCAKPiA+IGNhdGNoIHRoZSBwYWdlIGZh
-dWx0IGFuZCByZS1zZXR1cCB0aGUgbWFwIHRvIHRoZSBuZXcgNjRLaUIgcGFnZS4KPiA+IEJ1dCAK
-PiA+IHN1cmVseSBpdCB3aWxsIGtpbGwgdGhlIHBlcmZvcm1hbmNlLikKPiAKPiBUaGUgaW1wbGVt
-ZW50YXRpb24gbWlnaHQgYmUgbm9uLXRyaXZpYWwsIGFzIHdlbGwuCgpJdCBtaWdodCBiZSBwb3Nz
-aWJsZSBmb3Igc2V0IHVwIGEgaHlwZXJ2aXNvciB0byBkbyBpdC4gKEFsdGhvdWdoIGl0J3MKc3Vy
-ZWx5IGFuIGFidXNlIG9mIHRoZSBIWVAvRUwyIG1vZGUpCgo+IAo+ID4gW3RhbmdvIGlzXSBzdGls
-bCBsZXNzIHF1aXJreSB0aGFuIEFsbHdpbm5lciBINiBQQ0llLiBJdCdzIG9ubHkgYQo+ID4gY29u
-ZmlnL01NSU8gbXV4IG9uIHRhbmdvOyBob3dldmVyIG9uIEg2IFBDSWUgYm90aCBjb25maWcgc3Bh
-Y2UgYW5kCj4gPiBNTUlPIHNwYWNlIGFyZSBzcGxpdHRlZCB0byBtYW55IHBhZ2VzLiBTbyBvbiBI
-NiBpZiBubyBzb2x1dGlvbiBpcwo+ID4gd29ya2VkIG91dCwgaXQgd2lsbCBub3QgYmUgdW5yZWxp
-YWJsZSAtLSBpdCB3aWxsIGJlIHVudXNhYmxlCj4gPiBpbnN0ZWFkLgo+IAo+IEkgaGF2ZSBvbmx5
-IGxpbWl0ZWQgZXhwZXJpZW5jZSwgYnV0IGl0IHNlZW1zIHRoYXQgbWFueSB1c2VmdWwgUENJZQo+
-IGFkYXB0ZXJzIHJlcXVpcmUgb25seSB2ZXJ5IGxpdHRsZSBtZW0gYWRkcmVzcyBzcGFjZS4KCkJ1
-dCB0aGVyZSdzIGFsc28gbWFueSB0aGF0IHJlcXVpcmUgYmlnZ2VyIG1lbW9yeSBhZGRyZXNzIHNw
-YWNlIHRoYW4KNjRLLgoKZS5nLiB0aGUgQXRoZXJvcyBBUjk0NjIgODAyLjExbiBhZGFwdGVyIG5l
-ZWRzIDUxMksgbm9uLXByZWZldGNoYWJsZQptZW1vcnkuCgo+IAo+IEZvciBleGFtcGxlLCB0aGUg
-VVNCMyBQQ0llIGFkYXB0ZXIgSSB0ZXN0ZWQgbXkgaW1wbGVtZW50YXRpb24gd2l0aAo+IHJlcXVp
-cmVzIG9ubHkgOCBLQi4KPiAKPiAwMTowMC4wIFVTQiBjb250cm9sbGVyOiBSZW5lc2FzIFRlY2hu
-b2xvZ3kgQ29ycC4gdVBENzIwMjAxIFVTQiAzLjAKPiBIb3N0IENvbnRyb2xsZXIgKHJldiAwMykg
-KHByb2ctaWYgMzAgW1hIQ0ldKQo+ICAgICAgICAgRmxhZ3M6IGZhc3QgZGV2c2VsCj4gICAgICAg
-ICBNZW1vcnkgYXQgNTA0MDAwMDAgKDY0LWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9OEtd
-Cj4gICAgICAgICBDYXBhYmlsaXRpZXM6IFs1MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDMK
-PiAgICAgICAgIENhcGFiaWxpdGllczogWzcwXSBNU0k6IEVuYWJsZS0gQ291bnQ9MS84IE1hc2th
-YmxlLSA2NGJpdCsKPiAgICAgICAgIENhcGFiaWxpdGllczogWzkwXSBNU0ktWDogRW5hYmxlLSBD
-b3VudD04IE1hc2tlZC0KPiAgICAgICAgIENhcGFiaWxpdGllczogW2EwXSBFeHByZXNzIEVuZHBv
-aW50LCBNU0kgMDAKPiAgICAgICAgIENhcGFiaWxpdGllczogWzEwMF0gQWR2YW5jZWQgRXJyb3Ig
-UmVwb3J0aW5nCj4gICAgICAgICBDYXBhYmlsaXRpZXM6IFsxNTBdIExhdGVuY3kgVG9sZXJhbmNl
-IFJlcG9ydGluZwo+IAo+IAo+IFNhbWUgdGhpbmcgZm9yIHRoZSBmb2xsb3dpbmcgV2lGaSBhZGFw
-dGVyLgo+IAo+IDAxOjAwLjAgTmV0d29yayBjb250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlvbiBX
-aXJlbGVzcyA3MjYwIChyZXYgYmIpCj4gICAgICAgICBTdWJzeXN0ZW06IEludGVsIENvcnBvcmF0
-aW9uIER1YWwgQmFuZCBXaXJlbGVzcy1BQyA3MjYwCj4gICAgICAgICBGbGFnczogZmFzdCBkZXZz
-ZWwsIElSUSAyMgo+ICAgICAgICAgTWVtb3J5IGF0IDUwNDAwMDAwICg2NC1iaXQsIG5vbi1wcmVm
-ZXRjaGFibGUpIFtkaXNhYmxlZF0KPiBbc2l6ZT04S10KPiAgICAgICAgIENhcGFiaWxpdGllczog
-W2M4XSBQb3dlciBNYW5hZ2VtZW50IHZlcnNpb24gMwo+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBb
-ZDBdIE1TSTogRW5hYmxlLSBDb3VudD0xLzEgTWFza2FibGUtIDY0Yml0Kwo+ICAgICAgICAgQ2Fw
-YWJpbGl0aWVzOiBbNDBdIEV4cHJlc3MgRW5kcG9pbnQsIE1TSSAwMAo+ICAgICAgICAgQ2FwYWJp
-bGl0aWVzOiBbMTAwXSBBZHZhbmNlZCBFcnJvciBSZXBvcnRpbmcKPiAgICAgICAgIENhcGFiaWxp
-dGllczogWzE0MF0gRGV2aWNlIFNlcmlhbCBOdW1iZXIgNDgtNTEtYjctZmYtZmYtODQtCj4gNjkt
-MjYKPiAgICAgICAgIENhcGFiaWxpdGllczogWzE0Y10gTGF0ZW5jeSBUb2xlcmFuY2UgUmVwb3J0
-aW5nCj4gICAgICAgICBDYXBhYmlsaXRpZXM6IFsxNTRdIFZlbmRvciBTcGVjaWZpYyBJbmZvcm1h
-dGlvbjogSUQ9Y2FmZQo+IFJldj0xIExlbj0wMTQgPD8+Cj4gCj4gCj4gTWF5YmUgeW91IGNhbiBk
-ZWNpZGUgdGhhdCB5b3Ugd2lsbCBzdXBwb3J0IG9ubHkgNjQgS0I/CgpEZXNwaXRlIHN1cHBvcnQg
-b2Ygc29tZSBkZXZpY2VzIHdpbGwgZmFpbCwgSSBzdGlsbCB0aGluayB0aGlzIGlzIGEgZ29vZApp
-ZGVhLiBJdCBtYWtlcyB0aGUgcHJvYmxlbSBtdWNoIHNpbXBsZXIgLS0gaXQgd2lsbCBiZWNvbWUg
-YSBtdXggYW1vbmcKY29uZmlnIHNwYWNlLCBJTyBzcGFjZSBhbmQgNjRLQiBub24tcHJlZmV0Y2hh
-YmxlIG1lbW9yeS4KCklmIGEgUENJZS1maXhpbmcgaHlwZXJ2aXNvciBpcyBkb25lIGl0IGNhbiBz
-aW1wbHkgc2tpcCB0aGUga2VybmVsIGdsdWUsCmJ1dCBsZXQgdGhlIGtlcm5lbCBjb25maWd1cmUg
-aXQgd2l0aCBFQ0FNIG1vZGUuCgo+IAo+IFJlZ2FyZHMuCj4gCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlz
-dApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJh
-ZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+Hi Bjorn
+
+Many thanks for your review.
+
+在 2018/3/13 8:18, Bjorn Helgaas 写道:
+> [+cc Rafael, linux-acpi]
+>
+> On Sat, Mar 10, 2018 at 10:58:12AM +0800, Dongdong Liu wrote:
+>> The init value of dev->irq is from PCI_INTERRUPT_LINE register.The default
+>> value of dev->irq usually is 255 before calling acpi_pci_irq_enable().
+>> This will cause a problem When the platform does not support INTx well.
+>> For example, we do not config _PRT on our HIP07 platform, we met irq 255
+>> confilict.
+>
+> s/confilict/conflict/
+>
+> arm64 calls acpi_pci_irq_enable() in the probe() path instead of in
+> the pci_enable_device() path.  I can't remember the reason, and
+> unfortunately we didn't add a comment explaining why arm64 has to be
+> different.
+>
+> PCI_INTERRUPT_LINE is used only by software and has no effect on the
+> hardware.  If it contains 255 when Linux boots, that means firmware
+> must have set it to that value.
+>
+> We need some comment here about why we should always ignore what
+> firmware put there on arm64.  It needs to explain why this is
+> different on arm64 than it is on x86 and ia64.  The changelog above
+> basically says "we need this to make it work", but that's not very
+> informative or convincing.
+
+PCI 3.0, Section 6.2.4,
+Interrupt Line
+Values in this register are system architecture specific.
+
+For x86 based PCs, the values in this register correspond to IRQ
+numbers (0-15) of the standard dual 8259 configuration. The value
+255 is defined as meaning "unknown" or "no connection" to the interrupt
+controller. Values between 15 and 254 are reserved.
+
+It seems the value of Interrupt Line is not defined on ARM64.
+X86 has converted the irq 255 to IRQ_NOTCONNECTED in acpi_pci_irq_valid(),
+but ARM64 does not, so it will not have irq 255 conflict on X86, but
+ARM64 may have the issue if the BIOS does not provide _PRT.
+
+static inline bool acpi_pci_irq_valid(struct pci_dev *dev, u8 pin)
+{
+#ifdef CONFIG_X86
+	/*
+	 * On x86 irq line 0xff means "unknown" or "no connection"
+	 * (PCI 3.0, Section 6.2.4, footnote on page 223).
+	 */
+	if (dev->irq == 0xff) {
+		dev->irq = IRQ_NOTCONNECTED;
+		dev_warn(&dev->dev, "PCI INT %c: not connected\n",
+			 pin_name(pin));
+		return false;
+	}
+#endif
+	return true;
+}
+
+>
+> It sounds like you're saying HIP07 doesn't provide _PRT?  Per the PCI
+> Firmware Spec, r3.0, sec 4.4, _PRT is required under all PCI host
+> bridges.  So I think you're saying HIP07 doesn't comply with the spec,
+
+Yes, It does not support to use _PRT on the Hip07.
+
+> but the workaround here applies to *all* arm64 platforms.  That
+> doesn't seem right.
+
+Yes, it seems the Interrupt Line register is useless on ARM64
+from current code.
+
+>
+> On x86, I think if the _PRT doesn't tell us where an interrupt pin is
+> routed, we fall back to looking at PCI_INTERRUPT_LINE.  But here
+> you seem to be saying "there's no _PRT" *and* "there's no useful
+> information in PCI_INTERRUPT_LINE".
+>
+> Maybe I'm not understanding what you're saying.
+
+The irq 255 conflict issue can be resolved by BIOS to set PCI device's
+Interrupt Line register from 255(0xff) to 0.
+or modify the code as below if ARM64 has the same meaning with X86 about
+Interrupt Line register.
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -390,7 +390,7 @@ static inline int acpi_isa_register_gsi(struct pci_dev *dev)
+
+  static inline bool acpi_pci_irq_valid(struct pci_dev *dev, u8 pin)
+  {
+-#ifdef CONFIG_X86
++#if defined(CONFIG_X86) || defined(CONFIG_ARM64)
+         /*
+          * On x86 irq line 0xff means "unknown" or "no connection"
+          * (PCI 3.0, Section 6.2.4, footnote on page 223).
+
+
+Thanks,
+Dongdong
+>
+>> The error message is as below.
+>> snd_hda_intel 000d:33:00.1: PCI INT B: no GSI
+>> snd_hda_intel 000d:33:00.1: enabling device (0000 -> 0002)
+>> snd_hda_intel 000d:33:00.1: Force to snoop mode by module option
+>> snd_hda_intel 000d:33:00.1: Device has broken 64-bit MSI but arch tried to
+>> assign one above 4G
+>> genirq: Flags mismatch irq 255. 00000001 (enahisic2i0-tx1) vs. 00000081
+>> (snd_hda_intel:card0)
+>> hns-nic HISI00C2:00 enahisic2i0: request irq(255) fail
+>>
+>> enahisic2i0-tx1: this device is a platform device.
+>> snd_hda_intel:card0: this device is a PCI device.
+>>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> ---
+>>  arch/arm64/kernel/pci.c | 5 ++++-
+>>  1 file changed, 4 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>> index 0e2ea1c..6a77bef 100644
+>> --- a/arch/arm64/kernel/pci.c
+>> +++ b/arch/arm64/kernel/pci.c
+>> @@ -28,8 +28,11 @@
+>>   */
+>>  int pcibios_alloc_irq(struct pci_dev *dev)
+>>  {
+>> -	if (!acpi_disabled)
+>> +	if (!acpi_disabled) {
+>> +		dev->irq = 0;
+>>  		acpi_pci_irq_enable(dev);
+>> +	}
+>> +
+>>
+>>  	return 0;
+>>  }
+>> --
+>> 1.9.1
+>>
+>
+> .
+>
