@@ -1,74 +1,224 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0136.outbound.protection.outlook.com ([104.47.33.136]:16256
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752759AbeCaAtM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 20:49:12 -0400
-From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5] PCI: hv: Make sure the bus domain is really unique
-Date: Sat, 31 Mar 2018 00:49:09 +0000
-Message-ID: <F31FD99A-2356-4659-BEC1-91CAE1920B90@microsoft.com>
-References: <4BF97B43-5339-4750-9704-23D6AAC4A01E@microsoft.com>
- <105A3FAC-23AF-40F9-8B83-F00DED14EC43@microsoft.com>
- <20180330212311.GB9322@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180330212311.GB9322@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.kernel.org ([198.145.29.99]:56568 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932197AbeCMW0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 18:26:48 -0400
+Subject: [PATCH v1 2/4] PCI/VPD: Move VPD sysfs code to vpd.c
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 13 Mar 2018 17:26:41 -0500
+Message-ID: <152097999840.37832.2831547542821143769.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152097990638.37832.15000151673990461303.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152097990638.37832.15000151673990461303.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CT5PbiAzLzMwLzE4LCAyOjIzIFBNLCAiQmpvcm4gSGVsZ2FhcyIgPGhlbGdhYXNAa2VybmVsLm9y
-Zz4gd3JvdGU6DQoJPiAgID5PbiBGcmksIE1hciAzMCwgMjAxOCBhdCAwNzozNTowNFBNICswMDAw
-LCBTcmlkaGFyIFBpdGNoYWkgd3JvdGU6DQoJPiAgID5jb21taXQgNGE5YjA5MzNiZGZjICgiUENJ
-OiBodjogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KCT4gICA+ZG9tYWluIikgbmVl
-ZCB0byBiZSByZXZlcnRlZC4gQWxzbywgd2Ugbm8gbG9uZ2VyIG5lZWQgaXQgYXMgY29tbWl0DQoJ
-PiAgID40YTE2MjZkZDIzM2UgKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGIG1hbmFnZW1lbnQiKSBy
-ZW1vdmUgdGhlDQoJPiAgID5uZWVkIGZvciBpdC4NCgk+DQoJPkRvIHlvdSBtZWFuIDBjMTk1NTY3
-YThmNiAoIm5ldHZzYzogdHJhbnNwYXJlbnQgVkYgbWFuYWdlbWVudCIpPw0KCT4NCgk+SSBkb24n
-dCBzZWUgYSA0YTE2MjZkZDIzM2UgY29tbWl0IGluIExpbnVzJyB0cmVlLg0KCT4NCg0KVGhhdCBp
-cyByaWdodC4gc2hhIHNob3VsZCBiZSA0YTE2MjZkZDIzM2UuDQoNCgk+VGhlIGNvbm5lY3Rpb24g
-YmV0d2VlbiAwYzE5NTU2N2E4ZjYgKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGDQoJPm1hbmFnZW1l
-bnQiKSBhbmQgdGhpcyBIeXBlci1WIGRvbWFpbiBJRCBpc3N1ZSBpcyBub3QgY2xlYXIgdG8gbWUg
-YXQNCgk+YWxsLiAgQnV0IG9idmlvdXNseSBJJ20gbm90IGEgbmV0d29ya2luZyBvciBhIEh5cGVy
-LVYgcGVyc29uLg0KCT4NCgk+QSBoaW50IGluIHRoZSBjaGFuZ2Vsb2cgYWJvdXQgd2hhdCB0aGF0
-IGNvbm5lY3Rpb24gaXMgd291bGQgYmUgbmljZS4NCgk+DQoJPiAgID5SZXZlcnQgY29tbWl0IDRh
-OWIwOTMzYmRmYyAoIlBDSTogaHY6IFVzZSBkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQQ0kNCgk+
-ICAgPmRvbWFpbiIpIHNvIHdlIGNhbiByZWxpYWJseSBzdXBwb3J0IG11bHRpcGxlIGRldmljZXMg
-YmVpbmcgYXNzaWduZWQgdG8NCgk+ICAgPmEgZ3Vlc3QuDQoJPiAgID4NCgk+ICAgPlRoaXMgcmV2
-ZXJ0IHNob3VsZCBvbmx5IGJlIGJhY2twb3J0ZWQgdG8ga2VybmVscyB0aGF0IGNvbnRhaW4gY29t
-bWl0DQoJPiAgID40YTE2MjZkZDIzM2UgKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGIG1hbmFnZW1l
-bnQiKS4NCgk+ICAgPg0KCT4gICA+Rml4ZXM6IDRhOWIwOTMzYmRmYyAoIlBDSTogaHY6IFVzZSBk
-ZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQQ0kgZG9tYWluIikNCgk+ICAgPlNpZ25lZC1vZmYtYnk6
-IFNyaWRoYXIgUGl0Y2hhaSA8c3JpZGhhci5waXRjaGFpQG1pY3Jvc29mdC5jb20+DQoJPiAgID5D
-Yzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KCT4NCgk+VGhpcyBiYWNrcG9ydGluZyBndWlkYW5j
-ZSBpcyB2ZXJ5IGNvbmZ1c2luZy4NCgk+DQoJPjRhOWIwOTMzYmRmYyAoIlBDSTogaHY6IFVzZSBk
-ZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQQ0kgZG9tYWluIikNCgk+YXBwZWFyZWQgaW4gdjQuMTEu
-DQoJPg0KCT4wYzE5NTU2N2E4ZjYgKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGIG1hbmFnZW1lbnQi
-KSBhcHBlYXJlZCBpbiB2NC4xNC4NCgk+DQoJPlRoZSBjaGFuZ2Vsb2cgYW5kIHRoZSAiRml4ZXMi
-IHRhZyBib3RoIHN1Z2dlc3QgdGhhdCA0YTliMDkzM2JkZmMgd2FzDQoJPmZsYXQtb3V0IGJ1Z2d5
-IGFuZCBzaG91bGQgYmUgcmV2ZXJ0ZWQgdW5jb25kaXRpb25hbGx5LiAgVGhhdCB3b3VsZA0KCT5t
-ZWFuIHRoaXMgcGF0Y2ggc2hvdWxkIGJlIGFwcGxpZWQgdG8gdjQuMTEgYW5kIGxhdGVyIHN0YWJs
-ZSBrZXJuZWxzLg0KCT4NCgk+QnV0IHRoZSBjaGFuZ2Vsb2cgYWxzbyBzYXlzICJvbmx5IHJldmVy
-dCA0YTliMDkzM2JkZmMgaWYgeW91IGhhdmUNCgk+MGMxOTU1NjdhOGY2Ii4gIFRoYXQgd291bGQg
-bWVhbiB0aGlzIHBhdGNoIHNob3VsZCBvbmx5IGJlIGFwcGxpZWQgdG8NCgk+djQuMTQgYW5kIGxh
-dGVyIHN0YWJsZSBrZXJuZWxzLg0KCT4NCgk+V2hpY2ggaXMgaXQ/ICBZb3UgY2FuIGFuc3dlciBp
-biB0aGlzIHRocmVhZCBpZiB5b3Ugd2FudCwgYnV0IExvcmVuem8NCgk+d2lsbCB1bHRpbWF0ZWx5
-IGJlIGxvb2tpbmcgZm9yIGEgdjYgcGF0Y2ggd2l0aCBhIGNvcnJlY3RlZCBjaGFuZ2Vsb2cuDQoN
-Ckl0IGlzIHRoZSBDYXNlIDEuIFdlIGp1c3QgbmVlZCB0byByZXZlcnQgNGE5YjA5MzNiZGZjLiBJ
-IHdpbGwgcmVtb3ZlIHRoZQ0KcmVmZXJlbmNlIHRvIDBjMTk1NTY3YThmNiBhbHRvZ2V0aGVyIGlu
-IHRoZSBjb21taXQgbWVzc2FnZS4NCg0KCT4NCgk+SSB0aGluayBMb3JlbnpvIGlzIG91dCB0aGlz
-IHdlZWssIGJ1dCBJIHN1c3BlY3QgaGUnbGwgbG9vayBhdCBpdCBuZXh0DQoJPndlZWsuDQoJPg0K
-CT5Cam9ybg0KDQpJIHdpbGwgc2VuZCBvdXQgdGhlIHVwZGF0ZSBwYXRjaCB2ZXJzaW9uIDYuDQoN
-ClRoYW5rcywNClNyaWRoYXIgUGl0Y2hhaSANCg0K
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+Move the VPD-related sysfs code from pci-sysfs.c to vpd.c.  This follows
+the pattern of pcie_aspm_create_sysfs_dev_files().  The goal is to
+encapsulate all the VPD code and structures in vpd.c.
+
+No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci-sysfs.c |   67 ++---------------------------------------------
+ drivers/pci/pci.h       |    2 +
+ drivers/pci/vpd.c       |   67 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 72 insertions(+), 64 deletions(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index eb6bee8724cc..4415e624cf7e 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -982,38 +982,6 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+ 	return count;
+ }
+ 
+-static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
+-			     struct bin_attribute *bin_attr, char *buf,
+-			     loff_t off, size_t count)
+-{
+-	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
+-
+-	if (bin_attr->size > 0) {
+-		if (off > bin_attr->size)
+-			count = 0;
+-		else if (count > bin_attr->size - off)
+-			count = bin_attr->size - off;
+-	}
+-
+-	return pci_read_vpd(dev, off, count, buf);
+-}
+-
+-static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
+-			      struct bin_attribute *bin_attr, char *buf,
+-			      loff_t off, size_t count)
+-{
+-	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
+-
+-	if (bin_attr->size > 0) {
+-		if (off > bin_attr->size)
+-			count = 0;
+-		else if (count > bin_attr->size - off)
+-			count = bin_attr->size - off;
+-	}
+-
+-	return pci_write_vpd(dev, off, count, buf);
+-}
+-
+ #ifdef HAVE_PCI_LEGACY
+ /**
+  * pci_read_legacy_io - read byte(s) from legacy I/O port space
+@@ -1517,29 +1485,8 @@ static struct device_attribute reset_attr = __ATTR(reset, 0200, NULL, reset_stor
+ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+ {
+ 	int retval;
+-	struct bin_attribute *attr;
+-
+-	/* If the device has VPD, try to expose it in sysfs. */
+-	if (dev->vpd) {
+-		attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
+-		if (!attr)
+-			return -ENOMEM;
+ 
+-		sysfs_bin_attr_init(attr);
+-		attr->size = 0;
+-		attr->attr.name = "vpd";
+-		attr->attr.mode = S_IRUSR | S_IWUSR;
+-		attr->read = read_vpd_attr;
+-		attr->write = write_vpd_attr;
+-		retval = sysfs_create_bin_file(&dev->dev.kobj, attr);
+-		if (retval) {
+-			kfree(attr);
+-			return retval;
+-		}
+-		dev->vpd->attr = attr;
+-	}
+-
+-	/* Active State Power Management */
++	pcie_vpd_create_sysfs_dev_files(dev);
+ 	pcie_aspm_create_sysfs_dev_files(dev);
+ 
+ 	if (!pci_probe_reset_function(dev)) {
+@@ -1552,11 +1499,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+ 
+ error:
+ 	pcie_aspm_remove_sysfs_dev_files(dev);
+-	if (dev->vpd && dev->vpd->attr) {
+-		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
+-		kfree(dev->vpd->attr);
+-	}
+-
++	pcie_vpd_remove_sysfs_dev_files(dev);
+ 	return retval;
+ }
+ 
+@@ -1630,11 +1573,7 @@ int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
+ 
+ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
+ {
+-	if (dev->vpd && dev->vpd->attr) {
+-		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
+-		kfree(dev->vpd->attr);
+-	}
+-
++	pcie_vpd_remove_sysfs_dev_files(dev);
+ 	pcie_aspm_remove_sysfs_dev_files(dev);
+ 	if (dev->reset_fn) {
+ 		device_remove_file(&dev->dev, &reset_attr);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index fcd81911b127..1191320a44d5 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -123,6 +123,8 @@ struct pci_vpd {
+ 
+ int pci_vpd_init(struct pci_dev *dev);
+ void pci_vpd_release(struct pci_dev *dev);
++void pcie_vpd_create_sysfs_dev_files(struct pci_dev *dev);
++void pcie_vpd_remove_sysfs_dev_files(struct pci_dev *dev);
+ 
+ /* PCI /proc functions */
+ #ifdef CONFIG_PROC_FS
+diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+index 4596452d58bf..55477f24d8b9 100644
+--- a/drivers/pci/vpd.c
++++ b/drivers/pci/vpd.c
+@@ -378,6 +378,73 @@ void pci_vpd_release(struct pci_dev *dev)
+ 	kfree(dev->vpd);
+ }
+ 
++static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
++			     struct bin_attribute *bin_attr, char *buf,
++			     loff_t off, size_t count)
++{
++	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
++
++	if (bin_attr->size > 0) {
++		if (off > bin_attr->size)
++			count = 0;
++		else if (count > bin_attr->size - off)
++			count = bin_attr->size - off;
++	}
++
++	return pci_read_vpd(dev, off, count, buf);
++}
++
++static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
++			      struct bin_attribute *bin_attr, char *buf,
++			      loff_t off, size_t count)
++{
++	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
++
++	if (bin_attr->size > 0) {
++		if (off > bin_attr->size)
++			count = 0;
++		else if (count > bin_attr->size - off)
++			count = bin_attr->size - off;
++	}
++
++	return pci_write_vpd(dev, off, count, buf);
++}
++
++void pcie_vpd_create_sysfs_dev_files(struct pci_dev *dev)
++{
++	int retval;
++	struct bin_attribute *attr;
++
++	if (!dev->vpd)
++		return;
++
++	attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
++	if (!attr)
++		return;
++
++	sysfs_bin_attr_init(attr);
++	attr->size = 0;
++	attr->attr.name = "vpd";
++	attr->attr.mode = S_IRUSR | S_IWUSR;
++	attr->read = read_vpd_attr;
++	attr->write = write_vpd_attr;
++	retval = sysfs_create_bin_file(&dev->dev.kobj, attr);
++	if (retval) {
++		kfree(attr);
++		return;
++	}
++
++	dev->vpd->attr = attr;
++}
++
++void pcie_vpd_remove_sysfs_dev_files(struct pci_dev *dev)
++{
++	if (dev->vpd && dev->vpd->attr) {
++		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
++		kfree(dev->vpd->attr);
++	}
++}
++
+ int pci_vpd_find_tag(const u8 *buf, unsigned int off, unsigned int len, u8 rdt)
+ {
+ 	int i;
