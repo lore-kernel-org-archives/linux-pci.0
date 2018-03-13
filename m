@@ -1,94 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35530 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750902AbeCNC4r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 22:56:47 -0400
-Date: Tue, 13 Mar 2018 21:56:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-Message-ID: <20180314025639.GA50067@bhelgaas-glaptop.roam.corp.google.com>
-References: <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
- <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
- <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
- <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:40770 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752611AbeCMVbi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 17:31:38 -0400
+Subject: [pci PATCH v6 5/5] pci-pf-stub: Add PF driver stub for PFs that
+ function only to enable VFs
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+Date: Tue, 13 Mar 2018 14:31:36 -0700
+Message-ID: <20180313213054.3553.89366.stgit@localhost.localdomain>
+In-Reply-To: <20180313212508.3553.65326.stgit@localhost.localdomain>
+References: <20180313212508.3553.65326.stgit@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 05:21:20PM -0600, Logan Gunthorpe wrote:
-> On 13/03/18 05:08 PM, Bjorn Helgaas wrote:
-> > On Tue, Mar 13, 2018 at 10:31:55PM +0000, Stephen  Bates wrote:
-> > If it *is* necessary because Root Ports and devices below them behave
-> > differently than in conventional PCI, I think you should include a
-> > reference to the relevant section of the spec and check directly for a
-> > Root Port.  I would prefer that over trying to exclude Root Ports by
-> > looking for two upstream bridges.
-> 
-> Well we've established that we don't want to allow root ports.
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
-I assume you want to exclude Root Ports because of multi-function
-devices and the "route to self" error.  I was hoping for a reference
-to that so I could learn more about it.
+Add a new driver called "pci-pf-stub" to act as a "white-list" for PF
+devices that provide no other functionality other then acting as a means of
+allocating a set of VFs. For now I only have one example ID provided by
+Amazon in terms of devices that require this functionality. The general
+idea is that in the future we will see other devices added as vendors come
+up with devices where the PF is more or less just a lightweight shim used
+to allocate VFs.
 
-While I was looking for it, I found sec 6.12.1.2 (PCIe r4.0), "ACS
-Functions in SR-IOV Capable and Multi-Function Devices", which seems
-relevant.  It talks about "peer-to-peer Requests (between Functions of
-the device)".  Thay says to me that multi-function devices can DMA
-between themselves.
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+---
 
-> But we need to, at a minimum, do two pci_upstream_bridge() calls...
-> 
-> Remember, we need to check that a number of devices are behind the same
-> switch. So we need to find a _common_ upstream port for several devices.
+v6: New driver to address concerns about Amazon devices left unsupported
 
-I agree that peers need to have a common upstream bridge.  I think
-you're saying peers need to have *two* common upstream bridges.  If I
-understand correctly, requiring two common bridges is a way to ensure
-that peers directly below Root Ports don't try to DMA to each other.
+ drivers/pci/Kconfig       |   12 +++++++++
+ drivers/pci/Makefile      |    2 ++
+ drivers/pci/pci-pf-stub.c |   60 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci_ids.h   |    2 ++
+ 4 files changed, 76 insertions(+)
+ create mode 100644 drivers/pci/pci-pf-stub.c
 
-So I guess the first order of business is to nail down whether peers
-below a Root Port are prohibited from DMAing to each other.  My
-assumption, based on 6.12.1.2 and the fact that I haven't yet found
-a prohibition, is that they can.
-
-> Excluding the multifunction device case (which I don't think is
-> applicable for reasons we've discussed before), this will *never* be the
-> first upstream port for a given device.
-
-If you're looking for a common upstream bridge, you don't need to make
-assumptions about whether the hierarchy is conventional PCI or PCIe or
-how many levels are in the hierarchy.
-
-You already have upstream_bridges_match(), which takes two pci_devs.
-I think it should walk up the PCI hierarchy from the first device,
-checking whether the bridge at each level is also a parent of the
-second device.
-
-Bjorn
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 34b56a8f8480..cdef2a2a9bc5 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -71,6 +71,18 @@ config PCI_STUB
+ 
+ 	  When in doubt, say N.
+ 
++config PCI_PF_STUB
++	tristate "PCI PF Stub driver"
++	depends on PCI
++	depends on PCI_IOV
++	help
++	  Say Y or M here if you want to enable support for devices that
++	  require SR-IOV support, while at the same time the PF itself is
++	  not providing any actual services on the host itself such as
++	  storage or networking.
++
++	  When in doubt, say N.
++
+ config XEN_PCIDEV_FRONTEND
+         tristate "Xen PCI Frontend"
+         depends on PCI && X86 && XEN
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 941970936840..4e133d3df403 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -43,6 +43,8 @@ obj-$(CONFIG_PCI_SYSCALL) += syscall.o
+ 
+ obj-$(CONFIG_PCI_STUB) += pci-stub.o
+ 
++obj-$(CONFIG_PCI_PF_STUB) += pci-pf-stub.o
++
+ obj-$(CONFIG_PCI_ECAM) += ecam.o
+ 
+ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+diff --git a/drivers/pci/pci-pf-stub.c b/drivers/pci/pci-pf-stub.c
+new file mode 100644
+index 000000000000..d218924d9bdb
+--- /dev/null
++++ b/drivers/pci/pci-pf-stub.c
+@@ -0,0 +1,60 @@
++// SPDX-License-Identifier: GPL-2.0
++/* pci-pf-stub - simple stub driver for PCI SR-IOV PF device
++ *
++ * This driver is meant to act as a "white-list" for devices that provde
++ * SR-IOV functionality while at the same time not actually needing a
++ * driver of their own.
++ */
++
++#include <linux/module.h>
++#include <linux/pci.h>
++
++/**
++ * pci_pf_stub_white_list - White list of devices to bind pci-pf-stub onto
++ *
++ * This table provides the list of IDs this driver is supposed to bind
++ * onto. You could think of this as a list of "quirked" devices where we
++ * are adding support for SR-IOV here since there are no other drivers
++ * that they would be running under.
++ *
++ * Layout of the table below is as follows:
++ * { Vendor ID, Device ID,
++ *   SubVendor ID, SubDevice ID,
++ *   Class, Class Mask,
++ *   private data (not used) }
++ */
++static const struct pci_device_id pci_pf_stub_white_list[] = {
++	{ PCI_VDEVICE(AMAZON, 0x0053) },
++	/* required last entry */
++	{ 0 }
++};
++MODULE_DEVICE_TABLE(pci, pci_pf_stub_white_list);
++
++static int pci_pf_stub_probe(struct pci_dev *dev,
++			     const struct pci_device_id *id)
++{
++	pci_info(dev, "claimed by pci-pf-stub\n");
++	return 0;
++}
++
++static struct pci_driver pf_stub_driver = {
++	.name			= "pci-pf-stub",
++	.id_table		= pci_pf_stub_white_list,
++	.probe			= pci_pf_stub_probe,
++	.sriov_configure	= pci_sriov_configure_simple,
++};
++
++static int __init pci_pf_stub_init(void)
++{
++	return pci_register_driver(&pf_stub_driver);
++}
++
++static void __exit pci_pf_stub_exit(void)
++{
++	pci_unregister_driver(&pf_stub_driver);
++}
++
++module_init(pci_pf_stub_init);
++module_exit(pci_pf_stub_exit);
++
++MODULE_LICENSE("GPL");
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index a6b30667a331..b10621896017 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2548,6 +2548,8 @@
+ #define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
+ #define PCI_SUBSYSTEM_ID_CIRCUITCO_MINNOWBOARD	0x0001
+ 
++#define PCI_VENDOR_ID_AMAZON		0x1d0f
++
+ #define PCI_VENDOR_ID_TEKRAM		0x1de1
+ #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
+ 
