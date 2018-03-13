@@ -1,138 +1,32 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [pci PATCH v3 2/3] vfio: Add support for unmanaged or userspace
- managed SR-IOV
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, mheyne@amazon.de,
-        liang-min.wang@intel.com, mark.d.rustad@intel.com,
-        dwmw2@infradead.org, dwmw@amazon.co.uk
-Date: Tue, 06 Mar 2018 11:29:50 -0800
-Message-ID: <20180306192947.3153.20106.stgit@localhost.localdomain>
-In-Reply-To: <20180306192423.3153.42741.stgit@localhost.localdomain>
-References: <20180306192423.3153.42741.stgit@localhost.localdomain>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f169.google.com ([74.125.82.169]:38037 "EHLO
+        mail-ot0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932627AbeCMKyb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 06:54:31 -0400
+Received: by mail-ot0-f169.google.com with SMTP id 95so18465055ote.5
+        for <linux-pci@vger.kernel.org>; Tue, 13 Mar 2018 03:54:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <b440214a-0768-38a4-9410-9eedc7a79dca@green-communications.fr>
+References: <b440214a-0768-38a4-9410-9eedc7a79dca@green-communications.fr>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Tue, 13 Mar 2018 07:54:30 -0300
+Message-ID: <CAOMZO5DeTvR2YiJa1ei7vW=m1FukJRhdO-DaoeKLrFeSvFO0QA@mail.gmail.com>
+Subject: Re: PCI enumeration broken on Ventana gw5200
+To: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
+Cc: linux-pci@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Hi Nicolas,
 
-This patch is meant to allow assignment of an SR-IOV enabled PF, as in VFs
-have been generated, with vfio-pci. My understanding is the primary use
-case for this is something like DPDK running the PF while the VFs are all
-assigned to guests.
+On Tue, Mar 13, 2018 at 7:45 AM, Nicolas Cavallari
+<Nicolas.Cavallari@green-communications.fr> wrote:
+> When testing v4.16-rc2 on a Ventana gw5200, the mini-PCIe cards were
+> not recognised.  Only the bridge was recognised.
 
-A secondary effect of this is that it provides an interface through which
-it would be possible to enable SR-IOV on drivers that may not have a
-physical function that actually manages the device.
+Please try 4.16-rc5 instead.
 
-Enabling SR-IOV should be pretty straight forward. As long as there are no
-userspace processes currently controlling the interface the number of VFs
-can be changed, and VFs will be generated without drivers being loaded on
-the host. Once the userspace process begins controlling the interface the
-number of VFs cannot be updated via the sysfs until the control is
-released.
-
-Note the VFs will have drivers load on them in the host if the
-sriov_unmanaged_autoprobe is updated to a value of 1. However the behavior
-of the VFs in such a setup cannot be guaranteed as the PF will not be
-available until the userspace process starts and begins to manage the
-device.
-
-For now I am leaving the value as locked when the PF is being controlled
-from userspace as a form of synchronization. Basically this way we cannot
-have the number of VFs change out from under the process so it should not
-require any notification framework, and the configuration can just be read
-out via configuration space accesses.
-
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
----
- drivers/vfio/pci/vfio_pci.c |   59 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
-
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index b0f759476900..8025d7336071 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1224,6 +1224,8 @@ static void vfio_pci_remove(struct pci_dev *pdev)
- 				VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM);
- 	}
- 
-+	pci_disable_sriov(pdev);
-+
- 	if (!disable_idle_d3)
- 		pci_set_power_state(pdev, PCI_D0);
- }
-@@ -1260,12 +1262,69 @@ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
- 	.error_detected = vfio_pci_aer_err_detected,
- };
- 
-+#ifdef CONFIG_PCI_IOV
-+static int vfio_pci_sriov_configure(struct pci_dev *pdev, int nr_virtfn)
-+{
-+	struct vfio_pci_device *vdev;
-+	struct vfio_device *device;
-+	int err;
-+
-+	device = vfio_device_get_from_dev(&pdev->dev);
-+	if (device == NULL)
-+		return -ENODEV;
-+
-+	vdev = vfio_device_data(device);
-+	if (vdev == NULL) {
-+		vfio_device_put(device);
-+		return -ENODEV;
-+	}
-+
-+	/*
-+	 * If a userspace process is already using this device just return
-+	 * busy and don't allow for any changes.
-+	 */
-+	if (vdev->refcnt) {
-+		pci_warn(pdev,
-+			 "PF is currently in use, blocked until released by user\n");
-+		return -EBUSY;
-+	}
-+
-+	err = pci_sriov_configure_unmanaged(pdev, nr_virtfn);
-+	if (err <= 0)
-+		return err;
-+
-+	/*
-+	 * We are now leaving VFs in the control of some unknown PF entity.
-+	 *
-+	 * Best case is a well behaved userspace PF is expected and any VMs
-+	 * that the VFs will be assigned to are dependent on the userspace
-+	 * entity anyway. An example being NFV where maybe the PF is acting
-+	 * as an accelerated interface for a firewall or switch.
-+	 *
-+	 * Worst case is somebody really messed up and just enabled SR-IOV
-+	 * on a device they were planning to assign to a VM somwhere.
-+	 *
-+	 * In either case it is probably best for us to set the taint flag
-+	 * and warn the user since this could get really ugly really quick
-+	 * if this wasn't what they were planning to do.
-+	 */
-+	add_taint(TAINT_USER, LOCKDEP_STILL_OK);
-+	pci_warn(pdev,
-+		 "Adding kernel taint for vfio-pci now managing SR-IOV PF device\n");
-+
-+	return nr_virtfn;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static struct pci_driver vfio_pci_driver = {
- 	.name		= "vfio-pci",
- 	.id_table	= NULL, /* only dynamic ids */
- 	.probe		= vfio_pci_probe,
- 	.remove		= vfio_pci_remove,
- 	.err_handler	= &vfio_err_handlers,
-+#ifdef CONFIG_PCI_IOV
-+	.sriov_configure = vfio_pci_sriov_configure,
-+#endif
- };
- 
- struct vfio_devices {
+Koen's commit should fix the issue you described:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/pci/dwc?h=v4.16-rc5&id=fc110ebdd014dd1368c98e7685b47789c31fab42
