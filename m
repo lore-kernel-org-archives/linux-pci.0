@@ -1,62 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:53817 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751249AbeC2JvU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 05:51:20 -0400
-Subject: Re: [PATCH v5 08/12] PCI: endpoint: Handle 64-bit BARs properly
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        <cyrille.pitchen@free-electrons.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Received: from smtp.codeaurora.org ([198.145.29.96]:55970 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751534AbeCMRtq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 13:49:46 -0400
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sekhar Nori <nsekhar@ti.com>, John Keeping <john@metanate.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
- <20180328115018.31921-9-niklas.cassel@axis.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <390035dc-7e33-184f-a2eb-909c09e2c455@ti.com>
-Date: Thu, 29 Mar 2018 15:20:51 +0530
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+ <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
+Date: Tue, 13 Mar 2018 13:49:41 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180328115018.31921-9-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 3/13/2018 12:43 PM, Logan Gunthorpe wrote:
+> 
+> 
+> On 12/03/18 09:28 PM, Sinan Kaya wrote:
+>> On 3/12/2018 3:35 PM, Logan Gunthorpe wrote:
+>> Regarding the switch business, It is amazing how much trouble you went into
+>> limit this functionality into very specific hardware.
+>>
+>> I thought that we reached to an agreement that code would not impose
+>> any limits on what user wants.
+>>
+>> What happened to all the emails we exchanged?
+> 
+> It turns out that root ports that support P2P are far less common than anyone thought. So it will likely have to be a white list. Nobody else seems keen on allowing the user to enable this on hardware that doesn't work. The easiest solution is still limiting it to using a switch. From there, if someone wants to start creating a white-list then that's probably the way forward to support root ports.
+
+I thought only few root ports had problem. Thanks for clarifying that.
+
+> 
+> And there's also the ACS problem which means if you want to use P2P on the root ports you'll have to disable ACS on the entire system. (Or preferably, the IOMMU groups need to get more sophisticated to allow for dynamic changes).
+> 
+
+Do you think you can keep a pointer to the parent bridge instead of querying it
+via get_upstream_bridge_port() here so that we can reuse your
+pci_p2pdma_disable_acs() in the future.
+
++int pci_p2pdma_disable_acs(struct pci_dev *pdev)
++{
++	struct pci_dev *up;
++	int pos;
++	u16 ctrl;
++
++	up = get_upstream_bridge_port(pdev);
++	if (!up)
++		return 0;
+
+Some future device would only deal with pci_p2pdma_add_client(() for whitelisting
+instead of changing all of your code.
+
+We should at least limit the usage of get_upstream_bridge_port() family of functions
+to probe time only.
+
+> Additionally, once you allow for root ports you may find the IOMMU getting in the way.
+
+We can tell iommu to do one to one translation by passing iommu.passthrough=1 to kernel
+command line to have identical behavior to your switch case.
+
+> 
+> So there are great deal more issues to sort out if you don't restrict to devices behind switches.
+> 
+> Logan
+> 
 
 
-On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
-> If a 64-bit BAR was set-up, we need to skip a BAR,
-> since a 64-bit BAR consists of a BAR pair.
-> 
-> We need to check what BAR width the epc->ops->set_bar() specific
-> implementation actually did set-up, since some drivers, like the
-> Cadence EP controller, sometimes sets up a 64-bit BAR, even though
-> a 32-bit BAR was requested.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/endpoint/functions/pci-epf-test.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index 91274779e59f..d46e3ebabb8e 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -380,6 +380,13 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
->  			if (bar == test_reg_bar)
->  				return ret;
->  		}
-> +		/*
-> +		 * pci_epc_set_bar() sets PCI_BASE_ADDRESS_MEM_TYPE_64
-> +		 * if the specific implementation required a 64-bit BAR,
-> +		 * even if we only requested a 32-bit BAR.
-> +		 */
-> +		if (epf_bar->flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
-> +			bar++;
->  	}
->  
->  	return 0;
-> 
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
