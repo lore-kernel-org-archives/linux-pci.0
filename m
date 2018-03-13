@@ -1,42 +1,75 @@
-Return-Path: <SRS0=jK+Y=GV=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=jK+Y=GV=h08.hostsharing.net=foo00@kernel.org>
-Date: Sat, 31 Mar 2018 10:29:03 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <yehezkel.bernat@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
- bus number
-Message-ID: <20180331082903.GA21051@wunner.de>
-References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
- <20180226132112.81447-2-mika.westerberg@linux.intel.com>
- <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180328114346.GZ2703@lahna.fi.intel.com>
- <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180329115911.GN2703@lahna.fi.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52526 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751412AbeCMRgh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 13:36:37 -0400
+Date: Tue, 13 Mar 2018 12:36:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Daniel Vetter <daniel@ffwll.ch>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Sean Paul <seanpaul@chromium.org>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pci@vger.kernel.org, Daniel Drake <dan@reactivated.net>,
+        Denis Lisov <dennis.lissov@gmail.com>,
+        Peter Wu <peter@lekensteyn.nl>,
+        Martin Lopatar <lopin@dataplex.cz>,
+        Maik Freudenberg <hhfeuer@gmx.de>,
+        Takashi Iwai <tiwai@suse.com>, Lyude Paul <lyude@redhat.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        alsa-devel@alsa-project.org, Mike Lothian <mike@fireburn.co.uk>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: Re: [PATCH v2 0/7] Modernize vga_switcheroo by using device link for
+ HDA
+Message-ID: <20180313173634.GB202215@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1520068884.git.lukas@wunner.de>
+ <20180306102940.GG22212@phenom.ffwll.local>
+ <20180311155549.GA11806@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180329115911.GN2703@lahna.fi.intel.com>
+In-Reply-To: <20180311155549.GA11806@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 29, 2018 at 02:59:11PM +0300, Mika Westerberg wrote:
-> On Wed, Mar 28, 2018 at 01:09:06PM -0500, Bjorn Helgaas wrote:
-> > The same issue could happen on any system where we use acpiphp, so I
-> > don't think Thunderbolt is really relevant here, and it's easy to
-> > confuse things by mentioning it.
+On Sun, Mar 11, 2018 at 04:55:49PM +0100, Lukas Wunner wrote:
+> On Tue, Mar 06, 2018 at 11:29:40AM +0100, Daniel Vetter wrote:
+> > On Sat, Mar 03, 2018 at 10:53:24AM +0100, Lukas Wunner wrote:
+> > > Modernize vga_switcheroo by using a device link to enforce a runtime PM
+> > > dependency from an HDA controller to the GPU it's integrated into, v2.
+> > > 
+> > > https://github.com/l1k/linux/commits/switcheroo_devlink_v2
+> > 
+> > This all looks really reasonable and like a good cleanup, but it's a bit
+> > too much detail so I'll punt review to someone else with more clue.
 > 
-> This issue can happen regardless whether acpiphp is used or not.
+> Patches [3/7] to [7/7] were reviewed by Peter Wu, the HDA bits in
+> patch [5/7] additionally by Takashi.
+> 
+> Patch [2/7] was acked by Bjorn.  There was no ack for patch [1/7]
+> (authored by Rafael), but it adressed the objection Bjorn raised
+> against my original patch, so I'm assuming Bjorn is okay with it.
+> (Bjorn, please let me know if that isn't the case.)
 
-If the platform has yielded hotplug control to the OS via _OSC,
-I don't see how the platform could hot-add devices.  So surely
-reserving a bus number for a bridge without anything below it
-can be constrained to the !pciehp_is_native(bridge) case?
+I am OK with it.  I sent an ack and possible minor changelog tweak.
 
-Thanks,
+I expect that you'll merge the whole series via drm-misc.
 
-Lukas
+> The series has been tested on 5 systems, which raises the confidence:
+> 2x AMD PowerXpress (Mike Lothian, Kai Heng Feng)
+> 2x Nvidia Optimus (Denis Lisov, Peter Wu)
+> 1x MacBook Pro
+> 
+> The issues found during Peter Wu's thorough testing appear to all
+> be unrelated to this series, as per my e-mail yesterday.
+> 
+> If there are no objections, I plan to push the series to
+> drm-misc-next by the middle of the coming week so that it
+> would still catch the last train to 4.17.
+> 
+> Thanks,
+> 
+> Lukas
