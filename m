@@ -1,42 +1,112 @@
-Return-Path: <SRS0=oZA6=GM=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=oZA6=GM=kernel.crashing.org=benh@kernel.org>
-Message-ID: <1521756164.16434.319.camel@kernel.crashing.org>
-Subject: Re: PCIe resets/restore and lack of CRS wait
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Michael
-	Neuling <michael.neuling@au1.ibm.com>,
-        linux-pci-owner@vger.kernel.org
-Date: Fri, 23 Mar 2018 09:02:44 +1100
-In-Reply-To: <6aec45f1-74d9-d36f-7169-0c91733985e3@codeaurora.org>
-References: <1521691380.16434.287.camel@kernel.crashing.org>
-	 <f6af9b6e424c469f433735a106b8ee69@codeaurora.org>
-	 <1521695531.16434.294.camel@kernel.crashing.org>
-	 <1521699853.16434.301.camel@kernel.crashing.org>
-	 <4d1c04efa51db50dd5095ae258c3c52b@codeaurora.org>
-	 <1521726371.16434.307.camel@kernel.crashing.org>
-	 <172f0ea9-7eba-1505-bb79-1ee31cc4d692@codeaurora.org>
-	 <20180322141402.GA242245@bhelgaas-glaptop.roam.corp.google.com>
-	 <6aec45f1-74d9-d36f-7169-0c91733985e3@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: Re: [PATCH v16 0/9] LPC: legacy ISA I/O support
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1520333268-82754-1-git-send-email-john.garry@huawei.com>
+ <1520335317.10722.416.camel@linux.intel.com>
+ <b4459d98-ebd4-7b13-07ec-613845579558@huawei.com>
+ <CAJZ5v0gnf6rDYtKLBNfKjC=g3W=2XUed_R=AO+GeGYuubP_zWw@mail.gmail.com>
+ <3ef757ff-8430-017f-59d3-ff67f49f5a80@huawei.com>
+ <CAJZ5v0jTJ-LwyPUO7mbS47KyZ35pZeBfqkjxqubZjEGC=OJ82Q@mail.gmail.com>
+CC: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "Hanjun Guo" <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Rob Herring <robh@kernel.org>, Joe Perches <joe@perches.com>,
+        "Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Alexander Graf <agraf@suse.de>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <fb457950-b0d7-0d77-02c5-f9531ea71d90@huawei.com>
+Date: Tue, 13 Mar 2018 10:42:22 +0000
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0jTJ-LwyPUO7mbS47KyZ35pZeBfqkjxqubZjEGC=OJ82Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-03-22 at 12:54 -0500, Sinan Kaya wrote:
-> Ben,
-> 
-> On 3/22/2018 9:14 AM, Bjorn Helgaas wrote:
-> > CRS SV is optional, so the code has to work when it's absent.  But we
-> > can tell whether it's supported, so if we need to, we can do something
-> > different when it's absent.
-> 
-> Let us know if you want to work on this or not. Otherwise, I'll add
-> to the list of things I'm doing.
+On 13/03/2018 10:22, Rafael J. Wysocki wrote:
+> On Tue, Mar 6, 2018 at 5:22 PM, John Garry <john.garry@huawei.com> wrote:
+>>>>>>
+>>>>>> Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC
+>>>>>> peripherals can
+>>>>>> be supported without any changes on the existing ipmi-si driver.
+>>>>>>
+>>>>>> The whole patchset has been tested on Hip07 D05 board both using DTB
+>>>>>> and ACPI.
+>>>>>>
+>>>>>
+>>>>>> V15 thread here: https://lkml.org/lkml/2018/2/26/584
+>>>>>
+>>>>>
+>>>>>
+>>>>> Thanks for an update.
+>>>>> Though I answered to previous thread.
+>>>>>
+>>>>> Summary: I'm fine with the series as long as maintainers are fine
+>>>>> (Rafael et al.). On personal side I think that the handler approach is
+>>>>> better. Details are in v15 thread.
+>>>>
+>>>>
+>>>>
+>>>> Hi Andy,
+>>>>
+>>>> Thanks for your input and continued support. As I mentioned in reply in
+>>>> v15,
+>>>> the handler support would (or has) faced issues. And Rafael seems fine
+>>>> with
+>>>> deferring the probe to the LLDD in Patch #7/9
+>>>
+>>>
+>>
+>> Hi Rafael,
+>>
+>>> Well, the only sort-of concern is that these devices may not be
+>>> "serial bus slaves" in general, so the naming is slightly confusing.
+>>>
+>>
+>> Right, the name.
+>>
+>> The key point is that we model the bus the same as other serial buses like
+>> I2C or SPI, so require the same treatment from the ACPI scan.
+>>
+>> Would you prefer acpi_is_serial_bus_slave() and
+>> acpi_device_flags.serial_bus_slave symbols be modified also?
+>
+> Yeah, preferably.
+>
+> You can rename them to acpi_device_enumeration_by_parent() and
+> acpi_device_flags.enumeration_by_parent, respectively, as far as I'm
+> concerned.
+>
+> At least the names would match the purpose then. :-)
+>
+> And please update the comment in acpi_default_enumeration() while at it.
 
-On my side (powerpc) I'll make sure we do get ffff's and that our retry
-timeouts aren't too high. I just need to makes sure we don't end up
-triggering an EEH failure on the timeout though.
+Hi Rafael,
 
-Cheers,
-Ben.
+That should be ok. I can just add this mentioned modification to my 
+series and send for review.
+
+All the best,
+John
+
+>
+> .
+>
