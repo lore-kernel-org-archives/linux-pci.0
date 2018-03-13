@@ -1,134 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52268 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751362AbeCMRez (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 13:34:55 -0400
-Date: Tue, 13 Mar 2018 12:34:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: dri-devel@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        nouveau@lists.freedesktop.org, Imre Deak <imre.deak@intel.com>,
-        Maik Freudenberg <hhfeuer@gmx.de>,
-        Raphael Doursenaud <rdoursenaud@free.fr>,
-        Martin Lopatar <lopin@dataplex.cz>,
-        Daniel Drake <dan@reactivated.net>,
-        Denis Lisov <dennis.lissov@gmail.com>, zigarrre@gmail.com,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/7] PCI: Restore config space on runtime resume
- despite being unbound
-Message-ID: <20180313173449.GA202215@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1520068884.git.lukas@wunner.de>
- <92fb6e6ae2730915eb733c08e2f76c6a313e3860.1520068884.git.lukas@wunner.de>
+Return-Path: <SRS0=fJCO=GD=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=fJCO=GD=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 13 Mar 2018 10:22:21 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Dongdong Liu <liudongdong3@huawei.com>, linux-pci@vger.kernel.org,
+	linuxarm@huawei.com, charles.chenxin@huawei.com,
+	linux-acpi@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [RFC PATCH] ARM64/PCI: Set dev->irq=0 before calling
+ acpi_pci_irq_enable()
+Message-ID: <20180313102221.GA14608@e107981-ln.cambridge.arm.com>
+References: <1520650692-62705-1-git-send-email-liudongdong3@huawei.com>
+ <20180313001830.GA60197@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <92fb6e6ae2730915eb733c08e2f76c6a313e3860.1520068884.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180313001830.GA60197@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 03, 2018 at 10:53:24AM +0100, Lukas Wunner wrote:
-> From: Rafael J. Wysocki <rjw@rjwysocki.net>
+On Mon, Mar 12, 2018 at 07:18:30PM -0500, Bjorn Helgaas wrote:
+> [+cc Rafael, linux-acpi]
 > 
-> We leave PCI devices not bound to a driver in D0 during runtime suspend.
-> But they may have a parent which is bound and can be transitioned to
-> D3cold at runtime.  Once the parent goes to D3cold, the unbound child
-> may go to D3cold as well.  When the child comes out of D3cold, its BARs
-> are uninitialized and thus inaccessible when a driver tries to probe.
-
-There's no clear way to tell whether a BAR is uninitialized.  At
-power-up, the writable bits will be zero, which is a valid BAR value.
-If enabled in PCI_COMMAND, the BAR is accessible and may conflict with
-other devices.
-
-Possible alternate wording:
-
-  When the child goes to D3cold, its internal state, including
-  configuration of BARs, MSI, ASPM, MPS, etc., is lost.
-
-> Moreover configuration done during enumeration, e.g. ASPM and MPS, will
-> be lost.
+> On Sat, Mar 10, 2018 at 10:58:12AM +0800, Dongdong Liu wrote:
+> > The init value of dev->irq is from PCI_INTERRUPT_LINE register.The default
+> > value of dev->irq usually is 255 before calling acpi_pci_irq_enable().
+> > This will cause a problem When the platform does not support INTx well.
+> > For example, we do not config _PRT on our HIP07 platform, we met irq 255
+> > confilict.
 > 
-> One example are recent hybrid graphics laptops which cut power to the
-> discrete GPU when the root port above it goes to ACPI power state D3.
-> Users may provoke this by unbinding the GPU driver and allowing runtime
-> PM on the GPU via sysfs:  The PM core will then treat the GPU as
-> "suspended", which in turn allows the root port to runtime suspend,
-> causing the power resources listed in its _PR3 object to be powered off.
-> The GPU's BARs will be uninitialized when a driver later probes it.
+> s/confilict/conflict/
 > 
-> Another example are hybrid graphics laptops where the GPU itself (rather
-> than the root port) is capable of runtime suspending to D3cold.  If the
-> GPU's integrated HDA controller is not bound and the GPU's driver
-> decides to runtime suspend to D3cold, the HDA controller's BARs will be
-> uninitialized when a driver later probes it.
+> arm64 calls acpi_pci_irq_enable() in the probe() path instead of in
+> the pci_enable_device() path.  I can't remember the reason, and
+> unfortunately we didn't add a comment explaining why arm64 has to be
+> different.
 > 
-> Fix by saving and restoring config space over a runtime suspend cycle
-> even if the device is not bound.
+> PCI_INTERRUPT_LINE is used only by software and has no effect on the
+> hardware.  If it contains 255 when Linux boots, that means firmware
+> must have set it to that value.
 > 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> [lukas: add commit message, bikeshed code comments for clarity]
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> We need some comment here about why we should always ignore what
+> firmware put there on arm64.  It needs to explain why this is
+> different on arm64 than it is on x86 and ia64.  The changelog above
+> basically says "we need this to make it work", but that's not very
+> informative or convincing.
+> 
+> It sounds like you're saying HIP07 doesn't provide _PRT?  Per the PCI
+> Firmware Spec, r3.0, sec 4.4, _PRT is required under all PCI host
+> bridges.  So I think you're saying HIP07 doesn't comply with the spec,
+> but the workaround here applies to *all* arm64 platforms.  That
+> doesn't seem right.
+> 
+> On x86, I think if the _PRT doesn't tell us where an interrupt pin is
+> routed, we fall back to looking at PCI_INTERRUPT_LINE.  But here
+> you seem to be saying "there's no _PRT" *and* "there's no useful
+> information in PCI_INTERRUPT_LINE".
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+I don't think arm64 is doing anything different from x86/ia64 except
+that we route the IRQ at device probe time (it was done to route IRQ at
+the same boot stage in DT and ACPI but I then removed the DT path
+with the pci_fixup_irqs() removal series - moving the IRQ routing at
+pcibios_enable_device() time may well break platforms, x86 has even
+a boot parameter to prevent that :) - ie pci=routeirq).
 
-> ---
-> Changes since v1:
-> - Replace patch to use pci_save_state() / pci_restore_state()
->   for consistency between runtime PM code path of bound and unbound
->   devices. (Rafael, Bjorn)
-> 
->  drivers/pci/pci-driver.c | 17 +++++++++++------
->  1 file changed, 11 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3bed6beda051..6a67cdbd0e6a 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1224,11 +1224,14 @@ static int pci_pm_runtime_suspend(struct device *dev)
->  	int error;
->  
->  	/*
-> -	 * If pci_dev->driver is not set (unbound), the device should
-> -	 * always remain in D0 regardless of the runtime PM status
-> +	 * If pci_dev->driver is not set (unbound), we leave the device in D0,
-> +	 * but it may go to D3cold when the bridge above it runtime suspends.
-> +	 * Save its config space in case that happens.
+Regardless, we are not going to patch the kernel to work around
+a specific platform firmware bug - a _PRT object should be added.
 
-Thanks for this clarification.
+Lorenzo
 
->  	 */
-> -	if (!pci_dev->driver)
-> +	if (!pci_dev->driver) {
-> +		pci_save_state(pci_dev);
->  		return 0;
-> +	}
->  
->  	if (!pm || !pm->runtime_suspend)
->  		return -ENOSYS;
-> @@ -1276,16 +1279,18 @@ static int pci_pm_runtime_resume(struct device *dev)
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->  
->  	/*
-> -	 * If pci_dev->driver is not set (unbound), the device should
-> -	 * always remain in D0 regardless of the runtime PM status
-> +	 * Restoring config space is necessary even if the device is not bound
-> +	 * to a driver because although we left it in D0, it may have gone to
-> +	 * D3cold when the bridge above it runtime suspended.
->  	 */
-> +	pci_restore_standard_config(pci_dev);
-> +
->  	if (!pci_dev->driver)
->  		return 0;
->  
->  	if (!pm || !pm->runtime_resume)
->  		return -ENOSYS;
->  
-> -	pci_restore_standard_config(pci_dev);
->  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
->  	pci_enable_wake(pci_dev, PCI_D0, false);
->  	pci_fixup_device(pci_fixup_resume, pci_dev);
-> -- 
-> 2.15.1
+> Maybe I'm not understanding what you're saying.
 > 
+> > The error message is as below.
+> > snd_hda_intel 000d:33:00.1: PCI INT B: no GSI
+> > snd_hda_intel 000d:33:00.1: enabling device (0000 -> 0002)
+> > snd_hda_intel 000d:33:00.1: Force to snoop mode by module option
+> > snd_hda_intel 000d:33:00.1: Device has broken 64-bit MSI but arch tried to
+> > assign one above 4G
+> > genirq: Flags mismatch irq 255. 00000001 (enahisic2i0-tx1) vs. 00000081
+> > (snd_hda_intel:card0)
+> > hns-nic HISI00C2:00 enahisic2i0: request irq(255) fail
+> > 
+> > enahisic2i0-tx1: this device is a platform device.
+> > snd_hda_intel:card0: this device is a PCI device.
+> > 
+> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> > ---
+> >  arch/arm64/kernel/pci.c | 5 ++++-
+> >  1 file changed, 4 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > index 0e2ea1c..6a77bef 100644
+> > --- a/arch/arm64/kernel/pci.c
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -28,8 +28,11 @@
+> >   */
+> >  int pcibios_alloc_irq(struct pci_dev *dev)
+> >  {
+> > -	if (!acpi_disabled)
+> > +	if (!acpi_disabled) {
+> > +		dev->irq = 0;
+> >  		acpi_pci_irq_enable(dev);
+> > +	}
+> > +
+> >  
+> >  	return 0;
+> >  }
+> > -- 
+> > 1.9.1
+> > 
