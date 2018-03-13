@@ -1,115 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:51776 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755299AbeCSKCi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 06:02:38 -0400
-Subject: Re: [PATCH V4] PCI: rcar: Use runtime PM to control controller clock
-To: Simon Horman <horms@verge.net.au>
-Cc: linux-pci@vger.kernel.org,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-References: <20180318105209.5922-1-marek.vasut+renesas@gmail.com>
- <20180319084447.ce44arxneqd6i3bj@verge.net.au>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <834f8473-3e3b-98b2-56e1-55a3c40aa2dc@gmail.com>
-Date: Mon, 19 Mar 2018 10:54:47 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 13 Mar 2018 11:33:13 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+Subject: Re: [PATCH v2 1/4] firmware: dmi_scan: Introduce the
+ dmi_get_bios_year() helper
+Message-ID: <20180313113313.612d66c6@endymion>
+In-Reply-To: <20180301180220.11333-2-andriy.shevchenko@linux.intel.com>
+References: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
+        <20180301180220.11333-2-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180319084447.ce44arxneqd6i3bj@verge.net.au>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/19/2018 09:44 AM, Simon Horman wrote:
-> On Sun, Mar 18, 2018 at 11:52:09AM +0100, Marek Vasut wrote:
->> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
->>
->> The controller clock can be switched off during suspend/resume,
->> let runtime PM take care of that.
->>
->> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
->> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->> Cc: Simon Horman <horms+renesas@verge.net.au>
->> Cc: Wolfram Sang <wsa@the-dreams.de>
->> Cc: linux-renesas-soc@vger.kernel.org
->> To: linux-pci@vger.kernel.org
->> ---
->> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
->>       reordering of function calls in probe
->>     - Dispose of fail_clk in rcar_pcie_get_resources()
->> V3: - Fix up the failpath in probe function
->> V4: - Rebase on recent linux-next
->> ---
->>  drivers/pci/host/pcie-rcar.c | 40 ++++++++++++----------------------------
->>  1 file changed, 12 insertions(+), 28 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
->> index b4c4aad2cf66..93d59f15c589 100644
->> --- a/drivers/pci/host/pcie-rcar.c
->> +++ b/drivers/pci/host/pcie-rcar.c
->> @@ -142,7 +142,6 @@ struct rcar_pcie {
->>  	void __iomem		*base;
->>  	struct list_head	resources;
->>  	int			root_bus_nr;
->> -	struct clk		*clk;
->>  	struct clk		*bus_clk;
->>  	struct			rcar_msi msi;
->>  };
->> @@ -914,24 +913,14 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
->>  	if (IS_ERR(pcie->base))
->>  		return PTR_ERR(pcie->base);
->>  
->> -	pcie->clk = devm_clk_get(dev, "pcie");
->> -	if (IS_ERR(pcie->clk)) {
->> -		dev_err(dev, "cannot get platform clock\n");
->> -		return PTR_ERR(pcie->clk);
->> -	}
->> -	err = clk_prepare_enable(pcie->clk);
->> -	if (err)
->> -		return err;
->> -
->>  	pcie->bus_clk = devm_clk_get(dev, "pcie_bus");
->>  	if (IS_ERR(pcie->bus_clk)) {
->>  		dev_err(dev, "cannot get pcie bus clock\n");
->> -		err = PTR_ERR(pcie->bus_clk);
->> -		goto fail_clk;
->> +		return PTR_ERR(pcie->bus_clk);
->>  	}
->>  	err = clk_prepare_enable(pcie->bus_clk);
->>  	if (err)
->> -		goto fail_clk;
->> +		return err;
->>  
->>  	i = irq_of_parse_and_map(dev->of_node, 0);
->>  	if (!i) {
->> @@ -953,8 +942,6 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
->>  
->>  err_map_reg:
->>  	clk_disable_unprepare(pcie->bus_clk);
->> -fail_clk:
->> -	clk_disable_unprepare(pcie->clk);
->>  
->>  	return err;
->>  }
->> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>  	if (err)
->>  		goto err_free_bridge;
-> 
-> This error path now calls pci_free_resource_list() and in this case
-> the path is taken if rcar_pcie_parse_request_of_pci_ranges() fails.
-> Is that ok?
+Hi Andy,
 
-I think so, or did I miss something obvious?
+On Thu,  1 Mar 2018 20:02:17 +0200, Andy Shevchenko wrote:
+> The pattern to only extract the year portion of date is used in
+> several places and more users may come.
+> 
+> By using this helper they may create slightly cleaner code.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/firmware/dmi_scan.c | 11 +++++++++++
+>  include/linux/dmi.h         |  2 ++
+>  2 files changed, 13 insertions(+)
+> 
+> diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+> index 6ce299926196..616ec17cc802 100644
+> --- a/drivers/firmware/dmi_scan.c
+> +++ b/drivers/firmware/dmi_scan.c
+> @@ -1015,6 +1015,17 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+>  }
+>  EXPORT_SYMBOL(dmi_get_date);
+>  
+> +int dmi_get_bios_year(void)
+> +{
+> +	bool exists;
+> +	int year;
+> +
+> +	exists = dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
+> +
+> +	return exists ? year : -ENODATA;
+
+If the DMI field exists but year can't be parsed, "exists" is true but
+"year" is 0. From the caller's perspective, it is the same as if the
+field did not exist (year is not available in both cases), but the
+function returns 0 in one case and -ENODATA in the other. Don't you
+think that:
+
+	return year ? year : -ENODATA;
+
+would serve the caller better?
+
+> +}
+> +EXPORT_SYMBOL(dmi_get_bios_year);
+> +
+>  /**
+>   *	dmi_walk - Walk the DMI table and get called back for every record
+>   *	@decode: Callback function
+> diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+> index 46e151172d95..6a86d8db16d9 100644
+> --- a/include/linux/dmi.h
+> +++ b/include/linux/dmi.h
+> @@ -106,6 +106,7 @@ extern void dmi_scan_machine(void);
+>  extern void dmi_memdev_walk(void);
+>  extern void dmi_set_dump_stack_arch_desc(void);
+>  extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
+> +extern int dmi_get_bios_year(void);
+>  extern int dmi_name_in_vendors(const char *str);
+>  extern int dmi_name_in_serial(const char *str);
+>  extern int dmi_available;
+> @@ -133,6 +134,7 @@ static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+>  		*dayp = 0;
+>  	return false;
+>  }
+> +static inline int dmi_get_bios_year(void) { return -ENXIO; }
+>  static inline int dmi_name_in_vendors(const char *s) { return 0; }
+>  static inline int dmi_name_in_serial(const char *s) { return 0; }
+>  #define dmi_available 0
+
+Looks good otherwise.
+
+Reviewed-by: Jean Delvare <jdelvare@suse.de>
 
 -- 
-Best regards,
-Marek Vasut
+Jean Delvare
+SUSE L3 Support
