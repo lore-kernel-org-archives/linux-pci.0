@@ -1,47 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:49814 "EHLO gate.crashing.org"
+Received: from ale.deltatee.com ([207.54.116.67]:36406 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751692AbeCVEDI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Mar 2018 00:03:08 -0400
-Message-ID: <1521691380.16434.287.camel@kernel.crashing.org>
-Subject: PCIe resets/restore and lack of CRS wait
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michael Neuling <michael.neuling@au1.ibm.com>
-Date: Thu, 22 Mar 2018 15:03:00 +1100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S932349AbeCMXqM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 19:46:12 -0400
+To: Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+ <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+ <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
+ <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
+ <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
+ <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+ <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+ <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+ <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
+ <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
+ <016dc910-f96a-8a60-4bda-fa24eea98ea5@codeaurora.org>
+ <2b152932-2f44-408b-e3ed-b4608d95f82e@deltatee.com>
+ <156c24fb-6e27-28f6-0b36-7fd83311ce37@codeaurora.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <932bbf48-9d86-97ec-17bb-052099aff99e@deltatee.com>
+Date: Tue, 13 Mar 2018 17:45:58 -0600
+MIME-Version: 1.0
+In-Reply-To: <156c24fb-6e27-28f6-0b36-7fd83311ce37@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Folks !
 
-So while chasing some issues in our EEH error handling, we noticed that
-the generic code has about a bazillion of "reset" path for devices,
-most of them seemingly missing a wait for CRS after the reset.
 
-That includes PM based resets or wakeups (can a D3->D0 transition cause
-CRS to be returned ? Unclear but we should try to be safe), but mostly
-it includes anything that resets the pcie port (PERST) or the secondary
-bridge reset (hot resets).
+On 13/03/18 05:19 PM, Sinan Kaya wrote:
+> It is still a switch it can move packets but, maybe it can move data at
+> 100kbps speed. 
 
-For example take __pci_reset_function_locked(...), it can call
-pci_parent_bus_reset() which will perform a hot reset but will *not*
-wait for CRS.
+As Stephen pointed out, it's a requirement of the PCIe spec that a
+switch supports P2P. If you want to sell a switch that does P2P with bad
+performance then that's on you to deal with.
 
-There are a plethora of reset path in there that are similar, it's
-actually hard to figure out which is what, but they all have in common
-that they don't wait for CRS with the notable exception of the FLR
-case.
+> What prevents that switch from trying P2P and having a bad user experience?
 
-I'm keen on doing a rather "blanket" fix by adding a CRS wait inside
-pci_dev_restore(). Would you guys agree ?
+The fact that no one would buy such a switch as it would have a bad user
+experience with regular PCI transfers. A P2P TLP is not special on a
+switch as it's routed in just the same way as any others. There'd also
+be no cost gain in making such a broken-by-design device.
 
-Also why does pci_flr_wait() not use vendor/device ID but instead waits
-on the COMMAND register being all 1's ? It's not clear to me ...
-VID/DID will give a very specific signature for CRS which is ffff0001
-while COMMAND could return all 1's for other reasons (device unplugged
-for example).
+> If everything is so broken, I was suggesting to at least list the switches
+> you have tested.
+> 
+> What's the problem with this?
 
-Cheers,
-Ben.
+More complexity for zero gain.
+
+> Why do you want to assume that all switches are good and all root ports are
+> bad?
+
+Because the assumption that all switches are good is more than
+reasonable and simplifies the code and maintenance significantly. No one
+wants to maintain a white list when they don't have to.
+
+> What if the design is so canned that you can't change anything? 
+
+Based on the feedback we've got so far and the developers that have
+participated in getting it to where it is, it is not "canned".
+
+> I have been asking things like getting rid of switch search in ACS
+> enablement towards achieving generic P2P. You seem to be pushing back.
+> You said yourself P2P and isolation doesn't go together at this point
+> but you also care about isolation for other devices that are not doing
+> P2P.
+
+P2P and isolation will never be compatible at any point. They are two
+opposite concepts. So we could just disable isolation across the whole
+system and for our purposes that would be fine. But it's relatively
+simple to limit this and only disable it behind switches. So why
+wouldn't we? It enables use cases like having an isolated card on the
+root complex used in a VM while having P2P on cards behind switches. I
+personally have no interest in doing this but I also have no reason to
+prevent it with my code.
+
+> It is not a requirement for you but it is a requirement for me (ARM64 guy).
+> Linux happens to run on multiple architectures. One exception invalidates your
+> point.
+
+It is not a requirement of an architecture or people that use a specific
+architecture. It is a requirement of the use-case and you have not said
+any use case or how we could do better. If you're running VMs that
+require isolation you will need to be *very* careful if you also want to
+do P2P between cards which requires no isolation. But, based on my
+understanding, most people will want to do one or the other -- not both.
+If you want to do P2P you enable the P2P config option, if you want
+isolation you don't.
+
+> If you are assuming that your kernel option should not be used by general
+> distributions like Ubuntu/redhat etc. and requires a kernel compilation,
+> creating a dependency to EXPERT is the right way to do. 
+
+I don't have a problem adding EXPERT as a dependency. We can do that for
+v4. I'd rather hope that distros actually read and understand the
+kconfig help text before enabling an off-by-default option. But maybe
+I'm asking too much.
+
+Logan
