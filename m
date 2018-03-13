@@ -1,80 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59670 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1162805AbeCAXAO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 18:00:14 -0500
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w21Mx5N1051954
-        for <linux-pci@vger.kernel.org>; Thu, 1 Mar 2018 18:00:14 -0500
-Received: from e06smtp10.uk.ibm.com (e06smtp10.uk.ibm.com [195.75.94.106])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2geprxhw0u-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 01 Mar 2018 18:00:14 -0500
-Received: from localhost
-        by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-        Thu, 1 Mar 2018 23:00:11 -0000
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI
- Memory
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Reply-To: benh@au1.ibm.com
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Dan Williams <dan.j.williams@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
+Received: from ale.deltatee.com ([207.54.116.67]:33606 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932729AbeCMQo0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 12:44:26 -0400
+To: Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-Date: Fri, 02 Mar 2018 10:00:04 +1100
-In-Reply-To: <43ba615f-a6e1-9444-65e1-494169cb415d@deltatee.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
-         <1519876489.4592.3.camel@kernel.crashing.org>
-         <1519876569.4592.4.camel@au1.ibm.com>
-         <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
-         <1519936477.4592.23.camel@au1.ibm.com>
-         <CAPcyv4goHsYytq60ehJUori8Xq+Z0p8dV-8_oRALj244H4YtwQ@mail.gmail.com>
-         <2079ba48-5ae5-5b44-cce1-8175712dd395@deltatee.com>
-         <43ba615f-a6e1-9444-65e1-494169cb415d@deltatee.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1519945204.4592.45.camel@au1.ibm.com>
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+Date: Tue, 13 Mar 2018 10:43:55 -0600
+MIME-Version: 1.0
+In-Reply-To: <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-03-01 at 14:57 -0700, Logan Gunthorpe wrote:
-> 
-> On 01/03/18 02:45 PM, Logan Gunthorpe wrote:
-> > It handles it fine for many situations. But when you try to map 
-> > something that is at the end of the physical address space then the 
-> > spares-vmemmap needs virtual address space that's the size of the 
-> > physical address space divided by PAGE_SIZE which may be a little bit 
-> > too large...
-> 
-> Though, considering this more, maybe this shouldn't be a problem...
-> 
-> Lets say you have 56bits of address space.
 
-We use only 52 in practice but yes.
 
->  That's 64PB. If you use need 
-> a sparse vmemmap for the entire space it will take 16TB which leaves you 
-> with 63.98PB of address space left. (Similar calculations for other 
-> numbers of address bits.)
-
-We only have 52 bits of virtual space for the kernel with the radix
-MMU.
-
-> So I'm not sure what the problem with this is.
+On 12/03/18 09:28 PM, Sinan Kaya wrote:
+> On 3/12/2018 3:35 PM, Logan Gunthorpe wrote:
+> Regarding the switch business, It is amazing how much trouble you went into
+> limit this functionality into very specific hardware.
 > 
-> We still have to ensure all the arches map the memory with the right 
-> cache bits but that should be relatively easy to solve.
+> I thought that we reached to an agreement that code would not impose
+> any limits on what user wants.
 > 
-> Logan
+> What happened to all the emails we exchanged?
+
+It turns out that root ports that support P2P are far less common than 
+anyone thought. So it will likely have to be a white list. Nobody else 
+seems keen on allowing the user to enable this on hardware that doesn't 
+work. The easiest solution is still limiting it to using a switch. From 
+there, if someone wants to start creating a white-list then that's 
+probably the way forward to support root ports.
+
+And there's also the ACS problem which means if you want to use P2P on 
+the root ports you'll have to disable ACS on the entire system. (Or 
+preferably, the IOMMU groups need to get more sophisticated to allow for 
+dynamic changes).
+
+Additionally, once you allow for root ports you may find the IOMMU 
+getting in the way.
+
+So there are great deal more issues to sort out if you don't restrict to 
+devices behind switches.
+
+Logan
