@@ -1,71 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44174 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S970813AbeCSTNN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Mar 2018 15:13:13 -0400
-Date: Mon, 19 Mar 2018 14:13:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian Zigotzky <chzigotzky@xenosoft.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 1/1] PCI set flag PCI_SCAN_ALL_PCIE_DEVS for P.A. Semi
- boards
-Message-ID: <20180319191310.GG77194@bhelgaas-glaptop.roam.corp.google.com>
-References: <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
- <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
- <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
- <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
- <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
- <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
- <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
- <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
- <dc228918-652a-e24c-ce7b-8d1b30153d3b@xenosoft.de>
- <639e975f-1b3a-4f85-9a40-13fe2473fc28@xenosoft.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <a01a0ef4-3b0a-b169-2628-cb8fbe51867c@deltatee.com>
+Date: Tue, 13 Mar 2018 12:40:13 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <639e975f-1b3a-4f85-9a40-13fe2473fc28@xenosoft.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 16, 2018 at 01:55:36PM +0100, Christian Zigotzky wrote:
-> Bjorn Helgaas created a patch for making PCI_SCAN_ALL_PCIE_DEVS work for
-> Root Ports as well as Downstream. Previously PCI_SCAN_ALL_PCIE_DEVS (set by
-> quirks or the "pci=pcie_scan_all"
-> kernel parameter) only affected Switch Downstream Ports, not Root Ports. The
-> problem is, that we have to add always the boot argument "pci=pcie_scan_all"
-> for using Bjorn's improvements. Without the boot argument
-> "pci=pcie_scan_all", the kernel doesn't boot on P.A. Semi boards with SB600
-> chipset (SB600 chipset is connected via PCIe x4 to the P.A. Semi’s
-> PA6T-1682M System-on-a-Chip) because the kernel can't find any drives
-> connected to the SB600 anymore. Olof Johansson has created a patch for
-> executing "pci=pcie_scan_all" automatically on P.A. Semi boards. With his
-> patch, we don't need to add 'pci=pcie_scan_all' to the kernel boot arguments
-> anymore.
 
-The patch looks fine, but I need a signed-off-by line before I can apply
-it.  See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst
 
-> ---
-> 
-> arch/powerpc/platforms/pasemi/pci.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/arch/powerpc/platforms/pasemi/pci.c
-> b/arch/powerpc/platforms/pasemi/pci.c
-> index 5ff6108..ea54ed2 100644
-> --- a/arch/powerpc/platforms/pasemi/pci.c
-> +++ b/arch/powerpc/platforms/pasemi/pci.c
-> @@ -224,6 +224,8 @@ void __init pas_pci_init(void)
->          return;
->      }
-> 
-> +    pci_set_flags(PCI_SCAN_ALL_PCIE_DEVS);
-> +
->      for (np = NULL; (np = of_get_next_child(root, np)) != NULL;)
->          if (np->name && !strcmp(np->name, "pxp") && !pas_add_bridge(np))
->              of_node_get(np);
-> 
-> --
-> 
-> 
+On 12/03/18 09:28 PM, Sinan Kaya wrote:
+> Maybe, dev parameter should also be struct pci_dev so that you can get rid of
+> all to_pci_dev() calls in this code including find_parent_pci_dev() function.
+
+No, this was mentioned in v2. find_parent_pci_dev is necessary because 
+the calling drivers aren't likely to have a bunch of struct pci_dev's 
+for all the devices they are working with lying around. It's a much 
+nicer from an API stand point to take struct devs and not worth it just 
+to have a PCI API only taking struct pci_devs.
+
+Logan
