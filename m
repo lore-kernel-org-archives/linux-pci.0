@@ -1,46 +1,60 @@
-Return-Path: <SRS0=s/JU=GV=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=s/JU=GV=linux.intel.com=mika.westerberg@kernel.org>
-Date: Sat, 31 Mar 2018 11:58:52 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <yehezkel.bernat@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
- bus number
-Message-ID: <20180331085852.GQ2703@lahna.fi.intel.com>
-References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
- <20180226132112.81447-2-mika.westerberg@linux.intel.com>
- <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180328114346.GZ2703@lahna.fi.intel.com>
- <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180329115911.GN2703@lahna.fi.intel.com>
- <20180331082903.GA21051@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:35256 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752414AbeCMUrC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 16:47:02 -0400
+To: Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+ <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+ <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
+ <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
+ <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
+ <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+ <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+Date: Tue, 13 Mar 2018 14:46:31 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180331082903.GA21051@wunner.de>
+In-Reply-To: <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 31, 2018 at 10:29:03AM +0200, Lukas Wunner wrote:
-> On Thu, Mar 29, 2018 at 02:59:11PM +0300, Mika Westerberg wrote:
-> > On Wed, Mar 28, 2018 at 01:09:06PM -0500, Bjorn Helgaas wrote:
-> > > The same issue could happen on any system where we use acpiphp, so I
-> > > don't think Thunderbolt is really relevant here, and it's easy to
-> > > confuse things by mentioning it.
-> > 
-> > This issue can happen regardless whether acpiphp is used or not.
-> 
-> If the platform has yielded hotplug control to the OS via _OSC,
-> I don't see how the platform could hot-add devices.  So surely
-> reserving a bus number for a bridge without anything below it
-> can be constrained to the !pciehp_is_native(bridge) case?
 
-Nothing prevents ACPI Notify() happening while native PCIe hotplug is
-used on non-hotplug ports (the ones not controlled by pciehp). And it
-cannot be constrained to !pciehp_is_native(bridge) because it is the
-root port that has the _OSC but below it can be non-hotplug ports where
-ACPI Notify() is used to bring in additional devices.
+
+On 13/03/18 01:53 PM, Sinan Kaya wrote:
+> I agree disabling globally would be bad. Somebody can always say I have
+> ten switches on my system. I want to do peer-to-peer on one switch only. Now,
+> this change weakened security for the other switches that I had no intention
+> with doing P2P.
+> 
+> Isn't this a problem?
+
+Well, if it's a problem for someone they'll have to solve it. We're
+targeting JBOFs that have no use for ACS / IOMMU groups at all.
+
+> Can we specify the BDF of the downstream device we want P2P with during boot via
+> kernel command line?
+
+That's a painful configuration burden. And then things might stop
+working if you change your topology at all and now have to change boot
+parameters.
+
+Logan
