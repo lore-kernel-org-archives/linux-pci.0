@@ -1,37 +1,117 @@
-Return-Path: <SRS0=3FyK=GR=denx.de=wd@kernel.org>
-Return-Path: <SRS0=3FyK=GR=denx.de=wd@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-    linux-acpi@vger.kernel.org,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: PCIe x4 cards not detected on Z370 mainboards
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53714 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751344AbeCMVpw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 17:45:52 -0400
+Subject: [PATCH] PCI/MSI: Don't set up INTx if MSI or MSI-X is enabled
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Mikael Starvik <starvik@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        David Howells <dhowells@redhat.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-cris-kernel@axis.com, linux-kernel@vger.kernel.org,
+        linux-ia64@vger.kernel.org, linux-am33-list@redhat.com
+Date: Tue, 13 Mar 2018 16:45:49 -0500
+Message-ID: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-type: text/plain; charset=UTF-8
-In-reply-to: <20180326155904.GJ2703@lahna.fi.intel.com>
-References: <20180322184840.E31D4247251@gemini.denx.de> <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com> <20180323084855.E3EAF247251@gemini.denx.de> <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com> <20180325122828.7FC55247245@gemini.denx.de> <20180326112647.GC2703@lahna.fi.intel.com> <20180326150050.086232476FF@gemini.denx.de> <20180326155904.GJ2703@lahna.fi.intel.com>
-Date: Tue, 27 Mar 2018 18:05:00 +0200
-Message-Id: <20180327160500.8CD0B240C0B@gemini.denx.de>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Mika,
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-In message <20180326155904.GJ2703@lahna.fi.intel.com> you wrote:
->
-> So at this point I have no idea either what else you could try except
-> perhaps booting to Windows and see if it detects the LSI card.
+If a device already has MSI or MSI-X enabled, there's no need to set up its
+legacy INTx interrupt.
 
-Windows?  shudder....
+bba6f6fc68e7 ("[PATCH] MSI-X: fix resume crash") changed the cris, frv,
+x86, and ia64 arches to skip INTx setup when MSI is enabled.
 
+16cf0ebc35dd ("x86/PCI: Do not use interrupt links for devices using
+MSI-X") extended that by changing x86 to also skip INTx setup when MSI-X is
+enabled.
 
-Oh well... it does not.
+Change the remaining arches (cris, frv, and ia64) to skip INTx setup when
+either MSI or MSI-X is enabled.
 
-Best regards,
+Also update mn10300 (which didn't exist at the time of bba6f6fc68e7) to
+follow the same pattern.
 
-Wolfgang Denk
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/cris/arch-v32/drivers/pci/bios.c |    2 +-
+ arch/frv/mb93090-mb00/pci-vdk.c       |    2 +-
+ arch/ia64/pci/pci.c                   |    4 ++--
+ arch/mn10300/unit-asb2305/pci.c       |    8 +++++---
+ 4 files changed, 9 insertions(+), 7 deletions(-)
 
--- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-"Ahead warp factor 1"                                  - Captain Kirk
+diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+index 6b9e6cfaa29e..c2bed0cc060b 100644
+--- a/arch/cris/arch-v32/drivers/pci/bios.c
++++ b/arch/cris/arch-v32/drivers/pci/bios.c
+@@ -68,7 +68,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	if ((err = pcibios_enable_resources(dev, mask)) < 0)
+ 		return err;
+ 
+-	if (!dev->msi_enabled)
++	if (!pci_dev_msi_enabled(dev))
+ 		pcibios_enable_irq(dev);
+ 	return 0;
+ }
+diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+index f211839e2cae..4a55d1b82d21 100644
+--- a/arch/frv/mb93090-mb00/pci-vdk.c
++++ b/arch/frv/mb93090-mb00/pci-vdk.c
+@@ -413,7 +413,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 
+ 	if ((err = pci_enable_resources(dev, mask)) < 0)
+ 		return err;
+-	if (!dev->msi_enabled)
++	if (!pci_dev_msi_enabled(dev))
+ 		pcibios_enable_irq(dev);
+ 	return 0;
+ }
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index f5ec736100ee..7ccc64d5fe3e 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -398,7 +398,7 @@ pcibios_enable_device (struct pci_dev *dev, int mask)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	if (!dev->msi_enabled)
++	if (!pci_dev_msi_enabled(dev))
+ 		return acpi_pci_irq_enable(dev);
+ 	return 0;
+ }
+@@ -407,7 +407,7 @@ void
+ pcibios_disable_device (struct pci_dev *dev)
+ {
+ 	BUG_ON(atomic_read(&dev->enable_cnt));
+-	if (!dev->msi_enabled)
++	if (!pci_dev_msi_enabled(dev))
+ 		acpi_pci_irq_disable(dev);
+ }
+ 
+diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+index 3dfe2d31c67b..4d36ea517679 100644
+--- a/arch/mn10300/unit-asb2305/pci.c
++++ b/arch/mn10300/unit-asb2305/pci.c
+@@ -399,10 +399,12 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+ 	int err;
+ 
+-	err = pci_enable_resources(dev, mask);
+-	if (err == 0)
++	if ((err = pci_enable_resources(dev, mask)) < 0)
++		return err;
++
++	if (!pci_dev_msi_enabled(dev))
+ 		pcibios_enable_irq(dev);
+-	return err;
++	return 0;
+ }
+ 
+ /*
