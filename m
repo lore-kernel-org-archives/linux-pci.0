@@ -1,123 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:37945 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752375AbeCMVat (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 17:30:49 -0400
+Subject: [pci PATCH v6 4/5] nvme: Migrate over to unmanaged SR-IOV support
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+Date: Tue, 13 Mar 2018 14:30:47 -0700
+Message-ID: <20180313213034.3553.47677.stgit@localhost.localdomain>
+In-Reply-To: <20180313212508.3553.65326.stgit@localhost.localdomain>
+References: <20180313212508.3553.65326.stgit@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <1520274579-30492-1-git-send-email-fkan@apm.com>
-References: <1520274579-30492-1-git-send-email-fkan@apm.com>
-From: Feng Kan <fkan@apm.com>
-Date: Thu, 15 Mar 2018 11:41:33 -0700
-Message-ID: <CAL85gmAAVoCCXoLH+c0ROSBy4mS3z86tnbX+7Avh5oGT=fHcfA@mail.gmail.com>
-Subject: Re: [PATCH V3] PM / core: fix deferred probe breaking suspend resume
- order
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Linux PM <linux-pm@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- linux-arm-kernel@lists.infradead.org,
- Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Feng Kan <fkan@apm.com>, Toan Le <toanle@apm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 5, 2018 at 10:29 AM, Feng Kan <fkan@apm.com> wrote:
-> When bridge and its endpoint is enumerated the devices are added to the
-> dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
-> This causes the bridge to be moved to the end of the dpm list when
-> deferred probe kicks in. The order of the dpm list for bridge and
-> endpoint is reversed.
->
-> Add reordering code to move the bridge and its children and consumers to
-> the end of the pm list so the order for suspend and resume is not altered.
-> The code also move device and its children and consumers to the tail of
-> device_kset list if it is registered.
->
-> Signed-off-by: Feng Kan <fkan@apm.com>
-> Signed-off-by: Toan Le <toanle@apm.com>
-> ---
->  V3:
->         1. additional code comment changes
->  V2:
->         1. change patch title from "move device and its children..."
->         2. move define based on Bjorn's comment
->         3. rename function name and comment content
->
->  drivers/base/base.h |  3 +++
->  drivers/base/core.c | 20 ++++++++++++++++++++
->  drivers/base/dd.c   |  4 +---
->  3 files changed, 24 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/base/base.h b/drivers/base/base.h
-> index d800de6..a75c302 100644
-> --- a/drivers/base/base.h
-> +++ b/drivers/base/base.h
-> @@ -161,3 +161,6 @@ static inline void module_remove_driver(struct device_driver *drv) { }
->  extern void device_links_no_driver(struct device *dev);
->  extern bool device_links_busy(struct device *dev);
->  extern void device_links_unbind_consumers(struct device *dev);
-> +
-> +/* device pm support */
-> +void device_pm_move_to_tail(struct device *dev);
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 110230d..3b37906 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -148,6 +148,26 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
->  }
->
->  /**
-> + * device_pm_move_to_tail - Move set of devices to the end of device lists
-> + * @dev: current device pointer
-> + *
-> + * This is a device_reorder_to_tail() wrapper taking the requisite locks.
-> + *
-> + * It moves the device along with all of its children and all of its consumers
-> + * to the ends of the device_kset and dpm_list, recursively.
-> + */
-> +void device_pm_move_to_tail(struct device *dev)
-> +{
-> +       int idx;
-> +
-> +       idx = device_links_read_lock();
-> +       device_pm_lock();
-> +       device_reorder_to_tail(dev, NULL);
-> +       device_pm_unlock();
-> +       device_links_read_unlock(idx);
-> +}
-> +
-> +/**
->   * device_link_add - Create a link between two devices.
->   * @consumer: Consumer end of the link.
->   * @supplier: Supplier end of the link.
-> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-> index 2c964f5..96fab29 100644
-> --- a/drivers/base/dd.c
-> +++ b/drivers/base/dd.c
-> @@ -123,9 +123,7 @@ static void deferred_probe_work_func(struct work_struct *work)
->                  * the list is a good order for suspend but deferred
->                  * probe makes that very unsafe.
->                  */
-> -               device_pm_lock();
-> -               device_pm_move_last(dev);
-> -               device_pm_unlock();
-> +               device_pm_move_to_tail(dev);
->
->                 dev_dbg(dev, "Retrying from deferred list\n");
->                 if (initcall_debug && !initcalls_done)
-> --
-> 1.8.3.1
->
-Hi, just wanted to check if there is anything else I need to change on
-this. Thanks.
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Instead of implementing our own version of a SR-IOV configuration stub in
+the nvme driver we can just reuse the existing
+pci_sriov_configure_simple function.
+
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+---
+
+v5: Replaced call to pci_sriov_configure_unmanaged with
+        pci_sriov_configure_simple
+v6: Dropped "#ifdef" checks for IOV wrapping sriov_configure definition
+
+ drivers/nvme/host/pci.c |   20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
+
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 5933a5c732e8..5e963058882a 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2580,24 +2580,6 @@ static void nvme_remove(struct pci_dev *pdev)
+ 	nvme_put_ctrl(&dev->ctrl);
+ }
+ 
+-static int nvme_pci_sriov_configure(struct pci_dev *pdev, int numvfs)
+-{
+-	int ret = 0;
+-
+-	if (numvfs == 0) {
+-		if (pci_vfs_assigned(pdev)) {
+-			dev_warn(&pdev->dev,
+-				"Cannot disable SR-IOV VFs while assigned\n");
+-			return -EPERM;
+-		}
+-		pci_disable_sriov(pdev);
+-		return 0;
+-	}
+-
+-	ret = pci_enable_sriov(pdev, numvfs);
+-	return ret ? ret : numvfs;
+-}
+-
+ #ifdef CONFIG_PM_SLEEP
+ static int nvme_suspend(struct device *dev)
+ {
+@@ -2716,7 +2698,7 @@ static void nvme_error_resume(struct pci_dev *pdev)
+ 	.driver		= {
+ 		.pm	= &nvme_dev_pm_ops,
+ 	},
+-	.sriov_configure = nvme_pci_sriov_configure,
++	.sriov_configure = pci_sriov_configure_simple,
+ 	.err_handler	= &nvme_err_handler,
+ };
+ 
