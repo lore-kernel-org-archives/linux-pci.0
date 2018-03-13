@@ -1,19 +1,15 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr670120.outbound.protection.outlook.com ([40.107.67.120]:34080
-        "EHLO CAN01-TO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933995AbeCBVis (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Mar 2018 16:38:48 -0500
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Jerome Glisse <jglisse@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-CC: Benjamin Herrenschmidt <benh@au1.ibm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+Received: from smtp.codeaurora.org ([198.145.29.96]:59836 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932211AbeCMBzc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 21:55:32 -0400
+Subject: Re: [PATCH v3 08/11] nvme-pci: Use PCI p2pmem subsystem to manage the
+ CMB
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Keith Busch <keith.busch@intel.com>,
         Sagi Grimberg <sagi@grimberg.me>,
@@ -21,43 +17,37 @@ CC: Benjamin Herrenschmidt <benh@au1.ibm.com>,
         Jason Gunthorpe <jgg@mellanox.com>,
         Max Gurtovoy <maxg@mellanox.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Date: Fri, 2 Mar 2018 21:38:43 +0000
-Message-ID: <8D3B5C26-39E0-478D-B51F-A22B3F36C4D7@raithlin.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
- <1519936195.4592.18.camel@au1.ibm.com> <20180301205548.GA6742@redhat.com>
- <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
- <20180301211036.GB6742@redhat.com>
-In-Reply-To: <20180301211036.GB6742@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-9-logang@deltatee.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <4b08ec0b-76f4-4b67-a38b-5a1940c4c40d@codeaurora.org>
+Date: Mon, 12 Mar 2018 21:55:27 -0400
 MIME-Version: 1.0
+In-Reply-To: <20180312193525.2855-9-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBJdCBzZWVtcyBwZW9wbGUgbWlzcy11bmRlcnN0YW5kIEhNTSA6KCANCg0KSGkgSmVyb21lDQoN
-CllvdXIgdW5oYXBweSBmYWNlIGVtb3RpY29uIG1hZGUgbWUgc2FkIHNvIEkgd2VudCBvZmYgdG8g
-KHJlKXJlYWQgdXAgb24gSE1NLiBBbG9uZyB0aGUgd2F5IEkgY2FtZSB1cCB3aXRoIGEgY291cGxl
-IG9mIHRoaW5ncy4NCg0KV2hpbGUgaG1tLnR4dCBpcyByZWFsbHkgbmljZSB0byByZWFkIGl0IG1h
-a2VzIG5vIG1lbnRpb24gb2YgREVWSUNFX1BSSVZBVEUgYW5kIERFVklDRV9QVUJMSUMuIEl0IGFs
-c28gZ2l2ZXMgbm8gaW5kaWNhdGlvbiB3aGVuIG9uZSBtaWdodCBjaG9vc2UgdG8gdXNlIG9uZSBv
-dmVyIHRoZSBvdGhlci4gV291bGQgaXQgYmUgcG9zc2libGUgdG8gdXBkYXRlIGhtbS50eHQgdG8g
-aW5jbHVkZSBzb21lIGRpc2N1c3Npb24gb24gdGhpcz8gSSB1bmRlcnN0YW5kIHRoYXQgREVWSUNF
-X1BVQkxJQyBjcmVhdGVzIGEgbWFwcGluZyBpbiB0aGUga2VybmVsJ3MgbGluZWFyIGFkZHJlc3Mg
-c3BhY2UgZm9yIHRoZSBkZXZpY2UgbWVtb3J5IGFuZCBERVZJQ0VfUFJJVkFURSBkb2VzIG5vdC4g
-SG93ZXZlciwgbGlrZSBJIHNhaWQsIEkgYW0gbm90IHN1cmUgd2hlbiB5b3Ugd291bGQgdXNlIGVp
-dGhlciBvbmUgYW5kIHRoZSBwcm9zIGFuZCBjb25zIG9mIGRvaW5nIHNvLiBJIGFjdHVhbGx5IGVu
-ZGVkIHVwIGZpbmRpbmcgc29tZSB1c2VmdWwgaW5mb3JtYXRpb24gaW4gbWVtcmVtYXAuaCBidXQg
-SSBkb24ndCB0aGluayBpdCBpcyBmYWlyIHRvIGV4cGVjdCBwZW9wbGUgdG8gZGlnICp0aGF0KiBk
-ZWVwIHRvIGZpbmQgdGhpcyBpbmZvcm1hdGlvbiA7LSkuDQoNCkEgcXVpY2sgZ3JlcCBzaG93cyBu
-byBkcml2ZXJzIHVzaW5nIHRoZSBITU0gQVBJIGluIHRoZSB1cHN0cmVhbSBjb2RlIHRvZGF5LiBJ
-cyB0aGlzIGNvcnJlY3Q/IEFyZSB0aGVyZSBhbnkgZXhhbXBsZXMgb2Ygb3V0IG9mIHRyZWUgZHJp
-dmVycyB0aGF0IHVzZSBITU0geW91IGNhbiBwb2ludCBtZSB0b28/IEFzIGEgZHJpdmVyIGRldmVs
-b3BlciB3aGF0IHJlc291cmNlcyBleGlzdCB0byBoZWxwIG1lIHdyaXRlIGEgSE1NIGF3YXJlIGRy
-aXZlcj8NCg0KVGhlICh2ZXJ5IG5pY2UpIGhtbS50eHQgZG9jdW1lbnQgaXMgbm90IHJlZmVyZW5j
-ZXMgaW4gdGhlIE1BSU5UQUlORVJTIGZpbGU/IFlvdSBtaWdodCB3YW50IHRvIGZpeCB0aGF0IHdo
-ZW4geW91IGhhdmUgYSBtb21lbnQuDQoNClN0ZXBoZW4NCg0KDQo=
+On 3/12/2018 3:35 PM, Logan Gunthorpe wrote:
+> -	if (nvmeq->sq_cmds_io)
+
+I think you should keep the code as it is for the case where
+(!nvmeq->sq_cmds_is_io && nvmeq->sq_cmds_io)
+
+You are changing the behavior for NVMe drives with CMB buffers.
+You can change the if statement here with the statement above.
+
+> -		memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
+> -	else
+> -		memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
+> +	memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
+>  
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
