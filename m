@@ -1,67 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sg2apc01on0120.outbound.protection.outlook.com ([104.47.125.120]:45036
-        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753837AbeCFSV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Mar 2018 13:21:58 -0500
-From: Dexuan Cui <decui@microsoft.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Jack Morgenstein <jackm@mellanox.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: [PATCH v3 2/6] PCI: hv: hv_eject_device_work(): remove the bogus test
-Date: Tue, 6 Mar 2018 18:21:49 +0000
-Message-ID: <20180306182128.23281-3-decui@microsoft.com>
-References: <20180306182128.23281-1-decui@microsoft.com>
-In-Reply-To: <20180306182128.23281-1-decui@microsoft.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <SRS0=fJCO=GD=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=fJCO=GD=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 13 Mar 2018 11:42:31 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linuxarm@huawei.com, charles.chenxin@huawei.com,
+	linux-acpi@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [RFC PATCH] ARM64/PCI: Set dev->irq=0 before calling
+ acpi_pci_irq_enable()
+Message-ID: <20180313114231.GA11786@red-moon>
+References: <1520650692-62705-1-git-send-email-liudongdong3@huawei.com>
+ <20180313001830.GA60197@bhelgaas-glaptop.roam.corp.google.com>
+ <f5d23376-42d1-7fec-dc1c-45e419acb678@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f5d23376-42d1-7fec-dc1c-45e419acb678@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-When we're in the function, hpdev->state must be hv_pcichild_ejecting:
-see hv_pci_eject_device().
+On Tue, Mar 13, 2018 at 07:20:10PM +0800, Dongdong Liu wrote:
 
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
-Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: Jack Morgenstein <jackm@mellanox.com>
-Cc: stable@vger.kernel.org
-Cc: Stephen Hemminger <sthemmin@microsoft.com>
-Cc: K. Y. Srinivasan <kys@microsoft.com>
-Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+[...]
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 1233300f41c6..04edb24c92ee 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1796,10 +1796,7 @@ static void hv_eject_device_work(struct work_struct =
-*work)
-=20
- 	hpdev =3D container_of(work, struct hv_pci_dev, wrk);
-=20
--	if (hpdev->state !=3D hv_pcichild_ejecting) {
--		put_pcichild(hpdev, hv_pcidev_ref_pnp);
--		return;
--	}
-+	WARN_ON(hpdev->state !=3D hv_pcichild_ejecting);
-=20
- 	/*
- 	 * Ejection can come before or after the PCI bus has been set up, so
---=20
-2.7.4
+> >It sounds like you're saying HIP07 doesn't provide _PRT?  Per the PCI
+> >Firmware Spec, r3.0, sec 4.4, _PRT is required under all PCI host
+> >bridges.  So I think you're saying HIP07 doesn't comply with the spec,
+> 
+> Yes, It does not support to use _PRT on the Hip07.
+
+Hip07 firmware will be updated to support _PRT because that's what
+the ACPI specifications enforce.
+
+Thanks,
+Lorenzo
