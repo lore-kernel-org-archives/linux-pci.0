@@ -1,127 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35468 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752777AbeC3VXO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 17:23:14 -0400
-Date: Fri, 30 Mar 2018 16:23:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5] PCI: hv: Make sure the bus domain is really unique
-Message-ID: <20180330212311.GB9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <4BF97B43-5339-4750-9704-23D6AAC4A01E@microsoft.com>
- <105A3FAC-23AF-40F9-8B83-F00DED14EC43@microsoft.com>
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:47076 "EHLO
+        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752575AbeCMOvf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 10:51:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <105A3FAC-23AF-40F9-8B83-F00DED14EC43@microsoft.com>
+In-Reply-To: <1520928772.28745.53.camel@infradead.org>
+References: <20180312171813.3487.94803.stgit@localhost.localdomain>
+ <20180312172309.3487.76690.stgit@localhost.localdomain> <1520928772.28745.53.camel@infradead.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Tue, 13 Mar 2018 07:51:33 -0700
+Message-ID: <CAKgT0UdkUSsHQC7CpJQ0CT77AD8k7P-HeeomWXNJQ-Ek4dJRMQ@mail.gmail.com>
+Subject: Re: [pci PATCH v5 3/4] ena: Migrate over to unmanaged SR-IOV support
+To: David Woodhouse <dwmw2@infradead.org>,
+        Don Dutile <ddutile@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 30, 2018 at 07:35:04PM +0000, Sridhar Pitchai wrote:
->   >When Linux runs as a guest VM in Hyper-V and Hyper-V adds the virtual
->   >PCI bus to the guest, Hyper-V always provides unique PCI domain.
->   >
->   >commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
->   >overrode unique domain with the serial number of the first device added
->   >to the virtual PCI bus. The reason for that patch is to have a consistent
->   >and short name for the device. But commit 4a9b0933bdfc ("PCI: hv: Use
->   >device serial number as PCI domain") will not guarantee unique domain id.
->   >For example, if the serial number of the device is 0 and there exists a
->   >PCI bus with domain 0 already, this will cause the PCI bus registration
->   >with kernel fails.
->   >
->   >commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI
->   >domain") need to be reverted. Also, we no longer need it as commit
->   >4a1626dd233e ("netvsc: transparent VF management") remove the
->   >need for it.
+On Tue, Mar 13, 2018 at 1:12 AM, David Woodhouse <dwmw2@infradead.org> wrote:
+> On Mon, 2018-03-12 at 10:23 -0700, Alexander Duyck wrote:
+>>
+>> -       .sriov_configure = ena_sriov_configure,
+>> +#ifdef CONFIG_PCI_IOV
+>> +       .sriov_configure = pci_sriov_configure_simple,
+>> +#endif
+>>  };
+>
+> I'd like to see that ifdef go away, as discussed. I agree that just
+> #define pci_sriov_configure_simple NULL
+> should suffice. As Christoph points out, it's not going to compile if
+> people try to just invoke it directly.
+>
+> I'd also *really* like to see a way to enable this for PFs which don't
+> have (and don't need) a driver. We seem to have lost that along the
+> way.
 
-Do you mean 0c195567a8f6 ("netvsc: transparent VF management")?
+Actually the suggestion I had from Don Dutile was that we should be
+looking at creating a pci-stub like driver specifically for those type
+of devices, but without the ability to arbitrarily assign devices.
+Basically we have to white-list it in one device at a time for those
+kind of things.
 
-I don't see a 4a1626dd233e commit in Linus' tree.
+If you have the device ID of the thing you wanted to have work with
+pci-stub before I could look at putting together a quick driver and
+adding it to this set.
 
-The connection between 0c195567a8f6 ("netvsc: transparent VF
-management") and this Hyper-V domain ID issue is not clear to me at
-all.  But obviously I'm not a networking or a Hyper-V person.
+Thanks.
 
-A hint in the changelog about what that connection is would be nice.
-
->   >Revert commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI
->   >domain") so we can reliably support multiple devices being assigned to
->   >a guest.
->   >
->   >This revert should only be backported to kernels that contain commit
->   >4a1626dd233e ("netvsc: transparent VF management").
->   >
->   >Fixes: 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
->   >Signed-off-by: Sridhar Pitchai <sridhar.pitchai@microsoft.com>
->   >Cc: stable@vger.kernel.org
-
-This backporting guidance is very confusing.
-
-4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
-appeared in v4.11.
-
-0c195567a8f6 ("netvsc: transparent VF management") appeared in v4.14.
-
-The changelog and the "Fixes" tag both suggest that 4a9b0933bdfc was
-flat-out buggy and should be reverted unconditionally.  That would
-mean this patch should be applied to v4.11 and later stable kernels.
-
-But the changelog also says "only revert 4a9b0933bdfc if you have
-0c195567a8f6".  That would mean this patch should only be applied to
-v4.14 and later stable kernels.
-
-Which is it?  You can answer in this thread if you want, but Lorenzo
-will ultimately be looking for a v6 patch with a corrected changelog.
-
->   >---
->   >Changes in v5:
->   >* fix the commit comment. [Lorenzo Pieralisi, Bjorn Helgaas]
->   >* fixed the patch white space.
->   >---
->   > drivers/pci/host/pci-hyperv.c | 11 -----------
->   > 1 file changed, 11 deletions(-)
->   >
->   >diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
->   >index 2faf38eab785..ac67e56e451a 100644
->   >--- a/drivers/pci/host/pci-hyperv.c
->   >+++ b/drivers/pci/host/pci-hyperv.c
->   >@@ -1518,17 +1518,6 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
->   > 	get_pcichild(hpdev, hv_pcidev_ref_childlist);
->   > 	spin_lock_irqsave(&hbus->device_list_lock, flags);
->   > 
->   >-	/*
->   >-	 * When a device is being added to the bus, we set the PCI domain
->   >-	 * number to be the device serial number, which is non-zero and
->   >-	 * unique on the same VM.  The serial numbers start with 1, and
->   >-	 * increase by 1 for each device.  So device names including this
->   >-	 * can have shorter names than based on the bus instance UUID.
->   >-	 * Only the first device serial number is used for domain, so the
->   >-	 * domain number will not change after the first device is added.
->   >-	 */
->   >-	if (list_empty(&hbus->children))
->   >-		hbus->sysdata.domain = desc->ser;
->   > 	list_add_tail(&hpdev->list_entry, &hbus->children);
->   > 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
->   > 	return hpdev;
->   >-- 
-> >2.14.1
-> 
-> Hi Lorenzo,
-> Did you get a chance to look at the patch v5. Please let me know if
-> anything I need to address further.
-
-I think Lorenzo is out this week, but I suspect he'll look at it next
-week.
-
-Bjorn
+- Alex
