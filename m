@@ -1,96 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:38277 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751508AbeCOSkv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2018 14:40:51 -0400
-Subject: [pci PATCH v7 0/5] Add support for unmanaged SR-IOV
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
-        mheyne@amazon.de, liang-min.wang@intel.com,
-        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
-        dwmw@amazon.co.uk
-Date: Thu, 15 Mar 2018 11:40:48 -0700
-Message-ID: <20180315183449.3102.64791.stgit@localhost.localdomain>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48404 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932498AbeCMTxX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 15:53:23 -0400
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+ <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+ <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
+ <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
+ <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
+ <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+Date: Tue, 13 Mar 2018 15:53:18 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is meant to add support for SR-IOV on devices when the VFs are
-not managed by the kernel. Examples of recent patches attempting to do this
-include:
-virto - https://patchwork.kernel.org/patch/10241225/
-pci-stub - https://patchwork.kernel.org/patch/10109935/
-vfio - https://patchwork.kernel.org/patch/10103353/
-uio - https://patchwork.kernel.org/patch/9974031/
+On 3/13/2018 3:19 PM, Logan Gunthorpe wrote:
+> 
+> 
+> On 13/03/18 01:10 PM, Sinan Kaya wrote:
+>> I was thinking of this for the pci_p2pdma_add_client() case for the
+>> parent pointer.
+>>
+>> +struct pci_p2pdma_client {
+>> +	struct list_head list;
+>> +	struct pci_dev *client;
+>> +	struct pci_dev *provider;
+>> +};
+> 
+> Yeah, that structure only exists in a list owned by the client and we
+> only check the upstream bridge once per entry so I don't see the point.
+> 
+>> But then, Why bother searching for the switch at all?
+> 
+> Huh? We have to make sure all the client and provider devices are behind
+> the same switch. How can we do that without "searching" for the switch?
+> 
 
-Since this is quickly blowing up into a multi-driver problem it is probably
-best to implement this solution as generically as possible.
+Sorry, I was thinking of ACS case you described below. The only thing code
+cares is if the device is behind a switch or not at this moment.
 
-This series is an attempt to do that. What we do with this patch set is
-provide a generic framework to enable SR-IOV in the case that the PF driver
-doesn't support managing the VFs itself.
+> In the ACS case, we only disable ACS on downstream ports of switches. No
+> sense disabling it globally as that's worse from an isolation point of
+> view and not worth it given we require all P2P transactions to be behind
+> a switch.
 
-I based my patch set originally on the patch by Mark Rustad but there isn't
-much left after going through and cleaning out the bits that were no longer
-needed, and after incorporating the feedback from David Miller. At this point
-the only items to be fully reused was his patch description which is now
-present in patch 3 of the set.
+I agree disabling globally would be bad. Somebody can always say I have
+ten switches on my system. I want to do peer-to-peer on one switch only. Now,
+this change weakened security for the other switches that I had no intention
+with doing P2P.
 
-This solution is limited in scope to just adding support for devices that
-provide no functionality for SR-IOV other than allocating the VFs by
-calling pci_enable_sriov. Previous sets had included patches for VFIO, but
-for now I am dropping that as the scope of that work is larger then I
-think I can take on at this time.
+Isn't this a problem?
 
-v2: Reduced scope back to just virtio_pci and vfio-pci
-    Broke into 3 patch set from single patch
-    Changed autoprobe behavior to always set when num_vfs is set non-zero
-v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is used
-    Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in kernel
-v4: Dropped vfio-pci patch
-    Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
-    Dropped pci_disable_sriov call in virtio_pci to be consistent with ena
-v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
-    Added new patch that enables pci_sriov_configure_simple
-    Updated drivers to use pci_sriov_configure_simple
-v6: Defined pci_sriov_configure_simple as NULL when SR-IOV is not enabled
-    Updated drivers to drop "#ifdef" checks for IOV
-    Added pci-pf-stub as place for PF-only drivers to add support
-v7: Dropped pci_id table explanation from pci-pf-stub driver
-    Updated pci_sriov_configure_simple to drop need for err value
-    Fixed comment explaining why pci_sriov_configure_simple is NULL
+Can we specify the BDF of the downstream device we want P2P with during boot via
+kernel command line?
 
-Cc: Mark Rustad <mark.d.rustad@intel.com>
-Cc: Maximilian Heyne <mheyne@amazon.de>
-Cc: Liang-Min Wang <liang-min.wang@intel.com>
-Cc: David Woodhouse <dwmw@amazon.co.uk>
+> 
+>> Even if the switch is there, there is no guarantee that it is currently
+>> being used for P2P.
+> 
+> IOMMU groups are set at boot time and, at present, there's no way to
+> dynamically change ACS bits without messing up the groups. So switches
+> not used for P2P will not have ACS enabled when CONFIG_PCI_P2PDMA is set
+> and I don't know of any good solution to that. Please see the ACS
+> discussions in v1 and v2.
 
----
+Given the implementation limitations, this might be OK as a short-term
+solution. 
 
-Alexander Duyck (5):
-      pci: Add pci_sriov_configure_simple for PFs that don't manage VF resources
-      virtio_pci: Add support for unmanaged SR-IOV on virtio_pci devices
-      ena: Migrate over to unmanaged SR-IOV support
-      nvme: Migrate over to unmanaged SR-IOV support
-      pci-pf-stub: Add PF driver stub for PFs that function only to enable VFs
+It depends on if Alex is comfortable with this.
+
+> 
+>> It seems that we are going with the assumption that enabling this config
+>> option implies you want P2P, then we can simplify this code as well.
+> 
+> How so?
+> 
+> Logan
+> 
+> 
+> 
 
 
- drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 -------------
- drivers/nvme/host/pci.c                      |   20 ----------
- drivers/pci/Kconfig                          |   12 ++++++
- drivers/pci/Makefile                         |    2 +
- drivers/pci/iov.c                            |   31 +++++++++++++++
- drivers/pci/pci-pf-stub.c                    |   54 ++++++++++++++++++++++++++
- drivers/virtio/virtio_pci_common.c           |    1 
- include/linux/pci.h                          |    3 +
- include/linux/pci_ids.h                      |    2 +
- 9 files changed, 107 insertions(+), 46 deletions(-)
- create mode 100644 drivers/pci/pci-pf-stub.c
-
---
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
