@@ -1,70 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:54071 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753084AbeC1Lvj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:51:39 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 12/12] misc: pci_endpoint_test: Handle 64-bit BARs properly
-Date: Wed, 28 Mar 2018 13:50:17 +0200
-Message-Id: <20180328115018.31921-13-niklas.cassel@axis.com>
-In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:38285 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752555AbeCMV3v (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 17:29:51 -0400
+Subject: [pci PATCH v6 2/5] virtio_pci: Add support for unmanaged SR-IOV on
+ virtio_pci devices
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+Date: Tue, 13 Mar 2018 14:29:49 -0700
+Message-ID: <20180313212855.3553.97762.stgit@localhost.localdomain>
+In-Reply-To: <20180313212508.3553.65326.stgit@localhost.localdomain>
+References: <20180313212508.3553.65326.stgit@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A 64-bit BAR consists of a BAR pair, where the second BAR has the
-upper bits, so we cannot simply call pci_ioremap_bar() on every single
-BAR index.
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
-The second BAR in a BAR pair will not have the IORESOURCE_MEM resource
-flag set. Only call ioremap on BARs that have the IORESOURCE_MEM
-resource flag set.
+Hardware-realized virtio_pci devices can implement SR-IOV, so this
+patch enables its use. The device in question is an upcoming Intel
+NIC that implements both a virtio_net PF and virtio_net VFs. These
+are hardware realizations of what has been up to now been a software
+interface.
 
-pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
-pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
-pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
-pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
-pci-endpoint-test 0000:01:00.0: failed to read BAR1
-pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
-pci-endpoint-test 0000:01:00.0: failed to read BAR3
-pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
-pci-endpoint-test 0000:01:00.0: failed to read BAR5
+The device in question has the following 4-part PCI IDs:
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
+
+The patch currently needs no check for device ID, because the callback
+will never be made for devices that do not assert the capability or
+when run on a platform incapable of SR-IOV.
+
+One reason for this patch is because the hardware requires the
+vendor ID of a VF to be the same as the vendor ID of the PF that
+created it. So it seemed logical to simply have a fully-functioning
+virtio_net PF create the VFs. This patch makes that possible.
+
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
 ---
- drivers/misc/pci_endpoint_test.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 320276f42653..fe8897e64635 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -534,12 +534,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	}
+v4: Dropped call to pci_disable_sriov in virtio_pci_remove function
+v5: Replaced call to pci_sriov_configure_unmanaged with
+        pci_sriov_configure_simple
+v6: Dropped "#ifdef" checks for IOV wrapping sriov_configure definition
+
+ drivers/virtio/virtio_pci_common.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+index 48d4d1cf1cb6..67a227fd7aa0 100644
+--- a/drivers/virtio/virtio_pci_common.c
++++ b/drivers/virtio/virtio_pci_common.c
+@@ -596,6 +596,7 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+ #ifdef CONFIG_PM_SLEEP
+ 	.driver.pm	= &virtio_pci_pm_ops,
+ #endif
++	.sriov_configure = pci_sriov_configure_simple,
+ };
  
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
--		base = pci_ioremap_bar(pdev, bar);
--		if (!base) {
--			dev_err(dev, "failed to read BAR%d\n", bar);
--			WARN_ON(bar == test_reg_bar);
-+		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
-+			base = pci_ioremap_bar(pdev, bar);
-+			if (!base) {
-+				dev_err(dev, "failed to read BAR%d\n", bar);
-+				WARN_ON(bar == test_reg_bar);
-+			}
-+			test->bar[bar] = base;
- 		}
--		test->bar[bar] = base;
- 	}
- 
- 	test->base = test->bar[test_reg_bar];
--- 
-2.14.2
+ module_pci_driver(virtio_pci_driver);
