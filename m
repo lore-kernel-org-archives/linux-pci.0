@@ -1,91 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0112.outbound.protection.outlook.com ([104.47.40.112]:36512
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754383AbeCSCwL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 18 Mar 2018 22:52:11 -0400
-From: KY Srinivasan <kys@microsoft.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 1/2] pci: host: pci-hyperv: Replace GFP_ATOMIC with
- GFP_KERNEL in hv_pci_onchannelcallback
-Date: Mon, 19 Mar 2018 02:52:08 +0000
-Message-ID: <SN6PR2101MB0893202C038AB406C6A6546BA0D40@SN6PR2101MB0893.namprd21.prod.outlook.com>
-References: <1521384782-23539-1-git-send-email-baijiaju1990@gmail.com>
-In-Reply-To: <1521384782-23539-1-git-send-email-baijiaju1990@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=tIDP=GE=intel.com=rafael.j.wysocki@kernel.org>
+Return-Path: <SRS0=tIDP=GE=intel.com=rafael.j.wysocki@kernel.org>
+Subject: Re: [PATCH] PCI/MSI: Don't set up INTx if MSI or MSI-X is enabled
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: Mikael Starvik <starvik@axis.com>,
+ Jesper Nilsson <jesper.nilsson@axis.com>, Tony Luck <tony.luck@intel.com>,
+ Fenghua Yu <fenghua.yu@intel.com>, David Howells <dhowells@redhat.com>,
+ linux-cris-kernel@axis.com, linux-kernel@vger.kernel.org,
+ linux-ia64@vger.kernel.org, linux-am33-list@redhat.com
+References: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Message-ID: <c3f097e6-9347-58f5-579a-21b40a7bef3e@intel.com>
+Date: Wed, 14 Mar 2018 11:27:17 +0100
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
+On 3/13/2018 10:45 PM, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> If a device already has MSI or MSI-X enabled, there's no need to set up its
+> legacy INTx interrupt.
+>
+> bba6f6fc68e7 ("[PATCH] MSI-X: fix resume crash") changed the cris, frv,
+> x86, and ia64 arches to skip INTx setup when MSI is enabled.
+>
+> 16cf0ebc35dd ("x86/PCI: Do not use interrupt links for devices using
+> MSI-X") extended that by changing x86 to also skip INTx setup when MSI-X is
+> enabled.
+>
+> Change the remaining arches (cris, frv, and ia64) to skip INTx setup when
+> either MSI or MSI-X is enabled.
+>
+> Also update mn10300 (which didn't exist at the time of bba6f6fc68e7) to
+> follow the same pattern.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> -----Original Message-----
-> From: Jia-Ju Bai <baijiaju1990@gmail.com>
-> Sent: Sunday, March 18, 2018 7:53 AM
-> To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>; bhelgaas@google.com
-> Cc: devel@linuxdriverproject.org; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Jia-Ju Bai <baijiaju1990@gmail.com>
-> Subject: [PATCH 1/2] pci: host: pci-hyperv: Replace GFP_ATOMIC with
-> GFP_KERNEL in hv_pci_onchannelcallback
->=20
-> hv_pci_onchannelcallback() is not called in atomic context.
->=20
-> The call chain ending up at hv_pci_onchannelcallback() is:
-> [1] hv_pci_onchannelcallback() <- hv_pci_probe()
-> hv_pci_probe() is only set as ".probe" in hv_driver
-> structure "hv_pci_drv".
-
-This function is setup as the function to handle interrupts on the channel.=
- Hence the
-need for GFP_ATOMIC.
-
-K. Y
->=20
-> Despite never getting called from atomic context,
-> hv_pci_onchannelcallback() calls kmalloc with GFP_ATOMIC,
-> which waits busily for allocation.
-> GFP_ATOMIC is not necessary and can be replaced with GFP_KERNEL
-> to avoid busy waiting.
->=20
-> This is found by a static analysis tool named DCNS written by myself.
->=20
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 > ---
->  drivers/pci/host/pci-hyperv.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 0fe3ea1..c5c8a99 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1887,7 +1887,7 @@ static void hv_pci_onchannelcallback(void
-> *context)
->  	struct pci_dev_incoming *dev_message;
->  	struct hv_pci_dev *hpdev;
->=20
-> -	buffer =3D kmalloc(bufferlen, GFP_ATOMIC);
-> +	buffer =3D kmalloc(bufferlen, GFP_KERNEL);
->  	if (!buffer)
->  		return;
->=20
-> @@ -1899,7 +1899,7 @@ static void hv_pci_onchannelcallback(void
-> *context)
->  			kfree(buffer);
->  			/* Handle large packet */
->  			bufferlen =3D bytes_recvd;
-> -			buffer =3D kmalloc(bytes_recvd, GFP_ATOMIC);
-> +			buffer =3D kmalloc(bytes_recvd, GFP_KERNEL);
->  			if (!buffer)
->  				return;
->  			continue;
-> --
-> 1.9.1
+>   arch/cris/arch-v32/drivers/pci/bios.c |    2 +-
+>   arch/frv/mb93090-mb00/pci-vdk.c       |    2 +-
+>   arch/ia64/pci/pci.c                   |    4 ++--
+>   arch/mn10300/unit-asb2305/pci.c       |    8 +++++---
+>   4 files changed, 9 insertions(+), 7 deletions(-)
+>
+> diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+> index 6b9e6cfaa29e..c2bed0cc060b 100644
+> --- a/arch/cris/arch-v32/drivers/pci/bios.c
+> +++ b/arch/cris/arch-v32/drivers/pci/bios.c
+> @@ -68,7 +68,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>   	if ((err = pcibios_enable_resources(dev, mask)) < 0)
+>   		return err;
+>   
+> -	if (!dev->msi_enabled)
+> +	if (!pci_dev_msi_enabled(dev))
+>   		pcibios_enable_irq(dev);
+>   	return 0;
+>   }
+> diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+> index f211839e2cae..4a55d1b82d21 100644
+> --- a/arch/frv/mb93090-mb00/pci-vdk.c
+> +++ b/arch/frv/mb93090-mb00/pci-vdk.c
+> @@ -413,7 +413,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>   
+>   	if ((err = pci_enable_resources(dev, mask)) < 0)
+>   		return err;
+> -	if (!dev->msi_enabled)
+> +	if (!pci_dev_msi_enabled(dev))
+>   		pcibios_enable_irq(dev);
+>   	return 0;
+>   }
+> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+> index f5ec736100ee..7ccc64d5fe3e 100644
+> --- a/arch/ia64/pci/pci.c
+> +++ b/arch/ia64/pci/pci.c
+> @@ -398,7 +398,7 @@ pcibios_enable_device (struct pci_dev *dev, int mask)
+>   	if (ret < 0)
+>   		return ret;
+>   
+> -	if (!dev->msi_enabled)
+> +	if (!pci_dev_msi_enabled(dev))
+>   		return acpi_pci_irq_enable(dev);
+>   	return 0;
+>   }
+> @@ -407,7 +407,7 @@ void
+>   pcibios_disable_device (struct pci_dev *dev)
+>   {
+>   	BUG_ON(atomic_read(&dev->enable_cnt));
+> -	if (!dev->msi_enabled)
+> +	if (!pci_dev_msi_enabled(dev))
+>   		acpi_pci_irq_disable(dev);
+>   }
+>   
+> diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+> index 3dfe2d31c67b..4d36ea517679 100644
+> --- a/arch/mn10300/unit-asb2305/pci.c
+> +++ b/arch/mn10300/unit-asb2305/pci.c
+> @@ -399,10 +399,12 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>   {
+>   	int err;
+>   
+> -	err = pci_enable_resources(dev, mask);
+> -	if (err == 0)
+> +	if ((err = pci_enable_resources(dev, mask)) < 0)
+> +		return err;
+> +
+> +	if (!pci_dev_msi_enabled(dev))
+>   		pcibios_enable_irq(dev);
+> -	return err;
+> +	return 0;
+>   }
+>   
+>   /*
+>
