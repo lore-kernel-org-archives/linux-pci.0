@@ -1,38 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-Subject: Re: [PATCH v3]PCI: hv: fix PCI-BUS domainID corruption
-Date: Mon, 26 Mar 2018 17:32:17 +0000
-Message-ID: <387657CF-8AD7-4C62-9E4E-A7B96915A345@microsoft.com>
-References: <C600E28F-E581-431E-9CD4-47C776E8E70F@microsoft.com>
- <20180315120522.GA15651@e107981-ln.cambridge.arm.com>
- <DM5PR21MB0826439DF296763A3FA861C3F6D00@DM5PR21MB0826.namprd21.prod.outlook.com>
- <04DBCCAB-4BA7-4E05-A047-44824995963E@microsoft.com>
- <65B4E847-CC40-4166-BE8F-D44049EDB2FF@microsoft.com>
- <20180320183208.GB24991@e107981-ln.cambridge.arm.com>
- <4E6E5EE3-2EFA-4326-BE14-D5465F5F439F@microsoft.com>
- <20180321162555.GA16028@red-moon>
- <55A0639B-3C54-456D-95C1-829332C024EE@microsoft.com>
- <20180323164716.GA7794@kroah.com>
-In-Reply-To: <20180323164716.GA7794@kroah.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=Tdh4=GE=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=Tdh4=GE=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>, Alex Hung <alex.hung@canonical.com>
+Cc: lenb@kernel.org, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH][V3] ACPI/PCI: pci_link: allow the absence of _PSR and change log level
+Date: Wed, 14 Mar 2018 12:43:43 +0100
+Message-ID: <3049002.WCqzBnTU9t@aspire.rjw.lan>
+In-Reply-To: <20180223145026.GJ14632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1519364624-4363-1-git-send-email-alex.hung@canonical.com> <20180223145026.GJ14632@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-ICANCiAgICA+IFRoaXMgaXMgbm90IHRoZSBjb3JyZWN0IHdheSB0byBzdWJtaXQgcGF0Y2hlcyBm
-b3IgaW5jbHVzaW9uIGluIHRoZQ0KICAgID4gc3RhYmxlIGtlcm5lbCB0cmVlLiAgUGxlYXNlIHJl
-YWQ6DQogICAgPiAgPHVybD4NCiAgICA+IGZvciBob3cgdG8gZG8gdGhpcyBwcm9wZXJseS4NCg0K
-TXkgYmFkLiBJIGFtIHNlbmRpbmcgdGhlIHBhdGNoIHRvIHRoZSBtYWlubGluZSBrZXJuZWwgd2l0
-aCBhIENjOiB0YWcgZm9yIHN0YWJsZQ0KYW5kIGhvcGluZyB0aGUgcGF0Y2ggd2lsbCBiZSBhdXRv
-bWF0aWNhbGx5IG1lcmdlZCB0byB0aGUgc3RhYmxlIGtlcm5lbHMuDQoNClRoYW5rcywNClNyaWRo
-YXIgUGl0Y2hhaQ0KDQo=
+On Friday, February 23, 2018 3:50:26 PM CET Bjorn Helgaas wrote:
+> In subject:
+> 
+> s/allow the/Allow the/ to match drivers/acpi capitalization convention
+> s/_PSR/_PRS/ to fix typo
+> 
+> On Thu, Feb 22, 2018 at 09:43:44PM -0800, Alex Hung wrote:
+> > In recent Intel hardware the IRQs become non-configurable after BIOS
+> > initializes them in PEI phase and _PRS objects are no longer included in
+> > ASL.
+> > 
+> > This is the same as "static (non-configurable) devices do not
+> > specify a _PRS object" in ACPI spec. As a result, error messages
+> > saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
+> > be in kernel messenges all the time but only when debug is enabled, and
+> > acpi_pci_link_get_possible should not return -ENODEV when _PRS is
+> > absent.
+> > 
+> > Signed-off-by: Alex Hung <alex.hung@canonical.com>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> > ---
+> >  drivers/acpi/pci_link.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> > index bc3d914..65f1908 100644
+> > --- a/drivers/acpi/pci_link.c
+> > +++ b/drivers/acpi/pci_link.c
+> > @@ -173,8 +173,8 @@ static int acpi_pci_link_get_possible(struct acpi_pci_link *link)
+> >  	status = acpi_walk_resources(link->device->handle, METHOD_NAME__PRS,
+> >  				     acpi_pci_link_check_possible, link);
+> >  	if (ACPI_FAILURE(status)) {
+> > -		ACPI_EXCEPTION((AE_INFO, status, "Evaluating _PRS"));
+> > -		return -ENODEV;
+> > +		acpi_handle_debug(link->device->handle, "_PRS not present or invalid");
+> 
+> The rest of this file uses ACPI_EXCEPTION(), ACPI_DEBUG_PRINT(), etc.
+> My personal preference would be to keep the file consistent, e.g.,
+> maybe use the style that matches the file in this patch, and have a
+> second patch that changes all the logging in the file to use
+> acpi_handle_*().
+> 
+> But I'm fine with whatever you and Rafael want to do about this.
+
+I wanted it to be changed.
+
+Using ACPI_DEBUG_PRINT() and similar outside of ACPICA code is
+questionable and plain problematic with some combinations of Kconfig
+options, so I'd actually prefer them to go away from the ACPI code
+outside of ACPICA.
+
+Patch applied with the subject typo fixed, thanks!
