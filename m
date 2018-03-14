@@ -1,63 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59224 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752199AbeCVOOF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Mar 2018 10:14:05 -0400
-Date: Thu, 22 Mar 2018 09:14:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Neuling <michael.neuling@au1.ibm.com>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: PCIe resets/restore and lack of CRS wait
-Message-ID: <20180322141402.GA242245@bhelgaas-glaptop.roam.corp.google.com>
-References: <1521691380.16434.287.camel@kernel.crashing.org>
- <f6af9b6e424c469f433735a106b8ee69@codeaurora.org>
- <1521695531.16434.294.camel@kernel.crashing.org>
- <1521699853.16434.301.camel@kernel.crashing.org>
- <4d1c04efa51db50dd5095ae258c3c52b@codeaurora.org>
- <1521726371.16434.307.camel@kernel.crashing.org>
- <172f0ea9-7eba-1505-bb79-1ee31cc4d692@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Dexuan Cui <decui@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: "'bhelgaas@google.com'" <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "'stable@vger.kernel.org'" <stable@vger.kernel.org>,
+        'Jack Morgenstein' <jackm@mellanox.com>
+Subject: RE: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
+Date: Wed, 14 Mar 2018 17:17:13 +0000
+Message-ID: <KL1P15301MB0006D5A4BD0ED296804637C9BFD10@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <20180306182128.23281-1-decui@microsoft.com>
+ <20180306182128.23281-7-decui@microsoft.com>
+ <20180307123441.GD15139@e107981-ln.cambridge.arm.com>
+ <KL1P15301MB0006B22926A4DC338BFEB78DBFD80@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <SG2P15301MB00158D30D602950F05F8B14ABFD20@SG2P15301MB0015.APCP153.PROD.OUTLOOK.COM>
+ <20180314115000.GC27868@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20180314115000.GC27868@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <172f0ea9-7eba-1505-bb79-1ee31cc4d692@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 22, 2018 at 08:58:06AM -0500, Sinan Kaya wrote:
-> On 3/22/2018 8:46 AM, Benjamin Herrenschmidt wrote:
-> > On Thu, 2018-03-22 at 07:25 -0400, okaya@codeaurora.org wrote:
-> >>> That tells me that there is no guarantee by spec that we'll get
-> >>> ffff's, instead we might get HW stalls, or other really nasty
-> >>> effects when probing a register other than 0 (VID/DID) for CRS.
-> >>
-> >> AFAIK, spec also mentions that sw needs to observe 0xffffffff for all 
-> >> other registers other than vendor id during CRS period.
-> > 
-> > This isnt what's in the 3.1a spec at least ... section 2.3.2 explains
-> > the specified behaviour which is, for any register other than 0
-> > (VID/DID), to re-issue the request...
-> 
-> I don't have any hard preference on this. Bjorn wanted code to work for
-> systems with and without CRS capability. That was the reason we stayed
-> away from 0xffff0001.
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Sent: Wednesday, March 14, 2018 04:50
+> On Tue, Mar 13, 2018 at 06:23:39PM +0000, Dexuan Cui wrote:
+>=20
+> [...]
+>=20
+> > Hi Lorenzo, Bjorn, and all,
+> > Do you need more ACKs? Currently Michael and Haiyang reviewed and ack'd
+> > the patchset.
+> >
+> > Should I send a v4 that just removes the "CC: stable@vger.kernel.org" t=
+ag
+> > for patches 1, 2, 4 and 5? I tend to avoid a v4 as I supppose it would =
+be
+> > easier if you just remove the tags if you belive it's necessary (IMHO a=
+ll the
+> > 6 paches are not big and it would be great if we can have all of them i=
+n
+> > the old stable kernels, but I respect your decision).
+>=20
+> I think you need a v4 since for patches that are actually fixing a bug I
+> want a Fixes: tag added and I want them to be applicable independently
+> of other patches in the series. Send them in a separate series if you
+> prefer - I just want to make sure they apply independently.
 
-CRS SV is optional, so the code has to work when it's absent.  But we
-can tell whether it's supported, so if we need to, we can do something
-different when it's absent.
+Ok, I'll send 2 series: one for
+[6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
+[3/6] PCI: hv: serialize the present/eject work items
+These fix real issues reported by Mellanox when they tested SR-IOV with VMs
+runnning on Hyper-V. I'll add stable tags for them.
 
-> CRS just gives you HW implementation defined retries for non vendor-id
-> register like you mentioned. If device does not reply in this period
-> of polling time, you should get all 1s eventually back.
-> 
-> All 1s is the spec way of saying device doesn't exist for config
-> transactions.
+The other series will cover these 4 patces which don't need to go in stable=
+:
+[5/6] PCI: hv: hv_pci_devices_present(): only queue a new work when necessa=
+ry
+[4/6] PCI: hv: remove hbus->enum_sem
+[2/6] PCI: hv: hv_eject_device_work(): remove the bogus test
+[1/6] PCI: hv: fix a comment typo in _hv_pcifront_read_config()
+=20
+> As for marking patches for stable kernels, I do not think it is right
+> to send cosmetic churn to stable kernels anyway, at least that's my
+> reading of the policy.
+>=20
+> You can easily post a v4 with patches reshuffled - I will apply them
+> accordingly.
+OK.
+=20
+> Before re-posting please read this to improve formatting (I can do it
+> for you but while at it you can do it yourself):
+> https://marc.info/?l=3Dlinux-pci&m=3D150905742808166&w=3D2
+Will read. Thanks!
 
-I remember implementation notes mentioning all 1's data returns, e.g.,
-PCIe r4.0, sec 2.3.2, but I don't *think* there's actually a spec
-requirement that CRS or other errors be reported that way.  So if
-there's a way to avoid relying on all 1's data, I think that would be
-a good thing.
-
-Bjorn
+-- Dexuan
