@@ -1,87 +1,59 @@
-Return-Path: <SRS0=iOVL=FZ=devnulllabs.io=kballou@kernel.org>
-Return-Path: <SRS0=iOVL=FZ=devnulllabs.io=kballou@kernel.org>
-References: <20180212230457.23181-1-kballou@devnulllabs.io> <20180228033228.GE127842@bhelgaas-glaptop.roam.corp.google.com>
-From: Kenny Ballou <kballou@devnulllabs.io>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, googlegot@yahooo.com, bhelgaas@google.com
-Subject: Re: [PATCH] pci: use kstrtobool over ad hoc string parsing
-In-reply-to: <20180228033228.GE127842@bhelgaas-glaptop.roam.corp.google.com>
-Date: Fri, 02 Mar 2018 16:47:16 -0700
-Message-ID: <878tbavy4b.fsf@devnulllabs.io>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:38151 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750910AbeCNPb0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 11:31:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180314085601.GD28796@lst.de>
+References: <20180313212508.3553.65326.stgit@localhost.localdomain>
+ <20180313213054.3553.89366.stgit@localhost.localdomain> <20180314085601.GD28796@lst.de>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Wed, 14 Mar 2018 08:31:24 -0700
+Message-ID: <CAKgT0UcotCGAQZjT8SWp0+HeHasyt0UV8M_Ev_zi08jV1uvp8w@mail.gmail.com>
+Subject: Re: [pci PATCH v6 5/5] pci-pf-stub: Add PF driver stub for PFs that
+ function only to enable VFs
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Don Dutile <ddutile@redhat.com>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-On 2018年02月28日 03:32 GMT, Bjorn Helgaas wrote:
-> On Mon, Feb 12, 2018 at 04:04:57PM -0700, Kenny Ballou wrote:
->> Convert ROM read access enable/disable string parsing to use the
->> `kstrtobool` function.
->>
->> This fixes Bugzilla Bug 111301 -- Sysfs PCI rom file functionality does
->> not match documentation.
->>
->> bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111301
->>
->> Reported-by: googlegot@yahoo.com
->> Signed-off-by: Kenny Ballou <kballou@devnulllabs.io>
->> ---
->>  drivers/pci/pci-sysfs.c | 8 +++++---
->>  1 file changed, 5 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->> index eb6bee8724cc..3cde1f25e786 100644
->> --- a/drivers/pci/pci-sysfs.c
->> +++ b/drivers/pci/pci-sysfs.c
->> @@ -1424,10 +1424,12 @@ static ssize_t pci_write_rom(struct file *filp, struct kobject *kobj,
->>  {
->>  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
->>
->> -	if ((off ==  0) && (*buf == '0') && (count == 2))
->> -		pdev->rom_attr_enabled = 0;
->> -	else
->> +	bool res = false;
+On Wed, Mar 14, 2018 at 1:56 AM, Christoph Hellwig <hch@lst.de> wrote:
 >> +
->> +	if (kstrtobool(buf, &res) == 0 && res)
->>  		pdev->rom_attr_enabled = 1;
->> +	else
->> +		pdev->rom_attr_enabled = 0;
->>
->>  	return count;
->>  }
+>> +/**
+>> + * pci_pf_stub_white_list - White list of devices to bind pci-pf-stub onto
+>> + *
+>> + * This table provides the list of IDs this driver is supposed to bind
+>> + * onto. You could think of this as a list of "quirked" devices where we
+>> + * are adding support for SR-IOV here since there are no other drivers
+>> + * that they would be running under.
+>> + *
+>> + * Layout of the table below is as follows:
+>> + * { Vendor ID, Device ID,
+>> + *   SubVendor ID, SubDevice ID,
+>> + *   Class, Class Mask,
+>> + *   private data (not used) }
+>> + */
 >
-> I know I proposed kstrtobool().  But looking closer, I don't think
-> it's the right answer because:
->
->   - kstrtobool() assumes a NULL-terminated string, and sysfs does not
->     guarantee that.  This is a binary file and we can write arbitrary
->     data to it.  kstrtobool_from_user() makes sure the string is
->     NULL-terminated, but it does a copy_from_user() that we don't want
->     in the sysfs case.
->
->   - The current behavior is that only 2-byte writes starting with '0'
->     disable the ROM, and all other writes enable it.
->
->     Using kstrtobool() would enable the ROM only for writes starting
->     with y/Y/1/on/oN/On/ON, and all other writes would disable it.
->
->     That changes the behavior for most writes, e.g., writing "2"
->     currently enables, but would now disable.  This feels
->     unnecessarily risky because we don't know what programs are
->     writing to enable the ROM.  The doc says to write "1", but the
->     code comment says "anything except 0".
->
-> We *could* change the code to accept a single-byte '0' write, but I
-> think the simplest solution would be to change the documentation to
-> explicitly require a 2-byte "0\n" write to disable the ROM.
->
-> Sorry for dithering on this.
->
-> Bjorn
+> No need to document the PCI device table format in a random driver.
 
-I was not under the impression that this particular device needed data
-written to it(?).  If it is the case that arbitrary data needs to be
-written, your argument makes sense, and I can put together a patch for
-the documentation instead.
+I realize this probably isn't necessary, but I wanted to document it
+to make it clear in terms of layout so that it is't confused with the
+quirk structure layout since this has been referred to as a "quirk"
+driver a few times.
 
--Kenny
+> Otherwise looks fine:
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
