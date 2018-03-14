@@ -1,48 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v4 0/2] x86, dmi: Uninline dmi_get_bios_year()
-Date: Tue, 20 Mar 2018 20:07:58 +0200
-Message-Id: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:35759 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751272AbeCNGHW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 02:07:22 -0400
+Date: Wed, 14 Mar 2018 07:07:20 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Daniel Vetter <daniel@ffwll.ch>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Sean Paul <seanpaul@chromium.org>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pci@vger.kernel.org, Daniel Drake <dan@reactivated.net>,
+        Denis Lisov <dennis.lissov@gmail.com>,
+        Peter Wu <peter@lekensteyn.nl>,
+        Martin Lopatar <lopin@dataplex.cz>,
+        Maik Freudenberg <hhfeuer@gmx.de>,
+        Takashi Iwai <tiwai@suse.com>, Lyude Paul <lyude@redhat.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        alsa-devel@alsa-project.org, Mike Lothian <mike@fireburn.co.uk>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: Re: [PATCH v2 0/7] Modernize vga_switcheroo by using device link for
+ HDA
+Message-ID: <20180314060720.GA24283@wunner.de>
+References: <cover.1520068884.git.lukas@wunner.de>
+ <20180306102940.GG22212@phenom.ffwll.local>
+ <20180311155549.GA11806@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180311155549.GA11806@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a new helper to extract a year from DMI BIOS date since there
-are most existing users do and newcomers would utilize as well.
+On Sun, Mar 11, 2018 at 04:55:49PM +0100, Lukas Wunner wrote:
+> > On Sat, Mar 03, 2018 at 10:53:24AM +0100, Lukas Wunner wrote:
+> > > Modernize vga_switcheroo by using a device link to enforce a runtime PM
+> > > dependency from an HDA controller to the GPU it's integrated into, v2.
+> > > 
+> > > https://github.com/l1k/linux/commits/switcheroo_devlink_v2
+> 
+> If there are no objections, I plan to push the series to
+> drm-misc-next by the middle of the coming week so that it
+> would still catch the last train to 4.17.
 
-This is a fix up series on top what had been applied already.
+Pushed to drm-misc-next now with Bjorn's changelog tweak and ack for
+patch [1/1].
 
-Since v3:
-- address more comments from Jean
-- add tags
-- reverse the order of the patches in the series
-- due to above add a Fixes tag to both of them
+Thanks a lot everyone for the reviews, acks, testing & comments.
 
-Since v2:
-- resend as fix up series
-- address comments from Bjorn, Jean, Lukas, Rafael
-
-Since v1:
-- move the helper to be regular function (Bjorn, Rafael)
-- fix a potential regression introduced in pci_acpi_crs_quirks() (Jean)
-- adjust subject lines and commit message bodies (Bjorn)
-- add tags (Bjorn, Jean)
-
-Andy Shevchenko (2):
-  firmware: dmi_scan: Uninline dmi_get_bios_year() helper
-  x86/PCI: Fix a potential regression when use dmi_get_bios_year()
-
- arch/x86/pci/acpi.c         |  4 +++-
- drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
- include/linux/dmi.h         | 11 ++---------
- 3 files changed, 25 insertions(+), 10 deletions(-)
-
--- 
-2.16.2
-
+Lukas
