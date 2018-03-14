@@ -1,82 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Richard Leitner <dev@g0hl1n.net>
-To: linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, mathias.nyman@intel.com,
-        bhelgaas@google.com, richard.leitner@skidata.com
-Subject: [PATCH 1/3] usb: host: pci: use existing Intel PCI ID macros
-Date: Wed, 14 Mar 2018 11:29:31 +0100
-Message-Id: <20180314102933.21367-2-dev@g0hl1n.net>
-In-Reply-To: <20180314102933.21367-1-dev@g0hl1n.net>
-References: <20180314102933.21367-1-dev@g0hl1n.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=Pv+1=GE=linux.vnet.ibm.com=desnesn@kernel.org>
+Return-Path: <SRS0=Pv+1=GE=linux.vnet.ibm.com=desnesn@kernel.org>
+Subject: Re: [PATCH 1/2, pci] pci: Addition of PCI_DEV_FLAGS_QUIET_PCI_REALIGN
+ attribute to the PCI subsystem
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+        benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+        ruscur@russell.cc, aik@ozlabs.ru, david@gibson.dropbear.id.au,
+        fbarrat@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
+References: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
+ <20180314163455.15854-2-desnesn@linux.vnet.ibm.com>
+ <20180314180642.GC179719@bhelgaas-glaptop.roam.corp.google.com>
+From: =?UTF-8?Q?Desnes_Augusto_Nunes_do_Ros=c3=a1rio?=
+ <desnesn@linux.vnet.ibm.com>
+Date: Wed, 14 Mar 2018 15:22:44 -0300
+MIME-Version: 1.0
+In-Reply-To: <20180314180642.GC179719@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <30c63477-620b-3f8b-82df-fd1e34cd99b8@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Leitner <richard.leitner@skidata.com>
+Hello Bjorn,
 
-Instead of the hardcoded hexadecimal PCI IDs use the existing macros
-from pci_ids.h for Intel IDs.
+On 03/14/2018 03:06 PM, Bjorn Helgaas wrote:
+> On Wed, Mar 14, 2018 at 01:34:54PM -0300, Desnes A. Nunes do Rosario wrote:
+>> Add PCI_DEV_FLAGS_QUIET_PCI_REALIGN to pci_dev_flags and use it to
+>> silent PCI realignment messages if the flag is turned on by a driver.
+>>
+>> Signed-off-by: Desnes A. Nunes do Rosario <desnesn@linux.vnet.ibm.com>
+>> ---
+>>   drivers/pci/pci.c       | 3 ++-
+>>   drivers/pci/setup-res.c | 3 ++-
+>>   include/linux/pci.h     | 2 ++
+>>   3 files changed, 6 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 8c71d1a66cdd..be197c944e5f 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -5505,7 +5505,8 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>>   		return;
+>>   	}
+>>   
+>> -	pci_info(dev, "Disabling memory decoding and releasing memory resources\n");
+>> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_QUIET_PCI_REALIGN))
+>> +		pci_info(dev, "Disabling memory decoding and releasing memory resources\n");
+>>   	pci_read_config_word(dev, PCI_COMMAND, &command);
+>>   	command &= ~PCI_COMMAND_MEMORY;
+>>   	pci_write_config_word(dev, PCI_COMMAND, command);
+>> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+>> index 369d48d6c6f1..00a538def763 100644
+>> --- a/drivers/pci/setup-res.c
+>> +++ b/drivers/pci/setup-res.c
+>> @@ -172,7 +172,8 @@ EXPORT_SYMBOL(pci_claim_resource);
+>>   
+>>   void pci_disable_bridge_window(struct pci_dev *dev)
+>>   {
+>> -	pci_info(dev, "disabling bridge mem windows\n");
+>> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_QUIET_PCI_REALIGN))
+>> +		pci_info(dev, "disabling bridge mem windows\n");
+> 
+> As far as I'm concerned, we can just remove these messages completely.
+> I don't think there's any real value there.
 
-Signed-off-by: Richard Leitner <richard.leitner@skidata.com>
----
- drivers/usb/host/pci-quirks.c | 10 +++++-----
- drivers/usb/host/xhci-pci.c   |  3 ++-
- include/linux/pci_ids.h       |  1 +
- 3 files changed, 8 insertions(+), 6 deletions(-)
+After I found out that this was happening to all PCI devices on powerpc 
+due to the __weak
+pcibios_default_alignment() interface (necessary for VFIO passthrough 
+and performance), I confess that this was my first approach to this 
+matter; however I couldn't vouch the need of these messages on other 
+architectures.
 
-diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
-index 67ad4bb6919a..4f4a9f36a68e 100644
---- a/drivers/usb/host/pci-quirks.c
-+++ b/drivers/usb/host/pci-quirks.c
-@@ -858,8 +858,8 @@ static void ehci_bios_handoff(struct pci_dev *pdev,
- 	 *
- 	 * The HASEE E200 hangs when the semaphore is set (bugzilla #77021).
- 	 */
--	if (pdev->vendor == 0x8086 && (pdev->device == 0x283a ||
--			pdev->device == 0x27cc)) {
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL &&
-+	    (pdev->device == 0x283a || pdev->device == 0x27cc)) {
- 		if (dmi_check_system(ehci_dmi_nohandoff_table))
- 			try_handoff = 0;
- 	}
-@@ -1168,9 +1168,9 @@ static void quirk_usb_handoff_xhci(struct pci_dev *pdev)
- 	val = readl(base + ext_cap_offset);
- 
- 	/* Auto handoff never worked for these devices. Force it and continue */
--	if ((pdev->vendor == PCI_VENDOR_ID_TI && pdev->device == 0x8241) ||
--			(pdev->vendor == PCI_VENDOR_ID_RENESAS
--			 && pdev->device == 0x0014)) {
-+	if ((pdev->vendor == PCI_VENDOR_ID_TI &&
-+	     pdev->device == PCI_DEVICE_ID_TI_TUSB73X0) ||
-+	    (pdev->vendor == PCI_VENDOR_ID_RENESAS && pdev->device == 0x0014)) {
- 		val = (val | XHCI_HC_OS_OWNED) & ~XHCI_HC_BIOS_OWNED;
- 		writel(val, base + ext_cap_offset);
- 	}
-diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-index 5262fa571a5d..a5bfd890190c 100644
---- a/drivers/usb/host/xhci-pci.c
-+++ b/drivers/usb/host/xhci-pci.c
-@@ -213,7 +213,8 @@ static void xhci_pci_quirks(struct device *dev, struct xhci_hcd *xhci)
- 		pdev->device == PCI_DEVICE_ID_ASMEDIA_1042A_XHCI)
- 		xhci->quirks |= XHCI_ASMEDIA_MODIFY_FLOWCONTROL;
- 
--	if (pdev->vendor == PCI_VENDOR_ID_TI && pdev->device == 0x8241)
-+	if (pdev->vendor == PCI_VENDOR_ID_TI &&
-+	    pdev->device == PCI_DEVICE_ID_TI_TUSB73X0)
- 		xhci->quirks |= XHCI_LIMIT_ENDPOINT_INTERVAL_7;
- 
- 	if (xhci->quirks & XHCI_RESET_ON_RESUME)
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index a6b30667a331..e8d1af82a688 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -838,6 +838,7 @@
- #define PCI_DEVICE_ID_TI_XX12		0x8039
- #define PCI_DEVICE_ID_TI_XX12_FM	0x803b
- #define PCI_DEVICE_ID_TI_XIO2000A	0x8231
-+#define PCI_DEVICE_ID_TI_TUSB73X0	0x8241
- #define PCI_DEVICE_ID_TI_1130		0xac12
- #define PCI_DEVICE_ID_TI_1031		0xac13
- #define PCI_DEVICE_ID_TI_1131		0xac15
+If there are no further concerns, I definitely prefer sending a second 
+version of this patch only eliminating these messages and attesting the 
+reason why.
+
+Thank you very much for your review Bjorn,
+
 -- 
-2.11.0
+Desnes A. Nunes do Rosário
