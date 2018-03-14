@@ -1,165 +1,206 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 27 Mar 2018 13:57:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
- bus number
-Message-ID: <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
- <20180226132112.81447-2-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:6201 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750862AbeCNSRF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 14:17:05 -0400
+From: John Garry <john.garry@huawei.com>
+To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
+        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
+        <olof@lixom.net>, <dann.frazier@canonical.com>,
+        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
+        <andriy.shevchenko@linux.intel.com>
+CC: <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
+        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
+        <frowand.list@gmail.com>, <agraf@suse.de>
+Subject: [PATCH v17 04/10] PCI: Apply the new generic I/O management on PCI IO hosts
+Date: Thu, 15 Mar 2018 02:15:53 +0800
+Message-ID: <1521051359-34473-5-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
+References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180226132112.81447-2-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 26, 2018 at 04:21:08PM +0300, Mika Westerberg wrote:
-> When distributing extra buses between hotplug bridges we need to make
-> sure each bridge reserve at least one bus number, even if there is
-> currently nothing connected to it. For instance ACPI hotplug may bring
-> in additional devices to non-hotplug bridges later on.
+From: Zhichang Yuan <yuanzhichang@hisilicon.com>
 
-I guess you mean ACPI hotplug can add devices below bridges that have
-"bridge->is_hotplug_bridge == 0"?  Why don't we set is_hotplug_bridge
-in that case?  I do see that acpiphp sets it in *some* cases (see
-check_hotplug_bridge()).  Are we missing some case?
+After introducing the new generic I/O space management(Logical PIO), the
+original PCI MMIO relevant helpers need to be updated based on the new
+interfaces defined in logical PIO.
+This patch adapts the corresponding code to match the changes introduced
+by logical PIO.
 
-> Here is what happens on one system when a Thunderbolt device is plugged in:
-> 
->   pci 0000:01:00.0: PCI bridge to [bus 02-39]
->   ...
->   pci_bus 0000:04: [bus 04-39] extended by 0x35
->   pci_bus 0000:04: bus scan returning with max=39
->   pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
->   pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
->   pci_bus 0000:3a: scanning bus
->   pci_bus 0000:3a: bus scan returning with max=3a
->   pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
->   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
->   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
->   pci_bus 0000:02: bus scan returning with max=3a
->   pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
-> 
-> Resulting 'lspci -t' output looks like this:
-> 
->   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
->                                   +-01.0-[04-39]--
->                                   \-02.0-[3a]----00.0
-> 
-> The device behind downstream port at 02:02 is the integrated xHCI (USB 3
-> host controller) and is not fully accessible because the hotplug bridge
-> is reserving too many bus numbers.
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Tested-by: dann frazier <dann.frazier@canonical.com>
+---
+ drivers/pci/pci.c        | 92 +++++++++---------------------------------------
+ include/asm-generic/io.h |  2 +-
+ 2 files changed, 18 insertions(+), 76 deletions(-)
 
-Thanks for the details here, but I can't tell what happened before and
-was broken, vs. what happens now.  Which is the hotplug bridge?  Which
-is the Thunderbolt controller?
-
-I guess 02:01.0 must be the bridge consuming too many bus numbers
-([bus 04-39])?
-
-And 02:02.0 might be the Thunderbolt controller that wants to use bus
-3a?  But obviously that won't work because 1b.0 doesn't route things
-to bus 3a, since it only consumes [bus 01-39].
-
-(The device behind 02:02.0 is more than just "not fully accessible" --
-it's not accessible via config space *at all*.)
-
-I guess the 'lspci -t' above must be without this patch, and with this
-patch, we'd have
-
-  pci 0000:02:00.0: PCI bridge to [bus 03]
-  pci 0000:02:01.0: PCI bridge to [bus 04-38]
-  pci 0000:02:02.0: PCI bridge to [bus 39]
-
-This patch might fix the situation for simple hot-added devices, but
-won't we have the same problem again if we hot-add a bridge?  It seems
-like we need a more comprehensive solution.  I don't mean we need to
-go whole hog and reassign everybody's bus numbers dynamically, but we
-ought to at least be able to notice the situation, decline to enable
-the bridge leading to devices we can't reach, and give a meaningful
-error message.
-
-Nit unrelated to this patch: "bridge 0000:02" is not a bridge, it's a
-bus.  Apparently bus 3a is hidden because 1b.0's subordinate bus is
-39.
-
-> To make sure we don't run out of bus numbers for non-hotplug bridges reserve
-> one bus number for them upfront before distributing buses for hotplug bridges.
-> 
-> Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
-> Reported-by: Mario Limonciello <mario.limonciello@dell.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/pci/probe.c | 11 ++++++++---
->  1 file changed, 8 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ef5377438a1e..6cefd47556e3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2561,7 +2561,10 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
->  	for_each_pci_bridge(dev, bus) {
->  		cmax = max;
->  		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
-> -		used_buses += cmax - max;
-> +		/* Reserve one bus for each bridge */
-> +		used_buses++;
-> +		if (cmax - max > 1)
-> +			used_buses += cmax - max - 1;
-
-Sorry, this should be trivial, but I'm having a hard time wrapping my
-mind around it.
-
-AFAICT, "cmax" is the highest known bus number below this bus, "max"
-is the highest bus number below "dev" (one of the bridges on "bus").
-
-I assume "used_buses++" accounts for the fact that every enabled
-bridge must consume one bus number for its secondary side.
-
-And I guess "used_buses += cmax - max - 1" adds in the bus numbers
-downstream from "dev" (subtracting the one used for its secondary
-bus)?
-
-pci_scan_bridge_extend() seems to return something related to the
-number of bus numbers used below "dev".  Why doesn't *it* account for
-the secondary bus number of "dev"?
-
-It might help if the pci_scan_bridge_extend() function comment were
-extended to say what it actually returns.
-
->  	}
->  
->  	/* Scan bridges that need to be reconfigured */
-> @@ -2584,12 +2587,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
->  			 * bridges if any.
->  			 */
->  			buses = available_buses / hotplug_bridges;
-> -			buses = min(buses, available_buses - used_buses);
-> +			buses = min(buses, available_buses - used_buses + 1);
->  		}
->  
->  		cmax = max;
->  		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
-> -		used_buses += max - cmax;
-> +		/* One bus is already accounted so don't add it again */
-> +		if (max - cmax > 1)
-> +			used_buses += max - cmax - 1;
->  	}
->  
->  	/*
-> -- 
-> 2.16.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 3f30b7d..09c2490 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -22,6 +22,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/log2.h>
++#include <linux/logic_pio.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/pm_wakeup.h>
+ #include <linux/interrupt.h>
+@@ -3436,17 +3437,6 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_regions_exclusive);
+ 
+-#ifdef PCI_IOBASE
+-struct io_range {
+-	struct list_head list;
+-	phys_addr_t start;
+-	resource_size_t size;
+-};
+-
+-static LIST_HEAD(io_range_list);
+-static DEFINE_SPINLOCK(io_range_lock);
+-#endif
+-
+ /*
+  * Record the PCI IO range (expressed as CPU physical address + size).
+  * Return a negative value if an error has occured, zero otherwise
+@@ -3454,51 +3444,28 @@ struct io_range {
+ int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
+ 			resource_size_t	size)
+ {
+-	int err = 0;
+-
++	int ret = 0;
+ #ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	/* check if the range hasn't been previously recorded */
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (addr >= range->start && addr + size <= range->start + size) {
+-			/* range already registered, bail out */
+-			goto end_register;
+-		}
+-		allocated_size += range->size;
+-	}
++	struct logic_pio_hwaddr *range;
+ 
+-	/* range not registed yet, check for available space */
+-	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+-		/* if it's too big check if 64K space can be reserved */
+-		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
+-			err = -E2BIG;
+-			goto end_register;
+-		}
+-
+-		size = SZ_64K;
+-		pr_warn("Requested IO range too big, new size set to 64K\n");
+-	}
++	if (!size || addr + size < addr)
++		return -EINVAL;
+ 
+-	/* add the range to the list */
+ 	range = kzalloc(sizeof(*range), GFP_ATOMIC);
+-	if (!range) {
+-		err = -ENOMEM;
+-		goto end_register;
+-	}
++	if (!range)
++		return -ENOMEM;
+ 
+-	range->start = addr;
++	range->fwnode = fwnode;
+ 	range->size = size;
++	range->hw_start = addr;
++	range->flags = LOGIC_PIO_CPU_MMIO;
+ 
+-	list_add_tail(&range->list, &io_range_list);
+-
+-end_register:
+-	spin_unlock(&io_range_lock);
++	ret = logic_pio_register_range(range);
++	if (ret)
++		kfree(range);
+ #endif
+ 
+-	return err;
++	return ret;
+ }
+ 
+ phys_addr_t pci_pio_to_address(unsigned long pio)
+@@ -3506,21 +3473,10 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ 	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+ 
+ #ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	if (pio > IO_SPACE_LIMIT)
++	if (pio >= MMIO_UPPER_LIMIT)
+ 		return address;
+ 
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (pio >= allocated_size && pio < allocated_size + range->size) {
+-			address = range->start + pio - allocated_size;
+-			break;
+-		}
+-		allocated_size += range->size;
+-	}
+-	spin_unlock(&io_range_lock);
++	address = logic_pio_to_hwaddr(pio);
+ #endif
+ 
+ 	return address;
+@@ -3529,21 +3485,7 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+ #ifdef PCI_IOBASE
+-	struct io_range *res;
+-	resource_size_t offset = 0;
+-	unsigned long addr = -1;
+-
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(res, &io_range_list, list) {
+-		if (address >= res->start && address < res->start + res->size) {
+-			addr = address - res->start + offset;
+-			break;
+-		}
+-		offset += res->size;
+-	}
+-	spin_unlock(&io_range_lock);
+-
+-	return addr;
++	return logic_pio_trans_cpuaddr(address);
+ #else
+ 	if (address > IO_SPACE_LIMIT)
+ 		return (unsigned long)-1;
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index f76fbd6..0016413 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -901,7 +901,7 @@ static inline void __iomem *ioremap_wt(phys_addr_t offset, size_t size)
+ #define ioport_map ioport_map
+ static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+ {
+-	return PCI_IOBASE + (port & IO_SPACE_LIMIT);
++	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
+ }
+ #endif
+ 
+-- 
+1.9.1
