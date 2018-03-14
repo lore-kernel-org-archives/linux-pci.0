@@ -1,180 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:54026 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753028AbeC1LvZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:51:25 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
-        Alan Douglas <adouglas@cadence.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 14 Mar 2018 12:45:15 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sekhar Nori <nsekhar@ti.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Niklas Cassel <niklass@axis.com>,
-        John Keeping <john@metanate.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v5 09/12] PCI: endpoint: Make epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar
-Date: Wed, 28 Mar 2018 13:50:14 +0200
-Message-Id: <20180328115018.31921-10-niklas.cassel@axis.com>
-In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH] pci: tegra: add MSI dependency
+Message-ID: <20180314114515.GC8564@ulmo>
+References: <20180313115218.2246372-1-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="nmemrqcdn5VTmUEE"
+In-Reply-To: <20180313115218.2246372-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar.
 
-This is needed so that epc->ops->clear_bar() can clear the BAR pair,
-if the BAR is 64-bits wide.
+--nmemrqcdn5VTmUEE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This also makes it possible for pci_epc_clear_bar() to sanity check
-the flags.
+On Tue, Mar 13, 2018 at 12:52:05PM +0100, Arnd Bergmann wrote:
+> Building the tegra PCIe host driver without MSI results in a link
+> failure:
+>=20
+> drivers/pci/host/pci-tegra.o:(.data+0x70): undefined reference to `pci_ms=
+i_unmask_irq'
+> drivers/pci/host/pci-tegra.o:(.data+0x74): undefined reference to `pci_ms=
+i_mask_irq'
+>=20
+> This adds the same dependency that everyone else uses.
+>=20
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/pci/host/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/cadence/pcie-cadence-ep.c         |  3 ++-
- drivers/pci/dwc/pcie-designware-ep.c          | 13 ++++++++++---
- drivers/pci/endpoint/functions/pci-epf-test.c |  5 ++++-
- drivers/pci/endpoint/pci-epc-core.c           |  7 ++++---
- include/linux/pci-epc.h                       |  5 +++--
- 5 files changed, 23 insertions(+), 10 deletions(-)
+I'm slightly concerned about the dependency. Not that I doubt its
+correctness, but because it could mean that PCI_TEGRA is not visible in
+the default configuration. The only reason why it is currently visible
+is because PCI_MSI is selected by some symbols that also happen to be
+enabled. However, what if at some point those symbols are disabled or
+removed?
 
-diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-index 2905e098678c..3d8283e450a9 100644
---- a/drivers/pci/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/cadence/pcie-cadence-ep.c
-@@ -145,10 +145,11 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
- }
- 
- static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
--				   enum pci_barno bar)
-+				   struct pci_epf_bar *epf_bar)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct cdns_pcie *pcie = &ep->pcie;
-+	enum pci_barno bar = epf_bar->barno;
- 	u32 reg, cfg, b, ctrl;
- 
- 	if (bar < BAR_4) {
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 571b90f88d84..cc4d8381c1dc 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -19,7 +19,8 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
- 	pci_epc_linkup(epc);
- }
- 
--void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-+static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar,
-+				   int flags)
- {
- 	u32 reg;
- 
-@@ -30,6 +31,11 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- 	dw_pcie_dbi_ro_wr_dis(pci);
- }
- 
-+void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-+{
-+	__dw_pcie_ep_reset_bar(pci, bar, 0);
-+}
-+
- static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
- 				   struct pci_epf_header *hdr)
- {
-@@ -104,13 +110,14 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- }
- 
- static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
--				 enum pci_barno bar)
-+				 struct pci_epf_bar *epf_bar)
- {
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	enum pci_barno bar = epf_bar->barno;
- 	u32 atu_index = ep->bar_to_atu[bar];
- 
--	dw_pcie_ep_reset_bar(pci, bar);
-+	__dw_pcie_ep_reset_bar(pci, bar, epf_bar->flags);
- 
- 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
- 	clear_bit(atu_index, ep->ib_window_map);
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index d46e3ebabb8e..7cef85124325 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -344,14 +344,17 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
- {
- 	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
- 	struct pci_epc *epc = epf->epc;
-+	struct pci_epf_bar *epf_bar;
- 	int bar;
- 
- 	cancel_delayed_work(&epf_test->cmd_handler);
- 	pci_epc_stop(epc);
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		epf_bar = &epf->bar[bar];
-+
- 		if (epf_test->reg[bar]) {
- 			pci_epf_free_space(epf, epf_test->reg[bar], bar);
--			pci_epc_clear_bar(epc, epf->func_no, bar);
-+			pci_epc_clear_bar(epc, epf->func_no, epf_bar);
- 		}
- 	}
- }
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 8637822605ff..eccc942043cb 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -276,11 +276,12 @@ EXPORT_SYMBOL_GPL(pci_epc_map_addr);
-  * pci_epc_clear_bar() - reset the BAR
-  * @epc: the EPC device for which the BAR has to be cleared
-  * @func_no: the endpoint function number in the EPC device
-- * @bar: the BAR number that has to be reset
-+ * @epf_bar: the struct epf_bar that contains the BAR information
-  *
-  * Invoke to reset the BAR of the endpoint device.
-  */
--void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, int bar)
-+void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no,
-+		       struct pci_epf_bar *epf_bar)
- {
- 	unsigned long flags;
- 
-@@ -291,7 +292,7 @@ void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, int bar)
- 		return;
- 
- 	spin_lock_irqsave(&epc->lock, flags);
--	epc->ops->clear_bar(epc, func_no, bar);
-+	epc->ops->clear_bar(epc, func_no, epf_bar);
- 	spin_unlock_irqrestore(&epc->lock, flags);
- }
- EXPORT_SYMBOL_GPL(pci_epc_clear_bar);
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 75bae8aabbf9..af657ca58b70 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -41,7 +41,7 @@ struct pci_epc_ops {
- 	int	(*set_bar)(struct pci_epc *epc, u8 func_no,
- 			   struct pci_epf_bar *epf_bar);
- 	void	(*clear_bar)(struct pci_epc *epc, u8 func_no,
--			     enum pci_barno bar);
-+			     struct pci_epf_bar *epf_bar);
- 	int	(*map_addr)(struct pci_epc *epc, u8 func_no,
- 			    phys_addr_t addr, u64 pci_addr, size_t size);
- 	void	(*unmap_addr)(struct pci_epc *epc, u8 func_no,
-@@ -127,7 +127,8 @@ int pci_epc_write_header(struct pci_epc *epc, u8 func_no,
- 			 struct pci_epf_header *hdr);
- int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
- 		    struct pci_epf_bar *epf_bar);
--void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, int bar);
-+void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no,
-+		       struct pci_epf_bar *epf_bar);
- int pci_epc_map_addr(struct pci_epc *epc, u8 func_no,
- 		     phys_addr_t phys_addr,
- 		     u64 pci_addr, size_t size);
--- 
-2.14.2
+Some architectures make sure that PCI_MSI is enabled by selecting it,
+but that's risky, isn't it, because PCI_MSI is user-visible and could
+therefore easily lead to conflicts.
+
+Enabling PCI_MSI in the arm64 defconfig would solve the issue and is
+good enough for me. I've got a couple of changes to that defconfig in
+the Tegra tree for v4.17-rc1, I can add a patch to enable PCI_MSI.
+
+Unless there are any objections.
+
+Thierry
+
+--nmemrqcdn5VTmUEE
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqpC0kACgkQ3SOs138+
+s6EiHxAAn6oQjcvzOEpBboIKDTGgxt0iPDj4dJzJzYucPE38Ve+vFm+PTA+MpYZs
+NWX07OLWX/AwVgRzS6sbxVxZrvtV3LxQOh0/IwDgZOGxoXgFbZ3OW8+x2PECzb4k
+olgjHWcJ4wKAnAoCQ5w6p5f/3Y1aBZ2N0sjKXjTYOi7nOBCsu/qm7cxm1rtUjEhS
+6frkef/D+4N3hYAQfAZNoUffy92w4YrDbFgRorOxg6RPqCRPyMdJfVf4t9GDzUkR
+TLTDc92r7UDYaWKm7X+l6aTuJLl5DWO0JeikiAyTkKoXs65SkKdbkodZGtVGDiUH
+x9KHYn5uTxKjX63e+gJszaFXvWGgh/Z61Ihxllz/4ObEelex5JY4SlvhZJWfr/ZD
+SogLQCintL1Iw7KUx/PEkjIDdANTOrx0HWO/ysL9FkG+UICBtxt4g8vsGnTBVJpn
+Z0jlKoKVYv3aMSjmMKI2CcWzH1+v+WONkJJEpuXWCYRDwc6lcZYZYTDXo7Fvrgx+
+vjX2ATksyc8W+4ynBjUUKD9kil1Nckkwx+yrHZT19VordlmYNOBo9bmjhJu2DPSl
+UKfnIbvEljg0mEXihk8aFWAYqR3hd0LT0gZk2PZKquhmPr4BHzToLla9Uff7iv47
+luEDw7UC0esK6tn1t7oP09EjtaCnMOq30OT14Fhcz4UvnhShXX4=
+=976t
+-----END PGP SIGNATURE-----
+
+--nmemrqcdn5VTmUEE--
