@@ -1,70 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60930 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753708AbeCEW2X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 17:28:23 -0500
-Date: Mon, 5 Mar 2018 16:28:21 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Message-ID: <20180305222821.GA33706@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-5-logang@deltatee.com>
- <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
- <bab9fb8b-1449-4b87-94de-7da26a279331@deltatee.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 07/37] iommu: Add a page fault handler
+To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-8-jean-philippe.brucker@arm.com>
+ <20180308164035.000065c2@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <d855e893-0f3d-3106-eb75-ce01ad9ce663@arm.com>
+Date: Wed, 14 Mar 2018 13:08:07 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bab9fb8b-1449-4b87-94de-7da26a279331@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180308164035.000065c2@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>, Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ Catalin Marinas <Catalin.Marinas@arm.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 12:13:10PM -0700, Logan Gunthorpe wrote:
+Hi Jonathan,
+
+Thanks for reviewing
+
+On 08/03/18 15:40, Jonathan Cameron wrote:
+>> +/**
+>> + * iommu_fault_queue_unregister() - Unregister an IOMMU driver from the fault
+>> + * queue.
+>> + * @flush_notifier: same parameter as iommu_fault_queue_register
+>> + */
+>> +void iommu_fault_queue_unregister(struct notifier_block *flush_notifier)
+>> +{
+>> +	down_write(&iommu_fault_queue_sem);
+>> +	if (refcount_dec_and_test(&iommu_fault_queue_refs)) {
+>> +		destroy_workqueue(iommu_fault_queue);
+>> +		iommu_fault_queue = NULL;
+>> +	}
+>> +	up_write(&iommu_fault_queue_sem);
+>> +
+>> +	if (flush_notifier)
+>> +		blocking_notifier_chain_unregister(&iommu_fault_queue_flush_notifiers,
+>> +						   flush_notifier);
+> I would expect the ordering in queue_unregister to be the reverse of queue
+> register (to make it obvious there are no races).
 > 
-> 
-> On 01/03/18 11:02 AM, Bjorn Helgaas wrote:
-> > >   void pci_enable_acs(struct pci_dev *dev)
-> > >   {
-> > > +	if (pci_p2pdma_disable_acs(dev))
-> > > +		return;
-> > 
-> > This doesn't read naturally to me.  I do see that when
-> > CONFIG_PCI_P2PDMA is not set, pci_p2pdma_disable_acs() does nothing
-> > and returns 0, so we'll go ahead and try to enable ACS as before.
-> > 
-> > But I think it would be clearer to have an #ifdef CONFIG_PCI_P2PDMA
-> > right here so it's more obvious that we only disable ACS when it's
-> > selected.
-> 
-> I could do this... however, I wrote it this way because I've read Linus
-> dislikes using #ifdef's inside function bodies and I personally agree with
-> that sentiment.
+> That would put this last block at the start before potentially destroying
+> the work queue.  If I'm missing something then perhaps a comment to
+> explain why the ordering is not the obvious one?
 
-I try to avoid #ifdefs too, but in this case the plain reading of the
-code makes no sense (we're in a function called "enable_acs()", and
-the first thing we do is call a function to "disable_acs()".
+Sure, I'll fix the order, I don't think there was any good reason for it
 
-Disabling ACS is scary for all the security reasons mentioned
-elsewhere, so a reader who knows what ACS does and cares about
-virtualization and security *has* to go look up the definition of
-pci_p2pdma_disable_acs().
+Thanks,
+Jean
 
-If you put the #ifdef right here, then it's easier to read because we
-can see that "oh, this is a special and uncommon case that I can
-probably ignore".
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
