@@ -1,75 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52526 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751412AbeCMRgh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 13:36:37 -0400
-Date: Tue, 13 Mar 2018 12:36:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Daniel Vetter <daniel@ffwll.ch>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Sean Paul <seanpaul@chromium.org>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Gustavo Padovan <gustavo@padovan.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pci@vger.kernel.org, Daniel Drake <dan@reactivated.net>,
-        Denis Lisov <dennis.lissov@gmail.com>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Martin Lopatar <lopin@dataplex.cz>,
-        Maik Freudenberg <hhfeuer@gmx.de>,
-        Takashi Iwai <tiwai@suse.com>, Lyude Paul <lyude@redhat.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        alsa-devel@alsa-project.org, Mike Lothian <mike@fireburn.co.uk>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>
-Subject: Re: [PATCH v2 0/7] Modernize vga_switcheroo by using device link for
- HDA
-Message-ID: <20180313173634.GB202215@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1520068884.git.lukas@wunner.de>
- <20180306102940.GG22212@phenom.ffwll.local>
- <20180311155549.GA11806@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 14 Mar 2018 11:50:00 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dexuan Cui <decui@microsoft.com>
+Cc: "'bhelgaas@google.com'" <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "'stable@vger.kernel.org'" <stable@vger.kernel.org>,
+        'Jack Morgenstein' <jackm@mellanox.com>
+Subject: Re: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
+Message-ID: <20180314115000.GC27868@e107981-ln.cambridge.arm.com>
+References: <20180306182128.23281-1-decui@microsoft.com>
+ <20180306182128.23281-7-decui@microsoft.com>
+ <20180307123441.GD15139@e107981-ln.cambridge.arm.com>
+ <KL1P15301MB0006B22926A4DC338BFEB78DBFD80@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <SG2P15301MB00158D30D602950F05F8B14ABFD20@SG2P15301MB0015.APCP153.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180311155549.GA11806@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <SG2P15301MB00158D30D602950F05F8B14ABFD20@SG2P15301MB0015.APCP153.PROD.OUTLOOK.COM>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 11, 2018 at 04:55:49PM +0100, Lukas Wunner wrote:
-> On Tue, Mar 06, 2018 at 11:29:40AM +0100, Daniel Vetter wrote:
-> > On Sat, Mar 03, 2018 at 10:53:24AM +0100, Lukas Wunner wrote:
-> > > Modernize vga_switcheroo by using a device link to enforce a runtime PM
-> > > dependency from an HDA controller to the GPU it's integrated into, v2.
-> > > 
-> > > https://github.com/l1k/linux/commits/switcheroo_devlink_v2
-> > 
-> > This all looks really reasonable and like a good cleanup, but it's a bit
-> > too much detail so I'll punt review to someone else with more clue.
-> 
-> Patches [3/7] to [7/7] were reviewed by Peter Wu, the HDA bits in
-> patch [5/7] additionally by Takashi.
-> 
-> Patch [2/7] was acked by Bjorn.  There was no ack for patch [1/7]
-> (authored by Rafael), but it adressed the objection Bjorn raised
-> against my original patch, so I'm assuming Bjorn is okay with it.
-> (Bjorn, please let me know if that isn't the case.)
+On Tue, Mar 13, 2018 at 06:23:39PM +0000, Dexuan Cui wrote:
 
-I am OK with it.  I sent an ack and possible minor changelog tweak.
+[...]
 
-I expect that you'll merge the whole series via drm-misc.
+> Hi Lorenzo, Bjorn, and all,
+> Do you need more ACKs? Currently Michael and Haiyang reviewed and ack'd 
+> the patchset.
+> 
+> Should I send a v4 that just removes the "CC: stable@vger.kernel.org" tag
+> for patches 1, 2, 4 and 5? I tend to avoid a v4 as I supppose it would be 
+> easier if you just remove the tags if you belive it's necessary (IMHO all the
+> 6 paches are not big and it would be great if we can have all of them in 
+> the old stable kernels, but I respect your decision).
 
-> The series has been tested on 5 systems, which raises the confidence:
-> 2x AMD PowerXpress (Mike Lothian, Kai Heng Feng)
-> 2x Nvidia Optimus (Denis Lisov, Peter Wu)
-> 1x MacBook Pro
-> 
-> The issues found during Peter Wu's thorough testing appear to all
-> be unrelated to this series, as per my e-mail yesterday.
-> 
-> If there are no objections, I plan to push the series to
-> drm-misc-next by the middle of the coming week so that it
-> would still catch the last train to 4.17.
-> 
-> Thanks,
-> 
-> Lukas
+I think you need a v4 since for patches that are actually fixing a bug I
+want a Fixes: tag added and I want them to be applicable independently
+of other patches in the series. Send them in a separate series if you
+prefer - I just want to make sure they apply independently.
+
+As for marking patches for stable kernels, I do not think it is right
+to send cosmetic churn to stable kernels anyway, at least that's my
+reading of the policy.
+
+You can easily post a v4 with patches reshuffled - I will apply them
+accordingly.
+
+Before re-posting please read this to improve formatting (I can do it
+for you but while at it you can do it yourself):
+
+https://marc.info/?l=linux-pci&m=150905742808166&w=2
+
+Thanks,
+Lorenzo
