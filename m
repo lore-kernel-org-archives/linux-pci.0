@@ -1,68 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:60678 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755935AbeCHNeB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2018 08:34:01 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 5/5] misc: pci_endpoint_test: Handle 64-bit BARs properly
-Date: Thu,  8 Mar 2018 14:33:30 +0100
-Message-Id: <20180308133331.19464-6-niklas.cassel@axis.com>
-In-Reply-To: <20180308133331.19464-1-niklas.cassel@axis.com>
-References: <20180308133331.19464-1-niklas.cassel@axis.com>
+Received: from verein.lst.de ([213.95.11.211]:34731 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751840AbeCNJDI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 05:03:08 -0400
+Date: Wed, 14 Mar 2018 10:03:06 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
+        "linus.walleij@linaro.org" <linus.walleij@linaro.org>,
+        "johan@kernel.org" <johan@kernel.org>,
+        "msuchanek@suse.de" <msuchanek@suse.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] dma-mapping: move dma configuration to bus
+        infrastructure
+Message-ID: <20180314090306.GF28983@lst.de>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <20180313073448.GA32269@lst.de> <HE1PR0401MB242509FE2B60674CAF306A4AE6D20@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <HE1PR0401MB242509FE2B60674CAF306A4AE6D20@HE1PR0401MB2425.eurprd04.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A 64-bit BAR consists of a BAR pair, where the second BAR has the
-upper bits, so we cannot simply call pci_ioremap_bar() on every single
-BAR index.
+> Agree. There is no good point in duplicating the code.
+> So this new API will be part of 'drivers/base/dma-mapping.c' file?
 
-The second BAR in a BAR pair will not have the IORESOURCE_MEM resource
-flag set. Only call ioremap on BARs that have the IORESOURCE_MEM
-resource flag set.
+Yes.
 
-pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
-pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
-pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
-pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
-pci-endpoint-test 0000:01:00.0: failed to read BAR1
-pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
-pci-endpoint-test 0000:01:00.0: failed to read BAR3
-pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
-pci-endpoint-test 0000:01:00.0: failed to read BAR5
+> > As mention in my previous reply I think we don't even need a deconfigure
+> > callback at this point - just remove the ACPI and OF wrappers and
+> > clear the dma ops.
+> > 
+> > Also in this series we should replace the force_dma flag by use of the
+> > proper method, e.g. give a force parameter to of_dma_configure and the
+> > new dma_common_configure helper that the busses that want it can set.
+> 
+> I am more inclined to what Robin states in other mail to keep symmetry.
+> i.e. to keep dma_configure() and dma_deconfigure() and call
+> dev->bus->dma_configure from dma_configure(). Is this okay?
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/misc/pci_endpoint_test.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 320276f42653..fe8897e64635 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -534,12 +534,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	}
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
--		base = pci_ioremap_bar(pdev, bar);
--		if (!base) {
--			dev_err(dev, "failed to read BAR%d\n", bar);
--			WARN_ON(bar == test_reg_bar);
-+		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
-+			base = pci_ioremap_bar(pdev, bar);
-+			if (!base) {
-+				dev_err(dev, "failed to read BAR%d\n", bar);
-+				WARN_ON(bar == test_reg_bar);
-+			}
-+			test->bar[bar] = base;
- 		}
--		test->bar[bar] = base;
- 	}
- 
- 	test->base = test->bar[test_reg_bar];
--- 
-2.14.2
+Sure.
