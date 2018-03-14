@@ -1,249 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1519933855.10722.364.camel@linux.intel.com>
-Subject: Re: [PATCH v15 8/9] HISI LPC: Add ACPI support
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: John Garry <john.garry@huawei.com>,
-        mika.westerberg@linux.intel.com, rafael@kernel.org,
-        lorenzo.pieralisi@arm.com, rjw@rjwysocki.net,
-        hanjun.guo@linaro.org, robh+dt@kernel.org, bhelgaas@google.com,
-        arnd@arndb.de, mark.rutland@arm.com, olof@lixom.net,
-        dann.frazier@canonical.com, andy.shevchenko@gmail.com,
-        robh@kernel.org
-Cc: joe@perches.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linuxarm@huawei.com, minyard@acm.org,
-        devicetree@vger.kernel.org, linux-arch@vger.kernel.org,
-        rdunlap@infradead.org, gregkh@linuxfoundation.org,
-        akpm@linux-foundation.org, frowand.list@gmail.com, agraf@suse.de
-Date: Thu, 01 Mar 2018 21:50:55 +0200
-In-Reply-To: <1519663249-9850-9-git-send-email-john.garry@huawei.com>
-References: <1519663249-9850-1-git-send-email-john.garry@huawei.com>
-         <1519663249-9850-9-git-send-email-john.garry@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:42650 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750779AbeCNP2U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 11:28:20 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180314085421.GA28796@lst.de>
+References: <20180313212508.3553.65326.stgit@localhost.localdomain>
+ <20180313212754.3553.72176.stgit@localhost.localdomain> <20180314085421.GA28796@lst.de>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Wed, 14 Mar 2018 08:28:18 -0700
+Message-ID: <CAKgT0UdmU7Rc+eOz2FrtmSET2MqAnErGPQza2fmDChmU6__8OQ@mail.gmail.com>
+Subject: Re: [pci PATCH v6 1/5] pci: Add pci_sriov_configure_simple for PFs
+ that don't manage VF resources
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Don Dutile <ddutile@redhat.com>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>, dwmw@amazon.co.uk
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-02-27 at 00:40 +0800, John Garry wrote:
-> Based on the previous patches, this patch supports the
-> LPC host on hip06/hip07 for ACPI FW.
-> 
-> It is the responsibility of the LPC host driver to
-> enumerate the child devices, as the ACPI scan code will
-> not enumerate children of "indirect IO" hosts.
-> 
-> The ACPI table for the LPC host controller and the child
-> devices is in the following format:
->   Device (LPC0) {
->     Name (_HID, "HISI0191")  // HiSi LPC
->     Name (_CRS, ResourceTemplate () {
->       Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
->     })
->   }
-> 
->   Device (LPC0.IPMI) {
->     Name (_HID, "IPI0001")
->     Name (LORS, ResourceTemplate() {
->       QWordIO (
->         ResourceConsumer,
-> 	MinNotFixed,     // _MIF
-> 	MaxNotFixed,     // _MAF
-> 	PosDecode,
-> 	EntireRange,
-> 	0x0,             // _GRA
-> 	0xe4,            // _MIN
-> 	0x3fff,          // _MAX
-> 	0x0,             // _TRA
-> 	0x04,            // _LEN
-> 	, ,
-> 	BTIO
->       )
->     })
-> 
-> Since the IO resources of the child devices need to be
-> translated from LPC bus addresses to logical PIO addresses,
-> and we shouldn't modify the resources of the devices
-> generated in the FW scan, a per-child MFD is created as
-> a substitute. The MFD IO resources will be the translated
-> bus addresses of the ACPI child.
+On Wed, Mar 14, 2018 at 1:54 AM, Christoph Hellwig <hch@lst.de> wrote:
+> On Tue, Mar 13, 2018 at 02:28:49PM -0700, Alexander Duyck wrote:
+>> From: Alexander Duyck <alexander.h.duyck@intel.com>
+>>
+>> This patch adds a common configuration function called
+>> pci_sriov_configure_simple that will allow for managing VFs on devices
+>> where the PF is not capable of managing VF resources.
+>>
+>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> ---
+>>
+>> v5: New patch replacing pci_sriov_configure_unmanaged with
+>>       pci_sriov_configure_simple
+>>     Dropped bits related to autoprobe changes
+>> v6: Defined pci_sriov_configure_simple as NULL if IOV is disabled
+>>
+>>  drivers/pci/iov.c   |   32 ++++++++++++++++++++++++++++++++
+>>  include/linux/pci.h |    3 +++
+>>  2 files changed, 35 insertions(+)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index 677924ae0350..bd7021491fdb 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -807,3 +807,35 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>>       return dev->sriov->total_VFs;
+>>  }
+>>  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+>> +
+>> +/**
+>> + * pci_sriov_configure_simple - helper to configure unmanaged SR-IOV
+>> + * @dev: the PCI device
+>> + * @nr_virtfn: number of virtual functions to enable, 0 to disable
+>> + *
+>> + * Used to provide generic enable/disable SR-IOV option for devices
+>> + * that do not manage the VFs generated by their driver
+>> + */
+>> +int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn)
+>> +{
+>> +     int err = -EINVAL;
+>
+> This assignment seems like it is never used..
 
-Ok, this needs to be thought about a bit more.
+It applies in the case where we are setting a number of VFs when VFs
+are already allocated. It was needed since the last statement ended in
+an if.
 
-I guess I understand what's is the problem with PNP IDs in the driver.
+>> +
+>> +     might_sleep();
+>> +
+>> +     if (!dev->is_physfn)
+>> +             return -ENODEV;
+>> +
+>> +     if (pci_vfs_assigned(dev)) {
+>> +             pci_warn(dev,
+>> +                      "Cannot modify SR-IOV while VFs are assigned\n");
+>> +             err = -EPERM;
+>
+> Why not:
+>
+>         if (pci_vfs_assigned(dev)) {
+>                 pci_warn(dev,
+>                          "Cannot modify SR-IOV while VFs are assigned\n");
+>                 return -EPERM;
+>         }
 
-You probe your LPC device quite late.
-One option is to move from classical probe to a event-driven model, i.e.
-via registering a notifier (see acpi_lpss.c), preparing necessary stuff
-at earlier stages and then register devices by their enumeration and
-appearance.
+Symmetry. I had this as one of 3 blocks and just did it this way to be
+consistent with the next two statements. I could probably just return
+from each if block if that is preferred.
 
-Though, if I would be you I would seek a opinion from Rafael and Mika
-(maybe others as well).
+> Otherwise looks good:
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-See also some comments below.
-
-> +#ifdef CONFIG_ACPI
-> +#define MFD_CHILD_NAME_PREFIX DRV_NAME"-"
-
-> +#define MFD_CHILD_NAME_LEN (ACPI_ID_LEN +
-> sizeof(MFD_CHILD_NAME_PREFIX))
-
-..._PREFIX) - 1)
-
-?
-
-> +static int hisi_lpc_acpi_xlat_io_res(struct acpi_device *adev,
-> +				     struct acpi_device *host,
-> +				     struct resource *res)
-> +{
-> +	unsigned long sys_port;
-
-> +	resource_size_t len = res->end - res->start;
-
-resource_size()
-
-> +	return 0;
-> +}
-
-
-> +static int hisi_lpc_acpi_set_io_res(struct device *child,
-> +				    struct device *hostdev,
-> +				    const struct resource **res,
-> +				    int *num_res)
-> +{
-
-> +	/*
-> +	 * The following code segment to retrieve the resources is
-> common to
-> +	 * acpi_create_platform_device(), so consider a common helper
-> function
-> +	 * in future.
-> +	 */
-> +	count = acpi_dev_get_resources(adev, &resource_list, NULL,
-> NULL);
-> +	if (count <= 0) {
-> +		dev_dbg(child, "failed to get resources\n");
-
-> +		return count ? count : -EIO;
-
-count == 0 --> return 0;
-
-Is it by design? (I didn't check acpi_create_platform_device() though)
-
-> +	}
-> +
-> +	resources = devm_kcalloc(hostdev, count, sizeof(*resources),
-> +				 GFP_KERNEL);
-> +	if (!resources) {
-> +		dev_warn(hostdev, "could not allocate memory for %d
-> resources\n",
-> +			 count);
-> +		acpi_dev_free_resource_list(&resource_list);
-> +		return -ENOMEM;
-> +	}
-> +	count = 0;
-> +	list_for_each_entry(rentry, &resource_list, node)
-> +		resources[count++] = *rentry->res;
-> +
-> +	acpi_dev_free_resource_list(&resource_list);
-
-> +
-> +	return 0;
-> +}
-
-> +
-> +/*
-> + * hisi_lpc_acpi_probe - probe children for ACPI FW
-> + * @hostdev: LPC host device pointer
-> + *
-> + * Returns 0 when successful, and a negative value for failure.
-> + *
-> + * Scan all child devices and create a per-device MFD with
-> + * logical PIO translated IO resources.
-> + */
-> +static int hisi_lpc_acpi_probe(struct device *hostdev)
-> +{
-> +	struct acpi_device *adev = ACPI_COMPANION(hostdev);
-> +	struct hisi_lpc_mfd_cell *hisi_lpc_mfd_cells;
-> +	struct mfd_cell *mfd_cells;
-> +	struct acpi_device *child;
-> +	int size, ret, count = 0, cell_num = 0;
-> +
-> +	list_for_each_entry(child, &adev->children, node)
-> +		cell_num++;
-> +
-> +	/* allocate the mfd cell and companion acpi info, one per
-> child */
-> +	size = sizeof(*mfd_cells) + sizeof(*hisi_lpc_mfd_cells);
-> +	mfd_cells = devm_kcalloc(hostdev, cell_num, size,
-> GFP_KERNEL);
-> +	if (!mfd_cells)
-> +		return -ENOMEM;
-> +
-
-> +	hisi_lpc_mfd_cells = (struct hisi_lpc_mfd_cell *)
-> +					&mfd_cells[cell_num];
-
-One line, please.
-
-Just noticed that calloc() memory layout is not the same how you are
-using it.
-
-> +	/* Only consider the children of the host */
-> +	list_for_each_entry(child, &adev->children, node) {
-> +		struct mfd_cell *mfd_cell = &mfd_cells[count];
-> +		struct hisi_lpc_mfd_cell *hisi_lpc_mfd_cell =
-> +					&hisi_lpc_mfd_cells[count];
-> +		struct mfd_cell_acpi_match *acpi_match =
-> +					&hisi_lpc_mfd_cell-
-> >acpi_match;
-> +		char *name = hisi_lpc_mfd_cell[count].name;
-> +		char *pnpid = hisi_lpc_mfd_cell[count].pnpid;
-> +		struct mfd_cell_acpi_match match = {
-> +			.pnpid = pnpid,
-> +		};
-> +
-
-> +		snprintf(name, MFD_CHILD_NAME_LEN,
-> MFD_CHILD_NAME_PREFIX"%s",
-> +			 acpi_device_hid(child));
-
-No possibility of identical devices?
-
-> +		snprintf(pnpid, ACPI_ID_LEN, "%s",
-> acpi_device_hid(child));
-> +
-> +		memcpy(acpi_match, &match, sizeof(*acpi_match));
-> +		mfd_cell->name = name;
-> +		mfd_cell->acpi_match = acpi_match;
-> +
-> +		ret = hisi_lpc_acpi_set_io_res(&child->dev, &adev-
-> >dev,
-> +					       &mfd_cell->resources,
-> +					       &mfd_cell-
-> >num_resources);
-> +		if (ret) {
-> +			dev_warn(&child->dev, "set resource
-> fail(%d)\n", ret);
-> +			return ret;
-> +		}
-> +		count++;
-> +	}
-> +
-> +	ret = mfd_add_devices(hostdev, 
-
-> PLATFORM_DEVID_NONE,
-
-You mean it's not possible to have more than one identical device?
-
-> +			      mfd_cells, cell_num, NULL, 0, NULL);
-> +	if (ret) {
-> +		dev_err(hostdev, "failed to add mfd cells (%d)\n",
-> ret);
-> +		return ret;
-> +	}
-
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+For v7 I can probably drop the err parameter and just return the
+necessary error values directly.
