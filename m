@@ -1,74 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41051 "EHLO mx2.suse.de"
+Received: from mail2.skidata.com ([91.230.2.91]:30348 "EHLO mail2.skidata.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751480AbeCTPdC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Mar 2018 11:33:02 -0400
-Date: Tue, 20 Mar 2018 16:32:58 +0100
-From: Jean Delvare <jdelvare@suse.de>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v3 1/2] x86/PCI: Fix a potential regression when use
- dmi_get_bios_year()
-Message-ID: <20180320163258.5ac39580@endymion>
-In-Reply-To: <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>
-References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
-        <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>
+        id S1750751AbeCNLmK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 07:42:10 -0400
+Subject: Re: [PATCH 3/3] usb: host: pci: replace hardcoded renesas PCI IDs
+To: Greg KH <gregkh@linuxfoundation.org>,
+        Richard Leitner <dev@g0hl1n.net>
+CC: <linux-usb@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <mathias.nyman@intel.com>,
+        <bhelgaas@google.com>
+References: <20180314102933.21367-1-dev@g0hl1n.net>
+ <20180314102933.21367-4-dev@g0hl1n.net> <20180314104925.GC32615@kroah.com>
+From: Richard Leitner <richard.leitner@skidata.com>
+Message-ID: <d46c3232-1a45-7e28-9691-de2fcb964ae4@skidata.com>
+Date: Wed, 14 Mar 2018 12:38:52 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20180314104925.GC32615@kroah.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andy,
 
-On Tue, 20 Mar 2018 15:54:09 +0200, Andy Shevchenko wrote:
-> dmi_get_bios_year() may return 0 when it is incapable to parse
-> the BIOS date string. Previously this has been checked in
-> pci_acpi_crs_quirks().
+On 03/14/2018 11:49 AM, Greg KH wrote:
+> On Wed, Mar 14, 2018 at 11:29:33AM +0100, Richard Leitner wrote:
+>> From: Richard Leitner <richard.leitner@skidata.com>
+>>
+>> Introduce Renesas uPD72020{1,2} PCI device IDs in pci_ids.h and replace
+>> the harcoded values with them.
+>>
+>> Signed-off-by: Richard Leitner <richard.leitner@skidata.com>
+>> ---
+>>  drivers/usb/host/pci-quirks.c | 6 ++++--
+>>  drivers/usb/host/xhci-pci.c   | 4 ++--
+>>  include/linux/pci_ids.h       | 2 ++
+>>  3 files changed, 8 insertions(+), 4 deletions(-)
+>>
+
+> Now this patch was fine :)
 > 
-> Update the code to restore old behaviour.
+> Care to redo this series?
 
-When fixing a regression, a good practice is to tag the fix commit as
-such:
+Sure. Will send a v2 soon.
 
-Fixes: 69c42d493db4 ("x86/pci: Simplify code by using the new dmi_get_bios_year() helper")
-
-> Reported-by: Jean Delvare <jdelvare@suse.de>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  arch/x86/pci/acpi.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 00e60de30328..5559dcaddd5e 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -140,7 +140,9 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
->  
->  void __init pci_acpi_crs_quirks(void)
->  {
-> -	if ((dmi_get_bios_year() < 2008) && (iomem_resource.end <= 0xffffffff))
-> +	int year = dmi_get_bios_year();
-> +
-> +	if (year >= 0 && year < 2008 && iomem_resource.end <= 0xffffffff)
->  		pci_use_crs = false;
->  
->  	dmi_check_system(pci_crs_quirks);
+> thanks,
+> 
+> greg k-h
+> 
 
-This works with the non-inline version of dmi_get_bios_year()
-introduced by patch 2/2 of this series. However the inline version of
-this function would return 0 on error, which makes the condition above
-always true.
+thank you!
 
-The patches need to be applied in the opposite order, or the test above
-should be changed to "year > 0".
-
-Reviewed-by: Jean Delvare <jdelvare@suse.de>
-
--- 
-Jean Delvare
-SUSE L3 Support
+regards;Richard.L
