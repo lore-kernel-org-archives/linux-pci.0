@@ -1,54 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/3] usb: host: pci: introduce PCI vendor ID for Netlogic
-To: Oliver Neukum <oneukum@suse.com>, Richard Leitner <dev@g0hl1n.net>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-usb@vger.kernel.org>
-CC: <bhelgaas@google.com>, <mathias.nyman@intel.com>,
-        <gregkh@linuxfoundation.org>
-References: <20180314102933.21367-1-dev@g0hl1n.net>
- <20180314102933.21367-3-dev@g0hl1n.net> <1521029854.4511.12.camel@suse.com>
-From: Richard Leitner <richard.leitner@skidata.com>
-Message-ID: <a97cd8ba-3934-dc88-8851-465f0313162b@skidata.com>
-Date: Wed, 14 Mar 2018 14:31:10 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:50760 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751492AbeCNLFw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 07:05:52 -0400
+Date: Wed, 14 Mar 2018 11:05:46 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Scott Bauer <scott.bauer@intel.com>
+Subject: Re: [PATCHv2] PCI: vmd: Use affinity to chain child device interrupts
+Message-ID: <20180314110546.GA27868@e107981-ln.cambridge.arm.com>
+References: <20180206202225.1124-1-keith.busch@intel.com>
+ <20180313171039.GB20373@e107981-ln.cambridge.arm.com>
+ <20180313200840.GA28002@localhost.localdomain>
+ <20180313201807.GA28112@localhost.localdomain>
+ <20180313232440.GA28358@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <1521029854.4511.12.camel@suse.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180313232440.GA28358@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Oliver,
-thank you for your feedback!
-
-On 03/14/2018 01:17 PM, Oliver Neukum wrote:
-> Am Mittwoch, den 14.03.2018, 11:29 +0100 schrieb Richard Leitner:
->> From: Richard Leitner <richard.leitner@skidata.com>
->>
->> Replace the hardcoded PCI vendor ID of Netlogic with a definition in
->> pci_ids.h
+On Tue, Mar 13, 2018 at 05:24:40PM -0600, Keith Busch wrote:
+> On Tue, Mar 13, 2018 at 02:18:07PM -0600, Keith Busch wrote:
+> > 
+> > And since you brought my attention to it, I see the 'if' is off by one.
+> > Let me prepare a v3, and I've one other minor optimization to add as
+> > well.
 > 
-> Hi,
+> Ugh, I may need to request withdrawing this patch entirely. This will
+> completely break if the VMD interrupt vector's SMP affinity is a subset
+> of the child driver's, and the CPUs in the intersection of those masks
+> are set offline after driver initialization.
 > 
-> in general, why?
-> Does this patch generate any benefit for any developer
-> reading the source? I don't see it. Does it cause an
-> issue for anybody who has a log file with the nummerical
-> ID and needs to grep for it? Yes it does.
-
-I'll send a v2 where I also use this definition in 
-arch/mips/netlogic/xlp/ instead of PCI_VENDOR_NETLOGIC from
-arch/mips/include/asm/netlogic/xlp-hal/iomap.h.
-
-Therefore it will remove this definition from the iomap.h
-and move it to pci_ids.h
-
-This will IMHO be a clear benefit as it removes a redundant
-definition.
-
+> That's looking like a pretty tricky problem to fix, all for (somewhat)
+> obscure kernel feature... I can't see how without a new hot cpu notifier.
 > 
-> Where is the point of this patch?
-> 
-> 	Regards
-> 		Oliver
-> 
+> Let me request a pause on this one and I'll get back ASAP.
 
-regards;Richard.L
+OK, I will mark it as "Not Applicable" and will wait for an updated
+version then.
+
+Thanks,
+Lorenzo
