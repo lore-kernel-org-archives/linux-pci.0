@@ -1,89 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52076 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751626AbeCTUOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Mar 2018 16:14:19 -0400
-Subject: [PATCH v2 2/2] sparc/PCI: Stop reserving System ROM and Video ROM
- in PCI space
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "David S. Miller" <davem@davemloft.net>,
-        Khalid Aziz <khalid.aziz@oracle.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-        David Ahern <david.ahern@oracle.com>, TJ <linux@iam.tj>,
-        David Airlie <airlied@linux.ie>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, sparclinux@vger.kernel.org
-Date: Tue, 20 Mar 2018 15:14:17 -0500
-Message-ID: <152157685713.167463.4236364024847068642.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152157662729.167463.14127576964193645242.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152157662729.167463.14127576964193645242.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50236 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752519AbeCNQfh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 12:35:37 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w2EGYwlJ079214
+        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 12:35:37 -0400
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2gq515ff61-1
+        (version=TLSv1.2 cipher=AES256-SHA256 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 12:35:37 -0400
+Received: from localhost
+        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <desnesn@linux.vnet.ibm.com>;
+        Wed, 14 Mar 2018 10:35:36 -0600
+From: "Desnes A. Nunes do Rosario" <desnesn@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au, ruscur@russell.cc, aik@ozlabs.ru,
+        david@gibson.dropbear.id.au, fbarrat@linux.vnet.ibm.com,
+        brking@linux.vnet.ibm.com
+Subject: [PATCH 2/2, powerpc/powernv] powerpc/powernv: Tweak PCI_DEV_FLAGS_QUIET_PCI_REALIGN on/off during boot
+Date: Wed, 14 Mar 2018 13:34:55 -0300
+In-Reply-To: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
+References: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
+Message-Id: <20180314163455.15854-3-desnesn@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Turn on PCI_DEV_FLAGS_QUIET_PCI_REALIGN flag on powernv's pci driver
+to silent PCI realignment messages through a early stage hook, and turn
+it off right before the pci device is enabled with a final stage hook.
 
-Previously, pci_register_legacy_regions() reserved PCI address space under
-every PCI host bridge for the System ROM and the Video ROM, but these
-regions are not part of PCI address space.
-
-Previously, pci_register_legacy_regions() reserved the following areas of
-PCI address space under every PCI host bridge:
-
-  [bus 0xa0000-0xbffff]    Video RAM area (VGA frame buffer)
-  [bus 0xc0000-0xc7fff]    Video ROM
-  [bus 0xf0000-0xfffff]    System ROM
-
-It does need to reserve the [bus 0xa0000-0xbffff] region (at least if
-there's a possibility of a VGA device below the bridge) because VGA devices
-can respond to that even if they don't describe it with a BAR.
-
-But the Video ROM and System ROM areas don't seem necessary because they
-are not areas that legacy PCI devices respond to.
-
-They appear to be copied from x86, where they describe areas of system
-memory that depend on BIOS conventions.  On x86, BIOS copies the option ROM
-of the primary VGA device to RAM at 0xc0000, and the 0xf0000-0xfffff region
-is reserved for the motherboard BIOS.  Neither of these things applies to
-sparc.
-
-Stop reserving the System ROM and Video ROM regions in PCI space.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Fixes: 38274637699 ("powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned")
+Signed-off-by: Desnes A. Nunes do Rosario <desnesn@linux.vnet.ibm.com>
 ---
- arch/sparc/kernel/pci_common.c |   20 --------------------
- 1 file changed, 20 deletions(-)
+ arch/powerpc/platforms/powernv/pci.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 14fa74f90fdb..38d46bcc8634 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -344,26 +344,6 @@ static void pci_register_legacy_regions(struct resource *io_res,
- 	p->end = p->start + 0x1ffffUL;
- 	p->flags = IORESOURCE_BUSY;
- 	request_resource(mem_res, p);
--
--	p = kzalloc(sizeof(*p), GFP_KERNEL);
--	if (!p)
--		return;
--
--	p->name = "System ROM";
--	p->start = mem_res->start + 0xf0000UL;
--	p->end = p->start + 0xffffUL;
--	p->flags = IORESOURCE_BUSY;
--	request_resource(mem_res, p);
--
--	p = kzalloc(sizeof(*p), GFP_KERNEL);
--	if (!p)
--		return;
--
--	p->name = "Video ROM";
--	p->start = mem_res->start + 0xc0000UL;
--	p->end = p->start + 0x7fffUL;
--	p->flags = IORESOURCE_BUSY;
--	request_resource(mem_res, p);
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 69d102cbf48f..d28ce0899487 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -1108,6 +1108,20 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
  }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
  
- static void pci_register_iommu_region(struct pci_pbm_info *pbm)
++/* Fixup that disables PCI realignment menssages for all PCI devices */
++static void disable_realign_menssages(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_QUIET_PCI_REALIGN;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, disable_realign_menssages);
++
++/* Fixup that enables PCI realignment messages for all PCI devices */
++static void enable_realign_menssages(struct pci_dev *dev)
++{
++	dev->dev_flags ^= PCI_DEV_FLAGS_QUIET_PCI_REALIGN;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, enable_realign_menssages);
++
+ void __init pnv_pci_init(void)
+ {
+ 	struct device_node *np;
+-- 
+2.14.3
