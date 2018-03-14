@@ -1,166 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50692 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753050AbeCUTsA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 15:48:00 -0400
-Date: Wed, 21 Mar 2018 14:47:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tal Gilboa <talgi@mellanox.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>
-Subject: Re: [PATCH next V3 3/5] PCI: Print PCI device link status in kernel
- log
-Message-ID: <20180321194758.GC38649@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
- <1520856370-15404-4-git-send-email-talgi@mellanox.com>
- <20180320140527.GL77194@bhelgaas-glaptop.roam.corp.google.com>
- <c513c09c-69d6-3a01-b183-496622daebdc@mellanox.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c513c09c-69d6-3a01-b183-496622daebdc@mellanox.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34282 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751279AbeCNVLJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 17:11:09 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w2EL6BQx054434
+        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 17:11:08 -0400
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2gq88pqayh-1
+        (version=TLSv1.2 cipher=AES256-SHA256 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 17:11:08 -0400
+Received: from localhost
+        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <desnesn@linux.vnet.ibm.com>;
+        Wed, 14 Mar 2018 15:11:07 -0600
+From: "Desnes A. Nunes do Rosario" <desnesn@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Cc: bhelgaas@google.com, brking@linux.vnet.ibm.com
+Subject: [PATCH, pci, v2] pci: Delete PCI disabling informational messages
+Date: Wed, 14 Mar 2018 18:10:53 -0300
+Message-Id: <20180314211053.26605-1-desnesn@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 09:43:48AM +0200, Tal Gilboa wrote:
-> On 3/20/2018 4:05 PM, Bjorn Helgaas wrote:
-> > [+cc Jacob]
-> > 
-> > On Mon, Mar 12, 2018 at 02:06:08PM +0200, Tal Gilboa wrote:
-> > > Add pcie_print_link_status() function for querying and verifying
-> > > a PCI device link status. The PCI speed and width are reported
-> > > in kernel log.
-> > > This provides a unified method for all PCI devices to
-> > > report status and issues, instead of each device reporting in a
-> > > different way, using different code.
-> > > 
-> > > Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-> > > Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
-> > > ---
-> > >   drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
-> > >   include/linux/pci.h |  1 +
-> > >   2 files changed, 26 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 48b9fd6..ac876c4 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -5229,6 +5229,31 @@ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
-> > >   EXPORT_SYMBOL(pcie_get_width_cap);
-> > >   /**
-> > > + * pcie_print_link_status - Reports the PCI device's link speed and width.
-> > > + * @dev: PCI device to query
-> > > + *
-> > > + * This function checks whether the PCI device current speed and width are equal
-> > > + * to the maximum PCI device capabilities.
-> > > + */
-> > > +void pcie_print_link_status(struct pci_dev *dev)
-> > > +{
-> > > +	enum pcie_link_width width, width_cap;
-> > > +	enum pci_bus_speed speed, speed_cap;
-> > > +
-> > > +	pcie_get_speed_cap(dev, &speed_cap);
-> > > +	pcie_get_width_cap(dev, &width_cap);
-> > > +	pcie_get_minimum_link(dev, &speed, &width);
-> > > +
-> > > +	if (speed == speed_cap && width == width_cap)
-> > > +		pci_info(dev, "%s x%d link\n", PCIE_SPEED2STR(speed), width);
-> > > +	else
-> > > +		pci_info(dev, "%s x%d link (capable of %s x%d)\n",
-> > > +			 PCIE_SPEED2STR(speed), width,
-> > > +			 PCIE_SPEED2STR(speed_cap), width_cap);
-> > 
-> > I think pcie_get_minimum_link() is misleading.  This new use of
-> > it is very similar to the existing uses, but I think we should clean
-> > this up before using it in more places.
-> > 
-> > pcie_get_minimum_link() finds the minimum speed and minimum link width
-> > (separately) across all the links in the path, and I don't think
-> > that's what we really want.  What we *want* is the total bandwidth
-> > available to the device, because we're trying to learn if the device
-> > is capable of more than the fabric can deliver.
-> > 
-> > That means we want to look at all the links in the path leading to the
-> > device and find the link with the lowest bandwidth, i.e., width *
-> > speed.  Obviously this is not necessarily the link with the fewest
-> > lanes or the lowest link speed.
-> 
-> The problem I see here is we need to consider differences in PCIe
-> gens.  Let's consider this example: gen3 x4 device which down the
-> chain goes over gen2 x8 pcie bridge. The device's bandwidth is
-> D=4*8*(gen3 encoding) and the bridge's bandwidth is B=8*5*(gen2
-> encoding). D~=31.5 and B~=32. So it would seem like there's no
-> issue, but don't we want to know we actually went up as gen2?
+The disabling informational messages on the PCI subsystem should be deleted
+since they do not represent any real value for the system logs.
 
-If you're saying the "bandwidth = width * speed" equation should be
-enhanced to consider the effect of encoding, I would agree with that.
-fm10k_slot_warn() has an example of doing that.
+These messages are either not presented, or presented for all PCI devices
+(e.g., powerpc now realigns all PCI devices to its page size). Thus, they
+are flooding system logs and can be interpreted as a false positive for
+total PCI failure on the system.
 
-I don't think we specifically care about whether it is gen2/gen3/etc.
-If a device with a narrow gen3 link can't keep a wide gen2 link
-upstream from it saturated, the device has nothing to complain about.
+[root@system user]# dmesg | grep -i disabling
+[    0.692270] pci 0000:00:00.0: Disabling memory decoding and releasing memory resources
+[    0.692324] pci 0000:00:00.0: disabling bridge mem windows
+[    0.729134] pci 0001:00:00.0: Disabling memory decoding and releasing memory resources
+[    0.737352] pci 0001:00:00.0: disabling bridge mem windows
+[    0.776295] pci 0002:00:00.0: Disabling memory decoding and releasing memory resources
+[    0.784509] pci 0002:00:00.0: disabling bridge mem windows
+... and goes on for all PCI devices on the system ...
 
-> > I hinted at this before, but you thought it would result in more
-> > questions than answers [1], and I failed to continue the conversation.
-> 
-> You raised the concern of not knowing the device limiting the total
-> bandwidth of the chain. I thought it was an argument against the
-> idea, but maybe I misunderstood. Let's agree on a design (below)
-> before I make anymore changes :).
+Fixes: 38274637699 ("powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned")
+Signed-off-by: Desnes A. Nunes do Rosario <desnesn@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.c       | 1 -
+ drivers/pci/setup-res.c | 2 --
+ 2 files changed, 3 deletions(-)
 
-I was basically asking whether you wanted to know which device was
-the limiting factor.  If we care about that, we could easily return
-it, but I don't see any drivers that care about it now.
-
-> > Let's continue it now :)
-> > 
-> > Here are some straw-man interfaces to return a device's capabilities
-> > and the available bandwidth in MB/s:
-> > 
-> >    unsigned int pcie_bandwidth_capable(struct pci_dev *dev,
-> >                                        enum pci_bus_speed *speed,
-> >                                        enum pcie_link_width *width);
-> >    unsigned int pcie_bandwidth_available(struct pci_dev *dev);
-> > 
-> > Then we can compare the result with what "dev" is capable of, e.g.,
-> > 
-> >    my_bw = pcie_bandwidth_capable(dev, &my_speed, &my_width);
-> >    avail_bw = pcie_bandwidth_available(dev);
-> >    if (avail_bw >= my_bw)
-> 
-> Can it really be >?
-
-If pcie_bandwidth_available() looks at my device or the immediate
-upstream bridge (two ends of the last link), then no, the available
-bandwidth (based on current link settings) should never be greater
-than the bandwidth my device could support (based on link
-capabilities).
-
-> >      pci_info(dev, "%d MB/s available bandwidth (%s x%d link)\n",
-> >               my_bw, PCIE_SPEED2STR(my_speed), my_width);
-> >    else
-> >      pci_info(dev, "%d MB/s available bandwidth (capable of %d MB/s, %s x%d)\n",
-> >               avail_bw, my_bw, PCIE_SPEED2STR(my_speed), my_width);
-> > 
-> > Using GB/s would be nicer; I lazily used MB/s to avoid dealing with
-> > decimals, e.g., 2.5GB/s.
-> 
-> So let's see if we agree on the steps:
-> 1. my_speed_cap, my_width_cap <- calculate device PCIe caps
-> 2. avail_bw, limiting_dev <- calculate PCIe chain bandwidth
-> 3. my_bw <- my_speed_cap * my_width_cap
-> 4. If avail_bw == my_bw print available bandwidth + PCIe caps
-> 5. Else print available bandwidth + limited by + capable bandwidth + PCIe
-> caps
-> 
-> What do you think?
-
-Steps 2 and 3 might need to be smart enough to apply the effect of
-encoding differences between generations.
-
-In step 2, we don't have any current user of the "limiting_dev"
-information, so I'd omit it until we have somebody who wants it.
-
-In step 5, we don't know the "limited by" part (unless you want to add
-that).
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8c71d1a66cdd..1563ce1ee091 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5505,7 +5505,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		return;
+ 	}
+ 
+-	pci_info(dev, "Disabling memory decoding and releasing memory resources\n");
+ 	pci_read_config_word(dev, PCI_COMMAND, &command);
+ 	command &= ~PCI_COMMAND_MEMORY;
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 369d48d6c6f1..6bd35e8e7cde 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -172,8 +172,6 @@ EXPORT_SYMBOL(pci_claim_resource);
+ 
+ void pci_disable_bridge_window(struct pci_dev *dev)
+ {
+-	pci_info(dev, "disabling bridge mem windows\n");
+-
+ 	/* MMIO Base/Limit */
+ 	pci_write_config_dword(dev, PCI_MEMORY_BASE, 0x0000fff0);
+ 
+-- 
+2.14.3
