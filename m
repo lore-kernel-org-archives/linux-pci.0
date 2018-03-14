@@ -1,65 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:59331 "EHLO gate.crashing.org"
+Received: from mail.kernel.org ([198.145.29.99]:48532 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752195AbeCVFMg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Mar 2018 01:12:36 -0400
-Message-ID: <1521695531.16434.294.camel@kernel.crashing.org>
-Subject: Re: PCIe resets/restore and lack of CRS wait
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: okaya@codeaurora.org
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Neuling <michael.neuling@au1.ibm.com>,
-        linux-pci-owner@vger.kernel.org
-Date: Thu, 22 Mar 2018 16:12:11 +1100
-In-Reply-To: <f6af9b6e424c469f433735a106b8ee69@codeaurora.org>
-References: <1521691380.16434.287.camel@kernel.crashing.org>
-         <f6af9b6e424c469f433735a106b8ee69@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751758AbeCNNag (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 09:30:36 -0400
+Subject: [PATCH v2 1/2] PCI: Report quirk timings with pci_info() instead of
+ pr_debug()
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>,
+        Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 14 Mar 2018 08:30:34 -0500
+Message-ID: <152103423397.167541.13308871352418597826.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152103417018.167541.3290752859388672112.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152103417018.167541.3290752859388672112.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-03-22 at 00:36 -0400, okaya@codeaurora.org wrote:
-> On 2018-03-22 00:03, Benjamin Herrenschmidt wrote:
-> > Hi Folks !
-> > 
-> > So while chasing some issues in our EEH error handling, we noticed that
-> > the generic code has about a bazillion of "reset" path for devices,
-> > most of them seemingly missing a wait for CRS after the reset.
-> > 
-> > That includes PM based resets or wakeups (can a D3->D0 transition cause
-> > CRS to be returned ? Unclear but we should try to be safe), but mostly
-> > it includes anything that resets the pcie port (PERST) or the secondary
-> > bridge reset (hot resets).
-> > 
-> > For example take __pci_reset_function_locked(...), it can call
-> > pci_parent_bus_reset() which will perform a hot reset but will *not*
-> > wait for CRS.
-> > 
-> > There are a plethora of reset path in there that are similar, it's
-> > actually hard to figure out which is what, but they all have in common
-> > that they don't wait for CRS with the notable exception of the FLR
-> > case.
-> 
-> Bjorn merged my change for 4.17. Kernel should handle these now.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Ah nice ! I'll check that out, I was checking 4.16-rc6 !
+With "initcall_debug", we report how long every PCI quirk took.  Previously
+we used pr_debug(), which means you have to figure out how to enable debug
+output.
 
-> > I'm keen on doing a rather "blanket" fix by adding a CRS wait inside
-> > pci_dev_restore(). Would you guys agree ?
-> > 
-> > Also why does pci_flr_wait() not use vendor/device ID but instead waits
-> > on the COMMAND register being all 1's ? It's not clear to me ...
-> > VID/DID will give a very specific signature for CRS which is ffff0001
-> > while COMMAND could return all 1's for other reasons (device unplugged
-> > for example).
-> > 
-> 
-> Because if you read vendor id of a virtual function, you get 0xffffffff
+Log these timings using pci_info() instead so it doesn't depend on DEBUG,
+CONFIG_DYNAMIC_DEBUG, etc.
 
-Ah indeed, I forgot about that... 
+Also, don't log anything at all unless "initcall_debug" is specified.  This
+matches what we do in do_one_initcall_debug().
 
-Thanks !
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/quirks.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-Cheers,
-Ben.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ec280f2223b3..97c74e386bcc 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3004,10 +3004,8 @@ static ktime_t fixup_debug_start(struct pci_dev *dev,
+ {
+ 	ktime_t calltime = 0;
+ 
+-	pci_dbg(dev, "calling %pF\n", fn);
+ 	if (initcall_debug) {
+-		pr_debug("calling  %pF @ %i for %s\n",
+-			 fn, task_pid_nr(current), dev_name(&dev->dev));
++		pci_info(dev, "calling  %pF @ %i\n", fn, task_pid_nr(current));
+ 		calltime = ktime_get();
+ 	}
+ 
+@@ -3024,8 +3022,7 @@ static void fixup_debug_report(struct pci_dev *dev, ktime_t calltime,
+ 		rettime = ktime_get();
+ 		delta = ktime_sub(rettime, calltime);
+ 		duration = (unsigned long long) ktime_to_ns(delta) >> 10;
+-		pr_debug("pci fixup %pF returned after %lld usecs for %s\n",
+-			 fn, duration, dev_name(&dev->dev));
++		pci_info(dev, "%pF took %lld usecs\n", fn, duration);
+ 	}
+ }
+ 
