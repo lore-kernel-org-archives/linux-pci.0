@@ -1,138 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:32993 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751161AbeC2IkU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:40:20 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Victor Gu <xigu@marvell.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Evan Wang <xswang@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v4 6/6] PCI: aardvark: Remove PCIe outbound window configuration
-Date: Thu, 29 Mar 2018 10:39:46 +0200
-Message-Id: <20180329083946.25970-7-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
-References: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51588 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751649AbeCNQf1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 12:35:27 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w2EGXjrU007829
+        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 12:35:27 -0400
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2gq446293e-1
+        (version=TLSv1.2 cipher=AES256-SHA256 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 12:35:27 -0400
+Received: from localhost
+        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <desnesn@linux.vnet.ibm.com>;
+        Wed, 14 Mar 2018 10:35:26 -0600
+From: "Desnes A. Nunes do Rosario" <desnesn@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au, ruscur@russell.cc, aik@ozlabs.ru,
+        david@gibson.dropbear.id.au, fbarrat@linux.vnet.ibm.com,
+        brking@linux.vnet.ibm.com
+Subject: [PATCH 0/2] Silent PCI realignment messages during boot
+Date: Wed, 14 Mar 2018 13:34:53 -0300
+Message-Id: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Evan Wang <xswang@marvell.com>
+This patchset introduces PCI_DEV_FLAGS_QUIET_PCI_REALIGN attribute in
+pci_dev_flags which informs the pci subsystem to suppress all realignment
+messages.
 
-Outbound window is used to translate CPU space addresses to PCIe space
-addresses when the CPU initiates PCIe transactions.
+Powerpc has aligned all of its PCI resources to its PAGE_SIZE, and this
+feature can be easily used on any other arch through the __weak
+pcibios_default_alignment() interface.
 
-According to the suggestion of the HW designers, the recommended
-solution is to use the default outbound parameters, even though the
-current outbound window setting does not cause any known functional
-issue.
+However, since all PCI resources will be now realigned during boot, the
+following messages will not only flood the system logs, but can be inter-
+preted as a false positive for total PCI failure on the system.
 
-This patch doesn't address any known functional issue, but aligns to
-HW design guidelines, and removes code that isn't needed.
+[root@system user]# dmesg | grep -i disabling
+[    0.692270] pci 0000:00:00.0: Disabling memory decoding and releasing memory resources
+[    0.692324] pci 0000:00:00.0: disabling bridge mem windows
+[    0.729134] pci 0001:00:00.0: Disabling memory decoding and releasing memory resources
+[    0.737352] pci 0001:00:00.0: disabling bridge mem windows
+[    0.776295] pci 0002:00:00.0: Disabling memory decoding and releasing memory resources
+[    0.784509] pci 0002:00:00.0: disabling bridge mem windows
+... and goes on for all PCI devices ...
 
-Signed-off-by: Evan Wang <xswang@marvell.com>
-Reviewed-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/host/pci-aardvark.c | 55 -----------------------------------------
- 1 file changed, 55 deletions(-)
+Thus, this patchset provides a way for drivers to silent these messages if
+the PCI_DEV_FLAGS_QUIET_PCI_REALIGN is turned on. Moreover, it also
+tweaks this flag during boot on powerpc.
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 69c4fd50947e..702160c4ae09 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -109,24 +109,6 @@
- #define PCIE_MSI_MASK_REG			(CONTROL_BASE_ADDR + 0x5C)
- #define PCIE_MSI_PAYLOAD_REG			(CONTROL_BASE_ADDR + 0x9C)
- 
--/* PCIe window configuration */
--#define OB_WIN_BASE_ADDR			0x4c00
--#define OB_WIN_BLOCK_SIZE			0x20
--#define OB_WIN_REG_ADDR(win, offset)		(OB_WIN_BASE_ADDR + \
--						 OB_WIN_BLOCK_SIZE * (win) + \
--						 (offset))
--#define OB_WIN_MATCH_LS(win)			OB_WIN_REG_ADDR(win, 0x00)
--#define OB_WIN_MATCH_MS(win)			OB_WIN_REG_ADDR(win, 0x04)
--#define OB_WIN_REMAP_LS(win)			OB_WIN_REG_ADDR(win, 0x08)
--#define OB_WIN_REMAP_MS(win)			OB_WIN_REG_ADDR(win, 0x0c)
--#define OB_WIN_MASK_LS(win)			OB_WIN_REG_ADDR(win, 0x10)
--#define OB_WIN_MASK_MS(win)			OB_WIN_REG_ADDR(win, 0x14)
--#define OB_WIN_ACTIONS(win)			OB_WIN_REG_ADDR(win, 0x18)
--
--/* PCIe window types */
--#define OB_PCIE_MEM				0x0
--#define OB_PCIE_IO				0x4
--
- /* LMI registers base address and register offsets */
- #define LMI_BASE_ADDR				0x6000
- #define CFG_REG					(LMI_BASE_ADDR + 0x0)
-@@ -245,34 +227,9 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
- 	return -ETIMEDOUT;
- }
- 
--/*
-- * Set PCIe address window register which could be used for memory
-- * mapping.
-- */
--static void advk_pcie_set_ob_win(struct advk_pcie *pcie,
--				 u32 win_num, u32 match_ms,
--				 u32 match_ls, u32 mask_ms,
--				 u32 mask_ls, u32 remap_ms,
--				 u32 remap_ls, u32 action)
--{
--	advk_writel(pcie, match_ls, OB_WIN_MATCH_LS(win_num));
--	advk_writel(pcie, match_ms, OB_WIN_MATCH_MS(win_num));
--	advk_writel(pcie, mask_ms, OB_WIN_MASK_MS(win_num));
--	advk_writel(pcie, mask_ls, OB_WIN_MASK_LS(win_num));
--	advk_writel(pcie, remap_ms, OB_WIN_REMAP_MS(win_num));
--	advk_writel(pcie, remap_ls, OB_WIN_REMAP_LS(win_num));
--	advk_writel(pcie, action, OB_WIN_ACTIONS(win_num));
--	advk_writel(pcie, match_ls | BIT(0), OB_WIN_MATCH_LS(win_num));
--}
--
- static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- {
- 	u32 reg;
--	int i;
--
--	/* Point PCIe unit MBUS decode windows to DRAM space */
--	for (i = 0; i < 8; i++)
--		advk_pcie_set_ob_win(pcie, i, 0, 0, 0, 0, 0, 0, 0);
- 
- 	/* Set to Direct mode */
- 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
-@@ -851,12 +808,6 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
--			advk_pcie_set_ob_win(pcie, 1,
--					     upper_32_bits(res->start),
--					     lower_32_bits(res->start),
--					     0,	0xF8000000, 0,
--					     lower_32_bits(res->start),
--					     OB_PCIE_IO);
- 			err = pci_remap_iospace(res, iobase);
- 			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
-@@ -865,12 +816,6 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 			}
- 			break;
- 		case IORESOURCE_MEM:
--			advk_pcie_set_ob_win(pcie, 0,
--					     upper_32_bits(res->start),
--					     lower_32_bits(res->start),
--					     0x0, 0xF8000000, 0,
--					     lower_32_bits(res->start),
--					     (2 << 20) | OB_PCIE_MEM);
- 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
- 			break;
- 		case IORESOURCE_BUS:
+Fixes: 38274637699 ("powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned")
+Signed-off-by: Desnes A. Nunes do Rosario <desnesn@linux.vnet.ibm.com>
+
+Desnes A. Nunes do Rosario (2):
+  pci: Addition of PCI_DEV_FLAGS_QUIET_PCI_REALIGN attribute to the PCI
+    subsystem
+  powerpc/powernv: Tweak PCI_DEV_FLAGS_QUIET_PCI_REALIGN on/off during
+    boot
+
+ arch/powerpc/platforms/powernv/pci.c | 14 ++++++++++++++
+ drivers/pci/pci.c                    |  3 ++-
+ drivers/pci/setup-res.c              |  3 ++-
+ include/linux/pci.h                  |  2 ++
+ 4 files changed, 20 insertions(+), 2 deletions(-)
+
 -- 
 2.14.3
