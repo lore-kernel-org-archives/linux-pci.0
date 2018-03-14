@@ -1,33 +1,57 @@
-Return-Path: <SRS0=MBbZ=GC=bombadil.srs.infradead.org=BATV+67f3e043b1e7b26abb15+5314+infradead.org+hch@kernel.org>
-Return-Path: <SRS0=MBbZ=GC=bombadil.srs.infradead.org=BATV+67f3e043b1e7b26abb15+5314+infradead.org+hch@kernel.org>
-Date: Mon, 12 Mar 2018 01:00:21 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-	Keith Busch <keith.busch@intel.com>,
-	Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>,
-	Frederick Lawler <fred@fredlawl.com>
-Subject: Re: [PATCH v2 02/13] PCI/PM: Move pcie_clear_root_pme_status() to
- core
-Message-ID: <20180312080021.GB10358@infradead.org>
-References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152062200018.77693.9632596426168244205.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0135.outbound.protection.outlook.com ([104.47.38.135]:20480
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751170AbeCNT4R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 15:56:17 -0400
+From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+To: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2]PCI: hv: fix PCI-BUS domainID corruption
+Date: Wed, 14 Mar 2018 19:56:13 +0000
+Message-ID: <DM5PR2101MB103077541F5DDC9B1355E71FDCD10@DM5PR2101MB1030.namprd21.prod.outlook.com>
+References: <048A5571-8706-496C-99FB-35A0CF506A8B@microsoft.com>
+ <3110FB76-7E16-4240-A5C0-135DD0E6EEE6@microsoft.com>
+In-Reply-To: <3110FB76-7E16-4240-A5C0-135DD0E6EEE6@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152062200018.77693.9632596426168244205.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 09, 2018 at 01:00:00PM -0600, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Move pcie_clear_root_pme_status() from the port driver to the PCI core so
-> it will be available even when the port driver isn't present.  No
-> functional change intended.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBTcmlkaGFyIFBpdGNoYWkNCj4g
+U2VudDogV2VkbmVzZGF5LCBNYXJjaCAxNCwgMjAxOCAxMTowOCBBTQ0KPiBUbzogTG9yZW56byBQ
+aWVyYWxpc2kgPGxvcmVuem8ucGllcmFsaXNpQGFybS5jb20+OyBNaWNoYWVsIEtlbGxleSAoRU9T
+RykNCj4gPE1pY2hhZWwuSC5LZWxsZXlAbWljcm9zb2Z0LmNvbT4NCj4gQ2M6IEJqb3JuIEhlbGdh
+YXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+OyBKYWtlIE9zaGlucyA8amFrZW9AbWljcm9zb2Z0LmNv
+bT47IEhhaXlhbmcNCj4gWmhhbmcgPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+OyBTdGVwaGVuIEhl
+bW1pbmdlciA8c3RoZW1taW5AbWljcm9zb2Z0LmNvbT47IERleHVhbg0KPiBDdWkgPGRlY3VpQG1p
+Y3Jvc29mdC5jb20+OyBLWSBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT47DQo+IGRldmVs
+QGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4
+LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW1BBVENIIHYyXVBDSTogaHY6IGZp
+eCBQQ0ktQlVTIGRvbWFpbklEIGNvcnJ1cHRpb24NCj4gDQo+ICAgICBXaGVuZXZlciBQQ0kgYnVz
+IGlzIGFkZGVkLCBIeXBlclYgZ3VhcmFudGVlcyB0aGUgQlVTIGlkIGlzIHVuaXF1ZS4gRXZlbiB3
+aXRoDQo+ICAgICB0aGF0IHdoZW4gYSBmaXJzdCBkZXZpY2UgaXMgYWRkZWQgdG8gdGhlIGJ1cywg
+aXQgb3ZlcnJpZGVzIGJ1cyBkb21haW4gSUQgd2l0aA0KPiAgICAgdGhlIGRldmljZSBzZXJpYWwg
+bnVtYmVyLiBTb21ldGltZSB0aGlzIGNhbiByZXN1bHQgaW4gQlVTIElEIG5vdCBiZWluZyB1bmlx
+dWUuDQo+ICAgICBJbiB0aGlzIGNhc2UsIHdoZW4gUENJX0JVUyBhbmQgYSBkZXZpY2UgYWRkZWQg
+dG8gdGhlIGJ1cywgZXZlbiBiZWZvcmUgdGhlIFBDSQ0KPiAgICAgQlVTIGlzIGFkZGVkIHRvIGtl
+cm5lbCwgdGhlIGZpcnN0IGRldmljZSB0ZW5kcyB0byBvdmVyd3JpdGUgdGhlIGRvbWFpbiBJRCB3
+aXRoDQo+ICAgICAwLiBTaW5jZSB0aGVyZSBleGlzdHMgYSBQQ0kgYnVzIHdpdGggZG9tYWluIElE
+IDAgYWxyZWFkeSB0aGUgUENJIGJ1cyBhZGRpdGlvbg0KPiAgICAgZmFpbHMuIFRoaXMgcGF0Y2gg
+bWFrZSBzdXJlIHdoZW4gYSBkZXZpY2UgaXMgYWRkZWQgdG8gYSBidXMsIGl0IG5ldmVyIHVwZGF0
+ZWQNCj4gICAgIHRoZSBidXMgZG9tYWluIElELiBTaW5jZSB3ZSBoYXZlIHRoZSB0cmFuc3BhcmVu
+dCBTUklPViBtb2RlIG5vdywgdGhlIHNob3J0IFZGDQo+ICAgICBkZXZpY2UgbmFtZSBpcyBubyBs
+b25nZXIgbmVlZGVkLg0KPiANCj4gICAgIEZpeGVzOiA0YTliMDkzM2JkZmMoIlBDSTpodjpVc2Ug
+ZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQo+ICAgICBDYzogc3RhYmxlQHZn
+ZXIua2VybmVsLm9yZw0KPiAgICAgU2lnbmVkLW9mZi1ieTogU3JpZGhhciBQaXRjaGFpIDxzcnBp
+dGNoYUBtaWNyb3NvZnQuY29tPg0KPiAgICAgLS0tDQoNClJldmlld2VkLWJ5OiBNaWNoYWVsIEtl
+bGxleSA8bWlrZWxsZXlAbWljcm9zb2Z0LmNvbT4NCg==
