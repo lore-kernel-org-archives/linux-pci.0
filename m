@@ -1,89 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40622 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752357AbeC3Wrl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 18:47:41 -0400
-Date: Fri, 30 Mar 2018 17:47:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: always define the of_node helpers
-Message-ID: <20180330224738.GG9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180318125806.12364-1-bjorn@mork.no>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
+To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-28-jean-philippe.brucker@arm.com>
+ <20180308184454.00000b4e@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <78551b46-2a54-76cf-da61-72aeae4b0002@arm.com>
+Date: Wed, 14 Mar 2018 13:08:25 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180318125806.12364-1-bjorn@mork.no>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180308184454.00000b4e@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>, Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ Catalin Marinas <Catalin.Marinas@arm.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 18, 2018 at 01:58:06PM +0100, Bjørn Mork wrote:
-> Simply move these inline functions outside the ifdef instead of duplicating
-> them as stubs in the !OF case.  The struct device of_node field does not
-> depend on OF.
+On 08/03/18 17:44, Jonathan Cameron wrote:
+>> @@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+>>  	if (ret)
+>>  		return ret;
+>>  
+>> +	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
+>> +		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
+>> +		ret = iommu_fault_queue_register(&smmu->faultq_nb);
+> Here you register only if this smmu supports stalls or pri which is fine, but
+> see the unregister path.
 > 
-> This also fixes the missing stubbed pci_bus_to_OF_node().
+>> +		if (ret)
+>> +			return ret;
+>> +	}
+>> +
+>>  	/* And we're up. Go go go! */
+>>  	ret = iommu_device_sysfs_add(&smmu->iommu, dev, NULL,
+>>  				     "smmu3.%pa", &ioaddr);
+>> @@ -3210,6 +3309,8 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+>>  {
+>>  	struct arm_smmu_device *smmu = platform_get_drvdata(pdev);
+>>  
+>> +	iommu_fault_queue_unregister(&smmu->faultq_nb);
 > 
-> Signed-off-by: Bjørn Mork <bjorn@mork.no>
+> Here you unregister from the fault queue unconditionally.  That is mostly
+> safe but it seems to decrement and potentially destroy the work queue that
+> is in use by another smmu instance that does support page faulting.
 
-Applied to pci/misc for v4.17, thanks!
+Ah yes, we'll need to check this
 
-> ---
-> I noticed this as a missing pci_bus_to_OF_node stub. But adding a
-> stub which does pretty much the same as the real thing didn't make much
-> sense to me.  Same goes for the existing pci_device_to_OF_node stub,
-> which is why I replace that too.
-> 
-> 
->  include/linux/pci.h | 24 +++++++++++-------------
->  1 file changed, 11 insertions(+), 13 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 024a1beda008..d0396da9160e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -2182,24 +2182,11 @@ int pci_parse_request_of_pci_ranges(struct device *dev,
->  /* Arch may override this (weak) */
->  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
->  
-> -static inline struct device_node *
-> -pci_device_to_OF_node(const struct pci_dev *pdev)
-> -{
-> -	return pdev ? pdev->dev.of_node : NULL;
-> -}
-> -
-> -static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
-> -{
-> -	return bus ? bus->dev.of_node : NULL;
-> -}
-> -
->  #else	/* CONFIG_OF */
->  static inline void pci_set_of_node(struct pci_dev *dev) { }
->  static inline void pci_release_of_node(struct pci_dev *dev) { }
->  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
->  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
-> -static inline struct device_node *
-> -pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
->  static inline struct irq_domain *
->  pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
->  static inline int pci_parse_request_of_pci_ranges(struct device *dev,
-> @@ -2210,6 +2197,17 @@ static inline int pci_parse_request_of_pci_ranges(struct device *dev,
->  }
->  #endif  /* CONFIG_OF */
->  
-> +static inline struct device_node *
-> +pci_device_to_OF_node(const struct pci_dev *pdev)
-> +{
-> +	return pdev ? pdev->dev.of_node : NULL;
-> +}
-> +
-> +static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
-> +{
-> +	return bus ? bus->dev.of_node : NULL;
-> +}
-> +
->  #ifdef CONFIG_ACPI
->  struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus);
->  
-> -- 
-> 2.11.0
-> 
+Thanks,
+Jean
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
