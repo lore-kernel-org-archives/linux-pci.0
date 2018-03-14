@@ -1,76 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:33837 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161204AbeCAWbZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 17:31:25 -0500
+Return-Path: <SRS0=YSQq=GE=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=YSQq=GE=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Stephen Bates <sbates@raithlin.com>, Sinan Kaya <okaya@codeaurora.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
+ <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
+ <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+ <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+ <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+ <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
+ <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
+ <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
+ <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
+ <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
+ <20180314025639.GA50067@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <112493af-ccd0-455b-6600-b50764f7ab7e@deltatee.com>
+Date: Wed, 14 Mar 2018 10:17:34 -0600
 MIME-Version: 1.0
-In-Reply-To: <1519942012.4592.31.camel@au1.ibm.com>
-References: <20180228234006.21093-1-logang@deltatee.com> <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com> <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
- <1519936477.4592.23.camel@au1.ibm.com> <1519936815.4592.25.camel@au1.ibm.com>
- <20180301205315.GJ19007@ziepe.ca> <1519942012.4592.31.camel@au1.ibm.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 1 Mar 2018 14:31:23 -0800
-Message-ID: <CA+55aFy-oAiFJ3WDx4giR1enj65y-YJnZZhY6geFw0ygFyKXfQ@mail.gmail.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        linux-nvme <linux-nvme@lists.infradead.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180314025639.GA50067@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 1, 2018 at 2:06 PM, Benjamin Herrenschmidt <benh@au1.ibm.com> wrote:
->
-> Could be that x86 has the smarts to do the right thing, still trying to
-> untangle the code :-)
 
-Afaik, x86 will not cache PCI unless the system is misconfigured, and
-even then it's more likely to just raise a machine check exception
-than cache things.
 
-The last-level cache is going to do fills and spills directly to the
-memory controller, not to the PCIe side of things.
+On 13/03/18 08:56 PM, Bjorn Helgaas wrote:
+> I assume you want to exclude Root Ports because of multi-function
+> devices and the "route to self" error.  I was hoping for a reference
+> to that so I could learn more about it.
 
-(I guess you *can* do things differently, and I wouldn't be surprised
-if some people inside Intel did try to do things differently with
-trying nvram over PCIe, but in general I think the above is true)
+I haven't been able to find where in the spec it forbids route to self.
+But I was told this by developers who work know switches. Hopefully
+Stephen can find the reference.
 
-You won't find it in the kernel code either. It's in hardware with
-firmware configuration of what addresses are mapped to the memory
-controllers (and _how_ they are mapped) and which are not.
+But it's a bit of a moot point. Devices can DMA to themselves if they
+are designed to do so. For example, some NVMe cards can read and write
+their own CMB for certain types of DMA request. There is a register in
+the spec (CMBSZ) which specifies which types of requests are supported.
+(See 3.1.12 in NVMe 1.3a).
 
-You _might_ find it in the BIOS, assuming you understood the tables
-and had the BIOS writer's guide to unravel the magic registers.
+> I agree that peers need to have a common upstream bridge.  I think
+> you're saying peers need to have *two* common upstream bridges.  If I
+> understand correctly, requiring two common bridges is a way to ensure
+> that peers directly below Root Ports don't try to DMA to each other.
 
-But you might not even find it there. Some of the memory unit timing
-programming is done very early, and by code that Intel doesn't even
-release to the BIOS writers except as a magic encrypted blob, afaik.
-Some of the magic might even be in microcode.
+No, I don't get where you think we need to have two common upstream
+bridges. I'm not sure when such a case would ever happen. But you seem
+to understand based on what you wrote below.
 
-The page table settings for cacheability are more like a hint, and
-only _part_ of the whole picture. The memory type range registers are
-another part. And magic low-level uarch, northbridge and memory unit
-specific magic is yet another part.
+> So I guess the first order of business is to nail down whether peers
+> below a Root Port are prohibited from DMAing to each other.  My
+> assumption, based on 6.12.1.2 and the fact that I haven't yet found
+> a prohibition, is that they can.
 
-So you can disable caching for memory, but I'm pretty sure you can't
-enable caching for PCIe at least in the common case. At best you can
-affect how the store buffer works for PCIe.
+If you have a multifunction device designed to DMA to itself below a
+root port, it can. But determining this is on a device by device basis,
+just as determining whether a root complex can do peer to peer is on a
+per device basis. So I'd say we don't want to allow it by default and
+let someone who has such a device figure out what's necessary if and
+when one comes along.
 
-              Linus
+> You already have upstream_bridges_match(), which takes two pci_devs.
+> I think it should walk up the PCI hierarchy from the first device,
+> checking whether the bridge at each level is also a parent of the
+> second device.
+
+Yes, this is what I meant when I said walking the entire tree. I've been
+kicking the can down the road on implementing this as getting ref
+counting right and testing it is going to be quite tricky. The single
+switch approach we implemented now is just a simplification which works
+for a single switch. But I guess we can look at implementing it this way
+for v4.
+
+Logan
