@@ -1,25 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42732 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932143AbeCSIrA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 04:47:00 -0400
-Date: Mon, 19 Mar 2018 11:46:45 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        bhelgaas@google.com, devel@linuxdriverproject.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] pci: host: pci-hyperv: Replace GFP_ATOMIC with
- GFP_KERNEL in new_pcichild_device
-Message-ID: <20180319084645.pruplfsgctqfs5wk@mwanda>
-References: <1521384808-23627-1-git-send-email-baijiaju1990@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/3] usb: host: pci: introduce PCI vendor ID for Netlogic
+To: Oliver Neukum <oneukum@suse.com>, Richard Leitner <dev@g0hl1n.net>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-usb@vger.kernel.org>
+CC: <bhelgaas@google.com>, <mathias.nyman@intel.com>,
+        <gregkh@linuxfoundation.org>
+References: <20180314102933.21367-1-dev@g0hl1n.net>
+ <20180314102933.21367-3-dev@g0hl1n.net> <1521029854.4511.12.camel@suse.com>
+From: Richard Leitner <richard.leitner@skidata.com>
+Message-ID: <a97cd8ba-3934-dc88-8851-465f0313162b@skidata.com>
+Date: Wed, 14 Mar 2018 14:31:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1521384808-23627-1-git-send-email-baijiaju1990@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1521029854.4511.12.camel@suse.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looks ok.
+Hi Oliver,
+thank you for your feedback!
 
-regards,
-dan carpenter
+On 03/14/2018 01:17 PM, Oliver Neukum wrote:
+> Am Mittwoch, den 14.03.2018, 11:29 +0100 schrieb Richard Leitner:
+>> From: Richard Leitner <richard.leitner@skidata.com>
+>>
+>> Replace the hardcoded PCI vendor ID of Netlogic with a definition in
+>> pci_ids.h
+> 
+> Hi,
+> 
+> in general, why?
+> Does this patch generate any benefit for any developer
+> reading the source? I don't see it. Does it cause an
+> issue for anybody who has a log file with the nummerical
+> ID and needs to grep for it? Yes it does.
+
+I'll send a v2 where I also use this definition in 
+arch/mips/netlogic/xlp/ instead of PCI_VENDOR_NETLOGIC from
+arch/mips/include/asm/netlogic/xlp-hal/iomap.h.
+
+Therefore it will remove this definition from the iomap.h
+and move it to pci_ids.h
+
+This will IMHO be a clear benefit as it removes a redundant
+definition.
+
+> 
+> Where is the point of this patch?
+> 
+> 	Regards
+> 		Oliver
+> 
+
+regards;Richard.L
