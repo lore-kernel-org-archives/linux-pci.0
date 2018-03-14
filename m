@@ -1,102 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:56936 "EHLO ale.deltatee.com"
+Received: from mx2.suse.de ([195.135.220.15]:50978 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751729AbeCUQxq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 12:53:46 -0400
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Steve Wise <swise@opengridcomputing.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-12-logang@deltatee.com> <20180321092702.GC7098@lst.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <a75f5bce-8ab5-7d99-bb27-908d0cc7c6f6@deltatee.com>
-Date: Wed, 21 Mar 2018 10:52:25 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180321092702.GC7098@lst.de>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 11/11] nvmet: Optionally use PCI P2P memory
+        id S1751015AbeCNMX0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 08:23:26 -0400
+Message-ID: <1521029854.4511.12.camel@suse.com>
+Subject: Re: [PATCH 2/3] usb: host: pci: introduce PCI vendor ID for Netlogic
+From: Oliver Neukum <oneukum@suse.com>
+To: Richard Leitner <dev@g0hl1n.net>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org
+Cc: bhelgaas@google.com, mathias.nyman@intel.com,
+        gregkh@linuxfoundation.org, richard.leitner@skidata.com
+Date: Wed, 14 Mar 2018 13:17:34 +0100
+In-Reply-To: <20180314102933.21367-3-dev@g0hl1n.net>
+References: <20180314102933.21367-1-dev@g0hl1n.net>
+         <20180314102933.21367-3-dev@g0hl1n.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 21/03/18 03:27 AM, Christoph Hellwig wrote:
->> +				  const char *page, size_t count)
->> +{
->> +	struct nvmet_port *port = to_nvmet_port(item);
->> +	struct device *dev;
->> +	struct pci_dev *p2p_dev = NULL;
->> +	bool use_p2pmem;
->> +
->> +	switch (page[0]) {
->> +	case 'y':
->> +	case 'Y':
->> +	case 'a':
->> +	case 'A':
->> +		use_p2pmem = true;
->> +		break;
->> +	case 'n':
->> +	case 'N':
->> +		use_p2pmem = false;
->> +		break;
->> +	default:
->> +		dev = bus_find_device_by_name(&pci_bus_type, NULL, page);
->> +		if (!dev) {
->> +			pr_err("No such PCI device: %s\n", page);
->> +			return -ENODEV;
->> +		}
->> +
->> +		use_p2pmem = true;
->> +		p2p_dev = to_pci_dev(dev);
->> +
->> +		if (!pci_has_p2pmem(p2p_dev)) {
->> +			pr_err("PCI device has no peer-to-peer memory: %s\n",
->> +			       page);
->> +			pci_dev_put(p2p_dev);
->> +			return -ENODEV;
->> +		}
->> +	}
+Am Mittwoch, den 14.03.2018, 11:29 +0100 schrieb Richard Leitner:
+> From: Richard Leitner <richard.leitner@skidata.com>
 > 
-> Yikes.  Shouldn't auto just be the normal yes case instead of this
-> string parsing mess?
+> Replace the hardcoded PCI vendor ID of Netlogic with a definition in
+> pci_ids.h
 
-Sorry, I don't follow. The code, as is, should automatically select the
-device if the user  sets it to "yes" or "auto" or "y" or similar.
-(Roughly similar to how kstrtobool() works, except '0' or '1' are not
-accepted seeing they could overlap with PCI device names). In other
-cases, it looks for the specific PCI device name to use exactly.
+Hi,
 
-Are you saying it shouldn't work this way or are you saying the code to
-implement it is too messy?
+in general, why?
+Does this patch generate any benefit for any developer
+reading the source? I don't see it. Does it cause an
+issue for anybody who has a log file with the nummerical
+ID and needs to grep for it? Yes it does.
 
->> +	if (rsp->req.sg != &rsp->cmd->inline_sg) {
->> +		if (rsp->req.p2p_dev)
->> +			pci_p2pmem_free_sgl(rsp->req.p2p_dev, rsp->req.sg,
->> +					    rsp->req.sg_cnt);
->> +		else
->> +			sgl_free(rsp->req.sg);
->> +	}
-> 
-> Can we factor this into a helper, as the other target drivers (fc for now,
-> tcp soon) using sgl allocatins should share the code?
-> 
-> (same for the alloc side)
+Where is the point of this patch?
 
-Sure. Would the helpers belong in core.c?
-
-Thanks,
-
-Logan
+	Regards
+		Oliver
