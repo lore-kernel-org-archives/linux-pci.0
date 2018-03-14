@@ -1,77 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34282 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751279AbeCNVLJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 17:11:09 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w2EL6BQx054434
-        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 17:11:08 -0400
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2gq88pqayh-1
-        (version=TLSv1.2 cipher=AES256-SHA256 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 17:11:08 -0400
-Received: from localhost
-        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <desnesn@linux.vnet.ibm.com>;
-        Wed, 14 Mar 2018 15:11:07 -0600
-From: "Desnes A. Nunes do Rosario" <desnesn@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Cc: bhelgaas@google.com, brking@linux.vnet.ibm.com
-Subject: [PATCH, pci, v2] pci: Delete PCI disabling informational messages
-Date: Wed, 14 Mar 2018 18:10:53 -0300
-Message-Id: <20180314211053.26605-1-desnesn@linux.vnet.ibm.com>
+Received: from mail-dm3nam03on0104.outbound.protection.outlook.com ([104.47.41.104]:40011
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751597AbeCNSF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 14:05:58 -0400
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2]PCI: hv: fix PCI-BUS domainID corruption
+Date: Wed, 14 Mar 2018 18:05:56 +0000
+Message-ID: <048A5571-8706-496C-99FB-35A0CF506A8B@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The disabling informational messages on the PCI subsystem should be deleted
-since they do not represent any real value for the system logs.
-
-These messages are either not presented, or presented for all PCI devices
-(e.g., powerpc now realigns all PCI devices to its page size). Thus, they
-are flooding system logs and can be interpreted as a false positive for
-total PCI failure on the system.
-
-[root@system user]# dmesg | grep -i disabling
-[    0.692270] pci 0000:00:00.0: Disabling memory decoding and releasing memory resources
-[    0.692324] pci 0000:00:00.0: disabling bridge mem windows
-[    0.729134] pci 0001:00:00.0: Disabling memory decoding and releasing memory resources
-[    0.737352] pci 0001:00:00.0: disabling bridge mem windows
-[    0.776295] pci 0002:00:00.0: Disabling memory decoding and releasing memory resources
-[    0.784509] pci 0002:00:00.0: disabling bridge mem windows
-... and goes on for all PCI devices on the system ...
-
-Fixes: 38274637699 ("powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned")
-Signed-off-by: Desnes A. Nunes do Rosario <desnesn@linux.vnet.ibm.com>
----
- drivers/pci/pci.c       | 1 -
- drivers/pci/setup-res.c | 2 --
- 2 files changed, 3 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8c71d1a66cdd..1563ce1ee091 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5505,7 +5505,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		return;
- 	}
- 
--	pci_info(dev, "Disabling memory decoding and releasing memory resources\n");
- 	pci_read_config_word(dev, PCI_COMMAND, &command);
- 	command &= ~PCI_COMMAND_MEMORY;
- 	pci_write_config_word(dev, PCI_COMMAND, command);
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 369d48d6c6f1..6bd35e8e7cde 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -172,8 +172,6 @@ EXPORT_SYMBOL(pci_claim_resource);
- 
- void pci_disable_bridge_window(struct pci_dev *dev)
- {
--	pci_info(dev, "disabling bridge mem windows\n");
--
- 	/* MMIO Base/Limit */
- 	pci_write_config_dword(dev, PCI_MEMORY_BASE, 0x0000fff0);
- 
--- 
-2.14.3
+V2hlbmV2ZXIgUENJIGJ1cyBpcyBhZGRlZCwgSHlwZXJWIGd1YXJhbnRlZXMgdGhlIEJVUyBpZCBp
+cyB1bmlxdWUuIEV2ZW4gd2l0aA0KdGhhdCB3aGVuIGEgZmlyc3QgZGV2aWNlIGlzIGFkZGVkIHRv
+IHRoZSBidXMsIGl0IG92ZXJyaWRlcyBidXMgZG9tYWluIElEIHdpdGgNCnRoZSBkZXZpY2Ugc2Vy
+aWFsIG51bWJlci4gU29tZXRpbWUgdGhpcyBjYW4gcmVzdWx0IGluIEJVUyBJRCBub3QgYmVpbmcg
+dW5pcXVlLg0KSW4gdGhpcyBjYXNlLCB3aGVuIFBDSV9CVVMgYW5kIGEgZGV2aWNlIGFkZGVkIHRv
+IHRoZSBidXMsIGV2ZW4gYmVmb3JlIHRoZSBQQ0kNCkJVUyBpcyBhZGRlZCB0byBrZXJuZWwsIHRo
+ZSBmaXJzdCBkZXZpY2UgdGVuZHMgdG8gb3ZlcndyaXRlIHRoZSBkb21haW4gSUQgd2l0aA0KMC4g
+U2luY2UgdGhlcmUgZXhpc3RzIGEgUENJIGJ1cyB3aXRoIGRvbWFpbiBJRCAwIGFscmVhZHkgdGhl
+IFBDSSBidXMgYWRkaXRpb24NCmZhaWxzLiBUaGlzIHBhdGNoIG1ha2Ugc3VyZSB3aGVuIGEgZGV2
+aWNlIGlzIGFkZGVkIHRvIGEgYnVzLCBpdCBuZXZlciB1cGRhdGVkDQp0aGUgYnVzIGRvbWFpbiBJ
+RC4gU2luY2Ugd2UgaGF2ZSB0aGUgdHJhbnNwYXJlbnQgU1JJT1YgbW9kZSBub3csIHRoZSBzaG9y
+dCBWRg0KZGV2aWNlIG5hbWUgaXMgbm8gbG9uZ2VyIG5lZWRlZC4NCg0KRml4ZXM6IDRhOWIwOTMz
+YmRmYygiUENJOmh2OlVzZSBkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQQ0kgZG9tYWluIikNCkNj
+OiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQpTaWduZWQtb2ZmLWJ5OiBTcmlkaGFyIFBpdGNoYWkg
+PHNycGl0Y2hhQG1pY3Jvc29mdC5jb20+DQotLS0NCg0KQ2hhbmdlcyBpbiB2MjoNCiogZml4IHRo
+ZSBjb21taXQgY29tbWVudHMuDQotLS0NCiBkcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYyB8
+IDExIC0tLS0tLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDExIGRlbGV0aW9ucygtKQ0KDQpkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMgYi9kcml2ZXJzL3BjaS9ob3N0
+L3BjaS1oeXBlcnYuYw0KaW5kZXggMmZhZjM4ZS4uYWM2N2U1NiAxMDA2NDQNCi0tLSBhL2RyaXZl
+cnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQorKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBl
+cnYuYw0KQEAgLTE1MTgsMTcgKzE1MTgsNiBAQCBzdGF0aWMgc3RydWN0IGh2X3BjaV9kZXYgKm5l
+d19wY2ljaGlsZF9kZXZpY2Uoc3RydWN0IGh2X3BjaWJ1c19kZXZpY2UgKmhidXMsDQogCWdldF9w
+Y2ljaGlsZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGlsZGxpc3QpOw0KIAlzcGluX2xvY2tfaXJx
+c2F2ZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KIA0KLQkvKg0KLQkgKiBXaGVu
+IGEgZGV2aWNlIGlzIGJlaW5nIGFkZGVkIHRvIHRoZSBidXMsIHdlIHNldCB0aGUgUENJIGRvbWFp
+bg0KLQkgKiBudW1iZXIgdG8gYmUgdGhlIGRldmljZSBzZXJpYWwgbnVtYmVyLCB3aGljaCBpcyBu
+b24temVybyBhbmQNCi0JICogdW5pcXVlIG9uIHRoZSBzYW1lIFZNLiAgVGhlIHNlcmlhbCBudW1i
+ZXJzIHN0YXJ0IHdpdGggMSwgYW5kDQotCSAqIGluY3JlYXNlIGJ5IDEgZm9yIGVhY2ggZGV2aWNl
+LiAgU28gZGV2aWNlIG5hbWVzIGluY2x1ZGluZyB0aGlzDQotCSAqIGNhbiBoYXZlIHNob3J0ZXIg
+bmFtZXMgdGhhbiBiYXNlZCBvbiB0aGUgYnVzIGluc3RhbmNlIFVVSUQuDQotCSAqIE9ubHkgdGhl
+IGZpcnN0IGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIHVzZWQgZm9yIGRvbWFpbiwgc28gdGhlDQot
+CSAqIGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRoZSBmaXJzdCBkZXZpY2Ug
+aXMgYWRkZWQuDQotCSAqLw0KLQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+Y2hpbGRyZW4pKQ0KLQkJ
+aGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogCWxpc3RfYWRkX3RhaWwoJmhwZGV2
+LT5saXN0X2VudHJ5LCAmaGJ1cy0+Y2hpbGRyZW4pOw0KIAlzcGluX3VubG9ja19pcnFyZXN0b3Jl
+KCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogCXJldHVybiBocGRldjsNCi0tIA0K
+Mi43LjQNCg0KDQo=
