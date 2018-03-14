@@ -1,184 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:54654 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932294AbeCLTfj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Mar 2018 15:35:39 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 12 Mar 2018 13:35:18 -0600
-Message-Id: <20180312193525.2855-5-logang@deltatee.com>
-In-Reply-To: <20180312193525.2855-1-logang@deltatee.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
-Subject: [PATCH v3 04/11] PCI/P2PDMA: Clear ACS P2P flags for all devices behind switches
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=j4p2=GE=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=j4p2=GE=intel.com=keith.busch@kernel.org>
+Date: Wed, 14 Mar 2018 14:50:50 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philippe Ombredanne <pombredanne@nexb.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kate Stewart <kstewart@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
+	Timur Tabi <timur@codeaurora.org>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
+Message-ID: <20180314205049.GE29867@localhost.localdomain>
+References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
+ <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
+ <04ade52e-d1ea-fe67-bb26-246621d159e6@codeaurora.org>
+ <20180312142551.GB18494@localhost.localdomain>
+ <20180312194236.GA12195@bhelgaas-glaptop.roam.corp.google.com>
+ <20180312232626.GI18494@localhost.localdomain>
+ <a52d2e0b-d319-bb34-8610-455d8c7ddad9@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a52d2e0b-d319-bb34-8610-455d8c7ddad9@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-For peer-to-peer transactions to work the downstream ports in each
-switch must not have the ACS flags set. At this time there is no way
-to dynamically change the flags and update the corresponding IOMMU
-groups so this is done at enumeration time before the groups are
-assigned.
+On Mon, Mar 12, 2018 at 11:47:12PM -0400, Sinan Kaya wrote:
+> 
+> The spec is recommending code to use "Hotplug Surprise" to differentiate
+> these two cases we are looking for. 
+> 
+> The use case Keith is looking for is for hotplug support. 
+> The case I and Oza are more interested is for error handling on platforms
+> with no hotplug support.
+> 
+> According to the spec, if "Hotplug Surprise" is set in slot capabilities,
+> then hotplug driver handles link up and DPC driver doesn't interfere with
+> its operation. Hotplug driver observes link up interrupt like it is doing today.
+> When link up event is observed, hotplug driver will do the enumeration.
+> 
+> If "Hotplug Surprise" bit is not set, it is the job of the DPC driver to
+> bring up the link. I believe this path should follow the AER driver path
+> as there is a very well defined error reporting and recovery framework
+> in the code.
+> 
+> The link comes back up automatically when DPC driver handles its interrupt
+> very similar to what secondary bus reset does for AER. I don't believe
+> there is a hotplug possibility under this condition since it is not supported
+> to begin with.
+> 
+> Should we plumb the "Hotplug Surprise" condition into the code to satisfy
+> both cases and leave the error handling path according to this code series?
 
-This effectively means that if CONFIG_PCI_P2PDMA is selected then
-all devices behind any PCIe switch will be in the same IOMMU group.
-Which implies that individual devices behind any switch will not be
-able to be assigned to separate VMs because there is no isolation
-between them. Additionally, any malicious PCIe devices will be able
-to DMA to memory exposed by other EPs in the same domain as TLPs will
-not be checked by the IOMMU.
+I'm on board with this, but I think you mean "Hotplug Capable" rather
+than "Hotplug Surprise". The former may co-exist with DPC and handles
+the link-ups, leaving DPC responsible for handling the link-down.
 
-Given that the intended use case of P2P Memory is for users with
-custom hardware designed for purpose, we do not expect distributors
-to ever need to enable this option. Users that want to use P2P
-must have compiled a custom kernel with this configuration option
-and understand the implications regarding ACS. They will either
-not require ACS or will have design the system in such a way that
-devices that require isolation will be separate from those using P2P
-transactions.
+The "Hotplug Surprise" capability is recommended to not co-exist with DPC
+since that capability may suppress the "surprise link down" notification
+that DPC needs to see in order to trigger.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/pci/Kconfig        |  9 +++++++++
- drivers/pci/p2pdma.c       | 44 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c          |  6 ++++++
- include/linux/pci-p2pdma.h |  5 +++++
- 4 files changed, 64 insertions(+)
-
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index d59f6f5ddfcd..c7a9d155baca 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -138,6 +138,15 @@ config PCI_P2PDMA
- 	  it's hard to tell which support it at all, so at this time you
- 	  will need a PCIe switch.
- 
-+	  Enabling this option will also disable ACS on all ports behind
-+	  any PCIe switch. This effectively puts all devices behind any
-+	  switch into the same IOMMU group. Which implies that individual
-+	  devices behind any switch will not be able to be assigned to
-+	  separate VMs because there is no isolation between them.
-+	  Additionally, any malicious PCIe devices will be able to DMA
-+	  to memory exposed by other EPs in the same domain as TLPs will
-+	  not be checked by the IOMMU.
-+
- 	  If unsure, say N.
- 
- config PCI_LABEL
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index ab810c3a93eb..3e70b0662def 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -264,6 +264,50 @@ static struct pci_dev *get_upstream_bridge_port(struct pci_dev *pdev)
- }
- 
- /*
-+ * pci_p2pdma_disable_acs - disable ACS flags for ports in PCI
-+ *	bridges/switches
-+ * @pdev: device to disable ACS flags for
-+ *
-+ * The ACS flags for P2P Request Redirect and P2P Completion Redirect need
-+ * to be disabled on any downstream port in any switch in order for
-+ * the TLPs to not be forwarded up to the RC which is not what we want
-+ * for P2P.
-+ *
-+ * This function is called when the devices are first enumerated and
-+ * will result in all devices behind any switch to be in the same IOMMU
-+ * group. At this time there is no way to "hotplug" IOMMU groups so we rely
-+ * on this largish hammer. If you need the devices to be in separate groups
-+ * don't enable CONFIG_PCI_P2PDMA.
-+ *
-+ * Returns 1 if the ACS bits for this device were cleared, otherwise 0.
-+ */
-+int pci_p2pdma_disable_acs(struct pci_dev *pdev)
-+{
-+	struct pci_dev *up;
-+	int pos;
-+	u16 ctrl;
-+
-+	up = get_upstream_bridge_port(pdev);
-+	if (!up)
-+		return 0;
-+	pci_dev_put(up);
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return 0;
-+
-+	pci_info(pdev, "disabling ACS flags for peer-to-peer DMA\n");
-+
-+	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR);
-+
-+	pci_write_config_word(pdev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	return 1;
-+}
-+
-+/*
-  * This function checks if two PCI devices are behind the same switch.
-  * (ie. they share the same second upstream port as returned by
-  *  get_upstream_bridge_port().)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd10d9b0..e5da8f482e94 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -16,6 +16,7 @@
- #include <linux/of.h>
- #include <linux/of_pci.h>
- #include <linux/pci.h>
-+#include <linux/pci-p2pdma.h>
- #include <linux/pm.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-@@ -2826,6 +2827,11 @@ static void pci_std_enable_acs(struct pci_dev *dev)
-  */
- void pci_enable_acs(struct pci_dev *dev)
- {
-+#ifdef CONFIG_PCI_P2PDMA
-+	if (pci_p2pdma_disable_acs(dev))
-+		return;
-+#endif
-+
- 	if (!pci_acs_enable)
- 		return;
- 
-diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-index 59eb218bdb25..2a2bf2ca018e 100644
---- a/include/linux/pci-p2pdma.h
-+++ b/include/linux/pci-p2pdma.h
-@@ -18,6 +18,7 @@ struct block_device;
- struct scatterlist;
- 
- #ifdef CONFIG_PCI_P2PDMA
-+int pci_p2pdma_disable_acs(struct pci_dev *pdev);
- int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 		u64 offset);
- int pci_p2pdma_add_client(struct list_head *head, struct device *dev);
-@@ -41,6 +42,10 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
- void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
- 			 enum dma_data_direction dir);
- #else /* CONFIG_PCI_P2PDMA */
-+static inline int pci_p2pdma_disable_acs(struct pci_dev *pdev)
-+{
-+	return 0;
-+}
- static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
- 		size_t size, u64 offset)
- {
--- 
-2.11.0
+If the "Hotplug Capable" bit is not set, detecting the link-up after a
+DPC event would have to fall under a different component's responsibility,
+so I think I'm finally seeing your point.
