@@ -1,47 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:53917 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752780AbeC1Lus (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:50:48 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 05/12] PCI: endpoint: Setting a BAR size > 4 GB is invalid if 64-bit flag is not set
-Date: Wed, 28 Mar 2018 13:50:10 +0200
-Message-Id: <20180328115018.31921-6-niklas.cassel@axis.com>
-In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
+Received: from mail-eopbgr660099.outbound.protection.outlook.com ([40.107.66.99]:21783
+        "EHLO CAN01-QB1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750827AbeCNOFJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 10:05:09 -0400
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+CC: Sinan Kaya <okaya@codeaurora.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        "Alex Williamson" <alex.williamson@redhat.com>
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Date: Wed, 14 Mar 2018 14:05:06 +0000
+Message-ID: <45A47A71-B435-4DFA-8925-8EB91CEAB230@raithlin.com>
+References: <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
+ <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
+ <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+ <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+ <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+ <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
+ <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
+ <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
+ <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
+ <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
+ <20180314025639.GA50067@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180314025639.GA50067@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Setting a BAR size > 4 GB is invalid if PCI_BASE_ADDRESS_MEM_TYPE_64
-flag is not set.
-
-This sanity check is done in pci_epc_set_bar(), so that we don't need
-to do this sanity check in all epc->ops->set_bar() implementations.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/endpoint/pci-epc-core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 40eea20d21f9..8637822605ff 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -315,7 +315,9 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
- 	    (epf_bar->barno == BAR_5 &&
- 	     flags & PCI_BASE_ADDRESS_MEM_TYPE_64) ||
- 	    (flags & PCI_BASE_ADDRESS_SPACE_IO &&
--	     flags & PCI_BASE_ADDRESS_IO_MASK))
-+	     flags & PCI_BASE_ADDRESS_IO_MASK) ||
-+	    (upper_32_bits(epf_bar->size) &&
-+	     !(flags & PCI_BASE_ADDRESS_MEM_TYPE_64)))
- 		return -EINVAL;
- 
- 	if (!epc->ops->set_bar)
--- 
-2.14.2
+PkkgYXNzdW1lIHlvdSB3YW50IHRvIGV4Y2x1ZGUgUm9vdCBQb3J0cyBiZWNhdXNlIG9mIG11bHRp
+LWZ1bmN0aW9uDQo+ICBkZXZpY2VzIGFuZCB0aGUgInJvdXRlIHRvIHNlbGYiIGVycm9yLiAgSSB3
+YXMgaG9waW5nIGZvciBhIHJlZmVyZW5jZQ0KPiAgdG8gdGhhdCBzbyBJIGNvdWxkIGxlYXJuIG1v
+cmUgYWJvdXQgaXQuDQoNCkFwb2xvZ2llcyBCam9ybi4gVGhpcyBzbGlwcGVkIHRocm91Z2ggbXkg
+bmV0LiBJIHdpbGwgdHJ5IGFuZCBnZXQgeW91IGEgcmVmZXJlbmNlIGZvciBSVFMgaW4gdGhlIG5l
+eHQgY291cGxlIG9mIGRheXMuDQogICAgDQo+IFdoaWxlIEkgd2FzIGxvb2tpbmcgZm9yIGl0LCBJ
+IGZvdW5kIHNlYyA2LjEyLjEuMiAoUENJZSByNC4wKSwgIkFDUw0KPiBGdW5jdGlvbnMgaW4gU1It
+SU9WIENhcGFibGUgYW5kIE11bHRpLUZ1bmN0aW9uIERldmljZXMiLCB3aGljaCBzZWVtcw0KPiBy
+ZWxldmFudC4gIEl0IHRhbGtzIGFib3V0ICJwZWVyLXRvLXBlZXIgUmVxdWVzdHMgKGJldHdlZW4g
+RnVuY3Rpb25zIG9mDQo+IHRoZSBkZXZpY2UpIi4gIFRoYXkgc2F5cyB0byBtZSB0aGF0IG11bHRp
+LWZ1bmN0aW9uIGRldmljZXMgY2FuIERNQQ0KPiBiZXR3ZWVuIHRoZW1zZWx2ZXMuDQogICAgDQpJ
+IHdpbGwgZ28gdGFrZSBhIGxvb2suIEFwcHJlY2lhdGUgdGhlIGxpbmsuDQoNClN0ZXBoZW4gDQoN
+Cg==
