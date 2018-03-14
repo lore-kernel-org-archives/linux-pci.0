@@ -1,79 +1,45 @@
-Return-Path: <SRS0=jK+Y=GV=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=jK+Y=GV=h08.hostsharing.net=foo00@kernel.org>
-Date: Sat, 31 Mar 2018 11:30:17 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <yehezkel.bernat@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
- bus number
-Message-ID: <20180331093017.GB10720@wunner.de>
-References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
- <20180226132112.81447-2-mika.westerberg@linux.intel.com>
- <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180328114346.GZ2703@lahna.fi.intel.com>
- <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180329115911.GN2703@lahna.fi.intel.com>
- <20180331082903.GA21051@wunner.de>
- <20180331085852.GQ2703@lahna.fi.intel.com>
- <20180331091245.GA10720@wunner.de>
- <20180331092017.GS2703@lahna.fi.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54930 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751387AbeCNLtt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 07:49:49 -0400
+Date: Wed, 14 Mar 2018 12:49:48 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Richard Leitner <richard.leitner@skidata.com>
+Cc: Richard Leitner <dev@g0hl1n.net>, linux-usb@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        mathias.nyman@intel.com, bhelgaas@google.com
+Subject: Re: [PATCH 2/3] usb: host: pci: introduce PCI vendor ID for Netlogic
+Message-ID: <20180314114948.GA25368@kroah.com>
+References: <20180314102933.21367-1-dev@g0hl1n.net>
+ <20180314102933.21367-3-dev@g0hl1n.net>
+ <20180314104849.GB32615@kroah.com>
+ <d755d623-2bb3-460f-45a0-2be6ab6f47ea@skidata.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180331092017.GS2703@lahna.fi.intel.com>
+In-Reply-To: <d755d623-2bb3-460f-45a0-2be6ab6f47ea@skidata.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 31, 2018 at 12:20:17PM +0300, Mika Westerberg wrote:
-> On Sat, Mar 31, 2018 at 11:12:45AM +0200, Lukas Wunner wrote:
-> > On Sat, Mar 31, 2018 at 11:58:52AM +0300, Mika Westerberg wrote:
-> > > On Sat, Mar 31, 2018 at 10:29:03AM +0200, Lukas Wunner wrote:
-> > > > On Thu, Mar 29, 2018 at 02:59:11PM +0300, Mika Westerberg wrote:
-> > > > > On Wed, Mar 28, 2018 at 01:09:06PM -0500, Bjorn Helgaas wrote:
-> > > > > > The same issue could happen on any system where we use acpiphp, so I
-> > > > > > don't think Thunderbolt is really relevant here, and it's easy to
-> > > > > > confuse things by mentioning it.
-> > > > > 
-> > > > > This issue can happen regardless whether acpiphp is used or not.
-> > > > 
-> > > > If the platform has yielded hotplug control to the OS via _OSC,
-> > > > I don't see how the platform could hot-add devices.  So surely
-> > > > reserving a bus number for a bridge without anything below it
-> > > > can be constrained to the !pciehp_is_native(bridge) case?
-> > > 
-> > > Nothing prevents ACPI Notify() happening while native PCIe hotplug is
-> > > used on non-hotplug ports (the ones not controlled by pciehp). And it
-> > > cannot be constrained to !pciehp_is_native(bridge) because it is the
-> > > root port that has the _OSC but below it can be non-hotplug ports where
-> > > ACPI Notify() is used to bring in additional devices.
-> > 
-> > That sounds like a violation of the spec to me.
-> > 
-> > ACPI 6.1 table 6-178 says if OS is granted control over PCIe hotplug,
-> > the firmware "must ensure that all hot plug events are routed to device
-> > interrupts", which wouldn't be the case for Notify() because the
-> > interrupt generated is an SCI, not an MSI or INTx interrupt for the
-> > hotplug port itself.
-> > 
-> > Moreover, "after control is transferred to the OS, firmware must not
-> > update the state of hot plug slots, including the state of the
-> > indicators and power controller."
-> > 
-> > Maybe I've misunderstood the spec all the time, my understanding was
-> > that if OS is granted control, the firmware won't do anything with
-> > hotplug ports below the host bridge, period.
+On Wed, Mar 14, 2018 at 12:36:17PM +0100, Richard Leitner wrote:
 > 
-> The whole point here is that those are *not* hotplug slots just regular
-> downstream ports.
+> On 03/14/2018 11:48 AM, Greg KH wrote:
+> > On Wed, Mar 14, 2018 at 11:29:32AM +0100, Richard Leitner wrote:
+> >> From: Richard Leitner <richard.leitner@skidata.com>
+> >>
+> >> Replace the hardcoded PCI vendor ID of Netlogic with a definition in
+> >> pci_ids.h
+> > 
+> > Why?  It's only being used in one file, so it should not be in
+> > pci_ids.h, right?
+> 
+> It's also used as PCI_VENDOR_NETLOGIC in arch/mips/netlogic/xlp/.
+> 
+> Should this be replaced with PCI_VENDOR_ID_NETLOGIC from pci_ids.h?
 
-Okay, understood.  Is this about the NHI or XHCI?  Because at least
-on Alpine Ridge (C step), the bridge above the XHCI *is* a hotplug
-bridge.  Only the bridge above the NHI is not.
+Yes, if you are going to add it to pci_ids.h, it had better be used by
+multiple files, otherwise it does not belong in there.
 
-Thanks,
+thanks,
 
-Lukas
+greg k-h
