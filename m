@@ -1,101 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42386 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750803AbeCGGNa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Mar 2018 01:13:30 -0500
-Subject: [PATCH v1 1/9] PCI/PM: Move pcie_clear_root_pme_status() to core
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 14 Mar 2018 14:07:15 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
         Keith Busch <keith.busch@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>
-Date: Wed, 07 Mar 2018 00:13:29 -0600
-Message-ID: <152040320934.240786.9241781859071768363.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI/DPC: Do not enable DPC if AER control is not
+ allowed by the BIOS
+Message-ID: <20180314120715.GC2703@lahna.fi.intel.com>
+References: <20180314114125.71132-1-mika.westerberg@linux.intel.com>
+ <20180314114125.71132-2-mika.westerberg@linux.intel.com>
+ <CAJZ5v0gNLi==C+_ZYiHSvbFUfTmp1nxX_bEVggrRXpUpPhptzA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0gNLi==C+_ZYiHSvbFUfTmp1nxX_bEVggrRXpUpPhptzA@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, Mar 14, 2018 at 12:50:28PM +0100, Rafael J. Wysocki wrote:
+> On Wed, Mar 14, 2018 at 12:41 PM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> > Commit eed85ff4c0da ("PCI/DPC: Enable DPC only if AER is available")
+> > made DPC control dependent whether AER is enabled in the OS. However, it
+> > does not take into account situations where BIOS has not given OS
+> > control of AER:
+> >
+> >   acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+> >   acpi PNP0A08:00: _OSC: platform does not support [AER]
+> >   acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug PME PCIeCapability]
+> >
+> > I think here it is better not to enable DPC even if the capability is
+> > available because then it would be against what "Determination of DPC
+> > Control" note in PCIe 4.0 sec 6.1.10 recommends.
+> >
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> 
+> This may clash with the recent PCIe ports initialization rework from
+> Bjorn, please double check.
 
-Move pcie_clear_root_pme_status() from the port driver to the PCI core so
-it will be available even when the port driver isn't present.  No
-functional change intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c              |    9 +++++++++
- drivers/pci/pci.h              |    1 +
- drivers/pci/pcie/portdrv.h     |    2 --
- drivers/pci/pcie/portdrv_pci.c |    9 ---------
- 4 files changed, 10 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd10d9b0..120e3393fc35 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1683,6 +1683,15 @@ int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
- }
- EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
- 
-+/**
-+ * pcie_clear_root_pme_status - Clear root port PME interrupt status.
-+ * @dev: PCIe root port or event collector.
-+ */
-+void pcie_clear_root_pme_status(struct pci_dev *dev)
-+{
-+	pcie_capability_set_dword(dev, PCI_EXP_RTSTA, PCI_EXP_RTSTA_PME);
-+}
-+
- /**
-  * pci_check_pme_status - Check if given device has generated PME.
-  * @dev: Device to check.
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fcd81911b127..813ca2c895d8 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -71,6 +71,7 @@ void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
- void pci_power_up(struct pci_dev *dev);
- void pci_disable_enabled_device(struct pci_dev *dev);
- int pci_finish_runtime_suspend(struct pci_dev *dev);
-+void pcie_clear_root_pme_status(struct pci_dev *dev);
- int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
- void pci_pme_restore(struct pci_dev *dev);
- bool pci_dev_keep_suspended(struct pci_dev *dev);
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index a854bc569117..a4fc44d52206 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -34,8 +34,6 @@ void pcie_port_bus_unregister(void);
- 
- struct pci_dev;
- 
--void pcie_clear_root_pme_status(struct pci_dev *dev);
--
- #ifdef CONFIG_HOTPLUG_PCI_PCIE
- extern bool pciehp_msi_disabled;
- 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index fb1c1bb87316..4413dd85e923 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -50,15 +50,6 @@ __setup("pcie_ports=", pcie_port_setup);
- 
- /* global data */
- 
--/**
-- * pcie_clear_root_pme_status - Clear root port PME interrupt status.
-- * @dev: PCIe root port or event collector.
-- */
--void pcie_clear_root_pme_status(struct pci_dev *dev)
--{
--	pcie_capability_set_dword(dev, PCI_EXP_RTSTA, PCI_EXP_RTSTA_PME);
--}
--
- static int pcie_portdrv_restore_config(struct pci_dev *dev)
- {
- 	int retval;
+You are right. I did not notice those changes. I'll rebase this on top
+of Bjorn's pci/portdrv branch.
