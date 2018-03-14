@@ -1,88 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38308 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:35530 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752357AbeC3W1z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 18:27:55 -0400
-Date: Fri, 30 Mar 2018 17:27:53 -0500
+        id S1750902AbeCNC4r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Mar 2018 22:56:47 -0400
+Date: Tue, 13 Mar 2018 21:56:39 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: move pcie_pme_root_status_cleanup into SUSPEND
- section
-Message-ID: <20180330222752.GD9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180328134747.2062348-1-arnd@arndb.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Message-ID: <20180314025639.GA50067@bhelgaas-glaptop.roam.corp.google.com>
+References: <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
+ <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
+ <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+ <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+ <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+ <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
+ <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
+ <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
+ <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
+ <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180328134747.2062348-1-arnd@arndb.de>
+In-Reply-To: <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 28, 2018 at 03:47:18PM +0200, Arnd Bergmann wrote:
-> The power management code in pci-driver.c is a maze of #ifdefs, and
-> the newly added pcie_pme_root_status_cleanup function ended up in the
-> wrong one of them, causing a harmless warning in some configurations:
+On Tue, Mar 13, 2018 at 05:21:20PM -0600, Logan Gunthorpe wrote:
+> On 13/03/18 05:08 PM, Bjorn Helgaas wrote:
+> > On Tue, Mar 13, 2018 at 10:31:55PM +0000, Stephen  Bates wrote:
+> > If it *is* necessary because Root Ports and devices below them behave
+> > differently than in conventional PCI, I think you should include a
+> > reference to the relevant section of the spec and check directly for a
+> > Root Port.  I would prefer that over trying to exclude Root Ports by
+> > looking for two upstream bridges.
 > 
-> drivers/pci/pci-driver.c:527:13: error: 'pcie_pme_root_status_cleanup' defined but not used [-Werror=unused-function]
->  static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
->              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> This moves the definition into the correct #ifdef section.
-> 
-> Fixes: 6c4dfc1389e1 ("PCI/PM: Clear PCIe PME Status bit in core, not PCIe port driver")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Well we've established that we don't want to allow root ports.
 
-Thanks, I folded this into 6c4dfc1389e1.
+I assume you want to exclude Root Ports because of multi-function
+devices and the "route to self" error.  I was hoping for a reference
+to that so I could learn more about it.
 
-> ---
->  drivers/pci/pci-driver.c | 25 ++++++++++++-------------
->  1 file changed, 12 insertions(+), 13 deletions(-)
+While I was looking for it, I found sec 6.12.1.2 (PCIe r4.0), "ACS
+Functions in SR-IOV Capable and Multi-Function Devices", which seems
+relevant.  It talks about "peer-to-peer Requests (between Functions of
+the device)".  Thay says to me that multi-function devices can DMA
+between themselves.
+
+> But we need to, at a minimum, do two pci_upstream_bridge() calls...
 > 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index b9bca74e9eff..6ace47099fc5 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -524,19 +524,6 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
->  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
->  }
->  
-> -static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
-> -{
-> -	/*
-> -	 * Some BIOSes forget to clear Root PME Status bits after system
-> -	 * wakeup, which breaks ACPI-based runtime wakeup on PCI Express.
-> -	 * Clear those bits now just in case (shouldn't hurt).
-> -	 */
-> -	if (pci_is_pcie(pci_dev) &&
-> -	    (pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> -	     pci_pcie_type(pci_dev) == PCI_EXP_TYPE_RC_EC))
-> -		pcie_clear_root_pme_status(pci_dev);
-> -}
-> -
->  /*
->   * Default "suspend" method for devices that have no driver provided suspend,
->   * or not even a driver at all (second part).
-> @@ -726,6 +713,18 @@ static void pci_pm_complete(struct device *dev)
->  #endif /* !CONFIG_PM_SLEEP */
->  
->  #ifdef CONFIG_SUSPEND
-> +static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
-> +{
-> +	/*
-> +	 * Some BIOSes forget to clear Root PME Status bits after system
-> +	 * wakeup, which breaks ACPI-based runtime wakeup on PCI Express.
-> +	 * Clear those bits now just in case (shouldn't hurt).
-> +	 */
-> +	if (pci_is_pcie(pci_dev) &&
-> +	    (pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> +	     pci_pcie_type(pci_dev) == PCI_EXP_TYPE_RC_EC))
-> +		pcie_clear_root_pme_status(pci_dev);
-> +}
->  
->  static int pci_pm_suspend(struct device *dev)
->  {
-> -- 
-> 2.9.0
-> 
+> Remember, we need to check that a number of devices are behind the same
+> switch. So we need to find a _common_ upstream port for several devices.
+
+I agree that peers need to have a common upstream bridge.  I think
+you're saying peers need to have *two* common upstream bridges.  If I
+understand correctly, requiring two common bridges is a way to ensure
+that peers directly below Root Ports don't try to DMA to each other.
+
+So I guess the first order of business is to nail down whether peers
+below a Root Port are prohibited from DMAing to each other.  My
+assumption, based on 6.12.1.2 and the fact that I haven't yet found
+a prohibition, is that they can.
+
+> Excluding the multifunction device case (which I don't think is
+> applicable for reasons we've discussed before), this will *never* be the
+> first upstream port for a given device.
+
+If you're looking for a common upstream bridge, you don't need to make
+assumptions about whether the hierarchy is conventional PCI or PCIe or
+how many levels are in the hierarchy.
+
+You already have upstream_bridges_match(), which takes two pci_devs.
+I think it should walk up the PCI hierarchy from the first device,
+checking whether the bridge at each level is also a parent of the
+second device.
+
+Bjorn
