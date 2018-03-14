@@ -1,51 +1,39 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v3 1/2] x86/PCI: Fix a potential regression when use dmi_get_bios_year()
-Date: Tue, 20 Mar 2018 17:53:54 +0100
-Message-ID: <39019613.0FkGD81NNE@aspire.rjw.lan>
-In-Reply-To: <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>
-References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com> <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f182.google.com ([209.85.216.182]:43636 "EHLO
+        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751739AbeCNRm3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 13:42:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAHp75VdOaE-efzbQV=Mtf+a1-6L5JxF10Uc+uZ+LYz3S757biw@mail.gmail.com>
+References: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
+ <20180314163455.15854-2-desnesn@linux.vnet.ibm.com> <CAHp75VdOaE-efzbQV=Mtf+a1-6L5JxF10Uc+uZ+LYz3S757biw@mail.gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 14 Mar 2018 19:42:28 +0200
+Message-ID: <CAHp75VcbY9FhmngPOJ_d7ZxLUFmwPZhi7KdJSaPnqF1Db5UKEg@mail.gmail.com>
+Subject: Re: [PATCH 1/2, pci] pci: Addition of PCI_DEV_FLAGS_QUIET_PCI_REALIGN
+ attribute to the PCI subsystem
+To: "Desnes A. Nunes do Rosario" <desnesn@linux.vnet.ibm.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        "open list:LINUX FOR POWERPC PA SEMI PWRFICIENT"
+        <linuxppc-dev@lists.ozlabs.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>, ruscur@russell.cc,
+        aik@ozlabs.ru, david@gibson.dropbear.id.au,
+        fbarrat@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, March 20, 2018 2:54:09 PM CET Andy Shevchenko wrote:
-> dmi_get_bios_year() may return 0 when it is incapable to parse
-> the BIOS date string. Previously this has been checked in
-> pci_acpi_crs_quirks().
-> 
-> Update the code to restore old behaviour.
-> 
-> Reported-by: Jean Delvare <jdelvare@suse.de>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  arch/x86/pci/acpi.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 00e60de30328..5559dcaddd5e 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -140,7 +140,9 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
->  
->  void __init pci_acpi_crs_quirks(void)
->  {
-> -	if ((dmi_get_bios_year() < 2008) && (iomem_resource.end <= 0xffffffff))
-> +	int year = dmi_get_bios_year();
-> +
-> +	if (year >= 0 && year < 2008 && iomem_resource.end <= 0xffffffff)
->  		pci_use_crs = false;
->  
->  	dmi_check_system(pci_crs_quirks);
-> 
+On Wed, Mar 14, 2018 at 7:41 PM, Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> I would rather name it _NO_PCI_REALIGN_MSG
 
+I meant _NO_REALIGN_MSG of course (PCI is already at the beginning).
 
+-- 
+With Best Regards,
+Andy Shevchenko
