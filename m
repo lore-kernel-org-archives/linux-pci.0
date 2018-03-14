@@ -1,155 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58290 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932205AbeCMW3l (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 18:29:41 -0400
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <016dc910-f96a-8a60-4bda-fa24eea98ea5@codeaurora.org>
-Date: Tue, 13 Mar 2018 18:29:37 -0400
+Received: from mail-dm3nam03on0122.outbound.protection.outlook.com ([104.47.41.122]:50240
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751551AbeCNSI1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 14:08:27 -0400
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2]PCI: hv: fix PCI-BUS domainID corruption
+Date: Wed, 14 Mar 2018 18:08:24 +0000
+Message-ID: <3110FB76-7E16-4240-A5C0-135DD0E6EEE6@microsoft.com>
+References: <048A5571-8706-496C-99FB-35A0CF506A8B@microsoft.com>
+In-Reply-To: <048A5571-8706-496C-99FB-35A0CF506A8B@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/13/2018 6:00 PM, Logan Gunthorpe wrote:
-> 
-> 
-> On 13/03/18 03:22 PM, Sinan Kaya wrote:
->> It sounds like you have very tight hardware expectations for this to work
->> at this moment. You also don't want to generalize this code for others and
->> address the shortcomings.
-> 
-> No, that's the way the community has pushed this work. Our original work
-> was very general and we were told it was unacceptable to put the onus on
-> the user and have things break if the hardware doesn't support it. I
-> think that's a reasonable requirement. So the hardware use-cases were
-> wittled down to the ones we can be confident about and support with
-> reasonable changes to the kernel today.
-
-If hardware doesn't support it, blacklisting should have been the right
-path and I still think that you should remove all switch business from the code.
-I did not hear enough justification for having a switch requirement
-for P2P.
-
-You are also saying that root ports have issues not because of functionality but
-because of performance. 
-
-If you know what is bad, create a list and keep adding it. You can't assume
-universally that all root ports are broken/ have bad performance.
-
-> 
->> To get you going, you should limit this change to the switch products that you have
->> validated via white-listing PCI vendor/device ids. Please do not enable this feature
->> for all other PCI devices or by default.
-> 
-> This doesn't seem necessary. We know that all PCIe switches available
-> today support P2P and we are highly confident that any switch that would
-> ever be produced would support P2P. As long as devices are behind a
-> switch you don't need any white listing. This is what the current patch
-> set implements. If you want to start including root ports then you will
-> need a white list (and solve all the other problems I mentioned earlier).
-
-What if I come up with a very cheap/crappy switch (something like used in data
-mining)?
-
-What guarantees that P2P will work with this device? You are making an
-assumption here that all switches have good performance.
-
-How is that any different from good switch vs. bad switch and good root
-port vs. bad root port?
-
-If it is universally broken, why don't you list the things that work?
-
-> 
->> I think your code qualifies as a virus until this issue is resolved (so NAK). 
-> 
-> That seems a bit hyperbolic... "a virus"??!... please keep things
-> constructive.
-> 
-
-Sorry, this was harsh. I'm taking "virus" word back. I apologize. 
-But, I hold onto my NAK opinion. 
-
-I have been doing my best to provide feedback. It feels like you are throwing
-them over the wall to be honest.
-
-You keep implying "not my problem".
-
-> > I agree disabling globally would be bad. Somebody can always say I have
-> > ten switches on my system. I want to do peer-to-peer on one switch only. Now,
-> > this change weakened security for the other switches that I had no intention
-> > with doing P2P.
-> >
-> > Isn't this a problem?
-> 
-> Well, if it's a problem for someone they'll have to solve it. We're
-> targeting JBOFs that have no use for ACS / IOMMU groups at all.
-
-IMO, you (not somebody) should address this one way or the other before this
-series land in upstream.
-
->> You are delivering a general purpose P2P code with a lot of holes in it and
->> expecting people to jump through it.
-> No, the code prevents users from screwing it up. It just requires a
-> switch in the hardware which is hardly a high bar to jump through
-> (provided you are putting some design thought into your hardware). And
-> given it requires semi-custom hardware today, it's not something that
-> needs to be on by default in any distributor kernel.
-> 
->> Turning security off by default is also not acceptable. Linux requires ACS support
->> even though you don't care about it for your particular application.
-> 
-> That's not true. Linux does not require ACS support. In fact it's
-> already off by default until you specifically turn on the IOMMU. (Which
-> is not always the most obvious thing to enable.) And the only thing it
-> really supports is enforcing isolation between VMs that are using
-> different pieces of hardware in the system.
-
-Another assumption: There are other architectures like ARM64 where IOMMU
-is enabled by default even if you don't use VMs for security reasons.
-IOMMU blocks stray transactions.
-
-> 
->> I'd hate ACS to be broken due to some operating system enabling your CONFIG option.
-> 
-> ACS isn't "broken" by enabling the config option. It just makes the
-> IOMMU groups and isolation less granular. (ie. devices behind a switch
-> will be in the same group and not isolated from each-other).
-
-Didn't the ACS behavior change suddenly for no good reason when we enabled
-your code even though I might not be using the P2P but I happen to have
-a kernel with P2P config option?
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+ICAgIFdoZW5ldmVyIFBDSSBidXMgaXMgYWRkZWQsIEh5cGVyViBndWFyYW50ZWVzIHRoZSBCVVMg
+aWQgaXMgdW5pcXVlLiBFdmVuIHdpdGgNCiAgICB0aGF0IHdoZW4gYSBmaXJzdCBkZXZpY2UgaXMg
+YWRkZWQgdG8gdGhlIGJ1cywgaXQgb3ZlcnJpZGVzIGJ1cyBkb21haW4gSUQgd2l0aA0KICAgIHRo
+ZSBkZXZpY2Ugc2VyaWFsIG51bWJlci4gU29tZXRpbWUgdGhpcyBjYW4gcmVzdWx0IGluIEJVUyBJ
+RCBub3QgYmVpbmcgdW5pcXVlLg0KICAgIEluIHRoaXMgY2FzZSwgd2hlbiBQQ0lfQlVTIGFuZCBh
+IGRldmljZSBhZGRlZCB0byB0aGUgYnVzLCBldmVuIGJlZm9yZSB0aGUgUENJDQogICAgQlVTIGlz
+IGFkZGVkIHRvIGtlcm5lbCwgdGhlIGZpcnN0IGRldmljZSB0ZW5kcyB0byBvdmVyd3JpdGUgdGhl
+IGRvbWFpbiBJRCB3aXRoDQogICAgMC4gU2luY2UgdGhlcmUgZXhpc3RzIGEgUENJIGJ1cyB3aXRo
+IGRvbWFpbiBJRCAwIGFscmVhZHkgdGhlIFBDSSBidXMgYWRkaXRpb24NCiAgICBmYWlscy4gVGhp
+cyBwYXRjaCBtYWtlIHN1cmUgd2hlbiBhIGRldmljZSBpcyBhZGRlZCB0byBhIGJ1cywgaXQgbmV2
+ZXIgdXBkYXRlZA0KICAgIHRoZSBidXMgZG9tYWluIElELiBTaW5jZSB3ZSBoYXZlIHRoZSB0cmFu
+c3BhcmVudCBTUklPViBtb2RlIG5vdywgdGhlIHNob3J0IFZGDQogICAgZGV2aWNlIG5hbWUgaXMg
+bm8gbG9uZ2VyIG5lZWRlZC4NCiAgICANCiAgICBGaXhlczogNGE5YjA5MzNiZGZjKCJQQ0k6aHY6
+VXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSSBkb21haW4iKQ0KICAgIENjOiBzdGFibGVA
+dmdlci5rZXJuZWwub3JnDQogICAgU2lnbmVkLW9mZi1ieTogU3JpZGhhciBQaXRjaGFpIDxzcnBp
+dGNoYUBtaWNyb3NvZnQuY29tPg0KICAgIC0tLQ0KICAgIA0KICAgIENoYW5nZXMgaW4gdjI6DQog
+ICAgKiBmaXggdGhlIGNvbW1pdCBjb21tZW50cy4NCiAgICAtLS0NCiAgICAgZHJpdmVycy9wY2kv
+aG9zdC9wY2ktaHlwZXJ2LmMgfCAxMSAtLS0tLS0tLS0tLQ0KICAgICAxIGZpbGUgY2hhbmdlZCwg
+MTEgZGVsZXRpb25zKC0pDQogICAgDQogICAgZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3Qv
+cGNpLWh5cGVydi5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCiAgICBpbmRleCAy
+ZmFmMzhlLi5hYzY3ZTU2IDEwMDY0NA0KICAgIC0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5
+cGVydi5jDQogICAgKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCiAgICBAQCAt
+MTUxOCwxNyArMTUxOCw2IEBAIHN0YXRpYyBzdHJ1Y3QgaHZfcGNpX2RldiAqbmV3X3BjaWNoaWxk
+X2RldmljZShzdHJ1Y3QgaHZfcGNpYnVzX2RldmljZSAqaGJ1cywNCiAgICAgCWdldF9wY2ljaGls
+ZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGlsZGxpc3QpOw0KICAgICAJc3Bpbl9sb2NrX2lycXNh
+dmUoJmhidXMtPmRldmljZV9saXN0X2xvY2ssIGZsYWdzKTsNCiAgICAgDQogICAgLQkvKg0KICAg
+IC0JICogV2hlbiBhIGRldmljZSBpcyBiZWluZyBhZGRlZCB0byB0aGUgYnVzLCB3ZSBzZXQgdGhl
+IFBDSSBkb21haW4NCiAgICAtCSAqIG51bWJlciB0byBiZSB0aGUgZGV2aWNlIHNlcmlhbCBudW1i
+ZXIsIHdoaWNoIGlzIG5vbi16ZXJvIGFuZA0KICAgIC0JICogdW5pcXVlIG9uIHRoZSBzYW1lIFZN
+LiAgVGhlIHNlcmlhbCBudW1iZXJzIHN0YXJ0IHdpdGggMSwgYW5kDQogICAgLQkgKiBpbmNyZWFz
+ZSBieSAxIGZvciBlYWNoIGRldmljZS4gIFNvIGRldmljZSBuYW1lcyBpbmNsdWRpbmcgdGhpcw0K
+ICAgIC0JICogY2FuIGhhdmUgc2hvcnRlciBuYW1lcyB0aGFuIGJhc2VkIG9uIHRoZSBidXMgaW5z
+dGFuY2UgVVVJRC4NCiAgICAtCSAqIE9ubHkgdGhlIGZpcnN0IGRldmljZSBzZXJpYWwgbnVtYmVy
+IGlzIHVzZWQgZm9yIGRvbWFpbiwgc28gdGhlDQogICAgLQkgKiBkb21haW4gbnVtYmVyIHdpbGwg
+bm90IGNoYW5nZSBhZnRlciB0aGUgZmlyc3QgZGV2aWNlIGlzIGFkZGVkLg0KICAgIC0JICovDQog
+ICAgLQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+Y2hpbGRyZW4pKQ0KICAgIC0JCWhidXMtPnN5c2Rh
+dGEuZG9tYWluID0gZGVzYy0+c2VyOw0KICAgICAJbGlzdF9hZGRfdGFpbCgmaHBkZXYtPmxpc3Rf
+ZW50cnksICZoYnVzLT5jaGlsZHJlbik7DQogICAgIAlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZo
+YnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogICAgIAlyZXR1cm4gaHBkZXY7DQogICAg
+LS0gDQogICAgMi43LjQNCiAgICANCiAgICANCiAgICANCg0K
