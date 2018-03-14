@@ -1,45 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:39687 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751322AbeCGIqT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 03:46:19 -0500
-From: wei.guo.simon@gmail.com
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Simon Guo <wei.guo.simon@gmail.com>
-Subject: [PATCH] PCI/hotplug: ppc: correct a php_slot usage after free
-Date: Wed,  7 Mar 2018 16:46:04 +0800
-Message-Id: <1520412364-2680-1-git-send-email-wei.guo.simon@gmail.com>
+Received: from verein.lst.de ([213.95.11.211]:34721 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751089AbeCNJCX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 05:02:23 -0400
+Date: Wed, 14 Mar 2018 10:02:21 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Nipun Gupta <nipun.gupta@nxp.com>, hch@lst.de,
+        linux@armlinux.org.uk, gregkh@linuxfoundation.org,
+        m.szyprowski@samsung.com, bhelgaas@google.com,
+        dmitry.torokhov@gmail.com, rafael.j.wysocki@intel.com,
+        jarkko.sakkinen@linux.intel.com, linus.walleij@linaro.org,
+        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] dma-mapping: move dma configuration to bus
+        infrastructure
+Message-ID: <20180314090221.GE28983@lst.de>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <a6cd83c9-d769-2994-5230-0a97de1897e5@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a6cd83c9-d769-2994-5230-0a97de1897e5@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Simon Guo <wei.guo.simon@gmail.com>
+>> +	.dev_groups		= amba_dev_groups,
+>> +	.match			= amba_match,
+>> +	.uevent			= amba_uevent,
+>> +	.pm			= &amba_pm,
+>> +	.dma_configure		= amba_dma_configure,
+>> +	.dma_deconfigure	= amba_dma_deconfigure,
+>> +	.force_dma		= true,
+>
+> This patch should also be removing force_dma because it no longer makes 
+> sense. If DMA configuration is now done by a bus-level callback, then a bus 
+> which wants its children to get DMA configuration needs to implement that 
+> callback; there's nowhere to force a "default" global behaviour any more.
 
-In pnv_php_unregister_one(), pnv_php_put_slot() might kfree
-php_slot structure. But there is pci_hp_deregister() after
-that with php_slot reference.
-
-This patch moves pnv_php_put_slot() to the end of function.
-
-Signed-off-by: Simon Guo <wei.guo.simon@gmail.com>
----
- drivers/pci/hotplug/pnv_php.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-index 74f6a17..eb60692e 100644
---- a/drivers/pci/hotplug/pnv_php.c
-+++ b/drivers/pci/hotplug/pnv_php.c
-@@ -930,8 +930,8 @@ static void pnv_php_unregister_one(struct device_node *dn)
- 		return;
- 
- 	php_slot->state = PNV_PHP_STATE_OFFLINE;
--	pnv_php_put_slot(php_slot);
- 	pci_hp_deregister(&php_slot->slot);
-+	pnv_php_put_slot(php_slot);
- }
- 
- static void pnv_php_unregister(struct device_node *dn)
--- 
-1.8.3.1
+Btw, we don't really know how many busses currently rely on OF or ACPI
+configuration.  So maybe we need to keep those as a default?
