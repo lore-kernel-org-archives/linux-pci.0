@@ -1,51 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 1 Mar 2018 12:49:57 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48596 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751758AbeCNNan (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 09:30:43 -0400
+Subject: [PATCH v2 2/2] PCI: Report quirks that take more than 10ms
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?=
-        <ckoenig.leichtzumerken@gmail.com>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: stop crashing in pci_release_resource v2
-Message-ID: <20180301184957.GI13722@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180221090715.2853-1-christian.koenig@amd.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>,
+        Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 14 Mar 2018 08:30:40 -0500
+Message-ID: <152103424057.167541.9559805983145916469.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152103417018.167541.3290752859388672112.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152103417018.167541.3290752859388672112.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180221090715.2853-1-christian.koenig@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 21, 2018 at 10:07:15AM +0100, Christian König wrote:
-> Is it entirely possible that the BIOS wasn't able to assign resources to
-> a device. In this case don't crash in pci_release_resource() when we try
-> to resize the resource.
-> 
-> v2: keep printing the info that we try to release the BAR
-> 
-> Signed-off-by: Christian König <christian.koenig@amd.com>
-> CC: stable@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-I was hoping for a dmesg snippet, but I added a Fixes: tag and applied
-this to for-linus for v4.16.
+With "initcall_debug", we report how long every PCI quirk took.
 
-> ---
->  drivers/pci/setup-res.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index e815111f3f81..c0f091614805 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -402,6 +402,10 @@ void pci_release_resource(struct pci_dev *dev, int resno)
->  	struct resource *res = dev->resource + resno;
->  
->  	dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
-> +
-> +	if (!res->parent)
-> +		return;
-> +
->  	release_resource(res);
->  	res->end = resource_size(res) - 1;
->  	res->start = 0;
-> -- 
-> 2.14.1
-> 
+Even without "initcall_debug", report the runtime of any quirk that takes
+longer than 10ms.  This is to make it easier to notice quirks that slow
+down boot.
+
+This was motivated by a report from Paul Menzel that PCI final quirks took
+half a second at boot.
+
+Link: https://lkml.kernel.org/r/44cada166e42007d27b4c3e3aa0744d7@molgen.mpg.de
+Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/quirks.c |   17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 97c74e386bcc..1466ee729e0a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3002,14 +3002,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+ static ktime_t fixup_debug_start(struct pci_dev *dev,
+ 				 void (*fn)(struct pci_dev *dev))
+ {
+-	ktime_t calltime = 0;
+-
+-	if (initcall_debug) {
++	if (initcall_debug)
+ 		pci_info(dev, "calling  %pF @ %i\n", fn, task_pid_nr(current));
+-		calltime = ktime_get();
+-	}
+ 
+-	return calltime;
++	return ktime_get();
+ }
+ 
+ static void fixup_debug_report(struct pci_dev *dev, ktime_t calltime,
+@@ -3018,12 +3014,11 @@ static void fixup_debug_report(struct pci_dev *dev, ktime_t calltime,
+ 	ktime_t delta, rettime;
+ 	unsigned long long duration;
+ 
+-	if (initcall_debug) {
+-		rettime = ktime_get();
+-		delta = ktime_sub(rettime, calltime);
+-		duration = (unsigned long long) ktime_to_ns(delta) >> 10;
++	rettime = ktime_get();
++	delta = ktime_sub(rettime, calltime);
++	duration = (unsigned long long) ktime_to_ns(delta) >> 10;
++	if (initcall_debug || duration > 10000)
+ 		pci_info(dev, "%pF took %lld usecs\n", fn, duration);
+-	}
+ }
+ 
+ /*
