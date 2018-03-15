@@ -1,91 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55970 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751534AbeCMRtq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 13:49:46 -0400
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
-Date: Tue, 13 Mar 2018 13:49:41 -0400
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56890 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbeCONWO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2018 09:22:14 -0400
+Date: Thu, 15 Mar 2018 14:22:13 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 5/5] misc: pci_endpoint_test: Handle 64-bit BARs
+ properly
+Message-ID: <20180315132213.GA8629@kroah.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
+ <20180308133331.19464-6-niklas.cassel@axis.com>
 MIME-Version: 1.0
-In-Reply-To: <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180308133331.19464-6-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/13/2018 12:43 PM, Logan Gunthorpe wrote:
+On Thu, Mar 08, 2018 at 02:33:30PM +0100, Niklas Cassel wrote:
+> A 64-bit BAR consists of a BAR pair, where the second BAR has the
+> upper bits, so we cannot simply call pci_ioremap_bar() on every single
+> BAR index.
 > 
+> The second BAR in a BAR pair will not have the IORESOURCE_MEM resource
+> flag set. Only call ioremap on BARs that have the IORESOURCE_MEM
+> resource flag set.
 > 
-> On 12/03/18 09:28 PM, Sinan Kaya wrote:
->> On 3/12/2018 3:35 PM, Logan Gunthorpe wrote:
->> Regarding the switch business, It is amazing how much trouble you went into
->> limit this functionality into very specific hardware.
->>
->> I thought that we reached to an agreement that code would not impose
->> any limits on what user wants.
->>
->> What happened to all the emails we exchanged?
+> pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
+> pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
+> pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
+> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
+> pci-endpoint-test 0000:01:00.0: failed to read BAR1
+> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
+> pci-endpoint-test 0000:01:00.0: failed to read BAR3
+> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
+> pci-endpoint-test 0000:01:00.0: failed to read BAR5
 > 
-> It turns out that root ports that support P2P are far less common than anyone thought. So it will likely have to be a white list. Nobody else seems keen on allowing the user to enable this on hardware that doesn't work. The easiest solution is still limiting it to using a switch. From there, if someone wants to start creating a white-list then that's probably the way forward to support root ports.
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/misc/pci_endpoint_test.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
 
-I thought only few root ports had problem. Thanks for clarifying that.
+Where are the 4 other patches in this series?  I can't just only apply
+the last one, right?
 
-> 
-> And there's also the ACS problem which means if you want to use P2P on the root ports you'll have to disable ACS on the entire system. (Or preferably, the IOMMU groups need to get more sophisticated to allow for dynamic changes).
-> 
+Please be careful when sending patches to properly notify everyone...
 
-Do you think you can keep a pointer to the parent bridge instead of querying it
-via get_upstream_bridge_port() here so that we can reuse your
-pci_p2pdma_disable_acs() in the future.
+this is now dropped from my patch queue.
 
-+int pci_p2pdma_disable_acs(struct pci_dev *pdev)
-+{
-+	struct pci_dev *up;
-+	int pos;
-+	u16 ctrl;
-+
-+	up = get_upstream_bridge_port(pdev);
-+	if (!up)
-+		return 0;
-
-Some future device would only deal with pci_p2pdma_add_client(() for whitelisting
-instead of changing all of your code.
-
-We should at least limit the usage of get_upstream_bridge_port() family of functions
-to probe time only.
-
-> Additionally, once you allow for root ports you may find the IOMMU getting in the way.
-
-We can tell iommu to do one to one translation by passing iommu.passthrough=1 to kernel
-command line to have identical behavior to your switch case.
-
-> 
-> So there are great deal more issues to sort out if you don't restrict to devices behind switches.
-> 
-> Logan
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+greg k-h
