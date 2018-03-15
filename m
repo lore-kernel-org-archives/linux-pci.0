@@ -1,76 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:39342 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1162589AbeCAW4x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 17:56:53 -0500
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Sagi Grimberg <sagi@grimberg.me>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Steve Wise <swise@opengridcomputing.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-11-logang@deltatee.com>
- <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
- <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
- <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
- <20180301184249.GI19007@ziepe.ca>
- <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
- <20180301224540.GL19007@ziepe.ca>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <cd55324c-f5bb-6bfb-a7b3-e128c797ca6b@deltatee.com>
-Date: Thu, 1 Mar 2018 15:56:38 -0700
+Received: from mail-sn1nam02on0120.outbound.protection.outlook.com ([104.47.36.120]:24508
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751497AbeCOSYL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Mar 2018 14:24:11 -0400
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3]PCI: hv: fix PCI-BUS domainID corruption
+Date: Thu, 15 Mar 2018 18:24:08 +0000
+Message-ID: <04DBCCAB-4BA7-4E05-A047-44824995963E@microsoft.com>
+References: <C600E28F-E581-431E-9CD4-47C776E8E70F@microsoft.com>
+ <20180315120522.GA15651@e107981-ln.cambridge.arm.com>
+ <DM5PR21MB0826439DF296763A3FA861C3F6D00@DM5PR21MB0826.namprd21.prod.outlook.com>
+In-Reply-To: <DM5PR21MB0826439DF296763A3FA861C3F6D00@DM5PR21MB0826.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180301224540.GL19007@ziepe.ca>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 01/03/18 03:45 PM, Jason Gunthorpe wrote:
-> I can appreciate you might have some special use case for that, but it
-> absolutely should require special configuration and not just magically
-> happen.
-
-Well if driver doesn't want someone doing p2p transfers with the memory 
-it shouldn't publish it to be used for exactly that purpose.
-
-> You bring up IB adaptor memory - if we put that into the allocator
-> then what is to stop the NMVe driver just using it instead of the CMB
-> buffer? That would be totally wrong in almost all cases.
-
-If you mean for SQEs in the NVMe driver, look at the code, it 
-specifically allocates it from it's own device. If you mean the 
-nvmet-rdma then it's using that memory exactly as it was meant to. 
-Again, if the IB driver doesn't want someone to use that memory for P2P 
-transfers it shouldn't publish it as such.
-
-> Seems like a very subtle and hard to debug performance trap to leave
-> for the users, and pretty much the only reason to use P2P is
-> performance... So why have such a dangerous interface?
-
-It's not at all dangerous, the code specifically only uses P2P memory 
-that's local enough. And the majority of the code is there to make sure 
-it will all work in all cases.
-
-Honestly, though, I'd love to go back to the case where the user selects 
-which p2pmem device to use, but that was very unpopular last year. It 
-would simplify a bunch of things though.
-
-Also, no, the reason to use P2P is not performance. Only if you have 
-very specific hardware can you get a performance bump and it isn't all 
-that significant. The reason to use P2P is so you can design performant 
-systems with small CPUs, less or slower DRAM, and low lane counts to the 
-CPU, etc.
-
-Logan
+QXBvbG9naWVzIGZvciBub3QgYWxpZ25pbmcgbXkgcmVwbHksIEkganVzdCByZWFsaXplZCBhZnRl
+ciBsb29raW5nIGludG8NCnRoZSBtYWlsIGFyY2hpdmUgaW4gTEtNTC4gIEkgaGF2ZSBhbGlnbmVk
+IHRoZSByZXBsYXkgbm93Lg0KDQoNCk9uIDMvMTUvMTgsIDEwOjU2IEFNLCAiU3JpZGhhciBQaXRj
+aGFpIiA8U3JpZGhhci5QaXRjaGFpQG1pY3Jvc29mdC5jb20+IHdyb3RlOg0KDQpIaSBMb3Jlbnpv
+LA0KQW5zd2VyaW5nIHRoZSBxdWVzdGlvbiBpbmxpbmUuDQpLaW5kbHkgbGV0IG1lIGtub3cgaWYg
+aXQgY2xhcmlmaWVzLiBJIHdpbGwgc2VuZCBvdXQgYW5vdGhlciBwYXRjaCBhZnRlciB3ZSBhZ3Jl
+ZSBvbiB0aGUgY2xhcmlmaWNhdGlvbi4NCg0KVGhhbmtzDQpTcmlkaGFyIFBpdGNoYWkNCg0KLS0t
+LS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IExvcmVuem8gUGllcmFsaXNpIDxsb3Jlbnpv
+LnBpZXJhbGlzaUBhcm0uY29tPg0KU2VudDogVGh1cnNkYXksIE1hcmNoIDE1LCAyMDE4IDU6MDUg
+QU0NClRvOiBTcmlkaGFyIFBpdGNoYWkgPFNyaWRoYXIuUGl0Y2hhaUBtaWNyb3NvZnQuY29tPg0K
+Q2M6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+OyBKYWtlIE9zaGlucyA8amFr
+ZW9AbWljcm9zb2Z0LmNvbT47IEhhaXlhbmcgWmhhbmcgPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+
+OyBTdGVwaGVuIEhlbW1pbmdlciA8c3RoZW1taW5AbWljcm9zb2Z0LmNvbT47IERleHVhbiBDdWkg
+PGRlY3VpQG1pY3Jvc29mdC5jb20+OyBLWSBTcmluaXZhc2FuIDxreXNAbWljcm9zb2Z0LmNvbT47
+IE1pY2hhZWwgS2VsbGV5IChFT1NHKSA8TWljaGFlbC5ILktlbGxleUBtaWNyb3NvZnQuY29tPjsg
+ZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsg
+bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSCB2M11QQ0k6
+IGh2OiBmaXggUENJLUJVUyBkb21haW5JRCBjb3JydXB0aW9uDQoNCk9uIFRodSwgTWFyIDE1LCAy
+MDE4IGF0IDEyOjAzOjA3QU0gKzAwMDAsIFNyaWRoYXIgUGl0Y2hhaSB3cm90ZToNCldoZW5ldmVy
+IFBDSSBidXMgaXMgYWRkZWQsIEh5cGVyViBndWFyYW50ZWVzIHRoZSBCVVMgaWQgaXMgdW5pcXVl
+LiBFdmVuDQoNCiJXaGVuZXZlciBhIFBDSSBidXMgaXMgYWRkZWQiDQpTcmlkaGFyPj4geWVzDQoN
+CndpdGggdGhhdCB3aGVuIGEgZmlyc3QgZGV2aWNlIGlzIGFkZGVkIHRvIHRoZSBidXMsIGl0IG92
+ZXJyaWRlcyBidXMgZG9tYWluDQpJRCB3aXRoIHRoZSBkZXZpY2Ugc2VyaWFsIG51bWJlci4gU29t
+ZXRpbWUgdGhpcyBjYW4gcmVzdWx0IGluIEJVUyBJRCBub3QNCg0KRGVmaW5lICJTb21ldGltZSIu
+DQoNClNyaWRoYXI+PiBIeXBlclYgd2hlbiBpdCBjcmVhdGVzIGEgUENJIGJ1cyBpdCBndWFyYW50
+ZWVzIGl0IHByb3ZpZGUgYSB1bmlxdWUgSUQgZm9yIGl0Lg0KQnV0LCB0aGF0IHVuaXF1ZSBCVVMg
+SUQgaXMgcmVwbGFjZWQgd2l0aCBkZXZpY2Ugc2VyaWFsIG51bWJlci4gMCBpcyBhIHZhbGlkDQpk
+ZXZpY2Ugc2VyaWFsIG51bWJlciwgYW5kIGlmIHRoZXJlIGV4aXN0cyBhIFBDSSBidXMgd2l0aCBk
+b21haW4gSUQgMCAoR2VuIDENCnZlcnNpb24gb2YgaHlwZXJWIFZNIGhhdmUgdGhpcyBmb3IgcGFy
+YSB2aXJ0dWFsIGRldmljZXMpLCB0aGlzIHdpbGwgcmVzdWx0IGluDQpQQ0kgYnVzIGlkIG5vdCBi
+ZWluZyB1bmlxdWUuDQoNCg0KYmVpbmcgdW5pcXVlLiBJbiB0aGlzIGNhc2UsIHdoZW4gUENJX0JV
+UyBhbmQgYSBkZXZpY2UgdG8gYnVzIGlzIGFkZGVkLCB0aGUNCmZpcnN0IGRldmljZSBvdmVyd3Jp
+dGVzIHRoZSBidXMgZG9tYWluIElEIHRvIHRoZSBkZXZpY2Ugc2VyaWFsIG51bWJlciwNCndoaWNo
+IGlzIDAuIFNpbmNlIHRoZXJlIGV4c2lzdCBhIFBDSSBidXMgd2l0aCBkb21haW4gSUQgMCBhbHJl
+YWR5IHRoZSBQQ0kNCg0Kcy9leHNpc3QvZXhpc3QNCg0KU3JpZGhhcj4+IHllcw0KDQpidXMgYWRk
+aXRpb24gZmFpbHMuIFRoaXMgcGF0Y2ggbWFrZSBzdXJlIHdoZW4gYSBkZXZpY2UgaXMgYWRkZWQg
+dG8gYSBidXMsDQppdCBuZXZlciB1cGRhdGVkIHRoZSBidXMgZG9tYWluIElELg0KDQpzL3VwZGF0
+ZWQvdXBkYXRlcw0KU3JpZGhhciA+PiB5ZXMNCg0KU2luY2Ugd2UgaGF2ZSB0aGUgdHJhbnNwYXJl
+bnQgU1JJT1YgbW9kZSBub3csIHRoZSBzaG9ydCBWRiBkZXZpY2UgbmFtZQ0KaXMgbm8gbG9uZ2Vy
+IG5lZWRlZC4NCg0KSSBzdGlsbCBkbyBub3QgdW5kZXJzdGFuZCB3aGF0IHRoaXMgbWVhbnMgYW5k
+IGhvdyBpdCBpcyByZWxhdGVkIHRvIHRoZQ0KcGF0Y2ggYmVsb3csIGl0IG1heSBiZSBjbGVhciB0
+byB5b3UsIGl0IGlzIG5vdCB0byBtZSwgYXQgYWxsLg0KDQpTcmlkaGFyID4+IHRoZSBwYXRjaCBi
+ZWxvdywgd2FzIGludHJvZHVjZWQgdG8gbWFrZSB0aGUgZGV2aWNlIG5hbWUgc21hbGwsIGJ5IHRh
+a2luZyBvbmx5DQoxNmJpdHMgb2YgdGhlIHNlcmlhbCBudW1iZXIuIFNpbmNlIHdlIGFyZSBub3Qg
+Z29pbmcgdG8gaGF2ZSB0aGUgc2VyaWFsIG51bWJlcg0KdXBkYXRlZCB0byB0aGUgQlVTIGlkLCB0
+aGlzIGhhcyB0byBiZSByZW1vdmVkLg0KDQpGaXhlczogNGE5YjA5MzNiZGZjKCJQQ0k6aHY6VXNl
+IGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSSBkb21haW4iKQ0KDQpGaXhlczogNGE5YjA5MzNi
+ZGZjICgiUENJOiBodjogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSSBkb21haW4iKQ0K
+U3JpZGhyID4+IHllcw0KDQpJIGFza2VkIHlvdSBhbiBleHBsaWNpdCBxdWVzdGlvbi4gQ29tbWl0
+IGFib3ZlIHdhcyBhZGRlZCBmb3IgYSByZWFzb24NCkkgYXNzdW1lLiBUaGlzIHBhdGNoIGltcGxp
+ZXMgdGhhdCBrZXJuZWwgaGFzIGJlZW4gYnJva2VuIHNpbmNlIHY0LjExDQp3aGljaCBpcyBhbG1v
+c3QgYSB5ZWFyIGFnbyBhbmQgbm9ib2R5IGV2ZXJ5IG5vdGljZWQgPyBPciB0aGVyZSBhcmUNCnN5
+c3RlbXMgd2hlcmUgY29tbWl0IGFib3ZlIGlzIF9uZWNlc3NhcnlfIGFuZCB0aGlzIHBhdGNoIHdv
+dWxkIGJyZWFrDQp0aGVtID8NCg0KSSB3YW50IGEgZGV0YWlsZWQgZXhwbGFuYXRpb24gdGhhdCBo
+aWdobGlnaHRzICp3aHkqIGl0IGlzIHNhZmUgdG8gYXBwbHkNCnRoaXMgcGF0Y2ggYW5kIHNlbmQg
+aXQgdG8gc3RhYmxlIGtlcm5lbHMsIGNvbW1pdCBsb2cgYWJvdmUgd29uJ3QgZG8uDQoNClNyaWRo
+YXI+PiBIeXBlclYgcHJvdmlkZXMgYSB1bmlxdWUgZG9tYWluIElEIGZvciBQQ0kgQlVTLiBCdXQg
+aXQgaXMgbW9kaWZpZWQgYnkgdGhlIGNoaWxkDQpkZXZpY2Ugd2hlbiBpdCBpcyBhZGRlZC4gVGhp
+cyBjYW5ub3QgcHJvZHVjZSBhIHVuaXF1ZSBkb21haW4gSUQgYWxsIHRoZSB0aW1lLg0KSGVyZSBp
+biB0aGUgYnVnLCB3ZSBzZWUgdGhlIGNvbGxpc2lvbiBiZXR3ZWVuIHRoZSBzZXJpYWwgbnVtYmVy
+IGFuZCBhbHJlYWR5DQpleGlzdGluZyBQQ0kgYnVzLiBUaGUgY2xlYW5lciB3YXkgaXMgbmV2ZXIg
+dG91Y2ggdGhlIGRvbWFpbiBJRCBwcm92aWRlZCBieQ0KaHlwZXJWIGR1cmluZyB0aGUgUENJIGJ1
+cyBjcmVhdGlvbi4gQXMgbG9uZyBhcyBoeXBlclYgbWFrZSBzdXJlIGl0IHByb3ZpZGVzIGENCnVu
+aXF1ZSBkb21haW4gSUQgZm9yIHRoZSBQQ0kgZm9yIGEgVk0gaXQgd2lsbCBub3QgYnJlYWssIGFu
+ZCBIeXBlclYgd2lsbA0KZ3VhcmFudGVlcyB0aGF0IHRoZSBkb21haW4gZm9yIHRoZSBQQ0kgYnVz
+IGZvciBhIGdpdmVuIFZNIHdpbGwgYmUgYWx3YXlzIHVuaXF1ZS4NClRoZSBvcmlnaW5hbCBwYXRj
+aCB3YXMgYWxzbyBpbnRlbmRpbmcgdG8gaGF2ZSBhIHVuaXF1ZSBkb21haW4gSUQgZm9yIHRoZSBQ
+Q0kNCmJ1cywgYnkgdGFraW5nIHRoZSBzZXJpYWwgbnVtYmVyIG9mIHRoZSBkZXZpY2UsIGJ1dCBp
+dCBpcyBub3Qgc3VmZmljaWVudCwgd2hlbg0KdGhlIGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIG51
+bWJlciB3aGljaCBpcyB0aGUgZG9tYWluIElEIG9mIHRoZSBleGlzdGluZyBQQ0kNCmJ1cy4gIFdp
+dGggdGhlIGN1cnJlbnQga2VybmVsIHdlIGNhbiByZXBybyB0aGlzIGlzc3VlIGJ5IGFkZGluZyBh
+IGRldmljZSB3aXRoIGENCnNlcmlhbCBudW1iZXIgbWF0Y2hpbmcgdGhlIGV4aXN0aW5nIFBDSSBi
+dXMgZG9tYWluIGlkLiAoaW4gdGhpcyBjYXNlIHRoYXQNCmhhcHBlbnMgdG8gYmUgemVybykuDQoN
+Cg0KVGhhbmtzLA0KTG9yZW56bw0KDQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KU2lnbmVk
+LW9mZi1ieTogU3JpZGhhciBQaXRjaGFpIDxzcnBpdGNoYUBtaWNyb3NvZnQuY29tPg0KLS0tDQpD
+aGFuZ2VzIGluIHYzOg0KKiBmaXggdGhlIGNvbW1pdCBjb21tZW50LiBbS1kgU3Jpbml2YXNhbiwg
+TWljaGFlbCBLZWxsZXldDQotLS0NCiAgZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMgfCAx
+MSAtLS0tLS0tLS0tLQ0KICAxIGZpbGUgY2hhbmdlZCwgMTEgZGVsZXRpb25zKC0pDQpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMgYi9kcml2ZXJzL3BjaS9ob3N0L3Bj
+aS1oeXBlcnYuYw0KaW5kZXggMmZhZjM4ZS4uYWM2N2U1NiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
+cGNpL2hvc3QvcGNpLWh5cGVydi5jDQorKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYu
+Yw0KQEAgLTE1MTgsMTcgKzE1MTgsNiBAQCBzdGF0aWMgc3RydWN0IGh2X3BjaV9kZXYgKm5ld19w
+Y2ljaGlsZF9kZXZpY2Uoc3RydWN0IGh2X3BjaWJ1c19kZXZpY2UgKmhidXMsDQogIAlnZXRfcGNp
+Y2hpbGQoaHBkZXYsIGh2X3BjaWRldl9yZWZfY2hpbGRsaXN0KTsNCiAgCXNwaW5fbG9ja19pcnFz
+YXZlKCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogIA0KLQkvKg0KLQkgKiBXaGVu
+IGEgZGV2aWNlIGlzIGJlaW5nIGFkZGVkIHRvIHRoZSBidXMsIHdlIHNldCB0aGUgUENJIGRvbWFp
+bg0KLQkgKiBudW1iZXIgdG8gYmUgdGhlIGRldmljZSBzZXJpYWwgbnVtYmVyLCB3aGljaCBpcyBu
+b24temVybyBhbmQNCi0JICogdW5pcXVlIG9uIHRoZSBzYW1lIFZNLiAgVGhlIHNlcmlhbCBudW1i
+ZXJzIHN0YXJ0IHdpdGggMSwgYW5kDQotCSAqIGluY3JlYXNlIGJ5IDEgZm9yIGVhY2ggZGV2aWNl
+LiAgU28gZGV2aWNlIG5hbWVzIGluY2x1ZGluZyB0aGlzDQotCSAqIGNhbiBoYXZlIHNob3J0ZXIg
+bmFtZXMgdGhhbiBiYXNlZCBvbiB0aGUgYnVzIGluc3RhbmNlIFVVSUQuDQotCSAqIE9ubHkgdGhl
+IGZpcnN0IGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIHVzZWQgZm9yIGRvbWFpbiwgc28gdGhlDQot
+CSAqIGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRoZSBmaXJzdCBkZXZpY2Ug
+aXMgYWRkZWQuDQotCSAqLw0KLQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+Y2hpbGRyZW4pKQ0KLQkJ
+aGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogIAlsaXN0X2FkZF90YWlsKCZocGRl
+di0+bGlzdF9lbnRyeSwgJmhidXMtPmNoaWxkcmVuKTsNCiAgCXNwaW5fdW5sb2NrX2lycXJlc3Rv
+cmUoJmhidXMtPmRldmljZV9saXN0X2xvY2ssIGZsYWdzKTsNCiAgCXJldHVybiBocGRldjsNCi0t
+DQoyLjcuNCANCg0K
