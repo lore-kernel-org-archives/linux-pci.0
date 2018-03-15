@@ -1,99 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:54463 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932126AbeCKMAq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Mar 2018 08:00:46 -0400
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V2 2/5] PCI: Add a query function for PCI device's width cap
-Date: Sun, 11 Mar 2018 13:19:30 +0200
-Message-Id: <1520767173-11090-3-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
-References: <1520767173-11090-1-git-send-email-talgi@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 15 Mar 2018 17:43:29 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ryder Lee <ryder.lee@mediatek.com>
+Subject: Re: [PATCH 1/2] of_pci_irq: add a check to fallback to standard
+ device tree parsing
+Message-ID: <20180315174329.GB22176@e107981-ln.cambridge.arm.com>
+References: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+MIME-Version: 1.0
+In-Reply-To: <31c765c53e85e41bfc001d110d69e46c9967f4e7.1516961656.git.ryder.lee@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie_get_width_cap() implements the logic for querying a PCI device's
-maximum width capability. Change max_link_width_show() function to
-use pcie_get_width_cap().
+On Wed, Jan 31, 2018 at 03:41:49PM +0800, Ryder Lee wrote:
+> A root complex usually consist of a host bridge and multiple P2P bridges,
+> and someone may express that in the form of a root node with many subnodes
+> and list all four interrupts for each slot (child node) in the root node
+> like this:
+> 
+> 	pcie-controller {
+> 		...
+> 		interrupt-map-mask = <0xf800 0 0 7>;
+> 		interrupt-map = <0x0000 0 0 {INTx} &{interrupt parent} ...>
+> 				 0x0800 0 0 {INTx} &{interrupt parent} ...>;
+> 
+> 		pcie@0,0 {
+> 			reg = <0x0000 0 0 0 0>;
+> 			...
+> 		};
+> 
+> 		pcie@1,0 {
+> 			reg = <0x0800 0 0 0 0>;
+> 			...
+> 		};
+> 	};
+> 
+> As shown above, we'd like to propagate IRQs from a root port to the devices
+> in the hierarchy below it in this way.  However, it seems that the current
+> parser couldn't handle such cases and will get something unexpected below:
+> 
+> 	pcieport 0000:00:01.0: assign IRQ: got 213
+> 	igb 0000:01:00.0: assign IRQ: got 212
+> 
+> There is a device which is connected to 2nd slot, but the port doesn't share
+> the same IRQ with its downstream devices.  The problem here is that, if the
+> loop found a P2P bridge, it wouldn't check whether the reg property exists
+> in ppnode or not but just pass the subordinate devfn to of_irq_parse_raw(),
+> thus the subsequent flow couldn't correctly resolve them.
+> 
+> Fix this by adding a check to fallback to standard device tree parsing.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+> Please refer to the previous discussion thread: https://patchwork.ozlabs.org/patch/829108/
+> ---
+>  drivers/of/of_pci_irq.c | 14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
----
- drivers/pci/pci-sysfs.c |  6 +++---
- drivers/pci/pci.c       | 23 +++++++++++++++++++++++
- include/linux/pci.h     |  1 +
- 3 files changed, 27 insertions(+), 3 deletions(-)
+Hi Ryder,
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index c8b4854..ae30ba2 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -177,14 +177,14 @@ static ssize_t max_link_width_show(struct device *dev,
- 				   struct device_attribute *attr, char *buf)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	u32 linkcap;
-+	enum pcie_link_width width;
- 	int err;
- 
--	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
-+	err = pcie_get_width_cap(pci_dev, &width);
- 	if (err)
- 		return -EINVAL;
- 
--	return sprintf(buf, "%u\n", (linkcap & PCI_EXP_LNKCAP_MLW) >> 4);
-+	return sprintf(buf, "%u\n", width);
- }
- static DEVICE_ATTR_RO(max_link_width);
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7620cc9..48b9fd6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5206,6 +5206,29 @@ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed)
- EXPORT_SYMBOL(pcie_get_speed_cap);
- 
- /**
-+ * pcie_get_width_cap - queries for the PCI device's link width capability.
-+ * @dev: PCI device to query
-+ * @width: storage for link width
-+ *
-+ * This function queries the PCI device width capability.
-+ */
-+int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
-+{
-+	u32 lnkcap;
-+	int err;
-+
-+	*width = PCIE_LNK_WIDTH_UNKNOWN;
-+
-+	err = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
-+	if (!err && lnkcap)
-+		/* Shift start of width mask by 4 to get actual speed cap */
-+		*width = (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
-+
-+	return err;
-+}
-+EXPORT_SYMBOL(pcie_get_width_cap);
-+
-+/**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-  * @flags: resource type mask to be selected
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 54443e4..8242d3d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1084,6 +1084,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
- int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
- int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
-+int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
--- 
-1.8.3.1
+from the thread discussion I gather I can drop this series from the PCI
+queue and you will update the DT as agreed with Ben, that looks like
+the most reasonable solution to the problem you are facing, please
+let me know if there is anything I am missing.
+
+Thanks,
+Lorenzo
+
+> diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+> index 3a05568..e445866 100644
+> --- a/drivers/of/of_pci_irq.c
+> +++ b/drivers/of/of_pci_irq.c
+> @@ -86,8 +86,18 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
+>  	out_irq->np = ppnode;
+>  	out_irq->args_count = 1;
+>  	out_irq->args[0] = pin;
+> -	laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
+> -	laddr[1] = laddr[2] = cpu_to_be32(0);
+> +
+> +	if (!dn && ppnode) {
+> +		const __be32 *addr;
+> +
+> +		addr = of_get_property(ppnode, "reg", NULL);
+> +		if (addr)
+> +			memcpy(laddr, addr, 3);
+> +	} else {
+> +		laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
+> +		laddr[1] = laddr[2] = cpu_to_be32(0);
+> +	}
+> +
+>  	rc = of_irq_parse_raw(laddr, out_irq);
+>  	if (rc)
+>  		goto err;
+> -- 
+> 1.9.1
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
