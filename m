@@ -1,137 +1,73 @@
-Return-Path: <SRS0=IxCZ=GE=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=IxCZ=GE=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36449 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751959AbeCOQta (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2018 12:49:30 -0400
+Date: Thu, 15 Mar 2018 17:49:27 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Stephen Warren <swarren@nvidia.com>,
+        Vidya Sagar <vidyas@nvidia.com>, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra: mark PM functions as __maybe_unused
+Message-ID: <20180315164927.GA31871@ulmo>
+References: <20180315161901.772729-1-arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 14 Mar 2018 18:31:38 +0200
-Message-ID: <CAHp75Vfp_uwSLe_ENnr=azJGrMoR6DuvGSCi5DSeq6=B-ghAGg@mail.gmail.com>
-Subject: Re: [PATCH] PCI/MSI: Don't set up INTx if MSI or MSI-X is enabled
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Mikael Starvik <starvik@axis.com>,
-	Jesper Nilsson <jesper.nilsson@axis.com>, Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, David Howells <dhowells@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Cris <linux-cris-kernel@axis.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ia64@vger.kernel.org,
-	linux-am33-list@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="DocE+STaALJfprDB"
+In-Reply-To: <20180315161901.772729-1-arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 11:45 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
 
-Agree with Christoph's comment.
+--DocE+STaALJfprDB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> If a device already has MSI or MSI-X enabled, there's no need to set up its
-> legacy INTx interrupt.
-
-Just point to the actual behaviour of this. In some cases code in
-question has to distinguish between MSI and MSI-x.
-So, this or similar changes has to be done with keeping above in mind.
-
-(Existing example is Thunderbolt driver)
-
->
-> bba6f6fc68e7 ("[PATCH] MSI-X: fix resume crash") changed the cris, frv,
-> x86, and ia64 arches to skip INTx setup when MSI is enabled.
->
-> 16cf0ebc35dd ("x86/PCI: Do not use interrupt links for devices using
-> MSI-X") extended that by changing x86 to also skip INTx setup when MSI-X is
-> enabled.
->
-> Change the remaining arches (cris, frv, and ia64) to skip INTx setup when
-> either MSI or MSI-X is enabled.
->
-> Also update mn10300 (which didn't exist at the time of bba6f6fc68e7) to
-> follow the same pattern.
-
-Perhaps no need to change the architectures that are about to be
-removed completely from the kernel.
-
-FWIW,
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Mar 15, 2018 at 05:18:39PM +0100, Arnd Bergmann wrote:
+> The new PM support causes a warning when CONFIG_PM is disabled:
+>=20
+> drivers/pci/host/pci-tegra.c:2482:12: error: 'tegra_pcie_pm_resume' defin=
+ed but not used [-Werror=3Dunused-function]
+>  static int tegra_pcie_pm_resume(struct device *dev)
+> drivers/pci/host/pci-tegra.c:2463:12: error: 'tegra_pcie_pm_suspend' defi=
+ned but not used [-Werror=3Dunused-function]
+>  static int tegra_pcie_pm_suspend(struct device *dev)
+>=20
+> Marking the functions as __maybe_unused lets the compiler drop them
+> silently instead.
+>=20
+> Fixes: b90b44154023 ("PCI: tegra: Add power management support")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 > ---
->  arch/cris/arch-v32/drivers/pci/bios.c |    2 +-
->  arch/frv/mb93090-mb00/pci-vdk.c       |    2 +-
->  arch/ia64/pci/pci.c                   |    4 ++--
->  arch/mn10300/unit-asb2305/pci.c       |    8 +++++---
->  4 files changed, 9 insertions(+), 7 deletions(-)
->
-> diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-> index 6b9e6cfaa29e..c2bed0cc060b 100644
-> --- a/arch/cris/arch-v32/drivers/pci/bios.c
-> +++ b/arch/cris/arch-v32/drivers/pci/bios.c
-> @@ -68,7 +68,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->         if ((err = pcibios_enable_resources(dev, mask)) < 0)
->                 return err;
->
-> -       if (!dev->msi_enabled)
-> +       if (!pci_dev_msi_enabled(dev))
->                 pcibios_enable_irq(dev);
->         return 0;
->  }
-> diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-> index f211839e2cae..4a55d1b82d21 100644
-> --- a/arch/frv/mb93090-mb00/pci-vdk.c
-> +++ b/arch/frv/mb93090-mb00/pci-vdk.c
-> @@ -413,7 +413,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->
->         if ((err = pci_enable_resources(dev, mask)) < 0)
->                 return err;
-> -       if (!dev->msi_enabled)
-> +       if (!pci_dev_msi_enabled(dev))
->                 pcibios_enable_irq(dev);
->         return 0;
->  }
-> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> index f5ec736100ee..7ccc64d5fe3e 100644
-> --- a/arch/ia64/pci/pci.c
-> +++ b/arch/ia64/pci/pci.c
-> @@ -398,7 +398,7 @@ pcibios_enable_device (struct pci_dev *dev, int mask)
->         if (ret < 0)
->                 return ret;
->
-> -       if (!dev->msi_enabled)
-> +       if (!pci_dev_msi_enabled(dev))
->                 return acpi_pci_irq_enable(dev);
->         return 0;
->  }
-> @@ -407,7 +407,7 @@ void
->  pcibios_disable_device (struct pci_dev *dev)
->  {
->         BUG_ON(atomic_read(&dev->enable_cnt));
-> -       if (!dev->msi_enabled)
-> +       if (!pci_dev_msi_enabled(dev))
->                 acpi_pci_irq_disable(dev);
->  }
->
-> diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-> index 3dfe2d31c67b..4d36ea517679 100644
-> --- a/arch/mn10300/unit-asb2305/pci.c
-> +++ b/arch/mn10300/unit-asb2305/pci.c
-> @@ -399,10 +399,12 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  {
->         int err;
->
-> -       err = pci_enable_resources(dev, mask);
-> -       if (err == 0)
-> +       if ((err = pci_enable_resources(dev, mask)) < 0)
-> +               return err;
-> +
-> +       if (!pci_dev_msi_enabled(dev))
->                 pcibios_enable_irq(dev);
-> -       return err;
-> +       return 0;
->  }
->
->  /*
->
+>  drivers/pci/host/pci-tegra.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
+Acked-by: Thierry Reding <treding@nvidia.com>
 
+--DocE+STaALJfprDB
+Content-Type: application/pgp-signature; name="signature.asc"
 
--- 
-With Best Regards,
-Andy Shevchenko
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqqpBcACgkQ3SOs138+
+s6GZZxAAgfh++fLMiINh7+QqGgjQs3u1OPUCZvgOAB2ovdTlu4I4mB13sH2XqtyS
+dLeiEyGpGc23vtJLfOgD7JrwEb5PZyQ1Boxz5L+58yVIgks/gOwvZ+ghxefc5J8M
+m+rl8VjPb54DYWgAUrxTXC4cPS60ATGuEJAeX3YXpQfVc89lWy7alt8PjUGOdmH1
+qd8p/tn3KF+SpnvTgO7DlcEpwFT0FgiMMORxtCrmJUg6IoAGI3pmndSYvkggzgud
+wodK+XKk1Tyg3BBbg+qKzMmi3W1cs80F3AJdPMngz4o3OTcUSOY8WI2tUZDiQkqy
+B1H23XNadB7pnBr5ijkmF1scM+dPiP6PwxYlhXmxhcU+oLZzh4UqbWymidAS/GhL
+XA6Tc4uHq+K012B6/18AQdYmj9N6mAz5ZiH2Z6QE/1pE9SyjMDVwvfoqtBPpcULU
+X5E/G60zNcflKTPskSkjHQA689b1SqqWaWW9iF8Wlx6PyTmsWEPXZsksOsTMYKO5
+6PbGuHxj5DwveBgr9txz1lQAIC/SfrD3Py6hOu5k1IZxK4UPo+JSiJeytY6exkyR
+Zaevz/ZyZHKu9zFKQkf/wB+mU1qEWCcVRwHYIJh9Ar5zr69qeO/W+WQk7lzepD+U
+RkztyJRpWM4Bxx0b+zVKlc6KiT/6eOR6sR7IxvaHD3StfRQUT88=
+=7CmL
+-----END PGP SIGNATURE-----
+
+--DocE+STaALJfprDB--
