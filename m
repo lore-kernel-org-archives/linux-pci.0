@@ -1,69 +1,63 @@
-Return-Path: <SRS0=qOBO=GD=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=qOBO=GD=deltatee.com=logang@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, Stephen Bates <sbates@raithlin.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>
-References: <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
- <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
- <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com>
-Date: Tue, 13 Mar 2018 17:21:20 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam03on0093.outbound.protection.outlook.com ([104.47.42.93]:60600
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751459AbeCOADK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Mar 2018 20:03:10 -0400
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3]PCI: hv: fix PCI-BUS domainID corruption
+Date: Thu, 15 Mar 2018 00:03:07 +0000
+Message-ID: <C600E28F-E581-431E-9CD4-47C776E8E70F@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 13/03/18 05:08 PM, Bjorn Helgaas wrote:
-> On Tue, Mar 13, 2018 at 10:31:55PM +0000, Stephen  Bates wrote:
-> If it *is* necessary because Root Ports and devices below them behave
-> differently than in conventional PCI, I think you should include a
-> reference to the relevant section of the spec and check directly for a
-> Root Port.  I would prefer that over trying to exclude Root Ports by
-> looking for two upstream bridges.
-
-Well we've established that we don't want to allow root ports.
-
-But we need to, at a minimum, do two pci_upstream_bridge() calls...
-
-Remember, we need to check that a number of devices are behind the same
-switch. So we need to find a _common_ upstream port for several devices.
-Excluding the multifunction device case (which I don't think is
-applicable for reasons we've discussed before), this will *never* be the
-first upstream port for a given device. We need to find the upstream
-port of the switch and ensure all devices share that same port. If a
-device is behind a switch, it's pci_upstream_bridge() is the downstream
-switch port which is unique to that device. So a peer device would have
-a different pci_upstream_bridge() port but share the same
-pci_upstream_bridge(pci_upstream_bridge()) port (assuming they are on
-the same switch).
-
-The alternative, is to walk the entire tree of upstream ports and check
-that all devices have a common port somewhere in the tree that isn't the
-root complex. Arguably this is the right way to do it and would support
-a network of switches but is a fair bit more complex to code.
-
-Logan
+V2hlbmV2ZXIgUENJIGJ1cyBpcyBhZGRlZCwgSHlwZXJWIGd1YXJhbnRlZXMgdGhlIEJVUyBpZCBp
+cyB1bmlxdWUuIEV2ZW4NCndpdGggdGhhdCB3aGVuIGEgZmlyc3QgZGV2aWNlIGlzIGFkZGVkIHRv
+IHRoZSBidXMsIGl0IG92ZXJyaWRlcyBidXMgZG9tYWluDQpJRCB3aXRoIHRoZSBkZXZpY2Ugc2Vy
+aWFsIG51bWJlci4gU29tZXRpbWUgdGhpcyBjYW4gcmVzdWx0IGluIEJVUyBJRCBub3QNCmJlaW5n
+IHVuaXF1ZS4gSW4gdGhpcyBjYXNlLCB3aGVuIFBDSV9CVVMgYW5kIGEgZGV2aWNlIHRvIGJ1cyBp
+cyBhZGRlZCwgdGhlDQpmaXJzdCBkZXZpY2Ugb3ZlcndyaXRlcyB0aGUgYnVzIGRvbWFpbiBJRCB0
+byB0aGUgZGV2aWNlIHNlcmlhbCBudW1iZXIsDQp3aGljaCBpcyAwLiBTaW5jZSB0aGVyZSBleHNp
+c3QgYSBQQ0kgYnVzIHdpdGggZG9tYWluIElEIDAgYWxyZWFkeSB0aGUgUENJDQpidXMgYWRkaXRp
+b24gZmFpbHMuIFRoaXMgcGF0Y2ggbWFrZSBzdXJlIHdoZW4gYSBkZXZpY2UgaXMgYWRkZWQgdG8g
+YSBidXMsDQppdCBuZXZlciB1cGRhdGVkIHRoZSBidXMgZG9tYWluIElELiBTaW5jZSB3ZSBoYXZl
+IHRoZSB0cmFuc3BhcmVudCBTUklPVg0KbW9kZSBub3csIHRoZSBzaG9ydCBWRiBkZXZpY2UgbmFt
+ZSBpcyBubyBsb25nZXIgbmVlZGVkLg0KDQpGaXhlczogNGE5YjA5MzNiZGZjKCJQQ0k6aHY6VXNl
+IGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSSBkb21haW4iKQ0KQ2M6IHN0YWJsZUB2Z2VyLmtl
+cm5lbC5vcmcNClNpZ25lZC1vZmYtYnk6IFNyaWRoYXIgUGl0Y2hhaSA8c3JwaXRjaGFAbWljcm9z
+b2Z0LmNvbT4NCi0tLQ0KDQpDaGFuZ2VzIGluIHYzOg0KKiBmaXggdGhlIGNvbW1pdCBjb21tZW50
+LiBbS1kgU3Jpbml2YXNhbiwgTWljaGFlbCBLZWxsZXldDQotLS0NCiBkcml2ZXJzL3BjaS9ob3N0
+L3BjaS1oeXBlcnYuYyB8IDExIC0tLS0tLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDExIGRlbGV0
+aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMgYi9k
+cml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYw0KaW5kZXggMmZhZjM4ZS4uYWM2N2U1NiAxMDA2
+NDQNCi0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQorKysgYi9kcml2ZXJzL3Bj
+aS9ob3N0L3BjaS1oeXBlcnYuYw0KQEAgLTE1MTgsMTcgKzE1MTgsNiBAQCBzdGF0aWMgc3RydWN0
+IGh2X3BjaV9kZXYgKm5ld19wY2ljaGlsZF9kZXZpY2Uoc3RydWN0IGh2X3BjaWJ1c19kZXZpY2Ug
+KmhidXMsDQogCWdldF9wY2ljaGlsZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGlsZGxpc3QpOw0K
+IAlzcGluX2xvY2tfaXJxc2F2ZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KIA0K
+LQkvKg0KLQkgKiBXaGVuIGEgZGV2aWNlIGlzIGJlaW5nIGFkZGVkIHRvIHRoZSBidXMsIHdlIHNl
+dCB0aGUgUENJIGRvbWFpbg0KLQkgKiBudW1iZXIgdG8gYmUgdGhlIGRldmljZSBzZXJpYWwgbnVt
+YmVyLCB3aGljaCBpcyBub24temVybyBhbmQNCi0JICogdW5pcXVlIG9uIHRoZSBzYW1lIFZNLiAg
+VGhlIHNlcmlhbCBudW1iZXJzIHN0YXJ0IHdpdGggMSwgYW5kDQotCSAqIGluY3JlYXNlIGJ5IDEg
+Zm9yIGVhY2ggZGV2aWNlLiAgU28gZGV2aWNlIG5hbWVzIGluY2x1ZGluZyB0aGlzDQotCSAqIGNh
+biBoYXZlIHNob3J0ZXIgbmFtZXMgdGhhbiBiYXNlZCBvbiB0aGUgYnVzIGluc3RhbmNlIFVVSUQu
+DQotCSAqIE9ubHkgdGhlIGZpcnN0IGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIHVzZWQgZm9yIGRv
+bWFpbiwgc28gdGhlDQotCSAqIGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRo
+ZSBmaXJzdCBkZXZpY2UgaXMgYWRkZWQuDQotCSAqLw0KLQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+
+Y2hpbGRyZW4pKQ0KLQkJaGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogCWxpc3Rf
+YWRkX3RhaWwoJmhwZGV2LT5saXN0X2VudHJ5LCAmaGJ1cy0+Y2hpbGRyZW4pOw0KIAlzcGluX3Vu
+bG9ja19pcnFyZXN0b3JlKCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogCXJldHVy
+biBocGRldjsNCi0tIA0KMi43LjQgDQoNCg==
