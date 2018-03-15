@@ -1,50 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr670106.outbound.protection.outlook.com ([40.107.67.106]:13629
-        "EHLO CAN01-TO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1162063AbeCAVhC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 16:37:02 -0500
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Jerome Glisse <jglisse@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-CC: Benjamin Herrenschmidt <benh@au1.ibm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Date: Thu, 1 Mar 2018 21:37:00 +0000
-Message-ID: <EA9224B2-3B12-4F31-9602-DEAF9869A242@raithlin.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
- <1519936195.4592.18.camel@au1.ibm.com> <20180301205548.GA6742@redhat.com>
- <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
- <20180301211036.GB6742@redhat.com>
-In-Reply-To: <20180301211036.GB6742@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:41841 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932257AbeCOSl2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2018 14:41:28 -0400
+Subject: [pci PATCH v7 1/5] pci: Add pci_sriov_configure_simple for PFs that
+ don't manage VF resources
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+Date: Thu, 15 Mar 2018 11:41:25 -0700
+Message-ID: <20180315184055.3102.2435.stgit@localhost.localdomain>
+In-Reply-To: <20180315183449.3102.64791.stgit@localhost.localdomain>
+References: <20180315183449.3102.64791.stgit@localhost.localdomain>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBUaGUgaW50ZW50aW9uIG9mIEhNTSBpcyB0byBiZSB1c2VmdWwgZm9yIGFsbCBkZXZpY2UgbWVt
-b3J5IHRoYXQgd2lzaA0KPiB0byBoYXZlIHN0cnVjdCBwYWdlIGZvciB2YXJpb3VzIHJlYXNvbnMu
-DQoNCkhpIEplcm1vbmUgYW5kIHRoYW5rcyBmb3IgeW91ciBpbnB1dCEgVW5kZXJzdG9vZC4gV2Ug
-aGF2ZSBsb29rZWQgYXQgSE1NIGluIHRoZSBwYXN0IGFuZCBsb25nIHRlcm0gSSBkZWZpbml0ZWx5
-IHdvdWxkIGxpa2UgdG8gY29uc2lkZXIgaG93IHdlIGNhbiBhZGQgUDJQIGZ1bmN0aW9uYWxpdHkg
-dG8gSE1NIGZvciBib3RoIERFVklDRV9QUklWQVRFIGFuZCBERVZJQ0VfUFVCTElDIHNvIHdlIGNh
-biBwYXNzIGFkZHJlc3NhYmxlIGFuZCBub24tYWRkcmVzc2FibGUgYmxvY2tzIG9mIGRhdGEgYmV0
-d2VlbiBkZXZpY2VzLiBIb3dldmVyIHRoYXQgaXMgd2VsbCBiZXlvbmQgdGhlIGludGVudGlvbnMg
-b2YgdGhpcyBzZXJpZXMgOy0pLg0KDQpTdGVwaGVuDQogICAgDQoNCg==
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+
+This patch adds a common configuration function called
+pci_sriov_configure_simple that will allow for managing VFs on devices
+where the PF is not capable of managing VF resources.
+
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+---
+
+v5: New patch replacing pci_sriov_configure_unmanaged with
+      pci_sriov_configure_simple
+    Dropped bits related to autoprobe changes
+v6: Defined pci_sriov_configure_simple as NULL if IOV is disabled
+v7: Updated pci_sriov_configure_simple to drop need for err value
+    Fixed comment explaining why pci_sriov_configure_simple is NULL
+
+ drivers/pci/iov.c   |   31 +++++++++++++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 677924ae0350..3e0a7fdff3e9 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -807,3 +807,34 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ 	return dev->sriov->total_VFs;
+ }
+ EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
++
++/**
++ * pci_sriov_configure_simple - helper to configure unmanaged SR-IOV
++ * @dev: the PCI device
++ * @nr_virtfn: number of virtual functions to enable, 0 to disable
++ *
++ * Used to provide generic enable/disable SR-IOV option for devices
++ * that do not manage the VFs generated by their driver. Return value
++ * is negative on error, or number of VFs allocated on success.
++ */
++int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn)
++{
++	might_sleep();
++
++	if (!dev->is_physfn)
++		return -ENODEV;
++
++	if (pci_vfs_assigned(dev)) {
++		pci_warn(dev,
++			 "Cannot modify SR-IOV while VFs are assigned\n");
++		return -EPERM;
++	}
++
++	if (!nr_virtfn) {
++		sriov_disable(dev);
++		return 0;
++	}
++
++	return sriov_enable(dev, nr_virtfn) ? : nr_virtfn;
++}
++EXPORT_SYMBOL_GPL(pci_sriov_configure_simple);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 024a1beda008..992202449829 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1953,6 +1953,7 @@ static inline void pci_mmcfg_late_init(void) { }
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
++int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+ #else
+@@ -1980,6 +1981,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ { return 0; }
+ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
++/* this is expected to be used as a function pointer, just define as NULL */
++#define pci_sriov_configure_simple NULL
+ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ { return 0; }
+ static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
