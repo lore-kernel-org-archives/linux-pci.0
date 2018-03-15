@@ -1,65 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:52109 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751179AbeC0OJY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Mar 2018 10:09:24 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        stable@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v3 2/6] PCI: aardvark: fix logic in advk_pcie_valid_device()
-Date: Tue, 27 Mar 2018 16:08:15 +0200
-Message-Id: <20180327140819.23501-10-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
-References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=y5Pb=GF=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=y5Pb=GF=intel.com=dan.j.williams@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <AA646409-BB63-4757-A250-CE7118D4D3B8@raithlin.com>
+References: <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+ <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org> <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+ <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org> <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
+ <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com> <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
+ <8de5d3dd-a78f-02d5-0eea-4365364143b6@deltatee.com> <20180314025639.GA50067@bhelgaas-glaptop.roam.corp.google.com>
+ <112493af-ccd0-455b-6600-b50764f7ab7e@deltatee.com> <20180314185159.GD179719@bhelgaas-glaptop.roam.corp.google.com>
+ <b75e83ad-bb83-1f8d-1751-0989cc2493f1@deltatee.com> <CAPcyv4g-A6fqdTahxX=aONSCgp1eEvBb=ZVMzbZUWUDmqBbj7Q@mail.gmail.com>
+ <AA646409-BB63-4757-A250-CE7118D4D3B8@raithlin.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 14 Mar 2018 21:30:41 -0700
+Message-ID: <CAPcyv4j4JOXYvf7e1x591oNPzk7b+pEDkzpFj3aBs+dXe5SqbQ@mail.gmail.com>
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+To: Stephen Bates <sbates@raithlin.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+	=?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+On Wed, Mar 14, 2018 at 12:34 PM, Stephen  Bates <sbates@raithlin.com> wrote:
+>> P2P over PCI/PCI-X is quite common in devices like raid controllers.
+>
+> Hi Dan
+>
+> Do you mean between PCIe devices below the RAID controller? Isn't it pretty novel to be able to support PCIe EPs below a RAID controller (as opposed to SCSI based devices)?
 
-The PCI configuration space read/write functions were special casing
-the situation where PCI_SLOT(devfn) != 0, and returned
-PCIBIOS_DEVICE_NOT_FOUND in this case.
-
-However, while this is what is intended for the root bus, it is not
-intended for the child busses, as it prevents discovering devices with
-PCI_SLOT(x) != 0. Therefore, we return PCIBIOS_DEVICE_NOT_FOUND only
-if we're on the root bus.
-
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Wilson Ding <dingwei@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
-Changes since v2:
- - The logic has been factorized into a advk_pcie_valid_device()
-   helper in a previous patch, so this patch was adjusted accordingly.
----
- drivers/pci/host/pci-aardvark.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index ccd0304a0c21..be140dc7109b 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -433,7 +433,7 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
- static int advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
- 				  int devfn)
- {
--	if (PCI_SLOT(devfn) != 0)
-+	if ((bus->number == pcie->root_bus_nr) && PCI_SLOT(devfn) != 0)
- 		return false;
- 
- 	return true;
--- 
-2.14.3
+I'm thinking of the classic I/O offload card where there's an NTB to
+an internal PCI bus that has a storage controller and raid offload
+engines.
