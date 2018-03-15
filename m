@@ -1,78 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47766 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753419AbeCUTa4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 15:30:56 -0400
-Date: Wed, 21 Mar 2018 14:30:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/6] PCI: rockchip: Create individual folder for
- rockchip drivers
-Message-ID: <20180321193053.GB38649@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
- <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
- <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
- <879a4862-d0d5-21fd-6c47-029c795fe78e@rock-chips.com>
- <20180321181940.GA9760@e107981-ln.cambridge.arm.com>
+Received: from mail-sg2apc01on0093.outbound.protection.outlook.com ([104.47.125.93]:55200
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752548AbeCOOWD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Mar 2018 10:22:03 -0400
+From: Dexuan Cui <decui@microsoft.com>
+To: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+Subject: [PATCH v4 2/4] PCI: hv: Remove the bogus test in
+ hv_eject_device_work()
+Date: Thu, 15 Mar 2018 14:21:43 +0000
+Message-ID: <KL1P15301MB00069CB9573BB682DEAD8404BFD00@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180321181940.GA9760@e107981-ln.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 06:19:40PM +0000, Lorenzo Pieralisi wrote:
-> On Wed, Mar 21, 2018 at 09:04:21AM +0800, Shawn Lin wrote:
-> > On 2018/3/21 1:46, Bjorn Helgaas wrote:
-> > >On Tue, Mar 06, 2018 at 10:43:22AM +0800, Shawn Lin wrote:
-> > >>In preparation for introducing End-Point driver for Rockchip
-> > >>PCIe controller, we create a new folder to follow the convention
-> > >>of dwc and cadence. Then we rename the host driver from pcie-rockchip.c
-> > >>to pcie-rockchip-host.c, and only leave some common functions in
-> > >>pcie-rockchip.c in order to be reused for both of host and EP drivers.
+When we're in the function, hpdev->state must be hv_pcichild_ejecting:
+see hv_pci_eject_device().
 
-> > >I admit to still being a little dubious about the idea of a bunch of
-> > >vendor-specific directories, each containing a completely trivial
-> > >Makefile, a mostly-trivial Kconfig, a header file, a shared .c file, a
-> > >host .c file, and an endpoint .c file.
-> > 
-> > So do I.
-> > 
-> > >One alternative would be to keep the single pcie-rockchip.c file with
-> > >an #ifdef CONFIG_PCIE_ROCKCHIP_HOST section and an #ifdef
-> > >CONFIG_PCIE_ROCKCHIP_EP section.
-> > 
-> > I admit I thought this eariler, however, I don't like it personally, as
-> > it confuses the new-comer to follow the convention here, if we are
-> > alternatives just for "style issue" or "personal taste".
-> 
-> It would be OK for me to keep files separate too; ...
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Jack Morgenstein <jackm@mellanox.com>
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Here's what's irritating for me: I go to look for something in pciehp,
-but I don't know the exact name, so I fire up cscope and look for
-files matching "pciehp".  It finds 5 (a header and 4 .c files).  I
-pick one of the 4 randomly, and my guess is invariably wrong.  I
-usually have to pull up all 4 files before I find what I'm looking
-for.
-
-So as a code browser, it's much easier if all the pciehp-related (or
-rockchip-) code is in one file.
-
-Even if it were obvious which file to look in, it ends up requiring
-multiple windows to follow paths through the code.  There's
-unnecessary redundancy because the .h file contains declarations that
-have to match the definition.  Symbols should be static but cannot be
-because they're referenced from other files.
-
-It's a similar hassle to read the code in portdrv, aerdrv, and all the
-hotplug drivers.  My secret agenda is to squash all those files
-together into a single file per driver.  I bet the code size would
-drop by 25% at the same time.
-
-Okay, rant over :)  You and Lorenzo can agree on something and just do
-it, and I'll be happy with whatever you decide.
-
-Bjorn
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 28fce2be0a5f..1d2e1cb617f4 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -1854,10 +1854,7 @@ static void hv_eject_device_work(struct work_struct =
+*work)
+=20
+ 	hpdev =3D container_of(work, struct hv_pci_dev, wrk);
+=20
+-	if (hpdev->state !=3D hv_pcichild_ejecting) {
+-		put_pcichild(hpdev, hv_pcidev_ref_pnp);
+-		return;
+-	}
++	WARN_ON(hpdev->state !=3D hv_pcichild_ejecting);
+=20
+ 	/*
+ 	 * Ejection can come before or after the PCI bus has been set up, so
+--=20
+2.7.4
