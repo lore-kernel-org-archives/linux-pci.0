@@ -1,52 +1,135 @@
-Return-Path: <SRS0=suQO=GP=stevens-zone.net=darren@kernel.org>
-Return-Path: <SRS0=suQO=GP=stevens-zone.net=darren@kernel.org>
-From: Darren Stevens <darren@stevens-zone.net>
-To: Michael Ellerman <mpe@ellerman.id.au>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-	Christian Zigotzky <chzigotzky@xenosoft.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Olof Johansson <olof@lixom.net>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Date: Sun, 25 Mar 2018 21:55:45 +0100 (BST)
-Message-ID: <4babdbb48e2.680f246e@auth.smtp.1and1.co.uk>
-In-Reply-To: <87tvtbg0i9.fsf@concordia.ellerman.id.au>
-References: <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
- <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
- <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
- <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
- <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
- <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
- <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
- <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
- <dc228918-652a-e24c-ce7b-8d1b30153d3b@xenosoft.de>
- <639e975f-1b3a-4f85-9a40-13fe2473fc28@xenosoft.de>
- <20180319191310.GG77194@bhelgaas-glaptop.roam.corp.google.com>
- <87tvtbg0i9.fsf@concordia.ellerman.id.au>
-Subject: Re: PCI set flag PCI_SCAN_ALL_PCIE_DEVS for P.A. Semi boards
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43742 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752152AbeCORBs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Mar 2018 13:01:48 -0400
+Date: Thu, 15 Mar 2018 17:01:31 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dexuan Cui <decui@microsoft.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+Subject: Re: [PATCH v4 1/2] PCI: hv: Serialize the present and eject work
+ items
+Message-ID: <20180315170131.GA22134@e107981-ln.cambridge.arm.com>
+References: <KL1P15301MB0006C96F94181FFB93A222D8BFD00@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <KL1P15301MB0006C96F94181FFB93A222D8BFD00@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Michael
+On Thu, Mar 15, 2018 at 02:20:53PM +0000, Dexuan Cui wrote:
+> When we hot-remove the device, we first receive a PCI_EJECT message and
+> then receive a PCI_BUS_RELATIONS message with bus_rel->device_count == 0.
+> 
+> The first message is offloaded to hv_eject_device_work(), and the second
+> is offloaded to pci_devices_present_work(). Both the paths can be running
+> list_del(&hpdev->list_entry), causing general protection fault, because
+> system_wq can run them concurrently.
+> 
+> The patch eliminates the race condition.
+> 
+> Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
+> Tested-by: Chris Valean <v-chvale@microsoft.com>
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+> Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
+> Cc: stable@vger.kernel.org
 
-On 20/03/2018, Michael Ellerman wrote:
->> The patch looks fine, but I need a signed-off-by line before I can apply
->> it.  See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst
->
-> I'm happy to take it, I've been meaning to check if Olof sent a SOB in
-> his original mail but haven't got to it.
+I need to know either what commit you are fixing (ie Fixes: tag - which
+is preferrable) or you tell me which kernel versions we are targeting
+for the stable backport.
 
-If thats the way you want to go... We still have an out-of-tree patch we need to apply, which I think is the right place for this. In fact I submitted some patches at the end of last year with a cleaned up version (including the above patch). Here are links:
+Thanks,
+Lorenzo
 
-https://patchwork.ozlabs.org/patch/854270/
-https://patchwork.ozlabs.org/patch/854269/
-https://patchwork.ozlabs.org/patch/854271/
-https://patchwork.ozlabs.org/patch/854268/
-
-These seem to have been missed somehow. (I intended them for 4.16)
-
-If these are suitable, the only thing left would be the pasemi i2c bus patch, which keeps getting ignored by the i2c guys.
-
-Regards
-Darren
+> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Cc: Jack Morgenstein <jackm@mellanox.com>
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 17 ++++++++++++++---
+>  1 file changed, 14 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index 2faf38eab785..5e67dff779a7 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -461,6 +461,8 @@ struct hv_pcibus_device {
+>  	struct retarget_msi_interrupt retarget_msi_interrupt_params;
+>  
+>  	spinlock_t retarget_msi_interrupt_lock;
+> +
+> +	struct workqueue_struct *wq;
+>  };
+>  
+>  /*
+> @@ -1770,7 +1772,7 @@ static void hv_pci_devices_present(struct hv_pcibus_device *hbus,
+>  	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+>  
+>  	get_hvpcibus(hbus);
+> -	schedule_work(&dr_wrk->wrk);
+> +	queue_work(hbus->wq, &dr_wrk->wrk);
+>  }
+>  
+>  /**
+> @@ -1848,7 +1850,7 @@ static void hv_pci_eject_device(struct hv_pci_dev *hpdev)
+>  	get_pcichild(hpdev, hv_pcidev_ref_pnp);
+>  	INIT_WORK(&hpdev->wrk, hv_eject_device_work);
+>  	get_hvpcibus(hpdev->hbus);
+> -	schedule_work(&hpdev->wrk);
+> +	queue_work(hpdev->hbus->wq, &hpdev->wrk);
+>  }
+>  
+>  /**
+> @@ -2463,11 +2465,17 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	spin_lock_init(&hbus->retarget_msi_interrupt_lock);
+>  	sema_init(&hbus->enum_sem, 1);
+>  	init_completion(&hbus->remove_event);
+> +	hbus->wq = alloc_ordered_workqueue("hv_pci_%x", 0,
+> +					   hbus->sysdata.domain);
+> +	if (!hbus->wq) {
+> +		ret = -ENOMEM;
+> +		goto free_bus;
+> +	}
+>  
+>  	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
+>  			 hv_pci_onchannelcallback, hbus);
+>  	if (ret)
+> -		goto free_bus;
+> +		goto destroy_wq;
+>  
+>  	hv_set_drvdata(hdev, hbus);
+>  
+> @@ -2536,6 +2544,8 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	hv_free_config_window(hbus);
+>  close:
+>  	vmbus_close(hdev->channel);
+> +destroy_wq:
+> +	destroy_workqueue(hbus->wq);
+>  free_bus:
+>  	free_page((unsigned long)hbus);
+>  	return ret;
+> @@ -2615,6 +2625,7 @@ static int hv_pci_remove(struct hv_device *hdev)
+>  	irq_domain_free_fwnode(hbus->sysdata.fwnode);
+>  	put_hvpcibus(hbus);
+>  	wait_for_completion(&hbus->remove_event);
+> +	destroy_workqueue(hbus->wq);
+>  	free_page((unsigned long)hbus);
+>  	return 0;
+>  }
+> -- 
+> 2.7.4
+> 
