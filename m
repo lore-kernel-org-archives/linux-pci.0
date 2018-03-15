@@ -1,48 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:52638 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754359AbeCGK6L (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 05:58:11 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: Joao.Pinto@synopsys.com, bhelgaas@google.com, jg1.han@samsung.com,
-        lorenzo.pieralisi@arm.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 1/4] PCI: dwc: designware: Define maximum number of vectors
-Date: Wed,  7 Mar 2018 10:57:57 +0000
-Message-Id: <e5a16a821627c1aa7b2ad6f97a84b6d3d639d1ab.1520419084.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
-References: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
-References: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:41229 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752370AbeCOSnw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2018 14:43:52 -0400
+Subject: [pci PATCH v7 4/5] nvme: Migrate over to unmanaged SR-IOV support
+From: Alexander Duyck <alexander.duyck@gmail.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+Date: Thu, 15 Mar 2018 11:43:49 -0700
+Message-ID: <20180315184328.3102.42818.stgit@localhost.localdomain>
+In-Reply-To: <20180315183449.3102.64791.stgit@localhost.localdomain>
+References: <20180315183449.3102.64791.stgit@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add callback that defines the maximum number of vectors to make it easy to
-change the value in the future.
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Instead of implementing our own version of a SR-IOV configuration stub in
+the nvme driver we can just reuse the existing
+pci_sriov_configure_simple function.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
 ---
- drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
- 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 5416aa8..83e316e 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -38,8 +38,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
- 	return 0;
+v5: Replaced call to pci_sriov_configure_unmanaged with
+        pci_sriov_configure_simple
+v6: Dropped "#ifdef" checks for IOV wrapping sriov_configure definition
+v7: No code change, added Reviewed-by
+
+ drivers/nvme/host/pci.c |   20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
+
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 5933a5c732e8..5e963058882a 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2580,24 +2580,6 @@ static void nvme_remove(struct pci_dev *pdev)
+ 	nvme_put_ctrl(&dev->ctrl);
  }
  
-+static void dw_plat_set_num_vectors(struct pcie_port *pp)
-+{
-+	pp->num_vectors = MSI_DEF_NUM_VECTORS;
-+}
-+
- static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
- 	.host_init = dw_plat_pcie_host_init,
-+	.set_num_vectors = dw_plat_set_num_vectors,
+-static int nvme_pci_sriov_configure(struct pci_dev *pdev, int numvfs)
+-{
+-	int ret = 0;
+-
+-	if (numvfs == 0) {
+-		if (pci_vfs_assigned(pdev)) {
+-			dev_warn(&pdev->dev,
+-				"Cannot disable SR-IOV VFs while assigned\n");
+-			return -EPERM;
+-		}
+-		pci_disable_sriov(pdev);
+-		return 0;
+-	}
+-
+-	ret = pci_enable_sriov(pdev, numvfs);
+-	return ret ? ret : numvfs;
+-}
+-
+ #ifdef CONFIG_PM_SLEEP
+ static int nvme_suspend(struct device *dev)
+ {
+@@ -2716,7 +2698,7 @@ static void nvme_error_resume(struct pci_dev *pdev)
+ 	.driver		= {
+ 		.pm	= &nvme_dev_pm_ops,
+ 	},
+-	.sriov_configure = nvme_pci_sriov_configure,
++	.sriov_configure = pci_sriov_configure_simple,
+ 	.err_handler	= &nvme_err_handler,
  };
  
- static int dw_plat_add_pcie_port(struct pcie_port *pp,
--- 
-2.7.4
