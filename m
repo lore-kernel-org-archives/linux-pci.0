@@ -1,106 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:33980 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751490AbeCERLD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 12:11:03 -0500
-To: Keith Busch <keith.busch@intel.com>, Oliver <oohall@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-8-logang@deltatee.com>
- <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
- <20180305160004.GA30975@localhost.localdomain>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <3f56c76d-6a5c-7c2f-5442-c9209749b598@deltatee.com>
-Date: Mon, 5 Mar 2018 10:10:41 -0700
+Received: from mail-pu1apc01on0119.outbound.protection.outlook.com ([104.47.126.119]:53944
+        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752274AbeCOS2h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Mar 2018 14:28:37 -0400
+From: Dexuan Cui <decui@microsoft.com>
+To: 'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>
+CC: "'bhelgaas@google.com'" <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+Subject: RE: [PATCH v4 1/2] PCI: hv: Serialize the present and eject work
+ items
+Date: Thu, 15 Mar 2018 18:28:21 +0000
+Message-ID: <KL1P15301MB00065FB13CC4AFC4C64DFBB3BFD00@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <KL1P15301MB0006C96F94181FFB93A222D8BFD00@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <20180315170131.GA22134@e107981-ln.cambridge.arm.com>
+ <KL1P15301MB00064712309002FB85341ACDBFD00@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+In-Reply-To: <KL1P15301MB00064712309002FB85341ACDBFD00@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20180305160004.GA30975@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the
- CMB
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> From: Dexuan Cui
+> > From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > I need to know either what commit you are fixing (ie Fixes: tag - which
+> > is preferrable) or you tell me which kernel versions we are targeting
+> > for the stable backport.
+> > Lorenzo
+>=20
+> Sorry.  Here I was hesitant to add a "Fixes:" because the bug was there t=
+he first
+> day
+> when the driver was introduced.
+>=20
+> Please use
+> Fixes: 4daace0d8ce8 ("PCI: hv: Add paravirtual PCI front-end for Microsof=
+t
+> Hyper-V VMs")
+> or
+> Cc: <stable@vger.kernel.org> # v4.6+
 
+BTW, the bug here is a race condtion which couldn't be easily hit in the pa=
+st,
+probably because most of the time only one PCI device was only added into t=
+he
+VM once. But now it's becoming typical that a VM can have 4 GPU devices so =
+we
+start to notice this bug. With 7 Mellanox VFs assigned to a VM, we can easi=
+ly
+reproduce the bug by "hot-remove and hot-add VFs" test:
 
-On 05/03/18 09:00 AM, Keith Busch wrote:
-> On Mon, Mar 05, 2018 at 12:33:29PM +1100, Oliver wrote:
->> On Thu, Mar 1, 2018 at 10:40 AM, Logan Gunthorpe <logang@deltatee.com> wrote:
->>> @@ -429,10 +429,7 @@ static void __nvme_submit_cmd(struct nvme_queue *nvmeq,
->>>   {
->>>          u16 tail = nvmeq->sq_tail;
->>
->>> -       if (nvmeq->sq_cmds_io)
->>> -               memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
->>> -       else
->>> -               memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
->>> +       memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
->>
->> Hmm, how safe is replacing memcpy_toio() with regular memcpy()? On PPC
->> the _toio() variant enforces alignment, does the copy with 4 byte
->> stores, and has a full barrier after the copy. In comparison our
->> regular memcpy() does none of those things and may use unaligned and
->> vector load/stores. For normal (cacheable) memory that is perfectly
->> fine, but they can cause alignment faults when targeted at MMIO
->> (cache-inhibited) memory.
->>
->> I think in this particular case it might be ok since we know SEQs are
->> aligned to 64 byte boundaries and the copy is too small to use our
->> vectorised memcpy(). I'll assume we don't need explicit ordering
->> between writes of SEQs since the existing code doesn't seem to care
->> unless the doorbell is being rung, so you're probably fine there too.
->> That said, I still think this is a little bit sketchy and at the very
->> least you should add a comment explaining what's going on when the CMB
->> is being used. If someone more familiar with the NVMe driver could
->> chime in I would appreciate it.
-> 
-> I may not be understanding the concern, but I'll give it a shot.
-> 
-> You're right, the start of any SQE is always 64-byte aligned, so that
-> should satisfy alignment requirements.
-> 
-> The order when writing multiple/successive SQEs in a submission queue
-> does matter, and this is currently serialized through the q_lock.
-> 
-> The order in which the bytes of a single SQE is written doesn't really
-> matter as long as the entire SQE is written into the CMB prior to writing
-> that SQ's doorbell register.
-> 
-> The doorbell register is written immediately after copying a command
-> entry into the submission queue (ignore "shadow buffer" features),
-> so the doorbells written to commands submitted is 1:1.
-> 
-> If a CMB SQE and DB order is not enforced with the memcpy, then we do
-> need a barrier after the SQE's memcpy and before the doorbell's writel.
-
-
-Thanks for the information Keith.
-
-Adding to this: regular memcpy generally also enforces alignment as 
-unaligned access to regular memory is typically bad in some way on most 
-arches. The generic memcpy_toio also does not have any barrier as it is 
-just a call to memcpy. Arm64 also does not appear to have a barrier in 
-its implementation and in the short survey I did I could not find any 
-implementation with a barrier. I also did not find a ppc implementation 
-in the tree but it would be weird for it to add a barrier when other 
-arches do not appear to need it.
-
-We've been operating on the assumption that memory mapped by 
-devm_memremap_pages() can be treated as regular memory. This is 
-emphasized by the fact that it does not return an __iomem pointer. If 
-this assumption does not hold for an arch then we cannot support P2P DMA 
-without an overhaul of many kernel interfaces or creating other backend 
-interfaces into the drivers which take different data types (ie. we'd 
-have to bypass the entire block layer when trying to write data in 
-p2pmem to an nvme device. This is very undesirable.
-
-Logan
+general protection fault: 0000 [#1] SMP
+...
+Workqueue: events hv_eject_device_work [pci_hyperv]
+task: ffff8800ed5e5400 ti: ffff8800ee674000 task.ti: ffff8800ee674000
+RIP: 0010:[<ffffffffc025c5ce>]  ... hv_eject_device_work+0xbe/0x160 [pci_hy=
+perv]
+...
+Call Trace:
+ [<ffffffff8183c3a6>] ? __schedule+0x3b6/0xa30
+ [<ffffffff8109a585>] process_one_work+0x165/0x480
+ [<ffffffff8109a8eb>] worker_thread+0x4b/0x4c0
+ [<ffffffff8109a8a0>] ? process_one_work+0x480/0x480
+ [<ffffffff810a0c25>] kthread+0xe5/0x100
+ [<ffffffff810a0b40>] ? kthread_create_on_node+0x1e0/0x1e0
+ [<ffffffff81840f0f>] ret_from_fork+0x3f/0x70
+ [<ffffffff810a0b40>] ? kthread_create_on_node+0x1e0/0x1e0
+Code: ...
+RIP  [<ffffffffc025c5ce>] hv_eject_device_work+0xbe/0x160 [pci_hyperv]
+...
+BUG: unable to handle kernel paging request at ffffffffffffffd8
+IP: [<ffffffff810a12d0>] kthread_data+0x10/0x20
+PGD 1e0d067 PUD 1e0f067 PMD 0
+Oops: 0000 [#2] SMP
+=20
+Thanks,
+-- Dexuan
