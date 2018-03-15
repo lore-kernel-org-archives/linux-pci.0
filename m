@@ -1,139 +1,123 @@
-Return-Path: <SRS0=EVB7=GM=rock-chips.com=shawn.lin@kernel.org>
-Return-Path: <SRS0=EVB7=GM=rock-chips.com=shawn.lin@kernel.org>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
- linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v3 1/6] PCI: rockchip: Create individual folder for
- rockchip drivers
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
- <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
- <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
- <879a4862-d0d5-21fd-6c47-029c795fe78e@rock-chips.com>
- <20180321181940.GA9760@e107981-ln.cambridge.arm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <7275bd77-016a-2729-482d-2855703d9b56@rock-chips.com>
-Date: Thu, 22 Mar 2018 09:03:58 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20180321181940.GA9760@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+In-Reply-To: <1520274579-30492-1-git-send-email-fkan@apm.com>
+References: <1520274579-30492-1-git-send-email-fkan@apm.com>
+From: Feng Kan <fkan@apm.com>
+Date: Thu, 15 Mar 2018 11:41:33 -0700
+Message-ID: <CAL85gmAAVoCCXoLH+c0ROSBy4mS3z86tnbX+7Avh5oGT=fHcfA@mail.gmail.com>
+Subject: Re: [PATCH V3] PM / core: fix deferred probe breaking suspend resume
+ order
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Linux PM <linux-pm@vger.kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Feng Kan <fkan@apm.com>, Toan Le <toanle@apm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+ Greg]
+On Mon, Mar 5, 2018 at 10:29 AM, Feng Kan <fkan@apm.com> wrote:
+> When bridge and its endpoint is enumerated the devices are added to the
+> dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
+> This causes the bridge to be moved to the end of the dpm list when
+> deferred probe kicks in. The order of the dpm list for bridge and
+> endpoint is reversed.
+>
+> Add reordering code to move the bridge and its children and consumers to
+> the end of the pm list so the order for suspend and resume is not altered.
+> The code also move device and its children and consumers to the tail of
+> device_kset list if it is registered.
+>
+> Signed-off-by: Feng Kan <fkan@apm.com>
+> Signed-off-by: Toan Le <toanle@apm.com>
+> ---
+>  V3:
+>         1. additional code comment changes
+>  V2:
+>         1. change patch title from "move device and its children..."
+>         2. move define based on Bjorn's comment
+>         3. rename function name and comment content
+>
+>  drivers/base/base.h |  3 +++
+>  drivers/base/core.c | 20 ++++++++++++++++++++
+>  drivers/base/dd.c   |  4 +---
+>  3 files changed, 24 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/base/base.h b/drivers/base/base.h
+> index d800de6..a75c302 100644
+> --- a/drivers/base/base.h
+> +++ b/drivers/base/base.h
+> @@ -161,3 +161,6 @@ static inline void module_remove_driver(struct device_driver *drv) { }
+>  extern void device_links_no_driver(struct device *dev);
+>  extern bool device_links_busy(struct device *dev);
+>  extern void device_links_unbind_consumers(struct device *dev);
+> +
+> +/* device pm support */
+> +void device_pm_move_to_tail(struct device *dev);
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index 110230d..3b37906 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -148,6 +148,26 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
+>  }
+>
+>  /**
+> + * device_pm_move_to_tail - Move set of devices to the end of device lists
+> + * @dev: current device pointer
+> + *
+> + * This is a device_reorder_to_tail() wrapper taking the requisite locks.
+> + *
+> + * It moves the device along with all of its children and all of its consumers
+> + * to the ends of the device_kset and dpm_list, recursively.
+> + */
+> +void device_pm_move_to_tail(struct device *dev)
+> +{
+> +       int idx;
+> +
+> +       idx = device_links_read_lock();
+> +       device_pm_lock();
+> +       device_reorder_to_tail(dev, NULL);
+> +       device_pm_unlock();
+> +       device_links_read_unlock(idx);
+> +}
+> +
+> +/**
+>   * device_link_add - Create a link between two devices.
+>   * @consumer: Consumer end of the link.
+>   * @supplier: Supplier end of the link.
+> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+> index 2c964f5..96fab29 100644
+> --- a/drivers/base/dd.c
+> +++ b/drivers/base/dd.c
+> @@ -123,9 +123,7 @@ static void deferred_probe_work_func(struct work_struct *work)
+>                  * the list is a good order for suspend but deferred
+>                  * probe makes that very unsafe.
+>                  */
+> -               device_pm_lock();
+> -               device_pm_move_last(dev);
+> -               device_pm_unlock();
+> +               device_pm_move_to_tail(dev);
+>
+>                 dev_dbg(dev, "Retrying from deferred list\n");
+>                 if (initcall_debug && !initcalls_done)
+> --
+> 1.8.3.1
+>
+Hi, just wanted to check if there is anything else I need to change on
+this. Thanks.
 
-Dear Bjorn, Lorenzo
-
-On 2018/3/22 2:19, Lorenzo Pieralisi wrote:
-> On Wed, Mar 21, 2018 at 09:04:21AM +0800, Shawn Lin wrote:
->> Dear Bjorn, Lorenzo
->>
->> On 2018/3/21 1:46, Bjorn Helgaas wrote:
->>> On Tue, Mar 06, 2018 at 10:43:22AM +0800, Shawn Lin wrote:
->>>> In preparation for introducing End-Point driver for Rockchip
->>>> PCIe controller, we create a new folder to follow the convention
->>>> of dwc and cadence. Then we rename the host driver from pcie-rockchip.c
->>>> to pcie-rockchip-host.c, and only leave some common functions in
->>>> pcie-rockchip.c in order to be reused for both of host and EP drivers.
->>>>
->>>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>>> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
->>>> ...
->>>
->>>> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
->>>> index 34b56a8..b85ad40 100644
->>>> --- a/drivers/pci/Kconfig
->>>> +++ b/drivers/pci/Kconfig
->>>> @@ -141,4 +141,5 @@ source "drivers/pci/cadence/Kconfig"
->>>>   source "drivers/pci/dwc/Kconfig"
->>>>   source "drivers/pci/host/Kconfig"
->>>>   source "drivers/pci/endpoint/Kconfig"
->>>> +source "drivers/pci/rockchip/Kconfig"
->>>>   source "drivers/pci/switch/Kconfig"
->>>
->>> Why is this out of order?  This seems exactly analogous to
->>> drivers/pci/cadence and dwc, so they should be next to each other.
->>
->> This confused me as well! I just put "rockchip" before "switch"
->> to keep the order, but I didn't know why "endpoint" wasn't ordered.
->>
->>>
->>>> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
->>>> index 9419709..8434afb 100644
->>>> --- a/drivers/pci/Makefile
->>>> +++ b/drivers/pci/Makefile
->>>> @@ -55,6 +55,8 @@ obj-y += switch/
->>>>   obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
->>>> +obj-$(CONFIG_PCIE_ROCKCHIP)	+= rockchip/
->>>> +
->>>>   # Endpoint library must be initialized before its users
->>>>   obj-$(CONFIG_PCIE_CADENCE)	+= cadence/
->>>>   # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
->>>
->>> Similarly here.
->>>
->>> I admit to still being a little dubious about the idea of a bunch of
->>> vendor-specific directories, each containing a completely trivial
->>> Makefile, a mostly-trivial Kconfig, a header file, a shared .c file, a
->>> host .c file, and an endpoint .c file.
->>
->> So do I.
->>
->>>
->>> One alternative would be to keep the single pcie-rockchip.c file with
->>> an #ifdef CONFIG_PCIE_ROCKCHIP_HOST section and an #ifdef
->>> CONFIG_PCIE_ROCKCHIP_EP section.
->>
->> I admit I thought this eariler, however, I don't like it personally, as
->> it confuses the new-comer to follow the convention here, if we are
->> alternatives just for "style issue" or "personal taste".
-> 
-> It would be OK for me to keep files separate too; a separate question
-> would then be whether we have to rename drivers/pci/host if we add
-> endpoint drivers in there, do we have to?
-> 
-> At that stage we could well move drivers/pci/dwc and drivers/pci/cadence
-> in there too.
-> 
-
-I add Greg to this thread, and hope he could shed a light here.
-
-That is completely the same situation annoying me when looking into
-drivers/usb where they have drivers/usb/host/ for host drivers,
-drivers/usb/gadget/ for device framwork, drivers/usb/gaget/udc for
-device drivers, and even surprisingly drivers/usb/dwc2/,
-drivers/usb/dwc3/ and drivers/usb/renesas_usbhs/ for supporting both of
-host and device functional drivers....
-
-How about renaming drivers/pci/host to drivers/pci/controller,
-and then put all pcie-rockchip* files in there, then we don't
-need add seperate directory containning trivial Kconfig, Makefile.
-
-
->> Certainly, I could do that beased on your suggestion, but I would like
->> to know if this's the final agreement both you and Lorenzo reached. :)
-> 
-> Or we can add all EP drivers into drivers/pci/endpoint but then the problem
-> is how to share code between host and endpoint directories and it starts
-> feeling like we are going round in circles.
-
-I would prefer to rename it to endpoint-framwrok or whatever to clearly
-states it is for framework but not the drivers. All the drivers
-whichever for host or endpoint should be in controller directory.
-
-> 
-> I can merge this series as-is as long as we will rework the directory
-> structure according to this discussion (given that's already late -rc6
-> so directory moves/renames can be disrupting - if feasible at all).
-
-This sounds super great to me to make this series into -next for some
-days before hitting into v4.17. Then we could simultaneously head up to
-see how we could move forward with this.
-
-
-> 
-> Lorenzo
-> 
-> 
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
