@@ -1,71 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:35442 "EHLO ale.deltatee.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38642 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752917AbeCEUNl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 15:13:41 -0500
-To: Sagi Grimberg <sagi@grimberg.me>,
-        Keith Busch <keith.busch@intel.com>, Oliver <oohall@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        id S1751302AbeCPVms (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Mar 2018 17:42:48 -0400
+Subject: Re: [pci PATCH v7 0/5] Add support for unmanaged SR-IOV
+To: Alexander Duyck <alexander.duyck@gmail.com>, bhelgaas@google.com,
+        alexander.h.duyck@intel.com, linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
         linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-block@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-8-logang@deltatee.com>
- <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
- <20180305160004.GA30975@localhost.localdomain>
- <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <e3ca6482-d68c-0e10-dde9-7ccb702d3ac2@deltatee.com>
-Date: Mon, 5 Mar 2018 13:13:20 -0700
+        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
+        liang-min.wang@intel.com, mark.d.rustad@intel.com,
+        dwmw2@infradead.org, hch@lst.de, dwmw@amazon.co.uk
+References: <20180315183449.3102.64791.stgit@localhost.localdomain>
+From: Don Dutile <ddutile@redhat.com>
+Message-ID: <a411bbf7-23ba-60e6-2673-4f200f36db9b@redhat.com>
+Date: Fri, 16 Mar 2018 17:42:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
+In-Reply-To: <20180315183449.3102.64791.stgit@localhost.localdomain>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the
- CMB
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 05/03/18 12:57 PM, Sagi Grimberg wrote:
-> Keith, while we're on this, regardless of cmb, is SQE memcopy and DB 
-> update ordering always guaranteed?
+On 03/15/2018 02:40 PM, Alexander Duyck wrote:
+> This series is meant to add support for SR-IOV on devices when the VFs are
+> not managed by the kernel. Examples of recent patches attempting to do this
+> include:
+> virto - https://patchwork.kernel.org/patch/10241225/
+> pci-stub - https://patchwork.kernel.org/patch/10109935/
+> vfio - https://patchwork.kernel.org/patch/10103353/
+> uio - https://patchwork.kernel.org/patch/9974031/
 > 
-> If you look at mlx4 (rdma device driver) that works exactly the same as
-> nvme you will find:
-> -- 
->                  qp->sq.head += nreq;
+> Since this is quickly blowing up into a multi-driver problem it is probably
+> best to implement this solution as generically as possible.
 > 
->                  /*
->                   * Make sure that descriptors are written before
->                   * doorbell record.
->                   */
->                  wmb();
+> This series is an attempt to do that. What we do with this patch set is
+> provide a generic framework to enable SR-IOV in the case that the PF driver
+> doesn't support managing the VFs itself.
 > 
->                  writel(qp->doorbell_qpn,
->                         to_mdev(ibqp->device)->uar_map + 
-> MLX4_SEND_DOORBELL);
+> I based my patch set originally on the patch by Mark Rustad but there isn't
+> much left after going through and cleaning out the bits that were no longer
+> needed, and after incorporating the feedback from David Miller. At this point
+> the only items to be fully reused was his patch description which is now
+> present in patch 3 of the set.
 > 
->                  /*
->                   * Make sure doorbells don't leak out of SQ spinlock
->                   * and reach the HCA out of order.
->                   */
->                  mmiowb();
-> -- 
+> This solution is limited in scope to just adding support for devices that
+> provide no functionality for SR-IOV other than allocating the VFs by
+> calling pci_enable_sriov. Previous sets had included patches for VFIO, but
+> for now I am dropping that as the scope of that work is larger then I
+> think I can take on at this time.
+> 
+> v2: Reduced scope back to just virtio_pci and vfio-pci
+>      Broke into 3 patch set from single patch
+>      Changed autoprobe behavior to always set when num_vfs is set non-zero
+> v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is used
+>      Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in kernel
+> v4: Dropped vfio-pci patch
+>      Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
+>      Dropped pci_disable_sriov call in virtio_pci to be consistent with ena
+> v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
+>      Added new patch that enables pci_sriov_configure_simple
+>      Updated drivers to use pci_sriov_configure_simple
+> v6: Defined pci_sriov_configure_simple as NULL when SR-IOV is not enabled
+>      Updated drivers to drop "#ifdef" checks for IOV
+>      Added pci-pf-stub as place for PF-only drivers to add support
+> v7: Dropped pci_id table explanation from pci-pf-stub driver
+>      Updated pci_sriov_configure_simple to drop need for err value
+>      Fixed comment explaining why pci_sriov_configure_simple is NULL
+> 
+> Cc: Mark Rustad <mark.d.rustad@intel.com>
+> Cc: Maximilian Heyne <mheyne@amazon.de>
+> Cc: Liang-Min Wang <liang-min.wang@intel.com>
+> Cc: David Woodhouse <dwmw@amazon.co.uk>
+> 
+> ---
+> 
+> Alexander Duyck (5):
+>        pci: Add pci_sriov_configure_simple for PFs that don't manage VF resources
+>        virtio_pci: Add support for unmanaged SR-IOV on virtio_pci devices
+>        ena: Migrate over to unmanaged SR-IOV support
+>        nvme: Migrate over to unmanaged SR-IOV support
+>        pci-pf-stub: Add PF driver stub for PFs that function only to enable VFs
+> 
+> 
+>   drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 -------------
+>   drivers/nvme/host/pci.c                      |   20 ----------
+>   drivers/pci/Kconfig                          |   12 ++++++
+>   drivers/pci/Makefile                         |    2 +
+>   drivers/pci/iov.c                            |   31 +++++++++++++++
+>   drivers/pci/pci-pf-stub.c                    |   54 ++++++++++++++++++++++++++
+>   drivers/virtio/virtio_pci_common.c           |    1
+>   include/linux/pci.h                          |    3 +
+>   include/linux/pci_ids.h                      |    2 +
+>   9 files changed, 107 insertions(+), 46 deletions(-)
+>   create mode 100644 drivers/pci/pci-pf-stub.c
+> 
+> --
+> 
+For what it's worth.
 
-To me, it looks like the wmb() is redundant as writel should guarantee 
-the order. (Indeed, per Sinan's comment, writel on arm64 starts with a 
-wmb() which means, on that platform, there are two wmb() calls in a row.)
+Good, simpler start for this type of support/effort.
+Thanks for the multiple versions to get to this point.
 
-The mmiowb() call, on the other hand, looks correct per my understanding 
-of it's purpose with respect to the spinlock.
-
-Logan
+Reviewed-by: Donald Dutile <ddutile@redhat.com>
