@@ -1,80 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Guenter Roeck <linux@roeck-us.net>
-To: Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v2] PCI: Move declaration of of_irq_parse_and_map_pci under OF_IRQ
-Date: Mon,  5 Mar 2018 15:22:30 -0800
-Message-Id: <1520292150-15699-1-git-send-email-linux@roeck-us.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36080 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751557AbeCPQki (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2018 12:40:38 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180316183042-mutt-send-email-mst@kernel.org>
+References: <20180315183449.3102.64791.stgit@localhost.localdomain>
+ <20180315184132.3102.90947.stgit@localhost.localdomain> <20180316183042-mutt-send-email-mst@kernel.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Fri, 16 Mar 2018 09:40:34 -0700
+Message-ID: <CAKgT0UfgZ2gAdiAbCe4MTOr3o9cqq1q-mykCQsw68p2F-QEC8g@mail.gmail.com>
+Subject: Re: [virtio-dev] [pci PATCH v7 2/5] virtio_pci: Add support for
+ unmanaged SR-IOV on virtio_pci devices
+To: "Michael S. Tsirkin" <mst@redhat.com>,
+        "Daly, Dan" <dan.daly@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Don Dutile <ddutile@redhat.com>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit 4670d610d5923 ("PCI: Move OF-related PCI functions into
-PCI core"), sparc:allmodconfig fails to build with the following error.
+On Fri, Mar 16, 2018 at 9:34 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> On Thu, Mar 15, 2018 at 11:42:41AM -0700, Alexander Duyck wrote:
+>> From: Alexander Duyck <alexander.h.duyck@intel.com>
+>>
+>> Hardware-realized virtio_pci devices can implement SR-IOV, so this
+>> patch enables its use. The device in question is an upcoming Intel
+>> NIC that implements both a virtio_net PF and virtio_net VFs. These
+>> are hardware realizations of what has been up to now been a software
+>> interface.
+>>
+>> The device in question has the following 4-part PCI IDs:
+>>
+>> PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+>> VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
+>>
+>> The patch currently needs no check for device ID, because the callback
+>> will never be made for devices that do not assert the capability or
+>> when run on a platform incapable of SR-IOV.
+>>
+>> One reason for this patch is because the hardware requires the
+>> vendor ID of a VF to be the same as the vendor ID of the PF that
+>> created it. So it seemed logical to simply have a fully-functioning
+>> virtio_net PF create the VFs. This patch makes that possible.
+>>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>
+> So if and when virtio PFs can manage the VFs, then we can
+> add a feature bit for that?
+> Seems reasonable.
 
-pcie-cadence-host.c:(.text+0x4c4):
-	undefined reference to `of_irq_parse_and_map_pci'
-pcie-cadence-host.c:(.text+0x4c8):
-	undefined reference to `of_irq_parse_and_map_pci'
+Yes. If nothing else you may not even need a feature bit depending on
+how things go. One of the reasons why Mark called out the
+subvendor/subdevice was because that might be able to be used to
+identify the specific hardware that is providing the SR-IOV feature so
+in the future if it is added to virtio itself then you could exclude
+devices like this by just limiting things based on subvendor/subdevice
+IDs.
 
-of_irq_parse_and_map_pci is now only available if OF_IRQ is enabled.
-Make its declaration and its dummy function dependent on OF_IRQ
-to solve the problem.
+> Also, I am guessing that hardware implementations will want
+> to add things like stong memory barriers - I guess we
+> will add new feature bits for that too down the road?
 
-Fixes: 4670d610d5923 ("PCI: Move OF-related PCI functions into PCI core")
-Cc: Rob Herring <robh@kernel.org>
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
----
-v2: Added Rob's Ack
-    Sent to linux-pci mailing list per Rob's request
+That piece I don't have visibility into at this time. Perhaps Dan
+might have more visibility into future plans on what this might need.
 
- include/linux/of_pci.h | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+Thanks.
 
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 88865e0ebf4d..091033a6b836 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -13,7 +13,6 @@ struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
--int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
- int of_pci_get_max_link_speed(struct device_node *node);
-@@ -34,12 +33,6 @@ static inline int of_pci_get_devfn(struct device_node *np)
- }
- 
- static inline int
--of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
--{
--	return 0;
--}
--
--static inline int
- of_pci_parse_bus_range(struct device_node *node, struct resource *res)
- {
- 	return -EINVAL;
-@@ -67,6 +60,16 @@ of_pci_get_max_link_speed(struct device_node *node)
- static inline void of_pci_check_probe_only(void) { }
- #endif
- 
-+#if IS_ENABLED(CONFIG_OF_IRQ)
-+int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
-+#else
-+static inline int
-+of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	return 0;
-+}
-+#endif
-+
- #if defined(CONFIG_OF_ADDRESS)
- int of_pci_get_host_bridge_resources(struct device_node *dev,
- 			unsigned char busno, unsigned char bus_max,
--- 
-2.7.4
+- Alex
