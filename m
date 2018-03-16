@@ -1,75 +1,170 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.183]:58664 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750855AbeCNMP1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 08:15:27 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Logan Gunthorpe' <logang@deltatee.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-CC: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, "Jens Axboe" <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        "Alex Williamson" <alex.williamson@redhat.com>
-Subject: RE: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-Date: Wed, 14 Mar 2018 12:16:05 +0000
-Message-ID: <6e36d43b0493455a8547bc50c8ec77ba@AcuMS.aculab.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
- <016dc910-f96a-8a60-4bda-fa24eea98ea5@codeaurora.org>
- <2b152932-2f44-408b-e3ed-b4608d95f82e@deltatee.com>
- <156c24fb-6e27-28f6-0b36-7fd83311ce37@codeaurora.org>
- <932bbf48-9d86-97ec-17bb-052099aff99e@deltatee.com>
-In-Reply-To: <932bbf48-9d86-97ec-17bb-052099aff99e@deltatee.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 16 Mar 2018 11:22:16 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Honghui Zhang <honghui.zhang@mediatek.com>
+Subject: Re: [PATCH v5 1/2] PCI: mediatek: Clear IRQ status after IRQ
+ dispatched to avoid reentry
+Message-ID: <20180316112216.GA24325@e107981-ln.cambridge.arm.com>
+References: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
+ <1514336394-17747-2-git-send-email-honghui.zhang@mediatek.com>
+ <20180104184040.GE12239@red-moon>
+ <88c84a3e-17ea-08f2-e5fc-4799b41de267@arm.com>
+ <1515153107.25872.57.camel@mhfsdcap03>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1515153107.25872.57.camel@mhfsdcap03>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
+ linux-mediatek@lists.infradead.org, yong.wu@mediatek.com, bhelgaas@google.com,
+ yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogTG9nYW4gR3VudGhvcnBlDQo+IFNlbnQ6IDEzIE1hcmNoIDIwMTggMjM6NDYNCi4uLg0K
-PiBBcyBTdGVwaGVuIHBvaW50ZWQgb3V0LCBpdCdzIGEgcmVxdWlyZW1lbnQgb2YgdGhlIFBDSWUg
-c3BlYyB0aGF0IGENCj4gc3dpdGNoIHN1cHBvcnRzIFAyUC4gSWYgeW91IHdhbnQgdG8gc2VsbCBh
-IHN3aXRjaCB0aGF0IGRvZXMgUDJQIHdpdGggYmFkDQo+IHBlcmZvcm1hbmNlIHRoZW4gdGhhdCdz
-IG9uIHlvdSB0byBkZWFsIHdpdGguDQoNClRoYXQgc3VycHJpc2VzIG1lICh1bmxlc3MgSSBtaXNz
-ZWQgc29tZXRoaW5nIGxhc3QgdGltZSBJIHJlYWQgdGhlIHNwZWMpLg0KV2hpbGUgUDJQIHdyaXRl
-cyBhcmUgcmVsYXRpdmVseSBlYXN5IHRvIGhhbmRsZSwgcmVhZHMgYW5kIGFueSBvdGhlciBUTFAg
-dGhhdA0KcmVxdWlyZSBhY2tzIGFyZSBhIGNvbXBsZXRlbHkgZGlmZmVyZW50IHByb3Bvc2l0aW9u
-Lg0KVGhlcmUgYXJlIG5vIGFkZGl0aW9uYWwgZmllbGRzIHRoYXQgY2FuIGJlIHNldCBpbiB0aGUg
-cmVhZCBUTFAgYW5kIHdpbGwgYmUNCnJlZmxlY3RlZCBiYWNrIGluIHRoZSBhY2socykgdGhhbiBj
-YW4gYmUgdXNlZCB0byByb3V0ZSB0aGUgYWNrcyBiYWNrIHRvIHRoZQ0KY29ycmVjdCBpbml0aWF0
-b3IuDQoNCkknbSBwcmV0dHkgc3VyZSB0aGF0IHRvIHN1cHBvcnQgUDJQIHJlYWRzIGEgc3dpdGNo
-IHdvdWxkIGhhdmUgdG8gc2F2ZQ0KdGhlIHJlY2VpdmVkIHJlYWQgVExQIGFuZCAocG9zc2libHkg
-bGF0ZXIgb24pIGlzc3VlIHJlYWQgVExQIG9mIGl0cyBvd24NCmZvciB0aGUgcmVxdWlyZWQgZGF0
-YS4NCkknbSBub3QgZXZlbiBzdXJlIGl0IGlzIGVhc3kgdG8gaW50ZXJsZWF2ZSB0aGUgUDJQIHJl
-YWRzIHdpdGggdGhvc2UNCmNvbWluZyBmcm9tIHRoZSByb290Lg0KVGhhdCByZXF1aXJlcyBhIHBv
-dGVudGlhbGx5IGluZmluaXRlIHF1ZXVlIG9mIHBlbmRpbmcgcmVxdWVzdHMuDQoNClNvbWUgeDg2
-IHJvb3QgcG9ydHMgc3VwcG9ydCBQMlAgd3JpdGVzIChtYXliZSB3aXRoIGEgYmlvcyBvcHRpb24p
-Lg0KSXQgd291bGQgYmUgYSBzaGFtZSBub3QgdG8gYmUgYWJsZSB0byBkbyBQMlAgd3JpdGVzIG9u
-IHN1Y2ggc3lzdGVtcw0KZXZlbiB0aG91Z2ggUDJQIHJlYWRzIHdvbid0IHdvcmsuDQoNCihXZSBs
-b29rZWQgYXQgdXNpbmcgUDJQIHRyYW5zZmVycyBmb3Igc29tZSBkYXRhLCBidXQgaW4gdGhlIGVu
-ZCB1c2VkDQphIGRpZmZlcmVudCBzY2hlbWUuDQpGb3Igb3VyIHVzZSBjYXNlIFAyUCB3cml0ZXMg
-d2VyZSBlbm91Z2guDQpBbiBhbHRlcm5hdGl2ZSB3b3VsZCBiZSB0byBhY2Nlc3MgdGhlIHNhbWUg
-aG9zdCBtZW1vcnkgYnVmZmVyIGZyb20NCnR3byBkaWZmZXJlbnQgZGV2aWNlcyAtIGJ1dCB0aGVy
-ZSBpc24ndCBhbiBBUEkgdGhhdCBsZXRzIHlvdSBkbyB0aGF0LikNCg0KCURhdmlkDQoNCg0K
+On Fri, Jan 05, 2018 at 07:51:47PM +0800, Honghui Zhang wrote:
+> On Thu, 2018-01-04 at 19:04 +0000, Marc Zyngier wrote:
+> > On 04/01/18 18:40, Lorenzo Pieralisi wrote:
+> > > [+Marc]
+> > > 
+> > > On Wed, Dec 27, 2017 at 08:59:53AM +0800, honghui.zhang@mediatek.com wrote:
+> > >> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > >>
+> > >> There maybe a same IRQ reentry scenario after IRQ received in current
+> > >> IRQ handle flow:
+> > >> 	EP device		PCIe host driver	EP driver
+> > >> 1. issue an IRQ
+> > >> 			2. received IRQ
+> > >> 			3. clear IRQ status
+> > >> 			4. dispatch IRQ
+> > >> 						5. clear IRQ source
+> > >> The IRQ status was not successfully cleared at step 2 since the IRQ
+> > >> source was not cleared yet. So the PCIe host driver may receive the
+> > >> same IRQ after step 5. Then there's an IRQ reentry occurred.
+> > >> Even worse, if the reentry IRQ was not an IRQ that EP driver expected,
+> > >> it may not handle the IRQ. Then we may run into the infinite loop from
+> > >> step 2 to step 4.
+> > >> Clear the IRQ status after IRQ have been dispatched to avoid the IRQ
+> > >> reentry.
+> > >> This patch also fix another INTx IRQ issue by initialize the iterate
+> > >> before the loop. If an INTx IRQ re-occurred while we are dispatching
+> > >> the INTx IRQ, then iterate may start from PCI_NUM_INTX + INTX_SHIFT
+> > >> instead of INTX_SHIFT for the second time entering the
+> > >> for_each_set_bit_from() loop.
+> > > 
+> > > This looks like two different issues that should be fixed with two
+> > > patches.
+> 
+> Ok, I split this into two patches and figure out a more reasonable
+> approach by using irq_chip solution.
+
+For the time being, I will mark this patch as "Changes Requested"
+waiting for a new version.
+
+Thanks,
+Lorenzo
+
+> 
+> > > 
+> > >> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > >> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> > >> ---
+> > >>  drivers/pci/host/pcie-mediatek.c | 11 ++++++-----
+> > >>  1 file changed, 6 insertions(+), 5 deletions(-)
+> > > 
+> > > For the sake of uniformity, I first want to understand why this
+> > > driver does not call:
+> > > 
+> > > chained_irq_enter/exit()
+> > > 
+> > > in the primary handler (mtk_pcie_intr_handler()).
+> > > 
+> > > With the GIC as a primary interrupt controller we have not
+> > > even figured out how current code can actually work without
+> > > calling the chained_* API.
+> > > 
+> > > I want to come up with a consistent handling of IRQ domains for
+> > > all host bridges and any discrepancy should be explained.
+> > 
+> > That's because this driver is a huge hack, see below:
+> > 
+> > > 
+> > >> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> > >> index db93efd..fc29a9a 100644
+> > >> --- a/drivers/pci/host/pcie-mediatek.c
+> > >> +++ b/drivers/pci/host/pcie-mediatek.c
+> > >> @@ -601,15 +601,16 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+> > 
+> > This function is not a chained irqchip, but an interrupt handler...
+> > 
+> > >>  	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
+> > >>  	unsigned long status;
+> > >>  	u32 virq;
+> > >> -	u32 bit = INTX_SHIFT;
+> > >> +	u32 bit;
+> > >>  
+> > >>  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
+> > >> +		bit = INTX_SHIFT;
+> > >>  		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
+> > >> -			/* Clear the INTx */
+> > >> -			writel(1 << bit, port->base + PCIE_INT_STATUS);
+> > >>  			virq = irq_find_mapping(port->irq_domain,
+> > >>  						bit - INTX_SHIFT);
+> > >>  			generic_handle_irq(virq);
+> > 
+> > and nonetheless, this calls into generic_handle_irq(). That's a complete
+> > violation of the interrupt layering. Maybe there is a good reason for
+> > it, but I'd like to know which one.
+> > 
+> > Which means that all of the ack/mask has to be done outside of the
+> > irqchip framework too... Disgusting.
+> > 
+> > >> +			/* Clear the INTx */
+> > >> +			writel(1 << bit, port->base + PCIE_INT_STATUS);
+> > > 
+> > > I think that these masking/acking should actually be done through
+> > > the irq_chip hooks (see for instance pci-ftpci100.c) - that would
+> > > make this kind of bugs much easier to prevent (because the IRQ
+> > > layer does the sequencing for you).
+> > 
+> > +1.
+> > 
+> 
+> Thanks for your advice, I need to do some homework to have a better
+> understanding of the irq_chip approach.
+> 
+> > > Marc (CC'ed) has a more comprehensive view on this than me - I would
+> > > like to get to a point where all host bridges uses a consistent
+> > > approach for chained IRQ handling and I hope this bug fix can be
+> > > a starting point.
+> > 
+> > +1 again. We definitely need to come up with some form of common
+> > approach for all these host drivers, and maybe turn that into a library...
+> > 
+> 
+> Well, this is beyond my knowledge now, I guess I can figure out how to
+> using irq_chip for the first step, then I may following this "common
+> approach" after we have a solution for that?
+> 
+> thanks.
+> > Thanks,
+> > 
+> > 	M.
+> 
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
