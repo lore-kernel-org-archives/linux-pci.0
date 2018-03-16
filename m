@@ -1,103 +1,76 @@
-Return-Path: <SRS0=9H7/=FX=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=9H7/=FX=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:39558 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750748AbeCPMz2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2018 08:55:28 -0400
+Date: Fri, 16 Mar 2018 13:55:24 +0100
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, joe@perches.com
+Subject: Re: [PATCH v4 5/5] misc: pci_endpoint_test: Handle 64-bit BARs
+ properly
+Message-ID: <20180316125523.GA30728@axis.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
+ <20180308133331.19464-6-niklas.cassel@axis.com>
+ <20180315132213.GA8629@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <20180301151359.GC13722@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1519882849.git.jan.kiszka@siemens.com> <8527c92b2e2920b8cd9096ddcbbb6d0f4004eb69.1519882849.git.jan.kiszka@siemens.com>
- <20180301151359.GC13722@bhelgaas-glaptop.roam.corp.google.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 1 Mar 2018 18:35:50 +0200
-Message-ID: <CAHp75VcmGCAARtuL5xBNWRN7SLcoh_Gxfkf1shgktTKTDjHn9Q@mail.gmail.com>
-Subject: Re: [PATCH v3 4/6] x86: Consolidate PCI_MMCONFIG configs
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jan Kiszka <jan.kiszka@siemens.com>, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, "H . Peter Anvin" <hpa@zytor.com>, Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jailhouse-dev@googlegroups.com,
-	linux-pci@vger.kernel.org, virtualization@lists.linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180315132213.GA8629@kroah.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 1, 2018 at 5:13 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Mar 01, 2018 at 06:40:47AM +0100, Jan Kiszka wrote:
->> From: Jan Kiszka <jan.kiszka@siemens.com>
->>
->> Since e279b6c1d329 ("x86: start unification of arch/x86/Kconfig.*"), we
->> have two PCI_MMCONFIG entries, one from the original i386 and another
->> from x86_64. This consolidates both entries into a single one.
->>
->> The logic for x86_32, where this option was not under user control,
->> remains identical. On x86_64, PCI_MMCONFIG becomes additionally
->> configurable for SFI systems even if ACPI was disabled. This just
->> simplifies the logic without restricting the configurability in any way.
->
-> Thanks for mentioning this difference.  It's probably trivial, but if
-> you have any other reason to respin this series, I would split this
-> into two patches:
->
->   - allow PCI_MMCONFIG on x86_64 with SFI
->   - consolidate PCI_MMCONFIG with no logical change at all
->
->> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
->
-> But either way,
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
+On Thu, Mar 15, 2018 at 02:22:13PM +0100, Greg Kroah-Hartman wrote:
+> On Thu, Mar 08, 2018 at 02:33:30PM +0100, Niklas Cassel wrote:
+> > A 64-bit BAR consists of a BAR pair, where the second BAR has the
+> > upper bits, so we cannot simply call pci_ioremap_bar() on every single
+> > BAR index.
+> > 
+> > The second BAR in a BAR pair will not have the IORESOURCE_MEM resource
+> > flag set. Only call ioremap on BARs that have the IORESOURCE_MEM
+> > resource flag set.
+> > 
+> > pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
+> > pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
+> > pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
+> > pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
+> > pci-endpoint-test 0000:01:00.0: failed to read BAR1
+> > pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
+> > pci-endpoint-test 0000:01:00.0: failed to read BAR3
+> > pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
+> > pci-endpoint-test 0000:01:00.0: failed to read BAR5
+> > 
+> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > ---
+> >  drivers/misc/pci_endpoint_test.c | 12 +++++++-----
+> >  1 file changed, 7 insertions(+), 5 deletions(-)
+> 
+> Where are the 4 other patches in this series?  I can't just only apply
+> the last one, right?
 
-If you going to respin I would suggest one more trivia
+http://patchwork.ozlabs.org/project/linux-pci/list/?series=32658
 
-Split long depends on to two lines, like
--      depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY ||
-PCI_GOOLPC || PCI_GOMMCONFIG))
-+      depends on PCI
-+      depends on X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC
-|| PCI_GOMMCONFIG)
+I'm expecting all patches to go via Lorenzo's pci tree.
 
-...
+> 
+> Please be careful when sending patches to properly notify everyone...
 
-      depends on PCI && (ACPI || SFI) && (X86_64 || (PCI_GOANY ||
-PCI_GOMMCONFIG))
-+     depends on PCI && (ACPI || SFI)
-+     depends on X86_64 || (PCI_GOANY || PCI_GOMMCONFIG)
+I'm using scripts from Joe Perches that run get_maintainer.pl,
+these scripts are then used as --to-cmd and --cc-cmd for git send-email:
+https://lkml.org/lkml/2016/9/14/482
 
-(perhaps in a separate change)
+(I did have to modify them so they handle rerolled patch series.)
+BTW. Joe, do you have updated versions of your scripts?
 
->> ---
->>  arch/x86/Kconfig | 9 +++------
->>  1 file changed, 3 insertions(+), 6 deletions(-)
->>
->> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
->> index eb7f43f23521..aef9d67ac186 100644
->> --- a/arch/x86/Kconfig
->> +++ b/arch/x86/Kconfig
->> @@ -2641,8 +2641,9 @@ config PCI_DIRECT
->>       depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC || PCI_GOMMCONFIG))
->>
->>  config PCI_MMCONFIG
->> -     def_bool y
->> -     depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
->> +     bool "Support mmconfig PCI config space access" if X86_64
->> +     default y
->> +     depends on PCI && (ACPI || SFI) && (X86_64 || (PCI_GOANY || PCI_GOMMCONFIG))
->>
->>  config PCI_OLPC
->>       def_bool y
->> @@ -2657,10 +2658,6 @@ config PCI_DOMAINS
->>       def_bool y
->>       depends on PCI
->>
->> -config PCI_MMCONFIG
->> -     bool "Support mmconfig PCI config space access"
->> -     depends on X86_64 && PCI && ACPI
->> -
->>  config PCI_CNB20LE_QUIRK
->>       bool "Read CNB20LE Host Bridge Windows" if EXPERT
->>       depends on PCI
->> --
->> 2.13.6
->>
+
+Greg, I'm assuming that you wouldn't want to be cc'd on all patches in the
+series, since all except the last one are pci related.
+However, perhaps it would be nice to add all those who are cc'd in the
+individual patches, as cc to the cover letter, that way it might be easier
+to figure out what tree will most likely merge a certain patch series.
 
 
 
--- 
-With Best Regards,
-Andy Shevchenko
+Kind regards,
+Niklas
