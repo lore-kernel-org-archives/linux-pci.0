@@ -1,78 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48596 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751758AbeCNNan (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 09:30:43 -0400
-Subject: [PATCH v2 2/2] PCI: Report quirks that take more than 10ms
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>,
-        Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 14 Mar 2018 08:30:40 -0500
-Message-ID: <152103424057.167541.9559805983145916469.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152103417018.167541.3290752859388672112.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152103417018.167541.3290752859388672112.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=kfwO=GG=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=kfwO=GG=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 16 Mar 2018 12:13:50 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: honghui.zhang@mediatek.com, bhelgaas@google.com, matthias.bgg@gmail.com,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+	ryder.lee@mediatek.com, hongkun.cao@mediatek.com,
+	youlin.pei@mediatek.com, yong.wu@mediatek.com, yt.shen@mediatek.com,
+	sean.wang@mediatek.com, xinping.qian@mediatek.com
+Subject: Re: [PATCH v5 2/2] PCI: mediatek: Set up class type and vendor ID
+ for MT7622
+Message-ID: <20180316121350.GB24325@e107981-ln.cambridge.arm.com>
+References: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
+ <1514336394-17747-3-git-send-email-honghui.zhang@mediatek.com>
+ <20171227184542.GA79892@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171227184542.GA79892@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, Dec 27, 2017 at 12:45:42PM -0600, Bjorn Helgaas wrote:
 
-With "initcall_debug", we report how long every PCI quirk took.
+[...]
 
-Even without "initcall_debug", report the runtime of any quirk that takes
-longer than 10ms.  This is to make it easier to notice quirks that slow
-down boot.
+> > +		/* Set up class code for MT7622 */
+> > +		val = PCI_CLASS_BRIDGE_PCI << 16;
+> > +		writel(val, port->base + PCIE_CONF_CLASS);
+> 
+> 1) Your comments mention MT7622 specifically, but this code is run for
+> both mt2712-pcie and mt7622-pcie.  If this code is safe and necessary
+> for both mt2712-pcie and mt7622-pcie, please remove the mention of
+> MT7622.
+> 
+> 2) The first comment mentions both "vendor ID and device ID" but you
+> don't write the device ID.  Since this code applies to both
+> mt2712-pcie and mt7622-pcie, my guess is that you don't *want* to
+> write the device ID.  If that's the case, please fix the comment.
+> 
+> 3) If you only need to set the vendor ID, you're performing a 32-bit
+> write (writel()) to update a 16-bit value.  Please use writew()
+> instead.
+> 
+> 4) If you only need to set the vendor ID, please use a definition like
+> "PCIE_CONF_VENDOR_ID" instead of the ambiguous "PCIE_CONF_ID".
+> 
+> 5) If you only need to set the vendor ID, please update the changelog
+> to mention "vendor ID" specifically instead of the ambiguous "IDs".
+> 
+> 6) Please add a space before the closing "*/" of the first comment.
+> 
+> 7) PCI_CLASS_BRIDGE_PCI is for a PCI-to-PCI bridge, i.e., one that has
+> PCI on both the primary (upstream) side and the secondary (downstream)
+> side.  That kind of bridge has a type 1 config header (see
+> PCI_HEADER_TYPE) and the PCI_PRIMARY_BUS and PCI_SECONDARY_BUS
+> registers tell us the bus number of the primary and secondary sides.
+> 
+> I don't believe this device is a PCI-to-PCI bridge.  I think it's a
+> *host* bridge that has some non-PCI interface on the upstream side and
+> should have a type 0 config header.  If that's the case you should use
+> PCI_CLASS_BRIDGE_HOST instead.
 
-This was motivated by a report from Paul Menzel that PCI final quirks took
-half a second at boot.
+I think these registers actually programme the root port register space
+in the RC (whether real or fake - that depends on the RC design) so
+the class is PCI_CLASS_BRIDGE_PCI, that's what most of host bridge
+drivers in drivers/pci/host do.
 
-Link: https://lkml.kernel.org/r/44cada166e42007d27b4c3e3aa0744d7@molgen.mpg.de
-Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/quirks.c |   17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+I would like to get to the bottom of this since it is indeed misleading
+(and I do not have HW to test it myself to check my understanding).
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 97c74e386bcc..1466ee729e0a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3002,14 +3002,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
- static ktime_t fixup_debug_start(struct pci_dev *dev,
- 				 void (*fn)(struct pci_dev *dev))
- {
--	ktime_t calltime = 0;
--
--	if (initcall_debug) {
-+	if (initcall_debug)
- 		pci_info(dev, "calling  %pF @ %i\n", fn, task_pid_nr(current));
--		calltime = ktime_get();
--	}
- 
--	return calltime;
-+	return ktime_get();
- }
- 
- static void fixup_debug_report(struct pci_dev *dev, ktime_t calltime,
-@@ -3018,12 +3014,11 @@ static void fixup_debug_report(struct pci_dev *dev, ktime_t calltime,
- 	ktime_t delta, rettime;
- 	unsigned long long duration;
- 
--	if (initcall_debug) {
--		rettime = ktime_get();
--		delta = ktime_sub(rettime, calltime);
--		duration = (unsigned long long) ktime_to_ns(delta) >> 10;
-+	rettime = ktime_get();
-+	delta = ktime_sub(rettime, calltime);
-+	duration = (unsigned long long) ktime_to_ns(delta) >> 10;
-+	if (initcall_debug || duration > 10000)
- 		pci_info(dev, "%pF took %lld usecs\n", fn, duration);
--	}
- }
- 
- /*
+Thanks,
+Lorenzo
