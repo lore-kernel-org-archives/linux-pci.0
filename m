@@ -1,73 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 26 Mar 2018 14:09:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wolfgang Denk <wd@denx.de>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCIe x4 cards not detected on Z370 mainboards
-Message-ID: <20180326190938.GA224629@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180322184840.E31D4247251@gemini.denx.de>
- <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com>
- <20180323084855.E3EAF247251@gemini.denx.de>
- <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
- <20180324201534.092D2247245@gemini.denx.de>
- <20180326135107.GH210003@bhelgaas-glaptop.roam.corp.google.com>
- <20180326135235.GA221217@bhelgaas-glaptop.roam.corp.google.com>
- <20180326151252.B7C8F2476FF@gemini.denx.de>
+Return-Path: <SRS0=owBi=GG=xenosoft.de=chzigotzky@kernel.org>
+Return-Path: <SRS0=owBi=GG=xenosoft.de=chzigotzky@kernel.org>
+Subject: [PATCH 0/1] PCI set flag PCI_SCAN_ALL_PCIE_DEVS for P.A. Semi boards
+To: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+ Olof Johansson <olof@lixom.net>
+References: <f3513294-6da0-456f-0f98-1f8c3bac90c9@xenosoft.de>
+ <87tvxl15qx.fsf@concordia.ellerman.id.au>
+ <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
+ <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
+ <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
+ <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
+ <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
+ <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
+ <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
+ <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
+From: Christian Zigotzky <chzigotzky@xenosoft.de>
+Message-ID: <dc228918-652a-e24c-ce7b-8d1b30153d3b@xenosoft.de>
+Date: Fri, 16 Mar 2018 13:10:43 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180326151252.B7C8F2476FF@gemini.denx.de>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 26, 2018 at 05:12:52PM +0200, Wolfgang Denk wrote:
-> In message <20180326135235.GA221217@bhelgaas-glaptop.roam.corp.google.com> you wrote:
-> >
-> > P.S. https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface
-> > has a little interesting background on UEFI/CSM.
-> 
-> Thanks for the pointer.
-> 
-> I start wondering if the mainboard / BIOS vendors stop supporting
-> such older hardware, if such support could be re-added in Linux?
-> OK, obviously not for the boot device, but...
-> 
-> In U-Boot we have an x86 emulator to be able to initialize the
-> on-board BIOS on (at least some) graphics cards so you can use these
-> on ARM or Power architecture systems.  Do we really have to add
-> similar stuff to Linux to support legacy hardware?
-> 
-> Would that even work?
+On 02 December 2017 at 00:27PM, Bjorn Helgaas wrote:
+ > On Fri, Dec 01, 2017 at 11:08:46PM +0100, Christian Zigotzky wrote:
+ >> On 30.11.2017 23:42, Bjorn Helgaas wrote:
+ >>>
+ >>> 00:11.0 claims to be a PCIe Root Port leading to [bus 05-06]. That
+ >>> means there's a Link (presumably this A-Link II Express thing), and the
+ >>> downstream end of the Link *should* be a PCIe Upstream Port on bus 05,
+ >>> but no such device is visible.  I suppose the SB600 does implement
+ >>> some sort of PCIe Port there, but keeps it invisible to software, and
+ >>> at the same time, contains an invisible bridge that connects the Link
+ >>> to all the conventional PCI devices on bus 05.
+ >>>
+ >>> When we scan bus 05, we do this:
+ >>>
+ >>>    pci_scan_child_bus_extend(bus=05)
+ >>>      for (devfn = 0; devfn < 0x100; devfn += 8)
+ >>>        pci_scan_slot(05, 00.0)
+ >>>          pci_scan_single_device
+ >>>            pci_scan_device(05, 00.0)           # fails; no 05:00.0
+ >>>        pci_scan_slot(05, 01.0)
+ >>>          only_one_child(bus=05)
+ >>>            parent = 00:11.0
+ >>>            pci_pcie_type(00:11.0) == ROOT_PORT # returns true
+ >>>
+ >>> Since only_one_child() sees that 00:11.0 is a Root Port, we give up
+ >>> before we even get to the PCI_SCAN_ALL_PCIE_DEVS test.
+ >>>
+ >>> I *think* something like the patch below should make this work if you
+ >>> use the "pci=pcie_scan_all" parameter.  We have some x86 DMI quirks
+ >>> that set PCI_SCAN_ALL_PCIE_DEVS automatically.  I don't know how to do
+ >>> something similar on powerpc, but maybe you do?
+ >>>
+ >>
+ >> Hi Bjorn,
+ >>
+ >> I tested your new patch today. It boots with the boot argument
+ >> "pci=pcie_scan_all". Well done! :-)
+ >>
+ >> It doesn't boot without the boot argument "pci=pcie_scan_all".
+ >
+ > Thanks for testing that.  I'll merge a similar patch for v4.16.
+ >
+ > I don't think using "pci=pcie_scan_all" is really an acceptable
+ > long-term answer for you, though.  Is there some way we can identify
+ > at run-time whether we're on a Nemo system?  If so, we can make this
+ > happen automatically.
+ >
+ > Bjorn
+ >
 
-On the MSI Z370 Tomahawk and the Gigabyte Z270X Ultra Gaming systems,
-it looks like you're using what the BIOS designates as "Slot #1",
-which is below an Intel Root Port (00:01.0 in both cases).  When the
-SAS3444E is in that slot, we don't even see the Root Port itself.  To
-fix that would require Linux to have chipset-specific knowledge about
-how to enable that Root Port.  I guess it's conceivable that could be
-done, but I don't know if the information required is public.  I
-assume this would be controlled by some MSR or other Intel-specific
-knob.
+Hi Bjorn,
+Hi All,
 
-On the Gigabyte AB350 Gaming system, you're using "Slot #1" (this
-comes from the Slot Capabilities register and may not match any
-silk-screened labels on the board).  This is below an AMD PCIe switch,
-where 04:04.0 is the Downstream Port leading to that slot.  When the
-SAS3444E is in the slot, we do see the 04:04.0 Downstream Port, so we
-*should* still be able to see the SAS device.
+Olof Johansson has created a patch for us. With this patch, 
+"pci=pcie_scan_all" executes automatically on P.A. Semi boards. We don't 
+need to add 'pci=pcie_scan_all' to the
+kernel boot arguments anymore. Could you please add Olof's patch to the 
+official kernel source code?
 
-This is now all in the PCIe domain so the BIOS should be pretty much
-out of the picture, and I can't explain why we don't see the SAS3444E
-device.
+arch/powerpc/platforms/pasemi/pci.c | 2 ++
+  1 file changed, 2 insertions(+)
 
-On that system, you could try something like this to reset the
-SAS3444E device and try to rescan the bus:
-
-  # setpci -s04:04.0 BRIDGE_CONTROL.w=0x40
-  # sleep 1
-  # setpci -s04:04.0 BRIDGE_CONTROL.w=0x00
-  # sleep 10
-  # echo 1 > /sys/bus/pci/rescan
-
-Check the dmesg log afterwards to see if anything happened.
+Thanks,
+Christian
