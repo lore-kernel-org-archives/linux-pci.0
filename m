@@ -1,86 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0093.outbound.protection.outlook.com ([104.47.33.93]:38750
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932677AbeCITie (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Mar 2018 14:38:34 -0500
-From: Haiyang Zhang <haiyangz@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Jack Morgenstein <jackm@mellanox.com>
-Subject: RE: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
-Date: Fri, 9 Mar 2018 19:38:10 +0000
-Message-ID: <BL0PR2101MB11087BE0B3B91040BE99EF5ACADE0@BL0PR2101MB1108.namprd21.prod.outlook.com>
-References: <20180306182128.23281-1-decui@microsoft.com>
- <20180306182128.23281-7-decui@microsoft.com>
-In-Reply-To: <20180306182128.23281-7-decui@microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:36900 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751934AbeCRKxj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 18 Mar 2018 06:53:39 -0400
+Subject: Re: [PATCH V3] PCI: rcar: Use runtime PM to control controller clock
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20171110215411.31912-1-marek.vasut+renesas@gmail.com>
+ <20180313112051.GB15480@e107981-ln.cambridge.arm.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <a11864d0-8cad-85fe-cf6a-94476558fa31@gmail.com>
+Date: Sun, 18 Mar 2018 11:19:25 +0100
 MIME-Version: 1.0
+In-Reply-To: <20180313112051.GB15480@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 03/13/2018 12:20 PM, Lorenzo Pieralisi wrote:
+> Hi Marek,
 
+Hi,
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Tuesday, March 6, 2018 1:22 PM
-> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan
-> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
-> olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
-> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
-> Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
-> marcelo.cerri@canonical.com; Michael Kelley (EOSG)
-> <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microsoft.com>;
-> stable@vger.kernel.org; Jack Morgenstein <jackm@mellanox.com>
-> Subject: [PATCH v3 6/6] PCI: hv: fix 2 hang issues in hv_compose_msi_msg(=
-)
->=20
-> 1. With the patch "x86/vector/msi: Switch to global reservation mode"
-> (4900be8360), the recent v4.15 and newer kernels always hang for 1-vCPU
-> Hyper-V VM with SR-IOV. This is because when we reach
-> hv_compose_msi_msg() by request_irq()  -> request_threaded_irq() ->
-> __setup_irq()->irq_startup()  -> __irq_startup() -> irq_domain_activate_i=
-rq() -
-> > ... ->
-> msi_domain_activate() -> ... -> hv_compose_msi_msg(), local irq is disabl=
-ed in
-> __setup_irq().
->=20
-> Fix this by polling the channel.
->=20
-> 2. If the host is ejecting the VF device before we reach hv_compose_msi_m=
-sg(),
-> in a UP VM, we can hang in hv_compose_msi_msg() forever, because at this
-> time the host doesn't respond to the CREATE_INTERRUPT request. This issue
-> also happens to old kernels like v4.14, v4.13, etc.
->=20
-> Fix this by polling the channel for the PCI_EJECT message and
-> hpdev->state, and by checking the PCI vendor ID.
->=20
-> Note: actually the above issues also happen to a SMP VM, if "hbus->hdev-
-> >channel->target_cpu =3D=3D smp_processor_id()" is true.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
-> Tested-by: Chris Valean <v-chvale@microsoft.com>
-> Cc: stable@vger.kernel.org
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> Cc: Jack Morgenstein <jackm@mellanox.com>
-> ---
+> On Fri, Nov 10, 2017 at 10:54:11PM +0100, Marek Vasut wrote:
+>> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>>
+>> The controller clock can be switched off during suspend/resume,
+>> let runtime PM take care of that.
+>>
+>> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> To: linux-pci@vger.kernel.org
+>> ---
+>> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
+>>       reordering of function calls in probe
+>>     - Dispose of fail_clk in rcar_pcie_get_resources()
+>> V3: - Fix up the failpath in probe function
+>> ---
+>>  drivers/pci/host/pcie-rcar.c | 40 ++++++++++++----------------------------
+>>  1 file changed, 12 insertions(+), 28 deletions(-)
+> 
+> I would like to ask you if this patch is still applicable and if so
+> whether you want me to apply it stand-alone (ie does it depend on
+> other patches ?), please let me know.
+It doesn't depend on other patches, but it needs a small adjustment when
+rebasing. I'll repost a V4.
 
-Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
+-- 
+Best regards,
+Marek Vasut
