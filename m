@@ -1,70 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1521105992.18237.2.camel@suse.com>
-Subject: Re: [PATCH 2/3] usb: host: pci: introduce PCI vendor ID for Netlogic
-From: Oliver Neukum <oneukum@suse.com>
-To: Richard Leitner <richard.leitner@skidata.com>,
-        Richard Leitner <dev@g0hl1n.net>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org
-Cc: bhelgaas@google.com, mathias.nyman@intel.com,
-        gregkh@linuxfoundation.org
-Date: Thu, 15 Mar 2018 10:26:32 +0100
-In-Reply-To: <377fb9d5-1cc9-7ab8-c965-2fb0a4dc20f3@skidata.com>
-References: <20180314102933.21367-1-dev@g0hl1n.net>
-         <20180314102933.21367-3-dev@g0hl1n.net> <1521029854.4511.12.camel@suse.com>
-         <a97cd8ba-3934-dc88-8851-465f0313162b@skidata.com>
-         <1521041253.4511.16.camel@suse.com>
-         <377fb9d5-1cc9-7ab8-c965-2fb0a4dc20f3@skidata.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relay1.mentorg.com ([192.94.38.131]:41966 "EHLO
+        relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754996AbeCSNni (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 09:43:38 -0400
+Subject: Re: [PATCH 1/2] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+To: Marek Vasut <marek.vasut@gmail.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+References: <20180318105253.30532-1-marek.vasut+renesas@gmail.com>
+ <20180319083839.h3qdt4obbsbqlx73@verge.net.au>
+ <b7dad289-c9de-ae19-a0d2-3eb127e0955a@gmail.com>
+ <CAMuHMdVjU=1ndTK1jTU90Vw2sgPsTRRsH56vvY6nuuoDWUo-Aw@mail.gmail.com>
+ <618f1841-f8b9-7fdb-5887-01a080a231db@gmail.com>
+CC: Simon Horman <horms@verge.net.au>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Message-ID: <ebef6e5d-03ac-e1a7-ab9b-11ddfee72355@mentor.com>
+Date: Mon, 19 Mar 2018 15:43:22 +0200
+MIME-Version: 1.0
+In-Reply-To: <618f1841-f8b9-7fdb-5887-01a080a231db@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 14.03.2018, 16:44 +0100 schrieb Richard Leitner:
-> On 03/14/2018 04:27 PM, Oliver Neukum wrote:
-> > Am Mittwoch, den 14.03.2018, 14:31 +0100 schrieb Richard Leitner:
-> > > 
-> > Well, but it does not. Removing a redundant definition is a clear
-> > benefit. But you are not removing a definition. You are introducing
-> > a preprocessor constant. Why?
-> > What is its benefit?
+On 03/19/2018 12:56 PM, Marek Vasut wrote:
+> On 03/19/2018 11:53 AM, Geert Uytterhoeven wrote:
+>> Hi Marek,
+>>
+>> On Mon, Mar 19, 2018 at 10:53 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>>> On 03/19/2018 09:38 AM, Simon Horman wrote:
+>>>> On Sun, Mar 18, 2018 at 11:52:52AM +0100, Marek Vasut wrote:
+>>>>> The data link active signal usually takes ~20 uSec to be asserted,
+>>>>> poll the bit more often to avoid useless delays in this function.
+>>>>>
+>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>>>>> Cc: linux-renesas-soc@vger.kernel.org
+>>>>
+>>>> Unless my eyes deceive me this seems to be quite a lot (100x) more often,
+>>>> but so be it.
+>>>
+>>> It's just a higher frequency to avoid slowdown when bringing the link up.
+>>
+>> No it isn't: you replaced a sleep by a delay, thus making it blocking.
 > 
-> AFAIK pci_ids.h collects PCI vendor and device IDs in one single 
-> point. As the PCI vendor ID of Netlogic is used in multiple files
-> IMHO it would be a good idea to add it to pci_ids.h and furthermore
-> remove it from arch/mips/include/asm/netlogic/xlp-hal/iomap.h (where
-> it's currently defined).
+> For much shorter period of time.
 > 
-> Or am I getting things wrong?
+>> So this can spin for up to 50 ms (+ overhead)?
+> 
+> That's what it did before too , it used msleep and now it uses udelay.
+> 
 
-I think so, yes. We are giving names to constants as a form
-of comment or to change them at multiple places at once and
-consistently.
+msleep() does not spin, it reschedules the process.
 
-So
+Instead to find a balance you may want to play with usleep_range().
 
-#define XYZ_NETDEV_RESET_RETRIES	2
-
-makes clearly sense. So does
-
-#define XYZ_MAGIC_VALUE1	0xab4e
-
-because it tells you that you have a magic value.
-But you will never redefine a PCI vendor ID. In fact you
-must not. And if you have a comparison like
-
-dev->vID == 0x1234
-
-if you change this to
-
-dev->vID == SOME_VENDOR_ID
-
-what good does this to you? You already knew it was a vendor ID.
-Now you can name it at a glance. So what? If you have a device
-you will have to check whether you have some OEM version. You
-will always go and check the raw number. And if you have a log
-and need to check whether the check will be true, you will have
-a number.
-Using a constant there is nothing but trouble. Yet one more grep.
-
-	Regards
-		Oliver
+--
+With best wishes,
+Vladimir
