@@ -1,95 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 12 Mar 2018 19:18:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org,
-        linuxarm@huawei.com, charles.chenxin@huawei.com,
-        linux-acpi@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [RFC PATCH] ARM64/PCI: Set dev->irq=0 before calling
- acpi_pci_irq_enable()
-Message-ID: <20180313001830.GA60197@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520650692-62705-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:42474 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755302AbeCSKAY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 06:00:24 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc: bhelgaas@google.com, rafael.j.wysocki@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] PCI / PM: Always check PME wakeup capability for runtime wakeup support
+Date: Mon, 19 Mar 2018 11:00:52 +0100
+Message-ID: <2242415.DLYj1vY8hi@aspire.rjw.lan>
+In-Reply-To: <20180318191215.10005-1-kai.heng.feng@canonical.com>
+References: <20180318191215.10005-1-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1520650692-62705-1-git-send-email-liudongdong3@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-acpi]
-
-On Sat, Mar 10, 2018 at 10:58:12AM +0800, Dongdong Liu wrote:
-> The init value of dev->irq is from PCI_INTERRUPT_LINE register.The default
-> value of dev->irq usually is 255 before calling acpi_pci_irq_enable().
-> This will cause a problem When the platform does not support INTx well.
-> For example, we do not config _PRT on our HIP07 platform, we met irq 255
-> confilict.
-
-s/confilict/conflict/
-
-arm64 calls acpi_pci_irq_enable() in the probe() path instead of in
-the pci_enable_device() path.  I can't remember the reason, and
-unfortunately we didn't add a comment explaining why arm64 has to be
-different.
-
-PCI_INTERRUPT_LINE is used only by software and has no effect on the
-hardware.  If it contains 255 when Linux boots, that means firmware
-must have set it to that value.
-
-We need some comment here about why we should always ignore what
-firmware put there on arm64.  It needs to explain why this is
-different on arm64 than it is on x86 and ia64.  The changelog above
-basically says "we need this to make it work", but that's not very
-informative or convincing.
-
-It sounds like you're saying HIP07 doesn't provide _PRT?  Per the PCI
-Firmware Spec, r3.0, sec 4.4, _PRT is required under all PCI host
-bridges.  So I think you're saying HIP07 doesn't comply with the spec,
-but the workaround here applies to *all* arm64 platforms.  That
-doesn't seem right.
-
-On x86, I think if the _PRT doesn't tell us where an interrupt pin is
-routed, we fall back to looking at PCI_INTERRUPT_LINE.  But here
-you seem to be saying "there's no _PRT" *and* "there's no useful
-information in PCI_INTERRUPT_LINE".
-
-Maybe I'm not understanding what you're saying.
-
-> The error message is as below.
-> snd_hda_intel 000d:33:00.1: PCI INT B: no GSI
-> snd_hda_intel 000d:33:00.1: enabling device (0000 -> 0002)
-> snd_hda_intel 000d:33:00.1: Force to snoop mode by module option
-> snd_hda_intel 000d:33:00.1: Device has broken 64-bit MSI but arch tried to
-> assign one above 4G
-> genirq: Flags mismatch irq 255. 00000001 (enahisic2i0-tx1) vs. 00000081
-> (snd_hda_intel:card0)
-> hns-nic HISI00C2:00 enahisic2i0: request irq(255) fail
+On Sunday, March 18, 2018 8:12:15 PM CET Kai-Heng Feng wrote:
+> USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+> core: Drop run_wake flag from struct dev_pm_info").
 > 
-> enahisic2i0-tx1: this device is a platform device.
-> snd_hda_intel:card0: this device is a PCI device.
+> The device in question is not power managed by platform firmware,
+> furthermore, it only supports PME# from D3cold:
+> Capabilities: [78] Power Management version 3
+>        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+>        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+
+That's somewhat unusual, but OK.
+
+> Before the commit, the device never gets runtime suspended. After the
+> commit, the device gets runtime suspended, so it does not respond to any
+> PME#.
 > 
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
+> device_can_wakeup() in pci_dev_run_wake() always returns true.
+> 
+> So pci_dev_run_wake() needs to check PME wakeup capability as its first
+> condition.
+> 
+> Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct dev_pm_info")
+> Cc: stable@vger.kernel.org # 4.13+
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 > ---
->  arch/arm64/kernel/pci.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
+>  drivers/pci/pci.c | 11 ++++-------
+>  1 file changed, 4 insertions(+), 7 deletions(-)
 > 
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index 0e2ea1c..6a77bef 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -28,8 +28,11 @@
->   */
->  int pcibios_alloc_irq(struct pci_dev *dev)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f6a4dd10d9b0..e026d8f313ec 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2125,16 +2125,13 @@ bool pci_dev_run_wake(struct pci_dev *dev)
 >  {
-> -	if (!acpi_disabled)
-> +	if (!acpi_disabled) {
-> +		dev->irq = 0;
->  		acpi_pci_irq_enable(dev);
-> +	}
-> +
+>  	struct pci_bus *bus = dev->bus;
 >  
->  	return 0;
->  }
-> -- 
-> 1.9.1
+> -	if (device_can_wakeup(&dev->dev))
+> -		return true;
+> -
+> -	if (!dev->pme_support)
+> -		return false;
+
+Why are you removing this check?
+
+> -
+>  	/* PME-capable in principle, but not from the target power state */
+> -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
+> +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
+>  		return false;
+>  
+> +	if (device_can_wakeup(&dev->dev))
+> +		return true;
+> +
+>  	while (bus->parent) {
+>  		struct pci_dev *bridge = bus->self;
+>  
 > 
+
+Thanks,
+Rafael
