@@ -1,133 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:55776 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750838AbeCFK3p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 05:29:45 -0500
-Received: by mail-wm0-f41.google.com with SMTP id q83so21783483wme.5
-        for <linux-pci@vger.kernel.org>; Tue, 06 Mar 2018 02:29:44 -0800 (PST)
-Date: Tue, 6 Mar 2018 11:29:40 +0100
-From: Daniel Vetter <daniel@ffwll.ch>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: dri-devel@lists.freedesktop.org, zigarrre@gmail.com,
-        nouveau@lists.freedesktop.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pci@vger.kernel.org, Daniel Drake <dan@reactivated.net>,
-        Denis Lisov <dennis.lissov@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Martin Lopatar <lopin@dataplex.cz>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Maik Freudenberg <hhfeuer@gmx.de>,
-        Raphael Doursenaud <rdoursenaud@free.fr>
-Subject: Re: [PATCH v2 0/7] Modernize vga_switcheroo by using device link for
- HDA
-Message-ID: <20180306102940.GG22212@phenom.ffwll.local>
-References: <cover.1520068884.git.lukas@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
+References: <1519280641-30258-1-git-send-email-xieyisheng1@huawei.com>
+ <1519280641-30258-27-git-send-email-xieyisheng1@huawei.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <f2841aac-4c5e-4ac2-fa4d-81d6b2857503@huawei.com>
+Date: Mon, 19 Mar 2018 19:03:41 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1520068884.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1519280641-30258-27-git-send-email-xieyisheng1@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>, ilias.apalodimas@linaro.org,
+ kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
+ jonathan.cameron@huawei.com, Will Deacon <Will.Deacon@arm.com>,
+ okaya@codeaurora.org, robh@kernel.org, Lorenzo
+ Pieralisi <Lorenzo.Pieralisi@arm.com>, ashok.raj@intel.com, tn@semihalf.com,
+ joro@8bytes.org, robdclark@gmail.com, bharatku@xilinx.com,
+ linux-acpi@vger.kernel.org, Catalin Marinas <Catalin.Marinas@arm.com>,
+ rfranz@cavium.com, lenb@kernel.org, devicetree@vger.kernel.org,
+ jacob.jun.pan@linux.intel.com, alex.williamson@redhat.com, yi.l.liu@intel.com,
+ thunder.leizhen@huawei.com, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org, shunyong.yang@hxt-semitech.com,
+ dwmw2@infradead.org, liubo95@huawei.com, rjw@rjwysocki.net,
+ jcrouse@codeaurora.org, iommu@lists.linux-foundation.org,
+ hanjun.guo@linaro.org, Sudeep Holla <Sudeep.Holla@arm.com>,
+ Robin Murphy <Robin.Murphy@arm.com>, christian.koenig@amd.com,
+ nwatters@codeaurora.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 03, 2018 at 10:53:24AM +0100, Lukas Wunner wrote:
-> Modernize vga_switcheroo by using a device link to enforce a runtime PM
-> dependency from an HDA controller to the GPU it's integrated into, v2.
-> 
-> Changes since v1:
-> 
-> - Replace patch [1/7] to use pci_save_state() / pci_restore_state()
->   for consistency between runtime PM code path of bound and unbound
->   devices. (Rafael, Bjorn)
-> 
-> - Patch [5/7]: Drop an unnecessary initialization. (Bjorn)
->   Rephrase error message on failed link addition for clarity.
-> 
-> Link to v1:
-> https://www.spinics.net/lists/dri-devel/msg165889.html
-> 
-> Testing on more machines would be greatly appreciated, particularly
-> Nvidia Optimus or AMD PowerXpress.
-> 
-> The series is based on 4.16-rc3.  To test it on 4.15, you need to
-> cherry-pick 7506dc798993 and 2fa6d6cdaf28.  For your convenience
-> I've pushed a 4.15-based branch to:
-> https://github.com/l1k/linux/commits/switcheroo_devlink_v2
-> 
-> Minimal test procedure:
-> 
-> - Note well: Recent Optimus require that a Mini-DP or HDMI cable is
->   plugged in on boot for the HDA device to be present.
-> 
-> - Check that HDA, GPU and root port autosuspend when not in use:
->   cat /sys/bus/pci/devices/0000:01:00.1/power/runtime_status  # HDA
->   cat /sys/bus/pci/devices/0000:01:00.0/power/runtime_status  # GPU
->   cat /sys/bus/pci/devices/0000:00:01.0/power/runtime_status  # Root Port
-> 
-> - Check that all three autoresume when accessing the HDA:
->   hdajacksensetest -c 1
-> 
-> - Unbind the HDA controller:
->   echo 0000:01:00.1 > /sys/bus/pci/drivers/snd_hda_intel/unbind
->   Wait for GPU to power off, then rebind the HDA controller:
->   echo 0000:01:00.1 > /sys/bus/pci/drivers/snd_hda_intel/bind
->   Check dmesg for errors, try accessing HDA with hdajacksensetest.
-> 
-> - If your laptop uses the root port's _PR3 to cut power to the GPU:
->   Unbind the GPU:
->   echo 0000:01:00.0 > /sys/bus/pci/drivers/{nouveau,amdgpu,radeon}/unbind
->   Allow runtime PM on the GPU:
->   echo auto > /sys/bus/pci/devices/0000:01:00.0/power/control
->   Wait for GPU to power off, then rebind it:
->   echo 0000:01:00.0 > /sys/bus/pci/drivers/{nouveau,amdgpu,radeon}/bind
->   Check dmesg for errors.  If you see any then we may need to perform
->   further actions in pci_pm_runtime_resume(), see patch [1/7].
+Hi Jean,
 
-This all looks really reasonable and like a good cleanup, but it's a bit
-too much detail so I'll punt review to someone else with more clue.
--Daniel
+[...]
+> @@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+>  	if (ret)
+>  		return ret;
+>  
+> +	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
+> +		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
+> +		ret = iommu_fault_queue_register(&smmu->faultq_nb);
+> +		if (ret)
+> +			return ret;
 
-> 
-> Thanks,
-> 
-> Lukas
-> 
-> 
-> Lukas Wunner (6):
->   PCI: Make pci_wakeup_bus() & pci_bus_set_current_state() public
->   vga_switcheroo: Update PCI current_state on power change
->   vga_switcheroo: Deduplicate power state tracking
->   vga_switcheroo: Use device link for HDA controller
->   vga_switcheroo: Let HDA autosuspend on mux change
->   drm/nouveau: Runtime suspend despite HDA being unbound
-> 
-> Rafael J. Wysocki (1):
->   PCI: Restore config space on runtime resume despite being unbound
-> 
->  drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c |   2 -
->  drivers/gpu/drm/nouveau/nouveau_drm.c   |  46 ----------
->  drivers/gpu/drm/nouveau/nouveau_drv.h   |   1 -
->  drivers/gpu/drm/radeon/radeon_drv.c     |   2 -
->  drivers/gpu/vga/vga_switcheroo.c        | 152 ++++++++------------------------
->  drivers/pci/pci-driver.c                |  17 ++--
->  drivers/pci/pci.c                       |   8 +-
->  drivers/pci/quirks.c                    |  39 ++++++++
->  include/linux/pci.h                     |   2 +
->  include/linux/pci_ids.h                 |   1 +
->  include/linux/vga_switcheroo.h          |   6 --
->  include/sound/hdaudio.h                 |   3 -
->  sound/pci/hda/hda_intel.c               |  36 +++++---
->  sound/pci/hda/hda_intel.h               |   3 -
->  14 files changed, 117 insertions(+), 201 deletions(-)
-> 
-> -- 
-> 2.15.1
-> 
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+I find a case here: CONFIG_IOMMU_FAULT=n, and smmu support feature STALLS or PRI,
+the device probe will failed here, is this what we want?
 
--- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-http://blog.ffwll.ch
+Thanks
+Yisheng
+
+> +	}
+> +
+>  	/* And we're up. Go go go! */
+>  	ret = iommu_device_sysfs_add(&smmu->iommu, dev, NULL,
+>  				     "smmu3.%pa", &ioaddr);
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
