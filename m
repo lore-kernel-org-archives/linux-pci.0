@@ -1,55 +1,115 @@
-Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
- linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
- Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
- Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
- <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-2-logang@deltatee.com>
- <20180301173752.GE13722@bhelgaas-glaptop.roam.corp.google.com>
- <b81503c2-9f07-b5f6-df06-64d1fdc53386@deltatee.com>
- <20180301230032.GA74737@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <b3121c36-4ef5-0d8e-e8ef-418b48de9589@deltatee.com>
-Date: Thu, 1 Mar 2018 16:06:47 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:51776 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755299AbeCSKCi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 06:02:38 -0400
+Subject: Re: [PATCH V4] PCI: rcar: Use runtime PM to control controller clock
+To: Simon Horman <horms@verge.net.au>
+Cc: linux-pci@vger.kernel.org,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20180318105209.5922-1-marek.vasut+renesas@gmail.com>
+ <20180319084447.ce44arxneqd6i3bj@verge.net.au>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <834f8473-3e3b-98b2-56e1-55a3c40aa2dc@gmail.com>
+Date: Mon, 19 Mar 2018 10:54:47 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180301230032.GA74737@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 01/10] PCI/P2PDMA: Support peer to peer memory
+In-Reply-To: <20180319084447.ce44arxneqd6i3bj@verge.net.au>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> I don't think this is correct.  A Root Port defines a hierarchy domain
-> (I'm looking at PCIe r4.0, sec 1.3.1).  The capability to route
-> peer-to-peer transactions *between* hierarchy domains is optional.  I
-> think this means a Root Complex is not required to route transactions
-> from one Root Port to another Root Port.
+On 03/19/2018 09:44 AM, Simon Horman wrote:
+> On Sun, Mar 18, 2018 at 11:52:09AM +0100, Marek Vasut wrote:
+>> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>>
+>> The controller clock can be switched off during suspend/resume,
+>> let runtime PM take care of that.
+>>
+>> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> To: linux-pci@vger.kernel.org
+>> ---
+>> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
+>>       reordering of function calls in probe
+>>     - Dispose of fail_clk in rcar_pcie_get_resources()
+>> V3: - Fix up the failpath in probe function
+>> V4: - Rebase on recent linux-next
+>> ---
+>>  drivers/pci/host/pcie-rcar.c | 40 ++++++++++++----------------------------
+>>  1 file changed, 12 insertions(+), 28 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>> index b4c4aad2cf66..93d59f15c589 100644
+>> --- a/drivers/pci/host/pcie-rcar.c
+>> +++ b/drivers/pci/host/pcie-rcar.c
+>> @@ -142,7 +142,6 @@ struct rcar_pcie {
+>>  	void __iomem		*base;
+>>  	struct list_head	resources;
+>>  	int			root_bus_nr;
+>> -	struct clk		*clk;
+>>  	struct clk		*bus_clk;
+>>  	struct			rcar_msi msi;
+>>  };
+>> @@ -914,24 +913,14 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+>>  	if (IS_ERR(pcie->base))
+>>  		return PTR_ERR(pcie->base);
+>>  
+>> -	pcie->clk = devm_clk_get(dev, "pcie");
+>> -	if (IS_ERR(pcie->clk)) {
+>> -		dev_err(dev, "cannot get platform clock\n");
+>> -		return PTR_ERR(pcie->clk);
+>> -	}
+>> -	err = clk_prepare_enable(pcie->clk);
+>> -	if (err)
+>> -		return err;
+>> -
+>>  	pcie->bus_clk = devm_clk_get(dev, "pcie_bus");
+>>  	if (IS_ERR(pcie->bus_clk)) {
+>>  		dev_err(dev, "cannot get pcie bus clock\n");
+>> -		err = PTR_ERR(pcie->bus_clk);
+>> -		goto fail_clk;
+>> +		return PTR_ERR(pcie->bus_clk);
+>>  	}
+>>  	err = clk_prepare_enable(pcie->bus_clk);
+>>  	if (err)
+>> -		goto fail_clk;
+>> +		return err;
+>>  
+>>  	i = irq_of_parse_and_map(dev->of_node, 0);
+>>  	if (!i) {
+>> @@ -953,8 +942,6 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+>>  
+>>  err_map_reg:
+>>  	clk_disable_unprepare(pcie->bus_clk);
+>> -fail_clk:
+>> -	clk_disable_unprepare(pcie->clk);
+>>  
+>>  	return err;
+>>  }
+>> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>>  	if (err)
+>>  		goto err_free_bridge;
 > 
-> This doesn't say anything about routing between two different devices
-> below a Root Port.  Those would be in the same hierarchy domain and
-> should follow the conventional PCI routing rules.  Of course, since a
-> Root Port has one link that leads to one device, they would probably
-> be different functions of a single multi-function device, so I don't
-> know how practical it would be to test this.
+> This error path now calls pci_free_resource_list() and in this case
+> the path is taken if rcar_pcie_parse_request_of_pci_ranges() fails.
+> Is that ok?
 
-Yes, given that there's only one device below a root port it will either 
-be a switch or a multi-function device. In the multi-function device 
-case, I'm pretty sure the spec disallows routing-to-self so doing a P2P 
-transaction in that sense isn't going to work unless the device 
-specifically supports it and intercepts the traffic before it gets to 
-the port.
+I think so, or did I miss something obvious?
 
-But, if we're talking about multi-function devices it should be able to 
-do everything within it's own driver so it's not exactly Peer-to-Peer. 
-Still, if someone has such hardware I think it's up to them to add 
-support for this odd situation.
-
-Logan
+-- 
+Best regards,
+Marek Vasut
