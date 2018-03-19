@@ -1,79 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:55004 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934783AbeCBXoI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 18:44:08 -0500
-Subject: [PATCH 0/3] pci-iov: Add support for unmanaged SR-IOV
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, mheyne@amazon.de,
-        liang-min.wang@intel.com, mark.d.rustad@intel.com,
-        dwmw2@infradead.org, dwmw@amazon.co.uk
-Date: Fri, 02 Mar 2018 15:44:05 -0800
-Message-ID: <20180302234218.3337.16486.stgit@localhost.localdomain>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:54331 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932851AbeCSOEK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 10:04:10 -0400
+Subject: Re: [PATCH 1/2] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+To: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Simon Horman <horms@verge.net.au>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20180318105253.30532-1-marek.vasut+renesas@gmail.com>
+ <20180319083839.h3qdt4obbsbqlx73@verge.net.au>
+ <b7dad289-c9de-ae19-a0d2-3eb127e0955a@gmail.com>
+ <CAMuHMdVjU=1ndTK1jTU90Vw2sgPsTRRsH56vvY6nuuoDWUo-Aw@mail.gmail.com>
+ <618f1841-f8b9-7fdb-5887-01a080a231db@gmail.com>
+ <ebef6e5d-03ac-e1a7-ab9b-11ddfee72355@mentor.com>
+ <05d70e5e-4751-9dc7-3b88-f4b6f4c70e82@gmail.com>
+ <ea14c5a4-3588-77e2-4352-6e8eecd7c9a4@mentor.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <5f63d151-5397-4612-43c1-904dd614ac17@gmail.com>
+Date: Mon, 19 Mar 2018 15:04:07 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <ea14c5a4-3588-77e2-4352-6e8eecd7c9a4@mentor.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is meant to add support for SR-IOV on devices when the VFs are
-not managed by the kernel. Examples of recent patches attempting to do this
-include:
-virto - https://patchwork.kernel.org/patch/10241225/
-pci-stub - https://patchwork.kernel.org/patch/10109935/
-vfio - https://patchwork.kernel.org/patch/10103353/
-uio - https://patchwork.kernel.org/patch/9974031/
+On 03/19/2018 02:56 PM, Vladimir Zapolskiy wrote:
+> On 03/19/2018 03:48 PM, Marek Vasut wrote:
+>> On 03/19/2018 02:43 PM, Vladimir Zapolskiy wrote:
+>>> On 03/19/2018 12:56 PM, Marek Vasut wrote:
+>>>> On 03/19/2018 11:53 AM, Geert Uytterhoeven wrote:
+>>>>> Hi Marek,
+>>>>>
+>>>>> On Mon, Mar 19, 2018 at 10:53 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>>>>>> On 03/19/2018 09:38 AM, Simon Horman wrote:
+>>>>>>> On Sun, Mar 18, 2018 at 11:52:52AM +0100, Marek Vasut wrote:
+>>>>>>>> The data link active signal usually takes ~20 uSec to be asserted,
+>>>>>>>> poll the bit more often to avoid useless delays in this function.
+>>>>>>>>
+>>>>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>>>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>>>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>>>>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>>>>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>>>>>>>> Cc: linux-renesas-soc@vger.kernel.org
+>>>>>>>
+>>>>>>> Unless my eyes deceive me this seems to be quite a lot (100x) more often,
+>>>>>>> but so be it.
+>>>>>>
+>>>>>> It's just a higher frequency to avoid slowdown when bringing the link up.
+>>>>>
+>>>>> No it isn't: you replaced a sleep by a delay, thus making it blocking.
+>>>>
+>>>> For much shorter period of time.
+>>>>
+>>>>> So this can spin for up to 50 ms (+ overhead)?
+>>>>
+>>>> That's what it did before too , it used msleep and now it uses udelay.
+>>>>
+>>>
+>>> msleep() does not spin, it reschedules the process.
+>>>
+>>> Instead to find a balance you may want to play with usleep_range().
+>>
+>> Which does not work in atomic context, which will be needed when using
+>> this function in suspend/resume later on.
+>>
+> 
+> IIRC suspend/resume are never executed in atomic context, and runtime
+> suspend/resume are invoked in atomic context only if pm_runtime_irq_safe()
+> is called (just a few drivers in vanilla uses it at the moment).
+> 
+> Nevertheless, the commit message does not say that the change is needed
+> for future suspend/resume add-on.
 
-Since this is quickly blowing up into a multi-driver problem it is probably
-best to implement this solution as generically as possible.
+Well, then drop this patch for now, I'll resubmit it later with the
+suspend/resume series. I presume 2/2 can go in though, so I don't have
+to resubmit it over and over again.
 
-This series is an attempt to do that. What we do with this patch set is 
-provide a generic framework to enable SR-IOV in the case that the PF driver 
-doesn't support managing the VFs itself.
-
-I based my patch set originally on the patch by Mark Rustad but there isn't
-much left after going through and cleaning out the bits that were no longer
-needed, and after incorporating the feedback from David Miller. At this point
-the only items to be fully reused was his patch description which is now 
-present in patch 3 of the set.
-
-I have included the authors of the original 4 patches above in the Cc here.
-My hope is to get feedback and/or review on if this works for their use
-cases.
-
-My hope is that for now the pci-stub and uio driver approaches can be 
-addressed using the current patch that enables vfio-pci support. The only
-limitation is that it is also setting the taint flag until we have a better 
-solution.
-
-v2: Reduced scope back to just virtio_pci and vfio-pci
-    Broke into 3 patch set from single patch
-    Changed autoprobe behavior to always set when num_vfs is set non-zero
-
-Cc: Mark Rustad <mark.d.rustad@intel.com>
-Cc: Maximilian Heyne <mheyne@amazon.de>
-Cc: Liang-Min Wang <liang-min.wang@intel.com>
-Cc: David Woodhouse <dwmw@amazon.co.uk>
-
----
-
-Alexander Duyck (3):
-      pci-iov: Add support for unmanaged SR-IOV
-      vfio: Add support for unmanaged or userspace managed SR-IOV
-      virtio_pci: Add support for unmanaged SR-IOV on virtio_pci devices
-
-
- Documentation/ABI/testing/sysfs-bus-pci |   17 +++++++++
- drivers/pci/iov.c                       |   37 ++++++++++++++++++++
- drivers/pci/pci-driver.c                |    2 +
- drivers/pci/pci-sysfs.c                 |   29 ++++++++++++++++
- drivers/pci/pci.h                       |    4 ++
- drivers/vfio/pci/vfio_pci.c             |   57 +++++++++++++++++++++++++++++++
- drivers/virtio/virtio_pci_common.c      |    4 ++
- include/linux/pci.h                     |    1 +
- 8 files changed, 149 insertions(+), 2 deletions(-)
-
---
+-- 
+Best regards,
+Marek Vasut
