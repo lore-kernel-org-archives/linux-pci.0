@@ -1,75 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:49038 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934411AbeCEMYu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 07:24:50 -0500
-Date: Mon, 5 Mar 2018 12:24:40 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>,
-        linux-pci@vger.kernel.org,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v17 08/10] ACPI / scan: do not enumerate Indirect IO host
+ children
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
+ <1521051359-34473-9-git-send-email-john.garry@huawei.com>
+ <2309217.pWfZsU88YQ@aspire.rjw.lan>
+ <906b3868-39a5-3807-23a4-dfc52c2e82c4@huawei.com>
+ <CAJZ5v0gm5AokZy4JvuJzDgdNoc88FjrMmXR2RK5pdRkXgtYrXQ@mail.gmail.com>
+CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root
- subordinate
-Message-ID: <20180305122440.GA29780@e107981-ln.cambridge.arm.com>
-References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
- <20180220153947.GA21801@e107981-ln.cambridge.arm.com>
- <CAOMZO5CSMJz8=Mm-fJR1aJK=V19uTyVO1PXkOGd1g6v64BNHNg@mail.gmail.com>
- <20180305094918.GB28109@e107981-ln.cambridge.arm.com>
- <CAOMZO5CFXBciQBOpPDtZc9L48d5Y3zubCK8M=HWo+owEOTQkrQ@mail.gmail.com>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Joe Perches <joe@perches.com>,
+        "Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Alexander Graf <agraf@suse.de>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <d4048516-033c-85f1-1766-69b3e58ae295@huawei.com>
+Date: Mon, 19 Mar 2018 11:13:07 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOMZO5CFXBciQBOpPDtZc9L48d5Y3zubCK8M=HWo+owEOTQkrQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0gm5AokZy4JvuJzDgdNoc88FjrMmXR2RK5pdRkXgtYrXQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 05, 2018 at 08:55:43AM -0300, Fabio Estevam wrote:
-> Hi Lorenzo,
-> 
-> On Mon, Mar 5, 2018 at 6:49 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> 
-> > It is a balance of urgency and making sure it is extensively tested -
-> > I'd prefer it to go via usual release cycle (and -next) and then it will
-> > trickle into stable kernels, let me know if that's not OK.
-> >
-> > I would understand your point if dwc maintainers were more proactive
-> > in testing their respective controllers - all of them should be affected
-> > by this fix but I have just heard from a few of them.
-> 
-> We got this patch tested by: Koen, myself, Sebastian and the folks at
-> Pengutronix.
-> 
-> Looks like a decent amount of testing IMHO.
+On 19/03/2018 10:57, Rafael J. Wysocki wrote:
+> On Mon, Mar 19, 2018 at 11:48 AM, John Garry <john.garry@huawei.com> wrote:
+>> On 19/03/2018 10:30, Rafael J. Wysocki wrote:
+>>>
+>>> On Wednesday, March 14, 2018 7:15:57 PM CET John Garry wrote:
+>>>>
+>>>>> Through the logical PIO framework systems which otherwise have
+>>>>> no IO space access to legacy ISA/LPC devices may access these
+>>>>> devices through so-called "indirect IO" method. In this, IO
+>>>>> space accesses for non-PCI hosts are redirected to a host
+>>>>> LLDD to manually generate the IO space (bus) accesses. Hosts
+>>>>> are able to register a region in logical PIO space to map to
+>>>>> its bus address range.
+>>>>>
+>>>>> Indirect IO child devices have an associated host-specific bus
+>>>>> address. Special translation is required to map between
+>>>>> a logical PIO address for a device and it's host bus address.
+>>>>>
+>>>>> Since in the ACPI tables the child device IO resources would
+>>>>> be the host-specific values, it is required the ACPI scan code
+>>>>> should not enumerate these devices, and that this should be
+>>>>> the responsibility of the host driver so that it can "fixup"
+>>>>> the resources so that they map to the appropriate logical PIO
+>>>>> addresses.
+>>>>>
+>>>>> To avoid enumerating these child devices, we add a check from
+>>>>> acpi_device_enumeration_by_parent() as to whether the parent
+>>>>> for a device is a member of a known list of "indirect IO" hosts.
+>>>>> For now, the HiSilicon LPC host controller ID is added.
+>>>>>
+>>>>> Signed-off-by: John Garry <john.garry@huawei.com>
+>>>>> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>
+>>> You have my ACK here already.
+>>>
+>>> Since I've ACKed the [7/10] too, I don't think there's anything more I can
+>>> do
+>>> about this series and I'm assuming that it will be routed through other
+>>> trees.
+>>>
+>>> Thanks!
+>>>
+>>
+>> Hi Rafael,
+>>
+>> Thanks for this.
+>>
+>> Yes, I am working on getting this whole series routed through another tree.
+>> Actually I think 7+8 could go separately since there is no build dependency,
+>> but I will try to keep the series together.
+>
+> I can take the [7-8/10] if you want me to, so please let me know.
+>
 
-IIUC you all tested the same dwc host bridge variant (ie imx6) - I want
-to understand if it works across dwc variants because this patch affects
-them all.
+OK, thanks. Will do.
 
-> In this case I would prefer that we could fix the regression into
-> 4.16-rc cycle rather than waiting until 4.17.
+John
 
-I will decide what to do shortly - I would really appreciate if other
-dwc host bridge maintainers (that are CC'ed) can share the testing effort.
+> Thanks!
+>
+> .
+>
 
-Thanks,
-Lorenzo
+
