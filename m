@@ -1,70 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:52111 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751202AbeC0OJZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Mar 2018 10:09:25 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        stable@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v3 3/6] PCI: aardvark: set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-Date: Tue, 27 Mar 2018 16:08:16 +0200
-Message-Id: <20180327140819.23501-11-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
-References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:56146 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755430AbeCSKTy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 06:19:54 -0400
+Received: from mail-pf0-f198.google.com ([209.85.192.198])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1exrtQ-0007xO-MY
+        for linux-pci@vger.kernel.org; Mon, 19 Mar 2018 10:19:52 +0000
+Received: by mail-pf0-f198.google.com with SMTP id p10so1108375pfl.22
+        for <linux-pci@vger.kernel.org>; Mon, 19 Mar 2018 03:19:52 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii;
+        delsp=yes;
+        format=flowed
+Mime-Version: 1.0 (Mac OS X Mail 11.3 \(3445.6.15\))
+Subject: Re: [PATCH] PCI / PM: Always check PME wakeup capability for runtime
+ wakeup support
+From: Kai Heng Feng <kai.heng.feng@canonical.com>
+In-Reply-To: <2242415.DLYj1vY8hi@aspire.rjw.lan>
+Date: Mon, 19 Mar 2018 18:19:45 +0800
+Cc: bhelgaas@google.com, rafael.j.wysocki@intel.com,
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        stable@vger.kernel.org
+Message-Id: <48D2ECB8-4A95-4910-912C-67F17CA824EC@canonical.com>
+References: <20180318191215.10005-1-kai.heng.feng@canonical.com>
+ <2242415.DLYj1vY8hi@aspire.rjw.lan>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
 
-When setting the PIO_ADDR_LS register during a configuration read, we
-were properly passing the device number, function number and register
-number, but not the bus number, causing issues when reading the
-configuration of PCIe devices.
 
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Wilson Ding <dingwei@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
-Changes since v2:
- - Drop PCIE_BDF() macro, since it's no longer used. Noticed by Bjorn
-   Helgaas.
----
- drivers/pci/host/pci-aardvark.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> On Mar 19, 2018, at 6:00 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>
+> On Sunday, March 18, 2018 8:12:15 PM CET Kai-Heng Feng wrote:
+>> USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+>> core: Drop run_wake flag from struct dev_pm_info").
+>>
+>> The device in question is not power managed by platform firmware,
+>> furthermore, it only supports PME# from D3cold:
+>> Capabilities: [78] Power Management version 3
+>>        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+>>        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>
+> That's somewhat unusual, but OK.
+>
+>> Before the commit, the device never gets runtime suspended. After the
+>> commit, the device gets runtime suspended, so it does not respond to any
+>> PME#.
+>>
+>> usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
+>> device_can_wakeup() in pci_dev_run_wake() always returns true.
+>>
+>> So pci_dev_run_wake() needs to check PME wakeup capability as its first
+>> condition.
+>>
+>> Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct  
+>> dev_pm_info")
+>> Cc: stable@vger.kernel.org # 4.13+
+>> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+>> ---
+>>  drivers/pci/pci.c | 11 ++++-------
+>>  1 file changed, 4 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index f6a4dd10d9b0..e026d8f313ec 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -2125,16 +2125,13 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+>>  {
+>>  	struct pci_bus *bus = dev->bus;
+>>
+>> -	if (device_can_wakeup(&dev->dev))
+>> -		return true;
+>> -
+>> -	if (!dev->pme_support)
+>> -		return false;
+>
+> Why are you removing this check?
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index be140dc7109b..4affbf1b826b 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -172,8 +172,6 @@
- #define PCIE_CONFIG_WR_TYPE0			0xa
- #define PCIE_CONFIG_WR_TYPE1			0xb
- 
--/* PCI_BDF shifts 8bit, so we need extra 4bit shift */
--#define PCIE_BDF(dev)				(dev << 4)
- #define PCIE_CONF_BUS(bus)			(((bus) & 0xff) << 20)
- #define PCIE_CONF_DEV(dev)			(((dev) & 0x1f) << 15)
- #define PCIE_CONF_FUNC(fun)			(((fun) & 0x7)	<< 12)
-@@ -465,7 +463,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	advk_writel(pcie, reg, PIO_CTRL);
- 
- 	/* Program the address registers */
--	reg = PCIE_BDF(devfn) | PCIE_CONF_REG(where);
-+	reg = PCIE_CONF_ADDR(bus->number, devfn, where);
- 	advk_writel(pcie, reg, PIO_ADDR_LS);
- 	advk_writel(pcie, 0, PIO_ADDR_MS);
- 
--- 
-2.14.3
+Because this is implicitly checked by pci_pme_capable().
+
+But I guess it's better to keep it explicit.
+
+I'll send a v2 to address this.
+
+Kai-Heng
+
+>
+>> -
+>>  	/* PME-capable in principle, but not from the target power state */
+>> -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
+>> +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
+>>  		return false;
+>>
+>> +	if (device_can_wakeup(&dev->dev))
+>> +		return true;
+>> +
+>>  	while (bus->parent) {
+>>  		struct pci_dev *bridge = bus->self;
+>
+> Thanks,
+> Rafael
