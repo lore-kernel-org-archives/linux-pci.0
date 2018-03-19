@@ -1,157 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43124 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033321AbeCASRk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 13:17:40 -0500
-Date: Thu, 1 Mar 2018 18:18:00 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Vignesh R <vigneshr@ti.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/3] PCI: dwc: pci-dra7xx: Improve MSI IRQ handling
-Message-ID: <20180301181800.GA4728@red-moon>
-References: <20180209120415.17590-1-vigneshr@ti.com>
- <20180209120415.17590-3-vigneshr@ti.com>
- <20180212175801.GA29070@e107981-ln.cambridge.arm.com>
- <7cfa73af-09fa-d298-aaab-3e74ee7e1dd5@ti.com>
- <c3efe768-8934-16cc-142b-bc46b88fe399@ti.com>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:60322 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932316AbeCSK3p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 06:29:45 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: John Garry <john.garry@huawei.com>
+Cc: mika.westerberg@linux.intel.com, rafael@kernel.org,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        robh+dt@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+        mark.rutland@arm.com, olof@lixom.net, dann.frazier@canonical.com,
+        andy.shevchenko@gmail.com, robh@kernel.org,
+        andriy.shevchenko@linux.intel.com, joe@perches.com,
+        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linuxarm@huawei.com, minyard@acm.org, devicetree@vger.kernel.org,
+        linux-arch@vger.kernel.org, rdunlap@infradead.org,
+        gregkh@linuxfoundation.org, akpm@linux-foundation.org,
+        frowand.list@gmail.com, agraf@suse.de
+Subject: Re: [PATCH v17 08/10] ACPI / scan: do not enumerate Indirect IO host children
+Date: Mon, 19 Mar 2018 11:30:11 +0100
+Message-ID: <2309217.pWfZsU88YQ@aspire.rjw.lan>
+In-Reply-To: <1521051359-34473-9-git-send-email-john.garry@huawei.com>
+References: <1521051359-34473-1-git-send-email-john.garry@huawei.com> <1521051359-34473-9-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <c3efe768-8934-16cc-142b-bc46b88fe399@ti.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 09:01:53PM +0530, Vignesh R wrote:
-> Hi Lorenzo,
+On Wednesday, March 14, 2018 7:15:57 PM CET John Garry wrote:
+> Through the logical PIO framework systems which otherwise have
+> no IO space access to legacy ISA/LPC devices may access these
+> devices through so-called "indirect IO" method. In this, IO
+> space accesses for non-PCI hosts are redirected to a host
+> LLDD to manually generate the IO space (bus) accesses. Hosts
+> are able to register a region in logical PIO space to map to
+> its bus address range.
 > 
-> On 15-Feb-18 9:59 AM, Vignesh R wrote:
-> > Hi,
-> > 
-> > On Monday 12 February 2018 11:28 PM, Lorenzo Pieralisi wrote:
-> >> On Fri, Feb 09, 2018 at 05:34:14PM +0530, Vignesh R wrote:
-> >>> We need to ensure that there are no pending MSI IRQ vector set (i.e
-> >>> PCIE_MSI_INTR0_STATUS reads 0 at least once) before exiting
-> >>> dra7xx_pcie_msi_irq_handler(). Else, the dra7xx PCIe wrapper will not
-> >>> register new MSI IRQs even though PCIE_MSI_INTR0_STATUS shows IRQs are
-> >>> pending. Therefore, keep calling dra7xx_pcie_msi_irq_handler() until it
-> >>> returns IRQ_NONE, which suggests that PCIE_MSI_INTR0_STATUS is 0.
-> >>>
-> >>> This fixes a bug, where PCIe wifi cards with 4 DMA queues like Intel
-> >>> 8260 used to throw following error and stall during ping/iperf3 tests.
-> >>>
-> >>> [   97.776310] iwlwifi 0000:01:00.0: Queue 9 stuck for 2500 ms.
-> >>>
-> >>> Signed-off-by: Vignesh R <vigneshr@ti.com>
-> >>> ---
-> >>>   drivers/pci/dwc/pci-dra7xx.c | 21 ++++++++++++++++++---
-> >>>   1 file changed, 18 insertions(+), 3 deletions(-)
-> >>>
-> >>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> >>> index ed8558d638e5..3420cbf7b60a 100644
-> >>> --- a/drivers/pci/dwc/pci-dra7xx.c
-> >>> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> >>> @@ -254,14 +254,31 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
-> >>>         struct dra7xx_pcie *dra7xx = arg;
-> >>>         struct dw_pcie *pci = dra7xx->pci;
-> >>>         struct pcie_port *pp = &pci->pp;
-> >>> +     int count = 0;
-> >>>         unsigned long reg;
-> >>>         u32 virq, bit;
-> >>>   
-> >>>         reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
-> >>> +     dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
-> >>>   
-> >>>         switch (reg) {
-> >>>         case MSI:
-> >>> -             dw_handle_msi_irq(pp);
-> >>> +             /*
-> >>> +              * Need to make sure no MSI IRQs are pending before
-> >>> +              * exiting handler, else the wrapper will not catch new
-> >>> +              * IRQs. So loop around till dw_handle_msi_irq() returns
-> >>> +              * IRQ_NONE
-> >>> +              */
-> >>> +             while (dw_handle_msi_irq(pp) != IRQ_NONE && count < 1000)
-> >>> +                     count++;
-> >>> +
-> >>> +             if (count == 1000) {
-> >>> +                     dev_err(pci->dev, "too much work in msi irq\n");
-> >>> +                     dra7xx_pcie_writel(dra7xx,
-> >>> +                                        PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
-> >>> +                                        reg);
-> >>> +                     return IRQ_HANDLED;
-> >>
-> >> I am not merging any code patching this IRQ handling routine anymore
-> >> unless you thoroughly explain to me how this CONF_IRQSTATUS_MSI register
-> >> works (and how it is related to DW registers) and why this specific host
-> >> controller needs handling that is not required by any other host
-> >> controller relying on dw_handle_msi_irq().
-> > 
-> > Unlike other DW PCIe controllers, TI implementation has a wrapper on top
-> > of DW core. This wrapper latches the DW core level MSI and legacy
-> > interrupts and then propagates it to GIC.
-> > PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI register is present in this TI
-> > wrapper which aggregates all the MSI IRQs(PCIE_MSI_INTR0_STATUS) of DW
-> > level. They are mapped on the MSI interrupt line of PCIe controller,
-> > using a single status bit in the PCIECTRL_TI_CONF_IRQSTATUS_MSI register.
-> > 
-> > So, the irq handler, dra7xx_pcie_msi_irq_handler(), first needs to look
-> > at PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI[4] to know that its MSI IRQ and
-> > then call dw_handle_msi_irq() to handle individual MSI vectors.
-> > Driver has to make sure there are no pending vectors in DW core MSI
-> > status register before exiting handler. Otherwise next MSI IRQ will not
-> > be latched by the wrapper.
-> > 
-> > 
+> Indirect IO child devices have an associated host-specific bus
+> address. Special translation is required to map between
+> a logical PIO address for a device and it's host bus address.
 > 
-> Did above explanation clarify CONF_IRQSTATUS_MSI register usage and the
-> need for IRQ handler? Are you okay with this fix?
-
-Hi Vignesh,
-
-I will get back to it shortly, thanks for your patience.
-
-Lorenzo
-
-> Regards
-> Vignesh
+> Since in the ACPI tables the child device IO resources would
+> be the host-specific values, it is required the ACPI scan code
+> should not enumerate these devices, and that this should be
+> the responsibility of the host driver so that it can "fixup"
+> the resources so that they map to the appropriate logical PIO
+> addresses.
 > 
-> >>
-> >> I suspect there is a code design flaw with the way this host handles
-> >> IRQs and we are going to find it and fix it the way it should, not with
-> >> any plaster like this patch.
-> >>
-> > 
-> > I agree there has been some churn wrt this wrapper level IRQ handler.
-> > But, that was because hardware documentation/TRM did not match
-> > actual behavior and so it took some time to understand how the
-> > hardware is working. I have extensively tested this series on multiple
-> > problematic PCIe USB cards and PCIe WiFi cards over week long stress
-> > tests. And also had some agreement with internal hardware designers.
-> > Hardware documentations will also be updated.
-> > 
-> > 
-> >> Lorenzo
-> >>
-> >>> +             }
-> >>>                 break;
-> >>>         case INTA:
-> >>>         case INTB:
-> >>> @@ -275,8 +292,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
-> >>>                 break;
-> >>>         }
-> >>>   
-> >>> -     dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
-> >>> -
-> >>>         return IRQ_HANDLED;
-> >>>   }
-> >>>   
-> >>> -- 
-> >>> 2.16.1
-> >>>
-> > 
+> To avoid enumerating these child devices, we add a check from
+> acpi_device_enumeration_by_parent() as to whether the parent
+> for a device is a member of a known list of "indirect IO" hosts.
+> For now, the HiSilicon LPC host controller ID is added.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+You have my ACK here already.
+
+Since I've ACKed the [7/10] too, I don't think there's anything more I can do
+about this series and I'm assuming that it will be routed through other trees.
+
+Thanks!
+
+> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> Tested-by: dann frazier <dann.frazier@canonical.com>
+> ---
+>  drivers/acpi/scan.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index f9e7904..a4cbf3e 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -1524,11 +1524,25 @@ static int acpi_check_serial_bus_slave(struct acpi_resource *ares, void *data)
+>  	return -1;
+>  }
+>  
+> +static bool acpi_is_indirect_io_slave(struct acpi_device *device)
+> +{
+> +	struct acpi_device *parent = device->parent;
+> +	const struct acpi_device_id indirect_io_hosts[] = {
+> +		{"HISI0191", 0},
+> +		{}
+> +	};
+> +
+> +	return parent && !acpi_match_device_ids(parent, indirect_io_hosts);
+> +}
+> +
+>  static bool acpi_device_enumeration_by_parent(struct acpi_device *device)
+>  {
+>  	struct list_head resource_list;
+>  	bool is_serial_bus_slave = false;
+>  
+> +	if (acpi_is_indirect_io_slave(device))
+> +		return true;
+> +
+>  	/* Macs use device properties in lieu of _CRS resources */
+>  	if (x86_apple_machine &&
+>  	    (fwnode_property_present(&device->fwnode, "spiSclkPeriod") ||
+> 
