@@ -1,61 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from zimbra1.kalray.eu ([92.103.151.219]:40052 "EHLO
-        zimbra1.kalray.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751712AbeCUMKd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 08:10:33 -0400
-Date: Wed, 21 Mar 2018 13:10:31 +0100 (CET)
-From: Marta Rybczynska <mrybczyn@kalray.eu>
-To: Ming Lei <ming.lei@redhat.com>
-Cc: keith busch <keith.busch@intel.com>, axboe@fb.com, hch@lst.de,
-        sagi@grimberg.me, linux-nvme@lists.infradead.org,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, Pierre-Yves Kerbrat <pkerbrat@kalray.eu>
-Message-ID: <464125757.5843583.1521634231341.JavaMail.zimbra@kalray.eu>
-In-Reply-To: <20180321115037.GA26083@ming.t460p>
-References: <744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu> <20180321115037.GA26083@ming.t460p>
-Subject: Re: [RFC PATCH] nvme: avoid race-conditions when enabling devices
+Received: from szxga04-in.huawei.com ([45.249.212.190]:6655 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754894AbeCSKtI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Mar 2018 06:49:08 -0400
+Subject: Re: [PATCH v17 08/10] ACPI / scan: do not enumerate Indirect IO host
+ children
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
+ <1521051359-34473-9-git-send-email-john.garry@huawei.com>
+ <2309217.pWfZsU88YQ@aspire.rjw.lan>
+CC: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
+        <lorenzo.pieralisi@arm.com>, <hanjun.guo@linaro.org>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>, <arnd@arndb.de>,
+        <mark.rutland@arm.com>, <olof@lixom.net>,
+        <dann.frazier@canonical.com>, <andy.shevchenko@gmail.com>,
+        <robh@kernel.org>, <andriy.shevchenko@linux.intel.com>,
+        <joe@perches.com>, <benh@kernel.crashing.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <minyard@acm.org>, <devicetree@vger.kernel.org>,
+        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
+        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
+        <frowand.list@gmail.com>, <agraf@suse.de>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <906b3868-39a5-3807-23a4-dfc52c2e82c4@huawei.com>
+Date: Mon, 19 Mar 2018 10:48:34 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2309217.pWfZsU88YQ@aspire.rjw.lan>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Wed, Mar 21, 2018 at 12:00:49PM +0100, Marta Rybczynska wrote:
->> NVMe driver uses threads for the work at device reset, including enabling
->> the PCIe device. When multiple NVMe devices are initialized, their reset
->> works may be scheduled in parallel. Then pci_enable_device_mem can be
->> called in parallel on multiple cores.
->> 
->> This causes a loop of enabling of all upstream bridges in
->> pci_enable_bridge(). pci_enable_bridge() causes multiple operations
->> including __pci_set_master and architecture-specific functions that
->> call ones like and pci_enable_resources(). Both __pci_set_master()
->> and pci_enable_resources() read PCI_COMMAND field in the PCIe space
->> and change it. This is done as read/modify/write.
->> 
->> Imagine that the PCIe tree looks like:
->> A - B - switch -  C - D
->>                \- E - F
->> 
->> D and F are two NVMe disks and all devices from B are not enabled and bus
->> mastering is not set. If their reset work are scheduled in parallel the two
->> modifications of PCI_COMMAND may happen in parallel without locking and the
->> system may end up with the part of PCIe tree not enabled.
-> 
-> Then looks serialized reset should be used, and I did see the commit
-> 79c48ccf2fe ("nvme-pci: serialize pci resets") fixes issue of 'failed
-> to mark controller state' in reset stress test.
-> 
-> But that commit only covers case of PCI reset from sysfs attribute, and
-> maybe other cases need to be dealt with in similar way too.
-> 
+On 19/03/2018 10:30, Rafael J. Wysocki wrote:
+> On Wednesday, March 14, 2018 7:15:57 PM CET John Garry wrote:
+>> > Through the logical PIO framework systems which otherwise have
+>> > no IO space access to legacy ISA/LPC devices may access these
+>> > devices through so-called "indirect IO" method. In this, IO
+>> > space accesses for non-PCI hosts are redirected to a host
+>> > LLDD to manually generate the IO space (bus) accesses. Hosts
+>> > are able to register a region in logical PIO space to map to
+>> > its bus address range.
+>> >
+>> > Indirect IO child devices have an associated host-specific bus
+>> > address. Special translation is required to map between
+>> > a logical PIO address for a device and it's host bus address.
+>> >
+>> > Since in the ACPI tables the child device IO resources would
+>> > be the host-specific values, it is required the ACPI scan code
+>> > should not enumerate these devices, and that this should be
+>> > the responsibility of the host driver so that it can "fixup"
+>> > the resources so that they map to the appropriate logical PIO
+>> > addresses.
+>> >
+>> > To avoid enumerating these child devices, we add a check from
+>> > acpi_device_enumeration_by_parent() as to whether the parent
+>> > for a device is a member of a known list of "indirect IO" hosts.
+>> > For now, the HiSilicon LPC host controller ID is added.
+>> >
+>> > Signed-off-by: John Garry <john.garry@huawei.com>
+>> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> You have my ACK here already.
+>
+> Since I've ACKed the [7/10] too, I don't think there's anything more I can do
+> about this series and I'm assuming that it will be routed through other trees.
+>
+> Thanks!
+>
 
-It seems to me that the serialized reset works for multiple resets of the
-same device, doesn't it? Our problem is linked to resets of different devices
-that share the same PCIe tree.
+Hi Rafael,
 
-You're right that the problem we face might also come with manual resets
-under certain conditions (I think that all devices in a subtree would need
-to be disabled).
+Thanks for this.
 
-Thanks,
-Marta
+Yes, I am working on getting this whole series routed through another 
+tree. Actually I think 7+8 could go separately since there is no build 
+dependency, but I will try to keep the series together.
+
+All the best, And thanks again,
+John
