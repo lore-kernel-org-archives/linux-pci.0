@@ -1,68 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50236 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752519AbeCNQfh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 12:35:37 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w2EGYwlJ079214
-        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 12:35:37 -0400
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2gq515ff61-1
-        (version=TLSv1.2 cipher=AES256-SHA256 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 14 Mar 2018 12:35:37 -0400
-Received: from localhost
-        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <desnesn@linux.vnet.ibm.com>;
-        Wed, 14 Mar 2018 10:35:36 -0600
-From: "Desnes A. Nunes do Rosario" <desnesn@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
-        mpe@ellerman.id.au, ruscur@russell.cc, aik@ozlabs.ru,
-        david@gibson.dropbear.id.au, fbarrat@linux.vnet.ibm.com,
-        brking@linux.vnet.ibm.com
-Subject: [PATCH 2/2, powerpc/powernv] powerpc/powernv: Tweak PCI_DEV_FLAGS_QUIET_PCI_REALIGN on/off during boot
-Date: Wed, 14 Mar 2018 13:34:55 -0300
-In-Reply-To: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
-References: <20180314163455.15854-1-desnesn@linux.vnet.ibm.com>
-Message-Id: <20180314163455.15854-3-desnesn@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.99]:37354 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966729AbeCSSnY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Mar 2018 14:43:24 -0400
+Date: Mon, 19 Mar 2018 13:43:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Frederick Lawler <fred@fredlawl.com>
+Subject: Re: [PATCH v2 00/13] PCI: Simplify PCIe port driver
+Message-ID: <20180319184322.GB77194@bhelgaas-glaptop.roam.corp.google.com>
+References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Turn on PCI_DEV_FLAGS_QUIET_PCI_REALIGN flag on powernv's pci driver
-to silent PCI realignment messages through a early stage hook, and turn
-it off right before the pci device is enabled with a final stage hook.
+On Fri, Mar 09, 2018 at 12:59:49PM -0600, Bjorn Helgaas wrote:
+> This is an attempt to move a few things out of the port driver.
+> 
+> I added these new patches since v1:
+> 
+>   Merge pcieport_if.h into portdrv.h
+>     Merge pcieport_if.h and portdrv.h to reduce clutter
+> 
+>   Remove unnecessary "pcie_ports=auto" parameter
+>     This is the default setting anyway, so specifying the parameter doesn't
+>     do anything.
+> 
+>   Encapsulate pcie_ports_auto inside the port driver
+>     "pcie_ports_auto" was declared in linux/pci.h even though nobody
+>     outside the port driver used it.
+> 
+>   Rename and reverse sense of pcie_ports_auto
+>     "pcie_ports_auto" is connected with the "pcie_ports=native" parameter,
+>     so rename it to match.
+> 
+> Other changes since v1:
+>   - Rebase onto my pci/portdrv branch.
+>   - Rename pcie_resume_early() to pcie_pme_root_status_cleanup() as
+>     suggested by Rafael.
+>   - Add Rafael's Reviewed-by tags.
+> 
+> v1: https://lkml.kernel.org/r/152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com
+> 
+> ---
+> 
+> Bjorn Helgaas (13):
+>       PCI/portdrv: Merge pcieport_if.h into portdrv.h
+>       PCI/PM: Move pcie_clear_root_pme_status() to core
+>       PCI/PM: Clear PCIe PME Status bit in core, not PCIe port driver
+>       PCI/PM: Clear PCIe PME Status bit for Root Complex Event Collectors
+>       PCI/portdrv: Disable port driver in compat mode
+>       PCI/portdrv: Remove pcie_port_bus_type link order dependency
+>       PCI/portdrv: Remove unused PCIE_PORT_SERVICE_VC
+>       PCI/portdrv: Simplify PCIe feature permission checking
+>       PCI/portdrv: Remove unnecessary include of <linux/pci-aspm.h>
+>       PCI/portdrv: Remove "pcie_hp=nomsi" kernel parameter
+>       PCI/portdrv: Remove unnecessary "pcie_ports=auto" parameter
+>       PCI/portdrv: Encapsulate pcie_ports_auto inside the port driver
+>       PCI/portdrv: Rename and reverse sense of pcie_ports_auto
 
-Fixes: 38274637699 ("powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned")
-Signed-off-by: Desnes A. Nunes do Rosario <desnesn@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 69d102cbf48f..d28ce0899487 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -1108,6 +1108,20 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
- 
-+/* Fixup that disables PCI realignment menssages for all PCI devices */
-+static void disable_realign_menssages(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_QUIET_PCI_REALIGN;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, disable_realign_menssages);
-+
-+/* Fixup that enables PCI realignment messages for all PCI devices */
-+static void enable_realign_menssages(struct pci_dev *dev)
-+{
-+	dev->dev_flags ^= PCI_DEV_FLAGS_QUIET_PCI_REALIGN;
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, enable_realign_menssages);
-+
- void __init pnv_pci_init(void)
- {
- 	struct device_node *np;
--- 
-2.14.3
+I applied these with Christoph's acks and Lukas' renaming suggestion to
+pci/portdrv for v4.17.
