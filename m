@@ -1,90 +1,123 @@
-Return-Path: <SRS0=5Xs+=GC=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=5Xs+=GC=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: John Garry <john.garry@huawei.com>
+Cc: mika.westerberg@linux.intel.com, rafael@kernel.org,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        robh+dt@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+        mark.rutland@arm.com, olof@lixom.net, dann.frazier@canonical.com,
+        andy.shevchenko@gmail.com, robh@kernel.org,
+        andriy.shevchenko@linux.intel.com, joe@perches.com,
+        benh@kernel.crashing.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linuxarm@huawei.com, minyard@acm.org, devicetree@vger.kernel.org,
+        linux-arch@vger.kernel.org, rdunlap@infradead.org,
+        gregkh@linuxfoundation.org, akpm@linux-foundation.org,
+        frowand.list@gmail.com, agraf@suse.de
+Subject: Re: [PATCH v17 07/10] ACPI / scan: rename acpi_is_serial_bus_slave() to widen use
+Date: Mon, 19 Mar 2018 11:27:25 +0100
+Message-ID: <2268663.His4AzxF9G@aspire.rjw.lan>
+In-Reply-To: <1521051359-34473-8-git-send-email-john.garry@huawei.com>
+References: <1521051359-34473-1-git-send-email-john.garry@huawei.com> <1521051359-34473-8-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 12 Mar 2018 21:04:47 +0530
-From: poza@codeaurora.org
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
- <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
- <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Wei
- Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>,
- linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
-In-Reply-To: <20180312145823.GC18494@localhost.localdomain>
-References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
- <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
- <04ade52e-d1ea-fe67-bb26-246621d159e6@codeaurora.org>
- <20180312142551.GB18494@localhost.localdomain>
- <3e1a2036675de6b8456145a022640f3d@codeaurora.org>
- <20180312145823.GC18494@localhost.localdomain>
-Message-ID: <eb2810113f98c2ff8201da1a0f827493@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-03-12 20:28, Keith Busch wrote:
-> On Mon, Mar 12, 2018 at 08:16:38PM +0530, poza@codeaurora.org wrote:
->> On 2018-03-12 19:55, Keith Busch wrote:
->> > On Sun, Mar 11, 2018 at 11:03:58PM -0400, Sinan Kaya wrote:
->> > > On 3/11/2018 6:03 PM, Bjorn Helgaas wrote:
->> > > > On Wed, Feb 28, 2018 at 10:34:11PM +0530, Oza Pawandeep wrote:
->> > >
->> > > > That difference has been there since the beginning of DPC, so it has
->> > > > nothing to do with *this* series EXCEPT for the fact that it really
->> > > > complicates the logic you're adding to reset_link() and
->> > > > broadcast_error_message().
->> > > >
->> > > > We ought to be able to simplify that somehow because the only real
->> > > > difference between AER and DPC should be that DPC automatically
->> > > > disables the link and AER does it in software.
->> > >
->> > > I agree this should be possible. Code execution path should be almost
->> > > identical to fatal error case.
->> > >
->> > > Is there any reason why you went to stop driver path, Keith?
->> >
->> > The fact is the link is truly down during a DPC event. When the link
->> > is enabled again, you don't know at that point if the device(s) on the
->> > other side have changed. Calling a driver's error handler for the wrong
->> > device in an unknown state may have undefined results. Enumerating the
->> > slot from scratch should be safe, and will assign resources, tune bus
->> > settings, and bind to the matching driver.
->> >
->> > Per spec, DPC is the recommended way for handling surprise removal
->> > events and even recommends DPC capable slots *not* set 'Surprise'
->> > in Slot Capabilities so that removals are always handled by DPC. This
->> > service driver was developed with that use in mind.
->> 
->> Now it begs the question, that
->> 
->> after DPC trigger
->> 
->> should we enumerate the devices, ?
->> or
->> error handling callbacks, followed by stop devices followed by 
->> enumeration ?
->> or
->> error handling callbacks, followed by enumeration ? (no stop devices)
+On Wednesday, March 14, 2018 7:15:56 PM CET John Garry wrote:
+> Currently the ACPI scan has special handling for serial bus
+> slaves, in that it makes it the responsibility of the the slave
+> device's parent to enumerate the device.
 > 
-> I'm not sure I understand. The link is disabled while DPC is triggered,
-> so if anything, you'd want to un-enumerate everything below the 
-> contained
-> port (that's what it does today).
+> To support in future other types of slave devices which require
+> the same special handling, but where the bus is not strictly a
+> serial bus - such as devices on the HiSilicon LPC controller bus -
+> rename acpi_is_serial_bus_slave() to
+> acpi_device_enumeration_by_parent(), so that the name can fit the
+> wider purpose.
 > 
-> After releasing a slot from DPC, the link is allowed to retrain. If 
-> there
-> is a working device on the other side, a link up event occurs. That
-> event is handled by the pciehp driver, and that schedules enumeration
-> no matter what you do to the DPC driver.
+> Associated device flag acpi_device_flags.serial_bus_slave is also
+> renamed to .enumeration_by_parent.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
 
-yes, that is what i current, but this patch-set makes DPC aware of error 
-handling driver callbacks.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-besides, in absence of pciehp there is nobody to do enumeration.
-
-And, I was talking about pci_stop_and_remove_bus_device() in dpc.
-if DPC calls driver's error callbacks, is it required to stop the 
-devices  ?
+> ---
+>  drivers/acpi/scan.c     | 19 ++++++++++---------
+>  include/acpi/acpi_bus.h |  2 +-
+>  2 files changed, 11 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 8e63d93..f9e7904 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -1524,7 +1524,7 @@ static int acpi_check_serial_bus_slave(struct acpi_resource *ares, void *data)
+>  	return -1;
+>  }
+>  
+> -static bool acpi_is_serial_bus_slave(struct acpi_device *device)
+> +static bool acpi_device_enumeration_by_parent(struct acpi_device *device)
+>  {
+>  	struct list_head resource_list;
+>  	bool is_serial_bus_slave = false;
+> @@ -1560,7 +1560,8 @@ void acpi_init_device_object(struct acpi_device *device, acpi_handle handle,
+>  	acpi_bus_get_flags(device);
+>  	device->flags.match_driver = false;
+>  	device->flags.initialized = true;
+> -	device->flags.serial_bus_slave = acpi_is_serial_bus_slave(device);
+> +	device->flags.enumeration_by_parent =
+> +		acpi_device_enumeration_by_parent(device);
+>  	acpi_device_clear_enumerated(device);
+>  	device_initialize(&device->dev);
+>  	dev_set_uevent_suppress(&device->dev, true);
+> @@ -1858,10 +1859,10 @@ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl_not_used,
+>  static void acpi_default_enumeration(struct acpi_device *device)
+>  {
+>  	/*
+> -	 * Do not enumerate SPI/I2C/UART slaves as they will be enumerated by
+> -	 * their respective parents.
+> +	 * Do not enumerate devices with enumeration_by_parent flag set as
+> +	 * they will be enumerated by their respective parents.
+>  	 */
+> -	if (!device->flags.serial_bus_slave) {
+> +	if (!device->flags.enumeration_by_parent) {
+>  		acpi_create_platform_device(device, NULL);
+>  		acpi_device_set_enumerated(device);
+>  	} else {
+> @@ -1958,7 +1959,7 @@ static void acpi_bus_attach(struct acpi_device *device)
+>  		return;
+>  
+>  	device->flags.match_driver = true;
+> -	if (ret > 0 && !device->flags.serial_bus_slave) {
+> +	if (ret > 0 && !device->flags.enumeration_by_parent) {
+>  		acpi_device_set_enumerated(device);
+>  		goto ok;
+>  	}
+> @@ -1967,10 +1968,10 @@ static void acpi_bus_attach(struct acpi_device *device)
+>  	if (ret < 0)
+>  		return;
+>  
+> -	if (!device->pnp.type.platform_id && !device->flags.serial_bus_slave)
+> -		acpi_device_set_enumerated(device);
+> -	else
+> +	if (device->pnp.type.platform_id || device->flags.enumeration_by_parent)
+>  		acpi_default_enumeration(device);
+> +	else
+> +		acpi_device_set_enumerated(device);
+>  
+>   ok:
+>  	list_for_each_entry(child, &device->children, node)
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index c9608b0..ba4dd54 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -215,7 +215,7 @@ struct acpi_device_flags {
+>  	u32 of_compatible_ok:1;
+>  	u32 coherent_dma:1;
+>  	u32 cca_seen:1;
+> -	u32 serial_bus_slave:1;
+> +	u32 enumeration_by_parent:1;
+>  	u32 reserved:19;
+>  };
+>  
+> 
