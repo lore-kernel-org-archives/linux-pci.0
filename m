@@ -1,68 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36352 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1033399AbeCARoa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Mar 2018 12:44:30 -0500
-To: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        "shankerd@codeaurora.org" <shankerd@codeaurora.org>,
-        Vikram Sethi <vikrams@codeaurora.org>,
-        "Goel, Sameer" <sgoel@codeaurora.org>, kexec@lists.infradead.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: RFC on Kdump and PCIe on ARM64
-Message-ID: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
-Date: Thu, 1 Mar 2018 12:44:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54660 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S969447AbeCST6B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Mar 2018 15:58:01 -0400
+Date: Mon, 19 Mar 2018 14:57:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: KarimAllah Ahmed <karahmed@amazon.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI/IOV: Skip initializing the base addresses from the
+ VF config space
+Message-ID: <20180319195758.GK77194@bhelgaas-glaptop.roam.corp.google.com>
+References: <1520051590-11750-1-git-send-email-karahmed@amazon.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1520051590-11750-1-git-send-email-karahmed@amazon.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Sat, Mar 03, 2018 at 05:33:10AM +0100, KarimAllah Ahmed wrote:
+> Per PCIe r4.0, sec 9.3.4.1.11, the BARs registers from the VF config space
+> are all RO Zero for PCI VFs. So just skip reading them for VFs.
+> 
+> This is an optimization when enabling SR-IOV on a device with many VFs.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+> Signed-off-by: KarimAllah Ahmed <karahmed@amazon.de>
 
-We are seeing IOMMU faults when booting the kdump kernel on ARM64.
+Applied to pci/virtualization for v4.17, thanks!
 
-[    7.220162] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x02 received:
-[    7.226123] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000010000000002
-[    7.232023] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
-[    7.237925] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
-[    7.243827] arm-smmu-v3 arm-smmu-v3.0.auto:            0x0000000000000000
-
-This is Nate's interpretation of the fault:
-
-"The PCI device is sending transactions just after the SMMU was reset/reinitialized
-which is problematic because the device has not yet been added to the SMMU
-and thus should not be doing *any* DMA.  DMA from the PCI devices should be
-quiesced prior to starting the crashdump kernel or you risk overwriting portions
-of memory you meant to preserve. In this case the SMMU was actually doing you a favor
-by blocking these errant DMA operations!!"
-
-I think this makes sense especially for the IOMMU enabled case on the host where an
-IOVA can overlap with the region of memory kdump reserved for itself.
-
-Apparently, there has been similar concerns in the past.
-
-https://www.fujitsu.com/jp/documents/products/software/os/linux/catalog/LinuxConJapan2013-Indoh.pdf
-
-and was not addressed globally due to IOMMU+PCI driver ordering issues and bugs in
-HW due to hot reset.
-
-https://lkml.org/lkml/2012/8/3/160
-
-Hot reset as mentioned is destructive and may not be the best implementation choice. 
-However, most of the modern endpoints support PCIE function level reset.
-
-One other solution is for SMMUv3 driver to reserve the kdump used IOVA addresses.
-
-Another solution is for the SMMUv3 driver to disable PCIe devices behind the SMMU
-if it see SMMU is already enabled.
-
-Appreciate the feedback,
-Sinan
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> ---
+>  drivers/pci/probe.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index a96837e..7204d46 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -329,6 +329,10 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
+>  	if (dev->non_compliant_bars)
+>  		return;
+>  
+> +	/* Per PCIe r4.0, sec 9.3.4.1.11, the VF BARs are all RO Zero */
+> +	if (dev->is_virtfn)
+> +		return;
+> +
+>  	for (pos = 0; pos < howmany; pos++) {
+>  		struct resource *res = &dev->resource[pos];
+>  		reg = PCI_BASE_ADDRESS_0 + (pos << 2);
+> -- 
+> 2.7.4
+> 
