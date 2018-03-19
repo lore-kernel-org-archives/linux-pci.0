@@ -1,97 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:33169 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752712AbeC3HPA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 03:15:00 -0400
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Keller Jacob E <jacob.e.keller@intel.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V4 3/8] PCI: Add device link bandwidth capabilities calculation
-Date: Fri, 30 Mar 2018 10:14:41 +0300
-Message-Id: <1522394086-3555-4-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
-References: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:35144 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932143AbeCSIov (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 04:44:51 -0400
+Date: Mon, 19 Mar 2018 09:44:48 +0100
+From: Simon Horman <horms@verge.net.au>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH V4] PCI: rcar: Use runtime PM to control controller clock
+Message-ID: <20180319084447.ce44arxneqd6i3bj@verge.net.au>
+References: <20180318105209.5922-1-marek.vasut+renesas@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180318105209.5922-1-marek.vasut+renesas@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added a function for calculating a PCI device's total link bandwidth
-capabilities. This function queries for the device link speed and
-width, multiplies them and applies encoding overhead for the different
-PCIe generations.
+On Sun, Mar 18, 2018 at 11:52:09AM +0100, Marek Vasut wrote:
+> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+> 
+> The controller clock can be switched off during suspend/resume,
+> let runtime PM take care of that.
+> 
+> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
+> ---
+> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
+>       reordering of function calls in probe
+>     - Dispose of fail_clk in rcar_pcie_get_resources()
+> V3: - Fix up the failpath in probe function
+> V4: - Rebase on recent linux-next
+> ---
+>  drivers/pci/host/pcie-rcar.c | 40 ++++++++++++----------------------------
+>  1 file changed, 12 insertions(+), 28 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index b4c4aad2cf66..93d59f15c589 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -142,7 +142,6 @@ struct rcar_pcie {
+>  	void __iomem		*base;
+>  	struct list_head	resources;
+>  	int			root_bus_nr;
+> -	struct clk		*clk;
+>  	struct clk		*bus_clk;
+>  	struct			rcar_msi msi;
+>  };
+> @@ -914,24 +913,14 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+>  	if (IS_ERR(pcie->base))
+>  		return PTR_ERR(pcie->base);
+>  
+> -	pcie->clk = devm_clk_get(dev, "pcie");
+> -	if (IS_ERR(pcie->clk)) {
+> -		dev_err(dev, "cannot get platform clock\n");
+> -		return PTR_ERR(pcie->clk);
+> -	}
+> -	err = clk_prepare_enable(pcie->clk);
+> -	if (err)
+> -		return err;
+> -
+>  	pcie->bus_clk = devm_clk_get(dev, "pcie_bus");
+>  	if (IS_ERR(pcie->bus_clk)) {
+>  		dev_err(dev, "cannot get pcie bus clock\n");
+> -		err = PTR_ERR(pcie->bus_clk);
+> -		goto fail_clk;
+> +		return PTR_ERR(pcie->bus_clk);
+>  	}
+>  	err = clk_prepare_enable(pcie->bus_clk);
+>  	if (err)
+> -		goto fail_clk;
+> +		return err;
+>  
+>  	i = irq_of_parse_and_map(dev->of_node, 0);
+>  	if (!i) {
+> @@ -953,8 +942,6 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+>  
+>  err_map_reg:
+>  	clk_disable_unprepare(pcie->bus_clk);
+> -fail_clk:
+> -	clk_disable_unprepare(pcie->clk);
+>  
+>  	return err;
+>  }
+> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  	if (err)
+>  		goto err_free_bridge;
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
----
- drivers/pci/pci.c   | 22 ++++++++++++++++++++++
- include/linux/pci.h | 12 ++++++++++++
- 2 files changed, 34 insertions(+)
+This error path now calls pci_free_resource_list() and in this case
+the path is taken if rcar_pcie_parse_request_of_pci_ranges() fails.
+Is that ok?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 90a6cf2..553d8f3 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5212,6 +5212,28 @@ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
- EXPORT_SYMBOL(pcie_get_width_cap);
- 
- /**
-+ * pcie_bandwidth_capable - Calculates a PCI device's link bandwidth capability
-+ * @dev: PCI device
-+ * @speed: storage for link speed
-+ * @width: storage for link width
-+ *
-+ * This function caculates a PCI device's link bandwidth by querying for its
-+ * link speed and width, multiplying them, and applying encoding overhead.
-+ */
-+int pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
-+			   enum pcie_link_width *width)
-+{
-+	pcie_get_speed_cap(dev, speed);
-+	pcie_get_width_cap(dev, width);
-+
-+	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN)
-+		return 0;
-+
-+	return (*width) * PCIE_SPEED2MBS_ENC(*speed);
-+}
-+EXPORT_SYMBOL(pcie_bandwidth_capable);
-+
-+/**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-  * @flags: resource type mask to be selected
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1e3d05f..9f57c45 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -265,6 +265,16 @@ enum pci_bus_speed {
- 	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
- 	 "Unknown speed")
- 
-+/**
-+ * PCIe speed to Mb/s with encoding overhead:
-+ * 20% for gen2, ~1.5% for gen3
-+ */
-+#define PCIE_SPEED2MBS_ENC(speed) \
-+	((speed) == PCIE_SPEED_8_0GT ? 7877 : \
-+	 (speed) == PCIE_SPEED_5_0GT ? 4000 : \
-+	 (speed) == PCIE_SPEED_2_5GT ? 2000 : \
-+	 0)
-+
- struct pci_cap_saved_data {
- 	u16		cap_nr;
- 	bool		cap_extended;
-@@ -1090,6 +1100,8 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
- int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
- int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
-+int pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
-+			   enum pcie_link_width *width);
- void pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
--- 
-1.8.3.1
+>  
+> +	pm_runtime_enable(pcie->dev);
+> +	err = pm_runtime_get_sync(pcie->dev);
+> +	if (err < 0) {
+> +		dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
+> +		goto err_pm_disable;
+> +	}
+> +
+>  	err = rcar_pcie_get_resources(pcie);
+>  	if (err < 0) {
+>  		dev_err(dev, "failed to request resources: %d\n", err);
+> -		goto err_free_resource_list;
+> +		goto err_pm_put;
+>  	}
+>  
+>  	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
+>  	if (err)
+> -		goto err_free_resource_list;
+> -
+> -	pm_runtime_enable(dev);
+> -	err = pm_runtime_get_sync(dev);
+> -	if (err < 0) {
+> -		dev_err(dev, "pm_runtime_get_sync failed\n");
+> -		goto err_pm_disable;
+> -	}
+> +		goto err_pm_put;
+>  
+>  	/* Failure to get a link might just be that no cards are inserted */
+>  	hw_init_fn = of_device_get_match_data(dev);
+> @@ -1171,13 +1158,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  
+>  err_pm_put:
+>  	pm_runtime_put(dev);
+> -
+>  err_pm_disable:
+>  	pm_runtime_disable(dev);
+> -
+> -err_free_resource_list:
+> -	pci_free_resource_list(&pcie->resources);
+>  err_free_bridge:
+> +	pci_free_resource_list(&pcie->resources);
+>  	pci_free_host_bridge(bridge);
+>  
+>  	return err;
+> -- 
+> 2.16.2
+> 
