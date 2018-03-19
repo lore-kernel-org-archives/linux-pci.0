@@ -1,49 +1,45 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: Christoph Hellwig <hch@lst.de>
-CC: "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
-        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
-        "linus.walleij@linaro.org" <linus.walleij@linaro.org>,
-        "johan@kernel.org" <johan@kernel.org>,
-        "msuchanek@suse.de" <msuchanek@suse.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] dma-mapping: move dma configuration to bus infrastructure
-Date: Fri, 30 Mar 2018 07:17:10 +0000
-Message-ID: <HE1PR0401MB24259BC13BCEFEE462910AE1E6A10@HE1PR0401MB2425.eurprd04.prod.outlook.com>
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <20180330071530.GA17557@lst.de>
-In-Reply-To: <20180330071530.GA17557@lst.de>
-Content-Type: text/plain; charset="us-ascii"
+Date: Mon, 19 Mar 2018 13:51:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>,
+        Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH v2 0/2] PCI: Update quirk timing
+Message-ID: <20180319185119.GD77194@bhelgaas-glaptop.roam.corp.google.com>
+References: <152103417018.167541.3290752859388672112.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152103417018.167541.3290752859388672112.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am just going to send it within an hour :)
+On Wed, Mar 14, 2018 at 08:30:26AM -0500, Bjorn Helgaas wrote:
+> This is a minor update of a patch I posted earlier [1] when Paul
+> reported an unreasonably long time spent in PCI quirks during boot
+> [2].  This doesn't fix the slow quirks, but might help find them.
+> 
+> We previously printed the time taken by each quirk if "initcall_debug"
+> was specified.  With these patches, we'll print it even without
+> "initcall_debug" if the quirk takes longer than 10ms.
+> 
+> I did notice one quirk (quirk_apple_poweroff_thunderbolt()) in the
+> suspend path that sleeps for 300ms, so this will probably make suspend
+> noisier on Apple systems.
+> 
+> [1] https://lkml.kernel.org/r/20171228212723.GB211339@bhelgaas-glaptop.roam.corp.google.com
+> [2] https://lkml.kernel.org/r/44cada166e42007d27b4c3e3aa0744d7@molgen.mpg.de
+> 
+> ---
+> 
+> Bjorn Helgaas (2):
+>       PCI: Report quirk timings with pci_info() instead of pr_debug()
+>       PCI: Report quirks that take more than 10ms
+> 
+> 
+>  drivers/pci/quirks.c |   24 ++++++++----------------
+>  1 file changed, 8 insertions(+), 16 deletions(-)
 
-Thanks,
-Nipun
-
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@lst.de]
-> Sent: Friday, March 30, 2018 12:46
-> To: Nipun Gupta <nipun.gupta@nxp.com>
-> Cc: hch@lst.de; robin.murphy@arm.com; linux@armlinux.org.uk;
-> gregkh@linuxfoundation.org; m.szyprowski@samsung.com; bhelgaas@google.com=
-;
-> dmitry.torokhov@gmail.com; rafael.j.wysocki@intel.com;
-> jarkko.sakkinen@linux.intel.com; linus.walleij@linaro.org;
-> johan@kernel.org; msuchanek@suse.de; linux-kernel@vger.kernel.org;
-> iommu@lists.linux-foundation.org; linux-pci@vger.kernel.org
-> Subject: Re: [PATCH] dma-mapping: move dma configuration to bus
-> infrastructure
->=20
-> Can you resend the current state of affairs so we can get it in for
-> 4.17?
+Applied to pci/misc for v4.17.
