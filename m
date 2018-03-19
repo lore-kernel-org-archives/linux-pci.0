@@ -1,72 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:37326 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753039AbeCFBOP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 20:14:15 -0500
-To: Oliver <oohall@gmail.com>
-Cc: Keith Busch <keith.busch@intel.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-8-logang@deltatee.com>
- <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
- <20180305160004.GA30975@localhost.localdomain>
- <3f56c76d-6a5c-7c2f-5442-c9209749b598@deltatee.com>
- <CAOSf1CHvaz0QTCkptQwsdyPp6uvvHqtM51N0MfrO9RqYf9W0tg@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <416d8d27-200f-befb-1c30-14544fffcba0@deltatee.com>
-Date: Mon, 5 Mar 2018 18:14:02 -0700
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAOSf1CHvaz0QTCkptQwsdyPp6uvvHqtM51N0MfrO9RqYf9W0tg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage the
- CMB
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <906b3868-39a5-3807-23a4-dfc52c2e82c4@huawei.com>
+References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
+ <1521051359-34473-9-git-send-email-john.garry@huawei.com> <2309217.pWfZsU88YQ@aspire.rjw.lan>
+ <906b3868-39a5-3807-23a4-dfc52c2e82c4@huawei.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 19 Mar 2018 11:57:15 +0100
+Message-ID: <CAJZ5v0gm5AokZy4JvuJzDgdNoc88FjrMmXR2RK5pdRkXgtYrXQ@mail.gmail.com>
+Subject: Re: [PATCH v17 08/10] ACPI / scan: do not enumerate Indirect IO host children
+To: John Garry <john.garry@huawei.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Olof Johansson <olof@lixom.net>,
+        Dann Frazier <dann.frazier@canonical.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Joe Perches <joe@perches.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Alexander Graf <agraf@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Mar 19, 2018 at 11:48 AM, John Garry <john.garry@huawei.com> wrote:
+> On 19/03/2018 10:30, Rafael J. Wysocki wrote:
+>>
+>> On Wednesday, March 14, 2018 7:15:57 PM CET John Garry wrote:
+>>>
+>>> > Through the logical PIO framework systems which otherwise have
+>>> > no IO space access to legacy ISA/LPC devices may access these
+>>> > devices through so-called "indirect IO" method. In this, IO
+>>> > space accesses for non-PCI hosts are redirected to a host
+>>> > LLDD to manually generate the IO space (bus) accesses. Hosts
+>>> > are able to register a region in logical PIO space to map to
+>>> > its bus address range.
+>>> >
+>>> > Indirect IO child devices have an associated host-specific bus
+>>> > address. Special translation is required to map between
+>>> > a logical PIO address for a device and it's host bus address.
+>>> >
+>>> > Since in the ACPI tables the child device IO resources would
+>>> > be the host-specific values, it is required the ACPI scan code
+>>> > should not enumerate these devices, and that this should be
+>>> > the responsibility of the host driver so that it can "fixup"
+>>> > the resources so that they map to the appropriate logical PIO
+>>> > addresses.
+>>> >
+>>> > To avoid enumerating these child devices, we add a check from
+>>> > acpi_device_enumeration_by_parent() as to whether the parent
+>>> > for a device is a member of a known list of "indirect IO" hosts.
+>>> > For now, the HiSilicon LPC host controller ID is added.
+>>> >
+>>> > Signed-off-by: John Garry <john.garry@huawei.com>
+>>> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>
+>> You have my ACK here already.
+>>
+>> Since I've ACKed the [7/10] too, I don't think there's anything more I can
+>> do
+>> about this series and I'm assuming that it will be routed through other
+>> trees.
+>>
+>> Thanks!
+>>
+>
+> Hi Rafael,
+>
+> Thanks for this.
+>
+> Yes, I am working on getting this whole series routed through another tree.
+> Actually I think 7+8 could go separately since there is no build dependency,
+> but I will try to keep the series together.
 
+I can take the [7-8/10] if you want me to, so please let me know.
 
-On 05/03/18 05:49 PM, Oliver wrote:
-> It's in arch/powerpc/kernel/io.c as _memcpy_toio() and it has two full barriers!
-> 
-> Awesome!
-> 
-> Our io.h indicates that our iomem accessors are designed to provide x86ish
-> strong ordering of accesses to MMIO space. The git log indicates
-> arch/powerpc/kernel/io.c has barely been touched in the last decade so
-> odds are most of that code was written in the elder days when people
-> were less aware of ordering issues. It might just be overly conservative
-> by today's standards, but maybe not (see below).
-
-Yes, that seems overly conservative.
-
-> (I'm not going to suggest ditching the lwsync trick. mpe is not going
-> to take that patch
-> without a really good reason)
-
-Well, that's pretty gross. Is this not exactly the situation mmiowb() is 
-meant to solve? See [1].
-
-Though, you're right in principle. Even if power was similar to other 
-systems in this way, it's still a risk that if these pages get passed 
-somewhere in the kernel that uses a spin lock like that without an 
-mmiowb() call, then it's going to have a bug. For now, the risk is 
-pretty low as we know exactly where all the p2pmem pages will be used 
-but if it gets into other places, all bets are off. I did do some work 
-trying to make a safe version of io-pages and also trying to change from 
-pages to pfn_t in large areas but neither approach seemed likely to get 
-any traction in the community, at least not in the near term.
-
-Logan
-
-[1] ACQUIRES VS I/O ACCESSES in 
-https://www.kernel.org/doc/Documentation/memory-barriers.txt
+Thanks!
