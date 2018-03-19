@@ -1,47 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50760 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751492AbeCNLFw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 07:05:52 -0400
-Date: Wed, 14 Mar 2018 11:05:46 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Scott Bauer <scott.bauer@intel.com>
-Subject: Re: [PATCHv2] PCI: vmd: Use affinity to chain child device interrupts
-Message-ID: <20180314110546.GA27868@e107981-ln.cambridge.arm.com>
-References: <20180206202225.1124-1-keith.busch@intel.com>
- <20180313171039.GB20373@e107981-ln.cambridge.arm.com>
- <20180313200840.GA28002@localhost.localdomain>
- <20180313201807.GA28112@localhost.localdomain>
- <20180313232440.GA28358@localhost.localdomain>
+Return-Path: <SRS0=Yawx=GJ=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=Yawx=GJ=linutronix.de=tglx@kernel.org>
+Date: Mon, 19 Mar 2018 20:50:59 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Jan Kiszka <jan.kiszka@siemens.com>, Ingo Molnar <mingo@redhat.com>,
+    "H . Peter Anvin" <hpa@zytor.com>, Bjorn Helgaas <bhelgaas@google.com>,
+    x86@kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+    jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
+    virtualization@lists.linux-foundation.org,
+    Andy Shevchenko <andy.shevchenko@gmail.com>,
+    Benedikt Spranger <b.spranger@linutronix.de>,
+    Juergen Gross <jgross@suse.com>, Mark Rutland <mark.rutland@arm.com>,
+    Otavio Pontes <otavio.pontes@intel.com>, Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v5 0/7] jailhouse: Enhance secondary Jailhouse guest
+ support /wrt PCI
+In-Reply-To: <20180319194813.GJ77194@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.21.1803192049500.1520@nanos.tec.linutronix.de>
+References: <cover.1520408357.git.jan.kiszka@siemens.com> <20180319194813.GJ77194@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180313232440.GA28358@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 05:24:40PM -0600, Keith Busch wrote:
-> On Tue, Mar 13, 2018 at 02:18:07PM -0600, Keith Busch wrote:
-> > 
-> > And since you brought my attention to it, I see the 'if' is off by one.
-> > Let me prepare a v3, and I've one other minor optimization to add as
-> > well.
-> 
-> Ugh, I may need to request withdrawing this patch entirely. This will
-> completely break if the VMD interrupt vector's SMP affinity is a subset
-> of the child driver's, and the CPUs in the intersection of those masks
-> are set offline after driver initialization.
-> 
-> That's looking like a pretty tricky problem to fix, all for (somewhat)
-> obscure kernel feature... I can't see how without a new hot cpu notifier.
-> 
-> Let me request a pause on this one and I'll get back ASAP.
+Bjorn,
 
-OK, I will mark it as "Not Applicable" and will wait for an updated
-version then.
+On Mon, 19 Mar 2018, Bjorn Helgaas wrote:
+
+> On Wed, Mar 07, 2018 at 08:39:11AM +0100, Jan Kiszka wrote:
+> > Basic x86 support [1] for running Linux as secondary Jailhouse [2] guest
+> > is currently pending in the tip tree. This builds on top and enhances
+> > the PCI support for x86 and also ARM guests (ARM[64] does not require
+> > platform patches and works already).
+> > ...
+> 
+> Hi Jan,
+> 
+> What tree do you plan to merge this through?  I was sort of assuming
+> x86, since the main point of jailhouse is not PCI, but I do notice
+> most of the changes here are PCI-related, so thought I should make
+> sure you're not waiting on me.
+
+I picked it up already. It's sitting in tip x86/platform
 
 Thanks,
-Lorenzo
+
+	tglx
