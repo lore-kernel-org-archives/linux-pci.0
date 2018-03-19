@@ -1,119 +1,99 @@
-Return-Path: <SRS0=903h=GE=fireburn.co.uk=mike@kernel.org>
-Return-Path: <SRS0=903h=GE=fireburn.co.uk=mike@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 19 Mar 2018 12:36:29 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: kishon@ti.com, Bjorn Helgaas <bhelgaas@google.com>,
+        Sekhar Nori <nsekhar@ti.com>, John Keeping <john@metanate.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 1/5] PCI: endpoint: BAR width should not depend on
+ sizeof dma_addr_t
+Message-ID: <20180319123629.GA8830@e107981-ln.cambridge.arm.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
+ <20180308133331.19464-2-niklas.cassel@axis.com>
+ <20180316180220.GA13505@red-moon>
+ <20180317005513.GB22414@axis.com>
 MIME-Version: 1.0
-References: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
- <CAHbf0-Exsu14dBmmfYy8Tcb4R58eYJKLFPPoM9RkqxHWDkqwXQ@mail.gmail.com>
- <20180212152122.GB75542@bhelgaas-glaptop.roam.corp.google.com>
- <CAHbf0-HffVDu0vxyTrSfgCtJ5rGtu_4HqAoo2sseG3HoE-1djw@mail.gmail.com>
- <20180222131343.GA205018@bhelgaas-glaptop.roam.corp.google.com> <CAHbf0-FUhpmJat5zo4iGNL8zbSVmhkfNDgzTLNdGvj8DJx-ddg@mail.gmail.com>
-In-Reply-To: <CAHbf0-FUhpmJat5zo4iGNL8zbSVmhkfNDgzTLNdGvj8DJx-ddg@mail.gmail.com>
-From: Mike Lothian <mike@fireburn.co.uk>
-Date: Wed, 14 Mar 2018 01:18:12 +0000
-Message-ID: <CAHbf0-H6WAM2Lrv2+VD6tD8ogtJXmd3uv-WvGzXYX8agpc0EBw@mail.gmail.com>
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Check presence of slot itself in get_slot_status()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: multipart/alternative; boundary="94eb2c0b6b90b8a5200567552625"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180317005513.GB22414@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---94eb2c0b6b90b8a5200567552625
-Content-Type: text/plain; charset="UTF-8"
+On Sat, Mar 17, 2018 at 01:55:13AM +0100, Niklas Cassel wrote:
+> On Fri, Mar 16, 2018 at 06:02:20PM +0000, Lorenzo Pieralisi wrote:
+> > On Thu, Mar 08, 2018 at 02:33:26PM +0100, Niklas Cassel wrote:
+> > > If a BAR supports 64-bit width or not depends on the hardware,
+> > > and should thus not depend on sizeof(dma_addr_t).
+> > > 
+> > > Since this driver is generic, default to always using BAR width
+> > > of 32-bits. 64-bit BARs can easily be tested by replacing
+> > > PCI_BASE_ADDRESS_MEM_TYPE_32 with PCI_BASE_ADDRESS_MEM_TYPE_64
+> > > in bar_flags.
+> > > 
+> > > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > > ---
+> > > Note to Lorenzo/Bjorn:
+> > > It is not trivial to convert the bar_size + bar_flags +
+> > > struct pci_epf->bar member array to an array of struct resources,
+> > > since we need to be able to store the addresses returned
+> > > by dma_alloc_coherent(), which is of type dma_addr_t.
+> > > struct resource uses resource_size_t, which is defined as phys_addr_t.
+> > > E.g. ARTPEC-7 uses 64-bit dma_addr_t, but only 32-bit phys_addr_t.
+> > > 
+> > >  drivers/pci/endpoint/functions/pci-epf-test.c | 15 +++++++++------
+> > >  1 file changed, 9 insertions(+), 6 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > index 800da09d9005..7c70433b11a7 100644
+> > > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > > @@ -71,6 +71,14 @@ struct pci_epf_test_data {
+> > >  };
+> > >  
+> > >  static int bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 };
+> > > +static int bar_flags[] = {
+> > > +	PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32,
+> > > +	PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32,
+> > > +	PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32,
+> > > +	PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32,
+> > > +	PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32,
+> > > +	PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32
+> > > +};
+> > 
+> > Niklas,
+> > 
+> > I think you are almost there, I have one question though to address
+> > that can even simplify the patchset.
+> > 
+> > If, according to your own commit logs (and my reading of the code), the
+> > Cadence driver makes a decision on the BAR size just by checking the
+> > corresponding region size (I would be happy to hear the reason
+> > underpinning that choice, BTW), why can't we do the same for DWC (ie to
+> > let the DWC driver decides whether a BAR should be 64 or 32 bits ?)
+> 
+> We could, but I think that would be a mistake.
+> 
+> The API that the user/"endpoint function" has available to configure
+> the BARs:
+> pci_epc_set_bar()
+> 
+> If the user, for some reason, wants to configure a BAR with a
+> 64-bit width, even though the BAR size is less than 4 GB,
+> I think that the API should allow that.
 
-Hi
+Yes, that's a good point, thanks a lot for the explanation.
 
-Just another reminder / hint that this hasn't landed in linux-next yet
+Lorenzo
 
-Regards
-
-Mike
-
-On Fri, 23 Feb 2018 at 10:14 Mike Lothian <mike@fireburn.co.uk> wrote:
-
-> On 22 February 2018 at 13:13, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> > Not on your end.  But thanks fo the reminder, and also for the hint
-> > that you'd like it in -rc3.  It's not likely to make -rc3 because I
-> > like things to at least be in -next for a few days before I ask Linus
-> > to pull them.
-> >
-> > But more importantly, what's the justification for adding this after
-> > the merge window?  It doesn't look like a regression or a fix for
-> > something we broke in the merge window.  It certainly *could* still be
-> > merged for v4.16, but the default target would be v4.17.
-> >
-> > Bjorn
->
-> Hi Bjorn
->
-> Apologies, I thought all fixes got into the release candidates rather
-> than just regressions
->
-> I was hoping the original fix was going to make it into the merge
-> window that just passed
->
-> I just wanted to make sure the patch doesn't fall through the cracks
->
-> I'm carrying this patch locally so it doesn't make too much difference
-> to me which route it takes
->
-> Thanks again
->
-> Mike
->
-
---94eb2c0b6b90b8a5200567552625
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi<div><br></div><div>Just another reminder / hint that th=
-is hasn&#39;t landed in linux-next yet</div><div><br></div><div>Regards</di=
-v><div><br></div><div>Mike</div></div><br><div class=3D"gmail_quote"><div d=
-ir=3D"ltr">On Fri, 23 Feb 2018 at 10:14 Mike Lothian &lt;<a href=3D"mailto:=
-mike@fireburn.co.uk">mike@fireburn.co.uk</a>&gt; wrote:<br></div><blockquot=
-e class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc sol=
-id;padding-left:1ex">On 22 February 2018 at 13:13, Bjorn Helgaas &lt;<a hre=
-f=3D"mailto:helgaas@kernel.org" target=3D"_blank">helgaas@kernel.org</a>&gt=
-; wrote:<br>
-&gt;<br>
-&gt; Not on your end.=C2=A0 But thanks fo the reminder, and also for the hi=
-nt<br>
-&gt; that you&#39;d like it in -rc3.=C2=A0 It&#39;s not likely to make -rc3=
- because I<br>
-&gt; like things to at least be in -next for a few days before I ask Linus<=
-br>
-&gt; to pull them.<br>
-&gt;<br>
-&gt; But more importantly, what&#39;s the justification for adding this aft=
-er<br>
-&gt; the merge window?=C2=A0 It doesn&#39;t look like a regression or a fix=
- for<br>
-&gt; something we broke in the merge window.=C2=A0 It certainly *could* sti=
-ll be<br>
-&gt; merged for v4.16, but the default target would be v4.17.<br>
-&gt;<br>
-&gt; Bjorn<br>
-<br>
-Hi Bjorn<br>
-<br>
-Apologies, I thought all fixes got into the release candidates rather<br>
-than just regressions<br>
-<br>
-I was hoping the original fix was going to make it into the merge<br>
-window that just passed<br>
-<br>
-I just wanted to make sure the patch doesn&#39;t fall through the cracks<br=
->
-<br>
-I&#39;m carrying this patch locally so it doesn&#39;t make too much differe=
-nce<br>
-to me which route it takes<br>
-<br>
-Thanks again<br>
-<br>
-Mike<br>
-</blockquote></div>
-
---94eb2c0b6b90b8a5200567552625--
+> This would not be possible if pci_epc_set_bar() would start to
+> ignore PCI_BASE_ADDRESS_MEM_TYPE_64 from the flags parameter
+> (and BAR width thus only being controlled by the size parameter).
+> 
+> int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, enum pci_barno bar,
+> 	            dma_addr_t bar_phys, size_t size, int flags);
+> 
+> 
+> 
+> Best regards,
+> Niklas
