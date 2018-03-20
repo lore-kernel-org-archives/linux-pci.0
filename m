@@ -1,43 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:56466 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751830AbeCMHoH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 03:44:07 -0400
-Date: Tue, 13 Mar 2018 08:44:05 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, netanel@amazon.com,
-        Maximilian Heyne <mheyne@amazon.de>,
-        "Wang, Liang-min" <liang-min.wang@intel.com>,
-        "Rustad, Mark D" <mark.d.rustad@intel.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
-Subject: Re: [pci PATCH v5 1/4] pci: Add pci_sriov_configure_simple for PFs
-        that don't manage VF resources
-Message-ID: <20180313074405.GA32480@lst.de>
-References: <20180312171813.3487.94803.stgit@localhost.localdomain> <20180312172031.3487.20651.stgit@localhost.localdomain> <20180312174012.GE18494@localhost.localdomain> <CAKgT0UdWc=Sz-xgd4H3bTDt5d17=-PY8VPWz6A3mAciWV6=97w@mail.gmail.com> <20180312182321.GG18494@localhost.localdomain> <CAKgT0UfH+xXk__R_hEtFMsm7qkBG02hWC-S=8MgYkeeEx5zweA@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 20 Mar 2018 12:35:56 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
+Message-ID: <20180320113556.GA24197@wunner.de>
+References: <20180314114125.71132-1-mika.westerberg@linux.intel.com>
+ <CAJZ5v0gOrQhXzLHDnABEYHxGbHVY89Nij9uQzqx-oyYmFwzuSg@mail.gmail.com>
+ <20180314120547.GB2703@lahna.fi.intel.com>
+ <20180314123332.GC19651@wunner.de>
+ <20180320104508.GF2703@lahna.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKgT0UfH+xXk__R_hEtFMsm7qkBG02hWC-S=8MgYkeeEx5zweA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180320104508.GF2703@lahna.fi.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 01:17:00PM -0700, Alexander Duyck wrote:
-> No, I am aware of those. The problem is they aren't accessed as
-> function pointers. As such converting them to static inline functions
-> is easy. As I am sure you are aware an "inline" function doesn't
-> normally generate a function pointer.
+On Tue, Mar 20, 2018 at 12:45:08PM +0200, Mika Westerberg wrote:
+> > On Wed, Mar 14, 2018 at 02:05:47PM +0200, Mika Westerberg wrote:
+> > > On Wed, Mar 14, 2018 at 12:48:49PM +0100, Rafael J. Wysocki wrote:
+> > > > Have you considered putting these things into the ->suspend_late and
+> > > > ->resume_early callbacks, respectively?
+> > > > 
+> > > > That might be slightly better as runtime resume is still enabled when
+> > > > the ->suspend and ->resume callbacks run.
+> > > 
+> > > There is no ->suspend_late or ->resume_early callbacks in struct
+> > > pcie_port_service_driver so I followed what drivers/pci/pcie/pme.c is
+> > > doing. I guess we could add those callbacks as well if you think they
+> > > are better suited here.
+> 
+> I took a look and then realized that we most probably do not need the
+> custom portdrv specific hooks at all. They are basically doing the same
+> than what PM core is (iterate over children and call service driver PM
+> hook). I don't see any reason why we could not rely on the PM core ops
+> instead of these custom ones but maybe I'm missing something.
 
-I think Keith's original idea of defining them to NULL is right.  That
-takes care of all the current trivial assign to struct cases.
+Can't think of a reason why this solution shouldn't work, I must have
+been blind not to see it.
 
-If someone wants to call these functions they'll still need the ifdef
-around the call as those won't otherwise compile, but they probably
-want the ifdef around the whole caller anyway.
+Lukas
