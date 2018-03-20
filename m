@@ -1,111 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47032 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933485AbeCEJlg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 04:41:36 -0500
-Date: Mon, 5 Mar 2018 09:41:24 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, bhelgaas@google.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V9 3/3] PCI: tegra: Add power management support
-Message-ID: <20180305094116.GA28109@e107981-ln.cambridge.arm.com>
-References: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
- <1519812034-11120-4-git-send-email-mmaddireddy@nvidia.com>
- <20180302163643.GA18316@e107981-ln.cambridge.arm.com>
- <19831410-9248-61ff-6e75-249c77dcee9a@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <19831410-9248-61ff-6e75-249c77dcee9a@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1521566329.23017.74.camel@linux.intel.com>
+Subject: Re: [PATCH v3 1/2] x86/PCI: Fix a potential regression when use
+ dmi_get_bios_year()
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jean Delvare <jdelvare@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Lukas Wunner <lukas@wunner.de>
+Date: Tue, 20 Mar 2018 19:18:49 +0200
+In-Reply-To: <alpine.DEB.2.21.1803201746450.1567@nanos.tec.linutronix.de>
+References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
+         <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>
+         <20180320163258.5ac39580@endymion>
+         <1521560965.23017.68.camel@linux.intel.com>
+         <alpine.DEB.2.21.1803201746450.1567@nanos.tec.linutronix.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 03, 2018 at 01:47:38PM +0530, Manikanta Maddireddy wrote:
+On Tue, 2018-03-20 at 17:47 +0100, Thomas Gleixner wrote:
+> On Tue, 20 Mar 2018, Andy Shevchenko wrote:
+> > On Tue, 2018-03-20 at 16:32 +0100, Jean Delvare wrote:
 
-[...]
-
-> >> +static int tegra_pcie_pm_resume(struct device *dev)
-> >> +{
-> >> +	struct tegra_pcie *pcie = dev_get_drvdata(dev);
-> >> +	int err;
-> >> +
-> >> +	err = tegra_pcie_power_on(pcie);
-> >> +	if (err) {
-> >> +		dev_err(dev, "tegra pcie power on fail: %d\n", err);
-> >> +		return err;
-> >> +	}
-> >> +	err = tegra_pcie_enable_controller(pcie);
-> >> +	if (err) {
-> >> +		dev_err(dev, "tegra pcie controller enable fail: %d\n", err);
-> >> +		goto poweroff;
-> >> +	}
-> >> +	tegra_pcie_setup_translations(pcie);
-> >> +
-> >> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> >> +		tegra_pcie_enable_msi(pcie);
-> >> +
-> >> +	tegra_pcie_enable_ports(pcie);
+> > > When fixing a regression, a good practice is to tag the fix commit
+> > > as
+> > > such:
+> > > 
+> > > Fixes: 69c42d493db4 ("x86/pci: Simplify code by using the new
+> > > dmi_get_bios_year() helper")
 > > 
-> > Is it correct to report a successfull resume if some of the ports fail
-> > to come up (whether within runtime PM or system suspend) ? I think that,
-> > if any of the ports fails to come up, returning a failure is more
-> > appropriate here given that the host bridge is a single device as far as
-> > the kernel is concerned.
-> > 
-> > Thanks,
-> > Lorenzo
-> > 
+> > Someone (perhaps Ingo) told me that Fixes doesn't make much sense if
+> > the
+> > fixing commit is not yet in vanilla.
 > 
-> Hi Lorenzo,
-> 
-> We(Thierry, Vidya Sagar and myself) had a discussion on this topic
-> and we chose not to fail probe/resume because host controller is
-> initialized properly, so failing the probe/resume is not the right
-> thing to do.
+> No. If the commit is already queued for the next merge window then a
+> fixes
+> tag is appropriate.
 
-What happens then to endpoints downstream a rootport that failed to
-resume but we nonetheless reported that it successfully resume instead ?
+Thank you, Thomas, for clarification.
+Will do this in v4.
 
-Thanks,
-Lorenzo
-
-> PCIe link may fail to come up if there is no endpoint in the slot
-> or interoperable failure where endpoint specific quirk or work
-> around required. In such cases host controller driver shouldn't
-> fail.
-> 
-> Also user can connect endpoint in only one slot and expect it to be
-> working. Even though host bridge is a single device, driver should
-> allow standalone port to work.
-> 
-> Thanks,
-> Manikanta
-> 
-> >>  
-> >>  	return 0;
-> >> +
-> >> +poweroff:
-> >> +	tegra_pcie_power_off(pcie);
-> >> +
-> >> +	return err;
-> >>  }
-> >>  
-> >> +static const struct dev_pm_ops tegra_pcie_pm_ops = {
-> >> +	SET_RUNTIME_PM_OPS(tegra_pcie_pm_suspend, tegra_pcie_pm_resume, NULL)
-> >> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(tegra_pcie_pm_suspend,
-> >> +				      tegra_pcie_pm_resume)
-> >> +};
-> >> +
-> >>  static struct platform_driver tegra_pcie_driver = {
-> >>  	.driver = {
-> >>  		.name = "tegra-pcie",
-> >>  		.of_match_table = tegra_pcie_of_match,
-> >>  		.suppress_bind_attrs = true,
-> >> +		.pm = &tegra_pcie_pm_ops,
-> >>  	},
-> >>  	.probe = tegra_pcie_probe,
-> >>  	.remove = tegra_pcie_remove,
-> >> -- 
-> >> 2.1.4
-> >>
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
