@@ -1,72 +1,31 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from zimbra1.kalray.eu ([92.103.151.219]:47004 "EHLO
-        zimbra1.kalray.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751505AbeCULLF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 07:11:05 -0400
-Date: Wed, 21 Mar 2018 12:00:49 +0100 (CET)
-From: Marta Rybczynska <mrybczyn@kalray.eu>
-To: keith.busch@intel.com, axboe@fb.com, hch@lst.de, sagi@grimberg.me,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Pierre-Yves Kerbrat <pkerbrat@kalray.eu>
-Message-ID: <744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu>
-Subject: [RFC PATCH] nvme: avoid race-conditions when enabling devices
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:57962 "EHLO
+        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751320AbeCTUeF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2018 16:34:05 -0400
+Date: Tue, 20 Mar 2018 21:34:03 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
+Cc: linux-pci@vger.kernel.org, dmonakhov@openvz.org
+Subject: Re: [PATCH v1] lspci: fix printing DeviceName
+Message-ID: <mj+md-20180320.203357.93255.nikam@ucw.cz>
+References: <1521573634-5635-1-git-send-email-viktor.prutyanov@virtuozzo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1521573634-5635-1-git-send-email-viktor.prutyanov@virtuozzo.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-NVMe driver uses threads for the work at device reset, including enabling
-the PCIe device. When multiple NVMe devices are initialized, their reset
-works may be scheduled in parallel. Then pci_enable_device_mem can be
-called in parallel on multiple cores.
+Hi!
 
-This causes a loop of enabling of all upstream bridges in
-pci_enable_bridge(). pci_enable_bridge() causes multiple operations
-including __pci_set_master and architecture-specific functions that
-call ones like and pci_enable_resources(). Both __pci_set_master()
-and pci_enable_resources() read PCI_COMMAND field in the PCIe space
-and change it. This is done as read/modify/write.
+> In commit ef6c9ec3a45992d9e7ef4716d444252baf2013e1 pci_fill_info() calls were moved
+> and the label field is filled after its output.
+> Before this patch lspci never prints 'DeviceName'.
 
-Imagine that the PCIe tree looks like:
-A - B - switch -  C - D
-               \- E - F
+Thanks, applied.
 
-D and F are two NVMe disks and all devices from B are not enabled and bus
-mastering is not set. If their reset work are scheduled in parallel the two
-modifications of PCI_COMMAND may happen in parallel without locking and the
-system may end up with the part of PCIe tree not enabled.
-
-The problem may also happen if other device is initialized in parallel to
-a nvme disk.
-
-This fix moves pci_enable_device_mem to the probe part of the driver that
-is run sequentially to avoid the issue.
-
-Signed-off-by: Marta Rybczynska <marta.rybczynska@kalray.eu>
-Signed-off-by: Pierre-Yves Kerbrat <pkerbrat@kalray.eu>
----
- drivers/nvme/host/pci.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index b6f43b7..af53854 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -2515,6 +2515,14 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	dev_info(dev->ctrl.device, "pci function %s\n", dev_name(&pdev->dev));
- 
-+	/*
-+	 * Enable the device now to make sure that all accesses to bridges above
-+	 * are done without races
-+	 */
-+	result = pci_enable_device_mem(pdev);
-+	if (result)
-+		goto release_pools;
-+
- 	nvme_reset_ctrl(&dev->ctrl);
- 
- 	return 0;
+				Have a nice fortnight
 -- 
-1.8.3.1
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+God is real, unless declared integer.
