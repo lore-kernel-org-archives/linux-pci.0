@@ -1,108 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "Busch, Keith" <keith.busch@intel.com>,
-        "netanel@amazon.com" <netanel@amazon.com>,
-        "ddutile@redhat.com" <ddutile@redhat.com>,
-        "mheyne@amazon.de" <mheyne@amazon.de>,
-        "Wang, Liang-min" <liang-min.wang@intel.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "hch@lst.de" <hch@lst.de>, "dwmw@amazon.co.uk" <dwmw@amazon.co.uk>
-Subject: Re: [pci PATCH v7 2/5] virtio_pci: Add support for unmanaged SR-IOV
- on virtio_pci devices
-Date: Wed, 28 Mar 2018 21:31:40 +0000
-Message-ID: <52734805-4A20-41C0-A46A-A8AFF8D79A72@intel.com>
-References: <20180315183449.3102.64791.stgit@localhost.localdomain>
- <20180315184132.3102.90947.stgit@localhost.localdomain>
-In-Reply-To: <20180315184132.3102.90947.stgit@localhost.localdomain>
-Content-Type: multipart/signed;
-        boundary="Apple-Mail=_67787A4F-EC56-438D-B41A-B2FB4E4FBB45";
-        protocol="application/pgp-signature"; micalg=pgp-sha256
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v4 1/2] firmware: dmi_scan: Uninline dmi_get_bios_year() helper
+Date: Tue, 20 Mar 2018 20:07:59 +0200
+Message-Id: <20180320180800.63179-2-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
+References: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_67787A4F-EC56-438D-B41A-B2FB4E4FBB45
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii
+Uninline dmi_get_bios_year() which, in particular, allows us
+to optimize it in the future.
 
-On Mar 15, 2018, at 11:42 AM, Alexander Duyck <alexander.duyck@gmail.com> wrote:
+While doing this, convert the function to return an error code
+when BIOS date is not present or not parsable, or CONFIG_DMI=n.
 
-> From: Alexander Duyck <alexander.h.duyck@intel.com>
-> 
-> Hardware-realized virtio_pci devices can implement SR-IOV, so this
-> patch enables its use. The device in question is an upcoming Intel
-> NIC that implements both a virtio_net PF and virtio_net VFs. These
-> are hardware realizations of what has been up to now been a software
-> interface.
-> 
-> The device in question has the following 4-part PCI IDs:
-> 
-> PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
-> VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
-> 
-> The patch currently needs no check for device ID, because the callback
-> will never be made for devices that do not assert the capability or
-> when run on a platform incapable of SR-IOV.
-> 
-> One reason for this patch is because the hardware requires the
-> vendor ID of a VF to be the same as the vendor ID of the PF that
-> created it. So it seemed logical to simply have a fully-functioning
-> virtio_net PF create the VFs. This patch makes that possible.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
-> ---
-> 
-> v4: Dropped call to pci_disable_sriov in virtio_pci_remove function
-> v5: Replaced call to pci_sriov_configure_unmanaged with
->         pci_sriov_configure_simple
-> v6: Dropped "#ifdef" checks for IOV wrapping sriov_configure definition
-> v7: No code change, added Reviewed-by
-> 
->  drivers/virtio/virtio_pci_common.c |    1 +
->  1 file changed, 1 insertion(+)
+Additionally, during the move, add a bit of documentation.
 
-Tested with the identified device.
+Fixes: 492a1abd61e4 ("dmi: Introduce the dmi_get_bios_year() helper function")
+Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
+Reviewed-by: Jean Delvare <jdelvare@suse.de>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
+ include/linux/dmi.h         | 11 ++---------
+ 2 files changed, 22 insertions(+), 9 deletions(-)
 
-Tested-by: Mark Rustad <mark.d.rustad@intel.com>
+diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+index ae4f1b181c23..bfb6ce6abc83 100644
+--- a/drivers/firmware/dmi_scan.c
++++ b/drivers/firmware/dmi_scan.c
+@@ -1040,6 +1040,26 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+ }
+ EXPORT_SYMBOL(dmi_get_date);
+ 
++/**
++ *	dmi_get_bios_year - get a year out of DMI_BIOS_DATE field
++ *
++ *	Returns year on success, -ENXIO if DMI is not selected,
++ *	or a different negative error code if DMI field is not present
++ *	or not parsable.
++ */
++int dmi_get_bios_year(void)
++{
++	bool exists;
++	int year;
++
++	exists = dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
++	if (!exists)
++		return -ENODATA;
++
++	return year ? year : -ERANGE;
++}
++EXPORT_SYMBOL(dmi_get_bios_year);
++
+ /**
+  *	dmi_walk - Walk the DMI table and get called back for every record
+  *	@decode: Callback function
+diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+index b5b8c26b04fb..c46fdb36700b 100644
+--- a/include/linux/dmi.h
++++ b/include/linux/dmi.h
+@@ -106,6 +106,7 @@ extern void dmi_scan_machine(void);
+ extern void dmi_memdev_walk(void);
+ extern void dmi_set_dump_stack_arch_desc(void);
+ extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
++extern int dmi_get_bios_year(void);
+ extern int dmi_name_in_vendors(const char *str);
+ extern int dmi_name_in_serial(const char *str);
+ extern int dmi_available;
+@@ -134,6 +135,7 @@ static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+ 		*dayp = 0;
+ 	return false;
+ }
++static inline int dmi_get_bios_year(void) { return -ENXIO; }
+ static inline int dmi_name_in_vendors(const char *s) { return 0; }
+ static inline int dmi_name_in_serial(const char *s) { return 0; }
+ #define dmi_available 0
+@@ -149,13 +151,4 @@ static inline const struct dmi_system_id *
+ 
+ #endif
+ 
+-static inline int dmi_get_bios_year(void)
+-{
+-	int year;
+-
+-	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
+-
+-	return year;
+-}
+-
+ #endif	/* __DMI_H__ */
+-- 
+2.16.2
 
---
-Mark Rustad, Networking Division, Intel Corporation
-
---Apple-Mail=_67787A4F-EC56-438D-B41A-B2FB4E4FBB45
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEE6ug8b0Wg+ULmnksNPA7/547j7m4FAlq8CbsACgkQPA7/547j
-7m7IXg/+IlfLEdVeKE9r7YPA/yg+kKRNuPXfNTEGfo9fobGLIys3pZpqNrkH6XO8
-duZJE/XM481LgYhwwllX+WEUrfCnvwP/Kgaf5J3TA7HVOk8+0jCiuz3YcuPy+D1B
-gMS5QsG/HyLjJpd8Qs72nS7uuGTgghVSMfwxvhk6kqbVt0MVumCrXffWsvEyKdpK
-KHChBqKpbMix6Jt66bVg2vJpRWJEVg3dgdO34VdYAn0+N7WMygOLtsyPATqLvgl7
-IWq3O2p2j91lyCn4u2QF4lc+Juye94PWHTgggXej670nNuJ+wwjCy0VZMvlZ+zCP
-BKdBSnOuJU81Bp1Hrc6T5R6PVvoMgwJnqwm+JvsdCLM0dqw8MqubkmUZ4ZjKSnwY
-qxGFHgMf+iuue2Se7Dcg5nv+z6rVf4xO7GuK8b874sI681tKGW5ETGQ+/Ws2pgIR
-/n/HMcdWaaOsJ2fj9drCRlKxQIrMNFRgdDqyJeVaMpN5KrkwdMGY48QSgD7wV36E
-7ZuKiQKFN58D9BmcECfrHN4WiP33aTmDPITD9leSGBdpw/YGZTm68T/+mxYcEbq1
-GJNpQxuQ2eZaXdsBVchh1KQHkxEYhmhSgnrupvzi0uf3KM9CcliOg6IzAACYfkJv
-+Q9+otsqaRp3ABczrGY26h7Riqrd3G4hSCqur/jNmQydxgMXFPo=
-=KFIy
------END PGP SIGNATURE-----
-
---Apple-Mail=_67787A4F-EC56-438D-B41A-B2FB4E4FBB45--
