@@ -1,95 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-28-jean-philippe.brucker@arm.com>
- <20180308184454.00000b4e@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <78551b46-2a54-76cf-da61-72aeae4b0002@arm.com>
-Date: Wed, 14 Mar 2018 13:08:25 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53244 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751330AbeCTRqg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Mar 2018 13:46:36 -0400
+Date: Tue, 20 Mar 2018 12:46:33 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/6] PCI: rockchip: Create individual folder for
+ rockchip drivers
+Message-ID: <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
+References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
+ <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <20180308184454.00000b4e@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>, Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/03/18 17:44, Jonathan Cameron wrote:
->> @@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
->>  	if (ret)
->>  		return ret;
->>  
->> +	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
->> +		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
->> +		ret = iommu_fault_queue_register(&smmu->faultq_nb);
-> Here you register only if this smmu supports stalls or pri which is fine, but
-> see the unregister path.
+On Tue, Mar 06, 2018 at 10:43:22AM +0800, Shawn Lin wrote:
+> In preparation for introducing End-Point driver for Rockchip
+> PCIe controller, we create a new folder to follow the convention
+> of dwc and cadence. Then we rename the host driver from pcie-rockchip.c
+> to pcie-rockchip-host.c, and only leave some common functions in
+> pcie-rockchip.c in order to be reused for both of host and EP drivers.
 > 
->> +		if (ret)
->> +			return ret;
->> +	}
->> +
->>  	/* And we're up. Go go go! */
->>  	ret = iommu_device_sysfs_add(&smmu->iommu, dev, NULL,
->>  				     "smmu3.%pa", &ioaddr);
->> @@ -3210,6 +3309,8 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
->>  {
->>  	struct arm_smmu_device *smmu = platform_get_drvdata(pdev);
->>  
->> +	iommu_fault_queue_unregister(&smmu->faultq_nb);
-> 
-> Here you unregister from the fault queue unconditionally.  That is mostly
-> safe but it seems to decrement and potentially destroy the work queue that
-> is in use by another smmu instance that does support page faulting.
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ...
 
-Ah yes, we'll need to check this
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 34b56a8..b85ad40 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -141,4 +141,5 @@ source "drivers/pci/cadence/Kconfig"
+>  source "drivers/pci/dwc/Kconfig"
+>  source "drivers/pci/host/Kconfig"
+>  source "drivers/pci/endpoint/Kconfig"
+> +source "drivers/pci/rockchip/Kconfig"
+>  source "drivers/pci/switch/Kconfig"
 
-Thanks,
-Jean
+Why is this out of order?  This seems exactly analogous to
+drivers/pci/cadence and dwc, so they should be next to each other.
 
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 9419709..8434afb 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -55,6 +55,8 @@ obj-y += switch/
+>  
+>  obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
+>  
+> +obj-$(CONFIG_PCIE_ROCKCHIP)	+= rockchip/
+> +
+>  # Endpoint library must be initialized before its users
+>  obj-$(CONFIG_PCIE_CADENCE)	+= cadence/
+>  # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Similarly here.
+
+I admit to still being a little dubious about the idea of a bunch of
+vendor-specific directories, each containing a completely trivial
+Makefile, a mostly-trivial Kconfig, a header file, a shared .c file, a
+host .c file, and an endpoint .c file.
+
+One alternative would be to keep the single pcie-rockchip.c file with
+an #ifdef CONFIG_PCIE_ROCKCHIP_HOST section and an #ifdef
+CONFIG_PCIE_ROCKCHIP_EP section.
+
+Bjorn
