@@ -1,47 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 23 Mar 2018 16:08:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:41051 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751480AbeCTPdC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Mar 2018 11:33:02 -0400
+Date: Tue, 20 Mar 2018 16:32:58 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
         "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
-Message-ID: <20180323210857.GA210003@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAJZ5v0gOrQhXzLHDnABEYHxGbHVY89Nij9uQzqx-oyYmFwzuSg@mail.gmail.com>
- <20180314120547.GB2703@lahna.fi.intel.com>
- <20180314123332.GC19651@wunner.de>
- <20180320104508.GF2703@lahna.fi.intel.com>
- <20180320113556.GA24197@wunner.de>
- <20180322104517.GA20389@wunner.de>
- <20180322165317.GI2703@lahna.fi.intel.com>
- <20180322173903.GA15503@wunner.de>
- <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
- <20180323111856.GO2703@lahna.fi.intel.com>
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v3 1/2] x86/PCI: Fix a potential regression when use
+ dmi_get_bios_year()
+Message-ID: <20180320163258.5ac39580@endymion>
+In-Reply-To: <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>
+References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
+        <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180323111856.GO2703@lahna.fi.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 23, 2018 at 01:18:56PM +0200, Mika Westerberg wrote:
-> On Thu, Mar 22, 2018 at 02:36:30PM -0500, Bjorn Helgaas wrote:
-> > I hope we can avoid adding suspend_late/resume_early callbacks in
-> > struct pcie_port_service_driver, and I also hope we can avoid adding
-> > device links.  Those both sound pretty complicated.
-> > 
-> > Can you do something like the patch below, which does something
-> > similar for PME?
-> 
-> AFAICT the core PCI PM code follows the same ordering than what PM core
-> does so it may be possible that not all service drivers get
-> resumed/suspended before other children (PCI buses). Basically this
-> would be the same than just using core PM ops in DPC driver (in which
-> case DPC specific things are still kept in DPC driver not in PCI core).
+Hi Andy,
 
-I'm not sure I follow this.  I assume the core PCI PM code guarantees
-that a bridge is suspended after its children and resumed before them.
-Are you saying that's not the case?
+On Tue, 20 Mar 2018 15:54:09 +0200, Andy Shevchenko wrote:
+> dmi_get_bios_year() may return 0 when it is incapable to parse
+> the BIOS date string. Previously this has been checked in
+> pci_acpi_crs_quirks().
+> 
+> Update the code to restore old behaviour.
+
+When fixing a regression, a good practice is to tag the fix commit as
+such:
+
+Fixes: 69c42d493db4 ("x86/pci: Simplify code by using the new dmi_get_bios_year() helper")
+
+> Reported-by: Jean Delvare <jdelvare@suse.de>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  arch/x86/pci/acpi.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 00e60de30328..5559dcaddd5e 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -140,7 +140,9 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
+>  
+>  void __init pci_acpi_crs_quirks(void)
+>  {
+> -	if ((dmi_get_bios_year() < 2008) && (iomem_resource.end <= 0xffffffff))
+> +	int year = dmi_get_bios_year();
+> +
+> +	if (year >= 0 && year < 2008 && iomem_resource.end <= 0xffffffff)
+>  		pci_use_crs = false;
+>  
+>  	dmi_check_system(pci_crs_quirks);
+
+This works with the non-inline version of dmi_get_bios_year()
+introduced by patch 2/2 of this series. However the inline version of
+this function would return 0 on error, which makes the condition above
+always true.
+
+The patches need to be applied in the opposite order, or the test above
+should be changed to "year > 0".
+
+Reviewed-by: Jean Delvare <jdelvare@suse.de>
+
+-- 
+Jean Delvare
+SUSE L3 Support
