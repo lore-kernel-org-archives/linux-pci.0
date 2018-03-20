@@ -1,82 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:43365 "EHLO
-        relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754569AbeCSN4R (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 09:56:17 -0400
-Subject: Re: [PATCH 1/2] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-To: Marek Vasut <marek.vasut@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-References: <20180318105253.30532-1-marek.vasut+renesas@gmail.com>
- <20180319083839.h3qdt4obbsbqlx73@verge.net.au>
- <b7dad289-c9de-ae19-a0d2-3eb127e0955a@gmail.com>
- <CAMuHMdVjU=1ndTK1jTU90Vw2sgPsTRRsH56vvY6nuuoDWUo-Aw@mail.gmail.com>
- <618f1841-f8b9-7fdb-5887-01a080a231db@gmail.com>
- <ebef6e5d-03ac-e1a7-ab9b-11ddfee72355@mentor.com>
- <05d70e5e-4751-9dc7-3b88-f4b6f4c70e82@gmail.com>
-CC: Simon Horman <horms@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Message-ID: <ea14c5a4-3588-77e2-4352-6e8eecd7c9a4@mentor.com>
-Date: Mon, 19 Mar 2018 15:56:11 +0200
-MIME-Version: 1.0
-In-Reply-To: <05d70e5e-4751-9dc7-3b88-f4b6f4c70e82@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 1/2] x86/PCI: Fix a potential regression when use dmi_get_bios_year()
+Date: Tue, 20 Mar 2018 15:54:09 +0200
+Message-Id: <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
+References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/19/2018 03:48 PM, Marek Vasut wrote:
-> On 03/19/2018 02:43 PM, Vladimir Zapolskiy wrote:
->> On 03/19/2018 12:56 PM, Marek Vasut wrote:
->>> On 03/19/2018 11:53 AM, Geert Uytterhoeven wrote:
->>>> Hi Marek,
->>>>
->>>> On Mon, Mar 19, 2018 at 10:53 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
->>>>> On 03/19/2018 09:38 AM, Simon Horman wrote:
->>>>>> On Sun, Mar 18, 2018 at 11:52:52AM +0100, Marek Vasut wrote:
->>>>>>> The data link active signal usually takes ~20 uSec to be asserted,
->>>>>>> poll the bit more often to avoid useless delays in this function.
->>>>>>>
->>>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>>>>>> Cc: linux-renesas-soc@vger.kernel.org
->>>>>>
->>>>>> Unless my eyes deceive me this seems to be quite a lot (100x) more often,
->>>>>> but so be it.
->>>>>
->>>>> It's just a higher frequency to avoid slowdown when bringing the link up.
->>>>
->>>> No it isn't: you replaced a sleep by a delay, thus making it blocking.
->>>
->>> For much shorter period of time.
->>>
->>>> So this can spin for up to 50 ms (+ overhead)?
->>>
->>> That's what it did before too , it used msleep and now it uses udelay.
->>>
->>
->> msleep() does not spin, it reschedules the process.
->>
->> Instead to find a balance you may want to play with usleep_range().
-> 
-> Which does not work in atomic context, which will be needed when using
-> this function in suspend/resume later on.
-> 
+dmi_get_bios_year() may return 0 when it is incapable to parse
+the BIOS date string. Previously this has been checked in
+pci_acpi_crs_quirks().
 
-IIRC suspend/resume are never executed in atomic context, and runtime
-suspend/resume are invoked in atomic context only if pm_runtime_irq_safe()
-is called (just a few drivers in vanilla uses it at the moment).
+Update the code to restore old behaviour.
 
-Nevertheless, the commit message does not say that the change is needed
-for future suspend/resume add-on.
+Reported-by: Jean Delvare <jdelvare@suse.de>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/pci/acpi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
---
-With best wishes,
-Vladimir
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 00e60de30328..5559dcaddd5e 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -140,7 +140,9 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
+ 
+ void __init pci_acpi_crs_quirks(void)
+ {
+-	if ((dmi_get_bios_year() < 2008) && (iomem_resource.end <= 0xffffffff))
++	int year = dmi_get_bios_year();
++
++	if (year >= 0 && year < 2008 && iomem_resource.end <= 0xffffffff)
+ 		pci_use_crs = false;
+ 
+ 	dmi_check_system(pci_crs_quirks);
+-- 
+2.16.2
+
