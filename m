@@ -1,60 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:39242 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932794AbeCSIyF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 04:54:05 -0400
-Subject: Re: [PATCH 1/2] pci: host: pci-hyperv: Replace GFP_ATOMIC with
- GFP_KERNEL in hv_pci_onchannelcallback
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        bhelgaas@google.com, devel@linuxdriverproject.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-References: <1521384782-23539-1-git-send-email-baijiaju1990@gmail.com>
- <20180319083850.tglknmwwybdhahfl@mwanda>
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Message-ID: <63a95bfd-0199-b935-b8d0-2b73d82e8d46@gmail.com>
-Date: Mon, 19 Mar 2018 16:53:52 +0800
-MIME-Version: 1.0
-In-Reply-To: <20180319083850.tglknmwwybdhahfl@mwanda>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 2/2] firmware: dmi_scan: Uninline dmi_get_bios_year() helper
+Date: Tue, 20 Mar 2018 15:54:10 +0200
+Message-Id: <20180320135410.11627-3-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
+References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Uninline dmi_get_bios_year() which, in particular, allows us
+to optimize it in the future.
 
+While doing this, convert the function to return an error code
+when BIOS date is not present, parsable or CONFIG_DMI=n.
 
-On 2018/3/19 16:38, Dan Carpenter wrote:
-> On Sun, Mar 18, 2018 at 10:53:02PM +0800, Jia-Ju Bai wrote:
->> hv_pci_onchannelcallback() is not called in atomic context.
->>
->> The call chain ending up at hv_pci_onchannelcallback() is:
->> [1] hv_pci_onchannelcallback() <- hv_pci_probe()
->> hv_pci_probe() is only set as ".probe" in hv_driver
->> structure "hv_pci_drv".
->>
-> Your static analysis tool is faulty and apparently so is Smatch.
->
-> $ smdb function_ptrs hv_pci_onchannelcallback
->
-> Says it can't find a caller.  When I look for function pointers I get:
->
-> $ smdb function_ptr hv_pci_onchannelcallback
-> hv_pci_onchannelcallback =  'hv_pci_onchannelcallback' , 'vmbus_open param 5' , '(struct vmbus_channel)->onchannel_callback' , '__read_once_size param 0'
->
-> Anyway the call tree is:
->
-> vmbus_chan_sched() <-- takes rcu_read_lock();
-> -> vmbus_channel_isr()
->     -> channel->onchannel_callback() -> which is hv_pci_onchannelcallback(
+Additionally, during the move, add a bit of documentation.
 
-Thanks for your reply :)
-I admit my tool produces a false positive for this code...
-Sorry for my incorrect patch.
+Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
+ include/linux/dmi.h         | 11 ++---------
+ 2 files changed, 22 insertions(+), 9 deletions(-)
 
-Anyway, I find that function pointers are quite hard to analyze in the 
-Linux kernel code, because their usages are often flexible.
-Have you found a good way to handle function pointers? Or can you 
-recommend some good tools to handle them?
+diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+index ae4f1b181c23..bfb6ce6abc83 100644
+--- a/drivers/firmware/dmi_scan.c
++++ b/drivers/firmware/dmi_scan.c
+@@ -1040,6 +1040,26 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+ }
+ EXPORT_SYMBOL(dmi_get_date);
+ 
++/**
++ *	dmi_get_bios_year - get a year out of DMI_BIOS_DATE field
++ *
++ *	Returns year on success, -ENXIO if DMI is not selected,
++ *	or a different negative error code if DMI field is not present
++ *	or not parsable.
++ */
++int dmi_get_bios_year(void)
++{
++	bool exists;
++	int year;
++
++	exists = dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
++	if (!exists)
++		return -ENODATA;
++
++	return year ? year : -ERANGE;
++}
++EXPORT_SYMBOL(dmi_get_bios_year);
++
+ /**
+  *	dmi_walk - Walk the DMI table and get called back for every record
+  *	@decode: Callback function
+diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+index b5b8c26b04fb..c46fdb36700b 100644
+--- a/include/linux/dmi.h
++++ b/include/linux/dmi.h
+@@ -106,6 +106,7 @@ extern void dmi_scan_machine(void);
+ extern void dmi_memdev_walk(void);
+ extern void dmi_set_dump_stack_arch_desc(void);
+ extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
++extern int dmi_get_bios_year(void);
+ extern int dmi_name_in_vendors(const char *str);
+ extern int dmi_name_in_serial(const char *str);
+ extern int dmi_available;
+@@ -134,6 +135,7 @@ static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+ 		*dayp = 0;
+ 	return false;
+ }
++static inline int dmi_get_bios_year(void) { return -ENXIO; }
+ static inline int dmi_name_in_vendors(const char *s) { return 0; }
+ static inline int dmi_name_in_serial(const char *s) { return 0; }
+ #define dmi_available 0
+@@ -149,13 +151,4 @@ static inline const struct dmi_system_id *
+ 
+ #endif
+ 
+-static inline int dmi_get_bios_year(void)
+-{
+-	int year;
+-
+-	dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
+-
+-	return year;
+-}
+-
+ #endif	/* __DMI_H__ */
+-- 
+2.16.2
 
-
-Best wishes,
-Jia-Ju Bai
