@@ -1,43 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0119.outbound.protection.outlook.com ([104.47.2.119]:54250
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751348AbeCTLuU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Mar 2018 07:50:20 -0400
-From: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
-To: linux-pci@vger.kernel.org
-Cc: mj@ucw.cz, dmonakhov@openvz.org,
-        Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
-Subject: [PATCH] lspci: fix printing label in terse+kernel mode
-Date: Tue, 20 Mar 2018 14:49:04 +0300
-Message-Id: <1521546544-25027-1-git-send-email-viktor.prutyanov@virtuozzo.com>
+Received: from mail.kernel.org ([198.145.29.99]:52076 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751626AbeCTUOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Mar 2018 16:14:19 -0400
+Subject: [PATCH v2 2/2] sparc/PCI: Stop reserving System ROM and Video ROM
+ in PCI space
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "David S. Miller" <davem@davemloft.net>,
+        Khalid Aziz <khalid.aziz@oracle.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+        David Ahern <david.ahern@oracle.com>, TJ <linux@iam.tj>,
+        David Airlie <airlied@linux.ie>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, sparclinux@vger.kernel.org
+Date: Tue, 20 Mar 2018 15:14:17 -0500
+Message-ID: <152157685713.167463.4236364024847068642.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152157662729.167463.14127576964193645242.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152157662729.167463.14127576964193645242.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In commit ef6c9ec3a45992d9e7ef4716d444252baf2013e1 pci_fill_info() calls were moved,
-but printing label in terse mode with opt_kernel was skipped.
-Before this patch lspci -k never prints 'DeviceName'.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Viktor Prutyanov <viktor.prutyanov@virtuozzo.com>
+Previously, pci_register_legacy_regions() reserved PCI address space under
+every PCI host bridge for the System ROM and the Video ROM, but these
+regions are not part of PCI address space.
+
+Previously, pci_register_legacy_regions() reserved the following areas of
+PCI address space under every PCI host bridge:
+
+  [bus 0xa0000-0xbffff]    Video RAM area (VGA frame buffer)
+  [bus 0xc0000-0xc7fff]    Video ROM
+  [bus 0xf0000-0xfffff]    System ROM
+
+It does need to reserve the [bus 0xa0000-0xbffff] region (at least if
+there's a possibility of a VGA device below the bridge) because VGA devices
+can respond to that even if they don't describe it with a BAR.
+
+But the Video ROM and System ROM areas don't seem necessary because they
+are not areas that legacy PCI devices respond to.
+
+They appear to be copied from x86, where they describe areas of system
+memory that depend on BIOS conventions.  On x86, BIOS copies the option ROM
+of the primary VGA device to RAM at 0xc0000, and the 0xf0000-0xfffff region
+is reserved for the motherboard BIOS.  Neither of these things applies to
+sparc.
+
+Stop reserving the System ROM and Video ROM regions in PCI space.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- lspci.c | 3 +++
- 1 file changed, 3 insertions(+)
+ arch/sparc/kernel/pci_common.c |   20 --------------------
+ 1 file changed, 20 deletions(-)
 
-diff --git a/lspci.c b/lspci.c
-index 6b93d9c..1f1e20c 100644
---- a/lspci.c
-+++ b/lspci.c
-@@ -322,6 +322,9 @@ show_terse(struct device *d)
-     }
-   putchar('\n');
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 14fa74f90fdb..38d46bcc8634 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -344,26 +344,6 @@ static void pci_register_legacy_regions(struct resource *io_res,
+ 	p->end = p->start + 0x1ffffUL;
+ 	p->flags = IORESOURCE_BUSY;
+ 	request_resource(mem_res, p);
+-
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return;
+-
+-	p->name = "System ROM";
+-	p->start = mem_res->start + 0xf0000UL;
+-	p->end = p->start + 0xffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
+-
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return;
+-
+-	p->name = "Video ROM";
+-	p->start = mem_res->start + 0xc0000UL;
+-	p->end = p->start + 0x7fffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
+ }
  
-+  if (opt_kernel)
-+    pci_fill_info(p, PCI_FILL_LABEL);
-+
-   if (verbose || opt_kernel)
-     {
-       word subsys_v, subsys_d;
--- 
-2.7.4
+ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
