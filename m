@@ -1,52 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:41718 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751789AbeCULvB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 07:51:01 -0400
-Date: Wed, 21 Mar 2018 19:50:43 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Marta Rybczynska <mrybczyn@kalray.eu>
-Cc: keith.busch@intel.com, axboe@fb.com, hch@lst.de, sagi@grimberg.me,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>
-Subject: Re: [RFC PATCH] nvme: avoid race-conditions when enabling devices
-Message-ID: <20180321115037.GA26083@ming.t460p>
-References: <744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu>
+Received: from mx2.suse.de ([195.135.220.15]:54835 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751186AbeCTSeK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Mar 2018 14:34:10 -0400
+Date: Tue, 20 Mar 2018 19:34:06 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v3 1/2] x86/PCI: Fix a potential regression when use
+ dmi_get_bios_year()
+Message-ID: <20180320193406.3d76d4f1@endymion>
+In-Reply-To: <alpine.DEB.2.21.1803201746450.1567@nanos.tec.linutronix.de>
+References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>
+        <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>
+        <20180320163258.5ac39580@endymion>
+        <1521560965.23017.68.camel@linux.intel.com>
+        <alpine.DEB.2.21.1803201746450.1567@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 12:00:49PM +0100, Marta Rybczynska wrote:
-> NVMe driver uses threads for the work at device reset, including enabling
-> the PCIe device. When multiple NVMe devices are initialized, their reset
-> works may be scheduled in parallel. Then pci_enable_device_mem can be
-> called in parallel on multiple cores.
+On Tue, 20 Mar 2018 17:47:41 +0100 (CET), Thomas Gleixner wrote:
+> On Tue, 20 Mar 2018, Andy Shevchenko wrote:
+> > On Tue, 2018-03-20 at 16:32 +0100, Jean Delvare wrote:  
+> > > When fixing a regression, a good practice is to tag the fix commit as
+> > > such:
+> > > 
+> > > Fixes: 69c42d493db4 ("x86/pci: Simplify code by using the new
+> > > dmi_get_bios_year() helper")  
+> > 
+> > Someone (perhaps Ingo) told me that Fixes doesn't make much sense if the
+> > fixing commit is not yet in vanilla.  
 > 
-> This causes a loop of enabling of all upstream bridges in
-> pci_enable_bridge(). pci_enable_bridge() causes multiple operations
-> including __pci_set_master and architecture-specific functions that
-> call ones like and pci_enable_resources(). Both __pci_set_master()
-> and pci_enable_resources() read PCI_COMMAND field in the PCIe space
-> and change it. This is done as read/modify/write.
-> 
-> Imagine that the PCIe tree looks like:
-> A - B - switch -  C - D
->                \- E - F
-> 
-> D and F are two NVMe disks and all devices from B are not enabled and bus
-> mastering is not set. If their reset work are scheduled in parallel the two
-> modifications of PCI_COMMAND may happen in parallel without locking and the
-> system may end up with the part of PCIe tree not enabled.
+> No. If the commit is already queued for the next merge window then a fixes
+> tag is appropriate.
 
-Then looks serialized reset should be used, and I did see the commit
-79c48ccf2fe ("nvme-pci: serialize pci resets") fixes issue of 'failed
-to mark controller state' in reset stress test.
++1
 
-But that commit only covers case of PCI reset from sysfs attribute, and
-maybe other cases need to be dealt with in similar way too.
+Even if it won't be used for stable branches, it's still valuable for
+distribution kernel maintainers to find out the fixes to patches they
+backport.
 
 Thanks,
-Ming
+-- 
+Jean Delvare
+SUSE L3 Support
