@@ -1,68 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 19 Mar 2018 12:11:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Miller <davem@davemloft.net>
-Cc: khalid.aziz@oracle.com, sparclinux@vger.kernel.org,
-        linux-pci@vger.kernel.org, yinghai@kernel.org,
-        linux-kernel@vger.kernel.org, david.ahern@oracle.com, linux@iam.tj
-Subject: Re: [PATCH v1 0/2] PCI: Sparc 64-bit resource fixups
-Message-ID: <20180319171140.GA52750@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180215151118.196756.99622.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180220233935.GE32228@bhelgaas-glaptop.roam.corp.google.com>
- <20180318.120734.1936832399192758981.davem@davemloft.net>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 20 Mar 2018 17:47:41 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+cc: Jean Delvare <jdelvare@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v3 1/2] x86/PCI: Fix a potential regression when use
+ dmi_get_bios_year()
+In-Reply-To: <1521560965.23017.68.camel@linux.intel.com>
+Message-ID: <alpine.DEB.2.21.1803201746450.1567@nanos.tec.linutronix.de>
+References: <20180320135410.11627-1-andriy.shevchenko@linux.intel.com>  <20180320135410.11627-2-andriy.shevchenko@linux.intel.com>  <20180320163258.5ac39580@endymion> <1521560965.23017.68.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180318.120734.1936832399192758981.davem@davemloft.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 18, 2018 at 12:07:34PM -0400, David Miller wrote:
-> From: Bjorn Helgaas <helgaas@kernel.org>
-> Date: Tue, 20 Feb 2018 17:39:35 -0600
-> 
-> > Both these patches are on my pci/sparc branch and appeared in the
-> > Feb 19 linux-next tree.
+On Tue, 20 Mar 2018, Andy Shevchenko wrote:
+> On Tue, 2018-03-20 at 16:32 +0100, Jean Delvare wrote:
+> > Hi Andy,
 > > 
-> > Any testing and feedback (especially on the second patch, which should
-> > change /proc/iomem) would be great.
+> > On Tue, 20 Mar 2018 15:54:09 +0200, Andy Shevchenko wrote:
+> > > dmi_get_bios_year() may return 0 when it is incapable to parse
+> > > the BIOS date string. Previously this has been checked in
+> > > pci_acpi_crs_quirks().
+> > > 
+> > > Update the code to restore old behaviour.
 > > 
-> > They're headed for v4.17 unless I hear about issues.
+> > When fixing a regression, a good practice is to tag the fix commit as
+> > such:
 > > 
-> > It would be useful to hear about what's still broken so I can try to
-> > pull in the other patches.
+> > Fixes: 69c42d493db4 ("x86/pci: Simplify code by using the new
+> > dmi_get_bios_year() helper")
 > 
-> I don't understand why you put the SYSTEM and Video ROM at addresses
-> relative to absolute zero.  The result of this is that it might
-> overlap real physical memory.
-> 
-> If a VGA card is present, it's ROM will respond to those addresses
-> relative to the PCI controller's MEM space area.
+> Someone (perhaps Ingo) told me that Fixes doesn't make much sense if the
+> fixing commit is not yet in vanilla.
 
-I could have worded the changelog better.  This is about reserving PCI
-bus addresses 0xc0000-0xc7fff, not the VGA framebuffer at
-0xa0000-0xbffff.
+No. If the commit is already queued for the next merge window then a fixes
+tag is appropriate.
 
-If I understand correctly, a VGA device will respond to the
-framebuffer at 0xa0000-0xbffff, but the device itself will not respond
-to the 0xc0000-0xc7fff range.  I think the typical x86 PC arrangement
-is that the BIOS reads the VGA option ROM using the normal relocatable
-expansion ROM BAR and copies it into system memory at 0xc0000, so it
-is in real physical memory.
+Thanks,
 
-I don't know what sparc firmware does, but I'm assuming the VGA PCI
-device behaves the same in that it wouldn't respond to 0xc0000 itself.
-
-> Their legacy resources are "hardwired", but those hardwired addresses
-> need to be relative to the PCI host controller's MEM areas in order
-> for them to be accessible.
-> 
-> I could understand removing the System ROM resource altogether, that
-> makes a lot of sense to me.
-
-Do you want me to remove the System ROM resource?  If so, I'll
-make a separate patch to remove it, followed by one that does
-whatever we figure out is the right thing for the video ROM.
-
-Thanks for the feedback.
-
-Bjorn
+	tglx
