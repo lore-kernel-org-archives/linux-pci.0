@@ -1,62 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0104.outbound.protection.outlook.com ([104.47.41.104]:40011
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751597AbeCNSF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 14:05:58 -0400
-From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2]PCI: hv: fix PCI-BUS domainID corruption
-Date: Wed, 14 Mar 2018 18:05:56 +0000
-Message-ID: <048A5571-8706-496C-99FB-35A0CF506A8B@microsoft.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v4 2/2] x86/PCI: Fix a potential regression when use dmi_get_bios_year()
+Date: Tue, 20 Mar 2018 20:08:00 +0200
+Message-Id: <20180320180800.63179-3-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
+References: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-V2hlbmV2ZXIgUENJIGJ1cyBpcyBhZGRlZCwgSHlwZXJWIGd1YXJhbnRlZXMgdGhlIEJVUyBpZCBp
-cyB1bmlxdWUuIEV2ZW4gd2l0aA0KdGhhdCB3aGVuIGEgZmlyc3QgZGV2aWNlIGlzIGFkZGVkIHRv
-IHRoZSBidXMsIGl0IG92ZXJyaWRlcyBidXMgZG9tYWluIElEIHdpdGgNCnRoZSBkZXZpY2Ugc2Vy
-aWFsIG51bWJlci4gU29tZXRpbWUgdGhpcyBjYW4gcmVzdWx0IGluIEJVUyBJRCBub3QgYmVpbmcg
-dW5pcXVlLg0KSW4gdGhpcyBjYXNlLCB3aGVuIFBDSV9CVVMgYW5kIGEgZGV2aWNlIGFkZGVkIHRv
-IHRoZSBidXMsIGV2ZW4gYmVmb3JlIHRoZSBQQ0kNCkJVUyBpcyBhZGRlZCB0byBrZXJuZWwsIHRo
-ZSBmaXJzdCBkZXZpY2UgdGVuZHMgdG8gb3ZlcndyaXRlIHRoZSBkb21haW4gSUQgd2l0aA0KMC4g
-U2luY2UgdGhlcmUgZXhpc3RzIGEgUENJIGJ1cyB3aXRoIGRvbWFpbiBJRCAwIGFscmVhZHkgdGhl
-IFBDSSBidXMgYWRkaXRpb24NCmZhaWxzLiBUaGlzIHBhdGNoIG1ha2Ugc3VyZSB3aGVuIGEgZGV2
-aWNlIGlzIGFkZGVkIHRvIGEgYnVzLCBpdCBuZXZlciB1cGRhdGVkDQp0aGUgYnVzIGRvbWFpbiBJ
-RC4gU2luY2Ugd2UgaGF2ZSB0aGUgdHJhbnNwYXJlbnQgU1JJT1YgbW9kZSBub3csIHRoZSBzaG9y
-dCBWRg0KZGV2aWNlIG5hbWUgaXMgbm8gbG9uZ2VyIG5lZWRlZC4NCg0KRml4ZXM6IDRhOWIwOTMz
-YmRmYygiUENJOmh2OlVzZSBkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQQ0kgZG9tYWluIikNCkNj
-OiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQpTaWduZWQtb2ZmLWJ5OiBTcmlkaGFyIFBpdGNoYWkg
-PHNycGl0Y2hhQG1pY3Jvc29mdC5jb20+DQotLS0NCg0KQ2hhbmdlcyBpbiB2MjoNCiogZml4IHRo
-ZSBjb21taXQgY29tbWVudHMuDQotLS0NCiBkcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYyB8
-IDExIC0tLS0tLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDExIGRlbGV0aW9ucygtKQ0KDQpkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMgYi9kcml2ZXJzL3BjaS9ob3N0
-L3BjaS1oeXBlcnYuYw0KaW5kZXggMmZhZjM4ZS4uYWM2N2U1NiAxMDA2NDQNCi0tLSBhL2RyaXZl
-cnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQorKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBl
-cnYuYw0KQEAgLTE1MTgsMTcgKzE1MTgsNiBAQCBzdGF0aWMgc3RydWN0IGh2X3BjaV9kZXYgKm5l
-d19wY2ljaGlsZF9kZXZpY2Uoc3RydWN0IGh2X3BjaWJ1c19kZXZpY2UgKmhidXMsDQogCWdldF9w
-Y2ljaGlsZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGlsZGxpc3QpOw0KIAlzcGluX2xvY2tfaXJx
-c2F2ZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KIA0KLQkvKg0KLQkgKiBXaGVu
-IGEgZGV2aWNlIGlzIGJlaW5nIGFkZGVkIHRvIHRoZSBidXMsIHdlIHNldCB0aGUgUENJIGRvbWFp
-bg0KLQkgKiBudW1iZXIgdG8gYmUgdGhlIGRldmljZSBzZXJpYWwgbnVtYmVyLCB3aGljaCBpcyBu
-b24temVybyBhbmQNCi0JICogdW5pcXVlIG9uIHRoZSBzYW1lIFZNLiAgVGhlIHNlcmlhbCBudW1i
-ZXJzIHN0YXJ0IHdpdGggMSwgYW5kDQotCSAqIGluY3JlYXNlIGJ5IDEgZm9yIGVhY2ggZGV2aWNl
-LiAgU28gZGV2aWNlIG5hbWVzIGluY2x1ZGluZyB0aGlzDQotCSAqIGNhbiBoYXZlIHNob3J0ZXIg
-bmFtZXMgdGhhbiBiYXNlZCBvbiB0aGUgYnVzIGluc3RhbmNlIFVVSUQuDQotCSAqIE9ubHkgdGhl
-IGZpcnN0IGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIHVzZWQgZm9yIGRvbWFpbiwgc28gdGhlDQot
-CSAqIGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRoZSBmaXJzdCBkZXZpY2Ug
-aXMgYWRkZWQuDQotCSAqLw0KLQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+Y2hpbGRyZW4pKQ0KLQkJ
-aGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogCWxpc3RfYWRkX3RhaWwoJmhwZGV2
-LT5saXN0X2VudHJ5LCAmaGJ1cy0+Y2hpbGRyZW4pOw0KIAlzcGluX3VubG9ja19pcnFyZXN0b3Jl
-KCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogCXJldHVybiBocGRldjsNCi0tIA0K
-Mi43LjQNCg0KDQo=
+dmi_get_bios_year() may return 0 when it is incapable to parse
+the BIOS date string. Previously this has been checked in
+pci_acpi_crs_quirks().
+
+Update the code to restore old behaviour.
+
+Fixes: 69c42d493db4 ("x86/pci: Simplify code by using the new dmi_get_bios_year() helper")
+Reported-by: Jean Delvare <jdelvare@suse.de>
+Reviewed-by: Jean Delvare <jdelvare@suse.de>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/pci/acpi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 00e60de30328..5559dcaddd5e 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -140,7 +140,9 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
+ 
+ void __init pci_acpi_crs_quirks(void)
+ {
+-	if ((dmi_get_bios_year() < 2008) && (iomem_resource.end <= 0xffffffff))
++	int year = dmi_get_bios_year();
++
++	if (year >= 0 && year < 2008 && iomem_resource.end <= 0xffffffff)
+ 		pci_use_crs = false;
+ 
+ 	dmi_check_system(pci_crs_quirks);
+-- 
+2.16.2
+
