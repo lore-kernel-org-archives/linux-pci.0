@@ -1,169 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54742 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751151AbeCIQbQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Mar 2018 11:31:16 -0500
-Date: Fri, 9 Mar 2018 16:31:37 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mingkai.hu@nxp.com,
-        peter.newton@nxp.com, minghuan.lian@nxp.com, rajesh.raina@nxp.com,
-        rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v6 1/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
- driver DT bindings
-Message-ID: <20180309163129.GA10137@red-moon>
-References: <1519733991-32198-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:40378 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751186AbeCTSeT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2018 14:34:19 -0400
+Received: by mail-qt0-f193.google.com with SMTP id y6so2685435qtm.7
+        for <linux-pci@vger.kernel.org>; Tue, 20 Mar 2018 11:34:19 -0700 (PDT)
+Subject: Re: [PATCH 0/9] PCI DT header refactoring and compile test
+ improvements
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>
+References: <20180307154243.3205-1-robh@kernel.org>
+ <20180320181855.GA24991@e107981-ln.cambridge.arm.com>
+From: Scott Branden <scott.branden@broadcom.com>
+Message-ID: <1ab13345-b0bc-1552-43b7-c7927810f833@broadcom.com>
+Date: Tue, 20 Mar 2018 11:34:14 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519733991-32198-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+In-Reply-To: <20180320181855.GA24991@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 27, 2018 at 07:19:51AM -0500, Subrahmanya Lingappa wrote:
-> This patch adds the DT bindings for Mobiveil PCIe Host Bridge
-> IP driver and updates the vendor prefixes file.
-> 
-> Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-> Acked-by: Rob Herring <robh@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: devicetree@vger.kernel.org
-> ---
->  .../devicetree/bindings/pci/mobiveil-pcie.txt      | 73 ++++++++++++++++++++++
->  .../devicetree/bindings/vendor-prefixes.txt        |  1 +
->  MAINTAINERS                                        |  7 +++
->  3 files changed, 81 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-> new file mode 100644
-> index 0000000..e9dd1e8
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-> @@ -0,0 +1,73 @@
-> +* Mobiveil AXI PCIe Root Port Bridge DT description
-> +
-> +Mobiveil's GPEX 4.0 is a PCIe Gen4 root port bridge IP. This configurable IP
-> +has up to 8 outbound and inbound windows for the address translation.
-> +
-> +Required properties:
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +- compatible: Should contain "mbvl,gpex40-pcie"
-> +- reg: Should contain PCIe registers location and length
-> +	"config_axi_slave": PCIe controller registers
-> +	"csr_axi_slave"	  : Bridge config registers
-> +	"gpio_slave"	  : GPIO registers to control slot power
-> +	"apb_csr"	  : MSI registers
-> +
-> +- device_type: must be "pci"
-> +- apio-wins : number of requested apio outbound windows
-> +		default 2 outbound windows are configured -
-> +		1. Config window
-> +		2. Memory window
-> +- ppio-wins : number of requested ppio inbound windows
-> +		default 1 inbound memory window is configured.
-> +- bus-range: PCI bus numbers covered
-> +- interrupt-controller: identifies the node as an interrupt controller
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +- interrupt-parent : phandle to the interrupt controller that
-> +		it is attached to, it should be set to gic to point to
-> +		ARM's Generic Interrupt Controller node in system DT.
-> +- interrupts: The interrupt line of the PCIe controller
-> +		last cell of this field is set to 4 to
-> +		denote it as IRQ_TYPE_LEVEL_HIGH type interrupt.
-> +- interrupt-map-mask,
-> +	interrupt-map: standard PCI properties to define the mapping of the
-> +	PCI interface to interrupt numbers.
-> +- ranges: ranges for the PCI memory regions (I/O space region is not
-> +	supported by hardware)
-> +	Please refer to the standard PCI bus binding document for a more
-> +	detailed explanation
-> +
-> +
-> +Example:
-> +++++++++
-> +	pcie0: pcie@a0000000 {
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		compatible = "mbvl,gpex40-pcie";
-> +		reg =	<0xa0000000 0x00001000>,
-> +			<0xb0000000 0x00010000>,
-> +			<0xff000000 0x00200000>,
-> +			<0xb0010000 0x00001000>;
-> +		reg-names =	"config_axi_slave",
-> +				"csr_axi_slave",
-> +				"gpio_slave",
-> +				"apb_csr";
-> +		device_type = "pci";
-> +		apio-wins = <2>;
-> +		ppio-wins = <1>;
-> +		bus-range = <0x00000000 0x000000ff>;
-> +		interrupt-controller;
-> +		interrupt-parent = <&gic>;
-> +		#interrupt-cells = <1>;
-> +		interrupts = < 0 89 4 >;
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0 0 0 1 &pci_express 1>,
-> +				<0 0 0 2 &pci_express 2>,
-> +				<0 0 0 3 &pci_express 3>,
-> +				<0 0 0 4 &pci_express 4>;
+Hi Lorenzo,
 
-This is wrong and it is the root cause of all the INTX mapping
-shenanigans in the PCI host bridge legacy IRQ domain.
 
-IIUC we are mapping INTx to input [0,1,2,3] in the host bridge
-interrupt combiner, starting from 0 not 1.
+On 18-03-20 11:18 AM, Lorenzo Pieralisi wrote:
+> Hi Rob, all,
+>
+> On Wed, Mar 07, 2018 at 09:42:34AM -0600, Rob Herring wrote:
+>> This started with just moving private functions from of_pci.h to
+>> drivers/pci/pci.h, but I was annoyed with trying to build all the right
+>> configs, so I enabled COMPILE_TEST on a bunch of drivers. Then I fixed
+>> the fallout from doing that. I'm sending this as all one series, but
+>> really there is no dependency for the header refactoring patch.
+>>
+>> Needless to say, this series is *compile tested* only. This is based on
+>> Bjorn's for-linus branch (and the of_pci.h fix there).
+> I reworked it and applied on top of v4.16-rc1 in my pci/host/misc
+> branch to get a kbot report on it - then we can decide how we can
+> merge it.
+You should send out v2 of the patch series so it can be reviewed and ack'd?
 
-This would remove all the bogus (INTX + 1) in kernel code that are there
-to cope with this erroneous DT binding.
-
-Yes - there are existing bindings that are wrong as well but we can't
-change them since they would trigger regressions.
-
-This one is new, let's get it done properly from the beginning.
-
-Thanks,
-Lorenzo
-
-> +		ranges = < 0x83000000 0 0x00000000 0xa8000000 0 0x8000000>;
-> +
-> +	};
-> diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
-> index 0994bdd..8263cc7 100644
-> --- a/Documentation/devicetree/bindings/vendor-prefixes.txt
-> +++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
-> @@ -197,6 +197,7 @@ lwn	Liebherr-Werk Nenzing GmbH
->  macnica	Macnica Americas
->  marvell	Marvell Technology Group Ltd.
->  maxim	Maxim Integrated Products
-> +mbvl	Mobiveil Inc.
->  mcube	mCube
->  meas	Measurement Specialties
->  mediatek	MediaTek Inc.
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 44512c3..b295080 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9162,6 +9162,13 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
->  S:	Maintained
->  F:	drivers/media/dvb-frontends/mn88473*
->  
-> +PCI DRIVER FOR MOBIVEIL PCIE IP
-> +M:	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Supported
-> +F:	Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-> +F:	drivers/pci/host/pcie-mobiveil.c
-> +
->  MODULE SUPPORT
->  M:	Jessica Yu <jeyu@kernel.org>
->  M:	Rusty Russell <rusty@rustcorp.com.au>
-> -- 
-> 1.8.3.1
-> 
+The v1 of the patch shouldn't be merged into mainline and then have v2 
+applied on top of it.  Only v2 should be merged upstream.
+>
+> Thanks,
+> Lorenzo
+>
+>> Rob
+>>
+>> Fengguang Wu (2):
+>>    PCI: rcar: fix semicolon.cocci warnings
+>>    PCI: v3-semi: fix semicolon.cocci warnings
+>>
+>> Rob Herring (6):
+>>    PCI: kirin: remove unnecessary asm/compiler.h include
+>>    PCI: iproc: remove dependency on ARM specific struct pci_sys_data
+>>    PCI: kirin: fix missing dependency on PCI_MSI_IRQ_DOMAIN
+>>    PCI: improve host drivers compile test coverage
+>>    PCI: dw: move CONFIG_PCI depends to menu
+>>    PCI: move private DT related functions into private header
+>>
+>> kbuild test robot (1):
+>>    PCI: kirin_pcie_driver can be static
+>>
+>>   drivers/pci/dwc/Kconfig                | 42 +++++++++++++---------------------
+>>   drivers/pci/dwc/pci-dra7xx.c           |  1 +
+>>   drivers/pci/dwc/pcie-designware-host.c |  1 +
+>>   drivers/pci/dwc/pcie-kirin.c           |  3 +--
+>>   drivers/pci/host/Kconfig               | 33 ++++++++++++--------------
+>>   drivers/pci/host/pci-aardvark.c        |  2 ++
+>>   drivers/pci/host/pci-ftpci100.c        |  6 +++--
+>>   drivers/pci/host/pci-mvebu.c           |  2 ++
+>>   drivers/pci/host/pci-rcar-gen2.c       |  2 ++
+>>   drivers/pci/host/pci-tegra.c           |  2 ++
+>>   drivers/pci/host/pci-v3-semi.c         |  4 +++-
+>>   drivers/pci/host/pci-xgene.c           |  2 ++
+>>   drivers/pci/host/pcie-altera.c         |  2 ++
+>>   drivers/pci/host/pcie-iproc-bcma.c     |  3 +--
+>>   drivers/pci/host/pcie-iproc-platform.c |  1 +
+>>   drivers/pci/host/pcie-iproc.c          | 19 ++-------------
+>>   drivers/pci/host/pcie-iproc.h          |  4 ----
+>>   drivers/pci/host/pcie-mediatek.c       |  2 ++
+>>   drivers/pci/host/pcie-rcar.c           |  4 +++-
+>>   drivers/pci/host/pcie-rockchip.c       |  2 ++
+>>   drivers/pci/host/pcie-xilinx-nwl.c     |  2 ++
+>>   drivers/pci/host/pcie-xilinx.c         |  2 ++
+>>   drivers/pci/pci.h                      | 40 ++++++++++++++++++++++++++++++++
+>>   include/linux/of_pci.h                 | 34 ---------------------------
+>>   24 files changed, 108 insertions(+), 107 deletions(-)
+>>
+>> -- 
+>> 2.14.1
+>>
