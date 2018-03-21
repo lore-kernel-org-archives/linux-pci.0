@@ -1,32 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f169.google.com ([74.125.82.169]:38037 "EHLO
-        mail-ot0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932627AbeCMKyb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 06:54:31 -0400
-Received: by mail-ot0-f169.google.com with SMTP id 95so18465055ote.5
-        for <linux-pci@vger.kernel.org>; Tue, 13 Mar 2018 03:54:31 -0700 (PDT)
+Return-Path: <SRS0=rPC7=GL=xenosoft.de=chzigotzky@kernel.org>
+Return-Path: <SRS0=rPC7=GL=xenosoft.de=chzigotzky@kernel.org>
+Subject: [PATCH 1/1] PCI set flag PCI_SCAN_ALL_PCIE_DEVS for P.A. Semi boards
+To: Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas
+ <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, Olof Johansson <olof@lixom.net>,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+References: <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
+ <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
+ <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
+ <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
+ <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
+ <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
+ <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
+ <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
+ <dc228918-652a-e24c-ce7b-8d1b30153d3b@xenosoft.de>
+ <639e975f-1b3a-4f85-9a40-13fe2473fc28@xenosoft.de>
+ <20180319191310.GG77194@bhelgaas-glaptop.roam.corp.google.com>
+ <87tvtbg0i9.fsf@concordia.ellerman.id.au>
+From: Christian Zigotzky <chzigotzky@xenosoft.de>
+Message-ID: <9841e67b-fc61-cfa7-e6ab-cede76665e27@xenosoft.de>
+Date: Wed, 21 Mar 2018 07:44:25 +0100
 MIME-Version: 1.0
-In-Reply-To: <b440214a-0768-38a4-9410-9eedc7a79dca@green-communications.fr>
-References: <b440214a-0768-38a4-9410-9eedc7a79dca@green-communications.fr>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Tue, 13 Mar 2018 07:54:30 -0300
-Message-ID: <CAOMZO5DeTvR2YiJa1ei7vW=m1FukJRhdO-DaoeKLrFeSvFO0QA@mail.gmail.com>
-Subject: Re: PCI enumeration broken on Ventana gw5200
-To: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
-Cc: linux-pci@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <87tvtbg0i9.fsf@concordia.ellerman.id.au>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Nicolas,
+Michael,
 
-On Tue, Mar 13, 2018 at 7:45 AM, Nicolas Cavallari
-<Nicolas.Cavallari@green-communications.fr> wrote:
-> When testing v4.16-rc2 on a Ventana gw5200, the mini-PCIe cards were
-> not recognised.  Only the bridge was recognised.
+Thanks for the hint because of removing tags and thanks a lot for adding 
+the patch to the official source code. This patch helps us a lot.
 
-Please try 4.16-rc5 instead.
+Have a nice day!
 
-Koen's commit should fix the issue you described:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/pci/dwc?h=v4.16-rc5&id=fc110ebdd014dd1368c98e7685b47789c31fab42
+Christian
+
+On 19 March 2018 at 11:32PM, Michael Ellerman wrote:
+ >
+ > I'm happy to take it, I've been meaning to check if Olof sent a SOB in
+ > his original mail but haven't got to it.
+ >
+ > ...
+ >
+ > Yes, he did, see below.
+ >
+ > So I'll merge that, I'll add a Tested-by for you Christian.
+ >
+ > Christian please don't remove any of the tags when submitting other
+ > peoples' patches in future.
+ >
+ > cheers
+ >
+ >
+ > >From a3b390277627b0342c8ccfc16e58679e0d8abdde Mon Sep 17 00:00:00 2001
+ > From: Olof Johansson <olof@lixom.net>
+ > Date: Sat, 2 Dec 2017 14:56:36 -0800
+ > Subject: [PATCH] powerpc/pasemi: set PCI_SCAN_ALL_PCI_DEVS
+ >
+ > Needed on Amiga X1000 with SB600.
+ >
+ > Reported-by: Christian Zigotzky <chzigotzky@xenosoft.de>
+ > Cc: Bjorn Helgaas <bhelgaas@google.com>
+ > Signed-off-by: Olof Johansson <olof@lixom.net>
+ > ---
+ >  arch/powerpc/platforms/pasemi/pci.c | 2 ++
+ >  1 file changed, 2 insertions(+)
+ >
+ > diff --git a/arch/powerpc/platforms/pasemi/pci.c 
+b/arch/powerpc/platforms/pasemi/pci.c
+ > index 5ff6108..ea54ed2 100644
+ > --- a/arch/powerpc/platforms/pasemi/pci.c
+ > +++ b/arch/powerpc/platforms/pasemi/pci.c
+ > @@ -224,6 +224,8 @@ void __init pas_pci_init(void)
+ >         return;
+ >     }
+ >
+ > +    pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS):
+ > +
+ >     for (np = NULL; (np = of_get_next_child(root, np)) != NULL;)
+ >         if (np->name && !strcmp(np->name, "pxp") && !pas_add_bridge(np))
+ >             of_node_get(np);
+ >
