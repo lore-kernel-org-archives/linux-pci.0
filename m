@@ -1,51 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 12 Mar 2018 09:52:40 +0100
-From: Ingo Molnar <mingo@kernel.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 21 Mar 2018 10:27:02 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        the arch/x86 maintainers <x86@kernel.org>,
-        Jean Delvare <jdelvare@suse.de>
-Subject: Re: [PATCH v2 0/4] x86, dmi: introduce and use dmi_get_bios_year()
-Message-ID: <20180312085240.7y6ycvzo6ns7hjzc@gmail.com>
-References: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
- <CAJZ5v0jY-psSy51ZvrgHKidGg5CK_4hK1UGbhnzXD_QQxyCvZg@mail.gmail.com>
- <1520256299.10722.395.camel@linux.intel.com>
- <CAJZ5v0hZwz3fv2fBiXXTqO0E2AasphBYgX6tzUE8R-YK+wgmUw@mail.gmail.com>
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+Subject: Re: [PATCH v3 11/11] nvmet: Optionally use PCI P2P memory
+Message-ID: <20180321092702.GC7098@lst.de>
+References: <20180312193525.2855-1-logang@deltatee.com> <20180312193525.2855-12-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0hZwz3fv2fBiXXTqO0E2AasphBYgX6tzUE8R-YK+wgmUw@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180312193525.2855-12-logang@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> +				  const char *page, size_t count)
+> +{
+> +	struct nvmet_port *port = to_nvmet_port(item);
+> +	struct device *dev;
+> +	struct pci_dev *p2p_dev = NULL;
+> +	bool use_p2pmem;
+> +
+> +	switch (page[0]) {
+> +	case 'y':
+> +	case 'Y':
+> +	case 'a':
+> +	case 'A':
+> +		use_p2pmem = true;
+> +		break;
+> +	case 'n':
+> +	case 'N':
+> +		use_p2pmem = false;
+> +		break;
+> +	default:
+> +		dev = bus_find_device_by_name(&pci_bus_type, NULL, page);
+> +		if (!dev) {
+> +			pr_err("No such PCI device: %s\n", page);
+> +			return -ENODEV;
+> +		}
+> +
+> +		use_p2pmem = true;
+> +		p2p_dev = to_pci_dev(dev);
+> +
+> +		if (!pci_has_p2pmem(p2p_dev)) {
+> +			pr_err("PCI device has no peer-to-peer memory: %s\n",
+> +			       page);
+> +			pci_dev_put(p2p_dev);
+> +			return -ENODEV;
+> +		}
+> +	}
 
-* Rafael J. Wysocki <rafael@kernel.org> wrote:
+Yikes.  Shouldn't auto just be the normal yes case instead of this
+string parsing mess?
 
-> >> I can apply this or if you want to route it differently,
-> >
-> > I don't know how to proceed here, Ingo applied v1 and there might be
-> > options like remove old and reapply new, or do a series of fixups.
-> >
-> > Ingo, can you suggest how to do this in the best way?
-> 
-> AFAICS the tip workflow is that things are not rebased in there, only
-> reverted if need be, and if the previous version was taken to tip,
-> reverting it is not worth the hassle IMO.
-> 
-> I'd just wait for it to be integrated and post an update on top of it
-> or even on top of linux-next.
+> +	if (rsp->req.sg != &rsp->cmd->inline_sg) {
+> +		if (rsp->req.p2p_dev)
+> +			pci_p2pmem_free_sgl(rsp->req.p2p_dev, rsp->req.sg,
+> +					    rsp->req.sg_cnt);
+> +		else
+> +			sgl_free(rsp->req.sg);
+> +	}
 
-Yeah, indeed, we rebase in -tip only if absolutely necessary - and there were no 
-real problems with the v1 version, right?
+Can we factor this into a helper, as the other target drivers (fc for now,
+tcp soon) using sgl allocatins should share the code?
 
-So it would be nice to have v2 as a delta against what is already in -tip.
-
-Thanks,
-
-	Ingo
+(same for the alloc side)
