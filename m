@@ -1,66 +1,61 @@
-Return-Path: <SRS0=QDUS=GN=broadcom.com=srinath.mannam@kernel.org>
-Return-Path: <SRS0=QDUS=GN=broadcom.com=srinath.mannam@kernel.org>
-From: Srinath Mannam <srinath.mannam@broadcom.com>
-References: <744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu>
- <20180321115037.GA26083@ming.t460p> <464125757.5843583.1521634231341.JavaMail.zimbra@kalray.eu>
- <20180321154807.GD22254@ming.t460p> <20180321160238.GF12909@localhost.localdomain>
- <1220434088.5871933.1521648656789.JavaMail.zimbra@kalray.eu>
- <20180321215308.GH38649@bhelgaas-glaptop.roam.corp.google.com> <2116255963.5924726.1521790087788.JavaMail.zimbra@kalray.eu>
-In-Reply-To: <2116255963.5924726.1521790087788.JavaMail.zimbra@kalray.eu>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:25571 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751372AbeCUFyg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 01:54:36 -0400
+Subject: Re: [PATCH v4 3/5] PCI: designware-ep: Make dw_pcie_ep_reset_bar()
+ handle 64-bit BARs properly
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
+ <20180308133331.19464-4-niklas.cassel@axis.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <1ba89717-2eb7-c6af-632c-6ed8483002cb@ti.com>
+Date: Wed, 21 Mar 2018 11:24:25 +0530
 MIME-Version: 1.0
-Date: Fri, 23 Mar 2018 14:14:05 +0530
-Message-ID: <0b37cdbe43a350e46057efa197ba471a@mail.gmail.com>
-Subject: RE: [RFC PATCH] nvme: avoid race-conditions when enabling devices
-To: Marta Rybczynska <mrybczyn@kalray.eu>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>, Ming Lei <ming.lei@redhat.com>, axboe@fb.com, hch@lst.de,
-	sagi@grimberg.me, linux-nvme@lists.infradead.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
-	Pierre-Yves Kerbrat <pkerbrat@kalray.eu>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180308133331.19464-4-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marta,
+Hi Niklas,
 
-I could not get time to work on this.
-The present patch works for our platforms. so we continue with that.
-I will update new changes little later.
-If you have time, please try the same patch and let us know if any issue you
-see.
+On Thursday 08 March 2018 07:03 PM, Niklas Cassel wrote:
+> Since a 64-bit BAR consists of a BAR pair, we need to write to both
+> BARs in the BAR pair to clear the BAR properly.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/dwc/pcie-designware-ep.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index 946bbdf53c4d..b20b2651caf9 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -22,11 +22,18 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+>  void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+>  {
+>  	u32 reg;
+> +	u32 val;
+>  
+>  	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+> +	val = dw_pcie_readl_dbi(pci, reg);
+>  	dw_pcie_dbi_ro_wr_en(pci);
+>  	dw_pcie_writel_dbi2(pci, reg, 0x0);
+>  	dw_pcie_writel_dbi(pci, reg, 0x0);
+> +	if (!(val & PCI_BASE_ADDRESS_SPACE_IO) &&
+> +	    (val & PCI_BASE_ADDRESS_MEM_TYPE_64)) {
+> +		dw_pcie_writel_dbi2(pci, reg + 4, 0x0);
+> +		dw_pcie_writel_dbi(pci, reg + 4, 0x0);
+> +	}
 
-Regards,
-Srinath.
+same comment as previous patch apply here too.
 
------Original Message-----
-From: Marta Rybczynska [mailto:mrybczyn@kalray.eu]
-Sent: Friday, March 23, 2018 12:58 PM
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>; Ming Lei <ming.lei@redhat.com>;
-axboe@fb.com; hch@lst.de; sagi@grimberg.me; linux-nvme@lists.infradead.org;
-linux-kernel@vger.kernel.org; bhelgaas@google.com;
-linux-pci@vger.kernel.org; Pierre-Yves Kerbrat <pkerbrat@kalray.eu>; Srinath
-Mannam <srinath.mannam@broadcom.com>
-Subject: Re: [RFC PATCH] nvme: avoid race-conditions when enabling devices
-
-
-> On Wed, Mar 21, 2018 at 05:10:56PM +0100, Marta Rybczynska wrote:
->>
->> The problem may happen also with other device doing its probe and
->> nvme running its workqueue (and we probably have seen it in practice
->> too). We were thinking about a lock in the pci generic code too,
->> that's why I've put the linux-pci@ list in copy.
->
-> Yes, this is a generic problem in the PCI core.  We've tried to fix it
-> in the past but haven't figured it out yet.
->
-> See 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
-> and 0f50a49e3008 ("Revert "PCI: Avoid race while enabling upstream
-> bridges"").
->
-> It's not trivial, but if you figure out a good way to fix this, I'd be
-> thrilled.
->
-
-Bjorn, Srinath, are you aware of anyone working on an updated fix for this
-one?
-
-Marta
+Thanks
+Kishon
