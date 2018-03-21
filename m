@@ -1,173 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:37388 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1034046AbeCAS4P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 13:56:15 -0500
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-2-logang@deltatee.com>
- <20180301173752.GE13722@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <b81503c2-9f07-b5f6-df06-64d1fdc53386@deltatee.com>
-Date: Thu, 1 Mar 2018 11:55:51 -0700
+Return-Path: <SRS0=WG/S=GL=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=WG/S=GL=arm.com=marc.zyngier@kernel.org>
+Subject: Re: Why two irq chips for MSI
+To: valmiki <valmikibow@gmail.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+References: <81eb7191-1c5c-ad27-2714-9563e4ef7c68@gmail.com>
+ <adf13928-d1da-e8af-5b32-efc199ac6ba9@arm.com>
+ <a0cd800b-f20f-64f3-c3b3-7f0c193c2b16@gmail.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <3c4b764a-17ae-8309-094b-cf441a132d21@arm.com>
+Date: Wed, 21 Mar 2018 18:05:58 +0000
 MIME-Version: 1.0
-In-Reply-To: <20180301173752.GE13722@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 01/10] PCI/P2PDMA: Support peer to peer memory
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <a0cd800b-f20f-64f3-c3b3-7f0c193c2b16@gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 21/03/18 17:38, valmiki wrote:
+>> On 21/03/18 17:12, valmiki wrote:
+>>> Hi,
+>>>
+>>> In most of the RP drivers, why two irq chips are being used for MSI ?
+>>>
+>>> One at irq_domain_set_info (which uses irq_compose_msi_msg and
+>>> irq_set_affinity methods) and another being registered with struct
+>>> msi_domain_info (which uses irq_mask/irq_unmask methods).
+>>>
+>>> When will each chip be used w.r.t to virq ?
+>>
+>> A simple way to think of it is that you have two pieces of HW involved:
+>> an end-point that generates an interrupt, and a controller that receives it.
+>>
+>> Transpose this to the kernel view of things: one chip implements the PCI
+>> MSI, with the PCI semantics attached to it (how to program the
+>> payload/doorbell into the end-point, for example). The other implements
+>> the MSI controller part of it, talking to the HW that deals with the
+>> interrupt.
+>>
+>> Does it makes sense? Admittedly, this is not always that simple, but
+>> that the general approach.
+>>
+> Thanks Marc. Yes got a good picture now.
+> So the one which implements PCI semantics has irq_set_affinity, which is 
+> being invoked at request_irq. Why most of the drivers have this as dummy 
+> with return 0 ?
 
-Thanks for the review. I'll correct all the nits for the next version.
+It depends.
 
-On 01/03/18 10:37 AM, Bjorn Helgaas wrote:
-> On Wed, Feb 28, 2018 at 04:39:57PM -0700, Logan Gunthorpe wrote:
->> Some PCI devices may have memory mapped in a BAR space that's
->> intended for use in Peer-to-Peer transactions. In order to enable
->> such transactions the memory must be registered with ZONE_DEVICE pages
->> so it can be used by DMA interfaces in existing drivers.
+In general, the irqchip implementing set_affinity is the one talking to
+the MSI controller directly.
 
-> Is there anything about this memory that makes it specifically
-> intended for peer-to-peer transactions?  I assume the device can't
-> really tell whether a transaction is from a CPU or a peer.
+A lot of drivers don't implement it because they are multiplexing a
+number of MSIs on a single interrupt. The consequence is that you cannot
+change the affinity of a single MSI without affecting them all.
 
-No there's nothing special about the memory and it can still be accessed 
-by the CPU. This is just the intended purpose. You could use this PCI 
-memory as regular DMA buffers or regular memory but I'm not sure why you 
-would. It would probably be pretty bad performance-wise.
+HW that is build this way makes it impossible to implement one of the
+main feature of MSIs, which is to have per-cpu interrupts. Oh well. They
+probably also miss on the "MSI as a memory barrier" semantics...
 
+Decent HW doesn't do any multiplexing, and thus can very easily
+implement set_affinity.
 
-> BTW, maybe there could be some kind of guide for device driver writers
-> in Documentation/PCI/?
-Makes sense we can look at writing something for the next iteration.
+The other model (which x86 is using, for example), is to have one
+doorbell per CPU. In this model, changing affinity is just a matter of
+changing the doorbell address.
 
-> I think it would be clearer and sufficient to simply say that we have
-> no way to know whether peer-to-peer routing between PCIe Root Ports is
-> supported (PCIe r4.0, sec 1.3.1).
+> Does setting affinity to MSI needs any support from GIC?
 
-Fair enough.
+Absolutely. If using GICv2m, you need to change the affinity at the
+distributor level. With GICv3 and the ITS, you need to emit a MOVI
+command to target another redistributor.
 
-> The fact that you use the PCIe term "switch" suggests that a PCIe
-> Switch is required, but isn't it sufficient for the peers to be below
-> the same "PCI bridge", which would include PCIe Root Ports, PCIe
-> Switch Downstream Ports, and conventional PCI bridges?
-> The comments at get_upstream_bridge_port() suggest that this isn't
-> enough, and the peers actually do have to be below the same PCIe
-> Switch, but I don't know why.
+> Setting affinity can be achieved only with hardware support ?
 
-I do mean Switch as we do need to keep the traffic off the root complex. 
-Seeing, as stated above, we don't know if it actually support it. (While 
-we can be certain any PCI switch does). So we specifically want to 
-exclude PCIe Root ports and I'm not sure about the support of PCI 
-bridges but I can't imagine anyone wanting to do P2P around them so I'd 
-rather be safe than sorry and exclude them.
+See above. It depends which signalling model you're using, and how well
+it has been implemented.
 
+Thanks,
 
->> +	addr = devm_memremap_pages(&pdev->dev, pgmap);
->> +	if (IS_ERR(addr))
-> 
-> Free pgmap here?  And in the other error case below?  Or maybe this
-> happens via the devm_* magic?  If so, when would that actually happen?
-> Would pgmap be effectively leaked until the pdev is destroyed?
-
-Yes, it happens via the devm magic as that's the way the 
-devm_memremap_pages() interface was designed. If I remember correctly, 
-in my testing, it would be de-allocated when the driver gets unbound.
-
->> +		return PTR_ERR(addr);
->> +
->> +	error = gen_pool_add_virt(pdev->p2pdma->pool, (uintptr_t)addr,
->> +			pci_bus_address(pdev, bar) + offset,
->> +			resource_size(&pgmap->res), dev_to_node(&pdev->dev));
->> +	if (error)
->> +		return error;
->> +
->> +	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_percpu_kill,
->> +					  &pdev->p2pdma->devmap_ref);
->> +	if (error)
->> +		return error;
->> +
->> +	dev_info(&pdev->dev, "added peer-to-peer DMA memory %pR\n",
->> +		 &pgmap->res);
-> 
-> s/dev_info/pci_info/ (also similar usages below, except for the one or
-> two cases where you don't have a pci_dev).
-
-Oh, nice, I didn't notice that was added.
-
-> This whole thing is confusing to me.  Why do you want to reject peers
-> directly connected to the same root port?  Why do you require the same
-> Switch Upstream Port?  You don't exclude conventional PCI, but it
-> looks like you would require peers to share *two* upstream PCI-to-PCI
-> bridges?  I would think a single shared upstream bridge (conventional,
-> PCIe Switch Downstream Port, or PCIe Root Port) would be sufficient?
-
-Hmm, yes, this may just be laziness on my part. Finding the shared 
-upstream bridge is a bit more tricky than just showing that they are on 
-the same switch. So as coded, a fabric of switches with peers on 
-different legs of the fabric are not supported. But yes, maybe they just 
-need to be two devices with a single shared upstream bridge that is not 
-the root port. Again, we need to reject the root port because we can't 
-know if the root complex can support P2P traffic.
-
-> Since "pci_p2pdma_add_client()" includes "pci_" in its name, it seems
-> sort of weird that callers supply a non-PCI device and then we look up
-> a PCI device here.  I assume you have some reason for this; if you
-> added a writeup in Documentation/PCI, that would be a good place to
-> elaborate on that, maybe with a one-line clue here.
-
-Well yes, but this is much more convenient for callers which don't need 
-to care if the device they are attempting to add (which in the NVMe 
-target case, could be a random block device) is a pci device or not. 
-Especially seeing find_parent_pci_dev() is non-trivial.
-
->> +void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size)
->> +{
->> +	void *ret;
->> +
->> +	if (unlikely(!pdev->p2pdma))
-> 
-> Is this a hot path?  I'm not sure it's worth cluttering
-> non-performance paths with likely/unlikely.
-
-I'd say it can be pretty hot given that we need to allocate and free 
-buffers at multiple GB/s for the NVMe target case. I don't exactly have 
-benchmarks or anything to show this though...
-
->> +		return NULL;
->> +
->> +	if (unlikely(!percpu_ref_tryget_live(&pdev->p2pdma->devmap_ref)))
->> +		return NULL;
->> +
->> +	ret = (void *)(uintptr_t)gen_pool_alloc(pdev->p2pdma->pool, size);
-> 
-> Why the double cast?  Wouldn't "(void *)" be sufficient?
-
-Oh, hmm, I can't remember now. I suspect I added it to fix a kbuild test 
-robot error. I'll check and see if it can be removed.
-
-
-> In v4.6-rc1, gen_pool_free() takes "unsigned long addr".  I know this
-> is based on -rc3; is this something that changed between -rc1 and
-> -rc3?
-
-Yes, I think it's taken an unsigned long for a while now. Per the above, 
-I can't remember exactly why I casted it this way and I'll take a look 
-again.
-
-Logan
+	M.
+-- 
+Jazz is not dead. It just smells funny...
