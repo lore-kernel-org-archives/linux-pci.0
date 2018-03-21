@@ -1,50 +1,189 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36228 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753394AbeCUVQc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 17:16:32 -0400
-Date: Wed, 21 Mar 2018 16:16:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [PATCH v2 02/10] PCI: iproc: Remove dependency on ARM specific
- struct pci_sys_data
-Message-ID: <20180321211628.GE38649@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
- <20180321144254.7406-3-lorenzo.pieralisi@arm.com>
+Return-Path: <SRS0=qE9/=GL=intel.com=jacob.e.keller@kernel.org>
+Return-Path: <SRS0=qE9/=GL=intel.com=jacob.e.keller@kernel.org>
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Tal Gilboa <talgi@mellanox.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Linux PCI
+	<linux-pci@vger.kernel.org>, Tariq Toukan <tariqt@mellanox.com>
+Subject: RE: [PATCH next V3 3/5] PCI: Print PCI device link status in kernel
+ log
+Date: Wed, 21 Mar 2018 19:59:21 +0000
+Message-ID: <02874ECE860811409154E81DA85FBB5882D020D9@ORSMSX115.amr.corp.intel.com>
+References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
+ <1520856370-15404-4-git-send-email-talgi@mellanox.com>
+ <20180320140527.GL77194@bhelgaas-glaptop.roam.corp.google.com>
+ <c513c09c-69d6-3a01-b183-496622daebdc@mellanox.com>
+ <20180321194758.GC38649@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180321194758.GC38649@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180321144254.7406-3-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 02:42:46PM +0000, Lorenzo Pieralisi wrote:
-> From: Rob Herring <robh@kernel.org>
-> 
-> The iproc driver is using ARM's struct pci_sys_data simply to store a
-> private data pointer. This is completely unnecessary, so store the
-> private data directly in bus->sysdata as is done on arm64.
 
-Oh, thank you, this is awesome!
 
-struct pci_sys_data is still referenced in mvebu and rcar.  I didn't
-look closely enough to see if they could be similarly simplified.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Wednesday, March 21, 2018 12:48 PM
+> To: Tal Gilboa <talgi@mellanox.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>; Linux PCI <linux-
+> pci@vger.kernel.org>; Tariq Toukan <tariqt@mellanox.com>; Keller, Jacob E
+> <jacob.e.keller@intel.com>
+> Subject: Re: [PATCH next V3 3/5] PCI: Print PCI device link status in ker=
+nel log
+>=20
+> On Wed, Mar 21, 2018 at 09:43:48AM +0200, Tal Gilboa wrote:
+> > On 3/20/2018 4:05 PM, Bjorn Helgaas wrote:
+> > > [+cc Jacob]
+> > >
+> > > On Mon, Mar 12, 2018 at 02:06:08PM +0200, Tal Gilboa wrote:
+> > > > Add pcie_print_link_status() function for querying and verifying
+> > > > a PCI device link status. The PCI speed and width are reported
+> > > > in kernel log.
+> > > > This provides a unified method for all PCI devices to
+> > > > report status and issues, instead of each device reporting in a
+> > > > different way, using different code.
+> > > >
+> > > > Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+> > > > Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+> > > > ---
+> > > >   drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
+> > > >   include/linux/pci.h |  1 +
+> > > >   2 files changed, 26 insertions(+)
+> > > >
+> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > index 48b9fd6..ac876c4 100644
+> > > > --- a/drivers/pci/pci.c
+> > > > +++ b/drivers/pci/pci.c
+> > > > @@ -5229,6 +5229,31 @@ int pcie_get_width_cap(struct pci_dev *dev,
+> enum pcie_link_width *width)
+> > > >   EXPORT_SYMBOL(pcie_get_width_cap);
+> > > >   /**
+> > > > + * pcie_print_link_status - Reports the PCI device's link speed an=
+d width.
+> > > > + * @dev: PCI device to query
+> > > > + *
+> > > > + * This function checks whether the PCI device current speed and w=
+idth
+> are equal
+> > > > + * to the maximum PCI device capabilities.
+> > > > + */
+> > > > +void pcie_print_link_status(struct pci_dev *dev)
+> > > > +{
+> > > > +	enum pcie_link_width width, width_cap;
+> > > > +	enum pci_bus_speed speed, speed_cap;
+> > > > +
+> > > > +	pcie_get_speed_cap(dev, &speed_cap);
+> > > > +	pcie_get_width_cap(dev, &width_cap);
+> > > > +	pcie_get_minimum_link(dev, &speed, &width);
+> > > > +
+> > > > +	if (speed =3D=3D speed_cap && width =3D=3D width_cap)
+> > > > +		pci_info(dev, "%s x%d link\n", PCIE_SPEED2STR(speed), width);
+> > > > +	else
+> > > > +		pci_info(dev, "%s x%d link (capable of %s x%d)\n",
+> > > > +			 PCIE_SPEED2STR(speed), width,
+> > > > +			 PCIE_SPEED2STR(speed_cap), width_cap);
+> > >
+> > > I think pcie_get_minimum_link() is misleading.  This new use of
+> > > it is very similar to the existing uses, but I think we should clean
+> > > this up before using it in more places.
+> > >
+> > > pcie_get_minimum_link() finds the minimum speed and minimum link widt=
+h
+> > > (separately) across all the links in the path, and I don't think
+> > > that's what we really want.  What we *want* is the total bandwidth
+> > > available to the device, because we're trying to learn if the device
+> > > is capable of more than the fabric can deliver.
+> > >
+> > > That means we want to look at all the links in the path leading to th=
+e
+> > > device and find the link with the lowest bandwidth, i.e., width *
+> > > speed.  Obviously this is not necessarily the link with the fewest
+> > > lanes or the lowest link speed.
+> >
+> > The problem I see here is we need to consider differences in PCIe
+> > gens.  Let's consider this example: gen3 x4 device which down the
+> > chain goes over gen2 x8 pcie bridge. The device's bandwidth is
+> > D=3D4*8*(gen3 encoding) and the bridge's bandwidth is B=3D8*5*(gen2
+> > encoding). D~=3D31.5 and B~=3D32. So it would seem like there's no
+> > issue, but don't we want to know we actually went up as gen2?
+>=20
+> If you're saying the "bandwidth =3D width * speed" equation should be
+> enhanced to consider the effect of encoding, I would agree with that.
+> fm10k_slot_warn() has an example of doing that.
+>=20
+> I don't think we specifically care about whether it is gen2/gen3/etc.
+> If a device with a narrow gen3 link can't keep a wide gen2 link
+> upstream from it saturated, the device has nothing to complain about.
+>=20
+> > > I hinted at this before, but you thought it would result in more
+> > > questions than answers [1], and I failed to continue the conversation=
+.
+> >
+> > You raised the concern of not knowing the device limiting the total
+> > bandwidth of the chain. I thought it was an argument against the
+> > idea, but maybe I misunderstood. Let's agree on a design (below)
+> > before I make anymore changes :).
+>=20
+> I was basically asking whether you wanted to know which device was
+> the limiting factor.  If we care about that, we could easily return
+> it, but I don't see any drivers that care about it now.
+>=20
+> > > Let's continue it now :)
+> > >
+> > > Here are some straw-man interfaces to return a device's capabilities
+> > > and the available bandwidth in MB/s:
+> > >
+> > >    unsigned int pcie_bandwidth_capable(struct pci_dev *dev,
+> > >                                        enum pci_bus_speed *speed,
+> > >                                        enum pcie_link_width *width);
+> > >    unsigned int pcie_bandwidth_available(struct pci_dev *dev);
+> > >
+> > > Then we can compare the result with what "dev" is capable of, e.g.,
+> > >
+> > >    my_bw =3D pcie_bandwidth_capable(dev, &my_speed, &my_width);
+> > >    avail_bw =3D pcie_bandwidth_available(dev);
+> > >    if (avail_bw >=3D my_bw)
+> >
+> > Can it really be >?
+>=20
+> If pcie_bandwidth_available() looks at my device or the immediate
+> upstream bridge (two ends of the last link), then no, the available
+> bandwidth (based on current link settings) should never be greater
+> than the bandwidth my device could support (based on link
+> capabilities).
+>=20
+> > >      pci_info(dev, "%d MB/s available bandwidth (%s x%d link)\n",
+> > >               my_bw, PCIE_SPEED2STR(my_speed), my_width);
+> > >    else
+> > >      pci_info(dev, "%d MB/s available bandwidth (capable of %d MB/s, =
+%s
+> x%d)\n",
+> > >               avail_bw, my_bw, PCIE_SPEED2STR(my_speed), my_width);
+> > >
+> > > Using GB/s would be nicer; I lazily used MB/s to avoid dealing with
+> > > decimals, e.g., 2.5GB/s.
+> >
+> > So let's see if we agree on the steps:
+> > 1. my_speed_cap, my_width_cap <- calculate device PCIe caps
+> > 2. avail_bw, limiting_dev <- calculate PCIe chain bandwidth
+> > 3. my_bw <- my_speed_cap * my_width_cap
+> > 4. If avail_bw =3D=3D my_bw print available bandwidth + PCIe caps
+> > 5. Else print available bandwidth + limited by + capable bandwidth + PC=
+Ie
+> > caps
+> >
+> > What do you think?
+>=20
+> Steps 2 and 3 might need to be smart enough to apply the effect of
+> encoding differences between generations.
+>=20
+> In step 2, we don't have any current user of the "limiting_dev"
+> information, so I'd omit it until we have somebody who wants it.
+>=20
+> In step 5, we don't know the "limited by" part (unless you want to add
+> that).
 
-I guess not, because they use pci_common_init_dev().  They look
-tantalizingly close to being able to use pci_scan_root_bus_bridge()
-like everybody else, though.
+It might be useful to have the limited by information printed, even if no d=
+river yet bothered to do it today.
 
-Bjorn
+Thanks,
+Jake
