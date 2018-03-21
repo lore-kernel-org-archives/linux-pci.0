@@ -1,151 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58832 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751880AbeCETfm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 14:35:42 -0500
-Date: Mon, 5 Mar 2018 13:35:39 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kenny Ballou <kballou@devnulllabs.io>
-Cc: linux-pci@vger.kernel.org, googlegot@yahoo.com, bhelgaas@google.com
-Subject: Re: [PATCH] pci: use kstrtobool over ad hoc string parsing
-Message-ID: <20180305193539.GB255556@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180212230457.23181-1-kballou@devnulllabs.io>
- <20180228033228.GE127842@bhelgaas-glaptop.roam.corp.google.com>
- <878tbavy4b.fsf@devnulllabs.io>
- <20180305142840.GA255556@bhelgaas-glaptop.roam.corp.google.com>
- <87606aeepz.fsf@devnulllabs.io>
+Return-Path: <SRS0=/Y45=GL=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=/Y45=GL=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Wed, 21 Mar 2018 18:19:40 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/6] PCI: rockchip: Create individual folder for
+ rockchip drivers
+Message-ID: <20180321181940.GA9760@e107981-ln.cambridge.arm.com>
+References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
+ <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
+ <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
+ <879a4862-d0d5-21fd-6c47-029c795fe78e@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <87606aeepz.fsf@devnulllabs.io>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <879a4862-d0d5-21fd-6c47-029c795fe78e@rock-chips.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 05, 2018 at 08:15:04AM -0700, Kenny Ballou wrote:
+On Wed, Mar 21, 2018 at 09:04:21AM +0800, Shawn Lin wrote:
+> Dear Bjorn, Lorenzo
 > 
-> On 2018年03月05日 14:28 GMT, Bjorn Helgaas wrote:
-> > On Fri, Mar 02, 2018 at 04:47:16PM -0700, Kenny Ballou wrote:
+> On 2018/3/21 1:46, Bjorn Helgaas wrote:
+> >On Tue, Mar 06, 2018 at 10:43:22AM +0800, Shawn Lin wrote:
+> >>In preparation for introducing End-Point driver for Rockchip
+> >>PCIe controller, we create a new folder to follow the convention
+> >>of dwc and cadence. Then we rename the host driver from pcie-rockchip.c
+> >>to pcie-rockchip-host.c, and only leave some common functions in
+> >>pcie-rockchip.c in order to be reused for both of host and EP drivers.
 > >>
-> >> On 2018年02月28日 03:32 GMT, Bjorn Helgaas wrote:
-> >> > On Mon, Feb 12, 2018 at 04:04:57PM -0700, Kenny Ballou wrote:
-> >> >> Convert ROM read access enable/disable string parsing to use the
-> >> >> `kstrtobool` function.
-> >> >>
-> >> >> This fixes Bugzilla Bug 111301 -- Sysfs PCI rom file functionality does
-> >> >> not match documentation.
-> >> >>
-> >> >> bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111301
-> >> >>
-> >> >> Reported-by: googlegot@yahoo.com
-> >> >> Signed-off-by: Kenny Ballou <kballou@devnulllabs.io>
-> >> >> ---
-> >> >>  drivers/pci/pci-sysfs.c | 8 +++++---
-> >> >>  1 file changed, 5 insertions(+), 3 deletions(-)
-> >> >>
-> >> >> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> >> >> index eb6bee8724cc..3cde1f25e786 100644
-> >> >> --- a/drivers/pci/pci-sysfs.c
-> >> >> +++ b/drivers/pci/pci-sysfs.c
-> >> >> @@ -1424,10 +1424,12 @@ static ssize_t pci_write_rom(struct file *filp, struct kobject *kobj,
-> >> >>  {
-> >> >>  	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
-> >> >>
-> >> >> -	if ((off ==  0) && (*buf == '0') && (count == 2))
-> >> >> -		pdev->rom_attr_enabled = 0;
-> >> >> -	else
-> >> >> +	bool res = false;
-> >> >> +
-> >> >> +	if (kstrtobool(buf, &res) == 0 && res)
-> >> >>  		pdev->rom_attr_enabled = 1;
-> >> >> +	else
-> >> >> +		pdev->rom_attr_enabled = 0;
-> >> >>
-> >> >>  	return count;
-> >> >>  }
-> >> >
-> >> > I know I proposed kstrtobool().  But looking closer, I don't think
-> >> > it's the right answer because:
-> >> >
-> >> >   - kstrtobool() assumes a NULL-terminated string, and sysfs does not
-> >> >     guarantee that.  This is a binary file and we can write arbitrary
-> >> >     data to it.  kstrtobool_from_user() makes sure the string is
-> >> >     NULL-terminated, but it does a copy_from_user() that we don't want
-> >> >     in the sysfs case.
-> >> >
-> >> >   - The current behavior is that only 2-byte writes starting with '0'
-> >> >     disable the ROM, and all other writes enable it.
-> >> >
-> >> >     Using kstrtobool() would enable the ROM only for writes starting
-> >> >     with y/Y/1/on/oN/On/ON, and all other writes would disable it.
-> >> >
-> >> >     That changes the behavior for most writes, e.g., writing "2"
-> >> >     currently enables, but would now disable.  This feels
-> >> >     unnecessarily risky because we don't know what programs are
-> >> >     writing to enable the ROM.  The doc says to write "1", but the
-> >> >     code comment says "anything except 0".
-> >> >
-> >> > We *could* change the code to accept a single-byte '0' write, but I
-> >> > think the simplest solution would be to change the documentation to
-> >> > explicitly require a 2-byte "0\n" write to disable the ROM.
-> >> >
-> >> > Sorry for dithering on this.
-> >> >
-> >> > Bjorn
-> >>
-> >> I was not under the impression that this particular device needed data
-> >> written to it(?).  If it is the case that arbitrary data needs to be
-> >> written, your argument makes sense, and I can put together a patch for
-> >> the documentation instead.
+> >>Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> >>Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> >>...
 > >
-> > I'm not sure I understand your question, but here's a stab at
-> > answering it:
+> >>diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> >>index 34b56a8..b85ad40 100644
+> >>--- a/drivers/pci/Kconfig
+> >>+++ b/drivers/pci/Kconfig
+> >>@@ -141,4 +141,5 @@ source "drivers/pci/cadence/Kconfig"
+> >>  source "drivers/pci/dwc/Kconfig"
+> >>  source "drivers/pci/host/Kconfig"
+> >>  source "drivers/pci/endpoint/Kconfig"
+> >>+source "drivers/pci/rockchip/Kconfig"
+> >>  source "drivers/pci/switch/Kconfig"
 > >
-> > The sysfs "rom" file has a read method (pci_read_rom()) and a write
-> > method (pci_write_rom()).  User-space software can open the file and
-> > do a read() system call to read the contents of the ROM from the
-> > device, so pci_read_rom() is directly connected to the PCI hardware
-> > device.
-> >
-> > The write method doesn't touch the hardware device at all; it's only a
-> > software switch, and the data written to the sysfs "rom" file is never
-> > written to the PCI hardware device at all.  It doesn't need any
-> > particular data written to it.  The data can be whatever we decide it
-> > should be, and we can interpret that data in any way we like since
-> > it's purely a software construct.
-> >
-> > However, there is user-space software that assumes certain behavior
-> > (enabling/disabling read access to the ROM).  We don't want to break
-> > that software.  Using kstrtobool() would change the interpretation of
-> > some writes.  We *could* assume that user-space software always writes
-> > "1" to enable reads of the ROM and "0" to disable reads, but it's
-> > impossible to be certain of that.
-> >
-> > So the safest thing in terms of not breaking the ABI is to leave the
-> > code unchanged but update the documentation.  Does that make sense?
-> >
-> > Bjorn
+> >Why is this out of order?  This seems exactly analogous to
+> >drivers/pci/cadence and dwc, so they should be next to each other.
 > 
-> Perfectly clear.  Thank you for the explanation.  That confirms that I
-> was thinking about it correctly, but your desire to leave it unchanged
-> had me thinking I didn't understand how this all worked.
+> This confused me as well! I just put "rockchip" before "switch"
+> to keep the order, but I didn't know why "endpoint" wasn't ordered.
 > 
-> I, however, was not thinking about the broader context where such a
-> change is likely to break existing behaviour.  Thank you for keeping
-> that in mind.
+> >
+> >>diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> >>index 9419709..8434afb 100644
+> >>--- a/drivers/pci/Makefile
+> >>+++ b/drivers/pci/Makefile
+> >>@@ -55,6 +55,8 @@ obj-y += switch/
+> >>  obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
+> >>+obj-$(CONFIG_PCIE_ROCKCHIP)	+= rockchip/
+> >>+
+> >>  # Endpoint library must be initialized before its users
+> >>  obj-$(CONFIG_PCIE_CADENCE)	+= cadence/
+> >>  # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
+> >
+> >Similarly here.
+> >
+> >I admit to still being a little dubious about the idea of a bunch of
+> >vendor-specific directories, each containing a completely trivial
+> >Makefile, a mostly-trivial Kconfig, a header file, a shared .c file, a
+> >host .c file, and an endpoint .c file.
 > 
-> The off-topic question would then be: how would one go about changing it
-> so that it's using a more consolidated string library, if that's at all
-> desired.  Would that be something where we have both code paths, the old
-> input handler and the `kstrtobool()` code, reporting warnings when they
-> differ in interpretation of user input?  I'm not suggesting it, but I'm
-> trying to understand how something like that _could_ change.
+> So do I.
+> 
+> >
+> >One alternative would be to keep the single pcie-rockchip.c file with
+> >an #ifdef CONFIG_PCIE_ROCKCHIP_HOST section and an #ifdef
+> >CONFIG_PCIE_ROCKCHIP_EP section.
+> 
+> I admit I thought this eariler, however, I don't like it personally, as
+> it confuses the new-comer to follow the convention here, if we are
+> alternatives just for "style issue" or "personal taste".
 
-It's conceivable we could do something like emit warnings about a
-change in interpretation, and then after a few years, make the change
-permanent.  In this particular case, I don't think it's worth the
-trouble.
+It would be OK for me to keep files separate too; a separate question
+would then be whether we have to rename drivers/pci/host if we add
+endpoint drivers in there, do we have to?
 
-If making the change fixed a security issue, we would just do it
-immediately and accept the fact that some user applications might
-break.  But I think the existing code is safe.
+At that stage we could well move drivers/pci/dwc and drivers/pci/cadence
+in there too.
 
-Bjorn
+> Certainly, I could do that beased on your suggestion, but I would like
+> to know if this's the final agreement both you and Lorenzo reached. :)
+
+Or we can add all EP drivers into drivers/pci/endpoint but then the problem
+is how to share code between host and endpoint directories and it starts
+feeling like we are going round in circles.
+
+I can merge this series as-is as long as we will rework the directory
+structure according to this discussion (given that's already late -rc6
+so directory moves/renames can be disrupting - if feasible at all).
+
+Lorenzo
