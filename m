@@ -1,97 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:42738 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751442AbeCLNb5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 09:31:57 -0400
-Received: by mail-oi0-f51.google.com with SMTP id c18so12268251oiy.9
-        for <linux-pci@vger.kernel.org>; Mon, 12 Mar 2018 06:31:57 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.99]:50692 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753050AbeCUTsA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Mar 2018 15:48:00 -0400
+Date: Wed, 21 Mar 2018 14:47:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tal Gilboa <talgi@mellanox.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Jacob Keller <jacob.e.keller@intel.com>
+Subject: Re: [PATCH next V3 3/5] PCI: Print PCI device link status in kernel
+ log
+Message-ID: <20180321194758.GC38649@bhelgaas-glaptop.roam.corp.google.com>
+References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
+ <1520856370-15404-4-git-send-email-talgi@mellanox.com>
+ <20180320140527.GL77194@bhelgaas-glaptop.roam.corp.google.com>
+ <c513c09c-69d6-3a01-b183-496622daebdc@mellanox.com>
 MIME-Version: 1.0
-In-Reply-To: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
-References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Mon, 12 Mar 2018 10:31:56 -0300
-Message-ID: <CAOMZO5AnKwhgznXh2rV-7LPCF0y+_nRRxNvc3jEbJFGPhjF=jQ@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root subordinate
-To: Koen Vandeputte <koen.vandeputte@ncentric.com>
-Cc: linux-pci@vger.kernel.org,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c513c09c-69d6-3a01-b183-496622daebdc@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Koen,
+On Wed, Mar 21, 2018 at 09:43:48AM +0200, Tal Gilboa wrote:
+> On 3/20/2018 4:05 PM, Bjorn Helgaas wrote:
+> > [+cc Jacob]
+> > 
+> > On Mon, Mar 12, 2018 at 02:06:08PM +0200, Tal Gilboa wrote:
+> > > Add pcie_print_link_status() function for querying and verifying
+> > > a PCI device link status. The PCI speed and width are reported
+> > > in kernel log.
+> > > This provides a unified method for all PCI devices to
+> > > report status and issues, instead of each device reporting in a
+> > > different way, using different code.
+> > > 
+> > > Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+> > > Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+> > > ---
+> > >   drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
+> > >   include/linux/pci.h |  1 +
+> > >   2 files changed, 26 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 48b9fd6..ac876c4 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -5229,6 +5229,31 @@ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
+> > >   EXPORT_SYMBOL(pcie_get_width_cap);
+> > >   /**
+> > > + * pcie_print_link_status - Reports the PCI device's link speed and width.
+> > > + * @dev: PCI device to query
+> > > + *
+> > > + * This function checks whether the PCI device current speed and width are equal
+> > > + * to the maximum PCI device capabilities.
+> > > + */
+> > > +void pcie_print_link_status(struct pci_dev *dev)
+> > > +{
+> > > +	enum pcie_link_width width, width_cap;
+> > > +	enum pci_bus_speed speed, speed_cap;
+> > > +
+> > > +	pcie_get_speed_cap(dev, &speed_cap);
+> > > +	pcie_get_width_cap(dev, &width_cap);
+> > > +	pcie_get_minimum_link(dev, &speed, &width);
+> > > +
+> > > +	if (speed == speed_cap && width == width_cap)
+> > > +		pci_info(dev, "%s x%d link\n", PCIE_SPEED2STR(speed), width);
+> > > +	else
+> > > +		pci_info(dev, "%s x%d link (capable of %s x%d)\n",
+> > > +			 PCIE_SPEED2STR(speed), width,
+> > > +			 PCIE_SPEED2STR(speed_cap), width_cap);
+> > 
+> > I think pcie_get_minimum_link() is misleading.  This new use of
+> > it is very similar to the existing uses, but I think we should clean
+> > this up before using it in more places.
+> > 
+> > pcie_get_minimum_link() finds the minimum speed and minimum link width
+> > (separately) across all the links in the path, and I don't think
+> > that's what we really want.  What we *want* is the total bandwidth
+> > available to the device, because we're trying to learn if the device
+> > is capable of more than the fabric can deliver.
+> > 
+> > That means we want to look at all the links in the path leading to the
+> > device and find the link with the lowest bandwidth, i.e., width *
+> > speed.  Obviously this is not necessarily the link with the fewest
+> > lanes or the lowest link speed.
+> 
+> The problem I see here is we need to consider differences in PCIe
+> gens.  Let's consider this example: gen3 x4 device which down the
+> chain goes over gen2 x8 pcie bridge. The device's bandwidth is
+> D=4*8*(gen3 encoding) and the bridge's bandwidth is B=8*5*(gen2
+> encoding). D~=31.5 and B~=32. So it would seem like there's no
+> issue, but don't we want to know we actually went up as gen2?
 
-On Mon, Jan 15, 2018 at 7:36 AM, Koen Vandeputte
-<koen.vandeputte@ncentric.com> wrote:
-> The subordinate value indicates the highest bus number which can be
-> reached downstream though a certain device.
->
-> Commit a20c7f36bd3d ("PCI: Do not allocate more buses than available in
-> parent")
-> ensures that downstream devices cannot assign busnumbers higher than the
-> upstream device subordinate number, which was indeed illogical.
->
-> By default, dw_pcie_setup_rc() inits the Root Complex subordinate to a
-> value of 0x01.
->
-> Due to this combined with above commit, enumeration stops digging deeper
-> downstream as soon as bus num 0x01 has been assigned, which is always
-> the case for a bridge device.
->
-> This results in all devices behind a bridge bus to remain undetected, as
-> these would be connected to bus 0x02 or higher.
->
-> Fix this by initializing the RC to a subordinate value of 0xff, which is
-> not altering hardware behaviour in any way, but informs probing
-> function pci_scan_bridge() later on which reads this value back from
-> register.
->
-> Following nasty errors during boot are also fixed by this:
->
-> [    0.459145] pci_bus 0000:02: busn_res: can not insert [bus 02-ff]
-> under [bus 01] (conflicts with (null) [bus 01])
-> ...
-> [    0.464515] pci_bus 0000:03: [bus 03] partially hidden behind bridge
-> 0000:01 [bus 01]
-> ...
-> [    0.464892] pci_bus 0000:04: [bus 04] partially hidden behind bridge
-> 0000:01 [bus 01]
-> ...
-> [    0.466488] pci_bus 0000:05: [bus 05] partially hidden behind bridge
-> 0000:01 [bus 01]
-> [    0.466506] pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to
-> 05
-> [    0.466517] pci_bus 0000:02: busn_res: can not insert [bus 02-05]
-> under [bus 01] (conflicts with (null) [bus 01])
-> [    0.466534] pci_bus 0000:02: [bus 02-05] partially hidden behind
-> bridge 0000:01 [bus 01]
->
-> Fixes: a20c7f36bd3d ("PCI: Do not allocate more buses than available in
-> parent")
-> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+If you're saying the "bandwidth = width * speed" equation should be
+enhanced to consider the effect of encoding, I would agree with that.
+fm10k_slot_warn() has an example of doing that.
 
-This commit is in Linus' tree now as commit fc110ebdd014dd1368.
+I don't think we specifically care about whether it is gen2/gen3/etc.
+If a device with a narrow gen3 link can't keep a wide gen2 link
+upstream from it saturated, the device has nothing to complain about.
 
-Could you please prepare a version that could be backported to 4.9
-stable kernel?
+> > I hinted at this before, but you thought it would result in more
+> > questions than answers [1], and I failed to continue the conversation.
+> 
+> You raised the concern of not knowing the device limiting the total
+> bandwidth of the chain. I thought it was an argument against the
+> idea, but maybe I misunderstood. Let's agree on a design (below)
+> before I make anymore changes :).
 
-Thanks
+I was basically asking whether you wanted to know which device was
+the limiting factor.  If we care about that, we could easily return
+it, but I don't see any drivers that care about it now.
+
+> > Let's continue it now :)
+> > 
+> > Here are some straw-man interfaces to return a device's capabilities
+> > and the available bandwidth in MB/s:
+> > 
+> >    unsigned int pcie_bandwidth_capable(struct pci_dev *dev,
+> >                                        enum pci_bus_speed *speed,
+> >                                        enum pcie_link_width *width);
+> >    unsigned int pcie_bandwidth_available(struct pci_dev *dev);
+> > 
+> > Then we can compare the result with what "dev" is capable of, e.g.,
+> > 
+> >    my_bw = pcie_bandwidth_capable(dev, &my_speed, &my_width);
+> >    avail_bw = pcie_bandwidth_available(dev);
+> >    if (avail_bw >= my_bw)
+> 
+> Can it really be >?
+
+If pcie_bandwidth_available() looks at my device or the immediate
+upstream bridge (two ends of the last link), then no, the available
+bandwidth (based on current link settings) should never be greater
+than the bandwidth my device could support (based on link
+capabilities).
+
+> >      pci_info(dev, "%d MB/s available bandwidth (%s x%d link)\n",
+> >               my_bw, PCIE_SPEED2STR(my_speed), my_width);
+> >    else
+> >      pci_info(dev, "%d MB/s available bandwidth (capable of %d MB/s, %s x%d)\n",
+> >               avail_bw, my_bw, PCIE_SPEED2STR(my_speed), my_width);
+> > 
+> > Using GB/s would be nicer; I lazily used MB/s to avoid dealing with
+> > decimals, e.g., 2.5GB/s.
+> 
+> So let's see if we agree on the steps:
+> 1. my_speed_cap, my_width_cap <- calculate device PCIe caps
+> 2. avail_bw, limiting_dev <- calculate PCIe chain bandwidth
+> 3. my_bw <- my_speed_cap * my_width_cap
+> 4. If avail_bw == my_bw print available bandwidth + PCIe caps
+> 5. Else print available bandwidth + limited by + capable bandwidth + PCIe
+> caps
+> 
+> What do you think?
+
+Steps 2 and 3 might need to be smart enough to apply the effect of
+encoding differences between generations.
+
+In step 2, we don't have any current user of the "limiting_dev"
+information, so I'd omit it until we have somebody who wants it.
+
+In step 5, we don't know the "limited by" part (unless you want to add
+that).
