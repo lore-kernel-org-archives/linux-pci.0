@@ -1,87 +1,115 @@
-Return-Path: <SRS0=HzDk=GQ=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=HzDk=GQ=linux.intel.com=mika.westerberg@kernel.org>
-Date: Mon, 26 Mar 2018 18:59:04 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Wolfgang Denk <wd@denx.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCIe x4 cards not detected on Z370 mainboards
-Message-ID: <20180326155904.GJ2703@lahna.fi.intel.com>
-References: <20180322184840.E31D4247251@gemini.denx.de>
- <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com>
- <20180323084855.E3EAF247251@gemini.denx.de>
- <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
- <20180325122828.7FC55247245@gemini.denx.de>
- <20180326112647.GC2703@lahna.fi.intel.com>
- <20180326150050.086232476FF@gemini.denx.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "andy.gross@linaro.org" <andy.gross@linaro.org>,
+        "david.brown@linaro.org" <david.brown@linaro.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vinod.koul@intel.com" <vinod.koul@intel.com>,
+        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        "johan@kernel.org" <johan@kernel.org>,
+        "msuchanek@suse.de" <msuchanek@suse.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bharat Bhushan <bharat.bhushan@nxp.com>,
+        Leo Li <leoyang.li@nxp.com>
+Subject: RE: [PATCH v2 2/2] drivers: remove force dma flag from buses
+Date: Wed, 21 Mar 2018 16:28:46 +0000
+Message-ID: <HE1PR0401MB2425644F72A063ED42B79D5FE6AA0@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+ <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com>
+ <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
+ <20180321093525.GT14085@kroah.com>
+In-Reply-To: <20180321093525.GT14085@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180326150050.086232476FF@gemini.denx.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 26, 2018 at 05:00:50PM +0200, Wolfgang Denk wrote:
-> Dear Mika,
-> 
-> In message <20180326112647.GC2703@lahna.fi.intel.com> you wrote:
-> >
-> > > I have updated the information (lspci output, dmesg output) for all
-> > > three boards here:
-> > > 
-> > > https://owncloud.denx.de/index.php/s/wXiCMMYJodGj5Kr
-> > 
-> > Looking at the MSI Tomahawk dmesg when you have the adaptec card
-> > connected, the BIOS adds an additional ACPI SSDT table:
-> > 
-> > [    0.000000] ACPI: SSDT 0x000000008C039120 002611 (v02 PegSsd PegSsdt 00001000 INTL 20160422)
-> > 
-> > This is missing when LSI card is connected. There might be some sort of
-> > preboot protocol or whitelist that prevents the root port to be enabled
-> > in BIOS.
-> > 
-> > Wolfgang, could you also add acpidump output of these systems to that
-> > share site?
-> 
-> Done.
-> 
-> [I hope this is what you need.  Fedora does not seem to provide the
-> acpidump tool ready to use in any package, but I found the sources
-> in the kcbench package.]
 
-Yes, that's exactly what I wanted. Thanks!
 
-> All three boards behave a bit different here, but see yourself...
-> 
-> [What they have in common is that none works as I would like to have
-> it :-( ]
+> -----Original Message-----
+> From: Greg KH [mailto:gregkh@linuxfoundation.org]
+> Sent: Wednesday, March 21, 2018 15:05
+> To: Nipun Gupta <nipun.gupta@nxp.com>
+> Cc: robin.murphy@arm.com; hch@lst.de; linux@armlinux.org.uk;
+> m.szyprowski@samsung.com; bhelgaas@google.com; zajec5@gmail.com;
+> andy.gross@linaro.org; david.brown@linaro.org; dan.j.williams@intel.com;
+> vinod.koul@intel.com; thierry.reding@gmail.com; robh+dt@kernel.org;
+> frowand.list@gmail.com; jarkko.sakkinen@linux.intel.com;
+> rafael.j.wysocki@intel.com; dmitry.torokhov@gmail.com; johan@kernel.org;
+> msuchanek@suse.de; linux-kernel@vger.kernel.org; iommu@lists.linux-
+> foundation.org; linux-wireless@vger.kernel.org; linux-arm-
+> msm@vger.kernel.org; linux-soc@vger.kernel.org; dmaengine@vger.kernel.org=
+;
+> dri-devel@lists.freedesktop.org; linux-tegra@vger.kernel.org;
+> devicetree@vger.kernel.org; linux-pci@vger.kernel.org; Bharat Bhushan
+> <bharat.bhushan@nxp.com>; Leo Li <leoyang.li@nxp.com>
+> Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
+>=20
+> On Wed, Mar 21, 2018 at 12:25:23PM +0530, Nipun Gupta wrote:
+> > With each bus implementing its own DMA configuration callback,
+> > there is no need for bus to explicitly have force_dma in its
+> > global structure. This patch modifies of_dma_configure API to
+> > accept an input parameter which specifies if implicit DMA
+> > configuration is required even when it is not described by the
+> > firmware.
+>=20
+> Having to "remember" what that bool variable means on the end of the
+> function call is a royal pain over time, right?
+>=20
+> Why not just create a new function:
+> 	dma_common_configure_force(dma)
+> that always does this?  Leave "dma_common_configure()" alone, and then
+> wrap the old code with these two helper functions that call the 'core'
+> code with the bool set properly?
+>=20
+> That way you do not have to "know" what that parameter is, the function
+> name just documents it automatically, so when you see it in the
+> bus-specific code, no need to go and have to hunt for anything.  And if
+> you are reading the dma core code, it's obvious what is happening as the
+> functions are all right there.
 
-I compared DSDT of the MSI Tomahawk with Adaptec connected to LSI
-connected and there is pretty much no difference. So the BIOS decides to
-load that PegSsd SSDT table based on something else than what is in DSDT.
+How about we do not pass any flag in 'dma_common_configure()', and inside t=
+his
+API we pass "true" to 'of_dma_configure()'? I am saying this because curren=
+tly
+both the busses (platform and AMBA) which uses 'dma_common_configure()' pas=
+ses
+"true" value. If we create additional 'dma_common_configure_force()', then
+'dma_common_configure()' will not be used anytime and will become redundant=
+.
 
-The Gigabyte AB350 does not do any tricks with the ACPI tables. However,
-comparing dmesgs you can see that the kernel simply does not find anything
-below the bridge.
+If someday new busses come and they needs to use similar functionality whic=
+h
+'dma_common_configure()' provides, but with passing "false" to 'of_dma_conf=
+igure()',
+then what you suggests of having two separate such API's will be more reaso=
+nable
+and can be implemented?
 
-Adaptec:
-[    0.064806] pci 0000:04:04.0: PCI bridge to [bus 07-08]
-[    0.064912] pci 0000:04:04.0:   bridge window [io  0xd000-0xdfff]
-[    0.064915] pci 0000:04:04.0:   bridge window [mem 0xfd200000-0xfd3fffff]
-[    0.065004] pci 0000:08:04.0: [9005:8017] type 00 class 0x010000
-[    0.065050] pci 0000:08:04.0: reg 0x10: [io  0xd100-0xd1ff]
-[    0.065077] pci 0000:08:04.0: reg 0x14: [mem 0xfd280000-0xfd281fff 64bit]
-[    0.065095] pci 0000:08:04.0: reg 0x1c: [io  0xd000-0xd0ff]
-[    0.065145] pci 0000:08:04.0: reg 0x30: [mem 0xfd200000-0xfd27ffff pref]
-[    0.065312] pci 0000:07:00.0: PCI bridge to [bus 08]
-[    0.065424] pci 0000:07:00.0:   bridge window [io  0xd000-0xdfff]
-[    0.065429] pci 0000:07:00.0:   bridge window [mem 0xfd200000-0xfd2fffff]
+Thanks,
+Nipun
 
-LSI:
-[    0.064312] pci 0000:04:04.0: PCI bridge to [bus 07]
-
-I guess MSI Tomahawk BIOS enumerates PCI devices as well and perhaps it
-disables the PegSsd SSDT table because it cannot find anything below the
-PCI bridge 04:04.
-
-So at this point I have no idea either what else you could try except
-perhaps booting to Windows and see if it detects the LSI card.
+>=20
+> thanks,
+>=20
+> greg k-h
