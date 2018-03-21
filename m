@@ -1,78 +1,87 @@
-Return-Path: <SRS0=s/JU=GV=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=s/JU=GV=linux.intel.com=mika.westerberg@kernel.org>
-Date: Sat, 31 Mar 2018 12:56:15 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Mario Limonciello <Mario.Limonciello@dell.com>,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <yehezkel.bernat@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
- bus number
-Message-ID: <20180331095615.GT2703@lahna.fi.intel.com>
-References: <20180226132112.81447-2-mika.westerberg@linux.intel.com>
- <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180328114346.GZ2703@lahna.fi.intel.com>
- <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
- <20180329115911.GN2703@lahna.fi.intel.com>
- <20180331082903.GA21051@wunner.de>
- <20180331085852.GQ2703@lahna.fi.intel.com>
- <20180331091245.GA10720@wunner.de>
- <20180331092017.GS2703@lahna.fi.intel.com>
- <CAJZ5v0iFP3VuJoMD2PXp73WoszB3rDFpro6Sgy5PnrVp0Zz0zQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:35773 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751521AbeCUD7f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Mar 2018 23:59:35 -0400
+Date: Wed, 21 Mar 2018 04:59:31 +0100
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 5/5] misc: pci_endpoint_test: Handle 64-bit BARs
+ properly
+Message-ID: <20180321035931.GB28953@axis.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
+ <20180308133331.19464-6-niklas.cassel@axis.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0iFP3VuJoMD2PXp73WoszB3rDFpro6Sgy5PnrVp0Zz0zQ@mail.gmail.com>
+In-Reply-To: <20180308133331.19464-6-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 31, 2018 at 11:30:44AM +0200, Rafael J. Wysocki wrote:
-> > The whole point here is that those are *not* hotplug slots just regular
-> > downstream ports.
+Hello Greg,
+
+Lorenzo	is fine with this series
+( https://marc.info/?l=linux-kernel&m=152147837619191&w=2 )
+
+However, he wants your ack on this patch before merging.
+
+Could you please have a look at this patch?
+
+
+Kind regards,
+Niklas
+
+
+On Thu, Mar 08, 2018 at 02:33:30PM +0100, Niklas Cassel wrote:
+> A 64-bit BAR consists of a BAR pair, where the second BAR has the
+> upper bits, so we cannot simply call pci_ioremap_bar() on every single
+> BAR index.
 > 
-> I'm not sure what scenario exactly you are referring to to be honest.
+> The second BAR in a BAR pair will not have the IORESOURCE_MEM resource
+> flag set. Only call ioremap on BARs that have the IORESOURCE_MEM
+> resource flag set.
 > 
-> Something related to Thunderbolt I suppose?
-
-Here is an example that hopefully clarifies. This example is from a
-system using Thunderbolt in "native" mode but I think it is not specific
-to Thunderbolt. The idea is that when you don't have anything connected
-to Thunderbolt ports you have following PCI topology:
-
-  00:1b.0 --
-
-So a root port that is hotplug capable and handled by pciehp.
-
-Next when you plug in a Thunderbolt enpdoint, you get native PCIe
-hotplug event and after it is handled the topology looks like:
-
-  00:1b.0 --- 01:00.0 --+- 02:00.0 --
-                        +- 02:01.0 (hotplug) --
-                        \- 02:02.0 --
-
-In other words there is a PCIe switch with one hotplug port (02:01.0)
-that is again handled by pciehp (this is used to daisy chain further
-devices). However, downstream ports 02:00.0 and 02:02.0 are not marked
-as hotplug capable so pciehp is not controlling them.
-
-To bring in xHCI and/or Thunderbolt host controller we get ACPI Notify()
-to the root port 00:1b.0 which should result following topology after
-handled by acpiphp:
-
-  00:1b.0 --- 01:00.0 --+- 02:00.0 -- Thunderbolt host controller
-                        +- 02:01.0 (hotplug) --
-                        \- 02:02.0 -- xHCI host controller
-
-In other words ACPI Notify() is used to populate devices connected to
-non-hotplug downstream ports. It is also used to "hot-unplug" them in
-the same way (for example if you only connect standard USB-C device to
-the port the Thunderbolt host controller is hot-unplugged using this
-mechanism).
-
-Rest of the devices in the chain are hotplugged using standard native
-PCIe hotplug so pciehp will be controlling then.
+> pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
+> pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
+> pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
+> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
+> pci-endpoint-test 0000:01:00.0: failed to read BAR1
+> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
+> pci-endpoint-test 0000:01:00.0: failed to read BAR3
+> pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
+> pci-endpoint-test 0000:01:00.0: failed to read BAR5
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/misc/pci_endpoint_test.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> index 320276f42653..fe8897e64635 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -534,12 +534,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+>  	}
+>  
+>  	for (bar = BAR_0; bar <= BAR_5; bar++) {
+> -		base = pci_ioremap_bar(pdev, bar);
+> -		if (!base) {
+> -			dev_err(dev, "failed to read BAR%d\n", bar);
+> -			WARN_ON(bar == test_reg_bar);
+> +		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
+> +			base = pci_ioremap_bar(pdev, bar);
+> +			if (!base) {
+> +				dev_err(dev, "failed to read BAR%d\n", bar);
+> +				WARN_ON(bar == test_reg_bar);
+> +			}
+> +			test->bar[bar] = base;
+>  		}
+> -		test->bar[bar] = base;
+>  	}
+>  
+>  	test->base = test->bar[test_reg_bar];
+> -- 
+> 2.14.2
+> 
