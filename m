@@ -1,125 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:41179 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753481AbeCFLzH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Mar 2018 06:55:07 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com, lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, shawn.guo@linaro.org,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com, nsekhar@ti.com,
-        gustavo.pimentel@synopsys.com
-Subject: [PATCH v10 3/3] PCI: dwc: Expand maximum number of MSI IRQs from 32 to 256
-Date: Tue,  6 Mar 2018 11:54:55 +0000
-Message-Id: <6e81c8aab9adee832f33d0caa580f35aacd41588.1520336186.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
-References: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
-References: <cover.1520336185.git.gustavo.pimentel@synopsys.com>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:58130 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750810AbeCUFuR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 01:50:17 -0400
+Subject: Re: [PATCH v4 2/5] PCI: designware-ep: Make dw_pcie_ep_set_bar()
+ handle 64-bit BARs properly
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
+ <20180308133331.19464-3-niklas.cassel@axis.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <e779a6dc-3037-69da-1e92-64c5d8348019@ti.com>
+Date: Wed, 21 Mar 2018 11:19:57 +0530
+MIME-Version: 1.0
+In-Reply-To: <20180308133331.19464-3-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Synopsys PCIe Root Complex supports up to MSI 256 IRQs distributed
-over 8 controller registers, therefore the maximum number of MSI IRQs
-can be changed to 256. The number of controllers can be calculated based
-on the number of vectors used by the specific SoC driver.
+Hi Niklas,
 
-Update the dwc host bridge driver maximum number of supported MSI
-IRQs.
+On Thursday 08 March 2018 07:03 PM, Niklas Cassel wrote:
+> Since a 64-bit BAR consists of a BAR pair, we need to write to both
+> BARs in the BAR pair to setup the BAR properly.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/dwc/pcie-designware-ep.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index 9236b998327f..946bbdf53c4d 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -136,8 +136,15 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+>  		return ret;
+>  
+>  	dw_pcie_dbi_ro_wr_en(pci);
+> -	dw_pcie_writel_dbi2(pci, reg, size - 1);
+> -	dw_pcie_writel_dbi(pci, reg, flags);
+> +	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+> +		dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
+> +		dw_pcie_writel_dbi(pci, reg, flags);
+> +		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
+> +		dw_pcie_writel_dbi(pci, reg + 4, 0);
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Tested-by: Niklas Cassel <niklas.cassel@axis.com>
-Tested-by: Shawn Guo <shawn.guo@linaro.org>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
----
-Change v1->v2:
-- New patch file.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Change v3->v4:
-- Patch renamed from v3-0009 to v4-0010.
-- Changed summary line to match the drivers/PCI convention and changelog to
-maintain the consistency (thanks Bjorn).
-Change v4->v5:
-- Nothing changed, just to follow the patch set version.
-Change v5->v6:
-- Nothing changed, just to follow the patch set version.
-Change v6->v7:
-- Nothing changed, just to follow the patch set version.
-Change v7->v8:
-- Rebased against v4.16-rc1.
-Change v8->v9:
-- Changed patch indexation, due patch series squash.
-Change v9->v10:
-- Log commit rewrite to be accurate by Lorenzo (thanks Lorenzo).
+I think we should check in pci_epc_set_bar to make sure BAR_5 cannot have
+PCI_BASE_ADDRESS_MEM_TYPE_64 flag set as this might lead undesired result.
 
- drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
- drivers/pci/dwc/pcie-designware.h      | 10 +++-------
- 2 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 7cf39c9..6df6275 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -76,11 +76,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
- /* MSI int handler */
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- {
--	u32 val;
- 	int i, pos, irq;
-+	u32 val, num_ctrls;
- 	irqreturn_t ret = IRQ_NONE;
- 
--	for (i = 0; i < MAX_MSI_CTRLS; i++) {
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
-+	for (i = 0; i < num_ctrls; i++) {
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
- 				    &val);
- 		if (!val)
-@@ -639,13 +641,15 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
- 
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
--	u32 val, ctrl;
-+	u32 val, ctrl, num_ctrls;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
- 	dw_pcie_setup(pci);
- 
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
- 	/* Initialize IRQ Status array */
--	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
-+	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
- 				    &pp->irq_status[ctrl]);
- 	/* setup RC BARs */
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 923f956..fe811db 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -107,13 +107,9 @@
- #define MSI_MESSAGE_DATA_32		0x58
- #define MSI_MESSAGE_DATA_64		0x5C
- 
--/*
-- * Maximum number of MSI IRQs can be 256 per controller. But keep
-- * it 32 as of now. Probably we will never need more than 32. If needed,
-- * then increment it in multiple of 32.
-- */
--#define MAX_MSI_IRQS			32
--#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
-+#define MAX_MSI_IRQS			256
-+#define MAX_MSI_IRQS_PER_CTRL		32
-+#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
--- 
-2.7.4
+Thanks
+Kishon
