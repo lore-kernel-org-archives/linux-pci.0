@@ -1,103 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:60671 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755824AbeCHNeA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Mar 2018 08:34:00 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: kishon@ti.com, Alan Douglas <adouglas@cadence.com>,
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:54296 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752064AbeCUOnR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Mar 2018 10:43:17 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Fengguang Wu <fengguang.wu@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sekhar Nori <nsekhar@ti.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
         Shawn Lin <shawn.lin@rock-chips.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 4/5] PCI: endpoint: Make pci_epc_set_bar() return the BAR width that was set-up
-Date: Thu,  8 Mar 2018 14:33:29 +0100
-Message-Id: <20180308133331.19464-5-niklas.cassel@axis.com>
-In-Reply-To: <20180308133331.19464-1-niklas.cassel@axis.com>
-References: <20180308133331.19464-1-niklas.cassel@axis.com>
+        Ley Foon Tan <lftan@altera.com>
+Subject: [PATCH v2 05/10] PCI: faraday: struct faraday_pci_variant can be static
+Date: Wed, 21 Mar 2018 14:42:49 +0000
+Message-Id: <20180321144254.7406-6-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
+References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to properly handle 64-bit BARs, we need to know what BAR width
-that was actually set-up by specific pci_epc_set_bar() implementations.
+From: Fengguang Wu <fengguang.wu@intel.com>
 
-This is done so that we can know if we need to skip a BAR,
-since a 64-bit BAR consists of a BAR pair.
+This was generated from 0-day builder.
 
-It is important to know the BAR width that was actually set-up,
-since some drivers, like the Cadence EP controller, does not
-simply look at PCI_BASE_ADDRESS_MEM_TYPE_64, as it configures
-all BARs larger than 2G as 64-bit.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+[lorenzo.pieralisi@arm.com: reworked/split patch]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 ---
- drivers/pci/cadence/pcie-cadence-ep.c         | 2 +-
- drivers/pci/dwc/pcie-designware-ep.c          | 4 ++--
- drivers/pci/endpoint/functions/pci-epf-test.c | 7 ++++++-
- 3 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/pci/host/pci-ftpci100.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-index 3c3a97743453..0e4cc4cca56d 100644
---- a/drivers/pci/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/cadence/pcie-cadence-ep.c
-@@ -135,7 +135,7 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn, enum pci_barno bar,
- 		CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL(b, ctrl));
- 	cdns_pcie_writel(pcie, reg, cfg);
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index b9617d1c1d48..5008fd87956a 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -586,11 +586,11 @@ static int faraday_pci_probe(struct platform_device *pdev)
+  * We encode bridge variants here, we have at least two so it doesn't
+  * hurt to have infrastructure to encompass future variants as well.
+  */
+-const struct faraday_pci_variant faraday_regular = {
++static const struct faraday_pci_variant faraday_regular = {
+ 	.cascaded_irq = true,
+ };
  
--	return 0;
-+	return is_64bits ? 1 : 0;
- }
+-const struct faraday_pci_variant faraday_dual = {
++static const struct faraday_pci_variant faraday_dual = {
+ 	.cascaded_irq = false,
+ };
  
- static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index b20b2651caf9..f3c19f8ff8e5 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -139,7 +139,7 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
- 		as_type = DW_PCIE_AS_IO;
- 
- 	ret = dw_pcie_ep_inbound_atu(ep, bar, bar_phys, as_type);
--	if (ret)
-+	if (ret < 0)
- 		return ret;
- 
- 	dw_pcie_dbi_ro_wr_en(pci);
-@@ -154,7 +154,7 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
- 	}
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
--	return 0;
-+	return (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) ? 1 : 0;
- }
- 
- static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 7c70433b11a7..09878e011284 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -379,12 +379,17 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
- 		ret = pci_epc_set_bar(epc, epf->func_no, bar,
- 				      epf_bar->phys_addr,
- 				      epf_bar->size, bar_flags[bar]);
--		if (ret) {
-+		if (ret < 0) {
- 			pci_epf_free_space(epf, epf_test->reg[bar], bar);
- 			dev_err(dev, "failed to set BAR%d\n", bar);
- 			if (bar == test_reg_bar)
- 				return ret;
- 		}
-+		/*
-+		 * pci_epc_set_bar() returns 1 if a 64-bit BAR was set-up,
-+		 * or 0 if a 32-bit BAR was set-up.
-+		 */
-+		bar += ret;
- 	}
- 
- 	return 0;
 -- 
-2.14.2
+2.15.0
