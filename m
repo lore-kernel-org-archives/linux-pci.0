@@ -1,50 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr660109.outbound.protection.outlook.com ([40.107.66.109]:22645
-        "EHLO CAN01-QB1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1031567AbeCAP6n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 10:58:43 -0500
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Sagi Grimberg <sagi@grimberg.me>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-CC: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        "Alex Williamson" <alex.williamson@redhat.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 08/10] nvme-pci: Add support for P2P memory in requests
-Date: Thu, 1 Mar 2018 15:58:40 +0000
-Message-ID: <1CE68E79-E5FD-4EE2-BD88-B3EE57E43ACE@raithlin.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-9-logang@deltatee.com>
- <c6639530-48ba-4655-c772-7d88a030e37e@grimberg.me>
-In-Reply-To: <c6639530-48ba-4655-c772-7d88a030e37e@grimberg.me>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=/BSl=GL=gmail.com=valmikibow@kernel.org>
+Return-Path: <SRS0=/BSl=GL=gmail.com=valmikibow@kernel.org>
+Subject: Re: Why two irq chips for MSI
+To: Marc Zyngier <marc.zyngier@arm.com>, linux-pci
+ <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <81eb7191-1c5c-ad27-2714-9563e4ef7c68@gmail.com>
+ <adf13928-d1da-e8af-5b32-efc199ac6ba9@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+From: valmiki <valmikibow@gmail.com>
+Message-ID: <a0cd800b-f20f-64f3-c3b3-7f0c193c2b16@gmail.com>
+Date: Wed, 21 Mar 2018 23:08:38 +0530
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <adf13928-d1da-e8af-5b32-efc199ac6ba9@arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBBbnkgcGxhbnMgYWRkaW5nIHRoZSBjYXBhYmlsaXR5IHRvIG52bWUtcmRtYT8gU2hvdWxkIGJl
-DQo+IHN0cmFpZ2h0LWZvcndhcmQuLi4gSW4gdGhlb3J5LCB0aGUgdXNlLWNhc2Ugd291bGQgYmUg
-cmRtYSBiYWNrZW5kDQo+IGZhYnJpYyBiZWhpbmQuIFNob3VsZG4ndCBiZSBoYXJkIHRvIHRlc3Qg
-ZWl0aGVyLi4uDQoNCk5pY2UgaWRlYSBTYWdpLiBZZXMgd2UgaGF2ZSBiZWVuIHN0YXJ0aW5nIHRv
-IGxvb2sgYXQgdGhhdC4gVGhvdWdoIGFnYWluIHdlIHdvdWxkIHByb2JhYmx5IHdhbnQgdG8gaW1w
-b3NlIHRoZSAiYXR0YWNoZWQgdG8gdGhlIHNhbWUgUENJZSBzd2l0Y2giIHJ1bGUgd2hpY2ggbWln
-aHQgYmUgbGVzcyBjb21tb24gdG8gc2F0aXNmeSBpbiBpbml0aWF0b3Igc3lzdGVtcy4gDQoNCkRv
-d24gdGhlIHJvYWQgSSB3b3VsZCBhbHNvIGxpa2UgdG8gZGlzY3VzcyB0aGUgYmVzdCB3YXkgdG8g
-dXNlIHRoaXMgUDJQIGZyYW1ld29yayB0byBmYWNpbGl0YXRlIGNvcGllcyBiZXR3ZWVuIE5WTWUg
-bmFtZXNwYWNlcyAob24gYm90aCBQQ0llIGFuZCBmYWJyaWMgYXR0YWNoZWQgbmFtZXNwYWNlcykg
-d2l0aG91dCBoYXZpbmcgdG8gZXhwb3NlIHRoZSBDTUIgdXAgdG8gdXNlciBzcGFjZS4gV2Fzbid0
-IHNvbWV0aGluZyBsaWtlIHRoYXQgZG9uZSBpbiB0aGUgU0NTSSB3b3JsZCBhdCBzb21lIHBvaW50
-IE1hcnRpbj8NCg0KU3RlcGhlbg0KICAgIA0KDQo=
+> On 21/03/18 17:12, valmiki wrote:
+>> Hi,
+>>
+>> In most of the RP drivers, why two irq chips are being used for MSI ?
+>>
+>> One at irq_domain_set_info (which uses irq_compose_msi_msg and
+>> irq_set_affinity methods) and another being registered with struct
+>> msi_domain_info (which uses irq_mask/irq_unmask methods).
+>>
+>> When will each chip be used w.r.t to virq ?
+>
+> A simple way to think of it is that you have two pieces of HW involved:
+> an end-point that generates an interrupt, and a controller that receives it.
+>
+> Transpose this to the kernel view of things: one chip implements the PCI
+> MSI, with the PCI semantics attached to it (how to program the
+> payload/doorbell into the end-point, for example). The other implements
+> the MSI controller part of it, talking to the HW that deals with the
+> interrupt.
+>
+> Does it makes sense? Admittedly, this is not always that simple, but
+> that the general approach.
+>
+Thanks Marc. Yes got a good picture now.
+So the one which implements PCI semantics has irq_set_affinity, which is 
+being invoked at request_irq. Why most of the drivers have this as dummy 
+with return 0 ?
+Does setting affinity to MSI needs any support from GIC?
+Setting affinity can be achieved only with hardware support ?
+
+Valmiki
+
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
