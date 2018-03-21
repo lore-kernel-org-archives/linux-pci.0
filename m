@@ -1,126 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 1 Mar 2018 15:55:49 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Message-ID: <20180301205548.GA6742@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
- <1519936195.4592.18.camel@au1.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45456 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753715AbeCUVxN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Mar 2018 17:53:13 -0400
+Date: Wed, 21 Mar 2018 16:53:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marta Rybczynska <mrybczyn@kalray.eu>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Ming Lei <ming.lei@redhat.com>, axboe@fb.com, hch@lst.de,
+        sagi@grimberg.me, linux-nvme@lists.infradead.org,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org,
+        Pierre-Yves Kerbrat <pkerbrat@kalray.eu>,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: Re: [RFC PATCH] nvme: avoid race-conditions when enabling devices
+Message-ID: <20180321215308.GH38649@bhelgaas-glaptop.roam.corp.google.com>
+References: <744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu>
+ <20180321115037.GA26083@ming.t460p>
+ <464125757.5843583.1521634231341.JavaMail.zimbra@kalray.eu>
+ <20180321154807.GD22254@ming.t460p>
+ <20180321160238.GF12909@localhost.localdomain>
+ <1220434088.5871933.1521648656789.JavaMail.zimbra@kalray.eu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1519936195.4592.18.camel@au1.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1220434088.5871933.1521648656789.JavaMail.zimbra@kalray.eu>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 02, 2018 at 07:29:55AM +1100, Benjamin Herrenschmidt wrote:
-> On Thu, 2018-03-01 at 11:04 -0700, Logan Gunthorpe wrote:
+[+cc Srinath]
+
+On Wed, Mar 21, 2018 at 05:10:56PM +0100, Marta Rybczynska wrote:
+> > On Wed, Mar 21, 2018 at 11:48:09PM +0800, Ming Lei wrote:
+> >> On Wed, Mar 21, 2018 at 01:10:31PM +0100, Marta Rybczynska wrote:
+> >> > > On Wed, Mar 21, 2018 at 12:00:49PM +0100, Marta Rybczynska wrote:
+> >> > >> NVMe driver uses threads for the work at device reset, including enabling
+> >> > >> the PCIe device. When multiple NVMe devices are initialized, their reset
+> >> > >> works may be scheduled in parallel. Then pci_enable_device_mem can be
+> >> > >> called in parallel on multiple cores.
+> >> > >> 
+> >> > >> This causes a loop of enabling of all upstream bridges in
+> >> > >> pci_enable_bridge(). pci_enable_bridge() causes multiple operations
+> >> > >> including __pci_set_master and architecture-specific functions that
+> >> > >> call ones like and pci_enable_resources(). Both __pci_set_master()
+> >> > >> and pci_enable_resources() read PCI_COMMAND field in the PCIe space
+> >> > >> and change it. This is done as read/modify/write.
+> >> > >> 
+> >> > >> Imagine that the PCIe tree looks like:
+> >> > >> A - B - switch -  C - D
+> >> > >>                \- E - F
+> >> > >> 
+> >> > >> D and F are two NVMe disks and all devices from B are not enabled and bus
+> >> > >> mastering is not set. If their reset work are scheduled in parallel the two
+> >> > >> modifications of PCI_COMMAND may happen in parallel without locking and the
+> >> > >> system may end up with the part of PCIe tree not enabled.
+> >> > > 
+> >> > > Then looks serialized reset should be used, and I did see the commit
+> >> > > 79c48ccf2fe ("nvme-pci: serialize pci resets") fixes issue of 'failed
+> >> > > to mark controller state' in reset stress test.
+> >> > > 
+> >> > > But that commit only covers case of PCI reset from sysfs attribute, and
+> >> > > maybe other cases need to be dealt with in similar way too.
+> >> > > 
+> >> > 
+> >> > It seems to me that the serialized reset works for multiple resets of the
+> >> > same device, doesn't it? Our problem is linked to resets of different devices
+> >> > that share the same PCIe tree.
+> >> 
+> >> Given reset shouldn't be a frequent action, it might be fine to serialize all
+> >> reset from different devices.
 > > 
-> > On 28/02/18 08:56 PM, Benjamin Herrenschmidt wrote:
-> > > On Thu, 2018-03-01 at 14:54 +1100, Benjamin Herrenschmidt wrote:
-> > > > The problem is that acccording to him (I didn't double check the latest
-> > > > patches) you effectively hotplug the PCIe memory into the system when
-> > > > creating struct pages.
-> > > > 
-> > > > This cannot possibly work for us. First we cannot map PCIe memory as
-> > > > cachable. (Note that doing so is a bad idea if you are behind a PLX
-> > > > switch anyway since you'd ahve to manage cache coherency in SW).
-> > > 
-> > > Note: I think the above means it won't work behind a switch on x86
-> > > either, will it ?
+> > The driver was much simpler when we had serialized resets in line with
+> > probe, but that had a bigger problems with certain init systems when
+> > you put enough nvme devices in your server, making them unbootable.
 > > 
-> > This works perfectly fine on x86 behind a switch and we've tested it on 
-> > multiple machines. We've never had an issue of running out of virtual 
-> > space despite our PCI bars typically being located with an offset of 
-> > 56TB or more. The arch code on x86 also somehow figures out not to map 
-> > the memory as cachable so that's not an issue (though, at this point, 
-> > the CPU never accesses the memory so even if it were, it wouldn't affect 
-> > anything).
-> 
-> Oliver can you look into this ? You sais the memory was effectively
-> hotplug'ed into the system when creating the struct pages. That would
-> mean to me that it's a) mapped (which for us is cachable, maybe x86 has
-> tricks to avoid that) and b) potentially used to populate userspace
-> pages (that will definitely be cachable). Unless there's something in
-> there you didn't see that prevents it.
-> 
-> > We also had this working on ARM64 a while back but it required some out 
-> > of tree ZONE_DEVICE patches and some truly horrid hacks to it's arch 
-> > code to ioremap the memory into the page map.
+> > Would it be okay to serialize just the pci_enable_device across all
+> > other tasks messing with the PCI topology?
 > > 
-> > You didn't mention what architecture you were trying this on.
+> > ---
+> > diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> > index cef5ce851a92..e0a2f6c0f1cf 100644
+> > --- a/drivers/nvme/host/pci.c
+> > +++ b/drivers/nvme/host/pci.c
+> > @@ -2094,8 +2094,11 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+> >	int result = -ENOMEM;
+> >	struct pci_dev *pdev = to_pci_dev(dev->dev);
+> > 
+> > -	if (pci_enable_device_mem(pdev))
+> > -		return result;
+> > +	pci_lock_rescan_remove();
+> > +	result = pci_enable_device_mem(pdev);
+> > +	pci_unlock_rescan_remove();
+> > +	if (result)
+> > +		return -ENODEV;
+> > 
+> >	pci_set_master(pdev);
 > 
-> ppc64.
-> 
-> > It may make sense at this point to make this feature dependent on x86 
-> > until more work is done to make it properly portable. Something like 
-> > arch functions that allow adding IO memory pages to with a specific 
-> > cache setting. Though, if an arch has such restrictive limits on the map 
-> > size it would probably need to address that too somehow.
-> 
-> Not fan of that approach.
-> 
-> So there are two issues to consider here:
-> 
->  - Our MMIO space is very far away from memory (high bits set in the
-> address) which causes problem with things like vmmemmap, page_address,
-> virt_to_page etc... Do you have similar issues on arm64 ?
+> The problem may happen also with other device doing its probe and
+> nvme running its workqueue (and we probably have seen it in practice
+> too). We were thinking about a lock in the pci generic code too,
+> that's why I've put the linux-pci@ list in copy.
 
-HMM private (HMM public is different) works around that by looking for
-"hole" in address space and using those for hotplug (ie page_to_pfn()
-!= physical pfn of the memory). This is ok for HMM because the memory
-is never map by the CPU and we can find the physical pfn with a little
-bit of math (page_to_pfn() - page->pgmap->res->start + page->pgmap->dev->
-physical_base_address).
+Yes, this is a generic problem in the PCI core.  We've tried to fix it
+in the past but haven't figured it out yet.
 
-To avoid anything going bad i actually do not populate the kernel linear
-mapping for the range hence definitly no CPU access at all through those
-struct page. CPU can still access PCIE bar through usual mmio map.
+See 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
+and 0f50a49e3008 ("Revert "PCI: Avoid race while enabling upstream
+bridges"").
 
-> 
->  - We need to ensure that the mechanism (which I'm not familiar with)
-> that you use to create the struct page's for the device don't end up
-> turning those device pages into normal "general use" pages for the
-> system. Oliver thinks it does, you say it doesn't, ... 
-> 
-> Jerome (Glisse), what's your take on this ? Smells like something that
-> could be covered by HMM...
+It's not trivial, but if you figure out a good way to fix this, I'd be
+thrilled.
 
-Well this again a new user of struct page for device memory just for
-one usecase. I wanted HMM to be more versatile so that it could be use
-for this kind of thing too. I guess the message didn't go through. I
-will take some cycles tomorrow to look into this patchset to ascertain
-how struct page is use in this context.
-
-Note that i also want peer to peer for HMM users but with ACS and using
-IOMMU ie having to populate IOMMU page table of one device to point to
-bar of another device. I need to test on how many platform this work,
-hardware engineer are unable/unwilling to commit on wether this work or
-not.
-
-
-> Logan, the only reason you need struct page's to begin with is for the
-> DMA API right ? Or am I missing something here ?
-
-If it is only needed for that this sounds like a waste of memory for
-struct page. Thought i understand this allow new API to match previous
-one.
-
-Cheers,
-Jérôme
+Bjorn
