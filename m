@@ -1,51 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:26237 "EHLO mga07.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:36228 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752280AbeCMUGp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 16:06:45 -0400
-Date: Tue, 13 Mar 2018 14:08:41 -0600
-From: Keith Busch <keith.busch@intel.com>
+        id S1753394AbeCUVQc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Mar 2018 17:16:32 -0400
+Date: Wed, 21 Mar 2018 16:16:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
 To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Scott Bauer <scott.bauer@intel.com>
-Subject: Re: [PATCHv2] PCI: vmd: Use affinity to chain child device interrupts
-Message-ID: <20180313200840.GA28002@localhost.localdomain>
-References: <20180206202225.1124-1-keith.busch@intel.com>
- <20180313171039.GB20373@e107981-ln.cambridge.arm.com>
+Cc: linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: [PATCH v2 02/10] PCI: iproc: Remove dependency on ARM specific
+ struct pci_sys_data
+Message-ID: <20180321211628.GE38649@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
+ <20180321144254.7406-3-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180313171039.GB20373@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20180321144254.7406-3-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 05:10:39PM +0000, Lorenzo Pieralisi wrote:
-> On Tue, Feb 06, 2018 at 01:22:25PM -0700, Keith Busch wrote:
-> > @@ -233,9 +266,11 @@ static int vmd_msi_prepare(struct irq_domain *domain, struct device *dev,
-> >  	struct pci_dev *pdev = to_pci_dev(dev);
-> >  	struct vmd_dev *vmd = vmd_from_bus(pdev->bus);
-> >  
-> > -	if (nvec > vmd->msix_count)
-> > +	if (nvec > vmd->msix_count) {
-> > +		if (vmd->msix_count > 1)
-> > +			return vmd->msix_count - 1;
-> >  		return vmd->msix_count;
+On Wed, Mar 21, 2018 at 02:42:46PM +0000, Lorenzo Pieralisi wrote:
+> From: Rob Herring <robh@kernel.org>
 > 
-> I am about to apply this patch but I do not understand what's this hunk
-> is there for, to me vmd_msi_prepare() should just return an error in
-> this code path unless I am getting this wrong.
+> The iproc driver is using ARM's struct pci_sys_data simply to store a
+> private data pointer. This is completely unnecessary, so store the
+> private data directly in bus->sysdata as is done on arm64.
 
-Hi Lorenzo,
+Oh, thank you, this is awesome!
 
-It's not really an error if a driver requests more vectors than
-can be allocated. The return here ultimately propogates back to
-__pci_enable_msix, which returns 0 for sucess, < 0 for error, and >
-0 if the requested count was too high.
+struct pci_sys_data is still referenced in mvebu and rcar.  I didn't
+look closely enough to see if they could be similarly simplified.
 
-The change above is fixing an off-by-one. It is really a bug fix on its
-own, but it wasn't really harmful without the affinity awareness this
-patch adds, where not having it starts to negatively affect performance.
+I guess not, because they use pci_common_init_dev().  They look
+tantalizingly close to being able to use pci_scan_root_bus_bridge()
+like everybody else, though.
 
-Thanks,
-Keith
+Bjorn
