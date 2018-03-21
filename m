@@ -1,141 +1,378 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0096.outbound.protection.outlook.com ([104.47.34.96]:17229
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751394AbeCTR4S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Mar 2018 13:56:18 -0400
-From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3]PCI: hv: fix PCI-BUS domainID corruption
-Date: Tue, 20 Mar 2018 17:56:15 +0000
-Message-ID: <65B4E847-CC40-4166-BE8F-D44049EDB2FF@microsoft.com>
-References: <C600E28F-E581-431E-9CD4-47C776E8E70F@microsoft.com>
- <20180315120522.GA15651@e107981-ln.cambridge.arm.com>
- <DM5PR21MB0826439DF296763A3FA861C3F6D00@DM5PR21MB0826.namprd21.prod.outlook.com>
- <04DBCCAB-4BA7-4E05-A047-44824995963E@microsoft.com>
-In-Reply-To: <04DBCCAB-4BA7-4E05-A047-44824995963E@microsoft.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:54448 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752057AbeCUOnc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Mar 2018 10:43:32 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Fengguang Wu <fengguang.wu@intel.com>
+Subject: [PATCH v2 10/10] PCI: Move private DT related functions into private header
+Date: Wed, 21 Mar 2018 14:42:54 +0000
+Message-Id: <20180321144254.7406-11-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
+References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTG9yZW56bywNCkFyZSB3ZSBnb29kIHdpdGggdGhlIGV4cGxhbmF0aW9uPyBDYW4gSSBzZW5k
-IHRoZSBwYXRjaCB3aXRoIHRoZSB1cGRhdGVkIGNvbW1pdCBjb21tZW50cz8NCg0KVGhhbmtzDQpT
-cmlkaGFyDQoNCu+7v09uIDMvMTUvMTgsIDExOjI0IEFNLCAiU3JpZGhhciBQaXRjaGFpIiA8U3Jp
-ZGhhci5QaXRjaGFpQG1pY3Jvc29mdC5jb20+IHdyb3RlOg0KDQogICAgQXBvbG9naWVzIGZvciBu
-b3QgYWxpZ25pbmcgbXkgcmVwbHksIEkganVzdCByZWFsaXplZCBhZnRlciBsb29raW5nIGludG8N
-CiAgICB0aGUgbWFpbCBhcmNoaXZlIGluIExLTUwuICBJIGhhdmUgYWxpZ25lZCB0aGUgcmVwbGF5
-IG5vdy4NCiAgICANCiAgICANCiAgICBPbiAzLzE1LzE4LCAxMDo1NiBBTSwgIlNyaWRoYXIgUGl0
-Y2hhaSIgPFNyaWRoYXIuUGl0Y2hhaUBtaWNyb3NvZnQuY29tPiB3cm90ZToNCiAgICANCiAgICBI
-aSBMb3JlbnpvLA0KICAgIEFuc3dlcmluZyB0aGUgcXVlc3Rpb24gaW5saW5lLg0KICAgIEtpbmRs
-eSBsZXQgbWUga25vdyBpZiBpdCBjbGFyaWZpZXMuIEkgd2lsbCBzZW5kIG91dCBhbm90aGVyIHBh
-dGNoIGFmdGVyIHdlIGFncmVlIG9uIHRoZSBjbGFyaWZpY2F0aW9uLg0KICAgIA0KICAgIFRoYW5r
-cw0KICAgIFNyaWRoYXIgUGl0Y2hhaQ0KICAgIA0KICAgIC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
-LS0tDQogICAgRnJvbTogTG9yZW56byBQaWVyYWxpc2kgPGxvcmVuem8ucGllcmFsaXNpQGFybS5j
-b20+DQogICAgU2VudDogVGh1cnNkYXksIE1hcmNoIDE1LCAyMDE4IDU6MDUgQU0NCiAgICBUbzog
-U3JpZGhhciBQaXRjaGFpIDxTcmlkaGFyLlBpdGNoYWlAbWljcm9zb2Z0LmNvbT4NCiAgICBDYzog
-Qmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT47IEpha2UgT3NoaW5zIDxqYWtlb0Bt
-aWNyb3NvZnQuY29tPjsgSGFpeWFuZyBaaGFuZyA8aGFpeWFuZ3pAbWljcm9zb2Z0LmNvbT47IFN0
-ZXBoZW4gSGVtbWluZ2VyIDxzdGhlbW1pbkBtaWNyb3NvZnQuY29tPjsgRGV4dWFuIEN1aSA8ZGVj
-dWlAbWljcm9zb2Z0LmNvbT47IEtZIFNyaW5pdmFzYW4gPGt5c0BtaWNyb3NvZnQuY29tPjsgTWlj
-aGFlbCBLZWxsZXkgKEVPU0cpIDxNaWNoYWVsLkguS2VsbGV5QG1pY3Jvc29mdC5jb20+OyBkZXZl
-bEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51
-eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQogICAgU3ViamVjdDogUmU6IFtQQVRDSCB2M11QQ0k6
-IGh2OiBmaXggUENJLUJVUyBkb21haW5JRCBjb3JydXB0aW9uDQogICAgDQogICAgT24gVGh1LCBN
-YXIgMTUsIDIwMTggYXQgMTI6MDM6MDdBTSArMDAwMCwgU3JpZGhhciBQaXRjaGFpIHdyb3RlOg0K
-ICAgIFdoZW5ldmVyIFBDSSBidXMgaXMgYWRkZWQsIEh5cGVyViBndWFyYW50ZWVzIHRoZSBCVVMg
-aWQgaXMgdW5pcXVlLiBFdmVuDQogICAgDQogICAgIldoZW5ldmVyIGEgUENJIGJ1cyBpcyBhZGRl
-ZCINCiAgICBTcmlkaGFyPj4geWVzDQogICAgDQogICAgd2l0aCB0aGF0IHdoZW4gYSBmaXJzdCBk
-ZXZpY2UgaXMgYWRkZWQgdG8gdGhlIGJ1cywgaXQgb3ZlcnJpZGVzIGJ1cyBkb21haW4NCiAgICBJ
-RCB3aXRoIHRoZSBkZXZpY2Ugc2VyaWFsIG51bWJlci4gU29tZXRpbWUgdGhpcyBjYW4gcmVzdWx0
-IGluIEJVUyBJRCBub3QNCiAgICANCiAgICBEZWZpbmUgIlNvbWV0aW1lIi4NCiAgICANCiAgICBT
-cmlkaGFyPj4gSHlwZXJWIHdoZW4gaXQgY3JlYXRlcyBhIFBDSSBidXMgaXQgZ3VhcmFudGVlcyBp
-dCBwcm92aWRlIGEgdW5pcXVlIElEIGZvciBpdC4NCiAgICBCdXQsIHRoYXQgdW5pcXVlIEJVUyBJ
-RCBpcyByZXBsYWNlZCB3aXRoIGRldmljZSBzZXJpYWwgbnVtYmVyLiAwIGlzIGEgdmFsaWQNCiAg
-ICBkZXZpY2Ugc2VyaWFsIG51bWJlciwgYW5kIGlmIHRoZXJlIGV4aXN0cyBhIFBDSSBidXMgd2l0
-aCBkb21haW4gSUQgMCAoR2VuIDENCiAgICB2ZXJzaW9uIG9mIGh5cGVyViBWTSBoYXZlIHRoaXMg
-Zm9yIHBhcmEgdmlydHVhbCBkZXZpY2VzKSwgdGhpcyB3aWxsIHJlc3VsdCBpbg0KICAgIFBDSSBi
-dXMgaWQgbm90IGJlaW5nIHVuaXF1ZS4NCiAgICANCiAgICANCiAgICBiZWluZyB1bmlxdWUuIElu
-IHRoaXMgY2FzZSwgd2hlbiBQQ0lfQlVTIGFuZCBhIGRldmljZSB0byBidXMgaXMgYWRkZWQsIHRo
-ZQ0KICAgIGZpcnN0IGRldmljZSBvdmVyd3JpdGVzIHRoZSBidXMgZG9tYWluIElEIHRvIHRoZSBk
-ZXZpY2Ugc2VyaWFsIG51bWJlciwNCiAgICB3aGljaCBpcyAwLiBTaW5jZSB0aGVyZSBleHNpc3Qg
-YSBQQ0kgYnVzIHdpdGggZG9tYWluIElEIDAgYWxyZWFkeSB0aGUgUENJDQogICAgDQogICAgcy9l
-eHNpc3QvZXhpc3QNCiAgICANCiAgICBTcmlkaGFyPj4geWVzDQogICAgDQogICAgYnVzIGFkZGl0
-aW9uIGZhaWxzLiBUaGlzIHBhdGNoIG1ha2Ugc3VyZSB3aGVuIGEgZGV2aWNlIGlzIGFkZGVkIHRv
-IGEgYnVzLA0KICAgIGl0IG5ldmVyIHVwZGF0ZWQgdGhlIGJ1cyBkb21haW4gSUQuDQogICAgDQog
-ICAgcy91cGRhdGVkL3VwZGF0ZXMNCiAgICBTcmlkaGFyID4+IHllcw0KICAgIA0KICAgIFNpbmNl
-IHdlIGhhdmUgdGhlIHRyYW5zcGFyZW50IFNSSU9WIG1vZGUgbm93LCB0aGUgc2hvcnQgVkYgZGV2
-aWNlIG5hbWUNCiAgICBpcyBubyBsb25nZXIgbmVlZGVkLg0KICAgIA0KICAgIEkgc3RpbGwgZG8g
-bm90IHVuZGVyc3RhbmQgd2hhdCB0aGlzIG1lYW5zIGFuZCBob3cgaXQgaXMgcmVsYXRlZCB0byB0
-aGUNCiAgICBwYXRjaCBiZWxvdywgaXQgbWF5IGJlIGNsZWFyIHRvIHlvdSwgaXQgaXMgbm90IHRv
-IG1lLCBhdCBhbGwuDQogICAgDQogICAgU3JpZGhhciA+PiB0aGUgcGF0Y2ggYmVsb3csIHdhcyBp
-bnRyb2R1Y2VkIHRvIG1ha2UgdGhlIGRldmljZSBuYW1lIHNtYWxsLCBieSB0YWtpbmcgb25seQ0K
-ICAgIDE2Yml0cyBvZiB0aGUgc2VyaWFsIG51bWJlci4gU2luY2Ugd2UgYXJlIG5vdCBnb2luZyB0
-byBoYXZlIHRoZSBzZXJpYWwgbnVtYmVyDQogICAgdXBkYXRlZCB0byB0aGUgQlVTIGlkLCB0aGlz
-IGhhcyB0byBiZSByZW1vdmVkLg0KICAgIA0KICAgIEZpeGVzOiA0YTliMDkzM2JkZmMoIlBDSTpo
-djpVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQogICAgDQogICAgRml4
-ZXM6IDRhOWIwOTMzYmRmYyAoIlBDSTogaHY6IFVzZSBkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQ
-Q0kgZG9tYWluIikNCiAgICBTcmlkaHIgPj4geWVzDQogICAgDQogICAgSSBhc2tlZCB5b3UgYW4g
-ZXhwbGljaXQgcXVlc3Rpb24uIENvbW1pdCBhYm92ZSB3YXMgYWRkZWQgZm9yIGEgcmVhc29uDQog
-ICAgSSBhc3N1bWUuIFRoaXMgcGF0Y2ggaW1wbGllcyB0aGF0IGtlcm5lbCBoYXMgYmVlbiBicm9r
-ZW4gc2luY2UgdjQuMTENCiAgICB3aGljaCBpcyBhbG1vc3QgYSB5ZWFyIGFnbyBhbmQgbm9ib2R5
-IGV2ZXJ5IG5vdGljZWQgPyBPciB0aGVyZSBhcmUNCiAgICBzeXN0ZW1zIHdoZXJlIGNvbW1pdCBh
-Ym92ZSBpcyBfbmVjZXNzYXJ5XyBhbmQgdGhpcyBwYXRjaCB3b3VsZCBicmVhaw0KICAgIHRoZW0g
-Pw0KICAgIA0KICAgIEkgd2FudCBhIGRldGFpbGVkIGV4cGxhbmF0aW9uIHRoYXQgaGlnaGxpZ2h0
-cyAqd2h5KiBpdCBpcyBzYWZlIHRvIGFwcGx5DQogICAgdGhpcyBwYXRjaCBhbmQgc2VuZCBpdCB0
-byBzdGFibGUga2VybmVscywgY29tbWl0IGxvZyBhYm92ZSB3b24ndCBkby4NCiAgICANCiAgICBT
-cmlkaGFyPj4gSHlwZXJWIHByb3ZpZGVzIGEgdW5pcXVlIGRvbWFpbiBJRCBmb3IgUENJIEJVUy4g
-QnV0IGl0IGlzIG1vZGlmaWVkIGJ5IHRoZSBjaGlsZA0KICAgIGRldmljZSB3aGVuIGl0IGlzIGFk
-ZGVkLiBUaGlzIGNhbm5vdCBwcm9kdWNlIGEgdW5pcXVlIGRvbWFpbiBJRCBhbGwgdGhlIHRpbWUu
-DQogICAgSGVyZSBpbiB0aGUgYnVnLCB3ZSBzZWUgdGhlIGNvbGxpc2lvbiBiZXR3ZWVuIHRoZSBz
-ZXJpYWwgbnVtYmVyIGFuZCBhbHJlYWR5DQogICAgZXhpc3RpbmcgUENJIGJ1cy4gVGhlIGNsZWFu
-ZXIgd2F5IGlzIG5ldmVyIHRvdWNoIHRoZSBkb21haW4gSUQgcHJvdmlkZWQgYnkNCiAgICBoeXBl
-clYgZHVyaW5nIHRoZSBQQ0kgYnVzIGNyZWF0aW9uLiBBcyBsb25nIGFzIGh5cGVyViBtYWtlIHN1
-cmUgaXQgcHJvdmlkZXMgYQ0KICAgIHVuaXF1ZSBkb21haW4gSUQgZm9yIHRoZSBQQ0kgZm9yIGEg
-Vk0gaXQgd2lsbCBub3QgYnJlYWssIGFuZCBIeXBlclYgd2lsbA0KICAgIGd1YXJhbnRlZXMgdGhh
-dCB0aGUgZG9tYWluIGZvciB0aGUgUENJIGJ1cyBmb3IgYSBnaXZlbiBWTSB3aWxsIGJlIGFsd2F5
-cyB1bmlxdWUuDQogICAgVGhlIG9yaWdpbmFsIHBhdGNoIHdhcyBhbHNvIGludGVuZGluZyB0byBo
-YXZlIGEgdW5pcXVlIGRvbWFpbiBJRCBmb3IgdGhlIFBDSQ0KICAgIGJ1cywgYnkgdGFraW5nIHRo
-ZSBzZXJpYWwgbnVtYmVyIG9mIHRoZSBkZXZpY2UsIGJ1dCBpdCBpcyBub3Qgc3VmZmljaWVudCwg
-d2hlbg0KICAgIHRoZSBkZXZpY2Ugc2VyaWFsIG51bWJlciBpcyBudW1iZXIgd2hpY2ggaXMgdGhl
-IGRvbWFpbiBJRCBvZiB0aGUgZXhpc3RpbmcgUENJDQogICAgYnVzLiAgV2l0aCB0aGUgY3VycmVu
-dCBrZXJuZWwgd2UgY2FuIHJlcHJvIHRoaXMgaXNzdWUgYnkgYWRkaW5nIGEgZGV2aWNlIHdpdGgg
-YQ0KICAgIHNlcmlhbCBudW1iZXIgbWF0Y2hpbmcgdGhlIGV4aXN0aW5nIFBDSSBidXMgZG9tYWlu
-IGlkLiAoaW4gdGhpcyBjYXNlIHRoYXQNCiAgICBoYXBwZW5zIHRvIGJlIHplcm8pLg0KICAgIA0K
-ICAgIA0KICAgIFRoYW5rcywNCiAgICBMb3JlbnpvDQogICAgDQogICAgQ2M6IHN0YWJsZUB2Z2Vy
-Lmtlcm5lbC5vcmcNCiAgICBTaWduZWQtb2ZmLWJ5OiBTcmlkaGFyIFBpdGNoYWkgPHNycGl0Y2hh
-QG1pY3Jvc29mdC5jb20+DQogICAgLS0tDQogICAgQ2hhbmdlcyBpbiB2MzoNCiAgICAqIGZpeCB0
-aGUgY29tbWl0IGNvbW1lbnQuIFtLWSBTcmluaXZhc2FuLCBNaWNoYWVsIEtlbGxleV0NCiAgICAt
-LS0NCiAgICAgIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jIHwgMTEgLS0tLS0tLS0tLS0N
-CiAgICAgIDEgZmlsZSBjaGFuZ2VkLCAxMSBkZWxldGlvbnMoLSkNCiAgICBkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBl
-cnYuYw0KICAgIGluZGV4IDJmYWYzOGUuLmFjNjdlNTYgMTAwNjQ0DQogICAgLS0tIGEvZHJpdmVy
-cy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCiAgICArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1o
-eXBlcnYuYw0KICAgIEBAIC0xNTE4LDE3ICsxNTE4LDYgQEAgc3RhdGljIHN0cnVjdCBodl9wY2lf
-ZGV2ICpuZXdfcGNpY2hpbGRfZGV2aWNlKHN0cnVjdCBodl9wY2lidXNfZGV2aWNlICpoYnVzLA0K
-ICAgICAgCWdldF9wY2ljaGlsZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGlsZGxpc3QpOw0KICAg
-ICAgCXNwaW5fbG9ja19pcnFzYXZlKCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQog
-ICAgICANCiAgICAtCS8qDQogICAgLQkgKiBXaGVuIGEgZGV2aWNlIGlzIGJlaW5nIGFkZGVkIHRv
-IHRoZSBidXMsIHdlIHNldCB0aGUgUENJIGRvbWFpbg0KICAgIC0JICogbnVtYmVyIHRvIGJlIHRo
-ZSBkZXZpY2Ugc2VyaWFsIG51bWJlciwgd2hpY2ggaXMgbm9uLXplcm8gYW5kDQogICAgLQkgKiB1
-bmlxdWUgb24gdGhlIHNhbWUgVk0uICBUaGUgc2VyaWFsIG51bWJlcnMgc3RhcnQgd2l0aCAxLCBh
-bmQNCiAgICAtCSAqIGluY3JlYXNlIGJ5IDEgZm9yIGVhY2ggZGV2aWNlLiAgU28gZGV2aWNlIG5h
-bWVzIGluY2x1ZGluZyB0aGlzDQogICAgLQkgKiBjYW4gaGF2ZSBzaG9ydGVyIG5hbWVzIHRoYW4g
-YmFzZWQgb24gdGhlIGJ1cyBpbnN0YW5jZSBVVUlELg0KICAgIC0JICogT25seSB0aGUgZmlyc3Qg
-ZGV2aWNlIHNlcmlhbCBudW1iZXIgaXMgdXNlZCBmb3IgZG9tYWluLCBzbyB0aGUNCiAgICAtCSAq
-IGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRoZSBmaXJzdCBkZXZpY2UgaXMg
-YWRkZWQuDQogICAgLQkgKi8NCiAgICAtCWlmIChsaXN0X2VtcHR5KCZoYnVzLT5jaGlsZHJlbikp
-DQogICAgLQkJaGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogICAgICAJbGlzdF9h
-ZGRfdGFpbCgmaHBkZXYtPmxpc3RfZW50cnksICZoYnVzLT5jaGlsZHJlbik7DQogICAgICAJc3Bp
-bl91bmxvY2tfaXJxcmVzdG9yZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KICAg
-ICAgCXJldHVybiBocGRldjsNCiAgICAtLQ0KICAgIDIuNy40IA0KICAgIA0KICAgIA0KDQo=
+From: Rob Herring <robh@kernel.org>
+
+The functions in linux/of_pci.h are primarily used by host bridge
+drivers, so they can be private to drivers/pci/.
+
+The remaining functions are still used mostly in host bridge drivers
+that still live in arch specific code. Hopefully someday, those will get
+moved into drivers/pci as well.
+
+Signed-off-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c           |  1 +
+ drivers/pci/dwc/pcie-designware-host.c |  1 +
+ drivers/pci/host/pci-aardvark.c        |  2 ++
+ drivers/pci/host/pci-ftpci100.c        |  2 ++
+ drivers/pci/host/pci-mvebu.c           |  2 ++
+ drivers/pci/host/pci-rcar-gen2.c       |  2 ++
+ drivers/pci/host/pci-tegra.c           |  2 ++
+ drivers/pci/host/pci-v3-semi.c         |  2 ++
+ drivers/pci/host/pci-xgene.c           |  2 ++
+ drivers/pci/host/pcie-altera.c         |  2 ++
+ drivers/pci/host/pcie-iproc-platform.c |  1 +
+ drivers/pci/host/pcie-mediatek.c       |  2 ++
+ drivers/pci/host/pcie-rcar.c           |  2 ++
+ drivers/pci/host/pcie-rockchip.c       |  2 ++
+ drivers/pci/host/pcie-xilinx-nwl.c     |  2 ++
+ drivers/pci/host/pcie-xilinx.c         |  2 ++
+ drivers/pci/pci.h                      | 40 ++++++++++++++++++++++++++++++++++
+ include/linux/of_pci.h                 | 34 -----------------------------
+ 18 files changed, 69 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index ed8558d638e5..620709d38a64 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -27,6 +27,7 @@
+ #include <linux/mfd/syscon.h>
+ #include <linux/regmap.h>
+ 
++#include "../pci.h"
+ #include "pcie-designware.h"
+ 
+ /* PCIe controller wrapper DRA7XX configuration registers */
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 8de2d5c69b1d..17faa4c04dd6 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -14,6 +14,7 @@
+ #include <linux/pci_regs.h>
+ #include <linux/platform_device.h>
+ 
++#include "../pci.h"
+ #include "pcie-designware.h"
+ 
+ static struct pci_ops dw_pcie_ops;
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index b04d37b3c5de..55b94911bc9a 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -19,6 +19,8 @@
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ 
++#include "../pci.h"
++
+ /* PCIe core registers */
+ #define PCIE_CORE_CMD_STATUS_REG				0x4
+ #define     PCIE_CORE_CMD_IO_ACCESS_EN				BIT(0)
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index 5008fd87956a..474faa2e922e 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -28,6 +28,8 @@
+ #include <linux/irq.h>
+ #include <linux/clk.h>
+ 
++#include "../pci.h"
++
+ /*
+  * Special configuration registers directly in the first few words
+  * in I/O space.
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 5d4dccfc9d81..23e270839e6a 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -21,6 +21,8 @@
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
+ 
++#include "../pci.h"
++
+ /*
+  * PCIe unit register offsets.
+  */
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index a28370bb2b2a..0cb00f2edc89 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -21,6 +21,8 @@
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
+ 
++#include "../pci.h"
++
+ /* AHB-PCI Bridge PCI communication registers */
+ #define RCAR_AHBPCI_PCICOM_OFFSET	0x800
+ 
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index dd9b3bcc41c3..8292f763a49b 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -38,6 +38,8 @@
+ #include <soc/tegra/cpuidle.h>
+ #include <soc/tegra/pmc.h>
+ 
++#include "../pci.h"
++
+ #define INT_PCI_MSI_NR (8 * 32)
+ 
+ /* register definitions */
+diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/host/pci-v3-semi.c
+index 0a4dea796663..04bf53d02f23 100644
+--- a/drivers/pci/host/pci-v3-semi.c
++++ b/drivers/pci/host/pci-v3-semi.c
+@@ -33,6 +33,8 @@
+ #include <linux/regmap.h>
+ #include <linux/clk.h>
+ 
++#include "../pci.h"
++
+ #define V3_PCI_VENDOR			0x00000000
+ #define V3_PCI_DEVICE			0x00000002
+ #define V3_PCI_CMD			0x00000004
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 0a0d7ee6d3c9..648a50243022 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -22,6 +22,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
+ 
++#include "../pci.h"
++
+ #define PCIECORE_CTLANDSTATUS		0x50
+ #define PIM1_1L				0x80
+ #define IBAR2				0x98
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 2235f4760951..3292c20abe40 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -17,6 +17,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
+ 
++#include "../pci.h"
++
+ #define RP_TX_REG0			0x2000
+ #define RP_TX_REG1			0x2004
+ #define RP_TX_CNTRL			0x2008
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index e764a2a2693c..fb23fdf919c8 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -16,6 +16,7 @@
+ #include <linux/of_platform.h>
+ #include <linux/phy/phy.h>
+ 
++#include "../pci.h"
+ #include "pcie-iproc.h"
+ 
+ static const struct of_device_id iproc_pcie_of_match_table[] = {
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index a8b20c5012a9..5b3da5856ca2 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -22,6 +22,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ 
++#include "../pci.h"
++
+ /* PCIe shared registers */
+ #define PCIE_SYS_CFG		0x00
+ #define PCIE_INT_ENABLE		0x0c
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 6ab28f29ac6a..9629ec039deb 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -28,6 +28,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ 
++#include "../pci.h"
++
+ #define PCIECAR			0x000010
+ #define PCIECCTLR		0x000018
+ #define  CONFIG_SEND_ENABLE	(1 << 31)
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index f1e8f97ea1fb..daf9120a4350 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -36,6 +36,8 @@
+ #include <linux/reset.h>
+ #include <linux/regmap.h>
+ 
++#include "../pci.h"
++
+ /*
+  * The upper 16 bits of PCIE_CLIENT_CONFIG are a write mask for the lower 16
+  * bits.  This allows atomic updates of the register without locking.
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 0acaf483d031..7702d68abbdc 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -21,6 +21,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/irqchip/chained_irq.h>
+ 
++#include "../pci.h"
++
+ /* Bridge core config registers */
+ #define BRCFG_PCIE_RX0			0x00000000
+ #define BRCFG_INTERRUPT			0x00000010
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 0ad188effc09..ec193e930caa 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -23,6 +23,8 @@
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ 
++#include "../pci.h"
++
+ /* Register definitions */
+ #define XILINX_PCIE_REG_BIR		0x00000130
+ #define XILINX_PCIE_REG_IDR		0x00000138
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index fcd81911b127..d1b91c26b0d4 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -396,4 +396,44 @@ static inline u64 pci_rebar_size_to_bytes(int size)
+ 	return 1ULL << (size + 20);
+ }
+ 
++struct device_node;
++
++#ifdef CONFIG_OF
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
++int of_get_pci_domain_nr(struct device_node *node);
++int of_pci_get_max_link_speed(struct device_node *node);
++
++#else
++static inline int
++of_pci_parse_bus_range(struct device_node *node, struct resource *res)
++{
++	return -EINVAL;
++}
++
++static inline int
++of_get_pci_domain_nr(struct device_node *node)
++{
++	return -1;
++}
++
++static inline int
++of_pci_get_max_link_speed(struct device_node *node)
++{
++	return -EINVAL;
++}
++#endif /* CONFIG_OF */
++
++#if defined(CONFIG_OF_ADDRESS)
++int of_pci_get_host_bridge_resources(struct device_node *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base);
++#else
++static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	return -EINVAL;
++}
++#endif
++
+ #endif /* DRIVERS_PCI_H */
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 88865e0ebf4d..41155181ecbd 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -14,9 +14,6 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+-int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+-int of_get_pci_domain_nr(struct device_node *node);
+-int of_pci_get_max_link_speed(struct device_node *node);
+ void of_pci_check_probe_only(void);
+ int of_pci_map_rid(struct device_node *np, u32 rid,
+ 		   const char *map_name, const char *map_mask_name,
+@@ -39,18 +36,6 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return 0;
+ }
+ 
+-static inline int
+-of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+-{
+-	return -EINVAL;
+-}
+-
+-static inline int
+-of_get_pci_domain_nr(struct device_node *node)
+-{
+-	return -1;
+-}
+-
+ static inline int of_pci_map_rid(struct device_node *np, u32 rid,
+ 			const char *map_name, const char *map_mask_name,
+ 			struct device_node **target, u32 *id_out)
+@@ -58,26 +43,7 @@ static inline int of_pci_map_rid(struct device_node *np, u32 rid,
+ 	return -EINVAL;
+ }
+ 
+-static inline int
+-of_pci_get_max_link_speed(struct device_node *node)
+-{
+-	return -EINVAL;
+-}
+-
+ static inline void of_pci_check_probe_only(void) { }
+ #endif
+ 
+-#if defined(CONFIG_OF_ADDRESS)
+-int of_pci_get_host_bridge_resources(struct device_node *dev,
+-			unsigned char busno, unsigned char bus_max,
+-			struct list_head *resources, resource_size_t *io_base);
+-#else
+-static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
+-			unsigned char busno, unsigned char bus_max,
+-			struct list_head *resources, resource_size_t *io_base)
+-{
+-	return -EINVAL;
+-}
+-#endif
+-
+ #endif
+-- 
+2.15.0
