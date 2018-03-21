@@ -1,117 +1,114 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 23 Mar 2018 23:47:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wolfgang Denk <wd@denx.de>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCIe x4 cards not detected on Z370 mainboards
-Message-ID: <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180322184840.E31D4247251@gemini.denx.de>
- <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com>
- <20180323084855.E3EAF247251@gemini.denx.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:56405 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751040AbeCUGHN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Mar 2018 02:07:13 -0400
+Subject: Re: [PATCH v4 4/5] PCI: endpoint: Make pci_epc_set_bar() return the
+ BAR width that was set-up
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Alan Douglas <adouglas@cadence.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+References: <20180308133331.19464-1-niklas.cassel@axis.com>
+ <20180308133331.19464-5-niklas.cassel@axis.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <001f10ee-d2cd-a1ae-5524-75a1e0b8c92e@ti.com>
+Date: Wed, 21 Mar 2018 11:36:56 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180323084855.E3EAF247251@gemini.denx.de>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180308133331.19464-5-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Mika, Rafael, linux-acpi]
-[I cobbled this together from our earlier conversation to try to give
-context for the new additions]
+Hi Niklas,
 
-On Fri, Mar 23, 2018 at 09:48:55AM +0100, Wolfgang Denk wrote:
-> In message <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com> Bjorn wrote:
->> Wolfgang Denk originally wrote:
->>> Both on a GIGABYTE Z370-HD3 and on a MSI Z370 TOMAHAWK mainboard
->>> neither of my LSI SAS controllers (SAS3444 E PCIe x4 and
->>> SAS3442E-R PCIe x4) gets detected.  Not by the system BIOS, there
->>> is not messages from the SAS Controller BIOS, Linux does not see
->>> it in the PCI bus scan - nothing.  Both controllers work find in
->>> older mainboards.
->>>
->>> I asked MSI support, who told me:
->>>
->>>   These are old controllers which don't support UEFI/GOP. this is
->>>   the reason they don't work.  Cards which have only legacy
->>>   support cannot be operated in modern mainboards.
->>
->> That doesn't make sense to me.  Maybe these controllers have option
->> ROMs that aren't compatible with UEFI (though even that sounds
->> unlikely to me).  But even in that case, I would expect the card to
->> at least be visible in PCI config space, because that's needed even
->> to read the option ROM from the card.
+On Thursday 08 March 2018 07:03 PM, Niklas Cassel wrote:
+> In order to properly handle 64-bit BARs, we need to know what BAR width
+> that was actually set-up by specific pci_epc_set_bar() implementations.
 > 
-> I speculate that, like on some graphics cards, the card BIOS needs
-> to run to initialize for example on-board memory etc., before the
-> card becomes realy visible to the rest of the system?
-
-We can't run the card BIOS unless the card responds to the config
-reads we use to enumerate the device.
-
->>> I also have a PCIe x 1 Adaptect SCSI controller (29320LPE,
->>> firmware version v4.31.4 of 2007) which certainly never heard of
->>> UEFI/GOP before, and this is working fine: I see the BIOS messages
->>> when it does the SCSI bus scan, I see the initialization under
->>> Linux, and I can access the SCSI devices under Linux.
->>> ...
->>>
->> With the SAS3444 in the system, I wonder the port leading to that
->> slot is disabled or not negotiating the link for some reason.  Can
->> you collect "lspci -vvv" output with the working card and with one
->> of the non-working cards?
+> This is done so that we can know if we need to skip a BAR,
+> since a 64-bit BAR consists of a BAR pair.
 > 
-> Done.  See below.
-
->From lspci-adaptec-29320LPE:
-
-  00:01.0 Intel Xeon E3-1200 v5/E3-1500 Root Port
-    Bus: primary=00, secondary=01, subordinate=02
-  01:00.0 PEX 8114 PCI Express-to-PCI/PCI-X Bridge
-    Bus: primary=01, secondary=02, subordinate=02
-  02:04.0 Adaptec ASC-29320ALP U320 (rev 10)
-
-The 00:01.0 Root Port is built into your motherboard's chipset.  The
-01:00.0 Bridge and ASC-29320ALP devices are both on the plugin card.
-The card should have a PLX-labeled chip and an Adaptec-labeled one.
-
-In lspci-lsi-SAS3444E, the 00:01.0 Root Port doesn't appear at all, so
-it must be disabled, which means we can't reach the card in that slot.
-Linux doesn't know how to enable the Root Port directly (it requires
-chipset-specific knowledge, so it's done by the BIOS).
-
->>> I don't know if this is relevant, but in Linux (Fedora 27,
->>> 4.15.6-300.fc27.x86_64 kernel), I see these error messages:
->>> 
->>>   ACPI Error: [_SB_.PCI0.RP05.PXSX] Namespace lookup failure, AE_NOT_FOUND (20170831/dswload2-191)
->>>   ACPI Exception: AE_NOT_FOUND, During name lookup/catalog (20170831/psobject-252)
->>>   ACPI Error: Method parse/execution failed \_SB.PCI0.RP04.PXSX, AE_NOT_FOUND (20170831/psparse-550)
->>>   ACPI Error: [_SB_.PCI0.RP09.PXSX] Namespace lookup failure, AE_NOT_FOUND (20170831/dswload2-191)
->>>   ACPI Exception: AE_NOT_FOUND, During name lookup/catalog (20170831/psobject-252)
->>>   ACPI Error: Method parse/execution failed \_SB.PCI0.RP08.PXSX, AE_NOT_FOUND (20170831/psparse-550)
-
-This is interesting.  These methods (PXSX) are connected with PCIe
-Root Ports, and Mika's recent patch [1] also mentioned PXSX, though
-that was in the context of Thunderbolt hotplug.
-
-It's conceivable that Linux is doing something wrong here that causes
-BIOS to leave that 00:01.0 Root Port disabled.
-
-Do these PXSX messages also occur when you boot with the working
-29320LPE card in the slot?
-
-> > You could try locating the port leading to the slot and using setpci
-> > to reset its secondary bus, then using /sys/bus/pci/rescan to rescan
-> > the bus.
+> It is important to know the BAR width that was actually set-up,
+> since some drivers, like the Cadence EP controller, does not
+> simply look at PCI_BASE_ADDRESS_MEM_TYPE_64, as it configures
+> all BARs larger than 2G as 64-bit.
 > 
-> Sorry, I need help here.  Which options/parameters are needed to
-> setpci to do that?
-
-This idea won't work because the port leading to the slot isn't visible at
-all.
-
-> The log files are available here:
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/cadence/pcie-cadence-ep.c         | 2 +-
+>  drivers/pci/dwc/pcie-designware-ep.c          | 4 ++--
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 7 ++++++-
+>  3 files changed, 9 insertions(+), 4 deletions(-)
 > 
-> 	https://owncloud.denx.de/index.php/s/wXiCMMYJodGj5Kr
+> diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
+> index 3c3a97743453..0e4cc4cca56d 100644
+> --- a/drivers/pci/cadence/pcie-cadence-ep.c
+> +++ b/drivers/pci/cadence/pcie-cadence-ep.c
+> @@ -135,7 +135,7 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn, enum pci_barno bar,
+>  		CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL(b, ctrl));
+>  	cdns_pcie_writel(pcie, reg, cfg);
+>  
+> -	return 0;
+> +	return is_64bits ? 1 : 0;
+>  }
+>  
+>  static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index b20b2651caf9..f3c19f8ff8e5 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -139,7 +139,7 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+>  		as_type = DW_PCIE_AS_IO;
+>  
+>  	ret = dw_pcie_ep_inbound_atu(ep, bar, bar_phys, as_type);
+> -	if (ret)
+> +	if (ret < 0)
+>  		return ret;
+>  
+>  	dw_pcie_dbi_ro_wr_en(pci);
+> @@ -154,7 +154,7 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+>  	}
+>  	dw_pcie_dbi_ro_wr_dis(pci);
+>  
+> -	return 0;
+> +	return (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) ? 1 : 0;
+>  }
+>  
+>  static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 7c70433b11a7..09878e011284 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -379,12 +379,17 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
+>  		ret = pci_epc_set_bar(epc, epf->func_no, bar,
+>  				      epf_bar->phys_addr,
+>  				      epf_bar->size, bar_flags[bar]);
+> -		if (ret) {
+> +		if (ret < 0) {
+>  			pci_epf_free_space(epf, epf_test->reg[bar], bar);
+>  			dev_err(dev, "failed to set BAR%d\n", bar);
+>  			if (bar == test_reg_bar)
+>  				return ret;
+>  		}
+> +		/*
+> +		 * pci_epc_set_bar() returns 1 if a 64-bit BAR was set-up,
+> +		 * or 0 if a 32-bit BAR was set-up.
+> +		 */
+> +		bar += ret;
 
-[1] https://lkml.kernel.org/r/20180212105523.15984-1-mika.westerberg@linux.intel.com
+I'd prefer having a new argument bool *is_64bit in set_bar rather than having
+to work with return value of set_bar.
+
+Even otherwise, can't we set PCI_BASE_ADDRESS_MEM_TYPE_64 based on size in
+pci-epf-test itself?
+
+Thanks
+Kishon
