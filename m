@@ -1,92 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60056 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:40808 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752620AbeC0Rop (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Mar 2018 13:44:45 -0400
-Date: Tue, 27 Mar 2018 12:44:43 -0500
+        id S1753777AbeCUVhX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Mar 2018 17:37:23 -0400
+Date: Wed, 21 Mar 2018 16:37:21 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v2 04/10] PCI: kirin: struct kirin_pcie_driver can be
- static
-Message-ID: <20180327174323.GA7759@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
- <20180321144254.7406-5-lorenzo.pieralisi@arm.com>
+To: Jay Fang <f.fangjian@huawei.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Support PCIe 4.0 data rate(16.0 GT/s)
+Message-ID: <20180321213721.GG38649@bhelgaas-glaptop.roam.corp.google.com>
+References: <1520846012-8294-1-git-send-email-f.fangjian@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180321144254.7406-5-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1520846012-8294-1-git-send-email-f.fangjian@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Ingo]
-
-On Wed, Mar 21, 2018 at 02:42:48PM +0000, Lorenzo Pieralisi wrote:
-> From: Fengguang Wu <fengguang.wu@intel.com>
+On Mon, Mar 12, 2018 at 05:13:32PM +0800, Jay Fang wrote:
+> PCIe 4.0 provides an effective 16.0 GT/second/lane/direction of raw
+> bandwidth. Current PCI driver does not support this new feature.
+> For example, when you read a PCIe 4.0 EP's link data rate by sysfs, it
+> will return "Unknown speed", not the expected "16.0 GT/s".
 > 
-> This was generated from 0-day builder.
-> 
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+> Signed-off-by: Jay Fang <f.fangjian@huawei.com>
+> Reviewed-by: Dongdong Liu <liudongdong3@huawei.com>
 
-Hi Fengguang,
+Applied to pci/enumeration for v4.17, thanks!
 
-These patches to make things static are awesome :)
-
-There might be a small way to make them even better: change the title
-from "struct xxx can be static" to "Make struct xxx static" so it
-starts with a capitalized verb and tells what the patch does (not just
-what is possible).
-
-This is based on Ingo's suggestions about changelogs [1].
-
-It might be just my personal preference, but I also like to see a
-non-empty changelog, even for trivial patches like this, because the
-title and the body serve separate semantic purposes and neither should
-be empty even if they are both the same.  E.g.,
-
-  PCI: kirin: Make struct kirin_pcie_driver static
-
-  Struct kirin_pcie_driver is only referenced inside pcie-kirin.c, so
-  make it static.
-
-  Signed-off-by: ...
-
-[1] http://lkml.kernel.org/r/20120711080446.GA17713@gmail.com
-
-> [robh: add commit msg]
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> [lorenzo.pieralisi@arm.com: reworked the commit log]
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 > ---
->  drivers/pci/dwc/pcie-kirin.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/pci/pci-sysfs.c       | 6 ++++++
+>  drivers/pci/probe.c           | 2 +-
+>  drivers/pci/slot.c            | 1 +
+>  include/linux/pci.h           | 1 +
+>  include/uapi/linux/pci_regs.h | 2 ++
+>  5 files changed, 11 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
-> index dcc8cedf6e17..a6b88c7f6e3e 100644
-> --- a/drivers/pci/dwc/pcie-kirin.c
-> +++ b/drivers/pci/dwc/pcie-kirin.c
-> @@ -504,7 +504,7 @@ static const struct of_device_id kirin_pcie_match[] = {
->  	{},
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index eb6bee8..7dc5be5 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -168,6 +168,9 @@ static ssize_t max_link_speed_show(struct device *dev,
+>  		return -EINVAL;
+>  
+>  	switch (linkcap & PCI_EXP_LNKCAP_SLS) {
+> +	case PCI_EXP_LNKCAP_SLS_16_0GB:
+> +		speed = "16 GT/s";
+> +		break;
+>  	case PCI_EXP_LNKCAP_SLS_8_0GB:
+>  		speed = "8 GT/s";
+>  		break;
+> @@ -213,6 +216,9 @@ static ssize_t current_link_speed_show(struct device *dev,
+>  		return -EINVAL;
+>  
+>  	switch (linkstat & PCI_EXP_LNKSTA_CLS) {
+> +	case PCI_EXP_LNKSTA_CLS_16_0GB:
+> +		speed = "16 GT/s";
+> +		break;
+>  	case PCI_EXP_LNKSTA_CLS_8_0GB:
+>  		speed = "8 GT/s";
+>  		break;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ef53774..86bf045 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -592,7 +592,7 @@ const unsigned char pcie_link_speed[] = {
+>  	PCIE_SPEED_2_5GT,		/* 1 */
+>  	PCIE_SPEED_5_0GT,		/* 2 */
+>  	PCIE_SPEED_8_0GT,		/* 3 */
+> -	PCI_SPEED_UNKNOWN,		/* 4 */
+> +	PCIE_SPEED_16_0GT,		/* 4 */
+>  	PCI_SPEED_UNKNOWN,		/* 5 */
+>  	PCI_SPEED_UNKNOWN,		/* 6 */
+>  	PCI_SPEED_UNKNOWN,		/* 7 */
+> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+> index d10f556..191893e 100644
+> --- a/drivers/pci/slot.c
+> +++ b/drivers/pci/slot.c
+> @@ -76,6 +76,7 @@ static const char *pci_bus_speed_strings[] = {
+>  	"2.5 GT/s PCIe",	/* 0x14 */
+>  	"5.0 GT/s PCIe",	/* 0x15 */
+>  	"8.0 GT/s PCIe",	/* 0x16 */
+> +	"16.0 GT/s PCIe",	/* 0x17 */
 >  };
 >  
-> -struct platform_driver kirin_pcie_driver = {
-> +static struct platform_driver kirin_pcie_driver = {
->  	.probe			= kirin_pcie_probe,
->  	.driver			= {
->  		.name			= "kirin-pcie",
+>  static ssize_t bus_speed_read(enum pci_bus_speed speed, char *buf)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 5adabe2..44ce439 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -259,6 +259,7 @@ enum pci_bus_speed {
+>  	PCIE_SPEED_2_5GT		= 0x14,
+>  	PCIE_SPEED_5_0GT		= 0x15,
+>  	PCIE_SPEED_8_0GT		= 0x16,
+> +	PCIE_SPEED_16_0GT		= 0x17,
+>  	PCI_SPEED_UNKNOWN		= 0xff,
+>  };
+>  
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 0c79eac..c1c4109 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -520,6 +520,7 @@
+>  #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
+>  #define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
+>  #define  PCI_EXP_LNKCAP_SLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
+> +#define  PCI_EXP_LNKCAP_SLS_16_0GB 0x00000004 /* LNKCAP2 SLS Vector bit 3 */
+>  #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
+>  #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
+>  #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
+> @@ -547,6 +548,7 @@
+>  #define  PCI_EXP_LNKSTA_CLS_2_5GB 0x0001 /* Current Link Speed 2.5GT/s */
+>  #define  PCI_EXP_LNKSTA_CLS_5_0GB 0x0002 /* Current Link Speed 5.0GT/s */
+>  #define  PCI_EXP_LNKSTA_CLS_8_0GB 0x0003 /* Current Link Speed 8.0GT/s */
+> +#define  PCI_EXP_LNKSTA_CLS_16_0GB 0x0004 /* Current Link Speed 16.0GT/s */
+>  #define  PCI_EXP_LNKSTA_NLW	0x03f0	/* Negotiated Link Width */
+>  #define  PCI_EXP_LNKSTA_NLW_X1	0x0010	/* Current Link Width x1 */
+>  #define  PCI_EXP_LNKSTA_NLW_X2	0x0020	/* Current Link Width x2 */
 > -- 
-> 2.15.0
+> 2.7.4
 > 
