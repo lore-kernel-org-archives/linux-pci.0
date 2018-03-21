@@ -1,108 +1,92 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <1520335161.10722.413.camel@linux.intel.com>
-Subject: Re: [PATCH v15 8/9] HISI LPC: Add ACPI support
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: John Garry <john.garry@huawei.com>,
-        mika.westerberg@linux.intel.com, rafael@kernel.org,
-        lorenzo.pieralisi@arm.com, rjw@rjwysocki.net,
-        hanjun.guo@linaro.org, robh+dt@kernel.org, bhelgaas@google.com,
-        arnd@arndb.de, mark.rutland@arm.com, olof@lixom.net,
-        dann.frazier@canonical.com, andy.shevchenko@gmail.com,
-        robh@kernel.org
-Cc: joe@perches.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linuxarm@huawei.com, minyard@acm.org,
-        devicetree@vger.kernel.org, linux-arch@vger.kernel.org,
-        rdunlap@infradead.org, gregkh@linuxfoundation.org,
-        akpm@linux-foundation.org, frowand.list@gmail.com, agraf@suse.de
-Date: Tue, 06 Mar 2018 13:19:21 +0200
-In-Reply-To: <10d3b5b8-0662-27b1-ff72-5080dd54d78e@huawei.com>
-References: <1519663249-9850-1-git-send-email-john.garry@huawei.com>
-         <1519663249-9850-9-git-send-email-john.garry@huawei.com>
-         <1519933855.10722.364.camel@linux.intel.com>
-         <10d3b5b8-0662-27b1-ff72-5080dd54d78e@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <SRS0=IxT1=GL=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=IxT1=GL=rock-chips.com=shawn.lin@kernel.org>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/6] PCI: rockchip: Create individual folder for
+ rockchip drivers
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
+ <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
+ <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <879a4862-d0d5-21fd-6c47-029c795fe78e@rock-chips.com>
+Date: Wed, 21 Mar 2018 09:04:21 +0800
+MIME-Version: 1.0
+In-Reply-To: <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-03-02 at 10:19 +0000, John Garry wrote:
-> On 01/03/2018 19:50, Andy Shevchenko wrote:
-> > On Tue, 2018-02-27 at 00:40 +0800, John Garry wrote:
+Dear Bjorn, Lorenzo
 
-> > Ok, this needs to be thought about a bit more.
-> > 
-> > I guess I understand what's is the problem with PNP IDs in the
-> > driver.
-> > 
-> > You probe your LPC device quite late.
-> > One option is to move from classical probe to a event-driven model,
-> > i.e.
-> > via registering a notifier (see acpi_lpss.c), preparing necessary
-> > stuff
-> > at earlier stages and then register devices by their enumeration and
-> > appearance.
-> > 
-> > Though, if I would be you I would seek a opinion from Rafael and
-> > Mika
-> > (maybe others as well).
+On 2018/3/21 1:46, Bjorn Helgaas wrote:
+> On Tue, Mar 06, 2018 at 10:43:22AM +0800, Shawn Lin wrote:
+>> In preparation for introducing End-Point driver for Rockchip
+>> PCIe controller, we create a new folder to follow the convention
+>> of dwc and cadence. Then we rename the host driver from pcie-rockchip.c
+>> to pcie-rockchip-host.c, and only leave some common functions in
+>> pcie-rockchip.c in order to be reused for both of host and EP drivers.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>> ...
 > 
-> I would like to give a bit more background on this HW. This HW is now 
-> for us a legacy device. It will be used in no more chipsets. It is
-> only 
-> used in hip06 and hip07 chipsets on our D03 and D05 boards, 
-> respectively. On these boards we have the following LPC slave devices
-> only:
-> D03: UART, IPMI
-> D05: IPMI
+>> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+>> index 34b56a8..b85ad40 100644
+>> --- a/drivers/pci/Kconfig
+>> +++ b/drivers/pci/Kconfig
+>> @@ -141,4 +141,5 @@ source "drivers/pci/cadence/Kconfig"
+>>   source "drivers/pci/dwc/Kconfig"
+>>   source "drivers/pci/host/Kconfig"
+>>   source "drivers/pci/endpoint/Kconfig"
+>> +source "drivers/pci/rockchip/Kconfig"
+>>   source "drivers/pci/switch/Kconfig"
 > 
-> Supporting IPMI for D05 is required. Supporting legacy D03 and the
-> UART 
-> is a "nice-to-have". But it is definitely ok for us to not support
-> this 
-> device.
+> Why is this out of order?  This seems exactly analogous to
+> drivers/pci/cadence and dwc, so they should be next to each other.
 
-I see. But it raises another question to the whole series, why do we
-introduce a generic indirect IO for only two devices ever?
+This confused me as well! I just put "rockchip" before "switch"
+to keep the order, but I didn't know why "endpoint" wasn't ordered.
 
-Can't it be done in the (MFD) driver itself?
+> 
+>> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+>> index 9419709..8434afb 100644
+>> --- a/drivers/pci/Makefile
+>> +++ b/drivers/pci/Makefile
+>> @@ -55,6 +55,8 @@ obj-y += switch/
+>>   
+>>   obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
+>>   
+>> +obj-$(CONFIG_PCIE_ROCKCHIP)	+= rockchip/
+>> +
+>>   # Endpoint library must be initialized before its users
+>>   obj-$(CONFIG_PCIE_CADENCE)	+= cadence/
+>>   # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
+> 
+> Similarly here.
+> 
+> I admit to still being a little dubious about the idea of a bunch of
+> vendor-specific directories, each containing a completely trivial
+> Makefile, a mostly-trivial Kconfig, a header file, a shared .c file, a
+> host .c file, and an endpoint .c file.
 
-Possible another option, is to introduce a specific regmap for that and
-use it in the drivers (though it might be not so trivial with existing
-ones).
+So do I.
 
-> Our previous ACPI support solution did use a scan handler for this
-> host, 
-> but there was some sensible pushback on this - please check this if
-> not 
-> familiar: https://lkml.org/lkml/2018/2/14/532
+> 
+> One alternative would be to keep the single pcie-rockchip.c file with
+> an #ifdef CONFIG_PCIE_ROCKCHIP_HOST section and an #ifdef
+> CONFIG_PCIE_ROCKCHIP_EP section.
 
-> Overall it does not make sense to try to move this back to
-> drivers/acpi 
-> and receive more pushback from that direction,
+I admit I thought this eariler, however, I don't like it personally, as
+it confuses the new-comer to follow the convention here, if we are
+alternatives just for "style issue" or "personal taste".
 
-Ah, I think the ARM people just worried mostly about arm64 in the
-pathnames, though your case is very similar to our LPSS for only few
-SoCs.
+Certainly, I could do that beased on your suggestion, but I would like
+to know if this's the final agreement both you and Lorenzo reached. :)
 
-I would rather think if you move it directly to drivers/acpi it would be
-fine.
-
->  and only delay 
-> indefinitely upstreaming this driver (which is now running at ~27
-> months 
-> since v1) to just support a PNP-compatible device which we don't care 
-> too much about.
-
-Ouch!
-
-As I suggested before, you would better to get an input from
-maintainers.
-
-My personal opinion that the handler approach is cleaner, though it's
-still non-generic stuff. I think that this is what Mika referred to in
-his mail.
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+> 
+> Bjorn
+> 
+> 
+> 
