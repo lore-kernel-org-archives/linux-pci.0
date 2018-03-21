@@ -1,62 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 2 Mar 2018 11:42:07 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC 5/5] PCI: tegra: use seq_open_data
-Message-ID: <20180302104207.GB27178@ulmo>
-References: <20180301233724.20440-1-linux@rasmusvillemoes.dk>
- <20180301233724.20440-5-linux@rasmusvillemoes.dk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:60458 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751981AbeCUQA0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Mar 2018 12:00:26 -0400
+Date: Wed, 21 Mar 2018 10:02:39 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Marta Rybczynska <mrybczyn@kalray.eu>, axboe@fb.com, hch@lst.de,
+        sagi@grimberg.me, linux-nvme@lists.infradead.org,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, Pierre-Yves Kerbrat <pkerbrat@kalray.eu>
+Subject: Re: [RFC PATCH] nvme: avoid race-conditions when enabling devices
+Message-ID: <20180321160238.GF12909@localhost.localdomain>
+References: <744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu>
+ <20180321115037.GA26083@ming.t460p>
+ <464125757.5843583.1521634231341.JavaMail.zimbra@kalray.eu>
+ <20180321154807.GD22254@ming.t460p>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="CUfgB8w4ZwR/yMy5"
-In-Reply-To: <20180301233724.20440-5-linux@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180321154807.GD22254@ming.t460p>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Mar 21, 2018 at 11:48:09PM +0800, Ming Lei wrote:
+> On Wed, Mar 21, 2018 at 01:10:31PM +0100, Marta Rybczynska wrote:
+> > > On Wed, Mar 21, 2018 at 12:00:49PM +0100, Marta Rybczynska wrote:
+> > >> NVMe driver uses threads for the work at device reset, including enabling
+> > >> the PCIe device. When multiple NVMe devices are initialized, their reset
+> > >> works may be scheduled in parallel. Then pci_enable_device_mem can be
+> > >> called in parallel on multiple cores.
+> > >> 
+> > >> This causes a loop of enabling of all upstream bridges in
+> > >> pci_enable_bridge(). pci_enable_bridge() causes multiple operations
+> > >> including __pci_set_master and architecture-specific functions that
+> > >> call ones like and pci_enable_resources(). Both __pci_set_master()
+> > >> and pci_enable_resources() read PCI_COMMAND field in the PCIe space
+> > >> and change it. This is done as read/modify/write.
+> > >> 
+> > >> Imagine that the PCIe tree looks like:
+> > >> A - B - switch -  C - D
+> > >>                \- E - F
+> > >> 
+> > >> D and F are two NVMe disks and all devices from B are not enabled and bus
+> > >> mastering is not set. If their reset work are scheduled in parallel the two
+> > >> modifications of PCI_COMMAND may happen in parallel without locking and the
+> > >> system may end up with the part of PCIe tree not enabled.
+> > > 
+> > > Then looks serialized reset should be used, and I did see the commit
+> > > 79c48ccf2fe ("nvme-pci: serialize pci resets") fixes issue of 'failed
+> > > to mark controller state' in reset stress test.
+> > > 
+> > > But that commit only covers case of PCI reset from sysfs attribute, and
+> > > maybe other cases need to be dealt with in similar way too.
+> > > 
+> > 
+> > It seems to me that the serialized reset works for multiple resets of the
+> > same device, doesn't it? Our problem is linked to resets of different devices
+> > that share the same PCIe tree.
+> 
+> Given reset shouldn't be a frequent action, it might be fine to serialize all
+> reset from different devices.
 
---CUfgB8w4ZwR/yMy5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The driver was much simpler when we had serialized resets in line with
+probe, but that had a bigger problems with certain init systems when
+you put enough nvme devices in your server, making them unbootable.
 
-On Fri, Mar 02, 2018 at 12:37:24AM +0100, Rasmus Villemoes wrote:
-> Simplify the code slightly by having seq_open_data do the ->private
-> assignment.
->=20
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> ---
->  drivers/pci/host/pci-tegra.c | 11 +----------
->  1 file changed, 1 insertion(+), 10 deletions(-)
+Would it be okay to serialize just the pci_enable_device across all
+other tasks messing with the PCI topology?
 
-I had to go hunt for patch 1/5 to be able to tell if this is indeed
-equivalent. It is, so:
+---
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index cef5ce851a92..e0a2f6c0f1cf 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2094,8 +2094,11 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+	int result = -ENOMEM;
+	struct pci_dev *pdev = to_pci_dev(dev->dev);
 
-Reviewed-by: Thierry Reding <treding@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
+-	if (pci_enable_device_mem(pdev))
+-		return result;
++	pci_lock_rescan_remove();
++	result = pci_enable_device_mem(pdev);
++	pci_unlock_rescan_remove();
++	if (result)
++		return -ENODEV;
 
---CUfgB8w4ZwR/yMy5
-Content-Type: application/pgp-signature; name="signature.asc"
+	pci_set_master(pdev);
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqZKn8ACgkQ3SOs138+
-s6EmyRAAkzu5grx2iNvsqWgE/4+9sRZ97eRSEc4muVz5vPvuNNZ0aviU4rXZ9OCi
-1R73r8tc73U1LOTlHozRLIwvXiWMiv8vE9YzgUyoaj0Pllh44P0GK7PXiuPmktyo
-hUMpQwxEfQNtTR18svAFb0iKexFzLUhTndAvgRwmUb9stTkfEXX0HUMYb5vOD1t5
-NWbw8sO9lCUq++NUkiyKG9+mGK1M2YLAsGtbewYqqBqP0g68NPYBPHBaDzATZrvF
-z61G0Y0SzUg9F1oNmkDgUghDKlDzouhWxYBRVk37sCNg2CVkW+9+Exlcwi3lSNQI
-pDgykezDrCcC/sYJJ2wGQBiElrvtfGwJUJmI3eozKoDqvSI8o4r15EZozAuaAexL
-CBoJy9NfQBhqbFBl0HcteEqCLdqXmmA6sIleBbadQWjW+fvGsIyfyS4lGL2Cs8Sl
-qgkVe+iKhg4jRYFBTVKRbADdxxpBZ8hoty5I9ew+tcpWOWwOyjc1AZHM9n54J/IA
-Poj0tJmDgbfeC4J/AnSYpYXCm+P+2YxwprTzuOdIe2N8XMkiCj8jYKWOydWzZAEW
-eMHZ8vnyvmUWVgmHpo2KPo0nMGMc8KGqMAVOjbThUvh3ETvczyd+XhizMV/G9AvW
-W9/Ry5co8MP/2Eder/JT6ylcjwVcnVN3MtvMB8bjn2Xw3I2hHTE=
-=QeI3
------END PGP SIGNATURE-----
-
---CUfgB8w4ZwR/yMy5--
+--
