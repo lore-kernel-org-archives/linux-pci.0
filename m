@@ -1,81 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:40755 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030430AbeCSSMH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Mar 2018 14:12:07 -0400
-Received: by mail-qt0-f193.google.com with SMTP id y6so18974590qtm.7
-        for <linux-pci@vger.kernel.org>; Mon, 19 Mar 2018 11:12:07 -0700 (PDT)
-Subject: Re: [PATCH 7/9] PCI: improve host drivers compile test coverage
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>
-References: <20180307154243.3205-1-robh@kernel.org>
- <20180307154243.3205-8-robh@kernel.org>
- <368a94dc-72d3-9365-447b-07e9e811ade3@broadcom.com>
- <CAL_JsqKemmq8nucjVavhdSahx5NaGupzSt4cNkqvsCpSGMNHWw@mail.gmail.com>
- <20180319180519.GA13211@e107981-ln.cambridge.arm.com>
-From: Scott Branden <scott.branden@broadcom.com>
-Message-ID: <ee5474dc-d905-312a-b3a5-fdbc6677fcfa@broadcom.com>
-Date: Mon, 19 Mar 2018 11:11:57 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 21 Mar 2018 13:24:22 +0000
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Subject: Re: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
+Message-ID: <cabd71fd-c54c-c21a-a5b7-227e69fa4286@arm.com>
+References: <1519280641-30258-1-git-send-email-xieyisheng1@huawei.com>
+ <1519280641-30258-27-git-send-email-xieyisheng1@huawei.com>
+ <f2841aac-4c5e-4ac2-fa4d-81d6b2857503@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20180319180519.GA13211@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <f2841aac-4c5e-4ac2-fa4d-81d6b2857503@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "robh@kernel.org" <robh@kernel.org>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ Catalin Marinas <Catalin.Marinas@arm.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+Hi Yisheng,
 
+On 19/03/18 11:03, Yisheng Xie wrote:
+> Hi Jean,
+> 
+> [...]
+>> @@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+>>  	if (ret)
+>>  		return ret;
+>>  
+>> +	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
+>> +		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
+>> +		ret = iommu_fault_queue_register(&smmu->faultq_nb);
+>> +		if (ret)
+>> +			return ret;
+> 
+> I find a case here: CONFIG_IOMMU_FAULT=n, and smmu support feature STALLS or PRI,
+> the device probe will failed here, is this what we want?
 
-On 18-03-19 11:05 AM, Lorenzo Pieralisi wrote:
-> On Fri, Mar 16, 2018 at 02:53:16PM -0500, Rob Herring wrote:
->> On Wed, Mar 7, 2018 at 11:57 AM, Scott Branden
->> <scott.branden@broadcom.com> wrote:
->>> Hi Rob,
->>>
->>> Change to PCIE_IPROC_BCMA to be made.
->>>
->>>
->>> On 18-03-07 07:42 AM, Rob Herring wrote:
->>>> Add COMPILE_TEST on driver config options with it. Some ARM drivers
->>>> still have arch dependencies, so we have to keep those dependent on ARM.
->>>>
->>>> Signed-off-by: Rob Herring <robh@kernel.org>
->>>> ---
->>>>    drivers/pci/dwc/Kconfig  | 24 ++++++++++++------------
->>>>    drivers/pci/host/Kconfig | 33 +++++++++++++++------------------
->>>>    2 files changed, 27 insertions(+), 30 deletions(-)
->> [...]
->>
->>>> @@ -127,7 +126,7 @@ config PCIE_IPROC_PLATFORM
->>>>      config PCIE_IPROC_BCMA
->>>>          tristate "Broadcom iProc PCIe BCMA bus driver"
->>>> -       depends on ARM && (ARCH_BCM_IPROC || COMPILE_TEST)
->>>> +       depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
->>>>          select PCIE_IPROC
->>>>          select BCMA
->>>>          default ARCH_BCM_5301X
->>> The was intentionally depending on ARM (as it does not apply to ARM64 which
->>> ARCH_BCM__IPROC also applies to).  Please keep that in place.
->>> depends on (ARM && ARCH_BCM_IPROC) || COMPILE_TEST
->> Indeed.
->>
->> Lorenzo, can you fix up or want me to send a new version?
-> Hi Rob,
->
-> I can fix it up, I am not sure where the dependency on ARM is though,
-> isn't patch 2 supposed to remove it ? I am certainly missing something
-> here so please chime in.
->
-> Thanks,
-> Lorenzo
-You patch wanted to remove the dependency on ARM during COMPILE_TEST.
-But, during normal use, it should not remove such dependency.
-As such, the following is the correct change to make:
-
-depends on (ARM && ARCH_BCM_IPROC) || COMPILE_TEST
+Since CONFIG_ARM_SMMU_V3 selects CONFIG_IOMMU_FAULT, I don't think it
+can happen. I'm not sure what the best practices are, but I feel like it
+would be too much work to guard against config combinations that violate
+an explicit "select" in Kconfig
 
 Thanks,
-Scott
+Jean
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
