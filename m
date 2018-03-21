@@ -1,156 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:46737 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933746AbeCGPnA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 10:43:00 -0500
-Received: by mail-ot0-f193.google.com with SMTP id g97so2423197otg.13
-        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2018 07:43:00 -0800 (PST)
-From: Rob Herring <robh@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>
-Subject: [PATCH 8/9] PCI: dw: move CONFIG_PCI depends to menu
-Date: Wed,  7 Mar 2018 09:42:42 -0600
-Message-Id: <20180307154243.3205-9-robh@kernel.org>
-In-Reply-To: <20180307154243.3205-1-robh@kernel.org>
-References: <20180307154243.3205-1-robh@kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:56936 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751729AbeCUQxq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Mar 2018 12:53:46 -0400
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steve Wise <swise@opengridcomputing.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-12-logang@deltatee.com> <20180321092702.GC7098@lst.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <a75f5bce-8ab5-7d99-bb27-908d0cc7c6f6@deltatee.com>
+Date: Wed, 21 Mar 2018 10:52:25 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180321092702.GC7098@lst.de>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 11/11] nvmet: Optionally use PCI P2P memory
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no need for every config option to explicitly depend on
-CONFIG_PCI, so move it out of individual option to the menu option.
 
-Signed-off-by: Rob Herring <robh@kernel.org>
----
- drivers/pci/dwc/Kconfig | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 6f2b653146bb..2902544f5834 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -1,13 +1,13 @@
- # SPDX-License-Identifier: GPL-2.0
- 
- menu "DesignWare PCI Core Support"
-+	depends on PCI
- 
- config PCIE_DW
- 	bool
- 
- config PCIE_DW_HOST
-         bool
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
-         select PCIE_DW
- 
-@@ -22,7 +22,7 @@ config PCI_DRA7XX
- config PCI_DRA7XX_HOST
- 	bool "TI DRA7xx PCIe controller Host Mode"
- 	depends on SOC_DRA7XX || COMPILE_TEST
--	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on PCI_MSI_IRQ_DOMAIN
- 	depends on OF && HAS_IOMEM && TI_PIPE3
- 	select PCIE_DW_HOST
- 	select PCI_DRA7XX
-@@ -52,7 +52,6 @@ config PCI_DRA7XX_EP
- 
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
- 	---help---
-@@ -65,7 +64,6 @@ config PCIE_DW_PLAT
- 
- config PCI_EXYNOS
- 	bool "Samsung Exynos PCIe controller"
--	depends on PCI
- 	depends on SOC_EXYNOS5440 || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -73,7 +71,6 @@ config PCI_EXYNOS
- 
- config PCI_IMX6
- 	bool "Freescale i.MX6 PCIe controller"
--	depends on PCI
- 	depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -81,7 +78,6 @@ config PCI_IMX6
- 
- config PCIE_SPEAR13XX
- 	bool "STMicroelectronics SPEAr PCIe controller"
--	depends on PCI
- 	depends on ARCH_SPEAR13XX || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -91,7 +87,6 @@ config PCIE_SPEAR13XX
- 
- config PCI_KEYSTONE
- 	bool "TI Keystone PCIe controller"
--	depends on PCI
- 	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -104,7 +99,6 @@ config PCI_KEYSTONE
- 
- config PCI_LAYERSCAPE
- 	bool "Freescale Layerscape PCIe controller"
--	depends on PCI
- 	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select MFD_SYSCON
-@@ -115,7 +109,6 @@ config PCI_LAYERSCAPE
- config PCI_HISI
- 	depends on OF && (ARM64 || COMPILE_TEST)
- 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
-@@ -126,7 +119,6 @@ config PCI_HISI
- 
- config PCIE_QCOM
- 	bool "Qualcomm PCIe controller"
--	depends on PCI
- 	depends on OF && (ARCH_QCOM || COMPILE_TEST)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -138,7 +130,6 @@ config PCIE_QCOM
- 
- config PCIE_ARMADA_8K
- 	bool "Marvell Armada-8K PCIe controller"
--	depends on PCI
- 	depends on ARCH_MVEBU || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -155,7 +146,7 @@ config PCIE_ARTPEC6
- config PCIE_ARTPEC6_HOST
- 	bool "Axis ARTPEC-6 PCIe controller Host Mode"
- 	depends on MACH_ARTPEC6 || COMPILE_TEST
--	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	select PCIE_ARTPEC6
-@@ -177,7 +168,6 @@ config PCIE_KIRIN
- 	depends on OF && (ARM64 || COMPILE_TEST)
- 	bool "HiSilicon Kirin series SoCs PCIe controllers"
- 	depends on PCI_MSI_IRQ_DOMAIN
--	depends on PCI
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	help
-@@ -187,7 +177,6 @@ config PCIE_KIRIN
- config PCIE_HISI_STB
- 	bool "HiSilicon STB SoCs PCIe controllers"
- 	depends on ARCH_HISI || COMPILE_TEST
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
--- 
-2.14.1
+On 21/03/18 03:27 AM, Christoph Hellwig wrote:
+>> +				  const char *page, size_t count)
+>> +{
+>> +	struct nvmet_port *port = to_nvmet_port(item);
+>> +	struct device *dev;
+>> +	struct pci_dev *p2p_dev = NULL;
+>> +	bool use_p2pmem;
+>> +
+>> +	switch (page[0]) {
+>> +	case 'y':
+>> +	case 'Y':
+>> +	case 'a':
+>> +	case 'A':
+>> +		use_p2pmem = true;
+>> +		break;
+>> +	case 'n':
+>> +	case 'N':
+>> +		use_p2pmem = false;
+>> +		break;
+>> +	default:
+>> +		dev = bus_find_device_by_name(&pci_bus_type, NULL, page);
+>> +		if (!dev) {
+>> +			pr_err("No such PCI device: %s\n", page);
+>> +			return -ENODEV;
+>> +		}
+>> +
+>> +		use_p2pmem = true;
+>> +		p2p_dev = to_pci_dev(dev);
+>> +
+>> +		if (!pci_has_p2pmem(p2p_dev)) {
+>> +			pr_err("PCI device has no peer-to-peer memory: %s\n",
+>> +			       page);
+>> +			pci_dev_put(p2p_dev);
+>> +			return -ENODEV;
+>> +		}
+>> +	}
+> 
+> Yikes.  Shouldn't auto just be the normal yes case instead of this
+> string parsing mess?
+
+Sorry, I don't follow. The code, as is, should automatically select the
+device if the user  sets it to "yes" or "auto" or "y" or similar.
+(Roughly similar to how kstrtobool() works, except '0' or '1' are not
+accepted seeing they could overlap with PCI device names). In other
+cases, it looks for the specific PCI device name to use exactly.
+
+Are you saying it shouldn't work this way or are you saying the code to
+implement it is too messy?
+
+>> +	if (rsp->req.sg != &rsp->cmd->inline_sg) {
+>> +		if (rsp->req.p2p_dev)
+>> +			pci_p2pmem_free_sgl(rsp->req.p2p_dev, rsp->req.sg,
+>> +					    rsp->req.sg_cnt);
+>> +		else
+>> +			sgl_free(rsp->req.sg);
+>> +	}
+> 
+> Can we factor this into a helper, as the other target drivers (fc for now,
+> tcp soon) using sgl allocatins should share the code?
+> 
+> (same for the alloc side)
+
+Sure. Would the helpers belong in core.c?
+
+Thanks,
+
+Logan
