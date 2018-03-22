@@ -1,63 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Roy Zang <roy.zang@nxp.com>
-To: "M.h. Lian" <minghuan.lian@nxp.com>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] MAINTAINERS: Update Layerscape PCIe driver maintainers
- list
-Date: Thu, 29 Mar 2018 15:30:35 +0000
-Message-ID: <AM5PR04MB29455605D17006084987EACF8BA20@AM5PR04MB2945.eurprd04.prod.outlook.com>
-References: <1522288381-470803-1-git-send-email-Minghuan.Lian@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:56023 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751817AbeCVRjG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Mar 2018 13:39:06 -0400
+Date: Thu, 22 Mar 2018 18:39:03 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
+Message-ID: <20180322173903.GA15503@wunner.de>
+References: <20180314114125.71132-1-mika.westerberg@linux.intel.com>
+ <CAJZ5v0gOrQhXzLHDnABEYHxGbHVY89Nij9uQzqx-oyYmFwzuSg@mail.gmail.com>
+ <20180314120547.GB2703@lahna.fi.intel.com>
+ <20180314123332.GC19651@wunner.de>
+ <20180320104508.GF2703@lahna.fi.intel.com>
+ <20180320113556.GA24197@wunner.de>
+ <20180322104517.GA20389@wunner.de>
+ <20180322165317.GI2703@lahna.fi.intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mingkai Hu <mingkai.hu@nxp.com>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180322165317.GI2703@lahna.fi.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/28/2018 08:51 PM, Minghuan Lian wrote:
-> Change Layerscape PCIe driver maintainers' email address
-> from freescale to nxp.
->
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
-> ---
->  MAINTAINERS | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 3bdc260..a0a9524 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -10558,9 +10558,9 @@ F:	Documentation/devicetree/bindings/pci/cdns,*.txt
->  F:	drivers/pci/cadence/pcie-cadence*
->  
->  PCI DRIVER FOR FREESCALE LAYERSCAPE
-> -M:	Minghuan Lian <minghuan.Lian@freescale.com>
-> -M:	Mingkai Hu <mingkai.hu@freescale.com>
-> -M:	Roy Zang <tie-fei.zang@freescale.com>
-> +M:	Minghuan Lian <minghuan.Lian@nxp.com>
-> +M:	Mingkai Hu <mingkai.hu@nxp.com>
-> +M:	Roy Zang <roy.zang@nxp.com>
->  L:	linuxppc-dev@lists.ozlabs.org
->  L:	linux-pci@vger.kernel.org
->  L:	linux-arm-kernel@lists.infradead.org
+On Thu, Mar 22, 2018 at 06:53:17PM +0200, Mika Westerberg wrote:
+> On Thu, Mar 22, 2018 at 11:45:17AM +0100, Lukas Wunner wrote:
+> > Now I've thought of one.
+> > 
+> > The port may have more children besides the port service devices,
+> > namely all the PCI devices below the port.  The PM core doesn't
+> > impose a specific ordering on suspend/resume but will try to
+> > parallelize among all the children.
+> > 
+> > Usually that's not what you want.  On resume, you want to resume
+> > the port itself (including its port services) *before* resuming
+> > the PCI child devices.  And the other way round on suspend.
+> 
+> That's a good point.
+> 
+> So I guess there is no way avoiding adding suspend_late/resume_early
+> callbacks to the pcie port service structure. I'll do that in the next
+> revision.
 
- Acked-by: Roy Zang <roy.zang@nxp.com>
+Well, there *are* ways to avoid it but they might not be better.
 
-Thanks.
+Iterating over the port services' callbacks is equivalent to ordering
+the port service devices after the port's PCI device but before its
+PCI child devices in devices_kset.
 
-Roy
+That can also be achieved by adding a device link from every PCI child
+device (consumer) to every port service device (provider).  The result
+however is a combinatorial explosion.  Say you've got 64 down stream
+bridges in a PCIe switch and the upstream bridge has 3 port services,
+that's 3 x 64 = 192 device links.  That's probably clumsier than
+iterating over the port services.
 
+Thanks,
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Lukas
