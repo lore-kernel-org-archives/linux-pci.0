@@ -1,62 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1522084449.21176.16.camel@linux.intel.com>
-Subject: Re: [PATCH v4 0/2] x86, dmi: Uninline dmi_get_bios_year()
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
-Date: Mon, 26 Mar 2018 20:14:09 +0300
-In-Reply-To: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
-References: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752199AbeCVN6J (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Mar 2018 09:58:09 -0400
+Subject: Re: PCIe resets/restore and lack of CRS wait
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Michael Neuling <michael.neuling@au1.ibm.com>,
+        linux-pci-owner@vger.kernel.org
+References: <1521691380.16434.287.camel@kernel.crashing.org>
+ <f6af9b6e424c469f433735a106b8ee69@codeaurora.org>
+ <1521695531.16434.294.camel@kernel.crashing.org>
+ <1521699853.16434.301.camel@kernel.crashing.org>
+ <4d1c04efa51db50dd5095ae258c3c52b@codeaurora.org>
+ <1521726371.16434.307.camel@kernel.crashing.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <172f0ea9-7eba-1505-bb79-1ee31cc4d692@codeaurora.org>
+Date: Thu, 22 Mar 2018 08:58:06 -0500
+MIME-Version: 1.0
+In-Reply-To: <1521726371.16434.307.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-03-20 at 20:07 +0200, Andy Shevchenko wrote:
-> Introduce a new helper to extract a year from DMI BIOS date since
-> there
-> are most existing users do and newcomers would utilize as well.
+On 3/22/2018 8:46 AM, Benjamin Herrenschmidt wrote:
+> On Thu, 2018-03-22 at 07:25 -0400, okaya@codeaurora.org wrote:
+>>>>>
+>>>
+>>> That tells me that there is no guarantee by spec that we'll get
+>>> ffff's, instead we might get HW stalls, or other really nasty
+>>> effects when probing a register other than 0 (VID/DID) for CRS.
+>>
+>> AFAIK, spec also mentions that sw needs to observe 0xffffffff for all 
+>> other registers other than vendor id during CRS period.
 > 
-> This is a fix up series on top what had been applied already.
+> This isnt what's in the 3.1a spec at least ... section 2.3.2 explains
+> the specified behaviour which is, for any register other than 0
+> (VID/DID), to re-issue the request...
 > 
 
-Ingo, this is a fix up series like should be as you and Rafael pointed
-out.
+I don't have any hard preference on this. Bjorn wanted code to work for
+systems with and without CRS capability. That was the reason we stayed
+away from 0xffff0001.
 
-Can we get it into next release, so, we will have no regression in
-between?
+CRS just gives you HW implementation defined retries for non vendor-id
+register like you mentioned. If device does not reply in this period
+of polling time, you should get all 1s eventually back.
 
-> Since v3:
-> - address more comments from Jean
-> - add tags
-> - reverse the order of the patches in the series
-> - due to above add a Fixes tag to both of them
+All 1s is the spec way of saying device doesn't exist for config
+transactions.
+
+Some HW can poll indefinitely or other HW can return immediately.
+
+If CRS visibility is supported & enabled, polling indefinitely and
+hogging the CPU wouldn't be the best HW implementation.
+
+> Now, it can have a timeout, and thus might be completed as a failed
+> transaction after a while, but it's a sub-optimal way (ie, we'll end up
+> hogging the CPU on loads) and it's not 100% clear that a failed
+> transaction returns as all 1's (it should but ...).
 > 
-> Since v2:
-> - resend as fix up series
-> - address comments from Bjorn, Jean, Lukas, Rafael
+> I can make sure it happens the way the code expects on powerpc, I'm not
+> too worried about that, but I think for such a generic function, it
+> would make sense to stick a bit closer to the spec. 
+> Cheers,
+> Ben.
 > 
-> Since v1:
-> - move the helper to be regular function (Bjorn, Rafael)
-> - fix a potential regression introduced in pci_acpi_crs_quirks()
-> (Jean)
-> - adjust subject lines and commit message bodies (Bjorn)
-> - add tags (Bjorn, Jean)
 > 
-> Andy Shevchenko (2):
->   firmware: dmi_scan: Uninline dmi_get_bios_year() helper
->   x86/PCI: Fix a potential regression when use dmi_get_bios_year()
-> 
->  arch/x86/pci/acpi.c         |  4 +++-
->  drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
->  include/linux/dmi.h         | 11 ++---------
->  3 files changed, 25 insertions(+), 10 deletions(-)
-> 
+
 
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
