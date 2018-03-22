@@ -1,103 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:42171 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932890AbeCCAUc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 19:20:32 -0500
+Return-Path: <SRS0=hGeN=GM=huawei.com=john.garry@kernel.org>
+Return-Path: <SRS0=hGeN=GM=huawei.com=john.garry@kernel.org>
+Subject: Re: [PATCH v17 00/10] LPC: legacy ISA I/O support
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
+ <20180321233940.GI38649@bhelgaas-glaptop.roam.corp.google.com>
+ <334da3b2-5233-5ad3-728e-7ae95231bf01@huawei.com>
+ <20180322133544.GA236400@bhelgaas-glaptop.roam.corp.google.com>
+CC: "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+	"rafael@kernel.org" <rafael@kernel.org>, "lorenzo.pieralisi@arm.com"
+	<lorenzo.pieralisi@arm.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>, "robh+dt@kernel.org"
+	<robh+dt@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>, "mark.rutland@arm.com"
+	<mark.rutland@arm.com>, "olof@lixom.net" <olof@lixom.net>,
+	"dann.frazier@canonical.com" <dann.frazier@canonical.com>,
+	"andy.shevchenko@gmail.com" <andy.shevchenko@gmail.com>, "robh@kernel.org"
+	<robh@kernel.org>, "andriy.shevchenko@linux.intel.com"
+	<andriy.shevchenko@linux.intel.com>, "joe@perches.com" <joe@perches.com>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, Linuxarm
+	<linuxarm@huawei.com>, "minyard@acm.org" <minyard@acm.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+	"rdunlap@infradead.org" <rdunlap@infradead.org>, "gregkh@linuxfoundation.org"
+	<gregkh@linuxfoundation.org>, "akpm@linux-foundation.org"
+	<akpm@linux-foundation.org>, "frowand.list@gmail.com"
+	<frowand.list@gmail.com>, "agraf@suse.de" <agraf@suse.de>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <8cc028fa-e4b5-514f-b2f6-a6bbd2ea57a6@huawei.com>
+Date: Thu, 22 Mar 2018 14:18:10 +0000
 MIME-Version: 1.0
-In-Reply-To: <20180302165919.423cd45b@t450s.home>
-References: <20180302234218.3337.16486.stgit@localhost.localdomain>
- <20180302234412.3337.71321.stgit@localhost.localdomain> <20180302165919.423cd45b@t450s.home>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Fri, 2 Mar 2018 16:20:30 -0800
-Message-ID: <CAKgT0UcXf+w6P2=EbbZKzOxfK5vAf2tgtnTeLh9mRaysKJStwQ@mail.gmail.com>
-Subject: Re: [PATCH 1/3] pci-iov: Add support for unmanaged SR-IOV
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Maximilian Heyne <mheyne@amazon.de>,
-        "Wang, Liang-min" <liang-min.wang@intel.com>,
-        "Rustad, Mark D" <mark.d.rustad@intel.com>,
-        David Woodhouse <dwmw2@infradead.org>, dwmw@amazon.co.uk
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180322133544.GA236400@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 2, 2018 at 3:59 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Fri, 02 Mar 2018 15:44:25 -0800
-> Alexander Duyck <alexander.duyck@gmail.com> wrote:
+>>>
+>>> I applied this whole series to pci/lpc for v4.17.
+>>>
+>>> I made the following whitespace and other trivial corrections.
+>>> Hopefully I didn't break anything.
+>>>
+>>
+>> Hi Bjorn,
+>>
+>> Super thanks for doing this. In general the changes look ok. However a build
+>> issue has appeared, below.
 >
->> From: Alexander Duyck <alexander.h.duyck@intel.com>
->>
->> This patch is meant to add some basic functionality to support for SR-IOV
->> on devices when the VFs are not managed by the kernel. The functions
->> provided here can be used by drivers such as vfio-pci and virtio to enable
->> SR-IOV on devices that are either managed by userspace, or by some sort of
->> firmware entity respectively.
->>
->> A new sysfs value called sriov_unmanaged_autoprobe has been added. This
->> value is used as the drivers_autoprobe setting of the VFs when they are
->> being managed by an external entity such as userspace or device firmware
->> instead of being managed by the kernel.
->>
->> One side effect of this change is that the sriov_drivers_autoprobe and
->> sriov_unmanaged_autoprobe will only apply their updates when SR-IOV is
->> disabled. Attempts to update them when SR-IOV is in use will only update
->> the local value and will not update sriov->autoprobe.
->>
->> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
->> ---
->>  Documentation/ABI/testing/sysfs-bus-pci |   17 ++++++++++++++
->>  drivers/pci/iov.c                       |   37 +++++++++++++++++++++++++++++++
->>  drivers/pci/pci-driver.c                |    2 +-
->>  drivers/pci/pci-sysfs.c                 |   29 ++++++++++++++++++++++++
->>  drivers/pci/pci.h                       |    4 +++
->>  include/linux/pci.h                     |    1 +
->>  6 files changed, 88 insertions(+), 2 deletions(-)
->>
->> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
->> index 44d4b2be92fd..ff0b6c19cb1a 100644
->> --- a/Documentation/ABI/testing/sysfs-bus-pci
->> +++ b/Documentation/ABI/testing/sysfs-bus-pci
->> @@ -323,3 +323,20 @@ Description:
->>
->>               This is similar to /sys/bus/pci/drivers_autoprobe, but
->>               affects only the VFs associated with a specific PF.
->> +
->> +What:                /sys/bus/pci/devices/.../sriov_unmanaged_autoprobe
->> +Date:                March 2018
->> +Contact:     Alexander Duyck <alexander.h.duyck@intel.com>
->> +Description:
->> +             This file is associated with the PF of a device that
->> +             supports SR-IOV.  It determines whether newly-enabled VFs
->> +             are immediately bound to a driver when the PF driver does
->> +             not manage the VFs itself.  It initially contains 0, which
->> +             means the kernel will not automatically bind VFs to a driver.
->> +             If an application writes 1 to the file before enabling VFs,
->> +             the kernel will bind VFs to a compatible driver immediately
->> +             after they are enabled.
->> +
->> +             This overrides /sys/bus/pci/devices/.../sriov_drivers_autoprobe
->> +             when a PF driver is not present to manage a device, or the PF
->> +             driver does not provide functionality to support SR-IOV.
+> It didn't just "appear"; I added it myself!  I fixed it and repushed the
+> branch.
 >
->
-> Given a pf, how does a user determine whether it is managed or unmanaged
-> and therefore which autoprobe attributes are in effect?  Thanks,
->
-> Alex
 
-Basically it comes down to what driver is loaded on it. For now
-vfio-pci and virtio would be the only two using the "unmanaged"
-version of things.
+Hi Bjorn,
 
-Really you don't know which autoprobe is in effect until SR-IOV is
-enabled by whatever driver. As such you should really be setting both
-the drivers_autoprobe and the unmanaged_autoprobe based on the
-expected use case.
+I repulled and tested, and it looks ok.
 
-- Alex
+Thanks,
+John
+
+> .
+>
