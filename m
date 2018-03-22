@@ -1,82 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:58208 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750988AbeCLMG1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 08:06:27 -0400
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V3 3/5] PCI: Print PCI device link status in kernel log
-Date: Mon, 12 Mar 2018 14:06:08 +0200
-Message-Id: <1520856370-15404-4-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
-References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=N6jm=GM=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=N6jm=GM=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 22 Mar 2018 11:30:00 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v3 1/6] PCI: rockchip: Create individual folder for
+ rockchip drivers
+Message-ID: <20180322113000.GA24976@e107981-ln.cambridge.arm.com>
+References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
+ <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
+ <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
+ <879a4862-d0d5-21fd-6c47-029c795fe78e@rock-chips.com>
+ <20180321181940.GA9760@e107981-ln.cambridge.arm.com>
+ <7275bd77-016a-2729-482d-2855703d9b56@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7275bd77-016a-2729-482d-2855703d9b56@rock-chips.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pcie_print_link_status() function for querying and verifying
-a PCI device link status. The PCI speed and width are reported
-in kernel log.
-This provides a unified method for all PCI devices to
-report status and issues, instead of each device reporting in a
-different way, using different code.
+On Thu, Mar 22, 2018 at 09:03:58AM +0800, Shawn Lin wrote:
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
----
- drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 26 insertions(+)
+[...]
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 48b9fd6..ac876c4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5229,6 +5229,31 @@ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
- EXPORT_SYMBOL(pcie_get_width_cap);
- 
- /**
-+ * pcie_print_link_status - Reports the PCI device's link speed and width.
-+ * @dev: PCI device to query
-+ *
-+ * This function checks whether the PCI device current speed and width are equal
-+ * to the maximum PCI device capabilities.
-+ */
-+void pcie_print_link_status(struct pci_dev *dev)
-+{
-+	enum pcie_link_width width, width_cap;
-+	enum pci_bus_speed speed, speed_cap;
-+
-+	pcie_get_speed_cap(dev, &speed_cap);
-+	pcie_get_width_cap(dev, &width_cap);
-+	pcie_get_minimum_link(dev, &speed, &width);
-+
-+	if (speed == speed_cap && width == width_cap)
-+		pci_info(dev, "%s x%d link\n", PCIE_SPEED2STR(speed), width);
-+	else
-+		pci_info(dev, "%s x%d link (capable of %s x%d)\n",
-+			 PCIE_SPEED2STR(speed), width,
-+			 PCIE_SPEED2STR(speed_cap), width_cap);
-+}
-+EXPORT_SYMBOL(pcie_print_link_status);
-+
-+/**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-  * @flags: resource type mask to be selected
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8242d3d..4a20870 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1085,6 +1085,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
- int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
- int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
-+void pcie_print_link_status(struct pci_dev *dev);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
--- 
-1.8.3.1
+> How about renaming drivers/pci/host to drivers/pci/controller,
+> and then put all pcie-rockchip* files in there, then we don't
+> need add seperate directory containning trivial Kconfig, Makefile.
+
+Yes we can do that but not at -rc6 tail end.
+
+> >>Certainly, I could do that beased on your suggestion, but I would like
+> >>to know if this's the final agreement both you and Lorenzo reached. :)
+> >
+> >Or we can add all EP drivers into drivers/pci/endpoint but then the problem
+> >is how to share code between host and endpoint directories and it starts
+> >feeling like we are going round in circles.
+> 
+> I would prefer to rename it to endpoint-framwrok or whatever to clearly
+> states it is for framework but not the drivers. All the drivers
+> whichever for host or endpoint should be in controller directory.
+> 
+> >
+> >I can merge this series as-is as long as we will rework the directory
+> >structure according to this discussion (given that's already late -rc6
+> >so directory moves/renames can be disrupting - if feasible at all).
+> 
+> This sounds super great to me to make this series into -next for some
+> days before hitting into v4.17. Then we could simultaneously head up to
+> see how we could move forward with this.
+
+Send a last version asap and I will try to merge it for this cycle,
+keeping in mind that what we discussed above must be implemented as
+soon as a new cycle starts.
+
+Thanks,
+Lorenzo
