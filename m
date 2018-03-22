@@ -1,286 +1,159 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:56693 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932566AbeCMKpk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 06:45:40 -0400
-From: Nicolas Cavallari <Nicolas.Cavallari@green-communications.fr>
-Subject: PCI enumeration broken on Ventana gw5200
-To: linux-pci@vger.kernel.org
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Message-ID: <b440214a-0768-38a4-9410-9eedc7a79dca@green-communications.fr>
-Date: Tue, 13 Mar 2018 11:45:33 +0100
+Return-Path: <SRS0=hGeN=GM=huawei.com=john.garry@kernel.org>
+Return-Path: <SRS0=hGeN=GM=huawei.com=john.garry@kernel.org>
+Subject: Re: [PATCH v17 00/10] LPC: legacy ISA I/O support
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
+ <20180321233940.GI38649@bhelgaas-glaptop.roam.corp.google.com>
+CC: "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+	"rafael@kernel.org" <rafael@kernel.org>, "lorenzo.pieralisi@arm.com"
+	<lorenzo.pieralisi@arm.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>, "robh+dt@kernel.org"
+	<robh+dt@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>, "mark.rutland@arm.com"
+	<mark.rutland@arm.com>, "olof@lixom.net" <olof@lixom.net>,
+	"dann.frazier@canonical.com" <dann.frazier@canonical.com>,
+	"andy.shevchenko@gmail.com" <andy.shevchenko@gmail.com>, "robh@kernel.org"
+	<robh@kernel.org>, "andriy.shevchenko@linux.intel.com"
+	<andriy.shevchenko@linux.intel.com>, "joe@perches.com" <joe@perches.com>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, Linuxarm
+	<linuxarm@huawei.com>, "minyard@acm.org" <minyard@acm.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+	"rdunlap@infradead.org" <rdunlap@infradead.org>, "gregkh@linuxfoundation.org"
+	<gregkh@linuxfoundation.org>, "akpm@linux-foundation.org"
+	<akpm@linux-foundation.org>, "frowand.list@gmail.com"
+	<frowand.list@gmail.com>, "agraf@suse.de" <agraf@suse.de>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <334da3b2-5233-5ad3-728e-7ae95231bf01@huawei.com>
+Date: Thu, 22 Mar 2018 10:38:37 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180321233940.GI38649@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-When testing v4.16-rc2 on a Ventana gw5200, the mini-PCIe cards were
-not recognised.  Only the bridge was recognised.
+On 21/03/2018 23:39, Bjorn Helgaas wrote:
+> On Thu, Mar 15, 2018 at 02:15:49AM +0800, John Garry wrote:
+>> This patchset supports the IPMI-bt device attached to the Low-Pin-Count
+>> interface implemented on Hisilicon Hip06/Hip07 SoC.
+>>                         -----------
+>>                         | LPC host|
+>>                         |         |
+>>                         -----------
+>>                              |
+>>                 _____________V_______________LPC
+>>                   |                       |
+>>                   V                       V
+>>                                      ------------
+>>                                      |  BT(ipmi)|
+>>                                      ------------
+>> ...
+>
+>> Gabriele Paoloni (2):
+>>   PCI: Remove unused __weak attribute in pci_register_io_range()
+>>   PCI: Add fwnode handler as input param of pci_register_io_range()
+>>
+>> John Garry (4):
+>>   ACPI / scan: rename acpi_is_serial_bus_slave() to widen use
+>>   ACPI / scan: do not enumerate Indirect IO host children
+>>   HISI LPC: Add ACPI support
+>>   MAINTAINERS: Add maintainer for HiSilicon LPC driver
+>>
+>> Zhichang Yuan (4):
+>>   LIB: Introduce a generic PIO mapping method
+>>   PCI: Apply the new generic I/O management on PCI IO hosts
+>>   OF: Add missing I/O range exception for indirect-IO devices
+>>   HISI LPC: Support the LPC host on Hip06/Hip07 with DT bindings
+>>
+>>  .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
+>>  MAINTAINERS                                        |   7 +
+>>  drivers/acpi/pci_root.c                            |   8 +-
+>>  drivers/acpi/scan.c                                |  33 +-
+>>  drivers/bus/Kconfig                                |   8 +
+>>  drivers/bus/Makefile                               |   2 +
+>>  drivers/bus/hisi_lpc.c                             | 623 +++++++++++++++++++++
+>>  drivers/of/address.c                               |  96 +++-
+>>  drivers/pci/pci.c                                  |  95 +---
+>>  include/acpi/acpi_bus.h                            |   2 +-
+>>  include/asm-generic/io.h                           |   4 +-
+>>  include/linux/logic_pio.h                          | 124 ++++
+>>  include/linux/pci.h                                |   3 +-
+>>  lib/Kconfig                                        |  15 +
+>>  lib/Makefile                                       |   2 +
+>>  lib/logic_pio.c                                    | 282 ++++++++++
+>>  16 files changed, 1229 insertions(+), 108 deletions(-)
+>>  create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
+>>  create mode 100644 drivers/bus/hisi_lpc.c
+>>  create mode 100644 include/linux/logic_pio.h
+>>  create mode 100644 lib/logic_pio.c
+>
+> I applied this whole series to pci/lpc for v4.17.
+>
+> I made the following whitespace and other trivial corrections.
+> Hopefully I didn't break anything.
+>
 
-With v4.12.10, mini-PCIe cards were recognized and worked:
+Hi Bjorn,
 
+Super thanks for doing this. In general the changes look ok. However a 
+build issue has appeared, below.
 
-pci_bus 0000:00: root bus resource [bus 00-ff]
-pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
-pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
-pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
-pci 0000:00:00.0: supports D1
-pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
-PCI: bus0: Fast back to back transfers disabled
-pci 0000:01:00.0: [10b5:8604] type 01 class 0x060400
-pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x0001ffff]
-pci 0000:01:00.0: PME# supported from D0 D3hot D3cold
-PCI: bus1: Fast back to back transfers disabled
-pci 0000:01:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci_bus 0000:02: busn_res: can not insert [bus 02-ff] under [bus 01] (conflicts
- with (null) [bus 01])
-pci 0000:02:01.0: [10b5:8604] type 01 class 0x060400
-pci 0000:02:01.0: PME# supported from D0 D3hot D3cold
-pci 0000:02:04.0: [10b5:8604] type 01 class 0x060400
-pci 0000:02:04.0: PME# supported from D0 D3hot D3cold
-pci 0000:02:05.0: [10b5:8604] type 01 class 0x060400
-pci 0000:02:05.0: PME# supported from D0 D3hot D3cold
-PCI: bus2: Fast back to back transfers disabled
-pci 0000:02:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:02:04.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:02:05.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:03:00.0: [168c:0030] type 00 class 0x028000
-pci 0000:03:00.0: reg 0x10: [mem 0x00000000-0x0001ffff 64bit]
-pci 0000:03:00.0: reg 0x30: [mem 0x00000000-0x0000ffff pref]
-pci 0000:03:00.0: supports D1
-pci 0000:03:00.0: PME# supported from D0 D1 D3hot
-PCI: bus3: Fast back to back transfers disabled
-pci_bus 0000:03: busn_res: [bus 03-ff] end is updated to 03
-pci_bus 0000:03: [bus 03] partially hidden behind bridge 0000:01 [bus 01]
-PCI: bus4: Fast back to back transfers enabled
-pci_bus 0000:04: busn_res: [bus 04-ff] end is updated to 04
-pci_bus 0000:04: [bus 04] partially hidden behind bridge 0000:01 [bus 01]
-PCI: bus5: Fast back to back transfers enabled
-pci_bus 0000:05: busn_res: [bus 05-ff] end is updated to 05
-pci_bus 0000:05: [bus 05] partially hidden behind bridge 0000:01 [bus 01]
-pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to 05
-pci_bus 0000:02: busn_res: can not insert [bus 02-05] under [bus 01] (conflicts
- with (null) [bus 01])
-pci_bus 0000:02: [bus 02-05] partially hidden behind bridge 0000:01 [bus 01]
-pci 0000:00:00.0: bridge has subordinate 01 but max busn 05
-pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
-pci 0000:00:00.0: BAR 8: assigned [mem 0x01100000-0x012fffff]
-pci 0000:00:00.0: BAR 6: assigned [mem 0x01300000-0x0130ffff pref]
-pci 0000:01:00.0: BAR 8: assigned [mem 0x01100000-0x011fffff]
-pci 0000:01:00.0: BAR 0: assigned [mem 0x01200000-0x0121ffff]
-pci 0000:02:01.0: BAR 8: assigned [mem 0x01100000-0x011fffff]
-pci 0000:03:00.0: BAR 0: assigned [mem 0x01100000-0x0111ffff 64bit]
- 0000:03:00.0: BAR 6: assigned [mem 0x01120000-0x0112ffff pref]
-pci 0000:02:01.0: PCI bridge to [bus 03]
-pci 0000:02:01.0:   bridge window [mem 0x01100000-0x011fffff]
-pci 0000:02:04.0: PCI bridge to [bus 04]
-pci 0000:02:05.0: PCI bridge to [bus 05]
-pci 0000:01:00.0: PCI bridge to [bus 02-05]
-pci 0000:01:00.0:   bridge window [mem 0x01100000-0x011fffff]
-pci 0000:00:00.0: PCI bridge to [bus 01]
-pci 0000:00:00.0:   bridge window [mem 0x01100000-0x012fffff]
-pcieport 0000:00:00.0: Signaling PME with IRQ 298
-pcieport 0000:01:00.0: enabling device (0140 -> 0142)
-pcieport 0000:02:01.0: enabling device (0140 -> 0142)
+I retested your pci/lpc branch (with the build fix), and it seems fine.
 
+BTW, I am also testing with a "Serial controller: MosChip Semiconductor 
+Technology Ltd. PCIe 9912 Multi-I/O Controller" in loopback mode to 
+ensure PCI host IO space is not broken and this is ok.
 
-This message:
-pci 0000:00:00.0: bridge has subordinate 01 but max busn 05
-Seems to indicate that Linux reconfigured the bridges incorrectly, Yet
-the PCIe devices worked fine anyway.
+Thanks again, and to everyone who has helped with this patchset!
 
-With v4.16-rc2, 0000:01's bridge is left configured to [bus 2] only
-(because first pass thinks that the configuration is valid), thus no
-child busses are enumerated :
+John
 
+>
+> --- changelogs.orig	2018-03-21 18:37:47.209217927 -0500
+> +++ changelogs	2018-03-21 18:37:35.993074570 -0500
+> @@ -1,29 +1,31 @@
+> -commit cc88cacce96a
+> +commit eb3a2ff7e72e
+>  Author: John Garry <john.garry@huawei.com>
+>  Date:   Thu Mar 15 02:15:59 2018 +0800
+>
 
-pci_bus 0000:00: root bus resource [bus 00-ff]
-pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-pci_bus 0000:00: scanning bus
-pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
-pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
-pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
-pci 0000:00:00.0: calling pci_fixup_ide_bases+0x0/0x54
-pci 0000:00:00.0: supports D1
-pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
-pci 0000:00:00.0: PME# disabled
-pci_bus 0000:00: fixups for bus
-PCI: bus0: Fast back to back transfers disabled
-pci 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
-pci_bus 0000:01: scanning bus
-pci 0000:01:00.0: [10b5:8604] type 01 class 0x060400
-pci 0000:01:00.0: calling ventana_pciesw_early_fixup+0x0/0xb0
-pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x0001ffff]
-pci 0000:01:00.0: calling pci_fixup_ide_bases+0x0/0x54
-pci 0000:01:00.0: PME# supported from D0 D3hot D3cold
-pci 0000:01:00.0: PME# disabled
-pci_bus 0000:01: fixups for bus
-PCI: bus1: Fast back to back transfers disabled
-pci 0000:01:00.0: scanning [bus 00-00] behind bridge, pass 0
-pci 0000:01:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:01:00.0: scanning [bus 00-00] behind bridge, pass 1
-pci_bus 0000:02: busn_res: can not insert [bus 02-01] under [bus 01] (conflicts
- with (null) [bus 01])
-pci_bus 0000:02: scanning bus
-pci_bus 0000:02: fixups for bus
-PCI: bus2: Fast back to back transfers enabled
-pci_bus 0000:02: bus scan returning with max=02
-pci_bus 0000:02: busn_res: [bus 02-01] end is updated to 02
-pci_bus 0000:02: busn_res: can not insert [bus 02] under [bus 01] (conflicts
- with (null) [bus 01])
-pci_bus 0000:02: [bus 02] partially hidden behind bridge 0000:01 [bus 01]
-pci_bus 0000:01: bus scan returning with max=02
-pci 0000:00:00.0: bridge has subordinate 01 but max busn 02
-pci 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 1
-pci_bus 0000:00: bus scan returning with max=01
-pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
-pci 0000:00:00.0: BAR 8: assigned [mem 0x01100000-0x011fffff]
-pci 0000:00:00.0: BAR 6: assigned [mem 0x01200000-0x0120ffff pref]
-pci 0000:01:00.0: BAR 0: assigned [mem 0x01100000-0x0111ffff]
-pci 0000:01:00.0: PCI bridge to [bus 02]
-pci 0000:00:00.0: PCI bridge to [bus 01]
-pci 0000:00:00.0:   bridge window [mem 0x01100000-0x011fffff]
-pcieport 0000:00:00.0: assign IRQ: got 330
-pcieport 0000:00:00.0: Signaling PME with IRQ 298
-pcieport 0000:00:00.0: AER enabled with IRQ 298
-pcieport 0000:01:00.0: assign IRQ: got 330
-pcieport 0000:01:00.0: enabling device (0140 -> 0142)
-pcieport 0000:01:00.0: enabling bus mastering
+[ ... ]
 
+>
+> @@ -134,21 +132,20 @@ static struct logic_pio_hwaddr *find_io_range(unsigned long pio)
+>   * logic_pio_to_hwaddr - translate logical PIO to HW address
+>   * @pio: logical PIO value
+>   *
+> - * Returns HW address if valid, ~0 otherwise
+> + * Returns HW address if valid, ~0 otherwise.
+>   *
+> - * Translate the input logical pio to the corresponding hardware address.
+> - * The input pio should be unique in the whole logical PIO space.
+> + * Translate the input logical PIO to the corresponding hardware address.
+> + * The input PIO should be unique in the whole logical PIO space.
+>   */
+>  resource_size_t logic_pio_to_hwaddr(unsigned long pio)
+>  {
+>  	struct logic_pio_hwaddr *range;
+> -	resource_size_t hwaddr = (resource_size_t)~0;
+>
+>  	range = find_io_range(pio);
+>  	if (range)
+> -		hwaddr = range->hw_start + pio - range->io_start;
+> +		return = range->hw_start + pio - range->io_start;
 
-One change apparently made the problem worse:
-a20c7f36 ("PCI: Do not allocate more buses than available in parent")
-assumes that the parent's bus end is valid when setting the limit for their
-childrens.  If I revert that and further hack probe.c's
-pci_scan_bridge_extend() by initializing 'broken' to 1 instead of 0, then
-things appear to be configured correctly:
+Please remove '='
 
-
-PCI: OF: host bridge /soc/pcie@1ffc000 ranges:
-PCI: OF: Parsing ranges property...
-PCI: OF:    IO 0x01f80000..0x01f8ffff -> 0x00000000
-PCI: OF:   MEM 0x01000000..0x01efffff -> 0x01000000
-imx6q-pcie 1ffc000.pcie: link up
-imx6q-pcie 1ffc000.pcie: link up
-imx6q-pcie 1ffc000.pcie: Link up, Gen2
-imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [bus 00-ff]
-pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-pci_bus 0000:00: scanning bus
-pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
-pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
-pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
-pci 0000:00:00.0: calling pci_fixup_ide_bases+0x0/0x54
-pci 0000:00:00.0: supports D1
-pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
-pci 0000:00:00.0: PME# disabled
-pci_bus 0000:00: fixups for bus
-PCI: bus0: Fast back to back transfers disabled
-pci 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
-pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
-pci_bus 0000:01: scanning bus
-pci 0000:01:00.0: [10b5:8604] type 01 class 0x060400
-pci 0000:01:00.0: calling ventana_pciesw_early_fixup+0x0/0xb0
-pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x0001ffff]
-pci 0000:01:00.0: calling pci_fixup_ide_bases+0x0/0x54
-pci 0000:01:00.0: PME# supported from D0 D3hot D3cold
-pci 0000:01:00.0: PME# disabled
-pci_bus 0000:01: fixups for bus
-PCI: bus1: Fast back to back transfers disabled
-pci 0000:01:00.0: scanning [bus 00-00] behind bridge, pass 0
-pci 0000:01:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:01:00.0: scanning [bus 00-00] behind bridge, pass 1
-pci_bus 0000:02: scanning bus
-pci 0000:02:01.0: [10b5:8604] type 01 class 0x060400
-pci 0000:02:01.0: calling ventana_pciesw_early_fixup+0x0/0xb0
-pci 0000:02:01.0: calling pci_fixup_ide_bases+0x0/0x54
-pci 0000:02:01.0: PME# supported from D0 D3hot D3cold
-pci 0000:02:01.0: PME# disabled
-pci 0000:02:04.0: [10b5:8604] type 01 class 0x060400
-pci 0000:02:04.0: calling ventana_pciesw_early_fixup+0x0/0xb0
-pci 0000:02:04.0: calling pci_fixup_ide_bases+0x0/0x54
-pci 0000:02:04.0: PME# supported from D0 D3hot D3cold
-pci 0000:02:04.0: PME# disabled
-pci 0000:02:05.0: [10b5:8604] type 01 class 0x060400
-pci 0000:02:05.0: calling ventana_pciesw_early_fixup+0x0/0xb0
-pci 0000:02:05.0: calling pci_fixup_ide_bases+0x0/0x54
-pci 0000:02:05.0: PME# supported from D0 D3hot D3cold
-pci 0000:02:05.0: PME# disabled
-pci_bus 0000:02: fixups for bus
-PCI: bus2: Fast back to back transfers disabled
-pci 0000:02:01.0: scanning [bus 00-00] behind bridge, pass 0
-pci 0000:02:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:02:04.0: scanning [bus 00-00] behind bridge, pass 0
-pci 0000:02:04.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:02:05.0: scanning [bus 00-00] behind bridge, pass 0
-pci 0000:02:05.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-pci 0000:02:01.0: scanning [bus 00-00] behind bridge, pass 1
-pci_bus 0000:03: scanning bus
-pci_bus 0000:03: fixups for bus
-PCI: bus3: Fast back to back transfers enabled
-pci_bus 0000:03: bus scan returning with max=03
-pci_bus 0000:03: busn_res: [bus 03-ff] end is updated to 03
-pci 0000:02:04.0: scanning [bus 00-00] behind bridge, pass 1
-pci_bus 0000:04: scanning bus
-pci_bus 0000:04: fixups for bus
-PCI: bus4: Fast back to back transfers enabled
-pci_bus 0000:04: bus scan returning with max=04
-pci_bus 0000:04: busn_res: [bus 04-ff] end is updated to 04
-pci 0000:02:05.0: scanning [bus 00-00] behind bridge, pass 1
-pci_bus 0000:05: scanning bus
-pci 0000:05:00.0: [168c:0030] type 00 class 0x028000
-pci 0000:05:00.0: reg 0x10: [mem 0x00000000-0x0001ffff 64bit]
-pci 0000:05:00.0: reg 0x30: [mem 0x00000000-0x0000ffff pref]
-pci 0000:05:00.0: calling pci_fixup_ide_bases+0x0/0x54
-pci 0000:05:00.0: calling quirk_no_bus_reset+0x0/0x20
-pci 0000:05:00.0: supports D1
-pci 0000:05:00.0: PME# supported from D0 D1 D3hot
-pci 0000:05:00.0: PME# disabled
-pci_bus 0000:05: fixups for bus
-PCI: bus5: Fast back to back transfers disabled
-pci_bus 0000:05: bus scan returning with max=05
-pci_bus 0000:05: busn_res: [bus 05-ff] end is updated to 05
-pci_bus 0000:02: bus scan returning with max=05
-pci_bus 0000:02: busn_res: [bus 02-ff] end is updated to 05
-pci_bus 0000:01: bus scan returning with max=05
-pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 05
-pci_bus 0000:00: bus scan returning with max=05
-pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
-pci 0000:00:00.0: BAR 8: assigned [mem 0x01100000-0x012fffff]
-pci 0000:00:00.0: BAR 6: assigned [mem 0x01300000-0x0130ffff pref]
-pci 0000:01:00.0: BAR 8: assigned [mem 0x01100000-0x011fffff]
-pci 0000:01:00.0: BAR 0: assigned [mem 0x01200000-0x0121ffff]
-pci 0000:02:05.0: BAR 8: assigned [mem 0x01100000-0x011fffff]
-pci 0000:02:01.0: PCI bridge to [bus 03]
-pci 0000:02:04.0: PCI bridge to [bus 04]
-pci 0000:05:00.0: BAR 0: assigned [mem 0x01100000-0x0111ffff 64bit]
-pci 0000:05:00.0: BAR 6: assigned [mem 0x01120000-0x0112ffff pref]
-pci 0000:02:05.0: PCI bridge to [bus 05]
-pci 0000:02:05.0:   bridge window [mem 0x01100000-0x011fffff]
-pci 0000:01:00.0: PCI bridge to [bus 02-05]
-pci 0000:01:00.0:   bridge window [mem 0x01100000-0x011fffff]
-pci 0000:00:00.0: PCI bridge to [bus 01-05]
-pci 0000:00:00.0:   bridge window [mem 0x01100000-0x012fffff]
-pcieport 0000:00:00.0: assign IRQ: got 330
-pcieport 0000:00:00.0: Signaling PME with IRQ 298
-pcieport 0000:00:00.0: AER enabled with IRQ 298
-pcieport 0000:01:00.0: assign IRQ: got 330
-pcieport 0000:01:00.0: enabling device (0140 -> 0142)
-pcieport 0000:01:00.0: enabling bus mastering
-pcieport 0000:02:01.0: assign IRQ: got 331
-pcieport 0000:02:01.0: enabling bus mastering
-pcieport 0000:02:04.0: assign IRQ: got 330
-pcieport 0000:02:04.0: enabling bus mastering
-pcieport 0000:02:05.0: assign IRQ: got 331
-pcieport 0000:02:05.0: enabling device (0140 -> 0142)
-pcieport 0000:02:05.0: enabling bus mastering
-
-
-I don't know much about PCI or the PCI subsystem, so i do not know what
-would be a proper solution.  Maybe a minimal change would be to add a
-command line option that would tell pci_scan_bridge_extend() that
-everything is broken ?
+>
+> -	return hwaddr;
+> +	return (resource_size_t)~0;
+>  }
+>
+>  /**
+> @@ -159,15 +156,14 @@ resource_size_t logic_pio_to_hwaddr(unsigned long pio)
+>   *
+>   * Returns Logical PIO value if successful, ~0UL otherwise
+>   */
