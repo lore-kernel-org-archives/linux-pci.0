@@ -1,108 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60966 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932197AbeCBWKA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Mar 2018 17:10:00 -0500
-Date: Fri, 2 Mar 2018 17:09:51 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Benjamin Herrenschmidt <benh@au1.ibm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 22 Mar 2018 11:45:17 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
         Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Message-ID: <20180302220950.GA6148@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
- <1519936195.4592.18.camel@au1.ibm.com>
- <20180301205548.GA6742@redhat.com>
- <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
- <20180301211036.GB6742@redhat.com>
- <8D3B5C26-39E0-478D-B51F-A22B3F36C4D7@raithlin.com>
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
+Message-ID: <20180322104517.GA20389@wunner.de>
+References: <20180314114125.71132-1-mika.westerberg@linux.intel.com>
+ <CAJZ5v0gOrQhXzLHDnABEYHxGbHVY89Nij9uQzqx-oyYmFwzuSg@mail.gmail.com>
+ <20180314120547.GB2703@lahna.fi.intel.com>
+ <20180314123332.GC19651@wunner.de>
+ <20180320104508.GF2703@lahna.fi.intel.com>
+ <20180320113556.GA24197@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <8D3B5C26-39E0-478D-B51F-A22B3F36C4D7@raithlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180320113556.GA24197@wunner.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 02, 2018 at 09:38:43PM +0000, Stephen  Bates wrote:
-> > It seems people miss-understand HMM :( 
+On Tue, Mar 20, 2018 at 12:35:56PM +0100, Lukas Wunner wrote:
+> On Tue, Mar 20, 2018 at 12:45:08PM +0200, Mika Westerberg wrote:
+> > > On Wed, Mar 14, 2018 at 02:05:47PM +0200, Mika Westerberg wrote:
+> > > > On Wed, Mar 14, 2018 at 12:48:49PM +0100, Rafael J. Wysocki wrote:
+> > > > > Have you considered putting these things into the ->suspend_late and
+> > > > > ->resume_early callbacks, respectively?
+> > > > > 
+> > > > > That might be slightly better as runtime resume is still enabled when
+> > > > > the ->suspend and ->resume callbacks run.
+> > > > 
+> > > > There is no ->suspend_late or ->resume_early callbacks in struct
+> > > > pcie_port_service_driver so I followed what drivers/pci/pcie/pme.c is
+> > > > doing. I guess we could add those callbacks as well if you think they
+> > > > are better suited here.
+> > 
+> > I took a look and then realized that we most probably do not need the
+> > custom portdrv specific hooks at all. They are basically doing the same
+> > than what PM core is (iterate over children and call service driver PM
+> > hook). I don't see any reason why we could not rely on the PM core ops
+> > instead of these custom ones but maybe I'm missing something.
 > 
-> Hi Jerome
-> 
-> Your unhappy face emoticon made me sad so I went off to (re)read up
-> on HMM. Along the way I came up with a couple of things.
-> 
-> While hmm.txt is really nice to read it makes no mention of
-> DEVICE_PRIVATE and DEVICE_PUBLIC. It also gives no indication when
-> one might choose to use one over the other. Would it be possible to
-> update hmm.txt to include some discussion on this? I understand
-> that DEVICE_PUBLIC creates a mapping in the kernel's linear address
-> space for the device memory and DEVICE_PRIVATE does not. However,
-> like I said, I am not sure when you would use either one and the
-> pros and cons of doing so. I actually ended up finding some useful
-> information in memremap.h but I don't think it is fair to expect
-> people to dig *that* deep to find this information ;-).
+> Can't think of a reason why this solution shouldn't work
 
-Yes i need to document that some more in hmm.txt, PRIVATE is for device
-that have memory that do not fit regular memory expectation ie cachable
-so PCIe device memory fit under that category. So if all you need is
-struct page for such memory then this is a perfect fit. On top of that
-you can use more HMM feature, like using this memory transparently
-inside a process address space.
+Now I've thought of one.
 
-PUBLIC is for memory that belong to a device but still can be access by
-CPU in cache coherent way (CAPI, CCIX, ...). Again if you have such
-memory and just want struct page you can use that and again if you want
-to use that inside a process address space HMM provide more helpers to
-do so.
+The port may have more children besides the port service devices,
+namely all the PCI devices below the port.  The PM core doesn't
+impose a specific ordering on suspend/resume but will try to
+parallelize among all the children.
 
+Usually that's not what you want.  On resume, you want to resume
+the port itself (including its port services) *before* resuming
+the PCI child devices.  And the other way round on suspend.
 
-> A quick grep shows no drivers using the HMM API in the upstream code
-> today. Is this correct? Are there any examples of out of tree drivers
-> that use HMM you can point me too? As a driver developer what
-> resources exist to help me write a HMM aware driver?
+Thanks,
 
-I am about to send RFC for nouveau, i am still working out some bugs.
-I was hoping to be done today but i am still fighting with the hardware.
-They are other drivers being work on with HMM. I do not know exactly
-when they will be made public (i expect in coming months).
-
-How you use HMM is under the control of the device driver, as well as
-how you expose it to userspace. They use it how they want to use it.
-There is no pattern or requirement imposed by HMM. All driver being work
-on so far are GPU like hardware, ie big chunk of on board memory
-(several giga-bytes) and they want to use that memory inside process
-address space in a transparent fashion to the program and CPU.
-
-Each have their own API expose to userspace and while they are a lot of
-similarity among them, lot of details of userspace API is hardware
-specific. In GPU world most of the driver are in userspace, application
-do target high level API such as OpenGL, Vulkan, OpenCL or CUDA. Those
-API then have a hardware specific userspace driver that talks to hardware
-specific IOCTL. So this is not like network or block device.
-
-
-> The (very nice) hmm.txt document is not references in the MAINTAINERS
-> file? You might want to fix that when you have a moment.
-
-I have couple small fixes/typo patches that i need to cleanup and send
-i will fix the MAINTAINERS as part of those.
-
-Cheers,
-Jérôme
+Lukas
