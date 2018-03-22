@@ -1,132 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:53873 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752069AbeC0XAx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Mar 2018 19:00:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56092 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751595AbeCVT2B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Mar 2018 15:28:01 -0400
+Date: Thu, 22 Mar 2018 14:27:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wolfgang Denk <wd@denx.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: PCIe x4 cards not detected on Z370 mainboards
+Message-ID: <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180322184840.E31D4247251@gemini.denx.de>
 MIME-Version: 1.0
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Tue, 27 Mar 2018 16:00:51 -0700
-Message-ID: <CAKgT0Ude4C774sB22XG08-YoJ-4uSEB45b-RcM+eNnhyfuyQnw@mail.gmail.com>
-Subject: Re: [pci PATCH v7 0/5] Add support for unmanaged SR-IOV
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        Netdev <netdev@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
-        Maximilian Heyne <mheyne@amazon.de>,
-        "Wang, Liang-min" <liang-min.wang@intel.com>,
-        "Rustad, Mark D" <mark.d.rustad@intel.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk,
-        Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180322184840.E31D4247251@gemini.denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 16, 2018 at 2:42 PM, Don Dutile <ddutile@redhat.com> wrote:
-> On 03/15/2018 02:40 PM, Alexander Duyck wrote:
->>
->> This series is meant to add support for SR-IOV on devices when the VFs are
->> not managed by the kernel. Examples of recent patches attempting to do
->> this
->> include:
->> virto - https://patchwork.kernel.org/patch/10241225/
->> pci-stub - https://patchwork.kernel.org/patch/10109935/
->> vfio - https://patchwork.kernel.org/patch/10103353/
->> uio - https://patchwork.kernel.org/patch/9974031/
->>
->> Since this is quickly blowing up into a multi-driver problem it is
->> probably
->> best to implement this solution as generically as possible.
->>
->> This series is an attempt to do that. What we do with this patch set is
->> provide a generic framework to enable SR-IOV in the case that the PF
->> driver
->> doesn't support managing the VFs itself.
->>
->> I based my patch set originally on the patch by Mark Rustad but there
->> isn't
->> much left after going through and cleaning out the bits that were no
->> longer
->> needed, and after incorporating the feedback from David Miller. At this
->> point
->> the only items to be fully reused was his patch description which is now
->> present in patch 3 of the set.
->>
->> This solution is limited in scope to just adding support for devices that
->> provide no functionality for SR-IOV other than allocating the VFs by
->> calling pci_enable_sriov. Previous sets had included patches for VFIO, but
->> for now I am dropping that as the scope of that work is larger then I
->> think I can take on at this time.
->>
->> v2: Reduced scope back to just virtio_pci and vfio-pci
->>      Broke into 3 patch set from single patch
->>      Changed autoprobe behavior to always set when num_vfs is set non-zero
->> v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is
->> used
->>      Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in
->> kernel
->> v4: Dropped vfio-pci patch
->>      Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
->>      Dropped pci_disable_sriov call in virtio_pci to be consistent with
->> ena
->> v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
->>      Added new patch that enables pci_sriov_configure_simple
->>      Updated drivers to use pci_sriov_configure_simple
->> v6: Defined pci_sriov_configure_simple as NULL when SR-IOV is not enabled
->>      Updated drivers to drop "#ifdef" checks for IOV
->>      Added pci-pf-stub as place for PF-only drivers to add support
->> v7: Dropped pci_id table explanation from pci-pf-stub driver
->>      Updated pci_sriov_configure_simple to drop need for err value
->>      Fixed comment explaining why pci_sriov_configure_simple is NULL
->>
->> Cc: Mark Rustad <mark.d.rustad@intel.com>
->> Cc: Maximilian Heyne <mheyne@amazon.de>
->> Cc: Liang-Min Wang <liang-min.wang@intel.com>
->> Cc: David Woodhouse <dwmw@amazon.co.uk>
->>
->> ---
->>
->> Alexander Duyck (5):
->>        pci: Add pci_sriov_configure_simple for PFs that don't manage VF
->> resources
->>        virtio_pci: Add support for unmanaged SR-IOV on virtio_pci devices
->>        ena: Migrate over to unmanaged SR-IOV support
->>        nvme: Migrate over to unmanaged SR-IOV support
->>        pci-pf-stub: Add PF driver stub for PFs that function only to
->> enable VFs
->>
->>
->>   drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 -------------
->>   drivers/nvme/host/pci.c                      |   20 ----------
->>   drivers/pci/Kconfig                          |   12 ++++++
->>   drivers/pci/Makefile                         |    2 +
->>   drivers/pci/iov.c                            |   31 +++++++++++++++
->>   drivers/pci/pci-pf-stub.c                    |   54
->> ++++++++++++++++++++++++++
->>   drivers/virtio/virtio_pci_common.c           |    1
->>   include/linux/pci.h                          |    3 +
->>   include/linux/pci_ids.h                      |    2 +
->>   9 files changed, 107 insertions(+), 46 deletions(-)
->>   create mode 100644 drivers/pci/pci-pf-stub.c
->>
->> --
->>
-> For what it's worth.
->
-> Good, simpler start for this type of support/effort.
-> Thanks for the multiple versions to get to this point.
->
-> Reviewed-by: Donald Dutile <ddutile@redhat.com>
+On Thu, Mar 22, 2018 at 07:48:40PM +0100, Wolfgang Denk wrote:
+> Hello,
+> 
+> sorry if this is not an appropriate list for my question - any
+> pointers are welcome.
 
-Any issues with getting this pulled into the linux-pci tree? When I
-submitted these that was the original target for this set, or do I
-need to look at breaking them up and/or submitting them submitted
-somewhere else?
+This is a perfect place to ask!
 
-Thanks.
+> Short version:
+> 
+> Both on a GIGABYTE Z370-HD3 and on a MSI Z370 TOMAHAWK mainboard
+> neither of my LSI SAS controllers (SAS3444 E PCIe x4 and
+> SAS3442E-R PCIe x4) gets detected.  Not by the system BIOS, there is
+> not messages from the SAS Controller BIOS, Linux does not see it in
+> the PCI bus scan - nothing.  Both controllers work find in older
+> mainboards.
+> 
+> Is this a known problem?  Can it be fixed?
+> 
+> 
+> More details:
+> 
+> I tried all combinations of PCIe slots with one or with both cards -
+> none is working.
+> 
+> I asked MSI support, who told me:
+> 
+> 	These are old controllers which don't support UEFI/GOP. this
+> 	is the reason they don't work.  Cards which have only legacy
+> 	support cannot be operated in modern mainboards.
 
-- Alex
+That doesn't make sense to me.  Maybe these controllers have option
+ROMs that aren't compatible with UEFI (though even that sounds
+unlikely to me).  But even in that case, I would expect the card to at
+least be visible in PCI config space, because that's needed even to
+read the option ROM from the card.
+
+We have had issues with LSI devices in the past, e.g.,
+
+  822155100e58 ("PCI: Mark Cavium CN8xxx to avoid bus reset")
+  12d8706963f0 ("Revert "PCI: Make sure bus number resources stay within their parents bounds"")
+
+822155100e58 is a band-aid to avoid bus resets when LSI devices are
+involved.  We don't really have a root cause for that, so it's
+possible you're seeing a similar issue.
+
+12d8706963f0 has to do with a defect in an LSI device where it
+apparently fails to latch its bus number correctly when the OS changes
+it.  You never see the device at all, so the only bus number change
+should be when the BIOS enumerates and programs bus numbers initially.
+But it seems like the BIOS doesn't see the device either.
+
+> Hm...  but I also have a PCIe x 1 Adaptect SCSI controller
+> (29320LPE, firmware version v4.31.4 of 2007) which certainly never
+> heard of UEFI/GOP before, and this is working fine: I see the BIOS
+> messages when it does the SCSI bus scan, I see the initialization
+> under Linux, and I can access the SCSI devices under Linux.
+
+So we know the slot is functional at least for a x1 controller.  The
+spec requires that a xN port can also form a x1 link (PCIe r4.0, sec
+4.2.4.10.1), so I think your x4 controllers *should* be functional at
+least at x1.
+
+I wonder the port leading to that slot is disabled or not negotiating
+the link for some reason.  Can you collect "lspci -vvv" output with
+the working card and with one of the non-working cards?
+
+You could try locating the port leading to the slot and using setpci
+to reset its secondary bus, then using /sys/bus/pci/rescan to rescan
+the bus.
+
+Bjorn
