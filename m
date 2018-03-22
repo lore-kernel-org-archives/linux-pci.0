@@ -1,67 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:59796 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753015AbeC1NNw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 09:13:52 -0400
-Subject: Re: [PATCH v5 06/12] PCI: designware-ep: Make dw_pcie_ep_set_bar()
- handle 64-bit BARs properly
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "cyrille.pitchen@free-electrons.com"
-        <cyrille.pitchen@free-electrons.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
- <20180328115018.31921-7-niklas.cassel@axis.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <44985f79-5240-b3d2-dd38-644a174357de@synopsys.com>
-Date: Wed, 28 Mar 2018 14:13:06 +0100
+Received: from verein.lst.de ([213.95.11.211]:46117 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752542AbeCVIT3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Mar 2018 04:19:29 -0400
+Date: Thu, 22 Mar 2018 09:19:26 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
+        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
+        david.brown@linaro.org, dan.j.williams@intel.com,
+        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
+        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
+        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
+        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
+        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
+        leoyang.li@nxp.com
+Subject: Re: [PATCH v2 2/2] drivers: remove force dma flag from buses
+Message-ID: <20180322081926.GC29444@lst.de>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20180328115018.31921-7-niklas.cassel@axis.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1521615323-4752-2-git-send-email-nipun.gupta@nxp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas,
+> --- a/drivers/dma/qcom/hidma_mgmt.c
+> +++ b/drivers/dma/qcom/hidma_mgmt.c
+> @@ -398,7 +398,7 @@ static int __init hidma_mgmt_of_populate_channels(struct device_node *np)
+>  		}
+>  		of_node_get(child);
+>  		new_pdev->dev.of_node = child;
+> -		of_dma_configure(&new_pdev->dev, child);
+> +		of_dma_configure(&new_pdev->dev, child, true);
+>  		/*
+>  		 * It is assumed that calling of_msi_configure is safe on
+>  		 * platforms with or without MSI support.
 
-On 28/03/2018 12:50, Niklas Cassel wrote:
-> Since a 64-bit BAR consists of a BAR pair, we need to write to both
-> BARs in the BAR pair to setup the BAR properly.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/dwc/pcie-designware-ep.c | 11 +++++++++--
->  1 file changed, 9 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index 5a0bb53c795c..571b90f88d84 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -138,8 +138,15 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
->  		return ret;
->  
->  	dw_pcie_dbi_ro_wr_en(pci);
-> -	dw_pcie_writel_dbi2(pci, reg, size - 1);
-> -	dw_pcie_writel_dbi(pci, reg, flags);
-> +	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-> +		dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
-> +		dw_pcie_writel_dbi(pci, reg, flags);
-> +		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
-> +		dw_pcie_writel_dbi(pci, reg + 4, 0);
-> +	} else {
-> +		dw_pcie_writel_dbi2(pci, reg, size - 1);
-> +		dw_pcie_writel_dbi(pci, reg, flags);
-> +	}
->  	dw_pcie_dbi_ro_wr_dis(pci);
->  
->  	return 0;
-> 
+Where did we mark this bus as force_dma before?
 
-Seems good to me. :)
+> diff --git a/drivers/of/of_reserved_mem.c b/drivers/of/of_reserved_mem.c
+> index 9a4f4246..895c83e 100644
+> --- a/drivers/of/of_reserved_mem.c
+> +++ b/drivers/of/of_reserved_mem.c
+> @@ -353,7 +353,7 @@ int of_reserved_mem_device_init_by_idx(struct device *dev,
+>  		/* ensure that dma_ops is set for virtual devices
+>  		 * using reserved memory
+>  		 */
+> -		of_dma_configure(dev, np);
+> +		of_dma_configure(dev, np, true);
 
-Reviewed-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Did all the callers of this one really force dma?  I have a hard time
+untangling the call stacks unfortunately.
