@@ -1,73 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0105.outbound.protection.outlook.com ([104.47.38.105]:19376
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752131AbeCZReI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Mar 2018 13:34:08 -0400
-From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+Received: from verein.lst.de ([213.95.11.211]:46090 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752504AbeCVIRH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Mar 2018 04:17:07 -0400
+Date: Thu, 22 Mar 2018 09:17:05 +0100
+From: "hch@lst.de" <hch@lst.de>
+To: Bharat Bhushan <bharat.bhushan@nxp.com>
+Cc: Nipun Gupta <nipun.gupta@nxp.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "andy.gross@linaro.org" <andy.gross@linaro.org>,
+        "david.brown@linaro.org" <david.brown@linaro.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vinod.koul@intel.com" <vinod.koul@intel.com>,
+        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        "johan@kernel.org" <johan@kernel.org>,
+        "msuchanek@suse.de" <msuchanek@suse.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v5] PCI: hv: Make sure the bus domain is really unique
-Date: Mon, 26 Mar 2018 17:34:04 +0000
-Message-ID: <4BF97B43-5339-4750-9704-23D6AAC4A01E@microsoft.com>
-Content-Type: text/plain; charset="utf-8"
+        Leo Li <leoyang.li@nxp.com>
+Subject: Re: [PATCH v2 1/2] dma-mapping: move dma configuration to bus
+        infrastructure
+Message-ID: <20180322081705.GB29444@lst.de>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1521615323-4752-1-git-send-email-nipun.gupta@nxp.com> <AM5PR0401MB254503027680DE6A23355D909AAA0@AM5PR0401MB2545.eurprd04.prod.outlook.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AM5PR0401MB254503027680DE6A23355D909AAA0@AM5PR0401MB2545.eurprd04.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-V2hlbiBMaW51eCBydW5zIGFzIGEgZ3Vlc3QgVk0gaW4gSHlwZXItViBhbmQgSHlwZXItViBhZGRz
-IHRoZSB2aXJ0dWFsDQpQQ0kgYnVzIHRvIHRoZSBndWVzdCwgSHlwZXItViBhbHdheXMgcHJvdmlk
-ZXMgdW5pcXVlIFBDSSBkb21haW4uDQoNCmNvbW1pdCA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBV
-c2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQpvdmVycm9kZSB1bmlxdWUg
-ZG9tYWluIHdpdGggdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGZpcnN0IGRldmljZSBhZGRlZA0K
-dG8gdGhlIHZpcnR1YWwgUENJIGJ1cy4gVGhlIHJlYXNvbiBmb3IgdGhhdCBwYXRjaCBpcyB0byBo
-YXZlIGEgY29uc2lzdGVudA0KYW5kIHNob3J0IG5hbWUgZm9yIHRoZSBkZXZpY2UuIEJ1dCBjb21t
-aXQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlDQpkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQ
-Q0kgZG9tYWluIikgd2lsbCBub3QgZ3VhcmFudGVlIHVuaXF1ZSBkb21haW4gaWQuDQpGb3IgZXhh
-bXBsZSwgaWYgdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGRldmljZSBpcyAwIGFuZCB0aGVyZSBl
-eGlzdHMgYQ0KUENJIGJ1cyB3aXRoIGRvbWFpbiAwIGFscmVhZHksIHRoaXMgd2lsbCBjYXVzZSB0
-aGUgUENJIGJ1cyByZWdpc3RyYXRpb24NCndpdGgga2VybmVsIGZhaWxzLg0KDQpjb21taXQgNGE5
-YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KZG9t
-YWluIikgbmVlZCB0byBiZSByZXZlcnRlZC4gQWxzbywgd2Ugbm8gbG9uZ2VyIG5lZWQgaXQgYXMg
-Y29tbWl0DQo0YTE2MjZkZDIzM2UgKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGIG1hbmFnZW1lbnQi
-KSByZW1vdmUgdGhlDQpuZWVkIGZvciBpdC4NCg0KUmV2ZXJ0IGNvbW1pdCA0YTliMDkzM2JkZmMg
-KCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJDQpkb21haW4iKSBzbyB3
-ZSBjYW4gcmVsaWFibHkgc3VwcG9ydCBtdWx0aXBsZSBkZXZpY2VzIGJlaW5nIGFzc2lnbmVkIHRv
-DQphIGd1ZXN0Lg0KDQpUaGlzIHJldmVydCBzaG91bGQgb25seSBiZSBiYWNrcG9ydGVkIHRvIGtl
-cm5lbHMgdGhhdCBjb250YWluIGNvbW1pdA0KNGExNjI2ZGQyMzNlICgibmV0dnNjOiB0cmFuc3Bh
-cmVudCBWRiBtYW5hZ2VtZW50IikuDQoNCkZpeGVzOiA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBV
-c2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQpTaWduZWQtb2ZmLWJ5OiBT
-cmlkaGFyIFBpdGNoYWkgPHNyaWRoYXIucGl0Y2hhaUBtaWNyb3NvZnQuY29tPg0KQ2M6IHN0YWJs
-ZUB2Z2VyLmtlcm5lbC5vcmcNCg0KLS0tDQpDaGFuZ2VzIGluIHY1Og0KKiBmaXggdGhlIGNvbW1p
-dCBjb21tZW50LiBbTG9yZW56byBQaWVyYWxpc2ksIEJqb3JuIEhlbGdhYXNdDQoqIGZpeGVkIHRo
-ZSBwYXRjaCB3aGl0ZSBzcGFjZS4NCi0tLQ0KIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5j
-IHwgMTEgLS0tLS0tLS0tLS0NCiAxIGZpbGUgY2hhbmdlZCwgMTEgZGVsZXRpb25zKC0pDQoNCmRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYyBiL2RyaXZlcnMvcGNpL2hv
-c3QvcGNpLWh5cGVydi5jDQppbmRleCAyZmFmMzhlYWI3ODUuLmFjNjdlNTZlNDUxYSAxMDA2NDQN
-Ci0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQorKysgYi9kcml2ZXJzL3BjaS9o
-b3N0L3BjaS1oeXBlcnYuYw0KQEAgLTE1MTgsMTcgKzE1MTgsNiBAQCBzdGF0aWMgc3RydWN0IGh2
-X3BjaV9kZXYgKm5ld19wY2ljaGlsZF9kZXZpY2Uoc3RydWN0IGh2X3BjaWJ1c19kZXZpY2UgKmhi
-dXMsDQogCWdldF9wY2ljaGlsZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGlsZGxpc3QpOw0KIAlz
-cGluX2xvY2tfaXJxc2F2ZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KIA0KLQkv
-Kg0KLQkgKiBXaGVuIGEgZGV2aWNlIGlzIGJlaW5nIGFkZGVkIHRvIHRoZSBidXMsIHdlIHNldCB0
-aGUgUENJIGRvbWFpbg0KLQkgKiBudW1iZXIgdG8gYmUgdGhlIGRldmljZSBzZXJpYWwgbnVtYmVy
-LCB3aGljaCBpcyBub24temVybyBhbmQNCi0JICogdW5pcXVlIG9uIHRoZSBzYW1lIFZNLiAgVGhl
-IHNlcmlhbCBudW1iZXJzIHN0YXJ0IHdpdGggMSwgYW5kDQotCSAqIGluY3JlYXNlIGJ5IDEgZm9y
-IGVhY2ggZGV2aWNlLiAgU28gZGV2aWNlIG5hbWVzIGluY2x1ZGluZyB0aGlzDQotCSAqIGNhbiBo
-YXZlIHNob3J0ZXIgbmFtZXMgdGhhbiBiYXNlZCBvbiB0aGUgYnVzIGluc3RhbmNlIFVVSUQuDQot
-CSAqIE9ubHkgdGhlIGZpcnN0IGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIHVzZWQgZm9yIGRvbWFp
-biwgc28gdGhlDQotCSAqIGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRoZSBm
-aXJzdCBkZXZpY2UgaXMgYWRkZWQuDQotCSAqLw0KLQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+Y2hp
-bGRyZW4pKQ0KLQkJaGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogCWxpc3RfYWRk
-X3RhaWwoJmhwZGV2LT5saXN0X2VudHJ5LCAmaGJ1cy0+Y2hpbGRyZW4pOw0KIAlzcGluX3VubG9j
-a19pcnFyZXN0b3JlKCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogCXJldHVybiBo
-cGRldjsNCi0tIA0KMi4xNC4xDQoNCg==
+> > +int dma_configure(struct device *dev)
+> > +{
+> > +	if (dev->bus->dma_configure)
+> > +		return dev->bus->dma_configure(dev);
+> 
+> What if dma_common_configure() is called in case "bus->dma_configure" is not defined?
+
+Then we'd still have a dependency of common code on OF and ACPI.
+
+On the other hand we'd get free OF and ACPI dma ranges parsing for
+everyone, which might be handy.  And which would really help mitigating
+the risk that we missed some bus that gets dma configuration from OF,
+so maybe it actually is a good idea.  I'd just rename it to
+dma_default_configure or similar in that case.
