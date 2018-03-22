@@ -1,46 +1,40 @@
-Return-Path: <SRS0=lwou=GI=davemloft.net=davem@kernel.org>
-Return-Path: <SRS0=lwou=GI=davemloft.net=davem@kernel.org>
-Date: Sun, 18 Mar 2018 12:07:34 -0400 (EDT)
-Message-Id: <20180318.120734.1936832399192758981.davem@davemloft.net>
-To: helgaas@kernel.org
-Cc: khalid.aziz@oracle.com, sparclinux@vger.kernel.org,
- linux-pci@vger.kernel.org, yinghai@kernel.org,
- linux-kernel@vger.kernel.org, david.ahern@oracle.com, linux@iam.tj
-Subject: Re: [PATCH v1 0/2] PCI: Sparc 64-bit resource fixups
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180220233935.GE32228@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180215151118.196756.99622.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<20180220233935.GE32228@bhelgaas-glaptop.roam.corp.google.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Return-Path: <SRS0=UWQ+=GM=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=UWQ+=GM=codeaurora.org=okaya@kernel.org>
+Subject: Re: PCIe resets/restore and lack of CRS wait
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Michael Neuling <michael.neuling@au1.ibm.com>,
+ linux-pci-owner@vger.kernel.org
+References: <1521691380.16434.287.camel@kernel.crashing.org>
+ <f6af9b6e424c469f433735a106b8ee69@codeaurora.org>
+ <1521695531.16434.294.camel@kernel.crashing.org>
+ <1521699853.16434.301.camel@kernel.crashing.org>
+ <4d1c04efa51db50dd5095ae258c3c52b@codeaurora.org>
+ <1521726371.16434.307.camel@kernel.crashing.org>
+ <172f0ea9-7eba-1505-bb79-1ee31cc4d692@codeaurora.org>
+ <20180322141402.GA242245@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <6aec45f1-74d9-d36f-7169-0c91733985e3@codeaurora.org>
+Date: Thu, 22 Mar 2018 12:54:01 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180322141402.GA242245@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <helgaas@kernel.org>
-Date: Tue, 20 Feb 2018 17:39:35 -0600
+Ben,
 
-> Both these patches are on my pci/sparc branch and appeared in the
-> Feb 19 linux-next tree.
-> 
-> Any testing and feedback (especially on the second patch, which should
-> change /proc/iomem) would be great.
-> 
-> They're headed for v4.17 unless I hear about issues.
-> 
-> It would be useful to hear about what's still broken so I can try to
-> pull in the other patches.
+On 3/22/2018 9:14 AM, Bjorn Helgaas wrote:
+> CRS SV is optional, so the code has to work when it's absent.  But we
+> can tell whether it's supported, so if we need to, we can do something
+> different when it's absent.
 
-I don't understand why you put the SYSTEM and Video ROM at addresses
-relative to absolute zero.  The result of this is that it might
-overlap real physical memory.
+Let us know if you want to work on this or not. Otherwise, I'll add
+to the list of things I'm doing.
 
-If a VGA card is present, it's ROM will respond to those addresses
-relative to the PCI controller's MEM space area.
+Sinan
 
-Their legacy resources are "hardwired", but those hardwired addresses
-need to be relative to the PCI host controller's MEM areas in order
-for them to be accessible.
-
-I could understand removing the System ROM resource altogether, that
-makes a lot of sense to me.
-
-Thanks.
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
