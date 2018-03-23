@@ -1,51 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr670093.outbound.protection.outlook.com ([40.107.67.93]:22304
-        "EHLO CAN01-TO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752861AbeCEUgG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Mar 2018 15:36:06 -0500
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Jerome Glisse <jglisse@redhat.com>
-CC: Logan Gunthorpe <logang@deltatee.com>,
-        Benjamin Herrenschmidt <benh@au1.ibm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Date: Mon, 5 Mar 2018 20:36:03 +0000
-Message-ID: <F78D688D-BB93-4BFB-9F2B-9809278CC25C@raithlin.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
- <1519936195.4592.18.camel@au1.ibm.com> <20180301205548.GA6742@redhat.com>
- <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
- <20180301211036.GB6742@redhat.com>
- <8D3B5C26-39E0-478D-B51F-A22B3F36C4D7@raithlin.com>
- <20180302220950.GA6148@redhat.com>
-In-Reply-To: <20180302220950.GA6148@redhat.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from lucky1.263xmail.com ([211.157.147.130]:57618 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751395AbeCWHyy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2018 03:54:54 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] PCI: rockchip: Fix compile errors and warnings
+Date: Fri, 23 Mar 2018 15:47:59 +0800
+Message-Id: <1521791279-148357-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAgICBZZXMgaSBuZWVkIHRvIGRvY3VtZW50IHRoYXQgc29tZSBtb3JlIGluIGhtbS50eHQuLi4N
-Cg0KSGkgSmVybW9uZSwgdGhhbmtzIGZvciB0aGUgZXhwbGFuYXRpb24uIENhbiBJIHN1Z2dlc3Qg
-eW91IHVwZGF0ZSBobW0udHh0IHdpdGggd2hhdCB5b3Ugc2VudCBvdXQ/DQoNCj4gIEkgYW0gYWJv
-dXQgdG8gc2VuZCBSRkMgZm9yIG5vdXZlYXUsIGkgYW0gc3RpbGwgd29ya2luZyBvdXQgc29tZSBi
-dWdzLg0KDQpHcmVhdC4gSSB3aWxsIGtlZXAgYW4gZXllIG91dCBmb3IgaXQuIEFuIGV4YW1wbGUg
-dXNlciBvZiBobW0gd2lsbCBiZSB2ZXJ5IGhlbHBmdWwuDQoNCj4gaSB3aWxsIGZpeCB0aGUgTUFJ
-TlRBSU5FUlMgYXMgcGFydCBvZiB0aG9zZS4NCiAgICANCkF3ZXNvbWUsIHRoYW5rcy4NCg0KU3Rl
-cGhlbg0KICAgIA0KDQo=
+pcie-rockchip.c uses devm_pci_remap_cfg_resource which should
+depends on CONFIG_PCI. And as we could allow to build the host
+driver as a module, we should export the function. This patch
+also make rockchip_pcie_{prog, clear}_ep_ob_atu static.
+
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Fixes: 52f3757afc06 ("PCI: rockchip: Create individual folder for rockchip drivers");
+Fixes: 7257f9f50c02 ("PCI: rockchip: Add Endpoint controller driver for Rockchip PCIe controller")
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
+
+ drivers/pci/rockchip/Kconfig            |  1 +
+ drivers/pci/rockchip/pcie-rockchip-ep.c | 10 ++++++----
+ drivers/pci/rockchip/pcie-rockchip.c    |  7 +++++++
+ 3 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/rockchip/Kconfig b/drivers/pci/rockchip/Kconfig
+index 668f850..f4ac165 100644
+--- a/drivers/pci/rockchip/Kconfig
++++ b/drivers/pci/rockchip/Kconfig
+@@ -4,6 +4,7 @@ menu "Rockchip PCIe controllers support"
+ 
+ config PCIE_ROCKCHIP
+ 	bool
++	depends on PCI
+ 
+ config PCIE_ROCKCHIP_HOST
+ 	tristate "Rockchip PCIe host controller"
+diff --git a/drivers/pci/rockchip/pcie-rockchip-ep.c b/drivers/pci/rockchip/pcie-rockchip-ep.c
+index 01997ce..8aa31a3 100644
+--- a/drivers/pci/rockchip/pcie-rockchip-ep.c
++++ b/drivers/pci/rockchip/pcie-rockchip-ep.c
+@@ -49,7 +49,8 @@ struct rockchip_pcie_ep {
+ 	u8			irq_pending;
+ };
+ 
+-void rockchip_pcie_clear_ep_ob_atu(struct rockchip_pcie *rockchip, u32 region)
++static void rockchip_pcie_clear_ep_ob_atu(struct rockchip_pcie *rockchip,
++					  u32 region)
+ {
+ 	rockchip_pcie_write(rockchip, 0,
+ 			    ROCKCHIP_PCIE_AT_OB_REGION_PCI_ADDR0(region));
+@@ -65,9 +66,10 @@ void rockchip_pcie_clear_ep_ob_atu(struct rockchip_pcie *rockchip, u32 region)
+ 			    ROCKCHIP_PCIE_AT_OB_REGION_CPU_ADDR1(region));
+ }
+ 
+-void rockchip_pcie_prog_ep_ob_atu(struct rockchip_pcie *rockchip, u8 fn,
+-				  u32 r, u32 type, u64 cpu_addr, u64 pci_addr,
+-				  size_t size)
++static void rockchip_pcie_prog_ep_ob_atu(struct rockchip_pcie *rockchip, u8 fn,
++					 u32 r, u32 type, u64 cpu_addr,
++					 u64 pci_addr,
++					 size_t size)
+ {
+ 	u64 sz = 1ULL << fls64(size - 1);
+ 	int num_pass_bits = ilog2(sz);
+diff --git a/drivers/pci/rockchip/pcie-rockchip.c b/drivers/pci/rockchip/pcie-rockchip.c
+index 9071178..9025a81 100644
+--- a/drivers/pci/rockchip/pcie-rockchip.c
++++ b/drivers/pci/rockchip/pcie-rockchip.c
+@@ -151,6 +151,7 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(rockchip_pcie_parse_dt);
+ 
+ int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ {
+@@ -291,6 +292,7 @@ int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		phy_exit(rockchip->phys[i]);
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(rockchip_pcie_init_port);
+ 
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ {
+@@ -332,6 +334,7 @@ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(rockchip_pcie_get_phys);
+ 
+ void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
+ {
+@@ -344,6 +347,7 @@ void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
+ 		phy_exit(rockchip->phys[i]);
+ 	}
+ }
++EXPORT_SYMBOL_GPL(rockchip_pcie_deinit_phys);
+ 
+ int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip)
+ {
+@@ -384,6 +388,7 @@ int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip)
+ 	clk_disable_unprepare(rockchip->aclk_pcie);
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(rockchip_pcie_enable_clocks);
+ 
+ void rockchip_pcie_disable_clocks(void *data)
+ {
+@@ -394,6 +399,7 @@ void rockchip_pcie_disable_clocks(void *data)
+ 	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+ 	clk_disable_unprepare(rockchip->aclk_pcie);
+ }
++EXPORT_SYMBOL_GPL(rockchip_pcie_disable_clocks);
+ 
+ void rockchip_pcie_cfg_configuration_accesses(
+ 		struct rockchip_pcie *rockchip, u32 type)
+@@ -414,3 +420,4 @@ void rockchip_pcie_cfg_configuration_accesses(
+ 	rockchip_pcie_write(rockchip, ob_desc_0, PCIE_CORE_OB_REGION_DESC0);
+ 	rockchip_pcie_write(rockchip, 0x0, PCIE_CORE_OB_REGION_DESC1);
+ }
++EXPORT_SYMBOL_GPL(rockchip_pcie_cfg_configuration_accesses);
+-- 
+1.9.1
