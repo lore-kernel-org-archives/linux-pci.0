@@ -1,126 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40892 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932759AbeCITA2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Mar 2018 14:00:28 -0500
-Subject: [PATCH v2 07/13] PCI/portdrv: Remove unused PCIE_PORT_SERVICE_VC
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 23 Mar 2018 16:18:19 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Frederick Lawler <fred@fredlawl.com>
-Date: Fri, 09 Mar 2018 13:00:27 -0600
-Message-ID: <152062202742.77693.2491710394330502440.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Len Brown <lenb@kernel.org>,
+        Mike Lothian <mike@fireburn.co.uk>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Check presence of slot itself in
+ get_slot_status()
+Message-ID: <20180323211819.GB210003@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Mon, Feb 12, 2018 at 01:55:23PM +0300, Mika Westerberg wrote:
+> Mike Lothian reported that plugging in a USB-C device does not work
+> properly in his Dell Alienware system. This system has Intel Alpine
+> Ridge Thunderbolt controller providing USB-C functionality. In these
+> systems the USB controller (xHCI) is hotplugged whenever a device is
+> connected to the port using ACPI based hotplug.
+> 
+> The ACPI description of the root port in question looks as follows:
+> 
+> Device (RP01)
+> {
+>     Name (_ADR, 0x001C0000)
+> 
+>     Device (PXSX)
+>     {
+>         Name (_ADR, 0x02)
+> 
+>         Method (_RMV, 0, NotSerialized)
+>         {
+>             // ...
+>         }
+>     }
+> 
+> Here _ADR 0x02 means device 0, function 2 on the bus under root port
+> (RP1) but that seems to be incorrect because device 0 is the upstream
+> port of the Alpine Ridge PCIe switch and it does not have other
+> functions than 0 (the bridge itself). When we get ACPI Notify() to the
+> root port resulting from connecting a USB-C device, Linux tries to read
+> PCI_VENDOR_ID from device 0, function 2 which of course always returns
+> 0xffffffff because there is no such function and we never find the
+> device.
+> 
+> In Windows this works fine.
+> 
+> Now, since we get ACPI Notify() to the root port and not to the PXSX
+> device we should actually start our scan from there as well and not from
+> the non-existent PXSX device so fix this by checking presence of the
+> slot itself (function 0) if we fail to do that otherwise.
+> 
+> While there use pci_bus_read_dev_vendor_id() in get_slot_status() which
+> is the recommended way to read device and vendor ID of device on PCI bus.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=198557
+> Reported-by: Mike Lothian <mike@fireburn.co.uk>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: stable@vger.kernel.org
 
-No driver registers for PCIE_PORT_SERVICE_VC, so remove it.
+I (finally) applied this to pci/hotplug with Rafael's ack for v4.17,
+thanks!
 
-This removes the VC "service" files from /sys/bus/pci_express/devices,
-e.g., 0000:07:00.0:pcie108, 0000:08:04.0:pcie208 (all the files that
-contained "8" as the last digit of the "pcieXXX" part).  The port driver
-created these files for PCIe port devices that have a VC Capability.
-
-Since this reduces PCIE_PORT_DEVICE_MAXSERVICES and moves DPC down into the
-spot where VC used to be, the DPC sysfs files will now be named "pcieXX8".
-I don't think there's anything useful userspace can do with those files, so
-I hope nobody cares about these filenames.
-
-There is no VC driver that calls pcie_port_service_register(), so there
-never was a /sys/bus/pci_express/drivers/vc directory.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pcie/portdrv.h      |    6 ++----
- drivers/pci/pcie/portdrv_acpi.c |    2 +-
- drivers/pci/pcie/portdrv_core.c |   14 ++++----------
- 3 files changed, 7 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 7086086e45d0..7bfd75f9197b 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -19,12 +19,10 @@
- #define PCIE_PORT_SERVICE_AER		(1 << PCIE_PORT_SERVICE_AER_SHIFT)
- #define PCIE_PORT_SERVICE_HP_SHIFT	2	/* Native Hotplug */
- #define PCIE_PORT_SERVICE_HP		(1 << PCIE_PORT_SERVICE_HP_SHIFT)
--#define PCIE_PORT_SERVICE_VC_SHIFT	3	/* Virtual Channel */
--#define PCIE_PORT_SERVICE_VC		(1 << PCIE_PORT_SERVICE_VC_SHIFT)
--#define PCIE_PORT_SERVICE_DPC_SHIFT	4	/* Downstream Port Containment */
-+#define PCIE_PORT_SERVICE_DPC_SHIFT	3	/* Downstream Port Containment */
- #define PCIE_PORT_SERVICE_DPC		(1 << PCIE_PORT_SERVICE_DPC_SHIFT)
- 
--#define PCIE_PORT_DEVICE_MAXSERVICES   5
-+#define PCIE_PORT_DEVICE_MAXSERVICES   4
- 
- /* Port Type */
- #define PCIE_ANY_PORT			(~0)
-diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
-index 53f60053bd47..9d12650dc2ae 100644
---- a/drivers/pci/pcie/portdrv_acpi.c
-+++ b/drivers/pci/pcie/portdrv_acpi.c
-@@ -47,7 +47,7 @@ void pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
- 
- 	flags = root->osc_control_set;
- 
--	*srv_mask = PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_DPC;
-+	*srv_mask = PCIE_PORT_SERVICE_DPC;
- 	if (flags & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
- 		*srv_mask |= PCIE_PORT_SERVICE_HP;
- 	if (flags & OSC_PCI_EXPRESS_PME_CONTROL)
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 9a41751db332..bf851da97947 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -188,10 +188,8 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- 	if (ret < 0)
- 		return -ENODEV;
- 
--	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
--		if (i != PCIE_PORT_SERVICE_VC_SHIFT)
--			irqs[i] = pci_irq_vector(dev, 0);
--	}
-+	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-+		irqs[i] = pci_irq_vector(dev, 0);
- 
- 	return 0;
- }
-@@ -211,8 +209,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	int services = 0;
- 	int cap_mask = 0;
- 
--	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
--			| PCIE_PORT_SERVICE_VC;
-+	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP;
- 	if (pci_aer_available())
- 		cap_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
- 
-@@ -239,9 +236,6 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		 */
- 		pci_disable_pcie_error_reporting(dev);
- 	}
--	/* VC support */
--	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_VC))
--		services |= PCIE_PORT_SERVICE_VC;
- 	/* Root ports are capable of generating PME too */
- 	if ((cap_mask & PCIE_PORT_SERVICE_PME)
- 	    && pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
-@@ -331,7 +325,7 @@ int pcie_port_device_register(struct pci_dev *dev)
- 	 */
- 	status = pcie_init_service_irqs(dev, irqs, capabilities);
- 	if (status) {
--		capabilities &= PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_HP;
-+		capabilities &= PCIE_PORT_SERVICE_HP;
- 		if (!capabilities)
- 			goto error_disable;
- 	}
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c | 23 ++++++++++++++++-------
+>  1 file changed, 16 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index e2198a2feeca..b45b375c0e6c 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -541,6 +541,7 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+>  {
+>  	unsigned long long sta = 0;
+>  	struct acpiphp_func *func;
+> +	u32 dvid;
+>  
+>  	list_for_each_entry(func, &slot->funcs, sibling) {
+>  		if (func->flags & FUNC_HAS_STA) {
+> @@ -551,19 +552,27 @@ static unsigned int get_slot_status(struct acpiphp_slot *slot)
+>  			if (ACPI_SUCCESS(status) && sta)
+>  				break;
+>  		} else {
+> -			u32 dvid;
+> -
+> -			pci_bus_read_config_dword(slot->bus,
+> -						  PCI_DEVFN(slot->device,
+> -							    func->function),
+> -						  PCI_VENDOR_ID, &dvid);
+> -			if (dvid != 0xffffffff) {
+> +			if (pci_bus_read_dev_vendor_id(slot->bus,
+> +					PCI_DEVFN(slot->device, func->function),
+> +					&dvid, 0)) {
+>  				sta = ACPI_STA_ALL;
+>  				break;
+>  			}
+>  		}
+>  	}
+>  
+> +	if (!sta) {
+> +		/*
+> +		 * Check for the slot itself since it may be that the
+> +		 * ACPI slot is a device below PCIe upstream port so in
+> +		 * that case it may not even be reachable yet.
+> +		 */
+> +		if (pci_bus_read_dev_vendor_id(slot->bus,
+> +				PCI_DEVFN(slot->device, 0), &dvid, 0)) {
+> +			sta = ACPI_STA_ALL;
+> +		}
+> +	}
+> +
+>  	return (unsigned int)sta;
+>  }
+>  
+> -- 
+> 2.15.1
+> 
