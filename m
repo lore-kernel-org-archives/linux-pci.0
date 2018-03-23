@@ -1,47 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Dexuan Cui <decui@microsoft.com>
-To: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam03on0107.outbound.protection.outlook.com ([104.47.42.107]:61248
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751853AbeCWQNA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Mar 2018 12:13:00 -0400
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Haiyang Zhang <haiyangz@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
-Subject: [PATCH v4 0/4] PCI: hv: Add 4 cosmetic patches
-Date: Thu, 15 Mar 2018 14:21:18 +0000
-Message-ID: <KL1P15301MB00066C8F7CDF90BE9D2B7412BFD00@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-Content-Type: text/plain; charset="us-ascii"
+        Stephen Hemminger <sthemmin@microsoft.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v4] PCI: hv: Make sure the bus domain is really unique
+Date: Fri, 23 Mar 2018 16:12:58 +0000
+Message-ID: <2C72A4DB-2108-41DF-87B5-9E438C84C3F2@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The 4 patches should go in v4.16.
-
-There is no code change since v3:
-https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1628496.html
-
-I just split the original 6 patches to 2 series, and this is series 2.
-
-I fixed the order of Signed-off-by/Tested-by/Cc, etc., and fixed the
-other format issues in changelog (I hope I have fixed all of them).
-
-Dexuan Cui (4):
-  PCI: hv: Fix a comment typo in _hv_pcifront_read_config()
-  PCI: hv: Remove the bogus test in hv_eject_device_work()
-  PCI: hv: Remove hbus->enum_sem
-  PCI: hv: Only queue a new work in hv_pci_devices_present() if
-    necessary
-
- drivers/pci/host/pci-hyperv.c | 39 +++++++++++++++++----------------------
- 1 file changed, 17 insertions(+), 22 deletions(-)
-
---=20
-2.7.4
+V2hlbiBMaW51eCBydW5zIGFzIGEgZ3Vlc3QgVk0gaW4gSHlwZXItViBhbmQgSHlwZXItViBhZGRz
+IHRoZSB2aXJ0dWFsDQpQQ0kgYnVzIHRvIHRoZSBndWVzdCwgSHlwZXItViBhbHdheXMgcHJvdmlk
+ZXMgdW5pcXVlIFBDSSBkb21haW4uDQoNCmNvbW1pdCA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBV
+c2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQpvdmVycm9kZSB1bmlxdWUg
+ZG9tYWluIHdpdGggdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGZpcnN0IGRldmljZSBhZGRlZA0K
+dG8gdGhlIHZpcnR1YWwgUENJIGJ1cy4gVGhlIHJlYXNvbiBmb3IgdGhhdCBwYXRjaCBpcyB0byBo
+YXZlIGEgY29uc2lzdGVudA0KYW5kIHNob3J0IG5hbWUgZm9yIHRoZSBkZXZpY2UuIEJ1dCBjb21t
+aXQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlDQpkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQ
+Q0kgZG9tYWluIikgd2lsbCBub3QgZ3VhcmFudGVlIHVuaXF1ZSBkb21haW4gaWQuDQpGb3IgZXhh
+bXBsZSwgaWYgdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGRldmljZSBpcyAwIGFuZCB0aGVyZSBl
+eGlzdHMgYQ0KUENJIGJ1cyB3aXRoIGRvbWFpbiAwIGFscmVhZHksIHRoaXMgd2lsbCBjYXVzZSB0
+aGUgUENJIGJ1cyByZWdpc3RyYXRpb24NCndpdGgga2VybmVsIGZhaWxzLg0KDQpjb21taXQgNGE5
+YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KZG9t
+YWluIikgbmVlZCB0byBiZSByZXZlcnRlZC4gQWxzbywgd2Ugbm8gbG9uZ2VyIG5lZWQgaXQsIGFz
+IGNvbW1pdA0KNGExNjI2ZGQyMzNlICgibmV0dnNjOiB0cmFuc3BhcmVudCBWRiBtYW5hZ2VtZW50
+IikgcmVtb3ZlIHRoZQ0KbmVlZCBmb3IgaXQuDQoNClJldmVydCBjb21taXQgNGE5YjA5MzNiZGZj
+ICgiUENJOiBodjogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KZG9tYWluIikgc28g
+d2UgY2FuIHJlbGlhYmx5IHN1cHBvcnQgbXVsdGlwbGUgZGV2aWNlcyBiZWluZyBhc3NpZ25lZCB0
+bw0KYSBndWVzdC4NCg0KVGhpcyByZXZlcnQgc2hvdWxkIG9ubHkgYmUgYmFja3BvcnRlZCB0byBr
+ZXJuZWxzIHRoYXQgY29udGFpbiBjb21taXQNCjRhMTYyNmRkMjMzZSAoIm5ldHZzYzogdHJhbnNw
+YXJlbnQgVkYgbWFuYWdlbWVudCIpLg0KDQpGaXhlczogNGE5YjA5MzNiZGZjICgiUENJOiBodjog
+VXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSSBkb21haW4iKQ0KU2lnbmVkLW9mZi1ieTog
+U3JpZGhhciBQaXRjaGFpIDxzcmlkaGFyLnBpdGNoYWlAbWljcm9zb2Z0LmNvbT4NCkNjOiBzdGFi
+bGVAdmdlci5rZXJuZWwub3JnDQoNCi0tLQ0KQ2hhbmdlcyBpbiB2NDoNCiogZml4IHRoZSBjb21t
+aXQgY29tbWVudC4gW0xvcmVuem8gUGllcmFsaXNpLCBCam9ybiBIZWxnYWFzXQ0KLS0tDQogZHJp
+dmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMgfCAxMSAtLS0tLS0tLS0tLQ0KIDEgZmlsZSBjaGFu
+Z2VkLCAxMSBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNp
+LWh5cGVydi5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCmluZGV4IDJmYWYzOGVh
+Yjc4NS4uYWM2N2U1NmU0NTFhIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlw
+ZXJ2LmMNCisrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQpAQCAtMTUxOCwxNyAr
+MTUxOCw2IEBAIHN0YXRpYyBzdHJ1Y3QgaHZfcGNpX2RldiAqbmV3X3BjaWNoaWxkX2RldmljZShz
+dHJ1Y3QgaHZfcGNpYnVzX2RldmljZSAqaGJ1cywNCiAgICBnZXRfcGNpY2hpbGQoaHBkZXYsIGh2
+X3BjaWRldl9yZWZfY2hpbGRsaXN0KTsNCiAgICBzcGluX2xvY2tfaXJxc2F2ZSgmaGJ1cy0+ZGV2
+aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KDQotICAgLyoNCi0gICAgKiBXaGVuIGEgZGV2aWNlIGlz
+IGJlaW5nIGFkZGVkIHRvIHRoZSBidXMsIHdlIHNldCB0aGUgUENJIGRvbWFpbg0KLSAgICAqIG51
+bWJlciB0byBiZSB0aGUgZGV2aWNlIHNlcmlhbCBudW1iZXIsIHdoaWNoIGlzIG5vbi16ZXJvIGFu
+ZA0KLSAgICAqIHVuaXF1ZSBvbiB0aGUgc2FtZSBWTS4gIFRoZSBzZXJpYWwgbnVtYmVycyBzdGFy
+dCB3aXRoIDEsIGFuZA0KLSAgICAqIGluY3JlYXNlIGJ5IDEgZm9yIGVhY2ggZGV2aWNlLiAgU28g
+ZGV2aWNlIG5hbWVzIGluY2x1ZGluZyB0aGlzDQotICAgICogY2FuIGhhdmUgc2hvcnRlciBuYW1l
+cyB0aGFuIGJhc2VkIG9uIHRoZSBidXMgaW5zdGFuY2UgVVVJRC4NCi0gICAgKiBPbmx5IHRoZSBm
+aXJzdCBkZXZpY2Ugc2VyaWFsIG51bWJlciBpcyB1c2VkIGZvciBkb21haW4sIHNvIHRoZQ0KLSAg
+ICAqIGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRoZSBmaXJzdCBkZXZpY2Ug
+aXMgYWRkZWQuDQotICAgICovDQotICAgaWYgKGxpc3RfZW1wdHkoJmhidXMtPmNoaWxkcmVuKSkN
+Ci0gICAgICAgaGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogICAgbGlzdF9hZGRf
+dGFpbCgmaHBkZXYtPmxpc3RfZW50cnksICZoYnVzLT5jaGlsZHJlbik7DQogICAgc3Bpbl91bmxv
+Y2tfaXJxcmVzdG9yZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KICAgIHJldHVy
+biBocGRldjsNCi0tDQoyLjE0LjENCg0K
