@@ -1,168 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51036 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752757AbeCMXTM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Mar 2018 19:19:12 -0400
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
- <016dc910-f96a-8a60-4bda-fa24eea98ea5@codeaurora.org>
- <2b152932-2f44-408b-e3ed-b4608d95f82e@deltatee.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <156c24fb-6e27-28f6-0b36-7fd83311ce37@codeaurora.org>
-Date: Tue, 13 Mar 2018 19:19:07 -0400
+Return-Path: <SRS0=QDUS=GN=broadcom.com=srinath.mannam@kernel.org>
+Return-Path: <SRS0=QDUS=GN=broadcom.com=srinath.mannam@kernel.org>
+From: Srinath Mannam <srinath.mannam@broadcom.com>
+References: <744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu>
+ <20180321115037.GA26083@ming.t460p> <464125757.5843583.1521634231341.JavaMail.zimbra@kalray.eu>
+ <20180321154807.GD22254@ming.t460p> <20180321160238.GF12909@localhost.localdomain>
+ <1220434088.5871933.1521648656789.JavaMail.zimbra@kalray.eu>
+ <20180321215308.GH38649@bhelgaas-glaptop.roam.corp.google.com> <2116255963.5924726.1521790087788.JavaMail.zimbra@kalray.eu>
+In-Reply-To: <2116255963.5924726.1521790087788.JavaMail.zimbra@kalray.eu>
 MIME-Version: 1.0
-In-Reply-To: <2b152932-2f44-408b-e3ed-b4608d95f82e@deltatee.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Date: Fri, 23 Mar 2018 14:14:05 +0530
+Message-ID: <0b37cdbe43a350e46057efa197ba471a@mail.gmail.com>
+Subject: RE: [RFC PATCH] nvme: avoid race-conditions when enabling devices
+To: Marta Rybczynska <mrybczyn@kalray.eu>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>, Ming Lei <ming.lei@redhat.com>, axboe@fb.com, hch@lst.de,
+	sagi@grimberg.me, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
+	Pierre-Yves Kerbrat <pkerbrat@kalray.eu>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/13/2018 6:48 PM, Logan Gunthorpe wrote:
-> 
-> 
-> On 13/03/18 04:29 PM, Sinan Kaya wrote:
->> If hardware doesn't support it, blacklisting should have been the right
->> path and I still think that you should remove all switch business from the code.
->> I did not hear enough justification for having a switch requirement
->> for P2P.
-> 
-> I disagree.
-> 
->> You are also saying that root ports have issues not because of functionality but
->> because of performance. 
-> 
-> No... performance can also be an issue but the main justification for
-> this is that many root ports do not support P2P at all and can fail in
-> different ways (usually just dropping the TLPs).
-> 
->> What if I come up with a very cheap/crappy switch (something like used in data
->> mining)?
-> 
-> Good luck. That's not how hardware is designed. PCIe switches that have
-> any hope to compete with the existing market will need features like
-> NTB, non-transparent ports, etc... and that implies a certain symmetry
-> (ie there isn't a special host port because there may be more than one
-> and it may move around) which implies that packets will always be able
-> to forward between each ports which implies P2P will work.
-> 
+Hi Marta,
 
-It is still a switch it can move packets but, maybe it can move data at
-100kbps speed. 
+I could not get time to work on this.
+The present patch works for our platforms. so we continue with that.
+I will update new changes little later.
+If you have time, please try the same patch and let us know if any issue you
+see.
 
-What prevents that switch from trying P2P and having a bad user experience?
+Regards,
+Srinath.
 
-If everything is so broken, I was suggesting to at least list the switches
-you have tested.
+-----Original Message-----
+From: Marta Rybczynska [mailto:mrybczyn@kalray.eu]
+Sent: Friday, March 23, 2018 12:58 PM
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>; Ming Lei <ming.lei@redhat.com>;
+axboe@fb.com; hch@lst.de; sagi@grimberg.me; linux-nvme@lists.infradead.org;
+linux-kernel@vger.kernel.org; bhelgaas@google.com;
+linux-pci@vger.kernel.org; Pierre-Yves Kerbrat <pkerbrat@kalray.eu>; Srinath
+Mannam <srinath.mannam@broadcom.com>
+Subject: Re: [RFC PATCH] nvme: avoid race-conditions when enabling devices
 
-What's the problem with this?
 
-Why do you want to assume that all switches are good and all root ports are
-bad?
-
->> I have been doing my best to provide feedback. It feels like you are throwing
->> them over the wall to be honest.
+> On Wed, Mar 21, 2018 at 05:10:56PM +0100, Marta Rybczynska wrote:
 >>
->> You keep implying "not my problem".
-> 
-> Well, the fact of the matter is that extending this in all the ways
-> people like you want face huge problems on all sides. These are not
-> trivial issues and holding back work that works for our problem because
-> it doesn't solve your problem is IMO just going to grind development in
-> this area to a halt. We have to have something we can agree on which is
-> safe to start building on. The building can't just emerge fully formed
-> in one go.
-> 
+>> The problem may happen also with other device doing its probe and
+>> nvme running its workqueue (and we probably have seen it in practice
+>> too). We were thinking about a lock in the pci generic code too,
+>> that's why I've put the linux-pci@ list in copy.
+>
+> Yes, this is a generic problem in the PCI core.  We've tried to fix it
+> in the past but haven't figured it out yet.
+>
+> See 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
+> and 0f50a49e3008 ("Revert "PCI: Avoid race while enabling upstream
+> bridges"").
+>
+> It's not trivial, but if you figure out a good way to fix this, I'd be
+> thrilled.
+>
 
-What if the design is so canned that you can't change anything? 
+Bjorn, Srinath, are you aware of anyone working on an updated fix for this
+one?
 
-I have been asking things like getting rid of switch search in ACS
-enablement towards achieving generic P2P. You seem to be pushing back.
-You said yourself P2P and isolation doesn't go together at this point
-but you also care about isolation for other devices that are not doing
-P2P.
-
-Confusing...
-
-> P2P proposal go back a long time and have never gotten anywhere because
-> there are limitations and people want it to do things that are hard but
-> don't want to contribute the work to solving those problems.
-> 
->>> Well, if it's a problem for someone they'll have to solve it. We're
->>> targeting JBOFs that have no use for ACS / IOMMU groups at all.
->>
->> IMO, you (not somebody) should address this one way or the other before this
->> series land in upstream.
-> 
-> The real way to address this (as I've mentioned before) is with some way
-> of doing ACS and iomem groups dynamically. But this is a huge project in
-> itself and is never going to be part of the P2P patchset.
-
-fair enough.
-
-> 
->> Another assumption: There are other architectures like ARM64 where IOMMU
->> is enabled by default even if you don't use VMs for security reasons.
->> IOMMU blocks stray transactions.
-> 
-> True, but it doesn't change my point: ACS is not a requirement for Linux
-> many many systems do not have it on at all or by default.
-
-I don't think so.
-
-It is not a requirement for you but it is a requirement for me (ARM64 guy).
-Linux happens to run on multiple architectures. One exception invalidates your
-point.
-
-> 
->> Didn't the ACS behavior change suddenly for no good reason when we enabled
->> your code even though I might not be using the P2P but I happen to have
->> a kernel with P2P config option?
-> 
-
-If you are assuming that your kernel option should not be used by general
-distributions like Ubuntu/redhat etc. and requires a kernel compilation,
-creating a dependency to EXPERT is the right way to do. 
-
-Distributions assume that no damage is done by enabling PCI bus options
-under normal circumstances.
-
-> Well no, presumably you made a conscious choice to turn the config
-> option on and build a custom kernel for your box. That doesn't seem very
-> sudden and the reason is that the two concepts are very much at odds
-> with each other: you can't have isolation and still have transactions
-> between devices.
-> 
-> Logan
-> 
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Marta
