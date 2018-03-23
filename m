@@ -1,117 +1,43 @@
-Return-Path: <SRS0=tIDP=GE=intel.com=rafael.j.wysocki@kernel.org>
-Return-Path: <SRS0=tIDP=GE=intel.com=rafael.j.wysocki@kernel.org>
-Subject: Re: [PATCH] PCI/MSI: Don't set up INTx if MSI or MSI-X is enabled
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Mikael Starvik <starvik@axis.com>,
- Jesper Nilsson <jesper.nilsson@axis.com>, Tony Luck <tony.luck@intel.com>,
- Fenghua Yu <fenghua.yu@intel.com>, David Howells <dhowells@redhat.com>,
- linux-cris-kernel@axis.com, linux-kernel@vger.kernel.org,
- linux-ia64@vger.kernel.org, linux-am33-list@redhat.com
-References: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Message-ID: <c3f097e6-9347-58f5-579a-21b40a7bef3e@intel.com>
-Date: Wed, 14 Mar 2018 11:27:17 +0100
+Return-Path: <SRS0=+Q5Y=GN=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=+Q5Y=GN=linux.intel.com=mika.westerberg@kernel.org>
+Date: Fri, 23 Mar 2018 13:18:56 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Keith Busch <keith.busch@intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
+Message-ID: <20180323111856.GO2703@lahna.fi.intel.com>
+References: <20180314114125.71132-1-mika.westerberg@linux.intel.com>
+ <CAJZ5v0gOrQhXzLHDnABEYHxGbHVY89Nij9uQzqx-oyYmFwzuSg@mail.gmail.com>
+ <20180314120547.GB2703@lahna.fi.intel.com>
+ <20180314123332.GC19651@wunner.de>
+ <20180320104508.GF2703@lahna.fi.intel.com>
+ <20180320113556.GA24197@wunner.de>
+ <20180322104517.GA20389@wunner.de>
+ <20180322165317.GI2703@lahna.fi.intel.com>
+ <20180322173903.GA15503@wunner.de>
+ <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/13/2018 10:45 PM, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> If a device already has MSI or MSI-X enabled, there's no need to set up its
-> legacy INTx interrupt.
->
-> bba6f6fc68e7 ("[PATCH] MSI-X: fix resume crash") changed the cris, frv,
-> x86, and ia64 arches to skip INTx setup when MSI is enabled.
->
-> 16cf0ebc35dd ("x86/PCI: Do not use interrupt links for devices using
-> MSI-X") extended that by changing x86 to also skip INTx setup when MSI-X is
-> enabled.
->
-> Change the remaining arches (cris, frv, and ia64) to skip INTx setup when
-> either MSI or MSI-X is enabled.
->
-> Also update mn10300 (which didn't exist at the time of bba6f6fc68e7) to
-> follow the same pattern.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Mar 22, 2018 at 02:36:30PM -0500, Bjorn Helgaas wrote:
+> I hope we can avoid adding suspend_late/resume_early callbacks in
+> struct pcie_port_service_driver, and I also hope we can avoid adding
+> device links.  Those both sound pretty complicated.
+> 
+> Can you do something like the patch below, which does something
+> similar for PME?
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+AFAICT the core PCI PM code follows the same ordering than what PM core
+does so it may be possible that not all service drivers get
+resumed/suspended before other children (PCI buses). Basically this
+would be the same than just using core PM ops in DPC driver (in which
+case DPC specific things are still kept in DPC driver not in PCI core).
 
-> ---
->   arch/cris/arch-v32/drivers/pci/bios.c |    2 +-
->   arch/frv/mb93090-mb00/pci-vdk.c       |    2 +-
->   arch/ia64/pci/pci.c                   |    4 ++--
->   arch/mn10300/unit-asb2305/pci.c       |    8 +++++---
->   4 files changed, 9 insertions(+), 7 deletions(-)
->
-> diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-> index 6b9e6cfaa29e..c2bed0cc060b 100644
-> --- a/arch/cris/arch-v32/drivers/pci/bios.c
-> +++ b/arch/cris/arch-v32/drivers/pci/bios.c
-> @@ -68,7 +68,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->   	if ((err = pcibios_enable_resources(dev, mask)) < 0)
->   		return err;
->   
-> -	if (!dev->msi_enabled)
-> +	if (!pci_dev_msi_enabled(dev))
->   		pcibios_enable_irq(dev);
->   	return 0;
->   }
-> diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-> index f211839e2cae..4a55d1b82d21 100644
-> --- a/arch/frv/mb93090-mb00/pci-vdk.c
-> +++ b/arch/frv/mb93090-mb00/pci-vdk.c
-> @@ -413,7 +413,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->   
->   	if ((err = pci_enable_resources(dev, mask)) < 0)
->   		return err;
-> -	if (!dev->msi_enabled)
-> +	if (!pci_dev_msi_enabled(dev))
->   		pcibios_enable_irq(dev);
->   	return 0;
->   }
-> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> index f5ec736100ee..7ccc64d5fe3e 100644
-> --- a/arch/ia64/pci/pci.c
-> +++ b/arch/ia64/pci/pci.c
-> @@ -398,7 +398,7 @@ pcibios_enable_device (struct pci_dev *dev, int mask)
->   	if (ret < 0)
->   		return ret;
->   
-> -	if (!dev->msi_enabled)
-> +	if (!pci_dev_msi_enabled(dev))
->   		return acpi_pci_irq_enable(dev);
->   	return 0;
->   }
-> @@ -407,7 +407,7 @@ void
->   pcibios_disable_device (struct pci_dev *dev)
->   {
->   	BUG_ON(atomic_read(&dev->enable_cnt));
-> -	if (!dev->msi_enabled)
-> +	if (!pci_dev_msi_enabled(dev))
->   		acpi_pci_irq_disable(dev);
->   }
->   
-> diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-> index 3dfe2d31c67b..4d36ea517679 100644
-> --- a/arch/mn10300/unit-asb2305/pci.c
-> +++ b/arch/mn10300/unit-asb2305/pci.c
-> @@ -399,10 +399,12 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->   {
->   	int err;
->   
-> -	err = pci_enable_resources(dev, mask);
-> -	if (err == 0)
-> +	if ((err = pci_enable_resources(dev, mask)) < 0)
-> +		return err;
-> +
-> +	if (!pci_dev_msi_enabled(dev))
->   		pcibios_enable_irq(dev);
-> -	return err;
-> +	return 0;
->   }
->   
->   /*
->
+If we do not care about that then I think both options are pretty
+straighforward to implement.
