@@ -1,52 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Mar 2018 13:50:15 -0700
-From: Jason Gunthorpe <jgg@mellanox.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>, Oliver <oohall@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-block@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:50876 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751825AbeCWQse (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2018 12:48:34 -0400
+Date: Fri, 23 Mar 2018 17:48:32 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        Jake Oshins <jakeo@microsoft.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage
- the CMB
-Message-ID: <20180305205015.GT11337@mellanox.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-8-logang@deltatee.com>
- <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
- <20180305160004.GA30975@localhost.localdomain>
- <36c78987-006a-a97f-1d18-b0a08cbea9d4@grimberg.me>
- <20180305201053.GK11337@mellanox.com>
- <20180305204212.GD30975@localhost.localdomain>
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Subject: Re: [PATCH v4] PCI: hv: Make sure the bus domain is really unique
+Message-ID: <20180323164832.GB7794@kroah.com>
+References: <2C72A4DB-2108-41DF-87B5-9E438C84C3F2@microsoft.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180305204212.GD30975@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <2C72A4DB-2108-41DF-87B5-9E438C84C3F2@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 05, 2018 at 01:42:12PM -0700, Keith Busch wrote:
-> On Mon, Mar 05, 2018 at 01:10:53PM -0700, Jason Gunthorpe wrote:
-> > So when reading the above mlx code, we see the first wmb() being used
-> > to ensure that CPU stores to cachable memory are visible to the DMA
-> > triggered by the doorbell ring.
+On Fri, Mar 23, 2018 at 04:12:58PM +0000, Sridhar Pitchai wrote:
+> When Linux runs as a guest VM in Hyper-V and Hyper-V adds the virtual
+> PCI bus to the guest, Hyper-V always provides unique PCI domain.
 > 
-> IIUC, we don't need a similar barrier for NVMe to ensure memory is
-> visibile to DMA since the SQE memory is allocated DMA coherent when the
-> SQ is not within a CMB.
+> commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
+> overrode unique domain with the serial number of the first device added
+> to the virtual PCI bus. The reason for that patch is to have a consistent
+> and short name for the device. But commit 4a9b0933bdfc ("PCI: hv: Use
+> device serial number as PCI domain") will not guarantee unique domain id.
+> For example, if the serial number of the device is 0 and there exists a
+> PCI bus with domain 0 already, this will cause the PCI bus registration
+> with kernel fails.
+> 
+> commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI
+> domain") need to be reverted. Also, we no longer need it, as commit
+> 4a1626dd233e ("netvsc: transparent VF management") remove the
+> need for it.
+> 
+> Revert commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI
+> domain") so we can reliably support multiple devices being assigned to
+> a guest.
+> 
+> This revert should only be backported to kernels that contain commit
+> 4a1626dd233e ("netvsc: transparent VF management").
+> 
+> Fixes: 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
+> Signed-off-by: Sridhar Pitchai <sridhar.pitchai@microsoft.com>
+> Cc: stable@vger.kernel.org
+> 
+> ---
+> Changes in v4:
+> * fix the commit comment. [Lorenzo Pieralisi, Bjorn Helgaas]
+> ---
+>  drivers/pci/host/pci-hyperv.c | 11 -----------
+>  1 file changed, 11 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index 2faf38eab785..ac67e56e451a 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -1518,17 +1518,6 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
+>     get_pcichild(hpdev, hv_pcidev_ref_childlist);
+>     spin_lock_irqsave(&hbus->device_list_lock, flags);
+> 
+> -   /*
+> -    * When a device is being added to the bus, we set the PCI domain
+> -    * number to be the device serial number, which is non-zero and
+> -    * unique on the same VM.  The serial numbers start with 1, and
+> -    * increase by 1 for each device.  So device names including this
+> -    * can have shorter names than based on the bus instance UUID.
+> -    * Only the first device serial number is used for domain, so the
+> -    * domain number will not change after the first device is added.
+> -    */
+> -   if (list_empty(&hbus->children))
+> -       hbus->sysdata.domain = desc->ser;
+>     list_add_tail(&hpdev->list_entry, &hbus->children);
+>     spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+>     return hpdev;
+> --
+> 2.14.1
 
-You still need it.
-
-DMA coherent just means you don't need to call the DMA API after
-writing, it says nothing about CPU ordering.
-
-eg on x86 DMA coherent is just normal system memory, and you do need
-the SFENCE betweeen system memory stores and DMA triggering MMIO,
-apparently.
-
-Jason
+Your whitespace is totally wrong, it was probably eaten by your email
+client and so the patch can not be applied :(
