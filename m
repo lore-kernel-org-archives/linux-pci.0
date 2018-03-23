@@ -1,103 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33624 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752978AbeC3VFV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 17:05:21 -0400
-Subject: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log link
- speed and whether it's limited
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tal Gilboa <talgi@mellanox.com>
-Cc: Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Date: Fri, 30 Mar 2018 16:05:18 -0500
-Message-ID: <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3]PCI: hv: fix PCI-BUS domainID corruption
+Date: Fri, 23 Mar 2018 16:09:14 +0000
+Message-ID: <4561FB62-054B-4E2D-9FDD-780FDB1374F6@microsoft.com>
+References: <C600E28F-E581-431E-9CD4-47C776E8E70F@microsoft.com>
+ <20180315120522.GA15651@e107981-ln.cambridge.arm.com>
+ <DM5PR21MB0826439DF296763A3FA861C3F6D00@DM5PR21MB0826.namprd21.prod.outlook.com>
+ <04DBCCAB-4BA7-4E05-A047-44824995963E@microsoft.com>
+ <65B4E847-CC40-4166-BE8F-D44049EDB2FF@microsoft.com>
+ <20180320183208.GB24991@e107981-ln.cambridge.arm.com>
+ <4E6E5EE3-2EFA-4326-BE14-D5465F5F439F@microsoft.com>
+ <20180321173047.GA38649@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180321173047.GA38649@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tal Gilboa <talgi@mellanox.com>
-
-Add pcie_print_link_status().  This logs the current settings of the link
-(speed, width, and total available bandwidth).
-
-If the device is capable of more bandwidth but is limited by a slower
-upstream link, we include information about the link that limits the
-device's performance.
-
-The user may be able to move the device to a different slot for better
-performance.
-
-This provides a unified method for all PCI devices to report status and
-issues, instead of each device reporting in a different way, using
-different code.
-
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-[bhelgaas: changelog, reword log messages, print device capabilities when
-not limited]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c   |   29 +++++++++++++++++++++++++++++
- include/linux/pci.h |    1 +
- 2 files changed, 30 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e00d56b12747..cec7aed09f6b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5283,6 +5283,35 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
- 	return *width * PCIE_SPEED2MBS_ENC(*speed);
- }
- 
-+/**
-+ * pcie_print_link_status - Report the PCI device's link speed and width
-+ * @dev: PCI device to query
-+ *
-+ * Report the available bandwidth at the device.  If this is less than the
-+ * device is capable of, report the device's maximum possible bandwidth and
-+ * the upstream link that limits its performance to less than that.
-+ */
-+void pcie_print_link_status(struct pci_dev *dev)
-+{
-+	enum pcie_link_width width, width_cap;
-+	enum pci_bus_speed speed, speed_cap;
-+	struct pci_dev *limiting_dev = NULL;
-+	u32 bw_avail, bw_cap;
-+
-+	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
-+	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
-+
-+	if (bw_avail >= bw_cap)
-+		pci_info(dev, "%d Mb/s available bandwidth (%s x%d link)\n",
-+			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
-+	else
-+		pci_info(dev, "%d Mb/s available bandwidth, limited by %s x%d link at %s (capable of %d Mb/s with %s x%d link)\n",
-+			 bw_avail, PCIE_SPEED2STR(speed), width,
-+			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
-+			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
-+}
-+EXPORT_SYMBOL(pcie_print_link_status);
-+
- /**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f2bf2b7a66c7..38f7957121ef 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1086,6 +1086,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 			     enum pci_bus_speed *speed,
- 			     enum pcie_link_width *width);
-+void pcie_print_link_status(struct pci_dev *dev);
- void pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
+ICAgID4gUHJldmlvdXNseSwgd2hlbiB1c2luZyB0aGUgYm9uZCBkcml2ZXIsIHVuaXF1ZSBhbmQg
+cGVyc2lzdGVudCBWRiBOSUMgbmFtZQ0KICAgID4gd2FzIHJlcXVpcmVkLCBzbyB3ZSB1c2VkIHNl
+cmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiB3aGljaCBpcyBpbmNsdWRlZCBhcw0KICAgID4gcGFy
+dCBvZiB0aGUgVkYgTklDIG5hbWUuICBUcmFuc3BhcmVudCBTUklPViBtb2RlIHB1dHMgVkYgTklD
+IGJhc2VkIG9uIE1BQw0KICAgID4gbWF0Y2ggYXMgYSBzbGF2ZSBvZiBzeW50aGV0aWMgTklDLCBz
+byBWRiBOSUPigJlzIG5hbWUgaXMgbm8gbG9uZ2VyIGltcG9ydGFudC4NCiAgICANCiAgICBIaSBT
+cmlkaGFyLA0KICAgIA0KICAgIEEgZmV3IGhpbnRzIGFib3V0IHN1Ym1pdHRpbmcgcGF0Y2hlcyBt
+b3JlIGVmZmljaWVudGx5Og0KICAgIA0KICAgIDEpIFlvdSBuZXZlciBoYXZlIHRvIGFzayAiQXJl
+IHdlIE9LIHdpdGggdGhlIGV4cGxhbmF0aW9uPyAgSWYgc28sIEknbGwNCiAgICBzZW5kIGEgcGF0
+Y2ggd2l0aCB1cGRhdGVkIGNoYW5nZWxvZy4iICBUaGF0IGZvcmNlcyBhbiBleHRyYQ0KICAgIHJv
+dW5kLXRyaXAuICBTaW1wbHkgcG9zdCBhIG5ldyB2ZXJzaW9uIHdpdGggeW91ciBwcm9wb3NlZCB1
+cGRhdGUuICBJZg0KICAgIExvcmVuem8gaGFzIG1vcmUgcXVlc3Rpb25zLCBoZSdsbCBzYXkgc28g
+YW5kIHlvdSBjYW4gZG8gYW5vdGhlcg0KICAgIHZlcnNpb24uDQogICAgDQogICAgMikgV2hlbiBM
+b3JlbnpvIGlzIGFza2luZyBmb3IgY2xhcmlmaWNhdGlvbiwgaGUncyBub3QgcmVhbGx5IGFza2lu
+Zw0KICAgIGZvciB0aGUgY2xhcmlmaWNhdGlvbiBpbiBhbiBlbWFpbCByZXNwb25zZSwgYmVjYXVz
+ZSB0aGUgZW1haWwgdGhyZWFkDQogICAgd2lsbCBzb29uIGJlIGZvcmdvdHRlbiBhbmQgbG9zdCBp
+biB0aGUgYXJjaGl2ZXMuICBXaGF0IHdlIHJlYWxseSB3YW50DQogICAgaXMgZm9yIHRoZSBwZXJt
+YW5lbnQgZ2l0IGNoYW5nZWxvZyB0byBtYWtlIHNlbnNlIHRvIHNvbWVvbmUgaW4gdGhlDQogICAg
+ZnV0dXJlLiAgVGhlIGVhc2llc3Qgd2F5IGlzIHRvIHBvc3QgYSBuZXcgcGF0Y2ggdmVyc2lvbiB3
+aXRoIGENCiAgICByZXZpc2VkIGNoYW5nZWxvZyB0aGF0IGFuc3dlcnMgdGhlIHF1ZXN0aW9ucy4N
+CiAgICANCiAgICAzKSBQbGVhc2UgY2FwaXRhbGl6ZSBhbmQgcHVuY3R1YXRlIGNvbnNpc3RlbnRs
+eSB3aXRoIHByZXZpb3VzIGhpc3RvcnksDQogICAgZS5nLiwgIlBDSTogaHY6IEZpeCBkb21haW4g
+SUQgY29ycnVwdGlvbiIgZm9yIHlvdXIgdGl0bGUsICJTUi1JT1YiDQogICAgKG5vdCAiU1JJT1Yi
+KSBhbmQgImJ1cyIgKG5vdCAiQlVTIikgaW4gY2hhbmdlbG9nLiAgQm90aCAicGFyYS12aXJ0dWFs
+Ig0KICAgIGFuZCAicGFyYXZpcnR1YWwiIGFyZSB1c2VkIGluIHRoZSBrZXJuZWwsIGJ1dCAicGFy
+YXZpcnR1YWwiIGlzIG11Y2gNCiAgICBtb3JlIGNvbW1vbi4gIFJ1biAiZ2l0IGxvZyIgYW5kICJn
+aXQgbG9nIC0tb25lbGluZSIgb24geW91ciBmaWxlIGFuZA0KICAgIGZvbGxvdyB0aGUgc2FtZSBz
+dHlsZS4NCiAgICANCiAgICA0KSBXaGVuIHlvdSByZWZlcmVuY2UgYSBwcmV2aW91cyBjb21taXQs
+IHBsZWFzZSB1c2UgdGhpcyBzdHlsZToNCiAgICAwYzE5NTU2N2E4ZjYgKCJuZXR2c2M6IHRyYW5z
+cGFyZW50IFZGIG1hbmFnZW1lbnQiKSwgaS5lLiwgMTItY2hhciBTSEExDQogICAgZm9sbG93ZWQg
+YnkgdGl0bGUuICBZb3Ugc2VlbSB0byBoYXZlIHJlbW92ZWQgc29tZSBzcGFjZXMgZnJvbSB0aGUN
+CiAgICBjb21taXQgeW91IG1lbnRpb24gaW4gdGhlICJGaXhlcyIgdGFnLg0KICAgIA0KICAgIEFu
+ZCBhIGZldyBjb250ZW50IHF1ZXN0aW9ucy9vYnNlcnZhdGlvbnMgb2YgbXkgb3duOg0KICAgIA0K
+ICAgIDEpICJGaXggZG9tYWluIElEIGNvcnJ1cHRpb24iIGlzbid0IGEgdmVyeSBnb29kIHRpdGxl
+IGJlY2F1c2UgaXQNCiAgICBzdWdnZXN0cyB5b3UncmUgZml4aW5nIGEgbWVtb3J5IGNvcnJ1cHRp
+b24gb3Igc2ltaWxhciBkZWZlY3QuICBCdXQgaW4NCiAgICBmYWN0LCBJIHRoaW5rIHlvdSdyZSBy
+ZW1vdmluZyBzb21ldGhpbmcgdGhhdCB1c2VkIHRvIGJlIGEgZmVhdHVyZQ0KICAgIChhZGRlZCBi
+eSA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJ
+DQogICAgZG9tYWluIikpIGJ1dCBpcyBub3cgbm8gbG9uZ2VyIG5lZWRlZCBhbmQgaW4gZmFjdCBu
+b3cgY2F1c2VzIGENCiAgICBwcm9ibGVtLg0KICAgIA0KICAgIDIpIFlvdXIgY2hhbmdlbG9nIGRv
+ZXMgbWVudGlvbiA0YTliMDkzM2JkZmMsIHdoaWNoIGlzIGdvb2QsIGJ1dA0KICAgIHRoZXJlIG11
+c3QgYmUgc29tZSBvdGhlciA8Y29tbWl0IFg+IHRoYXQgbWFrZXMgaXQgc2FmZSB0byByZW1vdmUN
+CiAgICA0YTliMDkzM2JkZmMsIGkuZS4sIDxjb21taXQgWD4gcmVtb3ZlcyB0aGUgbmVlZCBmb3Ig
+dXNpbmcgdGhlIGRldmljZQ0KICAgIHNlcmlhbCBudW1iZXIgYXMgdGhlIFBDSSBkb21haW4uICA8
+Q29tbWl0IFg+ICptdXN0KiBiZSBtZW50aW9uZWQgaW4NCiAgICB0aGUgY2hhbmdlbG9nLiAgT3Ro
+ZXJ3aXNlLCBwZW9wbGUgbWF5IGJhY2twb3J0IHRoaXMgcGF0Y2ggdG8gYSBrZXJuZWwNCiAgICB0
+aGF0IGRvZXNuJ3QgaW5jbHVkZSA8Y29tbWl0IFg+LCBhbmQgdGhpbmdzIHdpbGwgYnJlYWsuDQog
+ICAgDQogICAgMykgSSBkb24ndCB1bmRlcnN0YW5kIHdoYXQgeW91IG1lYW4gYnkgInRyYW5zcGFy
+ZW50IFNSLUlPViBtb2RlIi4gIElzDQogICAgdGhhdCBzb21ldGhpbmcgZGlmZmVyZW50IHRoYW4g
+cmVndWxhciBTUi1JT1Y/ICBJZiBzbywgd2hhdCBleGFjdGx5IGlzDQogICAgdGhlIGRpZmZlcmVu
+Y2U/ICBJIGRvbid0IHRoaW5rIHRoZSBQQ0llIHNwZWNzIG1lbnRpb24gYSAidHJhbnNwYXJlbnQN
+CiAgICBtb2RlIiwgc28gaXMgaXQgYSBIeXBlci1WIHRoaW5nPyAgSXQgc2VlbXMgaW1wb3J0YW50
+LCBidXQgSSBkb24ndCBzZWUNCiAgICBhbnkgcGNpLWh5cGVydi5jIGNvbW1pdHMgdGhhdCBtZW50
+aW9uIGl0Lg0KICAgIA0KICAgIEhlcmUncyBhIHN0YWIgYXQgdGhlIHNvcnQgb2YgY2hhbmdlbG9n
+IEkgd291bGQgYmUgbG9va2luZyBmb3IuDQogICAgT2J2aW91c2x5IEkgZG9uJ3QgdW5kZXJzdGFu
+ZCBtdWNoIGFib3V0IEh5cGVyLVYgYW5kIHBjaS1oeXBlcnYuYywgc28NCiAgICBwbGVhc2UgY29y
+cmVjdCB0aGUgdGhpbmdzIEkgZ290IHdyb25nOg0KICAgIA0KICAgICAgV2hlbiBMaW51eCBydW5z
+IGFzIGEgZ3Vlc3QgaW4gYSBIeXBlci1WIFZNLCBwY2ktaHlwZXJ2LmMNCiAgICAgIHBhcmF2aXJ0
+dWFsaXplcyBhY2Nlc3MgdG8gUENJIGRldmljZXMgYXNzaWduZWQgdG8gdGhlIGd1ZXN0LiAgRm9y
+DQogICAgICBlYWNoIG9mIHRob3NlIGRldmljZXMsIGh2X3BjaV9wcm9iZSgpIGNyZWF0ZXMgYSB2
+aXJ0dWFsIFBDSSBidXMgaW4NCiAgICAgIGl0cyBvd24gdW5pcXVlIFBDSSBkb21haW4uDQogICAg
+DQogICAgICA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIg
+YXMgUENJIGRvbWFpbiIpDQogICAgICBvdmVycm9kZSB0aGF0IHVuaXF1ZSBQQ0kgZG9tYWluIHRv
+IGJlIHRoZSBIeXBlci1WIGRldmljZSBzZXJpYWwNCiAgICAgIG51bWJlciB0byBtYWtlIGRldmlj
+ZSBuYW1lcyBtb3JlIGNvbnZlbmllbnQgPG9yIHdoYXRldmVyIHRoZSByZWFsDQogICAgICByZWFz
+b24gaXM7IEkgZG9uJ3QgcXVpdGUgdW5kZXJzdGFuZCB0aGlzIHBhcnQ+Lg0KICAgIA0KICAgICAg
+T25lIHByb2JsZW0gd2l0aCA0YTliMDkzM2JkZmMgaXMgdGhhdCB0aGUgSHlwZXItViBkZXZpY2Ug
+c2VyaWFsDQogICAgICBudW1iZXIgaXMgbm90IG5lY2Vzc2FyaWx5IHVuaXF1ZSwgc28gd2UgbWF5
+IGVuZCB1cCB3aXRoIHR3byBidXNlcw0KICAgICAgd2l0aCB0aGUgc2FtZSBkb21haW4gYW5kIGJ1
+cyBudW1iZXIsIGFuZCBhZGRpbmcgdGhlIHNlY29uZCBidXMNCiAgICAgIGZhaWxzLg0KICAgIA0K
+ICAgICAgV2Ugbm8gbG9uZ2VyIG5lZWQgdG8gb3ZlcnJpZGUgdGhlIFBDSSBkb21haW4gbnVtYmVy
+cyBiZWNhdXNlIDxjb21taXQNCiAgICAgIFg+IHJlbW92ZWQgdGhlIG5lZWQgZm9yIHRoYXQuDQog
+ICAgDQogICAgICBSZXZlcnQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmljZSBzZXJp
+YWwgbnVtYmVyIGFzIFBDSQ0KICAgICAgZG9tYWluIikgc28gd2UgY2FuIHJlbGlhYmx5IHN1cHBv
+cnQgbXVsdGlwbGUgZGV2aWNlcyBiZWluZyBhc3NpZ25lZA0KICAgICAgdG8gYSBndWVzdC4NCiAg
+ICANCiAgICAgIFRoaXMgcmV2ZXJ0IHNob3VsZCBvbmx5IGJlIGJhY2twb3J0ZWQgdG8ga2VybmVs
+cyB0aGF0IGNvbnRhaW4NCiAgICAgIDxjb21taXQgWD4uDQogICAgDQogICAgQmpvcm4NCg0KVGhh
+bmtzIGZvciB5b3VyIGNvbW1lbnRzIEJqb3JuLiBJIHRvb2sgc29tZSB0aW1lIHRvIGdvIG92ZXIg
+dGhlIGFsbCB0aGUNCmNvbW1lbnRzIGFuZCBzZW5kaW5nIGEgbmV3IHZlcnNpb24gb2YgdGhlIHBh
+dGNoIHdpdGggYWxsIHRoZSBjb21tZW50cyANCmluY29ycG9yYXRlZC4NCg0KVGhhbmtzDQpTcmlk
+aGFyICAgIA0KDQo=
