@@ -1,41 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:47667 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753124AbeCFCt6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Mar 2018 21:49:58 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 4/6] dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to rockchip-pcie-host.txt
-Date: Tue,  6 Mar 2018 10:43:59 +0800
-Message-Id: <1520304239-235024-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=vpXI=GO=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=vpXI=GO=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20180323220127.GD210003@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180314123332.GC19651@wunner.de> <20180320104508.GF2703@lahna.fi.intel.com>
+ <20180320113556.GA24197@wunner.de> <20180322104517.GA20389@wunner.de>
+ <20180322165317.GI2703@lahna.fi.intel.com> <20180322173903.GA15503@wunner.de>
+ <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
+ <20180323111856.GO2703@lahna.fi.intel.com> <20180323210857.GA210003@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0iFSgC4gbWCi09Nr4rwa7r4QfAQ__Oz88cagMZ3Z_NnKg@mail.gmail.com> <20180323220127.GD210003@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 24 Mar 2018 11:48:08 +0100
+Message-ID: <CAJZ5v0gi_-ZQCncRp1jBRSw6sOjZ4OoXq-aEykUfNV1uFgJZ3A@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Keith Busch <keith.busch@intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Just make it more obvious that this documentation is referenced for
-adding Rockchip PCIe controller as root complex mode.
+On Fri, Mar 23, 2018 at 11:01 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Mar 23, 2018 at 10:11:53PM +0100, Rafael J. Wysocki wrote:
+>> On Fri, Mar 23, 2018 at 10:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Fri, Mar 23, 2018 at 01:18:56PM +0200, Mika Westerberg wrote:
+>> >> On Thu, Mar 22, 2018 at 02:36:30PM -0500, Bjorn Helgaas wrote:
+>> >> > I hope we can avoid adding suspend_late/resume_early callbacks in
+>> >> > struct pcie_port_service_driver, and I also hope we can avoid adding
+>> >> > device links.  Those both sound pretty complicated.
+>> >> >
+>> >> > Can you do something like the patch below, which does something
+>> >> > similar for PME?
+>> >>
+>> >> AFAICT the core PCI PM code follows the same ordering than what PM core
+>> >> does so it may be possible that not all service drivers get
+>> >> resumed/suspended before other children (PCI buses). Basically this
+>> >> would be the same than just using core PM ops in DPC driver (in which
+>> >> case DPC specific things are still kept in DPC driver not in PCI core).
+>> >
+>> > I'm not sure I follow this.  I assume the core PCI PM code guarantees
+>> > that a bridge is suspended after its children and resumed before them.
+>> > Are you saying that's not the case?
+>>
+>> if this is a PCIe port, then there are two categories of childres:
+>> port services and the PCI devices below it.
+>>
+>> There are no ordering constraints between the former and the latter,
+>> which appears to be a problem here.
+>
+> It seems like a pretty fundamental problem if port services can be
+> suspended before PCI devices below the port.  I assume that would have
+> to be fixed somehow in the PCI core and the port driver, but this
+> patch only touches the DPC service driver.
+>
+> I'd really like to get rid of the port services driver altogether, and
+> this ordering issue seems like a good reason to do that.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+I agree.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
----
-
-Changes in v3: None
-Changes in v2:
-- remove rockchip,rk3399-pcie-host compatible(Suggested by Rob)
-
- .../devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} | 0
- 1 file changed, 0 insertions(+), 0 deletions(-)
- rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (100%)
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt
-similarity index 100%
-rename from Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-rename to Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt
--- 
-1.9.1
+In fact, I was about to say the exact same thing, but you beat me to that. :-)
