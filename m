@@ -1,54 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:50986 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbeC1Lin (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:38:43 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 0/8] Designware EP support and code clenan up
-Date: Wed, 28 Mar 2018 12:38:30 +0100
-Message-Id: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=N1sc=GO=denx.de=wd@kernel.org>
+Return-Path: <SRS0=N1sc=GO=denx.de=wd@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+    Mika Westerberg <mika.westerberg@linux.intel.com>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: PCIe x4 cards not detected on Z370 mainboards
+MIME-Version: 1.0
+Content-type: text/plain; charset=UTF-8
+In-reply-to: <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180322184840.E31D4247251@gemini.denx.de> <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com> <20180323084855.E3EAF247251@gemini.denx.de> <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
+Date: Sat, 24 Mar 2018 21:15:34 +0100
+Message-Id: <20180324201534.092D2247245@gemini.denx.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch set was made against the Bjorn's next branch.
+Dear Bjorn,
 
-Adds support Designware EP support.
+thanks - I really appreciate your help.
 
-Increases the maximum number of interrupts allowed for Designware IP
-controller.
+In message <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com> you wrote:
+>
+> From lspci-adaptec-29320LPE:
+> 
+>   00:01.0 Intel Xeon E3-1200 v5/E3-1500 Root Port
+>     Bus: primary=00, secondary=01, subordinate=02
+>   01:00.0 PEX 8114 PCI Express-to-PCI/PCI-X Bridge
+>     Bus: primary=01, secondary=02, subordinate=02
+>   02:04.0 Adaptec ASC-29320ALP U320 (rev 10)
+> 
+> The 00:01.0 Root Port is built into your motherboard's chipset.  The
+> 01:00.0 Bridge and ASC-29320ALP devices are both on the plugin card.
+> The card should have a PLX-labeled chip and an Adaptec-labeled one.
 
-Does a code cleanup on Designware driver:
- - Replaces magic numbers without a easy meaning by a well known define
-   that helps the human compreension.
- - Replaces a division by 2 by a simple right shift rotation of 1 bit.
- - Fixes all first letter characters on comments and debug messages to
-   upper case to maintain coherency.
+Correct.  It has an AIC-7901X (Adaptec) and a PEX8114-BD13BI G (PLX).
 
-Gustavo Pimentel (8):
-  bindings: PCI: designware: Example update
-  PCI: dwc: designware: Add support for endpoint mode
-  bindings: PCI: designware: Add support for the EP in designware driver
-  misc: pci_endpoint_test: Add designware EP entry
-  PCI: dwc: designware: Define maximum number of vectors
-  PCI: dwc: Replace lower into upper case characters
-  PCI: dwc: Small computation improvement
-  PCI: dwc: Replace magic number by defines
+> >>> I don't know if this is relevant, but in Linux (Fedora 27,
+> >>> 4.15.6-300.fc27.x86_64 kernel), I see these error messages:
+> >>> 
+> >>>   ACPI Error: [_SB_.PCI0.RP05.PXSX] Namespace lookup failure, AE_NOT_FOUND (20170831/dswload2-191)
+> >>>   ACPI Exception: AE_NOT_FOUND, During name lookup/catalog (20170831/psobject-252)
+> >>>   ACPI Error: Method parse/execution failed \_SB.PCI0.RP04.PXSX, AE_NOT_FOUND (20170831/psparse-550)
+> >>>   ACPI Error: [_SB_.PCI0.RP09.PXSX] Namespace lookup failure, AE_NOT_FOUND (20170831/dswload2-191)
+> >>>   ACPI Exception: AE_NOT_FOUND, During name lookup/catalog (20170831/psobject-252)
+> >>>   ACPI Error: Method parse/execution failed \_SB.PCI0.RP08.PXSX, AE_NOT_FOUND (20170831/psparse-550)
+> 
+> This is interesting.  These methods (PXSX) are connected with PCIe
+> Root Ports, and Mika's recent patch [1] also mentioned PXSX, though
+> that was in the context of Thunderbolt hotplug.
+> 
+> It's conceivable that Linux is doing something wrong here that causes
+> BIOS to leave that 00:01.0 Root Port disabled.
 
- .../devicetree/bindings/pci/designware-pcie.txt    |  25 +++-
- drivers/misc/pci_endpoint_test.c                   |   1 +
- drivers/pci/dwc/Kconfig                            |  45 ++++--
- drivers/pci/dwc/pcie-designware-ep.c               |  16 +-
- drivers/pci/dwc/pcie-designware-host.c             |  77 +++++-----
- drivers/pci/dwc/pcie-designware-plat.c             | 163 +++++++++++++++++++--
- drivers/pci/dwc/pcie-designware.c                  |  22 +--
- drivers/pci/dwc/pcie-designware.h                  |   1 +
- drivers/pci/endpoint/functions/pci-epf-test.c      |   5 +
- 9 files changed, 276 insertions(+), 79 deletions(-)
+But is not in any case the problem at least also in the mainboard
+BIOS? Should we not see the card's BIOS start messages in any case?
+For example, if I wanted to boot from a disk attached to this SAS
+controller, it would need to be up and running for booting Linux.
+
+> Do these PXSX messages also occur when you boot with the working
+> 29320LPE card in the slot?
+
+Yes, they appear always - without any card, with the working Adaptec
+SCSI controller, and with the non-working LSI SAS controllers.
+
+For reference, I have uploaded the complete boot logs for these
+three cases to the same directory, see files "dmesg-no-card",
+"lspci-adaptec-29320LPE" and "lspci-lsi-SAS3444E" at
+
+https://owncloud.denx.de/index.php/s/wXiCMMYJodGj5Kr
+
+
+Best regards,
+
+Wolfgang Denk
 
 -- 
-2.7.4
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Let's say the docs present a simplified view of reality...    :-)
+                      - Larry Wall in  <6940@jpl-devvax.JPL.NASA.GOV>
