@@ -1,76 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:39558 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750748AbeCPMz2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Mar 2018 08:55:28 -0400
-Date: Fri, 16 Mar 2018 13:55:24 +0100
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: kishon@ti.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, joe@perches.com
-Subject: Re: [PATCH v4 5/5] misc: pci_endpoint_test: Handle 64-bit BARs
- properly
-Message-ID: <20180316125523.GA30728@axis.com>
-References: <20180308133331.19464-1-niklas.cassel@axis.com>
- <20180308133331.19464-6-niklas.cassel@axis.com>
- <20180315132213.GA8629@kroah.com>
+Return-Path: <SRS0=8W8s=GO=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=8W8s=GO=h08.hostsharing.net=foo00@kernel.org>
+Date: Sat, 24 Mar 2018 14:48:07 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Keith Busch <keith.busch@intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
+Message-ID: <20180324134807.GA2627@wunner.de>
+References: <20180314114125.71132-1-mika.westerberg@linux.intel.com>
+ <CAJZ5v0gOrQhXzLHDnABEYHxGbHVY89Nij9uQzqx-oyYmFwzuSg@mail.gmail.com>
+ <20180314120547.GB2703@lahna.fi.intel.com>
+ <20180314123332.GC19651@wunner.de>
+ <20180320104508.GF2703@lahna.fi.intel.com>
+ <20180320113556.GA24197@wunner.de>
+ <20180322104517.GA20389@wunner.de>
+ <20180322165317.GI2703@lahna.fi.intel.com>
+ <20180322173903.GA15503@wunner.de>
+ <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180315132213.GA8629@kroah.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 15, 2018 at 02:22:13PM +0100, Greg Kroah-Hartman wrote:
-> On Thu, Mar 08, 2018 at 02:33:30PM +0100, Niklas Cassel wrote:
-> > A 64-bit BAR consists of a BAR pair, where the second BAR has the
-> > upper bits, so we cannot simply call pci_ioremap_bar() on every single
-> > BAR index.
-> > 
-> > The second BAR in a BAR pair will not have the IORESOURCE_MEM resource
-> > flag set. Only call ioremap on BARs that have the IORESOURCE_MEM
-> > resource flag set.
-> > 
-> > pci 0000:01:00.0: BAR 4: assigned [mem 0xc0300000-0xc031ffff 64bit]
-> > pci 0000:01:00.0: BAR 2: assigned [mem 0xc0320000-0xc03203ff 64bit]
-> > pci 0000:01:00.0: BAR 0: assigned [mem 0xc0320400-0xc03204ff 64bit]
-> > pci-endpoint-test 0000:01:00.0: can't ioremap BAR 1: [??? 0x00000000 flags 0x0]
-> > pci-endpoint-test 0000:01:00.0: failed to read BAR1
-> > pci-endpoint-test 0000:01:00.0: can't ioremap BAR 3: [??? 0x00000000 flags 0x0]
-> > pci-endpoint-test 0000:01:00.0: failed to read BAR3
-> > pci-endpoint-test 0000:01:00.0: can't ioremap BAR 5: [??? 0x00000000 flags 0x0]
-> > pci-endpoint-test 0000:01:00.0: failed to read BAR5
-> > 
-> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > ---
-> >  drivers/misc/pci_endpoint_test.c | 12 +++++++-----
-> >  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> Where are the 4 other patches in this series?  I can't just only apply
-> the last one, right?
+On Thu, Mar 22, 2018 at 02:36:30PM -0500, Bjorn Helgaas wrote:
+> I hope we can avoid adding suspend_late/resume_early callbacks in
+> struct pcie_port_service_driver,
 
-http://patchwork.ozlabs.org/project/linux-pci/list/?series=32658
+I'm fairly certain that we cannot avoid adding at least a ->resume_noirq
+callback to struct pcie_port_service_driver to fix a pciehp use case:
 
-I'm expecting all patches to go via Lorenzo's pci tree.
-
-> 
-> Please be careful when sending patches to properly notify everyone...
-
-I'm using scripts from Joe Perches that run get_maintainer.pl,
-these scripts are then used as --to-cmd and --cc-cmd for git send-email:
-https://lkml.org/lkml/2016/9/14/482
-
-(I did have to modify them so they handle rerolled patch series.)
-BTW. Joe, do you have updated versions of your scripts?
+On ->resume_noirq the PCI core walks down the hierarchy to put every
+device in D0 and restore its state (with a few exceptions such as direct
+complete).  However with hotplug ports, it's possible that the user has
+unplugged devices while the system was asleep, or replaced them with
+other devices.  That's a very real use case with Thunderbolt and we're
+handling it poorly or not at all currently.  We need to check if the
+devices below a hotplug port are still there or have been replaced
+(can probably be recognized by looking at vendor/device IDs across the
+entire sub-hierarchy) during the ->resume_noirq phase.  We could mark
+them with pci_dev_set_disconnected(), then skip putting them into D0
+if that flag has been set.
 
 
-Greg, I'm assuming that you wouldn't want to be cc'd on all patches in the
-series, since all except the last one are pci related.
-However, perhaps it would be nice to add all those who are cc'd in the
-individual patches, as cc to the cover letter, that way it might be easier
-to figure out what tree will most likely merge a certain patch series.
+> @@ -102,7 +88,6 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.thaw		= pcie_port_device_resume,
+>  	.poweroff	= pcie_port_device_suspend,
+>  	.restore	= pcie_port_device_resume,
+> -	.resume_noirq	= pcie_port_resume_noirq,
+>  	.runtime_suspend = pcie_port_runtime_suspend,
+>  	.runtime_resume	= pcie_port_runtime_resume,
+>  	.runtime_idle	= pcie_port_runtime_idle,
 
+So the above would have to be reverted unfortunately when we fix this
+use case.
 
+Thanks,
 
-Kind regards,
-Niklas
+Lukas
