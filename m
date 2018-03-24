@@ -1,108 +1,182 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v17 08/10] ACPI / scan: do not enumerate Indirect IO host
- children
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
- <1521051359-34473-9-git-send-email-john.garry@huawei.com>
- <2309217.pWfZsU88YQ@aspire.rjw.lan>
- <906b3868-39a5-3807-23a4-dfc52c2e82c4@huawei.com>
- <CAJZ5v0gm5AokZy4JvuJzDgdNoc88FjrMmXR2RK5pdRkXgtYrXQ@mail.gmail.com>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Dann Frazier <dann.frazier@canonical.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Rob Herring <robh@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Joe Perches <joe@perches.com>,
-        "Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>, Corey Minyard <minyard@acm.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Alexander Graf <agraf@suse.de>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <d4048516-033c-85f1-1766-69b3e58ae295@huawei.com>
-Date: Mon, 19 Mar 2018 11:13:07 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:44402 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751891AbeCXODk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Mar 2018 10:03:40 -0400
+Received: by mail-qk0-f193.google.com with SMTP id h14so15814664qkj.11
+        for <linux-pci@vger.kernel.org>; Sat, 24 Mar 2018 07:03:39 -0700 (PDT)
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>
+Cc: "'Rob Herring'" <robh@kernel.org>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>,
+        "'Linus Walleij'" <linus.walleij@linaro.org>,
+        "'Xiaowei Song'" <songxiaowei@hisilicon.com>,
+        "'Ray Jui'" <rjui@broadcom.com>,
+        "'Scott Branden'" <sbranden@broadcom.com>,
+        "'Jon Mason'" <jonmason@broadcom.com>,
+        "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
+        "'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+        "'Tanmay Inamdar'" <tinamdar@apm.com>,
+        "'Shawn Lin'" <shawn.lin@rock-chips.com>,
+        "'Ley Foon Tan'" <lftan@altera.com>,
+        "'Fengguang Wu'" <fengguang.wu@intel.com>
+References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com> <20180321144254.7406-10-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20180321144254.7406-10-lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v2 09/10] PCI: dwc: Move CONFIG_PCI depends to menu
+Date: Sat, 24 Mar 2018 10:03:37 -0400
+Message-ID: <000001d3c378$e83efbd0$b8bcf370$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0gm5AokZy4JvuJzDgdNoc88FjrMmXR2RK5pdRkXgtYrXQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain;
+        charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19/03/2018 10:57, Rafael J. Wysocki wrote:
-> On Mon, Mar 19, 2018 at 11:48 AM, John Garry <john.garry@huawei.com> wrote:
->> On 19/03/2018 10:30, Rafael J. Wysocki wrote:
->>>
->>> On Wednesday, March 14, 2018 7:15:57 PM CET John Garry wrote:
->>>>
->>>>> Through the logical PIO framework systems which otherwise have
->>>>> no IO space access to legacy ISA/LPC devices may access these
->>>>> devices through so-called "indirect IO" method. In this, IO
->>>>> space accesses for non-PCI hosts are redirected to a host
->>>>> LLDD to manually generate the IO space (bus) accesses. Hosts
->>>>> are able to register a region in logical PIO space to map to
->>>>> its bus address range.
->>>>>
->>>>> Indirect IO child devices have an associated host-specific bus
->>>>> address. Special translation is required to map between
->>>>> a logical PIO address for a device and it's host bus address.
->>>>>
->>>>> Since in the ACPI tables the child device IO resources would
->>>>> be the host-specific values, it is required the ACPI scan code
->>>>> should not enumerate these devices, and that this should be
->>>>> the responsibility of the host driver so that it can "fixup"
->>>>> the resources so that they map to the appropriate logical PIO
->>>>> addresses.
->>>>>
->>>>> To avoid enumerating these child devices, we add a check from
->>>>> acpi_device_enumeration_by_parent() as to whether the parent
->>>>> for a device is a member of a known list of "indirect IO" hosts.
->>>>> For now, the HiSilicon LPC host controller ID is added.
->>>>>
->>>>> Signed-off-by: John Garry <john.garry@huawei.com>
->>>>> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>
->>> You have my ACK here already.
->>>
->>> Since I've ACKed the [7/10] too, I don't think there's anything more I can
->>> do
->>> about this series and I'm assuming that it will be routed through other
->>> trees.
->>>
->>> Thanks!
->>>
->>
->> Hi Rafael,
->>
->> Thanks for this.
->>
->> Yes, I am working on getting this whole series routed through another tree.
->> Actually I think 7+8 could go separately since there is no build dependency,
->> but I will try to keep the series together.
+On Wednesday, March 21, 2018 10:43 AM, Lorenzo Pieralisi wrote:
 >
-> I can take the [7-8/10] if you want me to, so please let me know.
->
+> From: Rob Herring <robh@kernel.org>
+> 
+> There's no need for every config option to explicitly depend on
+> CONFIG_PCI, so move it out of individual option to the menu option.
+> 
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-OK, thanks. Will do.
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-John
+It looks good.
 
-> Thanks!
->
-> .
->
+Best regards,
+Jingoo Han
 
-
+> ---
+>  drivers/pci/dwc/Kconfig | 17 +++--------------
+>  1 file changed, 3 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 6f2b653146bb..2902544f5834 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -1,13 +1,13 @@
+>  # SPDX-License-Identifier: GPL-2.0
+> 
+>  menu "DesignWare PCI Core Support"
+> +	depends on PCI
+> 
+>  config PCIE_DW
+>  	bool
+> 
+>  config PCIE_DW_HOST
+>          bool
+> -	depends on PCI
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>          select PCIE_DW
+> 
+> @@ -22,7 +22,7 @@ config PCI_DRA7XX
+>  config PCI_DRA7XX_HOST
+>  	bool "TI DRA7xx PCIe controller Host Mode"
+>  	depends on SOC_DRA7XX || COMPILE_TEST
+> -	depends on PCI && PCI_MSI_IRQ_DOMAIN
+> +	depends on PCI_MSI_IRQ_DOMAIN
+>  	depends on OF && HAS_IOMEM && TI_PIPE3
+>  	select PCIE_DW_HOST
+>  	select PCI_DRA7XX
+> @@ -52,7 +52,6 @@ config PCI_DRA7XX_EP
+> 
+>  config PCIE_DW_PLAT
+>  	bool "Platform bus based DesignWare PCIe Controller"
+> -	depends on PCI
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIE_DW_HOST
+>  	---help---
+> @@ -65,7 +64,6 @@ config PCIE_DW_PLAT
+> 
+>  config PCI_EXYNOS
+>  	bool "Samsung Exynos PCIe controller"
+> -	depends on PCI
+>  	depends on SOC_EXYNOS5440 || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+> @@ -73,7 +71,6 @@ config PCI_EXYNOS
+> 
+>  config PCI_IMX6
+>  	bool "Freescale i.MX6 PCIe controller"
+> -	depends on PCI
+>  	depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+> @@ -81,7 +78,6 @@ config PCI_IMX6
+> 
+>  config PCIE_SPEAR13XX
+>  	bool "STMicroelectronics SPEAr PCIe controller"
+> -	depends on PCI
+>  	depends on ARCH_SPEAR13XX || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+> @@ -91,7 +87,6 @@ config PCIE_SPEAR13XX
+> 
+>  config PCI_KEYSTONE
+>  	bool "TI Keystone PCIe controller"
+> -	depends on PCI
+>  	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+> @@ -104,7 +99,6 @@ config PCI_KEYSTONE
+> 
+>  config PCI_LAYERSCAPE
+>  	bool "Freescale Layerscape PCIe controller"
+> -	depends on PCI
+>  	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select MFD_SYSCON
+> @@ -115,7 +109,6 @@ config PCI_LAYERSCAPE
+>  config PCI_HISI
+>  	depends on OF && (ARM64 || COMPILE_TEST)
+>  	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+> -	depends on PCI
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+> @@ -126,7 +119,6 @@ config PCI_HISI
+> 
+>  config PCIE_QCOM
+>  	bool "Qualcomm PCIe controller"
+> -	depends on PCI
+>  	depends on OF && (ARCH_QCOM || COMPILE_TEST)
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+> @@ -138,7 +130,6 @@ config PCIE_QCOM
+> 
+>  config PCIE_ARMADA_8K
+>  	bool "Marvell Armada-8K PCIe controller"
+> -	depends on PCI
+>  	depends on ARCH_MVEBU || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+> @@ -155,7 +146,7 @@ config PCIE_ARTPEC6
+>  config PCIE_ARTPEC6_HOST
+>  	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+>  	depends on MACH_ARTPEC6 || COMPILE_TEST
+> -	depends on PCI && PCI_MSI_IRQ_DOMAIN
+> +	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	select PCIE_ARTPEC6
+> @@ -177,7 +168,6 @@ config PCIE_KIRIN
+>  	depends on OF && (ARM64 || COMPILE_TEST)
+>  	bool "HiSilicon Kirin series SoCs PCIe controllers"
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> -	depends on PCI
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	help
+> @@ -187,7 +177,6 @@ config PCIE_KIRIN
+>  config PCIE_HISI_STB
+>  	bool "HiSilicon STB SoCs PCIe controllers"
+>  	depends on ARCH_HISI || COMPILE_TEST
+> -	depends on PCI
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+> --
+> 2.15.0
