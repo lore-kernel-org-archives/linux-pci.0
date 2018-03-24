@@ -1,63 +1,87 @@
-Return-Path: <SRS0=IxCZ=GE=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=IxCZ=GE=gmail.com=andy.shevchenko@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180314174946.GB179719@bhelgaas-glaptop.roam.corp.google.com>
-References: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAHp75Vfp_uwSLe_ENnr=azJGrMoR6DuvGSCi5DSeq6=B-ghAGg@mail.gmail.com> <20180314174946.GB179719@bhelgaas-glaptop.roam.corp.google.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 14 Mar 2018 20:17:07 +0200
-Message-ID: <CAHp75VdZSZ2srwuWREj0=NrpmfxKmjG5KmPW2jN9+mZ025j4nQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI/MSI: Don't set up INTx if MSI or MSI-X is enabled
+Return-Path: <SRS0=8W8s=GO=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=8W8s=GO=h08.hostsharing.net=foo00@kernel.org>
+Date: Sat, 24 Mar 2018 13:15:41 +0100
+From: Lukas Wunner <lukas@wunner.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Mikael Starvik <starvik@axis.com>,
-	Jesper Nilsson <jesper.nilsson@axis.com>, Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, David Howells <dhowells@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Cris <linux-cris-kernel@axis.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ia64@vger.kernel.org,
-	linux-am33-list@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Keith Busch <keith.busch@intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
+Message-ID: <20180324121541.GA15525@wunner.de>
+References: <20180320104508.GF2703@lahna.fi.intel.com>
+ <20180320113556.GA24197@wunner.de>
+ <20180322104517.GA20389@wunner.de>
+ <20180322165317.GI2703@lahna.fi.intel.com>
+ <20180322173903.GA15503@wunner.de>
+ <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
+ <20180323111856.GO2703@lahna.fi.intel.com>
+ <20180323210857.GA210003@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0iFSgC4gbWCi09Nr4rwa7r4QfAQ__Oz88cagMZ3Z_NnKg@mail.gmail.com>
+ <20180323220127.GD210003@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180323220127.GD210003@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 7:49 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Mar 14, 2018 at 06:31:38PM +0200, Andy Shevchenko wrote:
->> On Tue, Mar 13, 2018 at 11:45 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+On Fri, Mar 23, 2018 at 05:01:27PM -0500, Bjorn Helgaas wrote:
+> On Fri, Mar 23, 2018 at 10:11:53PM +0100, Rafael J. Wysocki wrote:
+> > On Fri, Mar 23, 2018 at 10:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > On Fri, Mar 23, 2018 at 01:18:56PM +0200, Mika Westerberg wrote:
+> > >> On Thu, Mar 22, 2018 at 02:36:30PM -0500, Bjorn Helgaas wrote:
+> > >> > I hope we can avoid adding suspend_late/resume_early callbacks in
+> > >> > struct pcie_port_service_driver, and I also hope we can avoid adding
+> > >> > device links.  Those both sound pretty complicated.
+> > >> >
+> > >> > Can you do something like the patch below, which does something
+> > >> > similar for PME?
+> > >>
+> > >> AFAICT the core PCI PM code follows the same ordering than what PM core
+> > >> does so it may be possible that not all service drivers get
+> > >> resumed/suspended before other children (PCI buses). Basically this
+> > >> would be the same than just using core PM ops in DPC driver (in which
+> > >> case DPC specific things are still kept in DPC driver not in PCI core).
+> > >
+> > > I'm not sure I follow this.  I assume the core PCI PM code guarantees
+> > > that a bridge is suspended after its children and resumed before them.
+> > > Are you saying that's not the case?
+> > 
+> > if this is a PCIe port, then there are two categories of childres:
+> > port services and the PCI devices below it.
+> > 
+> > There are no ordering constraints between the former and the latter,
+> > which appears to be a problem here.
+> 
+> It seems like a pretty fundamental problem if port services can be
+> suspended before PCI devices below the port.  I assume that would have
+> to be fixed somehow in the PCI core and the port driver, but this
+> patch only touches the DPC service driver.
+> 
+> I'd really like to get rid of the port services driver altogether, and
+> this ordering issue seems like a good reason to do that.
 
->> > If a device already has MSI or MSI-X enabled, there's no need to set up its
->> > legacy INTx interrupt.
->>
->> Just point to the actual behaviour of this.
->
-> By "point to the actual behaviour", do you mean adding something to
-> the changelog along the lines of the following?
->
->   If MSI or MSI-X is enabled, the device uses that.  It uses INTx only
->   if both MSI and MSI-X are disabled (see PCIe r4.0, sec 7.7.1.2).
->
-> I did add that because I think that spec reference is useful.  If you
-> have something else in mind, maybe an example would help me
-> understand.
+As it is, there is nothing to fix.
 
-I meant that the behaviour now is changed from
- check MSI only case
-to
- check MSI _or MSI-x_ case
+The port services driver enforces that the services are resumed before
+PCI child devices (and after them on suspend) by iterating over the
+services' ->resume / ->suspend callbacks, see pcie_port_device_resume()
+and pcie_port_device_suspend(), which in turn are the port's ->resume /
+->suspend callbacks.
 
-Not all code paths may survive that.
+There is (or was, before your reorganization this cycle) an inconsistency
+in the handling of ->resume / ->suspend stages vis-à-vis the ->resume_noirq /
+->runtime_resume / ->runtime_>suspend / ->runtime_idle stages.  The latter
+are handled directly by portdrv callbacks whereas the former are handled
+by per-service callbacks which we iterate over.
 
->> In some cases code in question has to distinguish between MSI and
->> MSI-x.  So, this or similar changes has to be done with keeping
->> above in mind.
->>
->> (Existing example is Thunderbolt driver)
->
-> Sorry, I didn't get your point here.  Certainly some code needs to
-> distinguish between MSI and MSI-X, but I don't think that's the case
-> here.  I'm not proposing to change Thunderbolt; I do see that it uses
-> dev->msix_enabled (but not dev->msi_enabled), and it doesn't look like
-> using pci_dev_msi_enabled() there would be appropriate.
+I cooked up these commits two years ago to make the handling more consistent
+but ended up not needing them:
+https://github.com/l1k/linux/commit/4f59372f830899e89fea9ba7c090680900d5998e
+https://github.com/l1k/linux/commit/ce63b6ed01602e77c56043ee6dfa52ca9d257f88
 
-Exactly, that's why I pointed on above.
+Thanks,
 
--- 
-With Best Regards,
-Andy Shevchenko
+Lukas
