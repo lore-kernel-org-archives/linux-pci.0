@@ -1,40 +1,94 @@
-Return-Path: <SRS0=oXy1=GL=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=oXy1=GL=intel.com=keith.busch@kernel.org>
-Date: Wed, 21 Mar 2018 16:27:20 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Maik Broemme <mbroemme@libmpq.org>
-Subject: Re: [PATCH 1/4] PCI/AER: Return approrpiate value when AER is not
- supported
-Message-ID: <20180321222720.GJ12909@localhost.localdomain>
-References: <20171219210643.24615-1-keith.busch@intel.com>
- <20180320230201.GC137590@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48012 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751409AbeCXDtu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Mar 2018 23:49:50 -0400
+Date: Fri, 23 Mar 2018 22:49:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Message-ID: <20180324034947.GE210003@bhelgaas-glaptop.roam.corp.google.com>
+References: <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
+ <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
+ <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
+ <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
+ <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
+ <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
+ <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
+ <C90AA66C-FFC6-4CCA-B959-7BBECA65509C@raithlin.com>
+ <20180323215046.GC210003@bhelgaas-glaptop.roam.corp.google.com>
+ <dc414fa5-1af9-0ba7-e12e-4cd9df313119@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180320230201.GC137590@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <dc414fa5-1af9-0ba7-e12e-4cd9df313119@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 20, 2018 at 04:02:01PM -0700, Bjorn Helgaas wrote:
-> On Tue, Dec 19, 2017 at 02:06:40PM -0700, Keith Busch wrote:
-> > Getting the AER information is documented to return 0 when it failed to
-> > get the information.
-> > 
-> > Signed-off-by: Keith Busch <keith.busch@intel.com>
+On Fri, Mar 23, 2018 at 03:59:14PM -0600, Logan Gunthorpe wrote:
+> On 23/03/18 03:50 PM, Bjorn Helgaas wrote:
+> > Popping way up the stack, my original point was that I'm trying to
+> > remove restrictions on what devices can participate in
+> > peer-to-peer DMA.  I think it's fairly clear that in conventional
+> > PCI, any devices in the same PCI hierarchy, i.e., below the same
+> > host-to-PCI bridge, should be able to DMA to each other.
 > 
-> Keith, I'm sorry, but I lost track of where we're at with this series.
-> Can you repost a fresh version if it's still applicable?
+> Yup, we are working on this.
 > 
-> Don't worry about rebasing it to anything other than v4.16-rc1 (my
-> "master" branch).  I might have added some conflicting things, but
-> I'll take care of resolving any conflicts.
+> > The routing behavior of PCIe is supposed to be compatible with
+> > conventional PCI, and I would argue that this effectively requires
+> > multi-function PCIe devices to have the internal routing required
+> > to avoid the route-to-self issue.
+> 
+> That would be very nice but many devices do not support the internal
+> route. We've had to work around this in the past and as I mentioned
+> earlier that NVMe devices have a flag indicating support. However,
+> if a device wants to be involved in P2P it must support it and we
+> can exclude devices that don't support it by simply not enabling
+> their drivers.
 
-No problem, I think this is still applicable, and can be done without
-conflicting with what Oza and Sinan are working on (it took a few tries,
-but it finally clicked for me on how that works).
+Do you think these devices that don't support internal DMA between
+functions are within spec, or should we handle them as exceptions,
+e.g., via quirks?
 
-I'll rebase a new series and should have it posted by end of week.
+If NVMe defines a flag indicating peer-to-peer support, that would
+suggest to me that these devices are within spec.
 
-Thanks,
-Keith
+I looked up the CMBSZ register you mentioned (NVMe 1.3a, sec 3.1.12).
+You must be referring to the WDS, RDS, LISTS, CQS, and SQS bits.  If
+WDS is set, the controller supports having Write-related data and
+metadata in the Controller Memory Buffer.  That would mean the driver
+could put certain queues in controller memory instead of in host
+memory.  The controller could then read the queue from its own
+internal memory rather than issuing a PCIe transaction to read it from
+host memory.
+
+That makes sense to me, but I don't see the connection to
+peer-to-peer.  There's no multi-function device in this picture, so
+it's not about internal DMA between functions.
+
+WDS, etc., tell us about capabilities of the controller.  If WDS is
+set, the CPU (or a peer PCIe device) can write things to controller
+memory.  If it is clear, neither the CPU nor a peer device can put
+things there.  So it doesn't seem to tell us anything about
+peer-to-peer specifically.  It looks like information needed by the
+NVMe driver, but not by the PCI core.
+
+Bjorn
