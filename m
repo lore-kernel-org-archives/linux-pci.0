@@ -1,68 +1,42 @@
-Return-Path: <SRS0=Tdh4=GE=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=Tdh4=GE=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>, Alex Hung <alex.hung@canonical.com>
-Cc: lenb@kernel.org, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH][V3] ACPI/PCI: pci_link: allow the absence of _PSR and change log level
-Date: Wed, 14 Mar 2018 12:43:43 +0100
-Message-ID: <3049002.WCqzBnTU9t@aspire.rjw.lan>
-In-Reply-To: <20180223145026.GJ14632@bhelgaas-glaptop.roam.corp.google.com>
-References: <1519364624-4363-1-git-send-email-alex.hung@canonical.com> <20180223145026.GJ14632@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=ie6y=GP=denx.de=wd@kernel.org>
+Return-Path: <SRS0=ie6y=GP=denx.de=wd@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+    Mika Westerberg <mika.westerberg@linux.intel.com>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: PCIe x4 cards not detected on Z370 mainboards
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-type: text/plain; charset=UTF-8
+In-reply-to: <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180322184840.E31D4247251@gemini.denx.de> <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com> <20180323084855.E3EAF247251@gemini.denx.de> <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
+Date: Sun, 25 Mar 2018 14:28:28 +0200
+Message-Id: <20180325122828.7FC55247245@gemini.denx.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, February 23, 2018 3:50:26 PM CET Bjorn Helgaas wrote:
-> In subject:
-> 
-> s/allow the/Allow the/ to match drivers/acpi capitalization convention
-> s/_PSR/_PRS/ to fix typo
-> 
-> On Thu, Feb 22, 2018 at 09:43:44PM -0800, Alex Hung wrote:
-> > In recent Intel hardware the IRQs become non-configurable after BIOS
-> > initializes them in PEI phase and _PRS objects are no longer included in
-> > ASL.
-> > 
-> > This is the same as "static (non-configurable) devices do not
-> > specify a _PRS object" in ACPI spec. As a result, error messages
-> > saying "ACPI Exception: AE_NOT_FOUND, Evaluating _PRS" does not need to
-> > be in kernel messenges all the time but only when debug is enabled, and
-> > acpi_pci_link_get_possible should not return -ENODEV when _PRS is
-> > absent.
-> > 
-> > Signed-off-by: Alex Hung <alex.hung@canonical.com>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> > ---
-> >  drivers/acpi/pci_link.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> > index bc3d914..65f1908 100644
-> > --- a/drivers/acpi/pci_link.c
-> > +++ b/drivers/acpi/pci_link.c
-> > @@ -173,8 +173,8 @@ static int acpi_pci_link_get_possible(struct acpi_pci_link *link)
-> >  	status = acpi_walk_resources(link->device->handle, METHOD_NAME__PRS,
-> >  				     acpi_pci_link_check_possible, link);
-> >  	if (ACPI_FAILURE(status)) {
-> > -		ACPI_EXCEPTION((AE_INFO, status, "Evaluating _PRS"));
-> > -		return -ENODEV;
-> > +		acpi_handle_debug(link->device->handle, "_PRS not present or invalid");
-> 
-> The rest of this file uses ACPI_EXCEPTION(), ACPI_DEBUG_PRINT(), etc.
-> My personal preference would be to keep the file consistent, e.g.,
-> maybe use the style that matches the file in this patch, and have a
-> second patch that changes all the logging in the file to use
-> acpi_handle_*().
-> 
-> But I'm fine with whatever you and Rafael want to do about this.
+Dear Bjorn,
 
-I wanted it to be changed.
+maybe it helps to provide some more information.  I can reproduce the
+same problem on 3 different mainboards from 2 different vendors:
 
-Using ACPI_DEBUG_PRINT() and similar outside of ACPICA code is
-questionable and plain problematic with some combinations of Kconfig
-options, so I'd actually prefer them to go away from the ACPI code
-outside of ACPICA.
+- Gigabyte AB350 Gaming CF
+- Gigabyte Z270X Ultra Gaming CF
+- MSI Z370 Tomahawk
 
-Patch applied with the subject typo fixed, thanks!
+I now have all 3 systems ready at hands to run additional tests if
+needed.
+
+I have updated the information (lspci output, dmesg output) for all
+three boards here:
+
+https://owncloud.denx.de/index.php/s/wXiCMMYJodGj5Kr
+
+Thanks in advance!
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Due to lack of disk space, this fortune database has been discontinued.
