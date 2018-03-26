@@ -1,76 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 5 Mar 2018 09:00:05 -0700
-From: Keith Busch <keith.busch@intel.com>
-To: Oliver <oohall@gmail.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 07/10] nvme-pci: Use PCI p2pmem subsystem to manage
- the CMB
-Message-ID: <20180305160004.GA30975@localhost.localdomain>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-8-logang@deltatee.com>
- <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOSf1CEj1vmLLd27-642=XSnL9ODkpEC0qLHA2_W5_7rV5+4Pg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1522084449.21176.16.camel@linux.intel.com>
+Subject: Re: [PATCH v4 0/2] x86, dmi: Uninline dmi_get_bios_year()
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
+Date: Mon, 26 Mar 2018 20:14:09 +0300
+In-Reply-To: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
+References: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 05, 2018 at 12:33:29PM +1100, Oliver wrote:
-> On Thu, Mar 1, 2018 at 10:40 AM, Logan Gunthorpe <logang@deltatee.com> wrote:
-> > @@ -429,10 +429,7 @@ static void __nvme_submit_cmd(struct nvme_queue *nvmeq,
-> >  {
-> >         u16 tail = nvmeq->sq_tail;
+On Tue, 2018-03-20 at 20:07 +0200, Andy Shevchenko wrote:
+> Introduce a new helper to extract a year from DMI BIOS date since
+> there
+> are most existing users do and newcomers would utilize as well.
 > 
-> > -       if (nvmeq->sq_cmds_io)
-> > -               memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
-> > -       else
-> > -               memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
-> > +       memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
+> This is a fix up series on top what had been applied already.
 > 
-> Hmm, how safe is replacing memcpy_toio() with regular memcpy()? On PPC
-> the _toio() variant enforces alignment, does the copy with 4 byte
-> stores, and has a full barrier after the copy. In comparison our
-> regular memcpy() does none of those things and may use unaligned and
-> vector load/stores. For normal (cacheable) memory that is perfectly
-> fine, but they can cause alignment faults when targeted at MMIO
-> (cache-inhibited) memory.
+
+Ingo, this is a fix up series like should be as you and Rafael pointed
+out.
+
+Can we get it into next release, so, we will have no regression in
+between?
+
+> Since v3:
+> - address more comments from Jean
+> - add tags
+> - reverse the order of the patches in the series
+> - due to above add a Fixes tag to both of them
 > 
-> I think in this particular case it might be ok since we know SEQs are
-> aligned to 64 byte boundaries and the copy is too small to use our
-> vectorised memcpy(). I'll assume we don't need explicit ordering
-> between writes of SEQs since the existing code doesn't seem to care
-> unless the doorbell is being rung, so you're probably fine there too.
-> That said, I still think this is a little bit sketchy and at the very
-> least you should add a comment explaining what's going on when the CMB
-> is being used. If someone more familiar with the NVMe driver could
-> chime in I would appreciate it.
+> Since v2:
+> - resend as fix up series
+> - address comments from Bjorn, Jean, Lukas, Rafael
+> 
+> Since v1:
+> - move the helper to be regular function (Bjorn, Rafael)
+> - fix a potential regression introduced in pci_acpi_crs_quirks()
+> (Jean)
+> - adjust subject lines and commit message bodies (Bjorn)
+> - add tags (Bjorn, Jean)
+> 
+> Andy Shevchenko (2):
+>   firmware: dmi_scan: Uninline dmi_get_bios_year() helper
+>   x86/PCI: Fix a potential regression when use dmi_get_bios_year()
+> 
+>  arch/x86/pci/acpi.c         |  4 +++-
+>  drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
+>  include/linux/dmi.h         | 11 ++---------
+>  3 files changed, 25 insertions(+), 10 deletions(-)
+> 
 
-I may not be understanding the concern, but I'll give it a shot.
-
-You're right, the start of any SQE is always 64-byte aligned, so that
-should satisfy alignment requirements.
-
-The order when writing multiple/successive SQEs in a submission queue
-does matter, and this is currently serialized through the q_lock.
-
-The order in which the bytes of a single SQE is written doesn't really
-matter as long as the entire SQE is written into the CMB prior to writing
-that SQ's doorbell register.
-
-The doorbell register is written immediately after copying a command
-entry into the submission queue (ignore "shadow buffer" features),
-so the doorbells written to commands submitted is 1:1.
-
-If a CMB SQE and DB order is not enforced with the memcpy, then we do
-need a barrier after the SQE's memcpy and before the doorbell's writel.
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
