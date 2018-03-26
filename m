@@ -1,75 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:45838 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936395AbeCBQSp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 11:18:45 -0500
-Received: by mail-pg0-f68.google.com with SMTP id i133so3950054pgc.12
-        for <linux-pci@vger.kernel.org>; Fri, 02 Mar 2018 08:18:44 -0800 (PST)
-Date: Fri, 2 Mar 2018 09:18:42 -0700
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Jason Gunthorpe <jgg@mellanox.com>
+Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Max Gurtovoy <maxg@mellanox.com>,
         Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Alex Williamson <alex.williamson@redhat.com>,
-        Steve Wise <swise@opengridcomputing.com>
-Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
-Message-ID: <20180302161842.GB14861@ziepe.ca>
-References: <20180228234006.21093-11-logang@deltatee.com>
- <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
- <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
- <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
- <20180301184249.GI19007@ziepe.ca>
- <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
- <20180301224540.GL19007@ziepe.ca>
- <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
- <20180301234930.GG14799@localhost.localdomain>
- <CE2A5D93-E735-4414-8DC1-B308B74A1C5B@raithlin.com>
+        Eric Wehage <Eric.Wehage@huawei.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+ <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+ <20180326121138.00005e30@huawei.com> <20180326164129.GF15530@mellanox.com>
+ <6ead7f19-c0e5-5584-2518-1e1889a007e4@deltatee.com>
+ <20180326193502.GI15530@mellanox.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <45fcaa2d-214c-f0a9-94d4-b26692b9a5f3@deltatee.com>
+Date: Mon, 26 Mar 2018 14:42:05 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CE2A5D93-E735-4414-8DC1-B308B74A1C5B@raithlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180326193502.GI15530@mellanox.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 11:57:43PM +0000, Stephen  Bates wrote:
-> > We don't want to lump these all together without knowing which region you're allocating from, right?
-> 
-> In all seriousness I do agree with you on these Keith in the long
-> term. We would consider adding property flags for the memory as it
-> is added to the p2p core and then the allocator could evolve to
-> intelligently dish it out. Attributes like endurance, latency and
-> special write commit requirements could all become attributes in
-> time. Perhaps one more reason for a central entity for p2p memory
-> allocation so this code does not end up having to go into many
-> different drivers?
 
-I fear we will find that every kind of P2P memory has special
-allocator requirements and dumping it all into one giant pool is not
-going to be helpful.
 
-This allocator is already seems not useful for the P2P target memory
-on a Mellanox NIC due to the way it has a special allocation flow
-(windowing) and special usage requirements..
+On 26/03/18 01:35 PM, Jason Gunthorpe wrote:
+> I think this is another case of the HW can do it but the SW support is
+> missing. IOMMU configuration and maybe firmware too, for instance.
 
-Nor can it be usefull for the doorbell memory in the NIC.
+Nope, not sure how you can make this leap. We've been specifically told
+that peer-to-peer PCIe DMA is not supported on P9. We've also been told
+there is a very limited (ie. store only), low performance mode designed
+for poking mailboxes but it is disabled by default and must be enable
+with some kind of special firmware calls.
 
-Both of these are existing use cases for P2P with out of tree patches..
-
-The allocator seems to only be able to solve the CMB problem, and I
-think due to that it is better to put this allocator in the NVMe
-driver and not the core code.. At least until we find a 2nd user that
-needs the same allocation scheme...
-
-Jason
+Logan
