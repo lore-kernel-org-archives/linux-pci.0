@@ -1,150 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37302 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750865AbeCFL7O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Mar 2018 06:59:14 -0500
-Date: Tue, 6 Mar 2018 11:59:07 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, bhelgaas@google.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V9 3/3] PCI: tegra: Add power management support
-Message-ID: <20180306115907.GA14599@e107981-ln.cambridge.arm.com>
-References: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
- <1519812034-11120-4-git-send-email-mmaddireddy@nvidia.com>
- <20180302163643.GA18316@e107981-ln.cambridge.arm.com>
- <19831410-9248-61ff-6e75-249c77dcee9a@nvidia.com>
- <20180305094116.GA28109@e107981-ln.cambridge.arm.com>
- <f807a2ad-6d30-70e5-ec42-fd2cf996f7a0@nvidia.com>
+Received: from mail-bl2nam02on0105.outbound.protection.outlook.com ([104.47.38.105]:19376
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752131AbeCZReI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 26 Mar 2018 13:34:08 -0400
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v5] PCI: hv: Make sure the bus domain is really unique
+Date: Mon, 26 Mar 2018 17:34:04 +0000
+Message-ID: <4BF97B43-5339-4750-9704-23D6AAC4A01E@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f807a2ad-6d30-70e5-ec42-fd2cf996f7a0@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 06, 2018 at 03:26:33PM +0530, Manikanta Maddireddy wrote:
-> 
-> 
-> On 05-Mar-18 3:11 PM, Lorenzo Pieralisi wrote:
-> > On Sat, Mar 03, 2018 at 01:47:38PM +0530, Manikanta Maddireddy wrote:
-> > 
-> > [...]
-> > 
-> >>>> +static int tegra_pcie_pm_resume(struct device *dev)
-> >>>> +{
-> >>>> +	struct tegra_pcie *pcie = dev_get_drvdata(dev);
-> >>>> +	int err;
-> >>>> +
-> >>>> +	err = tegra_pcie_power_on(pcie);
-> >>>> +	if (err) {
-> >>>> +		dev_err(dev, "tegra pcie power on fail: %d\n", err);
-> >>>> +		return err;
-> >>>> +	}
-> >>>> +	err = tegra_pcie_enable_controller(pcie);
-> >>>> +	if (err) {
-> >>>> +		dev_err(dev, "tegra pcie controller enable fail: %d\n", err);
-> >>>> +		goto poweroff;
-> >>>> +	}
-> >>>> +	tegra_pcie_setup_translations(pcie);
-> >>>> +
-> >>>> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> >>>> +		tegra_pcie_enable_msi(pcie);
-> >>>> +
-> >>>> +	tegra_pcie_enable_ports(pcie);
-> >>>
-> >>> Is it correct to report a successfull resume if some of the ports fail
-> >>> to come up (whether within runtime PM or system suspend) ? I think that,
-> >>> if any of the ports fails to come up, returning a failure is more
-> >>> appropriate here given that the host bridge is a single device as far as
-> >>> the kernel is concerned.
-> >>>
-> >>> Thanks,
-> >>> Lorenzo
-> >>>
-> >>
-> >> Hi Lorenzo,
-> >>
-> >> We(Thierry, Vidya Sagar and myself) had a discussion on this topic
-> >> and we chose not to fail probe/resume because host controller is
-> >> initialized properly, so failing the probe/resume is not the right
-> >> thing to do.
-> > 
-> > What happens then to endpoints downstream a rootport that failed to
-> > resume but we nonetheless reported that it successfully resume instead ?
-> > 
-> > Thanks,
-> > Lorenzo
-> > 
-> 
-> Hi Lorenzo,
-> 
-> If an endpoint comes up in probe & enumeration is completed and if
-> the same endpoint doesn't come up during resume I am observing
-> PCIe errors because PCIe enumeration hierarchy is unchanged &
-> PCI subsystem is trying to restore PCI device. This observation
-> is same if host driver returns error.
-> 
-> To handle this case driver needs to remove the respective
-> PCIe port enumeration hierarchy if link doesn't come up
-> in resume. It will tricky to identify PCI bus structure
-> from host port ID in resume, may be some book keeping required
-> here.
-> 
-> However if the PCIe link comes up in probe, it should come up
-> during resume as well else it will be a bug. Do you see the
-> need for changing the PCIe enumeration hierarchy in resume
-> based on link up status?
-
-I think that for the time being it is fine to merge the current
-set - I asked just for clarification; I agree there is no easy answer
-to the issue I raised. It should be safe to merge the series in its
-current form - I will keep this issue on my radar to see if there
-is something we can do to improve it.
-
-Thanks,
-Lorenzo
-
-> 
-> Thanks,
-> Manikanta
-> 
-> >> PCIe link may fail to come up if there is no endpoint in the slot
-> >> or interoperable failure where endpoint specific quirk or work
-> >> around required. In such cases host controller driver shouldn't
-> >> fail.
-> >>
-> >> Also user can connect endpoint in only one slot and expect it to be
-> >> working. Even though host bridge is a single device, driver should
-> >> allow standalone port to work.
-> >>
-> >> Thanks,
-> >> Manikanta
-> >>
-> >>>>  
-> >>>>  	return 0;
-> >>>> +
-> >>>> +poweroff:
-> >>>> +	tegra_pcie_power_off(pcie);
-> >>>> +
-> >>>> +	return err;
-> >>>>  }
-> >>>>  
-> >>>> +static const struct dev_pm_ops tegra_pcie_pm_ops = {
-> >>>> +	SET_RUNTIME_PM_OPS(tegra_pcie_pm_suspend, tegra_pcie_pm_resume, NULL)
-> >>>> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(tegra_pcie_pm_suspend,
-> >>>> +				      tegra_pcie_pm_resume)
-> >>>> +};
-> >>>> +
-> >>>>  static struct platform_driver tegra_pcie_driver = {
-> >>>>  	.driver = {
-> >>>>  		.name = "tegra-pcie",
-> >>>>  		.of_match_table = tegra_pcie_of_match,
-> >>>>  		.suppress_bind_attrs = true,
-> >>>> +		.pm = &tegra_pcie_pm_ops,
-> >>>>  	},
-> >>>>  	.probe = tegra_pcie_probe,
-> >>>>  	.remove = tegra_pcie_remove,
-> >>>> -- 
-> >>>> 2.1.4
-> >>>>
+V2hlbiBMaW51eCBydW5zIGFzIGEgZ3Vlc3QgVk0gaW4gSHlwZXItViBhbmQgSHlwZXItViBhZGRz
+IHRoZSB2aXJ0dWFsDQpQQ0kgYnVzIHRvIHRoZSBndWVzdCwgSHlwZXItViBhbHdheXMgcHJvdmlk
+ZXMgdW5pcXVlIFBDSSBkb21haW4uDQoNCmNvbW1pdCA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBV
+c2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQpvdmVycm9kZSB1bmlxdWUg
+ZG9tYWluIHdpdGggdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGZpcnN0IGRldmljZSBhZGRlZA0K
+dG8gdGhlIHZpcnR1YWwgUENJIGJ1cy4gVGhlIHJlYXNvbiBmb3IgdGhhdCBwYXRjaCBpcyB0byBo
+YXZlIGEgY29uc2lzdGVudA0KYW5kIHNob3J0IG5hbWUgZm9yIHRoZSBkZXZpY2UuIEJ1dCBjb21t
+aXQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlDQpkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQ
+Q0kgZG9tYWluIikgd2lsbCBub3QgZ3VhcmFudGVlIHVuaXF1ZSBkb21haW4gaWQuDQpGb3IgZXhh
+bXBsZSwgaWYgdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGRldmljZSBpcyAwIGFuZCB0aGVyZSBl
+eGlzdHMgYQ0KUENJIGJ1cyB3aXRoIGRvbWFpbiAwIGFscmVhZHksIHRoaXMgd2lsbCBjYXVzZSB0
+aGUgUENJIGJ1cyByZWdpc3RyYXRpb24NCndpdGgga2VybmVsIGZhaWxzLg0KDQpjb21taXQgNGE5
+YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KZG9t
+YWluIikgbmVlZCB0byBiZSByZXZlcnRlZC4gQWxzbywgd2Ugbm8gbG9uZ2VyIG5lZWQgaXQgYXMg
+Y29tbWl0DQo0YTE2MjZkZDIzM2UgKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGIG1hbmFnZW1lbnQi
+KSByZW1vdmUgdGhlDQpuZWVkIGZvciBpdC4NCg0KUmV2ZXJ0IGNvbW1pdCA0YTliMDkzM2JkZmMg
+KCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJDQpkb21haW4iKSBzbyB3
+ZSBjYW4gcmVsaWFibHkgc3VwcG9ydCBtdWx0aXBsZSBkZXZpY2VzIGJlaW5nIGFzc2lnbmVkIHRv
+DQphIGd1ZXN0Lg0KDQpUaGlzIHJldmVydCBzaG91bGQgb25seSBiZSBiYWNrcG9ydGVkIHRvIGtl
+cm5lbHMgdGhhdCBjb250YWluIGNvbW1pdA0KNGExNjI2ZGQyMzNlICgibmV0dnNjOiB0cmFuc3Bh
+cmVudCBWRiBtYW5hZ2VtZW50IikuDQoNCkZpeGVzOiA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBV
+c2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQpTaWduZWQtb2ZmLWJ5OiBT
+cmlkaGFyIFBpdGNoYWkgPHNyaWRoYXIucGl0Y2hhaUBtaWNyb3NvZnQuY29tPg0KQ2M6IHN0YWJs
+ZUB2Z2VyLmtlcm5lbC5vcmcNCg0KLS0tDQpDaGFuZ2VzIGluIHY1Og0KKiBmaXggdGhlIGNvbW1p
+dCBjb21tZW50LiBbTG9yZW56byBQaWVyYWxpc2ksIEJqb3JuIEhlbGdhYXNdDQoqIGZpeGVkIHRo
+ZSBwYXRjaCB3aGl0ZSBzcGFjZS4NCi0tLQ0KIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5j
+IHwgMTEgLS0tLS0tLS0tLS0NCiAxIGZpbGUgY2hhbmdlZCwgMTEgZGVsZXRpb25zKC0pDQoNCmRp
+ZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYyBiL2RyaXZlcnMvcGNpL2hv
+c3QvcGNpLWh5cGVydi5jDQppbmRleCAyZmFmMzhlYWI3ODUuLmFjNjdlNTZlNDUxYSAxMDA2NDQN
+Ci0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQorKysgYi9kcml2ZXJzL3BjaS9o
+b3N0L3BjaS1oeXBlcnYuYw0KQEAgLTE1MTgsMTcgKzE1MTgsNiBAQCBzdGF0aWMgc3RydWN0IGh2
+X3BjaV9kZXYgKm5ld19wY2ljaGlsZF9kZXZpY2Uoc3RydWN0IGh2X3BjaWJ1c19kZXZpY2UgKmhi
+dXMsDQogCWdldF9wY2ljaGlsZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGlsZGxpc3QpOw0KIAlz
+cGluX2xvY2tfaXJxc2F2ZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywgZmxhZ3MpOw0KIA0KLQkv
+Kg0KLQkgKiBXaGVuIGEgZGV2aWNlIGlzIGJlaW5nIGFkZGVkIHRvIHRoZSBidXMsIHdlIHNldCB0
+aGUgUENJIGRvbWFpbg0KLQkgKiBudW1iZXIgdG8gYmUgdGhlIGRldmljZSBzZXJpYWwgbnVtYmVy
+LCB3aGljaCBpcyBub24temVybyBhbmQNCi0JICogdW5pcXVlIG9uIHRoZSBzYW1lIFZNLiAgVGhl
+IHNlcmlhbCBudW1iZXJzIHN0YXJ0IHdpdGggMSwgYW5kDQotCSAqIGluY3JlYXNlIGJ5IDEgZm9y
+IGVhY2ggZGV2aWNlLiAgU28gZGV2aWNlIG5hbWVzIGluY2x1ZGluZyB0aGlzDQotCSAqIGNhbiBo
+YXZlIHNob3J0ZXIgbmFtZXMgdGhhbiBiYXNlZCBvbiB0aGUgYnVzIGluc3RhbmNlIFVVSUQuDQot
+CSAqIE9ubHkgdGhlIGZpcnN0IGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIHVzZWQgZm9yIGRvbWFp
+biwgc28gdGhlDQotCSAqIGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRoZSBm
+aXJzdCBkZXZpY2UgaXMgYWRkZWQuDQotCSAqLw0KLQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+Y2hp
+bGRyZW4pKQ0KLQkJaGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogCWxpc3RfYWRk
+X3RhaWwoJmhwZGV2LT5saXN0X2VudHJ5LCAmaGJ1cy0+Y2hpbGRyZW4pOw0KIAlzcGluX3VubG9j
+a19pcnFyZXN0b3JlKCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogCXJldHVybiBo
+cGRldjsNCi0tIA0KMi4xNC4xDQoNCg==
