@@ -1,39 +1,63 @@
-Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Dmyn=FX=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=HzDk=GQ=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=HzDk=GQ=linux.intel.com=mika.westerberg@kernel.org>
+Date: Mon, 26 Mar 2018 12:55:12 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
- linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
- Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
- Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
- <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-4-logang@deltatee.com>
- <20180301174941.GG13722@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <731c648d-5af3-1d5c-7169-07df12b79a41@deltatee.com>
-Date: Thu, 1 Mar 2018 12:36:43 -0700
+Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Keith Busch <keith.busch@intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI/DPC: Disable interrupt generation during suspend
+Message-ID: <20180326095512.GZ2703@lahna.fi.intel.com>
+References: <20180314120547.GB2703@lahna.fi.intel.com>
+ <20180314123332.GC19651@wunner.de>
+ <20180320104508.GF2703@lahna.fi.intel.com>
+ <20180320113556.GA24197@wunner.de>
+ <20180322104517.GA20389@wunner.de>
+ <20180322165317.GI2703@lahna.fi.intel.com>
+ <20180322173903.GA15503@wunner.de>
+ <20180322193630.GB252023@bhelgaas-glaptop.roam.corp.google.com>
+ <20180324134807.GA2627@wunner.de>
+ <20180324140950.GG210003@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180301174941.GG13722@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2 03/10] PCI/P2PDMA: Add PCI p2pmem dma mappings to
- adjust the bus offset
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180324140950.GG210003@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 01/03/18 10:49 AM, Bjorn Helgaas wrote:
->> +int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
->> +		      enum dma_data_direction dir)
+On Sat, Mar 24, 2018 at 09:09:50AM -0500, Bjorn Helgaas wrote:
+> On Sat, Mar 24, 2018 at 02:48:07PM +0100, Lukas Wunner wrote:
+> > On Thu, Mar 22, 2018 at 02:36:30PM -0500, Bjorn Helgaas wrote:
+> > > I hope we can avoid adding suspend_late/resume_early callbacks in
+> > > struct pcie_port_service_driver,
+> > 
+> > I'm fairly certain that we cannot avoid adding at least a ->resume_noirq
+> > callback to struct pcie_port_service_driver to fix a pciehp use case:
+> > 
+> > On ->resume_noirq the PCI core walks down the hierarchy to put every
+> > device in D0 and restore its state (with a few exceptions such as direct
+> > complete).  However with hotplug ports, it's possible that the user has
+> > unplugged devices while the system was asleep, or replaced them with
+> > other devices.  That's a very real use case with Thunderbolt and we're
+> > handling it poorly or not at all currently.  We need to check if the
+> > devices below a hotplug port are still there or have been replaced
+> > (can probably be recognized by looking at vendor/device IDs across the
+> > entire sub-hierarchy) during the ->resume_noirq phase.  We could mark
+> > them with pci_dev_set_disconnected(), then skip putting them into D0
+> > if that flag has been set.
 > 
-> Same question as before about why the mixture of "pci_*" interfaces
-> that take "struct device *" parameters.
+> This is definitely a real issue, and I think it affects more than just
+> Thunderbolt.  We've never handled undocks very well either.
+> 
+> I certainly agree we need a way to handle this; I would just rather do
+> it by integrating pciehp and the other services more directly into the
+> PCI core instead of using the port driver.  Maybe we'll need a
+> short-term ->resume_noirq, but I don't think the port driver is a good
+> long-term solution.
 
-In this case, per the discussion in v1, it was felt the _map_sg() 
-function should take the same arguments as dma_map_sg().
+For the context of this patch series, I think I'll drop this patch from
+the series now until it is clear what the direction is. I agree moving
+port driver functionality into the PCI core makes sense.
 
-Logan
+I'll send out an updated version of the first patch as it does not
+require these hooks.
