@@ -1,82 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:42838 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932214AbeCLURC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 16:17:02 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 26 Mar 2018 14:09:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wolfgang Denk <wd@denx.de>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCIe x4 cards not detected on Z370 mainboards
+Message-ID: <20180326190938.GA224629@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180322184840.E31D4247251@gemini.denx.de>
+ <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com>
+ <20180323084855.E3EAF247251@gemini.denx.de>
+ <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
+ <20180324201534.092D2247245@gemini.denx.de>
+ <20180326135107.GH210003@bhelgaas-glaptop.roam.corp.google.com>
+ <20180326135235.GA221217@bhelgaas-glaptop.roam.corp.google.com>
+ <20180326151252.B7C8F2476FF@gemini.denx.de>
 MIME-Version: 1.0
-In-Reply-To: <20180312182321.GG18494@localhost.localdomain>
-References: <20180312171813.3487.94803.stgit@localhost.localdomain>
- <20180312172031.3487.20651.stgit@localhost.localdomain> <20180312174012.GE18494@localhost.localdomain>
- <CAKgT0UdWc=Sz-xgd4H3bTDt5d17=-PY8VPWz6A3mAciWV6=97w@mail.gmail.com> <20180312182321.GG18494@localhost.localdomain>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 12 Mar 2018 13:17:00 -0700
-Message-ID: <CAKgT0UfH+xXk__R_hEtFMsm7qkBG02hWC-S=8MgYkeeEx5zweA@mail.gmail.com>
-Subject: Re: [pci PATCH v5 1/4] pci: Add pci_sriov_configure_simple for PFs
- that don't manage VF resources
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, netanel@amazon.com,
-        Maximilian Heyne <mheyne@amazon.de>,
-        "Wang, Liang-min" <liang-min.wang@intel.com>,
-        "Rustad, Mark D" <mark.d.rustad@intel.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180326151252.B7C8F2476FF@gemini.denx.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 11:23 AM, Keith Busch <keith.busch@intel.com> wrote:
-> On Mon, Mar 12, 2018 at 11:09:34AM -0700, Alexander Duyck wrote:
->> On Mon, Mar 12, 2018 at 10:40 AM, Keith Busch <keith.busch@intel.com> wrote:
->> > On Mon, Mar 12, 2018 at 10:21:29AM -0700, Alexander Duyck wrote:
->> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> >> index 024a1beda008..9cab9d0d51dc 100644
->> >> --- a/include/linux/pci.h
->> >> +++ b/include/linux/pci.h
->> >> @@ -1953,6 +1953,7 @@ static inline void pci_mmcfg_late_init(void) { }
->> >>  int pci_vfs_assigned(struct pci_dev *dev);
->> >>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
->> >>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
->> >> +int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn);
->> >>  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
->> >>  void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
->> >>  #else
->> >
->> > I recommend stubbing 'pci_sriov_configure_simple' or defining it to
->> > NULL in the '#else' section here so you don't need to repeat the "#ifdef
->> > CONFIG_PCI_IOV" in each driver wishing to use this function. Otherwise
->> > looks fine to me.
->>
->> My concern with defining it as NULL is that somebody may end up
->> calling it in the future directly and that may end up causing issues.
->> One thought I have been debating is moving it to a different file. I
->> am just not sure where the best place to put something like this would
->> be. I could move this function to drivers/pci/pci.c if everyone is
->> okay with it and then I could just strip the contents out by wrapping
->> them in a #ifdef instead.
->
-> Okay, instead of NULL, a stub implementation in the header file may
-> suffice when CONFIG_PCI_IOV is not defined:
->
-> static inline int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn)
-> {
->         return -ENOSYS;
-> }
->
-> See pci_iov_virtfn_bus, pci_iov_virtfn_devfn, pci_iov_add_virtfn, or
-> pci_enable_sriov for other examples.
+On Mon, Mar 26, 2018 at 05:12:52PM +0200, Wolfgang Denk wrote:
+> In message <20180326135235.GA221217@bhelgaas-glaptop.roam.corp.google.com> you wrote:
+> >
+> > P.S. https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface
+> > has a little interesting background on UEFI/CSM.
+> 
+> Thanks for the pointer.
+> 
+> I start wondering if the mainboard / BIOS vendors stop supporting
+> such older hardware, if such support could be re-added in Linux?
+> OK, obviously not for the boot device, but...
+> 
+> In U-Boot we have an x86 emulator to be able to initialize the
+> on-board BIOS on (at least some) graphics cards so you can use these
+> on ARM or Power architecture systems.  Do we really have to add
+> similar stuff to Linux to support legacy hardware?
+> 
+> Would that even work?
 
-No, I am aware of those. The problem is they aren't accessed as
-function pointers. As such converting them to static inline functions
-is easy. As I am sure you are aware an "inline" function doesn't
-normally generate a function pointer.
+On the MSI Z370 Tomahawk and the Gigabyte Z270X Ultra Gaming systems,
+it looks like you're using what the BIOS designates as "Slot #1",
+which is below an Intel Root Port (00:01.0 in both cases).  When the
+SAS3444E is in that slot, we don't even see the Root Port itself.  To
+fix that would require Linux to have chipset-specific knowledge about
+how to enable that Root Port.  I guess it's conceivable that could be
+done, but I don't know if the information required is public.  I
+assume this would be controlled by some MSR or other Intel-specific
+knob.
 
-Actually my original idea has been complicated further by the fact
-that I realized my code is accessing functions that are static in the
-iov.c file. I'll need to think about how to come up with a better
-solution for this.
+On the Gigabyte AB350 Gaming system, you're using "Slot #1" (this
+comes from the Slot Capabilities register and may not match any
+silk-screened labels on the board).  This is below an AMD PCIe switch,
+where 04:04.0 is the Downstream Port leading to that slot.  When the
+SAS3444E is in the slot, we do see the 04:04.0 Downstream Port, so we
+*should* still be able to see the SAS device.
+
+This is now all in the PCIe domain so the BIOS should be pretty much
+out of the picture, and I can't explain why we don't see the SAS3444E
+device.
+
+On that system, you could try something like this to reset the
+SAS3444E device and try to rescan the bus:
+
+  # setpci -s04:04.0 BRIDGE_CONTROL.w=0x40
+  # sleep 1
+  # setpci -s04:04.0 BRIDGE_CONTROL.w=0x00
+  # sleep 10
+  # echo 1 > /sys/bus/pci/rescan
+
+Check the dmesg log afterwards to see if anything happened.
