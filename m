@@ -1,148 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33938 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752639AbeC3VGQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 17:06:16 -0400
-Subject: [PATCH v5 12/14] fm10k: Report PCIe link properties with
- pcie_print_link_status()
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tal Gilboa <talgi@mellanox.com>
-Cc: Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Date: Fri, 30 Mar 2018 16:06:12 -0500
-Message-ID: <152244397259.135666.12655029447932912161.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from youngberry.canonical.com ([91.189.89.112]:42880 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751111AbeCZFyn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Mar 2018 01:54:43 -0400
+Received: from mail-pl0-f72.google.com ([209.85.160.72])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1f0L5e-0007nt-5J
+        for linux-pci@vger.kernel.org; Mon, 26 Mar 2018 05:54:42 +0000
+Received: by mail-pl0-f72.google.com with SMTP id y97-v6so4094494plh.20
+        for <linux-pci@vger.kernel.org>; Sun, 25 Mar 2018 22:54:42 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii;
+        delsp=yes;
+        format=flowed
+Mime-Version: 1.0 (Mac OS X Mail 11.3 \(3445.6.15\))
+Subject: Re: [PATCH v2] PCI / PM: Always check PME wakeup capability for
+ runtime wakeup support
+From: Kai Heng Feng <kai.heng.feng@canonical.com>
+In-Reply-To: <20180319140910.26496-1-kai.heng.feng@canonical.com>
+Date: Mon, 26 Mar 2018 13:54:35 +0800
+Cc: rafael.j.wysocki@intel.com, linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        stable@vger.kernel.org
+Message-Id: <5DC805B1-51DA-4D0F-9A43-9D5FE549AB13@canonical.com>
+References: <20180319140910.26496-1-kai.heng.feng@canonical.com>
+To: bhelgaas@google.com
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hi Bjorn, Rafael,
 
-Use pcie_print_link_status() to report PCIe link speed and possible
-limitations instead of implementing this in the driver itself.
+> On Mar 19, 2018, at 10:09 PM, Kai-Heng Feng <kai.heng.feng@canonical.com>  
+> wrote:
+>
+> USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+> core: Drop run_wake flag from struct dev_pm_info").
+>
+> The device in question is not power managed by platform firmware,
+> furthermore, it only supports PME# from D3cold:
+> Capabilities: [78] Power Management version 3
+>        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+>        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>
+> Before commit de3ef1eb1cd0, the device never gets runtime suspended.
+> After that commit, the device gets runtime suspended, so it does not
+> respond to any PME#.
+>
+> usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
+> device_can_wakeup() in pci_dev_run_wake() always returns true.
+>
+> So pci_dev_run_wake() needs to check PME wakeup capability as its first
+> condition.
+>
+> Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct  
+> dev_pm_info")
+> Cc: stable@vger.kernel.org # 4.13+
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 
-Note that pcie_get_minimum_link() can return misleading information because
-it finds the slowest link and the narrowest link without considering the
-total bandwidth of the link.  If the path contains a 16 GT/s x1 link and a
-2.5 GT/s x16 link, pcie_get_minimum_link() returns 2.5 GT/s x1, which
-corresponds to 250 MB/s of bandwidth, not the actual available bandwidth of
-about 2000 MB/s for a 16 GT/s x1 link.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/net/ethernet/intel/fm10k/fm10k_pci.c |   87 --------------------------
- 1 file changed, 1 insertion(+), 86 deletions(-)
+Is there any improvement I can address?
+Or do you have any concern about this patch?
 
-diff --git a/drivers/net/ethernet/intel/fm10k/fm10k_pci.c b/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-index a434fecfdfeb..aa05fb534942 100644
---- a/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-+++ b/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-@@ -2120,91 +2120,6 @@ static int fm10k_sw_init(struct fm10k_intfc *interface,
- 	return 0;
- }
- 
--static void fm10k_slot_warn(struct fm10k_intfc *interface)
--{
--	enum pcie_link_width width = PCIE_LNK_WIDTH_UNKNOWN;
--	enum pci_bus_speed speed = PCI_SPEED_UNKNOWN;
--	struct fm10k_hw *hw = &interface->hw;
--	int max_gts = 0, expected_gts = 0;
--
--	if (pcie_get_minimum_link(interface->pdev, &speed, &width) ||
--	    speed == PCI_SPEED_UNKNOWN || width == PCIE_LNK_WIDTH_UNKNOWN) {
--		dev_warn(&interface->pdev->dev,
--			 "Unable to determine PCI Express bandwidth.\n");
--		return;
--	}
--
--	switch (speed) {
--	case PCIE_SPEED_2_5GT:
--		/* 8b/10b encoding reduces max throughput by 20% */
--		max_gts = 2 * width;
--		break;
--	case PCIE_SPEED_5_0GT:
--		/* 8b/10b encoding reduces max throughput by 20% */
--		max_gts = 4 * width;
--		break;
--	case PCIE_SPEED_8_0GT:
--		/* 128b/130b encoding has less than 2% impact on throughput */
--		max_gts = 8 * width;
--		break;
--	default:
--		dev_warn(&interface->pdev->dev,
--			 "Unable to determine PCI Express bandwidth.\n");
--		return;
--	}
--
--	dev_info(&interface->pdev->dev,
--		 "PCI Express bandwidth of %dGT/s available\n",
--		 max_gts);
--	dev_info(&interface->pdev->dev,
--		 "(Speed:%s, Width: x%d, Encoding Loss:%s, Payload:%s)\n",
--		 (speed == PCIE_SPEED_8_0GT ? "8.0GT/s" :
--		  speed == PCIE_SPEED_5_0GT ? "5.0GT/s" :
--		  speed == PCIE_SPEED_2_5GT ? "2.5GT/s" :
--		  "Unknown"),
--		 hw->bus.width,
--		 (speed == PCIE_SPEED_2_5GT ? "20%" :
--		  speed == PCIE_SPEED_5_0GT ? "20%" :
--		  speed == PCIE_SPEED_8_0GT ? "<2%" :
--		  "Unknown"),
--		 (hw->bus.payload == fm10k_bus_payload_128 ? "128B" :
--		  hw->bus.payload == fm10k_bus_payload_256 ? "256B" :
--		  hw->bus.payload == fm10k_bus_payload_512 ? "512B" :
--		  "Unknown"));
--
--	switch (hw->bus_caps.speed) {
--	case fm10k_bus_speed_2500:
--		/* 8b/10b encoding reduces max throughput by 20% */
--		expected_gts = 2 * hw->bus_caps.width;
--		break;
--	case fm10k_bus_speed_5000:
--		/* 8b/10b encoding reduces max throughput by 20% */
--		expected_gts = 4 * hw->bus_caps.width;
--		break;
--	case fm10k_bus_speed_8000:
--		/* 128b/130b encoding has less than 2% impact on throughput */
--		expected_gts = 8 * hw->bus_caps.width;
--		break;
--	default:
--		dev_warn(&interface->pdev->dev,
--			 "Unable to determine expected PCI Express bandwidth.\n");
--		return;
--	}
--
--	if (max_gts >= expected_gts)
--		return;
--
--	dev_warn(&interface->pdev->dev,
--		 "This device requires %dGT/s of bandwidth for optimal performance.\n",
--		 expected_gts);
--	dev_warn(&interface->pdev->dev,
--		 "A %sslot with x%d lanes is suggested.\n",
--		 (hw->bus_caps.speed == fm10k_bus_speed_2500 ? "2.5GT/s " :
--		  hw->bus_caps.speed == fm10k_bus_speed_5000 ? "5.0GT/s " :
--		  hw->bus_caps.speed == fm10k_bus_speed_8000 ? "8.0GT/s " : ""),
--		 hw->bus_caps.width);
--}
--
- /**
-  * fm10k_probe - Device Initialization Routine
-  * @pdev: PCI device information struct
-@@ -2326,7 +2241,7 @@ static int fm10k_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	mod_timer(&interface->service_timer, (HZ * 2) + jiffies);
- 
- 	/* print warning for non-optimal configurations */
--	fm10k_slot_warn(interface);
-+	pcie_print_link_status(interface->pdev);
- 
- 	/* report MAC address for logging */
- 	dev_info(&pdev->dev, "%pM\n", netdev->dev_addr);
+Kai-Heng
+
+> ---
+> v2: Explicitly check dev->pme_support.
+>
+>  drivers/pci/pci.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f6a4dd10d9b0..52821a21fc07 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2125,16 +2125,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+>  {
+>  	struct pci_bus *bus = dev->bus;
+>
+> -	if (device_can_wakeup(&dev->dev))
+> -		return true;
+> -
+>  	if (!dev->pme_support)
+>  		return false;
+>
+>  	/* PME-capable in principle, but not from the target power state */
+> -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
+> +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
+>  		return false;
+>
+> +	if (device_can_wakeup(&dev->dev))
+> +		return true;
+> +
+>  	while (bus->parent) {
+>  		struct pci_dev *bridge = bus->self;
+>
+> -- 
+> 2.15.1
