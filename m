@@ -1,69 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44486 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1161764AbeCAVKm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 16:10:42 -0500
-Date: Thu, 1 Mar 2018 16:10:36 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Message-ID: <20180301211036.GB6742@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <8e808448-fc01-5da0-51e7-1a6657d5a23a@deltatee.com>
- <1519936195.4592.18.camel@au1.ibm.com>
- <20180301205548.GA6742@redhat.com>
- <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 26 Mar 2018 08:51:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wolfgang Denk <wd@denx.de>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCIe x4 cards not detected on Z370 mainboards
+Message-ID: <20180326135107.GH210003@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180322184840.E31D4247251@gemini.denx.de>
+ <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com>
+ <20180323084855.E3EAF247251@gemini.denx.de>
+ <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
+ <20180324201534.092D2247245@gemini.denx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <a512edf9-2d96-9229-fe60-e0ea60b3922b@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180324201534.092D2247245@gemini.denx.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 02:03:26PM -0700, Logan Gunthorpe wrote:
+On Sat, Mar 24, 2018 at 09:15:34PM +0100, Wolfgang Denk wrote:
+> Dear Bjorn,
 > 
+> thanks - I really appreciate your help.
 > 
-> On 01/03/18 01:55 PM, Jerome Glisse wrote:
-> > Well this again a new user of struct page for device memory just for
-> > one usecase. I wanted HMM to be more versatile so that it could be use
-> > for this kind of thing too. I guess the message didn't go through. I
-> > will take some cycles tomorrow to look into this patchset to ascertain
-> > how struct page is use in this context.
+> In message <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com> you wrote:
+> >
+> > From lspci-adaptec-29320LPE:
+> > 
+> >   00:01.0 Intel Xeon E3-1200 v5/E3-1500 Root Port
+> >     Bus: primary=00, secondary=01, subordinate=02
+> >   01:00.0 PEX 8114 PCI Express-to-PCI/PCI-X Bridge
+> >     Bus: primary=01, secondary=02, subordinate=02
+> >   02:04.0 Adaptec ASC-29320ALP U320 (rev 10)
+> > 
+> > The 00:01.0 Root Port is built into your motherboard's chipset.  The
+> > 01:00.0 Bridge and ASC-29320ALP devices are both on the plugin card.
+> > The card should have a PLX-labeled chip and an Adaptec-labeled one.
 > 
-> We looked at it but didn't see how any of it was applicable to our needs.
+> Correct.  It has an AIC-7901X (Adaptec) and a PEX8114-BD13BI G (PLX).
 > 
+> > >>> I don't know if this is relevant, but in Linux (Fedora 27,
+> > >>> 4.15.6-300.fc27.x86_64 kernel), I see these error messages:
+> > >>> 
+> > >>>   ACPI Error: [_SB_.PCI0.RP05.PXSX] Namespace lookup failure, AE_NOT_FOUND (20170831/dswload2-191)
+> > >>>   ACPI Exception: AE_NOT_FOUND, During name lookup/catalog (20170831/psobject-252)
+> > >>>   ACPI Error: Method parse/execution failed \_SB.PCI0.RP04.PXSX, AE_NOT_FOUND (20170831/psparse-550)
+> > >>>   ACPI Error: [_SB_.PCI0.RP09.PXSX] Namespace lookup failure, AE_NOT_FOUND (20170831/dswload2-191)
+> > >>>   ACPI Exception: AE_NOT_FOUND, During name lookup/catalog (20170831/psobject-252)
+> > >>>   ACPI Error: Method parse/execution failed \_SB.PCI0.RP08.PXSX, AE_NOT_FOUND (20170831/psparse-550)
+> > 
+> > This is interesting.  These methods (PXSX) are connected with PCIe
+> > Root Ports, and Mika's recent patch [1] also mentioned PXSX, though
+> > that was in the context of Thunderbolt hotplug.
+> > 
+> > It's conceivable that Linux is doing something wrong here that causes
+> > BIOS to leave that 00:01.0 Root Port disabled.
+> 
+> But is not in any case the problem at least also in the mainboard
+> BIOS? Should we not see the card's BIOS start messages in any case?
+> For example, if I wanted to boot from a disk attached to this SAS
+> controller, it would need to be up and running for booting Linux.
 
-It seems people miss-understand HMM :( you do not have to use all of
-its features. If all you care about is having struct page then just
-use that for instance in your case only use those following 3 functions:
+Oh, you're right; I forgot about that point.
 
-hmm_devmem_add() or hmm_devmem_add_resource() and hmm_devmem_remove()
-for cleanup.
+I guess you've already talked to MSI support, who told you:
 
-You can set the fault callback to an empty stub that always do return
-VM_SIGBUS or a patch to allow NULL callback inside HMM.
+  These are old controllers which don't support UEFI/GOP. this
+  is the reason they don't work.  Cards which have only legacy
+  support cannot be operated in modern mainboards.
 
-You don't have to use the free callback if you don't care and if there
-is something that doesn't quite match what you want HMM can always be
-ajusted to address this.
+That seems like sort of a lame excuse as a consumer, but if the BIOS
+writers decided they don't want to support older adapters, I don't
+know what we can really do about it.
 
-The intention of HMM is to be useful for all device memory that wish
-to have struct page for various reasons.
+I searched for other reports ("GIGABYTE Z370-HD3 not detected") and
+found several that could be similar.  One suggested enabling/disabling
+CSM (UEFI compatibility support module) in the BIOS setup.  If these
+BIOSes in fact decided not to support these old cards, my guess is
+there is no CSM in them, but it's worth checking.
 
-Cheers,
-Jérôme
+Otherwise, I think I'm out of ideas.  I don't think we've seen
+anything yet that indicates a Linux issue, although maybe Mika will
+come up with something from the acpidumps.
+
+Bjorn
