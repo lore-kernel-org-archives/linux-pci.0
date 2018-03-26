@@ -1,70 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37354 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966729AbeCSSnY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Mar 2018 14:43:24 -0400
-Date: Mon, 19 Mar 2018 13:43:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Frederick Lawler <fred@fredlawl.com>
-Subject: Re: [PATCH v2 00/13] PCI: Simplify PCIe port driver
-Message-ID: <20180319184322.GB77194@bhelgaas-glaptop.roam.corp.google.com>
-References: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=HzDk=GQ=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=HzDk=GQ=linux.intel.com=mika.westerberg@kernel.org>
+Date: Mon, 26 Mar 2018 14:26:47 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Wolfgang Denk <wd@denx.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: PCIe x4 cards not detected on Z370 mainboards
+Message-ID: <20180326112647.GC2703@lahna.fi.intel.com>
+References: <20180322184840.E31D4247251@gemini.denx.de>
+ <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com>
+ <20180323084855.E3EAF247251@gemini.denx.de>
+ <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
+ <20180325122828.7FC55247245@gemini.denx.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152062141493.77693.9630397416694091342.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180325122828.7FC55247245@gemini.denx.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 09, 2018 at 12:59:49PM -0600, Bjorn Helgaas wrote:
-> This is an attempt to move a few things out of the port driver.
+On Sun, Mar 25, 2018 at 02:28:28PM +0200, Wolfgang Denk wrote:
+> Dear Bjorn,
 > 
-> I added these new patches since v1:
+> maybe it helps to provide some more information.  I can reproduce the
+> same problem on 3 different mainboards from 2 different vendors:
 > 
->   Merge pcieport_if.h into portdrv.h
->     Merge pcieport_if.h and portdrv.h to reduce clutter
+> - Gigabyte AB350 Gaming CF
+> - Gigabyte Z270X Ultra Gaming CF
+> - MSI Z370 Tomahawk
+>
 > 
->   Remove unnecessary "pcie_ports=auto" parameter
->     This is the default setting anyway, so specifying the parameter doesn't
->     do anything.
+> I now have all 3 systems ready at hands to run additional tests if
+> needed.
 > 
->   Encapsulate pcie_ports_auto inside the port driver
->     "pcie_ports_auto" was declared in linux/pci.h even though nobody
->     outside the port driver used it.
+> I have updated the information (lspci output, dmesg output) for all
+> three boards here:
 > 
->   Rename and reverse sense of pcie_ports_auto
->     "pcie_ports_auto" is connected with the "pcie_ports=native" parameter,
->     so rename it to match.
+> https://owncloud.denx.de/index.php/s/wXiCMMYJodGj5Kr
 > 
-> Other changes since v1:
->   - Rebase onto my pci/portdrv branch.
->   - Rename pcie_resume_early() to pcie_pme_root_status_cleanup() as
->     suggested by Rafael.
->   - Add Rafael's Reviewed-by tags.
-> 
-> v1: https://lkml.kernel.org/r/152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com
-> 
-> ---
-> 
-> Bjorn Helgaas (13):
->       PCI/portdrv: Merge pcieport_if.h into portdrv.h
->       PCI/PM: Move pcie_clear_root_pme_status() to core
->       PCI/PM: Clear PCIe PME Status bit in core, not PCIe port driver
->       PCI/PM: Clear PCIe PME Status bit for Root Complex Event Collectors
->       PCI/portdrv: Disable port driver in compat mode
->       PCI/portdrv: Remove pcie_port_bus_type link order dependency
->       PCI/portdrv: Remove unused PCIE_PORT_SERVICE_VC
->       PCI/portdrv: Simplify PCIe feature permission checking
->       PCI/portdrv: Remove unnecessary include of <linux/pci-aspm.h>
->       PCI/portdrv: Remove "pcie_hp=nomsi" kernel parameter
->       PCI/portdrv: Remove unnecessary "pcie_ports=auto" parameter
->       PCI/portdrv: Encapsulate pcie_ports_auto inside the port driver
->       PCI/portdrv: Rename and reverse sense of pcie_ports_auto
 
-I applied these with Christoph's acks and Lukas' renaming suggestion to
-pci/portdrv for v4.17.
+Looking at the MSI Tomahawk dmesg when you have the adaptec card
+connected, the BIOS adds an additional ACPI SSDT table:
+
+[    0.000000] ACPI: SSDT 0x000000008C039120 002611 (v02 PegSsd PegSsdt 00001000 INTL 20160422)
+
+This is missing when LSI card is connected. There might be some sort of
+preboot protocol or whitelist that prevents the root port to be enabled
+in BIOS.
+
+Wolfgang, could you also add acpidump output of these systems to that
+share site?
