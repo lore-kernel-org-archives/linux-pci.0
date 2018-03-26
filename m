@@ -1,84 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hpe.com ([15.233.16.89]:52478 "EHLO
-        g2t1383g.austin.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935226AbeCBQWa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Mar 2018 11:22:30 -0500
-From: "Kani, Toshi" <toshi.kani@hpe.com>
-To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>, "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "jglisse@redhat.com" <jglisse@redhat.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "maxg@mellanox.com" <maxg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "keith.busch@intel.com" <keith.busch@intel.com>,
-        "oliveroh@au1.ibm.com" <oliveroh@au1.ibm.com>,
-        "jgg@ziepe.ca" <jgg@ziepe.ca>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Date: Fri, 2 Mar 2018 16:22:24 +0000
-Message-ID: <1520010446.2693.19.camel@hpe.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
-         <1519876489.4592.3.camel@kernel.crashing.org>
-         <1519876569.4592.4.camel@au1.ibm.com>
-         <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
-         <1519936477.4592.23.camel@au1.ibm.com>
-         <1519936815.4592.25.camel@au1.ibm.com> <20180301205315.GJ19007@ziepe.ca>
-         <1519942012.4592.31.camel@au1.ibm.com>
-         <CA+55aFy-oAiFJ3WDx4giR1enj65y-YJnZZhY6geFw0ygFyKXfQ@mail.gmail.com>
-         <1519943658.4592.34.camel@kernel.crashing.org>
-In-Reply-To: <1519943658.4592.34.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=Pusd=GQ=denx.de=wd@kernel.org>
+Return-Path: <SRS0=Pusd=GQ=denx.de=wd@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+    Mika Westerberg <mika.westerberg@linux.intel.com>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: PCIe x4 cards not detected on Z370 mainboards
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-type: text/plain; charset=UTF-8
+In-reply-to: <20180326135235.GA221217@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180322184840.E31D4247251@gemini.denx.de> <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com> <20180323084855.E3EAF247251@gemini.denx.de> <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com> <20180324201534.092D2247245@gemini.denx.de> <20180326135107.GH210003@bhelgaas-glaptop.roam.corp.google.com> <20180326135235.GA221217@bhelgaas-glaptop.roam.corp.google.com>
+Date: Mon, 26 Mar 2018 17:12:52 +0200
+Message-Id: <20180326151252.B7C8F2476FF@gemini.denx.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpLCAyMDE4LTAzLTAyIGF0IDA5OjM0ICsxMTAwLCBCZW5qYW1pbiBIZXJyZW5zY2htaWR0
-IHdyb3RlOg0KPiBPbiBUaHUsIDIwMTgtMDMtMDEgYXQgMTQ6MzEgLTA4MDAsIExpbnVzIFRvcnZh
-bGRzIHdyb3RlOg0KPiA+IE9uIFRodSwgTWFyIDEsIDIwMTggYXQgMjowNiBQTSwgQmVuamFtaW4g
-SGVycmVuc2NobWlkdCA8YmVuaEBhdTEuaWJtLmNvbT4gd3JvdGU6DQo+ID4gPiANCj4gPiA+IENv
-dWxkIGJlIHRoYXQgeDg2IGhhcyB0aGUgc21hcnRzIHRvIGRvIHRoZSByaWdodCB0aGluZywgc3Rp
-bGwgdHJ5aW5nIHRvDQo+ID4gPiB1bnRhbmdsZSB0aGUgY29kZSA6LSkNCj4gPiANCj4gPiBBZmFp
-aywgeDg2IHdpbGwgbm90IGNhY2hlIFBDSSB1bmxlc3MgdGhlIHN5c3RlbSBpcyBtaXNjb25maWd1
-cmVkLCBhbmQNCj4gPiBldmVuIHRoZW4gaXQncyBtb3JlIGxpa2VseSB0byBqdXN0IHJhaXNlIGEg
-bWFjaGluZSBjaGVjayBleGNlcHRpb24NCj4gPiB0aGFuIGNhY2hlIHRoaW5ncy4NCj4gPiANCj4g
-PiBUaGUgbGFzdC1sZXZlbCBjYWNoZSBpcyBnb2luZyB0byBkbyBmaWxscyBhbmQgc3BpbGxzIGRp
-cmVjdGx5IHRvIHRoZQ0KPiA+IG1lbW9yeSBjb250cm9sbGVyLCBub3QgdG8gdGhlIFBDSWUgc2lk
-ZSBvZiB0aGluZ3MuDQo+ID4gDQo+ID4gKEkgZ3Vlc3MgeW91ICpjYW4qIGRvIHRoaW5ncyBkaWZm
-ZXJlbnRseSwgYW5kIEkgd291bGRuJ3QgYmUgc3VycHJpc2VkDQo+ID4gaWYgc29tZSBwZW9wbGUg
-aW5zaWRlIEludGVsIGRpZCB0cnkgdG8gZG8gdGhpbmdzIGRpZmZlcmVudGx5IHdpdGgNCj4gPiB0
-cnlpbmcgbnZyYW0gb3ZlciBQQ0llLCBidXQgaW4gZ2VuZXJhbCBJIHRoaW5rIHRoZSBhYm92ZSBp
-cyB0cnVlKQ0KPiA+IA0KPiA+IFlvdSB3b24ndCBmaW5kIGl0IGluIHRoZSBrZXJuZWwgY29kZSBl
-aXRoZXIuIEl0J3MgaW4gaGFyZHdhcmUgd2l0aA0KPiA+IGZpcm13YXJlIGNvbmZpZ3VyYXRpb24g
-b2Ygd2hhdCBhZGRyZXNzZXMgYXJlIG1hcHBlZCB0byB0aGUgbWVtb3J5DQo+ID4gY29udHJvbGxl
-cnMgKGFuZCBfaG93XyB0aGV5IGFyZSBtYXBwZWQpIGFuZCB3aGljaCBhcmUgbm90Lg0KPiANCj4g
-QWggdGhhbmtzICEgVGhhbmtzIGV4cGxhaW5zLiBXZSBjYW4gZml4IHRoYXQgb24gcHBjNjQgaW4g
-b3VyIGxpbmVhcg0KPiBtYXBwaW5nIGNvZGUgYnkgY2hlY2tpbmcgdGhlIGFkZHJlc3MgdnMuIG1l
-bWJsb2NrcyB0byBjaG9zZSB0aGUgcmlnaHQNCj4gcGFnZSB0YWJsZSBhdHRyaWJ1dGVzLg0KDQpG
-V0lXLCB0aGlzIHRoaW5nIGlzIGNhbGxlZCBNVFJScyBvbiB4ODYsIHdoaWNoIGFyZSBpbml0aWFs
-aXplZCBieSBCSU9TLg0KVGhlc2UgcmVnaXN0ZXJzIGVmZmVjdGl2ZWx5IG92ZXJ3cml0ZSBwYWdl
-IHRhYmxlIHNldHVwcy4gIEludGVsIFNETQ0KZGVmaW5lcyB0aGUgZWZmZWN0IGFzIGZvbGxvd3Mu
-ICAnUEFUIEVudHJ5IFZhbHVlJyBpcyB0aGUgcGFnZSB0YWJsZQ0Kc2V0dXAuDQoNCk1UUlIgTWVt
-b3J5IFR5cGUgIFBBVCBFbnRyeSBWYWx1ZSAgRWZmZWN0aXZlIE1lbW9yeSBUeXBlDQotLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KVUMgICAg
-ICAgICAgICAgICAgVUMgICAgICAgICAgICAgICBVQw0KVUMgICAgICAgICAgICAgICAgV0MgICAg
-ICAgICAgICAgICBXQw0KVUMgICAgICAgICAgICAgICAgV1QgICAgICAgICAgICAgICBVQw0KVUMg
-ICAgICAgICAgICAgICAgV0IgICAgICAgICAgICAgICBVQw0KVUMgICAgICAgICAgICAgICAgV1Ag
-ICAgICAgICAgICAgICBVQyANCg0KT24gbXkgc3lzdGVtLCBCSU9TIHNldHMgTVRSUnMgdG8gY292
-ZXIgdGhlIGVudGlyZSBNTUlPIHJhbmdlcyB3aXRoIFVDLg0KT3RoZXIgQklPU2VzIG1heSBzaW1w
-bHkgc2V0IHRoZSBNVFJSIGRlZmF1bHQgdHlwZSB0byBVQywgaS5lLiB1bmNvdmVyZWQNCnJhbmdl
-cyBiZWNvbWUgVUMuDQoNCiMgY2F0IC9wcm9jL210cnINCiA6DQpyZWcwMTogYmFzZT0weGMwMDAw
-MDAwMDAwICgxMjU4MjkxMk1CKSwgc2l6ZT0yMDk3MTUyTUIsIGNvdW50PTE6DQp1bmNhY2hhYmxl
-DQogOg0KDQojIGNhdCAvcHJvYy9pb21lbSB8IGdyZXAgJ1BDSSBCdXMnDQogOg0KYzAwMDAwMDAw
-MDAtYzNmZmZmZmZmZmYgOiBQQ0kgQnVzIDAwMDA6MDANCmM0MDAwMDAwMDAwLWM3ZmZmZmZmZmZm
-IDogUENJIEJ1cyAwMDAwOjExDQpjODAwMDAwMDAwMC1jYmZmZmZmZmZmZiA6IFBDSSBCdXMgMDAw
-MDozNg0KY2MwMDAwMDAwMDAtY2ZmZmZmZmZmZmYgOiBQQ0kgQnVzIDAwMDA6NWINCmQwMDAwMDAw
-MDAwLWQzZmZmZmZmZmZmIDogUENJIEJ1cyAwMDAwOjgwDQpkNDAwMDAwMDAwMC1kN2ZmZmZmZmZm
-ZiA6IFBDSSBCdXMgMDAwMDo4NQ0KZDgwMDAwMDAwMDAtZGJmZmZmZmZmZmYgOiBQQ0kgQnVzIDAw
-MDA6YWUNCmRjMDAwMDAwMDAwLWRmZmZmZmZmZmZmIDogUENJIEJ1cyAwMDAwOmQ3DQoNCi1Ub3No
-aQ0KDQoNCg==
+Dear Bjorn,
+
+In message <20180326135235.GA221217@bhelgaas-glaptop.roam.corp.google.com> you wrote:
+>
+> P.S. https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface
+> has a little interesting background on UEFI/CSM.
+
+Thanks for the pointer.
+
+I start wondering if the mainboard / BIOS vendors stop supporting
+such older hardware, if such support could be re-added in Linux?
+OK, obviously not for the boot device, but...
+
+In U-Boot we have an x86 emulator to be able to initialize the
+on-board BIOS on (at least some) graphics cards so you can use these
+on ARM or Power architecture systems.  Do we really have to add
+similar stuff to Linux to support legacy hardware?
+
+Would that even work?
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+"I didn't know it was impossible when I did it."
