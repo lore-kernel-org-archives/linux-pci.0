@@ -1,53 +1,62 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: John Garry <john.garry@huawei.com>
-To: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
-        <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <arnd@arndb.de>, <mark.rutland@arm.com>,
-        <olof@lixom.net>, <dann.frazier@canonical.com>,
-        <andy.shevchenko@gmail.com>, <robh@kernel.org>,
-        <andriy.shevchenko@linux.intel.com>
-CC: <joe@perches.com>, <benh@kernel.crashing.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <minyard@acm.org>, <devicetree@vger.kernel.org>,
-        <linux-arch@vger.kernel.org>, <rdunlap@infradead.org>,
-        <gregkh@linuxfoundation.org>, <akpm@linux-foundation.org>,
-        <frowand.list@gmail.com>, <agraf@suse.de>
-Subject: [PATCH v17 10/10] MAINTAINERS: Add maintainer for HiSilicon LPC driver
-Date: Thu, 15 Mar 2018 02:15:59 +0800
-Message-ID: <1521051359-34473-11-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
-References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
+Return-Path: <SRS0=+GVI=GQ=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=+GVI=GQ=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Eric Wehage <Eric.Wehage@huawei.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+ <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+ <20180326121138.00005e30@huawei.com>
+ <20180326140118.GA221690@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <c717eb06-1e83-f0f3-4d6c-15531aa808e0@deltatee.com>
+Date: Mon, 26 Mar 2018 09:46:24 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <20180326140118.GA221690@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
 List-ID: <linux-pci.vger.kernel.org>
 
-Added maintainer for drivers/bus/hisi_lpc.c
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c187bc8..cd4f9dc 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6403,6 +6403,13 @@ W:	http://www.hisilicon.com
- S:	Maintained
- F:	drivers/net/ethernet/hisilicon/hns3/
- 
-+HISILICON LPC BUS DRIVER
-+M:	john.garry@huawei.com
-+W:	http://www.hisilicon.com
-+S:	Maintained
-+F:	drivers/bus/hisi_lpc.c
-+F:	Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
-+
- HISILICON NETWORK SUBSYSTEM DRIVER
- M:	Yisen Zhuang <yisen.zhuang@huawei.com>
- M:	Salil Mehta <salil.mehta@huawei.com>
--- 
-1.9.1
+On 26/03/18 08:01 AM, Bjorn Helgaas wrote:
+> On Mon, Mar 26, 2018 at 12:11:38PM +0100, Jonathan Cameron wrote:
+>> On Tue, 13 Mar 2018 10:43:55 -0600
+>> Logan Gunthorpe <logang@deltatee.com> wrote:
+>>> It turns out that root ports that support P2P are far less common than 
+>>> anyone thought. So it will likely have to be a white list.
+>>
+>> This came as a bit of a surprise to our PCIe architect.
+>>
+>> His follow up was whether it was worth raising an ECR for the PCIe spec
+>> to add a capability bit to allow this to be discovered.  This might
+>> long term avoid the need to maintain the white list for new devices.
+>>
+>> So is it worth having a long term solution for making this discoverable?
+> 
+> It was surprising to me that there's no architected way to discover
+> this.  It seems like such an obvious thing that I guess I assumed the
+> omission was intentional, i.e., maybe there's something that makes it
+> impractical, but it would be worth at least asking somebody in the
+> SIG.  It seems like for root ports in the same root complex, at least,
+> there could be a bit somewhere in the root port or the RCRB (which
+> Linux doesn't support yet).
+
+Yes, I agree. It would be a good long term solution to have this bit in
+the spec. That would avoid us needing to create a white list for new
+hardware. However, I expect it would be years before we can rely on it
+so someone may yet implement that white list.
+
+Logan
