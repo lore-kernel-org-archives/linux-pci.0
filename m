@@ -1,90 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:33180 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752822AbeC3HPA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 03:15:00 -0400
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Keller Jacob E <jacob.e.keller@intel.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V4 5/8] PCI: Print PCI device link status in kernel log
-Date: Fri, 30 Mar 2018 10:14:43 +0300
-Message-Id: <1522394086-3555-6-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
-References: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Keith Busch <keith.busch@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v2] PCI/DPC: Do not enable DPC if AER control is not allowed by the BIOS
+Date: Tue, 27 Mar 2018 13:48:35 +0300
+Message-Id: <20180327104835.19664-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pcie_print_link_status() function for querying and verifying
-a PCI device link status. The PCI speed and width are reported
-in kernel log. If there's a bandwidth limitation caused by a device
-in the PCIe chain, a relevant entry would be added to kernel log.
+Commit eed85ff4c0da ("PCI/DPC: Enable DPC only if AER is available")
+made DPC control dependent whether AER is enabled in the OS. However, it
+does not take into account situations where BIOS has not given OS
+control of AER:
 
-This provides a unified method for all PCI devices to
-report status and issues, instead of each device reporting in a
-different way, using different code.
+  acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+  acpi PNP0A08:00: _OSC: platform does not support [AER]
+  acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug PME PCIeCapability]
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+I think here it is better not to enable DPC even if the capability is
+available because then it would be against what "Determination of DPC
+Control" note in PCIe 4.0 sec 6.1.10 recommends.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 30 insertions(+)
+Changes from v1:
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fb79ff6..bd8aa64 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5265,6 +5265,35 @@ int pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
- EXPORT_SYMBOL(pcie_bandwidth_capable);
+  * Rebased on top of pci.git/pci/portdrv
+  * Dropped the other patch that disables interrupt generation during
+    suspend because there is development on-going to get rid of separate
+    PCIe portdrv and move everything to the PCI core instead.
+
+ drivers/pci/pcie/portdrv_acpi.c | 4 ++--
+ drivers/pci/pcie/portdrv_core.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+index 9d12650dc2ae..8ab5d434b9c6 100644
+--- a/drivers/pci/pcie/portdrv_acpi.c
++++ b/drivers/pci/pcie/portdrv_acpi.c
+@@ -47,11 +47,11 @@ void pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
  
- /**
-+ * pcie_print_link_status - Reports the PCI device's link speed and width.
-+ * @dev: PCI device to query
-+ *
-+ * This function checks whether the PCI device current speed and width are equal
-+ * to the maximum PCI device capabilities.
-+ */
-+void pcie_print_link_status(struct pci_dev *dev)
-+{
-+	enum pcie_link_width width, width_cap;
-+	struct pci_dev *limiting_dev = NULL;
-+	enum pci_bus_speed speed, speed_cap;
-+	int bw, bw_cap;
-+
-+	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
-+	pcie_bandwidth_available(dev, &speed, &width, &bw, &limiting_dev);
-+
-+	if (bw >= bw_cap)
-+		pci_info(dev, "%d Mb/s available bandwidth (%s x%d link)\n",
-+			 bw, PCIE_SPEED2STR(speed), width);
-+	else
-+		pci_info(dev, "%d Mb/s available bandwidth (capable of %d Mb/s, %s x%d link)\n",
-+			 bw, bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
-+	if (limiting_dev && strcmp(pci_name(limiting_dev), pci_name(dev)))
-+		pci_info(dev, "Bandwidth limited by device at %s\n",
-+			 pci_name(limiting_dev));
-+}
-+EXPORT_SYMBOL(pcie_print_link_status);
-+
-+/**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-  * @flags: resource type mask to be selected
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 585cea1..1a672c9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1105,6 +1105,7 @@ int pcie_bandwidth_available(struct pci_dev *dev, enum pci_bus_speed *speed,
- int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
- int pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			   enum pcie_link_width *width);
-+void pcie_print_link_status(struct pci_dev *dev);
- void pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
+ 	flags = root->osc_control_set;
+ 
+-	*srv_mask = PCIE_PORT_SERVICE_DPC;
++	*srv_mask = 0;
+ 	if (flags & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
+ 		*srv_mask |= PCIE_PORT_SERVICE_HP;
+ 	if (flags & OSC_PCI_EXPRESS_PME_CONTROL)
+ 		*srv_mask |= PCIE_PORT_SERVICE_PME;
+ 	if (flags & OSC_PCI_EXPRESS_AER_CONTROL)
+-		*srv_mask |= PCIE_PORT_SERVICE_AER;
++		*srv_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
+ }
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index a1f838f2646a..eb463966094e 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -236,7 +236,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	}
+ 
+ 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+-	    pci_aer_available())
++	    pci_aer_available() && services & PCIE_PORT_SERVICE_AER)
+ 		services |= PCIE_PORT_SERVICE_DPC;
+ 
+ 	return services;
 -- 
-1.8.3.1
+2.16.2
+
