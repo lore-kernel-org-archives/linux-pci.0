@@ -1,52 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:35784 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752411AbeCMLMU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 07:12:20 -0400
-Date: Tue, 13 Mar 2018 11:12:11 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh+dt@kernel.org, krzk@kernel.org, jingoohan1@gmail.com,
-        kgene@kernel.org
-Subject: Re: [RFC 1/2] pci: dwc: pci-exynos: modify the Kconfig dependency
-Message-ID: <20180313111211.GA15480@e107981-ln.cambridge.arm.com>
-References: <CGME20171221121409epcas1p2af291857b9df115d2dec9a3d3300e0aa@epcas1p2.samsung.com>
- <20171221121408.22636-1-jh80.chung@samsung.com>
+Received: from foss.arm.com ([217.140.101.70]:52746 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751030AbeC0Ky3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Mar 2018 06:54:29 -0400
+Subject: Re: [PATCH v6 3/3] PCI: mobiveil: Add MSI support for Mobiveil PCIe
+ Host Bridge IP driver
+To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        Peter W Newton <peter.newton@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Raj Raina <rajesh.raina@nxp.com>,
+        Rajan Kapoor <rajan.kapoor@nxp.com>,
+        Prabhjot Singh <prabhjot.singh@nxp.com>
+References: <1519734051-32298-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+ <20180314175710.GE27868@e107981-ln.cambridge.arm.com>
+ <CAFZiPx1bPp17aS40uUF48zt+cwqZDM3kO3rSPYng-n2-Nz6nJg@mail.gmail.com>
+ <d1be2791-ff95-5b14-8171-9714d66f28bb@arm.com>
+ <CAFZiPx1zTAgaH3xvpNqMKHg7X0b2VK2W2nMabwRnPudRAOBe2g@mail.gmail.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <6da2d16d-a797-0733-a49b-426e41ba6623@arm.com>
+Date: Tue, 27 Mar 2018 11:54:22 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171221121408.22636-1-jh80.chung@samsung.com>
+In-Reply-To: <CAFZiPx1zTAgaH3xvpNqMKHg7X0b2VK2W2nMabwRnPudRAOBe2g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jaehoon,
+On 27/03/18 11:42, Subrahmanya Lingappa wrote:
+> On Tue, Mar 27, 2018 at 2:39 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>> On 27/03/18 09:38, Subrahmanya Lingappa wrote:
+>>> Lorenzo,
+>>>
+>>> On Wed, Mar 14, 2018 at 11:27 PM, Lorenzo Pieralisi
+>>> <lorenzo.pieralisi@arm.com> wrote:
 
-On Thu, Dec 21, 2017 at 09:14:06PM +0900, Jaehoon Chung wrote:
-> PCI_EXYNOS has the dependency with SOC_EXYNOS5440.
-> It's modified to ARCH_EXYNOS from SOC_EXYNOS5440, because other
-> SoCs needs to use this driver.
+[...]
+
+>>>>> +     irq_domain_set_info(domain, virq, bit, &mobiveil_msi_bottom_irq_chip,
+>>>>> +                             domain->host_data, handle_simple_irq,
+>>>>
+>>>> This is conceptually wrong, handle_simple_irq() is not the right flow
+>>>> handler for MSIs that are edge by definition (ie it is a memory write).
+>>>>
+>>>> Furthermore, handle_simple_irq() does not handle acking and masking, which
+>>>> means that the current code is buggy (and INTX handling is buggy too,
+>>>> by the way).
+>>>>
+>>>> You need handle_edge_irq() here as a flow handler.
+>>>>
+>>> in our hardware case, INTX and MSI interrupts are provided to the
+>>> processor core as a level interrupt, tested with handle_level_irq()
+>>> successfully, as expected handle_edge_irq() crashes.
+>>
+>> This hardly makes any sense. An MSI is a write from a device to the MSI
+>> controller. There is no extra write to indicate that the interrupt has
+>> been retired. So how can that be a level interrupt?
+>>
 > 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> ---
->  drivers/pci/dwc/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> PCIe host hardware retires the interrupt as soon as ISR empties the
+> last entry in the MSI FIFO.
+
+And that interrupt is *not* an MSI.
+
 > 
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index 113e09440f85..0ff9795df8e8 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -65,7 +65,7 @@ config PCIE_DW_PLAT
->  config PCI_EXYNOS
->  	bool "Samsung Exynos PCIe controller"
->  	depends on PCI
-> -	depends on SOC_EXYNOS5440
-> +	depends on ARCH_EXYNOS
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
->  	select PCIE_DW_HOST
+>> You say that handle_edge_irq() crashes. How?
+>>
+> panics with following crash log:
+> [  107.358756] [00000000] *pgd=0000000b7fffe003[  107.363004] ,
+> *pud=0000000b7fffe003
+> , *pmd=0000000000000000[  107.368470]
+> [  107.369954] Internal error: Oops: 86000005 [#1] SMP
+> [  107.374815] Modules linked in: r8169 pcie_mobiveil(O) uio_pdrv_genirq
+> [  107.381239] CPU: 0 PID: 0 Comm: swapper/0 Tainted: G        W  O
+> 4.9.0-xilinx-v2017.2 #1
+> [  107.389577] Hardware name: xlnx,zynqmp (DT)
+> [  107.393737] task: ffffff8008c90880 task.stack: ffffff8008c80000
+> [  107.399642] PC is at 0x0
+> [  107.402162] LR is at handle_edge_irq+0x104/0x1a8
 
-This patch fell through the cracks, is it still needed ? Please let
-me know and I will apply it if it is, thank you very much.
+Well, you're obviously missing an irqchip callback here. Debug time.
 
-Lorenzo
+[...]
+
+>> Note that there are two interrupts involved in your case: The MSI
+>> itself, and the interrupt that signals the arrival of an MSI to the CPU.
+>> The former is edge-triggered *by definition*, but I'm perfectly prepared
+>> to understand that the second level interrupt is level (that's often the
+>> case).
+>>
+> Yes, so that second level one is level interrupt, our hardware
+> engineer confirmed too.
+
+But the interrupt you're messing with in mobiveil_irq_msi_domain_alloc
+is not that secondary interrupt, is it? It is an MSI, not the one coming
+from the PCIe RC.
+
+> 
+>>> is it OK to change this handle_simple_irq() into handle_level_irq() in
+>>> next version of patch ?
+>>
+>> I think we need to get to the bottom of the above first.
+>>
+>>> irq_chip in msi_domain_info set already has pci_msi_mask_irq and
+>>> pci_msi_unmask_irq; with handle_level_irq() in place is it not
+>>> sufficient ?
+>>
+>> pci_msi_mask_irq() works at the device level. There is no guarantee that
+>> you can mask individual interrupts there (think multi-MSI, for example).
+>>
+> most of the pci/host/pcie-*.c drivers are using pci_msi_un/mask_irq(),
+> which would result in to pci_write_config_dword() of MSI config
+> register.
+> could you please point me to a specific example of other type of implementation?
+Not from the top of my head. You should have a way to mask a given MSI
+at the MSI controller level.
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
