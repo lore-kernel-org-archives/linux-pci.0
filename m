@@ -1,54 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50572 "EHLO foss.arm.com"
+Received: from mail.bootlin.com ([62.4.15.54]:52094 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751289AbeCNKvO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 06:51:14 -0400
-Date: Wed, 14 Mar 2018 10:51:07 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: tegra: add MSI dependency
-Message-ID: <20180314105107.GA27699@e107981-ln.cambridge.arm.com>
-References: <20180313115218.2246372-1-arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180313115218.2246372-1-arnd@arndb.de>
+        id S1751187AbeC0OJV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Mar 2018 10:09:21 -0400
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Nadav Haklai <nadavh@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        stable@vger.kernel.org
+Subject: [PATCH v3 1/6] PCI: aardvark: introduce an advk_pcie_valid_device() helper
+Date: Tue, 27 Mar 2018 16:08:07 +0200
+Message-Id: <20180327140819.23501-2-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
+References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 12:52:05PM +0100, Arnd Bergmann wrote:
-> Building the tegra PCIe host driver without MSI results in a link
-> failure:
-> 
-> drivers/pci/host/pci-tegra.o:(.data+0x70): undefined reference to `pci_msi_unmask_irq'
-> drivers/pci/host/pci-tegra.o:(.data+0x74): undefined reference to `pci_msi_mask_irq'
-> 
-> This adds the same dependency that everyone else uses.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/pci/host/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-Applied to pci/host/misc for v4.17, thanks.
+In other to mimic other PCIe host controller drivers, introduce an
+advk_pcie_valid_device() helper, used in the configuration read/write
+functions.
 
-Lorenzo
+This patch by itself is not a fix, but it is required for a follow-up
+patch that is a fix, hence the Fixes tag and the Cc to stable.
 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 1fcdc890acc7..65b4afb8d11d 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -38,6 +38,7 @@ config PCI_FTPCI100
->  config PCI_TEGRA
->  	bool "NVIDIA Tegra PCIe controller"
->  	depends on ARCH_TEGRA && MMU
-> +	depends on PCI_MSI_IRQ_DOMAIN
->  	help
->  	  Say Y here if you want support for the PCIe host controller found
->  	  on NVIDIA Tegra SoCs.
-> -- 
-> 2.9.0
-> 
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+Changes since v2:
+ - New patch
+---
+ drivers/pci/host/pci-aardvark.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index b04d37b3c5de..ccd0304a0c21 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -430,6 +430,15 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
+ 	return -ETIMEDOUT;
+ }
+ 
++static int advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
++				  int devfn)
++{
++	if (PCI_SLOT(devfn) != 0)
++		return false;
++
++	return true;
++}
++
+ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+ 			     int where, int size, u32 *val)
+ {
+@@ -437,7 +446,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+ 	u32 reg;
+ 	int ret;
+ 
+-	if (PCI_SLOT(devfn) != 0) {
++	if (!advk_pcie_valid_device(pcie, bus, devfn)) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -491,7 +500,7 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	int offset;
+ 	int ret;
+ 
+-	if (PCI_SLOT(devfn) != 0)
++	if (!advk_pcie_valid_device(pcie, bus, devfn))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	if (where % size)
+-- 
+2.14.3
