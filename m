@@ -1,55 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr660126.outbound.protection.outlook.com ([40.107.66.126]:48048
-        "EHLO CAN01-QB1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1163538AbeCAX5p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 18:57:45 -0500
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Keith Busch <keith.busch@intel.com>
-CC: Jason Gunthorpe <jgg@ziepe.ca>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Steve Wise <swise@opengridcomputing.com>
-Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
-Date: Thu, 1 Mar 2018 23:57:43 +0000
-Message-ID: <CE2A5D93-E735-4414-8DC1-B308B74A1C5B@raithlin.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-11-logang@deltatee.com>
- <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
- <40d69074-31a8-d06a-ade9-90de7712c553@deltatee.com>
- <5649098f-b775-815b-8b9a-f34628873ff4@grimberg.me>
- <20180301184249.GI19007@ziepe.ca>
- <edaf476a-cfe9-0598-1aa5-14802a9a1477@deltatee.com>
- <20180301224540.GL19007@ziepe.ca>
- <77591162-4CCD-446E-A27C-1CDB4996ACB7@raithlin.com>
- <20180301234930.GG14799@localhost.localdomain>
-In-Reply-To: <20180301234930.GG14799@localhost.localdomain>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=TKGk=GR=huawei.com=jonathan.cameron@kernel.org>
+Return-Path: <SRS0=TKGk=GR=huawei.com=jonathan.cameron@kernel.org>
+Date: Tue, 27 Mar 2018 09:47:01 +0100
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
+	<linux-nvdimm@lists.01.org>, <linux-block@vger.kernel.org>, Stephen Bates
+	<sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe
+	<axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>, Sagi Grimberg
+	<sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe
+	<jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Dan Williams
+	<dan.j.williams@intel.com>, =?ISO-8859-1?Q?J=E9r=F4me?= Glisse
+	<jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Alex Williamson" <alex.williamson@redhat.com>, Eric Wehage
+	<Eric.Wehage@huawei.com>
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Message-ID: <20180327094701.0000300d@huawei.com>
+In-Reply-To: <c717eb06-1e83-f0f3-4d6c-15531aa808e0@deltatee.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+	<20180312193525.2855-2-logang@deltatee.com>
+	<59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+	<24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+	<20180326121138.00005e30@huawei.com>
+	<20180326140118.GA221690@bhelgaas-glaptop.roam.corp.google.com>
+	<c717eb06-1e83-f0f3-4d6c-15531aa808e0@deltatee.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBXZSBkb24ndCB3YW50IHRvIGx1bXAgdGhlc2UgYWxsIHRvZ2V0aGVyIHdpdGhvdXQga25vd2lu
-ZyB3aGljaCByZWdpb24geW91J3JlIGFsbG9jYXRpbmcgZnJvbSwgcmlnaHQ/DQoNCkluIGFsbCBz
-ZXJpb3VzbmVzcyBJIGRvIGFncmVlIHdpdGggeW91IG9uIHRoZXNlIEtlaXRoIGluIHRoZSBsb25n
-IHRlcm0uIFdlIHdvdWxkIGNvbnNpZGVyIGFkZGluZyBwcm9wZXJ0eSBmbGFncyBmb3IgdGhlIG1l
-bW9yeSBhcyBpdCBpcyBhZGRlZCB0byB0aGUgcDJwIGNvcmUgYW5kIHRoZW4gdGhlIGFsbG9jYXRv
-ciBjb3VsZCBldm9sdmUgdG8gaW50ZWxsaWdlbnRseSBkaXNoIGl0IG91dC4gQXR0cmlidXRlcyBs
-aWtlIGVuZHVyYW5jZSwgbGF0ZW5jeSBhbmQgc3BlY2lhbCB3cml0ZSBjb21taXQgcmVxdWlyZW1l
-bnRzIGNvdWxkIGFsbCBiZWNvbWUgYXR0cmlidXRlcyBpbiB0aW1lLiBQZXJoYXBzIG9uZSBtb3Jl
-IHJlYXNvbiBmb3IgYSBjZW50cmFsIGVudGl0eSBmb3IgcDJwIG1lbW9yeSBhbGxvY2F0aW9uIHNv
-IHRoaXMgY29kZSBkb2VzIG5vdCBlbmQgdXAgaGF2aW5nIHRvIGdvIGludG8gbWFueSBkaWZmZXJl
-bnQgZHJpdmVycz8NCg0KU3RlcGhlbg0KICAgIA0KDQo=
+On Mon, 26 Mar 2018 09:46:24 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
+
+> On 26/03/18 08:01 AM, Bjorn Helgaas wrote:
+> > On Mon, Mar 26, 2018 at 12:11:38PM +0100, Jonathan Cameron wrote:  
+> >> On Tue, 13 Mar 2018 10:43:55 -0600
+> >> Logan Gunthorpe <logang@deltatee.com> wrote:  
+> >>> It turns out that root ports that support P2P are far less common than 
+> >>> anyone thought. So it will likely have to be a white list.  
+> >>
+> >> This came as a bit of a surprise to our PCIe architect.
+> >>
+> >> His follow up was whether it was worth raising an ECR for the PCIe spec
+> >> to add a capability bit to allow this to be discovered.  This might
+> >> long term avoid the need to maintain the white list for new devices.
+> >>
+> >> So is it worth having a long term solution for making this discoverable?  
+> > 
+> > It was surprising to me that there's no architected way to discover
+> > this.  It seems like such an obvious thing that I guess I assumed the
+> > omission was intentional, i.e., maybe there's something that makes it
+> > impractical, but it would be worth at least asking somebody in the
+> > SIG.  It seems like for root ports in the same root complex, at least,
+> > there could be a bit somewhere in the root port or the RCRB (which
+> > Linux doesn't support yet).  
+> 
+> Yes, I agree. It would be a good long term solution to have this bit in
+> the spec. That would avoid us needing to create a white list for new
+> hardware. However, I expect it would be years before we can rely on it
+> so someone may yet implement that white list.
+> 
+> Logan
+
+I'll see if I can get our PCI SIG people to follow this through and see if
+it is just an omission or as Bjorn suggested, there is some reason we
+aren't thinking of that makes it hard.
+
+Agreed that it is a somewhat tangential question to what to do with current
+hardware, but let's get the ball rolling if possible.
+
+Jonathan
