@@ -1,71 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:33191 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752840AbeC3HPA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 03:15:00 -0400
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Keller Jacob E <jacob.e.keller@intel.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V4 8/8] net/mlx5e: Use generic PCI function for bandwidth calculation
-Date: Fri, 30 Mar 2018 10:14:46 +0300
-Message-Id: <1522394086-3555-9-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
-References: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <robh@kernel.org>
+Return-Path: <robh@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20180321211628.GE38649@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com>
+ <20180321144254.7406-3-lorenzo.pieralisi@arm.com> <20180321211628.GE38649@bhelgaas-glaptop.roam.corp.google.com>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 27 Mar 2018 11:39:57 -0500
+Message-ID: <CAL_JsqJDzGHix=C43FTry_AsUszXVrk_W=01OGnb8+EB0Mi9Jw@mail.gmail.com>
+Subject: Re: [PATCH v2 02/10] PCI: iproc: Remove dependency on ARM specific
+ struct pci_sys_data
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, Linus Walleij <linus.walleij@linaro.org>,
+	Xiaowei Song <songxiaowei@hisilicon.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Tanmay Inamdar <tinamdar@apm.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>, Ley Foon Tan <lftan@altera.com>,
+	Fengguang Wu <fengguang.wu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Newly introduced pci_bandwidth_available() function calculates
-maximum available bandwidth through the PCI chain. We can use this
-value for mlx5e_get_pci_bw() instead of calculating ourselves.
-This is mainly used for detecting cases on which PCIe bandwidth
-can't support current link speed and the driver need to act accordingly.
-By taking PCIe encoding into account, this calculation is even more
-accurate.
+On Wed, Mar 21, 2018 at 4:16 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Mar 21, 2018 at 02:42:46PM +0000, Lorenzo Pieralisi wrote:
+>> From: Rob Herring <robh@kernel.org>
+>>
+>> The iproc driver is using ARM's struct pci_sys_data simply to store a
+>> private data pointer. This is completely unnecessary, so store the
+>> private data directly in bus->sysdata as is done on arm64.
+>
+> Oh, thank you, this is awesome!
+>
+> struct pci_sys_data is still referenced in mvebu and rcar.  I didn't
+> look closely enough to see if they could be similarly simplified.
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
----
- drivers/net/ethernet/mellanox/mlx5/core/en_main.c | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+I did.
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
-index 4a675f1..fc51a73 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
-@@ -4011,27 +4011,16 @@ static int mlx5e_get_pci_bw(struct mlx5_core_dev *mdev, u32 *pci_bw)
- 	enum pcie_link_width width;
- 	enum pci_bus_speed speed;
- 	int err = 0;
-+	int bw;
- 
--	err = pcie_get_minimum_link(mdev->pdev, &speed, &width);
-+	err = pcie_bandwidth_available(mdev->pdev, &speed, &width, &bw, NULL);
- 	if (err)
- 		return err;
- 
- 	if (speed == PCI_SPEED_UNKNOWN || width == PCIE_LNK_WIDTH_UNKNOWN)
- 		return -EINVAL;
- 
--	switch (speed) {
--	case PCIE_SPEED_2_5GT:
--		*pci_bw = 2500 * width;
--		break;
--	case PCIE_SPEED_5_0GT:
--		*pci_bw = 5000 * width;
--		break;
--	case PCIE_SPEED_8_0GT:
--		*pci_bw = 8000 * width;
--		break;
--	default:
--		return -EINVAL;
--	}
-+	*pci_bw = bw;
- 
- 	return 0;
- }
--- 
-1.8.3.1
+> I guess not, because they use pci_common_init_dev().  They look
+> tantalizingly close to being able to use pci_scan_root_bus_bridge()
+> like everybody else, though.
+
+Yes, that is the problem. It shouldn't be hard, just needs someone
+with h/w to test.
+
+Rob
