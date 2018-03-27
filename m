@@ -1,46 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        bhelgaas@google.com
-Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH 2/2] pci: host: pci-hyperv: Replace GFP_ATOMIC with GFP_KERNEL in new_pcichild_device
-Date: Sun, 18 Mar 2018 22:53:28 +0800
-Message-Id: <1521384808-23627-1-git-send-email-baijiaju1990@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=2BpJ=GR=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=2BpJ=GR=deltatee.com=logang@kernel.org>
+To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+ Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Eric Wehage <Eric.Wehage@huawei.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+ <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+ <20180326121138.00005e30@huawei.com>
+ <20180326140118.GA221690@bhelgaas-glaptop.roam.corp.google.com>
+ <c717eb06-1e83-f0f3-4d6c-15531aa808e0@deltatee.com>
+ <20180327094701.0000300d@huawei.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <27171a6c-0e0b-4b2b-16ef-38bb3cf563a8@deltatee.com>
+Date: Tue, 27 Mar 2018 09:37:37 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180327094701.0000300d@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
 List-ID: <linux-pci.vger.kernel.org>
 
-new_pcichild_device() is not called in atomic context.
 
-The call chain ending up at new_pcichild_device() is:
-[1] new_pcichild_device() <- pci_devices_present_work()
-pci_devices_present_work() is only set in INIT_WORK().
 
-Despite never getting called from atomic context,
-new_pcichild_device() calls kzalloc with GFP_ATOMIC,
-which waits busily for allocation.
-GFP_ATOMIC is not necessary and can be replaced with GFP_KERNEL
-to avoid busy waiting.
+On 27/03/18 02:47 AM, Jonathan Cameron wrote:
+> I'll see if I can get our PCI SIG people to follow this through and see if
+> it is just an omission or as Bjorn suggested, there is some reason we
+> aren't thinking of that makes it hard.
 
-This is found by a static analysis tool named DCNS written by myself.
+That would be great! Thanks!
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
----
- drivers/pci/host/pci-hyperv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 0fe3ea1..289e31d 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1500,7 +1500,7 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
- 	unsigned long flags;
- 	int ret;
- 
--	hpdev = kzalloc(sizeof(*hpdev), GFP_ATOMIC);
-+	hpdev = kzalloc(sizeof(*hpdev), GFP_KERNEL);
- 	if (!hpdev)
- 		return NULL;
- 
--- 
-1.9.1
+Logan
