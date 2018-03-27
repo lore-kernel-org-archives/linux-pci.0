@@ -1,51 +1,147 @@
-Return-Path: <SRS0=FAy1=FY=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=FAy1=FY=codeaurora.org=okaya@kernel.org>
-Subject: Re: RFC on Kdump and PCIe on ARM64
-To: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Linux PCI <linux-pci@vger.kernel.org>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
- Nate Watterson <nwatters@codeaurora.org>,
- "shankerd@codeaurora.org" <shankerd@codeaurora.org>,
- Vikram Sethi <vikrams@codeaurora.org>, "Goel, Sameer"
- <sgoel@codeaurora.org>, kexec@lists.infradead.org,
- Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
- David Woodhouse <dwmw2@infradead.org>
-References: <c5c2d8d2-0384-442a-7bc6-8929457b8447@codeaurora.org>
- <20180301190552.GK13722@bhelgaas-glaptop.roam.corp.google.com>
- <2b2de17c-8527-e49b-2ef2-2a3d1801e4f9@codeaurora.org>
- <20180302000303.GD74737@bhelgaas-glaptop.roam.corp.google.com>
- <20180302103032.GB19323@arm.com>
- <84121a8d-5294-0567-6c6b-f57e85dc4961@codeaurora.org>
- <20180302180219.GB20579@arm.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <2f8e1f65-5f70-9556-5d96-c50421982f73@codeaurora.org>
-Date: Fri, 2 Mar 2018 13:37:11 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180302180219.GB20579@arm.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.bootlin.com ([62.4.15.54]:52104 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752431AbeC0OJZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Mar 2018 10:09:25 -0400
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Nadav Haklai <nadavh@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        stable@vger.kernel.org,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v3 4/6] PCI: aardvark: use isr1 instead of isr0 interrupt in legacy irq mode
+Date: Tue, 27 Mar 2018 16:08:17 +0200
+Message-Id: <20180327140819.23501-12-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
+References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/2/2018 1:02 PM, Will Deacon wrote:
->> How about the points that Baoquan highlighted in his email regarding the
->> solution from AMD and X86?
-> Which specific points do you think this proposal doesn't address?
-> 
+From: Victor Gu <xigu@marvell.com>
 
-No specific concerns at this moment.
+The Aardvark has two interrupts sets:
 
->> I have not read the entire thread but, is this just a matter of following
->> what Bjorn recommended or there is more to it?
-> I'm trying to say how I think Bjorn's idea can be implemented for SMMUv3.
-> I basically want to avoid a situation where the SMMU driver tries to walk
-> the in-memory data structures left by a previous kernel and infer the
-> setup from that.
+ - first set is bit[23:16] of PCIe ISR 0 register(RD0074840h)
 
-Let me know if you have something to test. We have a test case with the
-crash.
+ - second set is bit[11:8] of PCIe ISR 1 register(RD0074848h)
 
+Only one set should be used, while another set should be masked.
+
+The second set, ISR1, is more advanced, the Legacy INT_X status bit is
+asserted once Assert_INTX message is received, and de-asserted after
+Deassert_INTX message is received. Therefore, it matches what the
+driver is currently doing in the ->irq_mask() and ->irq_unmask()
+functions. The ISR0 requires additional work to deassert the
+interrupt, which the driver doesn't do currently.
+
+This commit resolves a number of issues with legacy interrupts.
+
+This is part of fixing bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+reported as the user to be important to get a Intel 7260 mini-PCIe
+WiFi card working.
+
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 41 ++++++++++++++++++++++++-----------------
+ 1 file changed, 24 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 4affbf1b826b..c6cd7b17868f 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -100,7 +100,8 @@
+ #define PCIE_ISR1_MASK_REG			(CONTROL_BASE_ADDR + 0x4C)
+ #define     PCIE_ISR1_POWER_STATE_CHANGE	BIT(4)
+ #define     PCIE_ISR1_FLUSH			BIT(5)
+-#define     PCIE_ISR1_ALL_MASK			GENMASK(5, 4)
++#define     PCIE_ISR1_INTX_ASSERT(val)		BIT(8 + (val))
++#define     PCIE_ISR1_ALL_MASK			GENMASK(11, 4)
+ #define PCIE_MSI_ADDR_LOW_REG			(CONTROL_BASE_ADDR + 0x50)
+ #define PCIE_MSI_ADDR_HIGH_REG			(CONTROL_BASE_ADDR + 0x54)
+ #define PCIE_MSI_STATUS_REG			(CONTROL_BASE_ADDR + 0x58)
+@@ -616,9 +617,9 @@ static void advk_pcie_irq_mask(struct irq_data *d)
+ 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+ 	u32 mask;
+ 
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	mask |= PCIE_ISR0_INTX_ASSERT(hwirq);
+-	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
++	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	mask |= PCIE_ISR1_INTX_ASSERT(hwirq);
++	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
+ }
+ 
+ static void advk_pcie_irq_unmask(struct irq_data *d)
+@@ -627,9 +628,9 @@ static void advk_pcie_irq_unmask(struct irq_data *d)
+ 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+ 	u32 mask;
+ 
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	mask &= ~PCIE_ISR0_INTX_ASSERT(hwirq);
+-	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
++	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	mask &= ~PCIE_ISR1_INTX_ASSERT(hwirq);
++	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
+ }
+ 
+ static int advk_pcie_irq_map(struct irq_domain *h,
+@@ -772,29 +773,35 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
+ 
+ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ {
+-	u32 val, mask, status;
++	u32 isr0_val, isr0_mask, isr0_status;
++	u32 isr1_val, isr1_mask, isr1_status;
+ 	int i, virq;
+ 
+-	val = advk_readl(pcie, PCIE_ISR0_REG);
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	status = val & ((~mask) & PCIE_ISR0_ALL_MASK);
++	isr0_val = advk_readl(pcie, PCIE_ISR0_REG);
++	isr0_mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
++	isr0_status = isr0_val & ((~isr0_mask) & PCIE_ISR0_ALL_MASK);
+ 
+-	if (!status) {
+-		advk_writel(pcie, val, PCIE_ISR0_REG);
++	isr1_val = advk_readl(pcie, PCIE_ISR1_REG);
++	isr1_mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	isr1_status = isr1_val & ((~isr1_mask) & PCIE_ISR1_ALL_MASK);
++
++	if (!isr0_status && !isr1_status) {
++		advk_writel(pcie, isr0_val, PCIE_ISR0_REG);
++		advk_writel(pcie, isr1_val, PCIE_ISR1_REG);
+ 		return;
+ 	}
+ 
+ 	/* Process MSI interrupts */
+-	if (status & PCIE_ISR0_MSI_INT_PENDING)
++	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
+ 		advk_pcie_handle_msi(pcie);
+ 
+ 	/* Process legacy interrupts */
+ 	for (i = 0; i < PCI_NUM_INTX; i++) {
+-		if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
++		if (!(isr1_status & PCIE_ISR1_INTX_ASSERT(i)))
+ 			continue;
+ 
+-		advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i),
+-			    PCIE_ISR0_REG);
++		advk_writel(pcie, PCIE_ISR1_INTX_ASSERT(i),
++			    PCIE_ISR1_REG);
+ 
+ 		virq = irq_find_mapping(pcie->irq_domain, i);
+ 		generic_handle_irq(virq);
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.14.3
