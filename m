@@ -1,104 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33570 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751274AbeCNMNS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 08:13:18 -0400
-Date: Wed, 14 Mar 2018 13:13:14 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        "open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci: tegra: add MSI dependency
-Message-ID: <20180314121314.GE8564@ulmo>
-References: <20180313115218.2246372-1-arnd@arndb.de>
- <20180314114515.GC8564@ulmo>
- <CAK8P3a3Wr8FNRP4ZYDGk9OL+=0w--pzRX=R6ye_+6nCtnHGVjg@mail.gmail.com>
+Return-Path: <robh@kernel.org>
+Return-Path: <robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="10jrOL3x2xqLmOsH"
-In-Reply-To: <CAK8P3a3Wr8FNRP4ZYDGk9OL+=0w--pzRX=R6ye_+6nCtnHGVjg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180321211904.GF38649@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180321144254.7406-1-lorenzo.pieralisi@arm.com> <20180321211904.GF38649@bhelgaas-glaptop.roam.corp.google.com>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 27 Mar 2018 11:34:32 -0500
+Message-ID: <CAL_Jsq+89X862Zyt4S_hYdpg-HbgEgxUfhx6r_HvihpxSe6c-A@mail.gmail.com>
+Subject: Re: [PATCH v2 00/10] PCI DT header refactoring and compile test improvements
+To: Bjorn Helgaas <helgaas@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, Linus Walleij <linus.walleij@linaro.org>,
+	Xiaowei Song <songxiaowei@hisilicon.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Tanmay Inamdar <tinamdar@apm.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>, Ley Foon Tan <lftan@altera.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Mar 21, 2018 at 4:19 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Mar 21, 2018 at 02:42:44PM +0000, Lorenzo Pieralisi wrote:
+>> Rebased/reworked a patch series previously posted by Rob Herring[1].
+>>
+>> v1 -> v2:
+>>       - Rebased against v4.16-rc1
+>>       - Refactored/split patches
+>>
+>> [1] https://marc.info/?l=linux-pci&m=152043736711658&w=2
+>>
+>> Original cover letter
+>> ---------------------
+>>
+>> This started with just moving private functions from of_pci.h to
+>> drivers/pci/pci.h, but I was annoyed with trying to build all the right
+>> configs, so I enabled COMPILE_TEST on a bunch of drivers. Then I fixed
+>> the fallout from doing that. I'm sending this as all one series, but
+>> really there is no dependency for the header refactoring patch.
+>>
+>> Needless to say, this series is *compile tested* only. This is based on
+>> Bjorn's for-linus branch (and the of_pci.h fix there).
+>>
+>> Rob
+>>
+>> Fengguang Wu (4):
+>>   PCI: kirin: struct kirin_pcie_driver can be static
+>>   PCI: faraday: struct faraday_pci_variant can be static
+>>   PCI: rcar: Fix semicolon.cocci warnings
+>>   PCI: v3-semi: Fix semicolon.cocci warnings
+>
+> If these titles were "Make XXX static" and "Remove unnecessary
+> semicolon" they would read the same as all the others, i.e., they
+> would start with a verb and contain a little more information.  "Fix
+> XXX warnings" is not really very informative all by itself.
 
---10jrOL3x2xqLmOsH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Not sure who you are directing the comment to, but they are generated
+patches. Fixing what generates them would be more useful than
+maintainers fixing up the commit messages. Of course, following the
+varied whims of different maintainers is probably not scriptable.
 
-On Wed, Mar 14, 2018 at 01:06:11PM +0100, Arnd Bergmann wrote:
-> On Wed, Mar 14, 2018 at 12:45 PM, Thierry Reding
-> <thierry.reding@gmail.com> wrote:
-> > On Tue, Mar 13, 2018 at 12:52:05PM +0100, Arnd Bergmann wrote:
-> >> Building the tegra PCIe host driver without MSI results in a link
-> >> failure:
-> >>
-> >> drivers/pci/host/pci-tegra.o:(.data+0x70): undefined reference to `pci=
-_msi_unmask_irq'
-> >> drivers/pci/host/pci-tegra.o:(.data+0x74): undefined reference to `pci=
-_msi_mask_irq'
-> >>
-> >> This adds the same dependency that everyone else uses.
-> >>
-> >> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> >> ---
-> >>  drivers/pci/host/Kconfig | 1 +
-> >>  1 file changed, 1 insertion(+)
-> >
-> > I'm slightly concerned about the dependency. Not that I doubt its
-> > correctness, but because it could mean that PCI_TEGRA is not visible in
-> > the default configuration. The only reason why it is currently visible
-> > is because PCI_MSI is selected by some symbols that also happen to be
-> > enabled. However, what if at some point those symbols are disabled or
-> > removed?
-> >
-> > Some architectures make sure that PCI_MSI is enabled by selecting it,
-> > but that's risky, isn't it, because PCI_MSI is user-visible and could
-> > therefore easily lead to conflicts.
-> >
-> > Enabling PCI_MSI in the arm64 defconfig would solve the issue and is
-> > good enough for me. I've got a couple of changes to that defconfig in
-> > the Tegra tree for v4.17-rc1, I can add a patch to enable PCI_MSI.
-> >
-> > Unless there are any objections.
->=20
-> I looked at it again and found that this on ARM64, PCI_MSI is always
-> selected indirectly by ARM_GIC&&PCI, so there is no problem.
->=20
-> The build failure must have been on 32-bit ARM.
-
-Okay, I had assumed that ARM_GIC_V2M (which selects PCI_MSI) was user-
-visible and hence could be disabled. But it's not, and always enabled on
-ARM64. On 32-bit we already explicitly enable PCI_MSI via the default
-configurations.
-
-I withdraw my concerns. I see that Lorenzo already applied the patch, so
-just for the record:
-
-Acked-by: Thierry Reding <treding@nvidia.com>
-
---10jrOL3x2xqLmOsH
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlqpEdoACgkQ3SOs138+
-s6F0yA//aupfcFSSBQFcQPwsoeUkqXMoTYfebuIV3TSMq/GUOv1zpfqf0duv9wkE
-KEJ2avzAX6vcG7AFMi2QsottaskHko0fpNXN0a919lR1uCMxkrjDDtpwrDVyCQHN
-Mmxy2wHqw2qjKCl0JmTOQf9QVVRiljYDt5vBSpsFpxUzXMzuipjKkfJsV6OrUnzl
-+/oN1XrsNP0qs/6rShLgObFdkNXBo7MejihrHiLwbzB7z/XGZ2krLrGNquWBY3Ff
-qt8CKiSSCDEzKtfzAMFP351z/W6KOrlHMhfBuiWCh0D32FqRfhx7mW+7Mpegqcp2
-tA6aSNqg+bY705Snk179K6J2uwIcPEiHTETpic0vxbwwliX2+NnrUeF/rkgS6m0o
-k9IDl7i1Hfi1/aqLNsgffsdpr1x+3K+fWCbcT/WbVR4h5Vaa/1AFC2rdusXmemFT
-1ymE1/IKNn2iU6avwINcfGJBHO6lqS5J08/k4U5AKq52rrO8jQvP3302GABcu6cK
-CLSEItLS8oB77h7RSCtPvyNDD6dFOXIRpGbpzQIF1A/dz0GdKgEYJg1rxj6N9pRg
-X/q8P8jACEQyWNZVx/wNV6GTDEbdPsPKkohzegAJ3H/rZkrroEdW7IKBokOUf5E7
-e5hKV5+w71g0RpFcTYLvKAqUCT9pN6brBTs4XDCgfgMxq20mgiM=
-=+dWC
------END PGP SIGNATURE-----
-
---10jrOL3x2xqLmOsH--
+Rob
