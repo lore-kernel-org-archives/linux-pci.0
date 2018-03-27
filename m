@@ -1,73 +1,184 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:40771 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933479AbeCGPmp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 10:42:45 -0500
-Received: by mail-ot0-f195.google.com with SMTP id l12so2438722otj.7
-        for <linux-pci@vger.kernel.org>; Wed, 07 Mar 2018 07:42:45 -0800 (PST)
-From: Rob Herring <robh@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>
-Subject: [PATCH 0/9] PCI DT header refactoring and compile test improvements
-Date: Wed,  7 Mar 2018 09:42:34 -0600
-Message-Id: <20180307154243.3205-1-robh@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 27 Mar 2018 14:23:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 2/5] PCI: Take bridge window alignment into account
+ when distributing resources
+Message-ID: <20180327192318.GC7759@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+ <20180226132112.81447-3-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180226132112.81447-3-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This started with just moving private functions from of_pci.h to 
-drivers/pci/pci.h, but I was annoyed with trying to build all the right 
-configs, so I enabled COMPILE_TEST on a bunch of drivers. Then I fixed 
-the fallout from doing that. I'm sending this as all one series, but 
-really there is no dependency for the header refactoring patch.
+On Mon, Feb 26, 2018 at 04:21:09PM +0300, Mika Westerberg wrote:
+> When connecting a Thunderbolt endpoint which itself has internal PCIe
+> switch (not the integrated one) the way we currently distribute
 
-Needless to say, this series is *compile tested* only. This is based on 
-Bjorn's for-linus branch (and the of_pci.h fix there).
+I don't understand this distinction between "internal PCIe switch" and
+"integrated one".
 
-Rob
+>From a PCI point of view, I assume you're adding a switch with 4 NIC
+endpoints below it.
 
-Fengguang Wu (2):
-  PCI: rcar: fix semicolon.cocci warnings
-  PCI: v3-semi: fix semicolon.cocci warnings
+> resources does not always work well because devices below non-hotplug
+> bridges might need to have their MMIO resources aligned to something
+> else than 1 MB boundary. As an example connecting a server grade 4-port
+> GbE add in card adds another PCIe switch leading to GbE devices that
+> want to have their MMIO resources aligned to 2 MB boundary instead.
 
-Rob Herring (6):
-  PCI: kirin: remove unnecessary asm/compiler.h include
-  PCI: iproc: remove dependency on ARM specific struct pci_sys_data
-  PCI: kirin: fix missing dependency on PCI_MSI_IRQ_DOMAIN
-  PCI: improve host drivers compile test coverage
-  PCI: dw: move CONFIG_PCI depends to menu
-  PCI: move private DT related functions into private header
+Is there something unique about Thunderbolt here?  I assume from a PCI
+point of view, these NIC ports have BARs that are 2 MB or larger and
+hence need 2 MB or larger alignment?
 
-kbuild test robot (1):
-  PCI: kirin_pcie_driver can be static
+> Current resource distribution code does not take this alignment into
+> account and might try to add too much resources for the extension
+> hotplug bridges. The resulting bridge window is then too big which makes
+> Linux to re-allocate minimal amount of resources, making future
+> extension impossible.
 
- drivers/pci/dwc/Kconfig                | 42 +++++++++++++---------------------
- drivers/pci/dwc/pci-dra7xx.c           |  1 +
- drivers/pci/dwc/pcie-designware-host.c |  1 +
- drivers/pci/dwc/pcie-kirin.c           |  3 +--
- drivers/pci/host/Kconfig               | 33 ++++++++++++--------------
- drivers/pci/host/pci-aardvark.c        |  2 ++
- drivers/pci/host/pci-ftpci100.c        |  6 +++--
- drivers/pci/host/pci-mvebu.c           |  2 ++
- drivers/pci/host/pci-rcar-gen2.c       |  2 ++
- drivers/pci/host/pci-tegra.c           |  2 ++
- drivers/pci/host/pci-v3-semi.c         |  4 +++-
- drivers/pci/host/pci-xgene.c           |  2 ++
- drivers/pci/host/pcie-altera.c         |  2 ++
- drivers/pci/host/pcie-iproc-bcma.c     |  3 +--
- drivers/pci/host/pcie-iproc-platform.c |  1 +
- drivers/pci/host/pcie-iproc.c          | 19 ++-------------
- drivers/pci/host/pcie-iproc.h          |  4 ----
- drivers/pci/host/pcie-mediatek.c       |  2 ++
- drivers/pci/host/pcie-rcar.c           |  4 +++-
- drivers/pci/host/pcie-rockchip.c       |  2 ++
- drivers/pci/host/pcie-xilinx-nwl.c     |  2 ++
- drivers/pci/host/pcie-xilinx.c         |  2 ++
- drivers/pci/pci.h                      | 40 ++++++++++++++++++++++++++++++++
- include/linux/of_pci.h                 | 34 ---------------------------
- 24 files changed, 108 insertions(+), 107 deletions(-)
+Maybe a concrete example would make this clearer to me.
 
--- 
-2.14.1
+> Make this work better by substracting properly aligned non-hotplug
+> downstream bridge window size from the remaining resources.
+> 
+> Fixes: 1a5767725cec ("PCI: Distribute available resources to hotplug-capable bridges")
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/pci/setup-bus.c | 41 ++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 40 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 3cce29a069e6..f1e6172734f0 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1882,6 +1882,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  	resource_size_t available_mmio, resource_size_t available_mmio_pref)
+>  {
+>  	resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
+> +	resource_size_t io_start, mmio_start, mmio_pref_start;
+>  	unsigned int normal_bridges = 0, hotplug_bridges = 0;
+>  	struct resource *io_res, *mmio_res, *mmio_pref_res;
+>  	struct pci_dev *dev, *bridge = bus->self;
+> @@ -1946,11 +1947,16 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  			remaining_mmio_pref -= resource_size(res);
+>  	}
+>  
+> +	io_start = io_res->start;
+> +	mmio_start = mmio_res->start;
+> +	mmio_pref_start = mmio_pref_res->start;
+> +
+>  	/*
+>  	 * Go over devices on this bus and distribute the remaining
+>  	 * resource space between hotplug bridges.
+>  	 */
+>  	for_each_pci_bridge(dev, bus) {
+> +		resource_size_t align;
+>  		struct pci_bus *b;
+>  
+>  		b = dev->subordinate;
+> @@ -1968,7 +1974,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  				available_io, available_mmio,
+>  				available_mmio_pref);
+>  		} else if (dev->is_hotplug_bridge) {
+> -			resource_size_t align, io, mmio, mmio_pref;
+> +			resource_size_t io, mmio, mmio_pref;
+>  
+>  			/*
+>  			 * Distribute available extra resources equally
+> @@ -1981,11 +1987,13 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  			io = div64_ul(available_io, hotplug_bridges);
+>  			io = min(ALIGN(io, align), remaining_io);
+>  			remaining_io -= io;
+> +			io_start += io;
+>  
+>  			align = pci_resource_alignment(bridge, mmio_res);
+>  			mmio = div64_ul(available_mmio, hotplug_bridges);
+>  			mmio = min(ALIGN(mmio, align), remaining_mmio);
+>  			remaining_mmio -= mmio;
+> +			mmio_start += mmio;
+>  
+>  			align = pci_resource_alignment(bridge, mmio_pref_res);
+>  			mmio_pref = div64_ul(available_mmio_pref,
+> @@ -1993,9 +2001,40 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  			mmio_pref = min(ALIGN(mmio_pref, align),
+>  					remaining_mmio_pref);
+>  			remaining_mmio_pref -= mmio_pref;
+> +			mmio_pref_start += mmio_pref;
+>  
+>  			pci_bus_distribute_available_resources(b, add_list, io,
+>  							       mmio, mmio_pref);
+> +		} else {
+> +			/*
+> +			 * For normal bridges, track start of the parent
+> +			 * bridge window to make sure we align the
+> +			 * remaining space which is distributed to the
+> +			 * hotplug bridges properly.
+> +			 */
+> +			resource_size_t aligned;
+> +			struct resource *res;
+> +
+> +			res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
+> +			io_start += resource_size(res);
+> +			aligned = ALIGN(io_start,
+> +					pci_resource_alignment(dev, res));
+> +			if (aligned > io_start)
+> +				remaining_io -= aligned - io_start;
+> +
+> +			res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
+> +			mmio_start += resource_size(res);
+> +			aligned = ALIGN(mmio_start,
+> +					pci_resource_alignment(dev, res));
+> +			if (aligned > mmio_start)
+> +				remaining_mmio -= aligned - mmio_start;
+> +
+> +			res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
+> +			mmio_pref_start += resource_size(res);
+> +			aligned = ALIGN(mmio_pref_start,
+> +					pci_resource_alignment(dev, res));
+> +			if (aligned > mmio_pref_start)
+> +				remaining_mmio_pref -= aligned - mmio_pref_start;
+
+I don't understand how this can work.  You have this:
+
+  for_each_pci_bridge(dev, bus) {
+    if (!hotplug_bridges && normal_bridges == 1) {
+      pci_bus_distribute_available_resources(...);   # block 1
+    } else if (dev->is_hotplug_bridge) {
+      ...                                            # block 2
+      pci_bus_distribute_available_resources(...);
+    } else {
+      ...                                            # block 3
+    }
+  }
+
+This patch adds block 3.  Block 3 doesn't do anything with side
+effects, i.e., it only updates local variables like io_start,
+remaining_io, mmio_start, remaining_mmio, etc.
+
+Those may be used in subsequent iterations, but it's only useful if
+there *are* subsequent iterations, so this is dependent on the order
+we iterate through the bridges.  It seems like we want the same
+results no matter what the order.
+
+>  		}
+>  	}
+>  }
+> -- 
+> 2.16.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
