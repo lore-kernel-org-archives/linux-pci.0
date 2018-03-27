@@ -1,40 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53914 "EHLO mail.kernel.org"
+Received: from mail.bootlin.com ([62.4.15.54]:52088 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751492AbeCNRMH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 13:12:07 -0400
-Date: Wed, 14 Mar 2018 12:12:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-pci@vger.kernel.org, Mikael Starvik <starvik@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Tony Luck <tony.luck@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        David Howells <dhowells@redhat.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-cris-kernel@axis.com, linux-kernel@vger.kernel.org,
-        linux-ia64@vger.kernel.org, linux-am33-list@redhat.com
-Subject: Re: [PATCH] PCI/MSI: Don't set up INTx if MSI or MSI-X is enabled
-Message-ID: <20180314171202.GA179719@bhelgaas-glaptop.roam.corp.google.com>
-References: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180314083519.GA24043@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180314083519.GA24043@infradead.org>
+        id S1751152AbeC0OJV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Mar 2018 10:09:21 -0400
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Nadav Haklai <nadavh@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: [PATCH v3 0/6] PCI: aardvark: misc fixes and improvements
+Date: Tue, 27 Mar 2018 16:08:06 +0200
+Message-Id: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 01:35:19AM -0700, Christoph Hellwig wrote:
-> Should this logic go into a little helper so that everyone is kept
-> in sync?
+Hello Bjorn,
 
-Great point, thanks!  What I'd really like is to completely get rid of
-most of the pcibios_enable_device() implementations.  Most of them
-contain nothing that's arch-specific.
+This patch series brings a number of improvements to the aardvark
+PCIe. Sorry for being so slow at sending the v3 after the v2 sent in
+January. Hopefully this time around the series will be fine.
 
-I'll look at that some more, but will probably do that as additional
-steps on top of this one.  That way this patch stays mostly trivial
-and obvious as a generalization of 16cf0ebc35dd ("x86/PCI: Do not use
-interrupt links for devices using MSI-X") to other affected arches.
+Changes since v2:
 
-Bjorn
+ - Rebased on v4.16-rc7
+
+ - Dropped the patches disabling L0S and aligning the MPS between RC
+   and EP, since we are working on a different solution, implementing
+   a proper root port. Therefore, this patch series only has the
+   (hopefully) non-controversial changes.
+
+ - Add a patch (PATCH 1) that factorizes the logic to decide if the
+   target of a configuration space access is a valid device or not
+   into a advk_pcie_valid_device() helper, and adjust PATCH 2
+   accordingly.
+
+ - Drop unused PCIE_BDF macro in PATCH 3.
+
+Best regards,
+
+Thomas Petazzoni
+
+Evan Wang (2):
+  PCI: aardvark: fix PCIe max read request size setting
+  PCI: aardvark: remove PCIe outbound window configuration
+
+Thomas Petazzoni (1):
+  PCI: aardvark: introduce an advk_pcie_valid_device() helper
+
+Victor Gu (3):
+  PCI: aardvark: fix logic in advk_pcie_valid_device()
+  PCI: aardvark: set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
+  PCI: aardvark: use isr1 instead of isr0 interrupt in legacy irq mode
+
+ drivers/pci/host/pci-aardvark.c | 117 ++++++++++++++--------------------------
+ 1 file changed, 39 insertions(+), 78 deletions(-)
+
+-- 
+2.14.3
