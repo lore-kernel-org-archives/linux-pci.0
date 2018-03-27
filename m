@@ -1,53 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail2.skidata.com ([91.230.2.91]:30348 "EHLO mail2.skidata.com"
+Received: from mail.bootlin.com ([62.4.15.54]:52109 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750751AbeCNLmK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 07:42:10 -0400
-Subject: Re: [PATCH 3/3] usb: host: pci: replace hardcoded renesas PCI IDs
-To: Greg KH <gregkh@linuxfoundation.org>,
-        Richard Leitner <dev@g0hl1n.net>
-CC: <linux-usb@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <mathias.nyman@intel.com>,
-        <bhelgaas@google.com>
-References: <20180314102933.21367-1-dev@g0hl1n.net>
- <20180314102933.21367-4-dev@g0hl1n.net> <20180314104925.GC32615@kroah.com>
-From: Richard Leitner <richard.leitner@skidata.com>
-Message-ID: <d46c3232-1a45-7e28-9691-de2fcb964ae4@skidata.com>
-Date: Wed, 14 Mar 2018 12:38:52 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180314104925.GC32615@kroah.com>
-Content-Type: text/plain; charset="utf-8"
+        id S1752508AbeC0OJ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Mar 2018 10:09:27 -0400
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Nadav Haklai <nadavh@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Evan Wang <xswang@marvell.com>, stable@vger.kernel.org,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v3 5/6] PCI: aardvark: fix PCIe max read request size setting
+Date: Tue, 27 Mar 2018 16:08:18 +0200
+Message-Id: <20180327140819.23501-13-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
+References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Evan Wang <xswang@marvell.com>
 
-On 03/14/2018 11:49 AM, Greg KH wrote:
-> On Wed, Mar 14, 2018 at 11:29:33AM +0100, Richard Leitner wrote:
->> From: Richard Leitner <richard.leitner@skidata.com>
->>
->> Introduce Renesas uPD72020{1,2} PCI device IDs in pci_ids.h and replace
->> the harcoded values with them.
->>
->> Signed-off-by: Richard Leitner <richard.leitner@skidata.com>
->> ---
->>  drivers/usb/host/pci-quirks.c | 6 ++++--
->>  drivers/usb/host/xhci-pci.c   | 4 ++--
->>  include/linux/pci_ids.h       | 2 ++
->>  3 files changed, 8 insertions(+), 4 deletions(-)
->>
+There is an obvious typo issue in the definition of the PCIe maximum
+read request size: a bit shift is directly used as a value, while it
+should be used to shift the correct value.
 
-> Now this patch was fine :)
-> 
-> Care to redo this series?
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Sure. Will send a v2 soon.
-
-> 
-> thanks,
-> 
-> greg k-h
-> 
-
-thank you!
-
-regards;Richard.L
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index c6cd7b17868f..d0688dc6b6d9 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -29,6 +29,7 @@
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT	5
+ #define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
++#define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ		0x2
+ #define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
+ #define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
+ #define     PCIE_CORE_LINK_TRAINING				BIT(5)
+@@ -295,7 +296,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
+ 		(7 << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
+ 		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
+-		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
++		(PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ <<
++		 PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT);
+ 	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
+ 
+ 	/* Program PCIe Control 2 to disable strict ordering */
+-- 
+2.14.3
