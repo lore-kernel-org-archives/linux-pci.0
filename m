@@ -1,426 +1,165 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:57896 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967919AbeCBQgx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Mar 2018 11:36:53 -0500
-Date: Fri, 2 Mar 2018 16:36:43 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, bhelgaas@google.com, cyndis@kapsi.fi,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org, vidyas@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V9 3/3] PCI: tegra: Add power management support
-Message-ID: <20180302163643.GA18316@e107981-ln.cambridge.arm.com>
-References: <1519812034-11120-1-git-send-email-mmaddireddy@nvidia.com>
- <1519812034-11120-4-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 27 Mar 2018 13:57:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
+ bus number
+Message-ID: <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+ <20180226132112.81447-2-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1519812034-11120-4-git-send-email-mmaddireddy@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180226132112.81447-2-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 28, 2018 at 03:30:34PM +0530, Manikanta Maddireddy wrote:
-> Tegra186 powergate driver is implemented as power domain driver, power
-> partition ungate/gate are registered as power_on/power_off callback
-> functions. There are no direct functions to power gate/ungate host
-> controller in Tegra186. Host controller driver should add "power-domains"
-> property in device tree and implement runtime suspend and resume
-> callback functons. Power gate and ungate is taken care by power domain
-> driver when host controller driver calls pm_runtime_put_sync and
-> pm_runtime_get_sync respectively.
+On Mon, Feb 26, 2018 at 04:21:08PM +0300, Mika Westerberg wrote:
+> When distributing extra buses between hotplug bridges we need to make
+> sure each bridge reserve at least one bus number, even if there is
+> currently nothing connected to it. For instance ACPI hotplug may bring
+> in additional devices to non-hotplug bridges later on.
+
+I guess you mean ACPI hotplug can add devices below bridges that have
+"bridge->is_hotplug_bridge == 0"?  Why don't we set is_hotplug_bridge
+in that case?  I do see that acpiphp sets it in *some* cases (see
+check_hotplug_bridge()).  Are we missing some case?
+
+> Here is what happens on one system when a Thunderbolt device is plugged in:
 > 
-> Register suspend_noirq & resume_noirq callback functions to allow PCIe to
-> come up after resume from RAM. Both runtime and noirq pm ops share same
-> callback functions.
+>   pci 0000:01:00.0: PCI bridge to [bus 02-39]
+>   ...
+>   pci_bus 0000:04: [bus 04-39] extended by 0x35
+>   pci_bus 0000:04: bus scan returning with max=39
+>   pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
+>   pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
+>   pci_bus 0000:3a: scanning bus
+>   pci_bus 0000:3a: bus scan returning with max=3a
+>   pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
+>   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+>   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+>   pci_bus 0000:02: bus scan returning with max=3a
+>   pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
+> 
+> Resulting 'lspci -t' output looks like this:
+> 
+>   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+>                                   +-01.0-[04-39]--
+>                                   \-02.0-[3a]----00.0
+> 
+> The device behind downstream port at 02:02 is the integrated xHCI (USB 3
+> host controller) and is not fully accessible because the hotplug bridge
+> is reserving too many bus numbers.
 
-Hi Manikanta,
+Thanks for the details here, but I can't tell what happened before and
+was broken, vs. what happens now.  Which is the hotplug bridge?  Which
+is the Thunderbolt controller?
 
-I think that overall the series is ready to go now but first I have a
-question for you and Thierry on this specific patch.
+I guess 02:01.0 must be the bridge consuming too many bus numbers
+([bus 04-39])?
 
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> Acked-by: Thierry Reding <treding@nvidia.com>
-> Tested-by: Thierry Reding <treding@nvidia.com>
+And 02:02.0 might be the Thunderbolt controller that wants to use bus
+3a?  But obviously that won't work because 1b.0 doesn't route things
+to bus 3a, since it only consumes [bus 01-39].
+
+(The device behind 02:02.0 is more than just "not fully accessible" --
+it's not accessible via config space *at all*.)
+
+I guess the 'lspci -t' above must be without this patch, and with this
+patch, we'd have
+
+  pci 0000:02:00.0: PCI bridge to [bus 03]
+  pci 0000:02:01.0: PCI bridge to [bus 04-38]
+  pci 0000:02:02.0: PCI bridge to [bus 39]
+
+This patch might fix the situation for simple hot-added devices, but
+won't we have the same problem again if we hot-add a bridge?  It seems
+like we need a more comprehensive solution.  I don't mean we need to
+go whole hog and reassign everybody's bus numbers dynamically, but we
+ought to at least be able to notice the situation, decline to enable
+the bridge leading to devices we can't reach, and give a meaningful
+error message.
+
+Nit unrelated to this patch: "bridge 0000:02" is not a bridge, it's a
+bus.  Apparently bus 3a is hidden because 1b.0's subordinate bus is
+39.
+
+> To make sure we don't run out of bus numbers for non-hotplug bridges reserve
+> one bus number for them upfront before distributing buses for hotplug bridges.
+> 
+> Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
+> Reported-by: Mario Limonciello <mario.limonciello@dell.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: stable@vger.kernel.org
 > ---
-> V2:
-> * no change in this patch
-> V3:
-> * no change in this patch
-> V4:
-> * no change in this patch
-> V5:
-> * Decoupled from https://patchwork.ozlabs.org/patch/832053/ and
-> rebased on linux-next
-> V6:
-> * no change in this patch
-> V7:
-> * memory & irq alloc and AFI programming for MSI are split in two functions
-> V8:
-> * Rebased on top of latest patch-2 & 3
-> V9:
-> * no change in this patch
+>  drivers/pci/probe.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
 > 
->  drivers/pci/host/pci-tegra.c | 180 +++++++++++++++++++++++++++----------------
->  1 file changed, 113 insertions(+), 67 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 60b1d5e1cfa4..3813820554b2 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -1293,31 +1293,25 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ef5377438a1e..6cefd47556e3 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2561,7 +2561,10 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+>  	for_each_pci_bridge(dev, bus) {
+>  		cmax = max;
+>  		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
+> -		used_buses += cmax - max;
+> +		/* Reserve one bus for each bridge */
+> +		used_buses++;
+> +		if (cmax - max > 1)
+> +			used_buses += cmax - max - 1;
+
+Sorry, this should be trivial, but I'm having a hard time wrapping my
+mind around it.
+
+AFAICT, "cmax" is the highest known bus number below this bus, "max"
+is the highest bus number below "dev" (one of the bridges on "bus").
+
+I assume "used_buses++" accounts for the fact that every enabled
+bridge must consume one bus number for its secondary side.
+
+And I guess "used_buses += cmax - max - 1" adds in the bus numbers
+downstream from "dev" (subtracting the one used for its secondary
+bus)?
+
+pci_scan_bridge_extend() seems to return something related to the
+number of bus numbers used below "dev".  Why doesn't *it* account for
+the secondary bus number of "dev"?
+
+It might help if the pci_scan_bridge_extend() function comment were
+extended to say what it actually returns.
+
+>  	}
+>  
+>  	/* Scan bridges that need to be reconfigured */
+> @@ -2584,12 +2587,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+>  			 * bridges if any.
+>  			 */
+>  			buses = available_buses / hotplug_bridges;
+> -			buses = min(buses, available_buses - used_buses);
+> +			buses = min(buses, available_buses - used_buses + 1);
 >  		}
+>  
+>  		cmax = max;
+>  		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
+> -		used_buses += max - cmax;
+> +		/* One bus is already accounted so don't add it again */
+> +		if (max - cmax > 1)
+> +			used_buses += max - cmax - 1;
 >  	}
 >  
-> -	err = tegra_pcie_power_on(pcie);
-> -	if (err) {
-> -		dev_err(dev, "failed to power up: %d\n", err);
-> -		goto phys_put;
-> -	}
-> -
->  	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
->  	pcie->pads = devm_ioremap_resource(dev, pads);
->  	if (IS_ERR(pcie->pads)) {
->  		err = PTR_ERR(pcie->pads);
-> -		goto poweroff;
-> +		goto phys_put;
->  	}
->  
->  	afi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "afi");
->  	pcie->afi = devm_ioremap_resource(dev, afi);
->  	if (IS_ERR(pcie->afi)) {
->  		err = PTR_ERR(pcie->afi);
-> -		goto poweroff;
-> +		goto phys_put;
->  	}
->  
->  	/* request configuration space, but remap later, on demand */
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cs");
->  	if (!res) {
->  		err = -EADDRNOTAVAIL;
-> -		goto poweroff;
-> +		goto phys_put;
->  	}
->  
->  	pcie->cs = *res;
-> @@ -1328,14 +1322,14 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
->  	pcie->cfg = devm_ioremap_resource(dev, &pcie->cs);
->  	if (IS_ERR(pcie->cfg)) {
->  		err = PTR_ERR(pcie->cfg);
-> -		goto poweroff;
-> +		goto phys_put;
->  	}
->  
->  	/* request interrupt */
->  	err = platform_get_irq_byname(pdev, "intr");
->  	if (err < 0) {
->  		dev_err(dev, "failed to get IRQ: %d\n", err);
-> -		goto poweroff;
-> +		goto phys_put;
->  	}
->  
->  	pcie->irq = err;
-> @@ -1343,7 +1337,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
->  	err = request_irq(pcie->irq, tegra_pcie_isr, IRQF_SHARED, "PCIE", pcie);
->  	if (err) {
->  		dev_err(dev, "failed to register IRQ: %d\n", err);
-> -		goto poweroff;
-> +		goto phys_put;
->  	}
->  
->  	return 0;
-> @@ -1351,8 +1345,6 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
->  phys_put:
->  	if (soc->program_uphy)
->  		tegra_pcie_phys_put(pcie);
-> -poweroff:
-> -	tegra_pcie_power_off(pcie);
->  	return err;
->  }
->  
-> @@ -1363,8 +1355,6 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
->  	if (pcie->irq > 0)
->  		free_irq(pcie->irq, pcie);
->  
-> -	tegra_pcie_power_off(pcie);
-> -
->  	if (soc->program_uphy)
->  		tegra_pcie_phys_put(pcie);
->  
-> @@ -1533,15 +1523,13 @@ static const struct irq_domain_ops msi_domain_ops = {
->  	.map = tegra_msi_map,
->  };
->  
-> -static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
-> +static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
->  {
->  	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
->  	struct platform_device *pdev = to_platform_device(pcie->dev);
-> -	const struct tegra_pcie_soc *soc = pcie->soc;
->  	struct tegra_msi *msi = &pcie->msi;
->  	struct device *dev = pcie->dev;
->  	int err;
-> -	u32 reg;
->  
->  	mutex_init(&msi->lock);
->  
-> @@ -1574,6 +1562,20 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
->  	/* setup AFI/FPCI range */
->  	msi->pages = __get_free_pages(GFP_KERNEL, 0);
->  	msi->phys = virt_to_phys((void *)msi->pages);
-> +	host->msi = &msi->chip;
-> +
-> +	return 0;
-> +
-> +err:
-> +	irq_domain_remove(msi->domain);
-> +	return err;
-> +}
-> +
-> +static void tegra_pcie_enable_msi(struct tegra_pcie *pcie)
-> +{
-> +	const struct tegra_pcie_soc *soc = pcie->soc;
-> +	struct tegra_msi *msi = &pcie->msi;
-> +	u32 reg;
->  
->  	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
->  	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
-> @@ -1594,20 +1596,29 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
->  	reg = afi_readl(pcie, AFI_INTR_MASK);
->  	reg |= AFI_INTR_MASK_MSI_MASK;
->  	afi_writel(pcie, reg, AFI_INTR_MASK);
-> +}
->  
-> -	host->msi = &msi->chip;
-> +static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
-> +{
-> +	struct tegra_msi *msi = &pcie->msi;
-> +	unsigned int i, irq;
->  
-> -	return 0;
-> +	free_pages(msi->pages, 0);
-> +
-> +	if (msi->irq > 0)
-> +		free_irq(msi->irq, pcie);
-> +
-> +	for (i = 0; i < INT_PCI_MSI_NR; i++) {
-> +		irq = irq_find_mapping(msi->domain, i);
-> +		if (irq > 0)
-> +			irq_dispose_mapping(irq);
-> +	}
->  
-> -err:
->  	irq_domain_remove(msi->domain);
-> -	return err;
->  }
->  
->  static int tegra_pcie_disable_msi(struct tegra_pcie *pcie)
->  {
-> -	struct tegra_msi *msi = &pcie->msi;
-> -	unsigned int i, irq;
->  	u32 value;
->  
->  	/* mask the MSI interrupt */
-> @@ -1625,19 +1636,6 @@ static int tegra_pcie_disable_msi(struct tegra_pcie *pcie)
->  	afi_writel(pcie, 0, AFI_MSI_EN_VEC6);
->  	afi_writel(pcie, 0, AFI_MSI_EN_VEC7);
->  
-> -	free_pages(msi->pages, 0);
-> -
-> -	if (msi->irq > 0)
-> -		free_irq(msi->irq, pcie);
-> -
-> -	for (i = 0; i < INT_PCI_MSI_NR; i++) {
-> -		irq = irq_find_mapping(msi->domain, i);
-> -		if (irq > 0)
-> -			irq_dispose_mapping(irq);
-> -	}
-> -
-> -	irq_domain_remove(msi->domain);
-> -
->  	return 0;
->  }
->  
-> @@ -2136,10 +2134,8 @@ static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
->  {
->  	struct tegra_pcie_port *port, *tmp;
->  
-> -	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
->  		tegra_pcie_port_disable(port);
-> -		tegra_pcie_port_free(port);
-> -	}
->  }
->  
->  static const struct tegra_pcie_port_soc tegra20_pcie_ports[] = {
-> @@ -2394,26 +2390,22 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  		return err;
->  	}
->  
-> -	err = tegra_pcie_enable_controller(pcie);
-> -	if (err)
-> +	err = tegra_pcie_msi_setup(pcie);
-> +	if (err < 0) {
-> +		dev_err(dev, "failed to enable MSI support: %d\n", err);
->  		goto put_resources;
-> +	}
->  
-> -	err = tegra_pcie_request_resources(pcie);
-> -	if (err)
-> -		goto disable_controller;
-> -
-> -	/* setup the AFI address translations */
-> -	tegra_pcie_setup_translations(pcie);
-> -
-> -	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> -		err = tegra_pcie_enable_msi(pcie);
-> -		if (err < 0) {
-> -			dev_err(dev, "failed to enable MSI support: %d\n", err);
-> -			goto free_resources;
-> -		}
-> +	pm_runtime_enable(pcie->dev);
-> +	err = pm_runtime_get_sync(pcie->dev);
-> +	if (err) {
-> +		dev_err(dev, "fail to enable pcie controller: %d\n", err);
-> +		goto teardown_msi;
->  	}
->  
-> -	tegra_pcie_enable_ports(pcie);
-> +	err = tegra_pcie_request_resources(pcie);
-> +	if (err)
-> +		goto pm_runtime_put;
->  
->  	host->busnr = pcie->busn.start;
->  	host->dev.parent = &pdev->dev;
-> @@ -2424,7 +2416,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  	err = pci_scan_root_bus_bridge(host);
->  	if (err < 0) {
->  		dev_err(dev, "failed to register host: %d\n", err);
-> -		goto disable_ports;
-> +		goto free_resources;
->  	}
->  
->  	pci_bus_size_bridges(host->bus);
-> @@ -2443,14 +2435,13 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  
->  	return 0;
->  
-> -disable_ports:
-> -	tegra_pcie_disable_ports(pcie);
-> -	if (IS_ENABLED(CONFIG_PCI_MSI))
-> -		tegra_pcie_disable_msi(pcie);
->  free_resources:
->  	tegra_pcie_free_resources(pcie);
-> -disable_controller:
-> -	tegra_pcie_disable_controller(pcie);
-> +pm_runtime_put:
-> +	pm_runtime_put_sync(pcie->dev);
-> +	pm_runtime_disable(pcie->dev);
-> +teardown_msi:
-> +	tegra_pcie_msi_teardown(pcie);
->  put_resources:
->  	tegra_pcie_put_resources(pcie);
->  	return err;
-> @@ -2460,13 +2451,32 @@ static int tegra_pcie_remove(struct platform_device *pdev)
->  {
->  	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
->  	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-> -	struct tegra_pcie_port *port;
-> +	struct tegra_pcie_port *port, *tmp;
->  
->  	if (IS_ENABLED(CONFIG_DEBUG_FS))
->  		tegra_pcie_debugfs_exit(pcie);
->  
->  	pci_stop_root_bus(host->bus);
->  	pci_remove_root_bus(host->bus);
-> +	tegra_pcie_free_resources(pcie);
-> +	pm_runtime_put_sync(pcie->dev);
-> +	pm_runtime_disable(pcie->dev);
-> +
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		tegra_pcie_msi_teardown(pcie);
-> +
-> +	tegra_pcie_put_resources(pcie);
-> +
-> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-> +		tegra_pcie_port_free(port);
-> +
-> +	return 0;
-> +}
-> +
-> +static int tegra_pcie_pm_suspend(struct device *dev)
-> +{
-> +	struct tegra_pcie *pcie = dev_get_drvdata(dev);
-> +	struct tegra_pcie_port *port;
->  
->  	list_for_each_entry(port, &pcie->ports, list)
->  		tegra_pcie_pme_turnoff(port);
-> @@ -2476,18 +2486,54 @@ static int tegra_pcie_remove(struct platform_device *pdev)
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		tegra_pcie_disable_msi(pcie);
->  
-> -	tegra_pcie_free_resources(pcie);
->  	tegra_pcie_disable_controller(pcie);
-> -	tegra_pcie_put_resources(pcie);
-> +	tegra_pcie_power_off(pcie);
-> +
-> +	return 0;
-> +}
-> +
-> +static int tegra_pcie_pm_resume(struct device *dev)
-> +{
-> +	struct tegra_pcie *pcie = dev_get_drvdata(dev);
-> +	int err;
-> +
-> +	err = tegra_pcie_power_on(pcie);
-> +	if (err) {
-> +		dev_err(dev, "tegra pcie power on fail: %d\n", err);
-> +		return err;
-> +	}
-> +	err = tegra_pcie_enable_controller(pcie);
-> +	if (err) {
-> +		dev_err(dev, "tegra pcie controller enable fail: %d\n", err);
-> +		goto poweroff;
-> +	}
-> +	tegra_pcie_setup_translations(pcie);
-> +
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		tegra_pcie_enable_msi(pcie);
-> +
-> +	tegra_pcie_enable_ports(pcie);
-
-Is it correct to report a successfull resume if some of the ports fail
-to come up (whether within runtime PM or system suspend) ? I think that,
-if any of the ports fails to come up, returning a failure is more
-appropriate here given that the host bridge is a single device as far as
-the kernel is concerned.
-
-Thanks,
-Lorenzo
-
->  
->  	return 0;
-> +
-> +poweroff:
-> +	tegra_pcie_power_off(pcie);
-> +
-> +	return err;
->  }
->  
-> +static const struct dev_pm_ops tegra_pcie_pm_ops = {
-> +	SET_RUNTIME_PM_OPS(tegra_pcie_pm_suspend, tegra_pcie_pm_resume, NULL)
-> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(tegra_pcie_pm_suspend,
-> +				      tegra_pcie_pm_resume)
-> +};
-> +
->  static struct platform_driver tegra_pcie_driver = {
->  	.driver = {
->  		.name = "tegra-pcie",
->  		.of_match_table = tegra_pcie_of_match,
->  		.suppress_bind_attrs = true,
-> +		.pm = &tegra_pcie_pm_ops,
->  	},
->  	.probe = tegra_pcie_probe,
->  	.remove = tegra_pcie_remove,
+>  	/*
 > -- 
-> 2.1.4
+> 2.16.1
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
