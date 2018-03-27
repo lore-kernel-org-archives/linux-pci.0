@@ -1,147 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:52109 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751349AbeC0OJX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Mar 2018 10:09:23 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:53873 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752069AbeC0XAx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Mar 2018 19:00:53 -0400
+MIME-Version: 1.0
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Tue, 27 Mar 2018 16:00:51 -0700
+Message-ID: <CAKgT0Ude4C774sB22XG08-YoJ-4uSEB45b-RcM+eNnhyfuyQnw@mail.gmail.com>
+Subject: Re: [pci PATCH v7 0/5] Add support for unmanaged SR-IOV
 To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        stable@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v3 4/6] PCI: aardvark: use isr1 instead of isr0 interrupt in legacy irq mode
-Date: Tue, 27 Mar 2018 16:08:10 +0200
-Message-Id: <20180327140819.23501-5-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
-References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
+Cc: "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk,
+        Don Dutile <ddutile@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+On Fri, Mar 16, 2018 at 2:42 PM, Don Dutile <ddutile@redhat.com> wrote:
+> On 03/15/2018 02:40 PM, Alexander Duyck wrote:
+>>
+>> This series is meant to add support for SR-IOV on devices when the VFs are
+>> not managed by the kernel. Examples of recent patches attempting to do
+>> this
+>> include:
+>> virto - https://patchwork.kernel.org/patch/10241225/
+>> pci-stub - https://patchwork.kernel.org/patch/10109935/
+>> vfio - https://patchwork.kernel.org/patch/10103353/
+>> uio - https://patchwork.kernel.org/patch/9974031/
+>>
+>> Since this is quickly blowing up into a multi-driver problem it is
+>> probably
+>> best to implement this solution as generically as possible.
+>>
+>> This series is an attempt to do that. What we do with this patch set is
+>> provide a generic framework to enable SR-IOV in the case that the PF
+>> driver
+>> doesn't support managing the VFs itself.
+>>
+>> I based my patch set originally on the patch by Mark Rustad but there
+>> isn't
+>> much left after going through and cleaning out the bits that were no
+>> longer
+>> needed, and after incorporating the feedback from David Miller. At this
+>> point
+>> the only items to be fully reused was his patch description which is now
+>> present in patch 3 of the set.
+>>
+>> This solution is limited in scope to just adding support for devices that
+>> provide no functionality for SR-IOV other than allocating the VFs by
+>> calling pci_enable_sriov. Previous sets had included patches for VFIO, but
+>> for now I am dropping that as the scope of that work is larger then I
+>> think I can take on at this time.
+>>
+>> v2: Reduced scope back to just virtio_pci and vfio-pci
+>>      Broke into 3 patch set from single patch
+>>      Changed autoprobe behavior to always set when num_vfs is set non-zero
+>> v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is
+>> used
+>>      Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in
+>> kernel
+>> v4: Dropped vfio-pci patch
+>>      Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
+>>      Dropped pci_disable_sriov call in virtio_pci to be consistent with
+>> ena
+>> v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
+>>      Added new patch that enables pci_sriov_configure_simple
+>>      Updated drivers to use pci_sriov_configure_simple
+>> v6: Defined pci_sriov_configure_simple as NULL when SR-IOV is not enabled
+>>      Updated drivers to drop "#ifdef" checks for IOV
+>>      Added pci-pf-stub as place for PF-only drivers to add support
+>> v7: Dropped pci_id table explanation from pci-pf-stub driver
+>>      Updated pci_sriov_configure_simple to drop need for err value
+>>      Fixed comment explaining why pci_sriov_configure_simple is NULL
+>>
+>> Cc: Mark Rustad <mark.d.rustad@intel.com>
+>> Cc: Maximilian Heyne <mheyne@amazon.de>
+>> Cc: Liang-Min Wang <liang-min.wang@intel.com>
+>> Cc: David Woodhouse <dwmw@amazon.co.uk>
+>>
+>> ---
+>>
+>> Alexander Duyck (5):
+>>        pci: Add pci_sriov_configure_simple for PFs that don't manage VF
+>> resources
+>>        virtio_pci: Add support for unmanaged SR-IOV on virtio_pci devices
+>>        ena: Migrate over to unmanaged SR-IOV support
+>>        nvme: Migrate over to unmanaged SR-IOV support
+>>        pci-pf-stub: Add PF driver stub for PFs that function only to
+>> enable VFs
+>>
+>>
+>>   drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 -------------
+>>   drivers/nvme/host/pci.c                      |   20 ----------
+>>   drivers/pci/Kconfig                          |   12 ++++++
+>>   drivers/pci/Makefile                         |    2 +
+>>   drivers/pci/iov.c                            |   31 +++++++++++++++
+>>   drivers/pci/pci-pf-stub.c                    |   54
+>> ++++++++++++++++++++++++++
+>>   drivers/virtio/virtio_pci_common.c           |    1
+>>   include/linux/pci.h                          |    3 +
+>>   include/linux/pci_ids.h                      |    2 +
+>>   9 files changed, 107 insertions(+), 46 deletions(-)
+>>   create mode 100644 drivers/pci/pci-pf-stub.c
+>>
+>> --
+>>
+> For what it's worth.
+>
+> Good, simpler start for this type of support/effort.
+> Thanks for the multiple versions to get to this point.
+>
+> Reviewed-by: Donald Dutile <ddutile@redhat.com>
 
-The Aardvark has two interrupts sets:
+Any issues with getting this pulled into the linux-pci tree? When I
+submitted these that was the original target for this set, or do I
+need to look at breaking them up and/or submitting them submitted
+somewhere else?
 
- - first set is bit[23:16] of PCIe ISR 0 register(RD0074840h)
+Thanks.
 
- - second set is bit[11:8] of PCIe ISR 1 register(RD0074848h)
-
-Only one set should be used, while another set should be masked.
-
-The second set, ISR1, is more advanced, the Legacy INT_X status bit is
-asserted once Assert_INTX message is received, and de-asserted after
-Deassert_INTX message is received. Therefore, it matches what the
-driver is currently doing in the ->irq_mask() and ->irq_unmask()
-functions. The ISR0 requires additional work to deassert the
-interrupt, which the driver doesn't do currently.
-
-This commit resolves a number of issues with legacy interrupts.
-
-This is part of fixing bug
-https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
-reported as the user to be important to get a Intel 7260 mini-PCIe
-WiFi card working.
-
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Evan Wang <xswang@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-aardvark.c | 41 ++++++++++++++++++++++++-----------------
- 1 file changed, 24 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 4affbf1b826b..c6cd7b17868f 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -100,7 +100,8 @@
- #define PCIE_ISR1_MASK_REG			(CONTROL_BASE_ADDR + 0x4C)
- #define     PCIE_ISR1_POWER_STATE_CHANGE	BIT(4)
- #define     PCIE_ISR1_FLUSH			BIT(5)
--#define     PCIE_ISR1_ALL_MASK			GENMASK(5, 4)
-+#define     PCIE_ISR1_INTX_ASSERT(val)		BIT(8 + (val))
-+#define     PCIE_ISR1_ALL_MASK			GENMASK(11, 4)
- #define PCIE_MSI_ADDR_LOW_REG			(CONTROL_BASE_ADDR + 0x50)
- #define PCIE_MSI_ADDR_HIGH_REG			(CONTROL_BASE_ADDR + 0x54)
- #define PCIE_MSI_STATUS_REG			(CONTROL_BASE_ADDR + 0x58)
-@@ -616,9 +617,9 @@ static void advk_pcie_irq_mask(struct irq_data *d)
- 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
- 	u32 mask;
- 
--	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
--	mask |= PCIE_ISR0_INTX_ASSERT(hwirq);
--	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
-+	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
-+	mask |= PCIE_ISR1_INTX_ASSERT(hwirq);
-+	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
- }
- 
- static void advk_pcie_irq_unmask(struct irq_data *d)
-@@ -627,9 +628,9 @@ static void advk_pcie_irq_unmask(struct irq_data *d)
- 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
- 	u32 mask;
- 
--	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
--	mask &= ~PCIE_ISR0_INTX_ASSERT(hwirq);
--	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
-+	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
-+	mask &= ~PCIE_ISR1_INTX_ASSERT(hwirq);
-+	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
- }
- 
- static int advk_pcie_irq_map(struct irq_domain *h,
-@@ -772,29 +773,35 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
- 
- static void advk_pcie_handle_int(struct advk_pcie *pcie)
- {
--	u32 val, mask, status;
-+	u32 isr0_val, isr0_mask, isr0_status;
-+	u32 isr1_val, isr1_mask, isr1_status;
- 	int i, virq;
- 
--	val = advk_readl(pcie, PCIE_ISR0_REG);
--	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
--	status = val & ((~mask) & PCIE_ISR0_ALL_MASK);
-+	isr0_val = advk_readl(pcie, PCIE_ISR0_REG);
-+	isr0_mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-+	isr0_status = isr0_val & ((~isr0_mask) & PCIE_ISR0_ALL_MASK);
- 
--	if (!status) {
--		advk_writel(pcie, val, PCIE_ISR0_REG);
-+	isr1_val = advk_readl(pcie, PCIE_ISR1_REG);
-+	isr1_mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
-+	isr1_status = isr1_val & ((~isr1_mask) & PCIE_ISR1_ALL_MASK);
-+
-+	if (!isr0_status && !isr1_status) {
-+		advk_writel(pcie, isr0_val, PCIE_ISR0_REG);
-+		advk_writel(pcie, isr1_val, PCIE_ISR1_REG);
- 		return;
- 	}
- 
- 	/* Process MSI interrupts */
--	if (status & PCIE_ISR0_MSI_INT_PENDING)
-+	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
- 		advk_pcie_handle_msi(pcie);
- 
- 	/* Process legacy interrupts */
- 	for (i = 0; i < PCI_NUM_INTX; i++) {
--		if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
-+		if (!(isr1_status & PCIE_ISR1_INTX_ASSERT(i)))
- 			continue;
- 
--		advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i),
--			    PCIE_ISR0_REG);
-+		advk_writel(pcie, PCIE_ISR1_INTX_ASSERT(i),
-+			    PCIE_ISR1_REG);
- 
- 		virq = irq_find_mapping(pcie->irq_domain, i);
- 		generic_handle_irq(virq);
--- 
-2.14.3
+- Alex
