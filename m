@@ -1,131 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:33181 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752740AbeC3HPA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 03:15:00 -0400
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Keller Jacob E <jacob.e.keller@intel.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V4 6/8] net/mlx4_core: Report PCI properties using dedicated function
-Date: Fri, 30 Mar 2018 10:14:44 +0300
-Message-Id: <1522394086-3555-7-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
-References: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
+Received: from mail.bootlin.com ([62.4.15.54]:52114 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752139AbeC0OJY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Mar 2018 10:09:24 -0400
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Nadav Haklai <nadavh@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Evan Wang <xswang@marvell.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v3 6/6] PCI: aardvark: remove PCIe outbound window configuration
+Date: Tue, 27 Mar 2018 16:08:12 +0200
+Message-Id: <20180327140819.23501-7-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
+References: <20180327140819.23501-1-thomas.petazzoni@bootlin.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change mlx4 method of checking and reporting PCI status and
-maximum capabilities to use the pci driver functions instead
-of implementing them in the driver code.
+From: Evan Wang <xswang@marvell.com>
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Signed-off-by: Tariq Toukan <tariqt@mellanox.com>
+Outbound window is used to translate CPU space addresses to PCIe space
+addresses when the CPU initiates PCIe transactions.
+
+According to the suggestion of the HW designers, the recommended
+solution is to use the default outbound parameters, even though the
+current outbound window setting does not cause any known functional
+issue.
+
+This patch doesn't address any known functional issue, but aligns to
+HW design guidelines, and removes code that isn't needed.
+
+Signed-off-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/net/ethernet/mellanox/mlx4/main.c | 81 +------------------------------
- 1 file changed, 1 insertion(+), 80 deletions(-)
+ drivers/pci/host/pci-aardvark.c | 55 -----------------------------------------
+ 1 file changed, 55 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-index 5a26851..e8c6707 100644
---- a/drivers/net/ethernet/mellanox/mlx4/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-@@ -623,85 +623,6 @@ static int mlx4_dev_cap(struct mlx4_dev *dev, struct mlx4_dev_cap *dev_cap)
- 	return 0;
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index d0688dc6b6d9..d0559152b8e1 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -109,24 +109,6 @@
+ #define PCIE_MSI_MASK_REG			(CONTROL_BASE_ADDR + 0x5C)
+ #define PCIE_MSI_PAYLOAD_REG			(CONTROL_BASE_ADDR + 0x9C)
+ 
+-/* PCIe window configuration */
+-#define OB_WIN_BASE_ADDR			0x4c00
+-#define OB_WIN_BLOCK_SIZE			0x20
+-#define OB_WIN_REG_ADDR(win, offset)		(OB_WIN_BASE_ADDR + \
+-						 OB_WIN_BLOCK_SIZE * (win) + \
+-						 (offset))
+-#define OB_WIN_MATCH_LS(win)			OB_WIN_REG_ADDR(win, 0x00)
+-#define OB_WIN_MATCH_MS(win)			OB_WIN_REG_ADDR(win, 0x04)
+-#define OB_WIN_REMAP_LS(win)			OB_WIN_REG_ADDR(win, 0x08)
+-#define OB_WIN_REMAP_MS(win)			OB_WIN_REG_ADDR(win, 0x0c)
+-#define OB_WIN_MASK_LS(win)			OB_WIN_REG_ADDR(win, 0x10)
+-#define OB_WIN_MASK_MS(win)			OB_WIN_REG_ADDR(win, 0x14)
+-#define OB_WIN_ACTIONS(win)			OB_WIN_REG_ADDR(win, 0x18)
+-
+-/* PCIe window types */
+-#define OB_PCIE_MEM				0x0
+-#define OB_PCIE_IO				0x4
+-
+ /* LMI registers base address and register offsets */
+ #define LMI_BASE_ADDR				0x6000
+ #define CFG_REG					(LMI_BASE_ADDR + 0x0)
+@@ -245,34 +227,9 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
+ 	return -ETIMEDOUT;
  }
  
--static int mlx4_get_pcie_dev_link_caps(struct mlx4_dev *dev,
--				       enum pci_bus_speed *speed,
--				       enum pcie_link_width *width)
+-/*
+- * Set PCIe address window register which could be used for memory
+- * mapping.
+- */
+-static void advk_pcie_set_ob_win(struct advk_pcie *pcie,
+-				 u32 win_num, u32 match_ms,
+-				 u32 match_ls, u32 mask_ms,
+-				 u32 mask_ls, u32 remap_ms,
+-				 u32 remap_ls, u32 action)
 -{
--	u32 lnkcap1, lnkcap2;
--	int err1, err2;
--
--#define  PCIE_MLW_CAP_SHIFT 4	/* start of MLW mask in link capabilities */
--
--	*speed = PCI_SPEED_UNKNOWN;
--	*width = PCIE_LNK_WIDTH_UNKNOWN;
--
--	err1 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP,
--					  &lnkcap1);
--	err2 = pcie_capability_read_dword(dev->persist->pdev, PCI_EXP_LNKCAP2,
--					  &lnkcap2);
--	if (!err2 && lnkcap2) { /* PCIe r3.0-compliant */
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
--			*speed = PCIE_SPEED_8_0GT;
--		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
--			*speed = PCIE_SPEED_5_0GT;
--		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
--			*speed = PCIE_SPEED_2_5GT;
--	}
--	if (!err1) {
--		*width = (lnkcap1 & PCI_EXP_LNKCAP_MLW) >> PCIE_MLW_CAP_SHIFT;
--		if (!lnkcap2) { /* pre-r3.0 */
--			if (lnkcap1 & PCI_EXP_LNKCAP_SLS_5_0GB)
--				*speed = PCIE_SPEED_5_0GT;
--			else if (lnkcap1 & PCI_EXP_LNKCAP_SLS_2_5GB)
--				*speed = PCIE_SPEED_2_5GT;
--		}
--	}
--
--	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN) {
--		return err1 ? err1 :
--			err2 ? err2 : -EINVAL;
--	}
--	return 0;
+-	advk_writel(pcie, match_ls, OB_WIN_MATCH_LS(win_num));
+-	advk_writel(pcie, match_ms, OB_WIN_MATCH_MS(win_num));
+-	advk_writel(pcie, mask_ms, OB_WIN_MASK_MS(win_num));
+-	advk_writel(pcie, mask_ls, OB_WIN_MASK_LS(win_num));
+-	advk_writel(pcie, remap_ms, OB_WIN_REMAP_MS(win_num));
+-	advk_writel(pcie, remap_ls, OB_WIN_REMAP_LS(win_num));
+-	advk_writel(pcie, action, OB_WIN_ACTIONS(win_num));
+-	advk_writel(pcie, match_ls | BIT(0), OB_WIN_MATCH_LS(win_num));
 -}
 -
--static void mlx4_check_pcie_caps(struct mlx4_dev *dev)
--{
--	enum pcie_link_width width, width_cap;
--	enum pci_bus_speed speed, speed_cap;
--	int err;
--
--#define PCIE_SPEED_STR(speed) \
--	(speed == PCIE_SPEED_8_0GT ? "8.0GT/s" : \
--	 speed == PCIE_SPEED_5_0GT ? "5.0GT/s" : \
--	 speed == PCIE_SPEED_2_5GT ? "2.5GT/s" : \
--	 "Unknown")
--
--	err = mlx4_get_pcie_dev_link_caps(dev, &speed_cap, &width_cap);
--	if (err) {
--		mlx4_warn(dev,
--			  "Unable to determine PCIe device BW capabilities\n");
--		return;
--	}
--
--	err = pcie_get_minimum_link(dev->persist->pdev, &speed, &width);
--	if (err || speed == PCI_SPEED_UNKNOWN ||
--	    width == PCIE_LNK_WIDTH_UNKNOWN) {
--		mlx4_warn(dev,
--			  "Unable to determine PCI device chain minimum BW\n");
--		return;
--	}
--
--	if (width != width_cap || speed != speed_cap)
--		mlx4_warn(dev,
--			  "PCIe BW is different than device's capability\n");
--
--	mlx4_info(dev, "PCIe link speed is %s, device supports %s\n",
--		  PCIE_SPEED_STR(speed), PCIE_SPEED_STR(speed_cap));
--	mlx4_info(dev, "PCIe link width is x%d, device supports x%d\n",
--		  width, width_cap);
--	return;
--}
--
- /*The function checks if there are live vf, return the num of them*/
- static int mlx4_how_many_lives_vf(struct mlx4_dev *dev)
+ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
  {
-@@ -3475,7 +3396,7 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
- 	 * express device capabilities are under-satisfied by the bus.
- 	 */
- 	if (!mlx4_is_slave(dev))
--		mlx4_check_pcie_caps(dev);
-+		pcie_print_link_status(dev->persist->pdev);
+ 	u32 reg;
+-	int i;
+-
+-	/* Point PCIe unit MBUS decode windows to DRAM space */
+-	for (i = 0; i < 8; i++)
+-		advk_pcie_set_ob_win(pcie, i, 0, 0, 0, 0, 0, 0, 0);
  
- 	/* In master functions, the communication channel must be initialized
- 	 * after obtaining its address from fw */
+ 	/* Set to Direct mode */
+ 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
+@@ -851,12 +808,6 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
+ 
+ 		switch (resource_type(res)) {
+ 		case IORESOURCE_IO:
+-			advk_pcie_set_ob_win(pcie, 1,
+-					     upper_32_bits(res->start),
+-					     lower_32_bits(res->start),
+-					     0,	0xF8000000, 0,
+-					     lower_32_bits(res->start),
+-					     OB_PCIE_IO);
+ 			err = pci_remap_iospace(res, iobase);
+ 			if (err) {
+ 				dev_warn(dev, "error %d: failed to map resource %pR\n",
+@@ -865,12 +816,6 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
+ 			}
+ 			break;
+ 		case IORESOURCE_MEM:
+-			advk_pcie_set_ob_win(pcie, 0,
+-					     upper_32_bits(res->start),
+-					     lower_32_bits(res->start),
+-					     0x0, 0xF8000000, 0,
+-					     lower_32_bits(res->start),
+-					     (2 << 20) | OB_PCIE_MEM);
+ 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+ 			break;
+ 		case IORESOURCE_BUS:
 -- 
-1.8.3.1
+2.14.3
