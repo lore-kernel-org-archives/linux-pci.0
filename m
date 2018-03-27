@@ -1,63 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr660097.outbound.protection.outlook.com ([40.107.66.97]:45311
-        "EHLO CAN01-QB1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1034075AbeCASyD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 13:54:03 -0500
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "Christoph Hellwig" <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Date: Thu, 1 Mar 2018 18:54:01 +0000
-Message-ID: <0D05579B-789C-4A19-B3A2-C1A630BE31C0@raithlin.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-5-logang@deltatee.com>
- <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=3FyK=GR=denx.de=wd@kernel.org>
+Return-Path: <SRS0=3FyK=GR=denx.de=wd@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+    Mika Westerberg <mika.westerberg@linux.intel.com>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: PCIe x4 cards not detected on Z370 mainboards
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-type: text/plain; charset=UTF-8
+In-reply-to: <20180326190938.GA224629@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180322184840.E31D4247251@gemini.denx.de> <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com> <20180323084855.E3EAF247251@gemini.denx.de> <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com> <20180324201534.092D2247245@gemini.denx.de> <20180326135107.GH210003@bhelgaas-glaptop.roam.corp.google.com> <20180326135235.GA221217@bhelgaas-glaptop.roam.corp.google.com> <20180326151252.B7C8F2476FF@gemini.denx.de> <20180326190938.GA224629@bhelgaas-glaptop.roam.corp.google.com>
+Date: Tue, 27 Mar 2018 15:46:27 +0200
+Message-Id: <20180327134627.3BA0624077B@gemini.denx.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-VGhhbmtzIGZvciB0aGUgZGV0YWlsZWQgcmV2aWV3IEJqb3JuIQ0KDQo+PiAgDQo+PiArCSAgRW5h
-YmxpbmcgdGhpcyBvcHRpb24gd2lsbCBhbHNvIGRpc2FibGUgQUNTIG9uIGFsbCBwb3J0cyBiZWhp
-bmQNCj4+ICsJICBhbnkgUENJZSBzd2l0Y2guIFRoaXMgZWZmaWN0aXZlbHkgcHV0cyBhbGwgZGV2
-aWNlcyBiZWhpbmQgYW55DQo+PiArCSAgc3dpdGNoIGludG8gdGhlIHNhbWUgSU9NTVUgZ3JvdXAu
-DQoNCj4NCj4gIERvZXMgdGhpcyByZWFsbHkgbWVhbiAiYWxsIGRldmljZXMgYmVoaW5kIHRoZSBz
-YW1lIFJvb3QgUG9ydCI/DQoNCk5vdCBuZWNlc3NhcmlseS4gWW91IG1pZ2h0IGhhdmUgYSBjYXNj
-YWRlIG9mIHN3aXRjaGVzIChpLmUgc3dpdGNoZXMgYmVsb3cgYSBzd2l0Y2gpIHRvIGFjaGlldmUg
-YSB2ZXJ5IGxhcmdlIGZhbi1vdXQgKGluIGFuIE5WTWUgU1NEIGFycmF5IGZvciBleGFtcGxlKSBh
-bmQgd2Ugd2lsbCBvbmx5IGRpc2FibGUgQUNTIG9uIHRoZSBwb3J0cyBiZWxvdyB0aGUgcmVsZXZh
-bnQgc3dpdGNoLg0KDQo+IFdoYXQgZG9lcyB0aGlzIG1lYW4gaW4gdGVybXMgb2YgZGV2aWNlIHNl
-Y3VyaXR5PyAgSSBhc3N1bWUgaXQgbWVhbnMsDQo+IGF0IGxlYXN0LCB0aGF0IGluZGl2aWR1YWwg
-ZGV2aWNlcyBjYW4ndCBiZSBhc3NpZ25lZCB0byBzZXBhcmF0ZSBWTXMuDQoNClRoaXMgd2FzIGRp
-c2N1c3NlZCBkdXJpbmcgdjEgWzFdLiBEaXNhYmxpbmcgQUNTIG9uIGFsbCBkb3duc3RyZWFtIHBv
-cnRzIG9mIHRoZSBzd2l0Y2ggbWVhbnMgdGhhdCBhbGwgdGhlIEVQcyBiZWxvdyBpdCBoYXZlIHRv
-IHBhcnQgb2YgdGhlIHNhbWUgSU9NTVUgZ3JvdXBpbmcuIEhvd2V2ZXIgaXQgd2FzIGFsc28gYWdy
-ZWVkIHRoYXQgYXMgbG9uZyBhcyB0aGUgQUNTIGRpc2FibGUgb2NjdXJyZWQgYXQgYm9vdCB0aW1l
-ICh3aGljaCBpcyBkb2VzIGluIHYyKSB0aGVuIHRoZSB2aXJ0dWFsaXphdGlvbiBsYXllciB3aWxs
-IGJlIGF3YXJlIG9mIGl0IGFuZCB3aWxsIHBlcmZvcm0gdGhlIElPTU1VIGdyb3VwIGZvcm1hdGlv
-biBjb3JyZWN0bHkuDQogICAgDQo+IEkgZG9uJ3QgbWluZCBhZG1pdHRpbmcgdGhhdCB0aGlzIHBh
-dGNoIG1ha2VzIG1lIHByZXR0eSBuZXJ2b3VzLCBhbmQgSQ0KPiBkb24ndCBoYXZlIGEgY2xlYXIg
-aWRlYSBvZiB3aGF0IHRoZSBpbXBsaWNhdGlvbnMgb2YgdGhpcyBhcmUsIG9yIGhvdw0KPiB0byBj
-b21tdW5pY2F0ZSB0aG9zZSB0byBlbmQgdXNlcnMuICAiVGhlIHNhbWUgSU9NTVUgZ3JvdXAiIGlz
-IGEgcHJldHR5DQo+IGFic3RyYWN0IGlkZWEuDQogICAgDQpBbGV4IGdhdmUgYSBnb29kIG92ZXJ2
-aWV3IG9mIHRoZSBpbXBsaWNhdGlvbnMgaW4gWzFdLg0KDQpTdGVwaGVuIA0KDQpbMV0gaHR0cHM6
-Ly9tYXJjLmluZm8vP2w9bGludXgtcGNpJm09MTUxNTEyMzIwMDMxNzM5Jnc9Mg0KDQo=
+Dear Bjorn,
+
+In message <20180326190938.GA224629@bhelgaas-glaptop.roam.corp.google.com> you wrote:
+>
+> On the MSI Z370 Tomahawk and the Gigabyte Z270X Ultra Gaming systems,
+> it looks like you're using what the BIOS designates as "Slot #1",
+> which is below an Intel Root Port (00:01.0 in both cases).  When the
+
+Correct.  I always used the first available (x16) slot; on these two
+boards I have Intel Core i5 processors, so I can use the on-cip
+graphics and have no need for a graphics adapter, so this is really
+the first PCIe x16 slot.
+
+> On the Gigabyte AB350 Gaming system, you're using "Slot #1" (this
+> comes from the Slot Capabilities register and may not match any
+> silk-screened labels on the board).  This is below an AMD PCIe switch,
+> where 04:04.0 is the Downstream Port leading to that slot.  When the
+> SAS3444E is in the slot, we do see the 04:04.0 Downstream Port, so we
+> *should* still be able to see the SAS device.
+
+This board has a AMD Ryzen 5 1600 Six-Core Processor, so I have to
+use a graphics adapter, which occupies the 1st PCIe x16 slot.  So I
+used the next frree one.
+
+> On that system, you could try something like this to reset the
+> SAS3444E device and try to rescan the bus:
+
+And now comes the next surprise:
+
+On this board the LSI controller suddenly started working!  I get
+the BIOS start message from it, and Linux detects it...
+
+The only difference is that i have installed the kcbench package to
+get at the acpidump tool:
+
+2018-03-26T14:15:15Z INFO Installed: kcbench-data-4.4-0.1-21.fc27.noarch
+2018-03-26T14:15:16Z INFO Installed: kcbench-0.3-17.fc27.noarch
+2018-03-26T14:15:16Z INFO Installed: kcbench-data-0.1-21.fc27.noarch
+
+No other changes to the hardware or software at all.  And I always
+powered off the system when changing the boards, so even this makes
+no difference.
+
+Oh, and we are running at DST now, so maybe it is POM dependent :-(
+
+
+I have uploaded updated lspci/dmesg/acpidump output for this new,
+working case, see files
+
+Gigabyte-AB350-Gaming-CF-lspci-lsi-sas3444e.1
+Gigabyte-AB350-Gaming-CF-dmesg-lsi-sas3444e.1
+Gigabyte-AB350-Gaming-CF-acpidump-lsi-sas3444e.1
+
+On the other Gigabyte board I see tiny changes in the logs, but the
+card is still not working.  New log files (sith suffix .1) also
+uploaded.
+
+Gigbyte support recommeded to "try  Other PCI devices: Legacy in
+bios setup".  Good point.  Tried that on the remainin non-working
+Gigabyte board.  Some difference in the acpidump, no differences in
+lspci output or behaviour.  Nonworking. New log files with suffix .2
+
+Strange...
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+The thing is, as you progress in the Craft,  you'll  learn  there  is
+another rule... When you break rules, break 'em good and hard.
+                                    - Terry Pratchett, _Wyrd Sisters_
