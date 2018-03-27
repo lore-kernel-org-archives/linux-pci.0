@@ -1,45 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:37810 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754366AbeCGK6L (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 05:58:11 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: Joao.Pinto@synopsys.com, bhelgaas@google.com, jg1.han@samsung.com,
-        lorenzo.pieralisi@arm.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 0/4] Code cleanup and small improvements
-Date: Wed,  7 Mar 2018 10:57:56 +0000
-Message-Id: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:53571 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750993AbeC0JeA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Mar 2018 05:34:00 -0400
+Date: Tue, 27 Mar 2018 11:33:56 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jean Delvare <jdelvare@suse.de>, Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v4 1/2] firmware: dmi_scan: Uninline dmi_get_bios_year()
+ helper
+Message-ID: <20180327093356.hxk5p4qt456nwejf@gmail.com>
+References: <20180320180800.63179-1-andriy.shevchenko@linux.intel.com>
+ <20180320180800.63179-2-andriy.shevchenko@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180320180800.63179-2-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sets a callback that defines the maximum number of MSI applied to
-designware driver for future easiness and also as an example, since
-the callback currently defines the default value.
 
-Does a code cleanup by replacing magic numbers without a easy meaning
-by a well known define that helps the human compreension.
+* Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-Fix of the first characters on comments and debug messages to maintain
-coherency.
+> Uninline dmi_get_bios_year() which, in particular, allows us
+> to optimize it in the future.
+> 
+> While doing this, convert the function to return an error code
+> when BIOS date is not present or not parsable, or CONFIG_DMI=n.
+> 
+> Additionally, during the move, add a bit of documentation.
+> 
+> Fixes: 492a1abd61e4 ("dmi: Introduce the dmi_get_bios_year() helper function")
+> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+> Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
+> Reviewed-by: Jean Delvare <jdelvare@suse.de>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/firmware/dmi_scan.c | 20 ++++++++++++++++++++
+>  include/linux/dmi.h         | 11 ++---------
+>  2 files changed, 22 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+> index ae4f1b181c23..bfb6ce6abc83 100644
+> --- a/drivers/firmware/dmi_scan.c
+> +++ b/drivers/firmware/dmi_scan.c
+> @@ -1040,6 +1040,26 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
+>  }
+>  EXPORT_SYMBOL(dmi_get_date);
+>  
+> +/**
+> + *	dmi_get_bios_year - get a year out of DMI_BIOS_DATE field
+> + *
+> + *	Returns year on success, -ENXIO if DMI is not selected,
+> + *	or a different negative error code if DMI field is not present
+> + *	or not parsable.
 
-Replaces a division by 2 by a simple right shift rotation of 1 bit.
+s/parsable/parseable
 
-The patch set was made against Lorenzo's dwc-msi branch.
+I have fixed this in the version I've applied - which I'll push out if it passes 
+testing.
 
-Gustavo Pimentel (4):
-  PCI: dwc: designware: Define maximum number of vectors
-  PCI: dwc: Replace lower into upper case characters in comments and
-    debug printks
-  PCI: dwc: Replace magic number by defines
-  PCI: dwc: Replace division by 2 to right shift
+Thanks,
 
- drivers/pci/dwc/pcie-designware-ep.c   | 16 +++----
- drivers/pci/dwc/pcie-designware-host.c | 77 +++++++++++++++++++---------------
- drivers/pci/dwc/pcie-designware-plat.c |  8 +++-
- drivers/pci/dwc/pcie-designware.c      | 22 +++++-----
- drivers/pci/dwc/pcie-designware.h      |  1 +
- 5 files changed, 70 insertions(+), 54 deletions(-)
-
--- 
-2.7.4
+	Ingo
