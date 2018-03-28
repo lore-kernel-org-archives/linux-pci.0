@@ -1,109 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 2/9] PCI/PM: Clear PCIe PME Status bit in core,
- not PCIe port driver
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>
-Date: Wed, 07 Mar 2018 00:13:34 -0600
-Message-ID: <152040321483.240786.16597888035806933750.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:53917 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752780AbeC1Lus (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:50:48 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 05/12] PCI: endpoint: Setting a BAR size > 4 GB is invalid if 64-bit flag is not set
+Date: Wed, 28 Mar 2018 13:50:10 +0200
+Message-Id: <20180328115018.31921-6-niklas.cassel@axis.com>
+In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Setting a BAR size > 4 GB is invalid if PCI_BASE_ADDRESS_MEM_TYPE_64
+flag is not set.
 
-fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
-resume") added a .resume_noirq() callback to the PCIe port driver to clear
-the PME Status bit during resume to work around a BIOS issue.
+This sanity check is done in pci_epc_set_bar(), so that we don't need
+to do this sanity check in all epc->ops->set_bar() implementations.
 
-The BIOS evidently enabled PME interrupts for ACPI-based runtime wakeups
-but did not clear the PME Status bit during resume, which meant PMEs after
-resume did not trigger interrupts because PME Status did not transition
-from cleared to set.
-
-The fix was in the PCIe port driver, so it worked when CONFIG_PCIEPORTBUS
-was set.  But I think we *always* want the fix because the platform may use
-PME interrupts even if Linux is built without the PCIe port driver.
-
-Move the fix from the port driver to the PCI core so we can work around
-this "PME doesn't work after waking from a sleep state" issue regardless of
-CONFIG_PCIEPORTBUS.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/pci-driver.c       |   14 ++++++++++++++
- drivers/pci/pcie/portdrv_pci.c |   15 ---------------
- 2 files changed, 14 insertions(+), 15 deletions(-)
+ drivers/pci/endpoint/pci-epc-core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3bed6beda051..bf0704b75f79 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -525,6 +525,18 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
- 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
- }
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 40eea20d21f9..8637822605ff 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -315,7 +315,9 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
+ 	    (epf_bar->barno == BAR_5 &&
+ 	     flags & PCI_BASE_ADDRESS_MEM_TYPE_64) ||
+ 	    (flags & PCI_BASE_ADDRESS_SPACE_IO &&
+-	     flags & PCI_BASE_ADDRESS_IO_MASK))
++	     flags & PCI_BASE_ADDRESS_IO_MASK) ||
++	    (upper_32_bits(epf_bar->size) &&
++	     !(flags & PCI_BASE_ADDRESS_MEM_TYPE_64)))
+ 		return -EINVAL;
  
-+static void pcie_resume_early(struct pci_dev *pci_dev)
-+{
-+	/*
-+	 * Some BIOSes forget to clear Root PME Status bits after system wakeup
-+	 * which breaks ACPI-based runtime wakeup on PCI Express, so clear those
-+	 * bits now just in case (shouldn't hurt).
-+	 */
-+	if (pci_is_pcie(pci_dev) &&
-+	    pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT)
-+		pcie_clear_root_pme_status(pci_dev);
-+}
-+
- /*
-  * Default "suspend" method for devices that have no driver provided suspend,
-  * or not even a driver at all (second part).
-@@ -873,6 +885,8 @@ static int pci_pm_resume_noirq(struct device *dev)
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_resume_early(dev);
- 
-+	pcie_resume_early(pci_dev);
-+
- 	if (drv && drv->pm && drv->pm->resume_noirq)
- 		error = drv->pm->resume_noirq(dev);
- 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 4413dd85e923..f91afd09e356 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -62,20 +62,6 @@ static int pcie_portdrv_restore_config(struct pci_dev *dev)
- }
- 
- #ifdef CONFIG_PM
--static int pcie_port_resume_noirq(struct device *dev)
--{
--	struct pci_dev *pdev = to_pci_dev(dev);
--
--	/*
--	 * Some BIOSes forget to clear Root PME Status bits after system wakeup
--	 * which breaks ACPI-based runtime wakeup on PCI Express, so clear those
--	 * bits now just in case (shouldn't hurt).
--	 */
--	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
--		pcie_clear_root_pme_status(pdev);
--	return 0;
--}
--
- static int pcie_port_runtime_suspend(struct device *dev)
- {
- 	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
-@@ -103,7 +89,6 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.thaw		= pcie_port_device_resume,
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
--	.resume_noirq	= pcie_port_resume_noirq,
- 	.runtime_suspend = pcie_port_runtime_suspend,
- 	.runtime_resume	= pcie_port_runtime_resume,
- 	.runtime_idle	= pcie_port_runtime_idle,
+ 	if (!epc->ops->set_bar)
+-- 
+2.14.2
