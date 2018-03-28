@@ -1,68 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48752 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1033189AbeCAVSX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 16:18:23 -0500
-Date: Thu, 1 Mar 2018 16:18:18 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: benh@au1.ibm.com, Dan Williams <dan.j.williams@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Oliver OHalloran <oliveroh@au1.ibm.com>
-Subject: Re: [PATCH v2 00/10] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Message-ID: <20180301211817.GC6742@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <1519876489.4592.3.camel@kernel.crashing.org>
- <1519876569.4592.4.camel@au1.ibm.com>
- <CAPcyv4h7mcFphv3j_vW-CGxXa2pjQgLqpBOLzHuTzAFzygai-Q@mail.gmail.com>
- <1519938210.4592.30.camel@au1.ibm.com>
- <1de70207-40ce-29f0-6093-337112852475@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1de70207-40ce-29f0-6093-337112852475@deltatee.com>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:58236 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752129AbeC1Lio (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:38:44 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 5/8] PCI: dwc: designware: Define maximum number of vectors
+Date: Wed, 28 Mar 2018 12:38:35 +0100
+Message-Id: <a0930afdf1a0953d0e8b66c999ce8923be517a03.1522235224.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 02:11:34PM -0700, Logan Gunthorpe wrote:
-> 
-> 
-> On 01/03/18 02:03 PM, Benjamin Herrenschmidt wrote:
-> > However, what happens if anything calls page_address() on them ? Some
-> > DMA ops do that for example, or some devices might ...
-> 
-> Although we could probably work around it with some pain, we rely on
-> page_address() and virt_to_phys(), etc to work on these pages. So on x86,
-> yes, it makes it into the linear mapping.
+Adds a callback that defines the maximum number of vectors that can be use
+by the Root Complex.
 
-This is pretty easy to do with HMM:
+Since this is a parameter associated to each SoC IP setting, makes sense to
+be configurable and easily visible to future modifications.
 
-unsigned long hmm_page_to_phys_pfn(struct page *page)
-{
-    struct hmm_devmem *devmem;
-    unsigned long ppfn;
+The designware IP supports a maximum of 256 vectors.
 
-    /* Sanity test maybe BUG_ON() */
-    if (!is_device_private_page(page))
-        return -1UL;
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-    devmem = page->pgmap->data;
-    ppfn = page_to_page(page) - devmem->pfn_first;
-    return ppfn + devmem->device_phys_base_pfn;
-}
-
-Note that last field does not exist in today HMM because i did not need
-such helper so far but this can be added.
-
-Cheers,
-Jérôme
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 921ab07..11271bb 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -48,8 +48,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
++static void dw_plat_set_num_vectors(struct pcie_port *pp)
++{
++	pp->num_vectors = MAX_MSI_IRQS;
++}
++
+ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
+ 	.host_init = dw_plat_pcie_host_init,
++	.set_num_vectors = dw_plat_set_num_vectors,
+ };
+ 
+ static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
+-- 
+2.7.4
