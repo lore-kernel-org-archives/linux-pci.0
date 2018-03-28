@@ -1,109 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from goliath.siemens.de ([192.35.17.28]:50321 "EHLO
-        goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751196AbeCGHjl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 02:39:41 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Juergen Gross <jgross@suse.com>
-Subject: [PATCH v5 1/7] jailhouse: Provide detection for non-x86 systems
-Date: Wed,  7 Mar 2018 08:39:12 +0100
-Message-Id: <dae9fe0c6e63141c28ca90492fa5712b4c33ffb5.1520408357.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
-References: <cover.1520408357.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
-References: <cover.1520408357.git.jan.kiszka@siemens.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:50998 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752086AbeC1Lio (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:38:44 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 7/8] PCI: dwc: Small computation improvement
+Date: Wed, 28 Mar 2018 12:38:37 +0100
+Message-Id: <fa3a0fcd74f271647322a5acaba0d4e2daa5d26f.1522235224.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+Replaces a simple division by 2 to a right shiftrotation of 1 bit.
 
-Implement jailhouse_paravirt() via device tree probing on architectures
-!= x86. Will be used by the PCI core.
-
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Mark Rutland <mark.rutland@arm.com>
-CC: Juergen Gross <jgross@suse.com>
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
-Reviewed-by: Juergen Gross <jgross@suse.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- Documentation/devicetree/bindings/jailhouse.txt |  8 ++++++++
- arch/x86/include/asm/jailhouse_para.h           |  2 +-
- include/linux/hypervisor.h                      | 17 +++++++++++++++--
- 3 files changed, 24 insertions(+), 3 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/jailhouse.txt
+ drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/jailhouse.txt b/Documentation/devicetree/bindings/jailhouse.txt
-new file mode 100644
-index 000000000000..2901c25ff340
---- /dev/null
-+++ b/Documentation/devicetree/bindings/jailhouse.txt
-@@ -0,0 +1,8 @@
-+Jailhouse non-root cell device tree bindings
-+--------------------------------------------
-+
-+When running in a non-root Jailhouse cell (partition), the device tree of this
-+platform shall have a top-level "hypervisor" node with the following
-+properties:
-+
-+- compatible = "jailhouse,cell"
-diff --git a/arch/x86/include/asm/jailhouse_para.h b/arch/x86/include/asm/jailhouse_para.h
-index 875b54376689..b885a961a150 100644
---- a/arch/x86/include/asm/jailhouse_para.h
-+++ b/arch/x86/include/asm/jailhouse_para.h
-@@ -1,7 +1,7 @@
- /* SPDX-License-Identifier: GPL2.0 */
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 03e9b82..8e6fed4 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
  
- /*
-- * Jailhouse paravirt_ops implementation
-+ * Jailhouse paravirt detection
-  *
-  * Copyright (c) Siemens AG, 2015-2017
-  *
-diff --git a/include/linux/hypervisor.h b/include/linux/hypervisor.h
-index b19563f9a8eb..fc08b433c856 100644
---- a/include/linux/hypervisor.h
-+++ b/include/linux/hypervisor.h
-@@ -8,15 +8,28 @@
-  */
- 
- #ifdef CONFIG_X86
-+
-+#include <asm/jailhouse_para.h>
- #include <asm/x86_init.h>
-+
- static inline void hypervisor_pin_vcpu(int cpu)
- {
- 	x86_platform.hyper.pin_vcpu(cpu);
- }
--#else
-+
-+#else /* !CONFIG_X86 */
-+
-+#include <linux/of.h>
-+
- static inline void hypervisor_pin_vcpu(int cpu)
- {
- }
--#endif
-+
-+static inline bool jailhouse_paravirt(void)
-+{
-+	return of_find_compatible_node(NULL, NULL, "jailhouse,cell");
-+}
-+
-+#endif /* !CONFIG_X86 */
- 
- #endif /* __LINUX_HYPEVISOR_H */
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+-		pp->cfg0_size = resource_size(cfg_res) / 2;
+-		pp->cfg1_size = resource_size(cfg_res) / 2;
++		pp->cfg0_size = resource_size(cfg_res) >> 1;
++		pp->cfg1_size = resource_size(cfg_res) >> 1;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			break;
+ 		case 0:
+ 			pp->cfg = win->res;
+-			pp->cfg0_size = resource_size(pp->cfg) / 2;
+-			pp->cfg1_size = resource_size(pp->cfg) / 2;
++			pp->cfg0_size = resource_size(pp->cfg) >> 1;
++			pp->cfg1_size = resource_size(pp->cfg) >> 1;
+ 			pp->cfg0_base = pp->cfg->start;
+ 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+ 			break;
 -- 
-2.13.6
+2.7.4
