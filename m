@@ -1,74 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53244 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751330AbeCTRqg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Mar 2018 13:46:36 -0400
-Date: Tue, 20 Mar 2018 12:46:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from bastet.se.axis.com ([195.60.68.11]:53856 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbeC1Lua (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:50:30 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/6] PCI: rockchip: Create individual folder for
- rockchip drivers
-Message-ID: <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
- <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Niklas Cassel <niklass@axis.com>,
+        John Keeping <john@metanate.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 01/12] PCI: endpoint: BAR width should not depend on sizeof dma_addr_t
+Date: Wed, 28 Mar 2018 13:50:06 +0200
+Message-Id: <20180328115018.31921-2-niklas.cassel@axis.com>
+In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 06, 2018 at 10:43:22AM +0800, Shawn Lin wrote:
-> In preparation for introducing End-Point driver for Rockchip
-> PCIe controller, we create a new folder to follow the convention
-> of dwc and cadence. Then we rename the host driver from pcie-rockchip.c
-> to pcie-rockchip-host.c, and only leave some common functions in
-> pcie-rockchip.c in order to be reused for both of host and EP drivers.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ...
+If a BAR supports 64-bit width or not depends on the hardware,
+and should thus not depend on sizeof(dma_addr_t).
 
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 34b56a8..b85ad40 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -141,4 +141,5 @@ source "drivers/pci/cadence/Kconfig"
->  source "drivers/pci/dwc/Kconfig"
->  source "drivers/pci/host/Kconfig"
->  source "drivers/pci/endpoint/Kconfig"
-> +source "drivers/pci/rockchip/Kconfig"
->  source "drivers/pci/switch/Kconfig"
+If a certain hardware doesn't support 64-bit BARs, its
+epc->ops->set_bar() implementation should return -EINVAL
+when PCI_BASE_ADDRESS_MEM_TYPE_64 is set.
 
-Why is this out of order?  This seems exactly analogous to
-drivers/pci/cadence and dwc, so they should be next to each other.
+We can't change pci_epc_set_bar() to only set
+PCI_BASE_ADDRESS_MEM_TYPE_64 based on size, since if the user,
+for some reason, wants to configure a BAR with a 64-bit width,
+even though the BAR size is less than 4 GB, he should be able
+to do that.
 
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index 9419709..8434afb 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -55,6 +55,8 @@ obj-y += switch/
->  
->  obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
->  
-> +obj-$(CONFIG_PCIE_ROCKCHIP)	+= rockchip/
-> +
->  # Endpoint library must be initialized before its users
->  obj-$(CONFIG_PCIE_CADENCE)	+= cadence/
->  # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
+However, since pci-epf-test is simply a test and not an API,
+we can set PCI_BASE_ADDRESS_MEM_TYPE_64 in pci-epf-test itself
+only based on size.
 
-Similarly here.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-I admit to still being a little dubious about the idea of a bunch of
-vendor-specific directories, each containing a completely trivial
-Makefile, a mostly-trivial Kconfig, a header file, a shared .c file, a
-host .c file, and an endpoint .c file.
-
-One alternative would be to keep the single pcie-rockchip.c file with
-an #ifdef CONFIG_PCIE_ROCKCHIP_HOST section and an #ifdef
-CONFIG_PCIE_ROCKCHIP_EP section.
-
-Bjorn
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 64d8a17f8094..f6c0c59b1bc8 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -70,7 +70,7 @@ struct pci_epf_test_data {
+ 	bool		linkup_notifier;
+ };
+ 
+-static int bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 };
++static size_t bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 };
+ 
+ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
+ {
+@@ -367,12 +367,14 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
+ 	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
+ 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+ 
+-	flags = PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32;
+-	if (sizeof(dma_addr_t) == 0x8)
+-		flags |= PCI_BASE_ADDRESS_MEM_TYPE_64;
+-
+ 	for (bar = BAR_0; bar <= BAR_5; bar++) {
+ 		epf_bar = &epf->bar[bar];
++
++		flags = PCI_BASE_ADDRESS_SPACE_MEMORY;
++		flags |= upper_32_bits(epf_bar->size) ?
++			PCI_BASE_ADDRESS_MEM_TYPE_64 :
++			PCI_BASE_ADDRESS_MEM_TYPE_32;
++
+ 		ret = pci_epc_set_bar(epc, epf->func_no, bar,
+ 				      epf_bar->phys_addr,
+ 				      epf_bar->size, flags);
+-- 
+2.14.2
