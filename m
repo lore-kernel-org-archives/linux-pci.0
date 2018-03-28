@@ -1,67 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:35654 "EHLO david.siemens.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751127AbeCGHji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Mar 2018 02:39:38 -0500
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-Cc: x86@kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        jailhouse-dev@googlegroups.com, linux-pci@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH v5 5/7] x86: Consolidate PCI_MMCONFIG configs
-Date: Wed,  7 Mar 2018 08:39:16 +0100
-Message-Id: <2a0ccd51ea6f7996e07162918228e23bdc1fbb03.1520408357.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
-References: <cover.1520408357.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1520408357.git.jan.kiszka@siemens.com>
-References: <cover.1520408357.git.jan.kiszka@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 10/12] PCI: endpoint: Make sure that BAR_5 does not have 64-bit flag set when clearing
+Date: Wed, 28 Mar 2018 13:50:15 +0200
+Message-Id: <20180328115018.31921-11-niklas.cassel@axis.com>
+In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+Since a 64-bit BAR consists of a BAR pair, and since there is no
+BAR after BAR_5, BAR_5 cannot be 64-bits wide.
 
-Since e279b6c1d329 ("x86: start unification of arch/x86/Kconfig.*"), we
-have two PCI_MMCONFIG entries, one from the original i386 and another
-from x86_64. This consolidates both entries into a single one.
+This sanity check is done in pci_epc_clear_bar(), so that we don't need
+to do this sanity check in all epc->ops->clear_bar() implementations.
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- arch/x86/Kconfig | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+Kishon made a review comment that he wanted this:
+https://marc.info/?l=linux-kernel&m=152161168226203
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index c19f5342ec2b..8986a6b6e3df 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2641,8 +2641,10 @@ config PCI_DIRECT
- 	depends on PCI && (X86_64 || (PCI_GODIRECT || PCI_GOANY || PCI_GOOLPC || PCI_GOMMCONFIG))
+Personally, I don't think that this check is needed,
+since pci_epc_set_bar() already does this check,
+and no one should modify the flags after pci_epc_set_bar()
+has been called.
+
+If everyone agrees, then this patch could be dropped.
+
+ drivers/pci/endpoint/pci-epc-core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index eccc942043cb..b0ee42739c3c 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -285,7 +285,9 @@ void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no,
+ {
+ 	unsigned long flags;
  
- config PCI_MMCONFIG
--	def_bool y
--	depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
-+	bool "Support mmconfig PCI config space access" if X86_64
-+	default y
-+	depends on PCI && (ACPI || SFI)
-+	depends on X86_64 || (PCI_GOANY || PCI_GOMMCONFIG)
+-	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
++	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
++	    (epf_bar->barno == BAR_5 &&
++	     epf_bar->flags & PCI_BASE_ADDRESS_MEM_TYPE_64))
+ 		return;
  
- config PCI_OLPC
- 	def_bool y
-@@ -2657,11 +2659,6 @@ config PCI_DOMAINS
- 	def_bool y
- 	depends on PCI
- 
--config PCI_MMCONFIG
--	bool "Support mmconfig PCI config space access"
--	default y
--	depends on X86_64 && PCI && (ACPI || SFI)
--
- config PCI_CNB20LE_QUIRK
- 	bool "Read CNB20LE Host Bridge Windows" if EXPERT
- 	depends on PCI
+ 	if (!epc->ops->clear_bar)
 -- 
-2.13.6
+2.14.2
