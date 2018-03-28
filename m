@@ -1,157 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35894 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932697AbeCMLU4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 07:20:56 -0400
-Date: Tue, 13 Mar 2018 11:20:51 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V3] PCI: rcar: Use runtime PM to control controller clock
-Message-ID: <20180313112051.GB15480@e107981-ln.cambridge.arm.com>
-References: <20171110215411.31912-1-marek.vasut+renesas@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171110215411.31912-1-marek.vasut+renesas@gmail.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:53840 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbeC1Lu0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:50:26 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Douglas <adouglas@cadence.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 00/12] PCI endpoint 64-bit BAR fixes
+Date: Wed, 28 Mar 2018 13:50:05 +0200
+Message-Id: <20180328115018.31921-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
+PCI endpoint fixes to improve the way 64-bit BARs are handled.
 
-On Fri, Nov 10, 2017 at 10:54:11PM +0100, Marek Vasut wrote:
-> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
-> 
-> The controller clock can be switched off during suspend/resume,
-> let runtime PM take care of that.
-> 
-> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
-> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> To: linux-pci@vger.kernel.org
-> ---
-> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
->       reordering of function calls in probe
->     - Dispose of fail_clk in rcar_pcie_get_resources()
-> V3: - Fix up the failpath in probe function
-> ---
->  drivers/pci/host/pcie-rcar.c | 40 ++++++++++++----------------------------
->  1 file changed, 12 insertions(+), 28 deletions(-)
 
-I would like to ask you if this patch is still applicable and if so
-whether you want me to apply it stand-alone (ie does it depend on
-other patches ?), please let me know.
+There are still future improvements that could be made:
 
-Thanks,
-Lorenzo
+pci-epf-test.c always allocates space for
+6 BARs, even when using 64-bit BARs (which
+really only requires us to allocate 3 BARs).
 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 12796eccb2be..e00f865952d5 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -145,7 +145,6 @@ struct rcar_pcie {
->  	void __iomem		*base;
->  	struct list_head	resources;
->  	int			root_bus_nr;
-> -	struct clk		*clk;
->  	struct clk		*bus_clk;
->  	struct			rcar_msi msi;
->  };
-> @@ -917,24 +916,14 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
->  	if (IS_ERR(pcie->base))
->  		return PTR_ERR(pcie->base);
->  
-> -	pcie->clk = devm_clk_get(dev, "pcie");
-> -	if (IS_ERR(pcie->clk)) {
-> -		dev_err(dev, "cannot get platform clock\n");
-> -		return PTR_ERR(pcie->clk);
-> -	}
-> -	err = clk_prepare_enable(pcie->clk);
-> -	if (err)
-> -		return err;
-> -
->  	pcie->bus_clk = devm_clk_get(dev, "pcie_bus");
->  	if (IS_ERR(pcie->bus_clk)) {
->  		dev_err(dev, "cannot get pcie bus clock\n");
-> -		err = PTR_ERR(pcie->bus_clk);
-> -		goto fail_clk;
-> +		return PTR_ERR(pcie->bus_clk);
->  	}
->  	err = clk_prepare_enable(pcie->bus_clk);
->  	if (err)
-> -		goto fail_clk;
-> +		return err;
->  
->  	i = irq_of_parse_and_map(dev->of_node, 0);
->  	if (!i) {
-> @@ -956,8 +945,6 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
->  
->  err_map_reg:
->  	clk_disable_unprepare(pcie->bus_clk);
-> -fail_clk:
-> -	clk_disable_unprepare(pcie->clk);
->  
->  	return err;
->  }
-> @@ -1125,22 +1112,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  
->  	rcar_pcie_parse_request_of_pci_ranges(pcie);
->  
-> +	pm_runtime_enable(pcie->dev);
-> +	err = pm_runtime_get_sync(pcie->dev);
-> +	if (err < 0) {
-> +		dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
-> +		goto err_pm_disable;
-> +	}
-> +
->  	err = rcar_pcie_get_resources(pcie);
->  	if (err < 0) {
->  		dev_err(dev, "failed to request resources: %d\n", err);
-> -		goto err_free_bridge;
-> +		goto err_pm_put;
->  	}
->  
->  	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
->  	if (err)
-> -		goto err_free_bridge;
-> -
-> -	pm_runtime_enable(dev);
-> -	err = pm_runtime_get_sync(dev);
-> -	if (err < 0) {
-> -		dev_err(dev, "pm_runtime_get_sync failed\n");
-> -		goto err_pm_disable;
-> -	}
-> +		goto err_pm_put;
->  
->  	/* Failure to get a link might just be that no cards are inserted */
->  	hw_init_fn = of_device_get_match_data(dev);
-> @@ -1172,13 +1159,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  
->  err_pm_put:
->  	pm_runtime_put(dev);
-> -
->  err_pm_disable:
->  	pm_runtime_disable(dev);
-> -
-> -err_free_bridge:
-> -	pci_free_host_bridge(bridge);
->  	pci_free_resource_list(&pcie->resources);
-> +	pci_free_host_bridge(bridge);
->  
->  	return err;
->  }
-> -- 
-> 2.11.0
-> 
+pcitest.sh will print "NOT OKAY" for BAR1,
+BAR3, and BAR5 when using 64-bit BARs.
+This could probably be improved to say
+something like "N/A (64-bit BAR)".
+
+Niklas Cassel (12):
+  PCI: endpoint: BAR width should not depend on sizeof dma_addr_t
+  PCI: endpoint: Simplify epc->ops->set_bar()/pci_epc_set_bar()
+  PCI: endpoint: Setting BAR_5 to 64-bits wide is invalid
+  PCI: endpoint: Setting 64-bit/prefetch bit is invalid when IO is set
+  PCI: endpoint: Setting a BAR size > 4 GB is invalid if 64-bit flag is
+    not set
+  PCI: designware-ep: Make dw_pcie_ep_set_bar() handle 64-bit BARs
+    properly
+  PCI: cadence: Set PCI_BASE_ADDRESS_MEM_TYPE_64 if a 64-bit BAR was
+    set-up
+  PCI: endpoint: Handle 64-bit BARs properly
+  PCI: endpoint: Make epc->ops->clear_bar()/pci_epc_clear_bar() take
+    struct *epf_bar
+  PCI: endpoint: Make sure that BAR_5 does not have 64-bit flag set when
+    clearing
+  PCI: designware-ep: Make dw_pcie_ep_reset_bar() handle 64-bit BARs
+    properly
+  misc: pci_endpoint_test: Handle 64-bit BARs properly
+
+ drivers/misc/pci_endpoint_test.c              | 12 +++++----
+ drivers/pci/cadence/pcie-cadence-ep.c         | 15 ++++++++---
+ drivers/pci/dwc/pcie-designware-ep.c          | 36 +++++++++++++++++++++------
+ drivers/pci/endpoint/functions/pci-epf-test.c | 28 +++++++++++++--------
+ drivers/pci/endpoint/pci-epc-core.c           | 32 +++++++++++++++---------
+ drivers/pci/endpoint/pci-epf-core.c           |  4 +++
+ include/linux/pci-epc.h                       | 11 ++++----
+ include/linux/pci-epf.h                       |  2 ++
+ 8 files changed, 95 insertions(+), 45 deletions(-)
+
+-- 
+2.14.2
