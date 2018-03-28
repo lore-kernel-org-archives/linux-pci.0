@@ -1,88 +1,48 @@
-Return-Path: <SRS0=owBi=GG=xenosoft.de=chzigotzky@kernel.org>
-Return-Path: <SRS0=owBi=GG=xenosoft.de=chzigotzky@kernel.org>
-Subject: [PATCH 0/1] PCI set flag PCI_SCAN_ALL_PCIE_DEVS for P.A. Semi boards
-To: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
- Olof Johansson <olof@lixom.net>
-References: <f3513294-6da0-456f-0f98-1f8c3bac90c9@xenosoft.de>
- <87tvxl15qx.fsf@concordia.ellerman.id.au>
- <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
- <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
- <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
- <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
- <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
- <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
- <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
- <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
-From: Christian Zigotzky <chzigotzky@xenosoft.de>
-Message-ID: <dc228918-652a-e24c-ce7b-8d1b30153d3b@xenosoft.de>
-Date: Fri, 16 Mar 2018 13:10:43 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:43307 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751209AbeC1MF7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 08:05:59 -0400
 MIME-Version: 1.0
-In-Reply-To: <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <e3c679c8bd516602d1f7cf5182cf718414e74089.1522235224.git.gustavo.pimentel@synopsys.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com> <e3c679c8bd516602d1f7cf5182cf718414e74089.1522235224.git.gustavo.pimentel@synopsys.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Wed, 28 Mar 2018 09:05:57 -0300
+Message-ID: <CAOMZO5AyzTqpVofx6wf4oHsWjwaC=94o8dgbJSs0rhnc8OwPkA@mail.gmail.com>
+Subject: Re: [PATCH 6/8] PCI: dwc: Replace lower into upper case characters
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+        <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02 December 2017 at 00:27PM, Bjorn Helgaas wrote:
- > On Fri, Dec 01, 2017 at 11:08:46PM +0100, Christian Zigotzky wrote:
- >> On 30.11.2017 23:42, Bjorn Helgaas wrote:
- >>>
- >>> 00:11.0 claims to be a PCIe Root Port leading to [bus 05-06]. That
- >>> means there's a Link (presumably this A-Link II Express thing), and the
- >>> downstream end of the Link *should* be a PCIe Upstream Port on bus 05,
- >>> but no such device is visible.  I suppose the SB600 does implement
- >>> some sort of PCIe Port there, but keeps it invisible to software, and
- >>> at the same time, contains an invisible bridge that connects the Link
- >>> to all the conventional PCI devices on bus 05.
- >>>
- >>> When we scan bus 05, we do this:
- >>>
- >>>    pci_scan_child_bus_extend(bus=05)
- >>>      for (devfn = 0; devfn < 0x100; devfn += 8)
- >>>        pci_scan_slot(05, 00.0)
- >>>          pci_scan_single_device
- >>>            pci_scan_device(05, 00.0)           # fails; no 05:00.0
- >>>        pci_scan_slot(05, 01.0)
- >>>          only_one_child(bus=05)
- >>>            parent = 00:11.0
- >>>            pci_pcie_type(00:11.0) == ROOT_PORT # returns true
- >>>
- >>> Since only_one_child() sees that 00:11.0 is a Root Port, we give up
- >>> before we even get to the PCI_SCAN_ALL_PCIE_DEVS test.
- >>>
- >>> I *think* something like the patch below should make this work if you
- >>> use the "pci=pcie_scan_all" parameter.  We have some x86 DMI quirks
- >>> that set PCI_SCAN_ALL_PCIE_DEVS automatically.  I don't know how to do
- >>> something similar on powerpc, but maybe you do?
- >>>
- >>
- >> Hi Bjorn,
- >>
- >> I tested your new patch today. It boots with the boot argument
- >> "pci=pcie_scan_all". Well done! :-)
- >>
- >> It doesn't boot without the boot argument "pci=pcie_scan_all".
- >
- > Thanks for testing that.  I'll merge a similar patch for v4.16.
- >
- > I don't think using "pci=pcie_scan_all" is really an acceptable
- > long-term answer for you, though.  Is there some way we can identify
- > at run-time whether we're on a Nemo system?  If so, we can make this
- > happen automatically.
- >
- > Bjorn
- >
+Hi Gustavo,
 
-Hi Bjorn,
-Hi All,
+On Wed, Mar 28, 2018 at 8:38 AM, Gustavo Pimentel
+<gustavo.pimentel@synopsys.com> wrote:
 
-Olof Johansson has created a patch for us. With this patch, 
-"pci=pcie_scan_all" executes automatically on P.A. Semi boards. We don't 
-need to add 'pci=pcie_scan_all' to the
-kernel boot arguments anymore. Could you please add Olof's patch to the 
-official kernel source code?
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 550fdbb..03e9b82 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -248,8 +248,10 @@ static void dw_pcie_irq_domain_free(struct irq_domain *domain,
+>         unsigned long flags;
+>
+>         raw_spin_lock_irqsave(&pp->lock, flags);
+> +
+>         bitmap_release_region(pp->msi_irq_in_use, data->hwirq,
+>                               order_base_2(nr_irqs));
+> +
+>         raw_spin_unlock_irqrestore(&pp->lock, flags);
+>  }
 
-arch/powerpc/platforms/pasemi/pci.c | 2 ++
-  1 file changed, 2 insertions(+)
-
-Thanks,
-Christian
+This looks like an unrelated change.
