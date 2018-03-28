@@ -1,166 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60776 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750950AbeCNRup (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 13:50:45 -0400
-Date: Wed, 14 Mar 2018 12:49:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: linux-pci@vger.kernel.org, Mikael Starvik <starvik@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Tony Luck <tony.luck@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        David Howells <dhowells@redhat.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Cris <linux-cris-kernel@axis.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-ia64@vger.kernel.org, linux-am33-list@redhat.com
-Subject: Re: [PATCH] PCI/MSI: Don't set up INTx if MSI or MSI-X is enabled
-Message-ID: <20180314174946.GB179719@bhelgaas-glaptop.roam.corp.google.com>
-References: <152097754955.241946.9551793957889760940.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAHp75Vfp_uwSLe_ENnr=azJGrMoR6DuvGSCi5DSeq6=B-ghAGg@mail.gmail.com>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:59832 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751072AbeC1NPK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 09:15:10 -0400
+Subject: Re: [PATCH v5 09/12] PCI: endpoint: Make
+ epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "cyrille.pitchen@free-electrons.com"
+        <cyrille.pitchen@free-electrons.com>,
+        Alan Douglas <adouglas@cadence.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Niklas Cassel <niklass@axis.com>,
+        John Keeping <john@metanate.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+ <20180328115018.31921-10-niklas.cassel@axis.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <5cb36688-e572-fe97-f472-657b70037ab0@synopsys.com>
+Date: Wed, 28 Mar 2018 14:14:24 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHp75Vfp_uwSLe_ENnr=azJGrMoR6DuvGSCi5DSeq6=B-ghAGg@mail.gmail.com>
+In-Reply-To: <20180328115018.31921-10-niklas.cassel@axis.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 06:31:38PM +0200, Andy Shevchenko wrote:
-> On Tue, Mar 13, 2018 at 11:45 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Agree with Christoph's comment.
-> 
-> > If a device already has MSI or MSI-X enabled, there's no need to set up its
-> > legacy INTx interrupt.
-> 
-> Just point to the actual behaviour of this.
+Hi Niklas,
 
-By "point to the actual behaviour", do you mean adding something to
-the changelog along the lines of the following?
-
-  If MSI or MSI-X is enabled, the device uses that.  It uses INTx only
-  if both MSI and MSI-X are disabled (see PCIe r4.0, sec 7.7.1.2).
-
-I did add that because I think that spec reference is useful.  If you
-have something else in mind, maybe an example would help me
-understand.
-
-> In some cases code in question has to distinguish between MSI and
-> MSI-x.  So, this or similar changes has to be done with keeping
-> above in mind.
+On 28/03/2018 12:50, Niklas Cassel wrote:
+> Make epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar.
 > 
-> (Existing example is Thunderbolt driver)
+> This is needed so that epc->ops->clear_bar() can clear the BAR pair,
+> if the BAR is 64-bits wide.
+> 
+> This also makes it possible for pci_epc_clear_bar() to sanity check
+> the flags.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/cadence/pcie-cadence-ep.c         |  3 ++-
+>  drivers/pci/dwc/pcie-designware-ep.c          | 13 ++++++++++---
+>  drivers/pci/endpoint/functions/pci-epf-test.c |  5 ++++-
+>  drivers/pci/endpoint/pci-epc-core.c           |  7 ++++---
+>  include/linux/pci-epc.h                       |  5 +++--
+>  5 files changed, 23 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
+> index 2905e098678c..3d8283e450a9 100644
+> --- a/drivers/pci/cadence/pcie-cadence-ep.c
+> +++ b/drivers/pci/cadence/pcie-cadence-ep.c
+> @@ -145,10 +145,11 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
+>  }
+>  
+>  static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
+> -				   enum pci_barno bar)
+> +				   struct pci_epf_bar *epf_bar)
+>  {
+>  	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+>  	struct cdns_pcie *pcie = &ep->pcie;
+> +	enum pci_barno bar = epf_bar->barno;
+>  	u32 reg, cfg, b, ctrl;
+>  
+>  	if (bar < BAR_4) {
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index 571b90f88d84..cc4d8381c1dc 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -19,7 +19,8 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+>  	pci_epc_linkup(epc);
+>  }
+>  
+> -void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+> +static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar,
+> +				   int flags)
+>  {
+>  	u32 reg;
+>  
+> @@ -30,6 +31,11 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+>  	dw_pcie_dbi_ro_wr_dis(pci);
+>  }
+>  
+> +void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+> +{
+> +	__dw_pcie_ep_reset_bar(pci, bar, 0);
+> +}
+> +
+>  static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+>  				   struct pci_epf_header *hdr)
+>  {
+> @@ -104,13 +110,14 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+>  }
+>  
+>  static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
+> -				 enum pci_barno bar)
+> +				 struct pci_epf_bar *epf_bar)
+>  {
+>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	enum pci_barno bar = epf_bar->barno;
+>  	u32 atu_index = ep->bar_to_atu[bar];
+>  
+> -	dw_pcie_ep_reset_bar(pci, bar);
+> +	__dw_pcie_ep_reset_bar(pci, bar, epf_bar->flags);
+>  
+>  	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
+>  	clear_bit(atu_index, ep->ib_window_map);
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index d46e3ebabb8e..7cef85124325 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -344,14 +344,17 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
+>  {
+>  	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
+>  	struct pci_epc *epc = epf->epc;
+> +	struct pci_epf_bar *epf_bar;
+>  	int bar;
+>  
+>  	cancel_delayed_work(&epf_test->cmd_handler);
+>  	pci_epc_stop(epc);
+>  	for (bar = BAR_0; bar <= BAR_5; bar++) {
+> +		epf_bar = &epf->bar[bar];
+> +
+>  		if (epf_test->reg[bar]) {
+>  			pci_epf_free_space(epf, epf_test->reg[bar], bar);
+> -			pci_epc_clear_bar(epc, epf->func_no, bar);
+> +			pci_epc_clear_bar(epc, epf->func_no, epf_bar);
+>  		}
+>  	}
+>  }
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 8637822605ff..eccc942043cb 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -276,11 +276,12 @@ EXPORT_SYMBOL_GPL(pci_epc_map_addr);
+>   * pci_epc_clear_bar() - reset the BAR
+>   * @epc: the EPC device for which the BAR has to be cleared
+>   * @func_no: the endpoint function number in the EPC device
+> - * @bar: the BAR number that has to be reset
+> + * @epf_bar: the struct epf_bar that contains the BAR information
+>   *
+>   * Invoke to reset the BAR of the endpoint device.
+>   */
+> -void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, int bar)
+> +void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no,
+> +		       struct pci_epf_bar *epf_bar)
+>  {
+>  	unsigned long flags;
+>  
+> @@ -291,7 +292,7 @@ void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, int bar)
+>  		return;
+>  
+>  	spin_lock_irqsave(&epc->lock, flags);
+> -	epc->ops->clear_bar(epc, func_no, bar);
+> +	epc->ops->clear_bar(epc, func_no, epf_bar);
+>  	spin_unlock_irqrestore(&epc->lock, flags);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_epc_clear_bar);
+> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+> index 75bae8aabbf9..af657ca58b70 100644
+> --- a/include/linux/pci-epc.h
+> +++ b/include/linux/pci-epc.h
+> @@ -41,7 +41,7 @@ struct pci_epc_ops {
+>  	int	(*set_bar)(struct pci_epc *epc, u8 func_no,
+>  			   struct pci_epf_bar *epf_bar);
+>  	void	(*clear_bar)(struct pci_epc *epc, u8 func_no,
+> -			     enum pci_barno bar);
+> +			     struct pci_epf_bar *epf_bar);
+>  	int	(*map_addr)(struct pci_epc *epc, u8 func_no,
+>  			    phys_addr_t addr, u64 pci_addr, size_t size);
+>  	void	(*unmap_addr)(struct pci_epc *epc, u8 func_no,
+> @@ -127,7 +127,8 @@ int pci_epc_write_header(struct pci_epc *epc, u8 func_no,
+>  			 struct pci_epf_header *hdr);
+>  int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
+>  		    struct pci_epf_bar *epf_bar);
+> -void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, int bar);
+> +void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no,
+> +		       struct pci_epf_bar *epf_bar);
+>  int pci_epc_map_addr(struct pci_epc *epc, u8 func_no,
+>  		     phys_addr_t phys_addr,
+>  		     u64 pci_addr, size_t size);
+> 
 
-Sorry, I didn't get your point here.  Certainly some code needs to
-distinguish between MSI and MSI-X, but I don't think that's the case
-here.  I'm not proposing to change Thunderbolt; I do see that it uses
-dev->msix_enabled (but not dev->msi_enabled), and it doesn't look like
-using pci_dev_msi_enabled() there would be appropriate.
+Seems good to me. :)
 
-> > bba6f6fc68e7 ("[PATCH] MSI-X: fix resume crash") changed the cris, frv,
-> > x86, and ia64 arches to skip INTx setup when MSI is enabled.
-> >
-> > 16cf0ebc35dd ("x86/PCI: Do not use interrupt links for devices using
-> > MSI-X") extended that by changing x86 to also skip INTx setup when MSI-X is
-> > enabled.
-> >
-> > Change the remaining arches (cris, frv, and ia64) to skip INTx setup when
-> > either MSI or MSI-X is enabled.
-> >
-> > Also update mn10300 (which didn't exist at the time of bba6f6fc68e7) to
-> > follow the same pattern.
-> 
-> Perhaps no need to change the architectures that are about to be
-> removed completely from the kernel.
-
-Yeah, I figured there was a danger of that, but I haven't kept up on
-exactly which are on the chopping block, so I figured it'd be trivial
-to drop anything that turns out to be unnecessary.
-
-> FWIW,
-> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> 
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  arch/cris/arch-v32/drivers/pci/bios.c |    2 +-
-> >  arch/frv/mb93090-mb00/pci-vdk.c       |    2 +-
-> >  arch/ia64/pci/pci.c                   |    4 ++--
-> >  arch/mn10300/unit-asb2305/pci.c       |    8 +++++---
-> >  4 files changed, 9 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-> > index 6b9e6cfaa29e..c2bed0cc060b 100644
-> > --- a/arch/cris/arch-v32/drivers/pci/bios.c
-> > +++ b/arch/cris/arch-v32/drivers/pci/bios.c
-> > @@ -68,7 +68,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
-> >         if ((err = pcibios_enable_resources(dev, mask)) < 0)
-> >                 return err;
-> >
-> > -       if (!dev->msi_enabled)
-> > +       if (!pci_dev_msi_enabled(dev))
-> >                 pcibios_enable_irq(dev);
-> >         return 0;
-> >  }
-> > diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-> > index f211839e2cae..4a55d1b82d21 100644
-> > --- a/arch/frv/mb93090-mb00/pci-vdk.c
-> > +++ b/arch/frv/mb93090-mb00/pci-vdk.c
-> > @@ -413,7 +413,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
-> >
-> >         if ((err = pci_enable_resources(dev, mask)) < 0)
-> >                 return err;
-> > -       if (!dev->msi_enabled)
-> > +       if (!pci_dev_msi_enabled(dev))
-> >                 pcibios_enable_irq(dev);
-> >         return 0;
-> >  }
-> > diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> > index f5ec736100ee..7ccc64d5fe3e 100644
-> > --- a/arch/ia64/pci/pci.c
-> > +++ b/arch/ia64/pci/pci.c
-> > @@ -398,7 +398,7 @@ pcibios_enable_device (struct pci_dev *dev, int mask)
-> >         if (ret < 0)
-> >                 return ret;
-> >
-> > -       if (!dev->msi_enabled)
-> > +       if (!pci_dev_msi_enabled(dev))
-> >                 return acpi_pci_irq_enable(dev);
-> >         return 0;
-> >  }
-> > @@ -407,7 +407,7 @@ void
-> >  pcibios_disable_device (struct pci_dev *dev)
-> >  {
-> >         BUG_ON(atomic_read(&dev->enable_cnt));
-> > -       if (!dev->msi_enabled)
-> > +       if (!pci_dev_msi_enabled(dev))
-> >                 acpi_pci_irq_disable(dev);
-> >  }
-> >
-> > diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-> > index 3dfe2d31c67b..4d36ea517679 100644
-> > --- a/arch/mn10300/unit-asb2305/pci.c
-> > +++ b/arch/mn10300/unit-asb2305/pci.c
-> > @@ -399,10 +399,12 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
-> >  {
-> >         int err;
-> >
-> > -       err = pci_enable_resources(dev, mask);
-> > -       if (err == 0)
-> > +       if ((err = pci_enable_resources(dev, mask)) < 0)
-> > +               return err;
-> > +
-> > +       if (!pci_dev_msi_enabled(dev))
-> >                 pcibios_enable_irq(dev);
-> > -       return err;
-> > +       return 0;
-> >  }
-> >
-> >  /*
-> >
-> 
-> 
-> 
-> -- 
-> With Best Regards,
-> Andy Shevchenko
+Reviewed-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
