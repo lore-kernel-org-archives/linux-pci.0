@@ -1,63 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57062 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752729AbeCMWfZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Mar 2018 18:35:25 -0400
-Subject: [PATCH v1 0/2] PCI: Clean up whitespace
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Tue, 13 Mar 2018 17:35:21 -0500
-Message-ID: <152098048688.43178.2089454526004328425.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from bastet.se.axis.com ([195.60.68.11]:53974 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752932AbeC1LvD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:51:03 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
+        Alan Douglas <adouglas@cadence.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 07/12] PCI: cadence: Set PCI_BASE_ADDRESS_MEM_TYPE_64 if a 64-bit BAR was set-up
+Date: Wed, 28 Mar 2018 13:50:12 +0200
+Message-Id: <20180328115018.31921-8-niklas.cassel@axis.com>
+In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clean up the Makefiles and some comments.  No functional change intended.
+cdns_pcie_ep_set_bar() does some round-up of the BAR size, which means
+that a 64-bit BAR can be set-up, even when the flag
+PCI_BASE_ADDRESS_MEM_TYPE_64 isn't set.
 
+If a 64-bit BAR was set-up, set the flag PCI_BASE_ADDRESS_MEM_TYPE_64,
+so that the calling function can know what BAR width that was actually
+set-up.
+
+I'm not sure why cdns_pcie_ep_set_bar() doesn't obey the flag
+PCI_BASE_ADDRESS_MEM_TYPE_64, but I leave this for the MAINTAINER to
+fix, since there might be a reason why this flag is ignored.
+
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
+ drivers/pci/cadence/pcie-cadence-ep.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Bjorn Helgaas (2):
-      PCI: Tidy Makefiles
-      PCI: Tidy comments
-
-
- drivers/pci/Makefile                   |   59 +++++++++++---------------------
- drivers/pci/access.c                   |   12 ++++---
- drivers/pci/ats.c                      |   10 ++---
- drivers/pci/bus.c                      |    2 -
- drivers/pci/host-bridge.c              |    2 +
- drivers/pci/iov.c                      |    8 ++--
- drivers/pci/mmap.c                     |    2 +
- drivers/pci/msi.c                      |    3 +-
- drivers/pci/pci-acpi.c                 |    3 +-
- drivers/pci/pci-driver.c               |    2 -
- drivers/pci/pci-label.c                |    5 ++-
- drivers/pci/pci-stub.c                 |    3 +-
- drivers/pci/pci-sysfs.c                |    3 --
- drivers/pci/pci.c                      |    9 +++--
- drivers/pci/pcie/Makefile              |   16 +++------
- drivers/pci/pcie/aer/aerdrv.c          |    9 ++---
- drivers/pci/pcie/aer/aerdrv.h          |    1 -
- drivers/pci/pcie/aer/aerdrv_acpi.c     |    1 -
- drivers/pci/pcie/aer/aerdrv_core.c     |   11 ++----
- drivers/pci/pcie/aer/aerdrv_errprint.c |    3 --
- drivers/pci/pcie/aer/ecrc.c            |    4 +-
- drivers/pci/pcie/aspm.c                |    3 +-
- drivers/pci/pcie/portdrv.h             |    1 -
- drivers/pci/pcie/portdrv_core.c        |    1 -
- drivers/pci/pcie/portdrv_pci.c         |    2 -
- drivers/pci/probe.c                    |    2 +
- drivers/pci/proc.c                     |    4 +-
- drivers/pci/quirks.c                   |   14 ++++----
- drivers/pci/rom.c                      |    4 +-
- drivers/pci/search.c                   |    8 ++--
- drivers/pci/setup-bus.c                |    6 +--
- drivers/pci/setup-irq.c                |    4 +-
- drivers/pci/setup-res.c                |   10 ++---
- drivers/pci/slot.c                     |    1 -
- drivers/pci/syscall.c                  |    9 ++---
- drivers/pci/vpd.c                      |    3 +-
- drivers/pci/xen-pcifront.c             |    4 +-
- 37 files changed, 89 insertions(+), 155 deletions(-)
+diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
+index cef36cd6b710..2905e098678c 100644
+--- a/drivers/pci/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/cadence/pcie-cadence-ep.c
+@@ -106,6 +106,9 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
+ 		if (is_64bits && (bar & 1))
+ 			return -EINVAL;
+ 
++		if (is_64bits && !(flags & PCI_BASE_ADDRESS_MEM_TYPE_64))
++			epf_bar->flags |= PCI_BASE_ADDRESS_MEM_TYPE_64;
++
+ 		if (is_64bits && is_prefetch)
+ 			ctrl = CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_64BITS;
+ 		else if (is_prefetch)
+-- 
+2.14.2
