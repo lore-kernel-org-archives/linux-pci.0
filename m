@@ -1,73 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42518 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751164AbeCGGNr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Mar 2018 01:13:47 -0500
-Subject: [PATCH v1 4/9] PCI/portdrv: Disable port driver in compat mode
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Lukas Wunner <lukas@wunner.de>
-Date: Wed, 07 Mar 2018 00:13:45 -0600
-Message-ID: <152040322576.240786.3375466676254382935.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 1/8] bindings: PCI: designware: Example update
+Date: Wed, 28 Mar 2018 12:38:31 +0100
+Message-Id: <33aa86ee667e8b435db080b8c683cb5df1bd6544.1522235224.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Changes the IP registers size to accommodate the ATU unroll space.
 
-The "pcie_ports=compat" kernel parameter sets pcie_ports_disabled, which is
-intended to disable the PCIe port driver.  But even when it was disabled,
-we registered pcie_portdriver so we could work around a BIOS PME issue (see
-fe31e69740ed ("PCI/PCIe: Clear Root PME Status bits early during system
-resume")).
+Replaces "ctrlreg" reg-name by "dbi" to be coherent with similar drivers.
 
-Registering the driver meant that the pcie_portdrv_probe() path called
-pci_enable_device(), pci_save_state(), pm_runtime_set_autosuspend_delay(),
-pm_runtime_use_autosuspend(), etc., even when the driver was disabled.
+Replaces the pcie base address example by a real pcie base address in use.
 
-We've since moved the BIOS PME workaround from the port driver to the core,
-so stop registering the PCIe port driver in compat mode.
-
-This means "pcie_ports=compat" will now be basically the same as turning
-off CONFIG_PCIEPORTBUS completely.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/pci/pcie/portdrv_core.c |    3 ---
- drivers/pci/pcie/portdrv_pci.c  |    2 +-
- 2 files changed, 1 insertion(+), 4 deletions(-)
+ Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index ef3bad4ad010..9db77c683732 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -212,9 +212,6 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	int services = 0;
- 	int cap_mask = 0;
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 1da7ade..6300762 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -1,7 +1,8 @@
+ * Synopsys DesignWare PCIe interface
  
--	if (pcie_ports_disabled)
--		return 0;
--
- 	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
- 			| PCIE_PORT_SERVICE_VC;
- 	if (pci_aer_available())
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index f91afd09e356..c08ebd237242 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -262,7 +262,7 @@ static int __init pcie_portdrv_init(void)
- 	int retval;
+ Required properties:
+-- compatible: should contain "snps,dw-pcie" to identify the core.
++- compatible:
++	"snps,dw-pcie" for RC mode;
+ - reg: Should contain the configuration address space.
+ - reg-names: Must be "config" for the PCIe configuration space.
+     (The old way of getting the configuration address space from "ranges"
+@@ -41,11 +42,11 @@ EP mode:
  
- 	if (pcie_ports_disabled)
--		return pci_register_driver(&pcie_portdriver);
-+		return -EACCES;
+ Example configuration:
  
- 	dmi_check_system(pcie_portdrv_dmi_table);
- 
+-	pcie: pcie@dffff000 {
++	pcie: pcie@dfc00000 {
+ 		compatible = "snps,dw-pcie";
+-		reg = <0xdffff000 0x1000>, /* Controller registers */
+-		      <0xd0000000 0x2000>; /* PCI config space */
+-		reg-names = "ctrlreg", "config";
++		reg = <0xdfc00000 0x302000>, /* IP registers */
++		      <0xd0000000 0x002000>; /* Configuration space */
++		reg-names = "dbi", "config";
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		device_type = "pci";
+@@ -54,5 +55,4 @@ Example configuration:
+ 		interrupts = <25>, <24>;
+ 		#interrupt-cells = <1>;
+ 		num-lanes = <1>;
+-		num-viewport = <3>;
+ 	};
+-- 
+2.7.4
