@@ -1,62 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:50600 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751668AbeCWQrS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Mar 2018 12:47:18 -0400
-Date: Fri, 23 Mar 2018 17:47:16 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-Subject: Re: [PATCH v3]PCI: hv: fix PCI-BUS domainID corruption
-Message-ID: <20180323164716.GA7794@kroah.com>
-References: <C600E28F-E581-431E-9CD4-47C776E8E70F@microsoft.com>
- <20180315120522.GA15651@e107981-ln.cambridge.arm.com>
- <DM5PR21MB0826439DF296763A3FA861C3F6D00@DM5PR21MB0826.namprd21.prod.outlook.com>
- <04DBCCAB-4BA7-4E05-A047-44824995963E@microsoft.com>
- <65B4E847-CC40-4166-BE8F-D44049EDB2FF@microsoft.com>
- <20180320183208.GB24991@e107981-ln.cambridge.arm.com>
- <4E6E5EE3-2EFA-4326-BE14-D5465F5F439F@microsoft.com>
- <20180321162555.GA16028@red-moon>
- <55A0639B-3C54-456D-95C1-829332C024EE@microsoft.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55A0639B-3C54-456D-95C1-829332C024EE@microsoft.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:53906 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750774AbeC1Lur (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Mar 2018 07:50:47 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: kishon@ti.com, cyrille.pitchen@free-electrons.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 03/12] PCI: endpoint: Setting BAR_5 to 64-bits wide is invalid
+Date: Wed, 28 Mar 2018 13:50:08 +0200
+Message-Id: <20180328115018.31921-4-niklas.cassel@axis.com>
+In-Reply-To: <20180328115018.31921-1-niklas.cassel@axis.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 23, 2018 at 04:41:02PM +0000, Sridhar Pitchai wrote:
->     Please read the link I sent you in relation to email formatting.
->     
->     Then add your description above in a way that anyone not 100% familiar
->     with hyperv can understand it - that's what the commit log is for.
->     
->     You are sending this patch to stable kernels, patch above has been in
->     the kernel from v4.14. The patch you are fixing since v4.11, you ought
->     to be careful since you do not want to have broken kernel versions owing
->     to stable patches mismatches, that's why I asked and I will ask again,
->     are you sure you won't trigger a regression by sending this fix to
->     stable ?
->     
->     I assume the bond driver mechanism is now done and dusted.
->     
-> That is correct. I have sent a v4 version of the patch. I am sending this
-> patch for stable kernel. We have tested and I am sure this should not trigger
-> regression by sending this fix to stable.
+Since a 64-bit BAR consists of a BAR pair, and since there is no
+BAR after BAR_5, BAR_5 cannot be 64-bits wide.
 
+This sanity check is done in pci_epc_set_bar(), so that we don't need
+to do this sanity check in all epc->ops->set_bar() implementations.
 
-<formletter>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/endpoint/pci-epc-core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read:
-    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
-for how to do this properly.
-
-</formletter>
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 784e33d6f229..109d75f0b7d2 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -310,7 +310,9 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
+ 	int ret;
+ 	unsigned long irq_flags;
+ 
+-	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
++	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
++	    (epf_bar->barno == BAR_5 &&
++	     epf_bar->flags & PCI_BASE_ADDRESS_MEM_TYPE_64))
+ 		return -EINVAL;
+ 
+ 	if (!epc->ops->set_bar)
+-- 
+2.14.2
