@@ -1,69 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.skidata.com ([91.230.2.99]:16098 "EHLO mail1.skidata.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752294AbeCNPol (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Mar 2018 11:44:41 -0400
-Subject: Re: [PATCH 2/3] usb: host: pci: introduce PCI vendor ID for Netlogic
-To: Oliver Neukum <oneukum@suse.com>, Richard Leitner <dev@g0hl1n.net>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-usb@vger.kernel.org>
-CC: <bhelgaas@google.com>, <mathias.nyman@intel.com>,
-        <gregkh@linuxfoundation.org>
-References: <20180314102933.21367-1-dev@g0hl1n.net>
- <20180314102933.21367-3-dev@g0hl1n.net> <1521029854.4511.12.camel@suse.com>
- <a97cd8ba-3934-dc88-8851-465f0313162b@skidata.com>
- <1521041253.4511.16.camel@suse.com>
-From: Richard Leitner <richard.leitner@skidata.com>
-Message-ID: <377fb9d5-1cc9-7ab8-c965-2fb0a4dc20f3@skidata.com>
-Date: Wed, 14 Mar 2018 16:44:38 +0100
-MIME-Version: 1.0
-In-Reply-To: <1521041253.4511.16.camel@suse.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 8/8] PCI: dwc: Replace magic number by defines
+Date: Wed, 28 Mar 2018 12:38:38 +0100
+Message-Id: <9d3dfc5db7016b6c7d25c7293f70909e9227afd4.1522235224.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Replace magic numbers by a well known define in order to make the code
+human readable and also facilitate the code reusability.
 
-On 03/14/2018 04:27 PM, Oliver Neukum wrote:
-> Am Mittwoch, den 14.03.2018, 14:31 +0100 schrieb Richard Leitner:
->> Hi Oliver,
->> thank you for your feedback!
->>
->> On 03/14/2018 01:17 PM, Oliver Neukum wrote:
->>> Am Mittwoch, den 14.03.2018, 11:29 +0100 schrieb Richard Leitner:
->>>> From: Richard Leitner <richard.leitner@skidata.com>
->>>>
->>>> Replace the hardcoded PCI vendor ID of Netlogic with a definition in
->>>> pci_ids.h
->>>
->>> Hi,
->>>
->>> in general, why?
->>> Does this patch generate any benefit for any developer
->>> reading the source? I don't see it. Does it cause an
->>> issue for anybody who has a log file with the nummerical
->>> ID and needs to grep for it? Yes it does.
->>
->> I'll send a v2 where I also use this definition in 
->> arch/mips/netlogic/xlp/ instead of PCI_VENDOR_NETLOGIC from
->> arch/mips/include/asm/netlogic/xlp-hal/iomap.h.
->>
->> Therefore it will remove this definition from the iomap.h
->> and move it to pci_ids.h
->>
->> This will IMHO be a clear benefit as it removes a redundant
->> definition.
-> 
-> Well, but it does not. Removing a redundant definition is a clear
-> benefit. But you are not removing a definition. You are introducing
-> a preprocessor constant. Why?
-> What is its benefit?
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
+ drivers/pci/dwc/pcie-designware.h      |  1 +
+ 2 files changed, 21 insertions(+), 14 deletions(-)
 
-AFAIK pci_ids.h collects PCI vendor and device IDs in one single 
-point. As the PCI vendor ID of Netlogic is used in multiple files
-IMHO it would be a good idea to add it to pci_ids.h and furthermore
-remove it from arch/mips/include/asm/netlogic/xlp-hal/iomap.h (where
-it's currently defined).
-
-Or am I getting things wrong?
-
-regards;richard.l
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 8e6fed4..ff43b0f 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+ 
+ 	for (i = 0; i < num_ctrls; i++) {
+-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+-				    &val);
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
++					(i * MSI_REG_CTRL_BLOCK_SIZE),
++				    4, &val);
+ 		if (!val)
+ 			continue;
+ 
+ 		ret = IRQ_HANDLED;
+ 		pos = 0;
+-		while ((pos = find_next_bit((unsigned long *) &val, 32,
+-					    pos)) != 32) {
+-			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
++		while ((pos = find_next_bit((unsigned long *) &val,
++					    MAX_MSI_IRQS_PER_CTRL,
++					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
++			irq = irq_find_mapping(pp->irq_domain,
++					       (i * MAX_MSI_IRQS_PER_CTRL) +
++					       pos);
+ 			generic_handle_irq(irq);
+-			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
++			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
++						(i * MSI_REG_CTRL_BLOCK_SIZE),
+ 					    4, 1 << pos);
+ 			pos++;
+ 		}
+@@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
+ 	if (pp->ops->msi_clear_irq) {
+ 		pp->ops->msi_clear_irq(pp, data->hwirq);
+ 	} else {
+-		ctrl = data->hwirq / 32;
+-		res = ctrl * 12;
+-		bit = data->hwirq % 32;
++		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 
+ 		pp->irq_status[ctrl] &= ~(1 << bit);
+ 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+@@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+ 	if (pp->ops->msi_set_irq) {
+ 		pp->ops->msi_set_irq(pp, data->hwirq);
+ 	} else {
+-		ctrl = data->hwirq / 32;
+-		res = ctrl * 12;
+-		bit = data->hwirq % 32;
++		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 
+ 		pp->irq_status[ctrl] |= 1 << bit;
+ 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+@@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 
+ 	/* Initialize IRQ Status array */
+ 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+-				    &pp->irq_status[ctrl]);
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
++					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
++				    4, &pp->irq_status[ctrl]);
+ 
+ 	/* Setup RC BARs */
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index fe811db..bee4e25 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -110,6 +110,7 @@
+ #define MAX_MSI_IRQS			256
+ #define MAX_MSI_IRQS_PER_CTRL		32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
++#define MSI_REG_CTRL_BLOCK_SIZE		12
+ #define MSI_DEF_NUM_VECTORS		32
+ 
+ /* Maximum number of inbound/outbound iATUs */
+-- 
+2.7.4
