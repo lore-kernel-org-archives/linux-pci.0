@@ -1,52 +1,92 @@
-Return-Path: <SRS0=/BSl=GL=gmail.com=valmikibow@kernel.org>
-Return-Path: <SRS0=/BSl=GL=gmail.com=valmikibow@kernel.org>
-Subject: Re: Why two irq chips for MSI
-To: Marc Zyngier <marc.zyngier@arm.com>, linux-pci
- <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <81eb7191-1c5c-ad27-2714-9563e4ef7c68@gmail.com>
- <adf13928-d1da-e8af-5b32-efc199ac6ba9@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-From: valmiki <valmikibow@gmail.com>
-Message-ID: <a0cd800b-f20f-64f3-c3b3-7f0c193c2b16@gmail.com>
-Date: Wed, 21 Mar 2018 23:08:38 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.llwyncelyn.cymru ([82.70.14.225]:51138 "EHLO fuzix.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751058AbeC1X2I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Mar 2018 19:28:08 -0400
+Date: Thu, 29 Mar 2018 00:28:05 +0100
+From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+To: Timothy Normand Miller <theosib@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: HELP PLEASE: Without ugly hacks, no interrupt delivery at all
+ to our driver; 3.10.0 kernel (RHEL7.4) on Intel 82X38/X48 chipset, Shuttle
+ (SX38/FX38, Core 2 Duo)
+Message-ID: <20180329002805.2824f7af@alans-desktop>
+In-Reply-To: <CAK7bmU-P0siz3pD9cHeuKMzK0PHZd4R8XqFDKswVkr4hwZ=-2g@mail.gmail.com>
+References: <CAK7bmU-P0siz3pD9cHeuKMzK0PHZd4R8XqFDKswVkr4hwZ=-2g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <adf13928-d1da-e8af-5b32-efc199ac6ba9@arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 21/03/18 17:12, valmiki wrote:
->> Hi,
->>
->> In most of the RP drivers, why two irq chips are being used for MSI ?
->>
->> One at irq_domain_set_info (which uses irq_compose_msi_msg and
->> irq_set_affinity methods) and another being registered with struct
->> msi_domain_info (which uses irq_mask/irq_unmask methods).
->>
->> When will each chip be used w.r.t to virq ?
->
-> A simple way to think of it is that you have two pieces of HW involved:
-> an end-point that generates an interrupt, and a controller that receives it.
->
-> Transpose this to the kernel view of things: one chip implements the PCI
-> MSI, with the PCI semantics attached to it (how to program the
-> payload/doorbell into the end-point, for example). The other implements
-> the MSI controller part of it, talking to the HW that deals with the
-> interrupt.
->
-> Does it makes sense? Admittedly, this is not always that simple, but
-> that the general approach.
->
-Thanks Marc. Yes got a good picture now.
-So the one which implements PCI semantics has irq_set_affinity, which is 
-being invoked at request_irq. Why most of the drivers have this as dummy 
-with return 0 ?
-Does setting affinity to MSI needs any support from GIC?
-Setting affinity can be achieved only with hardware support ?
+> I suspect a large part of the problem is that our device isn't really
+> a PCIe device.  It's a PCI device retrofitted with a TI
+> XIO2000(A)/XIO2200A PCI Express-to-PCI Bridge.  Large numbers of this
 
-Valmiki
+That really shouldn't be an issue. Just about every PC up to a few years
+ago has something that at least looks like a PCIe to PCI bridge on it
+somewhere (or buried in the chipset) to handle the PCI slots. There are
+also a vast number of older PCIe cards that are in fact PCI devices glued
+to PCIe x1 this way (or by worse things) in the market.
 
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+..
+
+> The next thing I notice is that all of a sudden, the interrupt line
+> for our chip has changed:
+> 
+> 02:00.0 Display controller: Tech-Source Device 0043
+>         Subsystem: Tech-Source Device 0043
+>         Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
+> ParErr- Stepping- SERR- FastB2B+ DisINTx-
+>         Status: Cap- 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium
+> >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-  
+>         Interrupt: pin A routed to IRQ 16
+> 
+> Some more debug messages later, and I find out that it was
+> pci_enable_device that changed the IRQ line:
+
+Yes it can do that.
+
+> So, the pci_dev struct has had irq updated to 16, and lspci reports
+> that the IRQ line has been updated to 16 in the hardware.  So why is
+> it that when I read PCI config space directly, I get the old value?
+> In fact, lspci is apparently LYING about this!  Here's what I get from
+> a raw dump of PCI config space:
+
+The hardware generates INTA-INTD, your bridge should turn those into the
+in band PCIe messages for INTA-INTD. The IRQ 'number' is just a
+configuration construct, and in fact it's very much a *PC* BIOS one.
+
+However pci_assign_irq does always update the INTERRUPT_LINE register
+because it has to do so for certain 'fake PCI' environments (like some
+old VIA chipsets) where the INTERRUPT_LINE is used for IRQ routing magic
+internally.
+
+Anyway it shouldn't matter!
+
+> long after booting.  There seems to be a global function pointer
+> pcibios_enable_irq that is called from pcibios_enable_device.  And
+> this brings me to the question as to what is the difference between
+> pci_ calls and pcibios_ calls.  One thing I can see is that
+
+Armwavingly 'generic' vs 'platform specific'. If you look at a modern
+kernel you'll find pci_assign_irq deals with all of this and does update
+the LINE register. 3.10 is five years old (I actually had hair when it
+came out) so this is really the wrong place to worry about ancient
+computing history.
+
+> In the Documention on PCI, it mentions using pci_enable_msi and
+> pci_enable_msix calls.  That and other text makes it pretty clear that
+> INTx interrupts are the *default*, and MSI has to be enabled
+
+Yes.
+
+> explicitly.  Looking at do_pci_enable_device, if msi and msix are
+> disabled, then it will clear PCI_COMMAND_INTX_DISABLE on the device,
+> but it doesn't ascend the bridge hierarchy fixing those too.
+
+Do you see the same problem with a current 4.x kernel ? If you then it's
+definitely worth further discussion (and I've added linux-pci to the cc),
+if it works fine in 4.14, then I'd stick your hack in the Red Hat driver,
+and remember its not something anyone is too likely to fix there.
+
+Alan
