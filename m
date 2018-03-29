@@ -1,52 +1,83 @@
-Return-Path: <SRS0=kB6D=FX=redhat.com=jglisse@kernel.org>
-Return-Path: <SRS0=kB6D=FX=redhat.com=jglisse@kernel.org>
-Date: Thu, 1 Mar 2018 16:35:33 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Keith Busch <keith.busch@intel.com>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgg@mellanox.com>,
-	Max Gurtovoy <maxg@mellanox.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v2 04/10] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Message-ID: <20180301213533.GE6742@redhat.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-5-logang@deltatee.com>
- <20180301180257.GH13722@bhelgaas-glaptop.roam.corp.google.com>
- <0D05579B-789C-4A19-B3A2-C1A630BE31C0@raithlin.com>
- <20180301142155.5966c4c0@w520.home>
- <EE1B4EB7-D3C0-4916-81CE-E647222D03E4@raithlin.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:60475 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750735AbeC2LBZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 07:01:25 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: move pcie_pme_root_status_cleanup into SUSPEND section
+Date: Thu, 29 Mar 2018 13:01:42 +0200
+Message-ID: <8350395.vIT3VM8fAC@aspire.rjw.lan>
+In-Reply-To: <20180328134747.2062348-1-arnd@arndb.de>
+References: <20180328134747.2062348-1-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <EE1B4EB7-D3C0-4916-81CE-E647222D03E4@raithlin.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 01, 2018 at 09:32:20PM +0000, Stephen  Bates wrote:
-> > your kernel provider needs to decide whether they favor device assignment or p2p
+On Wednesday, March 28, 2018 3:47:18 PM CEST Arnd Bergmann wrote:
+> The power management code in pci-driver.c is a maze of #ifdefs, and
+> the newly added pcie_pme_root_status_cleanup function ended up in the
+> wrong one of them, causing a harmless warning in some configurations:
 > 
-> Thanks Alex! The hardware requirements for P2P (switch, high performance EPs) are such that we really only expect CONFIG_P2P_DMA to be enabled in specific instances and in those instances the users have made a decision to favor P2P over IOMMU isolation. Or they have setup their PCIe topology in a way that gives them IOMMU isolation where they want it and P2P where they want it.
+> drivers/pci/pci-driver.c:527:13: error: 'pcie_pme_root_status_cleanup' defined but not used [-Werror=unused-function]
+>  static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
+>              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
 > 
+> This moves the definition into the correct #ifdef section.
+> 
+> Fixes: 6c4dfc1389e1 ("PCI/PM: Clear PCIe PME Status bit in core, not PCIe port driver")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/pci/pci-driver.c | 25 ++++++++++++-------------
+>  1 file changed, 12 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index b9bca74e9eff..6ace47099fc5 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -524,19 +524,6 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+>  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+>  }
+>  
+> -static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
+> -{
+> -	/*
+> -	 * Some BIOSes forget to clear Root PME Status bits after system
+> -	 * wakeup, which breaks ACPI-based runtime wakeup on PCI Express.
+> -	 * Clear those bits now just in case (shouldn't hurt).
+> -	 */
+> -	if (pci_is_pcie(pci_dev) &&
+> -	    (pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT ||
+> -	     pci_pcie_type(pci_dev) == PCI_EXP_TYPE_RC_EC))
+> -		pcie_clear_root_pme_status(pci_dev);
+> -}
+> -
+>  /*
+>   * Default "suspend" method for devices that have no driver provided suspend,
+>   * or not even a driver at all (second part).
+> @@ -726,6 +713,18 @@ static void pci_pm_complete(struct device *dev)
+>  #endif /* !CONFIG_PM_SLEEP */
+>  
+>  #ifdef CONFIG_SUSPEND
+> +static void pcie_pme_root_status_cleanup(struct pci_dev *pci_dev)
+> +{
+> +	/*
+> +	 * Some BIOSes forget to clear Root PME Status bits after system
+> +	 * wakeup, which breaks ACPI-based runtime wakeup on PCI Express.
+> +	 * Clear those bits now just in case (shouldn't hurt).
+> +	 */
+> +	if (pci_is_pcie(pci_dev) &&
+> +	    (pci_pcie_type(pci_dev) == PCI_EXP_TYPE_ROOT_PORT ||
+> +	     pci_pcie_type(pci_dev) == PCI_EXP_TYPE_RC_EC))
+> +		pcie_clear_root_pme_status(pci_dev);
+> +}
+>  
+>  static int pci_pm_suspend(struct device *dev)
+>  {
 > 
 
-Note that they are usecase for P2P where IOMMU isolation matter and
-the traffic through root complex isn't see as an issue. For instance
-for GPU the idea is that you want to allow the RDMA device to directly
-read or write from GPU memory to avoid having to migrate memory to
-system memory. This isn't so much for performance than for ease of
-use.
-
-Cheers,
-Jérôme
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
