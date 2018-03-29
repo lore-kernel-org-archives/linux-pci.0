@@ -1,122 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40808 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753777AbeCUVhX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Mar 2018 17:37:23 -0400
-Date: Wed, 21 Mar 2018 16:37:21 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jay Fang <f.fangjian@huawei.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Support PCIe 4.0 data rate(16.0 GT/s)
-Message-ID: <20180321213721.GG38649@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520846012-8294-1-git-send-email-f.fangjian@huawei.com>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:25285 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752254AbeC2Jkl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 05:40:41 -0400
+Subject: Re: [PATCH v5 03/12] PCI: endpoint: Setting BAR_5 to 64-bits wide is
+ invalid
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        <cyrille.pitchen@free-electrons.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+ <20180328115018.31921-4-niklas.cassel@axis.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <8a247d0e-73ff-8524-4939-e0e444ff206e@ti.com>
+Date: Thu, 29 Mar 2018 15:10:29 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1520846012-8294-1-git-send-email-f.fangjian@huawei.com>
+In-Reply-To: <20180328115018.31921-4-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 05:13:32PM +0800, Jay Fang wrote:
-> PCIe 4.0 provides an effective 16.0 GT/second/lane/direction of raw
-> bandwidth. Current PCI driver does not support this new feature.
-> For example, when you read a PCIe 4.0 EP's link data rate by sysfs, it
-> will return "Unknown speed", not the expected "16.0 GT/s".
+
+
+On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
+> Since a 64-bit BAR consists of a BAR pair, and since there is no
+> BAR after BAR_5, BAR_5 cannot be 64-bits wide.
 > 
-> Signed-off-by: Jay Fang <f.fangjian@huawei.com>
-> Reviewed-by: Dongdong Liu <liudongdong3@huawei.com>
-
-Applied to pci/enumeration for v4.17, thanks!
-
+> This sanity check is done in pci_epc_set_bar(), so that we don't need
+> to do this sanity check in all epc->ops->set_bar() implementations.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 > ---
->  drivers/pci/pci-sysfs.c       | 6 ++++++
->  drivers/pci/probe.c           | 2 +-
->  drivers/pci/slot.c            | 1 +
->  include/linux/pci.h           | 1 +
->  include/uapi/linux/pci_regs.h | 2 ++
->  5 files changed, 11 insertions(+), 1 deletion(-)
+>  drivers/pci/endpoint/pci-epc-core.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index eb6bee8..7dc5be5 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -168,6 +168,9 @@ static ssize_t max_link_speed_show(struct device *dev,
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 784e33d6f229..109d75f0b7d2 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -310,7 +310,9 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
+>  	int ret;
+>  	unsigned long irq_flags;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
+> +	    (epf_bar->barno == BAR_5 &&
+> +	     epf_bar->flags & PCI_BASE_ADDRESS_MEM_TYPE_64))
 >  		return -EINVAL;
+
+It's getting a bit lengthy. I'd prefer two separate ifs as that might be
+legible. But otherwise
+
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 >  
->  	switch (linkcap & PCI_EXP_LNKCAP_SLS) {
-> +	case PCI_EXP_LNKCAP_SLS_16_0GB:
-> +		speed = "16 GT/s";
-> +		break;
->  	case PCI_EXP_LNKCAP_SLS_8_0GB:
->  		speed = "8 GT/s";
->  		break;
-> @@ -213,6 +216,9 @@ static ssize_t current_link_speed_show(struct device *dev,
->  		return -EINVAL;
->  
->  	switch (linkstat & PCI_EXP_LNKSTA_CLS) {
-> +	case PCI_EXP_LNKSTA_CLS_16_0GB:
-> +		speed = "16 GT/s";
-> +		break;
->  	case PCI_EXP_LNKSTA_CLS_8_0GB:
->  		speed = "8 GT/s";
->  		break;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ef53774..86bf045 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -592,7 +592,7 @@ const unsigned char pcie_link_speed[] = {
->  	PCIE_SPEED_2_5GT,		/* 1 */
->  	PCIE_SPEED_5_0GT,		/* 2 */
->  	PCIE_SPEED_8_0GT,		/* 3 */
-> -	PCI_SPEED_UNKNOWN,		/* 4 */
-> +	PCIE_SPEED_16_0GT,		/* 4 */
->  	PCI_SPEED_UNKNOWN,		/* 5 */
->  	PCI_SPEED_UNKNOWN,		/* 6 */
->  	PCI_SPEED_UNKNOWN,		/* 7 */
-> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-> index d10f556..191893e 100644
-> --- a/drivers/pci/slot.c
-> +++ b/drivers/pci/slot.c
-> @@ -76,6 +76,7 @@ static const char *pci_bus_speed_strings[] = {
->  	"2.5 GT/s PCIe",	/* 0x14 */
->  	"5.0 GT/s PCIe",	/* 0x15 */
->  	"8.0 GT/s PCIe",	/* 0x16 */
-> +	"16.0 GT/s PCIe",	/* 0x17 */
->  };
->  
->  static ssize_t bus_speed_read(enum pci_bus_speed speed, char *buf)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5adabe2..44ce439 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -259,6 +259,7 @@ enum pci_bus_speed {
->  	PCIE_SPEED_2_5GT		= 0x14,
->  	PCIE_SPEED_5_0GT		= 0x15,
->  	PCIE_SPEED_8_0GT		= 0x16,
-> +	PCIE_SPEED_16_0GT		= 0x17,
->  	PCI_SPEED_UNKNOWN		= 0xff,
->  };
->  
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 0c79eac..c1c4109 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -520,6 +520,7 @@
->  #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
->  #define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
->  #define  PCI_EXP_LNKCAP_SLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
-> +#define  PCI_EXP_LNKCAP_SLS_16_0GB 0x00000004 /* LNKCAP2 SLS Vector bit 3 */
->  #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
->  #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
->  #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
-> @@ -547,6 +548,7 @@
->  #define  PCI_EXP_LNKSTA_CLS_2_5GB 0x0001 /* Current Link Speed 2.5GT/s */
->  #define  PCI_EXP_LNKSTA_CLS_5_0GB 0x0002 /* Current Link Speed 5.0GT/s */
->  #define  PCI_EXP_LNKSTA_CLS_8_0GB 0x0003 /* Current Link Speed 8.0GT/s */
-> +#define  PCI_EXP_LNKSTA_CLS_16_0GB 0x0004 /* Current Link Speed 16.0GT/s */
->  #define  PCI_EXP_LNKSTA_NLW	0x03f0	/* Negotiated Link Width */
->  #define  PCI_EXP_LNKSTA_NLW_X1	0x0010	/* Current Link Width x1 */
->  #define  PCI_EXP_LNKSTA_NLW_X2	0x0020	/* Current Link Width x2 */
-> -- 
-> 2.7.4
+>  	if (!epc->ops->set_bar)
 > 
