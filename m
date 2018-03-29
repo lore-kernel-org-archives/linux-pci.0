@@ -1,76 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50504 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033679AbeCASC0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 13:02:26 -0500
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jean Delvare <jdelvare@suse.de>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 1/4] firmware: dmi_scan: Introduce the dmi_get_bios_year() helper
-Date: Thu,  1 Mar 2018 20:02:17 +0200
-Message-Id: <20180301180220.11333-2-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
-References: <20180301180220.11333-1-andriy.shevchenko@linux.intel.com>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:43907 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750820AbeC2Jmx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 05:42:53 -0400
+Subject: Re: [PATCH v5 05/12] PCI: endpoint: Setting a BAR size > 4 GB is
+ invalid if 64-bit flag is not set
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        <cyrille.pitchen@free-electrons.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+ <20180328115018.31921-6-niklas.cassel@axis.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <71061f04-ab50-10d5-4e88-dadbe8fdbc5c@ti.com>
+Date: Thu, 29 Mar 2018 15:12:41 +0530
+MIME-Version: 1.0
+In-Reply-To: <20180328115018.31921-6-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pattern to only extract the year portion of date is used in
-several places and more users may come.
 
-By using this helper they may create slightly cleaner code.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/firmware/dmi_scan.c | 11 +++++++++++
- include/linux/dmi.h         |  2 ++
- 2 files changed, 13 insertions(+)
+On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
+> Setting a BAR size > 4 GB is invalid if PCI_BASE_ADDRESS_MEM_TYPE_64
+> flag is not set.
+> 
+> This sanity check is done in pci_epc_set_bar(), so that we don't need
+> to do this sanity check in all epc->ops->set_bar() implementations.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 
-diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
-index 6ce299926196..616ec17cc802 100644
---- a/drivers/firmware/dmi_scan.c
-+++ b/drivers/firmware/dmi_scan.c
-@@ -1015,6 +1015,17 @@ bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
- }
- EXPORT_SYMBOL(dmi_get_date);
- 
-+int dmi_get_bios_year(void)
-+{
-+	bool exists;
-+	int year;
-+
-+	exists = dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL);
-+
-+	return exists ? year : -ENODATA;
-+}
-+EXPORT_SYMBOL(dmi_get_bios_year);
-+
- /**
-  *	dmi_walk - Walk the DMI table and get called back for every record
-  *	@decode: Callback function
-diff --git a/include/linux/dmi.h b/include/linux/dmi.h
-index 46e151172d95..6a86d8db16d9 100644
---- a/include/linux/dmi.h
-+++ b/include/linux/dmi.h
-@@ -106,6 +106,7 @@ extern void dmi_scan_machine(void);
- extern void dmi_memdev_walk(void);
- extern void dmi_set_dump_stack_arch_desc(void);
- extern bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp);
-+extern int dmi_get_bios_year(void);
- extern int dmi_name_in_vendors(const char *str);
- extern int dmi_name_in_serial(const char *str);
- extern int dmi_available;
-@@ -133,6 +134,7 @@ static inline bool dmi_get_date(int field, int *yearp, int *monthp, int *dayp)
- 		*dayp = 0;
- 	return false;
- }
-+static inline int dmi_get_bios_year(void) { return -ENXIO; }
- static inline int dmi_name_in_vendors(const char *s) { return 0; }
- static inline int dmi_name_in_serial(const char *s) { return 0; }
- #define dmi_available 0
--- 
-2.16.1
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/endpoint/pci-epc-core.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 40eea20d21f9..8637822605ff 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -315,7 +315,9 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no,
+>  	    (epf_bar->barno == BAR_5 &&
+>  	     flags & PCI_BASE_ADDRESS_MEM_TYPE_64) ||
+>  	    (flags & PCI_BASE_ADDRESS_SPACE_IO &&
+> -	     flags & PCI_BASE_ADDRESS_IO_MASK))
+> +	     flags & PCI_BASE_ADDRESS_IO_MASK) ||
+> +	    (upper_32_bits(epf_bar->size) &&
+> +	     !(flags & PCI_BASE_ADDRESS_MEM_TYPE_64)))
+>  		return -EINVAL;
+>  
+>  	if (!epc->ops->set_bar)
+> 
