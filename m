@@ -1,97 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:38504 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751370AbeCNKsX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Mar 2018 06:48:23 -0400
-Date: Wed, 14 Mar 2018 11:48:21 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Richard Leitner <dev@g0hl1n.net>
-Cc: linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, mathias.nyman@intel.com,
-        bhelgaas@google.com, richard.leitner@skidata.com
-Subject: Re: [PATCH 1/3] usb: host: pci: use existing Intel PCI ID macros
-Message-ID: <20180314104821.GA32615@kroah.com>
-References: <20180314102933.21367-1-dev@g0hl1n.net>
- <20180314102933.21367-2-dev@g0hl1n.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180314102933.21367-2-dev@g0hl1n.net>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:44042 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751210AbeC2SWs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 14:22:48 -0400
+Received: by mail-pf0-f196.google.com with SMTP id m68so3792218pfm.11
+        for <linux-pci@vger.kernel.org>; Thu, 29 Mar 2018 11:22:48 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        Sathya Perla <sathya.perla@broadcom.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        alexander.duyck@gmail.com, john.fastabend@gmail.com,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Donald Dutile <ddutile@redhat.com>, oss-drivers@netronome.com,
+        Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCH] PCI: allow drivers to limit the number of VFs to 0
+Date: Thu, 29 Mar 2018 11:22:31 -0700
+Message-Id: <20180329182231.32151-1-jakub.kicinski@netronome.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 11:29:31AM +0100, Richard Leitner wrote:
-> From: Richard Leitner <richard.leitner@skidata.com>
-> 
-> Instead of the hardcoded hexadecimal PCI IDs use the existing macros
-> from pci_ids.h for Intel IDs.
+Some user space depends on driver allowing sriov_totalvfs to be
+enabled.  For devices which VF support depends on loaded FW we
+have the pci_sriov_{g,s}et_totalvfs() API.  However, this API
+uses 0 as a special "unset" value, meaning drivers can't limit
+sriov_totalvfs to 0.  Change the special value to be U16_MAX.
+Use simple min() to determine actual totalvfs.
 
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+---
+ drivers/net/ethernet/netronome/nfp/nfp_main.c | 6 +++---
+ drivers/pci/iov.c                             | 6 ++----
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
-You also did something else in this patch, yet failed to mention it
-here:
-
-> Signed-off-by: Richard Leitner <richard.leitner@skidata.com>
-> ---
->  drivers/usb/host/pci-quirks.c | 10 +++++-----
->  drivers/usb/host/xhci-pci.c   |  3 ++-
->  include/linux/pci_ids.h       |  1 +
->  3 files changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
-> index 67ad4bb6919a..4f4a9f36a68e 100644
-> --- a/drivers/usb/host/pci-quirks.c
-> +++ b/drivers/usb/host/pci-quirks.c
-> @@ -858,8 +858,8 @@ static void ehci_bios_handoff(struct pci_dev *pdev,
->  	 *
->  	 * The HASEE E200 hangs when the semaphore is set (bugzilla #77021).
->  	 */
-> -	if (pdev->vendor == 0x8086 && (pdev->device == 0x283a ||
-> -			pdev->device == 0x27cc)) {
-> +	if (pdev->vendor == PCI_VENDOR_ID_INTEL &&
-> +	    (pdev->device == 0x283a || pdev->device == 0x27cc)) {
->  		if (dmi_check_system(ehci_dmi_nohandoff_table))
->  			try_handoff = 0;
->  	}
-> @@ -1168,9 +1168,9 @@ static void quirk_usb_handoff_xhci(struct pci_dev *pdev)
->  	val = readl(base + ext_cap_offset);
->  
->  	/* Auto handoff never worked for these devices. Force it and continue */
-> -	if ((pdev->vendor == PCI_VENDOR_ID_TI && pdev->device == 0x8241) ||
-> -			(pdev->vendor == PCI_VENDOR_ID_RENESAS
-> -			 && pdev->device == 0x0014)) {
-> +	if ((pdev->vendor == PCI_VENDOR_ID_TI &&
-> +	     pdev->device == PCI_DEVICE_ID_TI_TUSB73X0) ||
-> +	    (pdev->vendor == PCI_VENDOR_ID_RENESAS && pdev->device == 0x0014)) {
->  		val = (val | XHCI_HC_OS_OWNED) & ~XHCI_HC_BIOS_OWNED;
->  		writel(val, base + ext_cap_offset);
->  	}
-> diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-> index 5262fa571a5d..a5bfd890190c 100644
-> --- a/drivers/usb/host/xhci-pci.c
-> +++ b/drivers/usb/host/xhci-pci.c
-> @@ -213,7 +213,8 @@ static void xhci_pci_quirks(struct device *dev, struct xhci_hcd *xhci)
->  		pdev->device == PCI_DEVICE_ID_ASMEDIA_1042A_XHCI)
->  		xhci->quirks |= XHCI_ASMEDIA_MODIFY_FLOWCONTROL;
->  
-> -	if (pdev->vendor == PCI_VENDOR_ID_TI && pdev->device == 0x8241)
-> +	if (pdev->vendor == PCI_VENDOR_ID_TI &&
-> +	    pdev->device == PCI_DEVICE_ID_TI_TUSB73X0)
->  		xhci->quirks |= XHCI_LIMIT_ENDPOINT_INTERVAL_7;
->  
->  	if (xhci->quirks & XHCI_RESET_ON_RESUME)
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index a6b30667a331..e8d1af82a688 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -838,6 +838,7 @@
->  #define PCI_DEVICE_ID_TI_XX12		0x8039
->  #define PCI_DEVICE_ID_TI_XX12_FM	0x803b
->  #define PCI_DEVICE_ID_TI_XIO2000A	0x8231
-> +#define PCI_DEVICE_ID_TI_TUSB73X0	0x8241
-
-You shared a TI device id.
-
-Please break this up into 2 patches.
-
-thanks,
-
-greg k-h
+diff --git a/drivers/net/ethernet/netronome/nfp/nfp_main.c b/drivers/net/ethernet/netronome/nfp/nfp_main.c
+index c4b1f344b4da..dcd6e208a155 100644
+--- a/drivers/net/ethernet/netronome/nfp/nfp_main.c
++++ b/drivers/net/ethernet/netronome/nfp/nfp_main.c
+@@ -123,7 +123,7 @@ static int nfp_pcie_sriov_read_nfd_limit(struct nfp_pf *pf)
+ 		return pci_sriov_set_totalvfs(pf->pdev, pf->limit_vfs);
+ 
+ 	pf->limit_vfs = ~0;
+-	pci_sriov_set_totalvfs(pf->pdev, 0); /* 0 is unset */
++	pci_sriov_set_totalvfs(pf->pdev, ~0);
+ 	/* Allow any setting for backwards compatibility if symbol not found */
+ 	if (err == -ENOENT)
+ 		return 0;
+@@ -537,7 +537,7 @@ static int nfp_pci_probe(struct pci_dev *pdev,
+ err_net_remove:
+ 	nfp_net_pci_remove(pf);
+ err_sriov_unlimit:
+-	pci_sriov_set_totalvfs(pf->pdev, 0);
++	pci_sriov_set_totalvfs(pf->pdev, ~0);
+ err_fw_unload:
+ 	kfree(pf->rtbl);
+ 	nfp_mip_close(pf->mip);
+@@ -570,7 +570,7 @@ static void nfp_pci_remove(struct pci_dev *pdev)
+ 	nfp_hwmon_unregister(pf);
+ 
+ 	nfp_pcie_sriov_disable(pdev);
+-	pci_sriov_set_totalvfs(pf->pdev, 0);
++	pci_sriov_set_totalvfs(pf->pdev, ~0);
+ 
+ 	nfp_net_pci_remove(pf);
+ 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 677924ae0350..aa3dfe3ecd68 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -446,6 +446,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
+ 	iov->pgsz = pgsz;
+ 	iov->self = dev;
++	iov->driver_max_VFs = U16_MAX;
+ 	iov->drivers_autoprobe = true;
+ 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+ 	pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
+@@ -801,9 +802,6 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ 	if (!dev->is_physfn)
+ 		return 0;
+ 
+-	if (dev->sriov->driver_max_VFs)
+-		return dev->sriov->driver_max_VFs;
+-
+-	return dev->sriov->total_VFs;
++	return min(dev->sriov->total_VFs, dev->sriov->driver_max_VFs);
+ }
+ EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+-- 
+2.16.2
