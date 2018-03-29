@@ -1,258 +1,370 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Jonathan Corbet <corbet@lwn.net>
-Date: Mon, 12 Mar 2018 13:35:19 -0600
-Message-Id: <20180312193525.2855-6-logang@deltatee.com>
-In-Reply-To: <20180312193525.2855-1-logang@deltatee.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
-Subject: [PATCH v3 05/11] PCI/P2PDMA: Add P2P DMA driver writer's documentation
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=DJs5=GT=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=DJs5=GT=linux.intel.com=mika.westerberg@kernel.org>
+Date: Thu, 29 Mar 2018 14:59:11 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <yehezkel.bernat@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
+ bus number
+Message-ID: <20180329115911.GN2703@lahna.fi.intel.com>
+References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+ <20180226132112.81447-2-mika.westerberg@linux.intel.com>
+ <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180328114346.GZ2703@lahna.fi.intel.com>
+ <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a restructured text file describing how to write drivers
-with support for P2P DMA transactions. The document describes
-how to use the APIs that were added in the previous few
-commits.
+On Wed, Mar 28, 2018 at 01:09:06PM -0500, Bjorn Helgaas wrote:
+> On Wed, Mar 28, 2018 at 02:43:46PM +0300, Mika Westerberg wrote:
+> > On Tue, Mar 27, 2018 at 01:57:42PM -0500, Bjorn Helgaas wrote:
+> > > On Mon, Feb 26, 2018 at 04:21:08PM +0300, Mika Westerberg wrote:
+> > > > When distributing extra buses between hotplug bridges we need to make
+> > > > sure each bridge reserve at least one bus number, even if there is
+> > > > currently nothing connected to it. For instance ACPI hotplug may bring
+> > > > in additional devices to non-hotplug bridges later on.
+> > > 
+> > > I guess you mean ACPI hotplug can add devices below bridges that have
+> > > "bridge->is_hotplug_bridge == 0"?  Why don't we set is_hotplug_bridge
+> > > in that case?  I do see that acpiphp sets it in *some* cases (see
+> > > check_hotplug_bridge()).  Are we missing some case?
+> > 
+> > We don't know upfront that these ports are going to get devices below
+> > them. Only thing that happens in these cases is that we may get ACPI
+> > Notify() to the root port leading to these ports.
+> 
+> Right, it makes sense that we can't tell in advance which devices
+> might receive ACPI Notify() events.
+> 
+> We set "is_hotplug_bridge" in these cases:
+> 
+>   1. PCIe bridge with PCI_EXP_SLTCAP_HPC (hot-plug capable) bit set.
+> 
+>      Possibly this could be conditional on CONFIG_HOTPLUG_PCI_PCIE
+>      because we can't really handle hotplug anyway if that's not set.
+>      The "manual hotplug" scenario where the user initiates a rescan
+>      with /sys/bus/pci/rescan or similar might suffer resource
+>      problems, but that's sort of a corner case that doesn't feel
+>      super important to me.
+> 
+>   2. acpiphp in check_hotplug_bridge().  bbd34fcdd1b2 ("ACPI / hotplug
+>      / PCI: Register all devices under the given bridge") suggests
+>      that we treat "all PCI bridges represented in the ACPI namespace
+>      are now considered 'hotplug' bridges".  I guess this basically a
+>      hint that hotplug is more likely if we have ACPI objects and
+>      possibly things like _RMV, _EJx, etc.
+> 
+>   3. The PLX 6254/HINT HB6 quirk, which I think we can disregard.
+> 
+> > Also the allocation strategy we use is based on ->is_hotplug_bridge
+> > == 1.  Those bridges will be assigned all the remaining bus space
+> > and resources. If we somehow set ->is_hotplug_bridge == 1 for these
+> > non-hotplug ports it means that we now include those ports also when
+> > resources are distributed which defeats the reason why ACPI Notify()
+> > is used there in the first place (to preserve bus numbers).
+> 
+> So as a general rule, can we say that we currently distribute
+> resources across bridges that have PCI_EXP_SLTCAP_HPC or are described
+> in the ACPI namespace, and we don't reserve anything for other
+> bridges?
 
-Also adds an index for the PCI documentation tree even though this
-is the only PCI document that has ben converted to restructured text
-at this time.
+More like, we distribute remaining resources to downstream bridges if
+they have is_hotplug_bridge == 1 (PCI_EXP_SLTCAP_HPC) and need to be
+reconfigured (i.e we don't do any resource allocation if the bridge is
+already configured by the BIOS).
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jonathan Corbet <corbet@lwn.net>
----
- Documentation/PCI/index.rst  |  14 ++++
- Documentation/PCI/p2pdma.rst | 164 +++++++++++++++++++++++++++++++++++++++++++
- Documentation/index.rst      |   3 +-
- 3 files changed, 180 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/PCI/index.rst
- create mode 100644 Documentation/PCI/p2pdma.rst
+For other bridges, we only reserve the amount of resources they need for
+the devices below them.
 
-diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-new file mode 100644
-index 000000000000..2fdc4b3c291d
---- /dev/null
-+++ b/Documentation/PCI/index.rst
-@@ -0,0 +1,14 @@
-+==================================
-+Linux PCI Driver Developer's Guide
-+==================================
-+
-+.. toctree::
-+
-+   p2pdma
-+
-+.. only::  subproject and html
-+
-+   Indices
-+   =======
-+
-+   * :ref:`genindex`
-diff --git a/Documentation/PCI/p2pdma.rst b/Documentation/PCI/p2pdma.rst
-new file mode 100644
-index 000000000000..d7edd48a3941
---- /dev/null
-+++ b/Documentation/PCI/p2pdma.rst
-@@ -0,0 +1,164 @@
-+============================
-+PCI Peer-to-Peer DMA Support
-+============================
-+
-+The PCI bus has pretty decent support for performing DMA transfers
-+between two endpoints on the bus. This type of transaction is
-+henceforth called Peer-to-Peer (or P2P). However, there are a number of
-+issues that make P2P transactions tricky to do in a perfectly safe way.
-+
-+One of the biggest issues is that PCI Root Complexes are not required
-+to support forwarding packets between Root Ports. To make things worse,
-+there is no simple way to determine if a given Root Complex supports
-+this or not. (See PCIe r4.0, sec 1.3.1). Therefore, as of this writing,
-+the kernel only supports doing P2P when the endpoints involved are all
-+behind a PCIe Switch as this guarantees the packets will always be routable.
-+
-+The second issue is that to make use of existing interfaces in Linux,
-+memory that is used for P2P transactions needs to be backed by struct
-+pages. However, PCI BARs are not typically cache coherent so there are
-+a few corner case gotchas with these pages so developers need to
-+be careful about what they do with them.
-+
-+
-+Driver Writer's Guide
-+====================
-+
-+In a given P2P implementation there may be three or more different
-+types of kernel drivers in play:
-+
-+* Providers - A driver which provides or publishes P2P resources like
-+  memory or doorbell registers to other drivers.
-+* Clients - A driver which makes use of a resource by setting up a
-+  DMA transaction to it.
-+* Orchestrators - A driver which orchestrates the flow of data between
-+  clients and providers
-+
-+In many cases there could be overlap between these three types (ie.
-+it may be typical for a driver to be both a provider and a client).
-+
-+For example, in the NVMe Target Copy Offload implementation:
-+
-+* The NVMe PCI driver is both a client, provider and orchestrator
-+  in that it exposes any CMB (Controller Memory Buffer) as a P2P memory
-+  resource (provider), it accepts P2P memory pages as buffers in requests
-+  to be used directly (client) and it can also make use the CMB as
-+  submission queue entries.
-+* The RDMA driver is a client in this arrangement so that an RNIC
-+  can DMA directly to the memory exposed by the NVME device.
-+* The NVMe Target driver (nvmet) can orchestrate the data from the RNIC
-+  to the P2P memory (CMB) and then to the NVMe device (and vice versa).
-+
-+This is currently the only arrangement supported by the kernel but
-+one could imagine slight tweaks to this that would allow for the same
-+functionality. For example, if a specific RNIC added a BAR with some
-+memory behind it, its driver could add support as a P2P provider and
-+then the NVMe Target could use the RNIC's memory instead of the CMB
-+in cases where the NVMe cards in use do not have CMB support.
-+
-+
-+Provider Drivers
-+----------------
-+
-+A provider simply needs to register a BAR (or a portion of a BAR)
-+as a P2P DMA resource using :c:func:`pci_p2pdma_add_resource()`.
-+This will register struct pages for all the specified memory.
-+
-+After that it may optionally publish all of its resources as
-+P2P memory using :c:func:`pci_p2pmem_publish()`. This will allow
-+any orchestrator drivers to find and use the memory. When marked in
-+this way, the resource must be regular memory with no side effects.
-+
-+For the time being this is fairly rudimentary in that all resources
-+are typically going to be P2P memory. Future work will likely expand
-+this to include other types of resources like doorbells.
-+
-+
-+Client Drivers
-+--------------
-+
-+A client driver typically only has to conditionally change its DMA map
-+routine to use the mapping functions :c:func:`pci_p2pdma_map_sg()` and
-+:c:func:`pci_p2pdma_unmap_sg()` instead of the usual :c:func:`dma_map_sg()`
-+functions.
-+
-+The client may also, optionally, make use of
-+:c:func:`is_pci_p2pdma_page()` to determine when to use the P2P mapping
-+functions and when to use the regular mapping functions. In some
-+situations, it may be more appropriate to use a flag to indicate a
-+given request is P2P memory and map appropriately (for example the
-+block layer uses a flag to keep P2P memory out of queues that do not
-+have P2P client support). It is important to ensure that struct pages that
-+back P2P memory stay out of code that does not have support for them.
-+
-+
-+Orchestrator Drivers
-+--------------------
-+
-+The first task an orchestrator driver must do is compile a list of
-+all client drivers that will be involved in a given transaction. For
-+example, the NVMe Target driver creates a list including all NVMe drives
-+and the RNIC in use. The list is stored as an anonymous struct
-+list_head which must be initialized with the usual INIT_LIST_HEAD.
-+The following functions may then be used to add to, remove from and free
-+the list of clients with the functions :c:func:`pci_p2pdma_add_client()`,
-+:c:func:`pci_p2pdma_remove_client()` and
-+:c:func:`pci_p2pdma_client_list_free()`.
-+
-+With the client list in hand, the orchestrator may then call
-+:c:func:`pci_p2pmem_find()` to obtain a published P2P memory provider
-+that is supported (behind the same switch) as all the clients. If more
-+than one provider is supported, the one nearest to all the clients will
-+be chosen first. If there are more than one provider is an equal distance
-+away, the one returned will be chosen at random. This function returns the PCI
-+device to use for the provider with a reference taken and therefore
-+when it's no longer needed it should be returned with pci_dev_put().
-+
-+Alternatively, if the orchestrator knows (via some other means)
-+which provider it wants to use it may use :c:func:`pci_has_p2pmem()`
-+to determine if it has P2P memory and :c:func:`pci_p2pdma_distance()`
-+to determine the cumulative distance between it and a potential
-+list of clients.
-+
-+With a supported provider in hand, the driver can then call
-+:c:func:`pci_p2pdma_assign_provider()` to assign the provider
-+to the client list. This function returns false if any of the
-+clients are unsupported by the provider.
-+
-+Once a provider is assigned to a client list via either
-+:c:func:`pci_p2pmem_find()` or :c:func:`pci_p2pdma_assign_provider()`,
-+the list is permanently bound to the provider such that any new clients
-+added to the list must be supported by the already selected provider.
-+If they are not supported, :c:func:`pci_p2pdma_add_client()` will return
-+an error. In this way, orchestrators are free to add and remove devices
-+without having to recheck support or tear down existing transfers to
-+change P2P providers.
-+
-+Once a provider is selected, the orchestrator can then use
-+:c:func:`pci_alloc_p2pmem()` and :c:func:`pci_free_p2pmem()` to
-+allocate P2P memory from the provider. :c:func:`pci_p2pmem_alloc_sgl()`
-+and :c:func:`pci_p2pmem_free_sgl()` are convenience functions for
-+allocating scatter-gather lists with P2P memory.
-+
-+Struct Page Caveats
-+-------------------
-+
-+Driver writers should be very careful about not passing these special
-+struct pages to code that isn't prepared for it. At this time, the kernel
-+interfaces do not have any checks for ensuring this. This obviously
-+precludes passing these pages to userspace.
-+
-+P2P memory is also technically IO memory but should never have any side
-+effects behind it. Thus, the order of loads and stores should not be important
-+and ioreadX(), iowriteX() and friends should not be necessary.
-+However, as the memory is not cache coherent, if access ever needs to
-+be protected by a spinlock then :c:func:`mmiowb()` must be used before
-+unlocking the lock. (See ACQUIRES VS I/O ACCESSES in
-+Documentation/memory-barriers.txt)
-+
-+
-+P2P DMA API Functions
-+=====================
-+
-+.. kernel-doc:: drivers/pci/p2pdma.c
-+   :export:
-diff --git a/Documentation/index.rst b/Documentation/index.rst
-index ef5080cbf009..c31bf0918413 100644
---- a/Documentation/index.rst
-+++ b/Documentation/index.rst
-@@ -45,7 +45,7 @@ the kernel interface as seen by application developers.
- .. toctree::
-    :maxdepth: 2
- 
--   userspace-api/index	      
-+   userspace-api/index
- 
- 
- Introduction to kernel development
-@@ -88,6 +88,7 @@ needed).
-    sound/index
-    crypto/index
-    filesystems/index
-+   PCI/index
- 
- Architecture-specific documentation
- -----------------------------------
--- 
-2.11.0
+> And the point of this patch is that we want to reserve at least one
+> bus number for *every* bridge because acpiphp may add something below
+> it?
+
+Point is to reserve at least one bus number for non-hotplug bridges that
+currently don't have device below them to keep the bus number
+distribution code from using those numbers for extension. There is a bug
+now that makes it allocate too much if you have non-hotplug bridges
+after the hotplug bridge.
+
+The topology is like:
+
+  US ---+--- DS for Thunderbolt NHI
+        |
+        +--- DS hotplug for extension
+        |
+        +--- DS for xHCI
+
+Because all the DS ports need to be reconfigured the code in
+pci_scan_child_bus_extend() loops over DS bridges but since the DS
+leading to XHCI comes after the DS hotplug port it will not be accounted
+when extension bus number space is distributed.
+
+> Presumably we should reserve some I/O and MMIO space, too?  Is
+> that already covered elsewhere?  Maybe we only need to do this if
+> acpiphp is actually compiled in?
+
+AFAICT the resource allocation code in drivers/pci/setup-bus.c makes
+sure bridge I/O and MMIO windows reserve at least minimum (4k for I/O,
+1M for MMIO).
+
+It is not just acpiphp but could happen when PCIe switch is hotplugged
+using native PCIe and has similar configuration (non-hotplug bridges
+following hotplug bridges).
+
+> > > > Here is what happens on one system when a Thunderbolt device is plugged in:
+> > > > 
+> > > >   pci 0000:01:00.0: PCI bridge to [bus 02-39]
+> > > >   ...
+> > > >   pci_bus 0000:04: [bus 04-39] extended by 0x35
+> > > >   pci_bus 0000:04: bus scan returning with max=39
+> > > >   pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
+> > > >   pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
+> > > >   pci_bus 0000:3a: scanning bus
+> > > >   pci_bus 0000:3a: bus scan returning with max=3a
+> > > >   pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
+> > > >   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+> > > >   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+> > > >   pci_bus 0000:02: bus scan returning with max=3a
+> > > >   pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
+> > > > 
+> > > > Resulting 'lspci -t' output looks like this:
+> > > > 
+> > > >   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+> > > >                                   +-01.0-[04-39]--
+> > > >                                   \-02.0-[3a]----00.0
+> > > > 
+> > > > The device behind downstream port at 02:02 is the integrated xHCI (USB 3
+> > > > host controller) and is not fully accessible because the hotplug bridge
+> > > > is reserving too many bus numbers.
+> > > 
+> > > Thanks for the details here, but I can't tell what happened before and
+> > > was broken, vs. what happens now.  Which is the hotplug bridge?  Which
+> > > is the Thunderbolt controller?
+> > > 
+> > > I guess 02:01.0 must be the bridge consuming too many bus numbers
+> > > ([bus 04-39])?
+> > 
+> > Yes, that's correct.
+> > 
+> > > And 02:02.0 might be the Thunderbolt controller that wants to use bus
+> > > 3a?  But obviously that won't work because 1b.0 doesn't route things
+> > > to bus 3a, since it only consumes [bus 01-39].
+> > 
+> > In fact 02:02 leads to xHCI controller which in this case is
+> > inaccessible which means that currently when you plug in USB 3 device to
+> > systems with this setup, it won't work.
+> > 
+> > > (The device behind 02:02.0 is more than just "not fully accessible" --
+> > > it's not accessible via config space *at all*.)
+> > 
+> > Right.
+> > 
+> > > I guess the 'lspci -t' above must be without this patch, and with this
+> > > patch, we'd have
+> > > 
+> > >   pci 0000:02:00.0: PCI bridge to [bus 03]
+> > >   pci 0000:02:01.0: PCI bridge to [bus 04-38]
+> > >   pci 0000:02:02.0: PCI bridge to [bus 39]
+> > 
+> > That's correct.
+> > 
+> > Do you want me to amend the changelog to include this information as
+> > well?
+> 
+> Yes, please; I think it's very helpful to understand exactly what
+> changes as a result of this patch.
+
+OK, I'll add that to the changelog then.
+
+> > > This patch might fix the situation for simple hot-added devices,
+> > > but won't we have the same problem again if we hot-add a bridge?
+> > > It seems like we need a more comprehensive solution.  I don't mean
+> > > we need to go whole hog and reassign everybody's bus numbers
+> > > dynamically, but we ought to at least be able to notice the
+> > > situation, decline to enable the bridge leading to devices we
+> > > can't reach, and give a meaningful error message.
+> > 
+> > The problem is that you don't know upfront what is going to be
+> > hotplugged. Thus it is hard to guess how many buses you want to
+> > reserve there. Doing that afterwards is not going to work because of
+> > the nature how we do scan and add devices, without rewriting the
+> > whole scanning logic.
+> 
+> That's what I meant about "not going whole hog" -- it's impractical
+> right now to solve the general problem.  But we should be clear in
+> *this* patch that we're adding a special case to handle a common
+> situation: hot-adding a single endpoint.
+> 
+> And if we encounter the more difficult cases like hot-adding a bridge
+> where we don't have resources (bus numbers, I/O, or MMIO) for the
+> hierarchy, we can fail with a clear message.  The "partially hidden
+> behind bridge" message does not count as clear :)
+
+OK
+
+> > The strategy we use here is the same as Windows does (e.g reserve
+> > one bus for these bridges, just in case ACPI Notify() brings in a
+> > new device. This is kind of special case used to hotplug TBT and
+> > xHCI controller (not bridges). It will not work properly if you
+> > hotplug a bridge but at least it works better than just failing
+> > miserably.
+> 
+> The same issue could happen on any system where we use acpiphp, so I
+> don't think Thunderbolt is really relevant here, and it's easy to
+> confuse things by mentioning it.
+
+This issue can happen regardless whether acpiphp is used or not. I agree
+that mentioning Thunderbolt might confuse things.
+
+> IIUC, the problem we're trying to solve here is simply this:
+> 
+>   A hot-added endpoint is useless unless we can assign a bus number
+>   for it.
+> 
+> I think if this changelog mentioned that fact, what we plan to do
+> (assign one bus number for every bridge, and potentially more for
+> hotplug bridges), and a simple example of the previous and new bus
+> number assignments, that would be about right.
+
+I'll update the changelog to be more clear about what the actual problem
+is that we are trying to solve with this patch.
+
+> > The sanity check at the end of pci_scan_bridge_extend() already detects
+> > cases where things went wrong:
+> > 
+> >    pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+> >    pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+> > 
+> > I'm not sure whether we want to add more error prints to confuse users.
+> > 
+> > (We actually look for these strings in our test automation for native
+> >  PCIe hotplug).
+> 
+> I think we can make things less confusing for users if we improve or
+> replace that message.  Maybe something along the lines of "devices
+> behind bridge X are unusable because we can't assign a bus number for
+> them."
+> 
+> We can't be very specific about what the new devices *are*, because
+> without a bus number, we can't even read their Vendor/Device IDs.
+> 
+> We should make sure that we don't create pci_devs for any of these
+> hidden devices (I suspect this is already the case).
+
+Yes, that's the case already.
+
+> Also, the "Has only triggered on CardBus, fixup is in yenta_socket"
+> comment above this block looks obsolete.  We should do some
+> archaeology on this and probably remove it, because you're seeing
+> this, and I don't think you're using CardBus or yenta_socket.
+
+But since this is a fix, should we do all the cleanup and message
+improvement in a separate patch(es) to make sure backporting the actual
+fix to stable releases is easy enough?
+
+> > > Nit unrelated to this patch: "bridge 0000:02" is not a bridge, it's a
+> > > bus.  Apparently bus 3a is hidden because 1b.0's subordinate bus is
+> > > 39.
+> > 
+> > Indeed.
+> > 
+> > > > To make sure we don't run out of bus numbers for non-hotplug bridges reserve
+> > > > one bus number for them upfront before distributing buses for hotplug bridges.
+> > > > 
+> > > > Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
+> > > > Reported-by: Mario Limonciello <mario.limonciello@dell.com>
+> > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > Cc: stable@vger.kernel.org
+> > > > ---
+> > > >  drivers/pci/probe.c | 11 ++++++++---
+> > > >  1 file changed, 8 insertions(+), 3 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > > index ef5377438a1e..6cefd47556e3 100644
+> > > > --- a/drivers/pci/probe.c
+> > > > +++ b/drivers/pci/probe.c
+> > > > @@ -2561,7 +2561,10 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+> > > >  	for_each_pci_bridge(dev, bus) {
+> > > >  		cmax = max;
+> > > >  		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
+> > > > -		used_buses += cmax - max;
+> > > > +		/* Reserve one bus for each bridge */
+> > > > +		used_buses++;
+> > > > +		if (cmax - max > 1)
+> > > > +			used_buses += cmax - max - 1;
+> > > 
+> > > Sorry, this should be trivial, but I'm having a hard time wrapping my
+> > > mind around it.
+> > 
+> > I don't blame you, it is getting quite complex. That's why I added the
+> > comments there, hopefully makeing it easier to understand.
+> > 
+> > > AFAICT, "cmax" is the highest known bus number below this bus, "max"
+> > > is the highest bus number below "dev" (one of the bridges on "bus").
+> > > 
+> > > I assume "used_buses++" accounts for the fact that every enabled
+> > > bridge must consume one bus number for its secondary side.
+> > 
+> > Exactly.
+> > 
+> > > And I guess "used_buses += cmax - max - 1" adds in the bus numbers
+> > > downstream from "dev" (subtracting the one used for its secondary
+> > > bus)?
+> > 
+> > That's also correct.
+> > 
+> > > pci_scan_bridge_extend() seems to return something related to the
+> > > number of bus numbers used below "dev".  Why doesn't *it* account for
+> > > the secondary bus number of "dev"?
+> > 
+> > It returns new "max" i.e maximum subordinate number the bridge occupies.
+> > 
+> > Reason why we handle this one in pci_scan_child_bus_extend() instead is
+> > that we then have the bus number distribution logic pretty much in a
+> > single function making it easier to understand what happens (well, it is
+> > getting quite complex but I still think it makes sense that way). If you
+> > insist, I can move it to pci_scan_bridge_extend() instead.
+> 
+> I could be wrong, but I think the code would make more sense if all
+> the bus number consumption computation were in one place.  It looks
+> like pci_scan_bridge_extend() already figures out the [secondary + 1
+> .. subordinate] interval, so it seems natural to me to have it figure
+> out the entire [secondary .. subordinate] interval.
+
+I looked at how we could move this to pci_scan_bridge_extend() instead
+but it turns out not to be so simple afterall. The issue is that
+pci_scan_bridge_extend() returns "max", not the number of buses the
+bridge consumes. Now, we would need to return max + 1 if the bridge is
+matching the criteria (non-hotplug downstream bridge that needs to be
+reconfigured) but since we have a loops like this:
+
+       for_each_pci_bridge(dev, bus) {
+		..
+                max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
+        }
+
+       for_each_pci_bridge(dev, bus) {
+		..
+                max = pci_scan_bridge_extend(bus, dev, max, buses, 1);
+       }
+
+In the first pass we end up increasing max by two (on this particular
+system) which then shifts starting subordinate bus number of the second
+pass by two as well so we would need to account that here spreading the
+complexity to two functions instead of just one.
+
+Since this particular patch adds total 5 new lines to fix the problem
+and they are contained in a single function, I would rather go with that.
+
+It could be that I'm just missing something obvious, though - this whole
+scanning logic is not the most understandable code I've ever
+encountered.
