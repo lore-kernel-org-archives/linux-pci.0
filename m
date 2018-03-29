@@ -1,67 +1,66 @@
-Return-Path: <SRS0=j4p2=GE=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=j4p2=GE=intel.com=keith.busch@kernel.org>
-Date: Wed, 14 Mar 2018 14:50:50 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philippe Ombredanne <pombredanne@nexb.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kate Stewart <kstewart@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
-	Timur Tabi <timur@codeaurora.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v12 0/6] Address error and recovery for AER and DPC
-Message-ID: <20180314205049.GE29867@localhost.localdomain>
-References: <1519837457-3596-1-git-send-email-poza@codeaurora.org>
- <20180311220337.GA194000@bhelgaas-glaptop.roam.corp.google.com>
- <04ade52e-d1ea-fe67-bb26-246621d159e6@codeaurora.org>
- <20180312142551.GB18494@localhost.localdomain>
- <20180312194236.GA12195@bhelgaas-glaptop.roam.corp.google.com>
- <20180312232626.GI18494@localhost.localdomain>
- <a52d2e0b-d319-bb34-8610-455d8c7ddad9@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:44751 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752497AbeC2KDI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 06:03:08 -0400
+Subject: Re: [PATCH v5 10/12] PCI: endpoint: Make sure that BAR_5 does not
+ have 64-bit flag set when clearing
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        <cyrille.pitchen@free-electrons.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+ <20180328115018.31921-11-niklas.cassel@axis.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <a2337a50-a881-3303-10a7-b65d11f5b9cb@ti.com>
+Date: Thu, 29 Mar 2018 15:32:55 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a52d2e0b-d319-bb34-8610-455d8c7ddad9@codeaurora.org>
+In-Reply-To: <20180328115018.31921-11-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 11:47:12PM -0400, Sinan Kaya wrote:
-> 
-> The spec is recommending code to use "Hotplug Surprise" to differentiate
-> these two cases we are looking for. 
-> 
-> The use case Keith is looking for is for hotplug support. 
-> The case I and Oza are more interested is for error handling on platforms
-> with no hotplug support.
-> 
-> According to the spec, if "Hotplug Surprise" is set in slot capabilities,
-> then hotplug driver handles link up and DPC driver doesn't interfere with
-> its operation. Hotplug driver observes link up interrupt like it is doing today.
-> When link up event is observed, hotplug driver will do the enumeration.
-> 
-> If "Hotplug Surprise" bit is not set, it is the job of the DPC driver to
-> bring up the link. I believe this path should follow the AER driver path
-> as there is a very well defined error reporting and recovery framework
-> in the code.
-> 
-> The link comes back up automatically when DPC driver handles its interrupt
-> very similar to what secondary bus reset does for AER. I don't believe
-> there is a hotplug possibility under this condition since it is not supported
-> to begin with.
-> 
-> Should we plumb the "Hotplug Surprise" condition into the code to satisfy
-> both cases and leave the error handling path according to this code series?
 
-I'm on board with this, but I think you mean "Hotplug Capable" rather
-than "Hotplug Surprise". The former may co-exist with DPC and handles
-the link-ups, leaving DPC responsible for handling the link-down.
 
-The "Hotplug Surprise" capability is recommended to not co-exist with DPC
-since that capability may suppress the "surprise link down" notification
-that DPC needs to see in order to trigger.
+On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
+> Since a 64-bit BAR consists of a BAR pair, and since there is no
+> BAR after BAR_5, BAR_5 cannot be 64-bits wide.
+> 
+> This sanity check is done in pci_epc_clear_bar(), so that we don't need
+> to do this sanity check in all epc->ops->clear_bar() implementations.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 
-If the "Hotplug Capable" bit is not set, detecting the link-up after a
-DPC event would have to fall under a different component's responsibility,
-so I think I'm finally seeing your point.
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> Kishon made a review comment that he wanted this:
+> https://marc.info/?l=linux-kernel&m=152161168226203
+> 
+> Personally, I don't think that this check is needed,
+> since pci_epc_set_bar() already does this check,
+> and no one should modify the flags after pci_epc_set_bar()
+> has been called.
+> 
+> If everyone agrees, then this patch could be dropped.
+> 
+>  drivers/pci/endpoint/pci-epc-core.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index eccc942043cb..b0ee42739c3c 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -285,7 +285,9 @@ void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no,
+>  {
+>  	unsigned long flags;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
+> +	    (epf_bar->barno == BAR_5 &&
+> +	     epf_bar->flags & PCI_BASE_ADDRESS_MEM_TYPE_64))
+>  		return;
+>  
+>  	if (!epc->ops->clear_bar)
+> 
