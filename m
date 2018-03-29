@@ -1,66 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 15 Mar 2018 08:00:05 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v3 0/5] PCI: Fixes for native PCIe and ACPI hotplug
-Message-ID: <20180315060005.GO2703@lahna.fi.intel.com>
-References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:26258 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751225AbeC2KAr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Mar 2018 06:00:47 -0400
+Subject: Re: [PATCH v5 09/12] PCI: endpoint: Make
+ epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        <cyrille.pitchen@free-electrons.com>,
+        Alan Douglas <adouglas@cadence.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Niklas Cassel <niklass@axis.com>,
+        John Keeping <john@metanate.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+ <20180328115018.31921-10-niklas.cassel@axis.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <ac3131cb-468d-5143-62a4-68d6e6b47e82@ti.com>
+Date: Thu, 29 Mar 2018 15:30:23 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180328115018.31921-10-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 26, 2018 at 04:21:07PM +0300, Mika Westerberg wrote:
-> Hi,
-> 
-> When Thunderbolt controller is configured to be in native enumeration mode
-> it actually includes two slightly different modes. First there is non-RTD3
-> mode where the Thunderbolt host controller is only present when there is a
-> device connected. The second one is RTD3 mode where the controller is
-> always present.
-> 
-> In non-RTD3 mode the Thunderbolt host controller (NHI) and USB host (xHCI)
-> controller are not hotplugged using native PCIe hotplug but instead they
-> will be hotplugged via BIOS triggered ACPI Notify() to the root port. This
-> is done to preserve resources since the NHI and xHCI only need 1 MB of MMIO
-> space and no additional buses. Currently Linux does not support this very
-> well and ends up failing the hotplug in one way or another. More detailed
-> explanation is in changelog of patch [4/5].
-> 
-> This series fixes this issue and in addition includes fixes for few other
-> issues found during testing on a system that has Thunderbolt controller in
-> non-RTD3 native PCIe enumeration mode. However, the fixes here are not in
-> any way Thunderbolt specific and should be applicable to other systems as
-> well.
-> 
-> The previous versions of the patch series can be found here:
-> 
->   v2: https://www.spinics.net/lists/linux-pci/msg69186.html
->   v1: https://www.spinics.net/lists/linux-acpi/msg80607.html
-> 
-> Changes from v2:
-> 
->   - Added Rafael's tag to patch [1/5].
->   - Updated changelog of patch [1/5] to include more details about how the
->     problem can be observed from dmesg and lspci output.
-> 
-> Changes from v1:
-> 
->   - Drop 'cmax - max ?: 1' and use similar construct than we use in second
->     pass loop in patch [1/5].
->   - Drop unnecessary parentheses in patch [1/5].
->   - Added Rafael's tag to patches [2-5/5].
+Hi Niklas,
 
-Hi Bjorn,
+On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
+> Make epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar.
+> 
+> This is needed so that epc->ops->clear_bar() can clear the BAR pair,
+> if the BAR is 64-bits wide.
+> 
+> This also makes it possible for pci_epc_clear_bar() to sanity check
+> the flags.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/cadence/pcie-cadence-ep.c         |  3 ++-
+>  drivers/pci/dwc/pcie-designware-ep.c          | 13 ++++++++++---
+>  drivers/pci/endpoint/functions/pci-epf-test.c |  5 ++++-
+>  drivers/pci/endpoint/pci-epc-core.c           |  7 ++++---
+>  include/linux/pci-epc.h                       |  5 +++--
+>  5 files changed, 23 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
+> index 2905e098678c..3d8283e450a9 100644
+> --- a/drivers/pci/cadence/pcie-cadence-ep.c
+> +++ b/drivers/pci/cadence/pcie-cadence-ep.c
+> @@ -145,10 +145,11 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
+>  }
+>  
+>  static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
+> -				   enum pci_barno bar)
+> +				   struct pci_epf_bar *epf_bar)
+>  {
+>  	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+>  	struct cdns_pcie *pcie = &ep->pcie;
+> +	enum pci_barno bar = epf_bar->barno;
+>  	u32 reg, cfg, b, ctrl;
+>  
+>  	if (bar < BAR_4) {
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index 571b90f88d84..cc4d8381c1dc 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -19,7 +19,8 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+>  	pci_epc_linkup(epc);
+>  }
+>  
+> -void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+> +static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar,
+> +				   int flags)
 
-Do you have any comments on the series? It would be nice to get it
-merged for v4.17 if no objections.
+Looks like the 'flags' are not used anywhere here?
 
-Thanks!
+Thanks
+Kishon
