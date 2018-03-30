@@ -1,150 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55629 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033435AbeCAT05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 14:26:57 -0500
-Message-ID: <1519932408.10722.351.camel@linux.intel.com>
-Subject: Re: [PATCH v15 6/9] HISI LPC: Support the LPC host on Hip06/Hip07
- with DT bindings
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: John Garry <john.garry@huawei.com>,
-        mika.westerberg@linux.intel.com, rafael@kernel.org,
-        lorenzo.pieralisi@arm.com, rjw@rjwysocki.net,
-        hanjun.guo@linaro.org, robh+dt@kernel.org, bhelgaas@google.com,
-        arnd@arndb.de, mark.rutland@arm.com, olof@lixom.net,
-        dann.frazier@canonical.com, andy.shevchenko@gmail.com,
-        robh@kernel.org
-Cc: joe@perches.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linuxarm@huawei.com, minyard@acm.org,
-        devicetree@vger.kernel.org, linux-arch@vger.kernel.org,
-        rdunlap@infradead.org, gregkh@linuxfoundation.org,
-        akpm@linux-foundation.org, frowand.list@gmail.com, agraf@suse.de
-Date: Thu, 01 Mar 2018 21:26:48 +0200
-In-Reply-To: <1519663249-9850-7-git-send-email-john.garry@huawei.com>
-References: <1519663249-9850-1-git-send-email-john.garry@huawei.com>
-         <1519663249-9850-7-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from youngberry.canonical.com ([91.189.89.112]:58796 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750971AbeC3JaS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 05:30:18 -0400
+Received: from mail-pf0-f200.google.com ([209.85.192.200])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1f1qMT-0005E5-4r
+        for linux-pci@vger.kernel.org; Fri, 30 Mar 2018 09:30:17 +0000
+Received: by mail-pf0-f200.google.com with SMTP id 2so7000992pft.4
+        for <linux-pci@vger.kernel.org>; Fri, 30 Mar 2018 02:30:17 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii;
+        delsp=yes;
+        format=flowed
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Subject: Re: [PATCH v2] PCI / PM: Always check PME wakeup capability for
+ runtime wakeup support
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+In-Reply-To: <1748267.LlfkqdCPEG@aspire.rjw.lan>
+Date: Fri, 30 Mar 2018 17:30:10 +0800
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        stable@vger.kernel.org
+Message-Id: <44B8B950-4C07-447E-9F12-AD60C536150F@canonical.com>
+References: <20180319140910.26496-1-kai.heng.feng@canonical.com>
+ <5DC805B1-51DA-4D0F-9A43-9D5FE549AB13@canonical.com>
+ <1748267.LlfkqdCPEG@aspire.rjw.lan>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-02-27 at 00:40 +0800, John Garry wrote:
+Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
 
-> The low-pin-count(LPC) interface of Hip06/Hip07 accesses the
-> peripherals in
-> I/O port addresses. This patch implements the LPC host controller
-> driver
-> which perform the I/O operations on the underlying hardware.
-> We don't want to touch those existing peripherals' driver, such as
-> ipmi-bt.
-> So this driver applies the indirect-IO introduced in the previous
-> patch
-> after registering an indirect-IO node to the indirect-IO devices list
-> which
-> will be searched in the I/O accessors to retrieve the host-local I/O
-> port.
-> 
-> The driver config is set as a bool instead of a trisate. The reason
-> here is that, by the very nature of the driver providing a logical
-> PIO range, it does not make sense to have this driver as a loadable
-> module. Another more specific reason is that the Huawei D03 board
-> which includes hip06 SoC requires the LPC bus for UART console, so
-> should be built in.
+> On Monday, March 26, 2018 7:54:35 AM CEST Kai Heng Feng wrote:
+>> Hi Bjorn, Rafael,
+>>
+>>> On Mar 19, 2018, at 10:09 PM, Kai-Heng Feng <kai.heng.feng@canonical.com>
+>>> wrote:
+>>>
+>>> USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+>>> core: Drop run_wake flag from struct dev_pm_info").
+>>>
+>>> The device in question is not power managed by platform firmware,
+>>> furthermore, it only supports PME# from D3cold:
+>>> Capabilities: [78] Power Management version 3
+>>>        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+>>>        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>>>
+>>> Before commit de3ef1eb1cd0, the device never gets runtime suspended.
+>>> After that commit, the device gets runtime suspended, so it does not
+>>> respond to any PME#.
+>>>
+>>> usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
+>>> device_can_wakeup() in pci_dev_run_wake() always returns true.
+>>>
+>>> So pci_dev_run_wake() needs to check PME wakeup capability as its first
+>>> condition.
+>>>
+>>> Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct
+>>> dev_pm_info")
+>>> Cc: stable@vger.kernel.org # 4.13+
+>>> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+>>
+>>
+>> Is there any improvement I can address?
+>> Or do you have any concern about this patch?
+>>
+>> Kai-Heng
+>>
+>>> ---
+>>> v2: Explicitly check dev->pme_support.
+>>>
+>>>  drivers/pci/pci.c | 8 ++++----
+>>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index f6a4dd10d9b0..52821a21fc07 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -2125,16 +2125,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+>>>  {
+>>>  	struct pci_bus *bus = dev->bus;
+>>>
+>>> -	if (device_can_wakeup(&dev->dev))
+>>> -		return true;
+>>> -
+>>>  	if (!dev->pme_support)
+>>>  		return false;
+>>>
+>>>  	/* PME-capable in principle, but not from the target power state */
+>>> -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
+>>> +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
+>
+> So why do you change 'false' to 'true' here?
+>
+> At least that change should be mentioned in the changelog too.
 
-Few minor comments below.
+I'll update the reason in the change log.
 
-> +static inline int wait_lpc_idle(unsigned char *mbase,
-> +				unsigned int waitcnt) {
-> +	do {
-> +		u32 status;
-> +
-> +		status = readl(mbase + LPC_REG_OP_STATUS);
-> +		if (status & LPC_REG_OP_STATUS_IDLE)
-> +			return (status & LPC_REG_OP_STATUS_FINISHED)
-> ? 0 : -EIO;
-> +		ndelay(LPC_NSEC_PERWAIT);
+Thanks.
 
-> +	} while (waitcnt--);
-
-} while (--waitcnt);
-
-> +
-> +	return -ETIME;
-> +}
-
-> +
-> +/*
-
-If you would like to have a documentation you need to use proper syntax,
-i.e.
-
-/**
-
-Check the rest of the series for it.
-
-> + * hisi_lpc_target_in - trigger a series of LPC cycles for read
-> operation
-> + * @lpcdev: pointer to hisi lpc device
-> + * @para: some parameters used to control the lpc I/O operations
-> + * @addr: the lpc I/O target port address
-> + * @buf: where the read back data is stored
-> + * @opcnt: how many I/O operations required, i.e. data width
-> + *
-> + * Returns 0 on success, non-zero on fail.
-> + */
-
-> +	do {
-> +		*buf++ = readb(lpcdev->membase + LPC_REG_RDATA);
-> +	} while (--opcnt);
-
-readsb() ?
-
-> +	do {
-> +		writeb(*buf++, lpcdev->membase + LPC_REG_WDATA);
-> +	} while (--opcnt);
-
-writesb() ?
-
-> +static inline unsigned long
-> +hisi_lpc_pio_to_addr(struct hisi_lpc_dev *lpcdev, unsigned long pio)
-> +{
-> +	return pio - lpcdev->io_host->io_start +
-> +		lpcdev->io_host->hw_start;
-
-I would rather put on one line.
-
-> +}
-
-> +	do {
-> +		if (hisi_lpc_target_out(lpcdev, &iopara, addr, buf,
-> +						dwidth))
-
-Fancy indentation. Perhaps put to one line?
-
-> +			break;
-> +		buf += dwidth;
-> +	} while (--count);
-
-
-> +	int ret;
-> +
-> +	lpcdev = devm_kzalloc(dev, sizeof(struct hisi_lpc_dev),
-> GFP_KERNEL);
-
-sizeof(*lpcdev) ?
-
-> +	if (!lpcdev)
-> +		return -ENOMEM;
-
-> +	dev_info(dev, "registered range[%pa - sz:%pa]\n",
-
-This is rather non-standard. We provide for resources the pattern like
-"... [start-end]\n"
-
-> +		 &lpcdev->io_host->io_start,
-> +		 &lpcdev->io_host->size);
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+>
+>>> return false;
+>>>
+>>> +	if (device_can_wakeup(&dev->dev))
+>>> +		return true;
+>>> +
+>>>  	while (bus->parent) {
+>>>  		struct pci_dev *bridge = bus->self;
