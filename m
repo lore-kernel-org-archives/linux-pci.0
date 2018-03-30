@@ -1,41 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:58203 "EHLO
-        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751053AbeCLMG1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 08:06:27 -0400
-From: Tal Gilboa <talgi@mellanox.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Tal Gilboa <talgi@mellanox.com>
-Subject: [PATCH next V3 5/5] net/mlx5: Report device PCI link status and issues
-Date: Mon, 12 Mar 2018 14:06:10 +0200
-Message-Id: <1520856370-15404-6-git-send-email-talgi@mellanox.com>
-In-Reply-To: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
-References: <1520856370-15404-1-git-send-email-talgi@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: Christoph Hellwig <hch@lst.de>
+CC: "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
+        "linus.walleij@linaro.org" <linus.walleij@linaro.org>,
+        "johan@kernel.org" <johan@kernel.org>,
+        "msuchanek@suse.de" <msuchanek@suse.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] dma-mapping: move dma configuration to bus infrastructure
+Date: Fri, 30 Mar 2018 07:17:10 +0000
+Message-ID: <HE1PR0401MB24259BC13BCEFEE462910AE1E6A10@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+ <20180330071530.GA17557@lst.de>
+In-Reply-To: <20180330071530.GA17557@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a kernel log print for mlx5 PCI device's link status.
+I am just going to send it within an hour :)
 
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
----
- drivers/net/ethernet/mellanox/mlx5/core/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+Thanks,
+Nipun
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-index 2ef641c9..6adad72 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-@@ -1043,6 +1043,8 @@ static int mlx5_load_one(struct mlx5_core_dev *dev, struct mlx5_priv *priv,
- 	dev_info(&pdev->dev, "firmware version: %d.%d.%d\n", fw_rev_maj(dev),
- 		 fw_rev_min(dev), fw_rev_sub(dev));
- 
-+	pcie_print_link_status(dev->pdev);
-+
- 	/* on load removing any previous indication of internal error, device is
- 	 * up
- 	 */
--- 
-1.8.3.1
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@lst.de]
+> Sent: Friday, March 30, 2018 12:46
+> To: Nipun Gupta <nipun.gupta@nxp.com>
+> Cc: hch@lst.de; robin.murphy@arm.com; linux@armlinux.org.uk;
+> gregkh@linuxfoundation.org; m.szyprowski@samsung.com; bhelgaas@google.com=
+;
+> dmitry.torokhov@gmail.com; rafael.j.wysocki@intel.com;
+> jarkko.sakkinen@linux.intel.com; linus.walleij@linaro.org;
+> johan@kernel.org; msuchanek@suse.de; linux-kernel@vger.kernel.org;
+> iommu@lists.linux-foundation.org; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH] dma-mapping: move dma configuration to bus
+> infrastructure
+>=20
+> Can you resend the current state of affairs so we can get it in for
+> 4.17?
