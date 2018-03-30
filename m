@@ -1,158 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33440 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752568AbeC3VEv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Mar 2018 17:04:51 -0400
-Subject: [PATCH v5 01/14] PCI: Add pcie_get_speed_cap() to find max
- supported link speed
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tal Gilboa <talgi@mellanox.com>
-Cc: Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Date: Fri, 30 Mar 2018 16:04:48 -0500
-Message-ID: <152244388865.135666.13225254795423314446.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
+Received: from mail-sn1nam01on0106.outbound.protection.outlook.com ([104.47.32.106]:47631
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752206AbeC3TfI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Mar 2018 15:35:08 -0400
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5] PCI: hv: Make sure the bus domain is really unique
+Date: Fri, 30 Mar 2018 19:35:04 +0000
+Message-ID: <105A3FAC-23AF-40F9-8B83-F00DED14EC43@microsoft.com>
+References: <4BF97B43-5339-4750-9704-23D6AAC4A01E@microsoft.com>
+In-Reply-To: <4BF97B43-5339-4750-9704-23D6AAC4A01E@microsoft.com>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tal Gilboa <talgi@mellanox.com>
-
-Add pcie_get_speed_cap() to find the max link speed supported by a device.
-Change max_link_speed_show() to use pcie_get_speed_cap().
-
-Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-[bhelgaas: return speed directly instead of error and *speed, don't export
-outside drivers/pci]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
----
- drivers/pci/pci-sysfs.c |   28 ++--------------------------
- drivers/pci/pci.c       |   44 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h       |   10 ++++++++++
- 3 files changed, 56 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 7dc5be545d18..c2ea05fbbf1d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -158,33 +158,9 @@ static DEVICE_ATTR_RO(resource);
- static ssize_t max_link_speed_show(struct device *dev,
- 				   struct device_attribute *attr, char *buf)
- {
--	struct pci_dev *pci_dev = to_pci_dev(dev);
--	u32 linkcap;
--	int err;
--	const char *speed;
--
--	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
--	if (err)
--		return -EINVAL;
--
--	switch (linkcap & PCI_EXP_LNKCAP_SLS) {
--	case PCI_EXP_LNKCAP_SLS_16_0GB:
--		speed = "16 GT/s";
--		break;
--	case PCI_EXP_LNKCAP_SLS_8_0GB:
--		speed = "8 GT/s";
--		break;
--	case PCI_EXP_LNKCAP_SLS_5_0GB:
--		speed = "5 GT/s";
--		break;
--	case PCI_EXP_LNKCAP_SLS_2_5GB:
--		speed = "2.5 GT/s";
--		break;
--	default:
--		speed = "Unknown speed";
--	}
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	return sprintf(buf, "%s\n", speed);
-+	return sprintf(buf, "%s\n", PCIE_SPEED2STR(pcie_get_speed_cap(pdev)));
- }
- static DEVICE_ATTR_RO(max_link_speed);
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd10d9b0..b29d3436ee9f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5146,6 +5146,50 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- }
- EXPORT_SYMBOL(pcie_get_minimum_link);
- 
-+/**
-+ * pcie_get_speed_cap - query for the PCI device's link speed capability
-+ * @dev: PCI device to query
-+ *
-+ * Query the PCI device speed capability.  Return the maximum link speed
-+ * supported by the device.
-+ */
-+enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
-+{
-+	u32 lnkcap2, lnkcap;
-+
-+	/*
-+	 * PCIe r4.0 sec 7.5.3.18 recommends using the Supported Link
-+	 * Speeds Vector in Link Capabilities 2 when supported, falling
-+	 * back to Max Link Speed in Link Capabilities otherwise.
-+	 */
-+	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
-+	if (lnkcap2) { /* PCIe r3.0-compliant */
-+		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_16_0GB)
-+			return PCIE_SPEED_16_0GT;
-+		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
-+			return PCIE_SPEED_8_0GT;
-+		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
-+			return PCIE_SPEED_5_0GT;
-+		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
-+			return PCIE_SPEED_2_5GT;
-+		return PCI_SPEED_UNKNOWN;
-+	}
-+
-+	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
-+	if (lnkcap) {
-+		if (lnkcap & PCI_EXP_LNKCAP_SLS_16_0GB)
-+			return PCIE_SPEED_16_0GT;
-+		else if (lnkcap & PCI_EXP_LNKCAP_SLS_8_0GB)
-+			return PCIE_SPEED_8_0GT;
-+		else if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
-+			return PCIE_SPEED_5_0GT;
-+		else if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
-+			return PCIE_SPEED_2_5GT;
-+	}
-+
-+	return PCI_SPEED_UNKNOWN;
-+}
-+
- /**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index fcd81911b127..1186d8be6055 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -253,6 +253,16 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- void pci_disable_bridge_window(struct pci_dev *dev);
- 
-+/* PCIe link information */
-+#define PCIE_SPEED2STR(speed) \
-+	((speed) == PCIE_SPEED_16_0GT ? "16 GT/s" : \
-+	 (speed) == PCIE_SPEED_8_0GT ? "8 GT/s" : \
-+	 (speed) == PCIE_SPEED_5_0GT ? "5 GT/s" : \
-+	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
-+	 "Unknown speed")
-+
-+enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev);
-+
- /* Single Root I/O Virtualization */
- struct pci_sriov {
- 	int		pos;		/* Capability position */
+ICA+V2hlbiBMaW51eCBydW5zIGFzIGEgZ3Vlc3QgVk0gaW4gSHlwZXItViBhbmQgSHlwZXItViBh
+ZGRzIHRoZSB2aXJ0dWFsDQogID5QQ0kgYnVzIHRvIHRoZSBndWVzdCwgSHlwZXItViBhbHdheXMg
+cHJvdmlkZXMgdW5pcXVlIFBDSSBkb21haW4uDQogID4NCiAgPmNvbW1pdCA0YTliMDkzM2JkZmMg
+KCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQogID5v
+dmVycm9kZSB1bmlxdWUgZG9tYWluIHdpdGggdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGZpcnN0
+IGRldmljZSBhZGRlZA0KICA+dG8gdGhlIHZpcnR1YWwgUENJIGJ1cy4gVGhlIHJlYXNvbiBmb3Ig
+dGhhdCBwYXRjaCBpcyB0byBoYXZlIGEgY29uc2lzdGVudA0KICA+YW5kIHNob3J0IG5hbWUgZm9y
+IHRoZSBkZXZpY2UuIEJ1dCBjb21taXQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlDQogID5k
+ZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQQ0kgZG9tYWluIikgd2lsbCBub3QgZ3VhcmFudGVlIHVu
+aXF1ZSBkb21haW4gaWQuDQogID5Gb3IgZXhhbXBsZSwgaWYgdGhlIHNlcmlhbCBudW1iZXIgb2Yg
+dGhlIGRldmljZSBpcyAwIGFuZCB0aGVyZSBleGlzdHMgYQ0KICA+UENJIGJ1cyB3aXRoIGRvbWFp
+biAwIGFscmVhZHksIHRoaXMgd2lsbCBjYXVzZSB0aGUgUENJIGJ1cyByZWdpc3RyYXRpb24NCiAg
+PndpdGgga2VybmVsIGZhaWxzLg0KICA+DQogID5jb21taXQgNGE5YjA5MzNiZGZjICgiUENJOiBo
+djogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KICA+ZG9tYWluIikgbmVlZCB0byBi
+ZSByZXZlcnRlZC4gQWxzbywgd2Ugbm8gbG9uZ2VyIG5lZWQgaXQgYXMgY29tbWl0DQogID40YTE2
+MjZkZDIzM2UgKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGIG1hbmFnZW1lbnQiKSByZW1vdmUgdGhl
+DQogID5uZWVkIGZvciBpdC4NCiAgPg0KICA+UmV2ZXJ0IGNvbW1pdCA0YTliMDkzM2JkZmMgKCJQ
+Q0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJDQogID5kb21haW4iKSBzbyB3
+ZSBjYW4gcmVsaWFibHkgc3VwcG9ydCBtdWx0aXBsZSBkZXZpY2VzIGJlaW5nIGFzc2lnbmVkIHRv
+DQogID5hIGd1ZXN0Lg0KICA+DQogID5UaGlzIHJldmVydCBzaG91bGQgb25seSBiZSBiYWNrcG9y
+dGVkIHRvIGtlcm5lbHMgdGhhdCBjb250YWluIGNvbW1pdA0KICA+NGExNjI2ZGQyMzNlICgibmV0
+dnNjOiB0cmFuc3BhcmVudCBWRiBtYW5hZ2VtZW50IikuDQogID4NCiAgPkZpeGVzOiA0YTliMDkz
+M2JkZmMgKCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIp
+DQogID5TaWduZWQtb2ZmLWJ5OiBTcmlkaGFyIFBpdGNoYWkgPHNyaWRoYXIucGl0Y2hhaUBtaWNy
+b3NvZnQuY29tPg0KICA+Q2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcNCiAgPg0KICA+LS0tDQog
+ID5DaGFuZ2VzIGluIHY1Og0KICA+KiBmaXggdGhlIGNvbW1pdCBjb21tZW50LiBbTG9yZW56byBQ
+aWVyYWxpc2ksIEJqb3JuIEhlbGdhYXNdDQogID4qIGZpeGVkIHRoZSBwYXRjaCB3aGl0ZSBzcGFj
+ZS4NCiAgPi0tLQ0KICA+IGRyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jIHwgMTEgLS0tLS0t
+LS0tLS0NCiAgPiAxIGZpbGUgY2hhbmdlZCwgMTEgZGVsZXRpb25zKC0pDQogID4NCiAgPmRpZmYg
+LS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYyBiL2RyaXZlcnMvcGNpL2hvc3Qv
+cGNpLWh5cGVydi5jDQogID5pbmRleCAyZmFmMzhlYWI3ODUuLmFjNjdlNTZlNDUxYSAxMDA2NDQN
+CiAgPi0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQogID4rKysgYi9kcml2ZXJz
+L3BjaS9ob3N0L3BjaS1oeXBlcnYuYw0KICA+QEAgLTE1MTgsMTcgKzE1MTgsNiBAQCBzdGF0aWMg
+c3RydWN0IGh2X3BjaV9kZXYgKm5ld19wY2ljaGlsZF9kZXZpY2Uoc3RydWN0IGh2X3BjaWJ1c19k
+ZXZpY2UgKmhidXMsDQogID4gCWdldF9wY2ljaGlsZChocGRldiwgaHZfcGNpZGV2X3JlZl9jaGls
+ZGxpc3QpOw0KICA+IAlzcGluX2xvY2tfaXJxc2F2ZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywg
+ZmxhZ3MpOw0KICA+IA0KICA+LQkvKg0KICA+LQkgKiBXaGVuIGEgZGV2aWNlIGlzIGJlaW5nIGFk
+ZGVkIHRvIHRoZSBidXMsIHdlIHNldCB0aGUgUENJIGRvbWFpbg0KICA+LQkgKiBudW1iZXIgdG8g
+YmUgdGhlIGRldmljZSBzZXJpYWwgbnVtYmVyLCB3aGljaCBpcyBub24temVybyBhbmQNCiAgPi0J
+ICogdW5pcXVlIG9uIHRoZSBzYW1lIFZNLiAgVGhlIHNlcmlhbCBudW1iZXJzIHN0YXJ0IHdpdGgg
+MSwgYW5kDQogID4tCSAqIGluY3JlYXNlIGJ5IDEgZm9yIGVhY2ggZGV2aWNlLiAgU28gZGV2aWNl
+IG5hbWVzIGluY2x1ZGluZyB0aGlzDQogID4tCSAqIGNhbiBoYXZlIHNob3J0ZXIgbmFtZXMgdGhh
+biBiYXNlZCBvbiB0aGUgYnVzIGluc3RhbmNlIFVVSUQuDQogID4tCSAqIE9ubHkgdGhlIGZpcnN0
+IGRldmljZSBzZXJpYWwgbnVtYmVyIGlzIHVzZWQgZm9yIGRvbWFpbiwgc28gdGhlDQogID4tCSAq
+IGRvbWFpbiBudW1iZXIgd2lsbCBub3QgY2hhbmdlIGFmdGVyIHRoZSBmaXJzdCBkZXZpY2UgaXMg
+YWRkZWQuDQogID4tCSAqLw0KICA+LQlpZiAobGlzdF9lbXB0eSgmaGJ1cy0+Y2hpbGRyZW4pKQ0K
+ICA+LQkJaGJ1cy0+c3lzZGF0YS5kb21haW4gPSBkZXNjLT5zZXI7DQogID4gCWxpc3RfYWRkX3Rh
+aWwoJmhwZGV2LT5saXN0X2VudHJ5LCAmaGJ1cy0+Y2hpbGRyZW4pOw0KICA+IAlzcGluX3VubG9j
+a19pcnFyZXN0b3JlKCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBmbGFncyk7DQogID4gCXJldHVy
+biBocGRldjsNCiAgPi0tIA0KPjIuMTQuMQ0KDQpIaSBMb3JlbnpvLA0KRGlkIHlvdSBnZXQgYSBj
+aGFuY2UgdG8gbG9vayBhdCB0aGUgcGF0Y2ggdjUuIFBsZWFzZSBsZXQgbWUga25vdyBpZg0KYW55
+dGhpbmcgSSBuZWVkIHRvIGFkZHJlc3MgZnVydGhlci4NCg0KVGhhbmtzDQpTcmlkaGFyIA0KDQo=
