@@ -1,158 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:38332 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751492AbeCOSoK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Mar 2018 14:44:10 -0400
-Subject: [pci PATCH v7 5/5] pci-pf-stub: Add PF driver stub for PFs that
- function only to enable VFs
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
-        mheyne@amazon.de, liang-min.wang@intel.com,
-        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
-        dwmw@amazon.co.uk
-Date: Thu, 15 Mar 2018 11:44:07 -0700
-Message-ID: <20180315184356.3102.71367.stgit@localhost.localdomain>
-In-Reply-To: <20180315183449.3102.64791.stgit@localhost.localdomain>
-References: <20180315183449.3102.64791.stgit@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:33169 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752712AbeC3HPA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 03:15:00 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Keller Jacob E <jacob.e.keller@intel.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V4 3/8] PCI: Add device link bandwidth capabilities calculation
+Date: Fri, 30 Mar 2018 10:14:41 +0300
+Message-Id: <1522394086-3555-4-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
+References: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Added a function for calculating a PCI device's total link bandwidth
+capabilities. This function queries for the device link speed and
+width, multiplies them and applies encoding overhead for the different
+PCIe generations.
 
-Add a new driver called "pci-pf-stub" to act as a "white-list" for PF
-devices that provide no other functionality other then acting as a means of
-allocating a set of VFs. For now I only have one example ID provided by
-Amazon in terms of devices that require this functionality. The general
-idea is that in the future we will see other devices added as vendors come
-up with devices where the PF is more or less just a lightweight shim used
-to allocate VFs.
-
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
 ---
+ drivers/pci/pci.c   | 22 ++++++++++++++++++++++
+ include/linux/pci.h | 12 ++++++++++++
+ 2 files changed, 34 insertions(+)
 
-v6: New driver to address concerns about Amazon devices left unsupported
-v7: Dropped pci_id table explanation from pci-pf-stub driver
-
- drivers/pci/Kconfig       |   12 ++++++++++
- drivers/pci/Makefile      |    2 ++
- drivers/pci/pci-pf-stub.c |   54 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h   |    2 ++
- 4 files changed, 70 insertions(+)
- create mode 100644 drivers/pci/pci-pf-stub.c
-
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 34b56a8f8480..cdef2a2a9bc5 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -71,6 +71,18 @@ config PCI_STUB
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 90a6cf2..553d8f3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5212,6 +5212,28 @@ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
+ EXPORT_SYMBOL(pcie_get_width_cap);
  
- 	  When in doubt, say N.
- 
-+config PCI_PF_STUB
-+	tristate "PCI PF Stub driver"
-+	depends on PCI
-+	depends on PCI_IOV
-+	help
-+	  Say Y or M here if you want to enable support for devices that
-+	  require SR-IOV support, while at the same time the PF itself is
-+	  not providing any actual services on the host itself such as
-+	  storage or networking.
-+
-+	  When in doubt, say N.
-+
- config XEN_PCIDEV_FRONTEND
-         tristate "Xen PCI Frontend"
-         depends on PCI && X86 && XEN
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 941970936840..4e133d3df403 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -43,6 +43,8 @@ obj-$(CONFIG_PCI_SYSCALL) += syscall.o
- 
- obj-$(CONFIG_PCI_STUB) += pci-stub.o
- 
-+obj-$(CONFIG_PCI_PF_STUB) += pci-pf-stub.o
-+
- obj-$(CONFIG_PCI_ECAM) += ecam.o
- 
- obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
-diff --git a/drivers/pci/pci-pf-stub.c b/drivers/pci/pci-pf-stub.c
-new file mode 100644
-index 000000000000..9d5fdf20d485
---- /dev/null
-+++ b/drivers/pci/pci-pf-stub.c
-@@ -0,0 +1,54 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/* pci-pf-stub - simple stub driver for PCI SR-IOV PF device
+ /**
++ * pcie_bandwidth_capable - Calculates a PCI device's link bandwidth capability
++ * @dev: PCI device
++ * @speed: storage for link speed
++ * @width: storage for link width
 + *
-+ * This driver is meant to act as a "white-list" for devices that provde
-+ * SR-IOV functionality while at the same time not actually needing a
-+ * driver of their own.
++ * This function caculates a PCI device's link bandwidth by querying for its
++ * link speed and width, multiplying them, and applying encoding overhead.
 + */
++int pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
++			   enum pcie_link_width *width)
++{
++	pcie_get_speed_cap(dev, speed);
++	pcie_get_width_cap(dev, width);
 +
-+#include <linux/module.h>
-+#include <linux/pci.h>
++	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN)
++		return 0;
++
++	return (*width) * PCIE_SPEED2MBS_ENC(*speed);
++}
++EXPORT_SYMBOL(pcie_bandwidth_capable);
 +
 +/**
-+ * pci_pf_stub_white_list - White list of devices to bind pci-pf-stub onto
-+ *
-+ * This table provides the list of IDs this driver is supposed to bind
-+ * onto. You could think of this as a list of "quirked" devices where we
-+ * are adding support for SR-IOV here since there are no other drivers
-+ * that they would be running under.
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1e3d05f..9f57c45 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -265,6 +265,16 @@ enum pci_bus_speed {
+ 	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
+ 	 "Unknown speed")
+ 
++/**
++ * PCIe speed to Mb/s with encoding overhead:
++ * 20% for gen2, ~1.5% for gen3
 + */
-+static const struct pci_device_id pci_pf_stub_white_list[] = {
-+	{ PCI_VDEVICE(AMAZON, 0x0053) },
-+	/* required last entry */
-+	{ 0 }
-+};
-+MODULE_DEVICE_TABLE(pci, pci_pf_stub_white_list);
++#define PCIE_SPEED2MBS_ENC(speed) \
++	((speed) == PCIE_SPEED_8_0GT ? 7877 : \
++	 (speed) == PCIE_SPEED_5_0GT ? 4000 : \
++	 (speed) == PCIE_SPEED_2_5GT ? 2000 : \
++	 0)
 +
-+static int pci_pf_stub_probe(struct pci_dev *dev,
-+			     const struct pci_device_id *id)
-+{
-+	pci_info(dev, "claimed by pci-pf-stub\n");
-+	return 0;
-+}
-+
-+static struct pci_driver pf_stub_driver = {
-+	.name			= "pci-pf-stub",
-+	.id_table		= pci_pf_stub_white_list,
-+	.probe			= pci_pf_stub_probe,
-+	.sriov_configure	= pci_sriov_configure_simple,
-+};
-+
-+static int __init pci_pf_stub_init(void)
-+{
-+	return pci_register_driver(&pf_stub_driver);
-+}
-+
-+static void __exit pci_pf_stub_exit(void)
-+{
-+	pci_unregister_driver(&pf_stub_driver);
-+}
-+
-+module_init(pci_pf_stub_init);
-+module_exit(pci_pf_stub_exit);
-+
-+MODULE_LICENSE("GPL");
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index a6b30667a331..b10621896017 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2548,6 +2548,8 @@
- #define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
- #define PCI_SUBSYSTEM_ID_CIRCUITCO_MINNOWBOARD	0x0001
- 
-+#define PCI_VENDOR_ID_AMAZON		0x1d0f
-+
- #define PCI_VENDOR_ID_TEKRAM		0x1de1
- #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
- 
+ struct pci_cap_saved_data {
+ 	u16		cap_nr;
+ 	bool		cap_extended;
+@@ -1090,6 +1100,8 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
+ int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
++int pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
++			   enum pcie_link_width *width);
+ void pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.8.3.1
