@@ -1,114 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:37815 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754363AbeCGK6L (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Mar 2018 05:58:11 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: Joao.Pinto@synopsys.com, bhelgaas@google.com, jg1.han@samsung.com,
-        lorenzo.pieralisi@arm.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 3/4] PCI: dwc: Replace magic number by defines
-Date: Wed,  7 Mar 2018 10:57:59 +0000
-Message-Id: <fc11f571b7a66a0cbdebd75dfae163f939a5a4c9.1520419084.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
-References: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
-References: <cover.1520419084.git.gustavo.pimentel@synopsys.com>
+Received: from mail.kernel.org ([198.145.29.99]:33768 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753090AbeC3VFn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Mar 2018 17:05:43 -0400
+Subject: [PATCH v5 08/14] net/mlx5e: Use pcie_bandwidth_available() to
+ compute bandwidth
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tal Gilboa <talgi@mellanox.com>
+Cc: Tariq Toukan <tariqt@mellanox.com>,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Date: Fri, 30 Mar 2018 16:05:41 -0500
+Message-ID: <152244394162.135666.4917184975514407800.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace magic numbers by a well known define in order to make the code
-human readable and also facilitate the code reusability.
+From: Tal Gilboa <talgi@mellanox.com>
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Use the new pci_bandwidth_available() function to calculate maximum
+available bandwidth through the PCI chain instead of computing it ourselves
+with mlx5e_get_pci_bw().
+
+This is used to detect when the device is capable of more bandwidth than is
+available in the current slot.  The driver may adjust compression settings
+accordingly.
+
+Note that pci_bandwidth_available() accounts for PCIe encoding overhead, so
+it is more accurate than mlx5e_get_pci_bw() was.
+
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+[bhelgaas: remove mlx5e_get_pci_bw() wrapper altogether]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
 ---
- drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware.h      |  1 +
- 2 files changed, 21 insertions(+), 14 deletions(-)
+ drivers/net/ethernet/mellanox/mlx5/core/en_main.c |   32 +--------------------
+ 1 file changed, 1 insertion(+), 31 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 03e9b82..7535918 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+index 47bab842c5ee..93291ec4a3d1 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+@@ -3864,36 +3864,6 @@ void mlx5e_build_default_indir_rqt(u32 *indirection_rqt, int len,
+ 		indirection_rqt[i] = i % num_channels;
+ }
  
- 	for (i = 0; i < num_ctrls; i++) {
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
--				    &val);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+					(i * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &val);
- 		if (!val)
- 			continue;
+-static int mlx5e_get_pci_bw(struct mlx5_core_dev *mdev, u32 *pci_bw)
+-{
+-	enum pcie_link_width width;
+-	enum pci_bus_speed speed;
+-	int err = 0;
+-
+-	err = pcie_get_minimum_link(mdev->pdev, &speed, &width);
+-	if (err)
+-		return err;
+-
+-	if (speed == PCI_SPEED_UNKNOWN || width == PCIE_LNK_WIDTH_UNKNOWN)
+-		return -EINVAL;
+-
+-	switch (speed) {
+-	case PCIE_SPEED_2_5GT:
+-		*pci_bw = 2500 * width;
+-		break;
+-	case PCIE_SPEED_5_0GT:
+-		*pci_bw = 5000 * width;
+-		break;
+-	case PCIE_SPEED_8_0GT:
+-		*pci_bw = 8000 * width;
+-		break;
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+ static bool cqe_compress_heuristic(u32 link_speed, u32 pci_bw)
+ {
+ 	return (link_speed && pci_bw &&
+@@ -3979,7 +3949,7 @@ void mlx5e_build_nic_params(struct mlx5_core_dev *mdev,
+ 	params->num_tc       = 1;
  
- 		ret = IRQ_HANDLED;
- 		pos = 0;
--		while ((pos = find_next_bit((unsigned long *) &val, 32,
--					    pos)) != 32) {
--			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
-+		while ((pos = find_next_bit((unsigned long *) &val,
-+					    MAX_MSI_IRQS_PER_CTRL,
-+					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
-+			irq = irq_find_mapping(pp->irq_domain,
-+					       (i * MAX_MSI_IRQS_PER_CTRL) +
-+					       pos);
- 			generic_handle_irq(irq);
--			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
-+			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+						(i * MSI_REG_CTRL_BLOCK_SIZE),
- 					    4, 1 << pos);
- 			pos++;
- 		}
-@@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
- 	if (pp->ops->msi_clear_irq) {
- 		pp->ops->msi_clear_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 	mlx5e_get_max_linkspeed(mdev, &link_speed);
+-	mlx5e_get_pci_bw(mdev, &pci_bw);
++	pci_bw = pcie_bandwidth_available(mdev->pdev, NULL, NULL, NULL);
+ 	mlx5_core_dbg(mdev, "Max link speed = %d, PCI BW = %d\n",
+ 		      link_speed, pci_bw);
  
- 		pp->irq_status[ctrl] &= ~(1 << bit);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
- 	if (pp->ops->msi_set_irq) {
- 		pp->ops->msi_set_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 		pp->irq_status[ctrl] |= 1 << bit;
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	/* Initialize IRQ Status array */
- 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
--				    &pp->irq_status[ctrl]);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
-+					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &pp->irq_status[ctrl]);
- 
- 	/* Setup RC BARs */
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index fe811db..bee4e25 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -110,6 +110,7 @@
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
-+#define MSI_REG_CTRL_BLOCK_SIZE		12
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
--- 
-2.7.4
