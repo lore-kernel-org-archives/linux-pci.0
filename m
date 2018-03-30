@@ -1,57 +1,94 @@
-Return-Path: <SRS0=Y1RQ=GM=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=Y1RQ=GM=linuxfoundation.org=gregkh@kernel.org>
-Date: Thu, 22 Mar 2018 09:47:35 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/6] PCI: rockchip: Create individual folder for
- rockchip drivers
-Message-ID: <20180322084735.GC6211@kroah.com>
-References: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
- <1520304202-232891-1-git-send-email-shawn.lin@rock-chips.com>
- <20180320174633.GA137590@bhelgaas-glaptop.roam.corp.google.com>
- <879a4862-d0d5-21fd-6c47-029c795fe78e@rock-chips.com>
- <20180321181940.GA9760@e107981-ln.cambridge.arm.com>
- <7275bd77-016a-2729-482d-2855703d9b56@rock-chips.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.pl ([79.96.170.134]:55371 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751252AbeC3JAf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 05:00:35 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Kai Heng Feng <kai.heng.feng@canonical.com>,
+        linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH v2] PCI / PM: Always check PME wakeup capability for runtime wakeup support
+Date: Fri, 30 Mar 2018 11:00:51 +0200
+Message-ID: <1748267.LlfkqdCPEG@aspire.rjw.lan>
+In-Reply-To: <5DC805B1-51DA-4D0F-9A43-9D5FE549AB13@canonical.com>
+References: <20180319140910.26496-1-kai.heng.feng@canonical.com> <5DC805B1-51DA-4D0F-9A43-9D5FE549AB13@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7275bd77-016a-2729-482d-2855703d9b56@rock-chips.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 22, 2018 at 09:03:58AM +0800, Shawn Lin wrote:
-> [+ Greg]
-
-Why me?
-
-> > It would be OK for me to keep files separate too; a separate question
-> > would then be whether we have to rename drivers/pci/host if we add
-> > endpoint drivers in there, do we have to?
-> > 
-> > At that stage we could well move drivers/pci/dwc and drivers/pci/cadence
-> > in there too.
-> > 
+On Monday, March 26, 2018 7:54:35 AM CEST Kai Heng Feng wrote:
+> Hi Bjorn, Rafael,
 > 
-> I add Greg to this thread, and hope he could shed a light here.
+> > On Mar 19, 2018, at 10:09 PM, Kai-Heng Feng <kai.heng.feng@canonical.com>  
+> > wrote:
+> >
+> > USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+> > core: Drop run_wake flag from struct dev_pm_info").
+> >
+> > The device in question is not power managed by platform firmware,
+> > furthermore, it only supports PME# from D3cold:
+> > Capabilities: [78] Power Management version 3
+> >        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+> >        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+> >
+> > Before commit de3ef1eb1cd0, the device never gets runtime suspended.
+> > After that commit, the device gets runtime suspended, so it does not
+> > respond to any PME#.
+> >
+> > usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
+> > device_can_wakeup() in pci_dev_run_wake() always returns true.
+> >
+> > So pci_dev_run_wake() needs to check PME wakeup capability as its first
+> > condition.
+> >
+> > Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct  
+> > dev_pm_info")
+> > Cc: stable@vger.kernel.org # 4.13+
+> > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 > 
-> That is completely the same situation annoying me when looking into
-> drivers/usb where they have drivers/usb/host/ for host drivers,
-> drivers/usb/gadget/ for device framwork, drivers/usb/gaget/udc for
-> device drivers, and even surprisingly drivers/usb/dwc2/,
-> drivers/usb/dwc3/ and drivers/usb/renesas_usbhs/ for supporting both of
-> host and device functional drivers....
+> 
+> Is there any improvement I can address?
+> Or do you have any concern about this patch?
+> 
+> Kai-Heng
+> 
+> > ---
+> > v2: Explicitly check dev->pme_support.
+> >
+> >  drivers/pci/pci.c | 8 ++++----
+> >  1 file changed, 4 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index f6a4dd10d9b0..52821a21fc07 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -2125,16 +2125,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+> >  {
+> >  	struct pci_bus *bus = dev->bus;
+> >
+> > -	if (device_can_wakeup(&dev->dev))
+> > -		return true;
+> > -
+> >  	if (!dev->pme_support)
+> >  		return false;
+> >
+> >  	/* PME-capable in principle, but not from the target power state */
+> > -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
+> > +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
 
-USB is "messy" in that we have hardware that acts both as a host and a
-gadget controller.  Don't use our directory scheme as an example to do
-anything :)
+So why do you change 'false' to 'true' here?
 
-Do what is right for the PCI subsystem, if a driver is too "complex"
-that it needs lots of different files, make a subdirectory to make it
-easier to manage.  That's all we did for USB, nothing really complex.
+At least that change should be mentioned in the changelog too.
 
-good luck!
-
-greg k-h
+> >  		return false;
+> >
+> > +	if (device_can_wakeup(&dev->dev))
+> > +		return true;
+> > +
+> >  	while (bus->parent) {
+> >  		struct pci_dev *bridge = bus->self;
+> >
+> 
