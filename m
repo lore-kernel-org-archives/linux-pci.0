@@ -1,57 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-hk2apc01on0139.outbound.protection.outlook.com ([104.47.124.139]:63328
-        "EHLO APC01-HK2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750782AbeCFSVw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Mar 2018 13:21:52 -0500
-From: Dexuan Cui <decui@microsoft.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>
-Subject: [PATCH v3 0/6] some fixes to the pci-hyperv driver.
-Date: Tue, 6 Mar 2018 18:21:45 +0000
-Message-ID: <20180306182128.23281-1-decui@microsoft.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 30 Mar 2018 17:34:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/DPC: Do not enable DPC if AER control is not
+ allowed by the BIOS
+Message-ID: <20180330223441.GE9322@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180327104835.19664-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180327104835.19664-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes in v2 are:
+On Tue, Mar 27, 2018 at 01:48:35PM +0300, Mika Westerberg wrote:
+> Commit eed85ff4c0da ("PCI/DPC: Enable DPC only if AER is available")
+> made DPC control dependent whether AER is enabled in the OS. However, it
+> does not take into account situations where BIOS has not given OS
+> control of AER:
+> 
+>   acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+>   acpi PNP0A08:00: _OSC: platform does not support [AER]
+>   acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug PME PCIeCapability]
+> 
+> I think here it is better not to enable DPC even if the capability is
+> available because then it would be against what "Determination of DPC
+> Control" note in PCIe 4.0 sec 6.1.10 recommends.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Patch 1, 6: no change since v1.
-Patch 2,4,5: I added these new patches, as suggested by Michael Kelley.
-Patch 3: Removed the unnecessary drain_workqueue(), as suggested by Michael=
- Kelley.
+Applied to pci/portdrv for v4.17, thanks!
 
-Changes in v3 are:
-
-Patch 5: minimized the scope of the spinlock, as suggested by Michael Kelle=
-y.
-
-Dexuan Cui (6):
-  PCI: hv: fix a comment typo in _hv_pcifront_read_config()
-  PCI: hv: hv_eject_device_work(): remove the bogus test
-  PCI: hv: serialize the present/eject work items
-  PCI: hv: remove hbus->enum_sem
-  PCI: hv: hv_pci_devices_present(): only queue a new work when
-    necessary
-  PCI: hv: fix 2 hang issues in hv_compose_msi_msg()
-
- drivers/pci/host/pci-hyperv.c | 116 ++++++++++++++++++++++++++++++++------=
-----
- 1 file changed, 90 insertions(+), 26 deletions(-)
-
---=20
-2.7.4
+> ---
+> Changes from v1:
+> 
+>   * Rebased on top of pci.git/pci/portdrv
+>   * Dropped the other patch that disables interrupt generation during
+>     suspend because there is development on-going to get rid of separate
+>     PCIe portdrv and move everything to the PCI core instead.
+> 
+>  drivers/pci/pcie/portdrv_acpi.c | 4 ++--
+>  drivers/pci/pcie/portdrv_core.c | 2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+> index 9d12650dc2ae..8ab5d434b9c6 100644
+> --- a/drivers/pci/pcie/portdrv_acpi.c
+> +++ b/drivers/pci/pcie/portdrv_acpi.c
+> @@ -47,11 +47,11 @@ void pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+>  
+>  	flags = root->osc_control_set;
+>  
+> -	*srv_mask = PCIE_PORT_SERVICE_DPC;
+> +	*srv_mask = 0;
+>  	if (flags & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
+>  		*srv_mask |= PCIE_PORT_SERVICE_HP;
+>  	if (flags & OSC_PCI_EXPRESS_PME_CONTROL)
+>  		*srv_mask |= PCIE_PORT_SERVICE_PME;
+>  	if (flags & OSC_PCI_EXPRESS_AER_CONTROL)
+> -		*srv_mask |= PCIE_PORT_SERVICE_AER;
+> +		*srv_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
+>  }
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index a1f838f2646a..eb463966094e 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -236,7 +236,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+>  	}
+>  
+>  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+> -	    pci_aer_available())
+> +	    pci_aer_available() && services & PCIE_PORT_SERVICE_AER)
+>  		services |= PCIE_PORT_SERVICE_DPC;
+>  
+>  	return services;
+> -- 
+> 2.16.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
