@@ -1,85 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 26 Mar 2018 08:52:35 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39860 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752478AbeC3Wmc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Mar 2018 18:42:32 -0400
+Date: Fri, 30 Mar 2018 17:42:29 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wolfgang Denk <wd@denx.de>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCIe x4 cards not detected on Z370 mainboards
-Message-ID: <20180326135235.GA221217@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180322184840.E31D4247251@gemini.denx.de>
- <20180322192759.GA252023@bhelgaas-glaptop.roam.corp.google.com>
- <20180323084855.E3EAF247251@gemini.denx.de>
- <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com>
- <20180324201534.092D2247245@gemini.denx.de>
- <20180326135107.GH210003@bhelgaas-glaptop.roam.corp.google.com>
+To: Mathieu Malaterre <malat@debian.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Wei Yang <weiyang@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH] PCI/IOV: Add missing prototype for powerpc specific
+Message-ID: <20180330224229.GF9322@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180322203355.26448-1-malat@debian.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180326135107.GH210003@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180322203355.26448-1-malat@debian.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 26, 2018 at 08:51:07AM -0500, Bjorn Helgaas wrote:
-> On Sat, Mar 24, 2018 at 09:15:34PM +0100, Wolfgang Denk wrote:
-> > Dear Bjorn,
-> > 
-> > thanks - I really appreciate your help.
-> > 
-> > In message <20180324044716.GF210003@bhelgaas-glaptop.roam.corp.google.com> you wrote:
-> > >
-> > > From lspci-adaptec-29320LPE:
-> > > 
-> > >   00:01.0 Intel Xeon E3-1200 v5/E3-1500 Root Port
-> > >     Bus: primary=00, secondary=01, subordinate=02
-> > >   01:00.0 PEX 8114 PCI Express-to-PCI/PCI-X Bridge
-> > >     Bus: primary=01, secondary=02, subordinate=02
-> > >   02:04.0 Adaptec ASC-29320ALP U320 (rev 10)
-> > > 
-> > > The 00:01.0 Root Port is built into your motherboard's chipset.  The
-> > > 01:00.0 Bridge and ASC-29320ALP devices are both on the plugin card.
-> > > The card should have a PLX-labeled chip and an Adaptec-labeled one.
-> > 
-> > Correct.  It has an AIC-7901X (Adaptec) and a PEX8114-BD13BI G (PLX).
-> > 
-> > > >>> I don't know if this is relevant, but in Linux (Fedora 27,
-> > > >>> 4.15.6-300.fc27.x86_64 kernel), I see these error messages:
-> > > >>> 
-> > > >>>   ACPI Error: [_SB_.PCI0.RP05.PXSX] Namespace lookup failure, AE_NOT_FOUND (20170831/dswload2-191)
-> > > >>>   ACPI Exception: AE_NOT_FOUND, During name lookup/catalog (20170831/psobject-252)
-> > > >>>   ACPI Error: Method parse/execution failed \_SB.PCI0.RP04.PXSX, AE_NOT_FOUND (20170831/psparse-550)
-> > > >>>   ACPI Error: [_SB_.PCI0.RP09.PXSX] Namespace lookup failure, AE_NOT_FOUND (20170831/dswload2-191)
-> > > >>>   ACPI Exception: AE_NOT_FOUND, During name lookup/catalog (20170831/psobject-252)
-> > > >>>   ACPI Error: Method parse/execution failed \_SB.PCI0.RP08.PXSX, AE_NOT_FOUND (20170831/psparse-550)
-> > > 
-> > > This is interesting.  These methods (PXSX) are connected with PCIe
-> > > Root Ports, and Mika's recent patch [1] also mentioned PXSX, though
-> > > that was in the context of Thunderbolt hotplug.
-> > > 
-> > > It's conceivable that Linux is doing something wrong here that causes
-> > > BIOS to leave that 00:01.0 Root Port disabled.
-> > 
-> > But is not in any case the problem at least also in the mainboard
-> > BIOS? Should we not see the card's BIOS start messages in any case?
-> > For example, if I wanted to boot from a disk attached to this SAS
-> > controller, it would need to be up and running for booting Linux.
+On Thu, Mar 22, 2018 at 09:33:55PM +0100, Mathieu Malaterre wrote:
+> Some prototypes for weak functions were missing for powerpc specific
+> functions. Add the missing prototypes to the CONFIG_PCI_IOV block. This
+> fixes the following three warnings treated as error when using W=1:
 > 
-> Oh, you're right; I forgot about that point.
+>   arch/powerpc/kernel/pci-common.c:236:17: error: no previous prototype for ‘pcibios_default_alignment’ [-Werror=missing-prototypes]
+>   arch/powerpc/kernel/pci-common.c:253:5: error: no previous prototype for ‘pcibios_sriov_enable’ [-Werror=missing-prototypes]
+>   arch/powerpc/kernel/pci-common.c:261:5: error: no previous prototype for ‘pcibios_sriov_disable’ [-Werror=missing-prototypes]
 > 
-> I guess you've already talked to MSI support, who told you:
+> Also in commit 978d2d683123 ("PCI: Add pcibios_iov_resource_alignment()
+> interface") a new function was added but the prototype was located in the
+> main header instead of the CONFIG_PCI_IOV specific section. Move this
+> function next to the newly added ones.
 > 
->   These are old controllers which don't support UEFI/GOP. this
->   is the reason they don't work.  Cards which have only legacy
->   support cannot be operated in modern mainboards.
-> 
-> That seems like sort of a lame excuse as a consumer, but if the BIOS
-> writers decided they don't want to support older adapters, I don't
-> know what we can really do about it.
-> 
-> I searched for other reports ("GIGABYTE Z370-HD3 not detected") and
-> found several that could be similar.  One suggested enabling/disabling
-> CSM (UEFI compatibility support module) in the BIOS setup.  If these
-> BIOSes in fact decided not to support these old cards, my guess is
-> there is no CSM in them, but it's worth checking.
+> Signed-off-by: Mathieu Malaterre <malat@debian.org>
 
-P.S. https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface
-has a little interesting background on UEFI/CSM.
+Applied to pci/virtualization for v4.17, thanks!
+
+> ---
+>  include/linux/pci.h | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 024a1beda008..f43b43b9b643 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1295,7 +1295,6 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+>  void pci_setup_bridge(struct pci_bus *bus);
+>  resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+>  					 unsigned long type);
+> -resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+>  
+>  #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+>  #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+> @@ -1923,6 +1922,7 @@ void pcibios_release_device(struct pci_dev *dev);
+>  void pcibios_penalize_isa_irq(int irq, int active);
+>  int pcibios_alloc_irq(struct pci_dev *dev);
+>  void pcibios_free_irq(struct pci_dev *dev);
+> +resource_size_t pcibios_default_alignment(void);
+>  
+>  #ifdef CONFIG_HIBERNATE_CALLBACKS
+>  extern struct dev_pm_ops pcibios_pm_ops;
+> @@ -1955,6 +1955,11 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+>  void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+> +
+> +/* Arch may override these (weak) */
+> +int pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs);
+> +int pcibios_sriov_disable(struct pci_dev *pdev);
+> +resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+>  #else
+>  static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+>  {
+> -- 
+> 2.11.0
+> 
