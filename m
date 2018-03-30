@@ -1,76 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: David Laight <David.Laight@ACULAB.COM>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180312193525.2855-1-logang@deltatee.com>
- <20180312193525.2855-2-logang@deltatee.com>
- <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
- <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
- <016dc910-f96a-8a60-4bda-fa24eea98ea5@codeaurora.org>
- <2b152932-2f44-408b-e3ed-b4608d95f82e@deltatee.com>
- <156c24fb-6e27-28f6-0b36-7fd83311ce37@codeaurora.org>
- <932bbf48-9d86-97ec-17bb-052099aff99e@deltatee.com>
- <6e36d43b0493455a8547bc50c8ec77ba@AcuMS.aculab.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <f5c1d284-5bc1-8007-08fd-1837c70b0daa@deltatee.com>
-Date: Wed, 14 Mar 2018 10:23:27 -0600
-MIME-Version: 1.0
-In-Reply-To: <6e36d43b0493455a8547bc50c8ec77ba@AcuMS.aculab.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:33161 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752672AbeC3HPA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 03:15:00 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Keller Jacob E <jacob.e.keller@intel.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V4 2/8] PCI: Add a query function for PCI device's width cap
+Date: Fri, 30 Mar 2018 10:14:40 +0300
+Message-Id: <1522394086-3555-3-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
+References: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+pcie_get_width_cap() implements the logic for querying a PCI device's
+maximum width capability. Change max_link_width_show() function to
+use pcie_get_width_cap().
 
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+---
+ drivers/pci/pci-sysfs.c |  6 +++---
+ drivers/pci/pci.c       | 23 +++++++++++++++++++++++
+ include/linux/pci.h     |  1 +
+ 3 files changed, 27 insertions(+), 3 deletions(-)
 
-On 14/03/18 06:16 AM, David Laight wrote:
-> That surprises me (unless I missed something last time I read the spec).
-> While P2P writes are relatively easy to handle, reads and any other TLP that
-> require acks are a completely different proposition.
-> There are no additional fields that can be set in the read TLP and will be
-> reflected back in the ack(s) than can be used to route the acks back to the
-> correct initiator.
->
-> I'm pretty sure that to support P2P reads a switch would have to save
-> the received read TLP and (possibly later on) issue read TLP of its own
-> for the required data.
-> I'm not even sure it is easy to interleave the P2P reads with those
-> coming from the root.
-> That requires a potentially infinite queue of pending requests.
-
-This is wrong. A completion is a TLP just like any other and makes use
-of the Destination ID field in the header to route it back to the
-original requester.
-
-> Some x86 root ports support P2P writes (maybe with a bios option).
-> It would be a shame not to be able to do P2P writes on such systems
-> even though P2P reads won't work.
-
-Yes, and this has been discussed many times. It won't be changing in the
-near term.
-
-Logan
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 69624d3..f4b8867 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -177,14 +177,14 @@ static ssize_t max_link_width_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	u32 linkcap;
++	enum pcie_link_width width;
+ 	int err;
+ 
+-	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
++	err = pcie_get_width_cap(pci_dev, &width);
+ 	if (err)
+ 		return -EINVAL;
+ 
+-	return sprintf(buf, "%u\n", (linkcap & PCI_EXP_LNKCAP_MLW) >> 4);
++	return sprintf(buf, "%u\n", width);
+ }
+ static DEVICE_ATTR_RO(max_link_width);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6fbf170..90a6cf2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5189,6 +5189,29 @@ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed)
+ EXPORT_SYMBOL(pcie_get_speed_cap);
+ 
+ /**
++ * pcie_get_width_cap - queries for the PCI device's link width capability
++ * @dev: PCI device to query
++ * @width: storage for link width
++ *
++ * This function queries the PCI device width capability.
++ */
++int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width)
++{
++	u32 lnkcap;
++	int err;
++
++	*width = PCIE_LNK_WIDTH_UNKNOWN;
++
++	err = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
++	if (!err && lnkcap)
++		/* Shift start of width mask by 4 to get actual speed cap */
++		*width = (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
++
++	return err;
++}
++EXPORT_SYMBOL(pcie_get_width_cap);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fcc6eb3..1e3d05f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1089,6 +1089,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+ int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
++int pcie_get_width_cap(struct pci_dev *dev, enum pcie_link_width *width);
+ void pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.8.3.1
