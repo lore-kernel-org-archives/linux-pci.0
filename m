@@ -1,137 +1,128 @@
-Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=MUuQ=F5=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Keith Busch <keith.busch@intel.com>, Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v1 9/9] PCI/portdrv: Remove "pcie_hp=nomsi" kernel parameter
-Date: Wed, 07 Mar 2018 12:13:47 +0100
-Message-ID: <1605705.SjLI87HLIV@aspire.rjw.lan>
-In-Reply-To: <152040325332.240786.929303502030362231.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152040297576.240786.1532465558381209070.stgit@bhelgaas-glaptop.roam.corp.google.com> <152040325332.240786.929303502030362231.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v5 04/14] PCI: Add pcie_bandwidth_available() to compute
+ bandwidth available to device
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tal Gilboa <talgi@mellanox.com>
+Cc: Tariq Toukan <tariqt@mellanox.com>,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Date: Fri, 30 Mar 2018 16:05:11 -0500
+Message-ID: <152244391143.135666.12548496808512444463.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, March 7, 2018 7:14:13 AM CET Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> 7570a333d8b0 ("PCI: Add pcie_hp=nomsi to disable MSI/MSI-X for pciehp
-> driver") added the "pcie_hp=nomsi" kernel parameter to work around this
-> error on shutdown:
-> 
->   irq 16: nobody cared (try booting with the "irqpoll" option)
->   Pid: 1081, comm: reboot Not tainted 3.2.0 #1
->   ...
->   Disabling IRQ #16
-> 
-> This happened on an unspecified system (possibly involving the Integrated
-> Device Technology, Inc. Device 807f bridge) where "an un-wanted interrupt
-> is generated when PCI driver switches from MSI/MSI-X to INTx while shutting
-> down the device."
-> 
-> The implication was that the device was buggy, but it is normal for a
-> device to use INTx after MSI/MSI-X have been disabled.  The only problem
-> was that the driver was still attached and it wasn't prepared for INTx
-> interrupts.  Prarit Bhargava fixed this issue with fda78d7a0ead ("PCI/MSI:
-> Stop disabling MSI/MSI-X in pci_device_shutdown()").
-> 
-> There is no automated way to set this parameter, so it's not very useful
-> for distributions or end users.  It's really only useful for debugging, and
-> we have "pci=nomsi" for that purpose.
-> 
-> Revert 7570a333d8b0 to remove the "pcie_hp=nomsi" parameter.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>
-> CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-> CC: Prarit Bhargava <prarit@redhat.com>
-> ---
->  Documentation/admin-guide/kernel-parameters.txt |    4 ----
->  drivers/pci/pcie/portdrv.h                      |   12 ------------
->  drivers/pci/pcie/portdrv_core.c                 |   20 +++-----------------
->  3 files changed, 3 insertions(+), 33 deletions(-)
-> 
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index 1d1d53f85ddd..761749562165 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> @@ -3130,10 +3130,6 @@
->  		force	Enable ASPM even on devices that claim not to support it.
->  			WARNING: Forcing ASPM on may cause system lockups.
->  
-> -	pcie_hp=	[PCIE] PCI Express Hotplug driver options:
-> -		nomsi	Do not use MSI for PCI Express Native Hotplug (this
-> -			makes all PCIe ports use INTx for hotplug services).
-> -
->  	pcie_ports=	[PCIE] PCIe ports handling:
->  		auto	Ask the BIOS whether or not to use native PCIe services
->  			associated with PCIe ports (PME, hot-plug, AER).  Use
-> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-> index 2c19cf9ffea2..87a87cb9f42d 100644
-> --- a/drivers/pci/pcie/portdrv.h
-> +++ b/drivers/pci/pcie/portdrv.h
-> @@ -34,18 +34,6 @@ void pcie_port_bus_unregister(void);
->  
->  struct pci_dev;
->  
-> -#ifdef CONFIG_HOTPLUG_PCI_PCIE
-> -extern bool pciehp_msi_disabled;
-> -
-> -static inline bool pciehp_no_msi(void)
-> -{
-> -	return pciehp_msi_disabled;
-> -}
-> -
-> -#else  /* !CONFIG_HOTPLUG_PCI_PCIE */
-> -static inline bool pciehp_no_msi(void) { return false; }
-> -#endif /* !CONFIG_HOTPLUG_PCI_PCIE */
-> -
->  #ifdef CONFIG_PCIE_PME
->  extern bool pcie_pme_msi_disabled;
->  
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 29210e9bfbd3..bf9c5c885957 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -21,17 +21,6 @@
->  #include "../pci.h"
->  #include "portdrv.h"
->  
-> -bool pciehp_msi_disabled;
-> -
-> -static int __init pciehp_setup(char *str)
-> -{
-> -	if (!strncmp(str, "nomsi", 5))
-> -		pciehp_msi_disabled = true;
-> -
-> -	return 1;
-> -}
-> -__setup("pcie_hp=", pciehp_setup);
-> -
->  /**
->   * release_pcie_device - free PCI Express port service device structure
->   * @dev: Port service device to release
-> @@ -169,16 +158,13 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
->  		irqs[i] = -1;
->  
->  	/*
-> -	 * If we support PME or hotplug, but we can't use MSI/MSI-X for
-> -	 * them, we have to fall back to INTx or other interrupts, e.g., a
-> -	 * system shared interrupt.
-> +	 * If we support PME but can't use MSI/MSI-X for it, we have to
-> +	 * fall back to INTx or other interrupts, e.g., a system shared
-> +	 * interrupt.
->  	 */
->  	if ((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi())
->  		goto legacy_irq;
->  
-> -	if ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())
-> -		goto legacy_irq;
-> -
->  	/* Try to use MSI-X or MSI if supported */
->  	if (pcie_port_enable_irq_vec(dev, irqs, mask) == 0)
->  		return 0;
-> 
-> 
+From: Tal Gilboa <talgi@mellanox.com>
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Add pcie_bandwidth_available() to compute the bandwidth available to a
+device.  This may be limited by the device itself or by a slower upstream
+link leading to the device.
+
+The available bandwidth at each link along the path is computed as:
+
+  link_speed * link_width * (1 - encoding_overhead)
+
+The encoding overhead is about 20% for 2.5 and 5.0 GT/s links using 8b/10b
+encoding, and about 1.5% for 8 GT/s or higher speed links using 128b/130b
+encoding.
+
+Also return the device with the slowest link and the speed and width of
+that link.
+
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+[bhelgaas: changelog, leave pcie_get_minimum_link() alone for now, return
+bw directly, use pci_upstream_bridge(), check "next_bw <= bw" to find
+uppermost limiting device, return speed/width of the limiting device]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c   |   54 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 57 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9ce89e254197..e00d56b12747 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5146,6 +5146,60 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ }
+ EXPORT_SYMBOL(pcie_get_minimum_link);
+ 
++/**
++ * pcie_bandwidth_available - determine minimum link settings of a PCIe
++ *			      device and its bandwidth limitation
++ * @dev: PCI device to query
++ * @limiting_dev: storage for device causing the bandwidth limitation
++ * @speed: storage for speed of limiting device
++ * @width: storage for width of limiting device
++ *
++ * Walk up the PCI device chain and find the point where the minimum
++ * bandwidth is available.  Return the bandwidth available there and (if
++ * limiting_dev, speed, and width pointers are supplied) information about
++ * that point.
++ */
++u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
++			     enum pci_bus_speed *speed,
++			     enum pcie_link_width *width)
++{
++	u16 lnksta;
++	enum pci_bus_speed next_speed;
++	enum pcie_link_width next_width;
++	u32 bw, next_bw;
++
++	*speed = PCI_SPEED_UNKNOWN;
++	*width = PCIE_LNK_WIDTH_UNKNOWN;
++	bw = 0;
++
++	while (dev) {
++		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
++
++		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
++		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
++			PCI_EXP_LNKSTA_NLW_SHIFT;
++
++		next_bw = next_width * PCIE_SPEED2MBS_ENC(next_speed);
++
++		/* Check if current device limits the total bandwidth */
++		if (!bw || next_bw <= bw) {
++			bw = next_bw;
++
++			if (limiting_dev)
++				*limiting_dev = dev;
++			if (speed)
++				*speed = next_speed;
++			if (width)
++				*width = next_width;
++		}
++
++		dev = pci_upstream_bridge(dev);
++	}
++
++	return bw;
++}
++EXPORT_SYMBOL(pcie_bandwidth_available);
++
+ /**
+  * pcie_get_speed_cap - query for the PCI device's link speed capability
+  * @dev: PCI device to query
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8043a5937ad0..f2bf2b7a66c7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1083,6 +1083,9 @@ int pcie_get_mps(struct pci_dev *dev);
+ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
++u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
++			     enum pci_bus_speed *speed,
++			     enum pcie_link_width *width);
+ void pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
