@@ -1,69 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0138.outbound.protection.outlook.com ([104.47.32.138]:23134
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932753AbeCFSbM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Mar 2018 13:31:12 -0500
-From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        Jack Morgenstein <jackm@mellanox.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH v3 4/6] PCI: hv: remove hbus->enum_sem
-Date: Tue, 6 Mar 2018 18:31:09 +0000
-Message-ID: <DM5PR2101MB1030C8B38BAFA59EDBFFA308DCD90@DM5PR2101MB1030.namprd21.prod.outlook.com>
-References: <20180306182128.23281-1-decui@microsoft.com>
- <20180306182128.23281-5-decui@microsoft.com>
-In-Reply-To: <20180306182128.23281-5-decui@microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.99]:40622 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752357AbeC3Wrl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Mar 2018 18:47:41 -0400
+Date: Fri, 30 Mar 2018 17:47:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: always define the of_node helpers
+Message-ID: <20180330224738.GG9322@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180318125806.12364-1-bjorn@mork.no>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180318125806.12364-1-bjorn@mork.no>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Tuesday, March 6, 2018 10:22 AM
-> To: bhelgaas@google.com; linux-pci@vger.kernel.org; KY Srinivasan <kys@mi=
-crosoft.com>;
-> Stephen Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de; apw@canonical=
-.com;
-> jasowang@redhat.com
-> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;=
- Haiyang Zhang
-> <haiyangz@microsoft.com>; vkuznets@redhat.com; marcelo.cerri@canonical.co=
-m; Michael
-> Kelley (EOSG) <Michael.H.Kelley@microsoft.com>; Dexuan Cui <decui@microso=
-ft.com>; Jack
-> Morgenstein <jackm@mellanox.com>; stable@vger.kernel.org
-> Subject: [PATCH v3 4/6] PCI: hv: remove hbus->enum_sem
->=20
-> Since we serialize the present/eject work items now, we don't need the
-> semaphore any more.
->=20
-> This is suggested by Michael Kelley.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> Cc: Jack Morgenstein <jackm@mellanox.com>
-> Cc: stable@vger.kernel.org
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> Cc: Michael Kelley (EOSG) <Michael.H.Kelley@microsoft.com>
-> ---
->  drivers/pci/host/pci-hyperv.c | 17 ++---------------
->  1 file changed, 2 insertions(+), 15 deletions(-)
->=20
+On Sun, Mar 18, 2018 at 01:58:06PM +0100, Bjørn Mork wrote:
+> Simply move these inline functions outside the ifdef instead of duplicating
+> them as stubs in the !OF case.  The struct device of_node field does not
+> depend on OF.
+> 
+> This also fixes the missing stubbed pci_bus_to_OF_node().
+> 
+> Signed-off-by: Bjørn Mork <bjorn@mork.no>
 
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+Applied to pci/misc for v4.17, thanks!
+
+> ---
+> I noticed this as a missing pci_bus_to_OF_node stub. But adding a
+> stub which does pretty much the same as the real thing didn't make much
+> sense to me.  Same goes for the existing pci_device_to_OF_node stub,
+> which is why I replace that too.
+> 
+> 
+>  include/linux/pci.h | 24 +++++++++++-------------
+>  1 file changed, 11 insertions(+), 13 deletions(-)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 024a1beda008..d0396da9160e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -2182,24 +2182,11 @@ int pci_parse_request_of_pci_ranges(struct device *dev,
+>  /* Arch may override this (weak) */
+>  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
+>  
+> -static inline struct device_node *
+> -pci_device_to_OF_node(const struct pci_dev *pdev)
+> -{
+> -	return pdev ? pdev->dev.of_node : NULL;
+> -}
+> -
+> -static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
+> -{
+> -	return bus ? bus->dev.of_node : NULL;
+> -}
+> -
+>  #else	/* CONFIG_OF */
+>  static inline void pci_set_of_node(struct pci_dev *dev) { }
+>  static inline void pci_release_of_node(struct pci_dev *dev) { }
+>  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+>  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+> -static inline struct device_node *
+> -pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
+>  static inline struct irq_domain *
+>  pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
+>  static inline int pci_parse_request_of_pci_ranges(struct device *dev,
+> @@ -2210,6 +2197,17 @@ static inline int pci_parse_request_of_pci_ranges(struct device *dev,
+>  }
+>  #endif  /* CONFIG_OF */
+>  
+> +static inline struct device_node *
+> +pci_device_to_OF_node(const struct pci_dev *pdev)
+> +{
+> +	return pdev ? pdev->dev.of_node : NULL;
+> +}
+> +
+> +static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
+> +{
+> +	return bus ? bus->dev.of_node : NULL;
+> +}
+> +
+>  #ifdef CONFIG_ACPI
+>  struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus);
+>  
+> -- 
+> 2.11.0
+> 
