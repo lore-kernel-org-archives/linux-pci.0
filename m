@@ -1,71 +1,87 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1520308623.33502.13.camel@aosc.io>
-Subject: Re: Question about a quirky (DesignWare) PCIe RC in Allwinner H6
-From: Icenowy Zheng <icenowy@aosc.io>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Date: Tue, 06 Mar 2018 11:57:03 +0800
-In-Reply-To: <20180305214718.GC255556@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520261458.33502.10.camel@aosc.io>
- <20180305214718.GC255556@bhelgaas-glaptop.roam.corp.google.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
- Maxime Ripard <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
- linux-sunxi@googlegroups.com, Chen-Yu Tsai <wens@csie.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:37022 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751322AbeC3Q3K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Mar 2018 12:29:10 -0400
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Tal Gilboa <talgi@mellanox.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>
+Subject: RE: [PATCH next V4 0/8] Report PCI device link status
+Date: Fri, 30 Mar 2018 16:29:08 +0000
+Message-ID: <02874ECE860811409154E81DA85FBB5882D44EAF@ORSMSX115.amr.corp.intel.com>
+References: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-5ZyoIDIwMTgtMDMtMDXkuIDnmoQgMTU6NDcgLTA2MDDvvIxCam9ybiBIZWxnYWFz5YaZ6YGT77ya
-Cj4gT24gTW9uLCBNYXIgMDUsIDIwMTggYXQgMTA6NTA6NThQTSArMDgwMCwgSWNlbm93eSBaaGVu
-ZyB3cm90ZToKPiA+IEhpIGV2ZXJ5b25lLAo+ID4gCj4gPiBJJ20gdHJ5aW5nIHRvIGltcGxlbWVu
-dCBhIGRyaXZlciBmb3IgdGhlIHF1aXJreSAoRFcpIFBDSWUgUkMgaW4gdGhlCj4gPiBBbGx3aW5u
-ZXIgSDYgU29DLgo+ID4gCj4gPiBUaGUgcXVpcmsgaXMgdGhhdCBvbmx5IHRoZSAiZGJpIiBzcGFj
-ZSBpcyBhbHdheXMgbWFwcGVkLCBidXQgYXQgdGhlCj4gPiBzYW1lIHRpbWUgb25seSA2NEtpQiBv
-ZiBvdGhlciBzcGFjZXMgKGNvbmZpZywgZG93bnN0cmVhbSBJTyBhbmQKPiA+IG5vbi0KPiA+IHBy
-ZWZldGNoYWJsZSBtZW1vcnkpIGFyZSBhY2Nlc3NpYmxlLiBUbyBhY2Nlc3MgYSBjZXJ0YWluIGFk
-ZHJlc3MKPiA+IHRoZQo+ID4gaGlnaCAxNi1iaXQgb2YgdGhlIGFkZHJlc3MgKGFsbCBidXMgYWRk
-cmVzc2VzIGluIEg2IFNvQyBhcmUgMzItYml0Cj4gPiBkZXNwaXRlIHRoZSBDUFUgaXMgNjQtYml0
-KSBuZWVkcyB0byBiZSB3cml0dGVuIGludG8gdGhlCj4gPiBQQ0lFX0FERFJfUEFHRV9DRkcgcmVn
-aXN0ZXIgKGEgdmVuZG9yLWRlZmluZWQgcmVnaXN0ZXIgaW4gREJJCj4gPiBzcGFjZSkuCj4gPiBT
-byB0aGUgYWNjZXNzIHRvIHRoZXNlIHNwYWNlcyBjYW5ub3QgYmUgcHJvY2Vzc2VkIGNvcnJlY3Rs
-eSB3aXRoCj4gPiBqdXN0Cj4gPiByZWFkbC93cml0ZWwsIGFzIHRoZSBleGlzdGluZyBjb2RlIGRv
-ZXMuCj4gPiAKPiA+IElzIGl0IHBvc3NpYmxlIHRvIHdvcmthcm91bmQgdGhpcyBpbiB0aGUgUENJ
-IHN1YnN5c3RlbSBvZiBMaW51eD8KPiA+IAo+ID4gKEkgaGF2ZSB0aG91Z2h0IGEgd29ya2Fyb3Vu
-ZCB0aGF0IG9ubHkgbWFwcyB0aGUgY3VycmVudCBhY2Nlc3NpYmxlCj4gPiA2NEtpQiB3aXRoIHRo
-ZSBNTVUsIGFuZCB3aGVuIGFjY2Vzc2luZyB0aGUgbm9uLWFjY2Vzc2libGUgcGFydCwKPiA+IGNh
-dGNoCj4gPiB0aGUgcGFnZSBmYXVsdCBhbmQgcmUtc2V0dXAgdGhlIG1hcCB0byB0aGUgbmV3IDY0
-S2lCIHBhZ2UuIEJ1dAo+ID4gc3VyZWx5Cj4gPiBpdCB3aWxsIGtpbGwgdGhlIHBlcmZvcm1hbmNl
-LikKPiAKPiBJZiB5b3Ugb25seSBuZWVkIHRvIHdyaXRlIHRvIFBDSUVfQUREUl9QQUdFX0NGRyBm
-b3IgKmNvbmZpZyoKPiBhY2Nlc3NlcywKPiB0aGlzIHNob3VsZCBiZSBlYXN5LiAgQWxsIGNvbmZp
-ZyBhY2Nlc3NlcyBnbyB0aHJvdWdoIHdyYXBwZXJzCj4gKHBjaV9yZWFkX2NvbmZpZ193b3JkKCks
-IGV0YykgYW5kIHNldmVyYWwgaG9zdCBicmlkZ2UgZHJpdmVycyBoYXZlIHRvCj4gdXBkYXRlIGEg
-cmVnaXN0ZXIgd2l0aCBwYXJ0cyBvZiB0aGUgY29uZmlnIGFkZHJlc3MsIGUuZy4sCj4gYWR2a19w
-Y2llX3JkX2NvbmYoKSwgbXZlYnVfcGNpZV9od19yZF9jb25mKCkuCj4gCj4gSXQgc291bmRzIGxp
-a2UgeW91IGFsc28gbmVlZCB0byB1cGRhdGUgUENJRV9BRERSX1BBR0VfQ0ZHIGZvciBJL08KPiBw
-b3J0Cj4gYWNjZXNzZXMuICBJL08gcG9ydCBhY2Nlc3NlcyBkbyBnbyB0aHJvdWdoIGEgd3JhcHBl
-ciAoaW5iKCksIGV0YyksIHNvCj4gaXQgbWlnaHQgYmUgcG9zc2libGUgaW4gcHJpbmNpcGxlIHRv
-IGludGVyY2VwdCB0aGVzZSwgYWx0aG91Z2ggbXVjaAo+IG1vcmUgZGlmZmljdWx0IHRoYW4gY29u
-ZmlnIGFjY2Vzc2VzLCBiZWNhdXNlIHRoZSBjb25maWcgYWNjZXNzZXMgYXJlCj4gYWxyZWFkeSBz
-ZXQgdXAgd2l0aCBwZXItaG9zdCBicmlkZ2UgaG9va3MsIHdoaWxlIHRoZSBJL08gcG9ydAo+IGFj
-Y2Vzc29ycyBhcmUgbW9zdGx5IHBlci1hcmNoLgo+IAo+IEJ1dCBpZiB5b3UgaGF2ZSB0byB1cGRh
-dGUgUENJRV9BRERSX1BBR0VfQ0ZHIGZvciBtZW1vcnkgYWNjZXNzZXMsCj4gdGhhdCdzIHJlYWxs
-eSBhIHByb2JsZW0gYmVjYXVzZSBkcml2ZXJzIGFyZSBhbGxvd2VkIHRvIGVzc2VudGlhbGx5Cj4g
-cmVhZCBhIG1lbW9yeSBCQVIsIGNvbnZlcnQgdGhhdCBidXMgYWRkcmVzcyB0byBhIENQVSBwaHlz
-aWNhbCBtZW1vcnkKPiBhZGRyZXNzLCBpb3JlbWFwKCkgaXQsIHRoZW4gZGlyZWN0bHkgYWNjZXNz
-IHRoZSBQQ0llIG1lbW9yeSB3aXRoCj4gbG9hZHMKPiBhbmQgc3RvcmVzLgoKVW5mb3J0dW5hdGVs
-eSB0aGlzIGlzIHRoZSBjYXNlLiBBbGwgYWJvdmUgKGNvbmZpZywgSU8sIG1lbW9yeSkgbmVlZHMK
-UENJRV9BRERSX1BBR0VfQ0ZHIHVwZGF0ZS4KCj4gCj4gQmpvcm4KCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBs
-aXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5m
-cmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+
+
+> -----Original Message-----
+> From: Tal Gilboa [mailto:talgi@mellanox.com]
+> Sent: Friday, March 30, 2018 12:15 AM
+> To: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Linux PCI <linux-pci@vger.kernel.org>; Tariq Toukan <tariqt@mellanox.com>;
+> Saeed Mahameed <saeedm@mellanox.com>; Keller, Jacob E
+> <jacob.e.keller@intel.com>; Tal Gilboa <talgi@mellanox.com>
+> Subject: [PATCH next V4 0/8] Report PCI device link status
+> 
+> These patches introduce the ability to report PCI link width
+> and speed for all PCI devices in kernel log.
+> This would reduce code duplication between drivers and unify
+> the approach for reporting PCI link status.
+> Implemented and tested for Mellanox devices.
+> 
+> v4: Reverted most of v2, meaning re-introduced bandwidth limitation calculation.
+> Limiting device is now returned from the available PCIe bandwidth calculation
+> function and is logged in kernel log (suggested by Bjorn Helgaas and Jacob E.
+> Keller).
+> 
+> Applied PCIe encoding overhead to PCIe bandwidth calculation
+> (available/capable).
+> this way upper bandwidth limit of the device is more accurate.
+> 
+
+I didn't find any objections to the series. We can probably remove the old function in the future once no one uses it anymore.
+
+Acked-by: Jacob Keller <jacob.e.keller@intel.com>
+
+> v3: Add Reviewed-by: Tariq Toukan to all commits.
+> 
+> v2: Remove chain BW calculation. This might be a nice feature, but
+> without the ability to know the exact limiting part, it is more
+> confusing than useful.
+> Remove warnings for failed PCI query actions, leaving only the status
+> and gaps from max capabilities report.
+> Use pci_warn()/pci_info() instead of dev_warn()/dev_info().
+> (suggested by Bjorn Helgaas).
+> 
+> v1: Split to multiple patches, calculate BW limitation and remove
+> MACRO definition for LNKCAP shift (suggested by Bjorn Helgaas).
+> Multiple fixes - conventions, typos, function naming and functional
+> (suggested by Tariq Toukan).
+> 
+> Tal Gilboa (8):
+>   PCI: Add a query function for PCI device's speed cap
+>   PCI: Add a query function for PCI device's width cap
+>   PCI: Add device link bandwidth capabilities calculation
+>   PCI: Calculate available bandwidth for PCI devices
+>   PCI: Print PCI device link status in kernel log
+>   net/mlx4_core: Report PCI properties using dedicated function
+>   net/mlx5: Report device PCI link status and issues
+>   net/mlx5e: Use generic PCI function for bandwidth calculation
+> 
+>  drivers/net/ethernet/mellanox/mlx4/main.c         |  81 +----------
+>  drivers/net/ethernet/mellanox/mlx5/core/en_main.c |  17 +--
+>  drivers/net/ethernet/mellanox/mlx5/core/main.c    |   4 +
+>  drivers/pci/pci-sysfs.c                           |  28 ++--
+>  drivers/pci/pci.c                                 | 161 +++++++++++++++++++++-
+>  include/linux/pci.h                               |  24 ++++
+>  6 files changed, 194 insertions(+), 121 deletions(-)
+> 
+> --
+> 1.8.3.1
