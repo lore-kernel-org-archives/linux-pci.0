@@ -1,83 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:32961 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750858AbeC2IkK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Mar 2018 04:40:10 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Victor Gu <xigu@marvell.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        stable@vger.kernel.org
-Subject: [PATCH v4 1/6] PCI: aardvark: Introduce an advk_pcie_valid_device() helper
-Date: Thu, 29 Mar 2018 10:39:41 +0200
-Message-Id: <20180329083946.25970-2-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
-References: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:33160 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752536AbeC3HPA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Mar 2018 03:15:00 -0400
+From: Tal Gilboa <talgi@mellanox.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Keller Jacob E <jacob.e.keller@intel.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Subject: [PATCH next V4 1/8] PCI: Add a query function for PCI device's speed cap
+Date: Fri, 30 Mar 2018 10:14:39 +0300
+Message-Id: <1522394086-3555-2-git-send-email-talgi@mellanox.com>
+In-Reply-To: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
+References: <1522394086-3555-1-git-send-email-talgi@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In other to mimic other PCIe host controller drivers, introduce an
-advk_pcie_valid_device() helper, used in the configuration read/write
-functions.
+pcie_get_speed_cap() implements the logic for querying a PCI device's
+maximum speed capability. Change max_link_speed_show() function to
+use pcie_get_speed_cap().
 
-This patch by itself is not a fix, but it is required for a follow-up
-patch that is a fix, hence the Fixes tag and the Cc to stable.
-
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
 ---
-Changes since v3:
- - Make the new helper return a bool instead of int
-Changes since v2:
- - New patch
----
- drivers/pci/host/pci-aardvark.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/pci/pci-sysfs.c | 22 +++++-----------------
+ drivers/pci/pci.c       | 42 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h     |  7 +++++++
+ 3 files changed, 54 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index b04d37b3c5de..82bff709a4b3 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -430,6 +430,15 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
- 	return -ETIMEDOUT;
- }
- 
-+static bool advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
-+				  int devfn)
-+{
-+	if (PCI_SLOT(devfn) != 0)
-+		return false;
-+
-+	return true;
-+}
-+
- static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 			     int where, int size, u32 *val)
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index eb6bee8..69624d3 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -159,29 +159,17 @@ static ssize_t max_link_speed_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
  {
-@@ -437,7 +446,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	u32 reg;
- 	int ret;
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	u32 linkcap;
++	enum pci_bus_speed speed;
++	const char *speed_str;
+ 	int err;
+-	const char *speed;
  
--	if (PCI_SLOT(devfn) != 0) {
-+	if (!advk_pcie_valid_device(pcie, bus, devfn)) {
- 		*val = 0xffffffff;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
-@@ -491,7 +500,7 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	int offset;
- 	int ret;
+-	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
++	err = pcie_get_speed_cap(pci_dev, &speed);
+ 	if (err)
+ 		return -EINVAL;
  
--	if (PCI_SLOT(devfn) != 0)
-+	if (!advk_pcie_valid_device(pcie, bus, devfn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
+-	switch (linkcap & PCI_EXP_LNKCAP_SLS) {
+-	case PCI_EXP_LNKCAP_SLS_8_0GB:
+-		speed = "8 GT/s";
+-		break;
+-	case PCI_EXP_LNKCAP_SLS_5_0GB:
+-		speed = "5 GT/s";
+-		break;
+-	case PCI_EXP_LNKCAP_SLS_2_5GB:
+-		speed = "2.5 GT/s";
+-		break;
+-	default:
+-		speed = "Unknown speed";
+-	}
++	speed_str = PCIE_SPEED2STR(speed);
  
- 	if (where % size)
+-	return sprintf(buf, "%s\n", speed);
++	return sprintf(buf, "%s\n", speed_str);
+ }
+ static DEVICE_ATTR_RO(max_link_speed);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f6a4dd1..6fbf170 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5147,6 +5147,48 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ EXPORT_SYMBOL(pcie_get_minimum_link);
+ 
+ /**
++ * pcie_get_speed_cap - queries for the PCI device's link speed capability
++ * @dev: PCI device to query
++ * @speed: storage for link speed
++ *
++ * This function queries the PCI device speed capability.
++ */
++int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed)
++{
++	u32 lnkcap;
++	int err1, err2;
++
++	*speed = PCI_SPEED_UNKNOWN;
++
++	err1 = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP,
++					  &lnkcap);
++	if (!err1 && lnkcap) {
++		if (lnkcap & PCI_EXP_LNKCAP_SLS_8_0GB)
++			*speed = PCIE_SPEED_8_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
++			*speed = PCIE_SPEED_5_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
++			*speed = PCIE_SPEED_2_5GT;
++		return 0;
++	}
++
++	err2 = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2,
++					  &lnkcap);
++	if (!err2 && lnkcap) { /* PCIe r3.0-compliant */
++		if (lnkcap & PCI_EXP_LNKCAP2_SLS_8_0GB)
++			*speed = PCIE_SPEED_8_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP2_SLS_5_0GB)
++			*speed = PCIE_SPEED_5_0GT;
++		else if (lnkcap & PCI_EXP_LNKCAP2_SLS_2_5GB)
++			*speed = PCIE_SPEED_2_5GT;
++		return 0;
++	}
++
++	return err1 ? err1 : err2;
++}
++EXPORT_SYMBOL(pcie_get_speed_cap);
++
++/**
+  * pci_select_bars - Make BAR mask from the type of resource
+  * @dev: the PCI device for which BAR mask is made
+  * @flags: resource type mask to be selected
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 024a1be..fcc6eb3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -259,6 +259,12 @@ enum pci_bus_speed {
+ 	PCI_SPEED_UNKNOWN		= 0xff,
+ };
+ 
++#define PCIE_SPEED2STR(speed) \
++	((speed) == PCIE_SPEED_8_0GT ? "8 GT/s" : \
++	 (speed) == PCIE_SPEED_5_0GT ? "5 GT/s" : \
++	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
++	 "Unknown speed")
++
+ struct pci_cap_saved_data {
+ 	u16		cap_nr;
+ 	bool		cap_extended;
+@@ -1082,6 +1088,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
++int pcie_get_speed_cap(struct pci_dev *dev, enum pci_bus_speed *speed);
+ void pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
 -- 
-2.14.3
+1.8.3.1
