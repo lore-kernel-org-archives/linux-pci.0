@@ -1,95 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44898 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751102AbeCIPHh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Mar 2018 10:07:37 -0500
-Date: Fri, 9 Mar 2018 15:07:27 +0000
-From: James Hogan <jhogan@kernel.org>
-To: Jim Quinlan <jim2101024@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Jonas Gorski <jonas.gorski@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-        Gregory Fong <gregory.0xf0@gmail.com>,
-        Kevin Cernekee <cernekee@gmail.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH v4 1/8] SOC: brcmstb: add memory API
-Message-ID: <20180309150727.GH24558@saruman>
-References: <1516058925-46522-1-git-send-email-jim2101024@gmail.com>
- <1516058925-46522-2-git-send-email-jim2101024@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="PW0Eas8rCkcu1VkF"
-In-Reply-To: <1516058925-46522-2-git-send-email-jim2101024@gmail.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:48746 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752829AbeCaQkb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 31 Mar 2018 12:40:31 -0400
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+To: bhelgaas@google.com
+Cc: rafael.j.wysocki@intel.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        stable@vger.kernel.org
+Subject: [PATCH v3] PCI / PM: Always check PME wakeup capability for runtime wakeup support
+Date: Sun,  1 Apr 2018 00:40:22 +0800
+Message-Id: <20180331164022.24220-1-kai.heng.feng@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+core: Drop run_wake flag from struct dev_pm_info").
 
---PW0Eas8rCkcu1VkF
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The device in question is not power managed by platform firmware,
+furthermore, it only supports PME# from D3cold:
+Capabilities: [78] Power Management version 3
+       Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+       Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
 
-On Mon, Jan 15, 2018 at 06:28:38PM -0500, Jim Quinlan wrote:
-> From: Florian Fainelli <f.fainelli@gmail.com>
->=20
-> This commit adds a memory API suitable for ascertaining the sizes of
-> each of the N memory controllers in a Broadcom STB chip.  Its first
-> user will be the Broadcom STB PCIe root complex driver, which needs
-> to know these sizes to properly set up DMA mappings for inbound
-> regions.
->=20
-> We cannot use memblock here or anything like what Linux provides
-> because it collapses adjacent regions within a larger block, and here
-> we actually need per-memory controller addresses and sizes, which is
-> why we resort to manual DT parsing.
->=20
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
->=20
-> Conflicts:
-> 	drivers/soc/bcm/brcmstb/Makefile
+Before commit de3ef1eb1cd0, the device never gets runtime suspended.
+After that commit, the device gets runtime suspended, so it does not
+respond to any PME#.
 
-That can go.
+usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
+device_can_wakeup() in pci_dev_run_wake() always returns true.
 
-> +++ b/drivers/soc/bcm/brcmstb/memory.c
-=2E..
-> +/* Macro to help extract property data */
-> +#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(*(u32*)(b + offs)))
+So pci_dev_run_wake() needs to check PME wakeup capability as its first
+condition.
 
-Checkpatch complains about missing whitespace after u32.
+In addition, change wakeup flag passed to pci_target_state() from false
+to true, because we want to find the deepest state that the device can
+still generate PME#.
 
-Cheers
-James
+Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct dev_pm_info")
+Cc: stable@vger.kernel.org # 4.13+
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+v3: State the reason why the wakeup flag gets changed.
 
---PW0Eas8rCkcu1VkF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+v2: Explicitly check dev->pme_support.
 
------BEGIN PGP SIGNATURE-----
+ drivers/pci/pci.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-iQIzBAEBCAAdFiEEd80NauSabkiESfLYbAtpk944dnoFAlqioy4ACgkQbAtpk944
-dnrGpQ/6A4EcwZ+zoSJZpxuuicPoZib7aq0pGu8F/Ld2nf+Tr48Slxw3kPhcCzc7
-HXPBL24yqKGrJ7jFbqrDnWCLkjTg7zsjokCbehiLzQI66LUsRolxGCLMYQz6XfvN
-noL4iAQ+mRx9qfhpRomyHXA3xcb3DS+TL0o6TxztDgiF5PGz+Iu9AlaYKQ4Zq0cd
-xuEIGfbJo3fivLDU20H/KyuSY3B3Bg1ayXqtBZSQmxgac1Hkyldjee5Spe8bG0j2
-aOUOZRfJY49FjYQ7wW2itTywSE1RpLTHBfqxpYrrQifSB69Ztwl9H0GqWD0PehjI
-uiKHInsJxqYMNQXMssZxMj4vuHq31v+QbD6jNoinnNrmoctjT8dPaSo6h6t051HE
-a0saFvpCEJrOqozZ6PQgJQPSg9Mz95+YUFMmNApBzKfYCw0TNuPHH5vupy9A9LWD
-D1uAyAatlj5Qb8dU0kBXKXCVPu1Ikq4Jbgq/WMkcUh2WTTD4+2T6uKdS+JSnd08X
-RjevevlDWxgSMJ4DzPoQgZbswKiq/A6Dewg/4hx9O8BnamQ/Sj4pbRThTcdWsNqj
-9xC/Gt6QPJQop/pdz0m+Q0ML1lQRNwe1YbUcwt0cMGlVuNzkN45lM7T3HGbz6nXW
-8kjCKcG+L9tMJ/4zywyXKUqb+EAjBMgp1OWJobxtG9r+wwLYHzs=
-=TGmj
------END PGP SIGNATURE-----
-
---PW0Eas8rCkcu1VkF--
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f6a4dd10d9b0..52821a21fc07 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2125,16 +2125,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus = dev->bus;
+ 
+-	if (device_can_wakeup(&dev->dev))
+-		return true;
+-
+ 	if (!dev->pme_support)
+ 		return false;
+ 
+ 	/* PME-capable in principle, but not from the target power state */
+-	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
++	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
+ 		return false;
+ 
++	if (device_can_wakeup(&dev->dev))
++		return true;
++
+ 	while (bus->parent) {
+ 		struct pci_dev *bridge = bus->self;
+ 
+-- 
+2.15.1
