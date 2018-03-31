@@ -1,66 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr670102.outbound.protection.outlook.com ([40.107.67.102]:5312
-        "EHLO CAN01-TO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1032539AbeCAQPH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Mar 2018 11:15:07 -0500
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Sagi Grimberg <sagi@grimberg.me>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-CC: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        "Alex Williamson" <alex.williamson@redhat.com>,
-        Steve Wise <swise@opengridcomputing.com>
-Subject: Re: [PATCH v2 10/10] nvmet: Optionally use PCI P2P memory
-Date: Thu, 1 Mar 2018 16:15:04 +0000
-Message-ID: <A95AE6BF-1CAC-48F5-B676-DA7BD6D5BF24@raithlin.com>
-References: <20180228234006.21093-1-logang@deltatee.com>
- <20180228234006.21093-11-logang@deltatee.com>
- <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
-In-Reply-To: <749e3752-4349-0bdf-5243-3d510c2b26db@grimberg.me>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=jK+Y=GV=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=jK+Y=GV=h08.hostsharing.net=foo00@kernel.org>
+Date: Sat, 31 Mar 2018 11:12:45 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <yehezkel.bernat@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
+ bus number
+Message-ID: <20180331091245.GA10720@wunner.de>
+References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+ <20180226132112.81447-2-mika.westerberg@linux.intel.com>
+ <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180328114346.GZ2703@lahna.fi.intel.com>
+ <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180329115911.GN2703@lahna.fi.intel.com>
+ <20180331082903.GA21051@wunner.de>
+ <20180331085852.GQ2703@lahna.fi.intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180331085852.GQ2703@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-PiA+IElkZWFsbHksIHdlJ2Qgd2FudCB0byB1c2UgYW4gTlZNRSBDTUIgYnVmZmVyIGFzIHAycCBt
-ZW1vcnkuIFRoaXMgd291bGQNCj4gPiBzYXZlIGFuIGV4dHJhIFBDSSB0cmFuc2ZlciBhcyB0aGUg
-TlZNRSBjYXJkIGNvdWxkIGp1c3QgdGFrZSB0aGUgZGF0YQ0KPiA+IG91dCBvZiBpdCdzIG93biBt
-ZW1vcnkuIEhvd2V2ZXIsIGF0IHRoaXMgdGltZSwgY2FyZHMgd2l0aCBDTUIgYnVmZmVycw0KPiA+
-IGRvbid0IHNlZW0gdG8gYmUgYXZhaWxhYmxlLg0KDQo+IENhbiB5b3UgZGVzY3JpYmUgd2hhdCB3
-b3VsZCBiZSB0aGUgcGxhbiB0byBoYXZlIGl0IHdoZW4gdGhlc2UgZGV2aWNlcw0KPiBkbyBjb21l
-IGFsb25nPyBJJ2Qgc2F5IHRoYXQgcDJwX2RldiBuZWVkcyB0byBiZWNvbWUgYSBudm1ldF9ucyBy
-ZWZlcmVuY2UNCj4gYW5kIG5vdCBmcm9tIG52bWV0X2N0cmwuIFRoZW4sIHdoZW4gY21iIGNhcGFi
-bGUgZGV2aWNlcyBjb21lIGFsb25nLCB0aGUNCj4gbnMgY2FuIHByZWZlciB0byB1c2UgaXRzIG93
-biBjbWIgaW5zdGVhZCBvZiBsb2NhdGluZyBhIHAycF9kZXYgZGV2aWNlPw0KDQpIaSBTYWdpDQoN
-ClRoYW5rcyBmb3IgdGhlIHJldmlldyEgVGhhdCBjb21taXQgbWVzc2FnZSBpcyBzb21ld2hhdCBk
-YXRlZCBhcyBOVk1lIGNvbnRyb2xsZXJzIHdpdGggQ01CcyB0aGF0IHN1cHBvcnQgUkRTIGFuZCBX
-RFMgYXJlIG5vdyBjb21tZXJjaWFsbHkgYXZhaWxhYmxlIFsxXS4gSG93ZXZlciB3ZSBoYXZlIG5v
-dCB5ZXQgdHJpZWQgdG8gZG8gYW55IGtpbmQgb2Ygb3B0aW1pemF0aW9uIGFyb3VuZCB0aGlzIHll
-dCBpbiB0ZXJtcyBvZiBkZXRlcm1pbmluZyB3aGljaCBwMnBfZGV2IHRvIHVzZS4gWW91ciBzdWdn
-ZXN0IGFib3ZlIGxvb2tzIGdvb2QgYW5kIHdlIGNhbiBsb29rIGludG8gdGhpcyBraW5kIG9mIG9w
-dGltaXphdGlvbiBpbiBkdWUgY291cnNlLg0KDQpbMV0gaHR0cDovL3d3dy5laWRldGljb20uY29t
-L3VwbG9hZHMvaW1hZ2VzL05vTG9hZF9Qcm9kdWN0X1NwZWMucGRmDQogICAgDQo+PiArCWN0cmwt
-PnAycF9kZXYgPSBwY2lfcDJwbWVtX2ZpbmQoJmN0cmwtPnAycF9jbGllbnRzKTsNCg0KPiBUaGlz
-IGlzIHRoZSBmaXJzdCBwMnBfZGV2IGZvdW5kIHJpZ2h0PyBXaGF0IGhhcHBlbnMgaWYgSSBoYXZl
-IG1vcmUgdGhhbg0KPiBhIHNpbmdsZSBwMnAgZGV2aWNlPyBJbiB0aGVvcnkgSSdkIGhhdmUgbW9y
-ZSBwMnAgbWVtb3J5IEkgY2FuIHVzZS4gSGF2ZQ0KPiB5b3UgY29uc2lkZXJlZCBtYWtpbmcgcGNp
-X3AycG1lbV9maW5kIHJldHVybiB0aGUgbGVhc3QgdXNlZCBzdWl0YWJsZQ0KPiBkZXZpY2U/DQog
-ICAgDQpZZXMgcGNpX3AycG1lbV9maW5kIHdpbGwgYWx3YXlzIHJldHVybiB0aGUgZmlyc3QgdmFs
-aWQgcDJwX2RldiBmb3VuZC4gQXQgdGhlIHZlcnkgbGVhc3Qgd2Ugc2hvdWxkIHVwZGF0ZSB0aGlz
-IGFsbG9jYXRlIG92ZXIgYWxsIHRoZSB2YWxpZCBwMnBfZGV2LiBTaW5jZSB0aGUgbG9hZCBvbiBh
-bnkgZ2l2ZW4gcDJwX2RldiB3aWxsIHZhcnkgb3ZlciB0aW1lIEkgdGhpbmsgYSByYW5kb20gYWxs
-b2NhdGlvbiBvZiB0aGUgZGV2aWNlcyBtYWtlcyBzZW5zZSAoYXQgbGVhc3QgZm9yIG5vdykuIA0K
-DQpTdGVwaGVuDQoNCg==
+On Sat, Mar 31, 2018 at 11:58:52AM +0300, Mika Westerberg wrote:
+> On Sat, Mar 31, 2018 at 10:29:03AM +0200, Lukas Wunner wrote:
+> > On Thu, Mar 29, 2018 at 02:59:11PM +0300, Mika Westerberg wrote:
+> > > On Wed, Mar 28, 2018 at 01:09:06PM -0500, Bjorn Helgaas wrote:
+> > > > The same issue could happen on any system where we use acpiphp, so I
+> > > > don't think Thunderbolt is really relevant here, and it's easy to
+> > > > confuse things by mentioning it.
+> > > 
+> > > This issue can happen regardless whether acpiphp is used or not.
+> > 
+> > If the platform has yielded hotplug control to the OS via _OSC,
+> > I don't see how the platform could hot-add devices.  So surely
+> > reserving a bus number for a bridge without anything below it
+> > can be constrained to the !pciehp_is_native(bridge) case?
+> 
+> Nothing prevents ACPI Notify() happening while native PCIe hotplug is
+> used on non-hotplug ports (the ones not controlled by pciehp). And it
+> cannot be constrained to !pciehp_is_native(bridge) because it is the
+> root port that has the _OSC but below it can be non-hotplug ports where
+> ACPI Notify() is used to bring in additional devices.
+
+That sounds like a violation of the spec to me.
+
+ACPI 6.1 table 6-178 says if OS is granted control over PCIe hotplug,
+the firmware "must ensure that all hot plug events are routed to device
+interrupts", which wouldn't be the case for Notify() because the
+interrupt generated is an SCI, not an MSI or INTx interrupt for the
+hotplug port itself.
+
+Moreover, "after control is transferred to the OS, firmware must not
+update the state of hot plug slots, including the state of the
+indicators and power controller."
+
+Maybe I've misunderstood the spec all the time, my understanding was
+that if OS is granted control, the firmware won't do anything with
+hotplug ports below the host bridge, period.
+
+Thanks,
+
+Lukas
