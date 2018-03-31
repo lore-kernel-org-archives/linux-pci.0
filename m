@@ -1,79 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 13 Mar 2018 18:08:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
-Message-ID: <20180313230850.GA45763@bhelgaas-glaptop.roam.corp.google.com>
-References: <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
- <52cbbbc4-c488-f83f-8d02-14d455b4efd7@codeaurora.org>
- <3e738f95-d73c-4182-2fa1-8664aafb1ab7@deltatee.com>
- <703aa92c-0c1c-4852-5887-6f6e6ccde0fb@codeaurora.org>
- <a0af83f8-2cbc-862b-6f8b-231991527cfc@deltatee.com>
- <3ea80992-a0fc-08f2-d93d-ae0ec4e3f4ce@codeaurora.org>
- <4eb6850c-df1b-fd44-3ee0-d43a50270b53@deltatee.com>
- <757fca36-dee4-e070-669e-f2788bd78e41@codeaurora.org>
- <4f761f55-4e9a-dccb-d12f-c59d2cd689db@deltatee.com>
- <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
+Return-Path: <SRS0=jK+Y=GV=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=jK+Y=GV=h08.hostsharing.net=foo00@kernel.org>
+Date: Sat, 31 Mar 2018 12:18:16 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <yehezkel.bernat@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
+ bus number
+Message-ID: <20180331101816.GA18877@wunner.de>
+References: <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180328114346.GZ2703@lahna.fi.intel.com>
+ <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180329115911.GN2703@lahna.fi.intel.com>
+ <20180331082903.GA21051@wunner.de>
+ <20180331085852.GQ2703@lahna.fi.intel.com>
+ <20180331091245.GA10720@wunner.de>
+ <20180331092017.GS2703@lahna.fi.intel.com>
+ <20180331093017.GB10720@wunner.de>
+ <20180331095804.GU2703@lahna.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BB94077B-7EB3-49C4-862D-BF77D0A692CC@raithlin.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180331095804.GU2703@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 10:31:55PM +0000, Stephen  Bates wrote:
-> >> It sounds like you have very tight hardware expectations for this to work
-> >> at this moment. You also don't want to generalize this code for others and
-> >> address the shortcomings.
-> >  No, that's the way the community has pushed this work
+On Sat, Mar 31, 2018 at 12:58:04PM +0300, Mika Westerberg wrote:
+> On Sat, Mar 31, 2018 at 11:30:17AM +0200, Lukas Wunner wrote:
+> > > The whole point here is that those are *not* hotplug slots just regular
+> > > downstream ports.
+> > 
+> > Okay, understood.  Is this about the NHI or XHCI?  Because at least
+> > on Alpine Ridge (C step), the bridge above the XHCI *is* a hotplug
+> > bridge.  Only the bridge above the NHI is not.
 > 
-> Hi Sinan
-> 
-> Thanks for all the input. As Logan has pointed out the switch
-> requirement is something that has evolved over time based on input
-> from the community. You are more than welcome to have an opinion on
-> this (and you have made that opinion clear ;-)). Over time the
-> patchset may evolve from its current requirements but right now we
-> are aligned with the feedback from the community.
+> Yes, exactly. I tried to clarify this mechanism a bit better in the
+> other email I just sent.
 
-This part of the community hasn't been convinced of the need to have
-two bridges, e.g., both an Upstream Port and a Downstream Port, or two
-conventional PCI bridges, above the peers.
+But in the e-mail you just sent, the bridge above the XHCI is not a
+hotplug bridge and according to the lspci output of a MacBookPro13,3
+I have here, it *is* a hotplug bridge on Alpine Ridge (C step).
 
-Every PCI-to-PCI bridge is required to support routing transactions
-between devices on its secondary side.  Therefore, I think it is
-sufficient to verify that the potential peers share a single common
-upstream bridge.  This could be a conventional PCI bridge, a Switch
-Downstream Port, or a Root Port.
+FWIW, the HDA controller integrated into Nvidia GPUs can be made
+visible or hidden in a similar fashion by setting a bit in the
+GPU's config space.  Some laptop DSDTs use this to hide the HDA
+controller on boot (and resume from system sleep) if no HDMI cable
+is plugged in.  I think this behavior is geared towards Windows'
+driver model.  On Linux it's mostly an annoyance and we're considering
+un-hiding the HDA controller unconditionally from a PCI quirk:
+https://bugs.freedesktop.org/show_bug.cgi?id=75985
 
-I've seen the response that peers directly below a Root Port could not
-DMA to each other through the Root Port because of the "route to self"
-issue, and I'm not disputing that.  But enforcing a requirement for
-two upstream bridges introduces a weird restriction on conventional
-PCI topologies, makes the code hard to read, and I don't think it's
-necessary.
+Thanks,
 
-If it *is* necessary because Root Ports and devices below them behave
-differently than in conventional PCI, I think you should include a
-reference to the relevant section of the spec and check directly for a
-Root Port.  I would prefer that over trying to exclude Root Ports by
-looking for two upstream bridges.
-
-Bjorn
+Lukas
