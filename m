@@ -1,74 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:39060 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752866AbeCFCtF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Mar 2018 21:49:05 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 0/6] Add endpoint driver for Rockchip PCIe controller
-Date: Tue,  6 Mar 2018 10:42:53 +0800
-Message-Id: <1520304173-231081-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=A2bG=GV=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=A2bG=GV=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20180331091245.GA10720@wunner.de>
+References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+ <20180226132112.81447-2-mika.westerberg@linux.intel.com> <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180328114346.GZ2703@lahna.fi.intel.com> <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180329115911.GN2703@lahna.fi.intel.com> <20180331082903.GA21051@wunner.de>
+ <20180331085852.GQ2703@lahna.fi.intel.com> <20180331091245.GA10720@wunner.de>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 31 Mar 2018 11:19:47 +0200
+Message-ID: <CAJZ5v0gzQuKAg883cFRoot53d4dXtZ4EjQ8WdcSNqekTV=TrKQ@mail.gmail.com>
+Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
+ bus number
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
+	Mario Limonciello <Mario.Limonciello@dell.com>, Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <yehezkel.bernat@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Mar 31, 2018 at 11:12 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Sat, Mar 31, 2018 at 11:58:52AM +0300, Mika Westerberg wrote:
+>> On Sat, Mar 31, 2018 at 10:29:03AM +0200, Lukas Wunner wrote:
+>> > On Thu, Mar 29, 2018 at 02:59:11PM +0300, Mika Westerberg wrote:
+>> > > On Wed, Mar 28, 2018 at 01:09:06PM -0500, Bjorn Helgaas wrote:
+>> > > > The same issue could happen on any system where we use acpiphp, so I
+>> > > > don't think Thunderbolt is really relevant here, and it's easy to
+>> > > > confuse things by mentioning it.
+>> > >
+>> > > This issue can happen regardless whether acpiphp is used or not.
+>> >
+>> > If the platform has yielded hotplug control to the OS via _OSC,
+>> > I don't see how the platform could hot-add devices.  So surely
+>> > reserving a bus number for a bridge without anything below it
+>> > can be constrained to the !pciehp_is_native(bridge) case?
+>>
+>> Nothing prevents ACPI Notify() happening while native PCIe hotplug is
+>> used on non-hotplug ports (the ones not controlled by pciehp). And it
+>> cannot be constrained to !pciehp_is_native(bridge) because it is the
+>> root port that has the _OSC but below it can be non-hotplug ports where
+>> ACPI Notify() is used to bring in additional devices.
+>
+> That sounds like a violation of the spec to me.
+>
+> ACPI 6.1 table 6-178 says if OS is granted control over PCIe hotplug,
+> the firmware "must ensure that all hot plug events are routed to device
+> interrupts", which wouldn't be the case for Notify() because the
+> interrupt generated is an SCI, not an MSI or INTx interrupt for the
+> hotplug port itself.
+>
+> Moreover, "after control is transferred to the OS, firmware must not
+> update the state of hot plug slots, including the state of the
+> indicators and power controller."
+>
+> Maybe I've misunderstood the spec all the time, my understanding was
+> that if OS is granted control, the firmware won't do anything with
+> hotplug ports below the host bridge, period.
 
-Patch 1 firstly move the whole Rockchip PCIe host driver from
-drivers/pci/host to a new folder, driver/pci/rockchip/, and rename
-pcie-rockchip.c to pcie-rockchip-host.c. It also updates the
-Kconfig/Makefile etc to repect this change.
+This is in agreement with my understanding of it.
 
-Then patch 2 and patch 3 are trying to spilt out some common code in
-preparation for adding endponit controller driver support.
-
-Patch 4 rename rockchip-pcie.txt to rockchip-pcie-host.txt.
-
-Patch 5 adds endpoint controller driver support as well as the new
-documentation, rockchip-pcie-ep.txt, introduced by patch 6.
-
-
-Changes in v2:
-- remove rockchip,rk3399-pcie-host compatible(Suggested by Rob)
-- fix some error handling
-Changes in v3:
-- fix all issues suggested by Lorenzo
-
-Shawn Lin (6):
-  PCI: rockchip: Create individual folder for rockchip drivers
-  PCI: rockchip: Split out common function to parse DT
-  PCI: rockchip: Split out common function to init controller
-  dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to
-    rockchip-pcie-host.txt
-  PCI: rockchip: Add Endpoint controller driver for Rockchip PCIe
-    controller
-  dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint
-    controller
-
- .../devicetree/bindings/pci/rockchip-pcie-ep.txt   |  62 ++
- .../{rockchip-pcie.txt => rockchip-pcie-host.txt}  |   0
- MAINTAINERS                                        |   4 +-
- drivers/pci/Kconfig                                |   1 +
- drivers/pci/Makefile                               |   2 +
- drivers/pci/host/Kconfig                           |  11 -
- drivers/pci/host/Makefile                          |   1 -
- drivers/pci/rockchip/Kconfig                       |  32 ++
- drivers/pci/rockchip/Makefile                      |   4 +
- drivers/pci/rockchip/pcie-rockchip-ep.c            | 638 +++++++++++++++++++++
- .../pcie-rockchip-host.c}                          | 594 +------------------
- drivers/pci/rockchip/pcie-rockchip.c               | 417 ++++++++++++++
- drivers/pci/rockchip/pcie-rockchip.h               | 341 +++++++++++
- 13 files changed, 1512 insertions(+), 595 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
- rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (100%)
- create mode 100644 drivers/pci/rockchip/Kconfig
- create mode 100644 drivers/pci/rockchip/Makefile
- create mode 100644 drivers/pci/rockchip/pcie-rockchip-ep.c
- rename drivers/pci/{host/pcie-rockchip.c => rockchip/pcie-rockchip-host.c} (61%)
- create mode 100644 drivers/pci/rockchip/pcie-rockchip.c
- create mode 100644 drivers/pci/rockchip/pcie-rockchip.h
-
--- 
-1.9.1
+The _OSC at a root port should cover the entire hierarchy below that port.
