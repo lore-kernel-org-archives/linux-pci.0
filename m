@@ -1,65 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:43145 "EHLO
-        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932817AbeCELzp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Mar 2018 06:55:45 -0500
-Received: by mail-oi0-f54.google.com with SMTP id a207so11785253oii.10
-        for <linux-pci@vger.kernel.org>; Mon, 05 Mar 2018 03:55:44 -0800 (PST)
+Return-Path: <SRS0=s/JU=GV=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=s/JU=GV=linux.intel.com=mika.westerberg@kernel.org>
+Date: Sat, 31 Mar 2018 12:20:17 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <yehezkel.bernat@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
+ bus number
+Message-ID: <20180331092017.GS2703@lahna.fi.intel.com>
+References: <20180226132112.81447-1-mika.westerberg@linux.intel.com>
+ <20180226132112.81447-2-mika.westerberg@linux.intel.com>
+ <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180328114346.GZ2703@lahna.fi.intel.com>
+ <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180329115911.GN2703@lahna.fi.intel.com>
+ <20180331082903.GA21051@wunner.de>
+ <20180331085852.GQ2703@lahna.fi.intel.com>
+ <20180331091245.GA10720@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20180305094918.GB28109@e107981-ln.cambridge.arm.com>
-References: <1516008968-26285-1-git-send-email-koen.vandeputte@ncentric.com>
- <20180220153947.GA21801@e107981-ln.cambridge.arm.com> <CAOMZO5CSMJz8=Mm-fJR1aJK=V19uTyVO1PXkOGd1g6v64BNHNg@mail.gmail.com>
- <20180305094918.GB28109@e107981-ln.cambridge.arm.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Mon, 5 Mar 2018 08:55:43 -0300
-Message-ID: <CAOMZO5CFXBciQBOpPDtZc9L48d5Y3zubCK8M=HWo+owEOTQkrQ@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: dwc: fix enumeration end when reaching root subordinate
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Koen Vandeputte <koen.vandeputte@ncentric.com>,
-        linux-pci@vger.kernel.org,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Sebastian Reichel <sebastian.reichel@collabora.co.uk>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180331091245.GA10720@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+On Sat, Mar 31, 2018 at 11:12:45AM +0200, Lukas Wunner wrote:
+> On Sat, Mar 31, 2018 at 11:58:52AM +0300, Mika Westerberg wrote:
+> > On Sat, Mar 31, 2018 at 10:29:03AM +0200, Lukas Wunner wrote:
+> > > On Thu, Mar 29, 2018 at 02:59:11PM +0300, Mika Westerberg wrote:
+> > > > On Wed, Mar 28, 2018 at 01:09:06PM -0500, Bjorn Helgaas wrote:
+> > > > > The same issue could happen on any system where we use acpiphp, so I
+> > > > > don't think Thunderbolt is really relevant here, and it's easy to
+> > > > > confuse things by mentioning it.
+> > > > 
+> > > > This issue can happen regardless whether acpiphp is used or not.
+> > > 
+> > > If the platform has yielded hotplug control to the OS via _OSC,
+> > > I don't see how the platform could hot-add devices.  So surely
+> > > reserving a bus number for a bridge without anything below it
+> > > can be constrained to the !pciehp_is_native(bridge) case?
+> > 
+> > Nothing prevents ACPI Notify() happening while native PCIe hotplug is
+> > used on non-hotplug ports (the ones not controlled by pciehp). And it
+> > cannot be constrained to !pciehp_is_native(bridge) because it is the
+> > root port that has the _OSC but below it can be non-hotplug ports where
+> > ACPI Notify() is used to bring in additional devices.
+> 
+> That sounds like a violation of the spec to me.
+> 
+> ACPI 6.1 table 6-178 says if OS is granted control over PCIe hotplug,
+> the firmware "must ensure that all hot plug events are routed to device
+> interrupts", which wouldn't be the case for Notify() because the
+> interrupt generated is an SCI, not an MSI or INTx interrupt for the
+> hotplug port itself.
+> 
+> Moreover, "after control is transferred to the OS, firmware must not
+> update the state of hot plug slots, including the state of the
+> indicators and power controller."
+> 
+> Maybe I've misunderstood the spec all the time, my understanding was
+> that if OS is granted control, the firmware won't do anything with
+> hotplug ports below the host bridge, period.
 
-On Mon, Mar 5, 2018 at 6:49 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-
-> It is a balance of urgency and making sure it is extensively tested -
-> I'd prefer it to go via usual release cycle (and -next) and then it will
-> trickle into stable kernels, let me know if that's not OK.
->
-> I would understand your point if dwc maintainers were more proactive
-> in testing their respective controllers - all of them should be affected
-> by this fix but I have just heard from a few of them.
-
-We got this patch tested by: Koen, myself, Sebastian and the folks at
-Pengutronix.
-
-Looks like a decent amount of testing IMHO.
-
-In this case I would prefer that we could fix the regression into
-4.16-rc cycle rather than waiting until 4.17.
-
-Thanks
+The whole point here is that those are *not* hotplug slots just regular
+downstream ports.
