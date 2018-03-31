@@ -1,83 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:36926 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932311AbeCLRU1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Mar 2018 13:20:27 -0400
-Subject: [pci PATCH v5 0/4] Series short description
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, mheyne@amazon.de,
-        liang-min.wang@intel.com, mark.d.rustad@intel.com,
-        dwmw2@infradead.org, hch@lst.de, dwmw@amazon.co.uk
-Date: Mon, 12 Mar 2018 10:20:23 -0700
-Message-ID: <20180312171813.3487.94803.stgit@localhost.localdomain>
+Return-Path: <SRS0=s/JU=GV=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=s/JU=GV=linux.intel.com=mika.westerberg@kernel.org>
+Date: Sat, 31 Mar 2018 12:56:15 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Mario Limonciello <Mario.Limonciello@dell.com>,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <yehezkel.bernat@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v3 1/5] PCI: Make sure all bridges reserve at least one
+ bus number
+Message-ID: <20180331095615.GT2703@lahna.fi.intel.com>
+References: <20180226132112.81447-2-mika.westerberg@linux.intel.com>
+ <20180327185742.GB7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180328114346.GZ2703@lahna.fi.intel.com>
+ <20180328180906.GI7759@bhelgaas-glaptop.roam.corp.google.com>
+ <20180329115911.GN2703@lahna.fi.intel.com>
+ <20180331082903.GA21051@wunner.de>
+ <20180331085852.GQ2703@lahna.fi.intel.com>
+ <20180331091245.GA10720@wunner.de>
+ <20180331092017.GS2703@lahna.fi.intel.com>
+ <CAJZ5v0iFP3VuJoMD2PXp73WoszB3rDFpro6Sgy5PnrVp0Zz0zQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0iFP3VuJoMD2PXp73WoszB3rDFpro6Sgy5PnrVp0Zz0zQ@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is meant to add support for SR-IOV on devices when the VFs are
-not managed by the kernel. Examples of recent patches attempting to do this
-include:
-virto - https://patchwork.kernel.org/patch/10241225/
-pci-stub - https://patchwork.kernel.org/patch/10109935/
-vfio - https://patchwork.kernel.org/patch/10103353/
-uio - https://patchwork.kernel.org/patch/9974031/
+On Sat, Mar 31, 2018 at 11:30:44AM +0200, Rafael J. Wysocki wrote:
+> > The whole point here is that those are *not* hotplug slots just regular
+> > downstream ports.
+> 
+> I'm not sure what scenario exactly you are referring to to be honest.
+> 
+> Something related to Thunderbolt I suppose?
 
-Since this is quickly blowing up into a multi-driver problem it is probably
-best to implement this solution as generically as possible.
+Here is an example that hopefully clarifies. This example is from a
+system using Thunderbolt in "native" mode but I think it is not specific
+to Thunderbolt. The idea is that when you don't have anything connected
+to Thunderbolt ports you have following PCI topology:
 
-This series is an attempt to do that. What we do with this patch set is
-provide a generic framework to enable SR-IOV in the case that the PF driver
-doesn't support managing the VFs itself.
+  00:1b.0 --
 
-I based my patch set originally on the patch by Mark Rustad but there isn't
-much left after going through and cleaning out the bits that were no longer
-needed, and after incorporating the feedback from David Miller. At this point
-the only items to be fully reused was his patch description which is now
-present in patch 3 of the set.
+So a root port that is hotplug capable and handled by pciehp.
 
-This solution is limited in scope to just adding support for devices that
-provide no functionality for SR-IOV other than allocating the VFs by
-calling pci_enable_sriov. Previous sets had included patches for VFIO, but
-for now I am dropping that as the scope of that work is larger then I
-think I can take on at this time.
+Next when you plug in a Thunderbolt enpdoint, you get native PCIe
+hotplug event and after it is handled the topology looks like:
 
-v2: Reduced scope back to just virtio_pci and vfio-pci
-    Broke into 3 patch set from single patch
-    Changed autoprobe behavior to always set when num_vfs is set non-zero
-v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is used
-    Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in kernel
-v4: Dropped vfio-pci patch
-    Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
-    Dropped pci_disable_sriov call in virtio_pci to be consistent with ena
-v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
-    Added new patch that enables pci_sriov_configure_simple
-    Updated drivers to use pci_sriov_configure_simple
+  00:1b.0 --- 01:00.0 --+- 02:00.0 --
+                        +- 02:01.0 (hotplug) --
+                        \- 02:02.0 --
 
-Cc: Mark Rustad <mark.d.rustad@intel.com>
-Cc: Maximilian Heyne <mheyne@amazon.de>
-Cc: Liang-Min Wang <liang-min.wang@intel.com>
-Cc: David Woodhouse <dwmw@amazon.co.uk>
+In other words there is a PCIe switch with one hotplug port (02:01.0)
+that is again handled by pciehp (this is used to daisy chain further
+devices). However, downstream ports 02:00.0 and 02:02.0 are not marked
+as hotplug capable so pciehp is not controlling them.
 
----
+To bring in xHCI and/or Thunderbolt host controller we get ACPI Notify()
+to the root port 00:1b.0 which should result following topology after
+handled by acpiphp:
 
-Alexander Duyck (4):
-      pci: Add pci_sriov_configure_simple for PFs that don't manage VF resources
-      virtio_pci: Add support for unmanaged SR-IOV on virtio_pci devices
-      ena: Migrate over to unmanaged SR-IOV support
-      nvme: Migrate over to unmanaged SR-IOV support
+  00:1b.0 --- 01:00.0 --+- 02:00.0 -- Thunderbolt host controller
+                        +- 02:01.0 (hotplug) --
+                        \- 02:02.0 -- xHCI host controller
 
+In other words ACPI Notify() is used to populate devices connected to
+non-hotplug downstream ports. It is also used to "hot-unplug" them in
+the same way (for example if you only connect standard USB-C device to
+the port the Thunderbolt host controller is hot-unplugged using this
+mechanism).
 
- drivers/net/ethernet/amazon/ena/ena_netdev.c |   30 ++----------------------
- drivers/nvme/host/pci.c                      |   22 ++----------------
- drivers/pci/iov.c                            |   32 ++++++++++++++++++++++++++
- drivers/virtio/virtio_pci_common.c           |    3 ++
- include/linux/pci.h                          |    1 +
- 5 files changed, 42 insertions(+), 46 deletions(-)
-
---
+Rest of the devices in the chain are hotplugged using standard native
+PCIe hotplug so pciehp will be controlling then.
