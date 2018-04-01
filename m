@@ -1,61 +1,139 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 18 Apr 2018 08:40:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v5 05/10] PCI: Adds device ID for Synopsys Sample
- Endpoint.
-Message-ID: <20180418134035.GM28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
- <5d20185e88e7b6738d6b6aca41b1a237033fc36f.1523973931.git.gustavo.pimentel@synopsys.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-he1eur01on0052.outbound.protection.outlook.com ([104.47.0.52]:36592
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754269AbeDAUlz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 1 Apr 2018 16:41:55 -0400
+Subject: Re: [PATCH v5 04/14] PCI: Add pcie_bandwidth_available() to compute
+ bandwidth available to device
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Tariq Toukan <tariqt@mellanox.com>,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152244391143.135666.12548496808512444463.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Tal Gilboa <talgi@mellanox.com>
+Message-ID: <7b82d160-002f-9687-ad80-5aaff639d7ab@mellanox.com>
+Date: Sun, 1 Apr 2018 23:41:42 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5d20185e88e7b6738d6b6aca41b1a237033fc36f.1523973931.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <152244391143.135666.12548496808512444463.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 17, 2018 at 03:34:23PM +0100, Gustavo Pimentel wrote:
-> The PCIe controller dual mode is capable of operating in host mode as well
-> as endpoint mode by configuration.
+On 3/31/2018 12:05 AM, Bjorn Helgaas wrote:
+> From: Tal Gilboa <talgi@mellanox.com>
 > 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> Add pcie_bandwidth_available() to compute the bandwidth available to a
+> device.  This may be limited by the device itself or by a slower upstream
+> link leading to the device.
+> 
+> The available bandwidth at each link along the path is computed as:
+> 
+>    link_speed * link_width * (1 - encoding_overhead)
+> 
+> The encoding overhead is about 20% for 2.5 and 5.0 GT/s links using 8b/10b
+> encoding, and about 1.5% for 8 GT/s or higher speed links using 128b/130b
+> encoding.
+> 
+> Also return the device with the slowest link and the speed and width of
+> that link.
+> 
+> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+> [bhelgaas: changelog, leave pcie_get_minimum_link() alone for now, return
+> bw directly, use pci_upstream_bridge(), check "next_bw <= bw" to find
+> uppermost limiting device, return speed/width of the limiting device]
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
-> Change v1->v2:
->  - Register new device id following Kishon's suggestion.
-> Change v2->v3:
->  - Nothing changed, just to follow the patch set version.
-> Changes v3->v4:
->  - Nothing changed, just to follow the patch set version.
-> Changes v4->v5:
->  - Nothing changed, just to follow the patch set version.
+>   drivers/pci/pci.c   |   54 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>   include/linux/pci.h |    3 +++
+>   2 files changed, 57 insertions(+)
 > 
->  include/linux/pci_ids.h | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index cc608fc5..22b1c1b 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2350,6 +2350,7 @@
->  #define PCI_DEVICE_ID_CENATEK_IDE	0x0001
->  
->  #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
-> +#define PCI_DEVICE_ID_SYNOPSYS_SMPL_EP	0xedda
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 9ce89e254197..e00d56b12747 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5146,6 +5146,60 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>   }
+>   EXPORT_SYMBOL(pcie_get_minimum_link);
+>   
+> +/**
+> + * pcie_bandwidth_available - determine minimum link settings of a PCIe
+> + *			      device and its bandwidth limitation
+> + * @dev: PCI device to query
+> + * @limiting_dev: storage for device causing the bandwidth limitation
+> + * @speed: storage for speed of limiting device
+> + * @width: storage for width of limiting device
+> + *
+> + * Walk up the PCI device chain and find the point where the minimum
+> + * bandwidth is available.  Return the bandwidth available there and (if
+> + * limiting_dev, speed, and width pointers are supplied) information about
+> + * that point.
+> + */
+> +u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+> +			     enum pci_bus_speed *speed,
+> +			     enum pcie_link_width *width)
+> +{
+> +	u16 lnksta;
+> +	enum pci_bus_speed next_speed;
+> +	enum pcie_link_width next_width;
+> +	u32 bw, next_bw;
+> +
+> +	*speed = PCI_SPEED_UNKNOWN;
+> +	*width = PCIE_LNK_WIDTH_UNKNOWN;
 
-This definition is only used once, so it fails the test at the top of
-pci_ids.h (we only add entries that will be shared between multiple
-drivers).  Just use the 0xedda constant in the driver.
+This is not safe anymore, now that we allow speed/width=NULL.
 
-I'm not really sure there's much value in the device ID definitions at
-all.  Maybe we should consider adding only new vendor IDs?
-
->  #define PCI_VENDOR_ID_VITESSE		0x1725
->  #define PCI_DEVICE_ID_VITESSE_VSC7174	0x7174
-> -- 
-> 2.7.4
-> 
+> +	bw = 0;
+> +
+> +	while (dev) {
+> +		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+> +
+> +		next_speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
+> +		next_width = (lnksta & PCI_EXP_LNKSTA_NLW) >>
+> +			PCI_EXP_LNKSTA_NLW_SHIFT;
+> +
+> +		next_bw = next_width * PCIE_SPEED2MBS_ENC(next_speed);
+> +
+> +		/* Check if current device limits the total bandwidth */
+> +		if (!bw || next_bw <= bw) {
+> +			bw = next_bw;
+> +
+> +			if (limiting_dev)
+> +				*limiting_dev = dev;
+> +			if (speed)
+> +				*speed = next_speed;
+> +			if (width)
+> +				*width = next_width;
+> +		}
+> +
+> +		dev = pci_upstream_bridge(dev);
+> +	}
+> +
+> +	return bw;
+> +}
+> +EXPORT_SYMBOL(pcie_bandwidth_available);
+> +
+>   /**
+>    * pcie_get_speed_cap - query for the PCI device's link speed capability
+>    * @dev: PCI device to query
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8043a5937ad0..f2bf2b7a66c7 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1083,6 +1083,9 @@ int pcie_get_mps(struct pci_dev *dev);
+>   int pcie_set_mps(struct pci_dev *dev, int mps);
+>   int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>   			  enum pcie_link_width *width);
+> +u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+> +			     enum pci_bus_speed *speed,
+> +			     enum pcie_link_width *width);
+>   void pcie_flr(struct pci_dev *dev);
+>   int __pci_reset_function_locked(struct pci_dev *dev);
+>   int pci_reset_function(struct pci_dev *dev);
 > 
