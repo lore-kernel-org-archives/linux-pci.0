@@ -1,78 +1,135 @@
-Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH 3/6] PCI: Introduce devm_of_pci_get_host_bridge_resources
-To: Bjorn Helgaas <helgaas@kernel.org>, Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-References: <cover.1524582822.git.jan.kiszka@siemens.com>
- <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
- <20180427222427.GB73638@bhelgaas-glaptop.roam.corp.google.com>
- <869a8ad9-dd2f-8462-c0c4-2d8a62d74185@siemens.com>
- <20180430184007.GC95643@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5e218659-b512-b622-25e0-5bb5a8f4b87d@codeaurora.org>
-Date: Mon, 30 Apr 2018 14:43:08 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:36704 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753582AbeDAPaz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Apr 2018 11:30:55 -0400
+Subject: Re: [PATCH V4] PCI: rcar: Use runtime PM to control controller clock
+To: Simon Horman <horms@verge.net.au>
+Cc: linux-pci@vger.kernel.org,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20180318105209.5922-1-marek.vasut+renesas@gmail.com>
+ <20180319084447.ce44arxneqd6i3bj@verge.net.au>
+ <834f8473-3e3b-98b2-56e1-55a3c40aa2dc@gmail.com>
+ <20180319103439.t6idzboizjtt4sgn@verge.net.au>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <d41fdb81-7d46-97d3-364d-b5565c0d8186@gmail.com>
+Date: Sun, 1 Apr 2018 17:02:07 +0200
 MIME-Version: 1.0
-In-Reply-To: <20180430184007.GC95643@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180319103439.t6idzboizjtt4sgn@verge.net.au>
 Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/30/2018 2:40 PM, Bjorn Helgaas wrote:
-> On Sat, Apr 28, 2018 at 09:28:47AM +0200, Jan Kiszka wrote:
->> On 2018-04-28 00:24, Bjorn Helgaas wrote:
->>> On Tue, Apr 24, 2018 at 05:13:39PM +0200, Jan Kiszka wrote:
->>>> From: Jan Kiszka <jan.kiszka@siemens.com>
+On 03/19/2018 11:34 AM, Simon Horman wrote:
+> On Mon, Mar 19, 2018 at 10:54:47AM +0100, Marek Vasut wrote:
+>> On 03/19/2018 09:44 AM, Simon Horman wrote:
+>>> On Sun, Mar 18, 2018 at 11:52:09AM +0100, Marek Vasut wrote:
+>>>> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
 >>>>
->>>> of_pci_get_host_bridge_resources allocates the resource structures it
->>>> fills dynamically, but none of its callers care to release them so far.
->>>> Rather than requiring everyone to do this explicitly, introduce a
->>>> managed version of that service. This differs API-wise only in taking a
->>>> reference to the associated device, rather than to the device tree node.
+>>>> The controller clock can be switched off during suspend/resume,
+>>>> let runtime PM take care of that.
 >>>>
->>>> As of_pci_get_host_bridge_resources is an exported interface, we cannot
->>>> simply drop it at this point. After converting all in-tree users to the
->>>> new API, we could phase out the unmanaged one over some grace period.
+>>>> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>>>> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>>>> Cc: linux-renesas-soc@vger.kernel.org
+>>>> To: linux-pci@vger.kernel.org
+>>>> ---
+>>>> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
+>>>>       reordering of function calls in probe
+>>>>     - Dispose of fail_clk in rcar_pcie_get_resources()
+>>>> V3: - Fix up the failpath in probe function
+>>>> V4: - Rebase on recent linux-next
+>>>> ---
+>>>>  drivers/pci/host/pcie-rcar.c | 40 ++++++++++++----------------------------
+>>>>  1 file changed, 12 insertions(+), 28 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>>>> index b4c4aad2cf66..93d59f15c589 100644
+>>>> --- a/drivers/pci/host/pcie-rcar.c
+>>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>>> @@ -142,7 +142,6 @@ struct rcar_pcie {
+>>>>  	void __iomem		*base;
+>>>>  	struct list_head	resources;
+>>>>  	int			root_bus_nr;
+>>>> -	struct clk		*clk;
+>>>>  	struct clk		*bus_clk;
+>>>>  	struct			rcar_msi msi;
+>>>>  };
+>>>> @@ -914,24 +913,14 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+>>>>  	if (IS_ERR(pcie->base))
+>>>>  		return PTR_ERR(pcie->base);
+>>>>  
+>>>> -	pcie->clk = devm_clk_get(dev, "pcie");
+>>>> -	if (IS_ERR(pcie->clk)) {
+>>>> -		dev_err(dev, "cannot get platform clock\n");
+>>>> -		return PTR_ERR(pcie->clk);
+>>>> -	}
+>>>> -	err = clk_prepare_enable(pcie->clk);
+>>>> -	if (err)
+>>>> -		return err;
+>>>> -
+>>>>  	pcie->bus_clk = devm_clk_get(dev, "pcie_bus");
+>>>>  	if (IS_ERR(pcie->bus_clk)) {
+>>>>  		dev_err(dev, "cannot get pcie bus clock\n");
+>>>> -		err = PTR_ERR(pcie->bus_clk);
+>>>> -		goto fail_clk;
+>>>> +		return PTR_ERR(pcie->bus_clk);
+>>>>  	}
+>>>>  	err = clk_prepare_enable(pcie->bus_clk);
+>>>>  	if (err)
+>>>> -		goto fail_clk;
+>>>> +		return err;
+>>>>  
+>>>>  	i = irq_of_parse_and_map(dev->of_node, 0);
+>>>>  	if (!i) {
+>>>> @@ -953,8 +942,6 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+>>>>  
+>>>>  err_map_reg:
+>>>>  	clk_disable_unprepare(pcie->bus_clk);
+>>>> -fail_clk:
+>>>> -	clk_disable_unprepare(pcie->clk);
+>>>>  
+>>>>  	return err;
+>>>>  }
+>>>> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>>>>  	if (err)
+>>>>  		goto err_free_bridge;
 >>>
->>> It looks like it might be possible to split this into three or four
->>> patches:
->>>
->>>   1) Factor __of_pci_get_host_bridge_resources() out of
->>>      of_pci_get_host_bridge_resources()
->>>
->>>   2) Add struct device * argument
->>>
->>>   3) Convert pr_info() to dev_info()
->>>
->>>   4) Add devm_of_pci_get_host_bridge_resources()
+>>> This error path now calls pci_free_resource_list() and in this case
+>>> the path is taken if rcar_pcie_parse_request_of_pci_ranges() fails.
+>>> Is that ok?
 >>
->> Will do. I'm even considering
->>
->> 5) mark of_pci_get_host_bridge_resources() __deprecated, due to the leak
->>    and no remaining in-tree user - what do you think?
+>> I think so, or did I miss something obvious?
 > 
-> Sounds good.
+> I feel that I am the one missing something obvious.
+> But here is what I am worried about:
 > 
-> It'd be nice if we had some guideline about deprecation -- whether we
-> actually need to mark things __deprecated, and then how long to wait
-> before actually removing them, but I don't see anything in
-> Documentation/.
+> 1. rcar_pcie_probe() calls rcar_pcie_parse_request_of_pci_ranges()
+> 2. rcar_pcie_parse_request_of_pci_ranges() calls
+>    devm_request_pci_bus_resources() but that fails so
+>    pci_free_resource_list() is called and an error is returned.
+> 3. rcar_pcie_probe() branches to err_free_bridge and calls
+>    pci_free_resource_list() again.
 
-I'm under the impression that we don't quite care about out-of-tree drivers.
-I have seen many times out-of-tree drivers to be broken due to API changes,
-renames or even parameter meaning change. 
+I see what you mean now, thanks for the details explanation.
 
-If the plan is to remove the API, just remove the API today.
-
-> 
-> Looks like it was added by cbe4097f8ae6 ("of/pci: Add support for
-> parsing PCI host bridge resources from DT") in v3.18, so it's been
-> around for a while and I guess it would be nice to have a grace period
-> before removing it.
-> 
-
+So the change needed here is to move
+pci_free_resource_list(&pcie->resources); above err_free_bridge, so it's
+not called twice, right ?
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Best regards,
+Marek Vasut
