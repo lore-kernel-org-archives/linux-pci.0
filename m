@@ -1,112 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:41920 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:39722 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932652AbeDWXbF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 23 Apr 2018 19:31:05 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 23 Apr 2018 17:30:43 -0600
-Message-Id: <20180423233046.21476-12-logang@deltatee.com>
-In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
-Subject: [PATCH v4 11/14] nvme-pci: Add a quirk for a pseudo CMB
+        id S1756748AbeDBUbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Apr 2018 16:31:47 -0400
+Date: Mon, 2 Apr 2018 15:31:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Keller, Jacob E" <jacob.e.keller@intel.com>
+Cc: Tal Gilboa <talgi@mellanox.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "everest-linux-l2@cavium.com" <everest-linux-l2@cavium.com>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v5 12/14] fm10k: Report PCIe link properties with
+ pcie_print_link_status()
+Message-ID: <20180402203144.GM9322@bhelgaas-glaptop.roam.corp.google.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152244397259.135666.12655029447932912161.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <02874ECE860811409154E81DA85FBB5882D497EE@ORSMSX115.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <02874ECE860811409154E81DA85FBB5882D497EE@ORSMSX115.amr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a quirk to use CMB-like memory on older devices that have
-an exposed BAR but do not advertise support for using CMBLOC and
-CMBSIZE.
+On Mon, Apr 02, 2018 at 03:56:06PM +0000, Keller, Jacob E wrote:
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: Friday, March 30, 2018 2:06 PM
+> > To: Tal Gilboa <talgi@mellanox.com>
+> > Cc: Tariq Toukan <tariqt@mellanox.com>; Keller, Jacob E
+> > <jacob.e.keller@intel.com>; Ariel Elior <ariel.elior@cavium.com>; Ganesh
+> > Goudar <ganeshgr@chelsio.com>; Kirsher, Jeffrey T
+> > <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium.com; intel-wired-
+> > lan@lists.osuosl.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > linux-pci@vger.kernel.org
+> > Subject: [PATCH v5 12/14] fm10k: Report PCIe link properties with
+> > pcie_print_link_status()
+> > 
+> > From: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > Use pcie_print_link_status() to report PCIe link speed and possible
+> > limitations instead of implementing this in the driver itself.
+> > 
+> > Note that pcie_get_minimum_link() can return misleading information because
+> > it finds the slowest link and the narrowest link without considering the
+> > total bandwidth of the link.  If the path contains a 16 GT/s x1 link and a
+> > 2.5 GT/s x16 link, pcie_get_minimum_link() returns 2.5 GT/s x1, which
+> > corresponds to 250 MB/s of bandwidth, not the actual available bandwidth of
+> > about 2000 MB/s for a 16 GT/s x1 link.
+> 
+> This comment is about what's being fixed, so it would have been easier to
+> parse if it were written to more clearly indicate that we're removing
+> (and not adding) this behavior.
 
-We'd like to use some of these older cards to test P2P memory.
+Good point.  Is this any better?
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
----
- drivers/nvme/host/nvme.h |  7 +++++++
- drivers/nvme/host/pci.c  | 24 ++++++++++++++++++++----
- 2 files changed, 27 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index 9a689c13998f..885e9ec9b889 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -84,6 +84,13 @@ enum nvme_quirks {
- 	 * Supports the LighNVM command set if indicated in vs[1].
- 	 */
- 	NVME_QUIRK_LIGHTNVM			= (1 << 6),
-+
-+	/*
-+	 * Pseudo CMB Support on BAR 4. For adapters like the Microsemi
-+	 * NVRAM that have CMB-like memory on a BAR but does not set
-+	 * CMBLOC or CMBSZ.
-+	 */
-+	NVME_QUIRK_PSEUDO_CMB_BAR4		= (1 << 7),
- };
- 
- /*
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 09b6aba6ed28..e526e969680a 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -1685,6 +1685,13 @@ static ssize_t nvme_cmb_show(struct device *dev,
- }
- static DEVICE_ATTR(cmb, S_IRUGO, nvme_cmb_show, NULL);
- 
-+static u32 nvme_pseudo_cmbsz(struct pci_dev *pdev, int bar)
-+{
-+	return NVME_CMBSZ_WDS | NVME_CMBSZ_RDS |
-+		(((ilog2(SZ_16M) - 12) / 4) << NVME_CMBSZ_SZU_SHIFT) |
-+		((pci_resource_len(pdev, bar) / SZ_16M) << NVME_CMBSZ_SZ_SHIFT);
-+}
-+
- static u64 nvme_cmb_size_unit(struct nvme_dev *dev)
- {
- 	u8 szu = (dev->cmbsz >> NVME_CMBSZ_SZU_SHIFT) & NVME_CMBSZ_SZU_MASK;
-@@ -1704,10 +1711,15 @@ static void nvme_map_cmb(struct nvme_dev *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev->dev);
- 	int bar;
- 
--	dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
--	if (!dev->cmbsz)
--		return;
--	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
-+	if (dev->ctrl.quirks & NVME_QUIRK_PSEUDO_CMB_BAR4) {
-+		dev->cmbsz = nvme_pseudo_cmbsz(pdev, 4);
-+		dev->cmbloc = 4;
-+	} else {
-+		dev->cmbsz = readl(dev->bar + NVME_REG_CMBSZ);
-+		if (!dev->cmbsz)
-+			return;
-+		dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
-+	}
- 
- 	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
- 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
-@@ -2736,6 +2748,10 @@ static const struct pci_device_id nvme_id_table[] = {
- 		.driver_data = NVME_QUIRK_LIGHTNVM, },
- 	{ PCI_DEVICE(0x1d1d, 0x2807),	/* CNEX WL */
- 		.driver_data = NVME_QUIRK_LIGHTNVM, },
-+	{ PCI_DEVICE(0x11f8, 0xf117),	/* Microsemi NVRAM adaptor */
-+		.driver_data = NVME_QUIRK_PSEUDO_CMB_BAR4, },
-+	{ PCI_DEVICE(0x1db1, 0x0002),	/* Everspin nvNitro adaptor */
-+		.driver_data = NVME_QUIRK_PSEUDO_CMB_BAR4,  },
- 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2001) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_APPLE, 0x2003) },
--- 
-2.11.0
+  fm10k: Report PCIe link properties with pcie_print_link_status()
+  
+  Previously the driver used pcie_get_minimum_link() to warn when the NIC
+  is in a slot that can't supply as much bandwidth as the NIC could use.
+  
+  pcie_get_minimum_link() can be misleading because it finds the slowest link
+  and the narrowest link (which may be different links) without considering
+  the total bandwidth of each link.  For a path with a 16 GT/s x1 link and a
+  2.5 GT/s x16 link, it returns 2.5 GT/s x1, which corresponds to 250 MB/s of
+  bandwidth, not the true available bandwidth of about 1969 MB/s for a
+  16 GT/s x1 link.
+  
+  Use pcie_print_link_status() to report PCIe link speed and possible
+  limitations instead of implementing this in the driver itself.  This finds
+  the slowest link in the path to the device by computing the total bandwidth
+  of each link and compares that with the capabilities of the device.
+  
+  Note that the driver previously used dev_warn() to suggest using a
+  different slot, but pcie_print_link_status() uses dev_info() because if the
+  platform has no faster slot available, the user can't do anything about the
+  warning and may not want to be bothered with it.
