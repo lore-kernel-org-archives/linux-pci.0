@@ -1,52 +1,110 @@
-Return-Path: <SRS0=Hbwl=HC=netronome.com=jakub.kicinski@kernel.org>
-Return-Path: <SRS0=Hbwl=HC=netronome.com=jakub.kicinski@kernel.org>
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: oss-drivers@netronome.com,
-	Tal Gilboa <talgi@mellanox.com>,
-	Tariq Toukan <tariqt@mellanox.com>,
-	Jacob Keller <jacob.e.keller@intel.com>,
-	Ganesh Goudar <ganeshgr@chelsio.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCH] PCI: Add PCIe to pcie_print_link_status() messages
-Date: Fri, 13 Apr 2018 11:16:38 -0700
-Message-Id: <20180413181638.6424-1-jakub.kicinski@netronome.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:43153 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750724AbeDBN3p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 09:29:45 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <kishon@ti.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH] PCI: endpoint: Create configfs entry for each pci_epf_device_id table entry
+Date: Mon, 2 Apr 2018 18:59:35 +0530
+Message-ID: <20180402132935.32008-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the pcie_print_link_status() will print PCIe bandwidth
-and link width information but does not mention it is pertaining
-to the PCIe.  Since this and related functions are used exclusively
-by networking drivers today users may get confused into thinking
-that it's the NIC bandwidth that is being talked about.  Insert a
-"PCIe" into the messages.
+In order to be able to provide correct driver_data for pci_epf device,
+a separate configfs entry for each pci_epf_device_id table entry in
+pci_epf_driver is required.
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+Add support to create configfs entry for each pci_epf_device_id
+table entry here.
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/endpoint/pci-epf-core.c | 23 +++++++++++++++++++++--
+ include/linux/pci-epf.h             |  4 ++--
+ 2 files changed, 23 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aa86e904f93c..73a0a4993f6a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5273,11 +5273,11 @@ void pcie_print_link_status(struct pci_dev *dev)
- 	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index 59ed29e550e9..d6787f39fd41 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -15,6 +15,8 @@
+ #include <linux/pci-epf.h>
+ #include <linux/pci-ep-cfs.h>
  
- 	if (bw_avail >= bw_cap)
--		pci_info(dev, "%u.%03u Gb/s available bandwidth (%s x%d link)\n",
-+		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
- 			 bw_cap / 1000, bw_cap % 1000,
- 			 PCIE_SPEED2STR(speed_cap), width_cap);
- 	else
--		pci_info(dev, "%u.%03u Gb/s available bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
-+		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
- 			 bw_avail / 1000, bw_avail % 1000,
- 			 PCIE_SPEED2STR(speed), width,
- 			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
++static DEFINE_MUTEX(pci_epf_mutex);
++
+ static struct bus_type pci_epf_bus_type;
+ static const struct device_type pci_epf_type;
+ 
+@@ -139,7 +141,13 @@ EXPORT_SYMBOL_GPL(pci_epf_alloc_space);
+  */
+ void pci_epf_unregister_driver(struct pci_epf_driver *driver)
+ {
+-	pci_ep_cfs_remove_epf_group(driver->group);
++	struct config_group *group;
++
++	mutex_lock(&pci_epf_mutex);
++	list_for_each_entry(group, &driver->epf_group, group_entry)
++		pci_ep_cfs_remove_epf_group(group);
++	list_del(&driver->epf_group);
++	mutex_unlock(&pci_epf_mutex);
+ 	driver_unregister(&driver->driver);
+ }
+ EXPORT_SYMBOL_GPL(pci_epf_unregister_driver);
+@@ -155,6 +163,8 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
+ 			      struct module *owner)
+ {
+ 	int ret;
++	struct config_group *group;
++	const struct pci_epf_device_id *id;
+ 
+ 	if (!driver->ops)
+ 		return -EINVAL;
+@@ -169,7 +179,16 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
+ 	if (ret)
+ 		return ret;
+ 
+-	driver->group = pci_ep_cfs_add_epf_group(driver->driver.name);
++	INIT_LIST_HEAD(&driver->epf_group);
++
++	id = driver->id_table;
++	while (id->name[0]) {
++		group = pci_ep_cfs_add_epf_group(id->name);
++		mutex_lock(&pci_epf_mutex);
++		list_add_tail(&group->group_entry, &driver->epf_group);
++		mutex_unlock(&pci_epf_mutex);
++		id++;
++	}
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index e897bf076701..a30dcaafa6e8 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -72,7 +72,7 @@ struct pci_epf_ops {
+  * @driver: PCI EPF driver
+  * @ops: set of function pointers for performing EPF operations
+  * @owner: the owner of the module that registers the PCI EPF driver
+- * @group: configfs group corresponding to the PCI EPF driver
++ * @epf_group: list of configfs group corresponding to the PCI EPF driver
+  * @id_table: identifies EPF devices for probing
+  */
+ struct pci_epf_driver {
+@@ -82,7 +82,7 @@ struct pci_epf_driver {
+ 	struct device_driver	driver;
+ 	struct pci_epf_ops	*ops;
+ 	struct module		*owner;
+-	struct config_group	*group;
++	struct list_head	epf_group;
+ 	const struct pci_epf_device_id	*id_table;
+ };
+ 
 -- 
 2.16.2
