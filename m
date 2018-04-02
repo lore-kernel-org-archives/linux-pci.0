@@ -1,146 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:45301 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751423AbeDHNJq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 09:09:46 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH V2] PCI: rcar: Clean up the macros
-Date: Sun,  8 Apr 2018 15:09:42 +0200
-Message-Id: <20180408130942.19148-1-marek.vasut+renesas@gmail.com>
+Received: from lucky1.263xmail.com ([211.157.147.135]:54559 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753980AbeDBBLP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Apr 2018 21:11:15 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Simon Xue <xxm@rock-chips.com>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 09/10] dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint controller
+Date: Mon,  2 Apr 2018 09:04:14 +0800
+Message-Id: <1522631054-151768-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch replaces the (1 << n) with BIT(n) and cleans up whitespace,
-no functional change.
+This patch documents the DT bindings for the Rockchip PCIe controller
+when configured in endpoint mode.
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
-V2: Reword the commit message
----
- drivers/pci/host/pcie-rcar.c | 52 ++++++++++++++++++++++----------------------
- 1 file changed, 26 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 25f68305322c..5ab7bf6a8de0 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -30,9 +30,9 @@
- 
- #define PCIECAR			0x000010
- #define PCIECCTLR		0x000018
--#define  CONFIG_SEND_ENABLE	(1 << 31)
-+#define  CONFIG_SEND_ENABLE	BIT(31)
- #define  TYPE0			(0 << 8)
--#define  TYPE1			(1 << 8)
-+#define  TYPE1			BIT(8)
- #define PCIECDR			0x000020
- #define PCIEMSR			0x000028
- #define PCIEINTXR		0x000400
-@@ -44,7 +44,7 @@
- #define PCIETSTR		0x02004
- #define  DATA_LINK_ACTIVE	1
- #define PCIEERRFR		0x02020
--#define  UNSUPPORTED_REQUEST	(1 << 4)
-+#define  UNSUPPORTED_REQUEST	BIT(4)
- #define PCIEMSIFR		0x02044
- #define PCIEMSIALR		0x02048
- #define  MSIFE			1
-@@ -57,17 +57,17 @@
- /* local address reg & mask */
- #define PCIELAR(x)		(0x02200 + ((x) * 0x20))
- #define PCIELAMR(x)		(0x02208 + ((x) * 0x20))
--#define  LAM_PREFETCH		(1 << 3)
--#define  LAM_64BIT		(1 << 2)
--#define  LAR_ENABLE		(1 << 1)
-+#define  LAM_PREFETCH		BIT(3)
-+#define  LAM_64BIT		BIT(2)
-+#define  LAR_ENABLE		BIT(1)
- 
- /* PCIe address reg & mask */
- #define PCIEPALR(x)		(0x03400 + ((x) * 0x20))
- #define PCIEPAUR(x)		(0x03404 + ((x) * 0x20))
- #define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
- #define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
--#define  PAR_ENABLE		(1 << 31)
--#define  IO_SPACE		(1 << 8)
-+#define  PAR_ENABLE		BIT(31)
-+#define  IO_SPACE		BIT(8)
- 
- /* Configuration */
- #define PCICONF(x)		(0x010000 + ((x) * 0x4))
-@@ -79,23 +79,23 @@
- #define IDSETR1			0x011004
- #define TLCTLR			0x011048
- #define MACSR			0x011054
--#define  SPCHGFIN		(1 << 4)
--#define  SPCHGFAIL		(1 << 6)
--#define  SPCHGSUC		(1 << 7)
-+#define  SPCHGFIN		BIT(4)
-+#define  SPCHGFAIL		BIT(6)
-+#define  SPCHGSUC		BIT(7)
- #define  LINK_SPEED		(0xf << 16)
- #define  LINK_SPEED_2_5GTS	(1 << 16)
- #define  LINK_SPEED_5_0GTS	(2 << 16)
- #define MACCTLR			0x011058
--#define  SPEED_CHANGE		(1 << 24)
--#define  SCRAMBLE_DISABLE	(1 << 27)
-+#define  SPEED_CHANGE		BIT(24)
-+#define  SCRAMBLE_DISABLE	BIT(27)
- #define MACS2R			0x011078
- #define MACCGSPSETR		0x011084
--#define  SPCNGRSN		(1 << 31)
-+#define  SPCNGRSN		BIT(31)
- 
- /* R-Car H1 PHY */
- #define H1_PCIEPHYADRR		0x04000c
--#define  WRITE_CMD		(1 << 16)
--#define  PHY_ACK		(1 << 24)
-+#define  WRITE_CMD		BIT(16)
-+#define  PHY_ACK		BIT(24)
- #define  RATE_POS		12
- #define  LANE_POS		8
- #define  ADR_POS		0
-@@ -107,19 +107,19 @@
- #define GEN2_PCIEPHYDATA	0x784
- #define GEN2_PCIEPHYCTRL	0x78c
- 
--#define INT_PCI_MSI_NR	32
-+#define INT_PCI_MSI_NR		32
- 
--#define RCONF(x)	(PCICONF(0)+(x))
--#define RPMCAP(x)	(PMCAP(0)+(x))
--#define REXPCAP(x)	(EXPCAP(0)+(x))
--#define RVCCAP(x)	(VCCAP(0)+(x))
-+#define RCONF(x)		(PCICONF(0) + (x))
-+#define RPMCAP(x)		(PMCAP(0) + (x))
-+#define REXPCAP(x)		(EXPCAP(0) + (x))
-+#define RVCCAP(x)		(VCCAP(0) + (x))
- 
--#define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
--#define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
--#define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
-+#define PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
-+#define PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
-+#define PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
- 
--#define RCAR_PCI_MAX_RESOURCES 4
--#define MAX_NR_INBOUND_MAPS 6
-+#define RCAR_PCI_MAX_RESOURCES	4
-+#define MAX_NR_INBOUND_MAPS	6
- 
- struct rcar_msi {
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+ .../devicetree/bindings/pci/rockchip-pcie-ep.txt   | 62 ++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+new file mode 100644
+index 0000000..77846730
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+@@ -0,0 +1,62 @@
++* Rockchip AXI PCIe Endpoint Controller DT description
++
++Required properties:
++- compatible: Should contain "rockchip,rk3399-pcie-ep"
++- reg: Two register ranges as listed in the reg-names property
++- reg-names: Must include the following names
++	- "apb-base"
++	- "mem-base"
++- clocks: Must contain an entry for each entry in clock-names.
++		See ../clocks/clock-bindings.txt for details.
++- clock-names: Must include the following entries:
++	- "aclk"
++	- "aclk-perf"
++	- "hclk"
++	- "pm"
++- resets: Must contain seven entries for each entry in reset-names.
++	   See ../reset/reset.txt for details.
++- reset-names: Must include the following names
++	- "core"
++	- "mgmt"
++	- "mgmt-sticky"
++	- "pipe"
++	- "pm"
++	- "aclk"
++	- "pclk"
++- pinctrl-names : The pin control state names
++- pinctrl-0: The "default" pinctrl state
++- phys: Must contain an phandle to a PHY for each entry in phy-names.
++- phy-names: Must include 4 entries for all 4 lanes even if some of
++  them won't be used for your cases. Entries are of the form "pcie-phy-N":
++  where N ranges from 0 to 3.
++  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
++  for changing the #phy-cells of phy node to support it)
++- rockchip,max-outbound-regions: Maximum number of outbound regions
++
++Optional Property:
++- num-lanes: number of lanes to use
++- max-functions: Maximum number of functions that can be configured (default 1).
++
++pcie0-ep: pcie@f8000000 {
++	compatible = "rockchip,rk3399-pcie-ep";
++	#address-cells = <3>;
++	#size-cells = <2>;
++	rockchip,max-outbound-regions = <16>;
++	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
++		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
++	clock-names = "aclk", "aclk-perf",
++		      "hclk", "pm";
++	max-functions = /bits/ 8 <8>;
++	num-lanes = <4>;
++	reg = <0x0 0xfd000000 0x0 0x1000000>, <0x0 0x80000000 0x0 0x20000>;
++	reg-names = "apb-base", "mem-base";
++	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
++		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE> ,
++		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
++	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
++		      "pm", "pclk", "aclk";
++	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
++	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie_clkreq>;
++};
 -- 
-2.16.2
+1.9.1
