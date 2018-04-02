@@ -1,210 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42676 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:52920 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756630AbeDBT6X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Apr 2018 15:58:23 -0400
-Date: Mon, 2 Apr 2018 14:58:20 -0500
+        id S1754367AbeDBVXF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Apr 2018 17:23:05 -0400
+Date: Mon, 2 Apr 2018 16:23:02 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Keller, Jacob E" <jacob.e.keller@intel.com>
-Cc: Tal Gilboa <talgi@mellanox.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "everest-linux-l2@cavium.com" <everest-linux-l2@cavium.com>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log link
- speed and whether it's limited
-Message-ID: <20180402195820.GL9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <02874ECE860811409154E81DA85FBB5882D49870@ORSMSX115.amr.corp.intel.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCHv2 1/7] PCI/DPC: Enable ERR_COR
+Message-ID: <20180402212302.GN9322@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180402162203.3370-1-keith.busch@intel.com>
+ <20180402162203.3370-2-keith.busch@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <02874ECE860811409154E81DA85FBB5882D49870@ORSMSX115.amr.corp.intel.com>
+In-Reply-To: <20180402162203.3370-2-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 02, 2018 at 04:25:17PM +0000, Keller, Jacob E wrote:
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: Friday, March 30, 2018 2:05 PM
-> > To: Tal Gilboa <talgi@mellanox.com>
-> > Cc: Tariq Toukan <tariqt@mellanox.com>; Keller, Jacob E
-> > <jacob.e.keller@intel.com>; Ariel Elior <ariel.elior@cavium.com>; Ganesh
-> > Goudar <ganeshgr@chelsio.com>; Kirsher, Jeffrey T
-> > <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium.com; intel-wired-
-> > lan@lists.osuosl.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > linux-pci@vger.kernel.org
-> > Subject: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log link speed and
-> > whether it's limited
-> > 
-> > From: Tal Gilboa <talgi@mellanox.com>
-> > 
-> > Add pcie_print_link_status().  This logs the current settings of the link
-> > (speed, width, and total available bandwidth).
-> > 
-> > If the device is capable of more bandwidth but is limited by a slower
-> > upstream link, we include information about the link that limits the
-> > device's performance.
-> > 
-> > The user may be able to move the device to a different slot for better
-> > performance.
-> > 
-> > This provides a unified method for all PCI devices to report status and
-> > issues, instead of each device reporting in a different way, using
-> > different code.
-> > 
-> > Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-> > [bhelgaas: changelog, reword log messages, print device capabilities when
-> > not limited]
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  drivers/pci/pci.c   |   29 +++++++++++++++++++++++++++++
-> >  include/linux/pci.h |    1 +
-> >  2 files changed, 30 insertions(+)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index e00d56b12747..cec7aed09f6b 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -5283,6 +5283,35 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev,
-> > enum pci_bus_speed *speed,
-> >  	return *width * PCIE_SPEED2MBS_ENC(*speed);
-> >  }
-> > 
-> > +/**
-> > + * pcie_print_link_status - Report the PCI device's link speed and width
-> > + * @dev: PCI device to query
-> > + *
-> > + * Report the available bandwidth at the device.  If this is less than the
-> > + * device is capable of, report the device's maximum possible bandwidth and
-> > + * the upstream link that limits its performance to less than that.
-> > + */
-> > +void pcie_print_link_status(struct pci_dev *dev)
-> > +{
-> > +	enum pcie_link_width width, width_cap;
-> > +	enum pci_bus_speed speed, speed_cap;
-> > +	struct pci_dev *limiting_dev = NULL;
-> > +	u32 bw_avail, bw_cap;
-> > +
-> > +	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
-> > +	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed,
-> > &width);
-> > +
-> > +	if (bw_avail >= bw_cap)
-> > +		pci_info(dev, "%d Mb/s available bandwidth (%s x%d link)\n",
-> > +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
-> > +	else
-> > +		pci_info(dev, "%d Mb/s available bandwidth, limited by %s x%d
-> > link at %s (capable of %d Mb/s with %s x%d link)\n",
-> > +			 bw_avail, PCIE_SPEED2STR(speed), width,
-> > +			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
-> > +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
-> > +}
+On Mon, Apr 02, 2018 at 10:21:57AM -0600, Keith Busch wrote:
+> A DPC port may be configured to send ERR_COR message when the
+> triggered. This patch enables this feature so additional notification
+> of the event is possible.
+
+Who is the intended consumer of the ERR_COR message?  I guess if the
+root port supports AER, we'll see AER logging when we didn't before?
+Is that what you mean by "additional notification"?
+
+Or, since the DPC ERR_COR implementation note (sec 6.2.10.2) suggests
+that ERR_COR is primarily intended for use by platform firmware, does
+this change enable notification via the firmware?  If so, how does
+that work?  Does it require the platform to retain control of AER so
+it can see these events?  But if the platform retains AER control, I
+don't think we'd be enabling DPC in Linux.  I'm confused.
+
+The similar implementation note in 6.2.10.5 suggests that
+DL_ACTIVE_ERR_COR is also intended for use by the platform.  Should we
+be setting that for the same reason we're setting
+PCI_EXP_DPC_CTL_ERR_COR?
+
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/pcie/pcie-dpc.c   | 5 ++++-
+>  include/uapi/linux/pci_regs.h | 1 +
+>  2 files changed, 5 insertions(+), 1 deletion(-)
 > 
-> Personally, I would make thic last one a pci_warn() to indicate it at a
-> higher log level, but I'm  ok with the wording, and if consensus is that
-> this should be at info, I'm ok with that.
+> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> index 38e40c6c576f..a9be6938417f 100644
+> --- a/drivers/pci/pcie/pcie-dpc.c
+> +++ b/drivers/pci/pcie/pcie-dpc.c
+> @@ -269,7 +269,10 @@ static int dpc_probe(struct pcie_device *dev)
+>  		}
+>  	}
+>  
+> -	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+> +	ctl = (ctl & 0xfff4) |
+> +		PCI_EXP_DPC_CTL_EN_NONFATAL |
+> +		PCI_EXP_DPC_CTL_INT_EN |
+> +		PCI_EXP_DPC_CTL_ERR_COR;
 
-Tal's original patch did have a pci_warn() here, and we went back and
-forth a bit.  They get bug reports when a device doesn't perform as
-expected, which argues for pci_warn().  But they also got feedback
-saying warnings are a bit too much, which argues for pci_info() [1]
+The 0xfff4 is a little confusing because it:
 
-I don't have a really strong opinion either way.  I have a slight
-preference for info because the user may not be able to do anything
-about it (there may not be a faster slot available), and I think
-distros are usually configured so a warning interrupts the smooth
-graphical boot.
+  - Clears DPC Trigger Enable (0x0003), then sets
+    PCI_EXP_DPC_CTL_EN_NONFATAL.  That makes good sense.  Maybe we
+    should have a mask for the 0x0003 value.
 
-It looks like mlx4, fm10k, and ixgbe currently use warnings, while
-bnx2x, bnxt_en, and cxgb4 use info.  It's a tie so far :)
+  - Preserves whatever the firmware set for DPC Completion Control
+    (0x0004).  Seems like maybe we should decide and set this
+    explicitly, unless there's a reason we should respect the
+    platform's choice.  But that's a separate issue.
 
-[1] https://lkml.kernel.org/r/e47f3628-b56c-4d0a-f18b-5ffaf261ccc0@mellanox.com
+  - Clears DPC Interrupt Enable (0x0008), then sets it again.
+    Clearing seems pointless.
 
-Here's a proposal for printing the bandwidth as "x.xxx Gb/s":
+  - Preserves DPC ERR_COR Enable (0x0010), then sets it.
 
-commit ad370f38c1b5e9b8bb941eaed84ebb676c4bdaa4
-Author: Tal Gilboa <talgi@mellanox.com>
-Date:   Fri Mar 30 08:56:47 2018 -0500
+I think the most readable thing would be:
 
-    PCI: Add pcie_print_link_status() to log link speed and whether it's limited
-    
-    Add pcie_print_link_status().  This logs the current settings of the link
-    (speed, width, and total available bandwidth).
-    
-    If the device is capable of more bandwidth but is limited by a slower
-    upstream link, we include information about the link that limits the
-    device's performance.
-    
-    The user may be able to move the device to a different slot for better
-    performance.
-    
-    This provides a unified method for all PCI devices to report status and
-    issues, instead of each device reporting in a different way, using
-    different code.
-    
-    Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-    [bhelgaas: changelog, reword log messages, print device capabilities when
-    not limited, print bandwidth in Gb/s]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+  ctl = (ctl & 0xfffc) | PCI_EXP_DPC_CTL_EN_NONFATAL;
+  ctl |= PCI_EXP_DPC_CTL_INT_EN | PCI_EXP_DPC_CTL_ERR_COR;
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c6e3c0524699..ab2346041fa4 100644
---- a/drivers/pci/pci.c
-++ b/drivers/pci/pci.c
-@@ -5287,6 +5287,38 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
- 	return *width * PCIE_SPEED2MBS_ENC(*speed);
- }
- 
-+/**
-+ * pcie_print_link_status - Report the PCI device's link speed and width
-+ * @dev: PCI device to query
-+ *
-+ * Report the available bandwidth at the device.  If this is less than the
-+ * device is capable of, report the device's maximum possible bandwidth and
-+ * the upstream link that limits its performance to less than that.
-+ */
-+void pcie_print_link_status(struct pci_dev *dev)
-+{
-+	enum pcie_link_width width, width_cap;
-+	enum pci_bus_speed speed, speed_cap;
-+	struct pci_dev *limiting_dev = NULL;
-+	u32 bw_avail, bw_cap;
-+
-+	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
-+	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
-+
-+	if (bw_avail >= bw_cap)
-+		pci_info(dev, "%u.%03u Gb/s available bandwidth (%s x%d link)\n",
-+			 bw_cap / 1000, bw_cap % 1000,
-+			 PCIE_SPEED2STR(speed_cap), width_cap);
-+	else
-+		pci_info(dev, "%u.%03u Gb/s available bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
-+			 bw_avail / 1000, bw_avail % 1000,
-+			 PCIE_SPEED2STR(speed), width,
-+			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
-+			 bw_cap / 1000, bw_cap % 1000,
-+			 PCIE_SPEED2STR(speed_cap), width_cap);
-+}
-+EXPORT_SYMBOL(pcie_print_link_status);
-+
- /**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f2bf2b7a66c7..38f7957121ef 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1086,6 +1086,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 			     enum pci_bus_speed *speed,
- 			     enum pcie_link_width *width);
-+void pcie_print_link_status(struct pci_dev *dev);
- void pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
+or maybe:
+
+  ctl = (ctl & 0xfffc) | PCI_EXP_DPC_CTL_EN_NONFATAL;
+  ctl |= PCI_EXP_DPC_CTL_INT_EN;
+
+  /* Platform firmware may rely on these ERR_COR messages */
+  ctl |= PCI_EXP_DPC_CTL_ERR_COR | PCI_EXP_DPC_CTL_DL_ACT_ERR_COR;
+
+(If that comment is accurate.)
+
+>  	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+>  
+>  	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 0c79eac5e9b8..9cfcecdc3ec7 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -980,6 +980,7 @@
+>  #define PCI_EXP_DPC_CTL			6	/* DPC control */
+>  #define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x0002	/* Enable trigger on ERR_NONFATAL message */
+>  #define  PCI_EXP_DPC_CTL_INT_EN 	0x0008	/* DPC Interrupt Enable */
+> +#define  PCI_EXP_DPC_CTL_ERR_COR 	0x0010	/* DPC ERR_COR Enable */
+>  
+>  #define PCI_EXP_DPC_STATUS		8	/* DPC Status */
+>  #define  PCI_EXP_DPC_STATUS_TRIGGER	    0x0001 /* Trigger Status */
+> -- 
+> 2.14.3
+> 
