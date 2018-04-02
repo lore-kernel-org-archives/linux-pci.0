@@ -1,151 +1,263 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41402 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:33228 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758069AbeD0TWJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 15:22:09 -0400
-Date: Fri, 27 Apr 2018 14:22:07 -0500
+        id S1754655AbeDBTh4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Apr 2018 15:37:56 -0400
+Date: Mon, 2 Apr 2018 14:37:54 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
-        Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
-Message-ID: <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+To: "Keller, Jacob E" <jacob.e.keller@intel.com>
+Cc: Tal Gilboa <talgi@mellanox.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "everest-linux-l2@cavium.com" <everest-linux-l2@cavium.com>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v5 03/14] PCI: Add pcie_bandwidth_capable() to compute
+ max supported link bandwidth
+Message-ID: <20180402193754.GK9322@bhelgaas-glaptop.roam.corp.google.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152244390359.135666.14890735614456271032.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <31e66048-e8b8-47ba-baf5-023560b4c124@mellanox.com>
+ <20180402004049.GA131023@bhelgaas-glaptop.roam.corp.google.com>
+ <50346f44-de3f-b226-69ad-6de45e94e261@mellanox.com>
+ <20180402140501.GA244675@bhelgaas-glaptop.roam.corp.google.com>
+ <3decbba0-74a2-c906-b5b4-a04f261860eb@mellanox.com>
+ <02874ECE860811409154E81DA85FBB5882D4980A@ORSMSX115.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+In-Reply-To: <02874ECE860811409154E81DA85FBB5882D4980A@ORSMSX115.amr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lukas, Sinan]
-
-Hi Paul,
-
-Thanks for the report!
-
-On Thu, Apr 26, 2018 at 12:17:53PM +0200, Paul Menzel wrote:
-> Dear Linux folks,
+On Mon, Apr 02, 2018 at 04:00:16PM +0000, Keller, Jacob E wrote:
+> > -----Original Message-----
+> > From: Tal Gilboa [mailto:talgi@mellanox.com]
+> > Sent: Monday, April 02, 2018 7:34 AM
+> > To: Bjorn Helgaas <helgaas@kernel.org>
+> > Cc: Tariq Toukan <tariqt@mellanox.com>; Keller, Jacob E
+> > <jacob.e.keller@intel.com>; Ariel Elior <ariel.elior@cavium.com>; Ganesh
+> > Goudar <ganeshgr@chelsio.com>; Kirsher, Jeffrey T
+> > <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium.com; intel-wired-
+> > lan@lists.osuosl.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > linux-pci@vger.kernel.org
+> > Subject: Re: [PATCH v5 03/14] PCI: Add pcie_bandwidth_capable() to compute
+> > max supported link bandwidth
+> > 
+> > On 4/2/2018 5:05 PM, Bjorn Helgaas wrote:
+> > > On Mon, Apr 02, 2018 at 10:34:58AM +0300, Tal Gilboa wrote:
+> > >> On 4/2/2018 3:40 AM, Bjorn Helgaas wrote:
+> > >>> On Sun, Apr 01, 2018 at 11:38:53PM +0300, Tal Gilboa wrote:
+> > >>>> On 3/31/2018 12:05 AM, Bjorn Helgaas wrote:
+> > >>>>> From: Tal Gilboa <talgi@mellanox.com>
+> > >>>>>
+> > >>>>> Add pcie_bandwidth_capable() to compute the max link bandwidth
+> > supported by
+> > >>>>> a device, based on the max link speed and width, adjusted by the
+> > encoding
+> > >>>>> overhead.
+> > >>>>>
+> > >>>>> The maximum bandwidth of the link is computed as:
+> > >>>>>
+> > >>>>>      max_link_speed * max_link_width * (1 - encoding_overhead)
+> > >>>>>
+> > >>>>> The encoding overhead is about 20% for 2.5 and 5.0 GT/s links using
+> > 8b/10b
+> > >>>>> encoding, and about 1.5% for 8 GT/s or higher speed links using 128b/130b
+> > >>>>> encoding.
+> > >>>>>
+> > >>>>> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+> > >>>>> [bhelgaas: adjust for pcie_get_speed_cap() and pcie_get_width_cap()
+> > >>>>> signatures, don't export outside drivers/pci]
+> > >>>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > >>>>> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+> > >>>>> ---
+> > >>>>>     drivers/pci/pci.c |   21 +++++++++++++++++++++
+> > >>>>>     drivers/pci/pci.h |    9 +++++++++
+> > >>>>>     2 files changed, 30 insertions(+)
+> > >>>>>
+> > >>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > >>>>> index 43075be79388..9ce89e254197 100644
+> > >>>>> --- a/drivers/pci/pci.c
+> > >>>>> +++ b/drivers/pci/pci.c
+> > >>>>> @@ -5208,6 +5208,27 @@ enum pcie_link_width
+> > pcie_get_width_cap(struct pci_dev *dev)
+> > >>>>>     	return PCIE_LNK_WIDTH_UNKNOWN;
+> > >>>>>     }
+> > >>>>> +/**
+> > >>>>> + * pcie_bandwidth_capable - calculates a PCI device's link bandwidth
+> > capability
+> > >>>>> + * @dev: PCI device
+> > >>>>> + * @speed: storage for link speed
+> > >>>>> + * @width: storage for link width
+> > >>>>> + *
+> > >>>>> + * Calculate a PCI device's link bandwidth by querying for its link speed
+> > >>>>> + * and width, multiplying them, and applying encoding overhead.
+> > >>>>> + */
+> > >>>>> +u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed
+> > *speed,
+> > >>>>> +			   enum pcie_link_width *width)
+> > >>>>> +{
+> > >>>>> +	*speed = pcie_get_speed_cap(dev);
+> > >>>>> +	*width = pcie_get_width_cap(dev);
+> > >>>>> +
+> > >>>>> +	if (*speed == PCI_SPEED_UNKNOWN || *width ==
+> > PCIE_LNK_WIDTH_UNKNOWN)
+> > >>>>> +		return 0;
+> > >>>>> +
+> > >>>>> +	return *width * PCIE_SPEED2MBS_ENC(*speed);
+> > >>>>> +}
+> > >>>>> +
+> > >>>>>     /**
+> > >>>>>      * pci_select_bars - Make BAR mask from the type of resource
+> > >>>>>      * @dev: the PCI device for which BAR mask is made
+> > >>>>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > >>>>> index 66738f1050c0..2a50172b9803 100644
+> > >>>>> --- a/drivers/pci/pci.h
+> > >>>>> +++ b/drivers/pci/pci.h
+> > >>>>> @@ -261,8 +261,17 @@ void pci_disable_bridge_window(struct pci_dev
+> > *dev);
+> > >>>>>     	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
+> > >>>>>     	 "Unknown speed")
+> > >>>>> +/* PCIe speed to Mb/s with encoding overhead: 20% for gen2, ~1.5% for
+> > gen3 */
+> > >>>>> +#define PCIE_SPEED2MBS_ENC(speed) \
+> > >>>>
+> > >>>> Missing gen4.
+> > >>>
+> > >>> I made it "gen3+".  I think that's accurate, isn't it?  The spec
+> > >>> doesn't seem to actually use "gen3" as a specific term, but sec 4.2.2
+> > >>> says rates of 8 GT/s or higher (which I think includes gen3 and gen4)
+> > >>> use 128b/130b encoding.
+> > >>>
+> > >>
+> > >> I meant that PCIE_SPEED_16_0GT will return 0 from this macro since it wasn't
+> > >> added. Need to return 15754.
+> > >
+> > > Oh, duh, of course!  Sorry for being dense.  What about the following?
+> > > I included the calculation as opposed to just the magic numbers to try
+> > > to make it clear how they're derived.  This has the disadvantage of
+> > > truncating the result instead of rounding, but I doubt that's
+> > > significant in this context.  If it is, we could use the magic numbers
+> > > and put the computation in a comment.
+> > 
+> > We can always use DIV_ROUND_UP((speed * enc_nominator),
+> > enc_denominator). I think this is confusing and since this introduces a
+> > bandwidth limit I would prefer to give a wider limit than a wrong one,
+> > even it is by less than 1Mb/s. My vote is for leaving it as you wrote below.
+> > 
+> > > Another question: we currently deal in Mb/s, not MB/s.  Mb/s has the
+> > > advantage of sort of corresponding to the GT/s numbers, but using MB/s
+> > > would have the advantage of smaller numbers that match the table here:
+> > > https://en.wikipedia.org/wiki/PCI_Express#History_and_revisions,
+> > > but I don't know what's most typical in user-facing situations.
+> > > What's better?
+> > 
+> > I don't know what's better but for network devices we measure bandwidth
+> > in Gb/s, so presenting bandwidth in MB/s would mean additional
+> > calculations. The truth is I would have prefer to use Gb/s instead of
+> > Mb/s, but again, don't want to loss up to 1Gb/s.
 > 
-> 
-> On the Lenovo X60t, during resume from ACPI suspend and during shutdown, the
-> message below is shown in the logs.
-> 
->     pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued
-> 65284 msec ago)
+> I prefer this version with the calculation in line since it makes
+> the derivation clear. Keeping them in Mb/s makes it easier to
+> convert to Gb/s, which is what most people would expect.
 
-This is an Intel root port:
+OK, let's keep this patch as-is since returning Mb/s means we
+don't have to worry about floating point, and it sounds like we
+agree the truncation isn't a big deal.
 
-  00:1c.0 PCI bridge: Intel Corporation NM10/ICH7 Family PCI Express Port 1 (rev 02) (prog-if 00 [Normal decode])
+I'll post a proposal to convert to Gb/s when printing.
 
-and probably has the CF118 erratum (see
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3461a068661c
-for details).  I bet if you changed "msecs" in pcie_wait_cmd() to 30000
-you'd see a 30 second delay during shutdown because we write a command to
-tell the port not to generate any more hotplug interrupts, and we wait for
-that command to complete, but the port never tells us it has completed.
-
-Lukas reported a similar issue in
-https://lkml.kernel.org/r/20180112104929.GA10599@wunner.de, which we sort
-of worked around by assuming that Thunderbolt controllers never support
-that "command complete" interrupt (see
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=493fb50e958c)
-
-Sinan mooted the idea of using a "no-wait" path of sending the "don't
-generate hotplug interrupts" command.  I think we should work on this
-idea a little more.  If we're shutting down the whole system, I can't
-believe there's much value in *anything* we do in the pciehp_remove()
-path.
-
-Maybe we should just get rid of pciehp_remove() (and probably
-pcie_port_remove_service() and the other service driver remove methods)
-completely.  That dates from when the service drivers could be modules that
-could be potentially unloaded, but unloading them hasn't been possible for
-years.
-
-As far as the resume path, my guess is that in pciehp_resume(), we
-write a command to enable interrupts, then it looks like we get a
-PCI_EXP_SLTSTA_DLLSC "Link Up" interrupt, and apparently we issue
-another command.  Not sure exactly what's going on here.
-
-Could you try the following patch?  The idea is to (1) do nothing on
-shutdown, so you should see no message and no delay, and (2) collect
-more information about the resume path.
-
-
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 332b723ff9e6..99751cc52968 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -260,14 +260,6 @@ static int pciehp_probe(struct pcie_device *dev)
- 	return -ENODEV;
- }
- 
--static void pciehp_remove(struct pcie_device *dev)
--{
--	struct controller *ctrl = get_service_data(dev);
--
--	cleanup_slot(ctrl);
--	pciehp_release_ctrl(ctrl);
--}
--
- #ifdef CONFIG_PM
- static int pciehp_suspend(struct pcie_device *dev)
- {
-@@ -305,7 +297,6 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- 	.service	= PCIE_PORT_SERVICE_HP,
- 
- 	.probe		= pciehp_probe,
--	.remove		= pciehp_remove,
- 
- #ifdef	CONFIG_PM
- 	.suspend	= pciehp_suspend,
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 18a42f8f5dc5..c3a9c47ed061 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -113,7 +113,7 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
- 	return 0;	/* timeout */
- }
- 
--static void pcie_wait_cmd(struct controller *ctrl)
-+static void pcie_wait_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- {
- 	unsigned int msecs = pciehp_poll_mode ? 2500 : 1000;
- 	unsigned long duration = msecs_to_jiffies(msecs);
-@@ -155,10 +155,13 @@ static void pcie_wait_cmd(struct controller *ctrl)
- 	 * don't change those bits, e.g., commands that merely enable
- 	 * interrupts.
- 	 */
--	if (!rc)
--		ctrl_info(ctrl, "Timeout on hotplug command %#06x (issued %u msec ago)\n",
-+	if (!rc) {
-+		ctrl_info(ctrl, "Timeout on hotplug command %#06x (issued %u msec ago), new command %#06x/mask %#06x\n",
- 			  ctrl->slot_ctrl,
--			  jiffies_to_msecs(jiffies - ctrl->cmd_started));
-+			  jiffies_to_msecs(jiffies - ctrl->cmd_started),
-+			  cmd, mask);
-+		dump_stack();
-+	}
- }
- 
- static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
-@@ -172,7 +175,7 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
- 	/*
- 	 * Always wait for any previous command that might still be in progress
- 	 */
--	pcie_wait_cmd(ctrl);
-+	pcie_wait_cmd(ctrl, cmd, mask);
- 
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
- 	if (slot_ctrl == (u16) ~0) {
-@@ -193,7 +196,7 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
- 	 * indicating completion of the above issued command.
- 	 */
- 	if (wait)
--		pcie_wait_cmd(ctrl);
-+		pcie_wait_cmd(ctrl, cmd, mask);
- 
- out:
- 	mutex_unlock(&ctrl->ctrl_lock);
+> > > commit 946435491b35b7782157e9a4d1bd73071fba7709
+> > > Author: Tal Gilboa <talgi@mellanox.com>
+> > > Date:   Fri Mar 30 08:32:03 2018 -0500
+> > >
+> > >      PCI: Add pcie_bandwidth_capable() to compute max supported link
+> > bandwidth
+> > >
+> > >      Add pcie_bandwidth_capable() to compute the max link bandwidth
+> > supported by
+> > >      a device, based on the max link speed and width, adjusted by the encoding
+> > >      overhead.
+> > >
+> > >      The maximum bandwidth of the link is computed as:
+> > >
+> > >        max_link_width * max_link_speed * (1 - encoding_overhead)
+> > >
+> > >      2.5 and 5.0 GT/s links use 8b/10b encoding, which reduces the raw
+> > bandwidth
+> > >      available by 20%; 8.0 GT/s and faster links use 128b/130b encoding, which
+> > >      reduces it by about 1.5%.
+> > >
+> > >      The result is in Mb/s, i.e., megabits/second, of raw bandwidth.
+> > >
+> > >      Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+> > >      [bhelgaas: add 16 GT/s, adjust for pcie_get_speed_cap() and
+> > >      pcie_get_width_cap() signatures, don't export outside drivers/pci]
+> > >      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > >      Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+> > >
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 43075be79388..ff1e72060952 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -5208,6 +5208,28 @@ enum pcie_link_width pcie_get_width_cap(struct
+> > pci_dev *dev)
+> > >   	return PCIE_LNK_WIDTH_UNKNOWN;
+> > >   }
+> > >
+> > > +/**
+> > > + * pcie_bandwidth_capable - calculate a PCI device's link bandwidth capability
+> > > + * @dev: PCI device
+> > > + * @speed: storage for link speed
+> > > + * @width: storage for link width
+> > > + *
+> > > + * Calculate a PCI device's link bandwidth by querying for its link speed
+> > > + * and width, multiplying them, and applying encoding overhead.  The result
+> > > + * is in Mb/s, i.e., megabits/second of raw bandwidth.
+> > > + */
+> > > +u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed
+> > *speed,
+> > > +			   enum pcie_link_width *width)
+> > > +{
+> > > +	*speed = pcie_get_speed_cap(dev);
+> > > +	*width = pcie_get_width_cap(dev);
+> > > +
+> > > +	if (*speed == PCI_SPEED_UNKNOWN || *width ==
+> > PCIE_LNK_WIDTH_UNKNOWN)
+> > > +		return 0;
+> > > +
+> > > +	return *width * PCIE_SPEED2MBS_ENC(*speed);
+> > > +}
+> > > +
+> > >   /**
+> > >    * pci_select_bars - Make BAR mask from the type of resource
+> > >    * @dev: the PCI device for which BAR mask is made
+> > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > > index 66738f1050c0..37f9299ed623 100644
+> > > --- a/drivers/pci/pci.h
+> > > +++ b/drivers/pci/pci.h
+> > > @@ -261,8 +261,18 @@ void pci_disable_bridge_window(struct pci_dev *dev);
+> > >   	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
+> > >   	 "Unknown speed")
+> > >
+> > > +/* PCIe speed to Mb/s reduced by encoding overhead */
+> > > +#define PCIE_SPEED2MBS_ENC(speed) \
+> > > +	((speed) == PCIE_SPEED_16_0GT ? (16000*(128/130)) : \
+> > > +	 (speed) == PCIE_SPEED_8_0GT  ?  (8000*(128/130)) : \
+> > > +	 (speed) == PCIE_SPEED_5_0GT  ?  (5000*(8/10)) : \
+> > > +	 (speed) == PCIE_SPEED_2_5GT  ?  (2500*(8/10)) : \
+> > > +	 0)
+> > > +
+> > >   enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev);
+> > >   enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev);
+> > > +u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed
+> > *speed,
+> > > +			   enum pcie_link_width *width);
+> > >
+> > >   /* Single Root I/O Virtualization */
+> > >   struct pci_sriov {
+> > >
