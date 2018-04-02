@@ -1,235 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55060 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756411AbeDKUBo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Apr 2018 16:01:44 -0400
-Date: Wed, 11 Apr 2018 15:01:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-Message-ID: <20180411200143.GA105104@bhelgaas-glaptop.roam.corp.google.com>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
- <20180410173437.GB24642@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
- <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
- <20180411133334.GA91792@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804111738260.18432@math.ut.ee>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.21.1804111738260.18432@math.ut.ee>
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:37812 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754548AbeDBWrA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 18:47:00 -0400
+Received: by mail-pl0-f66.google.com with SMTP id v5-v6so4139704plo.4
+        for <linux-pci@vger.kernel.org>; Mon, 02 Apr 2018 15:47:00 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        Sathya Perla <sathya.perla@broadcom.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        alexander.duyck@gmail.com, john.fastabend@gmail.com,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Donald Dutile <ddutile@redhat.com>, oss-drivers@netronome.com,
+        Christoph Hellwig <hch@infradead.org>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCH] PCI: allow drivers to limit the number of VFs to 0
+Date: Mon,  2 Apr 2018 15:46:52 -0700
+Message-Id: <20180402224652.4058-1-jakub.kicinski@netronome.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 11, 2018 at 05:40:41PM +0300, Meelis Roos wrote:
-> > On Wed, Apr 11, 2018 at 10:59:19AM +0300, Meelis Roos wrote:
-> > > > Oops, sorry, I can't easily compile test it.  Here's an updated patch:
-> > > > 
-> > > > commit a9ded309cbf3f57e9979848fd0aa0ffacdf11f1a
-> > > > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Date:   Tue Apr 10 08:47:34 2018 -0500
-> > > 
-> > > Thanks, this patch compiles and works - Video RAM related BAR allocation 
-> > > errors are gone.
-> > 
-> > Great, thanks!  I didn't mean to take up so much of your time testing
-> > *all* of your systems :)
-> 
-> Well, they compiled in parallel :)
-> 
-> > > Hera are the /proc/iomem's but unfortunately the physical 
-> > > addresses have been censored by security:
-> > 
-> > If you look at /proc/iomem as root, you should see the actual
-> > addresses.
-> 
-> Yes, that was it.
-> 
-> > If you have any systems with VGA, it would be useful to test one of
-> > them.  
-> 
-> This is Blade 100, with atyfb frame buffer:
-> 
-> # cat /proc/iomem 
-> 00000000-7effdfff : System RAM
->   00404000-0085aadf : Kernel code
->   0085aae0-009b8a8f : Kernel data
->   009f2000-00a37a37 : Kernel bss
-> 7f000000-7fee5fff : System RAM
-> 7ff04000-7ff0bfff : System RAM
-> 1ff00000000-1ffffffffff : /pci@1f,0
->   1ff00000000-1ff000fffff : 0000:00:07.0
->   1ff00400000-1ff0041ffff : 0000:00:0c.1
->     1ff00400000-1ff0041ffff : sungem
->   1ff00420000-1ff00421fff : 0000:00:0c.2
->   1ff00422000-1ff00423fff : 0000:00:0c.2
->   1ff00424000-1ff00425fff : 0000:00:08.0
->   1ff00426000-1ff00427fff : 0000:00:13.0
->   1ff00440000-1ff0045ffff : 0000:00:13.0
+Some user space depends on enabling sriov_totalvfs number of VFs
+to not fail, e.g.:
 
-Thanks, this is really interesting.  Would you mind replacing the test
-patch with the following (this applies directly on the upstream
-kernel, e.g., fd3b36d27566)?
+$ cat .../sriov_totalvfs > .../sriov_numvfs
 
-Sorry for the back and forth, but there's a lot going on here that I
-don't understand.  
+For devices which VF support depends on loaded FW we have the
+pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
+a special "unset" value, meaning drivers can't limit sriov_totalvfs
+to 0.  Remove the special values completely and simply initialize
+driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
+Add a helper for drivers to reset the VF limit back to total.
 
-I'd like to see the complete dmesg log, /proc/iomem, and "lspci -vv".
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+---
+ drivers/net/ethernet/netronome/nfp/nfp_main.c |  6 +++---
+ drivers/pci/iov.c                             | 27 +++++++++++++++++++++------
+ include/linux/pci.h                           |  2 ++
+ 3 files changed, 26 insertions(+), 9 deletions(-)
 
-
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 41b20edb427d..ffb9227c1b80 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -166,7 +166,7 @@ void pci_config_write32(u32 *addr, u32 val)
- 	spin_unlock_irqrestore(&pci_poke_lock, flags);
+diff --git a/drivers/net/ethernet/netronome/nfp/nfp_main.c b/drivers/net/ethernet/netronome/nfp/nfp_main.c
+index c4b1f344b4da..a76d177e40dd 100644
+--- a/drivers/net/ethernet/netronome/nfp/nfp_main.c
++++ b/drivers/net/ethernet/netronome/nfp/nfp_main.c
+@@ -123,7 +123,7 @@ static int nfp_pcie_sriov_read_nfd_limit(struct nfp_pf *pf)
+ 		return pci_sriov_set_totalvfs(pf->pdev, pf->limit_vfs);
+ 
+ 	pf->limit_vfs = ~0;
+-	pci_sriov_set_totalvfs(pf->pdev, 0); /* 0 is unset */
++	pci_sriov_reset_totalvfs(pf->pdev);
+ 	/* Allow any setting for backwards compatibility if symbol not found */
+ 	if (err == -ENOENT)
+ 		return 0;
+@@ -537,7 +537,7 @@ static int nfp_pci_probe(struct pci_dev *pdev,
+ err_net_remove:
+ 	nfp_net_pci_remove(pf);
+ err_sriov_unlimit:
+-	pci_sriov_set_totalvfs(pf->pdev, 0);
++	pci_sriov_reset_totalvfs(pf->pdev);
+ err_fw_unload:
+ 	kfree(pf->rtbl);
+ 	nfp_mip_close(pf->mip);
+@@ -570,7 +570,7 @@ static void nfp_pci_remove(struct pci_dev *pdev)
+ 	nfp_hwmon_unregister(pf);
+ 
+ 	nfp_pcie_sriov_disable(pdev);
+-	pci_sriov_set_totalvfs(pf->pdev, 0);
++	pci_sriov_reset_totalvfs(pf->pdev);
+ 
+ 	nfp_net_pci_remove(pf);
+ 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 677924ae0350..c63ea870d8be 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -443,6 +443,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	iov->nres = nres;
+ 	iov->ctrl = ctrl;
+ 	iov->total_VFs = total;
++	iov->driver_max_VFs = total;
+ 	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
+ 	iov->pgsz = pgsz;
+ 	iov->self = dev;
+@@ -788,12 +789,29 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
  }
+ EXPORT_SYMBOL_GPL(pci_sriov_set_totalvfs);
  
--static int ofpci_verbose;
-+static int ofpci_verbose = 1;
- 
- static int __init ofpci_debug(char *str)
- {
-@@ -243,6 +243,8 @@ static void pci_parse_of_addrs(struct platform_device *op,
- 		res->end = op_res->end;
- 		res->flags = flags;
- 		res->name = pci_name(dev);
-+
-+		pci_info(dev, "reg 0x%x: %pR\n", i, res);
- 	}
- }
- 
-@@ -353,6 +355,9 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
- 			dev->irq = PCI_IRQ_NONE;
- 	}
- 
-+	pci_info(dev, "[%04x:%04x] type %02x class %#08x\n",
-+		 dev->vendor, dev->device, dev->hdr_type, dev->class);
-+
- 	pci_parse_of_addrs(sd->op, node, dev);
- 
- 	if (ofpci_verbose)
-@@ -624,6 +629,46 @@ static void pci_bus_register_of_sysfs(struct pci_bus *bus)
- 		pci_bus_register_of_sysfs(child_bus);
- }
- 
-+static void pci_claim_legacy_resources(struct pci_dev *dev)
++/**
++ * pci_sriov_reset_totalvfs -- return the TotalVFs value to the default
++ * @dev: the PCI PF device
++ *
++ * Should be called from PF driver's remove routine with
++ * device's mutex held.
++ */
++void pci_sriov_reset_totalvfs(struct pci_dev *dev)
 +{
-+	struct pci_bus_region region;
-+	struct resource *p, *root, *conflict;
-+
-+	pci_info(dev, "class %#x\n", dev->class);
-+	if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
++	/* Shouldn't change if VFs already enabled */
++	if (!dev->is_physfn || dev->sriov->ctrl & PCI_SRIOV_CTRL_VFE)
 +		return;
 +
-+	p = kzalloc(sizeof(*p), GFP_KERNEL);
-+	if (!p)
-+		return;
-+
-+	p->name = "Video RAM area";
-+	p->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-+
-+	region.start = 0xa0000UL;
-+	region.end = region.start + 0x1ffffUL;
-+	pcibios_bus_to_resource(dev->bus, p, &region);
-+
-+	root = pci_find_parent_resource(dev, p);
-+	if (!root) {
-+		pci_info(dev, "can't claim VGA legacy %pR: no compatible bridge window\n", p);
-+		goto err;
-+	}
-+
-+	pci_info(dev, "requesting %pR from %s %pR\n", p, root->name, root);
-+	conflict = request_resource_conflict(root, p);
-+	if (conflict) {
-+		pci_info(dev, "can't claim VGA legacy %pR: address conflict with %s %pR\n",
-+			 p, conflict->name, conflict);
-+		goto err;
-+	}
-+
-+	return;
-+
-+err:
-+	kfree(p);
++	dev->sriov->driver_max_VFs = dev->sriov->total_VFs;
 +}
++EXPORT_SYMBOL_GPL(pci_sriov_reset_totalvfs);
 +
- static void pci_claim_bus_resources(struct pci_bus *bus)
- {
- 	struct pci_bus *child_bus;
-@@ -648,6 +693,8 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
+ /**
+  * pci_sriov_get_totalvfs -- get total VFs supported on this device
+  * @dev: the PCI PF device
+  *
+- * For a PCIe device with SRIOV support, return the PCIe
+- * SRIOV capability value of TotalVFs or the value of driver_max_VFs
++ * For a PCIe device with SRIOV support, return the value of driver_max_VFs
++ * which can be equal to the PCIe SRIOV capability value of TotalVFs or lower
+  * if the driver reduced it.  Otherwise 0.
+  */
+ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+@@ -801,9 +819,6 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ 	if (!dev->is_physfn)
+ 		return 0;
  
- 			pci_claim_resource(dev, i);
- 		}
-+
-+		pci_claim_legacy_resources(dev);
- 	}
- 
- 	list_for_each_entry(child_bus, &bus->children, node)
-@@ -687,6 +734,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	pci_bus_register_of_sysfs(bus);
- 
- 	pci_claim_bus_resources(bus);
-+
- 	pci_bus_add_devices(bus);
- 	return bus;
- }
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 38d46bcc8634..9bb6a192ef3f 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -329,23 +329,6 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
- 	}
- }
- 
--static void pci_register_legacy_regions(struct resource *io_res,
--					struct resource *mem_res)
--{
--	struct resource *p;
+-	if (dev->sriov->driver_max_VFs)
+-		return dev->sriov->driver_max_VFs;
 -
--	/* VGA Video RAM. */
--	p = kzalloc(sizeof(*p), GFP_KERNEL);
--	if (!p)
--		return;
--
--	p->name = "Video RAM area";
--	p->start = mem_res->start + 0xa0000UL;
--	p->end = p->start + 0x1ffffUL;
--	p->flags = IORESOURCE_BUSY;
--	request_resource(mem_res, p);
--}
--
- static void pci_register_iommu_region(struct pci_pbm_info *pbm)
- {
- 	const u32 *vdma = of_get_property(pbm->op->dev.of_node, "virtual-dma",
-@@ -487,8 +470,6 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 	if (pbm->mem64_space.flags)
- 		request_resource(&iomem_resource, &pbm->mem64_space);
- 
--	pci_register_legacy_regions(&pbm->io_space,
--				    &pbm->mem_space);
- 	pci_register_iommu_region(pbm);
+-	return dev->sriov->total_VFs;
++	return dev->sriov->driver_max_VFs;
  }
- 
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index 1c5e74cb9279..147f8d205fdc 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -643,6 +643,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
- 	 * clear that below if the bridge isn't forwarding
- 	 */
- 	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+	vgaarb_info(&pdev->dev, "command %#06x\n", cmd);
- 	if (cmd & PCI_COMMAND_IO)
- 		vgadev->owns |= VGA_RSRC_LEGACY_IO;
- 	if (cmd & PCI_COMMAND_MEMORY)
-@@ -1469,7 +1470,7 @@ static void __init vga_arb_select_default_device(void)
- 						  struct vga_device, list);
- 		if (vgadev) {
- 			struct device *dev = &vgadev->pdev->dev;
--			vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
-+			vgaarb_info(dev, "setting as boot device (VGA legacy resources not enabled)\n");
- 			vga_set_default_device(vgadev->pdev);
- 		}
- 	}
+ EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 024a1beda008..95fde8850393 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1952,6 +1952,7 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
++void pci_sriov_reset_totalvfs(struct pci_dev *dev);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+@@ -1978,6 +1979,7 @@ static inline int pci_vfs_assigned(struct pci_dev *dev)
+ { return 0; }
+ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ { return 0; }
++static inline void pci_sriov_reset_totalvfs(struct pci_dev *dev) { }
+ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
+ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+-- 
+2.16.2
