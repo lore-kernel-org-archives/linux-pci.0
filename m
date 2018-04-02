@@ -1,73 +1,166 @@
-Return-Path: <SRS0=Ug22=HM=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=Ug22=HM=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-To: Alex Williamson <alex.williamson@redhat.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, sulrich@codeaurora.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- Mike Marciniszyn <mike.marciniszyn@intel.com>,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- Doug Ledford <dledford@redhat.com>,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>, Rajat Jain <rajatja@google.com>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
- <20180419202632.GE14063@ziepe.ca>
- <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
- <290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
- <20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
- <20180420090420.03fb1e6c@w520.home>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
-Date: Mon, 23 Apr 2018 13:28:22 -0400
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Tal Gilboa <talgi@mellanox.com>, Tariq Toukan <tariqt@mellanox.com>, Ariel
+ Elior <ariel.elior@cavium.com>, Ganesh Goudar <ganeshgr@chelsio.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	"everest-linux-l2@cavium.com" <everest-linux-l2@cavium.com>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log link
+ speed and whether it's limited
+Date: Mon, 2 Apr 2018 20:25:01 +0000
+Message-ID: <02874ECE860811409154E81DA85FBB5882D49AFE@ORSMSX115.amr.corp.intel.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <02874ECE860811409154E81DA85FBB5882D49870@ORSMSX115.amr.corp.intel.com>
+ <20180402195820.GL9322@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180402195820.GL9322@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20180420090420.03fb1e6c@w520.home>
-Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/20/2018 11:04 AM, Alex Williamson wrote:
-> Is there a concern here about whether the endpoint device driver or the
-> PCI core really knows better about link retraining?  This makes me
-> remember my unfinished (and need to revisit) Pericom quirk[1] where
-> errata in the PCIe switch requires that upstream and downstream links
-> are balanced (ie. same link rate) or else enabling ACS results in
-> packets not properly flowing through the switch.  If an endpoint driver
-> starts deciding to retrain links, overriding quirks in the PCI core,
-> then such topology manipulation isn't possible.  Why does the
-> driver .probe() function think it can retrain at a higher link rate
-> than PCI core?  Thanks,
 
-The example given is for some serdes firmware load to happen in probe and
-then performing a retrain to reach to a better speed.
 
-It becomes a chicken and egg problem. 
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Monday, April 02, 2018 12:58 PM
+> To: Keller, Jacob E <jacob.e.keller@intel.com>
+> Cc: Tal Gilboa <talgi@mellanox.com>; Tariq Toukan <tariqt@mellanox.com>; =
+Ariel
+> Elior <ariel.elior@cavium.com>; Ganesh Goudar <ganeshgr@chelsio.com>;
+> Kirsher, Jeffrey T <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium=
+.com;
+> intel-wired-lan@lists.osuosl.org; netdev@vger.kernel.org; linux-
+> kernel@vger.kernel.org; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log li=
+nk speed
+> and whether it's limited
+>=20
+> On Mon, Apr 02, 2018 at 04:25:17PM +0000, Keller, Jacob E wrote:
+> > > -----Original Message-----
+> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > > Sent: Friday, March 30, 2018 2:05 PM
+> > > To: Tal Gilboa <talgi@mellanox.com>
+> > > Cc: Tariq Toukan <tariqt@mellanox.com>; Keller, Jacob E
+> > > <jacob.e.keller@intel.com>; Ariel Elior <ariel.elior@cavium.com>; Gan=
+esh
+> > > Goudar <ganeshgr@chelsio.com>; Kirsher, Jeffrey T
+> > > <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium.com; intel-wir=
+ed-
+> > > lan@lists.osuosl.org; netdev@vger.kernel.org; linux-kernel@vger.kerne=
+l.org;
+> > > linux-pci@vger.kernel.org
+> > > Subject: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log li=
+nk speed
+> and
+> > > whether it's limited
+> > >
+> > > From: Tal Gilboa <talgi@mellanox.com>
+> > >
+> > > Add pcie_print_link_status().  This logs the current settings of the =
+link
+> > > (speed, width, and total available bandwidth).
+> > >
+> > > If the device is capable of more bandwidth but is limited by a slower
+> > > upstream link, we include information about the link that limits the
+> > > device's performance.
+> > >
+> > > The user may be able to move the device to a different slot for bette=
+r
+> > > performance.
+> > >
+> > > This provides a unified method for all PCI devices to report status a=
+nd
+> > > issues, instead of each device reporting in a different way, using
+> > > different code.
+> > >
+> > > Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+> > > [bhelgaas: changelog, reword log messages, print device capabilities =
+when
+> > > not limited]
+> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > ---
+> > >  drivers/pci/pci.c   |   29 +++++++++++++++++++++++++++++
+> > >  include/linux/pci.h |    1 +
+> > >  2 files changed, 30 insertions(+)
+> > >
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index e00d56b12747..cec7aed09f6b 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -5283,6 +5283,35 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev=
+,
+> > > enum pci_bus_speed *speed,
+> > >  	return *width * PCIE_SPEED2MBS_ENC(*speed);
+> > >  }
+> > >
+> > > +/**
+> > > + * pcie_print_link_status - Report the PCI device's link speed and w=
+idth
+> > > + * @dev: PCI device to query
+> > > + *
+> > > + * Report the available bandwidth at the device.  If this is less th=
+an the
+> > > + * device is capable of, report the device's maximum possible bandwi=
+dth and
+> > > + * the upstream link that limits its performance to less than that.
+> > > + */
+> > > +void pcie_print_link_status(struct pci_dev *dev)
+> > > +{
+> > > +	enum pcie_link_width width, width_cap;
+> > > +	enum pci_bus_speed speed, speed_cap;
+> > > +	struct pci_dev *limiting_dev =3D NULL;
+> > > +	u32 bw_avail, bw_cap;
+> > > +
+> > > +	bw_cap =3D pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
+> > > +	bw_avail =3D pcie_bandwidth_available(dev, &limiting_dev, &speed,
+> > > &width);
+> > > +
+> > > +	if (bw_avail >=3D bw_cap)
+> > > +		pci_info(dev, "%d Mb/s available bandwidth (%s x%d link)\n",
+> > > +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
+> > > +	else
+> > > +		pci_info(dev, "%d Mb/s available bandwidth, limited by %s x%d
+> > > link at %s (capable of %d Mb/s with %s x%d link)\n",
+> > > +			 bw_avail, PCIE_SPEED2STR(speed), width,
+> > > +			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
+> > > +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
+> > > +}
+> >
+> > Personally, I would make thic last one a pci_warn() to indicate it at a
+> > higher log level, but I'm  ok with the wording, and if consensus is tha=
+t
+> > this should be at info, I'm ok with that.
+>=20
+> Tal's original patch did have a pci_warn() here, and we went back and
+> forth a bit.  They get bug reports when a device doesn't perform as
+> expected, which argues for pci_warn().  But they also got feedback
+> saying warnings are a bit too much, which argues for pci_info() [1]
+>=20
+> I don't have a really strong opinion either way.  I have a slight
+> preference for info because the user may not be able to do anything
+> about it (there may not be a faster slot available), and I think
+> distros are usually configured so a warning interrupts the smooth
+> graphical boot.
+>=20
+> It looks like mlx4, fm10k, and ixgbe currently use warnings, while
+> bnx2x, bnxt_en, and cxgb4 use info.  It's a tie so far :)
+>=20
+> [1] https://lkml.kernel.org/r/e47f3628-b56c-4d0a-f18b-
+> 5ffaf261ccc0@mellanox.com
+>=20
 
-1. Endpoint HW trains to gen1 by default pre-boot.
-2. PCI core enumerates the device.
-3. Endpoint driver gets loaded
-4. Driver does the firmware programming followed by a link retrain.
+With that information, I'm fine with the proposal to display this as only a=
+n info. The message is still printed and can be used for debugging purposes=
+, and I think that's really enough.
 
-I think it is the responsibility of the PCI core to provide reset APIs.
-However, expecting endpoint drivers to be knowledgeable about hotplug is
-too much.
+> Here's a proposal for printing the bandwidth as "x.xxx Gb/s":
 
-We can certainly contain AER change into pci directory by moving the slot
-reset function to drivers/pci.h file.
+Nice, I like that also.
 
-But, we need to think about what to do about VFIO and other endpoint
-initiated reset cases. My suggestion was to move this into a single API and
-remove all other APIs from include/linux/pci.h.
-
-Coming back to this patch...
-
-Do we need a retrain API with the speed that driver wants to reach to?
-API can return what was actually accomplished. The quirk from Alex can
-run inside this API to make a decision on what speed do we actually want
-to reach to for a given PCI topology by reprogramming the target link speed
-field.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Regards,
+Jake
