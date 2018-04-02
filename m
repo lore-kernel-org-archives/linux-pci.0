@@ -1,46 +1,113 @@
-Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
- Extended Tags
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- sulrich@codeaurora.org, timur@codeaurora.org, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list
- <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
-References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
- <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
- <20180410195008.GE54986@bhelgaas-glaptop.roam.corp.google.com>
- <1c94361d-7a8d-ad18-12e5-1612326a54db@codeaurora.org>
- <20180411135151.GB91792@bhelgaas-glaptop.roam.corp.google.com>
- <ecdad8f4-6996-cfe0-d005-fbc67ba3cd79@codeaurora.org>
- <20180411140849.GA12557@kroah.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <1290e3d3-e7f0-a4f5-925d-2b7c2cb42b93@codeaurora.org>
-Date: Wed, 11 Apr 2018 10:13:11 -0400
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Tal Gilboa <talgi@mellanox.com>, Tariq Toukan <tariqt@mellanox.com>, Ariel
+ Elior <ariel.elior@cavium.com>, Ganesh Goudar <ganeshgr@chelsio.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	"everest-linux-l2@cavium.com" <everest-linux-l2@cavium.com>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v5 12/14] fm10k: Report PCIe link properties with
+ pcie_print_link_status()
+Date: Mon, 2 Apr 2018 20:36:08 +0000
+Message-ID: <02874ECE860811409154E81DA85FBB5882D49BAE@ORSMSX115.amr.corp.intel.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152244397259.135666.12655029447932912161.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <02874ECE860811409154E81DA85FBB5882D497EE@ORSMSX115.amr.corp.intel.com>
+ <20180402203144.GM9322@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180402203144.GM9322@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20180411140849.GA12557@kroah.com>
-Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/11/2018 10:08 AM, Greg Kroah-Hartman wrote:
->>> So I added these stable tags:
->>>
->>>   CC: stable@vger.kernel.org      # v4.11: 62ce94a7a5a5 PCI: Mark Broadcom HT2100 Root Port Extended Tags as broken
->>>   CC: stable@vger.kernel.org      # v4.11
->>>
->>> I'm not sure I'm using the stable request correctly, but my intent is:
+> -----Original Message-----
+> From: netdev-owner@vger.kernel.org [mailto:netdev-owner@vger.kernel.org]
+> On Behalf Of Bjorn Helgaas
+> Sent: Monday, April 02, 2018 1:32 PM
+> To: Keller, Jacob E <jacob.e.keller@intel.com>
+> Cc: Tal Gilboa <talgi@mellanox.com>; Tariq Toukan <tariqt@mellanox.com>; =
+Ariel
+> Elior <ariel.elior@cavium.com>; Ganesh Goudar <ganeshgr@chelsio.com>;
+> Kirsher, Jeffrey T <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium=
+.com;
+> intel-wired-lan@lists.osuosl.org; netdev@vger.kernel.org; linux-
+> kernel@vger.kernel.org; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH v5 12/14] fm10k: Report PCIe link properties with
+> pcie_print_link_status()
+>=20
+> On Mon, Apr 02, 2018 at 03:56:06PM +0000, Keller, Jacob E wrote:
+> > > -----Original Message-----
+> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > > Sent: Friday, March 30, 2018 2:06 PM
+> > > To: Tal Gilboa <talgi@mellanox.com>
+> > > Cc: Tariq Toukan <tariqt@mellanox.com>; Keller, Jacob E
+> > > <jacob.e.keller@intel.com>; Ariel Elior <ariel.elior@cavium.com>; Gan=
+esh
+> > > Goudar <ganeshgr@chelsio.com>; Kirsher, Jeffrey T
+> > > <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium.com; intel-wir=
+ed-
+> > > lan@lists.osuosl.org; netdev@vger.kernel.org; linux-kernel@vger.kerne=
+l.org;
+> > > linux-pci@vger.kernel.org
+> > > Subject: [PATCH v5 12/14] fm10k: Report PCIe link properties with
+> > > pcie_print_link_status()
+> > >
+> > > From: Bjorn Helgaas <bhelgaas@google.com>
+> > >
+> > > Use pcie_print_link_status() to report PCIe link speed and possible
+> > > limitations instead of implementing this in the driver itself.
+> > >
+> > > Note that pcie_get_minimum_link() can return misleading information
+> because
+> > > it finds the slowest link and the narrowest link without considering =
+the
+> > > total bandwidth of the link.  If the path contains a 16 GT/s x1 link =
+and a
+> > > 2.5 GT/s x16 link, pcie_get_minimum_link() returns 2.5 GT/s x1, which
+> > > corresponds to 250 MB/s of bandwidth, not the actual available bandwi=
+dth of
+> > > about 2000 MB/s for a 16 GT/s x1 link.
+> >
+> > This comment is about what's being fixed, so it would have been easier =
+to
+> > parse if it were written to more clearly indicate that we're removing
+> > (and not adding) this behavior.
+>=20
+> Good point.  Is this any better?
+>=20
+>   fm10k: Report PCIe link properties with pcie_print_link_status()
+>=20
+>   Previously the driver used pcie_get_minimum_link() to warn when the NIC
+>   is in a slot that can't supply as much bandwidth as the NIC could use.
+>=20
+>   pcie_get_minimum_link() can be misleading because it finds the slowest =
+link
+>   and the narrowest link (which may be different links) without consideri=
+ng
+>   the total bandwidth of each link.  For a path with a 16 GT/s x1 link an=
+d a
+>   2.5 GT/s x16 link, it returns 2.5 GT/s x1, which corresponds to 250 MB/=
+s of
+>   bandwidth, not the true available bandwidth of about 1969 MB/s for a
+>   16 GT/s x1 link.
+>=20
+>   Use pcie_print_link_status() to report PCIe link speed and possible
+>   limitations instead of implementing this in the driver itself.  This fi=
+nds
+>   the slowest link in the path to the device by computing the total bandw=
+idth
+>   of each link and compares that with the capabilities of the device.
+>=20
+>   Note that the driver previously used dev_warn() to suggest using a
+>   different slot, but pcie_print_link_status() uses dev_info() because if=
+ the
+>   platform has no faster slot available, the user can't do anything about=
+ the
+>   warning and may not want to be bothered with it.
 
-Asking if we placed the tags correctly. Sounds like we did.
+Perfect! Thanks!
 
->>>
->>>   - 62ce94a7a5a5 appeared in v4.14, so cherry-pick 62ce94a7a5a5 to
->>>     v4.11 through v4.13
->>>   - cherry-pick *this* patch on top of 62ce94a7a5a5 to v4.11 and later
-> Bjorn is correct here, why are you dragging me into this?
-
-Thanks
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+-Jake
