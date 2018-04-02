@@ -1,63 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:60520 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752465AbeDOPAu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2018 11:00:50 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 12/12] swiotlb: remove the CONFIG_DMA_DIRECT_OPS ifdefs
-Date: Sun, 15 Apr 2018 16:59:47 +0200
-Message-Id: <20180415145947.1248-13-hch@lst.de>
-In-Reply-To: <20180415145947.1248-1-hch@lst.de>
-References: <20180415145947.1248-1-hch@lst.de>
+Received: from aserp2130.oracle.com ([141.146.126.79]:50236 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752269AbeDBPrN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 11:47:13 -0400
+From: Thomas Tai <thomas.tai@oracle.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: thomas.tai@oracle.com
+Subject: [PATCH] PCI/AER: add pcie TLP header information in the tracepoint
+Date: Mon,  2 Apr 2018 11:47:08 -0400
+Message-Id: <20180402154708.5032-1-thomas.tai@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-swiotlb now selects the DMA_DIRECT_OPS config symbol, so this will
-always be true.
+When a PCIe AER occurs, the TLP header information is
+printed in the kernel message but it is missing from
+the tracepoint. A userspace program can use this information
+in the tracepoint to better analyze problems.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Example tracepoint output:
+aer_event: 0000:01:00.0
+PCIe Bus Error: severity=Uncorrected, non-fatal, Completer Abort
+TLP Header={0x0,0x1,0x2,0x3}
+
+Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
 ---
- lib/swiotlb.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/pci/pcie/aer/aerdrv_errprint.c |  4 ++--
+ include/ras/ras_event.h                | 20 ++++++++++++++++----
+ 2 files changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/lib/swiotlb.c b/lib/swiotlb.c
-index 47aeb04c1997..07f260319b82 100644
---- a/lib/swiotlb.c
-+++ b/lib/swiotlb.c
-@@ -692,7 +692,6 @@ void swiotlb_tbl_sync_single(struct device *hwdev, phys_addr_t tlb_addr,
- 	}
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 6a352e638699..0a78a773bd25 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -192,7 +192,7 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 		pci_err(dev, "  Error of this Agent(%04x) is reported first\n", id);
+ 
+ 	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+-			info->severity);
++			info->severity, info->tlp_header_valid, &info->tlp);
  }
  
--#ifdef CONFIG_DMA_DIRECT_OPS
- static inline bool dma_coherent_ok(struct device *dev, dma_addr_t addr,
- 		size_t size)
- {
-@@ -764,7 +763,6 @@ static bool swiotlb_free_buffer(struct device *dev, size_t size,
- 				 DMA_ATTR_SKIP_CPU_SYNC);
- 	return true;
- }
--#endif
+ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+@@ -252,6 +252,6 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+ 		__print_tlp_header(dev, &aer->header_log);
  
- static void
- swiotlb_full(struct device *dev, size_t size, enum dma_data_direction dir,
-@@ -1045,7 +1043,6 @@ swiotlb_dma_supported(struct device *hwdev, u64 mask)
- 	return __phys_to_dma(hwdev, io_tlb_end - 1) <= mask;
+ 	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
+-			aer_severity);
++			aer_severity, tlp_header_valid, &aer->header_log);
  }
+ #endif
+diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+index 9c689868eb4d..90f59556f595 100644
+--- a/include/ras/ras_event.h
++++ b/include/ras/ras_event.h
+@@ -298,30 +298,42 @@ TRACE_EVENT(non_standard_event,
+ TRACE_EVENT(aer_event,
+ 	TP_PROTO(const char *dev_name,
+ 		 const u32 status,
+-		 const u8 severity),
++		 const u8 severity,
++		 const u32 tlp_header_valid,
++		 struct aer_header_log_regs *tlp),
  
--#ifdef CONFIG_DMA_DIRECT_OPS
- void *swiotlb_alloc(struct device *dev, size_t size, dma_addr_t *dma_handle,
- 		gfp_t gfp, unsigned long attrs)
- {
-@@ -1089,4 +1086,3 @@ const struct dma_map_ops swiotlb_dma_ops = {
- 	.unmap_page		= swiotlb_unmap_page,
- 	.dma_supported		= swiotlb_dma_supported,
- };
--#endif /* CONFIG_DMA_DIRECT_OPS */
+-	TP_ARGS(dev_name, status, severity),
++	TP_ARGS(dev_name, status, severity, tlp_header_valid, tlp),
+ 
+ 	TP_STRUCT__entry(
+ 		__string(	dev_name,	dev_name	)
+ 		__field(	u32,		status		)
+ 		__field(	u8,		severity	)
++		__field(	u32, 		tlp_header_valid)
++		__array(	u32, 		buf, 4		)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		__assign_str(dev_name, dev_name);
+ 		__entry->status		= status;
+ 		__entry->severity	= severity;
++		__entry->tlp_header_valid = tlp_header_valid;
++		__entry->buf[0] = tlp->dw0;
++		__entry->buf[1] = tlp->dw1;
++		__entry->buf[2] = tlp->dw2;
++		__entry->buf[3] = tlp->dw3;
+ 	),
+ 
+-	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
++	TP_printk("%s PCIe Bus Error: severity=%s, %s, TLP Header=%s\n",
+ 		__get_str(dev_name),
+ 		__entry->severity == AER_CORRECTABLE ? "Corrected" :
+ 			__entry->severity == AER_FATAL ?
+ 			"Fatal" : "Uncorrected, non-fatal",
+ 		__entry->severity == AER_CORRECTABLE ?
+ 		__print_flags(__entry->status, "|", aer_correctable_errors) :
+-		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
++		__print_flags(__entry->status, "|", aer_uncorrectable_errors),
++		__entry->tlp_header_valid ?
++			__print_array(__entry->buf, 4, sizeof(unsigned int)) :
++			"Not available")
+ );
+ 
+ /*
 -- 
-2.17.0
+2.14.1
