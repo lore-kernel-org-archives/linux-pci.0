@@ -1,75 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 8/9] PCI: dwc: Small computation improvement
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
- <5181f7ffbb9d2889974c49d84e72042251adf8b6.1523266508.git.gustavo.pimentel@synopsys.com>
- <003001d3d128$39f3eaa0$addbbfe0$@gmail.com>
- <c295bc5b-e67a-290c-3316-56a1cc001538@synopsys.com>
- <CAOMZO5Acd-5ed_FivBf=GMmKLxipnossDtG4ptzq5-LzcNBhjA@mail.gmail.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <b8f10ee2-b580-9d49-247f-6c65804816c4@synopsys.com>
-Date: Mon, 16 Apr 2018 09:35:55 +0100
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Tal Gilboa <talgi@mellanox.com>
+CC: Tariq Toukan <tariqt@mellanox.com>, Ariel Elior <ariel.elior@cavium.com>,
+	Ganesh Goudar <ganeshgr@chelsio.com>, "Kirsher, Jeffrey T"
+	<jeffrey.t.kirsher@intel.com>, "everest-linux-l2@cavium.com"
+	<everest-linux-l2@cavium.com>, "intel-wired-lan@lists.osuosl.org"
+	<intel-wired-lan@lists.osuosl.org>, "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v5 12/14] fm10k: Report PCIe link properties with
+ pcie_print_link_status()
+Date: Mon, 2 Apr 2018 15:56:06 +0000
+Message-ID: <02874ECE860811409154E81DA85FBB5882D497EE@ORSMSX115.amr.corp.intel.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152244397259.135666.12655029447932912161.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152244397259.135666.12655029447932912161.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5Acd-5ed_FivBf=GMmKLxipnossDtG4ptzq5-LzcNBhjA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Fabio,
-
-On 15/04/2018 14:09, Fabio Estevam wrote:
-> Hi Gustavo,
-> 
-> On Wed, Apr 11, 2018 at 4:40 AM, Gustavo Pimentel
-> <gustavo.pimentel@synopsys.com> wrote:
-> 
->> Can be this one?
->>
->> Probably any recent and decent compiler does this kind of substitution
->> in order to improve code performance. Nevertheless it's a coding good
->> practice whenever there is a division / multiplication by multiple of 2
->> to replace it by the equivalent operation in this case, the shift
->> rotation.
-> 
-> Subject says that this patch provides a computation improvement, but
-> as you said above the compiler
-> will perform the shift, so it doesn't seem we will get any benefit.
-
-In the worth case there is no performance, so it will not hurt having it.
-However depending the compiler and the platform this can bring some improvement.
-For instance like Jingoo said: "The most platforms using 'dwc' are based on ARM
-CPUs. So, the shift rotation can be better."
-
-It's just a attempt to improve the code that doesn't bring any harm.
-
-> 
-> IMHO the original code has better readability as it makes easier to
-> understand that pp->cfg0_size will get the half of
-> resource_size(pp->cfg) size.
-
-Personally I prefer the shift rotation rather the division by 2. But in my case
-I'm used to use/see this type of operation, but it's like I said it's my
-personal opinion.
-
-> 
-> I would say it is better to drop this patch from the series.
-
-Let's see this patch inflicts pain on someone else, in that case I'll remove
-from the series.
-
-> 
-> Thanks
-> 
-
-Regards,
-Gustavo
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWls
+dG86aGVsZ2Fhc0BrZXJuZWwub3JnXQ0KPiBTZW50OiBGcmlkYXksIE1hcmNoIDMwLCAyMDE4IDI6
+MDYgUE0NCj4gVG86IFRhbCBHaWxib2EgPHRhbGdpQG1lbGxhbm94LmNvbT4NCj4gQ2M6IFRhcmlx
+IFRvdWthbiA8dGFyaXF0QG1lbGxhbm94LmNvbT47IEtlbGxlciwgSmFjb2IgRQ0KPiA8amFjb2Iu
+ZS5rZWxsZXJAaW50ZWwuY29tPjsgQXJpZWwgRWxpb3IgPGFyaWVsLmVsaW9yQGNhdml1bS5jb20+
+OyBHYW5lc2gNCj4gR291ZGFyIDxnYW5lc2hnckBjaGVsc2lvLmNvbT47IEtpcnNoZXIsIEplZmZy
+ZXkgVA0KPiA8amVmZnJleS50LmtpcnNoZXJAaW50ZWwuY29tPjsgZXZlcmVzdC1saW51eC1sMkBj
+YXZpdW0uY29tOyBpbnRlbC13aXJlZC0NCj4gbGFuQGxpc3RzLm9zdW9zbC5vcmc7IG5ldGRldkB2
+Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+IGxpbnV4LXBj
+aUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW1BBVENIIHY1IDEyLzE0XSBmbTEwazogUmVw
+b3J0IFBDSWUgbGluayBwcm9wZXJ0aWVzIHdpdGgNCj4gcGNpZV9wcmludF9saW5rX3N0YXR1cygp
+DQo+IA0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPg0KPiANCj4g
+VXNlIHBjaWVfcHJpbnRfbGlua19zdGF0dXMoKSB0byByZXBvcnQgUENJZSBsaW5rIHNwZWVkIGFu
+ZCBwb3NzaWJsZQ0KPiBsaW1pdGF0aW9ucyBpbnN0ZWFkIG9mIGltcGxlbWVudGluZyB0aGlzIGlu
+IHRoZSBkcml2ZXIgaXRzZWxmLg0KPiANCj4gTm90ZSB0aGF0IHBjaWVfZ2V0X21pbmltdW1fbGlu
+aygpIGNhbiByZXR1cm4gbWlzbGVhZGluZyBpbmZvcm1hdGlvbiBiZWNhdXNlDQo+IGl0IGZpbmRz
+IHRoZSBzbG93ZXN0IGxpbmsgYW5kIHRoZSBuYXJyb3dlc3QgbGluayB3aXRob3V0IGNvbnNpZGVy
+aW5nIHRoZQ0KPiB0b3RhbCBiYW5kd2lkdGggb2YgdGhlIGxpbmsuICBJZiB0aGUgcGF0aCBjb250
+YWlucyBhIDE2IEdUL3MgeDEgbGluayBhbmQgYQ0KPiAyLjUgR1QvcyB4MTYgbGluaywgcGNpZV9n
+ZXRfbWluaW11bV9saW5rKCkgcmV0dXJucyAyLjUgR1QvcyB4MSwgd2hpY2gNCj4gY29ycmVzcG9u
+ZHMgdG8gMjUwIE1CL3Mgb2YgYmFuZHdpZHRoLCBub3QgdGhlIGFjdHVhbCBhdmFpbGFibGUgYmFu
+ZHdpZHRoIG9mDQo+IGFib3V0IDIwMDAgTUIvcyBmb3IgYSAxNiBHVC9zIHgxIGxpbmsuDQoNClRo
+aXMgY29tbWVudCBpcyBhYm91dCB3aGF0J3MgYmVpbmcgZml4ZWQsIHNvIGl0IHdvdWxkIGhhdmUg
+YmVlbiBlYXNpZXIgdG8gcGFyc2UgaWYgaXQgd2VyZSB3cml0dGVuIHRvIG1vcmUgY2xlYXJseSBp
+bmRpY2F0ZSB0aGF0IHdlJ3JlIHJlbW92aW5nIChhbmQgbm90IGFkZGluZykgdGhpcyBiZWhhdmlv
+ci4NCg0KQXNpZGUgZnJvbSB0aGUgY29tbWl0IG1lc3NhZ2UgKHdoaWNoIEkgZG9uJ3QgZmVlbCBz
+dHJvbmdseSBlbm91Z2ggbmVlZHMgYSByZS1zZW5kIG9mIHRoZSBwYXRjaCkgdGhpcyBsb29rcyBn
+b29kIHRvIG1lLg0KDQpBY2tlZC1ieTogSmFjb2IgS2VsbGVyIDxqYWNvYi5lLmtlbGxlckBpbnRl
+bC5jb20+DQoNClRoYW5rcyBCam9ybiBhbmQgVGFsIGZvciBmaXhpbmcgdGhpcyENCg0KPiANCj4g
+U2lnbmVkLW9mZi1ieTogQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gLS0t
+DQo+ICBkcml2ZXJzL25ldC9ldGhlcm5ldC9pbnRlbC9mbTEway9mbTEwa19wY2kuYyB8ICAgODcg
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlv
+bigrKSwgODYgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvZXRo
+ZXJuZXQvaW50ZWwvZm0xMGsvZm0xMGtfcGNpLmMNCj4gYi9kcml2ZXJzL25ldC9ldGhlcm5ldC9p
+bnRlbC9mbTEway9mbTEwa19wY2kuYw0KPiBpbmRleCBhNDM0ZmVjZmRmZWIuLmFhMDVmYjUzNDk0
+MiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvZXRoZXJuZXQvaW50ZWwvZm0xMGsvZm0xMGtf
+cGNpLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvZXRoZXJuZXQvaW50ZWwvZm0xMGsvZm0xMGtfcGNp
+LmMNCj4gQEAgLTIxMjAsOTEgKzIxMjAsNiBAQCBzdGF0aWMgaW50IGZtMTBrX3N3X2luaXQoc3Ry
+dWN0IGZtMTBrX2ludGZjICppbnRlcmZhY2UsDQo+ICAJcmV0dXJuIDA7DQo+ICB9DQo+IA0KPiAt
+c3RhdGljIHZvaWQgZm0xMGtfc2xvdF93YXJuKHN0cnVjdCBmbTEwa19pbnRmYyAqaW50ZXJmYWNl
+KQ0KPiAtew0KPiAtCWVudW0gcGNpZV9saW5rX3dpZHRoIHdpZHRoID0gUENJRV9MTktfV0lEVEhf
+VU5LTk9XTjsNCj4gLQllbnVtIHBjaV9idXNfc3BlZWQgc3BlZWQgPSBQQ0lfU1BFRURfVU5LTk9X
+TjsNCj4gLQlzdHJ1Y3QgZm0xMGtfaHcgKmh3ID0gJmludGVyZmFjZS0+aHc7DQo+IC0JaW50IG1h
+eF9ndHMgPSAwLCBleHBlY3RlZF9ndHMgPSAwOw0KPiAtDQo+IC0JaWYgKHBjaWVfZ2V0X21pbmlt
+dW1fbGluayhpbnRlcmZhY2UtPnBkZXYsICZzcGVlZCwgJndpZHRoKSB8fA0KPiAtCSAgICBzcGVl
+ZCA9PSBQQ0lfU1BFRURfVU5LTk9XTiB8fCB3aWR0aCA9PQ0KPiBQQ0lFX0xOS19XSURUSF9VTktO
+T1dOKSB7DQo+IC0JCWRldl93YXJuKCZpbnRlcmZhY2UtPnBkZXYtPmRldiwNCj4gLQkJCSAiVW5h
+YmxlIHRvIGRldGVybWluZSBQQ0kgRXhwcmVzcyBiYW5kd2lkdGguXG4iKTsNCj4gLQkJcmV0dXJu
+Ow0KPiAtCX0NCj4gLQ0KPiAtCXN3aXRjaCAoc3BlZWQpIHsNCj4gLQljYXNlIFBDSUVfU1BFRURf
+Ml81R1Q6DQo+IC0JCS8qIDhiLzEwYiBlbmNvZGluZyByZWR1Y2VzIG1heCB0aHJvdWdocHV0IGJ5
+IDIwJSAqLw0KPiAtCQltYXhfZ3RzID0gMiAqIHdpZHRoOw0KPiAtCQlicmVhazsNCj4gLQljYXNl
+IFBDSUVfU1BFRURfNV8wR1Q6DQo+IC0JCS8qIDhiLzEwYiBlbmNvZGluZyByZWR1Y2VzIG1heCB0
+aHJvdWdocHV0IGJ5IDIwJSAqLw0KPiAtCQltYXhfZ3RzID0gNCAqIHdpZHRoOw0KPiAtCQlicmVh
+azsNCj4gLQljYXNlIFBDSUVfU1BFRURfOF8wR1Q6DQo+IC0JCS8qIDEyOGIvMTMwYiBlbmNvZGlu
+ZyBoYXMgbGVzcyB0aGFuIDIlIGltcGFjdCBvbiB0aHJvdWdocHV0ICovDQo+IC0JCW1heF9ndHMg
+PSA4ICogd2lkdGg7DQo+IC0JCWJyZWFrOw0KPiAtCWRlZmF1bHQ6DQo+IC0JCWRldl93YXJuKCZp
+bnRlcmZhY2UtPnBkZXYtPmRldiwNCj4gLQkJCSAiVW5hYmxlIHRvIGRldGVybWluZSBQQ0kgRXhw
+cmVzcyBiYW5kd2lkdGguXG4iKTsNCj4gLQkJcmV0dXJuOw0KPiAtCX0NCj4gLQ0KPiAtCWRldl9p
+bmZvKCZpbnRlcmZhY2UtPnBkZXYtPmRldiwNCj4gLQkJICJQQ0kgRXhwcmVzcyBiYW5kd2lkdGgg
+b2YgJWRHVC9zIGF2YWlsYWJsZVxuIiwNCj4gLQkJIG1heF9ndHMpOw0KPiAtCWRldl9pbmZvKCZp
+bnRlcmZhY2UtPnBkZXYtPmRldiwNCj4gLQkJICIoU3BlZWQ6JXMsIFdpZHRoOiB4JWQsIEVuY29k
+aW5nIExvc3M6JXMsIFBheWxvYWQ6JXMpXG4iLA0KPiAtCQkgKHNwZWVkID09IFBDSUVfU1BFRURf
+OF8wR1QgPyAiOC4wR1QvcyIgOg0KPiAtCQkgIHNwZWVkID09IFBDSUVfU1BFRURfNV8wR1QgPyAi
+NS4wR1QvcyIgOg0KPiAtCQkgIHNwZWVkID09IFBDSUVfU1BFRURfMl81R1QgPyAiMi41R1QvcyIg
+Og0KPiAtCQkgICJVbmtub3duIiksDQo+IC0JCSBody0+YnVzLndpZHRoLA0KPiAtCQkgKHNwZWVk
+ID09IFBDSUVfU1BFRURfMl81R1QgPyAiMjAlIiA6DQo+IC0JCSAgc3BlZWQgPT0gUENJRV9TUEVF
+RF81XzBHVCA/ICIyMCUiIDoNCj4gLQkJICBzcGVlZCA9PSBQQ0lFX1NQRUVEXzhfMEdUID8gIjwy
+JSIgOg0KPiAtCQkgICJVbmtub3duIiksDQo+IC0JCSAoaHctPmJ1cy5wYXlsb2FkID09IGZtMTBr
+X2J1c19wYXlsb2FkXzEyOCA/ICIxMjhCIiA6DQo+IC0JCSAgaHctPmJ1cy5wYXlsb2FkID09IGZt
+MTBrX2J1c19wYXlsb2FkXzI1NiA/ICIyNTZCIiA6DQo+IC0JCSAgaHctPmJ1cy5wYXlsb2FkID09
+IGZtMTBrX2J1c19wYXlsb2FkXzUxMiA/ICI1MTJCIiA6DQo+IC0JCSAgIlVua25vd24iKSk7DQo+
+IC0NCj4gLQlzd2l0Y2ggKGh3LT5idXNfY2Fwcy5zcGVlZCkgew0KPiAtCWNhc2UgZm0xMGtfYnVz
+X3NwZWVkXzI1MDA6DQo+IC0JCS8qIDhiLzEwYiBlbmNvZGluZyByZWR1Y2VzIG1heCB0aHJvdWdo
+cHV0IGJ5IDIwJSAqLw0KPiAtCQlleHBlY3RlZF9ndHMgPSAyICogaHctPmJ1c19jYXBzLndpZHRo
+Ow0KPiAtCQlicmVhazsNCj4gLQljYXNlIGZtMTBrX2J1c19zcGVlZF81MDAwOg0KPiAtCQkvKiA4
+Yi8xMGIgZW5jb2RpbmcgcmVkdWNlcyBtYXggdGhyb3VnaHB1dCBieSAyMCUgKi8NCj4gLQkJZXhw
+ZWN0ZWRfZ3RzID0gNCAqIGh3LT5idXNfY2Fwcy53aWR0aDsNCj4gLQkJYnJlYWs7DQo+IC0JY2Fz
+ZSBmbTEwa19idXNfc3BlZWRfODAwMDoNCj4gLQkJLyogMTI4Yi8xMzBiIGVuY29kaW5nIGhhcyBs
+ZXNzIHRoYW4gMiUgaW1wYWN0IG9uIHRocm91Z2hwdXQgKi8NCj4gLQkJZXhwZWN0ZWRfZ3RzID0g
+OCAqIGh3LT5idXNfY2Fwcy53aWR0aDsNCj4gLQkJYnJlYWs7DQo+IC0JZGVmYXVsdDoNCj4gLQkJ
+ZGV2X3dhcm4oJmludGVyZmFjZS0+cGRldi0+ZGV2LA0KPiAtCQkJICJVbmFibGUgdG8gZGV0ZXJt
+aW5lIGV4cGVjdGVkIFBDSSBFeHByZXNzDQo+IGJhbmR3aWR0aC5cbiIpOw0KPiAtCQlyZXR1cm47
+DQo+IC0JfQ0KPiAtDQo+IC0JaWYgKG1heF9ndHMgPj0gZXhwZWN0ZWRfZ3RzKQ0KPiAtCQlyZXR1
+cm47DQo+IC0NCj4gLQlkZXZfd2FybigmaW50ZXJmYWNlLT5wZGV2LT5kZXYsDQo+IC0JCSAiVGhp
+cyBkZXZpY2UgcmVxdWlyZXMgJWRHVC9zIG9mIGJhbmR3aWR0aCBmb3Igb3B0aW1hbA0KPiBwZXJm
+b3JtYW5jZS5cbiIsDQo+IC0JCSBleHBlY3RlZF9ndHMpOw0KPiAtCWRldl93YXJuKCZpbnRlcmZh
+Y2UtPnBkZXYtPmRldiwNCj4gLQkJICJBICVzc2xvdCB3aXRoIHglZCBsYW5lcyBpcyBzdWdnZXN0
+ZWQuXG4iLA0KPiAtCQkgKGh3LT5idXNfY2Fwcy5zcGVlZCA9PSBmbTEwa19idXNfc3BlZWRfMjUw
+MCA/ICIyLjVHVC9zICIgOg0KPiAtCQkgIGh3LT5idXNfY2Fwcy5zcGVlZCA9PSBmbTEwa19idXNf
+c3BlZWRfNTAwMCA/ICI1LjBHVC9zICIgOg0KPiAtCQkgIGh3LT5idXNfY2Fwcy5zcGVlZCA9PSBm
+bTEwa19idXNfc3BlZWRfODAwMCA/ICI4LjBHVC9zICIgOg0KPiAiIiksDQo+IC0JCSBody0+YnVz
+X2NhcHMud2lkdGgpOw0KPiAtfQ0KPiAtDQo+ICAvKioNCj4gICAqIGZtMTBrX3Byb2JlIC0gRGV2
+aWNlIEluaXRpYWxpemF0aW9uIFJvdXRpbmUNCj4gICAqIEBwZGV2OiBQQ0kgZGV2aWNlIGluZm9y
+bWF0aW9uIHN0cnVjdA0KPiBAQCAtMjMyNiw3ICsyMjQxLDcgQEAgc3RhdGljIGludCBmbTEwa19w
+cm9iZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwgY29uc3QNCj4gc3RydWN0IHBjaV9kZXZpY2VfaWQg
+KmVudCkNCj4gIAltb2RfdGltZXIoJmludGVyZmFjZS0+c2VydmljZV90aW1lciwgKEhaICogMikg
+KyBqaWZmaWVzKTsNCj4gDQo+ICAJLyogcHJpbnQgd2FybmluZyBmb3Igbm9uLW9wdGltYWwgY29u
+ZmlndXJhdGlvbnMgKi8NCj4gLQlmbTEwa19zbG90X3dhcm4oaW50ZXJmYWNlKTsNCj4gKwlwY2ll
+X3ByaW50X2xpbmtfc3RhdHVzKGludGVyZmFjZS0+cGRldik7DQo+IA0KPiAgCS8qIHJlcG9ydCBN
+QUMgYWRkcmVzcyBmb3IgbG9nZ2luZyAqLw0KPiAgCWRldl9pbmZvKCZwZGV2LT5kZXYsICIlcE1c
+biIsIG5ldGRldi0+ZGV2X2FkZHIpOw0KDQo=
