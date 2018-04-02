@@ -1,74 +1,195 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38210 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751384AbeD3WkF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Apr 2018 18:40:05 -0400
-Date: Mon, 30 Apr 2018 17:40:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: poza@codeaurora.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v14 0/9] Address error and recovery for AER and DPC
-Message-ID: <20180430224002.GI95643@bhelgaas-glaptop.roam.corp.google.com>
-References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
- <f97676e307fe7a02f1f2059a140a5e32@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f97676e307fe7a02f1f2059a140a5e32@codeaurora.org>
+Received: from lucky1.263xmail.com ([211.157.147.135]:52931 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753980AbeDBBJL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Apr 2018 21:09:11 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Simon Xue <xxm@rock-chips.com>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 02/10] PCI: cadence: Move cadence drivers back to controller directory
+Date: Mon,  2 Apr 2018 09:02:12 +0800
+Message-Id: <1522630932-151438-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 26, 2018 at 11:00:52AM +0530, poza@codeaurora.org wrote:
-> On 2018-04-23 20:53, Oza Pawandeep wrote:
-> > This patch set brings in error handling support for DPC
-> > 
-> > The current implementation of AER and error message broadcasting to the
-> > EP driver is tightly coupled and limited to AER service driver.
-> > It is important to factor out broadcasting and other link handling
-> > callbacks. So that not only when AER gets triggered, but also when DPC
-> > get
-> > triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
-> > 
-> > The goal of the patch-set is:
-> > DPC should handle the error handling and recovery similar to AER,
-> > because
-> > finally both are attempting recovery in some or the other way,
-> > and for that error handling and recovery framework has to be loosely
-> > coupled.
-> > ...
+No functional change intended.
 
-> Hi Bjorn,
-> 
-> I know I need to rebase this whole patch-set to 4.17 now.
-> 
-> But before I do that, can you please help to comment.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-My overall comment is that I think the series will be simpler and read
-better if you first change AER to do remove/re-enumerate, before doing
-anything with DPC.
+ MAINTAINERS                                        |  2 +-
+ drivers/pci/Kconfig                                |  1 -
+ drivers/pci/Makefile                               |  1 -
+ drivers/pci/cadence/Kconfig                        | 27 ---------------------
+ drivers/pci/cadence/Makefile                       |  4 ----
+ drivers/pci/controller/Kconfig                     | 28 ++++++++++++++++++++++
+ drivers/pci/controller/Makefile                    |  3 +++
+ .../pci/{cadence => controller}/pcie-cadence-ep.c  |  0
+ .../{cadence => controller}/pcie-cadence-host.c    |  0
+ drivers/pci/{cadence => controller}/pcie-cadence.c |  0
+ drivers/pci/{cadence => controller}/pcie-cadence.h |  0
+ 11 files changed, 32 insertions(+), 34 deletions(-)
+ delete mode 100644 drivers/pci/cadence/Kconfig
+ delete mode 100644 drivers/pci/cadence/Makefile
+ rename drivers/pci/{cadence => controller}/pcie-cadence-ep.c (100%)
+ rename drivers/pci/{cadence => controller}/pcie-cadence-host.c (100%)
+ rename drivers/pci/{cadence => controller}/pcie-cadence.c (100%)
+ rename drivers/pci/{cadence => controller}/pcie-cadence.h (100%)
 
-This could be done by extracting just the AER part of "PCI/AER/DPC:
-Align FATAL error handling for AER and DPC" (i.e., adding
-pcie_do_fatal_recovery()) and moving that to be the very first patch.
-
-It's a small change in terms of code size, but significant to drivers,
-and it's really the core of the series, so it would be good to clearly
-establish the policy of:
-
-  ERR_NONFATAL => call driver recovery entry points
-  ERR_FATAL    => remove and re-enumerate
-
-before bringing DPC into the picture.
-
-Then the subsequent patches would all be more or less mechanical
-changes to make DPC follow the same model.
-
-Bjorn
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a4e5971..42c02e1 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10667,7 +10667,7 @@ M:	Alan Douglas <adouglas@cadence.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/cdns,*.txt
+-F:	drivers/pci/cadence/pcie-cadence*
++F:	drivers/pci/controller/pcie-cadence*
+ 
+ PCI DRIVER FOR FREESCALE LAYERSCAPE
+ M:	Minghuan Lian <minghuan.Lian@freescale.com>
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index b759b29..49e4d18 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -137,7 +137,6 @@ config PCI_HYPERV
+           PCI devices from a PCI backend to support PCI driver domains.
+ 
+ source "drivers/pci/hotplug/Kconfig"
+-source "drivers/pci/cadence/Kconfig"
+ source "drivers/pci/controller/Kconfig"
+ source "drivers/pci/dwc/Kconfig"
+ source "drivers/pci/endpoint/Kconfig"
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 7769641..5a8a015 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -33,7 +33,6 @@ obj-y				+= switch/
+ # Endpoint library must be initialized before its users
+ obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
+ 
+-obj-$(CONFIG_PCIE_CADENCE)	+= cadence/
+ # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
+ obj-y				+= dwc/
+ 
+diff --git a/drivers/pci/cadence/Kconfig b/drivers/pci/cadence/Kconfig
+deleted file mode 100644
+index e6824cb..0000000
+--- a/drivers/pci/cadence/Kconfig
++++ /dev/null
+@@ -1,27 +0,0 @@
+-menu "Cadence PCIe controllers support"
+-
+-config PCIE_CADENCE
+-	bool
+-
+-config PCIE_CADENCE_HOST
+-	bool "Cadence PCIe host controller"
+-	depends on OF
+-	depends on PCI
+-	select IRQ_DOMAIN
+-	select PCIE_CADENCE
+-	help
+-	  Say Y here if you want to support the Cadence PCIe controller in host
+-	  mode. This PCIe controller may be embedded into many different vendors
+-	  SoCs.
+-
+-config PCIE_CADENCE_EP
+-	bool "Cadence PCIe endpoint controller"
+-	depends on OF
+-	depends on PCI_ENDPOINT
+-	select PCIE_CADENCE
+-	help
+-	  Say Y here if you want to support the Cadence PCIe  controller in
+-	  endpoint mode. This PCIe controller may be embedded into many
+-	  different vendors SoCs.
+-
+-endmenu
+diff --git a/drivers/pci/cadence/Makefile b/drivers/pci/cadence/Makefile
+deleted file mode 100644
+index 719392b..0000000
+--- a/drivers/pci/cadence/Makefile
++++ /dev/null
+@@ -1,4 +0,0 @@
+-# SPDX-License-Identifier: GPL-2.0
+-obj-$(CONFIG_PCIE_CADENCE) += pcie-cadence.o
+-obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o
+-obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep.o
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 7af83af..6a569a1 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -19,6 +19,34 @@ config PCI_AARDVARK
+ 	 controller is part of the South Bridge of the Marvel Armada
+ 	 3700 SoC.
+ 
++menu "Cadence PCIe controllers support"
++
++config PCIE_CADENCE
++	bool
++
++config PCIE_CADENCE_HOST
++	bool "Cadence PCIe host controller"
++	depends on OF
++	depends on PCI
++	select IRQ_DOMAIN
++	select PCIE_CADENCE
++	help
++	  Say Y here if you want to support the Cadence PCIe controller in host
++	  mode. This PCIe controller may be embedded into many different vendors
++	  SoCs.
++
++config PCIE_CADENCE_EP
++	bool "Cadence PCIe endpoint controller"
++	depends on OF
++	depends on PCI_ENDPOINT
++	select PCIE_CADENCE
++	help
++	  Say Y here if you want to support the Cadence PCIe  controller in
++	  endpoint mode. This PCIe controller may be embedded into many
++	  different vendors SoCs.
++
++endmenu
++
+ config PCIE_XILINX_NWL
+ 	bool "NWL PCIe Core"
+ 	depends on ARCH_ZYNQMP
+diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+index 3b10591..6474638 100644
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -1,4 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
++obj-$(CONFIG_PCIE_CADENCE) += pcie-cadence.o
++obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o
++obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep.o
+ obj-$(CONFIG_PCI_FTPCI100) += pci-ftpci100.o
+ obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
+ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+similarity index 100%
+rename from drivers/pci/cadence/pcie-cadence-ep.c
+rename to drivers/pci/controller/pcie-cadence-ep.c
+diff --git a/drivers/pci/cadence/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
+similarity index 100%
+rename from drivers/pci/cadence/pcie-cadence-host.c
+rename to drivers/pci/controller/pcie-cadence-host.c
+diff --git a/drivers/pci/cadence/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
+similarity index 100%
+rename from drivers/pci/cadence/pcie-cadence.c
+rename to drivers/pci/controller/pcie-cadence.c
+diff --git a/drivers/pci/cadence/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
+similarity index 100%
+rename from drivers/pci/cadence/pcie-cadence.h
+rename to drivers/pci/controller/pcie-cadence.h
+-- 
+1.9.1
