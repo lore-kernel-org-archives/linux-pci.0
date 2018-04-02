@@ -1,348 +1,361 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:43193 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753980AbeDBBJe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Apr 2018 21:09:34 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Simon Xue <xxm@rock-chips.com>, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 03/10] PCI: dwc: Move dwc drivers back to controller directory
-Date: Mon,  2 Apr 2018 09:02:35 +0800
-Message-Id: <1522630955-151485-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:28190 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751314AbeDBFeN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 01:34:13 -0400
+Subject: Re: [PATCH 2/8] PCI: dwc: designware: Add support for endpoint mode
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+ <93aafb03af86885994e633da240ef58dbd3f4d53.1522235224.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <df477a39-25b9-68f6-bd10-aa45226101e4@ti.com>
+Date: Mon, 2 Apr 2018 11:04:01 +0530
+MIME-Version: 1.0
+In-Reply-To: <93aafb03af86885994e633da240ef58dbd3f4d53.1522235224.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change intended.
+Hi,
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
+> The PCIe controller dual mode is capable of operating in host mode as well
+> as endpoint mode by configuration, therefore this patch aims to add
+> endpoint mode support to the designware driver.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+>  drivers/pci/dwc/Kconfig                       |  45 ++++++--
+>  drivers/pci/dwc/pcie-designware-plat.c        | 157 ++++++++++++++++++++++++--
+>  drivers/pci/endpoint/functions/pci-epf-test.c |   5 +
+>  3 files changed, 187 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 2f3f5c5..3fd7daf 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -7,8 +7,7 @@ config PCIE_DW
+>  
+>  config PCIE_DW_HOST
+>          bool
+> -	depends on PCI
+> -	depends on PCI_MSI_IRQ_DOMAIN
+> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
+>          select PCIE_DW
+>  
+>  config PCIE_DW_EP
+> @@ -52,16 +51,42 @@ config PCI_DRA7XX_EP
+>  
+>  config PCIE_DW_PLAT
+>  	bool "Platform bus based DesignWare PCIe Controller"
+> -	depends on PCI
+> -	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIE_DW_HOST
+> -	---help---
+> -	 This selects the DesignWare PCIe controller support. Select this if
+> -	 you have a PCIe controller on Platform bus.
+> +	help
+> +	  There are two instances of PCIe controller in Designware IP.
+> +	  This controller can work either as EP or RC. In order to enable
+> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
+> +	  order to enable device-specific features PCIE_DW_PLAT_EP must be
+> +	  selected.
+>  
+> -	 If you have a controller with this interface, say Y or M here.
+> +config PCIE_DW_PLAT_HOST
+> +	bool "Platform bus based DesignWare PCIe Controller - Host mode"
+> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
+> +	select PCIE_DW_HOST
+> +	select PCIE_DW_PLAT
+> +	default y
+> +	help
+> +	  Enables support for the PCIe controller in the Designware IP to
+> +	  work in host mode. There are two instances of PCIe controller in
+> +	  Designware IP.
+> +	  This controller can work either as EP or RC. In order to enable
+> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
+> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
+> +	  selected.
+>  
+> -	 If unsure, say N.
+> +config PCIE_DW_PLAT_EP
+> +	bool "Platform bus based DesignWare PCIe Controller - Endpoint mode"
+> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
+> +	depends on PCI_ENDPOINT
+> +	select PCIE_DW_EP
+> +	select PCIE_DW_PLAT
+> +	help
+> +	  Enables support for the PCIe controller in the Designware IP to
+> +	  work in endpoint mode. There are two instances of PCIe controller
+> +	  in Designware IP.
+> +	  This controller can work either as EP or RC. In order to enable
+> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
+> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
+> +	  selected.
+>  
+>  config PCI_EXYNOS
+>  	bool "Samsung Exynos PCIe controller"
+> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+> index 5416aa8..921ab07 100644
+> --- a/drivers/pci/dwc/pcie-designware-plat.c
+> +++ b/drivers/pci/dwc/pcie-designware-plat.c
+> @@ -12,19 +12,29 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/kernel.h>
+>  #include <linux/init.h>
+> +#include <linux/of_device.h>
+>  #include <linux/of_gpio.h>
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/resource.h>
+>  #include <linux/signal.h>
+>  #include <linux/types.h>
+> +#include <linux/regmap.h>
+>  
+>  #include "pcie-designware.h"
+>  
+>  struct dw_plat_pcie {
+> -	struct dw_pcie		*pci;
+> +	struct dw_pcie			*pci;
+> +	struct regmap			*regmap;
+> +	enum dw_pcie_device_mode	mode;
+>  };
+>  
+> +struct dw_plat_pcie_of_data {
+> +	enum dw_pcie_device_mode	mode;
+> +};
+> +
+> +static const struct of_device_id dw_plat_pcie_of_match[];
+> +
+>  static int dw_plat_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> @@ -42,9 +52,61 @@ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
+>  	.host_init = dw_plat_pcie_host_init,
+>  };
+>  
+> -static int dw_plat_add_pcie_port(struct pcie_port *pp,
+> +static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
+> +{
+> +	dw_pcie_ep_linkup(&pci->ep);
 
- MAINTAINERS                                        | 27 +++++++++++-----------
- drivers/pci/Kconfig                                |  1 -
- drivers/pci/Makefile                               |  3 ---
- drivers/pci/controller/Kconfig                     |  1 +
- drivers/pci/controller/Makefile                    |  2 ++
- drivers/pci/{ => controller}/dwc/Kconfig           |  0
- drivers/pci/{ => controller}/dwc/Makefile          |  0
- drivers/pci/{ => controller}/dwc/pci-dra7xx.c      |  0
- drivers/pci/{ => controller}/dwc/pci-exynos.c      |  0
- drivers/pci/{ => controller}/dwc/pci-imx6.c        |  0
- drivers/pci/{ => controller}/dwc/pci-keystone-dw.c |  0
- drivers/pci/{ => controller}/dwc/pci-keystone.c    |  0
- drivers/pci/{ => controller}/dwc/pci-keystone.h    |  0
- drivers/pci/{ => controller}/dwc/pci-layerscape.c  |  0
- drivers/pci/{ => controller}/dwc/pcie-armada8k.c   |  0
- drivers/pci/{ => controller}/dwc/pcie-artpec6.c    |  0
- .../pci/{ => controller}/dwc/pcie-designware-ep.c  |  0
- .../{ => controller}/dwc/pcie-designware-host.c    |  0
- .../{ => controller}/dwc/pcie-designware-plat.c    |  0
- drivers/pci/{ => controller}/dwc/pcie-designware.c |  0
- drivers/pci/{ => controller}/dwc/pcie-designware.h |  0
- drivers/pci/{ => controller}/dwc/pcie-hisi.c       |  2 +-
- drivers/pci/{ => controller}/dwc/pcie-histb.c      |  0
- drivers/pci/{ => controller}/dwc/pcie-kirin.c      |  0
- drivers/pci/{ => controller}/dwc/pcie-qcom.c       |  0
- drivers/pci/{ => controller}/dwc/pcie-spear13xx.c  |  0
- 26 files changed, 17 insertions(+), 19 deletions(-)
- rename drivers/pci/{ => controller}/dwc/Kconfig (100%)
- rename drivers/pci/{ => controller}/dwc/Makefile (100%)
- rename drivers/pci/{ => controller}/dwc/pci-dra7xx.c (100%)
- rename drivers/pci/{ => controller}/dwc/pci-exynos.c (100%)
- rename drivers/pci/{ => controller}/dwc/pci-imx6.c (100%)
- rename drivers/pci/{ => controller}/dwc/pci-keystone-dw.c (100%)
- rename drivers/pci/{ => controller}/dwc/pci-keystone.c (100%)
- rename drivers/pci/{ => controller}/dwc/pci-keystone.h (100%)
- rename drivers/pci/{ => controller}/dwc/pci-layerscape.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-armada8k.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-artpec6.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-designware-ep.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-designware-host.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-designware-plat.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-designware.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-designware.h (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-hisi.c (99%)
- rename drivers/pci/{ => controller}/dwc/pcie-histb.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-kirin.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-qcom.c (100%)
- rename drivers/pci/{ => controller}/dwc/pcie-spear13xx.c (100%)
+.start_link ops is used incorrectly here. .start_link is used when all the
+endpoint side configuration is done and "is ready" to establish a link with the
+host. But dw_pcie_ep_linkup is used to inform the function devices that the
+link "has been" established.
+> +
+> +	return 0;
+> +}
+> +
+> +static void dw_plat_pcie_stop_link(struct dw_pcie *pci)
+> +{
+> +
+> +}
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 42c02e1..f2dbbc9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10660,7 +10660,7 @@ L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/pci-armada8k.txt
--F:	drivers/pci/dwc/pcie-armada8k.c
-+F:	drivers/pci/controller/pcie-armada8k.c
- 
- PCI DRIVER FOR CADENCE PCIE IP
- M:	Alan Douglas <adouglas@cadence.com>
-@@ -10677,7 +10677,7 @@ L:	linuxppc-dev@lists.ozlabs.org
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org
- S:	Maintained
--F:	drivers/pci/dwc/*layerscape*
-+F:	drivers/pci/controller/*layerscape*
- 
- PCI DRIVER FOR GENERIC OF HOSTS
- M:	Will Deacon <will.deacon@arm.com>
-@@ -10695,7 +10695,7 @@ L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
--F:	drivers/pci/dwc/*imx6*
-+F:	drivers/pci/controller/*imx6*
- 
- PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
- M:	Keith Busch <keith.busch@intel.com>
-@@ -10745,7 +10745,7 @@ L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
- S:	Maintained
--F:	drivers/pci/dwc/pci-exynos.c
-+F:	drivers/pci/controller/pci-exynos.c
- 
- PCI DRIVER FOR SYNOPSYS DESIGNWARE
- M:	Jingoo Han <jingoohan1@gmail.com>
-@@ -10753,7 +10753,7 @@ M:	Joao Pinto <Joao.Pinto@synopsys.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
--F:	drivers/pci/dwc/*designware*
-+F:	drivers/pci/controller/*designware*
- 
- PCI DRIVER FOR TI DRA7XX
- M:	Kishon Vijay Abraham I <kishon@ti.com>
-@@ -10761,14 +10761,14 @@ L:	linux-omap@vger.kernel.org
- L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	Documentation/devicetree/bindings/pci/ti-pci.txt
--F:	drivers/pci/dwc/pci-dra7xx.c
-+F:	drivers/pci/controller/pci-dra7xx.c
- 
- PCI DRIVER FOR TI KEYSTONE
- M:	Murali Karicheri <m-karicheri2@ti.com>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
--F:	drivers/pci/dwc/*keystone*
-+F:	drivers/pci/controller/*keystone*
- 
- PCI ENDPOINT SUBSYSTEM
- M:	Kishon Vijay Abraham I <kishon@ti.com>
-@@ -10836,7 +10836,6 @@ Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
- S:	Supported
- F:	drivers/pci/controller/
--F:	drivers/pci/dwc/
- 
- PCIE DRIVER FOR AXIS ARTPEC
- M:	Niklas Cassel <niklas.cassel@axis.com>
-@@ -10845,7 +10844,7 @@ L:	linux-arm-kernel@axis.com
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/axis,artpec*
--F:	drivers/pci/dwc/*artpec*
-+F:	drivers/pci/controller/*artpec*
- 
- PCIE DRIVER FOR CAVIUM THUNDERX
- M:	David Daney <david.daney@cavium.com>
-@@ -10860,7 +10859,7 @@ M:	Zhou Wang <wangzhou1@hisilicon.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
--F:	drivers/pci/dwc/pcie-hisi.c
-+F:	drivers/pci/controller/pcie-hisi.c
- 
- PCIE DRIVER FOR HISILICON KIRIN
- M:	Xiaowei Song <songxiaowei@hisilicon.com>
-@@ -10868,7 +10867,7 @@ M:	Binghui Wang <wangbinghui@hisilicon.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/pcie-kirin.txt
--F:	drivers/pci/dwc/pcie-kirin.c
-+F:	drivers/pci/controller/pcie-kirin.c
- 
- PCIE DRIVER FOR HISILICON STB
- M:	Jianguo Sun <sunjianguo1@huawei.com>
-@@ -10876,7 +10875,7 @@ M:	Shawn Guo <shawn.guo@linaro.org>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
--F:	drivers/pci/dwc/pcie-histb.c
-+F:	drivers/pci/controller/pcie-histb.c
- 
- PCIE DRIVER FOR MEDIATEK
- M:	Ryder Lee <ryder.lee@mediatek.com>
-@@ -10891,7 +10890,7 @@ M:	Stanimir Varbanov <svarbanov@mm-sol.com>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-msm@vger.kernel.org
- S:	Maintained
--F:	drivers/pci/dwc/*qcom*
-+F:	drivers/pci/controller/*qcom*
- 
- PCIE DRIVER FOR ROCKCHIP
- M:	Shawn Lin <shawn.lin@rock-chips.com>
-@@ -10912,7 +10911,7 @@ PCIE DRIVER FOR ST SPEAR13XX
- M:	Pratyush Anand <pratyush.anand@gmail.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
--F:	drivers/pci/dwc/*spear*
-+F:	drivers/pci/controller/*spear*
- 
- PCMCIA SUBSYSTEM
- M:	Dominik Brodowski <linux@dominikbrodowski.net>
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 49e4d18..477131d 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -138,6 +138,5 @@ config PCI_HYPERV
- 
- source "drivers/pci/hotplug/Kconfig"
- source "drivers/pci/controller/Kconfig"
--source "drivers/pci/dwc/Kconfig"
- source "drivers/pci/endpoint/Kconfig"
- source "drivers/pci/switch/Kconfig"
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 5a8a015..922ada6 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -33,7 +33,4 @@ obj-y				+= switch/
- # Endpoint library must be initialized before its users
- obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
- 
--# pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
--obj-y				+= dwc/
--
- ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 6a569a1..d3dae70 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -256,4 +256,5 @@ config VMD
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called vmd.
- 
-+source "drivers/pci/controller/dwc/Kconfig"
- endmenu
-diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
-index 6474638..039ee9e 100644
---- a/drivers/pci/controller/Makefile
-+++ b/drivers/pci/controller/Makefile
-@@ -2,6 +2,8 @@
- obj-$(CONFIG_PCIE_CADENCE) += pcie-cadence.o
- obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o
- obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep.o
-+# pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
-+obj-y += dwc/
- obj-$(CONFIG_PCI_FTPCI100) += pci-ftpci100.o
- obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-similarity index 100%
-rename from drivers/pci/dwc/Kconfig
-rename to drivers/pci/controller/dwc/Kconfig
-diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-similarity index 100%
-rename from drivers/pci/dwc/Makefile
-rename to drivers/pci/controller/dwc/Makefile
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-similarity index 100%
-rename from drivers/pci/dwc/pci-dra7xx.c
-rename to drivers/pci/controller/dwc/pci-dra7xx.c
-diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
-similarity index 100%
-rename from drivers/pci/dwc/pci-exynos.c
-rename to drivers/pci/controller/dwc/pci-exynos.c
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-similarity index 100%
-rename from drivers/pci/dwc/pci-imx6.c
-rename to drivers/pci/controller/dwc/pci-imx6.c
-diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/controller/dwc/pci-keystone-dw.c
-similarity index 100%
-rename from drivers/pci/dwc/pci-keystone-dw.c
-rename to drivers/pci/controller/dwc/pci-keystone-dw.c
-diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-similarity index 100%
-rename from drivers/pci/dwc/pci-keystone.c
-rename to drivers/pci/controller/dwc/pci-keystone.c
-diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/controller/dwc/pci-keystone.h
-similarity index 100%
-rename from drivers/pci/dwc/pci-keystone.h
-rename to drivers/pci/controller/dwc/pci-keystone.h
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-similarity index 100%
-rename from drivers/pci/dwc/pci-layerscape.c
-rename to drivers/pci/controller/dwc/pci-layerscape.c
-diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-armada8k.c
-rename to drivers/pci/controller/dwc/pcie-armada8k.c
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-artpec6.c
-rename to drivers/pci/controller/dwc/pcie-artpec6.c
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-designware-ep.c
-rename to drivers/pci/controller/dwc/pcie-designware-ep.c
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-designware-host.c
-rename to drivers/pci/controller/dwc/pcie-designware-host.c
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-designware-plat.c
-rename to drivers/pci/controller/dwc/pcie-designware-plat.c
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-designware.c
-rename to drivers/pci/controller/dwc/pcie-designware.c
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-similarity index 100%
-rename from drivers/pci/dwc/pcie-designware.h
-rename to drivers/pci/controller/dwc/pcie-designware.h
-diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/controller/dwc/pcie-hisi.c
-similarity index 99%
-rename from drivers/pci/dwc/pcie-hisi.c
-rename to drivers/pci/controller/dwc/pcie-hisi.c
-index 2658aae..6d9e1b2 100644
---- a/drivers/pci/dwc/pcie-hisi.c
-+++ b/drivers/pci/controller/dwc/pcie-hisi.c
-@@ -19,7 +19,7 @@
- #include <linux/pci-acpi.h>
- #include <linux/pci-ecam.h>
- #include <linux/regmap.h>
--#include "../pci.h"
-+#include "../../pci.h"
- 
- #if defined(CONFIG_PCI_HISI) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
- 
-diff --git a/drivers/pci/dwc/pcie-histb.c b/drivers/pci/controller/dwc/pcie-histb.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-histb.c
-rename to drivers/pci/controller/dwc/pcie-histb.c
-diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-kirin.c
-rename to drivers/pci/controller/dwc/pcie-kirin.c
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-qcom.c
-rename to drivers/pci/controller/dwc/pcie-qcom.c
-diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/controller/dwc/pcie-spear13xx.c
-similarity index 100%
-rename from drivers/pci/dwc/pcie-spear13xx.c
-rename to drivers/pci/controller/dwc/pcie-spear13xx.c
--- 
-1.9.1
+Not necessary to have empty function here. pci-epc-core will not try to invoke
+ops which are not populated.
+> +
+> +static const struct dw_pcie_ops dw_pcie_ops = {
+> +	.start_link = dw_plat_pcie_establish_link,
+> +	.stop_link = dw_plat_pcie_stop_link,
+> +};
+> +
+> +static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	enum pci_barno bar;
+> +
+> +	for (bar = BAR_0; bar <= BAR_5; bar++)
+> +		dw_pcie_ep_reset_bar(pci, bar);
+> +}
+> +
+> +static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> +				     enum pci_epc_irq_type type,
+> +				     u8 interrupt_num)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +
+> +	switch (type) {
+> +	case PCI_EPC_IRQ_LEGACY:
+> +		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+> +		return -EINVAL;
+> +	case PCI_EPC_IRQ_MSI:
+> +		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+> +	default:
+> +		dev_err(pci->dev, "UNKNOWN IRQ type\n");
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static struct dw_pcie_ep_ops pcie_ep_ops = {
+> +	.ep_init = dw_plat_pcie_ep_init,
+> +	.raise_irq = dw_plat_pcie_ep_raise_irq,
+> +};
+> +
+> +static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
+>  				 struct platform_device *pdev)
+>  {
+> +	struct dw_pcie *pci = dw_plat_pcie->pci;
+> +	struct pcie_port *pp = &pci->pp;
+>  	struct device *dev = &pdev->dev;
+>  	int ret;
+>  
+> @@ -63,15 +125,44 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+>  
+>  	ret = dw_pcie_host_init(pp);
+>  	if (ret) {
+> -		dev_err(dev, "failed to initialize host\n");
+> +		dev_err(dev, "Failed to initialize host\n");
+>  		return ret;
+>  	}
+>  
+>  	return 0;
+>  }
+>  
+> -static const struct dw_pcie_ops dw_pcie_ops = {
+> -};
+> +static int dw_plat_add_pcie_ep(struct dw_plat_pcie *dw_plat_pcie,
+> +			       struct platform_device *pdev)
+> +{
+> +	int ret;
+> +	struct dw_pcie_ep *ep;
+> +	struct resource *res;
+> +	struct device *dev = &pdev->dev;
+> +	struct dw_pcie *pci = dw_plat_pcie->pci;
+> +
+> +	ep = &pci->ep;
+> +	ep->ops = &pcie_ep_ops;
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
+> +	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+> +	if (IS_ERR(pci->dbi_base2))
+> +		return PTR_ERR(pci->dbi_base2);
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+> +	if (!res)
+> +		return -EINVAL;
+> +
+> +	ep->phys_base = res->start;
+> +	ep->addr_size = resource_size(res);
+> +
+> +	ret = dw_pcie_ep_init(ep);
+> +	if (ret) {
+> +		dev_err(dev, "Failed to initialize endpoint\n");
+> +		return ret;
+> +	}
+> +	return 0;
+> +}
+>  
+>  static int dw_plat_pcie_probe(struct platform_device *pdev)
+>  {
+> @@ -80,6 +171,16 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+>  	struct dw_pcie *pci;
+>  	struct resource *res;  /* Resource from DT */
+>  	int ret;
+> +	const struct of_device_id *match;
+> +	const struct dw_plat_pcie_of_data *data;
+> +	enum dw_pcie_device_mode mode;
+> +
+> +	match = of_match_device(dw_plat_pcie_of_match, dev);
+> +	if (!match)
+> +		return -EINVAL;
+> +
+> +	data = (struct dw_plat_pcie_of_data *)match->data;
+> +	mode = (enum dw_pcie_device_mode)data->mode;
+>  
+>  	dw_plat_pcie = devm_kzalloc(dev, sizeof(*dw_plat_pcie), GFP_KERNEL);
+>  	if (!dw_plat_pcie)
+> @@ -93,23 +194,59 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+>  	pci->ops = &dw_pcie_ops;
+>  
+>  	dw_plat_pcie->pci = pci;
+> +	dw_plat_pcie->mode = mode;
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+> +	if (!res)
+> +		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>  
+> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>  	pci->dbi_base = devm_ioremap_resource(dev, res);
+>  	if (IS_ERR(pci->dbi_base))
+>  		return PTR_ERR(pci->dbi_base);
+>  
+>  	platform_set_drvdata(pdev, dw_plat_pcie);
+>  
+> -	ret = dw_plat_add_pcie_port(&pci->pp, pdev);
+> -	if (ret < 0)
+> -		return ret;
+> +	switch (dw_plat_pcie->mode) {
+> +	case DW_PCIE_RC_TYPE:
+> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_HOST))
+> +			return -ENODEV;
+> +
+> +		ret = dw_plat_add_pcie_port(dw_plat_pcie, pdev);
+> +		if (ret < 0)
+> +			return ret;
+> +		break;
+> +	case DW_PCIE_EP_TYPE:
+> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_EP))
+> +			return -ENODEV;
+> +
+> +		ret = dw_plat_add_pcie_ep(dw_plat_pcie, pdev);
+> +		if (ret < 0)
+> +			return ret;
+> +		break;
+> +	default:
+> +		dev_err(dev, "INVALID device type %d\n", dw_plat_pcie->mode);
+> +	}
+>  
+>  	return 0;
+>  }
+>  
+> +static const struct dw_plat_pcie_of_data dw_plat_pcie_rc_of_data = {
+> +	.mode = DW_PCIE_RC_TYPE,
+> +};
+> +
+> +static const struct dw_plat_pcie_of_data dw_plat_pcie_ep_of_data = {
+> +	.mode = DW_PCIE_EP_TYPE,
+> +};
+> +
+>  static const struct of_device_id dw_plat_pcie_of_match[] = {
+> -	{ .compatible = "snps,dw-pcie", },
+> +	{
+> +		.compatible = "snps,dw-pcie",
+> +		.data = &dw_plat_pcie_rc_of_data,
+> +	},
+> +	{
+> +		.compatible = "snps,dw-pcie-ep",
+> +		.data = &dw_plat_pcie_ep_of_data,
+> +	},
+>  	{},
+>  };
+>  
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 64d8a17..d7de684 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -451,9 +451,14 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+>  	return 0;
+>  }
+>  
+> +static const struct pci_epf_test_data pci_epf_data = {
+> +	.linkup_notifier = false
+> +};
+> +
+>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
+>  	{
+>  		.name = "pci_epf_test",
+> +		.driver_data = (kernel_ulong_t)&pci_epf_data,
+
+This will disable linkup_notifier for existing devices. Please add a new entry
+to the table to make any modifications to driver data. (I have a configfs fix
+for this to work. Will post that today).
+
+Thanks
+Kishon
