@@ -1,31 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:53860 "EHLO
-        nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754226AbeDTIYl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Apr 2018 04:24:41 -0400
-Date: Fri, 20 Apr 2018 10:24:38 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/4] lspci: Decode capability names
-Message-ID: <mj+md-20180420.082411.94657.nikam@ucw.cz>
-References: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Tal Gilboa <talgi@mellanox.com>
+CC: Tariq Toukan <tariqt@mellanox.com>, Ariel Elior <ariel.elior@cavium.com>,
+	Ganesh Goudar <ganeshgr@chelsio.com>, "Kirsher, Jeffrey T"
+	<jeffrey.t.kirsher@intel.com>, "everest-linux-l2@cavium.com"
+	<everest-linux-l2@cavium.com>, "intel-wired-lan@lists.osuosl.org"
+	<intel-wired-lan@lists.osuosl.org>, "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log link
+ speed and whether it's limited
+Date: Mon, 2 Apr 2018 16:25:17 +0000
+Message-ID: <02874ECE860811409154E81DA85FBB5882D49870@ORSMSX115.amr.corp.intel.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-> This is a minor update to print the names of several capabilities instead
-> of just the hex capability ID.
-
-thanks, applied.
-
-> I'd love it if somebody would implement decoding of the content of these
-> capabilities, but I haven't had time to do that.
-
-I would have time, but unfortunately I do not have the specs :(
-
-				Martin
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWls
+dG86aGVsZ2Fhc0BrZXJuZWwub3JnXQ0KPiBTZW50OiBGcmlkYXksIE1hcmNoIDMwLCAyMDE4IDI6
+MDUgUE0NCj4gVG86IFRhbCBHaWxib2EgPHRhbGdpQG1lbGxhbm94LmNvbT4NCj4gQ2M6IFRhcmlx
+IFRvdWthbiA8dGFyaXF0QG1lbGxhbm94LmNvbT47IEtlbGxlciwgSmFjb2IgRQ0KPiA8amFjb2Iu
+ZS5rZWxsZXJAaW50ZWwuY29tPjsgQXJpZWwgRWxpb3IgPGFyaWVsLmVsaW9yQGNhdml1bS5jb20+
+OyBHYW5lc2gNCj4gR291ZGFyIDxnYW5lc2hnckBjaGVsc2lvLmNvbT47IEtpcnNoZXIsIEplZmZy
+ZXkgVA0KPiA8amVmZnJleS50LmtpcnNoZXJAaW50ZWwuY29tPjsgZXZlcmVzdC1saW51eC1sMkBj
+YXZpdW0uY29tOyBpbnRlbC13aXJlZC0NCj4gbGFuQGxpc3RzLm9zdW9zbC5vcmc7IG5ldGRldkB2
+Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+IGxpbnV4LXBj
+aUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW1BBVENIIHY1IDA1LzE0XSBQQ0k6IEFkZCBw
+Y2llX3ByaW50X2xpbmtfc3RhdHVzKCkgdG8gbG9nIGxpbmsgc3BlZWQgYW5kDQo+IHdoZXRoZXIg
+aXQncyBsaW1pdGVkDQo+IA0KPiBGcm9tOiBUYWwgR2lsYm9hIDx0YWxnaUBtZWxsYW5veC5jb20+
+DQo+IA0KPiBBZGQgcGNpZV9wcmludF9saW5rX3N0YXR1cygpLiAgVGhpcyBsb2dzIHRoZSBjdXJy
+ZW50IHNldHRpbmdzIG9mIHRoZSBsaW5rDQo+IChzcGVlZCwgd2lkdGgsIGFuZCB0b3RhbCBhdmFp
+bGFibGUgYmFuZHdpZHRoKS4NCj4gDQo+IElmIHRoZSBkZXZpY2UgaXMgY2FwYWJsZSBvZiBtb3Jl
+IGJhbmR3aWR0aCBidXQgaXMgbGltaXRlZCBieSBhIHNsb3dlcg0KPiB1cHN0cmVhbSBsaW5rLCB3
+ZSBpbmNsdWRlIGluZm9ybWF0aW9uIGFib3V0IHRoZSBsaW5rIHRoYXQgbGltaXRzIHRoZQ0KPiBk
+ZXZpY2UncyBwZXJmb3JtYW5jZS4NCj4gDQo+IFRoZSB1c2VyIG1heSBiZSBhYmxlIHRvIG1vdmUg
+dGhlIGRldmljZSB0byBhIGRpZmZlcmVudCBzbG90IGZvciBiZXR0ZXINCj4gcGVyZm9ybWFuY2Uu
+DQo+IA0KPiBUaGlzIHByb3ZpZGVzIGEgdW5pZmllZCBtZXRob2QgZm9yIGFsbCBQQ0kgZGV2aWNl
+cyB0byByZXBvcnQgc3RhdHVzIGFuZA0KPiBpc3N1ZXMsIGluc3RlYWQgb2YgZWFjaCBkZXZpY2Ug
+cmVwb3J0aW5nIGluIGEgZGlmZmVyZW50IHdheSwgdXNpbmcNCj4gZGlmZmVyZW50IGNvZGUuDQo+
+IA0KPiBTaWduZWQtb2ZmLWJ5OiBUYWwgR2lsYm9hIDx0YWxnaUBtZWxsYW5veC5jb20+DQo+IFti
+aGVsZ2FhczogY2hhbmdlbG9nLCByZXdvcmQgbG9nIG1lc3NhZ2VzLCBwcmludCBkZXZpY2UgY2Fw
+YWJpbGl0aWVzIHdoZW4NCj4gbm90IGxpbWl0ZWRdDQo+IFNpZ25lZC1vZmYtYnk6IEJqb3JuIEhl
+bGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9wY2kvcGNpLmMg
+ICB8ICAgMjkgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gIGluY2x1ZGUvbGludXgv
+cGNpLmggfCAgICAxICsNCj4gIDIgZmlsZXMgY2hhbmdlZCwgMzAgaW5zZXJ0aW9ucygrKQ0KPiAN
+Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3BjaS5jIGIvZHJpdmVycy9wY2kvcGNpLmMNCj4g
+aW5kZXggZTAwZDU2YjEyNzQ3Li5jZWM3YWVkMDlmNmIgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMv
+cGNpL3BjaS5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL3BjaS5jDQo+IEBAIC01MjgzLDYgKzUyODMs
+MzUgQEAgdTMyIHBjaWVfYmFuZHdpZHRoX2NhcGFibGUoc3RydWN0IHBjaV9kZXYgKmRldiwNCj4g
+ZW51bSBwY2lfYnVzX3NwZWVkICpzcGVlZCwNCj4gIAlyZXR1cm4gKndpZHRoICogUENJRV9TUEVF
+RDJNQlNfRU5DKCpzcGVlZCk7DQo+ICB9DQo+IA0KPiArLyoqDQo+ICsgKiBwY2llX3ByaW50X2xp
+bmtfc3RhdHVzIC0gUmVwb3J0IHRoZSBQQ0kgZGV2aWNlJ3MgbGluayBzcGVlZCBhbmQgd2lkdGgN
+Cj4gKyAqIEBkZXY6IFBDSSBkZXZpY2UgdG8gcXVlcnkNCj4gKyAqDQo+ICsgKiBSZXBvcnQgdGhl
+IGF2YWlsYWJsZSBiYW5kd2lkdGggYXQgdGhlIGRldmljZS4gIElmIHRoaXMgaXMgbGVzcyB0aGFu
+IHRoZQ0KPiArICogZGV2aWNlIGlzIGNhcGFibGUgb2YsIHJlcG9ydCB0aGUgZGV2aWNlJ3MgbWF4
+aW11bSBwb3NzaWJsZSBiYW5kd2lkdGggYW5kDQo+ICsgKiB0aGUgdXBzdHJlYW0gbGluayB0aGF0
+IGxpbWl0cyBpdHMgcGVyZm9ybWFuY2UgdG8gbGVzcyB0aGFuIHRoYXQuDQo+ICsgKi8NCj4gK3Zv
+aWQgcGNpZV9wcmludF9saW5rX3N0YXR1cyhzdHJ1Y3QgcGNpX2RldiAqZGV2KQ0KPiArew0KPiAr
+CWVudW0gcGNpZV9saW5rX3dpZHRoIHdpZHRoLCB3aWR0aF9jYXA7DQo+ICsJZW51bSBwY2lfYnVz
+X3NwZWVkIHNwZWVkLCBzcGVlZF9jYXA7DQo+ICsJc3RydWN0IHBjaV9kZXYgKmxpbWl0aW5nX2Rl
+diA9IE5VTEw7DQo+ICsJdTMyIGJ3X2F2YWlsLCBid19jYXA7DQo+ICsNCj4gKwlid19jYXAgPSBw
+Y2llX2JhbmR3aWR0aF9jYXBhYmxlKGRldiwgJnNwZWVkX2NhcCwgJndpZHRoX2NhcCk7DQo+ICsJ
+YndfYXZhaWwgPSBwY2llX2JhbmR3aWR0aF9hdmFpbGFibGUoZGV2LCAmbGltaXRpbmdfZGV2LCAm
+c3BlZWQsDQo+ICZ3aWR0aCk7DQo+ICsNCj4gKwlpZiAoYndfYXZhaWwgPj0gYndfY2FwKQ0KPiAr
+CQlwY2lfaW5mbyhkZXYsICIlZCBNYi9zIGF2YWlsYWJsZSBiYW5kd2lkdGggKCVzIHglZCBsaW5r
+KVxuIiwNCj4gKwkJCSBid19jYXAsIFBDSUVfU1BFRUQyU1RSKHNwZWVkX2NhcCksIHdpZHRoX2Nh
+cCk7DQo+ICsJZWxzZQ0KPiArCQlwY2lfaW5mbyhkZXYsICIlZCBNYi9zIGF2YWlsYWJsZSBiYW5k
+d2lkdGgsIGxpbWl0ZWQgYnkgJXMgeCVkDQo+IGxpbmsgYXQgJXMgKGNhcGFibGUgb2YgJWQgTWIv
+cyB3aXRoICVzIHglZCBsaW5rKVxuIiwNCj4gKwkJCSBid19hdmFpbCwgUENJRV9TUEVFRDJTVFIo
+c3BlZWQpLCB3aWR0aCwNCj4gKwkJCSBsaW1pdGluZ19kZXYgPyBwY2lfbmFtZShsaW1pdGluZ19k
+ZXYpIDogIjx1bmtub3duPiIsDQo+ICsJCQkgYndfY2FwLCBQQ0lFX1NQRUVEMlNUUihzcGVlZF9j
+YXApLCB3aWR0aF9jYXApOw0KPiArfQ0KDQpQZXJzb25hbGx5LCBJIHdvdWxkIG1ha2UgdGhpYyBs
+YXN0IG9uZSBhIHBjaV93YXJuKCkgdG8gaW5kaWNhdGUgaXQgYXQgYSBoaWdoZXIgbG9nIGxldmVs
+LCBidXQgSSdtICBvayB3aXRoIHRoZSB3b3JkaW5nLCBhbmQgaWYgY29uc2Vuc3VzIGlzIHRoYXQg
+dGhpcyBzaG91bGQgYmUgYXQgaW5mbywgSSdtIG9rIHdpdGggdGhhdC4NCg0KVGhhbmtzLA0KSmFr
+ZQ0KDQo+ICtFWFBPUlRfU1lNQk9MKHBjaWVfcHJpbnRfbGlua19zdGF0dXMpOw0KPiArDQo+ICAv
+KioNCj4gICAqIHBjaV9zZWxlY3RfYmFycyAtIE1ha2UgQkFSIG1hc2sgZnJvbSB0aGUgdHlwZSBv
+ZiByZXNvdXJjZQ0KPiAgICogQGRldjogdGhlIFBDSSBkZXZpY2UgZm9yIHdoaWNoIEJBUiBtYXNr
+IGlzIG1hZGUNCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvcGNpLmggYi9pbmNsdWRlL2xp
+bnV4L3BjaS5oDQo+IGluZGV4IGYyYmYyYjdhNjZjNy4uMzhmNzk1NzEyMWVmIDEwMDY0NA0KPiAt
+LS0gYS9pbmNsdWRlL2xpbnV4L3BjaS5oDQo+ICsrKyBiL2luY2x1ZGUvbGludXgvcGNpLmgNCj4g
+QEAgLTEwODYsNiArMTA4Niw3IEBAIGludCBwY2llX2dldF9taW5pbXVtX2xpbmsoc3RydWN0IHBj
+aV9kZXYgKmRldiwgZW51bQ0KPiBwY2lfYnVzX3NwZWVkICpzcGVlZCwNCj4gIHUzMiBwY2llX2Jh
+bmR3aWR0aF9hdmFpbGFibGUoc3RydWN0IHBjaV9kZXYgKmRldiwgc3RydWN0IHBjaV9kZXYNCj4g
+KipsaW1pdGluZ19kZXYsDQo+ICAJCQkgICAgIGVudW0gcGNpX2J1c19zcGVlZCAqc3BlZWQsDQo+
+ICAJCQkgICAgIGVudW0gcGNpZV9saW5rX3dpZHRoICp3aWR0aCk7DQo+ICt2b2lkIHBjaWVfcHJp
+bnRfbGlua19zdGF0dXMoc3RydWN0IHBjaV9kZXYgKmRldik7DQo+ICB2b2lkIHBjaWVfZmxyKHN0
+cnVjdCBwY2lfZGV2ICpkZXYpOw0KPiAgaW50IF9fcGNpX3Jlc2V0X2Z1bmN0aW9uX2xvY2tlZChz
+dHJ1Y3QgcGNpX2RldiAqZGV2KTsNCj4gIGludCBwY2lfcmVzZXRfZnVuY3Rpb24oc3RydWN0IHBj
+aV9kZXYgKmRldik7DQoNCg==
