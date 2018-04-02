@@ -1,206 +1,411 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 01/10] PCI: endpoint: Add MSI-X interfaces
-Date: Fri, 27 Apr 2018 17:57:38 +0100
-Message-Id: <52506677a350a3e37ba604bcbf00bba885192094.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:37999 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753980AbeDBBJC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Apr 2018 21:09:02 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Simon Xue <xxm@rock-chips.com>, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 01/10] PCI: Rename directory from host to controller
+Date: Mon,  2 Apr 2018 09:01:50 +0800
+Message-Id: <1522630910-151391-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCI_EPC_IRQ_MSIX type.
+This patch is in preparation for moving back dwc and
+cadence drivers.
 
-Add MSI-X callbacks signatures to ops structure.
+No functional change intended.
 
-Add sysfs interface for set/get MSI-X capability maximum number.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/pci/endpoint/pci-ep-cfs.c   | 24 ++++++++++++++++
- drivers/pci/endpoint/pci-epc-core.c | 57 +++++++++++++++++++++++++++++++++++++
- include/linux/pci-epc.h             | 11 ++++++-
- include/linux/pci-epf.h             |  1 +
- 4 files changed, 92 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 018ea34..d1288a0 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -286,6 +286,28 @@ static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
- 		       to_pci_epf_group(item)->epf->msi_interrupts);
- }
+ MAINTAINERS                                        | 36 +++++++++++-----------
+ drivers/pci/Kconfig                                |  2 +-
+ drivers/pci/Makefile                               |  2 +-
+ drivers/pci/{host => controller}/Kconfig           |  2 +-
+ drivers/pci/{host => controller}/Makefile          |  0
+ drivers/pci/{host => controller}/pci-aardvark.c    |  0
+ drivers/pci/{host => controller}/pci-ftpci100.c    |  0
+ drivers/pci/{host => controller}/pci-host-common.c |  0
+ .../pci/{host => controller}/pci-host-generic.c    |  0
+ drivers/pci/{host => controller}/pci-hyperv.c      |  0
+ drivers/pci/{host => controller}/pci-mvebu.c       |  0
+ drivers/pci/{host => controller}/pci-rcar-gen2.c   |  0
+ drivers/pci/{host => controller}/pci-tegra.c       |  0
+ .../pci/{host => controller}/pci-thunder-ecam.c    |  0
+ drivers/pci/{host => controller}/pci-thunder-pem.c |  0
+ drivers/pci/{host => controller}/pci-v3-semi.c     |  0
+ drivers/pci/{host => controller}/pci-versatile.c   |  0
+ drivers/pci/{host => controller}/pci-xgene-msi.c   |  0
+ drivers/pci/{host => controller}/pci-xgene.c       |  0
+ drivers/pci/{host => controller}/pcie-altera-msi.c |  0
+ drivers/pci/{host => controller}/pcie-altera.c     |  0
+ drivers/pci/{host => controller}/pcie-iproc-bcma.c |  0
+ drivers/pci/{host => controller}/pcie-iproc-msi.c  |  0
+ .../pci/{host => controller}/pcie-iproc-platform.c |  0
+ drivers/pci/{host => controller}/pcie-iproc.c      |  0
+ drivers/pci/{host => controller}/pcie-iproc.h      |  0
+ drivers/pci/{host => controller}/pcie-mediatek.c   |  0
+ drivers/pci/{host => controller}/pcie-rcar.c       |  0
+ drivers/pci/{host => controller}/pcie-rockchip.c   |  0
+ drivers/pci/{host => controller}/pcie-tango.c      |  0
+ drivers/pci/{host => controller}/pcie-xilinx-nwl.c |  0
+ drivers/pci/{host => controller}/pcie-xilinx.c     |  0
+ drivers/pci/{host => controller}/vmd.c             |  0
+ 33 files changed, 21 insertions(+), 21 deletions(-)
+ rename drivers/pci/{host => controller}/Kconfig (99%)
+ rename drivers/pci/{host => controller}/Makefile (100%)
+ rename drivers/pci/{host => controller}/pci-aardvark.c (100%)
+ rename drivers/pci/{host => controller}/pci-ftpci100.c (100%)
+ rename drivers/pci/{host => controller}/pci-host-common.c (100%)
+ rename drivers/pci/{host => controller}/pci-host-generic.c (100%)
+ rename drivers/pci/{host => controller}/pci-hyperv.c (100%)
+ rename drivers/pci/{host => controller}/pci-mvebu.c (100%)
+ rename drivers/pci/{host => controller}/pci-rcar-gen2.c (100%)
+ rename drivers/pci/{host => controller}/pci-tegra.c (100%)
+ rename drivers/pci/{host => controller}/pci-thunder-ecam.c (100%)
+ rename drivers/pci/{host => controller}/pci-thunder-pem.c (100%)
+ rename drivers/pci/{host => controller}/pci-v3-semi.c (100%)
+ rename drivers/pci/{host => controller}/pci-versatile.c (100%)
+ rename drivers/pci/{host => controller}/pci-xgene-msi.c (100%)
+ rename drivers/pci/{host => controller}/pci-xgene.c (100%)
+ rename drivers/pci/{host => controller}/pcie-altera-msi.c (100%)
+ rename drivers/pci/{host => controller}/pcie-altera.c (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc-bcma.c (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc-msi.c (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc-platform.c (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc.c (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc.h (100%)
+ rename drivers/pci/{host => controller}/pcie-mediatek.c (100%)
+ rename drivers/pci/{host => controller}/pcie-rcar.c (100%)
+ rename drivers/pci/{host => controller}/pcie-rockchip.c (100%)
+ rename drivers/pci/{host => controller}/pcie-tango.c (100%)
+ rename drivers/pci/{host => controller}/pcie-xilinx-nwl.c (100%)
+ rename drivers/pci/{host => controller}/pcie-xilinx.c (100%)
+ rename drivers/pci/{host => controller}/vmd.c (100%)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4923621..a4e5971 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6511,7 +6511,7 @@ F:	arch/x86/hyperv
+ F:	drivers/hid/hid-hyperv.c
+ F:	drivers/hv/
+ F:	drivers/input/serio/hyperv-keyboard.c
+-F:	drivers/pci/host/pci-hyperv.c
++F:	drivers/pci/controller/pci-hyperv.c
+ F:	drivers/net/hyperv/
+ F:	drivers/scsi/storvsc_drv.c
+ F:	drivers/uio/uio_hv_generic.c
+@@ -10628,7 +10628,7 @@ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/aardvark-pci.txt
+-F:	drivers/pci/host/pci-aardvark.c
++F:	drivers/pci/controller/pci-aardvark.c
  
-+static ssize_t pci_epf_msix_interrupts_store(struct config_item *item,
-+					     const char *page, size_t len)
-+{
-+	u16 val;
-+	int ret;
-+
-+	ret = kstrtou16(page, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	to_pci_epf_group(item)->epf->msix_interrupts = val;
-+
-+	return len;
-+}
-+
-+static ssize_t pci_epf_msix_interrupts_show(struct config_item *item,
-+					    char *page)
-+{
-+	return sprintf(page, "%d\n",
-+		       to_pci_epf_group(item)->epf->msix_interrupts);
-+}
-+
- PCI_EPF_HEADER_R(vendorid)
- PCI_EPF_HEADER_W_u16(vendorid)
+ PCI DRIVER FOR ALTERA PCIE IP
+ M:	Ley Foon Tan <lftan@altera.com>
+@@ -10636,7 +10636,7 @@ L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
+ L:	linux-pci@vger.kernel.org
+ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
+-F:	drivers/pci/host/pcie-altera.c
++F:	drivers/pci/controller/pcie-altera.c
  
-@@ -327,6 +349,7 @@ CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
- CONFIGFS_ATTR(pci_epf_, subsys_id);
- CONFIGFS_ATTR(pci_epf_, interrupt_pin);
- CONFIGFS_ATTR(pci_epf_, msi_interrupts);
-+CONFIGFS_ATTR(pci_epf_, msix_interrupts);
+ PCI DRIVER FOR APPLIEDMICRO XGENE
+ M:	Tanmay Inamdar <tinamdar@apm.com>
+@@ -10644,7 +10644,7 @@ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
+-F:	drivers/pci/host/pci-xgene.c
++F:	drivers/pci/controller/pci-xgene.c
  
- static struct configfs_attribute *pci_epf_attrs[] = {
- 	&pci_epf_attr_vendorid,
-@@ -340,6 +363,7 @@ static struct configfs_attribute *pci_epf_attrs[] = {
- 	&pci_epf_attr_subsys_id,
- 	&pci_epf_attr_interrupt_pin,
- 	&pci_epf_attr_msi_interrupts,
-+	&pci_epf_attr_msix_interrupts,
- 	NULL,
- };
+ PCI DRIVER FOR ARM VERSATILE PLATFORM
+ M:	Rob Herring <robh@kernel.org>
+@@ -10652,7 +10652,7 @@ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/versatile.txt
+-F:	drivers/pci/host/pci-versatile.c
++F:	drivers/pci/controller/pci-versatile.c
  
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index b0ee427..7d77bd0 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -218,6 +218,63 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- EXPORT_SYMBOL_GPL(pci_epc_set_msi);
+ PCI DRIVER FOR ARMADA 8K
+ M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+@@ -10685,8 +10685,8 @@ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
+-F:	drivers/pci/host/pci-host-common.c
+-F:	drivers/pci/host/pci-host-generic.c
++F:	drivers/pci/controller/pci-host-common.c
++F:	drivers/pci/controller/pci-host-generic.c
  
- /**
-+ * pci_epc_get_msix() - get the number of MSI-X interrupt numbers allocated
-+ * @epc: the EPC device to which MSI-X interrupts was requested
-+ * @func_no: the endpoint function number in the EPC device
-+ *
-+ * Invoke to get the number of MSI-X interrupts allocated by the RC
-+ */
-+int pci_epc_get_msix(struct pci_epc *epc, u8 func_no)
-+{
-+	int interrupt;
-+	unsigned long flags;
-+
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-+		return 0;
-+
-+	if (!epc->ops->get_msix)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	interrupt = epc->ops->get_msix(epc, func_no);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	if (interrupt < 0)
-+		return 0;
-+
-+	return interrupt + 1;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_get_msix);
-+
-+/**
-+ * pci_epc_set_msix() - set the number of MSI-X interrupt numbers required
-+ * @epc: the EPC device on which MSI-X has to be configured
-+ * @func_no: the endpoint function number in the EPC device
-+ * @interrupts: number of MSI-X interrupts required by the EPF
-+ *
-+ * Invoke to set the required number of MSI-X interrupts.
-+ */
-+int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
-+	    interrupts < 1 || interrupts > 2048)
-+		return -EINVAL;
-+
-+	if (!epc->ops->set_msix)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	ret = epc->ops->set_msix(epc, func_no, interrupts - 1);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_set_msix);
-+
-+/**
-  * pci_epc_unmap_addr() - unmap CPU address from PCI address
-  * @epc: the EPC device on which address is allocated
-  * @func_no: the endpoint function number in the EPC device
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index af657ca..32e8961 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -17,6 +17,7 @@ enum pci_epc_irq_type {
- 	PCI_EPC_IRQ_UNKNOWN,
- 	PCI_EPC_IRQ_LEGACY,
- 	PCI_EPC_IRQ_MSI,
-+	PCI_EPC_IRQ_MSIX,
- };
+ PCI DRIVER FOR IMX6
+ M:	Richard Zhu <hongxing.zhu@nxp.com>
+@@ -10702,7 +10702,7 @@ M:	Keith Busch <keith.busch@intel.com>
+ M:	Jonathan Derrick <jonathan.derrick@intel.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Supported
+-F:	drivers/pci/host/vmd.c
++F:	drivers/pci/controller/vmd.c
  
- /**
-@@ -30,6 +31,10 @@ enum pci_epc_irq_type {
-  *	     capability register
-  * @get_msi: ops to get the number of MSI interrupts allocated by the RC from
-  *	     the MSI capability register
-+ * @set_msix: ops to set the requested number of MSI-X interrupts in the
-+ *	     MSI-X capability register
-+ * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
-+ *	     from the MSI-X capability register
-  * @raise_irq: ops to raise a legacy or MSI interrupt
-  * @start: ops to start the PCI link
-  * @stop: ops to stop the PCI link
-@@ -48,8 +53,10 @@ struct pci_epc_ops {
- 			      phys_addr_t addr);
- 	int	(*set_msi)(struct pci_epc *epc, u8 func_no, u8 interrupts);
- 	int	(*get_msi)(struct pci_epc *epc, u8 func_no);
-+	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
-+	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
- 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
--			     enum pci_epc_irq_type type, u8 interrupt_num);
-+			     enum pci_epc_irq_type type, u16 interrupt_num);
- 	int	(*start)(struct pci_epc *epc);
- 	void	(*stop)(struct pci_epc *epc);
- 	struct module *owner;
-@@ -136,6 +143,8 @@ void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no,
- 			phys_addr_t phys_addr);
- int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts);
- int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
-+int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
-+int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
- 		      enum pci_epc_irq_type type, u8 interrupt_num);
- int pci_epc_start(struct pci_epc *epc);
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 4e77649..ec02f587 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -119,6 +119,7 @@ struct pci_epf {
- 	struct pci_epf_header	*header;
- 	struct pci_epf_bar	bar[6];
- 	u8			msi_interrupts;
-+	u16			msix_interrupts;
- 	u8			func_no;
+ PCI DRIVER FOR MICROSEMI SWITCHTEC
+ M:	Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+@@ -10722,7 +10722,7 @@ M:	Jason Cooper <jason@lakedaemon.net>
+ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+ S:	Maintained
+-F:	drivers/pci/host/*mvebu*
++F:	drivers/pci/controller/*mvebu*
  
- 	struct pci_epc		*epc;
+ PCI DRIVER FOR NVIDIA TEGRA
+ M:	Thierry Reding <thierry.reding@gmail.com>
+@@ -10730,14 +10730,14 @@ L:	linux-tegra@vger.kernel.org
+ L:	linux-pci@vger.kernel.org
+ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+-F:	drivers/pci/host/pci-tegra.c
++F:	drivers/pci/controller/pci-tegra.c
+ 
+ PCI DRIVER FOR RENESAS R-CAR
+ M:	Simon Horman <horms@verge.net.au>
+ L:	linux-pci@vger.kernel.org
+ L:	linux-renesas-soc@vger.kernel.org
+ S:	Maintained
+-F:	drivers/pci/host/*rcar*
++F:	drivers/pci/controller/*rcar*
+ 
+ PCI DRIVER FOR SAMSUNG EXYNOS
+ M:	Jingoo Han <jingoohan1@gmail.com>
+@@ -10801,7 +10801,7 @@ L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
+ L:	linux-pci@vger.kernel.org
+ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+-F:	drivers/pci/host/pcie-altera-msi.c
++F:	drivers/pci/controller/pcie-altera-msi.c
+ 
+ PCI MSI DRIVER FOR APPLIEDMICRO XGENE
+ M:	Duc Dang <dhdang@apm.com>
+@@ -10809,7 +10809,7 @@ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+-F:	drivers/pci/host/pci-xgene-msi.c
++F:	drivers/pci/controller/pci-xgene-msi.c
+ 
+ PCI SUBSYSTEM
+ M:	Bjorn Helgaas <bhelgaas@google.com>
+@@ -10835,7 +10835,7 @@ L:	linux-pci@vger.kernel.org
+ Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
+ S:	Supported
+-F:	drivers/pci/host/
++F:	drivers/pci/controller/
+ F:	drivers/pci/dwc/
+ 
+ PCIE DRIVER FOR AXIS ARTPEC
+@@ -10853,7 +10853,7 @@ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/pci-thunder-*
+-F:	drivers/pci/host/pci-thunder-*
++F:	drivers/pci/controller/pci-thunder-*
+ 
+ PCIE DRIVER FOR HISILICON
+ M:	Zhou Wang <wangzhou1@hisilicon.com>
+@@ -10884,7 +10884,7 @@ L:	linux-pci@vger.kernel.org
+ L:	linux-mediatek@lists.infradead.org
+ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/mediatek*
+-F:	drivers/pci/host/*mediatek*
++F:	drivers/pci/controller/*mediatek*
+ 
+ PCIE DRIVER FOR QUALCOMM MSM
+ M:	Stanimir Varbanov <svarbanov@mm-sol.com>
+@@ -10899,14 +10899,14 @@ L:	linux-pci@vger.kernel.org
+ L:	linux-rockchip@lists.infradead.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+-F:	drivers/pci/host/pcie-rockchip.c
++F:	drivers/pci/controller/pcie-rockchip.c
+ 
+ PCI DRIVER FOR V3 SEMICONDUCTOR V360EPC
+ M:	Linus Walleij <linus.walleij@linaro.org>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+-F:	drivers/pci/host/pci-v3-semi.c
++F:	drivers/pci/controller/pci-v3-semi.c
+ 
+ PCIE DRIVER FOR ST SPEAR13XX
+ M:	Pratyush Anand <pratyush.anand@gmail.com>
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 34b56a8..b759b29 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -138,7 +138,7 @@ config PCI_HYPERV
+ 
+ source "drivers/pci/hotplug/Kconfig"
+ source "drivers/pci/cadence/Kconfig"
++source "drivers/pci/controller/Kconfig"
+ source "drivers/pci/dwc/Kconfig"
+-source "drivers/pci/host/Kconfig"
+ source "drivers/pci/endpoint/Kconfig"
+ source "drivers/pci/switch/Kconfig"
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 952addc..7769641 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -27,7 +27,7 @@ obj-$(CONFIG_PCI_STUB)		+= pci-stub.o
+ obj-$(CONFIG_PCI_ECAM)		+= ecam.o
+ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ 
+-obj-y				+= host/
++obj-y				+= controller/
+ obj-y				+= switch/
+ 
+ # Endpoint library must be initialized before its users
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/controller/Kconfig
+similarity index 99%
+rename from drivers/pci/host/Kconfig
+rename to drivers/pci/controller/Kconfig
+index 0d0177ce..7af83af 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -1,6 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
+ 
+-menu "PCI host controller drivers"
++menu "PCI controller drivers"
+ 	depends on PCI
+ 
+ config PCI_MVEBU
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/controller/Makefile
+similarity index 100%
+rename from drivers/pci/host/Makefile
+rename to drivers/pci/controller/Makefile
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+similarity index 100%
+rename from drivers/pci/host/pci-aardvark.c
+rename to drivers/pci/controller/pci-aardvark.c
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/controller/pci-ftpci100.c
+similarity index 100%
+rename from drivers/pci/host/pci-ftpci100.c
+rename to drivers/pci/controller/pci-ftpci100.c
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+similarity index 100%
+rename from drivers/pci/host/pci-host-common.c
+rename to drivers/pci/controller/pci-host-common.c
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/controller/pci-host-generic.c
+similarity index 100%
+rename from drivers/pci/host/pci-host-generic.c
+rename to drivers/pci/controller/pci-host-generic.c
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+similarity index 100%
+rename from drivers/pci/host/pci-hyperv.c
+rename to drivers/pci/controller/pci-hyperv.c
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+similarity index 100%
+rename from drivers/pci/host/pci-mvebu.c
+rename to drivers/pci/controller/pci-mvebu.c
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/controller/pci-rcar-gen2.c
+similarity index 100%
+rename from drivers/pci/host/pci-rcar-gen2.c
+rename to drivers/pci/controller/pci-rcar-gen2.c
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+similarity index 100%
+rename from drivers/pci/host/pci-tegra.c
+rename to drivers/pci/controller/pci-tegra.c
+diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/controller/pci-thunder-ecam.c
+similarity index 100%
+rename from drivers/pci/host/pci-thunder-ecam.c
+rename to drivers/pci/controller/pci-thunder-ecam.c
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/controller/pci-thunder-pem.c
+similarity index 100%
+rename from drivers/pci/host/pci-thunder-pem.c
+rename to drivers/pci/controller/pci-thunder-pem.c
+diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/controller/pci-v3-semi.c
+similarity index 100%
+rename from drivers/pci/host/pci-v3-semi.c
+rename to drivers/pci/controller/pci-v3-semi.c
+diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/controller/pci-versatile.c
+similarity index 100%
+rename from drivers/pci/host/pci-versatile.c
+rename to drivers/pci/controller/pci-versatile.c
+diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/controller/pci-xgene-msi.c
+similarity index 100%
+rename from drivers/pci/host/pci-xgene-msi.c
+rename to drivers/pci/controller/pci-xgene-msi.c
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/controller/pci-xgene.c
+similarity index 100%
+rename from drivers/pci/host/pci-xgene.c
+rename to drivers/pci/controller/pci-xgene.c
+diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/controller/pcie-altera-msi.c
+similarity index 100%
+rename from drivers/pci/host/pcie-altera-msi.c
+rename to drivers/pci/controller/pcie-altera-msi.c
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+similarity index 100%
+rename from drivers/pci/host/pcie-altera.c
+rename to drivers/pci/controller/pcie-altera.c
+diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/controller/pcie-iproc-bcma.c
+similarity index 100%
+rename from drivers/pci/host/pcie-iproc-bcma.c
+rename to drivers/pci/controller/pcie-iproc-bcma.c
+diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/controller/pcie-iproc-msi.c
+similarity index 100%
+rename from drivers/pci/host/pcie-iproc-msi.c
+rename to drivers/pci/controller/pcie-iproc-msi.c
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/controller/pcie-iproc-platform.c
+similarity index 100%
+rename from drivers/pci/host/pcie-iproc-platform.c
+rename to drivers/pci/controller/pcie-iproc-platform.c
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+similarity index 100%
+rename from drivers/pci/host/pcie-iproc.c
+rename to drivers/pci/controller/pcie-iproc.c
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/controller/pcie-iproc.h
+similarity index 100%
+rename from drivers/pci/host/pcie-iproc.h
+rename to drivers/pci/controller/pcie-iproc.h
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+similarity index 100%
+rename from drivers/pci/host/pcie-mediatek.c
+rename to drivers/pci/controller/pcie-mediatek.c
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+similarity index 100%
+rename from drivers/pci/host/pcie-rcar.c
+rename to drivers/pci/controller/pcie-rcar.c
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
+similarity index 100%
+rename from drivers/pci/host/pcie-rockchip.c
+rename to drivers/pci/controller/pcie-rockchip.c
+diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/controller/pcie-tango.c
+similarity index 100%
+rename from drivers/pci/host/pcie-tango.c
+rename to drivers/pci/controller/pcie-tango.c
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+similarity index 100%
+rename from drivers/pci/host/pcie-xilinx-nwl.c
+rename to drivers/pci/controller/pcie-xilinx-nwl.c
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+similarity index 100%
+rename from drivers/pci/host/pcie-xilinx.c
+rename to drivers/pci/controller/pcie-xilinx.c
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/controller/vmd.c
+similarity index 100%
+rename from drivers/pci/host/vmd.c
+rename to drivers/pci/controller/vmd.c
 -- 
-2.7.4
+1.9.1
