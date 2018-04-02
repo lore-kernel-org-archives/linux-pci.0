@@ -1,81 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        1745646@bugs.launchpad.net, mika.westerberg@linux.intel.com,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
- <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
- <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com>
- <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-Message-ID: <1f67f00a-8141-f9af-2120-c78f7cfecb1d@canonical.com>
-Date: Mon, 30 Apr 2018 10:22:27 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v5 10/10] arm64: defconfig: update config for Rockchip PCIe
+Date: Mon,  2 Apr 2018 09:04:28 +0800
+Message-Id: <1522631068-151816-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
+ linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+ Jeffy Chen <jeffy.chen@rock-chips.com>, linux-rockchip@lists.infradead.org,
+ Rob Herring <robh+dt@kernel.org>, linux-arm-kernel@lists.infradead.org,
+ Simon Xue <xxm@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/16/2018 11:58 AM, Rafael J. Wysocki wrote:
-> On Mon, Apr 16, 2018 at 5:31 PM, Joseph Salisbury
-> <joseph.salisbury@canonical.com> wrote:
->> On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
->>> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
->>> <joseph.salisbury@canonical.com> wrote:
->>>> Hi Rafael,
->>>>
->>>> A kernel bug report was opened against Ubuntu [0].  After a kernel
->>>> bisect, it was found that reverting the following two commits resolved
->>>> this bug:
->>>>
->>>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
->>>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
->>>>
->>>> This is a regression introduced in v4.13-rc1 and still exists in
->>>> mainline.  The bug causes the battery to drain when the system is
->>>> powered down and unplugged, which does not happed prior to these two
->>>> commits.
->>> What system and what do you mean by "powered down"?  How much time
->>> does it take for the battery to drain now?
->> By powered down, the bug reporter is saying physically powered off and
->> unplugged.  The system is a HP laptop:
->>
->> dmi.chassis.vendor: HP
->> dmi.product.family: 103C_5335KV HP Notebook
->> dmi.product.name: HP Notebook
->> vendor_id    : GenuineIntel
->> cpu family    : 6
->>
->>
->>>> The bisect actually pointed to commit de3ef1e, but reverting
->>>> these two commits fixes the issue.
->>>>
->>>> I was hoping to get your feedback, since you are the patch author.  Do
->>>> you think gathering any additional data will help diagnose this issue,
->>>> or would it be best to submit a revert request?
->>> First, reverting these is not an option or you will break systems
->>> relying on them now.  4.13 is three releases back at this point.
->>>
->>> Second, your issue appears to be related to the suspend/shutdown path
->>> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
->>> change in pci_enable_wake() causes the problem to happen.  Can you try
->>> to revert this one alone and see if that helps?
->> A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
->> tested.  However, the test kernel still exhibited the bug.
-> So essentially the bisection result cannot be trusted.
+Now Rockchip PCIe drivers could support both of host mode
+and endponint mode, so we rename the config name. This patch
+updates defconfig to refect the fact that we want to build
+Rockchip PCIe controller driver into a module as before.
 
-We performed some more testing and confirmed just a revert of the
-following commit resolves the bug:
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: Heiko Stuebner <heiko@sntech.de>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-0847684cfc5f0 ("PCI / PM: Simplify device wakeup settings code")
+---
 
-Can you think of any suggestions to help debug further?
+ arch/arm64/configs/defconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index ecf6137..17ea72b 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -78,7 +78,8 @@ CONFIG_PCIE_ARMADA_8K=y
+ CONFIG_PCI_AARDVARK=y
+ CONFIG_PCI_TEGRA=y
+ CONFIG_PCIE_RCAR=y
+-CONFIG_PCIE_ROCKCHIP=m
++CONFIG_PCIE_ROCKCHIP=y
++CONFIG_PCIE_ROCKCHIP_HOST=m
+ CONFIG_PCI_HOST_GENERIC=y
+ CONFIG_PCI_XGENE=y
+ CONFIG_PCI_HOST_THUNDER_PEM=y
+-- 
+1.9.1
 
 
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
