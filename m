@@ -1,51 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:56970 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752788AbeDQTyz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Apr 2018 15:54:55 -0400
-Date: Tue, 17 Apr 2018 21:55:29 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: David Miller <davem@davemloft.net>
-Cc: khandual@linux.vnet.ibm.com, hch@lst.de, konrad.wilk@oracle.com,
-        iommu@lists.linux-foundation.org, x86@kernel.org,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, linux-ide@vger.kernel.org,
-        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 01/12] iommu-common: move to arch/sparc
-Message-ID: <20180417195529.GA31335@lst.de>
-References: <20180415145947.1248-1-hch@lst.de> <20180415145947.1248-2-hch@lst.de> <f0305a92-b206-1567-3c25-67fbd194047d@linux.vnet.ibm.com> <20180416.095833.969403163564136309.davem@davemloft.net>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:23023 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751466AbeDBFfP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 01:35:15 -0400
+Subject: Re: [PATCH 3/8] bindings: PCI: designware: Add support for the EP in
+ designware driver
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+ <dd582bfc2780679b7a092d23547c316234a84c34.1522235224.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <405911c8-fffc-5bd7-76c5-f7aabde3b7bc@ti.com>
+Date: Mon, 2 Apr 2018 11:05:05 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180416.095833.969403163564136309.davem@davemloft.net>
+In-Reply-To: <dd582bfc2780679b7a092d23547c316234a84c34.1522235224.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 16, 2018 at 09:58:33AM -0400, David Miller wrote:
-> From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
-> Date: Mon, 16 Apr 2018 14:26:07 +0530
-> 
-> > On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
-> >> This code is only used by sparc, and all new iommu drivers should use the
-> >> drivers/iommu/ framework.  Also remove the unused exports.
-> >> 
-> >> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Right, these functions are used only from SPARC architecture. Simple
-> > git grep confirms it as well. Hence it makes sense to move them into
-> > arch code instead.
-> 
-> Well, we put these into a common location and used type friendly for
-> powerpc because we hoped powerpc would convert over to using this
-> common piece of code as well.
-> 
-> But nobody did the powerpc work.
-> 
-> If you look at the powerpc iommu support, it's the same code basically
-> for entry allocation.
 
-I could also introduce a new config symbol and keep it in common code,
-but it has been there for a while without any new user.
 
-Right now it just means we built the code for everyone who selects
-CONFIG_IOMMU_HELPER, which is just about anyone these days.
+On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+
+Please add a commit message.
+> ---
+>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index 6300762..4bb2e08 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -3,6 +3,7 @@
+>  Required properties:
+>  - compatible:
+>  	"snps,dw-pcie" for RC mode;
+> +	"snps,dw-pcie-ep" for EP mode;
+>  - reg: Should contain the configuration address space.
+>  - reg-names: Must be "config" for the PCIe configuration space.
+>      (The old way of getting the configuration address space from "ranges"
+> @@ -56,3 +57,15 @@ Example configuration:
+>  		#interrupt-cells = <1>;
+>  		num-lanes = <1>;
+>  	};
+> +or
+> +	pcie_ep: pcie_ep@dfc00000 {
+> +		compatible = "snps,dw-pcie-ep";
+> +		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
+> +		      <0xdfc01000 0x0001000>, /* IP registers 2 */
+
+Doesn't this have iATU unroll space?
+
+Thanks
+Kishon
