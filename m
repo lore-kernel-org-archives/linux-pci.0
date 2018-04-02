@@ -1,69 +1,78 @@
-Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 16 Apr 2018 11:33:13 +0530
-From: poza@codeaurora.org
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner
- <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate
- Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Timur Tabi
- <timur@codeaurora.org>
-Subject: Re: [PATCH v13 0/6] Address error and recovery for AER and DPC
-In-Reply-To: <5b4e667f-bead-a007-78dd-e42d3194f232@codeaurora.org>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
- <20180416031600.GB80087@bhelgaas-glaptop.roam.corp.google.com>
- <5b4e667f-bead-a007-78dd-e42d3194f232@codeaurora.org>
-Message-ID: <9301606a70a213c180d9e6764b002cf9@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:40107 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752412AbeDBQT6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Apr 2018 12:19:58 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Oza Pawandeep <poza@codeaurora.org>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 6/7] PCI/AER: API for obtaining AER information
+Date: Mon,  2 Apr 2018 10:22:02 -0600
+Message-Id: <20180402162203.3370-7-keith.busch@intel.com>
+In-Reply-To: <20180402162203.3370-1-keith.busch@intel.com>
+References: <20180402162203.3370-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-04-16 09:23, Sinan Kaya wrote:
-> On 4/15/2018 11:16 PM, Bjorn Helgaas wrote:
->> On Mon, Apr 09, 2018 at 10:41:48AM -0400, Oza Pawandeep wrote:
->>> This patch set brings in error handling support for DPC
->>> 
->>> The current implementation of AER and error message broadcasting to 
->>> the
->>> EP driver is tightly coupled and limited to AER service driver.
->>> It is important to factor out broadcasting and other link handling
->>> callbacks. So that not only when AER gets triggered, but also when 
->>> DPC get
->>> triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
->>> 
->>> DPC should behave identical to AER as far as error handling is 
->>> concerned.
->>> DPC should remove the devices and not to do recovery for hotplug 
->>> enabled system.
->> 
->> Is there a specific bug that's fixed by these patches?  I didn't see
->> one mentioned in the changelogs.
->> 
-> 
-> There is no actual bug.
-> 
-> We realized that DPC and hotplug is heavily integrated today. We have 
-> use
-> cases for systems without hotplug support but still support DPC. That's 
-> the
-> problem we are trying to solve with this patchset.
+Since this is making the function externally visible, appending "aer_"
+prefix to the function name.
 
-Adding to what Sinan said;
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/aer/aerdrv.h      | 1 +
+ drivers/pci/pcie/aer/aerdrv_core.c | 8 ++++----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-DPC should handle the error handling and recovery similar to AER, 
-because finally both
-are attempting recovery in some or the other way,
-and for that error handling and recovery framework has to be loosely 
-coupled.
-It achieves uniformity and transparency to the error handling agents 
-such as AER, DPC, with respect to recovery and error handling.
-
-So, this patch-set tries to unify lot of things between error agents and 
-make them behave in a well defined way. (be it error (FATAL, NON_FATAL) 
-handling or recovery).
-
-Regards,
-Oza.
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index 5449e5ce139d..7c833a1d897e 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -107,6 +107,7 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
+ }
+ 
+ extern struct bus_type pcie_port_bus_type;
++int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info);
+ void aer_isr(struct work_struct *work);
+ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
+ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index a4bfea52e7d4..4fb24003cac3 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -638,7 +638,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ #endif
+ 
+ /**
+- * get_device_error_info - read error status from dev and store it to info
++ * aer_get_device_error_info - read error status from dev and store it to info
+  * @dev: pointer to the device expected to have a error record
+  * @info: pointer to structure to store the error record
+  *
+@@ -646,7 +646,7 @@ static void aer_recover_work_func(struct work_struct *work)
+  *
+  * Note that @info is reused among all error devices. Clear fields properly.
+  */
+-static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
++int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ {
+ 	int pos, temp;
+ 
+@@ -705,11 +705,11 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
+ 
+ 	/* Report all before handle them, not to lost records by reset etc. */
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+-		if (get_device_error_info(e_info->dev[i], e_info))
++		if (aer_get_device_error_info(e_info->dev[i], e_info))
+ 			aer_print_error(e_info->dev[i], e_info);
+ 	}
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+-		if (get_device_error_info(e_info->dev[i], e_info))
++		if (aer_get_device_error_info(e_info->dev[i], e_info))
+ 			handle_error_source(p_device, e_info->dev[i], e_info);
+ 	}
+ }
+-- 
+2.14.3
