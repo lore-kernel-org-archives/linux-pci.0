@@ -1,38 +1,108 @@
-Return-Path: <SRS0=SZbP=HO=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=SZbP=HO=linux.intel.com=mika.westerberg@kernel.org>
-Date: Wed, 25 Apr 2018 10:29:46 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-he1eur01on0050.outbound.protection.outlook.com ([104.47.0.50]:3360
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754213AbeDBHfH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Apr 2018 03:35:07 -0400
+Subject: Re: [PATCH v5 03/14] PCI: Add pcie_bandwidth_capable() to compute max
+ supported link bandwidth
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 6/9] PCI: Move resource distribution for a single
- bridge outside of the loop
-Message-ID: <20180425072946.GH2173@lahna.fi.intel.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-7-mika.westerberg@linux.intel.com>
- <20180424230558.GA101734@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Tariq Toukan <tariqt@mellanox.com>,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152244390359.135666.14890735614456271032.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <31e66048-e8b8-47ba-baf5-023560b4c124@mellanox.com>
+ <20180402004049.GA131023@bhelgaas-glaptop.roam.corp.google.com>
+From: Tal Gilboa <talgi@mellanox.com>
+Message-ID: <50346f44-de3f-b226-69ad-6de45e94e261@mellanox.com>
+Date: Mon, 2 Apr 2018 10:34:58 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180424230558.GA101734@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180402004049.GA131023@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 24, 2018 at 06:05:58PM -0500, Bjorn Helgaas wrote:
-> > +	/*
-> > +	 * There is only one bridge on the bus so it gets all available
-> > +	 * resources which it can then distribute to the possible
-> > +	 * hotplug bridges below.
-> > +	 */
-> > +	if ((hotplug_bridges == 0 && normal_bridges == 1) ||
-> > +	    (hotplug_bridges == 1 && normal_bridges == 0)) {
+On 4/2/2018 3:40 AM, Bjorn Helgaas wrote:
+> On Sun, Apr 01, 2018 at 11:38:53PM +0300, Tal Gilboa wrote:
+>> On 3/31/2018 12:05 AM, Bjorn Helgaas wrote:
+>>> From: Tal Gilboa <talgi@mellanox.com>
+>>>
+>>> Add pcie_bandwidth_capable() to compute the max link bandwidth supported by
+>>> a device, based on the max link speed and width, adjusted by the encoding
+>>> overhead.
+>>>
+>>> The maximum bandwidth of the link is computed as:
+>>>
+>>>     max_link_speed * max_link_width * (1 - encoding_overhead)
+>>>
+>>> The encoding overhead is about 20% for 2.5 and 5.0 GT/s links using 8b/10b
+>>> encoding, and about 1.5% for 8 GT/s or higher speed links using 128b/130b
+>>> encoding.
+>>>
+>>> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
+>>> [bhelgaas: adjust for pcie_get_speed_cap() and pcie_get_width_cap()
+>>> signatures, don't export outside drivers/pci]
+>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
+>>> ---
+>>>    drivers/pci/pci.c |   21 +++++++++++++++++++++
+>>>    drivers/pci/pci.h |    9 +++++++++
+>>>    2 files changed, 30 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index 43075be79388..9ce89e254197 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -5208,6 +5208,27 @@ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
+>>>    	return PCIE_LNK_WIDTH_UNKNOWN;
+>>>    }
+>>> +/**
+>>> + * pcie_bandwidth_capable - calculates a PCI device's link bandwidth capability
+>>> + * @dev: PCI device
+>>> + * @speed: storage for link speed
+>>> + * @width: storage for link width
+>>> + *
+>>> + * Calculate a PCI device's link bandwidth by querying for its link speed
+>>> + * and width, multiplying them, and applying encoding overhead.
+>>> + */
+>>> +u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
+>>> +			   enum pcie_link_width *width)
+>>> +{
+>>> +	*speed = pcie_get_speed_cap(dev);
+>>> +	*width = pcie_get_width_cap(dev);
+>>> +
+>>> +	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN)
+>>> +		return 0;
+>>> +
+>>> +	return *width * PCIE_SPEED2MBS_ENC(*speed);
+>>> +}
+>>> +
+>>>    /**
+>>>     * pci_select_bars - Make BAR mask from the type of resource
+>>>     * @dev: the PCI device for which BAR mask is made
+>>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>>> index 66738f1050c0..2a50172b9803 100644
+>>> --- a/drivers/pci/pci.h
+>>> +++ b/drivers/pci/pci.h
+>>> @@ -261,8 +261,17 @@ void pci_disable_bridge_window(struct pci_dev *dev);
+>>>    	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
+>>>    	 "Unknown speed")
+>>> +/* PCIe speed to Mb/s with encoding overhead: 20% for gen2, ~1.5% for gen3 */
+>>> +#define PCIE_SPEED2MBS_ENC(speed) \
+>>
+>> Missing gen4.
 > 
->   if (hotplug_bridges + normal_bridges == 1) {
+> I made it "gen3+".  I think that's accurate, isn't it?  The spec
+> doesn't seem to actually use "gen3" as a specific term, but sec 4.2.2
+> says rates of 8 GT/s or higher (which I think includes gen3 and gen4)
+> use 128b/130b encoding.
 > 
-> Don't repost just for this; I can fold it in if you agree.
 
-I agree, looks better like that. Thanks!
+I meant that PCIE_SPEED_16_0GT will return 0 from this macro since it 
+wasn't added. Need to return 15754.
