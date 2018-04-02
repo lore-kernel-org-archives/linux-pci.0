@@ -1,61 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:53209 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932282AbeD0In5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:43:57 -0400
-Received: by mail-it0-f66.google.com with SMTP id f6-v6so1005332ita.2
-        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2018 01:43:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5AD0E995.3090802@kontron.com>
-References: <5AD0E995.3090802@kontron.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 27 Apr 2018 10:43:56 +0200
-Message-ID: <CAKv+Gu_v4V8DUa6f4WxvjZHoJbbqT0mKpOwYVmaLaE20CB3U_g@mail.gmail.com>
-Subject: Re: LS1043A : "synchronous abort" at boot due to PCI config read
-To: Gilles Buloz <Gilles.Buloz@kontron.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Cc: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mga11.intel.com ([192.55.52.93]:40105 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752609AbeDBQT5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Apr 2018 12:19:57 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Oza Pawandeep <poza@codeaurora.org>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 4/7] PCI/DPC: Defer event handling to work queue
+Date: Mon,  2 Apr 2018 10:22:00 -0600
+Message-Id: <20180402162203.3370-5-keith.busch@intel.com>
+In-Reply-To: <20180402162203.3370-1-keith.busch@intel.com>
+References: <20180402162203.3370-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(add Bjorn and linux-pci)
+This moves all event handling to the existing work queue, which will
+make passing event information simpler to the handler.
 
-On 13 April 2018 at 19:32, Gilles Buloz <Gilles.Buloz@kontron.com> wrote:
-> Dear developers,
->
-> I currently have two functional workarounds for this issue but would like to know which one you would recommend, if any :-)
-> I'm using a LS1043A CPU (NXP QorIQ Layerscape) and get a "synchronous external abort" when booting because of a PCI config read
-> during PCI scan.
->
-> I'm using a custom hardware (based on LS1043ARDB) having a PEX8112 PCIe-to-PCI bridge connected to the LS1043A to have a PCI slot
-> for legacy devices. This bridge only supports PCI-Compatible config accesses (offset 0x00-0xFF).
-> On this PCI slot I connect a PCI module made of a PCI-to-PCIe bridge plus PCIe devices behind.
-> The problem occurs when the kernel probes the PCIe devices : as they are PCIe devices, the kernel does a PCI config read access at
-> offset 0x100 to check if "PCIe extended capability registers" are accessible (see drivers/pci/probe.c, function
-> pci_cfg_space_size_ext()). Unfortunately the PEX8112 PCIe-to-PCI bridge that is in the path reports an error to the CPU for this
-> access, and it seems there's no way to disable that on this bridge.
->
-> The first workaround I found was to patch drivers/pci/host/pci-layerscape.c to have PCIE_ABSERR_SETTING set to 0x9400 instead of
-> 0x9401 (for PCIE_ABSERR register) to disable error reporting. This only impacts an NXP part of the Linux kernel code, but I'm not
-> sure this is a good idea (however it seems to be like that on Intel platforms where even MEM accesses to a no-device address return
-> FF without any error).
->
-> I've also tried another workaround that works : patch drivers/pci/probe.c to use bus_flags to remember if a bus is behind a bridge
-> without extended address capability, to avoid PCi config read accesses at offset 0x100 in
-> pci_cfg_space_size() / pci_cfg_space_size_ext(). But this patch impacts the generic PCI probe method of Linux.
->
-> Any Idea to properly handle that issue ?
->
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/pcie-dpc.c | 53 ++++++++++++++++++++-------------------------
+ 1 file changed, 24 insertions(+), 29 deletions(-)
 
-This seems like a rather unusual configuration, but I guess that if
-the first bridge/switch advertises its inability to support extended
-config space accesses, we should not be performing them on any of its
-subordinate buses. How does the PEX8112 advertise this limitation?
-
-That said, I wonder if it is reasonable in the first place to expect
-that a PCIe device works as expected passing through a legacy PCI
-layer like that.
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 38b2d0586c72..a28901e88f7b 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -45,6 +45,8 @@ static const char * const rp_pio_error_string[] = {
+ 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+ };
+ 
++static void dpc_process_rp_pio_error(struct dpc_dev *dpc);
++
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ {
+ 	unsigned long timeout = jiffies + HZ;
+@@ -87,7 +89,27 @@ static void dpc_work(struct work_struct *work)
+ 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+ 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
+-	u16 cap = dpc->cap_pos;
++	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
++
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
++	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
++
++	dev_info(&pdev->dev, "DPC containment event, status:%#06x source:%#06x\n",
++		status, source);
++
++	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
++	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
++
++	dev_warn(&pdev->dev, "DPC %s detected, remove downstream devices\n",
++		 (reason == 0) ? "unmasked uncorrectable error" :
++		 (reason == 1) ? "ERR_NONFATAL" :
++		 (reason == 2) ? "ERR_FATAL" :
++		 (ext_reason == 0) ? "RP PIO error" :
++		 (ext_reason == 1) ? "software trigger" :
++				     "reserved error");
++
++	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
++		dpc_process_rp_pio_error(dpc);
+ 
+ 	pci_lock_rescan_remove();
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+@@ -176,39 +198,12 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ {
+ 	struct dpc_dev *dpc = (struct dpc_dev *)context;
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	struct device *dev = &dpc->dev->device;
+-	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
++	u16 cap = dpc->cap_pos, status;
+ 
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT) || status == (u16)(~0))
+ 		return IRQ_NONE;
+ 
+-	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
+-		pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+-				      PCI_EXP_DPC_STATUS_INTERRUPT);
+-		return IRQ_HANDLED;
+-	}
+-
+-	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID,
+-			     &source);
+-
+-	dev_info(dev, "DPC containment event, status:%#06x source:%#06x\n",
+-		status, source);
+-
+-	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
+-	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
+-
+-	dev_warn(dev, "DPC %s detected, remove downstream devices\n",
+-		 (reason == 0) ? "unmasked uncorrectable error" :
+-		 (reason == 1) ? "ERR_NONFATAL" :
+-		 (reason == 2) ? "ERR_FATAL" :
+-		 (ext_reason == 0) ? "RP PIO error" :
+-		 (ext_reason == 1) ? "software trigger" :
+-				     "reserved error");
+-	/* show RP PIO error detail information */
+-	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
+-		dpc_process_rp_pio_error(dpc);
+-
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 			      PCI_EXP_DPC_STATUS_INTERRUPT);
+ 	if (status & PCI_EXP_DPC_STATUS_TRIGGER)
+-- 
+2.14.3
