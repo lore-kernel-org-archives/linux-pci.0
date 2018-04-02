@@ -1,97 +1,93 @@
-Return-Path: <SRS0=pQir=HR=gmail.com=mr.nuke.me@kernel.org>
-Return-Path: <SRS0=pQir=HR=gmail.com=mr.nuke.me@kernel.org>
-Subject: Re: [PATCH RESEND] PCI/AER: Use a common function to print AER error
- bits
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
- gregkh@linuxfoundation.org, fred@fredlawl.com, linux-kernel@vger.kernel.org,
- alex_gagniuc@dellteam.com, austin_bolen@dell.com, keith.busch@intel.com
-References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
- <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
-From: "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <12343e44-2d8a-51e1-a0be-e6804e9bd8a3@gmail.com>
-Date: Sat, 28 Apr 2018 11:46:22 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ste-pvt-msa2.bahnhof.se ([213.80.101.71]:36267 "EHLO
+        ste-pvt-msa2.bahnhof.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756523AbeDBS4B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 14:56:01 -0400
+Date: Mon, 2 Apr 2018 20:47:01 +0200
+From: Niklas Cassel <nks@flawful.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>,
+        cyrille.pitchen@free-electrons.com,
+        Alan Douglas <adouglas@cadence.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sekhar Nori <nsekhar@ti.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Niklas Cassel <niklass@axis.com>,
+        John Keeping <john@metanate.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 09/12] PCI: endpoint: Make
+ epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar
+Message-ID: <20180402184701.GA23587@flawful.org>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+ <20180328115018.31921-10-niklas.cassel@axis.com>
+ <ac3131cb-468d-5143-62a4-68d6e6b47e82@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ac3131cb-468d-5143-62a4-68d6e6b47e82@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/27/2018 05:43 PM, Bjorn Helgaas wrote:
-> On Tue, Apr 17, 2018 at 12:09:43PM -0500, Alexandru Gagniuc wrote:
->> On errors reported from CPER, cper_print_bits() was used to log the
->> AER bits. This resulted in hard-to-understand messages, without a
->> prefix. Instead use __aer_print_error() for both native AER and CPER
->> to provide a more consistent log format.
->>
->> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
->> ---
->>   drivers/pci/pcie/aer/aerdrv_errprint.c | 16 +++++++++-------
->>   1 file changed, 9 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
->> index cfc89dd57831..cfae4d52f848 100644
->> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
->> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
->> @@ -216,28 +216,30 @@ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
->>   void cper_print_aer(struct pci_dev *dev, int aer_severity,
->>   		    struct aer_capability_regs *aer)
->>   {
->> -	int layer, agent, status_strs_size, tlp_header_valid = 0;
->> +	int layer, agent, tlp_header_valid = 0;
->>   	u32 status, mask;
->> -	const char **status_strs;
->> +	struct aer_err_info info;
->>   
->>   	if (aer_severity == AER_CORRECTABLE) {
->>   		status = aer->cor_status;
->>   		mask = aer->cor_mask;
->> -		status_strs = aer_correctable_error_string;
->> -		status_strs_size = ARRAY_SIZE(aer_correctable_error_string);
->>   	} else {
->>   		status = aer->uncor_status;
->>   		mask = aer->uncor_mask;
->> -		status_strs = aer_uncorrectable_error_string;
->> -		status_strs_size = ARRAY_SIZE(aer_uncorrectable_error_string);
->>   		tlp_header_valid = status & AER_LOG_TLP_MASKS;
->>   	}
->>   
->>   	layer = AER_GET_LAYER_ERROR(aer_severity, status);
->>   	agent = AER_GET_AGENT(aer_severity, status);
->>   
->> +	memset(&info, 0, sizeof(info));
->> +	info.severity = aer_severity;
->> +	info.status = status;
->> +	info.mask = mask;
->> +	info.first_error = 0x1f;
+On Thu, Mar 29, 2018 at 03:30:23PM +0530, Kishon Vijay Abraham I wrote:
+> Hi Niklas,
 > 
-> I like this patch a lot, but where does this "first_error = 0x1f" come
-> from?
+> On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
+> > Make epc->ops->clear_bar()/pci_epc_clear_bar() take struct *epf_bar.
+> > 
+> > This is needed so that epc->ops->clear_bar() can clear the BAR pair,
+> > if the BAR is 64-bits wide.
+> > 
+> > This also makes it possible for pci_epc_clear_bar() to sanity check
+> > the flags.
+> > 
+> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > ---
+> >  drivers/pci/cadence/pcie-cadence-ep.c         |  3 ++-
+> >  drivers/pci/dwc/pcie-designware-ep.c          | 13 ++++++++++---
+> >  drivers/pci/endpoint/functions/pci-epf-test.c |  5 ++++-
+> >  drivers/pci/endpoint/pci-epc-core.c           |  7 ++++---
+> >  include/linux/pci-epc.h                       |  5 +++--
+> >  5 files changed, 23 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
+> > index 2905e098678c..3d8283e450a9 100644
+> > --- a/drivers/pci/cadence/pcie-cadence-ep.c
+> > +++ b/drivers/pci/cadence/pcie-cadence-ep.c
+> > @@ -145,10 +145,11 @@ static int cdns_pcie_ep_set_bar(struct pci_epc *epc, u8 fn,
+> >  }
+> >  
+> >  static void cdns_pcie_ep_clear_bar(struct pci_epc *epc, u8 fn,
+> > -				   enum pci_barno bar)
+> > +				   struct pci_epf_bar *epf_bar)
+> >  {
+> >  	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+> >  	struct cdns_pcie *pcie = &ep->pcie;
+> > +	enum pci_barno bar = epf_bar->barno;
+> >  	u32 reg, cfg, b, ctrl;
+> >  
+> >  	if (bar < BAR_4) {
+> > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> > index 571b90f88d84..cc4d8381c1dc 100644
+> > --- a/drivers/pci/dwc/pcie-designware-ep.c
+> > +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> > @@ -19,7 +19,8 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+> >  	pci_epc_linkup(epc);
+> >  }
+> >  
+> > -void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+> > +static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar,
+> > +				   int flags)
+> 
+> Looks like the 'flags' are not used anywhere here?
 
-aer_(un)correctable_error_string don't go to [0x1f], so this guarantees 
-us we don't print "(First)".
+Hello Kishon,
 
-> I assume this is supposed to be the "First Error Pointer" in the
-> Advanced Error Capabilities and Control register (PCIe r4.0, sec
-> 7.8.4.7).  There is a "cap_control" field in struct
-> aer_capability_regs; should we be using that here?
+That is correct, this patch is simply refactoring, flags is first used
+in patch 11/12, since I didn't want to refactor + add new code in the
+same commit.
 
-There is a way to extract it from the PCI regs, and it's quite simple. 
-IIRC, it should be all f's when the capability is not implemented. I 
-wanted to avoid any further parsing of PCI regs in this patch.
-
-I can see a way to use even more common printk code, but that requires 
-validating the PCI regs we get from firmware. That means we need to make 
-a guarantee about CPER that is beyond the scope of this patch.
-
-Alex
-
->> +
->>   	pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
->> -	cper_print_bits("", status, status_strs, status_strs_size);
->> +	__aer_print_error(dev, &info);
->>   	pci_err(dev, "aer_layer=%s, aer_agent=%s\n",
->>   		aer_error_layer[layer], aer_agent_string[agent]);
->>   
->> -- 
->> 2.14.3
->>
+Kind regards,
+Niklas
