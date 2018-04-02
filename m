@@ -1,74 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:34804 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753168AbeDZTcS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2018 15:32:18 -0400
-Subject: Re: [PATCH 1/2] PCI: Add pci_bus_specific_read_dev_vendor_id() to
- workaround PCI switch specific issues prior to accessing newly added endpoint
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, Alex Williamson <alex.williamson@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <16461819-82a1-8122-4a30-842f9a078988@oracle.com>
- <201804261426.2HZUSMma%fengguang.wu@intel.com>
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Message-ID: <32d9b7ce-0993-c749-3285-a51146fe37d6@oracle.com>
-Date: Thu, 26 Apr 2018 15:32:00 -0400
+Received: from mail-qt0-f177.google.com ([209.85.216.177]:45544 "EHLO
+        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754505AbeDBVRe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 17:17:34 -0400
+Received: by mail-qt0-f177.google.com with SMTP id f8so17023855qtg.12
+        for <linux-pci@vger.kernel.org>; Mon, 02 Apr 2018 14:17:34 -0700 (PDT)
+Date: Mon, 2 Apr 2018 14:17:29 -0700
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        alexander.duyck@gmail.com, john.fastabend@gmail.com,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Donald Dutile <ddutile@redhat.com>, oss-drivers@netronome.com
+Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
+Message-ID: <20180402141729.4576365d@cakuba.netronome.com>
+In-Reply-To: <20180330114905.GA10246@infradead.org>
+References: <20180329182231.32151-1-jakub.kicinski@netronome.com>
+        <20180330114905.GA10246@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <201804261426.2HZUSMma%fengguang.wu@intel.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 04/26/2018 02:26 AM, kbuild test robot wrote:
-> Hi James,
+On Fri, 30 Mar 2018 04:49:05 -0700, Christoph Hellwig wrote:
+> On Thu, Mar 29, 2018 at 11:22:31AM -0700, Jakub Kicinski wrote:
+> > Some user space depends on driver allowing sriov_totalvfs to be
+> > enabled.  
 > 
-> Thank you for the patch! Yet something to improve:
+> I can't make sene of this sentence.  Can you explain what user space
+> code depends on what semantics?  The sriov_totalvfs file should show
+> up for any device supporting SR-IOV as far as I can tell.
+
+Ugh, I took me a while to understand what I meant myself...  So what I
+meant is that this should generally work:
+
+# cat .../sriov_totalvfs > .../sriov_numvfs
+
+I.e. one should be able to "enable" the number of VFs advertised in
+sriov_totalvfs.  I will rephrase!
+
+> > For devices which VF support depends on loaded FW we
+> > have the pci_sriov_{g,s}et_totalvfs() API.  However, this API
+> > uses 0 as a special "unset" value, meaning drivers can't limit
+> > sriov_totalvfs to 0.  Change the special value to be U16_MAX.
+> > Use simple min() to determine actual totalvfs.  
 > 
-> [auto build test ERROR on pci/next]
-> [also build test ERROR on v4.17-rc2 next-20180424]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/James-Puthukattukaran/PCI-SUpport-to-workaround-bus-level-HW-issues/20180426-092305
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-> config: ia64-allnoconfig (attached as .config)
-> compiler: ia64-linux-gcc (GCC) 7.2.0
-> reproduce:
->         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=ia64 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    drivers/pci/probe.o: In function `pci_bus_read_dev_vendor_id':
->>> probe.c:(.text+0x3e02): undefined reference to `pci_bus_specific_read_dev_vendor_id'
+> Please use a PCI_MAX_VFS or similar define instead of plain U16_MAX or ~0.
 
-Alex/Sinan -
-
-Would it be an acceptable fix for this problem?
-
-
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2097,6 +2097,13 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
- 	return true;
- }
- 
-+int __weak pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn, 
-+					u32 *l, int timeout)
-+{
-+	return -ENOTTY;
-+}
-+
-+
- bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 				int timeout)
- {
-
-
-I ran the repro steps and it completes without issues. In addition, I will fix the typos Alex pointed out in the last submission and resubmit.
-thanks
-James
+I think I may just go with what I think Alex is suggesting and "unset"
+the value to total_VFs.
