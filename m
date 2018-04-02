@@ -1,262 +1,193 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v2 07/10] PCI: Convert of_pci_get_host_bridge_resources() users to devm variant
-Date: Mon, 30 Apr 2018 07:48:41 +0200
-Message-Id: <ed3e6df4feca5febefa14716d62aaddd5b4a39d1.1525067324.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+Return-Path: <SRS0=VoBb=GX=intel.com=jacob.e.keller@kernel.org>
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Tal Gilboa <talgi@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>
+CC: Tariq Toukan <tariqt@mellanox.com>, Ariel Elior <ariel.elior@cavium.com>,
+	Ganesh Goudar <ganeshgr@chelsio.com>, "Kirsher, Jeffrey T"
+	<jeffrey.t.kirsher@intel.com>, "everest-linux-l2@cavium.com"
+	<everest-linux-l2@cavium.com>, "intel-wired-lan@lists.osuosl.org"
+	<intel-wired-lan@lists.osuosl.org>, "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v5 03/14] PCI: Add pcie_bandwidth_capable() to compute
+ max supported link bandwidth
+Date: Mon, 2 Apr 2018 16:00:16 +0000
+Message-ID: <02874ECE860811409154E81DA85FBB5882D4980A@ORSMSX115.amr.corp.intel.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152244390359.135666.14890735614456271032.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <31e66048-e8b8-47ba-baf5-023560b4c124@mellanox.com>
+ <20180402004049.GA131023@bhelgaas-glaptop.roam.corp.google.com>
+ <50346f44-de3f-b226-69ad-6de45e94e261@mellanox.com>
+ <20180402140501.GA244675@bhelgaas-glaptop.roam.corp.google.com>
+ <3decbba0-74a2-c906-b5b4-a04f261860eb@mellanox.com>
+In-Reply-To: <3decbba0-74a2-c906-b5b4-a04f261860eb@mellanox.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
-
-Straightforward for all of them, no more leaks afterwards.
-
-CC: Jingoo Han <jingoohan1@gmail.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
-Acked-by: Jingoo Han <jingoo1han@gmail.com>
----
- drivers/pci/dwc/pcie-designware-host.c | 2 +-
- drivers/pci/host/pci-aardvark.c        | 5 ++---
- drivers/pci/host/pci-ftpci100.c        | 4 ++--
- drivers/pci/host/pci-v3-semi.c         | 3 ++-
- drivers/pci/host/pci-versatile.c       | 3 +--
- drivers/pci/host/pci-xgene.c           | 3 ++-
- drivers/pci/host/pcie-altera.c         | 5 ++---
- drivers/pci/host/pcie-iproc-platform.c | 4 ++--
- drivers/pci/host/pcie-rcar.c           | 5 ++---
- drivers/pci/host/pcie-rockchip.c       | 4 ++--
- drivers/pci/host/pcie-xilinx-nwl.c     | 4 ++--
- drivers/pci/host/pcie-xilinx.c         | 4 ++--
- drivers/pci/of.c                       | 4 ++--
- 13 files changed, 24 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 6c409079d514..a8f6ab54b4c0 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -342,7 +342,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (!bridge)
- 		return -ENOMEM;
- 
--	ret = of_pci_get_host_bridge_resources(np, 0, 0xff,
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
- 					&bridge->windows, &pp->io_base);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 9abf549631b4..1e048dd806dc 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -822,14 +822,13 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- {
- 	int err, res_valid = 0;
- 	struct device *dev = &pcie->pdev->dev;
--	struct device_node *np = dev->of_node;
- 	struct resource_entry *win, *tmp;
- 	resource_size_t iobase;
- 
- 	INIT_LIST_HEAD(&pcie->resources);
- 
--	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
--					       &iobase);
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+						    &pcie->resources, &iobase);
- 	if (err)
- 		return err;
- 
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-index 5008fd87956a..87748eaeaaed 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -476,8 +476,8 @@ static int faraday_pci_probe(struct platform_device *pdev)
- 	if (IS_ERR(p->base))
- 		return PTR_ERR(p->base);
- 
--	ret = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
--					       &res, &io_base);
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+						    &res, &io_base);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/host/pci-v3-semi.c
-index 0a4dea796663..167bf6f6b378 100644
---- a/drivers/pci/host/pci-v3-semi.c
-+++ b/drivers/pci/host/pci-v3-semi.c
-@@ -791,7 +791,8 @@ static int v3_pci_probe(struct platform_device *pdev)
- 	if (IS_ERR(v3->config_base))
- 		return PTR_ERR(v3->config_base);
- 
--	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &io_base);
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
-+						    &io_base);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-index 5b3876f5312b..ff2cd12b3978 100644
---- a/drivers/pci/host/pci-versatile.c
-+++ b/drivers/pci/host/pci-versatile.c
-@@ -64,11 +64,10 @@ static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
- 						     struct list_head *res)
- {
- 	int err, mem = 1, res_valid = 0;
--	struct device_node *np = dev->of_node;
- 	resource_size_t iobase;
- 	struct resource_entry *win, *tmp;
- 
--	err = of_pci_get_host_bridge_resources(np, 0, 0xff, res, &iobase);
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, res, &iobase);
- 	if (err)
- 		return err;
- 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index 0a0d7ee6d3c9..7b3ed6e34b6c 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -632,7 +632,8 @@ static int xgene_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
--	ret = of_pci_get_host_bridge_resources(dn, 0, 0xff, &res, &iobase);
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
-+						    &iobase);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index a6af62e0256d..49410c7ba0cc 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -488,11 +488,10 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
- {
- 	int err, res_valid = 0;
- 	struct device *dev = &pcie->pdev->dev;
--	struct device_node *np = dev->of_node;
- 	struct resource_entry *win;
- 
--	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
--					       NULL);
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff
-+						    &pcie->resources, NULL);
- 	if (err)
- 		return err;
- 
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index e764a2a2693c..99c2022813e4 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -99,8 +99,8 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 		pcie->phy = NULL;
- 	}
- 
--	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &resources,
--					       &iobase);
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &resources,
-+						    &iobase);
- 	if (ret) {
- 		dev_err(dev, "unable to get PCI host bridge resources\n");
- 		return ret;
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 6ab28f29ac6a..6eb36c924983 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1067,12 +1067,11 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
- {
- 	int err;
- 	struct device *dev = pci->dev;
--	struct device_node *np = dev->of_node;
- 	resource_size_t iobase;
- 	struct resource_entry *win, *tmp;
- 
--	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
--					       &iobase);
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+						    &pci->resources, &iobase);
- 	if (err)
- 		return err;
- 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index f1e8f97ea1fb..27b97fcddf15 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1560,8 +1560,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	if (err < 0)
- 		goto err_deinit_port;
- 
--	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
--					       &res, &io_base);
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+						    &res, &io_base);
- 	if (err)
- 		goto err_remove_irq_domain;
- 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 4839ae578711..64df768c795c 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -825,7 +825,6 @@ static const struct of_device_id nwl_pcie_of_match[] = {
- static int nwl_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
--	struct device_node *node = dev->of_node;
- 	struct nwl_pcie *pcie;
- 	struct pci_bus *bus;
- 	struct pci_bus *child;
-@@ -855,7 +854,8 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
--	err = of_pci_get_host_bridge_resources(node, 0, 0xff, &res, &iobase);
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
-+						    &iobase);
- 	if (err) {
- 		dev_err(dev, "Getting bridge resources failed\n");
- 		return err;
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 0ad188effc09..88c96e5669e0 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -643,8 +643,8 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
--	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff, &res,
--					       &iobase);
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
-+						    &iobase);
- 	if (err) {
- 		dev_err(dev, "Getting bridge resources failed\n");
- 		return err;
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index f16b343d3b85..5a88d46a41b7 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -645,12 +645,12 @@ int pci_parse_request_of_pci_ranges(struct device *dev,
- 				    struct resource **bus_range)
- {
- 	int err, res_valid = 0;
--	struct device_node *np = dev->of_node;
- 	resource_size_t iobase;
- 	struct resource_entry *win, *tmp;
- 
- 	INIT_LIST_HEAD(resources);
--	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, resources,
-+						    &iobase);
- 	if (err)
- 		return err;
- 
--- 
-2.13.6
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBUYWwgR2lsYm9hIFttYWlsdG86
+dGFsZ2lAbWVsbGFub3guY29tXQ0KPiBTZW50OiBNb25kYXksIEFwcmlsIDAyLCAyMDE4IDc6MzQg
+QU0NCj4gVG86IEJqb3JuIEhlbGdhYXMgPGhlbGdhYXNAa2VybmVsLm9yZz4NCj4gQ2M6IFRhcmlx
+IFRvdWthbiA8dGFyaXF0QG1lbGxhbm94LmNvbT47IEtlbGxlciwgSmFjb2IgRQ0KPiA8amFjb2Iu
+ZS5rZWxsZXJAaW50ZWwuY29tPjsgQXJpZWwgRWxpb3IgPGFyaWVsLmVsaW9yQGNhdml1bS5jb20+
+OyBHYW5lc2gNCj4gR291ZGFyIDxnYW5lc2hnckBjaGVsc2lvLmNvbT47IEtpcnNoZXIsIEplZmZy
+ZXkgVA0KPiA8amVmZnJleS50LmtpcnNoZXJAaW50ZWwuY29tPjsgZXZlcmVzdC1saW51eC1sMkBj
+YXZpdW0uY29tOyBpbnRlbC13aXJlZC0NCj4gbGFuQGxpc3RzLm9zdW9zbC5vcmc7IG5ldGRldkB2
+Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+IGxpbnV4LXBj
+aUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2NSAwMy8xNF0gUENJOiBB
+ZGQgcGNpZV9iYW5kd2lkdGhfY2FwYWJsZSgpIHRvIGNvbXB1dGUNCj4gbWF4IHN1cHBvcnRlZCBs
+aW5rIGJhbmR3aWR0aA0KPiANCj4gT24gNC8yLzIwMTggNTowNSBQTSwgQmpvcm4gSGVsZ2FhcyB3
+cm90ZToNCj4gPiBPbiBNb24sIEFwciAwMiwgMjAxOCBhdCAxMDozNDo1OEFNICswMzAwLCBUYWwg
+R2lsYm9hIHdyb3RlOg0KPiA+PiBPbiA0LzIvMjAxOCAzOjQwIEFNLCBCam9ybiBIZWxnYWFzIHdy
+b3RlOg0KPiA+Pj4gT24gU3VuLCBBcHIgMDEsIDIwMTggYXQgMTE6Mzg6NTNQTSArMDMwMCwgVGFs
+IEdpbGJvYSB3cm90ZToNCj4gPj4+PiBPbiAzLzMxLzIwMTggMTI6MDUgQU0sIEJqb3JuIEhlbGdh
+YXMgd3JvdGU6DQo+ID4+Pj4+IEZyb206IFRhbCBHaWxib2EgPHRhbGdpQG1lbGxhbm94LmNvbT4N
+Cj4gPj4+Pj4NCj4gPj4+Pj4gQWRkIHBjaWVfYmFuZHdpZHRoX2NhcGFibGUoKSB0byBjb21wdXRl
+IHRoZSBtYXggbGluayBiYW5kd2lkdGgNCj4gc3VwcG9ydGVkIGJ5DQo+ID4+Pj4+IGEgZGV2aWNl
+LCBiYXNlZCBvbiB0aGUgbWF4IGxpbmsgc3BlZWQgYW5kIHdpZHRoLCBhZGp1c3RlZCBieSB0aGUN
+Cj4gZW5jb2RpbmcNCj4gPj4+Pj4gb3ZlcmhlYWQuDQo+ID4+Pj4+DQo+ID4+Pj4+IFRoZSBtYXhp
+bXVtIGJhbmR3aWR0aCBvZiB0aGUgbGluayBpcyBjb21wdXRlZCBhczoNCj4gPj4+Pj4NCj4gPj4+
+Pj4gICAgICBtYXhfbGlua19zcGVlZCAqIG1heF9saW5rX3dpZHRoICogKDEgLSBlbmNvZGluZ19v
+dmVyaGVhZCkNCj4gPj4+Pj4NCj4gPj4+Pj4gVGhlIGVuY29kaW5nIG92ZXJoZWFkIGlzIGFib3V0
+IDIwJSBmb3IgMi41IGFuZCA1LjAgR1QvcyBsaW5rcyB1c2luZw0KPiA4Yi8xMGINCj4gPj4+Pj4g
+ZW5jb2RpbmcsIGFuZCBhYm91dCAxLjUlIGZvciA4IEdUL3Mgb3IgaGlnaGVyIHNwZWVkIGxpbmtz
+IHVzaW5nIDEyOGIvMTMwYg0KPiA+Pj4+PiBlbmNvZGluZy4NCj4gPj4+Pj4NCj4gPj4+Pj4gU2ln
+bmVkLW9mZi1ieTogVGFsIEdpbGJvYSA8dGFsZ2lAbWVsbGFub3guY29tPg0KPiA+Pj4+PiBbYmhl
+bGdhYXM6IGFkanVzdCBmb3IgcGNpZV9nZXRfc3BlZWRfY2FwKCkgYW5kIHBjaWVfZ2V0X3dpZHRo
+X2NhcCgpDQo+ID4+Pj4+IHNpZ25hdHVyZXMsIGRvbid0IGV4cG9ydCBvdXRzaWRlIGRyaXZlcnMv
+cGNpXQ0KPiA+Pj4+PiBTaWduZWQtb2ZmLWJ5OiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29n
+bGUuY29tPg0KPiA+Pj4+PiBSZXZpZXdlZC1ieTogVGFyaXEgVG91a2FuIDx0YXJpcXRAbWVsbGFu
+b3guY29tPg0KPiA+Pj4+PiAtLS0NCj4gPj4+Pj4gICAgIGRyaXZlcnMvcGNpL3BjaS5jIHwgICAy
+MSArKysrKysrKysrKysrKysrKysrKysNCj4gPj4+Pj4gICAgIGRyaXZlcnMvcGNpL3BjaS5oIHwg
+ICAgOSArKysrKysrKysNCj4gPj4+Pj4gICAgIDIgZmlsZXMgY2hhbmdlZCwgMzAgaW5zZXJ0aW9u
+cygrKQ0KPiA+Pj4+Pg0KPiA+Pj4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcGNpLmMgYi9k
+cml2ZXJzL3BjaS9wY2kuYw0KPiA+Pj4+PiBpbmRleCA0MzA3NWJlNzkzODguLjljZTg5ZTI1NDE5
+NyAxMDA2NDQNCj4gPj4+Pj4gLS0tIGEvZHJpdmVycy9wY2kvcGNpLmMNCj4gPj4+Pj4gKysrIGIv
+ZHJpdmVycy9wY2kvcGNpLmMNCj4gPj4+Pj4gQEAgLTUyMDgsNiArNTIwOCwyNyBAQCBlbnVtIHBj
+aWVfbGlua193aWR0aA0KPiBwY2llX2dldF93aWR0aF9jYXAoc3RydWN0IHBjaV9kZXYgKmRldikN
+Cj4gPj4+Pj4gICAgIAlyZXR1cm4gUENJRV9MTktfV0lEVEhfVU5LTk9XTjsNCj4gPj4+Pj4gICAg
+IH0NCj4gPj4+Pj4gKy8qKg0KPiA+Pj4+PiArICogcGNpZV9iYW5kd2lkdGhfY2FwYWJsZSAtIGNh
+bGN1bGF0ZXMgYSBQQ0kgZGV2aWNlJ3MgbGluayBiYW5kd2lkdGgNCj4gY2FwYWJpbGl0eQ0KPiA+
+Pj4+PiArICogQGRldjogUENJIGRldmljZQ0KPiA+Pj4+PiArICogQHNwZWVkOiBzdG9yYWdlIGZv
+ciBsaW5rIHNwZWVkDQo+ID4+Pj4+ICsgKiBAd2lkdGg6IHN0b3JhZ2UgZm9yIGxpbmsgd2lkdGgN
+Cj4gPj4+Pj4gKyAqDQo+ID4+Pj4+ICsgKiBDYWxjdWxhdGUgYSBQQ0kgZGV2aWNlJ3MgbGluayBi
+YW5kd2lkdGggYnkgcXVlcnlpbmcgZm9yIGl0cyBsaW5rIHNwZWVkDQo+ID4+Pj4+ICsgKiBhbmQg
+d2lkdGgsIG11bHRpcGx5aW5nIHRoZW0sIGFuZCBhcHBseWluZyBlbmNvZGluZyBvdmVyaGVhZC4N
+Cj4gPj4+Pj4gKyAqLw0KPiA+Pj4+PiArdTMyIHBjaWVfYmFuZHdpZHRoX2NhcGFibGUoc3RydWN0
+IHBjaV9kZXYgKmRldiwgZW51bSBwY2lfYnVzX3NwZWVkDQo+ICpzcGVlZCwNCj4gPj4+Pj4gKwkJ
+CSAgIGVudW0gcGNpZV9saW5rX3dpZHRoICp3aWR0aCkNCj4gPj4+Pj4gK3sNCj4gPj4+Pj4gKwkq
+c3BlZWQgPSBwY2llX2dldF9zcGVlZF9jYXAoZGV2KTsNCj4gPj4+Pj4gKwkqd2lkdGggPSBwY2ll
+X2dldF93aWR0aF9jYXAoZGV2KTsNCj4gPj4+Pj4gKw0KPiA+Pj4+PiArCWlmICgqc3BlZWQgPT0g
+UENJX1NQRUVEX1VOS05PV04gfHwgKndpZHRoID09DQo+IFBDSUVfTE5LX1dJRFRIX1VOS05PV04p
+DQo+ID4+Pj4+ICsJCXJldHVybiAwOw0KPiA+Pj4+PiArDQo+ID4+Pj4+ICsJcmV0dXJuICp3aWR0
+aCAqIFBDSUVfU1BFRUQyTUJTX0VOQygqc3BlZWQpOw0KPiA+Pj4+PiArfQ0KPiA+Pj4+PiArDQo+
+ID4+Pj4+ICAgICAvKioNCj4gPj4+Pj4gICAgICAqIHBjaV9zZWxlY3RfYmFycyAtIE1ha2UgQkFS
+IG1hc2sgZnJvbSB0aGUgdHlwZSBvZiByZXNvdXJjZQ0KPiA+Pj4+PiAgICAgICogQGRldjogdGhl
+IFBDSSBkZXZpY2UgZm9yIHdoaWNoIEJBUiBtYXNrIGlzIG1hZGUNCj4gPj4+Pj4gZGlmZiAtLWdp
+dCBhL2RyaXZlcnMvcGNpL3BjaS5oIGIvZHJpdmVycy9wY2kvcGNpLmgNCj4gPj4+Pj4gaW5kZXgg
+NjY3MzhmMTA1MGMwLi4yYTUwMTcyYjk4MDMgMTAwNjQ0DQo+ID4+Pj4+IC0tLSBhL2RyaXZlcnMv
+cGNpL3BjaS5oDQo+ID4+Pj4+ICsrKyBiL2RyaXZlcnMvcGNpL3BjaS5oDQo+ID4+Pj4+IEBAIC0y
+NjEsOCArMjYxLDE3IEBAIHZvaWQgcGNpX2Rpc2FibGVfYnJpZGdlX3dpbmRvdyhzdHJ1Y3QgcGNp
+X2Rldg0KPiAqZGV2KTsNCj4gPj4+Pj4gICAgIAkgKHNwZWVkKSA9PSBQQ0lFX1NQRUVEXzJfNUdU
+ID8gIjIuNSBHVC9zIiA6IFwNCj4gPj4+Pj4gICAgIAkgIlVua25vd24gc3BlZWQiKQ0KPiA+Pj4+
+PiArLyogUENJZSBzcGVlZCB0byBNYi9zIHdpdGggZW5jb2Rpbmcgb3ZlcmhlYWQ6IDIwJSBmb3Ig
+Z2VuMiwgfjEuNSUgZm9yDQo+IGdlbjMgKi8NCj4gPj4+Pj4gKyNkZWZpbmUgUENJRV9TUEVFRDJN
+QlNfRU5DKHNwZWVkKSBcDQo+ID4+Pj4NCj4gPj4+PiBNaXNzaW5nIGdlbjQuDQo+ID4+Pg0KPiA+
+Pj4gSSBtYWRlIGl0ICJnZW4zKyIuICBJIHRoaW5rIHRoYXQncyBhY2N1cmF0ZSwgaXNuJ3QgaXQ/
+ICBUaGUgc3BlYw0KPiA+Pj4gZG9lc24ndCBzZWVtIHRvIGFjdHVhbGx5IHVzZSAiZ2VuMyIgYXMg
+YSBzcGVjaWZpYyB0ZXJtLCBidXQgc2VjIDQuMi4yDQo+ID4+PiBzYXlzIHJhdGVzIG9mIDggR1Qv
+cyBvciBoaWdoZXIgKHdoaWNoIEkgdGhpbmsgaW5jbHVkZXMgZ2VuMyBhbmQgZ2VuNCkNCj4gPj4+
+IHVzZSAxMjhiLzEzMGIgZW5jb2RpbmcuDQo+ID4+Pg0KPiA+Pg0KPiA+PiBJIG1lYW50IHRoYXQg
+UENJRV9TUEVFRF8xNl8wR1Qgd2lsbCByZXR1cm4gMCBmcm9tIHRoaXMgbWFjcm8gc2luY2UgaXQg
+d2Fzbid0DQo+ID4+IGFkZGVkLiBOZWVkIHRvIHJldHVybiAxNTc1NC4NCj4gPg0KPiA+IE9oLCBk
+dWgsIG9mIGNvdXJzZSEgIFNvcnJ5IGZvciBiZWluZyBkZW5zZS4gIFdoYXQgYWJvdXQgdGhlIGZv
+bGxvd2luZz8NCj4gPiBJIGluY2x1ZGVkIHRoZSBjYWxjdWxhdGlvbiBhcyBvcHBvc2VkIHRvIGp1
+c3QgdGhlIG1hZ2ljIG51bWJlcnMgdG8gdHJ5DQo+ID4gdG8gbWFrZSBpdCBjbGVhciBob3cgdGhl
+eSdyZSBkZXJpdmVkLiAgVGhpcyBoYXMgdGhlIGRpc2FkdmFudGFnZSBvZg0KPiA+IHRydW5jYXRp
+bmcgdGhlIHJlc3VsdCBpbnN0ZWFkIG9mIHJvdW5kaW5nLCBidXQgSSBkb3VidCB0aGF0J3MNCj4g
+PiBzaWduaWZpY2FudCBpbiB0aGlzIGNvbnRleHQuICBJZiBpdCBpcywgd2UgY291bGQgdXNlIHRo
+ZSBtYWdpYyBudW1iZXJzDQo+ID4gYW5kIHB1dCB0aGUgY29tcHV0YXRpb24gaW4gYSBjb21tZW50
+Lg0KPiANCj4gV2UgY2FuIGFsd2F5cyB1c2UgRElWX1JPVU5EX1VQKChzcGVlZCAqIGVuY19ub21p
+bmF0b3IpLA0KPiBlbmNfZGVub21pbmF0b3IpLiBJIHRoaW5rIHRoaXMgaXMgY29uZnVzaW5nIGFu
+ZCBzaW5jZSB0aGlzIGludHJvZHVjZXMgYQ0KPiBiYW5kd2lkdGggbGltaXQgSSB3b3VsZCBwcmVm
+ZXIgdG8gZ2l2ZSBhIHdpZGVyIGxpbWl0IHRoYW4gYSB3cm9uZyBvbmUsDQo+IGV2ZW4gaXQgaXMg
+YnkgbGVzcyB0aGFuIDFNYi9zLiBNeSB2b3RlIGlzIGZvciBsZWF2aW5nIGl0IGFzIHlvdSB3cm90
+ZSBiZWxvdy4NCj4gDQo+ID4NCj4gPiBBbm90aGVyIHF1ZXN0aW9uOiB3ZSBjdXJyZW50bHkgZGVh
+bCBpbiBNYi9zLCBub3QgTUIvcy4gIE1iL3MgaGFzIHRoZQ0KPiA+IGFkdmFudGFnZSBvZiBzb3J0
+IG9mIGNvcnJlc3BvbmRpbmcgdG8gdGhlIEdUL3MgbnVtYmVycywgYnV0IHVzaW5nIE1CL3MNCj4g
+PiB3b3VsZCBoYXZlIHRoZSBhZHZhbnRhZ2Ugb2Ygc21hbGxlciBudW1iZXJzIHRoYXQgbWF0Y2gg
+dGhlIHRhYmxlIGhlcmU6DQo+ID4gaHR0cHM6Ly9lbi53aWtpcGVkaWEub3JnL3dpa2kvUENJX0V4
+cHJlc3MjSGlzdG9yeV9hbmRfcmV2aXNpb25zLA0KPiA+IGJ1dCBJIGRvbid0IGtub3cgd2hhdCdz
+IG1vc3QgdHlwaWNhbCBpbiB1c2VyLWZhY2luZyBzaXR1YXRpb25zLg0KPiA+IFdoYXQncyBiZXR0
+ZXI/DQo+IA0KPiBJIGRvbid0IGtub3cgd2hhdCdzIGJldHRlciBidXQgZm9yIG5ldHdvcmsgZGV2
+aWNlcyB3ZSBtZWFzdXJlIGJhbmR3aWR0aA0KPiBpbiBHYi9zLCBzbyBwcmVzZW50aW5nIGJhbmR3
+aWR0aCBpbiBNQi9zIHdvdWxkIG1lYW4gYWRkaXRpb25hbA0KPiBjYWxjdWxhdGlvbnMuIFRoZSB0
+cnV0aCBpcyBJIHdvdWxkIGhhdmUgcHJlZmVyIHRvIHVzZSBHYi9zIGluc3RlYWQgb2YNCj4gTWIv
+cywgYnV0IGFnYWluLCBkb24ndCB3YW50IHRvIGxvc3MgdXAgdG8gMUdiL3MuDQo+IA0KDQpJIHBy
+ZWZlciB0aGlzIHZlcnNpb24gd2l0aCB0aGUgY2FsY3VsYXRpb24gaW4gbGluZSBzaW5jZSBpdCBt
+YWtlcyB0aGUgZGVyaXZhdGlvbiBjbGVhci4gS2VlcGluZyB0aGVtIGluIE1iL3MgbWFrZXMgaXQg
+ZWFzaWVyIHRvIGNvbnZlcnQgdG8gR2Ivcywgd2hpY2ggaXMgd2hhdCBtb3N0IHBlb3BsZSB3b3Vs
+ZCBleHBlY3QuDQoNClRoYW5rcywNCkpha2UNCg0KPiA+DQo+ID4NCj4gPiBjb21taXQgOTQ2NDM1
+NDkxYjM1Yjc3ODIxNTdlOWE0ZDFiZDczMDcxZmJhNzcwOQ0KPiA+IEF1dGhvcjogVGFsIEdpbGJv
+YSA8dGFsZ2lAbWVsbGFub3guY29tPg0KPiA+IERhdGU6ICAgRnJpIE1hciAzMCAwODozMjowMyAy
+MDE4IC0wNTAwDQo+ID4NCj4gPiAgICAgIFBDSTogQWRkIHBjaWVfYmFuZHdpZHRoX2NhcGFibGUo
+KSB0byBjb21wdXRlIG1heCBzdXBwb3J0ZWQgbGluaw0KPiBiYW5kd2lkdGgNCj4gPg0KPiA+ICAg
+ICAgQWRkIHBjaWVfYmFuZHdpZHRoX2NhcGFibGUoKSB0byBjb21wdXRlIHRoZSBtYXggbGluayBi
+YW5kd2lkdGgNCj4gc3VwcG9ydGVkIGJ5DQo+ID4gICAgICBhIGRldmljZSwgYmFzZWQgb24gdGhl
+IG1heCBsaW5rIHNwZWVkIGFuZCB3aWR0aCwgYWRqdXN0ZWQgYnkgdGhlIGVuY29kaW5nDQo+ID4g
+ICAgICBvdmVyaGVhZC4NCj4gPg0KPiA+ICAgICAgVGhlIG1heGltdW0gYmFuZHdpZHRoIG9mIHRo
+ZSBsaW5rIGlzIGNvbXB1dGVkIGFzOg0KPiA+DQo+ID4gICAgICAgIG1heF9saW5rX3dpZHRoICog
+bWF4X2xpbmtfc3BlZWQgKiAoMSAtIGVuY29kaW5nX292ZXJoZWFkKQ0KPiA+DQo+ID4gICAgICAy
+LjUgYW5kIDUuMCBHVC9zIGxpbmtzIHVzZSA4Yi8xMGIgZW5jb2RpbmcsIHdoaWNoIHJlZHVjZXMg
+dGhlIHJhdw0KPiBiYW5kd2lkdGgNCj4gPiAgICAgIGF2YWlsYWJsZSBieSAyMCU7IDguMCBHVC9z
+IGFuZCBmYXN0ZXIgbGlua3MgdXNlIDEyOGIvMTMwYiBlbmNvZGluZywgd2hpY2gNCj4gPiAgICAg
+IHJlZHVjZXMgaXQgYnkgYWJvdXQgMS41JS4NCj4gPg0KPiA+ICAgICAgVGhlIHJlc3VsdCBpcyBp
+biBNYi9zLCBpLmUuLCBtZWdhYml0cy9zZWNvbmQsIG9mIHJhdyBiYW5kd2lkdGguDQo+ID4NCj4g
+PiAgICAgIFNpZ25lZC1vZmYtYnk6IFRhbCBHaWxib2EgPHRhbGdpQG1lbGxhbm94LmNvbT4NCj4g
+PiAgICAgIFtiaGVsZ2FhczogYWRkIDE2IEdUL3MsIGFkanVzdCBmb3IgcGNpZV9nZXRfc3BlZWRf
+Y2FwKCkgYW5kDQo+ID4gICAgICBwY2llX2dldF93aWR0aF9jYXAoKSBzaWduYXR1cmVzLCBkb24n
+dCBleHBvcnQgb3V0c2lkZSBkcml2ZXJzL3BjaV0NCj4gPiAgICAgIFNpZ25lZC1vZmYtYnk6IEJq
+b3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQo+ID4gICAgICBSZXZpZXdlZC1ieTog
+VGFyaXEgVG91a2FuIDx0YXJpcXRAbWVsbGFub3guY29tPg0KPiA+DQo+ID4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvcGNpL3BjaS5jIGIvZHJpdmVycy9wY2kvcGNpLmMNCj4gPiBpbmRleCA0MzA3NWJl
+NzkzODguLmZmMWU3MjA2MDk1MiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9wY2kuYw0K
+PiA+ICsrKyBiL2RyaXZlcnMvcGNpL3BjaS5jDQo+ID4gQEAgLTUyMDgsNiArNTIwOCwyOCBAQCBl
+bnVtIHBjaWVfbGlua193aWR0aCBwY2llX2dldF93aWR0aF9jYXAoc3RydWN0DQo+IHBjaV9kZXYg
+KmRldikNCj4gPiAgIAlyZXR1cm4gUENJRV9MTktfV0lEVEhfVU5LTk9XTjsNCj4gPiAgIH0NCj4g
+Pg0KPiA+ICsvKioNCj4gPiArICogcGNpZV9iYW5kd2lkdGhfY2FwYWJsZSAtIGNhbGN1bGF0ZSBh
+IFBDSSBkZXZpY2UncyBsaW5rIGJhbmR3aWR0aCBjYXBhYmlsaXR5DQo+ID4gKyAqIEBkZXY6IFBD
+SSBkZXZpY2UNCj4gPiArICogQHNwZWVkOiBzdG9yYWdlIGZvciBsaW5rIHNwZWVkDQo+ID4gKyAq
+IEB3aWR0aDogc3RvcmFnZSBmb3IgbGluayB3aWR0aA0KPiA+ICsgKg0KPiA+ICsgKiBDYWxjdWxh
+dGUgYSBQQ0kgZGV2aWNlJ3MgbGluayBiYW5kd2lkdGggYnkgcXVlcnlpbmcgZm9yIGl0cyBsaW5r
+IHNwZWVkDQo+ID4gKyAqIGFuZCB3aWR0aCwgbXVsdGlwbHlpbmcgdGhlbSwgYW5kIGFwcGx5aW5n
+IGVuY29kaW5nIG92ZXJoZWFkLiAgVGhlIHJlc3VsdA0KPiA+ICsgKiBpcyBpbiBNYi9zLCBpLmUu
+LCBtZWdhYml0cy9zZWNvbmQgb2YgcmF3IGJhbmR3aWR0aC4NCj4gPiArICovDQo+ID4gK3UzMiBw
+Y2llX2JhbmR3aWR0aF9jYXBhYmxlKHN0cnVjdCBwY2lfZGV2ICpkZXYsIGVudW0gcGNpX2J1c19z
+cGVlZA0KPiAqc3BlZWQsDQo+ID4gKwkJCSAgIGVudW0gcGNpZV9saW5rX3dpZHRoICp3aWR0aCkN
+Cj4gPiArew0KPiA+ICsJKnNwZWVkID0gcGNpZV9nZXRfc3BlZWRfY2FwKGRldik7DQo+ID4gKwkq
+d2lkdGggPSBwY2llX2dldF93aWR0aF9jYXAoZGV2KTsNCj4gPiArDQo+ID4gKwlpZiAoKnNwZWVk
+ID09IFBDSV9TUEVFRF9VTktOT1dOIHx8ICp3aWR0aCA9PQ0KPiBQQ0lFX0xOS19XSURUSF9VTktO
+T1dOKQ0KPiA+ICsJCXJldHVybiAwOw0KPiA+ICsNCj4gPiArCXJldHVybiAqd2lkdGggKiBQQ0lF
+X1NQRUVEMk1CU19FTkMoKnNwZWVkKTsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgIC8qKg0KPiA+ICAg
+ICogcGNpX3NlbGVjdF9iYXJzIC0gTWFrZSBCQVIgbWFzayBmcm9tIHRoZSB0eXBlIG9mIHJlc291
+cmNlDQo+ID4gICAgKiBAZGV2OiB0aGUgUENJIGRldmljZSBmb3Igd2hpY2ggQkFSIG1hc2sgaXMg
+bWFkZQ0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wY2kuaCBiL2RyaXZlcnMvcGNpL3Bj
+aS5oDQo+ID4gaW5kZXggNjY3MzhmMTA1MGMwLi4zN2Y5Mjk5ZWQ2MjMgMTAwNjQ0DQo+ID4gLS0t
+IGEvZHJpdmVycy9wY2kvcGNpLmgNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9wY2kuaA0KPiA+IEBA
+IC0yNjEsOCArMjYxLDE4IEBAIHZvaWQgcGNpX2Rpc2FibGVfYnJpZGdlX3dpbmRvdyhzdHJ1Y3Qg
+cGNpX2RldiAqZGV2KTsNCj4gPiAgIAkgKHNwZWVkKSA9PSBQQ0lFX1NQRUVEXzJfNUdUID8gIjIu
+NSBHVC9zIiA6IFwNCj4gPiAgIAkgIlVua25vd24gc3BlZWQiKQ0KPiA+DQo+ID4gKy8qIFBDSWUg
+c3BlZWQgdG8gTWIvcyByZWR1Y2VkIGJ5IGVuY29kaW5nIG92ZXJoZWFkICovDQo+ID4gKyNkZWZp
+bmUgUENJRV9TUEVFRDJNQlNfRU5DKHNwZWVkKSBcDQo+ID4gKwkoKHNwZWVkKSA9PSBQQ0lFX1NQ
+RUVEXzE2XzBHVCA/ICgxNjAwMCooMTI4LzEzMCkpIDogXA0KPiA+ICsJIChzcGVlZCkgPT0gUENJ
+RV9TUEVFRF84XzBHVCAgPyAgKDgwMDAqKDEyOC8xMzApKSA6IFwNCj4gPiArCSAoc3BlZWQpID09
+IFBDSUVfU1BFRURfNV8wR1QgID8gICg1MDAwKig4LzEwKSkgOiBcDQo+ID4gKwkgKHNwZWVkKSA9
+PSBQQ0lFX1NQRUVEXzJfNUdUICA/ICAoMjUwMCooOC8xMCkpIDogXA0KPiA+ICsJIDApDQo+ID4g
+Kw0KPiA+ICAgZW51bSBwY2lfYnVzX3NwZWVkIHBjaWVfZ2V0X3NwZWVkX2NhcChzdHJ1Y3QgcGNp
+X2RldiAqZGV2KTsNCj4gPiAgIGVudW0gcGNpZV9saW5rX3dpZHRoIHBjaWVfZ2V0X3dpZHRoX2Nh
+cChzdHJ1Y3QgcGNpX2RldiAqZGV2KTsNCj4gPiArdTMyIHBjaWVfYmFuZHdpZHRoX2NhcGFibGUo
+c3RydWN0IHBjaV9kZXYgKmRldiwgZW51bSBwY2lfYnVzX3NwZWVkDQo+ICpzcGVlZCwNCj4gPiAr
+CQkJICAgZW51bSBwY2llX2xpbmtfd2lkdGggKndpZHRoKTsNCj4gPg0KPiA+ICAgLyogU2luZ2xl
+IFJvb3QgSS9PIFZpcnR1YWxpemF0aW9uICovDQo+ID4gICBzdHJ1Y3QgcGNpX3NyaW92IHsNCj4g
+Pg0K
