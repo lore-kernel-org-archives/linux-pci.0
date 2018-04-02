@@ -1,85 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 10 Apr 2018 14:50:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
- Extended Tags
-Message-ID: <20180410195008.GE54986@bhelgaas-glaptop.roam.corp.google.com>
-References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
- <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:46177 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753322AbeDBVSu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 17:18:50 -0400
+Received: by mail-qk0-f173.google.com with SMTP id p67so8010735qke.13
+        for <linux-pci@vger.kernel.org>; Mon, 02 Apr 2018 14:18:50 -0700 (PDT)
+Date: Mon, 2 Apr 2018 14:18:45 -0700
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>,
+        Sathya Perla <sathya.perla@broadcom.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        John Fastabend <john.fastabend@gmail.com>,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Donald Dutile <ddutile@redhat.com>, oss-drivers@netronome.com
+Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
+Message-ID: <20180402141845.46e6c280@cakuba.netronome.com>
+In-Reply-To: <CAKgT0UfihwxLWf7BqP=Z87S83DPoqaR4MDq8UT8R4D6Puspy6w@mail.gmail.com>
+References: <20180329182231.32151-1-jakub.kicinski@netronome.com>
+        <20180330114905.GA10246@infradead.org>
+        <CAKgT0UfihwxLWf7BqP=Z87S83DPoqaR4MDq8UT8R4D6Puspy6w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sulrich@codeaurora.org, linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 10, 2018 at 02:41:44PM -0500, Bjorn Helgaas wrote:
-> On Wed, Apr 04, 2018 at 06:50:09PM -0400, Sinan Kaya wrote:
-> > Per PCIe r3.1, sec 2.2.6.2 and 7.8.4, a Requester may not use 8-bit Tags
-> > unless its Extended Tag Field Enable is set, but all Receivers/Completers
-> > must handle 8-bit Tags correctly regardless of their Extended Tag Field
-> > Enable.
-> > 
-> > Some devices do not handle 8-bit Tags as Completers, so add a quirk for
-> > them.  If we find such a device, we disable Extended Tags for the entire
-> > hierarchy to make peer-to-peer DMA possible.
-> > 
-> > The Broadcom HT1100/HT2000/HT2100 seems to have issues with handling 8-bit
-> > tags.  Mark it as broken.
-> > 
-> > Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=196197
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+On Fri, 30 Mar 2018 09:54:37 -0700, Alexander Duyck wrote:
+> On Fri, Mar 30, 2018 at 4:49 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> > On Thu, Mar 29, 2018 at 11:22:31AM -0700, Jakub Kicinski wrote:  
+> >> Some user space depends on driver allowing sriov_totalvfs to be
+> >> enabled.  
+> >
+> > I can't make sene of this sentence.  Can you explain what user space
+> > code depends on what semantics?  The sriov_totalvfs file should show
+> > up for any device supporting SR-IOV as far as I can tell.
+> >  
+> >>
+> >> For devices which VF support depends on loaded FW we
+> >> have the pci_sriov_{g,s}et_totalvfs() API.  However, this API
+> >> uses 0 as a special "unset" value, meaning drivers can't limit
+> >> sriov_totalvfs to 0.  Change the special value to be U16_MAX.
+> >> Use simple min() to determine actual totalvfs.  
+> >
+> > Please use a PCI_MAX_VFS or similar define instead of plain U16_MAX or ~0.  
 > 
-> Applied to pci/enumeration for v4.18, thanks!
+> Actually is there any reason why driver_max_VFs couldn't just be
+> initialized to the same value as total_VFs?
+> 
+> Also looking over the patch I don't see how writing ~0 would be
+> accepted unless you also make changes to pci_sriov_set_totalvfs since
+> it should fail the "numvfs > dev->sriov->total_VFs" check. You might
+> just want to look at adding a new function that would reset the
+> driver_max_VFs value instead of trying to write it to an arbitrary
+> value from the driver.
 
-Actually, this is a really annoying issue and I think the fix is
-appropriate for v4.17, so I moved it to my for-linus branch.
-
-> > ---
-> >  drivers/pci/quirks.c | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 8b14bd3..f012742 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -4813,9 +4813,13 @@ static void quirk_no_ext_tags(struct pci_dev *pdev)
-> >  
-> >  	pci_walk_bus(bridge->bus, pci_configure_extended_tags, NULL);
-> >  }
-> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0132, quirk_no_ext_tags);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0140, quirk_no_ext_tags);
-> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0141, quirk_no_ext_tags);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0142, quirk_no_ext_tags);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0144, quirk_no_ext_tags);
-> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0420, quirk_no_ext_tags);
-> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0422, quirk_no_ext_tags);
-> >  
-> >  #ifdef CONFIG_PCI_ATS
-> >  /*
-> > -- 
-> > 2.7.4
-> > 
-> > 
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Ack, the reset function plus using total_VFs as unset seems a lot
+cleaner, thanks!
