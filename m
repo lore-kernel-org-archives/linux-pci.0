@@ -1,75 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:41087 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754727AbeDZOmn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2018 10:42:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52436 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755731AbeDCXEN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Apr 2018 19:04:13 -0400
+Date: Tue, 3 Apr 2018 18:04:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCHv2 2/7] PCI/DPC: Fix PCI legacy interrupt acknowledgement
+Message-ID: <20180403230405.GP9322@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180402162203.3370-1-keith.busch@intel.com>
+ <20180402162203.3370-3-keith.busch@intel.com>
+ <20180403203847.GO9322@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 26 Apr 2018 16:42:42 +0200
-Message-ID: <CAJZ5v0isQnkPq-47G4n5C3vyNoY2xWokzVTC35MBSPGivfxqjQ@mail.gmail.com>
-Subject: [GIT PULL] Power management fixes for v4.17-rc3
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180403203847.GO9322@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
-
-Please pull from the tag
-
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- pm-4.17-rc3
-
-with top-most commit e140c4af1b63125dff629e8339793390201e2470
-
- Merge branches 'acpi-pm' and 'pm-cpufreq'
-
-on top of commit 6d08b06e67cd117f6992c46611dfb4ce267cd71e
-
- Linux 4.17-rc2
-
-to receive power management fixes for 4.17-rc3.
-
-These are a Low Power S0 Idle quirk, a hibernation handling fix for
-the PCI bus type and a brcmstb-avs-cpufreq driver fixup removing
-development debug code from it.
-
-Specifics:
-
- - Blacklist the Low Power S0 Idle _DSM on ThinkPad X1 Tablet(2016)
-   where it causes issues and make it use ACPI S3 which works instead
-   of the non-working suspend-to-idle by default (Chen Yu).
-
- - Fix the handling of hibernation in the PCI core for devices with
-   the DPM_FLAG_SMART_SUSPEND flag set to fix a regression affecting
-   intel-lpss I2C devices (Mika Westerberg).
-
- - Drop development debug code from the brcmstb-avs-cpufreq driver
-   (Markus Mayer).
-
-Thanks!
-
-
----------------
-
-Chen Yu (1):
-      ACPI / PM: Blacklist Low Power S0 Idle _DSM for ThinkPad X1 Tablet(2016)
-
-Markus Mayer (1):
-      cpufreq: brcmstb-avs-cpufreq: remove development debug support
-
-Mika Westerberg (1):
-      PCI / PM: Do not clear state_saved in pci_pm_freeze() when smart
-suspend is set
-
----------------
-
- drivers/acpi/sleep.c                  |  13 ++
- drivers/cpufreq/Kconfig.arm           |  10 --
- drivers/cpufreq/brcmstb-avs-cpufreq.c | 323 +---------------------------------
- drivers/pci/pci-driver.c              |   5 +-
- 4 files changed, 17 insertions(+), 334 deletions(-)
+[+cc Thomas, Rafael for real]
+On Tue, Apr 03, 2018 at 03:38:47PM -0500, Bjorn Helgaas wrote:
+> [+cc Thomas, Rafael]
+> 
+> On Mon, Apr 02, 2018 at 10:21:58AM -0600, Keith Busch wrote:
+> > From: Oza Pawandeep <poza@codeaurora.org>
+> > 
+> > The DPC driver was acknowledging the DPC interrupt status in deferred
+> > work. That works for edge triggered interrupts, but causes an interrupt
+> > storm with level triggered legacy interrupts.
+> > 
+> > This patch fixes that by clearing the interrupt status in interrupt
+> > handler.
+> 
+> I'm fuzzy on this question of edge vs. level and where the interrupt
+> should be cleared.  I'd like to understand this better and include the
+> general rule in the changelog in case I'm not the only one who is
+> unclear on this.
+> 
+> Here's my understanding, gleaned from kernel/irq/chip.c and
+> https://notes.shichao.io/lkd/ch7/ :
+> 
+>   The generic IRQ handling code ensures that an interrupt handler runs
+>   with its interrupt masked or disabled.  If the interrupt is
+>   level-triggered, the interrupt handler must tell its device to stop
+>   asserting the interrupt before returning.  If it doesn't, we will
+>   immediately take the interrupt again when the handler returns and
+>   the generic code unmasks the interrupt.
+> 
+>   The driver doesn't know whether its interrupt is edge- or
+>   level-triggered, so it must clear its interrupt source directly in
+>   its interrupt handler.
+> 
+> I'd also like to convince myself that we don't have similar issues
+> with other services, e.g., AER, PME, pciehp.  Here are my notes about
+> those:
+> 
+>   1) pciehp:
+>     request_irq(irq, pcie_isr, ...)
+>     pcie_isr
+>       pciehp_isr
+>         # clear Slot Status event bits
+>         pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
+> 	events = status & (...)
+> 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, events);
+> 
+>   2) AER:
+>     request_irq(dev->irq, aer_irq, ...)
+>     aer_irq
+>       # clear AER Root Error Status bits
+>       pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, &status);
+>       pci_write_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, status);
+> 
+>   3) DPC:
+>     devm_request_irq(..., dev->irq, dpc_irq, ...)
+>     dpc_irq
+>       schedule_work(<dpc_work>)
+>     ...
+>     dpc_work
+>       # clear DPC Interrupt Status
+>       pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS, PCI_EXP_DPC_STATUS_INTERRUPT);
+> 
+>   4) PME:
+>     request_irq(srv->irq, pcie_pme_irq, ...)
+>     pcie_pme_irq
+>       pcie_pme_interrupt_enable(port, false);
+>         # clear PME Interrupt Enable
+> 	pcie_capability_clear_word(dev, PCI_EXP_RTCTL, PCI_EXP_RTCTL_PMEIE);
+>       schedule_work(<pcie_pme_work_fn>)
+>     ...
+>     pcie_pme_work_fn
+>       # clear PME Status
+>       pcie_capability_set_dword(dev, PCI_EXP_RTSTA, PCI_EXP_RTSTA_PME);
+>       pcie_pme_interrupt_enable(port, true);
+>         # set PME Interrupt Enable
+>         pcie_capability_set_word(dev, PCI_EXP_RTCTL, PCI_EXP_RTCTL_PMEIE);
+> 
+> The pciehp and AER cases look OK to me.  DPC looks definitely wrong,
+> and this patch should fix it.
+> 
+> I *guess* PME looks OK, although I would feel better about it if it
+> used the same strategy as the others.  All of these things have both
+> "Interrupt Enable" and "Interrupt Status" bits.  PME is the only one
+> that twiddles the Interrupt Enable in the interrupt path.
+> 
+> Bottom line, I think this patch is fine and I applied it with the
+> following changelog:
+> 
+>   PCI/DPC: Clear interrupt status in interrupt handler top half
+> 
+>   The generic IRQ handling code ensures that an interrupt handler runs with
+>   its interrupt masked or disabled.  If the interrupt is level-triggered, the
+>   interrupt handler must tell its device to stop asserting the interrupt
+>   before returning.  If it doesn't, we will immediately take the interrupt
+>   again when the handler returns and the generic code unmasks the interrupt.
+> 
+>   The driver doesn't know whether its interrupt is edge- or level-triggered,
+>   so it must clear its interrupt source directly in its interrupt handler.
+> 
+>   Previously we cleared the DPC interrupt status in the bottom half, i.e., in
+>   deferred work, which can cause an interrupt storm if the DPC interrupt
+>   happens to be level-triggered, e.g., if we're using INTx instead of MSI.
+> 
+>   Clear the DPC interrupt status bit in the interrupt handler, not in the
+>   deferred work.
+> 
+>   Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+>   Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+>   [bhelgaas: changelog]
+>   Reviewed-by: Keith Busch <keith.busch@intel.com>
+> 
+> 
+> > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> > [changelog]
+> > Reviewed-by: Keith Busch <keith.busch@intel.com>
+> > ---
+> >  drivers/pci/pcie/pcie-dpc.c | 5 ++++-
+> >  1 file changed, 4 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> > index a9be6938417f..82644245cb4d 100644
+> > --- a/drivers/pci/pcie/pcie-dpc.c
+> > +++ b/drivers/pci/pcie/pcie-dpc.c
+> > @@ -112,7 +112,7 @@ static void dpc_work(struct work_struct *work)
+> >  	}
+> >  
+> >  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+> > -		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+> > +			      PCI_EXP_DPC_STATUS_TRIGGER);
+> >  
+> >  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+> >  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+> > @@ -222,6 +222,9 @@ static irqreturn_t dpc_irq(int irq, void *context)
+> >  	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
+> >  		dpc_process_rp_pio_error(dpc);
+> >  
+> > +	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+> > +			      PCI_EXP_DPC_STATUS_INTERRUPT);
+> > +
+> >  	schedule_work(&dpc->work);
+> >  
+> >  	return IRQ_HANDLED;
+> > -- 
+> > 2.14.3
+> > 
