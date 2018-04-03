@@ -1,166 +1,96 @@
-Return-Path: <SRS0=cPtn=HM=gmail.com=alexander.duyck@kernel.org>
-Return-Path: <SRS0=cPtn=HM=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:60616 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932087AbeDCMxT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Apr 2018 08:53:19 -0400
+Date: Tue, 3 Apr 2018 13:53:12 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <nks@flawful.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        cyrille.pitchen@free-electrons.com,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 06/12] PCI: designware-ep: Make dw_pcie_ep_set_bar()
+ handle 64-bit BARs properly
+Message-ID: <20180403125312.GA18128@e107981-ln.cambridge.arm.com>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+ <20180328115018.31921-7-niklas.cassel@axis.com>
+ <45971780-3a46-061d-bb76-2f450401c797@ti.com>
+ <20180402193703.GB23587@flawful.org>
 MIME-Version: 1.0
-In-Reply-To: <84adb7c2-bcf7-5e17-a9d0-482416e2d26c@redhat.com>
-References: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
- <20180421203437.GW28657@bhelgaas-glaptop.roam.corp.google.com> <84adb7c2-bcf7-5e17-a9d0-482416e2d26c@redhat.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 23 Apr 2018 08:47:39 -0700
-Message-ID: <CAKgT0Uca2ZoXWjF5Upa+-dwHPfvrd4H6usmmr8GgB0FkkciWsQ@mail.gmail.com>
-Subject: Re: [pci PATCH v8 0/4] Add support for unmanaged SR-IOV
-To: Don Dutile <ddutile@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Alexander Duyck <alexander.h.duyck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-	Netdev <netdev@vger.kernel.org>, "Daly, Dan" <dan.daly@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org,
-	Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
-	Maximilian Heyne <mheyne@amazon.de>, "Wang, Liang-min" <liang-min.wang@intel.com>,
-	"Rustad, Mark D" <mark.d.rustad@intel.com>, David Woodhouse <dwmw2@infradead.org>,
-	Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180402193703.GB23587@flawful.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 23, 2018 at 8:21 AM, Don Dutile <ddutile@redhat.com> wrote:
-> On 04/21/2018 04:34 PM, Bjorn Helgaas wrote:
->>
->> On Fri, Apr 20, 2018 at 12:28:08PM -0400, Alexander Duyck wrote:
->>>
->>> This series is meant to add support for SR-IOV on devices when the VFs
->>> are
->>> not managed by the kernel. Examples of recent patches attempting to do
->>> this
->>> include:
->>> virto - https://patchwork.kernel.org/patch/10241225/
->>> pci-stub - https://patchwork.kernel.org/patch/10109935/
->>> vfio - https://patchwork.kernel.org/patch/10103353/
->>> uio - https://patchwork.kernel.org/patch/9974031/
->>>
->>> Since this is quickly blowing up into a multi-driver problem it is
->>> probably
->>> best to implement this solution as generically as possible.
->>>
->>> This series is an attempt to do that. What we do with this patch set is
->>> provide a generic framework to enable SR-IOV in the case that the PF
->>> driver
->>> doesn't support managing the VFs itself.
->>>
->>> I based my patch set originally on the patch by Mark Rustad but there
->>> isn't
->>> much left after going through and cleaning out the bits that were no
->>> longer
->>> needed, and after incorporating the feedback from David Miller. At this
->>> point
->>> the only items to be fully reused was his patch description which is now
->>> present in patch 3 of the set.
->>>
->>> This solution is limited in scope to just adding support for devices that
->>> provide no functionality for SR-IOV other than allocating the VFs by
->>> calling pci_enable_sriov. Previous sets had included patches for VFIO,
->>> but
->>> for now I am dropping that as the scope of that work is larger then I
->>> think I can take on at this time.
->>>
->>> v2: Reduced scope back to just virtio_pci and vfio-pci
->>>      Broke into 3 patch set from single patch
->>>      Changed autoprobe behavior to always set when num_vfs is set
->>> non-zero
->>> v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is
->>> used
->>>      Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in
->>> kernel
->>> v4: Dropped vfio-pci patch
->>>      Added ena and nvme to drivers now using
->>> pci_sriov_configure_unmanaged
->>>      Dropped pci_disable_sriov call in virtio_pci to be consistent with
->>> ena
->>> v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
->>>      Added new patch that enables pci_sriov_configure_simple
->>>      Updated drivers to use pci_sriov_configure_simple
->>> v6: Defined pci_sriov_configure_simple as NULL when SR-IOV is not enabled
->>>      Updated drivers to drop "#ifdef" checks for IOV
->>>      Added pci-pf-stub as place for PF-only drivers to add support
->>> v7: Dropped pci_id table explanation from pci-pf-stub driver
->>>      Updated pci_sriov_configure_simple to drop need for err value
->>>      Fixed comment explaining why pci_sriov_configure_simple is NULL
->>> v8: Dropped virtio from the set, support to be added later after TC
->>> approval
->>>
->>> Cc: Mark Rustad <mark.d.rustad@intel.com>
->>> Cc: Maximilian Heyne <mheyne@amazon.de>
->>> Cc: Liang-Min Wang <liang-min.wang@intel.com>
->>> Cc: David Woodhouse <dwmw@amazon.co.uk>
->>>
->>> ---
->>>
->>> Alexander Duyck (4):
->>>        pci: Add pci_sriov_configure_simple for PFs that don't manage VF
->>> resources
->>>        ena: Migrate over to unmanaged SR-IOV support
->>>        nvme: Migrate over to unmanaged SR-IOV support
->>>        pci-pf-stub: Add PF driver stub for PFs that function only to
->>> enable VFs
->>>
->>>
->>>   drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 -------------
->>>   drivers/nvme/host/pci.c                      |   20 ----------
->>>   drivers/pci/Kconfig                          |   12 ++++++
->>>   drivers/pci/Makefile                         |    2 +
->>>   drivers/pci/iov.c                            |   31 +++++++++++++++
->>>   drivers/pci/pci-pf-stub.c                    |   54
->>> ++++++++++++++++++++++++++
->>>   include/linux/pci.h                          |    3 +
->>>   include/linux/pci_ids.h                      |    2 +
->>>   8 files changed, 106 insertions(+), 46 deletions(-)
->>>   create mode 100644 drivers/pci/pci-pf-stub.c
->>
->>
->> I tentatively applied these to pci/virtualization-review.
->>
->> The code changes look fine, but I want to flesh out the changelogs a
->> little bit before merging them.
->>
->> For example, I'm not sure what you mean by "devices where the PF is
->> not capable of managing VF resources."
->>
-> I agree w/Bjorn's assessment of the changelog.
-> The VF's are (minimally) assigned via the pf-stub driver, so they are
-> 'managed by the kernel'.
-> The security model is the same as the existing one, which was the issue we
-> resolved in the previous set(s) of patches.
->
-> I am hoping that something like vfio will be used to deal with the VF
-> ownership
-> and the reset mechanisms during assignement & de-assignment to 'guests'
-> (qemu-kvm, DPDK, or whatever user-process),
-> so the known, existing security model(s) is(are) maintained as well.
-> If so, it'd be good to add such verbage somewhere (as 0/n is not kept in
-> anything but possibly Bjorn's patchwork, or whatever patch mgmt tool he
-> uses, and future reference would be good to have) say, an update to
-> Documentation/PCI/pci-iov-howto.txt.
->
-> So... the 'unmanaged SR-IOV' Subject, IMO, is not a valid Subject for the
-> patch series any longer.
->
-> No objections to the patch series, as Bjorn noted, just the commit
-> log(s)/nomenclature of what is really being done.
-> The expectation of VF enablement via the PF was born out of the fairly
-> complicated, and unique PF vs VF drivers of the first implementations, which
-> AlexD knows so well.  This "VFs act just like PFs without SRIOV
-> capabilities" support is what this patch set enables with a much lighter
-> configuration mechanism.
-> So, maybe the patch set ought to be 'lightweight SRIOV enablement'.
->
-> --dd
+On Mon, Apr 02, 2018 at 09:37:03PM +0200, Niklas Cassel wrote:
+> On Thu, Mar 29, 2018 at 03:17:11PM +0530, Kishon Vijay Abraham I wrote:
+> > Hi,
+> > 
+> > On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
+> > > Since a 64-bit BAR consists of a BAR pair, we need to write to both
+> > > BARs in the BAR pair to setup the BAR properly.
+> > > 
+> > > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > > ---
+> > >  drivers/pci/dwc/pcie-designware-ep.c | 11 +++++++++--
+> > >  1 file changed, 9 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> > > index 5a0bb53c795c..571b90f88d84 100644
+> > > --- a/drivers/pci/dwc/pcie-designware-ep.c
+> > > +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> > > @@ -138,8 +138,15 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+> > >  		return ret;
+> > >  
+> > >  	dw_pcie_dbi_ro_wr_en(pci);
+> > > -	dw_pcie_writel_dbi2(pci, reg, size - 1);
+> > > -	dw_pcie_writel_dbi(pci, reg, flags);
+> > > +	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+> > > +		dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
+> > > +		dw_pcie_writel_dbi(pci, reg, flags);
+> > > +		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
+> > > +		dw_pcie_writel_dbi(pci, reg + 4, 0);
+> > > +	} else {
+> > > +		dw_pcie_writel_dbi2(pci, reg, size - 1);
+> > > +		dw_pcie_writel_dbi(pci, reg, flags);
+> > > +	}
+> > 
+> > 
+> > I think this should work too?
+> > 	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
+> > 	dw_pcie_writel_dbi(pci, reg, flags);
+> > 
+> > 	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+> > 		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
+> > 		dw_pcie_writel_dbi(pci, reg + 4, 0);
+> > 	}
+> > 
+> 
+> Hello Kishon,
+> 
+> I agree, your suggestion is more neat.
+> 
+> 
+> Kishon, please tell me if you insist that the long if-statement
+> in pci_epc_set_bar() should be split, since there are 5 different
+> conditions. Because imho, having 5 succeeding if-statements isn't
+> clearer than having 1 long if-statement.
+> 
+> If Kishon agrees with me, then the review comment in this mail
+> seems to be the only review comment.
+> And in that case, perhaps Lorenzo wouldn't mind fixing this up.
+> Or perhaps Lorenzo prefers if I reroll the whole patch series?
 
-I'd be good with this being referred to as "lightweight SRIOV enablement".
+I updated it myself in my pci/endpoint branch, please have a look, I
+can't guarantee we can merge this for this cycle though, I will ask
+Bjorn; apologies I could not be online for a while.
 
-The only reason why I was referring to it as "unmanaged" was because I
-am used to drivers that use the PF MMIO registers to manage VF
-resources and that doesn't exist in this model. Obviously this is all
-still managed via the extended PCIe configuration though so there is
-still some management taking place by the PCI subsystem in the kernel.
+Lorenzo
 
-Thanks.
-
-- Alex
+> Kind regards,
+> Niklas
