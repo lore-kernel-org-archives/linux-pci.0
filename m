@@ -1,115 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
- robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
- gregkh@linuxfoundation.org
-Subject: [PATCH v4 1/6] Docs: dt: add fsl-mc iommu-map device-tree binding
-Date: Mon, 30 Apr 2018 11:57:16 +0530
-Message-Id: <1525069641-8523-2-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
- <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
- linux-pci@vger.kernel.org, bhelgaas@google.com, laurentiu.tudor@nxp.com,
- frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
- m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH RESEND v4 8/9] PCI: Improve "partially hidden behind bridge" log message
+Date: Tue,  3 Apr 2018 17:52:24 +0300
+Message-Id: <20180403145225.22371-9-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
+References: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The existing IOMMU bindings cannot be used to specify the relationship
-between fsl-mc devices and IOMMUs. This patch adds a generic binding for
-mapping fsl-mc devices to IOMMUs, using iommu-map property.
+There is a sanity checker in the end of pci_scan_child_bus_extend() that
+tries to detect badly configured bridges. For example given the below
+topology:
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+  +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+                                  +-01.0-[04-39]--
+                                  \-02.0-[3a]----00.0
+
+The sanity checker notices this and logs following messages:
+
+  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+
+This is not really helpful to users and the information above is not
+even correct (0000:02 is a bus not bridge). Make this a bit more
+understandable by changing the sanity checker to log following message
+in place of the above two messages:
+
+  pci 0000:02:02.0: devices behind bridge are unusable because we cannot assign [bus 3a] for them
+
+While there update the comment on top of the sanity checker block to
+make it clear that it is not only restricted to CardBus.
+
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39 ++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ drivers/pci/probe.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-index 6611a7c..8cbed4f 100644
---- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-+++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-@@ -9,6 +9,25 @@ blocks that can be used to create functional hardware objects/devices
- such as network interfaces, crypto accelerator instances, L2 switches,
- etc.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 079eea6680bb..70b07a0e00b8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1175,20 +1175,16 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+ 		(is_cardbus ? "PCI CardBus %04x:%02x" : "PCI Bus %04x:%02x"),
+ 		pci_domain_nr(bus), child->number);
  
-+For an overview of the DPAA2 architecture and fsl-mc bus see:
-+drivers/staging/fsl-mc/README.txt
-+
-+As described in the above overview, all DPAA2 objects in a DPRC share the
-+same hardware "isolation context" and a 10-bit value called an ICID
-+(isolation context id) is expressed by the hardware to identify
-+the requester.
-+
-+The generic 'iommus' property is insufficient to describe the relationship
-+between ICIDs and IOMMUs, so an iommu-map property is used to define
-+the set of possible ICIDs under a root DPRC and how they map to
-+an IOMMU.
-+
-+For generic IOMMU bindings, see
-+Documentation/devicetree/bindings/iommu/iommu.txt.
-+
-+For arm-smmu binding, see:
-+Documentation/devicetree/bindings/iommu/arm,smmu.txt.
-+
- Required properties:
- 
-     - compatible
-@@ -88,14 +107,34 @@ Sub-nodes:
-               Value type: <phandle>
-               Definition: Specifies the phandle to the PHY device node associated
-                           with the this dpmac.
-+Optional properties:
-+
-+- iommu-map: Maps an ICID to an IOMMU and associated iommu-specifier
-+  data.
-+
-+  The property is an arbitrary number of tuples of
-+  (icid-base,iommu,iommu-base,length).
-+
-+  Any ICID i in the interval [icid-base, icid-base + length) is
-+  associated with the listed IOMMU, with the iommu-specifier
-+  (i - icid-base + iommu-base).
- 
- Example:
- 
-+        smmu: iommu@5000000 {
-+               compatible = "arm,mmu-500";
-+               #iommu-cells = <2>;
-+               stream-match-mask = <0x7C00>;
-+               ...
-+        };
-+
-         fsl_mc: fsl-mc@80c000000 {
-                 compatible = "fsl,qoriq-mc";
-                 reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
-                       <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
-                 msi-parent = <&its>;
-+                /* define map for ICIDs 23-64 */
-+                iommu-map = <23 &smmu 23 41>;
-                 #address-cells = <3>;
-                 #size-cells = <1>;
- 
+-	/* Has only triggered on CardBus, fixup is in yenta_socket */
++	/* Check that all devices are accessible */
+ 	while (bus->parent) {
+ 		if ((child->busn_res.end > bus->busn_res.end) ||
+ 		    (child->number > bus->busn_res.end) ||
+ 		    (child->number < bus->number) ||
+ 		    (child->busn_res.end < bus->number)) {
+-			dev_info(&child->dev, "%pR %s hidden behind%s bridge %s %pR\n",
+-				&child->busn_res,
+-				(bus->number > child->busn_res.end &&
+-				 bus->busn_res.end < child->number) ?
+-					"wholly" : "partially",
+-				bus->self->transparent ? " transparent" : "",
+-				dev_name(&bus->dev),
+-				&bus->busn_res);
++			dev_info(&dev->dev,
++				 "devices behind bridge are unusable because we cannot assign %pR for them\n",
++				 &child->busn_res);
++			break;
+ 		}
+ 		bus = bus->parent;
+ 	}
 -- 
-1.9.1
+2.16.2
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
