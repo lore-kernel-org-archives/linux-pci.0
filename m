@@ -1,60 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:46177 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753322AbeDBVSu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 17:18:50 -0400
-Received: by mail-qk0-f173.google.com with SMTP id p67so8010735qke.13
-        for <linux-pci@vger.kernel.org>; Mon, 02 Apr 2018 14:18:50 -0700 (PDT)
-Date: Mon, 2 Apr 2018 14:18:45 -0700
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Netdev <netdev@vger.kernel.org>,
-        Sathya Perla <sathya.perla@broadcom.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        John Fastabend <john.fastabend@gmail.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Donald Dutile <ddutile@redhat.com>, oss-drivers@netronome.com
-Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
-Message-ID: <20180402141845.46e6c280@cakuba.netronome.com>
-In-Reply-To: <CAKgT0UfihwxLWf7BqP=Z87S83DPoqaR4MDq8UT8R4D6Puspy6w@mail.gmail.com>
-References: <20180329182231.32151-1-jakub.kicinski@netronome.com>
-        <20180330114905.GA10246@infradead.org>
-        <CAKgT0UfihwxLWf7BqP=Z87S83DPoqaR4MDq8UT8R4D6Puspy6w@mail.gmail.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:52214 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932151AbeDCNOS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2018 09:14:18 -0400
+Subject: Re: [PATCH 1/8] bindings: PCI: designware: Example update
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+ <33aa86ee667e8b435db080b8c683cb5df1bd6544.1522235224.git.gustavo.pimentel@synopsys.com>
+ <fa001440-0dfe-b84a-e5ef-9285043b5ede@ti.com>
+ <36a36857-2d79-2c2d-198d-a3b65cafc768@synopsys.com>
+ <c5ffa7d6-40b1-1702-c0fd-9ebb1b4197f8@ti.com>
+ <170b150d-d2c6-fee8-17f7-12a3107c13ff@ti.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <342e7438-ef13-e297-cc51-3df3a43a45d4@synopsys.com>
+Date: Tue, 3 Apr 2018 14:13:24 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <170b150d-d2c6-fee8-17f7-12a3107c13ff@ti.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 30 Mar 2018 09:54:37 -0700, Alexander Duyck wrote:
-> On Fri, Mar 30, 2018 at 4:49 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Thu, Mar 29, 2018 at 11:22:31AM -0700, Jakub Kicinski wrote:  
-> >> Some user space depends on driver allowing sriov_totalvfs to be
-> >> enabled.  
-> >
-> > I can't make sene of this sentence.  Can you explain what user space
-> > code depends on what semantics?  The sriov_totalvfs file should show
-> > up for any device supporting SR-IOV as far as I can tell.
-> >  
-> >>
-> >> For devices which VF support depends on loaded FW we
-> >> have the pci_sriov_{g,s}et_totalvfs() API.  However, this API
-> >> uses 0 as a special "unset" value, meaning drivers can't limit
-> >> sriov_totalvfs to 0.  Change the special value to be U16_MAX.
-> >> Use simple min() to determine actual totalvfs.  
-> >
-> > Please use a PCI_MAX_VFS or similar define instead of plain U16_MAX or ~0.  
-> 
-> Actually is there any reason why driver_max_VFs couldn't just be
-> initialized to the same value as total_VFs?
-> 
-> Also looking over the patch I don't see how writing ~0 would be
-> accepted unless you also make changes to pci_sriov_set_totalvfs since
-> it should fail the "numvfs > dev->sriov->total_VFs" check. You might
-> just want to look at adding a new function that would reset the
-> driver_max_VFs value instead of trying to write it to an arbitrary
-> value from the driver.
+Hi Kishon,
 
-Ack, the reset function plus using total_VFs as unset seems a lot
-cleaner, thanks!
+On 03/04/2018 11:53, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> On Tuesday 03 April 2018 04:22 PM, Kishon Vijay Abraham I wrote:
+>>
+>>
+>> On Tuesday 03 April 2018 04:03 PM, Gustavo Pimentel wrote:
+>>> Hi Kishon,
+>>>
+>>> On 02/04/2018 06:23, Kishon Vijay Abraham I wrote:
+>>>> Hi,
+>>>>
+>>>> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
+>>>>> Changes the IP registers size to accommodate the ATU unroll space.
+>>>>>
+>>>>> Replaces "ctrlreg" reg-name by "dbi" to be coherent with similar drivers.
+>>>>>
+>>>>> Replaces the pcie base address example by a real pcie base address in use.
+>>>>>
+>>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>>>>> ---
+>>>>>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++------
+>>>>>  1 file changed, 6 insertions(+), 6 deletions(-)
+>>>>>
+>>>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>>>> index 1da7ade..6300762 100644
+>>>>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>>>> @@ -1,7 +1,8 @@
+>>>>>  * Synopsys DesignWare PCIe interface
+>>>>>  
+>>>>>  Required properties:
+>>>>> -- compatible: should contain "snps,dw-pcie" to identify the core.
+>>>>> +- compatible:
+>>>>> +	"snps,dw-pcie" for RC mode;
+>>>>
+>>>> I think irrespective of RC mode or EP mode, "snps,dw-pcie" can be used to
+>>>> identify the pcie core?
+>>>
+>>> I guess so. What you suggest? I was just folling the same guideline present
+>>> here: https://urldefense.proofpoint.com/v2/url?u=https-3A__lkml.org_lkml_2017_11_3_310&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=G1MqB_DY6ZwWtvS60L9PZMHnMe6rClMnrakAyQT_hDc&s=BhQYkrcp6y3QkD23qn1I6lU882BDUfLiXjBVWQ91cmg&e=
+>>
+>> Okay, I think you should have
+>> "snps,dw-pcie-rc", "snps,dw-pcie" for RC mode;
+>>
+>> and in the later patch
+>> "snps,dw-pcie-ep", "snps,dw-pcie" for EP mode;
+>>
+
+Ok, I'll change it.
+
+>>>
+>>>>>  - reg: Should contain the configuration address space.
+>>>>>  - reg-names: Must be "config" for the PCIe configuration space.
+>>>>>      (The old way of getting the configuration address space from "ranges"
+>>>>> @@ -41,11 +42,11 @@ EP mode:
+>>>>>  
+>>>>>  Example configuration:
+>>>>>  
+>>>>> -	pcie: pcie@dffff000 {
+>>>>> +	pcie: pcie@dfc00000 {
+>>>>>  		compatible = "snps,dw-pcie";
+>>>>> -		reg = <0xdffff000 0x1000>, /* Controller registers */
+>>>>> -		      <0xd0000000 0x2000>; /* PCI config space */
+>>>>> -		reg-names = "ctrlreg", "config";
+>>>>> +		reg = <0xdfc00000 0x302000>, /* IP registers */
+>>>>
+>>>> which version of synopsys IP is this. I think the ideal thing to do here is to
+>>>> have a separate register space for iATU.
+>>>
+>>> I also agree with that. The unroll iATU was introduced on Synopsys IP version
+>>> 4.80 and the kernel patch was release on 2016-08-10
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_657796_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=G1MqB_DY6ZwWtvS60L9PZMHnMe6rClMnrakAyQT_hDc&s=EgKKDbg4ywCxu4-lG_scYAgPMnxirsjS0uSS7SzBTeM&e=
+>>> However a separate register space for iATU implies some extra code do handle it
+>>> (and of course some tests) that don't fit into this patch series, in my point of
+>>> view. Can this task enter in the backlog in order to be done in another patch
+>>> series?
+>>
+>> Yes sure. I think we should also make sure existing binding doesn't break.
+
+I'll remove the any iATU unroll reference or change from this patch to avoid any
+confusion.
+
+> 
+> And IMO we should have a new compatible "snps,dw-pcie-4.80" in order to enable
+> iATU unroll.
+> 
+> Thanks
+> Kishon
+> 
