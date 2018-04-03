@@ -1,48 +1,99 @@
-Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
-To: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
-Cc: Dave Young <dyoung@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-pci@vger.kernel.org, kexec@lists.infradead.org,
- linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
- Eric Biederman <ebiederm@xmission.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Vivek Goyal <vgoyal@redhat.com>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
- <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
- <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
- <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
- <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
- <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
- <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <d8d134dc-9757-97cd-7a24-cbb21611d6c6@codeaurora.org>
-Date: Mon, 30 Apr 2018 16:48:15 -0400
-MIME-Version: 1.0
-In-Reply-To: <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH RESEND v4 3/9] PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+Date: Tue,  3 Apr 2018 17:52:19 +0300
+Message-Id: <20180403145225.22371-4-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
+References: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+After suspend/resume cycle the Presence Detect or Data Link Layer Status
+Changed bits might be set and if we don't clear them those events will
+not fire anymore and nothing happens for instance when a device is now
+hot-unplugged.
 
-On 4/28/2018 9:03 AM, okaya@codeaurora.org wrote:
->> Hmm, if it is the remove() method then kexec does not use it.  kexec use
->> the shutdown() method instead.  I missed this details when I replied.
-> 
-> Portdrv hooks up remove handler to shutdown. That's why remove is getting called.
+Fix this by clearing those bits in a newly introduced function
+pcie_reenable_notification(). This should be fine because immediately
+after we check if the adapter is still present by reading directly from
+the status register.
 
-What should we do about this?
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/hotplug/pciehp.h      |  2 +-
+ drivers/pci/hotplug/pciehp_core.c |  2 +-
+ drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
-Since there is an actual HW errata involved, should we quirk this root port and
-not wait as if remove/shutdown doesn't exist?
-
-Paul,
-You might want to file a bugzilla so that we can keep our debug efforts out of this
-list.
-
-Sinan
-
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 636ed8f4b869..5abf864eae35 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -120,7 +120,7 @@ struct controller *pcie_init(struct pcie_device *dev);
+ int pcie_init_notification(struct controller *ctrl);
+ int pciehp_enable_slot(struct slot *p_slot);
+ int pciehp_disable_slot(struct slot *p_slot);
+-void pcie_enable_notification(struct controller *ctrl);
++void pcie_reenable_notification(struct controller *ctrl);
+ int pciehp_power_on_slot(struct slot *slot);
+ void pciehp_power_off_slot(struct slot *slot);
+ void pciehp_get_power_status(struct slot *slot, u8 *status);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 332b723ff9e6..44a6a63802d5 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
+ 	ctrl = get_service_data(dev);
+ 
+ 	/* reinitialize the chipset's event detection logic */
+-	pcie_enable_notification(ctrl);
++	pcie_reenable_notification(ctrl);
+ 
+ 	slot = ctrl->slot;
+ 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8f5dc5..98ea75aa32c7 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	return handled;
+ }
+ 
+-void pcie_enable_notification(struct controller *ctrl)
++static void pcie_enable_notification(struct controller *ctrl)
+ {
+ 	u16 cmd, mask;
+ 
+@@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+ }
+ 
++void pcie_reenable_notification(struct controller *ctrl)
++{
++	/*
++	 * Clear both Presence and Data Link Layer Changed to make sure
++	 * those events still fire after we have re-enabled them.
++	 */
++	pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
++				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
++	pcie_enable_notification(ctrl);
++}
++
+ static void pcie_disable_notification(struct controller *ctrl)
+ {
+ 	u16 mask;
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.16.2
+
