@@ -1,121 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54160 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751546AbeDJVDv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Apr 2018 17:03:51 -0400
-Date: Tue, 10 Apr 2018 16:03:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
- system
-Message-ID: <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
- <1523284914-2037-7-git-send-email-poza@codeaurora.org>
+Received: from pio-pvt-msa1.bahnhof.se ([79.136.2.40]:34266 "EHLO
+        pio-pvt-msa1.bahnhof.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750722AbeDCODQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2018 10:03:16 -0400
+Date: Tue, 3 Apr 2018 16:03:10 +0200
+From: Niklas Cassel <nks@flawful.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        cyrille.pitchen@free-electrons.com,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 06/12] PCI: designware-ep: Make dw_pcie_ep_set_bar()
+ handle 64-bit BARs properly
+Message-ID: <20180403140310.GA28539@flawful.org>
+References: <20180328115018.31921-1-niklas.cassel@axis.com>
+ <20180328115018.31921-7-niklas.cassel@axis.com>
+ <45971780-3a46-061d-bb76-2f450401c797@ti.com>
+ <20180402193703.GB23587@flawful.org>
+ <20180403125312.GA18128@e107981-ln.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1523284914-2037-7-git-send-email-poza@codeaurora.org>
+In-Reply-To: <20180403125312.GA18128@e107981-ln.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 09, 2018 at 10:41:54AM -0400, Oza Pawandeep wrote:
-> DPC and AER should attempt recovery in the same way, except the
-> cases where system is with hotplug enabled.
-
-What's the connection with hotplug?  I see from the patch that for
-hotplug bridges you remove the tree below the bridge, and otherwise
-you just reset the secondary link (I think).
-
-The changelog should explain why we need the difference.
-
-I'm a little skeptical to begin with, because I'm not sure why we
-should handle a DPC event differently just because a bridge has the
-*capability* of hotplug.  Even if a hotplug bridge reports a DPC
-event, that doesn't necessarily mean a hotplug has occurred.
-
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+On Tue, Apr 03, 2018 at 01:53:12PM +0100, Lorenzo Pieralisi wrote:
+> On Mon, Apr 02, 2018 at 09:37:03PM +0200, Niklas Cassel wrote:
+> > On Thu, Mar 29, 2018 at 03:17:11PM +0530, Kishon Vijay Abraham I wrote:
+> > > Hi,
+> > > 
+> > > On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
+> > > > Since a 64-bit BAR consists of a BAR pair, we need to write to both
+> > > > BARs in the BAR pair to setup the BAR properly.
+> > > > 
+> > > > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > > > ---
+> > > >  drivers/pci/dwc/pcie-designware-ep.c | 11 +++++++++--
+> > > >  1 file changed, 9 insertions(+), 2 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> > > > index 5a0bb53c795c..571b90f88d84 100644
+> > > > --- a/drivers/pci/dwc/pcie-designware-ep.c
+> > > > +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> > > > @@ -138,8 +138,15 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+> > > >  		return ret;
+> > > >  
+> > > >  	dw_pcie_dbi_ro_wr_en(pci);
+> > > > -	dw_pcie_writel_dbi2(pci, reg, size - 1);
+> > > > -	dw_pcie_writel_dbi(pci, reg, flags);
+> > > > +	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+> > > > +		dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
+> > > > +		dw_pcie_writel_dbi(pci, reg, flags);
+> > > > +		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
+> > > > +		dw_pcie_writel_dbi(pci, reg + 4, 0);
+> > > > +	} else {
+> > > > +		dw_pcie_writel_dbi2(pci, reg, size - 1);
+> > > > +		dw_pcie_writel_dbi(pci, reg, flags);
+> > > > +	}
+> > > 
+> > > 
+> > > I think this should work too?
+> > > 	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
+> > > 	dw_pcie_writel_dbi(pci, reg, flags);
+> > > 
+> > > 	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
+> > > 		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
+> > > 		dw_pcie_writel_dbi(pci, reg + 4, 0);
+> > > 	}
+> > > 
+> > 
+> > Hello Kishon,
+> > 
+> > I agree, your suggestion is more neat.
+> > 
+> > 
+> > Kishon, please tell me if you insist that the long if-statement
+> > in pci_epc_set_bar() should be split, since there are 5 different
+> > conditions. Because imho, having 5 succeeding if-statements isn't
+> > clearer than having 1 long if-statement.
+> > 
+> > If Kishon agrees with me, then the review comment in this mail
+> > seems to be the only review comment.
+> > And in that case, perhaps Lorenzo wouldn't mind fixing this up.
+> > Or perhaps Lorenzo prefers if I reroll the whole patch series?
 > 
-> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-> index 8e1553b..6d9a841 100644
-> --- a/drivers/pci/pcie/pcie-dpc.c
-> +++ b/drivers/pci/pcie/pcie-dpc.c
-> @@ -108,8 +108,6 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
->   */
->  static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->  {
-> -	struct pci_bus *parent = pdev->subordinate;
-> -	struct pci_dev *dev, *temp;
->  	struct dpc_dev *dpc;
->  	struct pcie_device *pciedev;
->  	struct device *devdpc;
-> @@ -120,19 +118,6 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->  	dpc = get_service_data(pciedev);
->  	cap = dpc->cap_pos;
->  
-> -	pci_lock_rescan_remove();
-> -	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-> -					 bus_list) {
-> -		pci_dev_get(dev);
-> -		pci_dev_set_disconnected(dev, NULL);
-> -		if (pci_has_subordinate(dev))
-> -			pci_walk_bus(dev->subordinate,
-> -				     pci_dev_set_disconnected, NULL);
-> -		pci_stop_and_remove_bus_device(dev);
-> -		pci_dev_put(dev);
-> -	}
-> -	pci_unlock_rescan_remove();
-> -
->  	dpc_wait_link_inactive(dpc);
->  	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
->  		return PCI_ERS_RESULT_DISCONNECT;
-> @@ -152,13 +137,37 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->  	return PCI_ERS_RESULT_RECOVERED;
->  }
->  
-> +static void dpc_reset_link_remove_dev(struct pci_dev *pdev)
-> +{
-> +	struct pci_bus *parent = pdev->subordinate;
-> +	struct pci_dev *dev, *temp;
-> +
-> +	pci_lock_rescan_remove();
-> +	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-> +					 bus_list) {
-> +		pci_dev_get(dev);
-> +		pci_dev_set_disconnected(dev, NULL);
-> +		if (pci_has_subordinate(dev))
-> +			pci_walk_bus(dev->subordinate,
-> +				     pci_dev_set_disconnected, NULL);
-> +		pci_stop_and_remove_bus_device(dev);
-> +		pci_dev_put(dev);
-> +	}
-> +	pci_unlock_rescan_remove();
-> +
-> +	dpc_reset_link(pdev);
-> +}
-> +
->  static void dpc_work(struct work_struct *work)
->  {
->  	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->  	struct pci_dev *pdev = dpc->dev->port;
->  
->  	/* From DPC point of view error is always FATAL. */
-> -	pcie_do_recovery(pdev, DPC_FATAL);
-> +	if (!pdev->is_hotplug_bridge)
-> +		pcie_do_recovery(pdev, DPC_FATAL);
-> +	else
-> +		dpc_reset_link_remove_dev(pdev);
->  }
->  static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
->  {
-> -- 
-> 2.7.4
-> 
+> I updated it myself in my pci/endpoint branch, please have a look, I
+> can't guarantee we can merge this for this cycle though, I will ask
+> Bjorn; apologies I could not be online for a while.
+
+Hello Lorenzo,
+
+your pci/endpoint branch looks good.
+
+There is no rush, merge it whenever you think is best.
+
+Have in mind that there is EP support @ patchwork for Rockchip
+and for pcie-designware-plat, so make sure to juggle all the
+branches with care :)
+
+Kind regards,
+Niklas
