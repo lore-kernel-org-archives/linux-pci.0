@@ -1,73 +1,53 @@
-Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
- Extended Tags
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, sulrich@codeaurora.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
- <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
- <20180410195008.GE54986@bhelgaas-glaptop.roam.corp.google.com>
- <1c94361d-7a8d-ad18-12e5-1612326a54db@codeaurora.org>
- <20180411135151.GB91792@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <ecdad8f4-6996-cfe0-d005-fbc67ba3cd79@codeaurora.org>
-Date: Wed, 11 Apr 2018 10:02:07 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180411135151.GB91792@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH RESEND v4 7/9] PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
+Date: Tue,  3 Apr 2018 17:52:23 +0300
+Message-Id: <20180403145225.22371-8-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
+References: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+GregKH
+It is not immediately clear what the two functions actually return so
+add kernel-doc comment explaining it a bit better.
 
-On 4/11/2018 9:51 AM, Bjorn Helgaas wrote:
-> On Tue, Apr 10, 2018 at 04:18:01PM -0400, Sinan Kaya wrote:
->> On 4/10/2018 3:50 PM, Bjorn Helgaas wrote:
->>> On Tue, Apr 10, 2018 at 02:41:44PM -0500, Bjorn Helgaas wrote:
->>>> On Wed, Apr 04, 2018 at 06:50:09PM -0400, Sinan Kaya wrote:
->>>>> Per PCIe r3.1, sec 2.2.6.2 and 7.8.4, a Requester may not use 8-bit Tags
->>>>> unless its Extended Tag Field Enable is set, but all Receivers/Completers
->>>>> must handle 8-bit Tags correctly regardless of their Extended Tag Field
->>>>> Enable.
->>>>>
->>>>> Some devices do not handle 8-bit Tags as Completers, so add a quirk for
->>>>> them.  If we find such a device, we disable Extended Tags for the entire
->>>>> hierarchy to make peer-to-peer DMA possible.
->>>>>
->>>>> The Broadcom HT1100/HT2000/HT2100 seems to have issues with handling 8-bit
->>>>> tags.  Mark it as broken.
->>>>>
->>>>> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
->>>>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=196197
->>>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->>>> Applied to pci/enumeration for v4.18, thanks!
->>> Actually, this is a really annoying issue and I think the fix is
->>> appropriate for v4.17, so I moved it to my for-linus branch.
->>>
->>
->> I agree. It causes boot issues on some AMD Opteron machines. It should
->> probably be back-ported too. 
-> 
-> We started enabling extended tags with 60db3a4d8cc9 ("PCI: Enable PCIe
-> Extended Tags if supported"), which appeared in v4.11.
-> 
-> So I added these stable tags:
-> 
->   CC: stable@vger.kernel.org      # v4.11: 62ce94a7a5a5 PCI: Mark Broadcom HT2100 Root Port Extended Tags as broken
->   CC: stable@vger.kernel.org      # v4.11
-> 
-> I'm not sure I'm using the stable request correctly, but my intent is:
-> 
->   - 62ce94a7a5a5 appeared in v4.14, so cherry-pick 62ce94a7a5a5 to
->     v4.11 through v4.13
->   - cherry-pick *this* patch on top of 62ce94a7a5a5 to v4.11 and later
-> 
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/probe.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8c4715df62e7..079eea6680bb 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -983,6 +983,8 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+  * already configured by the BIOS and after we are done with all of
+  * them, we proceed to assigning numbers to the remaining buses in
+  * order to avoid overlaps between old and new bus numbers.
++ *
++ * Return: New subordinate number covering all buses behind this bridge.
+  */
+ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+ 				  int max, unsigned int available_buses,
+@@ -1215,6 +1217,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+  * already configured by the BIOS and after we are done with all of
+  * them, we proceed to assigning numbers to the remaining buses in
+  * order to avoid overlaps between old and new bus numbers.
++ *
++ * Return: New subordinate number covering all buses behind this bridge.
+  */
+ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ {
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.16.2
+
