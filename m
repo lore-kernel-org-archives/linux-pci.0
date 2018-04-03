@@ -1,11 +1,10 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v17 01/10] LIB: Introduce a generic PIO mapping method
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: Re: [PATCH v17 04/10] PCI: Apply the new generic I/O management on
+ PCI IO hosts
 To: Thierry Reding <thierry.reding@gmail.com>
 References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
- <1521051359-34473-2-git-send-email-john.garry@huawei.com>
- <20180403140410.GE27789@ulmo> <20180403143909.GA21171@ulmo>
- <ab748c97-2b55-d090-606f-5491551feff6@huawei.com>
- <20180403163700.GA10059@ulmo>
+ <1521051359-34473-5-git-send-email-john.garry@huawei.com>
+ <20180403134531.GD27789@ulmo>
 CC: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
         <lorenzo.pieralisi@arm.com>, <rjw@rjwysocki.net>,
         <hanjun.guo@linaro.org>, <robh+dt@kernel.org>,
@@ -19,140 +18,149 @@ CC: <mika.westerberg@linux.intel.com>, <rafael@kernel.org>,
         <devicetree@vger.kernel.org>, <linux-arch@vger.kernel.org>,
         <rdunlap@infradead.org>, <gregkh@linuxfoundation.org>,
         <akpm@linux-foundation.org>, <frowand.list@gmail.com>,
-        <agraf@suse.de>, <linux-tegra@vger.kernel.org>
+        <agraf@suse.de>
 From: John Garry <john.garry@huawei.com>
-Message-ID: <19c46196-304a-1574-89c9-01c71d123539@huawei.com>
-Date: Tue, 3 Apr 2018 18:02:43 +0100
+Message-ID: <40460bc7-401f-9625-fe59-26dc6408f60e@huawei.com>
+Date: Tue, 3 Apr 2018 15:02:44 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180403163700.GA10059@ulmo>
+In-Reply-To: <20180403134531.GD27789@ulmo>
 Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/04/2018 17:37, Thierry Reding wrote:
-> On Tue, Apr 03, 2018 at 05:01:37PM +0100, John Garry wrote:
->>>>> +int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
->>>>> +{
->>>>> +	struct logic_pio_hwaddr *range;
->>>>> +	resource_size_t start = new_range->hw_start;
->>>>> +	resource_size_t end = new_range->hw_start + new_range->size;
->>>>> +	resource_size_t mmio_sz = 0;
->>>>> +	resource_size_t iio_sz = MMIO_UPPER_LIMIT;
->>>>> +	int ret = 0;
->>>>> +
->>>>> +	if (!new_range || !new_range->fwnode || !new_range->size)
->>>>> +		return -EINVAL;
->>>>> +
->>>>> +	mutex_lock(&io_range_mutex);
->>>>> +	list_for_each_entry_rcu(range, &io_range_list, list) {
->>>>> +		if (range->fwnode == new_range->fwnode) {
->>>>> +			/* range already there */
->>>>> +			ret = -EFAULT;
->>>>> +			goto end_register;
->>>>> +		}
->>>>
+On 03/04/2018 14:45, Thierry Reding wrote:
+> On Thu, Mar 15, 2018 at 02:15:53AM +0800, John Garry wrote:
+>> From: Zhichang Yuan <yuanzhichang@hisilicon.com>
 >>
->> Hi Thierry,
+>> After introducing the new generic I/O space management(Logical PIO), the
+>> original PCI MMIO relevant helpers need to be updated based on the new
+>> interfaces defined in logical PIO.
+>> This patch adapts the corresponding code to match the changes introduced
+>> by logical PIO.
 >>
->>>> This is the -EFAULT that propagates to pci-tegra.c's ->probe() and fails
->>>> to bind the driver.
->>>>
->>>> I'm not exactly sure what's causing the duplicate here because it's
->>>> rather difficult to get at something useful from just the ->fwnode, but
->>>> I'm fairly sure that the reason this breaks is because the Tegra driver
->>>> will defer probe due to some regulators that aren't available on the
->>>> first try. Given the above code and the rest of this file, I can't see a
->>>> way to "fix" the driver and remove the I/O range on failure.
->>>>
->>>> This is doubly bad because this doesn't only leak the ranges on probe
->>>> deferral, but also on driver unload, and we just added support for
->>>> building the Tegra driver as a loadable module, so these are actually
->>>> cases that can happen in regular uses of the driver.
->>>>
->>>> I have no idea on how to fix this. Anyone know of a quick fix to restore
->>>> PCI for Tegra other than reverting all of these changes?
->>>>
->>>> I suppose an API could be added to unregister the range, but the calling
->>>> sequence is rather obfuscated, so removing the range will look totally
->>>> asymmetric, I'm afraid.
->>>>
->>>> Here's the call stack:
->>>>
->>>> 	tegra_pcie_probe()
->>>> 	tegra_pcie_parse_dt()
->>>> 	of_pci_range_to_resource()
->>>> 	pci_register_io_range()
->>>> 	logic_pio_register_range()
->>>>
->>>> So the range here is registered as part of a resource parsing function,
->>>> which is supposed to not have any side-effects. There's no equivalent of
->>>> that parsing routine (i.e. no "unparse" function that would undo the
->>>> effects of parsing).
->>>>
->>>> Perhaps a cleaner way would be to decouple the parsing from the actual
->>>> request step that has the side-effect.
+>> Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+>> Tested-by: dann frazier <dann.frazier@canonical.com>
+>> ---
+>>  drivers/pci/pci.c        | 92 +++++++++---------------------------------------
+>>  include/asm-generic/io.h |  2 +-
+>>  2 files changed, 18 insertions(+), 76 deletions(-)
+>
+> Today's linux-next regresses on NFS boot for Jetson TK1. I was able to
+> bisect it to this commit. I'll comment below for where I think this is
+> buggy.
+>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 3f30b7d..09c2490 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -22,6 +22,7 @@
+>>  #include <linux/spinlock.h>
+>>  #include <linux/string.h>
+>>  #include <linux/log2.h>
+>> +#include <linux/logic_pio.h>
+>>  #include <linux/pci-aspm.h>
+>>  #include <linux/pm_wakeup.h>
+>>  #include <linux/interrupt.h>
+>> @@ -3436,17 +3437,6 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+>>  }
+>>  EXPORT_SYMBOL(pci_request_regions_exclusive);
 >>
->> This could be added if we agreed that it would be useful.
->
-> I guess in most cases these ranges will be static at least during one
-> boot. But it still feels like this should be removed when the driver
-> goes away. While this may not depend on data by the driver, and hence
-> won't cause a crash or anything, it just seems wrong to leave it
-> around when the driver no longer isn't.
-
-That sounds reasonable, considering we do unmap the iospace when we 
-release - so it looks like currently we're leaving some IO range 
-reserved which does not have a mapping.
-
-However this change seems non-trivial, considering we're now even 
-coupling the PIO range registration into DT parsing.
-
->
->>>> Going back in history a little, it looks like even before this commit
->>>> the I/O range registration was triggered by the parsing code and even
->>>> the range leak was there, except that it caused pci_register_io_range()
->>>> to return 0 rather than -EFAULT. Perhaps the quickest fix for this would
->>>> be to do the same in the new code and restore drivers that accidentally
->>>> depend on this behaviour.
->>>
->>> I can confirm that the following fixes the issue for me, though I don't
->>> think it's a very clean fix given that the range will remain requested
->>> forever, even if the driver is gone. But since that's already been the
->>> case for quite a while, probably something that can be fixed separately.
->>>
+>> -#ifdef PCI_IOBASE
+>> -struct io_range {
+>> -	struct list_head list;
+>> -	phys_addr_t start;
+>> -	resource_size_t size;
+>> -};
+>> -
+>> -static LIST_HEAD(io_range_list);
+>> -static DEFINE_SPINLOCK(io_range_lock);
+>> -#endif
+>> -
+>>  /*
+>>   * Record the PCI IO range (expressed as CPU physical address + size).
+>>   * Return a negative value if an error has occured, zero otherwise
+>> @@ -3454,51 +3444,28 @@ struct io_range {
+>>  int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
+>>  			resource_size_t	size)
+>>  {
+>> -	int err = 0;
+>> -
+>> +	int ret = 0;
+>>  #ifdef PCI_IOBASE
+>> -	struct io_range *range;
+>> -	resource_size_t allocated_size = 0;
+>> -
+>> -	/* check if the range hasn't been previously recorded */
+>> -	spin_lock(&io_range_lock);
+>> -	list_for_each_entry(range, &io_range_list, list) {
+>> -		if (addr >= range->start && addr + size <= range->start + size) {
+>> -			/* range already registered, bail out */
+>> -			goto end_register;
+>> -		}
+>> -		allocated_size += range->size;
+>> -	}
+>> +	struct logic_pio_hwaddr *range;
 >>
->> Right, there was no way to deregister the range previously.  From looking at
->> the history here I see no reason to not support it.
+>> -	/* range not registed yet, check for available space */
+>> -	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+>> -		/* if it's too big check if 64K space can be reserved */
+>> -		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
+>> -			err = -E2BIG;
+>> -			goto end_register;
+>> -		}
+>> -
+>> -		size = SZ_64K;
+>> -		pr_warn("Requested IO range too big, new size set to 64K\n");
+>> -	}
+>> +	if (!size || addr + size < addr)
+>> +		return -EINVAL;
 >>
->> As for this patch, as you said, the only difference is that we fault on
->> trying to register the same range again. So this solution seems reasonable.
+>> -	/* add the range to the list */
+>>  	range = kzalloc(sizeof(*range), GFP_ATOMIC);
+>> -	if (!range) {
+>> -		err = -ENOMEM;
+>> -		goto end_register;
+>> -	}
+>> +	if (!range)
+>> +		return -ENOMEM;
+>>
+>> -	range->start = addr;
+>> +	range->fwnode = fwnode;
+>>  	range->size = size;
+>> +	range->hw_start = addr;
+>> +	range->flags = LOGIC_PIO_CPU_MMIO;
+>>
+>> -	list_add_tail(&range->list, &io_range_list);
+>> -
+>> -end_register:
+>> -	spin_unlock(&io_range_lock);
+>> +	ret = logic_pio_register_range(range);
 >
-> Okay, I can turn this into a proper patch to fix this up. I suspect that
-> other drivers may be subject to the same regression. For the longer term
-> I think it'd be better to properly undo the registration on failure and
-> removal, but I suspect that it'd be quite a bit of work and not suitable
-> for v4.17 anymore.
+> This ends up returning -EFAULT at some point, causing the driver's
+> (pci-tegra.c) ->probe() to fail.
+>
+> Let me comment on a prior patch to pinpoint what exactly goes wrong.
 
-Thanks, I had started to put the patch together but if you're happy to 
-continue then that's fine. Please let me know.
+Hi Thierry,
 
->
->> On another point, for the tegra driver, is it possible to defer earlier in
->> the probe, before these currently irreversible steps are taken?
->
-> I'm sure it'd be possible. But it would be quite involved, I think. The
-> reason the code is the way it is is because parsing the DT didn't use to
-> have side-effects.
->
-> Also, I don't think it would buy us much because the probe can still
-> defer (or at least fail) as late as pci_scan_root_bus_bridge(). Even if
-> we work around the probe deferral by moving the DT parsing to a later
-> point we could easily run into a situation where the entry remains in
-> place and a subsequent attempt to reload the driver would then fail in
-> the same way as if we were deferring probe.
+Thanks for the notification. So this patch is where we transistion from 
+using the PCI internal pio management to the new framework.
+
+I already had tried today's linux-next with hisi PCI host controller in 
+pcie-hisi.c on an arm64 system, and it looked ok.
+
+Function logic_pio_register_range() returns fault when we try to 
+register the same range twice or there is an overlap in ranges.
+
+I wonder if is there something special about this host controller driver 
+in terms of IO space management. And what arch/system was the host?
+
+John
+
 >
 > Thierry
 >
-
-Thanks,
-John
