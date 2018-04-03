@@ -1,72 +1,95 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
-        catalin.marinas@arm.com
-Cc: hch@lst.de, gregkh@linuxfoundation.org, joro@8bytes.org,
-        robh+dt@kernel.org, m.szyprowski@samsung.com, shawnguo@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com,
-        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 6/6 v2] arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
-Date: Tue, 17 Apr 2018 15:51:54 +0530
-Message-Id: <1523960514-25457-7-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1523960514-25457-1-git-send-email-nipun.gupta@nxp.com>
-References: <1520260166-29387-1-git-send-email-nipun.gupta@nxp.com>
- <1523960514-25457-1-git-send-email-nipun.gupta@nxp.com>
+Date: Tue, 3 Apr 2018 21:27:43 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: "Daly, Dan" <dan.daly@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Don Dutile <ddutile@redhat.com>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
+Subject: Re: [virtio-dev] [pci PATCH v7 2/5] virtio_pci: Add support for
+ unmanaged SR-IOV on virtio_pci devices
+Message-ID: <20180403212503-mutt-send-email-mst@kernel.org>
+References: <20180315183449.3102.64791.stgit@localhost.localdomain>
+ <20180315184132.3102.90947.stgit@localhost.localdomain>
+ <20180316183042-mutt-send-email-mst@kernel.org>
+ <CAKgT0UfgZ2gAdiAbCe4MTOr3o9cqq1q-mykCQsw68p2F-QEC8g@mail.gmail.com>
+ <20180403161151-mutt-send-email-mst@kernel.org>
+ <CAKgT0UfeSmG=xsd6sTkg4cOMnZ0QiqtCRDt4PynpF3d6nvvFCA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKgT0UfeSmG=xsd6sTkg4cOMnZ0QiqtCRDt4PynpF3d6nvvFCA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fsl-mc bus now support the iommu-map property. Comply to this binding for
-fsl_mc bus. This patch also updates the dts w.r.t. the DMA configuration.
+On Tue, Apr 03, 2018 at 10:32:00AM -0700, Alexander Duyck wrote:
+> On Tue, Apr 3, 2018 at 6:12 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> > On Fri, Mar 16, 2018 at 09:40:34AM -0700, Alexander Duyck wrote:
+> >> On Fri, Mar 16, 2018 at 9:34 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> >> > On Thu, Mar 15, 2018 at 11:42:41AM -0700, Alexander Duyck wrote:
+> >> >> From: Alexander Duyck <alexander.h.duyck@intel.com>
+> >> >>
+> >> >> Hardware-realized virtio_pci devices can implement SR-IOV, so this
+> >> >> patch enables its use. The device in question is an upcoming Intel
+> >> >> NIC that implements both a virtio_net PF and virtio_net VFs. These
+> >> >> are hardware realizations of what has been up to now been a software
+> >> >> interface.
+> >> >>
+> >> >> The device in question has the following 4-part PCI IDs:
+> >> >>
+> >> >> PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+> >> >> VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
+> >> >>
+> >> >> The patch currently needs no check for device ID, because the callback
+> >> >> will never be made for devices that do not assert the capability or
+> >> >> when run on a platform incapable of SR-IOV.
+> >> >>
+> >> >> One reason for this patch is because the hardware requires the
+> >> >> vendor ID of a VF to be the same as the vendor ID of the PF that
+> >> >> created it. So it seemed logical to simply have a fully-functioning
+> >> >> virtio_net PF create the VFs. This patch makes that possible.
+> >> >>
+> >> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> >> >> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+> >> >> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> >> >
+> >> > So if and when virtio PFs can manage the VFs, then we can
+> >> > add a feature bit for that?
+> >> > Seems reasonable.
+> >>
+> >> Yes. If nothing else you may not even need a feature bit depending on
+> >> how things go.
+> >
+> > OTOH if the interface is changed in an incompatible way,
+> > and old Linux will attempt to drive the new device
+> > since there is no check.
+> >
+> > I think we should add a feature bit right away.
+> 
+> I'm not sure why you would need a feature bit. The capability is
+> controlled via PCI configuration space. If it is present the device
+> has the capability. If it is not then it does not.
+> 
+> Basically if the PCI configuration space is not present then the sysfs
+> entries will not be spawned and nothing will attempt to use this
+> function.
+> 
+> - ALex
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
----
- arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+It's about compability with older guests which ignore the
+capability.
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-index f3a40af..1b1c5eb 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-@@ -135,6 +135,7 @@
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 		ranges;
-+		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
- 
- 		clockgen: clocking@1300000 {
- 			compatible = "fsl,ls2080a-clockgen";
-@@ -357,6 +358,8 @@
- 			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
- 			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
- 			msi-parent = <&its>;
-+			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
-+			dma-coherent;
- 			#address-cells = <3>;
- 			#size-cells = <1>;
- 
-@@ -460,6 +463,8 @@
- 			compatible = "arm,mmu-500";
- 			reg = <0 0x5000000 0 0x800000>;
- 			#global-interrupts = <12>;
-+			#iommu-cells = <1>;
-+			stream-match-mask = <0x7C00>;
- 			interrupts = <0 13 4>, /* global secure fault */
- 				     <0 14 4>, /* combined secure interrupt */
- 				     <0 15 4>, /* global non-secure fault */
-@@ -502,7 +507,6 @@
- 				     <0 204 4>, <0 205 4>,
- 				     <0 206 4>, <0 207 4>,
- 				     <0 208 4>, <0 209 4>;
--			mmu-masters = <&fsl_mc 0x300 0>;
- 		};
- 
- 		dspi: dspi@2100000 {
+The feature is thus helpful so host knows whether guest supports VFs.
+
+
 -- 
-1.9.1
+MSR
