@@ -1,100 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:33659 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751494AbeDFLIW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2018 07:08:22 -0400
-Received: by mail-wr0-f196.google.com with SMTP id z73so1399765wrb.0
-        for <linux-pci@vger.kernel.org>; Fri, 06 Apr 2018 04:08:22 -0700 (PDT)
-Subject: [PATCH 3/4] pcie-rcar: add R-Car gen3 PHY support
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
-Message-ID: <d8dde257-814f-142c-d58b-91eaf78a7d10@cogentembedded.com>
-Date: Fri, 6 Apr 2018 14:08:12 +0300
-MIME-Version: 1.0
-In-Reply-To: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH RESEND v4 0/9] PCI: Fixes and cleanups for native PCIe and ACPI hotplug
+Date: Tue,  3 Apr 2018 17:52:16 +0300
+Message-Id: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On R-Car gen3 SoCs the PCIe PHY has its own register region -- and I have
-written  a generic PHY driver for it, thus we need to add the corresponding
-code in  rcar_pcie_hw_init_gen3() and call devm_phy_optional_get() at the
-driver's probing time,  so that the existing R-Car gen3 device trees (not
-having a PHY node) would still work (we only need  to power up the PHY on
-R-Car V3H).
+[Resending this with linux-pci ML address corrected]
 
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Hi,
 
----
- drivers/pci/host/pcie-rcar.c |   27 +++++++++++++++++++++++++--
- 1 file changed, 25 insertions(+), 2 deletions(-)
+When Thunderbolt host router is configured to be in native enumeration mode
+it is only present in the system if there is something connected to the
+ports. This pretty much follows how the BIOS assisted mode works.
 
-Index: pci/drivers/pci/host/pcie-rcar.c
-===================================================================
---- pci.orig/drivers/pci/host/pcie-rcar.c
-+++ pci/drivers/pci/host/pcie-rcar.c
-@@ -24,6 +24,7 @@
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
- #include <linux/pci.h>
-+#include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
- #include <linux/slab.h>
-@@ -140,6 +141,7 @@ static inline struct rcar_msi *to_rcar_m
- /* Structure representing the PCIe interface */
- struct rcar_pcie {
- 	struct device		*dev;
-+	struct phy		*phy;
- 	void __iomem		*base;
- 	struct list_head	resources;
- 	int			root_bus_nr;
-@@ -667,6 +669,21 @@ static int rcar_pcie_hw_init_gen2(struct
- 	return rcar_pcie_hw_init(pcie);
- }
- 
-+static int rcar_pcie_hw_init_gen3(struct rcar_pcie *pcie)
-+{
-+	int err;
-+
-+	err = phy_init(pcie->phy);
-+	if (err)
-+		return err;
-+
-+	err = phy_power_on(pcie->phy);
-+	if (err)
-+		return err;
-+
-+	return rcar_pcie_hw_init(pcie);
-+}
-+
- static int rcar_msi_alloc(struct rcar_msi *chip)
- {
- 	int msi;
-@@ -916,6 +933,10 @@ static int rcar_pcie_get_resources(struc
- 	struct resource res;
- 	int err, i;
- 
-+	pcie->phy = devm_phy_optional_get(dev, "pcie");
-+	if (IS_ERR(pcie->phy))
-+		return PTR_ERR(pcie->phy);
-+
- 	err = of_address_to_resource(dev->of_node, 0, &res);
- 	if (err)
- 		return err;
-@@ -1068,8 +1089,10 @@ static const struct of_device_id rcar_pc
- 	  .data = rcar_pcie_hw_init_gen2 },
- 	{ .compatible = "renesas,pcie-rcar-gen2",
- 	  .data = rcar_pcie_hw_init_gen2 },
--	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
--	{ .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
-+	{ .compatible = "renesas,pcie-r8a7795",
-+	  .data = rcar_pcie_hw_init_gen3 },
-+	{ .compatible = "renesas,pcie-rcar-gen3",
-+	  .data = rcar_pcie_hw_init_gen3 },
- 	{},
- };
- 
+In native enumeration mode the Thunderbolt host controller (NHI) and USB
+host controller (xHCI) are not hot-added using native PCIe hotplug but
+instead they will be hotplugged via BIOS triggered ACPI Notify() to the
+root port. This is done to preserve resources since NHI and xHCI only need
+1 MB of MMIO space and no additional buses. Currently Linux does not
+support this very well and ends up failing the hotplug in one way or
+another. More detailed explanation is in changelog of patch [4/9].
+
+This series fixes this issue and in addition includes fixes for few other
+issues found during testing on a system that has Thunderbolt controller in
+native PCIe enumeration mode. However, the fixes here are not in any way
+Thunderbolt specific and should be applicable to other systems as well.
+
+The previous versions of the patch series can be found here:
+
+  v3: https://www.spinics.net/lists/linux-acpi/msg80876.html
+  v2: https://www.spinics.net/lists/linux-pci/msg69186.html
+  v1: https://www.spinics.net/lists/linux-acpi/msg80607.html
+
+Changes from v3:
+
+  - Added Andy's tag to patches [1-5]
+  - Improved changelog and subject line of patch [1/9] to match better what
+    it is trying to solve
+  - Improved comment in patch [1/9]
+  - Improved changelog of patches [2/9] and [4/9] accordingly to match
+    better why they are needed
+  - Added cleanup patches [6-9/9]
+
+Changes from v2:
+
+  - Added Rafael's tag to patch [1/5]
+  - Updated changelog of patch [1/5] to include more details about how the
+    problem can be observed from dmesg and lspci output
+
+Changes from v1:
+
+  - Drop 'cmax - max ?: 1' and use similar construct than we use in second
+    pass loop in patch [1/5]
+  - Drop unnecessary parentheses in patch [1/5]
+  - Added Rafael's tag to patches [2-5/5]
+
+Mika Westerberg (9):
+  PCI: Take all bridges into account when calculating bus numbers for extension
+  PCI: Take bridge window alignment into account when distributing resources
+  PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+  ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
+  ACPI / hotplug / PCI: Mark stale PCI devices disconnected
+  PCI: Move resource distribution for a single bridge outside of the loop
+  PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
+  PCI: Improve "partially hidden behind bridge" log message
+  ACPI / hotplug / PCI: Drop unnecessary parentheses
+
+ drivers/pci/hotplug/acpiphp.h      |  1 +
+ drivers/pci/hotplug/acpiphp_glue.c | 82 ++++++++++++++++++++++++++++++--------
+ drivers/pci/hotplug/pciehp.h       |  2 +-
+ drivers/pci/hotplug/pciehp_core.c  |  2 +-
+ drivers/pci/hotplug/pciehp_hpc.c   | 13 +++++-
+ drivers/pci/probe.c                | 33 +++++++++------
+ drivers/pci/setup-bus.c            | 69 ++++++++++++++++++++++++++------
+ 7 files changed, 158 insertions(+), 44 deletions(-)
+
+-- 
+2.16.2
+
