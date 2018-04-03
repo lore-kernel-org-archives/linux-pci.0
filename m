@@ -1,453 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Bhushan <bharat.bhushan@nxp.com>
-To: Robin Murphy <robin.murphy@arm.com>, Nipun Gupta <nipun.gupta@nxp.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, "frowand.list@gmail.com"
- <frowand.list@gmail.com>
-Subject: RE: [PATCH 2/6 v2] iommu: of: make of_pci_map_rid() available for
- other devices too
-Date: Wed, 18 Apr 2018 05:09:47 +0000
-Message-ID: <AM5PR0401MB25452C7E2281806F90163E519AB60@AM5PR0401MB2545.eurprd04.prod.outlook.com>
-References: <1520260166-29387-1-git-send-email-nipun.gupta@nxp.com>
- <1523960514-25457-1-git-send-email-nipun.gupta@nxp.com>
- <1523960514-25457-3-git-send-email-nipun.gupta@nxp.com>
- <41b32766-e21a-e946-6c8f-440e5c87d0ee@arm.com>
-In-Reply-To: <41b32766-e21a-e946-6c8f-440e5c87d0ee@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:37256 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752240AbeDCTGG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2018 15:06:06 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "stuyoder@gmail.com" <stuyoder@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Leo Li <leoyang.li@nxp.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Laurentiu Tudor <laurentiu.tudor@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>, "hch@lst.de" <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180403212503-mutt-send-email-mst@kernel.org>
+References: <20180315183449.3102.64791.stgit@localhost.localdomain>
+ <20180315184132.3102.90947.stgit@localhost.localdomain> <20180316183042-mutt-send-email-mst@kernel.org>
+ <CAKgT0UfgZ2gAdiAbCe4MTOr3o9cqq1q-mykCQsw68p2F-QEC8g@mail.gmail.com>
+ <20180403161151-mutt-send-email-mst@kernel.org> <CAKgT0UfeSmG=xsd6sTkg4cOMnZ0QiqtCRDt4PynpF3d6nvvFCA@mail.gmail.com>
+ <20180403212503-mutt-send-email-mst@kernel.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Tue, 3 Apr 2018 12:06:03 -0700
+Message-ID: <CAKgT0Ude79FYrK4qA0OKRJ1NackyqPi-hZ8Zh3WSdLDFxoOosQ@mail.gmail.com>
+Subject: Re: [virtio-dev] [pci PATCH v7 2/5] virtio_pci: Add support for
+ unmanaged SR-IOV on virtio_pci devices
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "Daly, Dan" <dan.daly@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Don Dutile <ddutile@redhat.com>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Apr 3, 2018 at 11:27 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> On Tue, Apr 03, 2018 at 10:32:00AM -0700, Alexander Duyck wrote:
+>> On Tue, Apr 3, 2018 at 6:12 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+>> > On Fri, Mar 16, 2018 at 09:40:34AM -0700, Alexander Duyck wrote:
+>> >> On Fri, Mar 16, 2018 at 9:34 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+>> >> > On Thu, Mar 15, 2018 at 11:42:41AM -0700, Alexander Duyck wrote:
+>> >> >> From: Alexander Duyck <alexander.h.duyck@intel.com>
+>> >> >>
+>> >> >> Hardware-realized virtio_pci devices can implement SR-IOV, so this
+>> >> >> patch enables its use. The device in question is an upcoming Intel
+>> >> >> NIC that implements both a virtio_net PF and virtio_net VFs. These
+>> >> >> are hardware realizations of what has been up to now been a software
+>> >> >> interface.
+>> >> >>
+>> >> >> The device in question has the following 4-part PCI IDs:
+>> >> >>
+>> >> >> PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+>> >> >> VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
+>> >> >>
+>> >> >> The patch currently needs no check for device ID, because the callback
+>> >> >> will never be made for devices that do not assert the capability or
+>> >> >> when run on a platform incapable of SR-IOV.
+>> >> >>
+>> >> >> One reason for this patch is because the hardware requires the
+>> >> >> vendor ID of a VF to be the same as the vendor ID of the PF that
+>> >> >> created it. So it seemed logical to simply have a fully-functioning
+>> >> >> virtio_net PF create the VFs. This patch makes that possible.
+>> >> >>
+>> >> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> >> >> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+>> >> >> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> >> >
+>> >> > So if and when virtio PFs can manage the VFs, then we can
+>> >> > add a feature bit for that?
+>> >> > Seems reasonable.
+>> >>
+>> >> Yes. If nothing else you may not even need a feature bit depending on
+>> >> how things go.
+>> >
+>> > OTOH if the interface is changed in an incompatible way,
+>> > and old Linux will attempt to drive the new device
+>> > since there is no check.
+>> >
+>> > I think we should add a feature bit right away.
+>>
+>> I'm not sure why you would need a feature bit. The capability is
+>> controlled via PCI configuration space. If it is present the device
+>> has the capability. If it is not then it does not.
+>>
+>> Basically if the PCI configuration space is not present then the sysfs
+>> entries will not be spawned and nothing will attempt to use this
+>> function.
+>>
+>> - ALex
+>
+> It's about compability with older guests which ignore the
+> capability.
+>
+> The feature is thus helpful so host knows whether guest supports VFs.
 
+The thing is if the capability is ignored then the feature isn't used.
+So for SR-IOV it isn't an uncommon thing for there to be drivers for
+the PF floating around that do not support SR-IOV. In such cases
+SR-IOV just isn't used while the hardware could support it.
 
-> -----Original Message-----
-> From: Robin Murphy [mailto:robin.murphy@arm.com]
-> Sent: Tuesday, April 17, 2018 10:23 PM
-> To: Nipun Gupta <nipun.gupta@nxp.com>; robh+dt@kernel.org;
-> frowand.list@gmail.com
-> Cc: will.deacon@arm.com; mark.rutland@arm.com; catalin.marinas@arm.com;
-> hch@lst.de; gregkh@linuxfoundation.org; joro@8bytes.org;
-> m.szyprowski@samsung.com; shawnguo@kernel.org; bhelgaas@google.com;
-> iommu@lists.linux-foundation.org; linux-kernel@vger.kernel.org;
-> devicetree@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linuxppc-
-> dev@lists.ozlabs.org; linux-pci@vger.kernel.org; Bharat Bhushan
-> <bharat.bhushan@nxp.com>; stuyoder@gmail.com; Laurentiu Tudor
-> <laurentiu.tudor@nxp.com>; Leo Li <leoyang.li@nxp.com>
-> Subject: Re: [PATCH 2/6 v2] iommu: of: make of_pci_map_rid() available for
-> other devices too
-> 
-> On 17/04/18 11:21, Nipun Gupta wrote:
-> > iommu-map property is also used by devices with fsl-mc. This patch
-> > moves the of_pci_map_rid to generic location, so that it can be used
-> > by other busses too.
+I would think in the case of virtio it would be the same kind of
+thing. Basically if SR-IOV is supported by the host then the
+capability would be present. If SR-IOV is supported by the guest then
+it would make use of the capability to spawn VFs. If either the
+capability isn't present, or the driver doesn't use it then you won't
+be able to spawn VFs in the guest.
 
-Nipun, please clarify that only function name is changed and rest of body is same.
+Maybe I am missing something. Do you support dynamically changing the
+PCI configuration space for Virtio devices based on the presence of
+feature bits provided by the guest?
 
-> >
-> > Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> > ---
-> >   drivers/iommu/of_iommu.c | 106
-> > +++++++++++++++++++++++++++++++++++++++++++++--
-> 
-> Doesn't this break "msi-parent" parsing for !CONFIG_OF_IOMMU?
+Also are you saying this patch set should wait on the feature bit to
+be added, or are you talking about doing this as some sort of
+follow-up?
 
-Yes, this will be a problem with MSI 
-
-> I guess you
-> don't want fsl-mc to have to depend on PCI, but this looks like a step in the
-> wrong direction.
-> 
-> I'm not entirely sure where of_map_rid() fits best, but from a quick look around
-> the least-worst option might be drivers/of/of_address.c, unless Rob and Frank
-> have a better idea of where generic DT-based ID translation routines could live?
-
-drivers/of/address.c may be proper place to move until someone have better idea.
-
-Thanks
--Bharat
-
-> 
-> >   drivers/of/irq.c         |   6 +--
-> >   drivers/pci/of.c         | 101 --------------------------------------------
-> >   include/linux/of_iommu.h |  11 +++++
-> >   include/linux/of_pci.h   |  10 -----
-> >   5 files changed, 117 insertions(+), 117 deletions(-)
-> >
-> > diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c index
-> > 5c36a8b..4e7712f 100644
-> > --- a/drivers/iommu/of_iommu.c
-> > +++ b/drivers/iommu/of_iommu.c
-> > @@ -138,6 +138,106 @@ static int of_iommu_xlate(struct device *dev,
-> >   	return ops->of_xlate(dev, iommu_spec);
-> >   }
-> >
-> > +/**
-> > + * of_map_rid - Translate a requester ID through a downstream mapping.
-> > + * @np: root complex device node.
-> > + * @rid: device requester ID to map.
-> > + * @map_name: property name of the map to use.
-> > + * @map_mask_name: optional property name of the mask to use.
-> > + * @target: optional pointer to a target device node.
-> > + * @id_out: optional pointer to receive the translated ID.
-> > + *
-> > + * Given a device requester ID, look up the appropriate
-> > +implementation-defined
-> > + * platform ID and/or the target device which receives transactions
-> > +on that
-> > + * ID, as per the "iommu-map" and "msi-map" bindings. Either of
-> > +@target or
-> > + * @id_out may be NULL if only the other is required. If @target
-> > +points to
-> > + * a non-NULL device node pointer, only entries targeting that node
-> > +will be
-> > + * matched; if it points to a NULL value, it will receive the device
-> > +node of
-> > + * the first matching target phandle, with a reference held.
-> > + *
-> > + * Return: 0 on success or a standard error code on failure.
-> > + */
-> > +int of_map_rid(struct device_node *np, u32 rid,
-> > +		   const char *map_name, const char *map_mask_name,
-> > +		   struct device_node **target, u32 *id_out) {
-> > +	u32 map_mask, masked_rid;
-> > +	int map_len;
-> > +	const __be32 *map = NULL;
-> > +
-> > +	if (!np || !map_name || (!target && !id_out))
-> > +		return -EINVAL;
-> > +
-> > +	map = of_get_property(np, map_name, &map_len);
-> > +	if (!map) {
-> > +		if (target)
-> > +			return -ENODEV;
-> > +		/* Otherwise, no map implies no translation */
-> > +		*id_out = rid;
-> > +		return 0;
-> > +	}
-> > +
-> > +	if (!map_len || map_len % (4 * sizeof(*map))) {
-> > +		pr_err("%pOF: Error: Bad %s length: %d\n", np,
-> > +			map_name, map_len);
-> > +		return -EINVAL;
-> > +	}
-> > +
-> > +	/* The default is to select all bits. */
-> > +	map_mask = 0xffffffff;
-> > +
-> > +	/*
-> > +	 * Can be overridden by "{iommu,msi}-map-mask" property.
-> > +	 */
-> > +	if (map_mask_name)
-> > +		of_property_read_u32(np, map_mask_name, &map_mask);
-> > +
-> > +	masked_rid = map_mask & rid;
-> > +	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
-> > +		struct device_node *phandle_node;
-> > +		u32 rid_base = be32_to_cpup(map + 0);
-> > +		u32 phandle = be32_to_cpup(map + 1);
-> > +		u32 out_base = be32_to_cpup(map + 2);
-> > +		u32 rid_len = be32_to_cpup(map + 3);
-> > +
-> > +		if (rid_base & ~map_mask) {
-> > +			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x)
-> ignores rid-base (0x%x)\n",
-> > +				np, map_name, map_name,
-> > +				map_mask, rid_base);
-> > +			return -EFAULT;
-> > +		}
-> > +
-> > +		if (masked_rid < rid_base || masked_rid >= rid_base + rid_len)
-> > +			continue;
-> > +
-> > +		phandle_node = of_find_node_by_phandle(phandle);
-> > +		if (!phandle_node)
-> > +			return -ENODEV;
-> > +
-> > +		if (target) {
-> > +			if (*target)
-> > +				of_node_put(phandle_node);
-> > +			else
-> > +				*target = phandle_node;
-> > +
-> > +			if (*target != phandle_node)
-> > +				continue;
-> > +		}
-> > +
-> > +		if (id_out)
-> > +			*id_out = masked_rid - rid_base + out_base;
-> > +
-> > +		pr_debug("%pOF: %s, using mask %08x, rid-base: %08x, out-
-> base: %08x, length: %08x, rid: %08x -> %08x\n",
-> > +			np, map_name, map_mask, rid_base, out_base,
-> > +			rid_len, rid, masked_rid - rid_base + out_base);
-> > +		return 0;
-> > +	}
-> > +
-> > +	pr_err("%pOF: Invalid %s translation - no match for rid 0x%x on
-> %pOF\n",
-> > +		np, map_name, rid, target && *target ? *target : NULL);
-> > +	return -EFAULT;
-> > +}
-> > +
-> >   struct of_pci_iommu_alias_info {
-> >   	struct device *dev;
-> >   	struct device_node *np;
-> > @@ -149,9 +249,9 @@ static int of_pci_iommu_init(struct pci_dev *pdev, u16
-> alias, void *data)
-> >   	struct of_phandle_args iommu_spec = { .args_count = 1 };
-> >   	int err;
-> >
-> > -	err = of_pci_map_rid(info->np, alias, "iommu-map",
-> > -			     "iommu-map-mask", &iommu_spec.np,
-> > -			     iommu_spec.args);
-> > +	err = of_map_rid(info->np, alias, "iommu-map",
-> > +			 "iommu-map-mask", &iommu_spec.np,
-> > +			 iommu_spec.args);
-> 
-> Super-nit: Apparently I missed rewrapping this to 2 lines in d87beb749281, but if
-> it's being touched again, that would be nice ;)
-> 
-> Robin.
-> 
-> >   	if (err)
-> >   		return err == -ENODEV ? NO_IOMMU : err;
-> >
-> > diff --git a/drivers/of/irq.c b/drivers/of/irq.c index
-> > 02ad93a..b72eeec 100644
-> > --- a/drivers/of/irq.c
-> > +++ b/drivers/of/irq.c
-> > @@ -22,7 +22,7 @@
-> >   #include <linux/module.h>
-> >   #include <linux/of.h>
-> >   #include <linux/of_irq.h>
-> > -#include <linux/of_pci.h>
-> > +#include <linux/of_iommu.h>
-> >   #include <linux/string.h>
-> >   #include <linux/slab.h>
-> >
-> > @@ -588,8 +588,8 @@ static u32 __of_msi_map_rid(struct device *dev,
-> struct device_node **np,
-> >   	 * "msi-map" property.
-> >   	 */
-> >   	for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent)
-> > -		if (!of_pci_map_rid(parent_dev->of_node, rid_in, "msi-map",
-> > -				    "msi-map-mask", np, &rid_out))
-> > +		if (!of_map_rid(parent_dev->of_node, rid_in, "msi-map",
-> > +				"msi-map-mask", np, &rid_out))
-> >   			break;
-> >   	return rid_out;
-> >   }
-> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c index
-> > a28355c..d2cebbe 100644
-> > --- a/drivers/pci/of.c
-> > +++ b/drivers/pci/of.c
-> > @@ -362,107 +362,6 @@ int of_pci_get_host_bridge_resources(struct
-> device_node *dev,
-> >   EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-> >   #endif /* CONFIG_OF_ADDRESS */
-> >
-> > -/**
-> > - * of_pci_map_rid - Translate a requester ID through a downstream mapping.
-> > - * @np: root complex device node.
-> > - * @rid: PCI requester ID to map.
-> > - * @map_name: property name of the map to use.
-> > - * @map_mask_name: optional property name of the mask to use.
-> > - * @target: optional pointer to a target device node.
-> > - * @id_out: optional pointer to receive the translated ID.
-> > - *
-> > - * Given a PCI requester ID, look up the appropriate
-> > implementation-defined
-> > - * platform ID and/or the target device which receives transactions
-> > on that
-> > - * ID, as per the "iommu-map" and "msi-map" bindings. Either of
-> > @target or
-> > - * @id_out may be NULL if only the other is required. If @target
-> > points to
-> > - * a non-NULL device node pointer, only entries targeting that node
-> > will be
-> > - * matched; if it points to a NULL value, it will receive the device
-> > node of
-> > - * the first matching target phandle, with a reference held.
-> > - *
-> > - * Return: 0 on success or a standard error code on failure.
-> > - */
-> > -int of_pci_map_rid(struct device_node *np, u32 rid,
-> > -		   const char *map_name, const char *map_mask_name,
-> > -		   struct device_node **target, u32 *id_out)
-> > -{
-> > -	u32 map_mask, masked_rid;
-> > -	int map_len;
-> > -	const __be32 *map = NULL;
-> > -
-> > -	if (!np || !map_name || (!target && !id_out))
-> > -		return -EINVAL;
-> > -
-> > -	map = of_get_property(np, map_name, &map_len);
-> > -	if (!map) {
-> > -		if (target)
-> > -			return -ENODEV;
-> > -		/* Otherwise, no map implies no translation */
-> > -		*id_out = rid;
-> > -		return 0;
-> > -	}
-> > -
-> > -	if (!map_len || map_len % (4 * sizeof(*map))) {
-> > -		pr_err("%pOF: Error: Bad %s length: %d\n", np,
-> > -			map_name, map_len);
-> > -		return -EINVAL;
-> > -	}
-> > -
-> > -	/* The default is to select all bits. */
-> > -	map_mask = 0xffffffff;
-> > -
-> > -	/*
-> > -	 * Can be overridden by "{iommu,msi}-map-mask" property.
-> > -	 * If of_property_read_u32() fails, the default is used.
-> > -	 */
-> > -	if (map_mask_name)
-> > -		of_property_read_u32(np, map_mask_name, &map_mask);
-> > -
-> > -	masked_rid = map_mask & rid;
-> > -	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
-> > -		struct device_node *phandle_node;
-> > -		u32 rid_base = be32_to_cpup(map + 0);
-> > -		u32 phandle = be32_to_cpup(map + 1);
-> > -		u32 out_base = be32_to_cpup(map + 2);
-> > -		u32 rid_len = be32_to_cpup(map + 3);
-> > -
-> > -		if (rid_base & ~map_mask) {
-> > -			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x)
-> ignores rid-base (0x%x)\n",
-> > -				np, map_name, map_name,
-> > -				map_mask, rid_base);
-> > -			return -EFAULT;
-> > -		}
-> > -
-> > -		if (masked_rid < rid_base || masked_rid >= rid_base + rid_len)
-> > -			continue;
-> > -
-> > -		phandle_node = of_find_node_by_phandle(phandle);
-> > -		if (!phandle_node)
-> > -			return -ENODEV;
-> > -
-> > -		if (target) {
-> > -			if (*target)
-> > -				of_node_put(phandle_node);
-> > -			else
-> > -				*target = phandle_node;
-> > -
-> > -			if (*target != phandle_node)
-> > -				continue;
-> > -		}
-> > -
-> > -		if (id_out)
-> > -			*id_out = masked_rid - rid_base + out_base;
-> > -
-> > -		pr_debug("%pOF: %s, using mask %08x, rid-base: %08x, out-
-> base: %08x, length: %08x, rid: %08x -> %08x\n",
-> > -			np, map_name, map_mask, rid_base, out_base,
-> > -			rid_len, rid, masked_rid - rid_base + out_base);
-> > -		return 0;
-> > -	}
-> > -
-> > -	pr_err("%pOF: Invalid %s translation - no match for rid 0x%x on
-> %pOF\n",
-> > -		np, map_name, rid, target && *target ? *target : NULL);
-> > -	return -EFAULT;
-> > -}
-> > -
-> >   #if IS_ENABLED(CONFIG_OF_IRQ)
-> >   /**
-> >    * of_irq_parse_pci - Resolve the interrupt for a PCI device diff
-> > --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h index
-> > 4fa654e..432b53c 100644
-> > --- a/include/linux/of_iommu.h
-> > +++ b/include/linux/of_iommu.h
-> > @@ -15,6 +15,10 @@ extern int of_get_dma_window(struct device_node
-> *dn, const char *prefix,
-> >   extern const struct iommu_ops *of_iommu_configure(struct device *dev,
-> >   					struct device_node *master_np);
-> >
-> > +int of_map_rid(struct device_node *np, u32 rid,
-> > +	       const char *map_name, const char *map_mask_name,
-> > +	       struct device_node **target, u32 *id_out);
-> > +
-> >   #else
-> >
-> >   static inline int of_get_dma_window(struct device_node *dn, const
-> > char *prefix, @@ -30,6 +34,13 @@ static inline const struct iommu_ops
-> *of_iommu_configure(struct device *dev,
-> >   	return NULL;
-> >   }
-> >
-> > +static inline int of_map_rid(struct device_node *np, u32 rid,
-> > +			     const char *map_name, const char
-> *map_mask_name,
-> > +			     struct device_node **target, u32 *id_out) {
-> > +	return -EINVAL;
-> > +}
-> > +
-> >   #endif	/* CONFIG_OF_IOMMU */
-> >
-> >   extern struct of_device_id __iommu_of_table; diff --git
-> > a/include/linux/of_pci.h b/include/linux/of_pci.h index
-> > 091033a..a23b44a 100644
-> > --- a/include/linux/of_pci.h
-> > +++ b/include/linux/of_pci.h
-> > @@ -17,9 +17,6 @@ struct device_node *of_pci_find_child_device(struct
-> device_node *parent,
-> >   int of_get_pci_domain_nr(struct device_node *node);
-> >   int of_pci_get_max_link_speed(struct device_node *node);
-> >   void of_pci_check_probe_only(void);
-> > -int of_pci_map_rid(struct device_node *np, u32 rid,
-> > -		   const char *map_name, const char *map_mask_name,
-> > -		   struct device_node **target, u32 *id_out);
-> >   #else
-> >   static inline struct device_node *of_pci_find_child_device(struct device_node
-> *parent,
-> >   					     unsigned int devfn)
-> > @@ -44,13 +41,6 @@ static inline int of_pci_get_devfn(struct device_node
-> *np)
-> >   	return -1;
-> >   }
-> >
-> > -static inline int of_pci_map_rid(struct device_node *np, u32 rid,
-> > -			const char *map_name, const char *map_mask_name,
-> > -			struct device_node **target, u32 *id_out)
-> > -{
-> > -	return -EINVAL;
-> > -}
-> > -
-> >   static inline int
-> >   of_pci_get_max_link_speed(struct device_node *node)
-> >   {
-> >
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+- Alex
