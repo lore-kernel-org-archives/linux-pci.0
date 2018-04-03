@@ -1,126 +1,89 @@
-Return-Path: <SRS0=C7R8=HH=jurassic.park.msu.ru=ink@kernel.org>
-Return-Path: <SRS0=C7R8=HH=jurassic.park.msu.ru=ink@kernel.org>
-Date: Wed, 18 Apr 2018 21:48:08 +0100
-From: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Matt Turner <mattst88@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-alpha <linux-alpha@vger.kernel.org>,
-	Richard Henderson <rth@twiddle.net>,
-	Jay Estabrook <jay.estabrook@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: Some Alphas broken by f75b99d5a77d (PCI: Enforce bus address
- limits in resource allocation)
-Message-ID: <20180418204808.GA2352@mail.rc.ru>
-References: <CAEdQ38GUhL0R4c7ZjEZv89TmqQ0cwhnvBawxuXonSb9On=+B6A@mail.gmail.com>
- <20180416215044.GE28657@bhelgaas-glaptop.roam.corp.google.com>
- <CAEdQ38EdxHigQiH_k=+4enbHAutbWOE6Kc5C81ghfsC3pwELjw@mail.gmail.com>
- <20180417194344.GK28657@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 3/8] bindings: PCI: designware: Add support for the EP in
+ designware driver
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
+ <dd582bfc2780679b7a092d23547c316234a84c34.1522235224.git.gustavo.pimentel@synopsys.com>
+ <405911c8-fffc-5bd7-76c5-f7aabde3b7bc@ti.com>
+ <87ba8936-e870-f52b-2ff1-0aea90d0a25c@synopsys.com>
+ <f94889e3-ba6f-5aba-d0ab-85db5d434cc9@ti.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <331e32c4-a39b-b5a6-6fbd-6eef7ca4b27c@synopsys.com>
+Date: Tue, 3 Apr 2018 14:20:45 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180417194344.GK28657@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <f94889e3-ba6f-5aba-d0ab-85db5d434cc9@ti.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 17, 2018 at 02:43:44PM -0500, Bjorn Helgaas wrote:
-> On Mon, Apr 16, 2018 at 09:43:42PM -0700, Matt Turner wrote:
-> > On Mon, Apr 16, 2018 at 2:50 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > Hi Matt,
-> > >
-> > > First of all, sorry about breaking Nautilus, and thanks very much for
-> > > tracking it down to this commit.
-> > 
-> > It's a particularly weird case, as far as I've been able to discern :)
-> > 
-> > > On Mon, Apr 16, 2018 at 07:33:57AM -0700, Matt Turner wrote:
-> > >> Commit f75b99d5a77d63f20e07bd276d5a427808ac8ef6 (PCI: Enforce bus
-> > >> address limits in resource allocation) broke Alpha systems using
-> > >> CONFIG_ALPHA_NAUTILUS. Alpha is 64-bit, but Nautilus systems use a
-> > >> 32-bit AMD 751/761 chipset. arch/alpha/kernel/sys_nautilus.c maps PCI
-> > >> into the upper addresses just below 4GB.
-> > >>
-> > >> I can get a working kernel by ifdef'ing out the code in
-> > >> drivers/pci/bus.c:pci_bus_alloc_resource. We can't tie
-> > >> PCI_BUS_ADDR_T_64BIT to ALPHA_NAUTILUS without breaking generic
-> > >> kernels.
-> > >>
-> > >> How can we get Nautilus working again?
-> > >
-> > > Can you collect a complete dmesg log, ideally both before and after
-> > > f75b99d5a77d?  I assume the problem is that after f75b99d5a77d? we
-> > > erroneously assign space for something above 4GB.  But if we know the
-> > > correct host bridge apertures, we shouldn't assign space outside them,
-> > > regardless of the PCI bus address size.
-> > 
-> > I made a mistake in my initial report. Commit f75b99d5a77d is actually
-> > the last *working* commit. My apologies. The next commit is
-> > d56dbf5bab8c (PCI: Allocate 64-bit BARs above 4G when possible) and it
-> > breaks Nautilus I've confirmed.
-> > 
-> > Please find attached dmesgs from those two commits, from the commit
-> > immediately before them, and another from 4.17-rc1 with my hack of #if
-> > 0'ing out the pci_bus_alloc_from_region(..., &pci_high) code.
-> > 
-> > Thanks for having a look!
+Hi Kishon,
+
+On 03/04/2018 11:55, Kishon Vijay Abraham I wrote:
+> Hi,
 > 
-> We're telling the PCI core that the host bridge MMIO aperture is the
-> entire 64-bit address space, so when we assign BARs, some of them end
-> up above 4GB:
+> On Tuesday 03 April 2018 04:13 PM, Gustavo Pimentel wrote:
+>> Hi Kishon,
+>>
+>> On 02/04/2018 06:35, Kishon Vijay Abraham I wrote:
+>>>
+>>>
+>>> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
+>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>>>
+>>> Please add a commit message.
+>>
+>> Ok. I'll add. Thanks for noticing it.
+>>
+>>>> ---
+>>>>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 13 +++++++++++++
+>>>>  1 file changed, 13 insertions(+)
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>>> index 6300762..4bb2e08 100644
+>>>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>>>> @@ -3,6 +3,7 @@
+>>>>  Required properties:
+>>>>  - compatible:
+>>>>  	"snps,dw-pcie" for RC mode;
+>>>> +	"snps,dw-pcie-ep" for EP mode;
+>>>>  - reg: Should contain the configuration address space.
+>>>>  - reg-names: Must be "config" for the PCIe configuration space.
+>>>>      (The old way of getting the configuration address space from "ranges"
+>>>> @@ -56,3 +57,15 @@ Example configuration:
+>>>>  		#interrupt-cells = <1>;
+>>>>  		num-lanes = <1>;
+>>>>  	};
+>>>> +or
+>>>> +	pcie_ep: pcie_ep@dfc00000 {
+>>>> +		compatible = "snps,dw-pcie-ep";
+>>>> +		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
+>>>> +		      <0xdfc01000 0x0001000>, /* IP registers 2 */
+>>>
+>>> Doesn't this have iATU unroll space?
+>>
+>> I don't think EP has it, but I'm no expert on this matter. Can you provide me
+>> some example of having iATU unroll space mapping would be useful in EP scope?
 > 
->   pci_bus 0000:00: root bus resource [mem 0x00000000-0xffffffffffffffff]
->   pci 0000:00:09.0: BAR 0: assigned [mem 0x100000000-0x10000ffff 64bit]
+> I'm not sure. I thought if the dwc3 core version is 4.80, then it'll have a
+> separate ATU space irrespective of RC mode or EP mode.
+
+As replied on patch 1, let's leave out  any reference of iATU unroll to avoid
+any confusion. Agree?
+
 > 
-> But it sounds like the MMIO aperture really ends at 0xffffffff, so
-> that's not going to work.
+> Thanks
+> Kishon
+> 
 
-Correct... This would do as a quick fix, I think:
-
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index ff4f54b..477ba65 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -193,6 +193,8 @@ static struct resource irongate_io = {
- };
- static struct resource irongate_mem = {
- 	.name	= "Irongate PCI MEM",
-+	.start	= 0,
-+	.end	= 0xffffffff,
- 	.flags	= IORESOURCE_MEM,
- };
- static struct resource busn_resource = {
-@@ -218,7 +220,7 @@ nautilus_init_pci(void)
- 		return;
- 
- 	pci_add_resource(&bridge->windows, &ioport_resource);
--	pci_add_resource(&bridge->windows, &iomem_resource);
-+	pci_add_resource(&bridge->windows, &irongate_mem);
- 	pci_add_resource(&bridge->windows, &busn_resource);
- 	bridge->dev.parent = NULL;
- 	bridge->sysdata = hose;
-
-
-> There's probably some register in the chipset that tells us where the
-> MMIO aperture starts.  The best thing to do would be to read that
-> register, use it to initialize irongate_mem, and use that as the MMIO
-> aperture.
-
-Surely there is the register, namely IRONGATE0->pci_mem, but it's
-basically write-only for us as it contains utter crap on bootup.
-
-> But I don't know where to look in the chipset, and it looks like the
-> current strategy is to infer the base by looking at BAR assignments of
-> PCI devices.  Can you try the patch below (based on v4.17-rc1) and
-> save the dmesg and /proc/iomem and /proc/ioports contents?  I'm
-> guessing at some things here, so I added a few debug printks, too.
-
-No, the strategy was to do PCI resource allocations from scratch,
-minimizing MMIO aperture to save as much RAM as possible in 4Gb
-memory configuration. That's what all that hackery with bus sizing
-was for. We pretended that irongate is sort of non-standard p2p bridge
-(which is almost true wrt internal alpha ev6 "host bridge"),
-called pci_bus_size_bridges() for it, then moved calculated MMIO
-window up to 4G boundary and then did normal "assign unassigned".
-However, it was broken long time ago in a more subtle way - even in
-Matt's dmesg from working 3.13 kernels AGP framebuffer resource ended
-up either unassigned or in the wrong place. This is relatively harmless
-if you don't use graphics though. Not sure how to fix that, this
-"root bridge" approach looks rather limiting to me.
+Regards,
+Gustavo
