@@ -1,73 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 3 Apr 2018 09:16:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-acpi@vger.kernel.org
-Subject: Re: [PATCHv2 1/7] PCI/DPC: Enable ERR_COR
-Message-ID: <20180403141646.GC60020@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180402162203.3370-1-keith.busch@intel.com>
- <20180402162203.3370-2-keith.busch@intel.com>
- <20180402212302.GN9322@bhelgaas-glaptop.roam.corp.google.com>
- <20180402230949.GA4485@localhost.localdomain>
+Return-Path: <SRS0=m3Xz=GZ=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=m3Xz=GZ=linutronix.de=tglx@kernel.org>
+Date: Wed, 4 Apr 2018 10:13:32 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Keith Busch <keith.busch@intel.com>, Linux PCI <linux-pci@vger.kernel.org>,
+    Bjorn Helgaas <bhelgaas@google.com>, Oza Pawandeep <poza@codeaurora.org>,
+    Sinan Kaya <okaya@codeaurora.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCHv2 2/7] PCI/DPC: Fix PCI legacy interrupt
+ acknowledgement
+In-Reply-To: <20180403230405.GP9322@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.21.1804041002550.2056@nanos.tec.linutronix.de>
+References: <20180402162203.3370-1-keith.busch@intel.com> <20180402162203.3370-3-keith.busch@intel.com> <20180403203847.GO9322@bhelgaas-glaptop.roam.corp.google.com> <20180403230405.GP9322@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180402230949.GA4485@localhost.localdomain>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-acpi]
+On Tue, 3 Apr 2018, Bjorn Helgaas wrote:
 
-On Mon, Apr 02, 2018 at 05:09:49PM -0600, Keith Busch wrote:
-> On Mon, Apr 02, 2018 at 04:23:02PM -0500, Bjorn Helgaas wrote:
-> > On Mon, Apr 02, 2018 at 10:21:57AM -0600, Keith Busch wrote:
-> > > A DPC port may be configured to send ERR_COR message when the
-> > > triggered. This patch enables this feature so additional notification
-> > > of the event is possible.
+> [+cc Thomas, Rafael for real]
+> On Tue, Apr 03, 2018 at 03:38:47PM -0500, Bjorn Helgaas wrote:
+> > [+cc Thomas, Rafael]
 > > 
-> > Who is the intended consumer of the ERR_COR message?  I guess if the
-> > root port supports AER, we'll see AER logging when we didn't before?
-> > Is that what you mean by "additional notification"?
-> > 
-> > Or, since the DPC ERR_COR implementation note (sec 6.2.10.2) suggests
-> > that ERR_COR is primarily intended for use by platform firmware, does
-> > this change enable notification via the firmware?  If so, how does
-> > that work?  Does it require the platform to retain control of AER so
-> > it can see these events?  But if the platform retains AER control, I
-> > don't think we'd be enabling DPC in Linux.  I'm confused.
-> > 
-> > The similar implementation note in 6.2.10.5 suggests that
-> > DL_ACTIVE_ERR_COR is also intended for use by the platform.  Should we
-> > be setting that for the same reason we're setting
-> > PCI_EXP_DPC_CTL_ERR_COR?
-> 
-> I think there are various ways this could play out. I added this to
-> the series per a request for future use, but I actually don't have an
-> environment where I could test as intended. As I understand, it was
-> for platform firmware that may own the root port, but not switches in
-> an external enclosure, so the OS would own the DPC control. The ERR_COR
-> is to notify firmware so it may note an event in a platform log.
+> > On Mon, Apr 02, 2018 at 10:21:58AM -0600, Keith Busch wrote:
+> > > From: Oza Pawandeep <poza@codeaurora.org>
+> > > 
+> > > The DPC driver was acknowledging the DPC interrupt status in deferred
+> > > work. That works for edge triggered interrupts, but causes an interrupt
+> > > storm with level triggered legacy interrupts.
 
-This picture doesn't make sense to me yet.  Per the PCI Firmware spec,
-r3.2, sec 4.5.2, we use _OSC to negotiate control over AER (and now
-DPC).  I think _OSC is only allowed directly under a host bridge
-device (PNP0A08 or PNP0A03), and it applies to the entire hierarchy
-under the host bridge.
+The problem is homebrewn in the driver. So, yes it needs to mask the
+interrupt before returning from the irq handler if the rest of the magic is
+done in a worker.
 
-I don't know how firmware could claim to own AER on a root port, but
-not on switches (external or otherwise) below that root port.
+Though this could have been avoided if the driver simply would have used a
+threaded interrupt. The core handles that correctly for any type of
+interrupts, edge/level. The logic there is:
 
-If _OSC says firmware owns AER, we won't touch AER on the root port,
-but we also won't touch DPC on switches below the root port.  So I
-don't see how this change will help.
+      low_level_handler()
+	   if (level)
+	   	irq_mask();
+	   primary_handler();
+	   wake_thread();
+	   if (level && !thread_pending)
+	   	irq_unmask();
 
-> I think you bring up a good point on DL_Active.
-> 
-> This should be harmless even if there are no consumers for the message,
-> or if the OS owns the root port AER control. But I'm totally fine
-> with dropping this one in the series, and it's not related to the rest
-> anyway. I think I at least need to circle back with platform makers and
-> really test the feature on capable hardware.
+and the thread handler does
+
+      thread_handler()
+      	   thread_handler_function();
+	   if (!thread_pending && masked && !disabled)
+	   	irq_unmask();
+
+There is a reason why threaded interrupt handlers exist....
+
+Thanks,
+
+	tglx
