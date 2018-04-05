@@ -1,120 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45642 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750973AbeDMVQy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Apr 2018 17:16:54 -0400
-Date: Fri, 13 Apr 2018 16:16:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Srinath Mannam <srinath.mannam@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Ray Jui <ray.jui@broadcom.com>, linux-pci@vger.kernel.org,
-        Rajat Jain <rajatja@google.com>
-Subject: Re: Issue with Enable LTR while pcie_aspm off
-Message-ID: <20180413211651.GA80087@bhelgaas-glaptop.roam.corp.google.com>
-References: <CABe79T47vUjq20HuMrJZxhZWMr0q3uXMF6xL1TgkqhqA8qi1wg@mail.gmail.com>
- <20180413135659.GC46420@bhelgaas-glaptop.roam.corp.google.com>
- <CABe79T4nO7dC9uHwX-woAvkdw0+b2ssUyxgs0cnGo90OH_YD+Q@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Feng Kan <fkan@apm.com>
+Subject: Re: [PATCH V3] PM / core: fix deferred probe breaking suspend resume
+ order
+Date: Thu, 05 Apr 2018 18:40:35 +0200
+Message-ID: <2883677.nJtJiE16PD@aspire.rjw.lan>
+In-Reply-To: <1520274579-30492-1-git-send-email-fkan@apm.com>
+References: <1520274579-30492-1-git-send-email-fkan@apm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABe79T4nO7dC9uHwX-woAvkdw0+b2ssUyxgs0cnGo90OH_YD+Q@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, linux-pm@vger.kernel.org,
+ linux-pci@vger.kernel.org, gregkh@linuxfoundation.org, bhelgaas@google.com,
+ Toan Le <toanle@apm.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 13, 2018 at 09:13:42PM +0530, Srinath Mannam wrote:
-> Hi Bjorn,
+On Monday, March 5, 2018 7:29:39 PM CEST Feng Kan wrote:
+> When bridge and its endpoint is enumerated the devices are added to the
+> dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
+> This causes the bridge to be moved to the end of the dpm list when
+> deferred probe kicks in. The order of the dpm list for bridge and
+> endpoint is reversed.
 > 
-> Thank you very much for quick response.
+> Add reordering code to move the bridge and its children and consumers to
+> the end of the pm list so the order for suspend and resume is not altered.
+> The code also move device and its children and consumers to the tail of
+> device_kset list if it is registered.
 > 
-> I am using samsung NVMe card as EP connected to our platform. As per
-> link capabilities device does not support L1.s.
-> But LTR is enabled in DEVCAP2.
+> Signed-off-by: Feng Kan <fkan@apm.com>
+> Signed-off-by: Toan Le <toanle@apm.com>
+> ---
+>  V3:
+> 	1. additional code comment changes
+>  V2:
+>         1. change patch title from "move device and its children..."
+>         2. move define based on Bjorn's comment
+>         3. rename function name and comment content
+> 
+>  drivers/base/base.h |  3 +++
+>  drivers/base/core.c | 20 ++++++++++++++++++++
+>  drivers/base/dd.c   |  4 +---
+>  3 files changed, 24 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/base/base.h b/drivers/base/base.h
+> index d800de6..a75c302 100644
+> --- a/drivers/base/base.h
+> +++ b/drivers/base/base.h
+> @@ -161,3 +161,6 @@ static inline void module_remove_driver(struct device_driver *drv) { }
+>  extern void device_links_no_driver(struct device *dev);
+>  extern bool device_links_busy(struct device *dev);
+>  extern void device_links_unbind_consumers(struct device *dev);
+> +
+> +/* device pm support */
+> +void device_pm_move_to_tail(struct device *dev);
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index 110230d..3b37906 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -148,6 +148,26 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
+>  }
+>  
+>  /**
+> + * device_pm_move_to_tail - Move set of devices to the end of device lists
+> + * @dev: current device pointer
 
-Interesting that the device advertises LTR support, but not L1.2
-support.  As far as I can tell, that's legal per spec, but I don't
-know what the LTR info would be used for.  The only use I know about
-is comparison with LTR_L1.2_THRESHOLD, as in PCIe r4.0, sec 5.5.1.
+What does "current" mean here, exactly?
 
-Can you attach lspci -vv output for the NVMe device and all the
-devices in the path leading to it?
+I guess it would be better to say "Device to move" or similar here.
 
-> In my observation after setting LTR without enabling ASPM (common
-> clock and link retraining) in software, device stopped responding.
+> + *
+> + * This is a device_reorder_to_tail() wrapper taking the requisite locks.
+> + *
+> + * It moves the device along with all of its children and all of its consumers
 
->From sec 5.5.1, it seems clear that LTR would have to be enabled
-before L1.2 is enabled, because the decision to enter L1.2 depends on
-information from LTR messages.
+"The device" is @dev, so it's better to use @dev here, like
 
-Since the device advertised LTR support, it seems like a hardware
-defect if enabling it breaks something.  But I can imagine that if it
-doesn't advertise L1.2 support, nobody expected LTR to be used.  Can
-you try the patch below?  It should make it so we don't enable LTR
-unless we also support L1.2.  Maybe that's enough to avoid the issue.
+"It moves @dev along with ..."
 
-Bjorn
+Thanks,
+Rafael
 
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index f76eb7704f64..9e2212889e7e 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -400,6 +400,16 @@ static void pcie_get_aspm_reg(struct pci_dev *pdev,
- 		info->l1ss_cap = 0;
- 		return;
- 	}
-+
-+	/*
-+	 * If we don't have LTR for the entire path from the Root Complex
-+	 * to this device, we can't use L1.2.  PCIe r4.0, secs 5.5.4, 6.18.
-+	 */
-+	if (!pdev->ltr_path) {
-+		info->l1ss_cap &= ~PCI_L1SS_CTL1_PCIPM_L1_2;
-+		info->l1ss_cap &= ~PCI_L1SS_CTL1_ASPM_L1_2;
-+	}
-+
- 	pci_read_config_dword(pdev, info->l1ss_cap_ptr + PCI_L1SS_CTL1,
- 			      &info->l1ss_ctl1);
- 	pci_read_config_dword(pdev, info->l1ss_cap_ptr + PCI_L1SS_CTL2,
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac91b6fd0bcd..9a224612b3f8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1954,12 +1954,29 @@ static void pci_configure_relaxed_ordering(struct pci_dev *dev)
- static void pci_configure_ltr(struct pci_dev *dev)
- {
- #ifdef CONFIG_PCIEASPM
--	u32 cap;
-+	u32 cap, l1ss_cap, l1ss;
- 	struct pci_dev *bridge;
- 
- 	if (!pci_is_pcie(dev))
- 		return;
- 
-+	/*
-+	 * Per PCIe r4.0, sec 5.5.4, we must program LTR_L1.2_THRESHOLD if
-+	 * either L1.2 enable bit is set.  That suggests that LTR must be
-+	 * enabled before L1.2.  If the device (and the entire path leading
-+	 * to it) advertises L1.2 and LTR support, enable LTR.
-+	 */
-+	l1ss_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_L1SS);
-+	if (!l1ss_cap)
-+		return;
-+
-+	pci_read_config_dword(dev, l1ss_cap + PCI_L1SS_CAP, &l1ss);
-+	if (!(l1ss & PCI_L1SS_CAP_L1_PM_SS))
-+		return;
-+
-+	if (!(l1ss & (PCI_L1SS_CAP_PCIPM_L1_2 | PCI_L1SS_CAP_ASPM_L1_2)))
-+		return;
-+
- 	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
- 	if (!(cap & PCI_EXP_DEVCAP2_LTR))
- 		return;
-@@ -1967,7 +1984,7 @@ static void pci_configure_ltr(struct pci_dev *dev)
- 	/*
- 	 * Software must not enable LTR in an Endpoint unless the Root
- 	 * Complex and all intermediate Switches indicate support for LTR.
--	 * PCIe r3.1, sec 6.18.
-+	 * PCIe r4.0, sec 6.18.
- 	 */
- 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
- 		dev->ltr_path = 1;
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
