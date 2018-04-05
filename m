@@ -1,105 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50236 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752269AbeDBPrN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 11:47:13 -0400
-From: Thomas Tai <thomas.tai@oracle.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+Received: from mga07.intel.com ([134.134.136.100]:45123 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751195AbeDEMME (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Apr 2018 08:12:04 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+        x86@kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>,
         linux-kernel@vger.kernel.org
-Cc: thomas.tai@oracle.com
-Subject: [PATCH] PCI/AER: add pcie TLP header information in the tracepoint
-Date: Mon,  2 Apr 2018 11:47:08 -0400
-Message-Id: <20180402154708.5032-1-thomas.tai@oracle.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] x86/PCI: Make pci=earlydump output neat
+Date: Thu,  5 Apr 2018 15:11:59 +0300
+Message-Id: <20180405121159.84241-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a PCIe AER occurs, the TLP header information is
-printed in the kernel message but it is missing from
-the tracepoint. A userspace program can use this information
-in the tracepoint to better analyze problems.
+Currently the early dump of PCI configuration space looks quite unhelpful, e.g.
 
-Example tracepoint output:
-aer_event: 0000:01:00.0
-PCIe Bus Error: severity=Uncorrected, non-fatal, Completer Abort
-TLP Header={0x0,0x1,0x2,0x3}
+[    0.000000]   60:
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]  00
+[    0.000000]
 
-Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+which makes really hard to get anything out of this. Convert the function to
+use print_hex_dump() to make output neat.
+
+In the result we will have
+
+[    0.000000] 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+which is much, much better.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/pci/pcie/aer/aerdrv_errprint.c |  4 ++--
- include/ras/ras_event.h                | 20 ++++++++++++++++----
- 2 files changed, 18 insertions(+), 6 deletions(-)
+ arch/x86/pci/early.c | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 6a352e638699..0a78a773bd25 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -192,7 +192,7 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- 		pci_err(dev, "  Error of this Agent(%04x) is reported first\n", id);
+diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+index f0114007e915..53a87692d687 100644
+--- a/arch/x86/pci/early.c
++++ b/arch/x86/pci/early.c
+@@ -59,24 +59,15 @@ int early_pci_allowed(void)
  
- 	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
--			info->severity);
-+			info->severity, info->tlp_header_valid, &info->tlp);
+ void early_dump_pci_device(u8 bus, u8 slot, u8 func)
+ {
++	u32 value[256 / 4];
+ 	int i;
+-	int j;
+-	u32 val;
+ 
+-	printk(KERN_INFO "pci 0000:%02x:%02x.%d config space:",
+-	       bus, slot, func);
++	pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, func);
+ 
+-	for (i = 0; i < 256; i += 4) {
+-		if (!(i & 0x0f))
+-			printk("\n  %02x:",i);
++	for (i = 0; i < 256; i += 4)
++		value[i/4] = read_pci_config(bus, slot, func, i);
+ 
+-		val = read_pci_config(bus, slot, func, i);
+-		for (j = 0; j < 4; j++) {
+-			printk(" %02x", val & 0xff);
+-			val >>= 8;
+-		}
+-	}
+-	printk("\n");
++	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value, 256, false);
  }
  
- void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
-@@ -252,6 +252,6 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
- 		__print_tlp_header(dev, &aer->header_log);
- 
- 	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
--			aer_severity);
-+			aer_severity, tlp_header_valid, &aer->header_log);
- }
- #endif
-diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
-index 9c689868eb4d..90f59556f595 100644
---- a/include/ras/ras_event.h
-+++ b/include/ras/ras_event.h
-@@ -298,30 +298,42 @@ TRACE_EVENT(non_standard_event,
- TRACE_EVENT(aer_event,
- 	TP_PROTO(const char *dev_name,
- 		 const u32 status,
--		 const u8 severity),
-+		 const u8 severity,
-+		 const u32 tlp_header_valid,
-+		 struct aer_header_log_regs *tlp),
- 
--	TP_ARGS(dev_name, status, severity),
-+	TP_ARGS(dev_name, status, severity, tlp_header_valid, tlp),
- 
- 	TP_STRUCT__entry(
- 		__string(	dev_name,	dev_name	)
- 		__field(	u32,		status		)
- 		__field(	u8,		severity	)
-+		__field(	u32, 		tlp_header_valid)
-+		__array(	u32, 		buf, 4		)
- 	),
- 
- 	TP_fast_assign(
- 		__assign_str(dev_name, dev_name);
- 		__entry->status		= status;
- 		__entry->severity	= severity;
-+		__entry->tlp_header_valid = tlp_header_valid;
-+		__entry->buf[0] = tlp->dw0;
-+		__entry->buf[1] = tlp->dw1;
-+		__entry->buf[2] = tlp->dw2;
-+		__entry->buf[3] = tlp->dw3;
- 	),
- 
--	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-+	TP_printk("%s PCIe Bus Error: severity=%s, %s, TLP Header=%s\n",
- 		__get_str(dev_name),
- 		__entry->severity == AER_CORRECTABLE ? "Corrected" :
- 			__entry->severity == AER_FATAL ?
- 			"Fatal" : "Uncorrected, non-fatal",
- 		__entry->severity == AER_CORRECTABLE ?
- 		__print_flags(__entry->status, "|", aer_correctable_errors) :
--		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
-+		__print_flags(__entry->status, "|", aer_uncorrectable_errors),
-+		__entry->tlp_header_valid ?
-+			__print_array(__entry->buf, 4, sizeof(unsigned int)) :
-+			"Not available")
- );
- 
- /*
+ void early_dump_pci_devices(void)
 -- 
-2.14.1
+2.16.3
