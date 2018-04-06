@@ -1,152 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:54114 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753514AbeDTSVT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Apr 2018 14:21:19 -0400
-From: "Ruhl, Michael J" <michael.j.ruhl@intel.com>
-To: Frederick Lawler <fred@fredlawl.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
-        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
-        "dledford@redhat.com" <dledford@redhat.com>,
-        "jgg@mellanox.com" <jgg@mellanox.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
-Subject: RE: [PATCH v3 2/2] IB/hfi1: Replace custom hfi1 macros with PCIe
- macros
-Date: Fri, 20 Apr 2018 18:21:17 +0000
-Message-ID: <14063C7AD467DE4B82DEDB5C278E8663B2E28205@fmsmsx107.amr.corp.intel.com>
-References: <20180417002825.2737-1-fred@fredlawl.com>
- <20180417002825.2737-3-fred@fredlawl.com>
-In-Reply-To: <20180417002825.2737-3-fred@fredlawl.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v4 4/6] PCI: aardvark: Fix PCIe Max Read Request Size setting
+Date: Fri,  6 Apr 2018 16:55:34 +0200
+Message-Id: <20180406145536.19637-5-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
+References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Antoine Tenart <antoine.tenart@bootlin.com>,
+ Gregory Clement <gregory.clement@bootlin.com>, Evan Wang <xswang@marvell.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
+ stable@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+ =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+ Wilson Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: linux-rdma-owner@vger.kernel.org [mailto:linux-rdma-
->owner@vger.kernel.org] On Behalf Of Frederick Lawler
->Sent: Monday, April 16, 2018 8:28 PM
->To: bhelgaas@google.com; Marciniszyn, Mike <mike.marciniszyn@intel.com>;
->Dalessandro, Dennis <dennis.dalessandro@intel.com>;
->dledford@redhat.com; jgg@mellanox.com
->Cc: linux-pci@vger.kernel.org; linux-rdma@vger.kernel.org; Frederick Lawler
-><fred@fredlawl.com>
->Subject: [PATCH v3 2/2] IB/hfi1: Replace custom hfi1 macros with PCIe macros
->
->IB/hfi1 contains custom macros for PCIe link configuration. Remove the
->custom macros in favor of the PCIe link macros. No functional change
->intended.
->
->Signed-off-by: Frederick Lawler <fred@fredlawl.com>
+From: Evan Wang <xswang@marvell.com>
 
-This looks good.
+There is an obvious typo issue in the definition of the PCIe maximum
+read request size: a bit shift is directly used as a value, while it
+should be used to shift the correct value.
 
-Thanks!
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+---
+ drivers/pci/host/pci-aardvark.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Reviewed-by: Michael J. Ruhl <michael.j.ruhl@intel.com>
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 7a0ddb709052..9abf549631b4 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -29,6 +29,7 @@
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT	5
+ #define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
++#define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ		0x2
+ #define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
+ #define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
+ #define     PCIE_CORE_LINK_TRAINING				BIT(5)
+@@ -295,7 +296,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
+ 		(7 << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
+ 		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
+-		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
++		(PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ <<
++		 PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT);
+ 	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
+ 
+ 	/* Program PCIe Control 2 to disable strict ordering */
+-- 
+2.14.3
 
 
->--
->V3: Use PCI_EXP_LNKCTL2_TLS* macros
->V2: s/LINK/LNK
->---
-> drivers/infiniband/hw/hfi1/pcie.c | 24 ++++++++----------------
-> 1 file changed, 8 insertions(+), 16 deletions(-)
->
->diff --git a/drivers/infiniband/hw/hfi1/pcie.c
->b/drivers/infiniband/hw/hfi1/pcie.c
->index 83d66e862207..fe2a6d602856 100644
->--- a/drivers/infiniband/hw/hfi1/pcie.c
->+++ b/drivers/infiniband/hw/hfi1/pcie.c
->@@ -56,11 +56,6 @@
-> #include "chip_registers.h"
-> #include "aspm.h"
->
->-/* link speed vector for Gen3 speed - not in Linux headers */
->-#define GEN1_SPEED_VECTOR 0x1
->-#define GEN2_SPEED_VECTOR 0x2
->-#define GEN3_SPEED_VECTOR 0x3
->-
-> /*
->  * This file contains PCIe utility routines.
->  */
->@@ -265,7 +260,7 @@ static u32 extract_speed(u16 linkstat)
-> 	case PCI_EXP_LNKSTA_CLS_5_0GB:
-> 		speed = 5000; /* Gen 2, 5GHz */
-> 		break;
->-	case GEN3_SPEED_VECTOR:
->+	case PCI_EXP_LNKSTA_CLS_8_0GB:
-> 		speed = 8000; /* Gen 3, 8GHz */
-> 		break;
-> 	}
->@@ -320,7 +315,7 @@ int pcie_speeds(struct hfi1_devdata *dd)
-> 		return ret;
-> 	}
->
->-	if ((linkcap & PCI_EXP_LNKCAP_SLS) != GEN3_SPEED_VECTOR) {
->+	if ((linkcap & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_8_0GB)
->{
-> 		dd_dev_info(dd,
-> 			    "This HFI is not Gen3 capable, max speed 0x%x,
->need 0x3\n",
-> 			    linkcap & PCI_EXP_LNKCAP_SLS);
->@@ -697,9 +692,6 @@ const struct pci_error_handlers hfi1_pci_err_handler =
->{
-> /* gasket block secondary bus reset delay */
-> #define SBR_DELAY_US 200000	/* 200ms */
->
->-/* mask for PCIe capability register lnkctl2 target link speed */
->-#define LNKCTL2_TARGET_LINK_SPEED_MASK 0xf
->-
-> static uint pcie_target = 3;
-> module_param(pcie_target, uint, S_IRUGO);
-> MODULE_PARM_DESC(pcie_target, "PCIe target speed (0 skip, 1-3 Gen1-3)");
->@@ -1048,13 +1040,13 @@ int do_pcie_gen3_transition(struct hfi1_devdata
->*dd)
-> 		return 0;
->
-> 	if (pcie_target == 1) {			/* target Gen1 */
->-		target_vector = GEN1_SPEED_VECTOR;
->+		target_vector = PCI_EXP_LNKCTL2_TLS_2_5GB;
-> 		target_speed = 2500;
-> 	} else if (pcie_target == 2) {		/* target Gen2 */
->-		target_vector = GEN2_SPEED_VECTOR;
->+		target_vector = PCI_EXP_LNKCTL2_TLS_5_0GB;
-> 		target_speed = 5000;
-> 	} else if (pcie_target == 3) {		/* target Gen3 */
->-		target_vector = GEN3_SPEED_VECTOR;
->+		target_vector = PCI_EXP_LNKCTL2_TLS_8_0GB;
-> 		target_speed = 8000;
-> 	} else {
-> 		/* off or invalid target - skip */
->@@ -1293,8 +1285,8 @@ int do_pcie_gen3_transition(struct hfi1_devdata
->*dd)
-> 	dd_dev_info(dd, "%s: ..old link control2: 0x%x\n", __func__,
-> 		    (u32)lnkctl2);
-> 	/* only write to parent if target is not as high as ours */
->-	if ((lnkctl2 & LNKCTL2_TARGET_LINK_SPEED_MASK) < target_vector) {
->-		lnkctl2 &= ~LNKCTL2_TARGET_LINK_SPEED_MASK;
->+	if ((lnkctl2 & PCI_EXP_LNKCTL2_TLS) < target_vector) {
->+		lnkctl2 &= ~PCI_EXP_LNKCTL2_TLS;
-> 		lnkctl2 |= target_vector;
-> 		dd_dev_info(dd, "%s: ..new link control2: 0x%x\n", __func__,
-> 			    (u32)lnkctl2);
->@@ -1319,7 +1311,7 @@ int do_pcie_gen3_transition(struct hfi1_devdata
->*dd)
->
-> 	dd_dev_info(dd, "%s: ..old link control2: 0x%x\n", __func__,
-> 		    (u32)lnkctl2);
->-	lnkctl2 &= ~LNKCTL2_TARGET_LINK_SPEED_MASK;
->+	lnkctl2 &= ~PCI_EXP_LNKCTL2_TLS;
-> 	lnkctl2 |= target_vector;
-> 	dd_dev_info(dd, "%s: ..new link control2: 0x%x\n", __func__,
-> 		    (u32)lnkctl2);
->--
->2.17.0
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
