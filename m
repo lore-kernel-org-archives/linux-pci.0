@@ -1,44 +1,69 @@
-Return-Path: <SRS0=dP1m=G2=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=dP1m=G2=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Feng Kan <fkan@apm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PM <linux-pm@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-arm-kernel@lists.infradead.org, Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Toan Le <toanle@apm.com>
-Subject: Re: [PATCH V3] PM / core: fix deferred probe breaking suspend resume order
-Date: Thu, 05 Apr 2018 18:38:30 +0200
-Message-ID: <7780328.CMcpMVPvTI@aspire.rjw.lan>
-In-Reply-To: <CAL85gmBtFnXje9tPngXEyCCwuvxvH6YHB=HrvjfU7npPDiSTCw@mail.gmail.com>
-References: <1520274579-30492-1-git-send-email-fkan@apm.com> <20180330225024.GH9322@bhelgaas-glaptop.roam.corp.google.com> <CAL85gmBtFnXje9tPngXEyCCwuvxvH6YHB=HrvjfU7npPDiSTCw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:33171 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751579AbeDFLFE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2018 07:05:04 -0400
+Received: by mail-wr0-f195.google.com with SMTP id z73so1384685wrb.0
+        for <linux-pci@vger.kernel.org>; Fri, 06 Apr 2018 04:05:03 -0700 (PDT)
+Subject: [PATCH 2/4] pcie-rcar: remove PHYRDY polling from
+ rcar_pcie_hw_init_h1()
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
+Message-ID: <5322b1c2-109d-bd0c-7785-697ca6a5324a@cogentembedded.com>
+Date: Fri, 6 Apr 2018 14:04:52 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 4, 2018 11:10:41 PM CEST Feng Kan wrote:
-> On Fri, Mar 30, 2018 at 3:50 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Thu, Mar 15, 2018 at 11:41:33AM -0700, Feng Kan wrote:
-> >> On Mon, Mar 5, 2018 at 10:29 AM, Feng Kan <fkan@apm.com> wrote:
-> >> > When bridge and its endpoint is enumerated the devices are added to the
-> >> > dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
-> >> > This causes the bridge to be moved to the end of the dpm list when
-> >> > deferred probe kicks in. The order of the dpm list for bridge and
-> >> > endpoint is reversed.
-> >> >
-> >> > Add reordering code to move the bridge and its children and consumers to
-> >> > the end of the pm list so the order for suspend and resume is not altered.
-> >> > The code also move device and its children and consumers to the tail of
-> >> > device_kset list if it is registered.
-> >> >
-> >> > Signed-off-by: Feng Kan <fkan@apm.com>
-> >> > Signed-off-by: Toan Le <toanle@apm.com>
-> >> > ...
-> >> >
-> >> Hi, just wanted to check if there is anything else I need to change on
-> >> this. Thanks.
-> >
-> > I'm assuming Rafael will handle this.
-> Rafael, sorry to ping again. Do you have a position on this patch yet?
+Now that we've added PCIEPHYSR.PHYRDY polling to rcar_pcie_hw_init(),
+there is no need anymore  for polling the PHY specific register in
+rcar_pcie_hw_init_h1() -- remove it.
 
-Sorry, I thought that Greg might want to send a comment here.
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-I'm basically fine with the approach.  I only have two minor remarks to the
-kernedoc comment of the new function, but let me reply directly to the patch
-message.
+---
+ drivers/pci/host/pcie-rcar.c |   12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+Index: pci/drivers/pci/host/pcie-rcar.c
+===================================================================
+--- pci.orig/drivers/pci/host/pcie-rcar.c
++++ pci/drivers/pci/host/pcie-rcar.c
+@@ -102,7 +102,6 @@
+ #define  LANE_POS		8
+ #define  ADR_POS		0
+ #define H1_PCIEPHYDOUTR		0x040014
+-#define H1_PCIEPHYSR		0x040018
+ 
+ /* R-Car Gen2 PHY */
+ #define GEN2_PCIEPHYADDR	0x780
+@@ -627,8 +626,6 @@ static int rcar_pcie_hw_init(struct rcar
+ 
+ static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
+ {
+-	unsigned int timeout = 10;
+-
+ 	/* Initialize the phy */
+ 	phy_write_reg(pcie, 0, 0x42, 0x1, 0x0EC34191);
+ 	phy_write_reg(pcie, 1, 0x42, 0x1, 0x0EC34180);
+@@ -647,14 +644,7 @@ static int rcar_pcie_hw_init_h1(struct r
+ 	phy_write_reg(pcie, 0, 0x64, 0x1, 0x3F0F1F0F);
+ 	phy_write_reg(pcie, 0, 0x66, 0x1, 0x00008000);
+ 
+-	while (timeout--) {
+-		if (rcar_pci_read_reg(pcie, H1_PCIEPHYSR))
+-			return rcar_pcie_hw_init(pcie);
+-
+-		msleep(5);
+-	}
+-
+-	return -ETIMEDOUT;
++	return rcar_pcie_hw_init(pcie);
+ }
+ 
+ static int rcar_pcie_hw_init_gen2(struct rcar_pcie *pcie)
