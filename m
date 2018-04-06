@@ -1,81 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58240 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753011AbeDSUQg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Apr 2018 16:16:36 -0400
-Subject: [PATCH 2/4] lspci: Decode Null Capability
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org
-Date: Thu, 19 Apr 2018 15:16:33 -0500
-Message-ID: <152416899351.71364.17915245982467561819.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:53539 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751434AbeDFK6u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2018 06:58:50 -0400
+Received: by mail-wm0-f65.google.com with SMTP id p9so2658909wmc.3
+        for <linux-pci@vger.kernel.org>; Fri, 06 Apr 2018 03:58:50 -0700 (PDT)
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: [PATCH 0/4] Add R8A77980 PCIe support & some driver cleanups
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Message-ID: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
+Date: Fri, 6 Apr 2018 13:58:47 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hello!
 
-The PCI Code and ID Assignment spec, r1.9, sec 2, defines a "Null
-Capability" containing no registers other than the 8-bit Capability ID
-(00h) and an 8-bit Next Capability Pointer.
+Here's a set of 4 patches against the 'pci.rcar' branch of Lorenzo Pieralisi's
+'pci.git' repo. These are the changes needed for better R-Car gen3 support
+(namely for R8A77980 support) plus some PCIe driver re-factoring done in
+the process...
 
-Some devices, e.g., the Intel [8086:2058] implement this Capability.
+[1/4] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
+[2/4] pcie-rcar: remove PHYRDY polling from rcar_pcie_hw_init_h1()
+[3/4] pcie-rcar: add R-Car gen3 PHY support
+[4/4] pcie-rcar: factor out rcar_pcie_hw_init() call
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- lib/header.h |    2 ++
- ls-caps.c    |    3 +++
- ls-ecaps.c   |    3 +++
- 3 files changed, 8 insertions(+)
-
-diff --git a/lib/header.h b/lib/header.h
-index 0b12b2c..1f0e460 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -185,6 +185,7 @@
- /* Capability lists */
- 
- #define PCI_CAP_LIST_ID		0	/* Capability ID */
-+#define  PCI_CAP_ID_NULL	0x00	/* Null Capability */
- #define  PCI_CAP_ID_PM		0x01	/* Power Management */
- #define  PCI_CAP_ID_AGP		0x02	/* Accelerated Graphics Port */
- #define  PCI_CAP_ID_VPD		0x03	/* Vital Product Data */
-@@ -211,6 +212,7 @@
- 
- /* Capabilities residing in the PCI Express extended configuration space */
- 
-+#define PCI_EXT_CAP_ID_NULL	0x00	/* Null Capability */
- #define PCI_EXT_CAP_ID_AER	0x01	/* Advanced Error Reporting */
- #define PCI_EXT_CAP_ID_VC	0x02	/* Virtual Channel */
- #define PCI_EXT_CAP_ID_DSN	0x03	/* Device Serial Number */
-diff --git a/ls-caps.c b/ls-caps.c
-index bc7829c..8b707c2 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -1536,6 +1536,9 @@ show_caps(struct device *d, int where)
- 	    }
- 	  switch (id)
- 	    {
-+	    case PCI_CAP_ID_NULL:
-+	      printf("Null\n");
-+	      break;
- 	    case PCI_CAP_ID_PM:
- 	      cap_pm(d, where, cap);
- 	      break;
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index cb3d46d..3f6a364 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -737,6 +737,9 @@ show_ext_caps(struct device *d, int type)
- 	}
-       switch (id)
- 	{
-+	  case PCI_EXT_CAP_ID_NULL:
-+	    printf("Null\n");
-+	    break;
- 	  case PCI_EXT_CAP_ID_AER:
- 	    cap_aer(d, where, type);
- 	    break;
+MBR, Sergei
