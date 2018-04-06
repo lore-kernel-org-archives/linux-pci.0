@@ -1,83 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:47046 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751279AbeDDL5N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Apr 2018 07:57:13 -0400
-Subject: Re: [PATCH 3/8] bindings: PCI: designware: Add support for the EP in
- designware driver
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 6 Apr 2018 11:21:28 +0200
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <dd582bfc2780679b7a092d23547c316234a84c34.1522235224.git.gustavo.pimentel@synopsys.com>
- <20180404115014.GC24669@red-moon>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <d48b4dc7-41a5-2304-c310-f7b4e08973a8@synopsys.com>
-Date: Wed, 4 Apr 2018 12:56:19 +0100
+Subject: Re: [PATCH v4 1/6] PCI: aardvark: Introduce an
+ advk_pcie_valid_device() helper
+Message-ID: <20180406112128.6b904f39@windsurf>
+In-Reply-To: <20180404112843.GA24669@red-moon>
+References: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
+ <20180329083946.25970-2-thomas.petazzoni@bootlin.com>
+ <20180404112843.GA24669@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <20180404115014.GC24669@red-moon>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
+ Gregory Clement <gregory.clement@bootlin.com>, stable@vger.kernel.org,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
+ =?UTF-8?B?TWlxdcOobA==?= Raynal <miquel.raynal@bootlin.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+Hello,
 
-On 04/04/2018 12:50, Lorenzo Pieralisi wrote:
-> On Wed, Mar 28, 2018 at 12:38:33PM +0100, Gustavo Pimentel wrote:
+On Wed, 4 Apr 2018 12:28:43 +0100, Lorenzo Pieralisi wrote:
+> On Thu, Mar 29, 2018 at 10:39:41AM +0200, Thomas Petazzoni wrote:
+> > In other to mimic other PCIe host controller drivers, introduce an
+> > advk_pcie_valid_device() helper, used in the configuration read/write
+> > functions.
+> > 
+> > This patch by itself is not a fix, but it is required for a follow-up
+> > patch that is a fix, hence the Fixes tag and the Cc to stable.  
 > 
-> Please always write a commit log even if it is trivial.
+> Should not we just reshuffle patch 1 and 2 instead of sending this
+> patch to stable ? I appreciate the merge window is open and timing is
+> quite tight, it is just to avoid sending churn to stable kernels
+> for not much.
 
-Ok, Kishon has also refered that. On next patch version it'll contain a log
-description.
+I can certainly do that, but it's actually Bjorn who asked in the first
+place to introduce the advk_pcie_valid_device() helper.
 
-> 
-> Thanks,
-> Lorenzo
-> 
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 13 +++++++++++++
->>  1 file changed, 13 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> index 6300762..4bb2e08 100644
->> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> @@ -3,6 +3,7 @@
->>  Required properties:
->>  - compatible:
->>  	"snps,dw-pcie" for RC mode;
->> +	"snps,dw-pcie-ep" for EP mode;
->>  - reg: Should contain the configuration address space.
->>  - reg-names: Must be "config" for the PCIe configuration space.
->>      (The old way of getting the configuration address space from "ranges"
->> @@ -56,3 +57,15 @@ Example configuration:
->>  		#interrupt-cells = <1>;
->>  		num-lanes = <1>;
->>  	};
->> +or
->> +	pcie_ep: pcie_ep@dfc00000 {
->> +		compatible = "snps,dw-pcie-ep";
->> +		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
->> +		      <0xdfc01000 0x0001000>, /* IP registers 2 */
->> +		      <0xd0000000 0x2000000>; /* Configuration space */
->> +		reg-names = "dbi", "dbi2", "addr_space";
->> +		device_type = "pci";
->> +		num-ib-windows = <6>;
->> +		num-ob-windows = <2>;
->> +		num-lanes = <1>;
->> +	};
->> -- 
->> 2.7.4
->>
->>
+I'll send a new patch series that has these reshuffled.
 
-Regards,
-Gustavo
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
+Embedded Linux and Kernel engineering
+https://bootlin.com
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
