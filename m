@@ -1,165 +1,31 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36330 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750891AbeDZFa5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2018 01:30:57 -0400
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:43157 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751492AbeDFLYM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2018 07:24:12 -0400
+Received: by mail-lf0-f68.google.com with SMTP id v207-v6so47321lfa.10
+        for <linux-pci@vger.kernel.org>; Fri, 06 Apr 2018 04:24:11 -0700 (PDT)
+Subject: Re: [PATCH 0/4] Add R8A77980 PCIe support & some driver cleanups
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
+Message-ID: <04f23976-3763-a0c6-7336-922efbf49e5e@cogentembedded.com>
+Date: Fri, 6 Apr 2018 14:24:09 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 26 Apr 2018 11:00:52 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v14 0/9] Address error and recovery for AER and DPC
-In-Reply-To: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
-References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
-Message-ID: <f97676e307fe7a02f1f2059a140a5e32@codeaurora.org>
+In-Reply-To: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-04-23 20:53, Oza Pawandeep wrote:
-> This patch set brings in error handling support for DPC
+On 04/06/2018 01:58 PM, Sergei Shtylyov wrote:
+> Hello!
 > 
-> The current implementation of AER and error message broadcasting to the
-> EP driver is tightly coupled and limited to AER service driver.
-> It is important to factor out broadcasting and other link handling
-> callbacks. So that not only when AER gets triggered, but also when DPC 
-> get
-> triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
-> 
-> The goal of the patch-set is:
-> DPC should handle the error handling and recovery similar to AER, 
-> because
-> finally both are attempting recovery in some or the other way,
-> and for that error handling and recovery framework has to be loosely
-> coupled.
-> 
-> It achieves uniformity and transparency to the error handling agents 
-> such
-> as AER, DPC, with respect to recovery and error handling.
-> 
-> So, this patch-set tries to unify lot of things between error agents 
-> and
-> make them behave in a well defined way. (be it error (FATAL, NON_FATAL)
-> handling or recovery).
-> 
-> The FATAL error handling is handled with remove/reset_link/re-enumerate
-> sequence while the NON_FATAL follows the default path.
-> Documentation/PCI/pci-error-recovery.txt talks more on that.
-> 
-> Changes since v13:
->     Bjorn's comments addressed
->     > handke FATAL errors with remove devices followed by 
-> re-enumeration.
->     > changes in AER and DPC along with required Documentation.
-> Changes since v12:
->     Bjorn's and Keith's Comments addressed.
->     > Made DPC and AER error handling identical <aligned err.c>
->     > hanldled cases for hotplug enabled system differently.
-> Changes since v11:
->     Bjorn's comments addressed.
->     > rename pcie-err.c to err.c
->     > removed EXPORT_SYMBOL
->     > made generic find_serivce function in port driver.
->     > removed mutex patch as no need to have mutex in pcie_do_recovery
->     > brough in DPC_FATAL in aer.h
->     > so now all the error codes (AER and DPC) are unified in aer.h
-> Changes since v10:
->     Christoph Hellwig's, David Laight's and Randy Dunlap's
->     comments addressed.
->         > renamed pci_do_recovery to pcie_do_recovery
->         > removed inner braces in conditional statements.
->         > restrctured the code in pci_wait_for_link
->         > EXPORT_SYMBOL_GPL
-> Changes since v9:
->     Sinan's comments addressed.
->         > bool active = true; unnecessary variable removed.
-> Changes since v8:
->     Fixed Kbuild errors.
-> Changes since v7:
->     Rebased the code on pci master
->         > 
-> https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
-> Changes since v6:
->     Sinan's and Stefan's comments implemented.
->         > reordered patch 6 and 7
->         > cleaned up
-> Changes since v5:
->     Sinan's and Keith's comments incorporated.
->         > made separate patch for mutex
->         > unified error repotting codes into driver/pci/pci.h
->         > got rid of wait link active/inactive and
->           made generic function in driver/pci/pci.c
-> Changes since v4:
->     Bjorn's comments incorporated.
->         > Renamed only do_recovery.
->         > moved the things more locally to drivers/pci/pci.h
-> Changes since v3:
->     Bjorn's comments incorporated.
->         > Made separate patch renaming generic pci_err.c
->         > Introduce pci_err.h to contain all the error types and 
-> recovery
->         > removed all the dependencies on pci.h
-> Changes since v2:
->     Based on feedback from Keith:
->     "
->     When DPC is triggered due to receipt of an uncorrectable error 
-> Message,
->     the Requester ID from the Message is recorded in the DPC Error
->     Source ID register and that Message is discarded and not forwarded 
-> Upstream.
->     "
->     Removed the patch where AER checks if DPC service is active
-> Changes since v1:
->     Kbuild errors fixed:
->         > pci_find_dpc_dev made static
->         > ras_event.h updated
->         > pci_find_aer_service call with CONFIG check
->         > pci_find_dpc_service call with CONFIG check
-> 
-> Oza Pawandeep (9):
->   PCI/AER: Rename error recovery to generic PCI naming
->   PCI/AER: Factor out error reporting from AER
->   PCI/PORTDRV: Implement generic find service
->   PCI/PORTDRV: Implement generic find device
->   PCI/DPC: Unify and plumb error handling into DPC
->   PCI: Unify wait for link active into generic PCI
->   PCI/DPC: Disable ERR_NONFATAL for DPC
->   PCI/AER/DPC: Align FATAL error handling for AER and DPC
->   pci-error-recovery: Add AER_FATAL handling
-> 
->  Documentation/PCI/pci-error-recovery.txt |  35 ++-
->  drivers/pci/hotplug/pciehp_hpc.c         |  20 +-
->  drivers/pci/pci.c                        |  30 +++
->  drivers/pci/pci.h                        |   5 +
->  drivers/pci/pcie/Makefile                |   2 +-
->  drivers/pci/pcie/aer/aerdrv.c            |   2 +
->  drivers/pci/pcie/aer/aerdrv.h            |  30 ---
->  drivers/pci/pcie/aer/aerdrv_core.c       | 317 
-> +-------------------------
->  drivers/pci/pcie/err.c                   | 374 
-> +++++++++++++++++++++++++++++++
->  drivers/pci/pcie/pcie-dpc.c              |  63 +++---
->  drivers/pci/pcie/portdrv.h               |   4 +
->  drivers/pci/pcie/portdrv_core.c          |  69 ++++++
->  include/linux/aer.h                      |   2 +
->  include/uapi/linux/pci_regs.h            |   3 +-
->  14 files changed, 552 insertions(+), 404 deletions(-)
->  create mode 100644 drivers/pci/pcie/err.c
+> Here's a set of 4 patches against the 'pci.rcar' branch of Lorenzo Pieralisi's
 
-Hi Bjorn,
+   I meant to type 'pci/rcar'. :-)
 
-I know I need to rebase this whole patch-set to 4.17 now.
+[...]
 
-But before I do that, can you please help to comment.
-
-Regards,
-Oza.
+MBR, Sergei 
