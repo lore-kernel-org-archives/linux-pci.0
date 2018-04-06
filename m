@@ -1,115 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 12 Apr 2018 09:06:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Timur Tabi <timur@codeaurora.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
- system
-Message-ID: <20180412140648.GD145698@bhelgaas-glaptop.roam.corp.google.com>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
- <1523284914-2037-7-git-send-email-poza@codeaurora.org>
- <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
- <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.bootlin.com ([62.4.15.54]:59570 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755394AbeDFOzo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Apr 2018 10:55:44 -0400
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Wilson Ding <dingwei@marvell.com>, stable@vger.kernel.org,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: [PATCH v4 3/6] PCI: aardvark: Use ISR1 instead of ISR0 interrupt in legacy irq mode
+Date: Fri,  6 Apr 2018 16:55:33 +0200
+Message-Id: <20180406145536.19637-4-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
+References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex because of his interest in device reset]
+From: Victor Gu <xigu@marvell.com>
 
-For context, here's the part of the patch we're discussing:
+The Aardvark has two interrupts sets:
 
-> >>  static void dpc_work(struct work_struct *work)
-> >>  {
-> >>         struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
-> >>         struct pci_dev *pdev = dpc->dev->port;
-> >> 
-> >>         /* From DPC point of view error is always FATAL. */
-> >> -       pcie_do_recovery(pdev, DPC_FATAL);
-> >> +       if (!pdev->is_hotplug_bridge)
-> >> +               pcie_do_recovery(pdev, DPC_FATAL);
-> >> +       else
-> >> +               dpc_reset_link_remove_dev(pdev);
-> >>  }
+ - first set is bit[23:16] of PCIe ISR 0 register(RD0074840h)
 
-This is at the point where DPC has been triggered in the hardware and
-the DPC driver is starting recovery, and I'm wondering why we need to
-handle the "!pdev->is_hotplug_bridge" case differently.
+ - second set is bit[11:8] of PCIe ISR 1 register(RD0074848h)
 
-On Wed, Apr 11, 2018 at 09:41:56PM -0400, Sinan Kaya wrote:
-> On 4/10/2018 5:03 PM, Bjorn Helgaas wrote:
-> >> DPC and AER should attempt recovery in the same way, except the
-> >> cases where system is with hotplug enabled.
-> > What's the connection with hotplug?  I see from the patch that for
-> > hotplug bridges you remove the tree below the bridge, and otherwise
-> > you just reset the secondary link (I think).
-> > 
-> > The changelog should explain why we need the difference.
-> > 
-> > I'm a little skeptical to begin with, because I'm not sure why we
-> > should handle a DPC event differently just because a bridge has the
-> > *capability* of hotplug.  Even if a hotplug bridge reports a DPC
-> > event, that doesn't necessarily mean a hotplug has occurred.
-> 
-> Let's do a recap on what we have discussed about this until now.
-> 
-> There are two conflicting error recovery mechanisms for PCIe. 
-> 
-> If a system supports both hotplug and DPC, endpoint can be removed
-> and inserted safely.  DPC driver shuts down the driver on link down.
-> When link comes back up, hotplug driver takes over and initiates an
-> enumeration process.  Keith mentioned the stop and re-enumerate
-> design was chosen because someone could remove a drive and insert an
-> unrelated drive back to the system.  We can't really save and
-> restore state as we do in the AER path. 
-> 
-> Now, let's assume a system without hotplug capability.  Second
-> mechanism is to go through DPC/AER path and do an automatic link
-> down recovery via DPC retrain/secondary bus reset including register
-> save and restore.  Second mechanism is more suitable for handling
-> "surprise link down" event. The goal is to retrain the link and
-> continue driver operation. 
-> 
-> The goal of this patch to separate these two cases from each other
-> as the DPC driver needs to work on both contexts. Current DPC code
-> doesn't handle the second use case.
+Only one set should be used, while another set should be masked.
 
-I think the scenario you are describing is two systems that are
-identical except that in the first, the endpoint is below a hotplug
-bridge, while in the second, it's below a non-hotplug bridge.  There's
-no physical hotplug (no drive removed or inserted), and DPC is
-triggered in both systems.
+The second set, ISR1, is more advanced, the Legacy INT_X status bit is
+asserted once Assert_INTX message is received, and de-asserted after
+Deassert_INTX message is received. Therefore, it matches what the
+driver is currently doing in the ->irq_mask() and ->irq_unmask()
+functions. The ISR0 requires additional work to deassert the
+interrupt, which the driver doesn't do currently.
 
-I suggest that DPC should be handled identically in both systems:
+This commit resolves a number of issues with legacy interrupts.
 
-  - The PCI core should have the same view of the endpoint: it should
-    be removed and re-added in both cases (or in neither case).
+This is part of fixing bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+reported as the user to be important to get a Intel 7260 mini-PCIe
+WiFi card working.
 
-  - The endpoint itself should not be able to tell the difference: it
-    should see a link down event, followed by a link retrain, followed
-    by the same sequence of config accesses, etc.
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+---
+ drivers/pci/host/pci-aardvark.c | 41 ++++++++++++++++++++++++-----------------
+ 1 file changed, 24 insertions(+), 17 deletions(-)
 
-  - The endpoint driver should not be able to tell the difference,
-    i.e., we should be calling the same pci_error_handlers callbacks
-    in both cases.
-
-It's true that in the non-hotplug system, pciehp probably won't start
-re-enumeration, so we might need an alternate path to trigger that.
-
-But that's not what we're doing in this patch.  In this patch we're
-adding a much bigger difference: for hotplug bridges, we stop and
-remove the hierarchy below the bridge; for non-hotplug bridges, we do
-the AER-style flow of calling pci_error_handlers callbacks.
-
-Bjorn
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 5b8201aaf34d..7a0ddb709052 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -100,7 +100,8 @@
+ #define PCIE_ISR1_MASK_REG			(CONTROL_BASE_ADDR + 0x4C)
+ #define     PCIE_ISR1_POWER_STATE_CHANGE	BIT(4)
+ #define     PCIE_ISR1_FLUSH			BIT(5)
+-#define     PCIE_ISR1_ALL_MASK			GENMASK(5, 4)
++#define     PCIE_ISR1_INTX_ASSERT(val)		BIT(8 + (val))
++#define     PCIE_ISR1_ALL_MASK			GENMASK(11, 4)
+ #define PCIE_MSI_ADDR_LOW_REG			(CONTROL_BASE_ADDR + 0x50)
+ #define PCIE_MSI_ADDR_HIGH_REG			(CONTROL_BASE_ADDR + 0x54)
+ #define PCIE_MSI_STATUS_REG			(CONTROL_BASE_ADDR + 0x58)
+@@ -607,9 +608,9 @@ static void advk_pcie_irq_mask(struct irq_data *d)
+ 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+ 	u32 mask;
+ 
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	mask |= PCIE_ISR0_INTX_ASSERT(hwirq);
+-	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
++	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	mask |= PCIE_ISR1_INTX_ASSERT(hwirq);
++	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
+ }
+ 
+ static void advk_pcie_irq_unmask(struct irq_data *d)
+@@ -618,9 +619,9 @@ static void advk_pcie_irq_unmask(struct irq_data *d)
+ 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+ 	u32 mask;
+ 
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	mask &= ~PCIE_ISR0_INTX_ASSERT(hwirq);
+-	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
++	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	mask &= ~PCIE_ISR1_INTX_ASSERT(hwirq);
++	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
+ }
+ 
+ static int advk_pcie_irq_map(struct irq_domain *h,
+@@ -763,29 +764,35 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
+ 
+ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ {
+-	u32 val, mask, status;
++	u32 isr0_val, isr0_mask, isr0_status;
++	u32 isr1_val, isr1_mask, isr1_status;
+ 	int i, virq;
+ 
+-	val = advk_readl(pcie, PCIE_ISR0_REG);
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	status = val & ((~mask) & PCIE_ISR0_ALL_MASK);
++	isr0_val = advk_readl(pcie, PCIE_ISR0_REG);
++	isr0_mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
++	isr0_status = isr0_val & ((~isr0_mask) & PCIE_ISR0_ALL_MASK);
+ 
+-	if (!status) {
+-		advk_writel(pcie, val, PCIE_ISR0_REG);
++	isr1_val = advk_readl(pcie, PCIE_ISR1_REG);
++	isr1_mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	isr1_status = isr1_val & ((~isr1_mask) & PCIE_ISR1_ALL_MASK);
++
++	if (!isr0_status && !isr1_status) {
++		advk_writel(pcie, isr0_val, PCIE_ISR0_REG);
++		advk_writel(pcie, isr1_val, PCIE_ISR1_REG);
+ 		return;
+ 	}
+ 
+ 	/* Process MSI interrupts */
+-	if (status & PCIE_ISR0_MSI_INT_PENDING)
++	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
+ 		advk_pcie_handle_msi(pcie);
+ 
+ 	/* Process legacy interrupts */
+ 	for (i = 0; i < PCI_NUM_INTX; i++) {
+-		if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
++		if (!(isr1_status & PCIE_ISR1_INTX_ASSERT(i)))
+ 			continue;
+ 
+-		advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i),
+-			    PCIE_ISR0_REG);
++		advk_writel(pcie, PCIE_ISR1_INTX_ASSERT(i),
++			    PCIE_ISR1_REG);
+ 
+ 		virq = irq_find_mapping(pcie->irq_domain, i);
+ 		generic_handle_irq(virq);
+-- 
+2.14.3
