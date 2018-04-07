@@ -1,172 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:58214 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751230AbeDQKdk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2018 06:33:40 -0400
-Subject: Re: [RFC 06/10] misc: pci_endpoint_test: Add MSI-X support
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
-        <adouglas@cadence.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
- <8b88f8c2b766f36c71659deb0fce635154b2b39f.1523379766.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <b25dcfb1-e770-e302-d9aa-7c35f6c58fa5@ti.com>
-Date: Tue, 17 Apr 2018 16:03:26 +0530
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:37279 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751591AbeDGSf3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 7 Apr 2018 14:35:29 -0400
+Received: by mail-lf0-f66.google.com with SMTP id m200-v6so4736712lfm.4
+        for <linux-pci@vger.kernel.org>; Sat, 07 Apr 2018 11:35:29 -0700 (PDT)
+Subject: Re: [PATCH 3/4] pcie-rcar: add R-Car gen3 PHY support
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
+ <d8dde257-814f-142c-d58b-91eaf78a7d10@cogentembedded.com>
+Message-ID: <175cd86f-aaca-ab0e-3ca8-10ef44118e23@cogentembedded.com>
+Date: Sat, 7 Apr 2018 21:35:25 +0300
 MIME-Version: 1.0
-In-Reply-To: <8b88f8c2b766f36c71659deb0fce635154b2b39f.1523379766.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <d8dde257-814f-142c-d58b-91eaf78a7d10@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hello!
 
-On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
-> Adds the MSI-X support and updates driver documentation accordingly.
+On 04/06/2018 02:08 PM, Sergei Shtylyov wrote:
+
+> On R-Car gen3 SoCs the PCIe PHY has its own register region -- and I have
+> written  a generic PHY driver for it, thus we need to add the corresponding
+> code in  rcar_pcie_hw_init_gen3() and call devm_phy_optional_get() at the
+> driver's probing time,  so that the existing R-Car gen3 device trees (not
+> having a PHY node) would still work (we only need  to power up the PHY on
+> R-Car V3H).
 > 
-> Changes the driver parameter in order to allow the interruption type
-> selection.
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 > 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 > ---
->  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
->  drivers/misc/pci_endpoint_test.c                 | 102 +++++++++++++++++------
->  2 files changed, 79 insertions(+), 26 deletions(-)
+>  drivers/pci/host/pcie-rcar.c |   27 +++++++++++++++++++++++++--
+>  1 file changed, 25 insertions(+), 2 deletions(-)
 > 
-> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
-> index 4ebc359..fdfa0f6 100644
-> --- a/Documentation/misc-devices/pci-endpoint-test.txt
-> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
-> @@ -10,6 +10,7 @@ The PCI driver for the test device performs the following tests
->  	*) verifying addresses programmed in BAR
->  	*) raise legacy IRQ
->  	*) raise MSI IRQ
-> +	*) raise MSI-X IRQ
->  	*) read data
->  	*) write data
->  	*) copy data
-> @@ -25,6 +26,8 @@ ioctl
->   PCITEST_LEGACY_IRQ: Tests legacy IRQ
->   PCITEST_MSI: Tests message signalled interrupts. The MSI number
->  	      to be tested should be passed as argument.
-> + PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
-> +	      to be tested should be passed as argument.
->   PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
->  		as argument.
->   PCITEST_READ: Perform read tests. The size of the buffer should be passed
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index 37db0fc..a7d9354 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -42,11 +42,16 @@
->  #define PCI_ENDPOINT_TEST_COMMAND	0x4
->  #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
->  #define COMMAND_RAISE_MSI_IRQ		BIT(1)
-> -#define MSI_NUMBER_SHIFT		2
-> -/* 6 bits for MSI number */
-> -#define COMMAND_READ                    BIT(8)
-> -#define COMMAND_WRITE                   BIT(9)
-> -#define COMMAND_COPY                    BIT(10)
-> +#define COMMAND_RAISE_MSIX_IRQ		BIT(2)
-> +#define IRQ_TYPE_SHIFT			3
-> +#define IRQ_TYPE_LEGACY			0
-> +#define IRQ_TYPE_MSI			1
-> +#define IRQ_TYPE_MSIX			2
-> +#define MSI_NUMBER_SHIFT		5
-
-Now that you are anyways fixing this, add a new register entry for MSI numbers.
-Let's not keep COMMAND and MSI's together.
-> +/* 12 bits for MSI number */
-> +#define COMMAND_READ                    BIT(17)
-> +#define COMMAND_WRITE                   BIT(18)
-> +#define COMMAND_COPY                    BIT(19)
-
-This change should be done along with the pci-epf-test in a single patch.
+> Index: pci/drivers/pci/host/pcie-rcar.c
+> ===================================================================
+> --- pci.orig/drivers/pci/host/pcie-rcar.c
+> +++ pci/drivers/pci/host/pcie-rcar.c
+[...]
+> @@ -916,6 +933,10 @@ static int rcar_pcie_get_resources(struc
+>  	struct resource res;
+>  	int err, i;
 >  
->  #define PCI_ENDPOINT_TEST_STATUS	0x8
->  #define STATUS_READ_SUCCESS             BIT(0)
-> @@ -73,9 +78,9 @@ static DEFINE_IDA(pci_endpoint_test_ida);
->  #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
->  					    miscdev)
->  
-> -static bool no_msi;
-> -module_param(no_msi, bool, 0444);
-> -MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
-
-Let's not remove this just to make sure existing users doesn't get affected.
-> +static int irq_type = IRQ_TYPE_MSIX;
-> +module_param(irq_type, int, 0444);
-> +MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI, 2 - MSI-X)");
->  
->  enum pci_barno {
->  	BAR_0,
-> @@ -103,7 +108,7 @@ struct pci_endpoint_test {
->  struct pci_endpoint_test_data {
->  	enum pci_barno test_reg_bar;
->  	size_t alignment;
-> -	bool no_msi;
-> +	int irq_type;
->  };
->  
->  static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
-> @@ -177,10 +182,10 @@ static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
->  
->  static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
->  {
-> -	u32 val;
-> +	u32 val = COMMAND_RAISE_LEGACY_IRQ;
->  
-> -	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-> -				 COMMAND_RAISE_LEGACY_IRQ);
-> +	val |= (IRQ_TYPE_LEGACY << IRQ_TYPE_SHIFT);
-> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND, val);
->  	val = wait_for_completion_timeout(&test->irq_raised,
->  					  msecs_to_jiffies(1000));
->  	if (!val)
-> @@ -192,12 +197,12 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
->  static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
->  				      u8 msi_num)
->  {
-> -	u32 val;
-> +	u32 val = COMMAND_RAISE_MSI_IRQ;
->  	struct pci_dev *pdev = test->pdev;
->  
-> -	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-> -				 msi_num << MSI_NUMBER_SHIFT |
-> -				 COMMAND_RAISE_MSI_IRQ);
-> +	val |= (msi_num << MSI_NUMBER_SHIFT);
-> +	val |= (IRQ_TYPE_MSI << IRQ_TYPE_SHIFT);
-> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND, val);
->  	val = wait_for_completion_timeout(&test->irq_raised,
->  					  msecs_to_jiffies(1000));
->  	if (!val)
-> @@ -209,6 +214,26 @@ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
->  	return false;
->  }
->  
-> +static bool pci_endpoint_test_msix_irq(struct pci_endpoint_test *test,
-> +				       u16 msix_num)
-> +{
-> +	u32 val = COMMAND_RAISE_MSIX_IRQ;
-> +	struct pci_dev *pdev = test->pdev;
+> +	pcie->phy = devm_phy_optional_get(dev, "pcie");
+> +	if (IS_ERR(pcie->phy))
+> +		return PTR_ERR(pcie->phy);
 > +
-> +	val |= (msix_num << MSI_NUMBER_SHIFT);
-> +	val |= (IRQ_TYPE_MSIX << IRQ_TYPE_SHIFT);
-> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND, val);
-> +	val = wait_for_completion_timeout(&test->irq_raised,
-> +					  msecs_to_jiffies(1000));
-> +	if (!val)
-> +		return false;
-> +
-> +	if (test->last_irq - pdev->irq == msix_num - 1)
-> +		return true;
-> +
-> +	return false;
 
-I think you can have a single function for msix_irq and msi_irq.
+   Forgot to update the bindings. Sigh... :-(
 
-Thanks
-Kishon
+[...]
+
+MBR, Sergei
