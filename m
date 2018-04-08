@@ -1,51 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:40356 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932085AbeDWRF1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 13:05:27 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 10/12] arm: don't build swiotlb by default
-Date: Mon, 23 Apr 2018 19:04:17 +0200
-Message-Id: <20180423170419.20330-11-hch@lst.de>
-In-Reply-To: <20180423170419.20330-1-hch@lst.de>
-References: <20180423170419.20330-1-hch@lst.de>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:55855 "EHLO smtp2.it.da.ut.ee"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752448AbeDHSpC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 8 Apr 2018 14:45:02 -0400
+Date: Sun, 8 Apr 2018 21:44:57 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: linux-pci@vger.kernel.org, sparclinux@vger.kernel.org
+Subject: sparc64 PCI BAR allocation is still problematic
+Message-ID: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-swiotlb is only used as a library of helper for xen-swiotlb if Xen support
-is enabled on arm, so don't build it by default.
+This is a followup on the thread https://lkml.org/lkml/2015/10/7/135 and 
+corresponding https://bugzilla.kernel.org/show_bug.cgi?id=117191 entry.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- arch/arm/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I saw some sparc64 PCI allocation changes in yesterdays git and compiled 
+4.16.0-10242-gf605ba9 on most of my sparc64 machines to test if the PCI 
+BAR allocation problems introduced in 4.3 were fixed on some of them. 
+Alas, no change at all - of the test machines, none showed any changes 
+in the error messages in "dmesg | grep BAR".
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index aa1c187d756d..90b81a3a28a7 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1774,7 +1774,7 @@ config SECCOMP
- 	  defined by each seccomp mode.
- 
- config SWIOTLB
--	def_bool y
-+	bool
- 
- config PARAVIRT
- 	bool "Enable paravirtualization code"
-@@ -1807,6 +1807,7 @@ config XEN
- 	depends on MMU
- 	select ARCH_DMA_ADDR_T_64BIT
- 	select ARM_PSCI
-+	select SWIOTLB
- 	select SWIOTLB_XEN
- 	select PARAVIRT
- 	help
+There was one test machine, T1000 with no addon cards, that did not 
+encounter any problem, before or after the recent patch. All the other 
+test machines tried still have the BAR allocation problems.
+
+The errors seem to cluster into 3 categories:
+
+1. many devices fail BAR allocations
+2. one of the Davicom Ethernet devices fails BAR allocation
+3. Uli ISA bridge fails BAR allocation.
+
+Full current dmesg and lspci info is also available if there is any 
+interest. I did not include it all here, which machines are interesting?
+
+Details:
+
+1. Many devices, including preventing FC HBA from working on T1-105:
+
+T1-105:
+pci 0000:00:01.0: can't claim BAR 8 [mem 0x1ff00000000-0x1ffbfffffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+pci 0000:02:01.0: can't claim BAR 8 [mem 0x1ff00100000-0x1ff028fffff]: no compatible bridge window
+pci 0000:03:0f.0: can't claim BAR 8 [mem 0x1ff00100000-0x1ff028fffff]: no compatible bridge window
+pci 0000:04:00.0: can't claim BAR 0 [mem 0x1ff01000000-0x1ff01ffffff]: no compatible bridge window
+pci 0000:04:00.0: can't claim BAR 1 [mem 0x1ff02000000-0x1ff027fffff]: no compatible bridge window
+pci 0000:04:00.1: can't claim BAR 0 [mem 0x1ff02800000-0x1ff0280702f]: no compatible bridge window
+pci 0000:04:04.0: can't claim BAR 1 [mem 0x1ff02808000-0x1ff02808fff]: no compatible bridge window
+pci 0000:04:04.0: can't claim BAR 6 [mem 0x1ff02810000-0x1ff0281ffff]: no compatible bridge windowqla1280 0000:04:04.0: can't ioremap BAR 1: [mem size 0x00001000]
+
+T1-200:
+pci 0000:00:01.0: can't claim BAR 8 [mem 0x1ff00000000-0x1ffbfffffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+pci 0000:02:08.0: can't claim BAR 1 [mem 0x1ff00002000-0x1ff00003fff 64bit]: no compatible bridge window
+pci 0000:02:08.0: can't claim BAR 3 [mem 0x1ff00004000-0x1ff00005fff 64bit]: no compatible bridge window
+pci 0000:02:08.1: can't claim BAR 1 [mem 0x1ff00006000-0x1ff00007fff 64bit]: no compatible bridge window
+pci 0000:02:08.1: can't claim BAR 3 [mem 0x1ff00008000-0x1ff00009fff 64bit]: no compatible bridge window
+pci 0000:02:05.0: can't claim BAR 1 [mem 0x1ff0000a000-0x1ff0000bfff]: no compatible bridge window
+pci 0000:02:05.0: can't claim BAR 6 [mem 0x1ff00020000-0x1ff0003ffff]: no compatible bridge window
+
+V120:
+pci 0000:00:01.0: can't claim BAR 8 [mem 0x1ff00000000-0x1ffbfffffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+pci 0000:02:08.0: can't claim BAR 1 [mem 0x1ff00002000-0x1ff00003fff 64bit]: no compatible bridge window
+pci 0000:02:08.0: can't claim BAR 3 [mem 0x1ff00004000-0x1ff00005fff 64bit]: no compatible bridge window
+pci 0000:02:08.1: can't claim BAR 1 [mem 0x1ff00006000-0x1ff00007fff 64bit]: no compatible bridge window
+pci 0000:02:08.1: can't claim BAR 3 [mem 0x1ff00008000-0x1ff00009fff 64bit]: no compatible bridge window
+
+2. Davicom Ethernet:
+
+Netra X1:
+pci 0000:00:05.0: can't claim BAR 6 [mem 0x1ff00080000-0x1ff000bffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+
+Fire V100:
+pci 0000:00:05.0: can't claim BAR 6 [mem 0x1ff00080000-0x1ff000bffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+
+
+3. ULi ISA bridge:
+
+T2000:
+pci 0001:05:02.0: can't claim BAR 0 [io  0xf010000000-0xf01000ffff]: no compatible bridge window
+
+V245:
+pci 0000:05:1e.0: can't claim BAR 0 [io  0x7f810000000-0x7f810000fff]: no compatible bridge window
+
+V210:
+pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+
+V240:
+pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+
+V440:
+pci 0002:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0002:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+pci 0002:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+pci 0002:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+
+Blade 100:
+pci 0000:00:07.0: can't claim BAR 0 [io  0x1fe02000000-0x1fe0200ffff]: address conflict with 0000:00:03.0 [io  0x1fe02000600-0x1fe0200061f]
+pci 0000:00:07.0: can't claim BAR 1 [mem 0x1ff00000000-0x1ff000fffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
+
+
 -- 
-2.17.0
+Meelis Roos (mroos@linux.ee)
