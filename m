@@ -1,67 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:51685 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753443AbeDQMx6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Apr 2018 08:53:58 -0400
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Anshuman Khandual <khandual@linux.vnet.ibm.com>,
-        David Miller <davem@davemloft.net>, khandual@linux.vnet.ibm.com
-Cc: hch@lst.de, konrad.wilk@oracle.com,
-        iommu@lists.linux-foundation.org, x86@kernel.org,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, linux-ide@vger.kernel.org,
-        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 01/12] iommu-common: move to arch/sparc
-In-Reply-To: <f5741528-427d-3537-5498-2080766df0fe@linux.vnet.ibm.com>
-References: <20180415145947.1248-1-hch@lst.de> <20180415145947.1248-2-hch@lst.de> <f0305a92-b206-1567-3c25-67fbd194047d@linux.vnet.ibm.com> <20180416.095833.969403163564136309.davem@davemloft.net> <f5741528-427d-3537-5498-2080766df0fe@linux.vnet.ibm.com>
-Date: Tue, 17 Apr 2018 22:53:53 +1000
-Message-ID: <87wox60za6.fsf@concordia.ellerman.id.au>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36364 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751552AbeDHR5Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 13:57:16 -0400
+Received: by mail-wm0-f65.google.com with SMTP id x82so11672757wmg.1
+        for <linux-pci@vger.kernel.org>; Sun, 08 Apr 2018 10:57:16 -0700 (PDT)
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: [PATCH v2 0/5] Add R8A77980 PCIe support & some driver cleanups
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Message-ID: <26e803ca-06b6-28c5-b87c-fc639b322d6f@cogentembedded.com>
+Date: Sun, 8 Apr 2018 20:57:13 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Anshuman Khandual <khandual@linux.vnet.ibm.com> writes:
-> On 04/16/2018 07:28 PM, David Miller wrote:
->> From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
->> Date: Mon, 16 Apr 2018 14:26:07 +0530
->> 
->>> On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
->>>> This code is only used by sparc, and all new iommu drivers should use the
->>>> drivers/iommu/ framework.  Also remove the unused exports.
->>>>
->>>> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>>
->>> Right, these functions are used only from SPARC architecture. Simple
->>> git grep confirms it as well. Hence it makes sense to move them into
->>> arch code instead.
->> 
->> Well, we put these into a common location and used type friendly for
->> powerpc because we hoped powerpc would convert over to using this
->> common piece of code as well.
->> 
->> But nobody did the powerpc work.
- 
-Sorry.
+Hello!
 
->> If you look at the powerpc iommu support, it's the same code basically
->> for entry allocation.
->
-> I understand. But there are some differences in iommu_table structure,
-> how both regular and large IOMMU pools are being initialized etc. So
-> if the movement of code into SPARC help cleaning up these generic config
-> options in general, I guess we should do that. But I will leave it upto
-> others who have more experience in this area.
->
-> +mpe
+Here's a set of 5 patches against the 'pci/rcar' branch of Lorenzo Pieralisi's
+'pci.git' repo. These are the changes needed for better R-Car gen3 support
+(namely for R8A77980 support) plus some PCIe driver re-factoring done in
+the process...
 
-This is the first I've heard of it, I guess it's probably somewhere on
-Ben's append-only TODO list.
+[1/5] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
+[2/5] pcie-rcar: remove PHYRDY polling from rcar_pcie_hw_init_h1()
+[3/5] pcie-rcar: add R-Car gen3 PHY support
+[4/5] pcie-rcar: factor out rcar_pcie_hw_init() call
+[5/5] DT: pci: rcar-pci: document R8A77980 bindings
 
-Some of the code does look very similar, but not 100%. So someone would
-need to do some work to reconcile the two and test the result. TBH I
-doubt we're going to get around to it any time soon. Unless we have a
-volunteer?
-
-cheers
+MBR, Sergei
