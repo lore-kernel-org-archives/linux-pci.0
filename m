@@ -1,61 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:56925 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759307AbeD1B4T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 21:56:19 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 0/9] Add new helper to allocate IRQ domain for host drivers
-Date: Sat, 28 Apr 2018 09:48:22 +0800
-Message-Id: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:46166 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752414AbeDHQvG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 12:51:06 -0400
+Subject: Re: [PATCH V2] PCI: rcar: Clean up the macros
+To: Marek Vasut <marek.vasut@gmail.com>, linux-pci@vger.kernel.org
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20180408130942.19148-1-marek.vasut+renesas@gmail.com>
+ <7f63726a-fb96-a329-cce4-d1dd64b33de7@infradead.org>
+ <710bfa56-09a6-5017-e493-fce7cd09e788@gmail.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <21dff119-07a4-e7b0-f3c0-b21721124232@infradead.org>
+Date: Sun, 8 Apr 2018 09:51:05 -0700
+MIME-Version: 1.0
+In-Reply-To: <710bfa56-09a6-5017-e493-fce7cd09e788@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 04/08/2018 09:34 AM, Marek Vasut wrote:
+> On 04/08/2018 05:27 PM, Randy Dunlap wrote:
+>> On 04/08/2018 06:09 AM, Marek Vasut wrote:
+>>> This patch replaces the (1 << n) with BIT(n) and cleans up whitespace,
+>>> no functional change.
+>>>
+>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>>> Cc: linux-renesas-soc@vger.kernel.org
+>>> ---
+>>> V2: Reword the commit message
+>>> ---
+>>>  drivers/pci/host/pcie-rcar.c | 52 ++++++++++++++++++++++----------------------
+>>>  1 file changed, 26 insertions(+), 26 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>>> index 25f68305322c..5ab7bf6a8de0 100644
+>>> --- a/drivers/pci/host/pcie-rcar.c
+>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>> @@ -30,9 +30,9 @@
+>>
+>> missing this:
+>>
+>> #include <linux/bitops.h>
+> 
+> This compiles just fine without it though, which means it's probably
+> pulled in through some of the other includes already present.
+> 
 
-Hi Bjorn and Lorenzo,
+I suspected that. However, please see rule #1 in
+Documentation/process/submit-checklist.rst:
 
-PCI drivers use highly similar code block to allocate IRQ domain which
-leads to code duplication than expected. This patchset adds a new helper,
-pci_alloc_intx_irqd(), to avoid that as much as possible. Just leave
-pcie-rockchip out now as it's under re-construct and will add incremental
-patch for it if this series looks ok and the pcie-rockchip ongoing patches
-got merge.
+1) If you use a facility then #include the file that defines/declares
+   that facility.  Don't depend on other header files pulling in ones
+   that you use.
 
-
-Changes in v2:
-- fix typo and move the code to C file.
-
-Shawn Lin (9):
-  PCI: Add pci_alloc_intx_irqd() for allocating IRQ domain
-  PCI: dra7xx: Use pci_alloc_intx_irqd() helper to simplify the code
-  PCI: keystone-dw: Use pci_alloc_intx_irqd() helper to get irq domain
-    for INTx
-  PCI: aardvark: Use pci_alloc_intx_irqd() helper to get irq domain for
-    INTx
-  PCI: faraday: Use pci_alloc_intx_irqd() helper to get irq domain for
-    INTx
-  PCI: altera: Use pci_alloc_intx_irqd() helper to get irq domain for
-    INTx
-  PCI: mediatek: Use pci_alloc_intx_irqd() helper to get irq domain for
-    INTx
-  PCI: xilinx-nwl: Use pci_alloc_intx_irqd() helper to get irq domain
-    for INTx
-  PCI: xilinx: Use pci_alloc_intx_irqd() helper to get irq domain for
-    INTx
-
- drivers/pci/dwc/pci-dra7xx.c       | 41 ++---------------------
- drivers/pci/dwc/pci-keystone-dw.c  | 12 +++----
- drivers/pci/host/pci-aardvark.c    | 24 +++-----------
- drivers/pci/host/pci-ftpci100.c    | 15 +++------
- drivers/pci/host/pcie-altera.c     | 38 +++------------------
- drivers/pci/host/pcie-mediatek.c   | 29 ++--------------
- drivers/pci/host/pcie-xilinx-nwl.c | 21 +++---------
- drivers/pci/host/pcie-xilinx.c     | 43 ++----------------------
- drivers/pci/irq.c                  | 68 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h                | 10 ++++++
- 10 files changed, 108 insertions(+), 193 deletions(-)
 
 -- 
-1.9.1
+~Randy
