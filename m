@@ -1,87 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45190 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759215AbeD0Wnj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 18:43:39 -0400
-Date: Fri, 27 Apr 2018 17:43:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        gregkh@linuxfoundation.org, fred@fredlawl.com,
-        linux-kernel@vger.kernel.org, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, keith.busch@intel.com
-Subject: Re: [PATCH RESEND] PCI/AER: Use a common function to print AER error
- bits
-Message-ID: <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180417170943.1767-1-mr.nuke.me@gmail.com>
+Received: from shards.monkeyblade.net ([184.105.139.130]:54416 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752487AbeDHVVx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 17:21:53 -0400
+Date: Sun, 08 Apr 2018 17:21:52 -0400 (EDT)
+Message-Id: <20180408.172152.113123578529151252.davem@davemloft.net>
+To: mroos@linux.ee
+Cc: yinghai@kernel.org, linux-pci@vger.kernel.org,
+        sparclinux@vger.kernel.org
+Subject: Re: sparc64 PCI BAR allocation is still problematic
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
+References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 17, 2018 at 12:09:43PM -0500, Alexandru Gagniuc wrote:
-> On errors reported from CPER, cper_print_bits() was used to log the
-> AER bits. This resulted in hard-to-understand messages, without a
-> prefix. Instead use __aer_print_error() for both native AER and CPER
-> to provide a more consistent log format.
-> 
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv_errprint.c | 16 +++++++++-------
->  1 file changed, 9 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index cfc89dd57831..cfae4d52f848 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -216,28 +216,30 @@ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
->  void cper_print_aer(struct pci_dev *dev, int aer_severity,
->  		    struct aer_capability_regs *aer)
->  {
-> -	int layer, agent, status_strs_size, tlp_header_valid = 0;
-> +	int layer, agent, tlp_header_valid = 0;
->  	u32 status, mask;
-> -	const char **status_strs;
-> +	struct aer_err_info info;
->  
->  	if (aer_severity == AER_CORRECTABLE) {
->  		status = aer->cor_status;
->  		mask = aer->cor_mask;
-> -		status_strs = aer_correctable_error_string;
-> -		status_strs_size = ARRAY_SIZE(aer_correctable_error_string);
->  	} else {
->  		status = aer->uncor_status;
->  		mask = aer->uncor_mask;
-> -		status_strs = aer_uncorrectable_error_string;
-> -		status_strs_size = ARRAY_SIZE(aer_uncorrectable_error_string);
->  		tlp_header_valid = status & AER_LOG_TLP_MASKS;
->  	}
->  
->  	layer = AER_GET_LAYER_ERROR(aer_severity, status);
->  	agent = AER_GET_AGENT(aer_severity, status);
->  
-> +	memset(&info, 0, sizeof(info));
-> +	info.severity = aer_severity;
-> +	info.status = status;
-> +	info.mask = mask;
-> +	info.first_error = 0x1f;
+From: Meelis Roos <mroos@linux.ee>
+Date: Sun, 8 Apr 2018 21:44:57 +0300 (EEST)
 
-I like this patch a lot, but where does this "first_error = 0x1f" come
-from?
-
-I assume this is supposed to be the "First Error Pointer" in the
-Advanced Error Capabilities and Control register (PCIe r4.0, sec
-7.8.4.7).  There is a "cap_control" field in struct
-aer_capability_regs; should we be using that here?
-
-> +
->  	pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
-> -	cper_print_bits("", status, status_strs, status_strs_size);
-> +	__aer_print_error(dev, &info);
->  	pci_err(dev, "aer_layer=%s, aer_agent=%s\n",
->  		aer_error_layer[layer], aer_agent_string[agent]);
->  
-> -- 
-> 2.14.3
+> This is a followup on the thread https://lkml.org/lkml/2015/10/7/135 and 
+> corresponding https://bugzilla.kernel.org/show_bug.cgi?id=117191 entry.
 > 
+> I saw some sparc64 PCI allocation changes in yesterdays git and compiled 
+> 4.16.0-10242-gf605ba9 on most of my sparc64 machines to test if the PCI 
+> BAR allocation problems introduced in 4.3 were fixed on some of them. 
+> Alas, no change at all - of the test machines, none showed any changes 
+> in the error messages in "dmesg | grep BAR".
+> 
+> There was one test machine, T1000 with no addon cards, that did not 
+> encounter any problem, before or after the recent patch. All the other 
+> test machines tried still have the BAR allocation problems.
+> 
+> The errors seem to cluster into 3 categories:
+> 
+> 1. many devices fail BAR allocations
+> 2. one of the Davicom Ethernet devices fails BAR allocation
+> 3. Uli ISA bridge fails BAR allocation.
+> 
+> Full current dmesg and lspci info is also available if there is any 
+> interest. I did not include it all here, which machines are interesting?
+
+PCI folks, please look into this.
+
+A regression like this should not linger since 4.3, thank you.
