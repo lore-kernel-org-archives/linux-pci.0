@@ -1,141 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:59583 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755444AbeDFOzp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Apr 2018 10:55:45 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Wilson Ding <dingwei@marvell.com>,
-        Evan Wang <xswang@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v4 6/6] PCI: aardvark: Remove PCIe outbound window configuration
-Date: Fri,  6 Apr 2018 16:55:36 +0200
-Message-Id: <20180406145536.19637-7-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
-References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:36592 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751738AbeDHSEi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 14:04:38 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH V3] PCI: rcar: Clean up the macros
+Date: Sun,  8 Apr 2018 20:04:31 +0200
+Message-Id: <20180408180431.17323-1-marek.vasut+renesas@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Evan Wang <xswang@marvell.com>
+This patch replaces the (1 << n) with BIT(n) and cleans up whitespace,
+no functional change.
 
-Outbound window is used to translate CPU space addresses to PCIe space
-addresses when the CPU initiates PCIe transactions.
-
-According to the suggestion of the HW designers, the recommended
-solution is to use the default outbound parameters, even though the
-current outbound window setting does not cause any known functional
-issue.
-
-This patch doesn't address any known functional issue, but aligns to
-HW design guidelines, and removes code that isn't needed.
-
-Signed-off-by: Evan Wang <xswang@marvell.com>
-Reviewed-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+Reviewed-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
 ---
- drivers/pci/host/pci-aardvark.c | 55 -----------------------------------------
- 1 file changed, 55 deletions(-)
+V2: Reword the commit message
+V3: Add bitops.h
+---
+ drivers/pci/host/pcie-rcar.c | 53 ++++++++++++++++++++++----------------------
+ 1 file changed, 27 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 69c4fd50947e..702160c4ae09 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -109,24 +109,6 @@
- #define PCIE_MSI_MASK_REG			(CONTROL_BASE_ADDR + 0x5C)
- #define PCIE_MSI_PAYLOAD_REG			(CONTROL_BASE_ADDR + 0x9C)
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 25f68305322c..e403c5206b24 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -11,6 +11,7 @@
+  * Author: Phil Edworthy <phil.edworthy@renesas.com>
+  */
  
--/* PCIe window configuration */
--#define OB_WIN_BASE_ADDR			0x4c00
--#define OB_WIN_BLOCK_SIZE			0x20
--#define OB_WIN_REG_ADDR(win, offset)		(OB_WIN_BASE_ADDR + \
--						 OB_WIN_BLOCK_SIZE * (win) + \
--						 (offset))
--#define OB_WIN_MATCH_LS(win)			OB_WIN_REG_ADDR(win, 0x00)
--#define OB_WIN_MATCH_MS(win)			OB_WIN_REG_ADDR(win, 0x04)
--#define OB_WIN_REMAP_LS(win)			OB_WIN_REG_ADDR(win, 0x08)
--#define OB_WIN_REMAP_MS(win)			OB_WIN_REG_ADDR(win, 0x0c)
--#define OB_WIN_MASK_LS(win)			OB_WIN_REG_ADDR(win, 0x10)
--#define OB_WIN_MASK_MS(win)			OB_WIN_REG_ADDR(win, 0x14)
--#define OB_WIN_ACTIONS(win)			OB_WIN_REG_ADDR(win, 0x18)
--
--/* PCIe window types */
--#define OB_PCIE_MEM				0x0
--#define OB_PCIE_IO				0x4
--
- /* LMI registers base address and register offsets */
- #define LMI_BASE_ADDR				0x6000
- #define CFG_REG					(LMI_BASE_ADDR + 0x0)
-@@ -245,34 +227,9 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
- 	return -ETIMEDOUT;
- }
++#include <linux/bitops.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+@@ -30,9 +31,9 @@
  
--/*
-- * Set PCIe address window register which could be used for memory
-- * mapping.
-- */
--static void advk_pcie_set_ob_win(struct advk_pcie *pcie,
--				 u32 win_num, u32 match_ms,
--				 u32 match_ls, u32 mask_ms,
--				 u32 mask_ls, u32 remap_ms,
--				 u32 remap_ls, u32 action)
--{
--	advk_writel(pcie, match_ls, OB_WIN_MATCH_LS(win_num));
--	advk_writel(pcie, match_ms, OB_WIN_MATCH_MS(win_num));
--	advk_writel(pcie, mask_ms, OB_WIN_MASK_MS(win_num));
--	advk_writel(pcie, mask_ls, OB_WIN_MASK_LS(win_num));
--	advk_writel(pcie, remap_ms, OB_WIN_REMAP_MS(win_num));
--	advk_writel(pcie, remap_ls, OB_WIN_REMAP_LS(win_num));
--	advk_writel(pcie, action, OB_WIN_ACTIONS(win_num));
--	advk_writel(pcie, match_ls | BIT(0), OB_WIN_MATCH_LS(win_num));
--}
--
- static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- {
- 	u32 reg;
--	int i;
--
--	/* Point PCIe unit MBUS decode windows to DRAM space */
--	for (i = 0; i < 8; i++)
--		advk_pcie_set_ob_win(pcie, i, 0, 0, 0, 0, 0, 0, 0);
+ #define PCIECAR			0x000010
+ #define PCIECCTLR		0x000018
+-#define  CONFIG_SEND_ENABLE	(1 << 31)
++#define  CONFIG_SEND_ENABLE	BIT(31)
+ #define  TYPE0			(0 << 8)
+-#define  TYPE1			(1 << 8)
++#define  TYPE1			BIT(8)
+ #define PCIECDR			0x000020
+ #define PCIEMSR			0x000028
+ #define PCIEINTXR		0x000400
+@@ -44,7 +45,7 @@
+ #define PCIETSTR		0x02004
+ #define  DATA_LINK_ACTIVE	1
+ #define PCIEERRFR		0x02020
+-#define  UNSUPPORTED_REQUEST	(1 << 4)
++#define  UNSUPPORTED_REQUEST	BIT(4)
+ #define PCIEMSIFR		0x02044
+ #define PCIEMSIALR		0x02048
+ #define  MSIFE			1
+@@ -57,17 +58,17 @@
+ /* local address reg & mask */
+ #define PCIELAR(x)		(0x02200 + ((x) * 0x20))
+ #define PCIELAMR(x)		(0x02208 + ((x) * 0x20))
+-#define  LAM_PREFETCH		(1 << 3)
+-#define  LAM_64BIT		(1 << 2)
+-#define  LAR_ENABLE		(1 << 1)
++#define  LAM_PREFETCH		BIT(3)
++#define  LAM_64BIT		BIT(2)
++#define  LAR_ENABLE		BIT(1)
  
- 	/* Set to Direct mode */
- 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
-@@ -851,12 +808,6 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
+ /* PCIe address reg & mask */
+ #define PCIEPALR(x)		(0x03400 + ((x) * 0x20))
+ #define PCIEPAUR(x)		(0x03404 + ((x) * 0x20))
+ #define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
+ #define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
+-#define  PAR_ENABLE		(1 << 31)
+-#define  IO_SPACE		(1 << 8)
++#define  PAR_ENABLE		BIT(31)
++#define  IO_SPACE		BIT(8)
  
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
--			advk_pcie_set_ob_win(pcie, 1,
--					     upper_32_bits(res->start),
--					     lower_32_bits(res->start),
--					     0,	0xF8000000, 0,
--					     lower_32_bits(res->start),
--					     OB_PCIE_IO);
- 			err = pci_remap_iospace(res, iobase);
- 			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
-@@ -865,12 +816,6 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 			}
- 			break;
- 		case IORESOURCE_MEM:
--			advk_pcie_set_ob_win(pcie, 0,
--					     upper_32_bits(res->start),
--					     lower_32_bits(res->start),
--					     0x0, 0xF8000000, 0,
--					     lower_32_bits(res->start),
--					     (2 << 20) | OB_PCIE_MEM);
- 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
- 			break;
- 		case IORESOURCE_BUS:
+ /* Configuration */
+ #define PCICONF(x)		(0x010000 + ((x) * 0x4))
+@@ -79,23 +80,23 @@
+ #define IDSETR1			0x011004
+ #define TLCTLR			0x011048
+ #define MACSR			0x011054
+-#define  SPCHGFIN		(1 << 4)
+-#define  SPCHGFAIL		(1 << 6)
+-#define  SPCHGSUC		(1 << 7)
++#define  SPCHGFIN		BIT(4)
++#define  SPCHGFAIL		BIT(6)
++#define  SPCHGSUC		BIT(7)
+ #define  LINK_SPEED		(0xf << 16)
+ #define  LINK_SPEED_2_5GTS	(1 << 16)
+ #define  LINK_SPEED_5_0GTS	(2 << 16)
+ #define MACCTLR			0x011058
+-#define  SPEED_CHANGE		(1 << 24)
+-#define  SCRAMBLE_DISABLE	(1 << 27)
++#define  SPEED_CHANGE		BIT(24)
++#define  SCRAMBLE_DISABLE	BIT(27)
+ #define MACS2R			0x011078
+ #define MACCGSPSETR		0x011084
+-#define  SPCNGRSN		(1 << 31)
++#define  SPCNGRSN		BIT(31)
+ 
+ /* R-Car H1 PHY */
+ #define H1_PCIEPHYADRR		0x04000c
+-#define  WRITE_CMD		(1 << 16)
+-#define  PHY_ACK		(1 << 24)
++#define  WRITE_CMD		BIT(16)
++#define  PHY_ACK		BIT(24)
+ #define  RATE_POS		12
+ #define  LANE_POS		8
+ #define  ADR_POS		0
+@@ -107,19 +108,19 @@
+ #define GEN2_PCIEPHYDATA	0x784
+ #define GEN2_PCIEPHYCTRL	0x78c
+ 
+-#define INT_PCI_MSI_NR	32
++#define INT_PCI_MSI_NR		32
+ 
+-#define RCONF(x)	(PCICONF(0)+(x))
+-#define RPMCAP(x)	(PMCAP(0)+(x))
+-#define REXPCAP(x)	(EXPCAP(0)+(x))
+-#define RVCCAP(x)	(VCCAP(0)+(x))
++#define RCONF(x)		(PCICONF(0) + (x))
++#define RPMCAP(x)		(PMCAP(0) + (x))
++#define REXPCAP(x)		(EXPCAP(0) + (x))
++#define RVCCAP(x)		(VCCAP(0) + (x))
+ 
+-#define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
+-#define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
+-#define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
++#define PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
++#define PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
++#define PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
+ 
+-#define RCAR_PCI_MAX_RESOURCES 4
+-#define MAX_NR_INBOUND_MAPS 6
++#define RCAR_PCI_MAX_RESOURCES	4
++#define MAX_NR_INBOUND_MAPS	6
+ 
+ struct rcar_msi {
+ 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
 -- 
-2.14.3
+2.16.2
