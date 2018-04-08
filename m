@@ -1,92 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:55936 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759215AbeD1B6g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 21:58:36 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 9/9] PCI: xilinx: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Sat, 28 Apr 2018 09:50:43 +0800
-Message-Id: <1524880243-101356-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:50262 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751845AbeDHS1C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 14:27:02 -0400
+Subject: Re: [PATCH V2] PCI: rcar: Clean up the macros
+To: Randy Dunlap <rdunlap@infradead.org>, linux-pci@vger.kernel.org
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20180408130942.19148-1-marek.vasut+renesas@gmail.com>
+ <7f63726a-fb96-a329-cce4-d1dd64b33de7@infradead.org>
+ <710bfa56-09a6-5017-e493-fce7cd09e788@gmail.com>
+ <21dff119-07a4-e7b0-f3c0-b21721124232@infradead.org>
+ <1043a359-7440-826b-5146-7dea494214b8@gmail.com>
+ <06dedbd6-13df-3d7a-5244-c4e92df0a009@infradead.org>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <309a7ed8-1fdb-f739-8489-7b0edd68a6bd@gmail.com>
+Date: Sun, 8 Apr 2018 20:26:59 +0200
+MIME-Version: 1.0
+In-Reply-To: <06dedbd6-13df-3d7a-5244-c4e92df0a009@infradead.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+On 04/08/2018 08:03 PM, Randy Dunlap wrote:
+> On 04/08/2018 09:53 AM, Marek Vasut wrote:
+>> On 04/08/2018 06:51 PM, Randy Dunlap wrote:
+>>> On 04/08/2018 09:34 AM, Marek Vasut wrote:
+>>>> On 04/08/2018 05:27 PM, Randy Dunlap wrote:
+>>>>> On 04/08/2018 06:09 AM, Marek Vasut wrote:
+>>>>>> This patch replaces the (1 << n) with BIT(n) and cleans up whitespace,
+>>>>>> no functional change.
+>>>>>>
+>>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>>>>>> Cc: linux-renesas-soc@vger.kernel.org
+>>>>>> ---
+>>>>>> V2: Reword the commit message
+>>>>>> ---
+>>>>>>  drivers/pci/host/pcie-rcar.c | 52 ++++++++++++++++++++++----------------------
+>>>>>>  1 file changed, 26 insertions(+), 26 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>>>>>> index 25f68305322c..5ab7bf6a8de0 100644
+>>>>>> --- a/drivers/pci/host/pcie-rcar.c
+>>>>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>>>>> @@ -30,9 +30,9 @@
+>>>>>
+>>>>> missing this:
+>>>>>
+>>>>> #include <linux/bitops.h>
+>>>>
+>>>> This compiles just fine without it though, which means it's probably
+>>>> pulled in through some of the other includes already present.
+>>>>
+>>>
+>>> I suspected that. However, please see rule #1 in
+>>> Documentation/process/submit-checklist.rst:
+>>>
+>>> 1) If you use a facility then #include the file that defines/declares
+>>>    that facility.  Don't depend on other header files pulling in ones
+>>>    that you use.
+>>
+>> If I was to include every single header from which I use something,
+>> wouldn't that make the list real long then ? Is that really worth it?
+> 
+> The length of the list of headers is not an issue.
+> And if you are "cleaning up," you might as well do a full job of it.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+I sent a V3 of this "clean up".
 
----
+> Just because it builds on one $ARCH (with various pulled-in headers) does
+> not mean that it will build on another $ARCH (with different pulled-in headers).
+> 
+> Or did you build it on all linux/arch/* ?
 
-Changes in v2: None
+No, since it is limited in Kconfig:
+        depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
 
- drivers/pci/host/pcie-xilinx.c | 43 +++---------------------------------------
- 1 file changed, 3 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 0ad188e..905668a 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -344,31 +344,6 @@ static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
- 	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
- }
- 
--/* INTx Functions */
--
--/**
-- * xilinx_pcie_intx_map - Set the handler for the INTx and mark IRQ as valid
-- * @domain: IRQ domain
-- * @irq: Virtual IRQ number
-- * @hwirq: HW interrupt number
-- *
-- * Return: Always returns 0.
-- */
--static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--				irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--/* INTx IRQ Domain operations */
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = xilinx_pcie_intx_map,
--	.xlate = pci_irqd_intx_xlate,
--};
--
- /* PCIe HW Functions */
- 
- /**
-@@ -495,22 +470,10 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- {
- 	struct device *dev = port->dev;
- 	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node;
- 
--	/* Setup INTx */
--	pcie_intc_node = of_get_next_child(node, NULL);
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
--	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--						 &intx_domain_ops,
--						 port);
--	if (!port->leg_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENODEV;
--	}
-+	port->leg_domain = pci_alloc_intx_irqd(dev, port, true, NULL, NULL);
-+	if (IS_ERR(port->leg_domain))
-+		return PTR_ERR(port->leg_domain);
- 
- 	/* Setup MSI */
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
 -- 
-1.9.1
+Best regards,
+Marek Vasut
