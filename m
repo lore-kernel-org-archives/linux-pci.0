@@ -1,43 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 06/12] dma-mapping: move the NEED_DMA_MAP_STATE config
- symbol to lib/Kconfig
-To: Christoph Hellwig <hch@lst.de>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- iommu@lists.linux-foundation.org
-References: <20180415145947.1248-1-hch@lst.de>
- <20180415145947.1248-7-hch@lst.de>
-From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
-Date: Mon, 16 Apr 2018 15:27:58 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:53924 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751919AbeDHSDi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 14:03:38 -0400
+Subject: Re: [PATCH V2] PCI: rcar: Clean up the macros
+To: Marek Vasut <marek.vasut@gmail.com>, linux-pci@vger.kernel.org
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20180408130942.19148-1-marek.vasut+renesas@gmail.com>
+ <7f63726a-fb96-a329-cce4-d1dd64b33de7@infradead.org>
+ <710bfa56-09a6-5017-e493-fce7cd09e788@gmail.com>
+ <21dff119-07a4-e7b0-f3c0-b21721124232@infradead.org>
+ <1043a359-7440-826b-5146-7dea494214b8@gmail.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <06dedbd6-13df-3d7a-5244-c4e92df0a009@infradead.org>
+Date: Sun, 8 Apr 2018 11:03:36 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180415145947.1248-7-hch@lst.de>
-Message-Id: <1ac5e633-5455-fcb6-6b3c-ea74d6691513@linux.vnet.ibm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
- x86@kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1043a359-7440-826b-5146-7dea494214b8@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
-> This way we have one central definition of it, and user can select it as
-> needed.  Note that we now also always select it when CONFIG_DMA_API_DEBUG
-> is select, which fixes some incorrect checks in a few network drivers.
+On 04/08/2018 09:53 AM, Marek Vasut wrote:
+> On 04/08/2018 06:51 PM, Randy Dunlap wrote:
+>> On 04/08/2018 09:34 AM, Marek Vasut wrote:
+>>> On 04/08/2018 05:27 PM, Randy Dunlap wrote:
+>>>> On 04/08/2018 06:09 AM, Marek Vasut wrote:
+>>>>> This patch replaces the (1 << n) with BIT(n) and cleans up whitespace,
+>>>>> no functional change.
+>>>>>
+>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>>>>> Cc: linux-renesas-soc@vger.kernel.org
+>>>>> ---
+>>>>> V2: Reword the commit message
+>>>>> ---
+>>>>>  drivers/pci/host/pcie-rcar.c | 52 ++++++++++++++++++++++----------------------
+>>>>>  1 file changed, 26 insertions(+), 26 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>>>>> index 25f68305322c..5ab7bf6a8de0 100644
+>>>>> --- a/drivers/pci/host/pcie-rcar.c
+>>>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>>>> @@ -30,9 +30,9 @@
+>>>>
+>>>> missing this:
+>>>>
+>>>> #include <linux/bitops.h>
+>>>
+>>> This compiles just fine without it though, which means it's probably
+>>> pulled in through some of the other includes already present.
+>>>
+>>
+>> I suspected that. However, please see rule #1 in
+>> Documentation/process/submit-checklist.rst:
+>>
+>> 1) If you use a facility then #include the file that defines/declares
+>>    that facility.  Don't depend on other header files pulling in ones
+>>    that you use.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> If I was to include every single header from which I use something,
+> wouldn't that make the list real long then ? Is that really worth it?
 
-Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+The length of the list of headers is not an issue.
+And if you are "cleaning up," you might as well do a full job of it.
 
+Just because it builds on one $ARCH (with various pulled-in headers) does
+not mean that it will build on another $ARCH (with different pulled-in headers).
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Or did you build it on all linux/arch/* ?
+
+thanks,
+-- 
+~Randy
