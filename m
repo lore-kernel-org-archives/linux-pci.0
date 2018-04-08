@@ -1,102 +1,111 @@
-Return-Path: <SRS0=tSFA=HF=xenosoft.de=chzigotzky@kernel.org>
-Return-Path: <SRS0=tSFA=HF=xenosoft.de=chzigotzky@kernel.org>
-Content-Type: text/plain;
-	charset=utf-8
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH 1/1] PCI set flag PCI_SCAN_ALL_PCIE_DEVS for P.A. Semi boards
-From: Christian Zigotzky <chzigotzky@xenosoft.de>
-In-Reply-To: <87tvtbg0i9.fsf@concordia.ellerman.id.au>
-Date: Mon, 16 Apr 2018 06:29:55 +0200
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Olof Johansson <olof@lixom.net>,
- linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Message-Id: <0146B9E7-8ECB-48DF-ACCB-4173278A3422@xenosoft.de>
-References: <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de> <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com> <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de> <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com> <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de> <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com> <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de> <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com> <dc228918-652a-e24c-ce7b-8d1b30153d3b@xenosoft.de> <639e975f-1b3a-4f85-9a40-13fe2473fc28@xenosoft.de> <20180319191310.GG77194@bhelgaas-glaptop.roam.corp.google.com> <87tvtbg0i9.fsf@concordia.ellerman.id.au>
-To: Michael Ellerman <mpe@ellerman.id.au>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 8 Apr 2018 17:09:03 +0800
+From: Baoquan He <bhe@redhat.com>
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, linux-kernel@vger.kernel.org,
+        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Brijesh Singh <brijesh.singh@amd.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Borislav Petkov <bp@suse.de>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
+        Wei Yang <richard.weiyang@gmail.com>,
+        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
+        linux-nvdimm@lists.01.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] resource: Use list_head to link sibling resource
+Message-ID: <20180408090903.GE19345@localhost.localdomain>
+References: <20180408024724.16812-2-bhe@redhat.com>
+ <201804081247.F3eqBMih%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201804081247.F3eqBMih%fengguang.wu@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Michael,
+Hi,
 
-Many thanks for your help. Did you merge Olof=E2=80=98s patch? I still have t=
-o patch the 4.17 source code.
+Thanks for telling!
 
-Thanks,
-Christian
+On 04/08/18 at 12:12pm, kbuild test robot wrote:
+> Hi Baoquan,
+> 
+> I love your patch! Yet something to improve:
+> 
+> [auto build test ERROR on linus/master]
+> [also build test ERROR on v4.16 next-20180406]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> 
+> url:    https://github.com/0day-ci/linux/commits/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180408-110108
+> config: parisc-c3000_defconfig (attached as .config)
+> compiler: hppa-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
+> reproduce:
+>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=parisc 
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    drivers//parisc/lba_pci.c: In function 'lba_dump_res':
+> >> drivers//parisc/lba_pci.c:173:15: error: incompatible type for argument 1 of 'lba_dump_res'
+>      lba_dump_res(r->child, d+2);
 
-Sent from my iPhone
+I compiled with allyesconfig, don't know why this was missed. Will
+change and repost.
 
-> On 19. Mar 2018, at 23:32, Michael Ellerman <mpe@ellerman.id.au> wrote:
->=20
-> Bjorn Helgaas <helgaas@kernel.org> writes:
->=20
->>> On Fri, Mar 16, 2018 at 01:55:36PM +0100, Christian Zigotzky wrote:
->>> Bjorn Helgaas created a patch for making PCI_SCAN_ALL_PCIE_DEVS work for=
-
->>> Root Ports as well as Downstream. Previously PCI_SCAN_ALL_PCIE_DEVS (set=
- by
->>> quirks or the "pci=3Dpcie_scan_all"
->>> kernel parameter) only affected Switch Downstream Ports, not Root Ports.=
- The
->>> problem is, that we have to add always the boot argument "pci=3Dpcie_sca=
-n_all"
->>> for using Bjorn's improvements. Without the boot argument
->>> "pci=3Dpcie_scan_all", the kernel doesn't boot on P.A. Semi boards with S=
-B600
->>> chipset (SB600 chipset is connected via PCIe x4 to the P.A. Semi=E2=80=99=
-s
->>> PA6T-1682M System-on-a-Chip) because the kernel can't find any drives
->>> connected to the SB600 anymore. Olof Johansson has created a patch for
->>> executing "pci=3Dpcie_scan_all" automatically on P.A. Semi boards. With h=
-is
->>> patch, we don't need to add 'pci=3Dpcie_scan_all' to the kernel boot arg=
-uments
->>> anymore.
->>=20
->> The patch looks fine, but I need a signed-off-by line before I can apply
->> it.  See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.g=
-it/tree/Documentation/process/submitting-patches.rst
->=20
-> I'm happy to take it, I've been meaning to check if Olof sent a SOB in
-> his original mail but haven't got to it.
->=20
-> ...
->=20
-> Yes, he did, see below.
->=20
-> So I'll merge that, I'll add a Tested-by for you Christian.
->=20
-> Christian please don't remove any of the tags when submitting other
-> peoples' patches in future.
->=20
-> cheers
->=20
->=20
-> =46rom a3b390277627b0342c8ccfc16e58679e0d8abdde Mon Sep 17 00:00:00 2001
-> From: Olof Johansson <olof@lixom.net>
-> Date: Sat, 2 Dec 2017 14:56:36 -0800
-> Subject: [PATCH] powerpc/pasemi: set PCI_SCAN_ALL_PCI_DEVS
->=20
-> Needed on Amiga X1000 with SB600.
->=20
-> Reported-by: Christian Zigotzky <chzigotzky@xenosoft.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Olof Johansson <olof@lixom.net>
+>                   ^
+>    drivers//parisc/lba_pci.c:162:1: note: expected 'struct resource *' but argument is of type 'struct list_head'
+>     lba_dump_res(struct resource *r, int d)
+>     ^~~~~~~~~~~~
+>    drivers//parisc/lba_pci.c:174:15: error: incompatible type for argument 1 of 'lba_dump_res'
+>      lba_dump_res(r->sibling, d);
+>                   ^
+>    drivers//parisc/lba_pci.c:162:1: note: expected 'struct resource *' but argument is of type 'struct list_head'
+>     lba_dump_res(struct resource *r, int d)
+>     ^~~~~~~~~~~~
+> 
+> vim +/lba_dump_res +173 drivers//parisc/lba_pci.c
+> 
+> ^1da177e Linus Torvalds 2005-04-16  159  
+> ^1da177e Linus Torvalds 2005-04-16  160  
+> ^1da177e Linus Torvalds 2005-04-16  161  static void
+> ^1da177e Linus Torvalds 2005-04-16  162  lba_dump_res(struct resource *r, int d)
+> ^1da177e Linus Torvalds 2005-04-16  163  {
+> ^1da177e Linus Torvalds 2005-04-16  164  	int i;
+> ^1da177e Linus Torvalds 2005-04-16  165  
+> ^1da177e Linus Torvalds 2005-04-16  166  	if (NULL == r)
+> ^1da177e Linus Torvalds 2005-04-16  167  		return;
+> ^1da177e Linus Torvalds 2005-04-16  168  
+> ^1da177e Linus Torvalds 2005-04-16  169  	printk(KERN_DEBUG "(%p)", r->parent);
+> ^1da177e Linus Torvalds 2005-04-16  170  	for (i = d; i ; --i) printk(" ");
+> 645d11d4 Matthew Wilcox 2006-12-24  171  	printk(KERN_DEBUG "%p [%lx,%lx]/%lx\n", r,
+> 645d11d4 Matthew Wilcox 2006-12-24  172  		(long)r->start, (long)r->end, r->flags);
+> ^1da177e Linus Torvalds 2005-04-16 @173  	lba_dump_res(r->child, d+2);
+> ^1da177e Linus Torvalds 2005-04-16  174  	lba_dump_res(r->sibling, d);
+> ^1da177e Linus Torvalds 2005-04-16  175  }
+> ^1da177e Linus Torvalds 2005-04-16  176  
+> 
+> :::::: The code at line 173 was first introduced by commit
+> :::::: 1da177e4c3f41524e886b7f1b8a0c1fc7321cac2 Linux-2.6.12-rc2
+> 
+> :::::: TO: Linus Torvalds <torvalds@ppc970.osdl.org>
+> :::::: CC: Linus Torvalds <torvalds@ppc970.osdl.org>
+> 
 > ---
-> arch/powerpc/platforms/pasemi/pci.c | 2 ++
-> 1 file changed, 2 insertions(+)
->=20
-> diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/=
-pasemi/pci.c
-> index 5ff6108..ea54ed2 100644
-> --- a/arch/powerpc/platforms/pasemi/pci.c
-> +++ b/arch/powerpc/platforms/pasemi/pci.c
-> @@ -224,6 +224,8 @@ void __init pas_pci_init(void)
->        return;
->    }
->=20
-> +    pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS):
-> +
->    for (np =3D NULL; (np =3D of_get_next_child(root, np)) !=3D NULL;)
->        if (np->name && !strcmp(np->name, "pxp") && !pas_add_bridge(np))
->            of_node_get(np);
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
