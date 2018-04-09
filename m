@@ -1,106 +1,115 @@
-Return-Path: <SRS0=K2CA=HR=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=K2CA=HR=codeaurora.org=okaya@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Sat, 28 Apr 2018 09:03:09 -0400
-From: okaya@codeaurora.org
-To: Dave Young <dyoung@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, Paul
- Menzel <pmenzel+linux-pci@molgen.mpg.de>, kexec@lists.infradead.org,
- linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, Eric Biederman
- <ebiederm@xmission.com>, Bjorn Helgaas <bhelgaas@google.com>, Vivek Goyal
- <vgoyal@redhat.com>
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
-In-Reply-To: <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
- <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
- <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
- <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
- <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
- <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
-Message-ID: <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v13 0/6] Address error and recovery for AER and DPC
+Date: Mon,  9 Apr 2018 10:41:48 -0400
+Message-Id: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-04-27 21:18, Dave Young wrote:
-> On 04/28/18 at 08:56am, Dave Young wrote:
->> On 04/27/18 at 04:12pm, Bjorn Helgaas wrote:
->> > [+cc Eric, Vivek, kexec list]
->> >
->> > On Fri, Apr 27, 2018 at 03:34:30PM -0400, Sinan Kaya wrote:
->> > > On 4/27/2018 3:22 PM, Bjorn Helgaas wrote:
->> > > > Sinan mooted the idea of using a "no-wait" path of sending the "don't
->> > > > generate hotplug interrupts" command.  I think we should work on this
->> > > > idea a little more.  If we're shutting down the whole system, I can't
->> > > > believe there's much value in *anything* we do in the pciehp_remove()
->> > > > path.
->> > > >
->> > > > Maybe we should just get rid of pciehp_remove() (and probably
->> > > > pcie_port_remove_service() and the other service driver remove methods)
->> > > > completely.  That dates from when the service drivers could be modules that
-> 
-> Hmm, if it is the remove() method then kexec does not use it.  kexec 
-> use
-> the shutdown() method instead.  I missed this details when I replied.
+This patch set brings in error handling support for DPC
 
-Portdrv hooks up remove handler to shutdown. That's why remove is 
-getting called.
+The current implementation of AER and error message broadcasting to the
+EP driver is tightly coupled and limited to AER service driver.
+It is important to factor out broadcasting and other link handling
+callbacks. So that not only when AER gets triggered, but also when DPC get
+triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
 
-> 
->> > > > could be potentially unloaded, but unloading them hasn't been possible for
->> > > > years.
->> > >
->> > > Shutdown path is also used for kexec. Leaving hotplug interrupts
->> > > pending is dangerous for the newly loaded kernel as it leaves
->> > > spurious interrupts during the new kernel boot.
->> > >
->> > > I think we should always disable the hotplug interrupt on shutdown.
->> > > We might think of not waiting for command-completion as a
->> > > middle-ground or go to polling path instead of interrupts all the
->> > > time.
->> >
->> > Ah, I forgot about the kexec path.  The kexec path is used for
->> > crashdump, too, so ideally the newly-loaded kernel would defend itself
->> > when possible so it doesn't depend on the original kernel doing things
->> > correctly.
->> 
->> It is true for kdump.  But kexec needs device shutdown.
->> 
->> >
->> > Seems like this question of whether to do things in the original
->> > kernel or the kexec-ed kernel comes up periodically, but I can never
->> > remember a definitive answer.  My initial reaction is that it'd be
->> > nice if we didn't have to do *any* shutdown in the original kernel,
->> > but I'm sure there are reasons that's not practical.
->> 
->> Devices sometimes assume it is in a good state initialized in firmware 
->> boot
->> phase, so we need a shutdown in 1st kernel so that kexec kernel can 
->> boot
->> correctly for those devices.  For kdump since kernel already panicked
->> and it is not reliable so we do as less as we can in the 1st kernel
->> crash path, but there are some special handling for kdump in various 
->> drivers
->> to reset the devices in 2nd kernel, eg. when it see "reset_devices" 
->> kernel parameter.
->> 
->> >
->> > I copied Eric (kexec maintainer) and Vivek (contact listed in
->> > Documentation/kdump/kdump.txt) in case they have suggestions or would
->> > consider some sort of Documentation/ update.
->> >
->> > Bjorn
->> >
->> > _______________________________________________
->> > kexec mailing list
->> > kexec@lists.infradead.org
->> > http://lists.infradead.org/mailman/listinfo/kexec
->> 
->> Thanks
->> Dave
->> 
->> _______________________________________________
->> kexec mailing list
->> kexec@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/kexec
+DPC should behave identical to AER as far as error handling is concerned.
+DPC should remove the devices and not to do recovery for hotplug enabled system.
+
+Changes since v13:
+    Bjorn's and Keith's Comments addressed.
+    > Made DPC and AER error handling identical <aligned err.c>
+    > hanldled cases for hotplug enabled system differently.
+Changes since v11:
+    Bjorn's comments addressed.
+    > rename pcie-err.c to err.c
+    > removed EXPORT_SYMBOL
+    > made generic find_serivce function in port driver.
+    > removed mutex patch as no need to have mutex in pcie_do_recovery
+    > brough in DPC_FATAL in aer.h
+    > so now all the error codes (AER and DPC) are unified in aer.h
+Changes since v10:
+    Christoph Hellwig's, David Laight's and Randy Dunlap's
+    comments addressed.
+        > renamed pci_do_recovery to pcie_do_recovery
+        > removed inner braces in conditional statements.
+        > restrctured the code in pci_wait_for_link
+        > EXPORT_SYMBOL_GPL
+Changes since v9:
+    Sinan's comments addressed.
+        > bool active = true; unnecessary variable removed.
+Changes since v8:
+    Fixed Kbuild errors.
+Changes since v7:
+    Rebased the code on pci master
+        > https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
+Changes since v6:
+    Sinan's and Stefan's comments implemented.
+        > reordered patch 6 and 7
+        > cleaned up
+Changes since v5:
+    Sinan's and Keith's comments incorporated.
+        > made separate patch for mutex
+        > unified error repotting codes into driver/pci/pci.h
+        > got rid of wait link active/inactive and
+          made generic function in driver/pci/pci.c
+Changes since v4:
+    Bjorn's comments incorporated.
+        > Renamed only do_recovery.
+        > moved the things more locally to drivers/pci/pci.h
+Changes since v3:
+    Bjorn's comments incorporated.
+        > Made separate patch renaming generic pci_err.c
+        > Introduce pci_err.h to contain all the error types and recovery
+        > removed all the dependencies on pci.h
+Changes since v2:
+    Based on feedback from Keith:
+    "
+    When DPC is triggered due to receipt of an uncorrectable error Message,
+    the Requester ID from the Message is recorded in the DPC Error
+    Source ID register and that Message is discarded and not forwarded Upstream.
+    "
+    Removed the patch where AER checks if DPC service is active
+Changes since v1:
+    Kbuild errors fixed:
+        > pci_find_dpc_dev made static
+        > ras_event.h updated
+        > pci_find_aer_service call with CONFIG check
+        > pci_find_dpc_service call with CONFIG check
+
+Oza Pawandeep (6):
+  PCI/AER: Rename error recovery to generic PCI naming
+  PCI/AER: Factor out error reporting from AER
+  PCI/PORTDRV: Implement generic find service
+  PCI/DPC: Unify and plumb error handling into DPC
+  PCI: Unify wait for link active into generic PCI
+  PCI/DPC: Do not do recovery for hotplug enabled system
+
+ drivers/pci/hotplug/pciehp_hpc.c   |  20 +--
+ drivers/pci/pci.c                  |  29 ++++
+ drivers/pci/pci.h                  |   5 +
+ drivers/pci/pcie/Makefile          |   2 +-
+ drivers/pci/pcie/aer/aerdrv.h      |  30 ----
+ drivers/pci/pcie/aer/aerdrv_core.c | 317 +---------------------------------
+ drivers/pci/pcie/err.c             | 340 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/pcie-dpc.c        | 107 +++++++++---
+ drivers/pci/pcie/portdrv.h         |   2 +
+ drivers/pci/pcie/portdrv_core.c    |  45 +++++
+ include/linux/aer.h                |   2 +
+ 11 files changed, 509 insertions(+), 390 deletions(-)
+ create mode 100644 drivers/pci/pcie/err.c
+
+-- 
+2.7.4
