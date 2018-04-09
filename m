@@ -1,86 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from thoth.sbs.de ([192.35.17.2]:41346 "EHLO thoth.sbs.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751770AbeD3FtO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Apr 2018 01:49:14 -0400
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>
-Subject: [PATCH v2 00/10] PCI: leak fixes, removable generic PCI host, assorted stuff
-Date: Mon, 30 Apr 2018 07:48:34 +0200
-Message-Id: <cover.1525067324.git.jan.kiszka@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v2 8/9] PCI: dwc: Small computation improvement
+Date: Mon,  9 Apr 2018 10:41:17 +0100
+Message-Id: <5181f7ffbb9d2889974c49d84e72042251adf8b6.1523266508.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes in v2:
- - patch 1: commit message reworking as suggested by Lorenzo
- - patch 3-6: split-up as suggested by Bjorn
- - patch 8: new
- - patch 10: select PCI_DOMAINS from PCI_HOST_GENERIC, rather than
-   allowing manual choice, as suggested by Lorenzo
+Replaces a simple division by 2 to a right shift rotation of 1 bit.
 
-This primarily enables to unbind the generic PCI host controller without
-leaving lots of memory leaks behind. A previous proposal patch 5 was
-rejected because of those issues [1].
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
 
-The fixes have been validated in the Jailhouse setup, where we add and
-remove a virtual PCI host controller on hypervisor activation/
-deactivation, with the help of kmemleak.
+ drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Besides that, there is tiny PCI API cleanup at the beginning and
-support for manually enabled PCI domains at the end that enables the
-Jailhouse scenario.
-
-Jan
-
-[1] http://lkml.iu.edu/hypermail/linux/kernel/1606.3/00072.html
-
-
-CC: Jingoo Han <jingoohan1@gmail.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
-
-Jan Kiszka (10):
-  PCI: Make pci_get_new_domain_nr() static
-  PCI: Fix memory leak of devm_pci_alloc_host_bridge()
-  PCI: Factor out __of_pci_get_host_bridge_resources()
-  PCI: Add dev parameter to __of_pci_get_host_bridge_resources()
-  PCI: Replace pr_*() with dev_*() in
-    __of_pci_get_host_bridge_resources()
-  PCI: Introduce devm_of_pci_get_host_bridge_resources()
-  PCI: Convert of_pci_get_host_bridge_resources() users to devm variant
-  PCI: Deprecate of_pci_get_host_bridge_resources()
-  PCI: Add support for unbinding the generic PCI host controller
-  PCI: Enable PCI_DOMAINS along with generic PCI host controller
-
- drivers/pci/dwc/pcie-designware-host.c |   2 +-
- drivers/pci/host/Kconfig               |   1 +
- drivers/pci/host/pci-aardvark.c        |   5 +-
- drivers/pci/host/pci-ftpci100.c        |   4 +-
- drivers/pci/host/pci-host-common.c     |  13 ++++
- drivers/pci/host/pci-host-generic.c    |   1 +
- drivers/pci/host/pci-v3-semi.c         |   3 +-
- drivers/pci/host/pci-versatile.c       |   3 +-
- drivers/pci/host/pci-xgene.c           |   3 +-
- drivers/pci/host/pcie-altera.c         |   5 +-
- drivers/pci/host/pcie-iproc-platform.c |   4 +-
- drivers/pci/host/pcie-rcar.c           |   5 +-
- drivers/pci/host/pcie-rockchip.c       |   4 +-
- drivers/pci/host/pcie-xilinx-nwl.c     |   4 +-
- drivers/pci/host/pcie-xilinx.c         |   4 +-
- drivers/pci/of.c                       | 105 +++++++++++++++++++++------------
- drivers/pci/pci.c                      |   6 +-
- drivers/pci/probe.c                    |   4 +-
- include/linux/of_pci.h                 |  42 ++++++++++++-
- include/linux/pci-ecam.h               |   1 +
- include/linux/pci.h                    |   3 -
- 21 files changed, 149 insertions(+), 73 deletions(-)
-
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 03e9b82..8e6fed4 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+-		pp->cfg0_size = resource_size(cfg_res) / 2;
+-		pp->cfg1_size = resource_size(cfg_res) / 2;
++		pp->cfg0_size = resource_size(cfg_res) >> 1;
++		pp->cfg1_size = resource_size(cfg_res) >> 1;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			break;
+ 		case 0:
+ 			pp->cfg = win->res;
+-			pp->cfg0_size = resource_size(pp->cfg) / 2;
+-			pp->cfg1_size = resource_size(pp->cfg) / 2;
++			pp->cfg0_size = resource_size(pp->cfg) >> 1;
++			pp->cfg1_size = resource_size(pp->cfg) >> 1;
+ 			pp->cfg0_base = pp->cfg->start;
+ 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+ 			break;
 -- 
-2.13.6
+2.7.4
