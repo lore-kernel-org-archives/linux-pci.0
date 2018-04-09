@@ -1,78 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:55454 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750962AbeDYFmn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:42:43 -0400
-Subject: Re: [PATCH] PCI: dwc: dra7xx: Use devm_ioremap_resource instead of
- devm_ioremap_resource
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
-References: <52159ae41a6e5a804b91c84f69a2e1374d4d1063.1524038248.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <59152b8d-5096-10ef-1915-9333ef6f97f1@ti.com>
-Date: Wed, 25 Apr 2018 11:12:35 +0530
-MIME-Version: 1.0
-In-Reply-To: <52159ae41a6e5a804b91c84f69a2e1374d4d1063.1524038248.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from mga11.intel.com ([192.55.52.93]:41629 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751546AbeDIWCH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Apr 2018 18:02:07 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex_Gagniuc@Dellteam.com, Scott Bauer <scott.bauer@intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 1/4] PCI/AER: Remove unused parameters
+Date: Mon,  9 Apr 2018 16:04:41 -0600
+Message-Id: <20180409220444.6632-2-keith.busch@intel.com>
+In-Reply-To: <20180409220444.6632-1-keith.busch@intel.com>
+References: <20180409220444.6632-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gustavo,
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/aer/aerdrv_core.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-On Wednesday 18 April 2018 01:36 PM, Gustavo Pimentel wrote:
-> This fix aims to replace the use of devm_ioremap() by
-> devm_ioremap_resource() already discussed on [1].
-> 
-> [1] -> https://patchwork.kernel.org/patch/10173831/
-
-Please use https://lkml.kernel.org/ redirector as mentioned in
-Documentation/process/submitting-patches.rst
-
-Once that is fixed
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index ed8558d..b410bb4 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -406,14 +406,14 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
->  	ep->ops = &pcie_ep_ops;
->  
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
-> -	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
-> -	if (!pci->dbi_base)
-> -		return -ENOMEM;
-> +	pci->dbi_base = devm_ioremap_resource(dev, res);
-> +	if (IS_ERR(pci->dbi_base))
-> +		return PTR_ERR(pci->dbi_base);
->  
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
-> -	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
-> -	if (!pci->dbi_base2)
-> -		return -ENOMEM;
-> +	pci->dbi_base2 = devm_ioremap_resource(dev, res);
-> +	if (IS_ERR(pci->dbi_base2))
-> +		return PTR_ERR(pci->dbi_base2);
->  
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
->  	if (!res)
-> @@ -459,9 +459,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->  		return ret;
->  
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
-> -	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
-> -	if (!pci->dbi_base)
-> -		return -ENOMEM;
-> +	pci->dbi_base = devm_ioremap_resource(dev, res);
-> +	if (IS_ERR(pci->dbi_base))
-> +		return PTR_ERR(pci->dbi_base);
->  
->  	pp->ops = &dra7xx_pcie_host_ops;
->  
-> 
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 0ea5acc40323..a533ea25e52c 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -541,15 +541,12 @@ static void do_recovery(struct pci_dev *dev, int severity)
+ 
+ /**
+  * handle_error_source - handle logging error into an event log
+- * @aerdev: pointer to pcie_device data structure of the root port
+  * @dev: pointer to pci_dev data structure of error source device
+  * @info: comprehensive error information
+  *
+  * Invoked when an error being detected by Root Port.
+  */
+-static void handle_error_source(struct pcie_device *aerdev,
+-	struct pci_dev *dev,
+-	struct aer_err_info *info)
++static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+ {
+ 	int pos;
+ 
+@@ -695,8 +692,7 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ 	return 1;
+ }
+ 
+-static inline void aer_process_err_devices(struct pcie_device *p_device,
+-			struct aer_err_info *e_info)
++static inline void aer_process_err_devices(struct aer_err_info *e_info)
+ {
+ 	int i;
+ 
+@@ -707,7 +703,7 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
+ 	}
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+ 		if (get_device_error_info(e_info->dev[i], e_info))
+-			handle_error_source(p_device, e_info->dev[i], e_info);
++			handle_error_source(e_info->dev[i], e_info);
+ 	}
+ }
+ 
+@@ -738,7 +734,7 @@ static void aer_isr_one_error(struct pcie_device *p_device,
+ 		aer_print_port_info(p_device->port, e_info);
+ 
+ 		if (find_source_device(p_device->port, e_info))
+-			aer_process_err_devices(p_device, e_info);
++			aer_process_err_devices(e_info);
+ 	}
+ 
+ 	if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
+@@ -757,7 +753,7 @@ static void aer_isr_one_error(struct pcie_device *p_device,
+ 		aer_print_port_info(p_device->port, e_info);
+ 
+ 		if (find_source_device(p_device->port, e_info))
+-			aer_process_err_devices(p_device, e_info);
++			aer_process_err_devices(e_info);
+ 	}
+ }
+ 
+-- 
+2.14.3
