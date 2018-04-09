@@ -1,174 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 30 Apr 2018 16:49:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Rajat Jain <rajatja@google.com>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: Bug? pcie_aspm=off cause less power consumption as default
-Message-ID: <20180430214954.GH95643@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180422171647.7v65zrlwhya5mq7v@pali>
- <20180427195313.GH8199@bhelgaas-glaptop.roam.corp.google.com>
- <20180430212321.hwvdhwk2hhjbd7nw@pali>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:54955 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752303AbeDIKyX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 06:54:23 -0400
+Date: Mon, 9 Apr 2018 12:54:18 +0200
+From: Simon Horman <horms@verge.net.au>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 1/4] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
+Message-ID: <20180409105415.h4rstrzzan4k6neq@verge.net.au>
+References: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
+ <35e8fb4a-4b43-dac9-7a6f-cc7083c06453@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180430212321.hwvdhwk2hhjbd7nw@pali>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <35e8fb4a-4b43-dac9-7a6f-cc7083c06453@cogentembedded.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 30, 2018 at 11:23:21PM +0200, Pali Rohár wrote:
-> On Friday 27 April 2018 14:53:13 Bjorn Helgaas wrote:
-> > Can you apply the following patch and try just the "force powersave" situation?
+On Fri, Apr 06, 2018 at 02:02:52PM +0300, Sergei Shtylyov wrote:
+> In  all the R-Car gen1/2/3 manuals, we are instructed to poll PCIEPHYSR
+> for PHYRDY=1  at  an early stage of the PCIEC initialization -- while
+> the driver only does this on R-Car H1 (polling a PHY specific register).
+
+Is the R-Car H1 specific code still needed with this patch in place?
+
+If so can we consider a helper. rcar_pcie_wait_for_phyrdy() looks
+very similar to that R-Car H1 code.
+
+> Add the PHYRDY polling to rcar_pcie_hw_init(). Note that without the
+> special PHY driver on the R-Car V3H the PCIEC initialization just freezes
+> the kernel --  adding the PHYRDY polling allows the init code to exit
+> gracefully on timeout (PHY starts powered down after reset on this SoC).
+
+How widely has this been exercised? I assume it affects Rcar Gen 1, 2 and 3.
+
 > 
-> Hi! You forgot to attach that patch.
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> 
+> ---
+>  drivers/pci/host/pcie-rcar.c |   20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+> 
+> Index: pci/drivers/pci/host/pcie-rcar.c
+> ===================================================================
+> --- pci.orig/drivers/pci/host/pcie-rcar.c
+> +++ pci/drivers/pci/host/pcie-rcar.c
+> @@ -36,6 +36,8 @@
+>  #define PCIECDR			0x000020
+>  #define PCIEMSR			0x000028
+>  #define PCIEINTXR		0x000400
+> +#define PCIEPHYSR		0x0007f0
+> +#define  PHYRDY			1
 
-Oops, I sure did!  I must have been subconsciously dreading analyzing the
-resulting data :)  Here's the patch:
+Can we start using the BIT() macro in this driver?
 
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index c687c817b47d..d5fef9b0a541 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -155,10 +155,13 @@ static void pcie_set_clkpm_nocheck(struct pcie_link_state *link, int enable)
- 	struct pci_bus *linkbus = link->pdev->subordinate;
- 	u32 val = enable ? PCI_EXP_LNKCTL_CLKREQ_EN : 0;
- 
--	list_for_each_entry(child, &linkbus->devices, bus_list)
-+	list_for_each_entry(child, &linkbus->devices, bus_list) {
- 		pcie_capability_clear_and_set_word(child, PCI_EXP_LNKCTL,
- 						   PCI_EXP_LNKCTL_CLKREQ_EN,
- 						   val);
-+		pci_info(child, "set PCI_EXP_LNKCTL %#06x %s\n", val,
-+			 __func__);
-+	}
- 	link->clkpm_enabled = !!enable;
- }
- 
-@@ -184,12 +187,16 @@ static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
- 	/* All functions should have the same cap and state, take the worst */
- 	list_for_each_entry(child, &linkbus->devices, bus_list) {
- 		pcie_capability_read_dword(child, PCI_EXP_LNKCAP, &reg32);
-+		pci_info(child, "rd  PCI_EXP_LNKCAP %#010x %s\n", reg32,
-+			 __func__);
- 		if (!(reg32 & PCI_EXP_LNKCAP_CLKPM)) {
- 			capable = 0;
- 			enabled = 0;
- 			break;
- 		}
- 		pcie_capability_read_word(child, PCI_EXP_LNKCTL, &reg16);
-+		pci_info(child, "rd  PCI_EXP_LNKCTL %#06x %s\n", reg16,
-+			 __func__);
- 		if (!(reg16 & PCI_EXP_LNKCTL_CLKREQ_EN))
- 			enabled = 0;
- 	}
-@@ -229,12 +236,16 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
- 
- 	/* Port might be already in common clock mode */
- 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &reg16);
-+	pci_info(parent, "rd  PCI_EXP_LNKCTL %#06x %s\n", reg16,
-+		 __func__);
- 	if (same_clock && (reg16 & PCI_EXP_LNKCTL_CCC)) {
- 		bool consistent = true;
- 
- 		list_for_each_entry(child, &linkbus->devices, bus_list) {
- 			pcie_capability_read_word(child, PCI_EXP_LNKCTL,
- 						  &reg16);
-+			pci_info(child, "rd  PCI_EXP_LNKCTL %#06x %s loop 1\n", reg16,
-+				 __func__);
- 			if (!(reg16 & PCI_EXP_LNKCTL_CCC)) {
- 				consistent = false;
- 				break;
-@@ -248,26 +259,36 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
- 	/* Configure downstream component, all functions */
- 	list_for_each_entry(child, &linkbus->devices, bus_list) {
- 		pcie_capability_read_word(child, PCI_EXP_LNKCTL, &reg16);
-+		pci_info(child, "rd  PCI_EXP_LNKCTL %#06x %s loop 2\n", reg16,
-+			 __func__);
- 		child_reg[PCI_FUNC(child->devfn)] = reg16;
- 		if (same_clock)
- 			reg16 |= PCI_EXP_LNKCTL_CCC;
- 		else
- 			reg16 &= ~PCI_EXP_LNKCTL_CCC;
- 		pcie_capability_write_word(child, PCI_EXP_LNKCTL, reg16);
-+		pci_info(child, "wr  PCI_EXP_LNKCTL %#06x %s loop 2\n", reg16,
-+			 __func__);
- 	}
- 
- 	/* Configure upstream component */
- 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &reg16);
-+	pci_info(parent, "rd  PCI_EXP_LNKCTL %#06x %s\n", reg16,
-+		 __func__);
- 	parent_reg = reg16;
- 	if (same_clock)
- 		reg16 |= PCI_EXP_LNKCTL_CCC;
- 	else
- 		reg16 &= ~PCI_EXP_LNKCTL_CCC;
- 	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
-+	pci_info(parent, "wr  PCI_EXP_LNKCTL %#06x %s\n", reg16,
-+		 __func__);
- 
- 	/* Retrain link */
- 	reg16 |= PCI_EXP_LNKCTL_RL;
- 	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
-+	pci_info(parent, "wr  PCI_EXP_LNKCTL %#06x %s retrain\n", reg16,
-+		 __func__);
- 
- 	/* Wait for link training end. Break out after waiting for timeout */
- 	start_jiffies = jiffies;
-@@ -284,10 +305,15 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
- 
- 	/* Training failed. Restore common clock configurations */
- 	pci_err(parent, "ASPM: Could not configure common clock\n");
--	list_for_each_entry(child, &linkbus->devices, bus_list)
-+	list_for_each_entry(child, &linkbus->devices, bus_list) {
- 		pcie_capability_write_word(child, PCI_EXP_LNKCTL,
- 					   child_reg[PCI_FUNC(child->devfn)]);
-+		pci_info(child, "wr  PCI_EXP_LNKCTL %#06x %s restore\n",
-+			 child_reg[PCI_FUNC(child->devfn)], __func__);
-+	}
- 	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, parent_reg);
-+	pci_info(parent, "wr  PCI_EXP_LNKCTL %#06x %s restore\n", parent_reg,
-+		 __func__);
- }
- 
- /* Convert L0s latency encoding to ns */
-@@ -383,10 +409,14 @@ static void pcie_get_aspm_reg(struct pci_dev *pdev,
- 	u32 reg32;
- 
- 	pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &reg32);
-+	pci_info(pdev, "rd  PCI_EXP_LNKCAP %#010x %s\n", reg32,
-+		 __func__);
- 	info->support = (reg32 & PCI_EXP_LNKCAP_ASPMS) >> 10;
- 	info->latency_encoding_l0s = (reg32 & PCI_EXP_LNKCAP_L0SEL) >> 12;
- 	info->latency_encoding_l1  = (reg32 & PCI_EXP_LNKCAP_L1EL) >> 15;
- 	pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &reg16);
-+	pci_info(pdev, "rd  PCI_EXP_LNKCTL %#06x %s\n", reg16,
-+		 __func__);
- 	info->enabled = reg16 & PCI_EXP_LNKCTL_ASPMC;
- 
- 	/* Read L1 PM substate capabilities */
-@@ -690,8 +720,12 @@ static void pcie_config_aspm_l1ss(struct pcie_link_state *link, u32 state)
- 	if (enable_req & (ASPM_STATE_L1_1 | ASPM_STATE_L1_2)) {
- 		pcie_capability_clear_and_set_word(child, PCI_EXP_LNKCTL,
- 						   PCI_EXP_LNKCTL_ASPM_L1, 0);
-+		pci_info(child, "clr PCI_EXP_LNKCTL %#06x %s\n",
-+			 PCI_EXP_LNKCTL_ASPM_L1, __func__);
- 		pcie_capability_clear_and_set_word(parent, PCI_EXP_LNKCTL,
- 						   PCI_EXP_LNKCTL_ASPM_L1, 0);
-+		pci_info(parent, "clr PCI_EXP_LNKCTL %#06x %s\n",
-+			 PCI_EXP_LNKCTL_ASPM_L1, __func__);
- 	}
- 
- 	if (enable_req & ASPM_STATE_L1_2_MASK) {
-@@ -739,6 +773,8 @@ static void pcie_config_aspm_dev(struct pci_dev *pdev, u32 val)
- {
- 	pcie_capability_clear_and_set_word(pdev, PCI_EXP_LNKCTL,
- 					   PCI_EXP_LNKCTL_ASPMC, val);
-+	pci_info(pdev, "set PCI_EXP_LNKCTL %#06x %s\n",
-+		 val, __func__);
- }
- 
- static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+>  #define PCIEMSITXR		0x000840
+>  
+>  /* Transfer control */
+> @@ -527,6 +529,20 @@ static void phy_write_reg(struct rcar_pc
+>  	phy_wait_for_ack(pcie);
+>  }
+>  
+> +static int rcar_pcie_wait_for_phyrdy(struct rcar_pcie *pcie)
+> +{
+> +	unsigned int timeout = 10;
+> +
+> +	while (timeout--) {
+> +		if (rcar_pci_read_reg(pcie, PCIEPHYSR) & PHYRDY)
+> +			return 0;
+> +
+> +		msleep(5);
+> +	}
+> +
+> +	return -ETIMEDOUT;
+> +}
+> +
+>  static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
+>  {
+>  	unsigned int timeout = 10;
+> @@ -551,6 +567,10 @@ static int rcar_pcie_hw_init(struct rcar
+>  	/* Set mode */
+>  	rcar_pci_write_reg(pcie, 1, PCIEMSR);
+>  
+> +	err = rcar_pcie_wait_for_phyrdy(pcie);
+> +	if (err)
+> +		return err;
+> +
+>  	/*
+>  	 * Initial header for port config space is type 1, set the device
+>  	 * class to match. Hardware takes care of propagating the IDSETR
+> 
