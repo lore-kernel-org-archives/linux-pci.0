@@ -1,79 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v6 3/9] PCI: endpoint: functions/pci-epf-test: Add second entry
-Date: Wed, 18 Apr 2018 15:46:38 +0100
-Message-Id: <9efd4af2f91e1be2b65d2df93444b35871673e8b.1524062073.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f66.google.com ([209.85.214.66]:36624 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752188AbeDIXWt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 19:22:49 -0400
+Received: by mail-it0-f66.google.com with SMTP id 15-v6so12479687itl.1
+        for <linux-pci@vger.kernel.org>; Mon, 09 Apr 2018 16:22:49 -0700 (PDT)
+Message-ID: <5ACBF5C6.60601@fredlawl.com>
+Date: Mon, 09 Apr 2018 18:22:46 -0500
+From: Frederick Lawler <fred@fredlawl.com>
+MIME-Version: 1.0
+To: mike.marciniszyn@intel.com, dennis.dalessandro@intel.com
+CC: linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] IB/hfi1: Cleanup PCIe link configuration
+References: <1523244898-25942-1-git-send-email-fred@fredlawl.com>
+In-Reply-To: <1523244898-25942-1-git-send-email-fred@fredlawl.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds a seconds entry on the pci_epf_test_ids structure that disables the
-linkup_notifier parameter on driver for the designware EP.
+Frederick Lawler wrote:
+> The IB/hfi1 driver uses custom macros to configure link speed. Some macros were
+> previously replaced, but not fully. This patch series addresses the 
+> configuration inconsistencies and introduces minor cleanup by replacing
+> redundant magic number usage.
+> 
+> --
+> V2: s/LINK/LNK
+> 
+> Frederick Lawler (2):
+>   IB/hfi1: Replace custom hfi1 macros with PCIe macros
+>   IB/hfi1: Cleanup PCIe speed link configuration
+> 
+>  drivers/infiniband/hw/hfi1/pcie.c | 29 ++++++++++-------------------
+>  1 file changed, 10 insertions(+), 19 deletions(-)
+> 
 
-This allows designware EPs that doesn't have linkup notification signal
-to work with pcitest.
+CC: linux-pci@vger.kernel.org
 
-Updates the binding documentation accordingly.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v2->v3:
- - Added second entry in pci_epf_test_ids structure.
- - Remove test_reg_bar field assignment on second entry.
-Changes v3->v4:
- - Nothing changed, just to follow the patch set version.
-Changes v4->v5:
- - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
-Changes v5->v6:
- - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
-
- Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
- drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
- 2 files changed, 10 insertions(+)
-
-diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-index 3b68b95..dc39f47 100644
---- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
-+++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-@@ -1,6 +1,8 @@
- PCI TEST ENDPOINT FUNCTION
- 
- name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
-+name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
-+      with a custom configuration for the designware EP.
- 
- Configurable Fields:
- vendorid	 : should be 0x104c
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 7cef851..b7dff87 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 	return 0;
- }
- 
-+static const struct pci_epf_test_data data_cfg2 = {
-+	.linkup_notifier = false
-+};
-+
- static const struct pci_epf_device_id pci_epf_test_ids[] = {
- 	{
- 		.name = "pci_epf_test",
- 	},
-+	{
-+		.name = "pci_epf_test_dw",
-+		.driver_data = (kernel_ulong_t)&data_cfg2,
-+	},
- 	{},
- };
- 
 -- 
-2.7.4
+Frederick Lawler
