@@ -1,44 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:37560 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750839AbeDMR4P (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2018 13:56:15 -0400
-To: rjw@rjwysocki.net
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-Subject: [Regression] PCI / PM: Simplify device wakeup settings code
-Cc: lenb@kernel.org, bhelgaas@google.com, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        1745646@bugs.launchpad.net
-Message-ID: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
-Date: Fri, 13 Apr 2018 13:56:12 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <0dad6b43476c1a70944e3e7c245040243ddc2a04.camel@perches.com>
+Subject: Re: [PATCH v2 7/9] PCI: dwc: Replace lower into upper case
+ characters
+From: Joe Perches <joe@perches.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Date: Mon, 09 Apr 2018 03:25:46 -0700
+In-Reply-To: <a28d463d04b198f51c64c1a7eb5b3f77da2d4ab9.1523266508.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+         <a28d463d04b198f51c64c1a7eb5b3f77da2d4ab9.1523266508.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+On Mon, 2018-04-09 at 10:41 +0100, Gustavo Pimentel wrote:
+> Replaces lower into upper case characters in comments and debug printks.
+> 
+> This is an attempt to keep the messages coherent within the designware
+> driver.
 
-A kernel bug report was opened against Ubuntu [0].  After a kernel
-bisect, it was found that reverting the following two commits resolved
-this bug:
+It'd be nice to make all the dwc drivers use the same
+message wording.
 
-0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
-0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
- 
-This is a regression introduced in v4.13-rc1 and still exists in
-mainline.  The bug causes the battery to drain when the system is
-powered down and unplugged, which does not happed prior to these two
-commits.  The bisect actually pointed to commit de3ef1e, but reverting
-these two commits fixes the issue.
-    
-I was hoping to get your feedback, since you are the patch author.  Do
-you think gathering any additional data will help diagnose this issue,
-or would it be best to submit a revert request?
-   
-   
-Thanks,
+For instance:
 
-Joe
-
-[0] http://pad.lv/1745646
+drivers/pci/dwc/pci-keystone.c: dev_err(dev, "phy link never came up\n");
+drivers/pci/dwc/pcie-designware.c:      dev_err(pci->dev, "phy link never came up\n");
+drivers/pci/host/pcie-xilinx-nwl.c:     dev_err(dev, "PHY link never came up\n");
