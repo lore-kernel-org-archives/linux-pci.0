@@ -1,113 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:56584 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756801AbeDZQ40 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 26 Apr 2018 12:56:26 -0400
-Date: Thu, 26 Apr 2018 17:56:14 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: bhelgaas@google.com, Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
-        kishon@ti.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v7 3/9] PCI: endpoint: functions/pci-epf-test: Add second
- entry
-Message-ID: <20180426165605.GA6370@e107981-ln.cambridge.arm.com>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
- <c6cfd167838ae8e226dee0820983efe918fa4e1f.1524577064.git.gustavo.pimentel@synopsys.com>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:36789 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753027AbeDIPpT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 11:45:19 -0400
+Received: by mail-lf0-f66.google.com with SMTP id d20-v6so1405901lfe.3
+        for <linux-pci@vger.kernel.org>; Mon, 09 Apr 2018 08:45:18 -0700 (PDT)
+Subject: Re: [PATCH 1/4] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
+To: Simon Horman <horms@verge.net.au>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
+ <35e8fb4a-4b43-dac9-7a6f-cc7083c06453@cogentembedded.com>
+ <20180409105415.h4rstrzzan4k6neq@verge.net.au>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <410d8ca9-8efa-8c41-a8ac-cad77e7bd2da@cogentembedded.com>
+Date: Mon, 9 Apr 2018 18:45:15 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c6cfd167838ae8e226dee0820983efe918fa4e1f.1524577064.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <20180409105415.h4rstrzzan4k6neq@verge.net.au>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 24, 2018 at 02:44:40PM +0100, Gustavo Pimentel wrote:
-> Adds a seconds entry on the pci_epf_test_ids structure that disables the
+On 04/09/2018 01:54 PM, Simon Horman wrote:
 
-"Add a second entry to..."
-
-> linkup_notifier parameter on driver for the designware EP.
+>> In  all the R-Car gen1/2/3 manuals, we are instructed to poll PCIEPHYSR
+>> for PHYRDY=1  at  an early stage of the PCIEC initialization -- while
+>> the driver only does this on R-Car H1 (polling a PHY specific register).
 > 
-> This allows designware EPs that doesn't have linkup notification signal
-> to work with pcitest.
+> Is the R-Car H1 specific code still needed with this patch in place?
+
+   No, it's removed in the next patch.
+
+[...]
+>> Add the PHYRDY polling to rcar_pcie_hw_init(). Note that without the
+>> special PHY driver on the R-Car V3H the PCIEC initialization just freezes
+>> the kernel --  adding the PHYRDY polling allows the init code to exit
+>> gracefully on timeout (PHY starts powered down after reset on this SoC).
 > 
-> Updates the binding documentation accordingly.
+> How widely has this been exercised? I assume it affects Rcar Gen 1, 2 and 3.
 
-Valid for all the series: use imperative sentences.
+   Tested on R8A7791/Porter (unfortunately, I have no spare PCIe card) and
+R8A77980/Condor (tried couple PCIe cards).
 
-eg:
-
-"Update the binding documentation accordingly".
-
-not
-
-"Updates the binding documentation accordingly".
-
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
-> Change v2->v3:
->  - Added second entry in pci_epf_test_ids structure.
->  - Remove test_reg_bar field assignment on second entry.
-> Changes v3->v4:
->  - Nothing changed, just to follow the patch set version.
-> Changes v4->v5:
->  - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
-> Changes v5->v6:
->  - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
-> Changes v6->v7:
->  - Changed variable name from data_cfg2 to data_linkup_notifier_disabled.
+>>
+>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+>>
+>> ---
+>>  drivers/pci/host/pcie-rcar.c |   20 ++++++++++++++++++++
+>>  1 file changed, 20 insertions(+)
+>>
+>> Index: pci/drivers/pci/host/pcie-rcar.c
+>> ===================================================================
+>> --- pci.orig/drivers/pci/host/pcie-rcar.c
+>> +++ pci/drivers/pci/host/pcie-rcar.c
+>> @@ -36,6 +36,8 @@
+>>  #define PCIECDR			0x000020
+>>  #define PCIEMSR			0x000028
+>>  #define PCIEINTXR		0x000400
+>> +#define PCIEPHYSR		0x0007f0
+>> +#define  PHYRDY			1
 > 
->  Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
->  drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
->  2 files changed, 10 insertions(+)
-> 
-> diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> index 3b68b95..dc39f47 100644
-> --- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> +++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> @@ -1,6 +1,8 @@
->  PCI TEST ENDPOINT FUNCTION
->  
->  name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
-> +name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
-> +      with a custom configuration for the designware EP.
+> Can we start using the BIT() macro in this driver?
 
-The link between the "name" and the device created is quite obscure and
-reading pci-test-howto.txt certainly does not clarify it.
+   Done by Marek for the other regs... not sure whose patch would hit the kernel
+first tho...
 
-In pci-test-howto.txt an explanation should be added to the configs
-device creation paragraph to clarify it.
+[...]
 
->  Configurable Fields:
->  vendorid	 : should be 0x104c
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index 7cef851..4ab463b 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
->  	return 0;
->  }
->  
-> +static const struct pci_epf_test_data data_linkup_notifier_disabled = {
-> +	.linkup_notifier = false
-> +};
-> +
->  static const struct pci_epf_device_id pci_epf_test_ids[] = {
->  	{
->  		.name = "pci_epf_test",
->  	},
-> +	{
-> +		.name = "pci_epf_test_dw",
-> +		.driver_data = (kernel_ulong_t)&data_linkup_notifier_disabled,
-> +	},
->  	{},
-
-Should not this be a property derived from the controller compatible
-property instead of the test device name written in configfs ?
-
-I think I am missing something in the whole scheme of things, please
-clarify.
-
-Thanks,
-Lorenzo
+MBR, Sergei
