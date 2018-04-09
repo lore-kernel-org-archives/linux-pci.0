@@ -1,95 +1,81 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Kai Heng Feng <kai.heng.feng@canonical.com>, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v3] PCI / PM: Always check PME wakeup capability for runtime wakeup support
-Date: Fri, 13 Apr 2018 09:29:56 +0200
-Message-ID: <10732937.eAR6mAEfiz@aspire.rjw.lan>
-In-Reply-To: <798A7C7A-A3DA-4C0E-A774-48042430EE1A@canonical.com>
-References: <20180331164022.24220-1-kai.heng.feng@canonical.com> <798A7C7A-A3DA-4C0E-A774-48042430EE1A@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v13 1/6] PCI/AER: Rename error recovery to generic PCI naming
+Date: Mon,  9 Apr 2018 10:41:49 -0400
+Message-Id: <1523284914-2037-2-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, April 13, 2018 8:58:11 AM CEST Kai Heng Feng wrote:
-> Hi Bjorn and Rafael,
-> 
-> > On Apr 1, 2018, at 12:40 AM, Kai-Heng Feng <kai.heng.feng@canonical.com>  
-> > wrote:
-> >
-> > USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
-> > core: Drop run_wake flag from struct dev_pm_info").
-> >
-> > The device in question is not power managed by platform firmware,
-> > furthermore, it only supports PME# from D3cold:
-> > Capabilities: [78] Power Management version 3
-> >        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
-> >        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-> >
-> > Before commit de3ef1eb1cd0, the device never gets runtime suspended.
-> > After that commit, the device gets runtime suspended, so it does not
-> > respond to any PME#.
-> >
-> > usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
-> > device_can_wakeup() in pci_dev_run_wake() always returns true.
-> >
-> > So pci_dev_run_wake() needs to check PME wakeup capability as its first
-> > condition.
-> >
-> > In addition, change wakeup flag passed to pci_target_state() from false
-> > to true, because we want to find the deepest state that the device can
-> > still generate PME#.
-> >
-> > Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct  
-> > dev_pm_info")
-> > Cc: stable@vger.kernel.org # 4.13+
-> > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> > ---
-> > v3: State the reason why the wakeup flag gets changed.
-> >
-> > v2: Explicitly check dev->pme_support.
-> 
-> If this patch is good enough, I am hoping it can get merged in v4.17.
+This patch renames error recovery to generic name with pcie prefix
 
-OK
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Bjorn, if you want to take this:
-
- Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-Otherwise please let me know and I'll queue it up.
-
-
-> >
-> >  drivers/pci/pci.c | 8 ++++----
-> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index f6a4dd10d9b0..52821a21fc07 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -2125,16 +2125,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
-> >  {
-> >  	struct pci_bus *bus = dev->bus;
-> >
-> > -	if (device_can_wakeup(&dev->dev))
-> > -		return true;
-> > -
-> >  	if (!dev->pme_support)
-> >  		return false;
-> >
-> >  	/* PME-capable in principle, but not from the target power state */
-> > -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
-> > +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
-> >  		return false;
-> >
-> > +	if (device_can_wakeup(&dev->dev))
-> > +		return true;
-> > +
-> >  	while (bus->parent) {
-> >  		struct pci_dev *bridge = bus->self;
-> >
-> 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index fcd8191..abc514e 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -342,6 +342,9 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ 
+ void pci_enable_acs(struct pci_dev *dev);
+ 
++/* PCI error reporting and recovery */
++void pcie_do_recovery(struct pci_dev *dev, int severity);
++
+ #ifdef CONFIG_PCIEASPM
+ void pcie_aspm_init_link_state(struct pci_dev *pdev);
+ void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index a4bfea5..aeb83a0 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -478,7 +478,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ }
+ 
+ /**
+- * do_recovery - handle nonfatal/fatal error recovery process
++ * pcie_do_recovery - handle nonfatal/fatal error recovery process
+  * @dev: pointer to a pci_dev data structure of agent detecting an error
+  * @severity: error severity type
+  *
+@@ -486,7 +486,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+  * error detected message to all downstream drivers within a hierarchy in
+  * question and return the returned code.
+  */
+-static void do_recovery(struct pci_dev *dev, int severity)
++static void pcie_do_recovery(struct pci_dev *dev, int severity)
+ {
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+@@ -566,7 +566,7 @@ static void handle_error_source(struct pcie_device *aerdev,
+ 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 					info->status);
+ 	} else
+-		do_recovery(dev, info->severity);
++		pcie_do_recovery(dev, info->severity);
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -631,7 +631,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		}
+ 		cper_print_aer(pdev, entry.severity, entry.regs);
+ 		if (entry.severity != AER_CORRECTABLE)
+-			do_recovery(pdev, entry.severity);
++			pcie_do_recovery(pdev, entry.severity);
+ 		pci_dev_put(pdev);
+ 	}
+ }
+-- 
+2.7.4
