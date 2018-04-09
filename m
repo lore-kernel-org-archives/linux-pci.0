@@ -1,53 +1,29 @@
-Return-Path: <SRS0=7tVf=HH=intel.com=dennis.dalessandro@kernel.org>
-Return-Path: <SRS0=7tVf=HH=intel.com=dennis.dalessandro@kernel.org>
-Subject: Re: [PATCH v3 0/2] IB/hfi1: Cleanup PCIe link configuration
-To: Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@infradead.org>
-Cc: Frederick Lawler <fred@fredlawl.com>, bhelgaas@google.com,
- mike.marciniszyn@intel.com, dledford@redhat.com, jgg@mellanox.com,
- linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-kernel@vger.kernel.org, Bartlomiej Dudek <bartlomiej.dudek@intel.com>
-References: <20180417002825.2737-1-fred@fredlawl.com>
- <20180417065343.GA29193@infradead.org>
- <20180417143232.GH28657@bhelgaas-glaptop.roam.corp.google.com>
-From: Dennis Dalessandro <dennis.dalessandro@intel.com>
-Message-ID: <19322128-0418-fba9-ae21-df176b3fe5e0@intel.com>
-Date: Wed, 18 Apr 2018 17:53:28 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:56890 "EHLO smtp2.it.da.ut.ee"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752100AbeDIOax (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Apr 2018 10:30:53 -0400
+Date: Mon, 9 Apr 2018 17:30:48 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+        sparclinux@vger.kernel.org
+Subject: Re: sparc64 PCI BAR allocation is still problematic
+In-Reply-To: <20180409032354.GA24642@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.LRH.2.21.1804091730060.16892@math.ut.ee>
+References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee> <20180409032354.GA24642@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180417143232.GH28657@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/17/2018 10:32 AM, Bjorn Helgaas wrote:
-> [+cc Bartlomiej, who recently changed do_pcie_gen3_transition(), LKML]
+> > Full current dmesg and lspci info is also available if there is any 
+> > interest. I did not include it all here, which machines are interesting?
 > 
-> On Mon, Apr 16, 2018 at 11:53:43PM -0700, Christoph Hellwig wrote:
->> On Mon, Apr 16, 2018 at 07:28:23PM -0500, Frederick Lawler wrote:
->>> The IB/hfi1 driver uses custom macros to configure the target link speed. Some
->>> macros were previously replaced, but not fully. This patch series addresses the
->>> configuration inconsistencies by adding PCI_EXP_LNKCTL2_TLS* macros to PCI,
->>> and then use them in the following IB/hfi1 patch.
->>
->> Btw, why is the driver configuring the PCIe link speed?  Isn't this
->> something we should be handling in the PCI core?
-> 
-> Good question.  I think this sort of code definitely should not be in
-> drivers unless it's to work around some kind of defect in the device.
-> 
-> I think the intent of the spec is that neither the OS nor the driver
-> has to deal with link training and the link should train to the
-> highest speed supported by both ends.  For example, PCIe r4.0, sec 1.2
-> says
-> 
->    Initialization – During hardware initialization, each PCI Express
->    Link is set up following a negotiation of Lane widths and frequency
->    of operation by the two agents at each end of the Link. No firmware
->    or operating system software is involved.
-> 
-> Maybe the Intel guys can comment on why HFI needs this code.
-> Presumably they didn't write it just for fun, so I assume there's
-> some reason.
+> I'm interested in that info.  Can you attach it all to the bugzilla?
+> I can't predict ahead of time which pieces will be useful.
 
-Yeah there was a reason. It just escapes me what it was right now. Let 
-me find out and I'll update.
+Added, all of them.
 
--Denny
+-- 
+Meelis Roos (mroos@linux.ee)
