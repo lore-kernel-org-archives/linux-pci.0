@@ -1,92 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16966 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752021AbeDYKPN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 25 Apr 2018 06:15:13 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "H . Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-        x86@kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2] x86/PCI: Make pci=earlydump output neat
-Date: Wed, 25 Apr 2018 13:15:07 +0300
-Message-Id: <20180425101507.51531-1-andriy.shevchenko@linux.intel.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:56226 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750982AbeDIM0k (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 08:26:40 -0400
+Date: Mon, 9 Apr 2018 14:26:36 +0200
+From: Simon Horman <horms@verge.net.au>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Marek Vasut <marek.vasut@gmail.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+Message-ID: <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
+References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
+ <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
+ <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
+ <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+ <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the early dump of PCI configuration space looks quite unhelpful, e.g.
+On Mon, Apr 09, 2018 at 01:47:38PM +0200, Geert Uytterhoeven wrote:
+> Hi Simon, Marek,
+> 
+> On Mon, Apr 9, 2018 at 1:41 PM, Simon Horman <horms@verge.net.au> wrote:
+> > On Mon, Apr 09, 2018 at 10:20:05AM +0200, Marek Vasut wrote:
+> >> On 04/09/2018 10:07 AM, Geert Uytterhoeven wrote:
+> >> > On Sun, Apr 8, 2018 at 3:09 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> >> >> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+> >> >>
+> >> >> The controller clock can be switched off during suspend/resume,
+> >> >> let runtime PM take care of that.
+> >> >>
+> >> >> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+> >> >> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+> >> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> >> >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> >> >> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >> >> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> >> >> Cc: Simon Horman <horms+renesas@verge.net.au>
+> >> >> Cc: Wolfram Sang <wsa@the-dreams.de>
+> >> >> Cc: linux-renesas-soc@vger.kernel.org
+> >> >> To: linux-pci@vger.kernel.org
+> >> >> ---
+> >> >> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
+> >> >>       reordering of function calls in probe
+> >> >>     - Dispose of fail_clk in rcar_pcie_get_resources()
+> >> >> V3: - Fix up the failpath in probe function
+> >> >> V4: - Rebase on recent linux-next
+> >> >> V5: - Do not call pci_free_resource_list(&pcie->resources) if
+> >> >>       rcar_pcie_parse_request_of_pci_ranges() fails, since that
+> >> >>       functiona calls pci_free_resource_list() already.
+> >> >
+> >> > Thanks for the update!
+> >> >
+> >> >> --- a/drivers/pci/host/pcie-rcar.c
+> >> >> +++ b/drivers/pci/host/pcie-rcar.c
+> >> >
+> >> >> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+> >> >>         if (err)
+> >> >>                 goto err_free_bridge;
+> >> >>
+> >> >> +       pm_runtime_enable(pcie->dev);
+> >> >> +       err = pm_runtime_get_sync(pcie->dev);
+> >> >> +       if (err < 0) {
+> >> >> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
+> >> >> +               goto err_pm_disable;
+> >> >> +       }
+> >> >> +
+> >> >
+> >> > As you moved the pm_runtime setup up...
+> >> >
+> >> >>         err = rcar_pcie_get_resources(pcie);
+> >> >>         if (err < 0) {
+> >> >>                 dev_err(dev, "failed to request resources: %d\n", err);
+> >> >> -               goto err_free_resource_list;
+> >> >> +               goto err_pm_put;
+> >> >>         }
+> >> >>
+> >> >>         err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
+> >> >>         if (err)
+> >> >> -               goto err_free_resource_list;
+> >> >> -
+> >> >> -       pm_runtime_enable(dev);
+> >> >> -       err = pm_runtime_get_sync(dev);
+> >> >> -       if (err < 0) {
+> >> >> -               dev_err(dev, "pm_runtime_get_sync failed\n");
+> >> >> -               goto err_pm_disable;
+> >> >> -       }
+> >> >> +               goto err_pm_put;
+> >> >>
+> >> >>         /* Failure to get a link might just be that no cards are inserted */
+> >> >>         hw_init_fn = of_device_get_match_data(dev);
+> >> >> @@ -1174,9 +1161,8 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+> >> >>
+> >> >>  err_pm_disable:
+> >> >>         pm_runtime_disable(dev);
+> >> >
+> >> > ... shouldn't it be moved down here, for symmetry?
+> >>
+> >> I am reasonably certain the failpath should be correct now. Did I still
+> >> miss something ?
+> >
+> > It looks correct to me too. Geert are Marek and I missing something?
+> 
+> Probably it will still work fine, but after this patch, Runtime PM is enabled
+> early, and disabled early, which is not symmetrical.
+> 
+> I like symmetry ;-)
 
-[    0.000000]   60:
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]  00
-[    0.000000]
-
-which makes really hard to get anything out of this. Convert the function to
-use print_hex_dump() to make output neat.
-
-In the result we will have
-
-[    0.000000] 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-which is much, much better.
-
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
-- add Mika's tag
-- address style issue
- arch/x86/pci/early.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
-
-diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
-index f0114007e915..e5f753cbb1c3 100644
---- a/arch/x86/pci/early.c
-+++ b/arch/x86/pci/early.c
-@@ -59,24 +59,15 @@ int early_pci_allowed(void)
- 
- void early_dump_pci_device(u8 bus, u8 slot, u8 func)
- {
-+	u32 value[256 / 4];
- 	int i;
--	int j;
--	u32 val;
- 
--	printk(KERN_INFO "pci 0000:%02x:%02x.%d config space:",
--	       bus, slot, func);
-+	pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, func);
- 
--	for (i = 0; i < 256; i += 4) {
--		if (!(i & 0x0f))
--			printk("\n  %02x:",i);
-+	for (i = 0; i < 256; i += 4)
-+		value[i / 4] = read_pci_config(bus, slot, func, i);
- 
--		val = read_pci_config(bus, slot, func, i);
--		for (j = 0; j < 4; j++) {
--			printk(" %02x", val & 0xff);
--			val >>= 8;
--		}
--	}
--	printk("\n");
-+	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value, 256, false);
- }
- 
- void early_dump_pci_devices(void)
--- 
-2.17.0
+Understood. I think that is reasonable.
+Marek, would you care to respin?
