@@ -1,128 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:38759 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752617AbeDROqw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Apr 2018 10:46:52 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v6 9/9] PCI: dwc: Replace magic number by defines
-Date: Wed, 18 Apr 2018 15:46:44 +0100
-Message-Id: <4eaca0f71b6966178ac2085450bdb813c692f858.1524062073.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:37093 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751464AbeDILrj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 07:47:39 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
+ <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
+ <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com> <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 9 Apr 2018 13:47:38 +0200
+Message-ID: <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+To: Simon Horman <horms@verge.net.au>
+Cc: Marek Vasut <marek.vasut@gmail.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace magic numbers by a well known define in order to make the code
-human readable and also facilitate the code reusability.
+Hi Simon, Marek,
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Changes v3->v4:
- - Nothing changed, just to follow the patch set version.
-Changes v4->v5:
- - Nothing changed, just to follow the patch set version.
-Changes v5->v6:
- - Nothing changed, just to follow the patch set version.
+On Mon, Apr 9, 2018 at 1:41 PM, Simon Horman <horms@verge.net.au> wrote:
+> On Mon, Apr 09, 2018 at 10:20:05AM +0200, Marek Vasut wrote:
+>> On 04/09/2018 10:07 AM, Geert Uytterhoeven wrote:
+>> > On Sun, Apr 8, 2018 at 3:09 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>> >> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>> >>
+>> >> The controller clock can be switched off during suspend/resume,
+>> >> let runtime PM take care of that.
+>> >>
+>> >> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>> >> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+>> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> >> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> >> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> >> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> >> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> >> Cc: linux-renesas-soc@vger.kernel.org
+>> >> To: linux-pci@vger.kernel.org
+>> >> ---
+>> >> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
+>> >>       reordering of function calls in probe
+>> >>     - Dispose of fail_clk in rcar_pcie_get_resources()
+>> >> V3: - Fix up the failpath in probe function
+>> >> V4: - Rebase on recent linux-next
+>> >> V5: - Do not call pci_free_resource_list(&pcie->resources) if
+>> >>       rcar_pcie_parse_request_of_pci_ranges() fails, since that
+>> >>       functiona calls pci_free_resource_list() already.
+>> >
+>> > Thanks for the update!
+>> >
+>> >> --- a/drivers/pci/host/pcie-rcar.c
+>> >> +++ b/drivers/pci/host/pcie-rcar.c
+>> >
+>> >> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>> >>         if (err)
+>> >>                 goto err_free_bridge;
+>> >>
+>> >> +       pm_runtime_enable(pcie->dev);
+>> >> +       err = pm_runtime_get_sync(pcie->dev);
+>> >> +       if (err < 0) {
+>> >> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
+>> >> +               goto err_pm_disable;
+>> >> +       }
+>> >> +
+>> >
+>> > As you moved the pm_runtime setup up...
+>> >
+>> >>         err = rcar_pcie_get_resources(pcie);
+>> >>         if (err < 0) {
+>> >>                 dev_err(dev, "failed to request resources: %d\n", err);
+>> >> -               goto err_free_resource_list;
+>> >> +               goto err_pm_put;
+>> >>         }
+>> >>
+>> >>         err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
+>> >>         if (err)
+>> >> -               goto err_free_resource_list;
+>> >> -
+>> >> -       pm_runtime_enable(dev);
+>> >> -       err = pm_runtime_get_sync(dev);
+>> >> -       if (err < 0) {
+>> >> -               dev_err(dev, "pm_runtime_get_sync failed\n");
+>> >> -               goto err_pm_disable;
+>> >> -       }
+>> >> +               goto err_pm_put;
+>> >>
+>> >>         /* Failure to get a link might just be that no cards are inserted */
+>> >>         hw_init_fn = of_device_get_match_data(dev);
+>> >> @@ -1174,9 +1161,8 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>> >>
+>> >>  err_pm_disable:
+>> >>         pm_runtime_disable(dev);
+>> >
+>> > ... shouldn't it be moved down here, for symmetry?
+>>
+>> I am reasonably certain the failpath should be correct now. Did I still
+>> miss something ?
+>
+> It looks correct to me too. Geert are Marek and I missing something?
 
- drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware.h      |  1 +
- 2 files changed, 21 insertions(+), 14 deletions(-)
+Probably it will still work fine, but after this patch, Runtime PM is enabled
+early, and disabled early, which is not symmetrical.
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index fc55fde..a7657ab 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
- 
- 	for (i = 0; i < num_ctrls; i++) {
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
--				    &val);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+					(i * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &val);
- 		if (!val)
- 			continue;
- 
- 		ret = IRQ_HANDLED;
- 		pos = 0;
--		while ((pos = find_next_bit((unsigned long *) &val, 32,
--					    pos)) != 32) {
--			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
-+		while ((pos = find_next_bit((unsigned long *) &val,
-+					    MAX_MSI_IRQS_PER_CTRL,
-+					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
-+			irq = irq_find_mapping(pp->irq_domain,
-+					       (i * MAX_MSI_IRQS_PER_CTRL) +
-+					       pos);
- 			generic_handle_irq(irq);
--			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
-+			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+						(i * MSI_REG_CTRL_BLOCK_SIZE),
- 					    4, 1 << pos);
- 			pos++;
- 		}
-@@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
- 	if (pp->ops->msi_clear_irq) {
- 		pp->ops->msi_clear_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 		pp->irq_status[ctrl] &= ~(1 << bit);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
- 	if (pp->ops->msi_set_irq) {
- 		pp->ops->msi_set_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 		pp->irq_status[ctrl] |= 1 << bit;
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	/* Initialize IRQ Status array */
- 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
--				    &pp->irq_status[ctrl]);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
-+					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &pp->irq_status[ctrl]);
- 
- 	/* Setup RC BARs */
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index fe811db..bee4e25 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -110,6 +110,7 @@
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
-+#define MSI_REG_CTRL_BLOCK_SIZE		12
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
+I like symmetry ;-)
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.7.4
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
