@@ -1,65 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v7 6/9] PCI: dwc: Define maximum number of vectors
-Date: Tue, 24 Apr 2018 14:44:43 +0100
-Message-Id: <6b2c7ec1835cf422af5703aa14c99dbad8c6ffb8.1524577064.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:41630 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751546AbeDIWCI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Apr 2018 18:02:08 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex_Gagniuc@Dellteam.com, Scott Bauer <scott.bauer@intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 4/4] PCI/AER: Lock pci topology when scanning errors
+Date: Mon,  9 Apr 2018 16:04:44 -0600
+Message-Id: <20180409220444.6632-5-keith.busch@intel.com>
+In-Reply-To: <20180409220444.6632-1-keith.busch@intel.com>
+References: <20180409220444.6632-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds a callback that defines the maximum number of vectors that can be use
-by the Root Complex.
+The side effects of surprise removal may trigger AER handling. The AER
+handling walks the pci topology and may access a pci_dev that is being
+freed by the hotplug handler.
 
-Since this is a parameter associated to each SoC IP setting, makes sense to
-be configurable and easily visible to future modifications.
+This patch fixes that use-after-free by locking the PCI topology in
+the AER handler so it isn't racing with the pciehp removal.
 
-The designware IP supports a maximum of 256 vectors.
+Since the AER handler now runs under a global PCI lock, the rpc specific
+mutex is no longer necessary.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+Reported-by: Alex Gagniuc <Alex_Gagniuc@Dellteam.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Changes v3->v4:
- - Nothing changed, just to follow the patch set version.
-Changes v4->v5:
- - Nothing changed, just to follow the patch set version.
-Changes v5->v6:
- - Nothing changed, just to follow the patch set version.
-Changes v6->v7:
- - Nothing changed, just to follow the patch set version.
+ drivers/pci/pcie/aer/aerdrv.c      | 1 -
+ drivers/pci/pcie/aer/aerdrv.h      | 5 -----
+ drivers/pci/pcie/aer/aerdrv_core.c | 4 ++--
+ 3 files changed, 2 insertions(+), 8 deletions(-)
 
- drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index efc315c..5937fed 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -48,8 +48,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 0b2eb88c422b..b88e5e2f3700 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -237,7 +237,6 @@ static struct aer_rpc *aer_alloc_rpc(struct pcie_device *dev)
+ 	rpc->rpd = pci_dev_get(dev->port);
+ 	kref_init(&rpc->ref);
+ 	INIT_WORK(&rpc->dpc_handler, aer_isr);
+-	mutex_init(&rpc->rpc_mutex);
  
-+static void dw_plat_set_num_vectors(struct pcie_port *pp)
-+{
-+	pp->num_vectors = MAX_MSI_IRQS;
-+}
-+
- static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
- 	.host_init = dw_plat_pcie_host_init,
-+	.set_num_vectors = dw_plat_set_num_vectors,
+ 	/* Use PCIe bus function to store rpc into PCIe device */
+ 	set_service_data(dev, rpc);
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index f886521e2c7b..b90fc5d4cda2 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -70,11 +70,6 @@ struct aer_rpc {
+ 					 * Lock access to Error Status/ID Regs
+ 					 * and error producer/consumer index
+ 					 */
+-	struct mutex rpc_mutex;		/*
+-					 * only one thread could do
+-					 * recovery on the same
+-					 * root port hierarchy
+-					 */
  };
  
- static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
+ struct aer_broadcast_data {
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index e4059d7fa7fa..de210b7439eb 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -796,10 +796,10 @@ void aer_isr(struct work_struct *work)
+ 	struct aer_rpc *rpc = container_of(work, struct aer_rpc, dpc_handler);
+ 	struct aer_err_source uninitialized_var(e_src);
+ 
+-	mutex_lock(&rpc->rpc_mutex);
++	pci_lock_rescan_remove();
+ 	while (get_e_source(rpc, &e_src))
+ 		aer_isr_one_error(rpc, &e_src);
+-	mutex_unlock(&rpc->rpc_mutex);
++	pci_unlock_rescan_remove();
+ 
+ 	aer_release(rpc);
+ }
 -- 
-2.7.4
+2.14.3
