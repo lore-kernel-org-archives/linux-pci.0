@@ -1,50 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27474 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932589AbeD0Ko0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 06:44:26 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
-Date: Fri, 27 Apr 2018 13:44:23 +0300
-Message-Id: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 9 Apr 2018 20:54:33 +0200
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v4 0/6] PCI: aardvark: misc fixes and improvements
+Message-ID: <20180409205433.4eb78a45@windsurf>
+In-Reply-To: <20180409162356.GB14533@e107981-ln.cambridge.arm.com>
+References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
+ <20180409162356.GB14533@e107981-ln.cambridge.arm.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
+ Miqu??l Raynal <miquel.raynal@bootlin.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Wilson Ding <dingwei@marvell.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Intel 300 series chipset still has the same ACS issue than the previous
-generations so extend the ACS quirk to cover it as well.
+Hello Lorenzo,
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/quirks.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Thanks for your feedback!
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2990ad1e7c99..7a0f41176369 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4230,6 +4230,11 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
-  * 0xa290-0xa29f PCI Express Root port #{0-16}
-  * 0xa2e7-0xa2ee PCI Express Root port #{17-24}
-  *
-+ * The 300 series chipset suffers from the same bug so include those root
-+ * ports here as well.
-+ *
-+ * 0xa32c-0xa343 PCI Express Root port #{0-24}
-+ *
-  * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
-  * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
-  * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
-@@ -4244,6 +4249,7 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
- 	switch (dev->device) {
- 	case 0xa110 ... 0xa11f: case 0xa167 ... 0xa16a: /* Sunrise Point */
- 	case 0xa290 ... 0xa29f: case 0xa2e7 ... 0xa2ee: /* Union Point */
-+	case 0xa32c ... 0xa343:				/* 300 series */
- 		return true;
- 	}
- 
+On Mon, 9 Apr 2018 17:23:56 +0100, Lorenzo Pieralisi wrote:
+
+> it is not just improvements, these look like significant bug fixes too.
+> 
+> Let me know which patches we should prioritize since hopefully they can
+> be sent during v4.17-rc* releases, I will queue the rest for the next
+> merge window.
+
+The patches that are bug fixes are marked with a "Fixes:" tag and are
+Cc'ed to stable.
+
+So, the following patches are fixes:
+
+[PATCH v4 1/6] PCI: aardvark: Fix logic in advk_pcie_{rd,wr}_conf()
+[PATCH v4 2/6] PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
+[PATCH v4 3/6] PCI: aardvark: Use ISR1 instead of ISR0 interrupt in legacy irq mode
+[PATCH v4 4/6] PCI: aardvark: Fix PCIe Max Read Request Size setting
+
+The following patches are improvements:
+
+[PATCH v4 5/6] PCI: aardvark: Introduce an advk_pcie_valid_device() helper
+[PATCH v4 6/6] PCI: aardvark: Remove PCIe outbound window configuration
+
+Thanks!
+
+Thomas
 -- 
-2.17.0
+Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
+Embedded Linux and Kernel engineering
+https://bootlin.com
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
