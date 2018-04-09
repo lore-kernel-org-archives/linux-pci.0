@@ -1,88 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 05/10] PCI: dwc: Add legacy interrupt callback handler
-Date: Fri, 27 Apr 2018 17:57:42 +0100
-Message-Id: <8d1204f6e1e0d4ceaa4df30415c025feaa72e6ee.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36085 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754111AbeDIU1r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 16:27:47 -0400
+Date: Mon, 9 Apr 2018 15:27:45 -0500
+From: Rob Herring <robh@kernel.org>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
+        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
+        david.brown@linaro.org, dan.j.williams@intel.com,
+        vinod.koul@intel.com, thierry.reding@gmail.com,
+        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
+        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
+        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
+        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
+        leoyang.li@nxp.com
+Subject: Re: [PATCH v3 2/2] drivers: remove force dma flag from buses
+Message-ID: <20180409202745.p6hxkyy4n7fin3bd@rob-hp-laptop>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+ <1522396485-10248-1-git-send-email-nipun.gupta@nxp.com>
+ <1522396485-10248-2-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522396485-10248-2-git-send-email-nipun.gupta@nxp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a legacy interrupt callback handler. Currently DesignWare IP don't
-allow triggering the legacy interrupt.
+On Fri, Mar 30, 2018 at 01:24:45PM +0530, Nipun Gupta wrote:
+> With each bus implementing its own DMA configuration callback,
+> there is no need for bus to explicitly have force_dma in its
+> global structure. This patch modifies of_dma_configure API to
+> accept an input parameter which specifies if implicit DMA
+> configuration is required even when it is not described by the
+> firmware.
+> 
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> ---
+> Changes in v2:
+>   - This is a new change suggested by Robin and Christoph
+>     and is added to the series.
+> 
+> Changes in v3:
+>   - Rebase and changes corresponding to the changes in patch 1/2
+> 
+>  drivers/amba/bus.c            | 1 -
+>  drivers/base/platform.c       | 3 +--
+>  drivers/bcma/main.c           | 2 +-
+>  drivers/dma/qcom/hidma_mgmt.c | 2 +-
+>  drivers/gpu/host1x/bus.c      | 5 ++---
+>  drivers/of/device.c           | 6 ++++--
+>  drivers/of/of_reserved_mem.c  | 2 +-
+>  drivers/pci/pci-driver.c      | 3 +--
+>  include/linux/device.h        | 4 ----
+>  include/linux/of_device.h     | 8 ++++++--
+>  10 files changed, 17 insertions(+), 19 deletions(-)
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- drivers/pci/dwc/pcie-designware-ep.c   | 10 ++++++++++
- drivers/pci/dwc/pcie-designware-plat.c |  3 +--
- drivers/pci/dwc/pcie-designware.h      |  6 ++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 1ba3a7f..b599169 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
- 	.stop			= dw_pcie_ep_stop,
- };
- 
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
-+
-+	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+
-+	return -EINVAL;
-+}
-+
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num)
- {
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 654dcb5..90a8c95 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -84,8 +84,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
--		return -EINVAL;
-+		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index a0ab12f..69e6e17 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -350,6 +350,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -369,6 +370,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
- 
-+static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	return 0;
-+}
-+
- static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 					   u8 interrupt_num)
- {
--- 
-2.7.4
+Reviewed-by: Rob Herring <robh@kernel.org>
