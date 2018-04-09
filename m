@@ -1,46 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51164 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751281AbeDYFP7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:15:59 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: sstabellini@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 02/13] iommu-helper: unexport iommu_area_alloc
-Date: Wed, 25 Apr 2018 07:15:28 +0200
-Message-Id: <20180425051539.1989-3-hch@lst.de>
-In-Reply-To: <20180425051539.1989-1-hch@lst.de>
-References: <20180425051539.1989-1-hch@lst.de>
+Received: from mga09.intel.com ([134.134.136.24]:58755 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751663AbeDIXL6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Apr 2018 19:11:58 -0400
+Date: Mon, 9 Apr 2018 17:14:48 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Wei Zhang <wzhang@fb.com>, Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v13 1/6] PCI/AER: Rename error recovery to generic PCI
+ naming
+Message-ID: <20180409231448.GB6283@localhost.localdomain>
+References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+ <1523284914-2037-2-git-send-email-poza@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1523284914-2037-2-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This function is only used by built-in code.
+On Mon, Apr 09, 2018 at 10:41:49AM -0400, Oza Pawandeep wrote:
+> This patch renames error recovery to generic name with pcie prefix
+> 
+> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
----
- lib/iommu-helper.c | 2 --
- 1 file changed, 2 deletions(-)
+Looks fine.
 
-diff --git a/lib/iommu-helper.c b/lib/iommu-helper.c
-index 23633c0fda4a..ded1703e7e64 100644
---- a/lib/iommu-helper.c
-+++ b/lib/iommu-helper.c
-@@ -3,7 +3,6 @@
-  * IOMMU helper functions for the free area management
-  */
- 
--#include <linux/export.h>
- #include <linux/bitmap.h>
- #include <linux/bug.h>
- 
-@@ -38,4 +37,3 @@ unsigned long iommu_area_alloc(unsigned long *map, unsigned long size,
- 	}
- 	return -1;
- }
--EXPORT_SYMBOL(iommu_area_alloc);
--- 
-2.17.0
+Reviewed-by: Keith Busch <keith.busch@intel.com>
