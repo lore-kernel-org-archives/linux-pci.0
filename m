@@ -1,90 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 3/8] bindings: PCI: designware: Add support for the EP in
- designware driver
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <dd582bfc2780679b7a092d23547c316234a84c34.1522235224.git.gustavo.pimentel@synopsys.com>
- <405911c8-fffc-5bd7-76c5-f7aabde3b7bc@ti.com>
- <87ba8936-e870-f52b-2ff1-0aea90d0a25c@synopsys.com>
- <f94889e3-ba6f-5aba-d0ab-85db5d434cc9@ti.com>
- <331e32c4-a39b-b5a6-6fbd-6eef7ca4b27c@synopsys.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <eeb842a7-6092-29af-1e22-53e04d9ab63c@ti.com>
-Date: Fri, 6 Apr 2018 12:34:36 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:38684 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751348AbeDIIes (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 04:34:48 -0400
 MIME-Version: 1.0
-In-Reply-To: <331e32c4-a39b-b5a6-6fbd-6eef7ca4b27c@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <4462b4d1-1e56-d6d2-ad38-8f02405d1d96@cogentembedded.com>
+References: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com> <4462b4d1-1e56-d6d2-ad38-8f02405d1d96@cogentembedded.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 9 Apr 2018 10:34:47 +0200
+Message-ID: <CAMuHMdX=Hd3c4m0cWt1wz3umP2XmhSg2s1dNizjvPdueVEd7JA@mail.gmail.com>
+Subject: Re: [PATCH 4/4] pcie-rcar: factor out rcar_pcie_hw_init() call
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Simon Horman <horms@verge.net.au>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Fri, Apr 6, 2018 at 1:10 PM, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> We now have rcar_pcie_hw_init_{h1|gen2|gen3}() differing only in the PCIe
+> PHY init code and all ending with a call to rcar_pcie_hw_init(), thus it
+> makes  sense to move that call into the driver's probe() method and then
+> rename those functions to rcar_pcie_phy_init_{h1|gen2|gen3}() -- doing
+> this saves 48 bytes of object code (AArch64 gcc 4.8.5)...
+>
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-On Tuesday 03 April 2018 06:50 PM, Gustavo Pimentel wrote:
-> Hi Kishon,
-> 
-> On 03/04/2018 11:55, Kishon Vijay Abraham I wrote:
->> Hi,
->>
->> On Tuesday 03 April 2018 04:13 PM, Gustavo Pimentel wrote:
->>> Hi Kishon,
->>>
->>> On 02/04/2018 06:35, Kishon Vijay Abraham I wrote:
->>>>
->>>>
->>>> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
->>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->>>>
->>>> Please add a commit message.
->>>
->>> Ok. I'll add. Thanks for noticing it.
->>>
->>>>> ---
->>>>>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 13 +++++++++++++
->>>>>  1 file changed, 13 insertions(+)
->>>>>
->>>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>>> index 6300762..4bb2e08 100644
->>>>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>>> @@ -3,6 +3,7 @@
->>>>>  Required properties:
->>>>>  - compatible:
->>>>>  	"snps,dw-pcie" for RC mode;
->>>>> +	"snps,dw-pcie-ep" for EP mode;
->>>>>  - reg: Should contain the configuration address space.
->>>>>  - reg-names: Must be "config" for the PCIe configuration space.
->>>>>      (The old way of getting the configuration address space from "ranges"
->>>>> @@ -56,3 +57,15 @@ Example configuration:
->>>>>  		#interrupt-cells = <1>;
->>>>>  		num-lanes = <1>;
->>>>>  	};
->>>>> +or
->>>>> +	pcie_ep: pcie_ep@dfc00000 {
->>>>> +		compatible = "snps,dw-pcie-ep";
->>>>> +		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
->>>>> +		      <0xdfc01000 0x0001000>, /* IP registers 2 */
->>>>
->>>> Doesn't this have iATU unroll space?
->>>
->>> I don't think EP has it, but I'm no expert on this matter. Can you provide me
->>> some example of having iATU unroll space mapping would be useful in EP scope?
->>
->> I'm not sure. I thought if the dwc3 core version is 4.80, then it'll have a
->> separate ATU space irrespective of RC mode or EP mode.
-> 
-> As replied on patch 1, let's leave out  any reference of iATU unroll to avoid
-> any confusion. Agree?
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Mentioning iATU is fine as long as you change the size field in the "reg" property.
+Gr{oetje,eeting}s,
 
-Thanks
-Kishon
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
