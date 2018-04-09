@@ -1,73 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48172 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755162AbeD3VC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Apr 2018 17:02:59 -0400
-Date: Mon, 30 Apr 2018 16:02:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Rajat Jain <rajatja@google.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-acpi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 0/2] PCI/ASPM: Tighten up ASPM L1.2 and LTR usage
-Message-ID: <20180430210256.GE95643@bhelgaas-glaptop.roam.corp.google.com>
-References: <152417080402.76853.4258398181136860884.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152417080402.76853.4258398181136860884.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v2 6/9] PCI: dwc: Define maximum number of vectors
+Date: Mon,  9 Apr 2018 10:41:15 +0100
+Message-Id: <bf7062c863f33b2951acc586b1f22d3497ee2f10.1523266508.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 19, 2018 at 04:05:19PM -0500, Bjorn Helgaas wrote:
-> The ASPM L1.2 substate depends on LTR information.  Per the PCI
-> Firmware spec, the OS is supposed to negotiate with the platform for
-> control of the LTR feature, but previously we didn't do that.
-> 
-> In addition, we must not enable LTR in an endpoint unless the Root
-> Complex and all intermediate switches also support LTR.  We already
-> took care of that in pci_configure_ltr(), but we didn't ensure that
-> LTR was enabled before allowing ASPM L1.2 to be enabled.
-> 
-> These patches fix both of these issues.  Or rather, they *should* fix
-> them.  I don't have hardware to test them, so any help with testing
-> would be appreciated.
-> 
-> I think the most likely issue would be a platform where the hardware
-> supports LTR and the ASPM L1.2 substate, but the BIOS doesn't support
-> LTR in _OSC.  In that case, we previously could have enabled ASPM L1.2
-> (though it probably wouldn't work correctly), and after these patches,
-> we should not enable ASPM L1.2.
-> 
-> You can look for issues by comparing dmesg and "lspci -vv" output
-> before and after these patches.
-> 
-> It would also be interesting to collect an acpidump from platforms
-> that support LTR, even if there's no endpoint that supports ASPM L1.2.
-> The acpidump should show that _OSC supports LTR.
-> 
-> I included some NVMe folks because these were motivated by Srinath's
-> recent report of LTR and ASPM issues with a Samsung NVMe SSD
-> Controller SM961/PM961 device, so this is sort of FYI in case you see
-> similar issues or are in a position to test these.
-> 
-> ---
-> 
-> Bjorn Helgaas (2):
->       PCI/ASPM: Disable ASPM L1.2 Substate if we don't have LTR
->       PCI/ACPI: Request LTR control from platform before using it
-> 
-> 
->  drivers/acpi/pci_root.c |    7 +++++++
->  drivers/pci/pcie/aspm.c |    9 +++++++++
->  drivers/pci/probe.c     |    5 +++++
->  include/linux/acpi.h    |    3 ++-
->  include/linux/pci.h     |    1 +
->  5 files changed, 24 insertions(+), 1 deletion(-)
+Adds a callback that defines the maximum number of vectors that can be use
+by the Root Complex.
 
-Applied to pci/aspm for v4.18 with Rafael's reviewed-by and Srinath's
-tested-by (on first patch).
+Since this is a parameter associated to each SoC IP setting, makes sense to
+be configurable and easily visible to future modifications.
+
+The designware IP supports a maximum of 256 vectors.
+
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+
+ drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 5382a7a..94da252 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -48,8 +48,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
++static void dw_plat_set_num_vectors(struct pcie_port *pp)
++{
++	pp->num_vectors = MAX_MSI_IRQS;
++}
++
+ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
+ 	.host_init = dw_plat_pcie_host_init,
++	.set_num_vectors = dw_plat_set_num_vectors,
+ };
+ 
+ static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
+-- 
+2.7.4
