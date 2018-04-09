@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:44199 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755693AbeDWPXR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 11:23:17 -0400
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:7659 "EHLO
+        alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751548AbeDIOsY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 10:48:24 -0400
 From: Oza Pawandeep <poza@codeaurora.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
         Philippe Ombredanne <pombredanne@nexb.com>,
@@ -15,11 +15,11 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
         Sinan Kaya <okaya@codeaurora.org>,
         Timur Tabi <timur@codeaurora.org>
 Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v14 6/9] PCI: Unify wait for link active into generic PCI
-Date: Mon, 23 Apr 2018 11:23:10 -0400
-Message-Id: <1524496993-29799-7-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
-References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+Subject: [PATCH v13 5/6] PCI: Unify wait for link active into generic PCI
+Date: Mon,  9 Apr 2018 10:41:53 -0400
+Message-Id: <1523284914-2037-6-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
@@ -64,10 +64,10 @@ index 18a42f8..e0c2b8e 100644
  
  static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd1..2bcf977 100644
+index f6a4dd1..bbea997 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -4176,6 +4176,36 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+@@ -4176,6 +4176,35 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
  	return 0;
  }
  
@@ -91,7 +91,6 @@ index f6a4dd1..2bcf977 100644
 +			return true;
 +		if (timeout <= 0)
 +			break;
-+		msleep(10);
 +		timeout -= 10;
 +	}
 +
@@ -118,10 +117,10 @@ index abc514e..5c44fbc 100644
  void pcie_aspm_init_link_state(struct pci_dev *pdev);
  void pcie_aspm_exit_link_state(struct pci_dev *pdev);
 diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index ad02298..6baed85 100644
+index 517c8b4..8e1553b 100644
 --- a/drivers/pci/pcie/pcie-dpc.c
 +++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -68,19 +68,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+@@ -95,19 +95,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
  
  static void dpc_wait_link_inactive(struct dpc_dev *dpc)
  {
