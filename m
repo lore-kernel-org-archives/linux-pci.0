@@ -1,63 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v6 6/9] PCI: dwc: Define maximum number of vectors
-Date: Wed, 18 Apr 2018 15:46:41 +0100
-Message-Id: <94ef244ea1b69bb610e282b59be77baea555797a.1524062073.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47184 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751862AbeDIDX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 8 Apr 2018 23:23:59 -0400
+Date: Sun, 8 Apr 2018 22:23:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+        sparclinux@vger.kernel.org
+Subject: Re: sparc64 PCI BAR allocation is still problematic
+Message-ID: <20180409032354.GA24642@bhelgaas-glaptop.roam.corp.google.com>
+References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds a callback that defines the maximum number of vectors that can be use
-by the Root Complex.
+On Sun, Apr 08, 2018 at 09:44:57PM +0300, Meelis Roos wrote:
+> This is a followup on the thread https://lkml.org/lkml/2015/10/7/135 and 
+> corresponding https://bugzilla.kernel.org/show_bug.cgi?id=117191 entry.
+> 
+> I saw some sparc64 PCI allocation changes in yesterdays git and compiled 
+> 4.16.0-10242-gf605ba9 on most of my sparc64 machines to test if the PCI 
+> BAR allocation problems introduced in 4.3 were fixed on some of them. 
+> Alas, no change at all - of the test machines, none showed any changes 
+> in the error messages in "dmesg | grep BAR".
+> 
+> There was one test machine, T1000 with no addon cards, that did not 
+> encounter any problem, before or after the recent patch. All the other 
+> test machines tried still have the BAR allocation problems.
+> 
+> The errors seem to cluster into 3 categories:
+> 
+> 1. many devices fail BAR allocations
+> 2. one of the Davicom Ethernet devices fails BAR allocation
+> 3. Uli ISA bridge fails BAR allocation.
+> 
+> Full current dmesg and lspci info is also available if there is any 
+> interest. I did not include it all here, which machines are interesting?
 
-Since this is a parameter associated to each SoC IP setting, makes sense to
-be configurable and easily visible to future modifications.
+I'm interested in that info.  Can you attach it all to the bugzilla?
+I can't predict ahead of time which pieces will be useful.
 
-The designware IP supports a maximum of 256 vectors.
+If you happen to have more specific information about which commit
+introduced the regression, that might be helpful, but it's probably
+not worth starting a new bisection yet.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Changes v3->v4:
- - Nothing changed, just to follow the patch set version.
-Changes v4->v5:
- - Nothing changed, just to follow the patch set version.
-Changes v5->v6:
- - Nothing changed, just to follow the patch set version.
-
- drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index efc315c..5937fed 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -48,8 +48,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
- 
-+static void dw_plat_set_num_vectors(struct pcie_port *pp)
-+{
-+	pp->num_vectors = MAX_MSI_IRQS;
-+}
-+
- static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
- 	.host_init = dw_plat_pcie_host_init,
-+	.set_num_vectors = dw_plat_set_num_vectors,
- };
- 
- static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
--- 
-2.7.4
+Bjorn
