@@ -1,65 +1,41 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	sulrich@codeaurora.org,
-	timur@codeaurora.org
-Subject: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-Date: Thu, 19 Apr 2018 15:56:23 -0400
-Message-Id: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
- linux-arm-msm@vger.kernel.org,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Doug Ledford <dledford@redhat.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:41629 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751505AbeDIWCG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Apr 2018 18:02:06 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex_Gagniuc@Dellteam.com, Scott Bauer <scott.bauer@intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 0/4] PCI/AER: Use-after-free fix
+Date: Mon,  9 Apr 2018 16:04:40 -0600
+Message-Id: <20180409220444.6632-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The infiniband adapter might be connected to a PCI hotplug slot. Performing
-secondary bus reset on a hotplug slot causes PCI link up/down interrupts.
+AER error handling walks the PCI topology below a root port, saving
+pointers of the pci_dev structs affected by the error along the way.
 
-Hotplug driver removes the device from system when a link down interrupt
-is observed and performs re-enumeration when link up interrupt is observed.
+At the same time, the pcie hotplug driver could be freeing those very
+same structures, causing the AER driver to reference freed memory.
 
-This conflicts with what this code is trying to do. Try secondary bus reset
-only if pci_reset_slot() fails/unsupported.
+This series fixes this by synchroniziing the aer driver with the pci
+hotplug driver during. The final patch is the one that ultimately provides
+the locking by having AER lock the same pci lock rescan/remove mutex as
+the pciehp driver. The first three patches are prepping to make it safe
+for the aer bottom half handler to hold that lock.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/infiniband/hw/hfi1/pcie.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Keith Busch (4):
+  PCI/AER: Remove unused parameters
+  PCI/AER: Replace struct pcie_device with pci_dev
+  PCI/AER: Reference count aer structures
+  PCI/AER: Lock pci topology when scanning errors
 
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index 83d66e8..75f49e3 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -908,7 +908,8 @@ static int trigger_sbr(struct hfi1_devdata *dd)
- 	 * delay after a reset is required.  Per spec requirements,
- 	 * the link is either working or not after that point.
- 	 */
--	pci_reset_bridge_secondary_bus(dev->bus->self);
-+	if (pci_reset_slot(dev->slot))
-+		pci_reset_bridge_secondary_bus(dev->bus->self);
- 
- 	return 0;
- }
+ drivers/pci/pcie/aer/aerdrv.c      | 28 +++++++++++++++++++++-------
+ drivers/pci/pcie/aer/aerdrv.h      |  9 +++------
+ drivers/pci/pcie/aer/aerdrv_core.c | 38 +++++++++++++++++---------------------
+ 3 files changed, 41 insertions(+), 34 deletions(-)
+
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.3
