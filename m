@@ -1,81 +1,98 @@
-Return-Path: <SRS0=9N5c=HP=monstr.eu=monstr@kernel.org>
-Return-Path: <SRS0=9N5c=HP=monstr.eu=monstr@kernel.org>
-Reply-To: monstr@monstr.eu
-Subject: Re: [PATCH v1 0/2] microblaze/PCI: Remove unused code
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <152336656418.18958.17017091754578447948.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180420185653.GV28657@bhelgaas-glaptop.roam.corp.google.com>
-From: Michal Simek <monstr@monstr.eu>
-Message-ID: <19860462-223f-dcff-1f1b-536b1f0a3beb@monstr.eu>
-Date: Thu, 26 Apr 2018 12:35:26 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180420185653.GV28657@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="b8gPjuoeEu6kaT7VlkxgXxqdsbsv2jBFQ"
+In-Reply-To: <20180409090853.GJ19345@localhost.localdomain>
+References: <20180408024724.16812-1-bhe@redhat.com> <20180408024724.16812-2-bhe@redhat.com>
+ <20180409090853.GJ19345@localhost.localdomain>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 9 Apr 2018 08:38:18 -0700
+Message-ID: <CAPcyv4huU32+oMeoF8-HmmctafZ_uOZN-v85O5M8Ka8pBXP+Lg@mail.gmail.com>
+Subject: Re: [PATCH v3 1/3] resource: Use list_head to link resource sibling
+To: Baoquan He <bhe@redhat.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Brijesh Singh <brijesh.singh@amd.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Borislav Petkov <bp@suse.de>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
+        Wei Yang <richard.weiyang@gmail.com>,
+        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Device Tree <devicetree@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---b8gPjuoeEu6kaT7VlkxgXxqdsbsv2jBFQ
-Content-Type: multipart/mixed; boundary="k4vdRQLwq7H80UmZYEABOtlXksOcZx6ej";
- protected-headers="v1"
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-ID: <19860462-223f-dcff-1f1b-536b1f0a3beb@monstr.eu>
-Subject: Re: [PATCH v1 0/2] microblaze/PCI: Remove unused code
-References: <152336656418.18958.17017091754578447948.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180420185653.GV28657@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180420185653.GV28657@bhelgaas-glaptop.roam.corp.google.com>
+On Mon, Apr 9, 2018 at 2:08 AM, Baoquan He <bhe@redhat.com> wrote:
+> The struct resource uses singly linked list to link siblings. It's not
+> easy to do reverse iteration on sibling list. So replace it with list_head.
+>
+> And code refactoring makes codes in kernel/resource.c more readable than
+> pointer operation.
+>
+> Besides, type of member variables of struct resource, sibling and child, are
+> changed from 'struct resource *' to 'struct list_head'. Kernel size will
+> increase because of those statically defined struct resource instances.
+>
+> Signed-off-by: Baoquan He <bhe@redhat.com>
+> ---
+[..]
+> diff --git a/kernel/resource.c b/kernel/resource.c
+> index e270b5048988..473c624606f9 100644
+> --- a/kernel/resource.c
+> +++ b/kernel/resource.c
+> @@ -31,6 +31,8 @@ struct resource ioport_resource = {
+>         .start  = 0,
+>         .end    = IO_SPACE_LIMIT,
+>         .flags  = IORESOURCE_IO,
+> +       .sibling = LIST_HEAD_INIT(ioport_resource.sibling),
+> +       .child  = LIST_HEAD_INIT(ioport_resource.child),
+>  };
+>  EXPORT_SYMBOL(ioport_resource);
+>
+> @@ -39,6 +41,8 @@ struct resource iomem_resource = {
+>         .start  = 0,
+>         .end    = -1,
+>         .flags  = IORESOURCE_MEM,
+> +       .sibling = LIST_HEAD_INIT(iomem_resource.sibling),
+> +       .child  = LIST_HEAD_INIT(iomem_resource.child),
+>  };
+>  EXPORT_SYMBOL(iomem_resource);
+>
+> @@ -57,20 +61,32 @@ static DEFINE_RWLOCK(resource_lock);
+>   * by boot mem after the system is up. So for reusing the resource entry
+>   * we need to remember the resource.
+>   */
+> -static struct resource *bootmem_resource_free;
+> +static struct list_head bootmem_resource_free = LIST_HEAD_INIT(bootmem_resource_free);
+>  static DEFINE_SPINLOCK(bootmem_resource_lock);
+>
+> +struct resource *sibling(struct resource *res)
+> +{
+> +       if (res->parent && !list_is_last(&res->sibling, &res->parent->child))
+> +               return list_next_entry(res, sibling);
+> +       return NULL;
+> +}
+> +
+> +struct resource *first_child(struct list_head *head)
+> +{
+> +       return list_first_entry_or_null(head, struct resource, sibling);
+> +}
+> +
 
---k4vdRQLwq7H80UmZYEABOtlXksOcZx6ej
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-
-Hi Bjorn,
-
-On 20.4.2018 20:56, Bjorn Helgaas wrote:
-> On Tue, Apr 10, 2018 at 08:24:59AM -0500, Bjorn Helgaas wrote:
->> Remove some unused microblaze PCI code.
->>
->> I can merge these via PCI if you like, Michal.  I have some related
->> changes coming for some sparc resource claim issues.  Or it's fine if
->> you pick them up.
->=20
-> I applied these to pci/microblaze for v4.17.  If you pick them up,
-> Michal, I'll drop them; just let me know.
-
-Not a problem with it.
-
-Thanks,
-Michal
-
-
---=20
-Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel - Xilinx Microblaze
-Maintainer of Linux kernel - Xilinx Zynq ARM and ZynqMP ARM64 SoCs
-U-Boot custodian - Xilinx Microblaze/Zynq/ZynqMP SoCs
-
-
-
---k4vdRQLwq7H80UmZYEABOtlXksOcZx6ej--
-
---b8gPjuoeEu6kaT7VlkxgXxqdsbsv2jBFQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEARECAAYFAlrhq3EACgkQykllyylKDCG+OQCfRn+lKGnyXGLltVSB6z7y4Zxu
-95kAnRZHo7wbFem0ubtYIKSF9Rp+8nVu
-=IIMb
------END PGP SIGNATURE-----
-
---b8gPjuoeEu6kaT7VlkxgXxqdsbsv2jBFQ--
+These names are too generic for new global symbols. A "resource_"
+prefix is warranted.
