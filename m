@@ -1,181 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41822 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751600AbeDJS4M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Apr 2018 14:56:12 -0400
-Date: Tue, 10 Apr 2018 13:56:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-Message-ID: <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
- <20180410173437.GB24642@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:46891 "EHLO
+        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753085AbeDIPdG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 11:33:06 -0400
+Received: by mail-lf0-f43.google.com with SMTP id j68-v6so7196762lfg.13
+        for <linux-pci@vger.kernel.org>; Mon, 09 Apr 2018 08:33:05 -0700 (PDT)
+Subject: Re: [PATCH 2/4] pcie-rcar: remove PHYRDY polling from
+ rcar_pcie_hw_init_h1()
+To: Simon Horman <horms@verge.net.au>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
+ <5322b1c2-109d-bd0c-7785-697ca6a5324a@cogentembedded.com>
+ <20180409105622.cl2joe6yoaozlvpz@verge.net.au>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <ee266a0c-94a1-8f02-64d7-4ee77dde096d@cogentembedded.com>
+Date: Mon, 9 Apr 2018 18:33:02 +0300
 MIME-Version: 1.0
+In-Reply-To: <20180409105622.cl2joe6yoaozlvpz@verge.net.au>
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 10, 2018 at 09:45:09PM +0300, Meelis Roos wrote:
-> > commit bc270e0028cd0856d5689cab38f0071f0d07b3be
-> > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > Date:   Tue Apr 10 08:47:34 2018 -0500
-> > 
-> >     sparc/PCI: Request legacy VGA framebuffer only for VGA devices
+On 04/09/2018 01:56 PM, Simon Horman wrote:
+
+>> Now that we've added PCIEPHYSR.PHYRDY polling to rcar_pcie_hw_init(),
+>> there is no need anymore  for polling the PHY specific register in
+>> rcar_pcie_hw_init_h1() -- remove it.
+>>
+>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 > 
-> Thank you.
-> 
-> It does not seem to compile for me:
-> 
->   CC      arch/sparc/kernel/pci.o
-> arch/sparc/kernel/pci.c: In function ‘pci_claim_legacy_resources’:
-> arch/sparc/kernel/pci.c:644:26: error: ‘bus’ undeclared (first use in this function)
->   pcibios_bus_to_resource(bus, p, &region);
+> This looks good, but has it been tested?
 
-Oops, sorry, I can't easily compile test it.  Here's an updated patch:
+   Unfortunately, no. Yet it fully matches the R-Car H1 manual v1.00.
 
-commit a9ded309cbf3f57e9979848fd0aa0ffacdf11f1a
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Tue Apr 10 08:47:34 2018 -0500
-
-    sparc/PCI: Request legacy VGA framebuffer only for VGA devices
-    
-    Previously we unconditionally requested the legacy VGA framebuffer (bus
-    address 0xa0000-0xbffff) before we even know what PCI devices are present,
-    in these paths:
-    
-      pci_fire_pbm_init, schizo_pbm_init, pci_sun4v_pbm_init, psycho_pbm_init_common
-        pci_determine_mem_io_space
-          pci_register_legacy_regions
-            p->start = mem_res->start + 0xa0000
-            request_resource(mem_res, p)    # claim VGA framebuffer
-        pci_scan_one_pbm
-          pci_of_scan_bus                   # scan DT for PCI devices
-          pci_claim_bus_resources           # claim PCI device BARs
-    
-    If we found a PCI device with a BAR that overlapped the framebuffer area,
-    we complained about not being able to claim the BAR, e.g.,
-    
-      pci_bus 0002:00: root bus resource [mem 0x7ff00000000-0x7ffffffffff] (bus address [0x00000000-0xffffffff])
-      pci 0002:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-    
-    If there is no VGA device in the same PCI segment, there's no reason to
-    reserve the framebuffer and there's no conflict.
-    
-    If there *is* a VGA device in the same segment, both the VGA device and the
-    device with an overlapping BAR may respond to the framebuffer addresses,
-    which may cause bus errors.
-    
-    Request the legacy framebuffer area only when we actually find a VGA
-    device.  This is not sparc-specific and could be made more generic in the
-    PCI core eventually.
-    
-    Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=117191
-    Reported-by: Meelis Roos <mroos@linux.ee>
-
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 41b20edb427d..d5360e941620 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -624,6 +624,44 @@ static void pci_bus_register_of_sysfs(struct pci_bus *bus)
- 		pci_bus_register_of_sysfs(child_bus);
- }
- 
-+static void pci_claim_legacy_resources(struct pci_dev *dev)
-+{
-+	struct pci_bus_region region;
-+	struct resource *p, *root, *conflict;
-+
-+	if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
-+		return;
-+
-+	p = kzalloc(sizeof(*p), GFP_KERNEL);
-+	if (!p)
-+		return;
-+
-+	p->name = "Video RAM area";
-+	p->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-+
-+	region.start = 0xa0000UL;
-+	region.end = region.start + 0x1ffffUL;
-+	pcibios_bus_to_resource(dev->bus, p, &region);
-+
-+	root = pci_find_parent_resource(dev, p);
-+	if (!root) {
-+		pci_info(dev, "can't claim VGA legacy %pR: no compatible bridge window\n", p);
-+		goto err;
-+	}
-+
-+	conflict = request_resource_conflict(root, p);
-+	if (conflict) {
-+		pci_info(dev, "can't claim VGA legacy %pR: address conflict with %s %pR\n",
-+			 p, conflict->name, conflict);
-+		goto err;
-+	}
-+
-+	return;
-+
-+err:
-+	kfree(p);
-+}
-+
- static void pci_claim_bus_resources(struct pci_bus *bus)
- {
- 	struct pci_bus *child_bus;
-@@ -648,6 +686,8 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
- 
- 			pci_claim_resource(dev, i);
- 		}
-+
-+		pci_claim_legacy_resources(dev);
- 	}
- 
- 	list_for_each_entry(child_bus, &bus->children, node)
-@@ -687,6 +727,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	pci_bus_register_of_sysfs(bus);
- 
- 	pci_claim_bus_resources(bus);
-+
- 	pci_bus_add_devices(bus);
- 	return bus;
- }
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 38d46bcc8634..9bb6a192ef3f 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -329,23 +329,6 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
- 	}
- }
- 
--static void pci_register_legacy_regions(struct resource *io_res,
--					struct resource *mem_res)
--{
--	struct resource *p;
--
--	/* VGA Video RAM. */
--	p = kzalloc(sizeof(*p), GFP_KERNEL);
--	if (!p)
--		return;
--
--	p->name = "Video RAM area";
--	p->start = mem_res->start + 0xa0000UL;
--	p->end = p->start + 0x1ffffUL;
--	p->flags = IORESOURCE_BUSY;
--	request_resource(mem_res, p);
--}
--
- static void pci_register_iommu_region(struct pci_pbm_info *pbm)
- {
- 	const u32 *vdma = of_get_property(pbm->op->dev.of_node, "virtual-dma",
-@@ -487,8 +470,6 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 	if (pbm->mem64_space.flags)
- 		request_resource(&iomem_resource, &pbm->mem64_space);
- 
--	pci_register_legacy_regions(&pbm->io_space,
--				    &pbm->mem_space);
- 	pci_register_iommu_region(pbm);
- }
- 
+MBR, Sergei
