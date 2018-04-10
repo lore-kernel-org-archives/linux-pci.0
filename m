@@ -1,187 +1,166 @@
-Return-Path: <SRS0=seWT=HP=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=seWT=HP=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:38413 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753118AbeDJPZK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 11:25:10 -0400
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Simon Horman <horms@verge.net.au>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
+ <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
+ <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
+ <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+ <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+ <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
+ <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
+ <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
+Date: Tue, 10 Apr 2018 17:25:07 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 26 Apr 2018 11:03:22 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>, Linux PCI
- <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Sinan Kaya
- <okaya@codeaurora.org>, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCHv2 2/7] PCI/DPC: Fix PCI legacy interrupt acknowledgement
-In-Reply-To: <20180403203847.GO9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180402162203.3370-1-keith.busch@intel.com>
- <20180402162203.3370-3-keith.busch@intel.com>
- <20180403203847.GO9322@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <ce4d5c59dd5106350a750e656ddbc3c3@codeaurora.org>
+In-Reply-To: <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-04-04 02:08, Bjorn Helgaas wrote:
-> [+cc Thomas, Rafael]
+On 04/10/2018 04:42 PM, Geert Uytterhoeven wrote:
+> Hi Marek,
 > 
-> On Mon, Apr 02, 2018 at 10:21:58AM -0600, Keith Busch wrote:
->> From: Oza Pawandeep <poza@codeaurora.org>
->> 
->> The DPC driver was acknowledging the DPC interrupt status in deferred
->> work. That works for edge triggered interrupts, but causes an 
->> interrupt
->> storm with level triggered legacy interrupts.
->> 
->> This patch fixes that by clearing the interrupt status in interrupt
->> handler.
+> On Tue, Apr 10, 2018 at 4:31 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>> On 04/09/2018 02:26 PM, Simon Horman wrote:
+>>> On Mon, Apr 09, 2018 at 01:47:38PM +0200, Geert Uytterhoeven wrote:
+>>>> On Mon, Apr 9, 2018 at 1:41 PM, Simon Horman <horms@verge.net.au> wrote:
+>>>>> On Mon, Apr 09, 2018 at 10:20:05AM +0200, Marek Vasut wrote:
+>>>>>> On 04/09/2018 10:07 AM, Geert Uytterhoeven wrote:
+>>>>>>> On Sun, Apr 8, 2018 at 3:09 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>>>>>>>> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>>>>>>>>
+>>>>>>>> The controller clock can be switched off during suspend/resume,
+>>>>>>>> let runtime PM take care of that.
+>>>>>>>>
+>>>>>>>> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>>>>>>>> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+>>>>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>>>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>>>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>>>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>>>>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>>>>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>>>>>>>> Cc: linux-renesas-soc@vger.kernel.org
+>>>>>>>> To: linux-pci@vger.kernel.org
+>>>>>>>> ---
+>>>>>>>> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
+>>>>>>>>       reordering of function calls in probe
+>>>>>>>>     - Dispose of fail_clk in rcar_pcie_get_resources()
+>>>>>>>> V3: - Fix up the failpath in probe function
+>>>>>>>> V4: - Rebase on recent linux-next
+>>>>>>>> V5: - Do not call pci_free_resource_list(&pcie->resources) if
+>>>>>>>>       rcar_pcie_parse_request_of_pci_ranges() fails, since that
+>>>>>>>>       functiona calls pci_free_resource_list() already.
+>>>>>>>
+>>>>>>> Thanks for the update!
+>>>>>>>
+>>>>>>>> --- a/drivers/pci/host/pcie-rcar.c
+>>>>>>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>>>>>>
+>>>>>>>> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>>>>>>>>         if (err)
+>>>>>>>>                 goto err_free_bridge;
+>>>>>>>>
+>>>>>>>> +       pm_runtime_enable(pcie->dev);
+>>>>>>>> +       err = pm_runtime_get_sync(pcie->dev);
+>>>>>>>> +       if (err < 0) {
+>>>>>>>> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
+>>>>>>>> +               goto err_pm_disable;
+>>>>>>>> +       }
+>>>>>>>> +
+>>>>>>>
+>>>>>>> As you moved the pm_runtime setup up...
+>>>>>>>
+>>>>>>>>         err = rcar_pcie_get_resources(pcie);
+>>>>>>>>         if (err < 0) {
+>>>>>>>>                 dev_err(dev, "failed to request resources: %d\n", err);
+>>>>>>>> -               goto err_free_resource_list;
+>>>>>>>> +               goto err_pm_put;
+>>>>>>>>         }
+>>>>>>>>
+>>>>>>>>         err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
+>>>>>>>>         if (err)
+>>>>>>>> -               goto err_free_resource_list;
+>>>>>>>> -
+>>>>>>>> -       pm_runtime_enable(dev);
+>>>>>>>> -       err = pm_runtime_get_sync(dev);
+>>>>>>>> -       if (err < 0) {
+>>>>>>>> -               dev_err(dev, "pm_runtime_get_sync failed\n");
+>>>>>>>> -               goto err_pm_disable;
+>>>>>>>> -       }
+>>>>>>>> +               goto err_pm_put;
+>>>>>>>>
+>>>>>>>>         /* Failure to get a link might just be that no cards are inserted */
+>>>>>>>>         hw_init_fn = of_device_get_match_data(dev);
+>>>>>>>> @@ -1174,9 +1161,8 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>>>>>>>>
+>>>>>>>>  err_pm_disable:
+>>>>>>>>         pm_runtime_disable(dev);
+>>>>>>>
+>>>>>>> ... shouldn't it be moved down here, for symmetry?
+>>>>>>
+>>>>>> I am reasonably certain the failpath should be correct now. Did I still
+>>>>>> miss something ?
+>>>>>
+>>>>> It looks correct to me too. Geert are Marek and I missing something?
+>>>>
+>>>> Probably it will still work fine, but after this patch, Runtime PM is enabled
+>>>> early, and disabled early, which is not symmetrical.
+>>>>
+>>>> I like symmetry ;-)
+>>>
+>>> Understood. I think that is reasonable.
+>>> Marek, would you care to respin?
+>>
+>> I am looking into the driver, but I fail to see what Geert is trying to
+>> make me change here.
+>>
+>> The pairing looks as follows:
+>>
+>> .- rcar_pcie_parse_request_of_pci_ranges()
+>> |  (pm_runtime_enable is here)
+>> | .- pm_runtime_get_sync()
+>> | | .- rcar_pcie_get_resources()
 > 
-> I'm fuzzy on this question of edge vs. level and where the interrupt
-> should be cleared.  I'd like to understand this better and include the
-> general rule in the changelog in case I'm not the only one who is
-> unclear on this.
-> 
-> Here's my understanding, gleaned from kernel/irq/chip.c and
-> https://notes.shichao.io/lkd/ch7/ :
-> 
->   The generic IRQ handling code ensures that an interrupt handler runs
->   with its interrupt masked or disabled.  If the interrupt is
->   level-triggered, the interrupt handler must tell its device to stop
->   asserting the interrupt before returning.  If it doesn't, we will
->   immediately take the interrupt again when the handler returns and
->   the generic code unmasks the interrupt.
-> 
->   The driver doesn't know whether its interrupt is edge- or
->   level-triggered, so it must clear its interrupt source directly in
->   its interrupt handler.
-> 
-> I'd also like to convince myself that we don't have similar issues
-> with other services, e.g., AER, PME, pciehp.  Here are my notes about
-> those:
-> 
->   1) pciehp:
->     request_irq(irq, pcie_isr, ...)
->     pcie_isr
->       pciehp_isr
->         # clear Slot Status event bits
->         pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
-> 	events = status & (...)
-> 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, events);
-> 
->   2) AER:
->     request_irq(dev->irq, aer_irq, ...)
->     aer_irq
->       # clear AER Root Error Status bits
->       pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, 
-> &status);
->       pci_write_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, 
-> status);
-> 
->   3) DPC:
->     devm_request_irq(..., dev->irq, dpc_irq, ...)
->     dpc_irq
->       schedule_work(<dpc_work>)
->     ...
->     dpc_work
->       # clear DPC Interrupt Status
->       pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
-> PCI_EXP_DPC_STATUS_INTERRUPT);
-> 
->   4) PME:
->     request_irq(srv->irq, pcie_pme_irq, ...)
->     pcie_pme_irq
->       pcie_pme_interrupt_enable(port, false);
->         # clear PME Interrupt Enable
-> 	pcie_capability_clear_word(dev, PCI_EXP_RTCTL, PCI_EXP_RTCTL_PMEIE);
->       schedule_work(<pcie_pme_work_fn>)
->     ...
->     pcie_pme_work_fn
->       # clear PME Status
->       pcie_capability_set_dword(dev, PCI_EXP_RTSTA, PCI_EXP_RTSTA_PME);
->       pcie_pme_interrupt_enable(port, true);
->         # set PME Interrupt Enable
->         pcie_capability_set_word(dev, PCI_EXP_RTCTL, 
-> PCI_EXP_RTCTL_PMEIE);
-> 
-> The pciehp and AER cases look OK to me.  DPC looks definitely wrong,
-> and this patch should fix it.
-> 
-> I *guess* PME looks OK, although I would feel better about it if it
-> used the same strategy as the others.  All of these things have both
-> "Interrupt Enable" and "Interrupt Status" bits.  PME is the only one
-> that twiddles the Interrupt Enable in the interrupt path.
-> 
-> Bottom line, I think this patch is fine and I applied it with the
-> following changelog:
-> 
->   PCI/DPC: Clear interrupt status in interrupt handler top half
-> 
->   The generic IRQ handling code ensures that an interrupt handler runs 
-> with
->   its interrupt masked or disabled.  If the interrupt is 
-> level-triggered, the
->   interrupt handler must tell its device to stop asserting the 
-> interrupt
->   before returning.  If it doesn't, we will immediately take the 
-> interrupt
->   again when the handler returns and the generic code unmasks the 
-> interrupt.
-> 
->   The driver doesn't know whether its interrupt is edge- or 
-> level-triggered,
->   so it must clear its interrupt source directly in its interrupt 
-> handler.
-> 
->   Previously we cleared the DPC interrupt status in the bottom half, 
-> i.e., in
->   deferred work, which can cause an interrupt storm if the DPC 
-> interrupt
->   happens to be level-triggered, e.g., if we're using INTx instead of 
-> MSI.
-> 
->   Clear the DPC interrupt status bit in the interrupt handler, not in 
-> the
->   deferred work.
-> 
->   Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->   Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
->   [bhelgaas: changelog]
->   Reviewed-by: Keith Busch <keith.busch@intel.com>
-> 
-> 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> [changelog]
->> Reviewed-by: Keith Busch <keith.busch@intel.com>
->> ---
->>  drivers/pci/pcie/pcie-dpc.c | 5 ++++-
->>  1 file changed, 4 insertions(+), 1 deletion(-)
->> 
->> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
->> index a9be6938417f..82644245cb4d 100644
->> --- a/drivers/pci/pcie/pcie-dpc.c
->> +++ b/drivers/pci/pcie/pcie-dpc.c
->> @@ -112,7 +112,7 @@ static void dpc_work(struct work_struct *work)
->>  	}
->> 
->>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
->> -		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
->> +			      PCI_EXP_DPC_STATUS_TRIGGER);
->> 
->>  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
->>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
->> @@ -222,6 +222,9 @@ static irqreturn_t dpc_irq(int irq, void *context)
->>  	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
->>  		dpc_process_rp_pio_error(dpc);
->> 
->> +	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
->> +			      PCI_EXP_DPC_STATUS_INTERRUPT);
->> +
->>  	schedule_work(&dpc->work);
->> 
->>  	return IRQ_HANDLED;
->> --
->> 2.14.3
->> 
+> rcar_pcie_get_resources() is called  while the device is runtime-enabled/resumed
 
-Hi Bjorn,
+Because something may access the device, yes.
 
-Is this change left out in 4.17 for some reason ?
+>> | | |
+>> | | '- pm_runtime_put()
+>> | '- pm_runtime_disable() + pci_free_resource_list()
+> 
+> pci_free_resource_list() is called while the device is runtime-disabled.
 
+Because nothing will access the device.
 
-Regards,
-Oza.
+>> '- pci_free_host_bridge()
+>>
+>> It looks symmetric to me ...
+> 
+> rcar_pcie_get_resources() is called while the device is
+> runtime-enabled/resumed,
+> pci_free_resource_list() is called while the device is runtime-disabled.
+
+At this point, I think I'd rather see a diff of changes which you have
+in mind rather than this endless discussion. Can you provide one against
+this patch ?
+
+-- 
+Best regards,
+Marek Vasut
