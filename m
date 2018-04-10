@@ -1,93 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:49344 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754183AbeDCKdy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2018 06:33:54 -0400
-Subject: Re: [PATCH 1/8] bindings: PCI: designware: Example update
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <33aa86ee667e8b435db080b8c683cb5df1bd6544.1522235224.git.gustavo.pimentel@synopsys.com>
- <fa001440-0dfe-b84a-e5ef-9285043b5ede@ti.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <36a36857-2d79-2c2d-198d-a3b65cafc768@synopsys.com>
-Date: Tue, 3 Apr 2018 11:33:00 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 03/37] iommu/sva: Manage process address spaces
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+ iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-4-jean-philippe.brucker@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <04d4d161-ed72-f6b6-9b94-1d60bd79ef94@codeaurora.org>
+Date: Tue, 10 Apr 2018 14:53:47 -0400
 MIME-Version: 1.0
-In-Reply-To: <fa001440-0dfe-b84a-e5ef-9285043b5ede@ti.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180212183352.22730-4-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, xieyisheng1@huawei.com, ilias.apalodimas@linaro.org,
+ catalin.marinas@arm.com, xuzaibo@huawei.com, jonathan.cameron@huawei.com,
+ will.deacon@arm.com, yi.l.liu@intel.com, lorenzo.pieralisi@arm.com,
+ ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org, bharatku@xilinx.com,
+ rfranz@cavium.com, lenb@kernel.org, jacob.jun.pan@linux.intel.com,
+ alex.williamson@redhat.com, robh+dt@kernel.org, thunder.leizhen@huawei.com,
+ bhelgaas@google.com, shunyong.yang@hxt-semitech.com, dwmw2@infradead.org,
+ liubo95@huawei.com, rjw@rjwysocki.net, jcrouse@codeaurora.org,
+ robdclark@gmail.com, hanjun.guo@linaro.org, sudeep.holla@arm.com,
+ robin.murphy@arm.com, christian.koenig@amd.com, nwatters@codeaurora.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+On 2/12/2018 1:33 PM, Jean-Philippe Brucker wrote:
+> +static void io_mm_detach_all_locked(struct iommu_bond *bond)
+> +{
+> +	while (!io_mm_detach_locked(bond));
+> +}
+> +
 
-On 02/04/2018 06:23, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
->> Changes the IP registers size to accommodate the ATU unroll space.
->>
->> Replaces "ctrlreg" reg-name by "dbi" to be coherent with similar drivers.
->>
->> Replaces the pcie base address example by a real pcie base address in use.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++------
->>  1 file changed, 6 insertions(+), 6 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> index 1da7ade..6300762 100644
->> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> @@ -1,7 +1,8 @@
->>  * Synopsys DesignWare PCIe interface
->>  
->>  Required properties:
->> -- compatible: should contain "snps,dw-pcie" to identify the core.
->> +- compatible:
->> +	"snps,dw-pcie" for RC mode;
-> 
-> I think irrespective of RC mode or EP mode, "snps,dw-pcie" can be used to
-> identify the pcie core?
+I don't remember if I mentioned this before or not but I think this loop
+needs a little bit relaxation with yield and maybe an informational message
+with might help if wait exceeds some time.
 
-I guess so. What you suggest? I was just folling the same guideline present
-here: https://lkml.org/lkml/2017/11/3/310
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
->>  - reg: Should contain the configuration address space.
->>  - reg-names: Must be "config" for the PCIe configuration space.
->>      (The old way of getting the configuration address space from "ranges"
->> @@ -41,11 +42,11 @@ EP mode:
->>  
->>  Example configuration:
->>  
->> -	pcie: pcie@dffff000 {
->> +	pcie: pcie@dfc00000 {
->>  		compatible = "snps,dw-pcie";
->> -		reg = <0xdffff000 0x1000>, /* Controller registers */
->> -		      <0xd0000000 0x2000>; /* PCI config space */
->> -		reg-names = "ctrlreg", "config";
->> +		reg = <0xdfc00000 0x302000>, /* IP registers */
-> 
-> which version of synopsys IP is this. I think the ideal thing to do here is to
-> have a separate register space for iATU.
-
-I also agree with that. The unroll iATU was introduced on Synopsys IP version
-4.80 and the kernel patch was release on 2016-08-10
-https://patchwork.ozlabs.org/patch/657796/
-However a separate register space for iATU implies some extra code do handle it
-(and of course some tests) that don't fit into this patch series, in my point of
-view. Can this task enter in the backlog in order to be done in another patch
-series?
-
-> 
-> Thanks
-> Kishon
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
