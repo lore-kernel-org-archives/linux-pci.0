@@ -1,117 +1,60 @@
-Return-Path: <SRS0=Cik3=HJ=intel.com=dennis.dalessandro@kernel.org>
-Return-Path: <SRS0=Cik3=HJ=intel.com=dennis.dalessandro@kernel.org>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-To: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "sulrich@codeaurora.org" <sulrich@codeaurora.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- Mike Marciniszyn <mike.marciniszyn@intel.com>,
- Doug Ledford <dledford@redhat.com>,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
- <20180419202632.GE14063@ziepe.ca>
- <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
- <BN6PR12MB1809BD30AA5B890C054F9832F7B50@BN6PR12MB1809.namprd12.prod.outlook.com>
-From: Dennis Dalessandro <dennis.dalessandro@intel.com>
-Message-ID: <9c893ac2-9482-2134-9ca9-04a306e9a416@intel.com>
-Date: Fri, 20 Apr 2018 10:12:28 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga07-in.huawei.com ([45.249.212.35]:58261 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752802AbeDJNPr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Apr 2018 09:15:47 -0400
+Subject: Re: [PATCH 0/4] PCI/AER: Use-after-free fix
+To: Keith Busch <keith.busch@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20180409220444.6632-1-keith.busch@intel.com>
+CC: <Alex_Gagniuc@Dellteam.com>, Scott Bauer <scott.bauer@intel.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <557174ae-5c79-f5f2-b9cb-0fd967f602c7@huawei.com>
+Date: Tue, 10 Apr 2018 21:15:38 +0800
 MIME-Version: 1.0
-In-Reply-To: <BN6PR12MB1809BD30AA5B890C054F9832F7B50@BN6PR12MB1809.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20180409220444.6632-1-keith.busch@intel.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/19/2018 6:11 PM, Deucher, Alexander wrote:
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
->> Sent: Thursday, April 19, 2018 5:47 PM
->> To: Jason Gunthorpe <jgg@ziepe.ca>
->> Cc: Sinan Kaya <okaya@codeaurora.org>; Bjorn Helgaas
->> <bhelgaas@google.com>; linux-pci@vger.kernel.org;
->> sulrich@codeaurora.org; timur@codeaurora.org; linux-arm-
->> msm@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Mike
->> Marciniszyn <mike.marciniszyn@intel.com>; Dennis Dalessandro
->> <dennis.dalessandro@intel.com>; Doug Ledford <dledford@redhat.com>;
->> open list:HFI1 DRIVER <linux-rdma@vger.kernel.org>; open list <linux-
->> kernel@vger.kernel.org>; Deucher, Alexander
->> <Alexander.Deucher@amd.com>
->> Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
->>
->> [+cc Alex, who might know why DRM drivers have their own PCIe Gen3
->> code]
->>
->> On Thu, Apr 19, 2018 at 02:26:32PM -0600, Jason Gunthorpe wrote:
->>> On Thu, Apr 19, 2018 at 03:56:23PM -0400, Sinan Kaya wrote:
->>>> The infiniband adapter might be connected to a PCI hotplug slot.
->>>> Performing secondary bus reset on a hotplug slot causes PCI link
->> up/down interrupts.
->>>>
->>>> Hotplug driver removes the device from system when a link down
->>>> interrupt is observed and performs re-enumeration when link up
->> interrupt is observed.
->>>>
->>>> This conflicts with what this code is trying to do. Try secondary
->>>> bus reset only if pci_reset_slot() fails/unsupported.
->>>>
->>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->>>> drivers/infiniband/hw/hfi1/pcie.c | 3 ++-
->>>>   1 file changed, 2 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/infiniband/hw/hfi1/pcie.c
->>>> b/drivers/infiniband/hw/hfi1/pcie.c
->>>> index 83d66e8..75f49e3 100644
->>>> +++ b/drivers/infiniband/hw/hfi1/pcie.c
->>>> @@ -908,7 +908,8 @@ static int trigger_sbr(struct hfi1_devdata *dd)
->>>
->>> The code above this hunk is:
->>>
->>> /*
->>>   * Trigger a secondary bus reset (SBR) on ourselves using our parent.
->>>   *
->>>   * Based on pci_parent_bus_reset() which is not exported by the
->>>   * kernel core.
->>>   */
->>> static int trigger_sbr(struct hfi1_devdata *dd) {
->>>
->>> [..]
->>>
->>> This really seems like something the PCI core should be helping with,
->>> drivers shouldn't be doing stuff like this. I get the feeling this
->>> should be a common need if drivers support various error recovery
->>> schemes?
->>>
->>> Bjorn, would be appropriate to export pci_parent_bus_reset() or some
->>> variation therin??
->>
->> I agree it would be really nice if the PCI core could help out somehow so we
->> could get some of this code out of individual drivers.
->>
->> If fact, stepping back a few paces, this HFI reset path is part of a transition to
->> PCIe gen3 signaling, and I'm not sure why *that* is in the driver either.
->>
->> There's an ongoing discussion [1] about why this gen3 code is in the driver.
->> Several DRM drivers include similar code (cik_pcie_gen3_enable(),
->> si_pcie_gen3_enable()).
->>
->> I *thought* the hardware was supposed to automatically negotiate to the
->> highest rate supported by both sides without any help at all from software.
->> But since several drivers have code to do it themselves, I wonder if I'm
->> missing something, or maybe there's something the PCI core should be doing
->> that it isn't, and the driver code is basically working around that PCI core
->> deficiency.
-> 
-> My understanding was that some platfoms only bring up the link in gen 1 mode for compatibility reasons.  TBH, I'm not that familiar with how the links come up on different platforms.
-> 
-> Alex
-> 
 
-I'm checking with our HW folks and the guys that wrote the PCI code in 
-our driver. I quite frankly just don't recall what all is going on here. 
-Let me find out for sure before I give out wrong information.
+ÔÚ 2018/4/10 6:04, Keith Busch Ð´µÀ:
+> AER error handling walks the PCI topology below a root port, saving
+> pointers of the pci_dev structs affected by the error along the way.
+>
+> At the same time, the pcie hotplug driver could be freeing those very
+> same structures, causing the AER driver to reference freed memory.
 
--Denny
+I also have met such issue.  The details see the below link.
+https://www.spinics.net/lists/linux-pci/msg70614.html
+It seems do reset_link() will trigger hotplug driver to remove/rescan device
+when met AER fatal error.
+do_recovery()
+    --- reset_link()
+	--- pci_reset_secondary_bus() //then trigger link down/up.
+So if the root port support hotplug, it will remove/rescan device.
+I still have a question, since AER driver have already done recovery,
+it seems no need to trigger hotplug to remove and rescan the device.
+
+Thanks,
+Dongdong
+
+>
+> This series fixes this by synchroniziing the aer driver with the pci
+> hotplug driver during. The final patch is the one that ultimately provides
+> the locking by having AER lock the same pci lock rescan/remove mutex as
+> the pciehp driver. The first three patches are prepping to make it safe
+> for the aer bottom half handler to hold that lock.
+>
+> Keith Busch (4):
+>   PCI/AER: Remove unused parameters
+>   PCI/AER: Replace struct pcie_device with pci_dev
+>   PCI/AER: Reference count aer structures
+>   PCI/AER: Lock pci topology when scanning errors
+>
+>  drivers/pci/pcie/aer/aerdrv.c      | 28 +++++++++++++++++++++-------
+>  drivers/pci/pcie/aer/aerdrv.h      |  9 +++------
+>  drivers/pci/pcie/aer/aerdrv_core.c | 38 +++++++++++++++++---------------------
+>  3 files changed, 41 insertions(+), 34 deletions(-)
+>
