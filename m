@@ -1,66 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 11/12] swiotlb: move the SWIOTLB config symbol to
- lib/Kconfig
-To: Christoph Hellwig <hch@lst.de>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- iommu@lists.linux-foundation.org
-References: <20180415145947.1248-1-hch@lst.de>
- <20180415145947.1248-12-hch@lst.de>
-From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
-Date: Tue, 17 Apr 2018 11:40:36 +0530
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v13 4/6] PCI/DPC: Unify and plumb error handling into DPC
+To: Keith Busch <keith.busch@intel.com>,
+        Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Wei Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>
+References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+ <1523284914-2037-5-git-send-email-poza@codeaurora.org>
+ <20180409232957.GF6283@localhost.localdomain>
+ <2c00f25e-9dac-7d75-8138-026ad4bcc7fa@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <632afd61-0013-64bd-0d19-fcd6f901804c@codeaurora.org>
+Date: Mon, 9 Apr 2018 20:05:00 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180415145947.1248-12-hch@lst.de>
-Message-Id: <1c4007b5-c0d4-7077-b2c1-767c6abbf79f@linux.vnet.ibm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
- x86@kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <2c00f25e-9dac-7d75-8138-026ad4bcc7fa@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
-> This way we have one central definition of it, and user can select it as
-> needed.  Note that we also add a second ARCH_HAS_SWIOTLB symbol to
-> indicate the architecture supports swiotlb at all, so that we can still
-> make the usage optional for a few architectures that want this feature
-> to be user selectable.
+On 4/9/2018 7:51 PM, Sinan Kaya wrote:
+> On 4/9/2018 7:29 PM, Keith Busch wrote:
+>> On Mon, Apr 09, 2018 at 10:41:52AM -0400, Oza Pawandeep wrote:
+>>> +static int find_dpc_dev_iter(struct device *device, void *data)
+>>> +{
+>>> +	struct pcie_port_service_driver *service_driver;
+>>> +	struct device **dev;
+>>> +
+>>> +	dev = (struct device **) data;
+>>> +
+>>> +	if (device->bus == &pcie_port_bus_type && device->driver) {
+>>> +		service_driver = to_service_driver(device->driver);
+>>> +		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
+>>> +			*dev = device;
+>>> +			return 1;
+>>> +		}
+>>> +	}
+>>> +
+>>> +	return 0;
+>>> +}
+>>> +
+>>> +static struct device *pci_find_dpc_dev(struct pci_dev *pdev)
+>>> +{
+>>> +	struct device *dev = NULL;
+>>> +
+>>> +	device_for_each_child(&pdev->dev, &dev, find_dpc_dev_iter);
+>>> +
+>>> +	return dev;
+>>> +}
+>>
+>> The only caller of this doesn't seem to care to use struct device. This
+>> should probably just extract struct dpc_dev directly from in here.
+>>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Bjorn wants to kill the port service driver infrastructure but that is a much
+> bigger task. 
+> 
+> How do we obtain the DPC object from the parent object directly? Each port
+> service driver object is a children.
+> 
 
+How about implementing pcie_port_find_service_dev() as a follow up patch
+to "PCI/PORTDRV: Implement generic find service" similar to what was done for
+pcie_port_find_service()?
 
-snip
-
-> +
-> +config SWIOTLB
-> +	bool "SWIOTLB support"
-> +	default ARCH_HAS_SWIOTLB
-> +	select DMA_DIRECT_OPS
-> +	select NEED_DMA_MAP_STATE
-> +	select NEED_SG_DMA_LENGTH
-> +	---help---
-> +	  Support for IO bounce buffering for systems without an IOMMU.
-> +	  This allows us to DMA to the full physical address space on
-> +	  platforms where the size of a physical address is larger
-> +	  than the bus address.  If unsure, say Y.
-> +
->  config CHECK_SIGNATURE
->  	bool
-
-Pulling DMA_DIRECT_OPS config option by default when SWIOTLB is enabled
-makes sense. This option was also needed to be enabled separately even
-to use swiotlb_dma_ops.
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
