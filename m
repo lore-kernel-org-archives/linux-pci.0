@@ -2,40 +2,60 @@ Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
         Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 03/10] PCI: cadence: Update cdns_pcie_ep_raise_irq function signature
-Date: Fri, 27 Apr 2018 17:57:40 +0100
-Message-Id: <22e7cbcda9369cf88aadfa1b17c1dad00170a4ff.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v3 04/10] bindings: PCI: designware: Add support for the EP in Designware driver
+Date: Tue, 10 Apr 2018 13:58:36 +0100
+Message-Id: <d51cbb5f1cb4d87cfd263130cfffc385f25345be.1523360166.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change cdns_pcie_ep_raise_irq() signature, namely the interrupt_num variable type
-from u8 to u16 to accommodate the 2048 maximum MSI-X interrupts.
+Add device tree binding documentation for the Endpoint in PCIe Designware
+driver.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Alan Douglas <adouglas@cadence.com>
 ---
- drivers/pci/cadence/pcie-cadence-ep.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Change v1->v2:
+ - Add a missing log description.
+ - Add "snps,dw-pcie" compatible string following Kishon's suggestion.
+Change v2->v3:
+- Reverted pcie_ep name to pcie.
 
-diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-index 3d8283e..6d6322c 100644
---- a/drivers/pci/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/cadence/pcie-cadence-ep.c
-@@ -363,7 +363,7 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- }
- 
- static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
--				  enum pci_epc_irq_type type, u8 interrupt_num)
-+				  enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 
+ Documentation/devicetree/bindings/pci/designware-pcie.txt | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index f02cd20..3ba2080 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -3,6 +3,7 @@
+ Required properties:
+ - compatible:
+ 	"snps,dw-pcie-rc", "snps,dw-pcie" for RC mode;
++	"snps,dw-pcie-ep", "snps,dw-pcie" for EP mode;
+ - reg: Should contain the configuration address space.
+ - reg-names: Must be "config" for the PCIe configuration space.
+     (The old way of getting the configuration address space from "ranges"
+@@ -56,3 +57,15 @@ Example configuration:
+ 		#interrupt-cells = <1>;
+ 		num-lanes = <1>;
+ 	};
++or
++	pcie: pcie@dfc00000 {
++		compatible = "snps,dw-pcie-ep", "snps,dw_pcie";
++		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
++		      <0xdfc01000 0x0001000>, /* IP registers 2 */
++		      <0xd0000000 0x2000000>; /* Configuration space */
++		reg-names = "dbi", "dbi2", "addr_space";
++		device_type = "pci";
++		num-ib-windows = <6>;
++		num-ob-windows = <2>;
++		num-lanes = <1>;
++	};
 -- 
 2.7.4
