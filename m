@@ -1,149 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:55129 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751736AbeDILEI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 07:04:08 -0400
-Date: Mon, 9 Apr 2018 13:04:04 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH 4/4] pcie-rcar: factor out rcar_pcie_hw_init() call
-Message-ID: <20180409110404.5qjnvaig7ng2cyzt@verge.net.au>
-References: <23335d95-63ca-b107-e43d-f4c2621adc2c@cogentembedded.com>
- <4462b4d1-1e56-d6d2-ad38-8f02405d1d96@cogentembedded.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4462b4d1-1e56-d6d2-ad38-8f02405d1d96@cogentembedded.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v3 09/10] PCI: dwc: Small computation improvement
+Date: Tue, 10 Apr 2018 13:58:41 +0100
+Message-Id: <f46be584b17d2c2afb11497b067428874438b2f4.1523360166.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 06, 2018 at 02:10:22PM +0300, Sergei Shtylyov wrote:
-> We now have rcar_pcie_hw_init_{h1|gen2|gen3}() differing only in the PCIe
-> PHY init code and all ending with a call to rcar_pcie_hw_init(), thus it
-> makes  sense to move that call into the driver's probe() method and then
-> rename those functions to rcar_pcie_phy_init_{h1|gen2|gen3}() -- doing
-> this saves 48 bytes of object code (AArch64 gcc 4.8.5)...
+Replaces a simple division by 2 to a right shift rotation of 1 bit.
 
-I'm not sure the churn is worth it, but if you do then that is find by me.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
 
-> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> 
-> ---
->  drivers/pci/host/pcie-rcar.c |   42 ++++++++++++++++++++++--------------------
->  1 file changed, 22 insertions(+), 20 deletions(-)
-> 
-> Index: pci/drivers/pci/host/pcie-rcar.c
-> ===================================================================
-> --- pci.orig/drivers/pci/host/pcie-rcar.c
-> +++ pci/drivers/pci/host/pcie-rcar.c
-> @@ -626,7 +626,7 @@ static int rcar_pcie_hw_init(struct rcar
->  	return 0;
->  }
->  
-> -static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
-> +static int rcar_pcie_phy_init_h1(struct rcar_pcie *pcie)
->  {
->  	/* Initialize the phy */
->  	phy_write_reg(pcie, 0, 0x42, 0x1, 0x0EC34191);
-> @@ -646,10 +646,10 @@ static int rcar_pcie_hw_init_h1(struct r
->  	phy_write_reg(pcie, 0, 0x64, 0x1, 0x3F0F1F0F);
->  	phy_write_reg(pcie, 0, 0x66, 0x1, 0x00008000);
->  
-> -	return rcar_pcie_hw_init(pcie);
-> +	return 0;
->  }
->  
-> -static int rcar_pcie_hw_init_gen2(struct rcar_pcie *pcie)
-> +static int rcar_pcie_phy_init_gen2(struct rcar_pcie *pcie)
->  {
->  	/*
->  	 * These settings come from the R-Car Series, 2nd Generation User's
-> @@ -666,10 +666,10 @@ static int rcar_pcie_hw_init_gen2(struct
->  	rcar_pci_write_reg(pcie, 0x00000001, GEN2_PCIEPHYCTRL);
->  	rcar_pci_write_reg(pcie, 0x00000006, GEN2_PCIEPHYCTRL);
->  
-> -	return rcar_pcie_hw_init(pcie);
-> +	return 0;
->  }
->  
-> -static int rcar_pcie_hw_init_gen3(struct rcar_pcie *pcie)
-> +static int rcar_pcie_phy_init_gen3(struct rcar_pcie *pcie)
->  {
->  	int err;
->  
-> @@ -677,11 +677,7 @@ static int rcar_pcie_hw_init_gen3(struct
->  	if (err)
->  		return err;
->  
-> -	err = phy_power_on(pcie->phy);
-> -	if (err)
-> -		return err;
-> -
-> -	return rcar_pcie_hw_init(pcie);
-> +	return phy_power_on(pcie->phy);
->  }
->  
->  static int rcar_msi_alloc(struct rcar_msi *chip)
-> @@ -1082,17 +1078,18 @@ static int rcar_pcie_parse_map_dma_range
->  }
->  
->  static const struct of_device_id rcar_pcie_of_match[] = {
-> -	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
-> +	{ .compatible = "renesas,pcie-r8a7779",
-> +	  .data = rcar_pcie_phy_init_h1 },
->  	{ .compatible = "renesas,pcie-r8a7790",
-> -	  .data = rcar_pcie_hw_init_gen2 },
-> +	  .data = rcar_pcie_phy_init_gen2 },
->  	{ .compatible = "renesas,pcie-r8a7791",
-> -	  .data = rcar_pcie_hw_init_gen2 },
-> +	  .data = rcar_pcie_phy_init_gen2 },
->  	{ .compatible = "renesas,pcie-rcar-gen2",
-> -	  .data = rcar_pcie_hw_init_gen2 },
-> +	  .data = rcar_pcie_phy_init_gen2 },
->  	{ .compatible = "renesas,pcie-r8a7795",
-> -	  .data = rcar_pcie_hw_init_gen3 },
-> +	  .data = rcar_pcie_phy_init_gen3 },
->  	{ .compatible = "renesas,pcie-rcar-gen3",
-> -	  .data = rcar_pcie_hw_init_gen3 },
-> +	  .data = rcar_pcie_phy_init_gen3 },
->  	{},
+ drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-I would avoid the line wrapping here, but its up to you.
-
->  };
->  
-> @@ -1140,7 +1137,7 @@ static int rcar_pcie_probe(struct platfo
->  	struct rcar_pcie *pcie;
->  	unsigned int data;
->  	int err;
-> -	int (*hw_init_fn)(struct rcar_pcie *);
-> +	int (*phy_init_fn)(struct rcar_pcie *);
-
-Looking at this I wonder if we also need a phy_cleanup() code or
-similar.
-
->  	struct pci_host_bridge *bridge;
->  
->  	bridge = pci_alloc_host_bridge(sizeof(*pcie));
-> @@ -1174,10 +1171,15 @@ static int rcar_pcie_probe(struct platfo
->  		goto err_pm_disable;
->  	}
->  
-> -	/* Failure to get a link might just be that no cards are inserted */
-> -	hw_init_fn = of_device_get_match_data(dev);
-> -	err = hw_init_fn(pcie);
-> +	phy_init_fn = of_device_get_match_data(dev);
-> +	err = phy_init_fn(pcie);
->  	if (err) {
-> +		dev_err(dev, "failed to init PCIe PHY\n");
-> +		goto err_pm_put;
-> +	}
-> +
-> +	/* Failure to get a link might just be that no cards are inserted */
-> +	if (rcar_pcie_hw_init(pcie)) {
->  		dev_info(dev, "PCIe link down\n");
->  		err = -ENODEV;
->  		goto err_pm_put;
-> 
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 03e9b82..8e6fed4 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+-		pp->cfg0_size = resource_size(cfg_res) / 2;
+-		pp->cfg1_size = resource_size(cfg_res) / 2;
++		pp->cfg0_size = resource_size(cfg_res) >> 1;
++		pp->cfg1_size = resource_size(cfg_res) >> 1;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			break;
+ 		case 0:
+ 			pp->cfg = win->res;
+-			pp->cfg0_size = resource_size(pp->cfg) / 2;
+-			pp->cfg1_size = resource_size(pp->cfg) / 2;
++			pp->cfg0_size = resource_size(pp->cfg) >> 1;
++			pp->cfg1_size = resource_size(pp->cfg) >> 1;
+ 			pp->cfg0_base = pp->cfg->start;
+ 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+ 			break;
+-- 
+2.7.4
