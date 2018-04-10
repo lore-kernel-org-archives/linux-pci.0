@@ -1,127 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:37093 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751464AbeDILrj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 07:47:39 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180409114159.azxeehjkeuinwrwe@verge.net.au>
-References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
- <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
- <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com> <20180409114159.azxeehjkeuinwrwe@verge.net.au>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 9 Apr 2018 13:47:38 +0200
-Message-ID: <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
-Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
-To: Simon Horman <horms@verge.net.au>
-Cc: Marek Vasut <marek.vasut@gmail.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 10 Apr 2018 10:10:43 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Brijesh Singh <brijesh.singh@amd.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Borislav Petkov <bp@suse.de>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
+        Wei Yang <richard.weiyang@gmail.com>,
+        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Device Tree <devicetree@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] resource: Use list_head to link resource sibling
+Message-ID: <20180410021043.GC25724@localhost.localdomain>
+References: <20180408024724.16812-1-bhe@redhat.com>
+ <20180408024724.16812-2-bhe@redhat.com>
+ <20180409090853.GJ19345@localhost.localdomain>
+ <CAPcyv4huU32+oMeoF8-HmmctafZ_uOZN-v85O5M8Ka8pBXP+Lg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPcyv4huU32+oMeoF8-HmmctafZ_uOZN-v85O5M8Ka8pBXP+Lg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Simon, Marek,
+On 04/09/18 at 08:38am, Dan Williams wrote:
+> On Mon, Apr 9, 2018 at 2:08 AM, Baoquan He <bhe@redhat.com> wrote:
+> > The struct resource uses singly linked list to link siblings. It's not
+> > easy to do reverse iteration on sibling list. So replace it with list_head.
+> >
+> > And code refactoring makes codes in kernel/resource.c more readable than
+> > pointer operation.
+> >
+> > Besides, type of member variables of struct resource, sibling and child, are
+> > changed from 'struct resource *' to 'struct list_head'. Kernel size will
+> > increase because of those statically defined struct resource instances.
+> >
+> > Signed-off-by: Baoquan He <bhe@redhat.com>
+> > ---
+> [..]
+> > diff --git a/kernel/resource.c b/kernel/resource.c
+> > index e270b5048988..473c624606f9 100644
+> > --- a/kernel/resource.c
+> > +++ b/kernel/resource.c
+> > @@ -31,6 +31,8 @@ struct resource ioport_resource = {
+> >         .start  = 0,
+> >         .end    = IO_SPACE_LIMIT,
+> >         .flags  = IORESOURCE_IO,
+> > +       .sibling = LIST_HEAD_INIT(ioport_resource.sibling),
+> > +       .child  = LIST_HEAD_INIT(ioport_resource.child),
+> >  };
+> >  EXPORT_SYMBOL(ioport_resource);
+> >
+> > @@ -39,6 +41,8 @@ struct resource iomem_resource = {
+> >         .start  = 0,
+> >         .end    = -1,
+> >         .flags  = IORESOURCE_MEM,
+> > +       .sibling = LIST_HEAD_INIT(iomem_resource.sibling),
+> > +       .child  = LIST_HEAD_INIT(iomem_resource.child),
+> >  };
+> >  EXPORT_SYMBOL(iomem_resource);
+> >
+> > @@ -57,20 +61,32 @@ static DEFINE_RWLOCK(resource_lock);
+> >   * by boot mem after the system is up. So for reusing the resource entry
+> >   * we need to remember the resource.
+> >   */
+> > -static struct resource *bootmem_resource_free;
+> > +static struct list_head bootmem_resource_free = LIST_HEAD_INIT(bootmem_resource_free);
+> >  static DEFINE_SPINLOCK(bootmem_resource_lock);
+> >
+> > +struct resource *sibling(struct resource *res)
+> > +{
+> > +       if (res->parent && !list_is_last(&res->sibling, &res->parent->child))
+> > +               return list_next_entry(res, sibling);
+> > +       return NULL;
+> > +}
+> > +
+> > +struct resource *first_child(struct list_head *head)
+> > +{
+> > +       return list_first_entry_or_null(head, struct resource, sibling);
+> > +}
+> > +
+> 
+> These names are too generic for new global symbols. A "resource_"
+> prefix is warranted.
 
-On Mon, Apr 9, 2018 at 1:41 PM, Simon Horman <horms@verge.net.au> wrote:
-> On Mon, Apr 09, 2018 at 10:20:05AM +0200, Marek Vasut wrote:
->> On 04/09/2018 10:07 AM, Geert Uytterhoeven wrote:
->> > On Sun, Apr 8, 2018 at 3:09 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->> >> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
->> >>
->> >> The controller clock can be switched off during suspend/resume,
->> >> let runtime PM take care of that.
->> >>
->> >> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
->> >> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
->> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->> >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> >> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> >> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->> >> Cc: Simon Horman <horms+renesas@verge.net.au>
->> >> Cc: Wolfram Sang <wsa@the-dreams.de>
->> >> Cc: linux-renesas-soc@vger.kernel.org
->> >> To: linux-pci@vger.kernel.org
->> >> ---
->> >> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
->> >>       reordering of function calls in probe
->> >>     - Dispose of fail_clk in rcar_pcie_get_resources()
->> >> V3: - Fix up the failpath in probe function
->> >> V4: - Rebase on recent linux-next
->> >> V5: - Do not call pci_free_resource_list(&pcie->resources) if
->> >>       rcar_pcie_parse_request_of_pci_ranges() fails, since that
->> >>       functiona calls pci_free_resource_list() already.
->> >
->> > Thanks for the update!
->> >
->> >> --- a/drivers/pci/host/pcie-rcar.c
->> >> +++ b/drivers/pci/host/pcie-rcar.c
->> >
->> >> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->> >>         if (err)
->> >>                 goto err_free_bridge;
->> >>
->> >> +       pm_runtime_enable(pcie->dev);
->> >> +       err = pm_runtime_get_sync(pcie->dev);
->> >> +       if (err < 0) {
->> >> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
->> >> +               goto err_pm_disable;
->> >> +       }
->> >> +
->> >
->> > As you moved the pm_runtime setup up...
->> >
->> >>         err = rcar_pcie_get_resources(pcie);
->> >>         if (err < 0) {
->> >>                 dev_err(dev, "failed to request resources: %d\n", err);
->> >> -               goto err_free_resource_list;
->> >> +               goto err_pm_put;
->> >>         }
->> >>
->> >>         err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
->> >>         if (err)
->> >> -               goto err_free_resource_list;
->> >> -
->> >> -       pm_runtime_enable(dev);
->> >> -       err = pm_runtime_get_sync(dev);
->> >> -       if (err < 0) {
->> >> -               dev_err(dev, "pm_runtime_get_sync failed\n");
->> >> -               goto err_pm_disable;
->> >> -       }
->> >> +               goto err_pm_put;
->> >>
->> >>         /* Failure to get a link might just be that no cards are inserted */
->> >>         hw_init_fn = of_device_get_match_data(dev);
->> >> @@ -1174,9 +1161,8 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->> >>
->> >>  err_pm_disable:
->> >>         pm_runtime_disable(dev);
->> >
->> > ... shouldn't it be moved down here, for symmetry?
->>
->> I am reasonably certain the failpath should be correct now. Did I still
->> miss something ?
->
-> It looks correct to me too. Geert are Marek and I missing something?
-
-Probably it will still work fine, but after this patch, Runtime PM is enabled
-early, and disabled early, which is not symmetrical.
-
-I like symmetry ;-)
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Thanks, sounds reasonable, will change them as resource_sibling() and
+resource_first_child(). Or res_sibling()/res_1st_child()?
