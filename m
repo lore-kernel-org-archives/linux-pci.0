@@ -1,67 +1,73 @@
-Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH 1/2] PCI: Workaround hardware bugs in ACS functionality by
- implementing it as a quirk
-To: James Puthukattukaran <james.puthukattukaran@oracle.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-References: <e6a55432-8c56-9c99-ce99-4ae80a0ed3ba@oracle.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <1ee75028-6f58-399c-b772-cf2d5d3c617c@codeaurora.org>
-Date: Wed, 11 Apr 2018 12:57:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <e6a55432-8c56-9c99-ce99-4ae80a0ed3ba@oracle.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v3 01/10] bindings: PCI: designware: Example update
+Date: Tue, 10 Apr 2018 13:58:33 +0100
+Message-Id: <a3eebc66b17172b92e91d95c12a9d0289b9417c2.1523360166.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/11/2018 11:58 AM, James Puthukattukaran wrote:
-> 
-> There are bugs in ACS implementations by certain switch vendors that cause ACS violations in perfectly normal accesses. This patch provides the framework for enabling and disabling the functionality at certain points during endpoint bringup in the form of a quirk.
-> 
-> Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Replaces "ctrlreg" reg-name by "dbi" to be coherent with similar drivers,
+however it still be compatible with any previous DT that uses the old
+reg-name.
 
-Small nits below. Need to see what Bjorn and Alex to say about this.
+Replaces the PCIe base address example by a real PCIe base address in use.
 
->  #if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ac91b6f..0c93b3e 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2097,21 +2097,44 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
->      return true;
->  }
-> 
-> -bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-> +static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->                  int timeout)
->  {
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Changes v1->v2:
+ - Removed any iATU reference or changes to avoid confusion.
+ - Add "snps,dw-pcie" compatible string following Kishon's suggestion.
+Changes v2->v3:
+- Nothing changed, just to follow the patch set version.
 
-There is no point in changing this function contents now. Just change the header
-in this code. Please revert your other changes in this function.
+ Documentation/devicetree/bindings/pci/designware-pcie.txt | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-
-> +
-> +
-> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-> +                int timeout)
-> +{
-> +    bool ret;
-> +    int enable = -1;
-
-no need for initialization.
-
-> +
-> +    enable = pci_bus_specific_acs_quirk(bus, devfn, false, false);
-> +
-> +    ret = __pci_bus_read_dev_vendor_id(bus, devfn, l, timeout);
-> +
-> +    if (enable > 0)
-> +        pci_bus_specific_acs_quirk(bus, devfn, enable, ret);
-> +
-> +    return ret;
->  }
-
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 1da7ade..f02cd20 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -1,7 +1,8 @@
+ * Synopsys DesignWare PCIe interface
+ 
+ Required properties:
+-- compatible: should contain "snps,dw-pcie" to identify the core.
++- compatible:
++	"snps,dw-pcie-rc", "snps,dw-pcie" for RC mode;
+ - reg: Should contain the configuration address space.
+ - reg-names: Must be "config" for the PCIe configuration space.
+     (The old way of getting the configuration address space from "ranges"
+@@ -41,11 +42,11 @@ EP mode:
+ 
+ Example configuration:
+ 
+-	pcie: pcie@dffff000 {
+-		compatible = "snps,dw-pcie";
+-		reg = <0xdffff000 0x1000>, /* Controller registers */
+-		      <0xd0000000 0x2000>; /* PCI config space */
+-		reg-names = "ctrlreg", "config";
++	pcie: pcie@dfc00000 {
++		compatible = "snps,dw-pcie-rc", "snps,dw-pcie";
++		reg = <0xdfc00000 0x0001000>, /* IP registers */
++		      <0xd0000000 0x0002000>; /* Configuration space */
++		reg-names = "dbi", "config";
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		device_type = "pci";
+@@ -54,5 +55,4 @@ Example configuration:
+ 		interrupts = <25>, <24>;
+ 		#interrupt-cells = <1>;
+ 		num-lanes = <1>;
+-		num-viewport = <3>;
+ 	};
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.7.4
