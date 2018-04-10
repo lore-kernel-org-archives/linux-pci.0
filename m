@@ -1,56 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:36193 "EHLO mail.bootlin.com"
+Received: from mail.kernel.org ([198.145.29.99]:54160 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752790AbeDRNuC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Apr 2018 09:50:02 -0400
-Date: Wed, 18 Apr 2018 15:49:54 +0200
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Miqu??l Raynal <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>, Wilson Ding <dingwei@marvell.com>
-Subject: Re: [PATCH v4 0/6] PCI: aardvark: misc fixes and improvements
-Message-ID: <20180418154954.2a68fce6@windsurf.numericable.fr>
-In-Reply-To: <20180418130230.GB22463@e107981-ln.cambridge.arm.com>
-References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
-        <20180409162356.GB14533@e107981-ln.cambridge.arm.com>
-        <20180409205433.4eb78a45@windsurf>
-        <20180418130230.GB22463@e107981-ln.cambridge.arm.com>
+        id S1751546AbeDJVDv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Apr 2018 17:03:51 -0400
+Date: Tue, 10 Apr 2018 16:03:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
+ system
+Message-ID: <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
+References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+ <1523284914-2037-7-git-send-email-poza@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1523284914-2037-7-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Mon, Apr 09, 2018 at 10:41:54AM -0400, Oza Pawandeep wrote:
+> DPC and AER should attempt recovery in the same way, except the
+> cases where system is with hotplug enabled.
 
-On Wed, 18 Apr 2018 14:02:30 +0100, Lorenzo Pieralisi wrote:
+What's the connection with hotplug?  I see from the patch that for
+hotplug bridges you remove the tree below the bridge, and otherwise
+you just reset the secondary link (I think).
 
-> > So, the following patches are fixes:
-> > 
-> > [PATCH v4 1/6] PCI: aardvark: Fix logic in advk_pcie_{rd,wr}_conf()
-> > [PATCH v4 2/6] PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-> > [PATCH v4 3/6] PCI: aardvark: Use ISR1 instead of ISR0 interrupt in legacy irq mode
-> > [PATCH v4 4/6] PCI: aardvark: Fix PCIe Max Read Request Size setting
-> > 
-> > The following patches are improvements:
-> > 
-> > [PATCH v4 5/6] PCI: aardvark: Introduce an advk_pcie_valid_device() helper
-> > [PATCH v4 6/6] PCI: aardvark: Remove PCIe outbound window configuration  
+The changelog should explain why we need the difference.
+
+I'm a little skeptical to begin with, because I'm not sure why we
+should handle a DPC event differently just because a bridge has the
+*capability* of hotplug.  Even if a hotplug bridge reports a DPC
+event, that doesn't necessarily mean a hotplug has occurred.
+
+> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 > 
-> I added those four patches to my pci/host/fixes branch, please have a
-> look if they meet your expectations and if so I will ask Bjorn to send
-> them if he thinks they are fit for -rc*.
-
-Looks good to me. Those four patches are indeed the ones that would
-ideally be sent during the -rc cycle. Thanks a lot!
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
+> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> index 8e1553b..6d9a841 100644
+> --- a/drivers/pci/pcie/pcie-dpc.c
+> +++ b/drivers/pci/pcie/pcie-dpc.c
+> @@ -108,8 +108,6 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+>   */
+>  static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+>  {
+> -	struct pci_bus *parent = pdev->subordinate;
+> -	struct pci_dev *dev, *temp;
+>  	struct dpc_dev *dpc;
+>  	struct pcie_device *pciedev;
+>  	struct device *devdpc;
+> @@ -120,19 +118,6 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+>  	dpc = get_service_data(pciedev);
+>  	cap = dpc->cap_pos;
+>  
+> -	pci_lock_rescan_remove();
+> -	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+> -					 bus_list) {
+> -		pci_dev_get(dev);
+> -		pci_dev_set_disconnected(dev, NULL);
+> -		if (pci_has_subordinate(dev))
+> -			pci_walk_bus(dev->subordinate,
+> -				     pci_dev_set_disconnected, NULL);
+> -		pci_stop_and_remove_bus_device(dev);
+> -		pci_dev_put(dev);
+> -	}
+> -	pci_unlock_rescan_remove();
+> -
+>  	dpc_wait_link_inactive(dpc);
+>  	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
+>  		return PCI_ERS_RESULT_DISCONNECT;
+> @@ -152,13 +137,37 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+>  	return PCI_ERS_RESULT_RECOVERED;
+>  }
+>  
+> +static void dpc_reset_link_remove_dev(struct pci_dev *pdev)
+> +{
+> +	struct pci_bus *parent = pdev->subordinate;
+> +	struct pci_dev *dev, *temp;
+> +
+> +	pci_lock_rescan_remove();
+> +	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+> +					 bus_list) {
+> +		pci_dev_get(dev);
+> +		pci_dev_set_disconnected(dev, NULL);
+> +		if (pci_has_subordinate(dev))
+> +			pci_walk_bus(dev->subordinate,
+> +				     pci_dev_set_disconnected, NULL);
+> +		pci_stop_and_remove_bus_device(dev);
+> +		pci_dev_put(dev);
+> +	}
+> +	pci_unlock_rescan_remove();
+> +
+> +	dpc_reset_link(pdev);
+> +}
+> +
+>  static void dpc_work(struct work_struct *work)
+>  {
+>  	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+>  	struct pci_dev *pdev = dpc->dev->port;
+>  
+>  	/* From DPC point of view error is always FATAL. */
+> -	pcie_do_recovery(pdev, DPC_FATAL);
+> +	if (!pdev->is_hotplug_bridge)
+> +		pcie_do_recovery(pdev, DPC_FATAL);
+> +	else
+> +		dpc_reset_link_remove_dev(pdev);
+>  }
+>  static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+>  {
+> -- 
+> 2.7.4
+> 
