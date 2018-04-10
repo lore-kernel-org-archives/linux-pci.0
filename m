@@ -1,55 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:56008 "EHLO
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:35902 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750982AbeDINLm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 09:11:42 -0400
-Subject: Re: [PATCH v2 7/9] PCI: dwc: Replace lower into upper case characters
-To: Joe Perches <joe@perches.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
- <a28d463d04b198f51c64c1a7eb5b3f77da2d4ab9.1523266508.git.gustavo.pimentel@synopsys.com>
- <0dad6b43476c1a70944e3e7c245040243ddc2a04.camel@perches.com>
+        with ESMTP id S1751505AbeDJROy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 13:14:54 -0400
 From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <c7aa4990-92ad-3e5e-de27-40df4f29f08b@synopsys.com>
-Date: Mon, 9 Apr 2018 14:10:44 +0100
-MIME-Version: 1.0
-In-Reply-To: <0dad6b43476c1a70944e3e7c245040243ddc2a04.camel@perches.com>
-Content-Type: text/plain; charset=utf-8
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [RFC 00/10] Adds pcitest tool support for MSI-X
+Date: Tue, 10 Apr 2018 18:14:39 +0100
+Message-Id: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joe,
+This patch set depends the following series:
+https://lkml.org/lkml/2018/4/10/421
 
-On 09/04/2018 11:25, Joe Perches wrote:
-> On Mon, 2018-04-09 at 10:41 +0100, Gustavo Pimentel wrote:
->> Replaces lower into upper case characters in comments and debug printks.
->>
->> This is an attempt to keep the messages coherent within the designware
->> driver.
-> 
-> It'd be nice to make all the dwc drivers use the same
-> message wording.
-> 
-> For instance:
-> 
-> drivers/pci/dwc/pci-keystone.c: dev_err(dev, "phy link never came up\n");
-> drivers/pci/dwc/pcie-designware.c:      dev_err(pci->dev, "phy link never came up\n");
-> drivers/pci/host/pcie-xilinx-nwl.c:     dev_err(dev, "PHY link never came up\n");
+This series aims to add pcitest tool support for MSI-X. 
 
-I also agree, I added a task to my backlog to fix that. However, this task
-shouldn't be done in this patch series since it's a more broader task involving
-many drivers and different maintainers. Agree?
+Includes new callbacks methods and handlers to trigger the MSI-X
+interruptions on the EP Designware IP driver.
 
-> 
+Provides new methods on pci_epf_test driver that allows to set/get
+EP maximum number of MSI-X entries (similar to set/get MSI methods).
 
-Regards,
-Gustavo
+Reworks on MSI set/get and triggering methods on EP Designware IP driver
+to be more generic and flexible.
+
+Adds a new input parameter (msix) and replicates the whole MSI mechanism
+applied to the MSI-X feature on pcitest tool. Also updates the pcitest
+script with the new test set applied to this new feature.
+
+Gustavo Pimentel (10):
+  PCI: dwc: Add MSI-X callbacks handler
+  PCI: cadence: Update cdns_pcie_ep_raise_irq function signature
+  PCI: endpoint: Add MSI-X interfaces
+  PCI: dwc: MSI callbacks handler rework
+  PCI: dwc: Add legacy interrupt callback handler
+  misc: pci_endpoint_test: Add MSI-X support
+  misc: pci_endpoint_test: Replace lower into upper case characters
+  PCI: endpoint: functions/pci-epf-test: Add MSI-X support
+  PCI: endpoint: functions/pci-epf-test: Replace lower into upper case
+    characters
+  tools: PCI: Add MSI-X support
+
+ Documentation/misc-devices/pci-endpoint-test.txt |   3 +
+ drivers/misc/pci_endpoint_test.c                 | 120 ++++++++++----
+ drivers/pci/cadence/pcie-cadence-ep.c            |   2 +-
+ drivers/pci/dwc/pci-dra7xx.c                     |   2 +-
+ drivers/pci/dwc/pcie-artpec6.c                   |   2 +-
+ drivers/pci/dwc/pcie-designware-ep.c             | 201 +++++++++++++++++++++--
+ drivers/pci/dwc/pcie-designware-plat.c           |   9 +-
+ drivers/pci/dwc/pcie-designware.h                |  40 +++--
+ drivers/pci/endpoint/functions/pci-epf-test.c    | 113 +++++++++----
+ drivers/pci/endpoint/pci-ep-cfs.c                |  24 +++
+ drivers/pci/endpoint/pci-epc-core.c              |  60 ++++++-
+ include/linux/pci-epc.h                          |  11 +-
+ include/linux/pci-epf.h                          |   1 +
+ include/uapi/linux/pcitest.h                     |   1 +
+ tools/pci/pcitest.c                              |  18 +-
+ tools/pci/pcitest.sh                             |  25 +++
+ 16 files changed, 528 insertions(+), 104 deletions(-)
+
+-- 
+2.7.4
