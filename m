@@ -1,61 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60882 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757338AbeD0SKZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 14:10:25 -0400
-Date: Fri, 27 Apr 2018 13:10:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
-Message-ID: <20180427181024.GE8199@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33251 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752587AbeDJNER (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 09:04:17 -0400
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+To: kishon@ti.com, bhelgaas@google.com, nsekhar@ti.com,
+        john@metanate.com, shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] pci: endpoint: Replace mdelay with usleep_range in pci_epf_test_write
+Date: Tue, 10 Apr 2018 21:04:06 +0800
+Message-Id: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 27, 2018 at 01:44:23PM +0300, Mika Westerberg wrote:
-> Intel 300 series chipset still has the same ACS issue than the previous
-> generations so extend the ACS quirk to cover it as well.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+pci_epf_test_write() is never called in atomic context.
 
-Applied to pci/virtualization for v4.18, thanks!
+The call chain ending up at pci_epf_test_write() is:
+[1] pci_epf_test_write() <- pci_epf_test_cmd_handler()
 
-Stable tag here, too?
+pci_epf_test_cmd_handler() is set as a parameter of INIT_DELAYED_WORK() 
+in pci_epf_test_probe().
+This function is not called in atomic context.
 
-> ---
->  drivers/pci/quirks.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 2990ad1e7c99..7a0f41176369 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4230,6 +4230,11 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
->   * 0xa290-0xa29f PCI Express Root port #{0-16}
->   * 0xa2e7-0xa2ee PCI Express Root port #{17-24}
->   *
-> + * The 300 series chipset suffers from the same bug so include those root
-> + * ports here as well.
-> + *
-> + * 0xa32c-0xa343 PCI Express Root port #{0-24}
-> + *
->   * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
->   * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
->   * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
-> @@ -4244,6 +4249,7 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
->  	switch (dev->device) {
->  	case 0xa110 ... 0xa11f: case 0xa167 ... 0xa16a: /* Sunrise Point */
->  	case 0xa290 ... 0xa29f: case 0xa2e7 ... 0xa2ee: /* Union Point */
-> +	case 0xa32c ... 0xa343:				/* 300 series */
->  		return true;
->  	}
->  
-> -- 
-> 2.17.0
-> 
+Despite never getting called from atomic context, pci_epf_test_write()
+calls mdelay() to busily wait.
+This is not necessary and can be replaced with usleep_range() to
+avoid busy waiting.
+
+This is found by a static analysis tool named DCNS written by myself.
+And I also manually check it.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index f9308c2..2f0642e 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -237,7 +237,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 	 * wait 1ms inorder for the write to complete. Without this delay L3
+ 	 * error in observed in the host system.
+ 	 */
+-	mdelay(1);
++	usleep_range(1000, 2000);
+ 
+ 	kfree(buf);
+ 
+-- 
+1.9.1
