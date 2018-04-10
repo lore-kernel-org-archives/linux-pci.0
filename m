@@ -1,150 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:37812 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754548AbeDBWrA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 18:47:00 -0400
-Received: by mail-pl0-f66.google.com with SMTP id v5-v6so4139704plo.4
-        for <linux-pci@vger.kernel.org>; Mon, 02 Apr 2018 15:47:00 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        Sathya Perla <sathya.perla@broadcom.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        alexander.duyck@gmail.com, john.fastabend@gmail.com,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Donald Dutile <ddutile@redhat.com>, oss-drivers@netronome.com,
-        Christoph Hellwig <hch@infradead.org>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCH] PCI: allow drivers to limit the number of VFs to 0
-Date: Mon,  2 Apr 2018 15:46:52 -0700
-Message-Id: <20180402224652.4058-1-jakub.kicinski@netronome.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 10 Apr 2018 14:50:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
+ Extended Tags
+Message-ID: <20180410195008.GE54986@bhelgaas-glaptop.roam.corp.google.com>
+References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
+ <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+In-Reply-To: <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sulrich@codeaurora.org, linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some user space depends on enabling sriov_totalvfs number of VFs
-to not fail, e.g.:
+On Tue, Apr 10, 2018 at 02:41:44PM -0500, Bjorn Helgaas wrote:
+> On Wed, Apr 04, 2018 at 06:50:09PM -0400, Sinan Kaya wrote:
+> > Per PCIe r3.1, sec 2.2.6.2 and 7.8.4, a Requester may not use 8-bit Tags
+> > unless its Extended Tag Field Enable is set, but all Receivers/Completers
+> > must handle 8-bit Tags correctly regardless of their Extended Tag Field
+> > Enable.
+> > 
+> > Some devices do not handle 8-bit Tags as Completers, so add a quirk for
+> > them.  If we find such a device, we disable Extended Tags for the entire
+> > hierarchy to make peer-to-peer DMA possible.
+> > 
+> > The Broadcom HT1100/HT2000/HT2100 seems to have issues with handling 8-bit
+> > tags.  Mark it as broken.
+> > 
+> > Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=196197
+> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> 
+> Applied to pci/enumeration for v4.18, thanks!
 
-$ cat .../sriov_totalvfs > .../sriov_numvfs
+Actually, this is a really annoying issue and I think the fix is
+appropriate for v4.17, so I moved it to my for-linus branch.
 
-For devices which VF support depends on loaded FW we have the
-pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
-a special "unset" value, meaning drivers can't limit sriov_totalvfs
-to 0.  Remove the special values completely and simply initialize
-driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
-Add a helper for drivers to reset the VF limit back to total.
+> > ---
+> >  drivers/pci/quirks.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 8b14bd3..f012742 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -4813,9 +4813,13 @@ static void quirk_no_ext_tags(struct pci_dev *pdev)
+> >  
+> >  	pci_walk_bus(bridge->bus, pci_configure_extended_tags, NULL);
+> >  }
+> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0132, quirk_no_ext_tags);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0140, quirk_no_ext_tags);
+> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0141, quirk_no_ext_tags);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0142, quirk_no_ext_tags);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0144, quirk_no_ext_tags);
+> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0420, quirk_no_ext_tags);
+> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0422, quirk_no_ext_tags);
+> >  
+> >  #ifdef CONFIG_PCI_ATS
+> >  /*
+> > -- 
+> > 2.7.4
+> > 
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- drivers/net/ethernet/netronome/nfp/nfp_main.c |  6 +++---
- drivers/pci/iov.c                             | 27 +++++++++++++++++++++------
- include/linux/pci.h                           |  2 ++
- 3 files changed, 26 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/ethernet/netronome/nfp/nfp_main.c b/drivers/net/ethernet/netronome/nfp/nfp_main.c
-index c4b1f344b4da..a76d177e40dd 100644
---- a/drivers/net/ethernet/netronome/nfp/nfp_main.c
-+++ b/drivers/net/ethernet/netronome/nfp/nfp_main.c
-@@ -123,7 +123,7 @@ static int nfp_pcie_sriov_read_nfd_limit(struct nfp_pf *pf)
- 		return pci_sriov_set_totalvfs(pf->pdev, pf->limit_vfs);
- 
- 	pf->limit_vfs = ~0;
--	pci_sriov_set_totalvfs(pf->pdev, 0); /* 0 is unset */
-+	pci_sriov_reset_totalvfs(pf->pdev);
- 	/* Allow any setting for backwards compatibility if symbol not found */
- 	if (err == -ENOENT)
- 		return 0;
-@@ -537,7 +537,7 @@ static int nfp_pci_probe(struct pci_dev *pdev,
- err_net_remove:
- 	nfp_net_pci_remove(pf);
- err_sriov_unlimit:
--	pci_sriov_set_totalvfs(pf->pdev, 0);
-+	pci_sriov_reset_totalvfs(pf->pdev);
- err_fw_unload:
- 	kfree(pf->rtbl);
- 	nfp_mip_close(pf->mip);
-@@ -570,7 +570,7 @@ static void nfp_pci_remove(struct pci_dev *pdev)
- 	nfp_hwmon_unregister(pf);
- 
- 	nfp_pcie_sriov_disable(pdev);
--	pci_sriov_set_totalvfs(pf->pdev, 0);
-+	pci_sriov_reset_totalvfs(pf->pdev);
- 
- 	nfp_net_pci_remove(pf);
- 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 677924ae0350..c63ea870d8be 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -443,6 +443,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
- 	iov->total_VFs = total;
-+	iov->driver_max_VFs = total;
- 	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
- 	iov->pgsz = pgsz;
- 	iov->self = dev;
-@@ -788,12 +789,29 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- }
- EXPORT_SYMBOL_GPL(pci_sriov_set_totalvfs);
- 
-+/**
-+ * pci_sriov_reset_totalvfs -- return the TotalVFs value to the default
-+ * @dev: the PCI PF device
-+ *
-+ * Should be called from PF driver's remove routine with
-+ * device's mutex held.
-+ */
-+void pci_sriov_reset_totalvfs(struct pci_dev *dev)
-+{
-+	/* Shouldn't change if VFs already enabled */
-+	if (!dev->is_physfn || dev->sriov->ctrl & PCI_SRIOV_CTRL_VFE)
-+		return;
-+
-+	dev->sriov->driver_max_VFs = dev->sriov->total_VFs;
-+}
-+EXPORT_SYMBOL_GPL(pci_sriov_reset_totalvfs);
-+
- /**
-  * pci_sriov_get_totalvfs -- get total VFs supported on this device
-  * @dev: the PCI PF device
-  *
-- * For a PCIe device with SRIOV support, return the PCIe
-- * SRIOV capability value of TotalVFs or the value of driver_max_VFs
-+ * For a PCIe device with SRIOV support, return the value of driver_max_VFs
-+ * which can be equal to the PCIe SRIOV capability value of TotalVFs or lower
-  * if the driver reduced it.  Otherwise 0.
-  */
- int pci_sriov_get_totalvfs(struct pci_dev *dev)
-@@ -801,9 +819,6 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
- 	if (!dev->is_physfn)
- 		return 0;
- 
--	if (dev->sriov->driver_max_VFs)
--		return dev->sriov->driver_max_VFs;
--
--	return dev->sriov->total_VFs;
-+	return dev->sriov->driver_max_VFs;
- }
- EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 024a1beda008..95fde8850393 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1952,6 +1952,7 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
-+void pci_sriov_reset_totalvfs(struct pci_dev *dev);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
- void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
-@@ -1978,6 +1979,7 @@ static inline int pci_vfs_assigned(struct pci_dev *dev)
- { return 0; }
- static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- { return 0; }
-+static inline void pci_sriov_reset_totalvfs(struct pci_dev *dev) { }
- static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
- static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
--- 
-2.16.2
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
