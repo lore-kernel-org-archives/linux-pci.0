@@ -1,34 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:62919 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752592AbeDQP4P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Apr 2018 11:56:15 -0400
-From: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
-To: Christoph Hellwig <hch@infradead.org>,
-        Frederick Lawler <fred@fredlawl.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
-        "dledford@redhat.com" <dledford@redhat.com>,
-        "jgg@mellanox.com" <jgg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
-Subject: RE: [PATCH v3 0/2] IB/hfi1: Cleanup PCIe link configuration
-Date: Tue, 17 Apr 2018 15:56:13 +0000
-Message-ID: <32E1700B9017364D9B60AED9960492BC627FF54C@fmsmsx120.amr.corp.intel.com>
-References: <20180417002825.2737-1-fred@fredlawl.com>
- <20180417065343.GA29193@infradead.org>
-In-Reply-To: <20180417065343.GA29193@infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v3 05/10] PCI: Adds device ID for Synopsys Sample Endpoint.
+Date: Tue, 10 Apr 2018 13:58:37 +0100
+Message-Id: <5d99b4073ccf9927b52ba2f1ae671d64ff220b7b.1523360166.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> 
-> Btw, why is the driver configuring the PCIe link speed?  Isn't this
-> something we should be handling in the PCI core?
+The PCIe controller dual mode is capable of operating in host mode as well
+as endpoint mode by configuration.
 
-The device comes out of reset at the 5GT/s speed. The driver downloads device firmware, programs PCIe registers, and co-ordinates the transition to 8GT/s.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+- Register new device id following Kishon's suggestion.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
 
-This recipe is device specific and is therefore implemented in the hfi1 driver built on top of PCI core functions and macros.
+ include/linux/pci_ids.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Mike
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index f22124e..887c04e 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2349,6 +2349,7 @@
+ #define PCI_DEVICE_ID_CENATEK_IDE	0x0001
+ 
+ #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
++#define PCI_DEVICE_ID_SYNOPSYS_SMPL_EP	0xedda
+ 
+ #define PCI_VENDOR_ID_VITESSE		0x1725
+ #define PCI_DEVICE_ID_VITESSE_VSC7174	0x7174
+-- 
+2.7.4
