@@ -1,58 +1,209 @@
-Return-Path: <SRS0=9FkI=HB=microsoft.com=Sridhar.Pitchai@kernel.org>
-Return-Path: <SRS0=9FkI=HB=microsoft.com=Sridhar.Pitchai@kernel.org>
-From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>, Haiyang Zhang <haiyangz@microsoft.com>, Dexuan
- Cui <decui@microsoft.com>
-CC: Stephen Hemminger <sthemmin@microsoft.com>, Jake Oshins
-	<jakeo@microsoft.com>, KY Srinivasan <kys@microsoft.com>, "Michael Kelley
- (EOSG)" <Michael.H.Kelley@microsoft.com>, "devel@linuxdriverproject.org"
-	<devel@linuxdriverproject.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: [PATCH v7] Revert "PCI: hv: Use device serial number as PCI domain"
-Date: Thu, 12 Apr 2018 02:44:42 +0000
-Message-ID: <FE7CB779-F2C9-4967-BCF1-A0DFE846B2E5@microsoft.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [RFC 03/10] PCI: endpoint: Add MSI-X interfaces
+Date: Tue, 10 Apr 2018 18:14:42 +0100
+Message-Id: <c76688ee290a9ed4f0f70f5e350b906950ec05df.1523379766.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-V2hlbiBMaW51eCBydW5zIGFzIGEgZ3Vlc3QgVk0gaW4gSHlwZXItViBhbmQgSHlwZXItViBhZGRz
-IHRoZSB2aXJ0dWFsIFBDSQ0KYnVzIHRvIHRoZSBndWVzdCwgSHlwZXItViBhbHdheXMgcHJvdmlk
-ZXMgdW5pcXVlIFBDSSBkb21haW4uDQoNCmNvbW1pdCA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBV
-c2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQpvdmVycm9kZSB1bmlxdWUg
-ZG9tYWluIHdpdGggdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGZpcnN0IGRldmljZSBhZGRlZCB0
-bw0KdGhlIHZpcnR1YWwgUENJIGJ1cy4NCg0KVGhlIHJlYXNvbiBmb3IgdGhhdCBwYXRjaCB3YXMg
-dG8gaGF2ZSBhIGNvbnNpc3RlbnQgYW5kIHNob3J0IG5hbWUgZm9yIHRoZQ0KZGV2aWNlLCBidXQg
-SHlwZXItViBkb2Vzbid0IHByb3ZpZGUgdW5pcXVlIHNlcmlhbCBudW1iZXJzLiBVc2luZyBub24t
-dW5pcXVlDQpzZXJpYWwgbnVtYmVycyBhcyBkb21haW4gSURzIGxlYWRzIHRvIGR1cGxpY2F0ZSBk
-ZXZpY2UgYWRkcmVzc2VzLCB3aGljaA0KY2F1c2VzIFBDSSBidXMgcmVnaXN0cmF0aW9uIHRvIGZh
-aWwuDQoNClJldmVydCBjb21taXQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmljZSBz
-ZXJpYWwgbnVtYmVyIGFzIFBDSQ0KZG9tYWluIikgc28gd2UgY2FuIHJlbGlhYmx5IHN1cHBvcnQg
-bXVsdGlwbGUgZGV2aWNlcyBiZWluZyBhc3NpZ25lZCB0bw0KYSBndWVzdC4NCg0KRml4ZXM6IDRh
-OWIwOTMzYmRmYyAoIlBDSTogaHY6IFVzZSBkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQQ0kgZG9t
-YWluIikNClNpZ25lZC1vZmYtYnk6IFNyaWRoYXIgUGl0Y2hhaSA8c3JpZGhhci5waXRjaGFpQG1p
-Y3Jvc29mdC5jb20+DQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KUmV2aWV3ZWQtYnk6IEJq
-b3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQoNCi0tLQ0KQ2hhbmdlcyBpbiB2NzoN
-CiogZml4IHRoZSBjb21taXQgY29tbWVudC4gW0Jqb3JuIEhlbGdhYXNdDQotLS0NCiBkcml2ZXJz
-L3BjaS9ob3N0L3BjaS1oeXBlcnYuYyB8IDExIC0tLS0tLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQs
-IDExIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlw
-ZXJ2LmMgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYw0KaW5kZXggMmZhZjM4ZWFiNzg1
-Li5hYzY3ZTU2ZTQ1MWEgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYu
-Yw0KKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCkBAIC0xNTE4LDE3ICsxNTE4
-LDYgQEAgc3RhdGljIHN0cnVjdCBodl9wY2lfZGV2ICpuZXdfcGNpY2hpbGRfZGV2aWNlKHN0cnVj
-dCBodl9wY2lidXNfZGV2aWNlICpoYnVzLA0KIAlnZXRfcGNpY2hpbGQoaHBkZXYsIGh2X3BjaWRl
-dl9yZWZfY2hpbGRsaXN0KTsNCiAJc3Bpbl9sb2NrX2lycXNhdmUoJmhidXMtPmRldmljZV9saXN0
-X2xvY2ssIGZsYWdzKTsNCiANCi0JLyoNCi0JICogV2hlbiBhIGRldmljZSBpcyBiZWluZyBhZGRl
-ZCB0byB0aGUgYnVzLCB3ZSBzZXQgdGhlIFBDSSBkb21haW4NCi0JICogbnVtYmVyIHRvIGJlIHRo
-ZSBkZXZpY2Ugc2VyaWFsIG51bWJlciwgd2hpY2ggaXMgbm9uLXplcm8gYW5kDQotCSAqIHVuaXF1
-ZSBvbiB0aGUgc2FtZSBWTS4gIFRoZSBzZXJpYWwgbnVtYmVycyBzdGFydCB3aXRoIDEsIGFuZA0K
-LQkgKiBpbmNyZWFzZSBieSAxIGZvciBlYWNoIGRldmljZS4gIFNvIGRldmljZSBuYW1lcyBpbmNs
-dWRpbmcgdGhpcw0KLQkgKiBjYW4gaGF2ZSBzaG9ydGVyIG5hbWVzIHRoYW4gYmFzZWQgb24gdGhl
-IGJ1cyBpbnN0YW5jZSBVVUlELg0KLQkgKiBPbmx5IHRoZSBmaXJzdCBkZXZpY2Ugc2VyaWFsIG51
-bWJlciBpcyB1c2VkIGZvciBkb21haW4sIHNvIHRoZQ0KLQkgKiBkb21haW4gbnVtYmVyIHdpbGwg
-bm90IGNoYW5nZSBhZnRlciB0aGUgZmlyc3QgZGV2aWNlIGlzIGFkZGVkLg0KLQkgKi8NCi0JaWYg
-KGxpc3RfZW1wdHkoJmhidXMtPmNoaWxkcmVuKSkNCi0JCWhidXMtPnN5c2RhdGEuZG9tYWluID0g
-ZGVzYy0+c2VyOw0KIAlsaXN0X2FkZF90YWlsKCZocGRldi0+bGlzdF9lbnRyeSwgJmhidXMtPmNo
-aWxkcmVuKTsNCiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9j
-aywgZmxhZ3MpOw0KIAlyZXR1cm4gaHBkZXY7DQotLSANCjIuMTQuMQ0KDQo=
+Implements the generic method for calling the get/set callbacks.
+
+Adds the PCI_EPC_IRQ_MSIX type.
+
+Adds the MSI-X callbacks signatures to the ops structure.
+
+Adds sysfs interface for altering the number of MSI-X entries.
+
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/endpoint/pci-ep-cfs.c   | 24 ++++++++++++++++
+ drivers/pci/endpoint/pci-epc-core.c | 57 +++++++++++++++++++++++++++++++++++++
+ include/linux/pci-epc.h             | 11 ++++++-
+ include/linux/pci-epf.h             |  1 +
+ 4 files changed, 92 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index 018ea34..d1288a0 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -286,6 +286,28 @@ static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
+ 		       to_pci_epf_group(item)->epf->msi_interrupts);
+ }
+ 
++static ssize_t pci_epf_msix_interrupts_store(struct config_item *item,
++					     const char *page, size_t len)
++{
++	u16 val;
++	int ret;
++
++	ret = kstrtou16(page, 0, &val);
++	if (ret)
++		return ret;
++
++	to_pci_epf_group(item)->epf->msix_interrupts = val;
++
++	return len;
++}
++
++static ssize_t pci_epf_msix_interrupts_show(struct config_item *item,
++					    char *page)
++{
++	return sprintf(page, "%d\n",
++		       to_pci_epf_group(item)->epf->msix_interrupts);
++}
++
+ PCI_EPF_HEADER_R(vendorid)
+ PCI_EPF_HEADER_W_u16(vendorid)
+ 
+@@ -327,6 +349,7 @@ CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
+ CONFIGFS_ATTR(pci_epf_, subsys_id);
+ CONFIGFS_ATTR(pci_epf_, interrupt_pin);
+ CONFIGFS_ATTR(pci_epf_, msi_interrupts);
++CONFIGFS_ATTR(pci_epf_, msix_interrupts);
+ 
+ static struct configfs_attribute *pci_epf_attrs[] = {
+ 	&pci_epf_attr_vendorid,
+@@ -340,6 +363,7 @@ static struct configfs_attribute *pci_epf_attrs[] = {
+ 	&pci_epf_attr_subsys_id,
+ 	&pci_epf_attr_interrupt_pin,
+ 	&pci_epf_attr_msi_interrupts,
++	&pci_epf_attr_msix_interrupts,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index b0ee427..294a383 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -218,6 +218,63 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+ EXPORT_SYMBOL_GPL(pci_epc_set_msi);
+ 
+ /**
++ * pci_epc_get_msix() - get the number of MSI-X interrupt numbers allocated
++ * @epc: the EPC device to which MSI-X interrupts was requested
++ * @func_no: the endpoint function number in the EPC device
++ *
++ * Invoke to get the number of MSI-X interrupts allocated by the RC
++ */
++int pci_epc_get_msix(struct pci_epc *epc, u8 func_no)
++{
++	int interrupt;
++	unsigned long flags;
++
++	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
++		return 0;
++
++	if (!epc->ops->get_msix)
++		return 0;
++
++	spin_lock_irqsave(&epc->lock, flags);
++	interrupt = epc->ops->get_msix(epc, func_no);
++	spin_unlock_irqrestore(&epc->lock, flags);
++
++	if (interrupt < 0)
++		return 0;
++
++	return interrupt++;
++}
++EXPORT_SYMBOL_GPL(pci_epc_get_msix);
++
++/**
++ * pci_epc_set_msix() - set the number of MSI-X interrupt numbers required
++ * @epc: the EPC device on which MSI-X has to be configured
++ * @func_no: the endpoint function number in the EPC device
++ * @interrupts: number of MSI-X interrupts required by the EPF
++ *
++ * Invoke to set the required number of MSI-X interrupts.
++ */
++int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
++{
++	int ret;
++	unsigned long flags;
++
++	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
++	    interrupts < 1 || interrupts > 2048)
++		return -EINVAL;
++
++	if (!epc->ops->set_msix)
++		return 0;
++
++	spin_lock_irqsave(&epc->lock, flags);
++	ret = epc->ops->set_msix(epc, func_no, interrupts - 1);
++	spin_unlock_irqrestore(&epc->lock, flags);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(pci_epc_set_msix);
++
++/**
+  * pci_epc_unmap_addr() - unmap CPU address from PCI address
+  * @epc: the EPC device on which address is allocated
+  * @func_no: the endpoint function number in the EPC device
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index af657ca..32e8961 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -17,6 +17,7 @@ enum pci_epc_irq_type {
+ 	PCI_EPC_IRQ_UNKNOWN,
+ 	PCI_EPC_IRQ_LEGACY,
+ 	PCI_EPC_IRQ_MSI,
++	PCI_EPC_IRQ_MSIX,
+ };
+ 
+ /**
+@@ -30,6 +31,10 @@ enum pci_epc_irq_type {
+  *	     capability register
+  * @get_msi: ops to get the number of MSI interrupts allocated by the RC from
+  *	     the MSI capability register
++ * @set_msix: ops to set the requested number of MSI-X interrupts in the
++ *	     MSI-X capability register
++ * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
++ *	     from the MSI-X capability register
+  * @raise_irq: ops to raise a legacy or MSI interrupt
+  * @start: ops to start the PCI link
+  * @stop: ops to stop the PCI link
+@@ -48,8 +53,10 @@ struct pci_epc_ops {
+ 			      phys_addr_t addr);
+ 	int	(*set_msi)(struct pci_epc *epc, u8 func_no, u8 interrupts);
+ 	int	(*get_msi)(struct pci_epc *epc, u8 func_no);
++	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
++	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
+ 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
+-			     enum pci_epc_irq_type type, u8 interrupt_num);
++			     enum pci_epc_irq_type type, u16 interrupt_num);
+ 	int	(*start)(struct pci_epc *epc);
+ 	void	(*stop)(struct pci_epc *epc);
+ 	struct module *owner;
+@@ -136,6 +143,8 @@ void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no,
+ 			phys_addr_t phys_addr);
+ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts);
+ int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
++int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
++int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
+ int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
+ 		      enum pci_epc_irq_type type, u8 interrupt_num);
+ int pci_epc_start(struct pci_epc *epc);
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index f7d6f48..9bb1f31 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -119,6 +119,7 @@ struct pci_epf {
+ 	struct pci_epf_header	*header;
+ 	struct pci_epf_bar	bar[6];
+ 	u8			msi_interrupts;
++	u16			msix_interrupts;
+ 	u8			func_no;
+ 
+ 	struct pci_epc		*epc;
+-- 
+2.7.4
