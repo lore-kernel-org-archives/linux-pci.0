@@ -1,68 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:36678 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750841AbeDTFZ2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Apr 2018 01:25:28 -0400
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
-        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v6 0/2] PCI: mediatek: Fixups for the IRQ handle routine and MT7622's class code
-Date: Fri, 20 Apr 2018 13:25:08 +0800
-Message-ID: <1524201910-22836-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:35932 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751862AbeDJROz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 13:14:55 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [RFC 07/10] misc: pci_endpoint_test: Replace lower into upper case characters
+Date: Tue, 10 Apr 2018 18:14:46 +0100
+Message-Id: <48fee5fd7c31a22d1122ae3428810b6d1dba2f81.1523379766.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Replaces lower into upper case characters in comments and debug printks.
 
-Two fixups for mediatek's host bridge:
-The first patch fixup class type and vendor ID for MT7622.
-The second patch fixup the IRQ handle routine by using irq_chip solution
-to avoid IRQ reentry which may exist for both MT2712 and MT7622.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/misc/pci_endpoint_test.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-Change since v5:
- - Make the comments consistend with the code modification in the first patch.
- - Using writew to performing a 16-bit write.
- - Using irq_chip solution to fix the IRQ issue.
-
-The v5 patchset could be found in:
- https://patchwork.kernel.org/patch/10133303
- https://patchwork.kernel.org/patch/10133305
-
-Change since v4:
- - Only setup vendor ID for MT7622, igorning the device ID since mediatek's
-   host bridge driver does not cares about the device ID.
-
-Change since v3:
- - Setup the class type and vendor ID at the beginning of startup instead
-   of in a quirk.
- - Add mediatek's vendor ID, it could be found in:
-   https://pcisig.com/membership/member-companies?combine=&page=4
-
-Change since v2:
- - Move the initialize of the iterate before the loop to fix an
-   INTx IRQ issue in the first patch
-
-Change since v1:
- - Add the second patch.
- - Make the first patch's commit message more standard.
-Honghui Zhang (2):
-  PCI: mediatek: Set up vendor ID and class type for MT7622
-  PCI: mediatek: Using chained IRQ to setup IRQ handle
-
- drivers/pci/host/pcie-mediatek.c | 220 +++++++++++++++++++++++----------------
- include/linux/pci_ids.h          |   2 +
- 2 files changed, 133 insertions(+), 89 deletions(-)
-
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index a7d9354..7212a7d 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -259,7 +259,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
+ 					   &orig_src_phys_addr, GFP_KERNEL);
+ 	if (!orig_src_addr) {
+-		dev_err(dev, "failed to allocate source buffer\n");
++		dev_err(dev, "Failed to allocate source buffer\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+@@ -285,7 +285,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	orig_dst_addr = dma_alloc_coherent(dev, size + alignment,
+ 					   &orig_dst_phys_addr, GFP_KERNEL);
+ 	if (!orig_dst_addr) {
+-		dev_err(dev, "failed to allocate destination address\n");
++		dev_err(dev, "Failed to allocate destination address\n");
+ 		ret = false;
+ 		goto err_orig_src_addr;
+ 	}
+@@ -349,7 +349,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+ 				       GFP_KERNEL);
+ 	if (!orig_addr) {
+-		dev_err(dev, "failed to allocate address\n");
++		dev_err(dev, "Failed to allocate address\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+@@ -412,7 +412,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+ 				       GFP_KERNEL);
+ 	if (!orig_addr) {
+-		dev_err(dev, "failed to allocate destination address\n");
++		dev_err(dev, "Failed to allocate destination address\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+@@ -550,7 +550,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	case IRQ_TYPE_MSI:
+ 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+ 		if (irq < 0)
+-			dev_err(dev, "failed to get MSI interrupts\n");
++			dev_err(dev, "Failed to get MSI interrupts\n");
+ 		test->num_irqs = irq;
+ 		break;
+ 	case IRQ_TYPE_MSIX:
+@@ -567,7 +567,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
+ 			       IRQF_SHARED, DRV_MODULE_NAME, test);
+ 	if (err) {
+-		dev_err(dev, "failed to request IRQ %d\n", pdev->irq);
++		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
+ 		goto err_disable_msi;
+ 	}
+ 
+@@ -585,7 +585,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
+ 			base = pci_ioremap_bar(pdev, bar);
+ 			if (!base) {
+-				dev_err(dev, "failed to read BAR%d\n", bar);
++				dev_err(dev, "Failed to read BAR%d\n", bar);
+ 				WARN_ON(bar == test_reg_bar);
+ 			}
+ 			test->bar[bar] = base;
+@@ -605,7 +605,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	id = ida_simple_get(&pci_endpoint_test_ida, 0, 0, GFP_KERNEL);
+ 	if (id < 0) {
+ 		err = id;
+-		dev_err(dev, "unable to get id\n");
++		dev_err(dev, "Unable to get id\n");
+ 		goto err_iounmap;
+ 	}
+ 
+@@ -621,7 +621,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 
+ 	err = misc_register(misc_device);
+ 	if (err) {
+-		dev_err(dev, "failed to register device\n");
++		dev_err(dev, "Failed to register device\n");
+ 		goto err_kfree_name;
+ 	}
+ 
 -- 
-2.6.4
+2.7.4
