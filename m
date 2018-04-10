@@ -1,128 +1,144 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 2/2] PCI/ACPI: Request LTR control from platform before
- using it
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Rajat Jain <rajatja@google.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-acpi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Date: Thu, 19 Apr 2018 16:05:36 -0500
-Message-ID: <152417193680.76853.4784033544317115756.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152417080402.76853.4258398181136860884.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152417080402.76853.4258398181136860884.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:56083 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753154AbeDJObT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 10:31:19 -0400
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+To: Simon Horman <horms@verge.net.au>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
+ <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
+ <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
+ <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+ <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+ <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
+Date: Tue, 10 Apr 2018 16:31:16 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On 04/09/2018 02:26 PM, Simon Horman wrote:
+> On Mon, Apr 09, 2018 at 01:47:38PM +0200, Geert Uytterhoeven wrote:
+>> Hi Simon, Marek,
+>>
+>> On Mon, Apr 9, 2018 at 1:41 PM, Simon Horman <horms@verge.net.au> wrote:
+>>> On Mon, Apr 09, 2018 at 10:20:05AM +0200, Marek Vasut wrote:
+>>>> On 04/09/2018 10:07 AM, Geert Uytterhoeven wrote:
+>>>>> On Sun, Apr 8, 2018 at 3:09 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>>>>>> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>>>>>>
+>>>>>> The controller clock can be switched off during suspend/resume,
+>>>>>> let runtime PM take care of that.
+>>>>>>
+>>>>>> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>>>>>> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+>>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>>>>>> Cc: linux-renesas-soc@vger.kernel.org
+>>>>>> To: linux-pci@vger.kernel.org
+>>>>>> ---
+>>>>>> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
+>>>>>>       reordering of function calls in probe
+>>>>>>     - Dispose of fail_clk in rcar_pcie_get_resources()
+>>>>>> V3: - Fix up the failpath in probe function
+>>>>>> V4: - Rebase on recent linux-next
+>>>>>> V5: - Do not call pci_free_resource_list(&pcie->resources) if
+>>>>>>       rcar_pcie_parse_request_of_pci_ranges() fails, since that
+>>>>>>       functiona calls pci_free_resource_list() already.
+>>>>>
+>>>>> Thanks for the update!
+>>>>>
+>>>>>> --- a/drivers/pci/host/pcie-rcar.c
+>>>>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>>>>
+>>>>>> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>>>>>>         if (err)
+>>>>>>                 goto err_free_bridge;
+>>>>>>
+>>>>>> +       pm_runtime_enable(pcie->dev);
+>>>>>> +       err = pm_runtime_get_sync(pcie->dev);
+>>>>>> +       if (err < 0) {
+>>>>>> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
+>>>>>> +               goto err_pm_disable;
+>>>>>> +       }
+>>>>>> +
+>>>>>
+>>>>> As you moved the pm_runtime setup up...
+>>>>>
+>>>>>>         err = rcar_pcie_get_resources(pcie);
+>>>>>>         if (err < 0) {
+>>>>>>                 dev_err(dev, "failed to request resources: %d\n", err);
+>>>>>> -               goto err_free_resource_list;
+>>>>>> +               goto err_pm_put;
+>>>>>>         }
+>>>>>>
+>>>>>>         err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
+>>>>>>         if (err)
+>>>>>> -               goto err_free_resource_list;
+>>>>>> -
+>>>>>> -       pm_runtime_enable(dev);
+>>>>>> -       err = pm_runtime_get_sync(dev);
+>>>>>> -       if (err < 0) {
+>>>>>> -               dev_err(dev, "pm_runtime_get_sync failed\n");
+>>>>>> -               goto err_pm_disable;
+>>>>>> -       }
+>>>>>> +               goto err_pm_put;
+>>>>>>
+>>>>>>         /* Failure to get a link might just be that no cards are inserted */
+>>>>>>         hw_init_fn = of_device_get_match_data(dev);
+>>>>>> @@ -1174,9 +1161,8 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>>>>>>
+>>>>>>  err_pm_disable:
+>>>>>>         pm_runtime_disable(dev);
+>>>>>
+>>>>> ... shouldn't it be moved down here, for symmetry?
+>>>>
+>>>> I am reasonably certain the failpath should be correct now. Did I still
+>>>> miss something ?
+>>>
+>>> It looks correct to me too. Geert are Marek and I missing something?
+>>
+>> Probably it will still work fine, but after this patch, Runtime PM is enabled
+>> early, and disabled early, which is not symmetrical.
+>>
+>> I like symmetry ;-)
+> 
+> Understood. I think that is reasonable.
+> Marek, would you care to respin?
 
-Per the PCI Firmware spec r3.2, sec 4.5, an ACPI-based OS should use _OSC
-to request control of Latency Tolerance Reporting (LTR) before using it.
+I am looking into the driver, but I fail to see what Geert is trying to
+make me change here.
 
-Request control of LTR, and if the platform does not grant control, don't
-use it.
+The pairing looks as follows:
 
-N.B. If the hardware supports LTR and the ASPM L1.2 substate but the BIOS
-doesn't support LTR in _OSC, we previously would enable ASPM L1.2.  This
-patch will prevent us from enabling ASPM L1.2 in that case.  It does not
-prevent us from enabling PCI-PM L1.2, since that doesn't depend on LTR.
-See PCIe r40, sec 5.5.1, for the L1 PM substate entry conditions.
+.- rcar_pcie_parse_request_of_pci_ranges()
+|  (pm_runtime_enable is here)
+| .- pm_runtime_get_sync()
+| | .- rcar_pcie_get_resources()
+| | |
+| | '- pm_runtime_put()
+| '- pm_runtime_disable() + pci_free_resource_list()
+'- pci_free_host_bridge()
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c |    7 +++++++
- drivers/pci/probe.c     |    5 +++++
- include/linux/acpi.h    |    3 ++-
- include/linux/pci.h     |    1 +
- 4 files changed, 15 insertions(+), 1 deletion(-)
+It looks symmetric to me ...
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 0da18bde6a16..f32d767e8e3b 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -153,6 +153,7 @@ static struct pci_osc_bit_struct pci_osc_control_bit[] = {
- 	{ OSC_PCI_EXPRESS_PME_CONTROL, "PME" },
- 	{ OSC_PCI_EXPRESS_AER_CONTROL, "AER" },
- 	{ OSC_PCI_EXPRESS_CAPABILITY_CONTROL, "PCIeCapability" },
-+	{ OSC_PCI_EXPRESS_LTR_CONTROL, "LTR" },
- };
- 
- static void decode_osc_bits(struct acpi_pci_root *root, char *msg, u32 word,
-@@ -475,6 +476,10 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 		| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
- 		| OSC_PCI_EXPRESS_PME_CONTROL;
- 
-+#ifdef CONFIG_PCIEASPM
-+	control |= OSC_PCI_EXPRESS_LTR_CONTROL;
-+#endif
-+
- 	if (pci_aer_available()) {
- 		if (aer_acpi_firmware_first())
- 			dev_info(&device->dev,
-@@ -905,6 +910,8 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 		host_bridge->native_aer = 0;
- 	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
- 		host_bridge->native_pme = 0;
-+	if (!(root->osc_control_set & OSC_PCI_EXPRESS_LTR_CONTROL))
-+		host_bridge->native_ltr = 0;
- 
- 	pci_scan_child_bus(bus);
- 	pci_set_host_bridge_release(host_bridge, acpi_pci_root_release_info,
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac91b6fd0bcd..cc1688d75664 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -554,6 +554,7 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
- 	bridge->native_aer = 1;
- 	bridge->native_hotplug = 1;
- 	bridge->native_pme = 1;
-+	bridge->native_ltr = 1;
- 
- 	return bridge;
- }
-@@ -1954,9 +1955,13 @@ static void pci_configure_relaxed_ordering(struct pci_dev *dev)
- static void pci_configure_ltr(struct pci_dev *dev)
- {
- #ifdef CONFIG_PCIEASPM
-+	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
- 	u32 cap;
- 	struct pci_dev *bridge;
- 
-+	if (!host->native_ltr)
-+		return;
-+
- 	if (!pci_is_pcie(dev))
- 		return;
- 
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 15bfb15c2fa5..49f63c67a9d1 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -506,7 +506,8 @@ extern bool osc_pc_lpi_support_confirmed;
- #define OSC_PCI_EXPRESS_PME_CONTROL		0x00000004
- #define OSC_PCI_EXPRESS_AER_CONTROL		0x00000008
- #define OSC_PCI_EXPRESS_CAPABILITY_CONTROL	0x00000010
--#define OSC_PCI_CONTROL_MASKS			0x0000001f
-+#define OSC_PCI_EXPRESS_LTR_CONTROL		0x00000020
-+#define OSC_PCI_CONTROL_MASKS			0x0000003f
- 
- #define ACPI_GSB_ACCESS_ATTRIB_QUICK		0x00000002
- #define ACPI_GSB_ACCESS_ATTRIB_SEND_RCV         0x00000004
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 73178a2fcee0..d0149c01996d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -473,6 +473,7 @@ struct pci_host_bridge {
- 	unsigned int	native_aer:1;		/* OS may use PCIe AER */
- 	unsigned int	native_hotplug:1;	/* OS may use PCIe hotplug */
- 	unsigned int	native_pme:1;		/* OS may use PCIe PME */
-+	unsigned int	native_ltr:1;		/* OS may use PCIe LTR */
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
- 			const struct resource *res,
+-- 
+Best regards,
+Marek Vasut
