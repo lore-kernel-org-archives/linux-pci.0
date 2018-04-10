@@ -1,212 +1,408 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v5 4/9] ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
-Date: Mon, 16 Apr 2018 13:34:48 +0300
-Message-Id: <20180416103453.46232-5-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 2/9] PCI: dwc: Add support for endpoint mode
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+ <9ce10e6844863029992a5f4e74c89818615850e3.1523266508.git.gustavo.pimentel@synopsys.com>
+ <abb244d5-2697-54da-b64c-25c018f50354@ti.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <667dde5d-70b9-0001-59f9-f2b7cb8d06b8@synopsys.com>
+Date: Tue, 10 Apr 2018 11:36:53 +0100
+MIME-Version: 1.0
+In-Reply-To: <abb244d5-2697-54da-b64c-25c018f50354@ti.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a system is using native PCIe hotplug for Thunderbolt and the
-controller is not enabled for full RTD3 (runtime D3) it will be only
-present in the system when there is a device connected. This pretty much
-follows the BIOS assisted hotplug behaviour.
+Hi Kishon,
 
-Thunderbolt host router integrated PCIe switch has two additional PCIe
-downstream bridges that lead to NHI (Thunderbolt host controller) and xHCI
-(USB 3 host controller) respectively. These downstream bridges are not
-marked being hotplug capable. Reason for that is to preserve resources.
-Otherwise the OS would distribute remaining resources between all
-downstream bridges making these two bridges consume precious resources
-of the actual hotplug bridges.
+On 10/04/2018 06:12, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> On Monday 09 April 2018 03:11 PM, Gustavo Pimentel wrote:
+>> The PCIe controller dual mode is capable of operating in host mode as well
+>> as endpoint mode by configuration, therefore this patch aims to add
+>> endpoint mode support to the designware driver.
+>>
+>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>> ---
+>> Change v1->v2:
+>>  - Removed dw_plat_pcie_stop_link empty function.
+>>  - Implemented Kishon's suggestions about dw-pcie-rc and dw-pcie strings.
+>> compatibility.
+>>  - Added second entry on pci_epf_test_ids structure.
+>>
+>>  drivers/pci/dwc/Kconfig                       |  45 ++++++--
+>>  drivers/pci/dwc/pcie-designware-ep.c          |   4 +-
+>>  drivers/pci/dwc/pcie-designware-plat.c        | 153 ++++++++++++++++++++++++--
+>>  drivers/pci/endpoint/functions/pci-epf-test.c |   9 ++
+>>  4 files changed, 190 insertions(+), 21 deletions(-)
+>>
+>> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+>> index 2f3f5c5..3fd7daf 100644
+>> --- a/drivers/pci/dwc/Kconfig
+>> +++ b/drivers/pci/dwc/Kconfig
+>> @@ -7,8 +7,7 @@ config PCIE_DW
+>>  
+>>  config PCIE_DW_HOST
+>>          bool
+>> -	depends on PCI
+>> -	depends on PCI_MSI_IRQ_DOMAIN
+>> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
+>>          select PCIE_DW
+>>  
+>>  config PCIE_DW_EP
+>> @@ -52,16 +51,42 @@ config PCI_DRA7XX_EP
+>>  
+>>  config PCIE_DW_PLAT
+>>  	bool "Platform bus based DesignWare PCIe Controller"
+>> -	depends on PCI
+>> -	depends on PCI_MSI_IRQ_DOMAIN
+>> -	select PCIE_DW_HOST
+>> -	---help---
+>> -	 This selects the DesignWare PCIe controller support. Select this if
+>> -	 you have a PCIe controller on Platform bus.
+>> +	help
+>> +	  There are two instances of PCIe controller in Designware IP.
+>> +	  This controller can work either as EP or RC. In order to enable
+>> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
+>> +	  order to enable device-specific features PCIE_DW_PLAT_EP must be
+>> +	  selected.
+>>  
+>> -	 If you have a controller with this interface, say Y or M here.
+>> +config PCIE_DW_PLAT_HOST
+>> +	bool "Platform bus based DesignWare PCIe Controller - Host mode"
+>> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
+>> +	select PCIE_DW_HOST
+>> +	select PCIE_DW_PLAT
+>> +	default y
+>> +	help
+>> +	  Enables support for the PCIe controller in the Designware IP to
+>> +	  work in host mode. There are two instances of PCIe controller in
+>> +	  Designware IP.
+>> +	  This controller can work either as EP or RC. In order to enable
+>> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
+>> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
+>> +	  selected.
+>>  
+>> -	 If unsure, say N.
+>> +config PCIE_DW_PLAT_EP
+>> +	bool "Platform bus based DesignWare PCIe Controller - Endpoint mode"
+>> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
+>> +	depends on PCI_ENDPOINT
+>> +	select PCIE_DW_EP
+>> +	select PCIE_DW_PLAT
+>> +	help
+>> +	  Enables support for the PCIe controller in the Designware IP to
+>> +	  work in endpoint mode. There are two instances of PCIe controller
+>> +	  in Designware IP.
+>> +	  This controller can work either as EP or RC. In order to enable
+>> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
+>> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
+>> +	  selected.
+>>  
+>>  config PCI_EXYNOS
+>>  	bool "Samsung Exynos PCIe controller"
+>> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+>> index f07678b..4ac135a 100644
+>> --- a/drivers/pci/dwc/pcie-designware-ep.c
+>> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+>> @@ -15,8 +15,10 @@
+>>  void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+>>  {
+>>  	struct pci_epc *epc = ep->epc;
+>> +	struct pci_epf *epf;
+>>  
+>> -	pci_epc_linkup(epc);
+>> +	list_for_each_entry(epf, &epc->pci_epf, list)
+>> +		pci_epf_linkup(epf);
+>>  }
+> 
+> This shouldn't be required anymore.
 
-Now, because these two bridges are not marked being hotplug capable the OS
-will not enable hotplug interrupt for them either and will not receive
-interrupt when devices behind them are hot-added. Solution to this is
-that the BIOS sends ACPI Notify() to the root port let the OS know it
-needs to rescan for added and/or removed devices.
+Ok. I'll revert it.
 
-Here is how the mechanism is supposed to work when a Thunderbolt
-endpoint is connected to one of the ports. In case of a standard USB-C
-device only the xHCI is hot-added otherwise steps are the same.
+>>  
+>>  static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar,
+>> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+>> index 5416aa8..5382a7a 100644
+>> --- a/drivers/pci/dwc/pcie-designware-plat.c
+>> +++ b/drivers/pci/dwc/pcie-designware-plat.c
+>> @@ -12,19 +12,29 @@
+>>  #include <linux/interrupt.h>
+>>  #include <linux/kernel.h>
+>>  #include <linux/init.h>
+>> +#include <linux/of_device.h>
+>>  #include <linux/of_gpio.h>
+>>  #include <linux/pci.h>
+>>  #include <linux/platform_device.h>
+>>  #include <linux/resource.h>
+>>  #include <linux/signal.h>
+>>  #include <linux/types.h>
+>> +#include <linux/regmap.h>
+>>  
+>>  #include "pcie-designware.h"
+>>  
+>>  struct dw_plat_pcie {
+>> -	struct dw_pcie		*pci;
+>> +	struct dw_pcie			*pci;
+>> +	struct regmap			*regmap;
+>> +	enum dw_pcie_device_mode	mode;
+>>  };
+>>  
+>> +struct dw_plat_pcie_of_data {
+>> +	enum dw_pcie_device_mode	mode;
+>> +};
+>> +
+>> +static const struct of_device_id dw_plat_pcie_of_match[];
+>> +
+>>  static int dw_plat_pcie_host_init(struct pcie_port *pp)
+>>  {
+>>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> @@ -42,9 +52,53 @@ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
+>>  	.host_init = dw_plat_pcie_host_init,
+>>  };
+>>  
+>> -static int dw_plat_add_pcie_port(struct pcie_port *pp,
+>> +static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
+>> +{
+>> +	return 0;
+>> +}
+>> +
+>> +static const struct dw_pcie_ops dw_pcie_ops = {
+>> +	.start_link = dw_plat_pcie_establish_link,
+>> +};
+>> +
+>> +static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	enum pci_barno bar;
+>> +
+>> +	for (bar = BAR_0; bar <= BAR_5; bar++)
+>> +		dw_pcie_ep_reset_bar(pci, bar);
+>> +}
+>> +
+>> +static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>> +				     enum pci_epc_irq_type type,
+>> +				     u8 interrupt_num)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +
+>> +	switch (type) {
+>> +	case PCI_EPC_IRQ_LEGACY:
+>> +		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+>> +		return -EINVAL;
+>> +	case PCI_EPC_IRQ_MSI:
+>> +		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+>> +	default:
+>> +		dev_err(pci->dev, "UNKNOWN IRQ type\n");
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static struct dw_pcie_ep_ops pcie_ep_ops = {
+>> +	.ep_init = dw_plat_pcie_ep_init,
+>> +	.raise_irq = dw_plat_pcie_ep_raise_irq,
+>> +};
+>> +
+>> +static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
+>>  				 struct platform_device *pdev)
+>>  {
+>> +	struct dw_pcie *pci = dw_plat_pcie->pci;
+>> +	struct pcie_port *pp = &pci->pp;
+>>  	struct device *dev = &pdev->dev;
+>>  	int ret;
+>>  
+>> @@ -63,15 +117,44 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+>>  
+>>  	ret = dw_pcie_host_init(pp);
+>>  	if (ret) {
+>> -		dev_err(dev, "failed to initialize host\n");
+>> +		dev_err(dev, "Failed to initialize host\n");
+>>  		return ret;
+>>  	}
+>>  
+>>  	return 0;
+>>  }
+>>  
+>> -static const struct dw_pcie_ops dw_pcie_ops = {
+>> -};
+>> +static int dw_plat_add_pcie_ep(struct dw_plat_pcie *dw_plat_pcie,
+>> +			       struct platform_device *pdev)
+>> +{
+>> +	int ret;
+>> +	struct dw_pcie_ep *ep;
+>> +	struct resource *res;
+>> +	struct device *dev = &pdev->dev;
+>> +	struct dw_pcie *pci = dw_plat_pcie->pci;
+>> +
+>> +	ep = &pci->ep;
+>> +	ep->ops = &pcie_ep_ops;
+>> +
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
+>> +	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+> 
+> This can throw up a NULL pointer dereferencing error. Use devm_ioremap_resource
+> instead.
 
-1. Initially there is only the PCIe root port that is controlled by
-   the pciehp driver
+I have looked on [1] and [2] and both implementations uses devm_ioremap
+function, they are also wrong?
 
-  00:1b.0 (Hotplug+) --
+[1] -> https://elixir.bootlin.com/linux/latest/source/drivers/pci/dwc/pcie-artpec6.c
+[2] -> https://elixir.bootlin.com/linux/latest/source/drivers/pci/dwc/pci-dra7xx.c
 
-2. Then we get native PCIe hotplug interrupt and once it is handled the
-   topology looks as following
+> 
+>> +	if (IS_ERR(pci->dbi_base2))
+>> +		return PTR_ERR(pci->dbi_base2);
 
-  00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 --
-                                  +- 02:01.0 (HotPlug+)
-                                  \- 02:02.0 --
+However this validation is wrong. By using the devm_ioremap function the correct
+validation should be like this:
 
-3. Bridges 02:00.0 and 02:02.0 are not marked as hotplug capable and
-   they don't have anything behind them currently. Bridge 02:01.0 is
-   hotplug capable and used for extending the topology. At this point
-   the required PCIe devices are enabled and ACPI Notify() is sent to
-   the root port. The resulting topology is expected to look like
+if (!pci->dbi_base2)
+	return -ENOMEM;
 
-  00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 -- Thunderbolt host controller
-                                  +- 02:01.0 (HotPlug+)
-                                  \- 02:02.0 -- xHCI host controller
+like exists on [1] and [2]. Can I maintain the coherency with [1] and [2]?
 
-However, the current ACPI hotplug implementation scans the whole 00:1b.0
-hotplug slot and everything behind it regardless whether native PCIe is
-used or not, and it expects that the BIOS has configured bridge
-resources upfront. If that's not the case it assigns resources using
-minimal allocation (everything currently found just barely fit)
-preventing future extension. In addition to that, if there is another
-native PCIe hotplug going on we may find the new PCIe switch only
-partially ready (all links are not fully trained yet) confusing pciehp
-when it finally starts to enumerate for new devices.
+>> +
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+>> +	if (!res)
+>> +		return -EINVAL;
+>> +
+>> +	ep->phys_base = res->start;
+>> +	ep->addr_size = resource_size(res);
+>> +
+>> +	ret = dw_pcie_ep_init(ep);
+>> +	if (ret) {
+>> +		dev_err(dev, "Failed to initialize endpoint\n");
+>> +		return ret;
+>> +	}
+>> +	return 0;
+>> +}
+>>  
+>>  static int dw_plat_pcie_probe(struct platform_device *pdev)
+>>  {
+>> @@ -80,6 +163,16 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+>>  	struct dw_pcie *pci;
+>>  	struct resource *res;  /* Resource from DT */
+>>  	int ret;
+>> +	const struct of_device_id *match;
+>> +	const struct dw_plat_pcie_of_data *data;
+>> +	enum dw_pcie_device_mode mode;
+>> +
+>> +	match = of_match_device(dw_plat_pcie_of_match, dev);
+>> +	if (!match)
+>> +		return -EINVAL;
+>> +
+>> +	data = (struct dw_plat_pcie_of_data *)match->data;
+>> +	mode = (enum dw_pcie_device_mode)data->mode;
+>>  
+>>  	dw_plat_pcie = devm_kzalloc(dev, sizeof(*dw_plat_pcie), GFP_KERNEL);
+>>  	if (!dw_plat_pcie)
+>> @@ -93,23 +186,63 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+>>  	pci->ops = &dw_pcie_ops;
+>>  
+>>  	dw_plat_pcie->pci = pci;
+>> +	dw_plat_pcie->mode = mode;
+>> +
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+>> +	if (!res)
+>> +		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>>  
+>> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>>  	pci->dbi_base = devm_ioremap_resource(dev, res);
+>>  	if (IS_ERR(pci->dbi_base))
+>>  		return PTR_ERR(pci->dbi_base);
+>>  
+>>  	platform_set_drvdata(pdev, dw_plat_pcie);
+>>  
+>> -	ret = dw_plat_add_pcie_port(&pci->pp, pdev);
+>> -	if (ret < 0)
+>> -		return ret;
+>> +	switch (dw_plat_pcie->mode) {
+>> +	case DW_PCIE_RC_TYPE:
+>> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_HOST))
+>> +			return -ENODEV;
+>> +
+>> +		ret = dw_plat_add_pcie_port(dw_plat_pcie, pdev);
+>> +		if (ret < 0)
+>> +			return ret;
+>> +		break;
+>> +	case DW_PCIE_EP_TYPE:
+>> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_EP))
+>> +			return -ENODEV;
+>> +
+>> +		ret = dw_plat_add_pcie_ep(dw_plat_pcie, pdev);
+>> +		if (ret < 0)
+>> +			return ret;
+>> +		break;
+>> +	default:
+>> +		dev_err(dev, "INVALID device type %d\n", dw_plat_pcie->mode);
+>> +	}
+>>  
+>>  	return 0;
+>>  }
+>>  
+>> +static const struct dw_plat_pcie_of_data dw_plat_pcie_rc_of_data = {
+>> +	.mode = DW_PCIE_RC_TYPE,
+>> +};
+>> +
+>> +static const struct dw_plat_pcie_of_data dw_plat_pcie_ep_of_data = {
+>> +	.mode = DW_PCIE_EP_TYPE,
+>> +};
+>> +
+>>  static const struct of_device_id dw_plat_pcie_of_match[] = {
+>> -	{ .compatible = "snps,dw-pcie", },
+>> +	{
+>> +		.compatible = "snps,dw-pcie",
+>> +		.data = &dw_plat_pcie_rc_of_data,
+>> +	},
+>> +	{
+>> +		.compatible = "snps,dw-pcie-rc",
+>> +		.data = &dw_plat_pcie_rc_of_data,
+>> +	},
+>> +	{
+>> +		.compatible = "snps,dw-pcie-ep",
+>> +		.data = &dw_plat_pcie_ep_of_data,
+>> +	},
+>>  	{},
+>>  };
+>>  
+>> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+>> index 7cef851..45d1c63 100644
+>> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+>> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> 
+> have a separate patch for this.
 
-To make this work better with the native PCIe hotplug driver (pciehp),
-we let it handle all slot management and resource allocation for hotplug
-bridges and restrict ACPI hotplug to non-hotplug bridges.
+Ok.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/pci/hotplug/acpiphp.h      |  1 +
- drivers/pci/hotplug/acpiphp_glue.c | 73 ++++++++++++++++++++++++++++++--------
- 2 files changed, 59 insertions(+), 15 deletions(-)
+>> @@ -459,10 +459,19 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+>>  	return 0;
+>>  }
+>>  
+>> +static const struct pci_epf_test_data data_cfg2 = {
+>> +	.test_reg_bar = BAR_0,
+> 
+> default test_reg_bar is BAR_0. So you can skip this.
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index e438a2d734f2..8dcfd623ef1d 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -158,6 +158,7 @@ struct acpiphp_attention_info
- 
- #define SLOT_ENABLED		(0x00000001)
- #define SLOT_IS_GOING_AWAY	(0x00000002)
-+#define SLOT_IS_NATIVE		(0x00000004)
- 
- /* function flags */
- 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index b45b375c0e6c..5efa21cdddc9 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -282,6 +282,9 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
- 	slot->device = device;
- 	INIT_LIST_HEAD(&slot->funcs);
- 
-+	if (pdev && pciehp_is_native(pdev))
-+		slot->flags |= SLOT_IS_NATIVE;
-+
- 	list_add_tail(&slot->node, &bridge->slots);
- 
- 	/*
-@@ -291,7 +294,7 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
- 	 * expose slots to user space in those cases.
- 	 */
- 	if ((acpi_pci_check_ejectable(pbus, handle) || is_dock_device(adev))
--	    && !(pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev))) {
-+	    && !(slot->flags & SLOT_IS_NATIVE && pdev->is_hotplug_bridge)) {
- 		unsigned long long sun;
- 		int retval;
- 
-@@ -430,6 +433,29 @@ static int acpiphp_rescan_slot(struct acpiphp_slot *slot)
- 	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
- }
- 
-+static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
-+{
-+	struct pci_bus *bus = bridge->subordinate;
-+	struct pci_dev *dev;
-+	int max;
-+
-+	if (!bus)
-+		return;
-+
-+	max = bus->busn_res.start;
-+	/* Scan already configured non-hotplug bridges */
-+	for_each_pci_bridge(dev, bus) {
-+		if (!dev->is_hotplug_bridge)
-+			max = pci_scan_bridge(bus, dev, max, 0);
-+	}
-+
-+	/* Scan non-hotplug bridges that need to be reconfigured */
-+	for_each_pci_bridge(dev, bus) {
-+		if (!dev->is_hotplug_bridge)
-+			max = pci_scan_bridge(bus, dev, max, 1);
-+	}
-+}
-+
- /**
-  * enable_slot - enable, configure a slot
-  * @slot: slot to be enabled
-@@ -442,25 +468,42 @@ static void enable_slot(struct acpiphp_slot *slot)
- 	struct pci_dev *dev;
- 	struct pci_bus *bus = slot->bus;
- 	struct acpiphp_func *func;
--	int max, pass;
--	LIST_HEAD(add_list);
- 
--	acpiphp_rescan_slot(slot);
--	max = acpiphp_max_busnr(bus);
--	for (pass = 0; pass < 2; pass++) {
-+	if (slot->flags & SLOT_IS_NATIVE) {
-+		/*
-+		 * If native PCIe hotplug is used, it will take care of
-+		 * hotplug slot management and resource allocation for
-+		 * hotplug bridges. However, ACPI hotplug may still be
-+		 * used for non-hotplug bridges to bring in additional
-+		 * devices such as Thunderbolt host controller.
-+		 */
- 		for_each_pci_bridge(dev, bus) {
--			if (PCI_SLOT(dev->devfn) != slot->device)
--				continue;
--
--			max = pci_scan_bridge(bus, dev, max, pass);
--			if (pass && dev->subordinate) {
--				check_hotplug_bridge(slot, dev);
--				pcibios_resource_survey_bus(dev->subordinate);
--				__pci_bus_size_bridges(dev->subordinate, &add_list);
-+			if (PCI_SLOT(dev->devfn) == slot->device)
-+				acpiphp_native_scan_bridge(dev);
-+		}
-+		pci_assign_unassigned_bridge_resources(bus->self);
-+	} else {
-+		LIST_HEAD(add_list);
-+		int max, pass;
-+
-+		acpiphp_rescan_slot(slot);
-+		max = acpiphp_max_busnr(bus);
-+		for (pass = 0; pass < 2; pass++) {
-+			for_each_pci_bridge(dev, bus) {
-+				if (PCI_SLOT(dev->devfn) != slot->device)
-+					continue;
-+
-+				max = pci_scan_bridge(bus, dev, max, pass);
-+				if (pass && dev->subordinate) {
-+					check_hotplug_bridge(slot, dev);
-+					pcibios_resource_survey_bus(dev->subordinate);
-+					__pci_bus_size_bridges(dev->subordinate,
-+							       &add_list);
-+				}
- 			}
- 		}
-+		__pci_bus_assign_resources(bus, &add_list, NULL);
- 	}
--	__pci_bus_assign_resources(bus, &add_list, NULL);
- 
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
--- 
-2.16.3
+Ok, I'll remove it.
 
+>> +	.linkup_notifier = false
+>> +};
+>> +
+> 
+> Thanks
+> Kishon
+> 
+
+Regards,
+Gustavo
