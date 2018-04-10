@@ -1,87 +1,181 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC 01/10] PCI: dwc: Add MSI-X callbacks handler
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
-        <adouglas@cadence.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
- <77b7b2687e9618d3f7d1f11c3fc6ecec9a9442ef.1523379766.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <0b7023d9-29c6-0993-07d3-b046d25b67ff@ti.com>
-Date: Mon, 16 Apr 2018 14:59:34 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41822 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751600AbeDJS4M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Apr 2018 14:56:12 -0400
+Date: Tue, 10 Apr 2018 13:56:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+        sparclinux@vger.kernel.org
+Subject: Re: sparc64 PCI BAR allocation is still problematic
+Message-ID: <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
+References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
+ <20180410173437.GB24642@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
 MIME-Version: 1.0
-In-Reply-To: <77b7b2687e9618d3f7d1f11c3fc6ecec9a9442ef.1523379766.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gustavo,
+On Tue, Apr 10, 2018 at 09:45:09PM +0300, Meelis Roos wrote:
+> > commit bc270e0028cd0856d5689cab38f0071f0d07b3be
+> > Author: Bjorn Helgaas <bhelgaas@google.com>
+> > Date:   Tue Apr 10 08:47:34 2018 -0500
+> > 
+> >     sparc/PCI: Request legacy VGA framebuffer only for VGA devices
+> 
+> Thank you.
+> 
+> It does not seem to compile for me:
+> 
+>   CC      arch/sparc/kernel/pci.o
+> arch/sparc/kernel/pci.c: In function ‘pci_claim_legacy_resources’:
+> arch/sparc/kernel/pci.c:644:26: error: ‘bus’ undeclared (first use in this function)
+>   pcibios_bus_to_resource(bus, p, &region);
 
-On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
-> Changes the pcie_raise_irq function signature, namely the interrupt_num
-> variable type from u8 to u16 to accommodate the MSI-X maximum interrupts
-> of 2048.
-> 
-> Implements a PCIe config space capability iterator function to search and
-> save the MSI and MSI-X pointers. With this method the code becomes more
-> generic and flexible.
-> 
-> Implements MSI-X set/get functions for sysfs interface in order to change
-> the EP entries number.
-> 
-> Implements EP MSI-X interface for triggering interruptions.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c           |   2 +-
->  drivers/pci/dwc/pcie-artpec6.c         |   2 +-
->  drivers/pci/dwc/pcie-designware-ep.c   | 145 ++++++++++++++++++++++++++++++++-
->  drivers/pci/dwc/pcie-designware-plat.c |   6 +-
->  drivers/pci/dwc/pcie-designware.h      |  23 +++++-
->  5 files changed, 173 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index ed8558d..5265725 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -369,7 +369,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
->  }
->  
->  static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> -				 enum pci_epc_irq_type type, u8 interrupt_num)
-> +				 enum pci_epc_irq_type type, u16 interrupt_num)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-> index e66cede..96dc259 100644
-> --- a/drivers/pci/dwc/pcie-artpec6.c
-> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> @@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
->  }
->  
->  static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> -				  enum pci_epc_irq_type type, u8 interrupt_num)
-> +				  enum pci_epc_irq_type type, u16 interrupt_num)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->  
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index 15b22a6..874d4c2 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -40,6 +40,44 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->  	__dw_pcie_ep_reset_bar(pci, bar, 0);
->  }
->  
-> +void dw_pcie_ep_find_cap_addr(struct dw_pcie_ep *ep)
-> +{
+Oops, sorry, I can't easily compile test it.  Here's an updated patch:
 
-This should be implemented in a generic way similar to pci_find_capability().
-It'll be useful when we try to implement other capabilities as well.
+commit a9ded309cbf3f57e9979848fd0aa0ffacdf11f1a
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Tue Apr 10 08:47:34 2018 -0500
 
-Thanks
-Kishon
+    sparc/PCI: Request legacy VGA framebuffer only for VGA devices
+    
+    Previously we unconditionally requested the legacy VGA framebuffer (bus
+    address 0xa0000-0xbffff) before we even know what PCI devices are present,
+    in these paths:
+    
+      pci_fire_pbm_init, schizo_pbm_init, pci_sun4v_pbm_init, psycho_pbm_init_common
+        pci_determine_mem_io_space
+          pci_register_legacy_regions
+            p->start = mem_res->start + 0xa0000
+            request_resource(mem_res, p)    # claim VGA framebuffer
+        pci_scan_one_pbm
+          pci_of_scan_bus                   # scan DT for PCI devices
+          pci_claim_bus_resources           # claim PCI device BARs
+    
+    If we found a PCI device with a BAR that overlapped the framebuffer area,
+    we complained about not being able to claim the BAR, e.g.,
+    
+      pci_bus 0002:00: root bus resource [mem 0x7ff00000000-0x7ffffffffff] (bus address [0x00000000-0xffffffff])
+      pci 0002:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+    
+    If there is no VGA device in the same PCI segment, there's no reason to
+    reserve the framebuffer and there's no conflict.
+    
+    If there *is* a VGA device in the same segment, both the VGA device and the
+    device with an overlapping BAR may respond to the framebuffer addresses,
+    which may cause bus errors.
+    
+    Request the legacy framebuffer area only when we actually find a VGA
+    device.  This is not sparc-specific and could be made more generic in the
+    PCI core eventually.
+    
+    Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=117191
+    Reported-by: Meelis Roos <mroos@linux.ee>
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 41b20edb427d..d5360e941620 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -624,6 +624,44 @@ static void pci_bus_register_of_sysfs(struct pci_bus *bus)
+ 		pci_bus_register_of_sysfs(child_bus);
+ }
+ 
++static void pci_claim_legacy_resources(struct pci_dev *dev)
++{
++	struct pci_bus_region region;
++	struct resource *p, *root, *conflict;
++
++	if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
++		return;
++
++	p = kzalloc(sizeof(*p), GFP_KERNEL);
++	if (!p)
++		return;
++
++	p->name = "Video RAM area";
++	p->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
++
++	region.start = 0xa0000UL;
++	region.end = region.start + 0x1ffffUL;
++	pcibios_bus_to_resource(dev->bus, p, &region);
++
++	root = pci_find_parent_resource(dev, p);
++	if (!root) {
++		pci_info(dev, "can't claim VGA legacy %pR: no compatible bridge window\n", p);
++		goto err;
++	}
++
++	conflict = request_resource_conflict(root, p);
++	if (conflict) {
++		pci_info(dev, "can't claim VGA legacy %pR: address conflict with %s %pR\n",
++			 p, conflict->name, conflict);
++		goto err;
++	}
++
++	return;
++
++err:
++	kfree(p);
++}
++
+ static void pci_claim_bus_resources(struct pci_bus *bus)
+ {
+ 	struct pci_bus *child_bus;
+@@ -648,6 +686,8 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
+ 
+ 			pci_claim_resource(dev, i);
+ 		}
++
++		pci_claim_legacy_resources(dev);
+ 	}
+ 
+ 	list_for_each_entry(child_bus, &bus->children, node)
+@@ -687,6 +727,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 	pci_bus_register_of_sysfs(bus);
+ 
+ 	pci_claim_bus_resources(bus);
++
+ 	pci_bus_add_devices(bus);
+ 	return bus;
+ }
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 38d46bcc8634..9bb6a192ef3f 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -329,23 +329,6 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
+ 	}
+ }
+ 
+-static void pci_register_legacy_regions(struct resource *io_res,
+-					struct resource *mem_res)
+-{
+-	struct resource *p;
+-
+-	/* VGA Video RAM. */
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return;
+-
+-	p->name = "Video RAM area";
+-	p->start = mem_res->start + 0xa0000UL;
+-	p->end = p->start + 0x1ffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
+-}
+-
+ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
+ {
+ 	const u32 *vdma = of_get_property(pbm->op->dev.of_node, "virtual-dma",
+@@ -487,8 +470,6 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 	if (pbm->mem64_space.flags)
+ 		request_resource(&iomem_resource, &pbm->mem64_space);
+ 
+-	pci_register_legacy_regions(&pbm->io_space,
+-				    &pbm->mem_space);
+ 	pci_register_iommu_region(pbm);
+ }
+ 
