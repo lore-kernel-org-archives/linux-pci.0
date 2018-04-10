@@ -1,162 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:33132 "EHLO mga04.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:33782 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753459AbeDZG1Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 26 Apr 2018 02:27:24 -0400
-Date: Thu, 26 Apr 2018 14:26:28 +0800
-From: kbuild test robot <lkp@intel.com>
-To: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Cc: kbuild-all@01.org, Alex Williamson <alex.williamson@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/2] PCI: Add pci_bus_specific_read_dev_vendor_id() to
- workaround PCI switch specific issues prior to accessing newly added
- endpoint
-Message-ID: <201804261426.2HZUSMma%fengguang.wu@intel.com>
-References: <16461819-82a1-8122-4a30-842f9a078988@oracle.com>
+        id S1751960AbeDJS3f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Apr 2018 14:29:35 -0400
+Date: Tue, 10 Apr 2018 13:29:33 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Frederick Lawler <fred@fredlawl.com>
+Cc: mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] IB/hfi1: Cleanup PCIe link configuration
+Message-ID: <20180410182933.GC24642@bhelgaas-glaptop.roam.corp.google.com>
+References: <1523244898-25942-1-git-send-email-fred@fredlawl.com>
+ <5ACBF5C6.60601@fredlawl.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="wac7ysb48OaltWcw"
-In-Reply-To: <16461819-82a1-8122-4a30-842f9a078988@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5ACBF5C6.60601@fredlawl.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Apr 09, 2018 at 06:22:46PM -0500, Frederick Lawler wrote:
+> Frederick Lawler wrote:
+> > The IB/hfi1 driver uses custom macros to configure link speed. Some macros were
+> > previously replaced, but not fully. This patch series addresses the 
+> > configuration inconsistencies and introduces minor cleanup by replacing
+> > redundant magic number usage.
 
---wac7ysb48OaltWcw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Sorry for not responding to the actual patches; I'm not subscribed to
+linux-rdma, so reading them via an archive.
 
-Hi James,
+> > Frederick Lawler (2):
+> >   IB/hfi1: Replace custom hfi1 macros with PCIe macros
 
-Thank you for the patch! Yet something to improve:
+s/This patch removes/Remove/
+s/infavor/in favor/
 
-[auto build test ERROR on pci/next]
-[also build test ERROR on v4.17-rc2 next-20180424]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> @@ -320,7 +315,7 @@ int pcie_speeds(struct hfi1_devdata *dd)
+> -	if ((linkcap & PCI_EXP_LNKCAP_SLS) != GEN3_SPEED_VECTOR) {
+> +	if ((linkcap & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKSTA_CLS_8_0GB) {
 
-url:    https://github.com/0day-ci/linux/commits/James-Puthukattukaran/PCI-SUpport-to-workaround-bus-level-HW-issues/20180426-092305
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-config: ia64-allnoconfig (attached as .config)
-compiler: ia64-linux-gcc (GCC) 7.2.0
-reproduce:
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # save the attached .config to linux build tree
-        make.cross ARCH=ia64 
+Use PCI_EXP_LNKCAP_SLS_8_0GB (not PCI_EXP_LNKSTA_CLS_8_0GB) since
+we're testing a PCI_EXP_LNKCAP value.  They happen to be the same
+values, but we should use the matching definitions.
 
-All errors (new ones prefixed by >>):
+> @@ -1048,14 +1040,14 @@ int do_pcie_gen3_transition(struct hfi1_devdata *dd)
+> -		target_vector = GEN1_SPEED_VECTOR;
+> +		target_vector = PCI_EXP_LNKSTA_CLS_2_5GB;
 
-   drivers/pci/probe.o: In function `pci_bus_read_dev_vendor_id':
->> probe.c:(.text+0x3e02): undefined reference to `pci_bus_specific_read_dev_vendor_id'
+target_vector is later ORed into a PCI_EXP_LNKCTL2 value.  We
+currently do not have any definitions for PCI_EXP_LNKCTL2.  We should
+add those, then use them here.  Similarly for the rest of this patch.
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> -		target_speed = 8000;
+> +		target_speed = 8000;
 
---wac7ysb48OaltWcw
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
+Is there an unintended whitespace change here, e.g., trailing space or
+replacing tab with space?  I can't tell from the archive.
 
-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
+> >   IB/hfi1: Cleanup PCIe speed link configuration
 
---wac7ysb48OaltWcw--
+s/speed link/link speed/
