@@ -1,72 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37892 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750890AbeDDNnv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Apr 2018 09:43:51 -0400
-Date: Wed, 4 Apr 2018 08:43:49 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 10 Apr 2018 14:36:31 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Zhichang Yuan <yuanzhichang@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        John Garry <john.garry@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddeodr.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] lib: logic_pio: Fix potential NULL pointer dereference
-Message-ID: <20180404134349.GQ9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180403211505.GA29612@embeddedor.com>
+To: "Desnes A. Nunes do Rosario" <desnesn@linux.vnet.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com
+Subject: Re: [PATCH, RESEND, pci, v2] pci: Delete PCI disabling informational
+ messages
+Message-ID: <20180410193631.GC54986@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180404151035.12140-1-desnesn@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180403211505.GA29612@embeddedor.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180404151035.12140-1-desnesn@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
-
-On Tue, Apr 03, 2018 at 04:15:05PM -0500, Gustavo A. R. Silva wrote:
-> new_range is being dereferenced before it is null checked, hence
-> there is a potential null pointer dereference.
+On Wed, Apr 04, 2018 at 12:10:35PM -0300, Desnes A. Nunes do Rosario wrote:
+> The disabling informational messages on the PCI subsystem should be deleted
+> since they do not represent any real value for the system logs.
 > 
-> Fix this by moving the pointer dereference after new_range has
-> been properly null checked.
+> These messages are either not presented, or presented for all PCI devices
+> (e.g., powerpc now realigns all PCI devices to its page size). Thus, they
+> are flooding system logs and can be interpreted as a false positive for
+> total PCI failure on the system.
 > 
-> Addresses-Coverity-ID: 1466163 ("Dereference before null check")
-> Fixes: 0a7198426259 ("lib: Add generic PIO mapping method")
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> [root@system user]# dmesg | grep -i disabling
+> [    0.692270] pci 0000:00:00.0: Disabling memory decoding and releasing memory resources
+> [    0.692324] pci 0000:00:00.0: disabling bridge mem windows
+> [    0.729134] pci 0001:00:00.0: Disabling memory decoding and releasing memory resources
+> [    0.737352] pci 0001:00:00.0: disabling bridge mem windows
+> [    0.776295] pci 0002:00:00.0: Disabling memory decoding and releasing memory resources
+> [    0.784509] pci 0002:00:00.0: disabling bridge mem windows
+> ... and goes on for all PCI devices on the system ...
+> 
+> Fixes: 38274637699 ("powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned")
+> Signed-off-by: Desnes A. Nunes do Rosario <desnesn@linux.vnet.ibm.com>
 
-Folded into 0a7198426259 on pci/lpc, thanks!
+Applied to pci/resource for v4.18, thanks!
+
+I should have gotten this in for v4.17, but I didn't; sorry about that.
 
 > ---
->  lib/logic_pio.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
+>  drivers/pci/pci.c       | 1 -
+>  drivers/pci/setup-res.c | 2 --
+>  2 files changed, 3 deletions(-)
 > 
-> diff --git a/lib/logic_pio.c b/lib/logic_pio.c
-> index 29cedea..30dfdce 100644
-> --- a/lib/logic_pio.c
-> +++ b/lib/logic_pio.c
-> @@ -33,8 +33,8 @@ static DEFINE_MUTEX(io_range_mutex);
->  int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
->  {
->  	struct logic_pio_hwaddr *range;
-> -	resource_size_t start = new_range->hw_start;
-> -	resource_size_t end = new_range->hw_start + new_range->size;
-> +	resource_size_t start;
-> +	resource_size_t end;
->  	resource_size_t mmio_sz = 0;
->  	resource_size_t iio_sz = MMIO_UPPER_LIMIT;
->  	int ret = 0;
-> @@ -42,6 +42,9 @@ int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
->  	if (!new_range || !new_range->fwnode || !new_range->size)
->  		return -EINVAL;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8c71d1a66cdd..1563ce1ee091 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5505,7 +5505,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>  		return;
+>  	}
 >  
-> +	start = new_range->hw_start;
-> +	end = new_range->hw_start + new_range->size;
-> +
->  	mutex_lock(&io_range_mutex);
->  	list_for_each_entry_rcu(range, &io_range_list, list) {
->  		if (range->fwnode == new_range->fwnode) {
+> -	pci_info(dev, "Disabling memory decoding and releasing memory resources\n");
+>  	pci_read_config_word(dev, PCI_COMMAND, &command);
+>  	command &= ~PCI_COMMAND_MEMORY;
+>  	pci_write_config_word(dev, PCI_COMMAND, command);
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index 369d48d6c6f1..6bd35e8e7cde 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -172,8 +172,6 @@ EXPORT_SYMBOL(pci_claim_resource);
+>  
+>  void pci_disable_bridge_window(struct pci_dev *dev)
+>  {
+> -	pci_info(dev, "disabling bridge mem windows\n");
+> -
+>  	/* MMIO Base/Limit */
+>  	pci_write_config_dword(dev, PCI_MEMORY_BASE, 0x0000fff0);
+>  
 > -- 
-> 2.7.4
+> 2.14.3
 > 
