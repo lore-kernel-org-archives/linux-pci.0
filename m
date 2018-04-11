@@ -1,41 +1,46 @@
-Return-Path: <SRS0=U4mF=GZ=apm.com=fkan@kernel.org>
-Return-Path: <SRS0=U4mF=GZ=apm.com=fkan@kernel.org>
+Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
+ Extended Tags
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ sulrich@codeaurora.org, timur@codeaurora.org, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, open list
+ <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
+References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
+ <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
+ <20180410195008.GE54986@bhelgaas-glaptop.roam.corp.google.com>
+ <1c94361d-7a8d-ad18-12e5-1612326a54db@codeaurora.org>
+ <20180411135151.GB91792@bhelgaas-glaptop.roam.corp.google.com>
+ <ecdad8f4-6996-cfe0-d005-fbc67ba3cd79@codeaurora.org>
+ <20180411140849.GA12557@kroah.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <1290e3d3-e7f0-a4f5-925d-2b7c2cb42b93@codeaurora.org>
+Date: Wed, 11 Apr 2018 10:13:11 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180330225024.GH9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1520274579-30492-1-git-send-email-fkan@apm.com>
- <CAL85gmAAVoCCXoLH+c0ROSBy4mS3z86tnbX+7Avh5oGT=fHcfA@mail.gmail.com> <20180330225024.GH9322@bhelgaas-glaptop.roam.corp.google.com>
-From: Feng Kan <fkan@apm.com>
-Date: Wed, 4 Apr 2018 14:10:41 -0700
-Message-ID: <CAL85gmBtFnXje9tPngXEyCCwuvxvH6YHB=HrvjfU7npPDiSTCw@mail.gmail.com>
-Subject: Re: [PATCH V3] PM / core: fix deferred probe breaking suspend resume order
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PM <linux-pm@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-arm-kernel@lists.infradead.org,
-	Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Toan Le <toanle@apm.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180411140849.GA12557@kroah.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 30, 2018 at 3:50 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Mar 15, 2018 at 11:41:33AM -0700, Feng Kan wrote:
->> On Mon, Mar 5, 2018 at 10:29 AM, Feng Kan <fkan@apm.com> wrote:
->> > When bridge and its endpoint is enumerated the devices are added to the
->> > dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
->> > This causes the bridge to be moved to the end of the dpm list when
->> > deferred probe kicks in. The order of the dpm list for bridge and
->> > endpoint is reversed.
->> >
->> > Add reordering code to move the bridge and its children and consumers to
->> > the end of the pm list so the order for suspend and resume is not altered.
->> > The code also move device and its children and consumers to the tail of
->> > device_kset list if it is registered.
->> >
->> > Signed-off-by: Feng Kan <fkan@apm.com>
->> > Signed-off-by: Toan Le <toanle@apm.com>
->> > ...
->> >
->> Hi, just wanted to check if there is anything else I need to change on
->> this. Thanks.
->
-> I'm assuming Rafael will handle this.
-Rafael, sorry to ping again. Do you have a position on this patch yet?
+On 4/11/2018 10:08 AM, Greg Kroah-Hartman wrote:
+>>> So I added these stable tags:
+>>>
+>>>   CC: stable@vger.kernel.org      # v4.11: 62ce94a7a5a5 PCI: Mark Broadcom HT2100 Root Port Extended Tags as broken
+>>>   CC: stable@vger.kernel.org      # v4.11
+>>>
+>>> I'm not sure I'm using the stable request correctly, but my intent is:
+
+Asking if we placed the tags correctly. Sounds like we did.
+
+>>>
+>>>   - 62ce94a7a5a5 appeared in v4.14, so cherry-pick 62ce94a7a5a5 to
+>>>     v4.11 through v4.13
+>>>   - cherry-pick *this* patch on top of 62ce94a7a5a5 to v4.11 and later
+> Bjorn is correct here, why are you dragging me into this?
+
+Thanks
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
