@@ -1,195 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC 06/10] misc: pci_endpoint_test: Add MSI-X support
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
- <8b88f8c2b766f36c71659deb0fce635154b2b39f.1523379766.git.gustavo.pimentel@synopsys.com>
- <b25dcfb1-e770-e302-d9aa-7c35f6c58fa5@ti.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <c6d1d492-38a0-6a03-7e61-b8b50226734b@synopsys.com>
-Date: Tue, 17 Apr 2018 18:38:58 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35249 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752366AbeDKDW2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 23:22:28 -0400
+Date: Wed, 11 Apr 2018 11:22:20 +0800
+From: Wei Yang <richard.weiyang@gmail.com>
+To: Baoquan He <bhe@redhat.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Nicolas Pitre <nico@linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Brijesh Singh <brijesh.singh@amd.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Borislav Petkov <bp@suse.de>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
+        Wei Yang <richard.weiyang@gmail.com>,
+        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
+        linux-nvdimm@lists.01.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] resource: Use list_head to link resource sibling
+Message-ID: <20180411032220.GA49071@WeideMacBook-Pro.local>
+Reply-To: Wei Yang <richard.weiyang@gmail.com>
+References: <20180408024724.16812-1-bhe@redhat.com>
+ <20180408024724.16812-2-bhe@redhat.com>
+ <20180409090853.GJ19345@localhost.localdomain>
+ <CAL_Jsq+xxa9ep2LK3H6YWhwrZtc-T73Y84ry6Hs-JJ3XEXoGsw@mail.gmail.com>
+ <20180410134416.GM19345@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <b25dcfb1-e770-e302-d9aa-7c35f6c58fa5@ti.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180410134416.GM19345@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+On Tue, Apr 10, 2018 at 09:44:16PM +0800, Baoquan He wrote:
+>Hi Rob,
+>
+>Thanks a lot for looking into this and involve Nico to this thread!
+>
+>On 04/09/18 at 09:49am, Rob Herring wrote:
+>> +Nico who has been working on tinification of the kernel.
+>> 
+>> On Mon, Apr 9, 2018 at 4:08 AM, Baoquan He <bhe@redhat.com> wrote:
+>> > The struct resource uses singly linked list to link siblings. It's not
+>> > easy to do reverse iteration on sibling list. So replace it with list_head.
+>> 
+>> Why is reverse iteration needed?
+>
+>This is the explanation I made when Andrew helped to review the v1 post:
+>https://lkml.org/lkml/2018/3/23/78
+>
+>Because we have been using kexec-tools utility to search available
+>System RAM space for loading kernel/initrd/purgatory from top to down.
+>That is done in user space by searching /proc/iomem. While later added
+>kexec_file interface, the searching code happened in kernel, and it
+>only search System RAM region bottom up, then take an area in that found
+>RAM region from top to down. We need unify these two interfaces on
+>behaviour since they are the same on essense from the users' point of
+>view, though implementation is different. As you know, the singly linked
+>list implementation of the current resource's sibling linking, makes the
+>searching from top to down very hard to satisfy people. 
+>
+>Below is the v1 post, we make an temporary array to copy iomem_resource's
+>first level of children, then iterate the array reversedly. Andrew
+>suggested me to try list_head after reviewing. In fact we can optimize
+>that patch to only copy resource pointer into array, still the way is
+>ugly.
+>https://lkml.org/lkml/2018/3/21/952
+>
+>Then Wei pasted a patch he had made as below. He didn't mention if he
+>also has requirement on reversed iteration of resource. That is an O(n*n)
+>way, from personal feelings, hard to say if it's bettern than v1 post.
+>https://lkml.org/lkml/2018/3/24/157
 
-On 17/04/2018 11:33, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
->> Adds the MSI-X support and updates driver documentation accordingly.
->>
->> Changes the driver parameter in order to allow the interruption type
->> selection.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->>  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
->>  drivers/misc/pci_endpoint_test.c                 | 102 +++++++++++++++++------
->>  2 files changed, 79 insertions(+), 26 deletions(-)
->>
->> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
->> index 4ebc359..fdfa0f6 100644
->> --- a/Documentation/misc-devices/pci-endpoint-test.txt
->> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
->> @@ -10,6 +10,7 @@ The PCI driver for the test device performs the following tests
->>  	*) verifying addresses programmed in BAR
->>  	*) raise legacy IRQ
->>  	*) raise MSI IRQ
->> +	*) raise MSI-X IRQ
->>  	*) read data
->>  	*) write data
->>  	*) copy data
->> @@ -25,6 +26,8 @@ ioctl
->>   PCITEST_LEGACY_IRQ: Tests legacy IRQ
->>   PCITEST_MSI: Tests message signalled interrupts. The MSI number
->>  	      to be tested should be passed as argument.
->> + PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
->> +	      to be tested should be passed as argument.
->>   PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
->>  		as argument.
->>   PCITEST_READ: Perform read tests. The size of the buffer should be passed
->> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
->> index 37db0fc..a7d9354 100644
->> --- a/drivers/misc/pci_endpoint_test.c
->> +++ b/drivers/misc/pci_endpoint_test.c
->> @@ -42,11 +42,16 @@
->>  #define PCI_ENDPOINT_TEST_COMMAND	0x4
->>  #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
->>  #define COMMAND_RAISE_MSI_IRQ		BIT(1)
->> -#define MSI_NUMBER_SHIFT		2
->> -/* 6 bits for MSI number */
->> -#define COMMAND_READ                    BIT(8)
->> -#define COMMAND_WRITE                   BIT(9)
->> -#define COMMAND_COPY                    BIT(10)
->> +#define COMMAND_RAISE_MSIX_IRQ		BIT(2)
->> +#define IRQ_TYPE_SHIFT			3
->> +#define IRQ_TYPE_LEGACY			0
->> +#define IRQ_TYPE_MSI			1
->> +#define IRQ_TYPE_MSIX			2
->> +#define MSI_NUMBER_SHIFT		5
-> 
-> Now that you are anyways fixing this, add a new register entry for MSI numbers.
-> Let's not keep COMMAND and MSI's together.
+I don't have requirement on reverse iteration of resource structure.
 
-What you suggest?
+My approach is almost the same as current walk_system_ram_res(). Since each
+resource keeps parent, we could get previous resource by search on
+res->parent->child.
 
->> +/* 12 bits for MSI number */
->> +#define COMMAND_READ                    BIT(17)
->> +#define COMMAND_WRITE                   BIT(18)
->> +#define COMMAND_COPY                    BIT(19)
-> 
-> This change should be done along with the pci-epf-test in a single patch.
+The complexity of a whole iteration is O(N * W / 2), where N is the number of
+resources in the tree and W is the average number of siblings of each
+resource.
 
-To be clear, you're saying is this patch should be just be squashed into the
-patch number 8 [1], because there is a lot of dependencies namely the defines,
-that is used on the alter functions.
+And this approach doesn't need to change current structure.
 
-[1] -> https://patchwork.ozlabs.org/patch/896841/
+>
+>That's why I would like to have a try of the list_head linking.
+>
 
->>  
->>  #define PCI_ENDPOINT_TEST_STATUS	0x8
->>  #define STATUS_READ_SUCCESS             BIT(0)
->> @@ -73,9 +78,9 @@ static DEFINE_IDA(pci_endpoint_test_ida);
->>  #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
->>  					    miscdev)
->>  
->> -static bool no_msi;
->> -module_param(no_msi, bool, 0444);
->> -MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
-> 
-> Let's not remove this just to make sure existing users doesn't get affected.
-
-Hum, by making an internal conversion? Like this
-no_msi = false <=> irq_type = 1
-no_msi = true <=> irq_type = 0
-
->> +static int irq_type = IRQ_TYPE_MSIX;
->> +module_param(irq_type, int, 0444);
->> +MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI, 2 - MSI-X)");
->>  
->>  enum pci_barno {
->>  	BAR_0,
->> @@ -103,7 +108,7 @@ struct pci_endpoint_test {
->>  struct pci_endpoint_test_data {
->>  	enum pci_barno test_reg_bar;
->>  	size_t alignment;
->> -	bool no_msi;
->> +	int irq_type;
->>  };
->>  
->>  static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
->> @@ -177,10 +182,10 @@ static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
->>  
->>  static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
->>  {
->> -	u32 val;
->> +	u32 val = COMMAND_RAISE_LEGACY_IRQ;
->>  
->> -	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
->> -				 COMMAND_RAISE_LEGACY_IRQ);
->> +	val |= (IRQ_TYPE_LEGACY << IRQ_TYPE_SHIFT);
->> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND, val);
->>  	val = wait_for_completion_timeout(&test->irq_raised,
->>  					  msecs_to_jiffies(1000));
->>  	if (!val)
->> @@ -192,12 +197,12 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
->>  static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
->>  				      u8 msi_num)
->>  {
->> -	u32 val;
->> +	u32 val = COMMAND_RAISE_MSI_IRQ;
->>  	struct pci_dev *pdev = test->pdev;
->>  
->> -	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
->> -				 msi_num << MSI_NUMBER_SHIFT |
->> -				 COMMAND_RAISE_MSI_IRQ);
->> +	val |= (msi_num << MSI_NUMBER_SHIFT);
->> +	val |= (IRQ_TYPE_MSI << IRQ_TYPE_SHIFT);
->> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND, val);
->>  	val = wait_for_completion_timeout(&test->irq_raised,
->>  					  msecs_to_jiffies(1000));
->>  	if (!val)
->> @@ -209,6 +214,26 @@ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
->>  	return false;
->>  }
->>  
->> +static bool pci_endpoint_test_msix_irq(struct pci_endpoint_test *test,
->> +				       u16 msix_num)
->> +{
->> +	u32 val = COMMAND_RAISE_MSIX_IRQ;
->> +	struct pci_dev *pdev = test->pdev;
->> +
->> +	val |= (msix_num << MSI_NUMBER_SHIFT);
->> +	val |= (IRQ_TYPE_MSIX << IRQ_TYPE_SHIFT);
->> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND, val);
->> +	val = wait_for_completion_timeout(&test->irq_raised,
->> +					  msecs_to_jiffies(1000));
->> +	if (!val)
->> +		return false;
->> +
->> +	if (test->last_irq - pdev->irq == msix_num - 1)
->> +		return true;
->> +
->> +	return false;
-> 
-> I think you can have a single function for msix_irq and msi_irq.
-
-Ok.
-
-> 
-> Thanks
-> Kishon
-> 
+-- 
+Wei Yang
+Help you, Help me
