@@ -1,55 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v2 8/9] PCI: dwc: Small computation improvement
-Date: Mon,  9 Apr 2018 10:41:17 +0100
-Message-Id: <5181f7ffbb9d2889974c49d84e72042251adf8b6.1523266508.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 11 Apr 2018 12:40:58 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH RESEND v4 8/9] PCI: Improve "partially hidden behind
+ bridge" log message
+Message-ID: <20180411094058.GG2173@lahna.fi.intel.com>
+References: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
+ <20180403145225.22371-9-mika.westerberg@linux.intel.com>
+ <2498516.Go1qFCBKL6@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2498516.Go1qFCBKL6@aspire.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replaces a simple division by 2 to a right shift rotation of 1 bit.
+On Tue, Apr 10, 2018 at 05:04:53PM +0200, Rafael J. Wysocki wrote:
+> On Tuesday, April 3, 2018 4:52:24 PM CEST Mika Westerberg wrote:
+> > There is a sanity checker in the end of pci_scan_child_bus_extend() that
+> > tries to detect badly configured bridges. For example given the below
+> > topology:
+> > 
+> >   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+> >                                   +-01.0-[04-39]--
+> >                                   \-02.0-[3a]----00.0
+> > 
+> > The sanity checker notices this and logs following messages:
+> > 
+> >   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+> >   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+> > 
+> > This is not really helpful to users and the information above is not
+> > even correct (0000:02 is a bus not bridge). Make this a bit more
+> > understandable by changing the sanity checker to log following message
+> > in place of the above two messages:
+> > 
+> >   pci 0000:02:02.0: devices behind bridge are unusable because we cannot assign [bus 3a] for them
+> 
+> FWIW, I prefer to use passive voice in messages, like
+> 
+>  devices behind bridge are unusable, because [bus 3a] cannot be assigned for them
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
+Works for me :)
 
- drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 03e9b82..8e6fed4 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
- 	if (cfg_res) {
--		pp->cfg0_size = resource_size(cfg_res) / 2;
--		pp->cfg1_size = resource_size(cfg_res) / 2;
-+		pp->cfg0_size = resource_size(cfg_res) >> 1;
-+		pp->cfg1_size = resource_size(cfg_res) >> 1;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
- 	} else if (!pp->va_cfg0_base) {
-@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			break;
- 		case 0:
- 			pp->cfg = win->res;
--			pp->cfg0_size = resource_size(pp->cfg) / 2;
--			pp->cfg1_size = resource_size(pp->cfg) / 2;
-+			pp->cfg0_size = resource_size(pp->cfg) >> 1;
-+			pp->cfg1_size = resource_size(pp->cfg) >> 1;
- 			pp->cfg0_base = pp->cfg->start;
- 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
- 			break;
--- 
-2.7.4
+I'll update the message accordingly then.
