@@ -1,89 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 23 Apr 2018 17:30:44 -0600
-Message-Id: <20180423233046.21476-13-logang@deltatee.com>
-In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
-Subject: [PATCH v4 12/14] nvmet: Introduce helper functions to allocate and free request SGLs
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:46848 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750730AbeDKHlH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Apr 2018 03:41:07 -0400
+Subject: Re: [PATCH v2 8/9] PCI: dwc: Small computation improvement
+To: Jingoo Han <jingoohan1@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+ <5181f7ffbb9d2889974c49d84e72042251adf8b6.1523266508.git.gustavo.pimentel@synopsys.com>
+ <003001d3d128$39f3eaa0$addbbfe0$@gmail.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <c295bc5b-e67a-290c-3316-56a1cc001538@synopsys.com>
+Date: Wed, 11 Apr 2018 08:40:05 +0100
+MIME-Version: 1.0
+In-Reply-To: <003001d3d128$39f3eaa0$addbbfe0$@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add helpers to allocate and free the SGL in a struct nvmet_req:
+Hi Jingoo,
 
-int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq)
-void nvmet_req_free_sgl(struct nvmet_req *req)
+On 11/04/2018 01:01, Jingoo Han wrote:
+> On Monday, April 9, 2018 5:41 AM, Gustavo Pimentel wrote:
+>>
+>> Replaces a simple division by 2 to a right shift rotation of 1 bit.
+> 
+> It looks good. However, would you add a simple reason to the commit
+> message?
 
-This will be expanded in a future patch to implement peer-to-peer
-memory DMAs and should be common with all target drivers. The presently
-unused 'sq' argument in the alloc function will be necessary to
-decide whether to use peer-to-peer memory and obtain the correct
-provider to allocate the memory.
+Sure.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Sagi Grimberg <sagi@grimberg.me>
----
- drivers/nvme/target/core.c  | 18 ++++++++++++++++++
- drivers/nvme/target/nvmet.h |  2 ++
- 2 files changed, 20 insertions(+)
+Can be this one?
 
-diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index e95424f172fd..75d44bc3e8d3 100644
---- a/drivers/nvme/target/core.c
-+++ b/drivers/nvme/target/core.c
-@@ -575,6 +575,24 @@ void nvmet_req_execute(struct nvmet_req *req)
- }
- EXPORT_SYMBOL_GPL(nvmet_req_execute);
- 
-+int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq)
-+{
-+	req->sg = sgl_alloc(req->transfer_len, GFP_KERNEL, &req->sg_cnt);
-+	if (!req->sg)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(nvmet_req_alloc_sgl);
-+
-+void nvmet_req_free_sgl(struct nvmet_req *req)
-+{
-+	sgl_free(req->sg);
-+	req->sg = NULL;
-+	req->sg_cnt = 0;
-+}
-+EXPORT_SYMBOL_GPL(nvmet_req_free_sgl);
-+
- static inline bool nvmet_cc_en(u32 cc)
- {
- 	return (cc >> NVME_CC_EN_SHIFT) & 0x1;
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index 15fd84ab21f8..10b162615a5e 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -273,6 +273,8 @@ bool nvmet_req_init(struct nvmet_req *req, struct nvmet_cq *cq,
- void nvmet_req_uninit(struct nvmet_req *req);
- void nvmet_req_execute(struct nvmet_req *req);
- void nvmet_req_complete(struct nvmet_req *req, u16 status);
-+int nvmet_req_alloc_sgl(struct nvmet_req *req, struct nvmet_sq *sq);
-+void nvmet_req_free_sgl(struct nvmet_req *req);
- 
- void nvmet_cq_setup(struct nvmet_ctrl *ctrl, struct nvmet_cq *cq, u16 qid,
- 		u16 size);
--- 
-2.11.0
+Probably any recent and decent compiler does this kind of substitution
+in order to improve code performance. Nevertheless it's a coding good
+practice whenever there is a division / multiplication by multiple of 2
+to replace it by the equivalent operation in this case, the shift
+rotation.
+
+> 
+> Best regards,
+> Jingoo Han
+> 
+>>
+>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>> ---
+>> Change v1->v2:
+>> - Nothing changed, just to follow the patch set version.
+>>
+>>  drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
+>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/pci/dwc/pcie-designware-host.c
+>> b/drivers/pci/dwc/pcie-designware-host.c
+>> index 03e9b82..8e6fed4 100644
+>> --- a/drivers/pci/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/dwc/pcie-designware-host.c
+>> @@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>
+>>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+>> "config");
+>>  	if (cfg_res) {
+>> -		pp->cfg0_size = resource_size(cfg_res) / 2;
+>> -		pp->cfg1_size = resource_size(cfg_res) / 2;
+>> +		pp->cfg0_size = resource_size(cfg_res) >> 1;
+>> +		pp->cfg1_size = resource_size(cfg_res) >> 1;
+>>  		pp->cfg0_base = cfg_res->start;
+>>  		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+>>  	} else if (!pp->va_cfg0_base) {
+>> @@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>  			break;
+>>  		case 0:
+>>  			pp->cfg = win->res;
+>> -			pp->cfg0_size = resource_size(pp->cfg) / 2;
+>> -			pp->cfg1_size = resource_size(pp->cfg) / 2;
+>> +			pp->cfg0_size = resource_size(pp->cfg) >> 1;
+>> +			pp->cfg1_size = resource_size(pp->cfg) >> 1;
+>>  			pp->cfg0_base = pp->cfg->start;
+>>  			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+>>  			break;
+>> --
+>> 2.7.4
+>>
+> 
+> 
+
+Regards,
+Gustavo
