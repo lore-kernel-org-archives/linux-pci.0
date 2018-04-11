@@ -1,72 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:59303 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752941AbeDQS4V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2018 14:56:21 -0400
-Subject: Re: [PATCH v5 07/10] PCI: dwc: Define maximum number of vectors
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Gustavo Pimentel'" <gustavo.pimentel@synopsys.com>,
         <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>, <kishon@ti.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <Joao.Pinto@synopsys.com>, <kishon@ti.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>
+Cc: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
- <a71f296a31b14009e2db9608280102a0fa56b1d8.1523973931.git.gustavo.pimentel@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <0cf5b436-7c7e-93b4-c13d-2490e19b9a41@synopsys.com>
-Date: Tue, 17 Apr 2018 19:56:15 +0100
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com> <5181f7ffbb9d2889974c49d84e72042251adf8b6.1523266508.git.gustavo.pimentel@synopsys.com> <003001d3d128$39f3eaa0$addbbfe0$@gmail.com> <c295bc5b-e67a-290c-3316-56a1cc001538@synopsys.com>
+In-Reply-To: <c295bc5b-e67a-290c-3316-56a1cc001538@synopsys.com>
+Subject: Re: [PATCH v2 8/9] PCI: dwc: Small computation improvement
+Date: Wed, 11 Apr 2018 15:37:46 -0400
+Message-ID: <000001d3d1cc$92706790$b75136b0$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <a71f296a31b14009e2db9608280102a0fa56b1d8.1523973931.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain;
+        charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gustavo,
+On Wednesday, April 11, 2018 3:40 AM, Gustavo Pimentel wrote:
+> 
+> Hi Jingoo,
+> 
+> On 11/04/2018 01:01, Jingoo Han wrote:
+> > On Monday, April 9, 2018 5:41 AM, Gustavo Pimentel wrote:
+> >>
+> >> Replaces a simple division by 2 to a right shift rotation of 1 bit.
+> >
+> > It looks good. However, would you add a simple reason to the commit
+> > message?
+> 
+> Sure.
+> 
+> Can be this one?
+> 
+> Probably any recent and decent compiler does this kind of substitution
+> in order to improve code performance. Nevertheless it's a coding good
+> practice whenever there is a division / multiplication by multiple of 2
+> to replace it by the equivalent operation in this case, the shift
+> rotation.
 
-Às 3:34 PM de 4/17/2018, Gustavo Pimentel escreveu:
-> Adds a callback that defines the maximum number of vectors that can be use
-> by the Root Complex.
-> 
-> Since this is a parameter associated to each SoC IP setting, makes sense to
-> be configurable and easily visible to future modifications.
-> 
-> The designware IP supports a maximum of 256 vectors.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
-> Change v1->v2:
->  - Nothing changed, just to follow the patch set version.
-> Change v2->v3:
->  - Nothing changed, just to follow the patch set version.
-> Changes v3->v4:
->  - Nothing changed, just to follow the patch set version.
-> Changes v4->v5:
->  - Nothing changed, just to follow the patch set version.
-> 
->  drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-> index efc315c..5937fed 100644
-> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> @@ -48,8 +48,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
->  	return 0;
->  }
->  
-> +static void dw_plat_set_num_vectors(struct pcie_port *pp)
-> +{
-> +	pp->num_vectors = MAX_MSI_IRQS;
-> +}
-> +
->  static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
->  	.host_init = dw_plat_pcie_host_init,
-> +	.set_num_vectors = dw_plat_set_num_vectors,
->  };
->  
->  static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
-> 
+Yes, that's what I wanted. The most platforms using 'dwc' are based on
+ARM CPUs. So, the shift rotation can be better.
+Thank you.
 
-Yes, in our reference plat driver we should target all the available IRQs. Thanks!
+Best regards,
+Jingoo Han
 
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+> 
+> >
+> > Best regards,
+> > Jingoo Han
+> >
+> >>
+> >> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> >> ---
+> >> Change v1->v2:
+> >> - Nothing changed, just to follow the patch set version.
+> >>
+> >>  drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
+> >>  1 file changed, 4 insertions(+), 4 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/dwc/pcie-designware-host.c
+> >> b/drivers/pci/dwc/pcie-designware-host.c
+> >> index 03e9b82..8e6fed4 100644
+> >> --- a/drivers/pci/dwc/pcie-designware-host.c
+> >> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> >> @@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >>
+> >>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+> >> "config");
+> >>  	if (cfg_res) {
+> >> -		pp->cfg0_size = resource_size(cfg_res) / 2;
+> >> -		pp->cfg1_size = resource_size(cfg_res) / 2;
+> >> +		pp->cfg0_size = resource_size(cfg_res) >> 1;
+> >> +		pp->cfg1_size = resource_size(cfg_res) >> 1;
+> >>  		pp->cfg0_base = cfg_res->start;
+> >>  		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+> >>  	} else if (!pp->va_cfg0_base) {
+> >> @@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >>  			break;
+> >>  		case 0:
+> >>  			pp->cfg = win->res;
+> >> -			pp->cfg0_size = resource_size(pp->cfg) / 2;
+> >> -			pp->cfg1_size = resource_size(pp->cfg) / 2;
+> >> +			pp->cfg0_size = resource_size(pp->cfg) >> 1;
+> >> +			pp->cfg1_size = resource_size(pp->cfg) >> 1;
+> >>  			pp->cfg0_base = pp->cfg->start;
+> >>  			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+> >>  			break;
+> >> --
+> >> 2.7.4
+> >>
+> >
+> >
+> 
+> Regards,
+> Gustavo
