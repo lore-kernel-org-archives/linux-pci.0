@@ -1,262 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:58928 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752470AbeDOPAP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2018 11:00:15 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 03/12] iommu-helper: mark iommu_is_span_boundary as inline
-Date: Sun, 15 Apr 2018 16:59:38 +0200
-Message-Id: <20180415145947.1248-4-hch@lst.de>
-In-Reply-To: <20180415145947.1248-1-hch@lst.de>
-References: <20180415145947.1248-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=wz13=HA=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
+ Extended Tags
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, sulrich@codeaurora.org, timur@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
+ <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
+ <20180410195008.GE54986@bhelgaas-glaptop.roam.corp.google.com>
+ <1c94361d-7a8d-ad18-12e5-1612326a54db@codeaurora.org>
+ <20180411135151.GB91792@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <ecdad8f4-6996-cfe0-d005-fbc67ba3cd79@codeaurora.org>
+Date: Wed, 11 Apr 2018 10:02:07 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180411135151.GB91792@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-This avoids selecting IOMMU_HELPER just for this function.  And we only
-use it once or twice in normal builds so this often even is a size
-reduction.
++GregKH
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- arch/alpha/Kconfig              |  3 ---
- arch/arm/Kconfig                |  3 ---
- arch/arm64/Kconfig              |  3 ---
- arch/ia64/Kconfig               |  3 ---
- arch/mips/cavium-octeon/Kconfig |  4 ----
- arch/mips/loongson64/Kconfig    |  4 ----
- arch/mips/netlogic/Kconfig      |  3 ---
- arch/powerpc/Kconfig            |  1 -
- arch/unicore32/mm/Kconfig       |  3 ---
- arch/x86/Kconfig                |  2 +-
- drivers/parisc/Kconfig          |  5 -----
- include/linux/iommu-helper.h    | 13 ++++++++++---
- lib/iommu-helper.c              | 12 +-----------
- 13 files changed, 12 insertions(+), 47 deletions(-)
+On 4/11/2018 9:51 AM, Bjorn Helgaas wrote:
+> On Tue, Apr 10, 2018 at 04:18:01PM -0400, Sinan Kaya wrote:
+>> On 4/10/2018 3:50 PM, Bjorn Helgaas wrote:
+>>> On Tue, Apr 10, 2018 at 02:41:44PM -0500, Bjorn Helgaas wrote:
+>>>> On Wed, Apr 04, 2018 at 06:50:09PM -0400, Sinan Kaya wrote:
+>>>>> Per PCIe r3.1, sec 2.2.6.2 and 7.8.4, a Requester may not use 8-bit Tags
+>>>>> unless its Extended Tag Field Enable is set, but all Receivers/Completers
+>>>>> must handle 8-bit Tags correctly regardless of their Extended Tag Field
+>>>>> Enable.
+>>>>>
+>>>>> Some devices do not handle 8-bit Tags as Completers, so add a quirk for
+>>>>> them.  If we find such a device, we disable Extended Tags for the entire
+>>>>> hierarchy to make peer-to-peer DMA possible.
+>>>>>
+>>>>> The Broadcom HT1100/HT2000/HT2100 seems to have issues with handling 8-bit
+>>>>> tags.  Mark it as broken.
+>>>>>
+>>>>> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+>>>>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=196197
+>>>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>>>> Applied to pci/enumeration for v4.18, thanks!
+>>> Actually, this is a really annoying issue and I think the fix is
+>>> appropriate for v4.17, so I moved it to my for-linus branch.
+>>>
+>>
+>> I agree. It causes boot issues on some AMD Opteron machines. It should
+>> probably be back-ported too. 
+> 
+> We started enabling extended tags with 60db3a4d8cc9 ("PCI: Enable PCIe
+> Extended Tags if supported"), which appeared in v4.11.
+> 
+> So I added these stable tags:
+> 
+>   CC: stable@vger.kernel.org      # v4.11: 62ce94a7a5a5 PCI: Mark Broadcom HT2100 Root Port Extended Tags as broken
+>   CC: stable@vger.kernel.org      # v4.11
+> 
+> I'm not sure I'm using the stable request correctly, but my intent is:
+> 
+>   - 62ce94a7a5a5 appeared in v4.14, so cherry-pick 62ce94a7a5a5 to
+>     v4.11 through v4.13
+>   - cherry-pick *this* patch on top of 62ce94a7a5a5 to v4.11 and later
+> 
 
-diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
-index b2022885ced8..3ff735a722af 100644
---- a/arch/alpha/Kconfig
-+++ b/arch/alpha/Kconfig
-@@ -345,9 +345,6 @@ config PCI_DOMAINS
- config PCI_SYSCALL
- 	def_bool PCI
- 
--config IOMMU_HELPER
--	def_bool PCI
--
- config ALPHA_NONAME
- 	bool
- 	depends on ALPHA_BOOK1 || ALPHA_NONAME_CH
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index a7f8e7f4b88f..2f79222c5c02 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1781,9 +1781,6 @@ config SECCOMP
- config SWIOTLB
- 	def_bool y
- 
--config IOMMU_HELPER
--	def_bool SWIOTLB
--
- config PARAVIRT
- 	bool "Enable paravirtualization code"
- 	help
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index eb2cf4938f6d..fbef5d3de83f 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -252,9 +252,6 @@ config SMP
- config SWIOTLB
- 	def_bool y
- 
--config IOMMU_HELPER
--	def_bool SWIOTLB
--
- config KERNEL_MODE_NEON
- 	def_bool y
- 
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index bbe12a038d21..862c5160c09d 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -613,6 +613,3 @@ source "security/Kconfig"
- source "crypto/Kconfig"
- 
- source "lib/Kconfig"
--
--config IOMMU_HELPER
--	def_bool (IA64_HP_ZX1 || IA64_HP_ZX1_SWIOTLB || IA64_GENERIC || SWIOTLB)
-diff --git a/arch/mips/cavium-octeon/Kconfig b/arch/mips/cavium-octeon/Kconfig
-index b5eee1a57d6c..647ed158ac98 100644
---- a/arch/mips/cavium-octeon/Kconfig
-+++ b/arch/mips/cavium-octeon/Kconfig
-@@ -67,16 +67,12 @@ config CAVIUM_OCTEON_LOCK_L2_MEMCPY
- 	help
- 	  Lock the kernel's implementation of memcpy() into L2.
- 
--config IOMMU_HELPER
--	bool
--
- config NEED_SG_DMA_LENGTH
- 	bool
- 
- config SWIOTLB
- 	def_bool y
- 	select DMA_DIRECT_OPS
--	select IOMMU_HELPER
- 	select NEED_SG_DMA_LENGTH
- 
- config OCTEON_ILM
-diff --git a/arch/mips/loongson64/Kconfig b/arch/mips/loongson64/Kconfig
-index 72af0c183969..5efb2e63878e 100644
---- a/arch/mips/loongson64/Kconfig
-+++ b/arch/mips/loongson64/Kconfig
-@@ -130,9 +130,6 @@ config LOONGSON_UART_BASE
- 	default y
- 	depends on EARLY_PRINTK || SERIAL_8250
- 
--config IOMMU_HELPER
--	bool
--
- config NEED_SG_DMA_LENGTH
- 	bool
- 
-@@ -141,7 +138,6 @@ config SWIOTLB
- 	default y
- 	depends on CPU_LOONGSON3
- 	select DMA_DIRECT_OPS
--	select IOMMU_HELPER
- 	select NEED_SG_DMA_LENGTH
- 	select NEED_DMA_MAP_STATE
- 
-diff --git a/arch/mips/netlogic/Kconfig b/arch/mips/netlogic/Kconfig
-index 7fcfc7fe9f14..5c5ee0e05a17 100644
---- a/arch/mips/netlogic/Kconfig
-+++ b/arch/mips/netlogic/Kconfig
-@@ -83,9 +83,6 @@ endif
- config NLM_COMMON
- 	bool
- 
--config IOMMU_HELPER
--	bool
--
- config NEED_SG_DMA_LENGTH
- 	bool
- 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 73ce5dd07642..eb23f2949bf6 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -484,7 +484,6 @@ config IOMMU_HELPER
- config SWIOTLB
- 	bool "SWIOTLB support"
- 	default n
--	select IOMMU_HELPER
- 	---help---
- 	  Support for IO bounce buffering for systems without an IOMMU.
- 	  This allows us to DMA to the full physical address space on
-diff --git a/arch/unicore32/mm/Kconfig b/arch/unicore32/mm/Kconfig
-index e9154a59d561..3f105e00c432 100644
---- a/arch/unicore32/mm/Kconfig
-+++ b/arch/unicore32/mm/Kconfig
-@@ -44,9 +44,6 @@ config SWIOTLB
- 	def_bool y
- 	select DMA_DIRECT_OPS
- 
--config IOMMU_HELPER
--	def_bool SWIOTLB
--
- config NEED_SG_DMA_LENGTH
- 	def_bool SWIOTLB
- 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index d234cca296db..336b1378ee62 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -930,7 +930,7 @@ config SWIOTLB
- 
- config IOMMU_HELPER
- 	def_bool y
--	depends on CALGARY_IOMMU || GART_IOMMU || SWIOTLB || AMD_IOMMU
-+	depends on CALGARY_IOMMU || GART_IOMMU
- 
- config MAXSMP
- 	bool "Enable Maximum number of SMP Processors and NUMA Nodes"
-diff --git a/drivers/parisc/Kconfig b/drivers/parisc/Kconfig
-index 3a102a84d637..5a48b5606110 100644
---- a/drivers/parisc/Kconfig
-+++ b/drivers/parisc/Kconfig
-@@ -103,11 +103,6 @@ config IOMMU_SBA
- 	depends on PCI_LBA
- 	default PCI_LBA
- 
--config IOMMU_HELPER
--	bool
--	depends on IOMMU_SBA || IOMMU_CCIO
--	default y
--
- source "drivers/pcmcia/Kconfig"
- 
- endmenu
-diff --git a/include/linux/iommu-helper.h b/include/linux/iommu-helper.h
-index cb9a9248c8c0..70d01edcbf8b 100644
---- a/include/linux/iommu-helper.h
-+++ b/include/linux/iommu-helper.h
-@@ -2,6 +2,7 @@
- #ifndef _LINUX_IOMMU_HELPER_H
- #define _LINUX_IOMMU_HELPER_H
- 
-+#include <linux/bug.h>
- #include <linux/kernel.h>
- 
- static inline unsigned long iommu_device_max_index(unsigned long size,
-@@ -14,9 +15,15 @@ static inline unsigned long iommu_device_max_index(unsigned long size,
- 		return size;
- }
- 
--extern int iommu_is_span_boundary(unsigned int index, unsigned int nr,
--				  unsigned long shift,
--				  unsigned long boundary_size);
-+static inline int iommu_is_span_boundary(unsigned int index, unsigned int nr,
-+		unsigned long shift, unsigned long boundary_size)
-+{
-+	BUG_ON(!is_power_of_2(boundary_size));
-+
-+	shift = (shift + index) & (boundary_size - 1);
-+	return shift + nr > boundary_size;
-+}
-+
- extern unsigned long iommu_area_alloc(unsigned long *map, unsigned long size,
- 				      unsigned long start, unsigned int nr,
- 				      unsigned long shift,
-diff --git a/lib/iommu-helper.c b/lib/iommu-helper.c
-index ded1703e7e64..92a9f243c0e2 100644
---- a/lib/iommu-helper.c
-+++ b/lib/iommu-helper.c
-@@ -4,17 +4,7 @@
-  */
- 
- #include <linux/bitmap.h>
--#include <linux/bug.h>
--
--int iommu_is_span_boundary(unsigned int index, unsigned int nr,
--			   unsigned long shift,
--			   unsigned long boundary_size)
--{
--	BUG_ON(!is_power_of_2(boundary_size));
--
--	shift = (shift + index) & (boundary_size - 1);
--	return shift + nr > boundary_size;
--}
-+#include <linux/iommu-helper.h>
- 
- unsigned long iommu_area_alloc(unsigned long *map, unsigned long size,
- 			       unsigned long start, unsigned int nr,
+
 -- 
-2.17.0
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
