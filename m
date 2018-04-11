@@ -1,52 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:54524 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755232AbeDYPtl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 11:49:41 -0400
-Subject: Re: [PATCH 1/2] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-References: <20180318105253.30532-1-marek.vasut+renesas@gmail.com>
- <20180425141329.GA20923@e107981-ln.cambridge.arm.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <2b9d300b-09d7-d2ad-a22d-4f532276ae4c@gmail.com>
-Date: Wed, 25 Apr 2018 17:49:37 +0200
+Received: from mail.kernel.org ([198.145.29.99]:57250 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754892AbeDKVRX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Apr 2018 17:17:23 -0400
+Date: Wed, 11 Apr 2018 16:17:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+        sparclinux@vger.kernel.org
+Subject: Re: sparc64 PCI BAR allocation is still problematic
+Message-ID: <20180411211722.GB145698@bhelgaas-glaptop.roam.corp.google.com>
+References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
+ <20180410173437.GB24642@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
+ <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
+ <20180411133334.GA91792@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.LRH.2.21.1804111738260.18432@math.ut.ee>
+ <20180411200143.GA105104@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.LRH.2.21.1804112323170.25495@math.ut.ee>
 MIME-Version: 1.0
-In-Reply-To: <20180425141329.GA20923@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.21.1804112323170.25495@math.ut.ee>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/25/2018 04:13 PM, Lorenzo Pieralisi wrote:
-> Hi Marek,
-> 
-> On Sun, Mar 18, 2018 at 11:52:52AM +0100, Marek Vasut wrote:
->> The data link active signal usually takes ~20 uSec to be asserted,
->> poll the bit more often to avoid useless delays in this function.
->>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->> Cc: Simon Horman <horms+renesas@verge.net.au>
->> Cc: Wolfram Sang <wsa@the-dreams.de>
->> Cc: linux-renesas-soc@vger.kernel.org
->> ---
->>  drivers/pci/host/pcie-rcar.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> I assume this patch is still a valid change, I noticed you split this
-> series but I think this patch was not updated so I should take it as-is.
-> 
-> Please let me know.
+On Wed, Apr 11, 2018 at 11:25:06PM +0300, Meelis Roos wrote:
+> > Thanks, this is really interesting.  Would you mind replacing the test
+> > patch with the following (this applies directly on the upstream
+> > kernel, e.g., fd3b36d27566)?
+> > 
+> > Sorry for the back and forth, but there's a lot going on here that I
+> > don't understand.  
+> > 
+> > I'd like to see the complete dmesg log, /proc/iomem, and "lspci -vv".
 
-The discussion from a month ago would indicate that I need to resubmit it.
+Thanks, this helps a lot.  Things I learned or noticed:
 
--- 
-Best regards,
-Marek Vasut
+1) Sparc exposes raw BAR values instead of CPU resource addresses
+   because it implements pci_resource_to_user().  This means that on
+   sparc, /sys/devices/pci*/resource and lspci show the raw BAR
+   values, unlike most arches.
+
+2) We select the ATI Rage XL device as the default VGA device.  The
+   messages maybe could be improved because there's no bridge in the
+   path, and the legacy resources are "not available" because the
+   device's PCI_COMMAND_MEMORY and PCI_COMMAND_IO bits are disabled at
+   boot (and probably enabled by the fb driver):
+
+    pci 0000:00:13.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
+    pci 0000:00:13.0: vgaarb: bridge control possible
+    pci 0000:00:13.0: vgaarb: setting as boot device (VGA legacy resources not available)
+
+3) With this patch, we do see a conflict between the VGA device and
+   the ISA bridge, as I expected:
+
+     pci_bus 0000:00: root bus resource [mem 0x1ff00000000-0x1ffffffffff] (bus address [0x00000000-0xffffffff])
+     pci 0000:00:07.0: reg 0x14: [mem 0x1ff00000000-0x1ff000fffff]
+     pci 0000:00:13.0: can't claim VGA legacy [mem 0x1ff000a0000-0x1ff000bffff]: address conflict with 0000:00:07.0 [mem 0x1ff00000000-0x1ff000fffff]
+
+I don't know how to resolve this conflict nicely.  Both the ISA bridge
+at 00:07.0 and the VGA device at 00:13.0 can claim accesses to the
+framebuffer at PCI address 0xa0000.
+
+I don't know what (if anything) is behind the ISA bridge.  Maybe we
+could disable it by clearing its PCI_COMMAND_MEMORY and PCI_COMMAND_IO
+bits?
+
+My plan for now is to post the "Request legacy VGA framebuffer only
+for VGA devices" patch and to write a small vgaarb patch to clarify
+the messages.  That will still leave us with the "can't claim VGA
+legacy" message unless we can figure out something to do there.
+
+Bjorn
