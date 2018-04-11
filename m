@@ -1,128 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53680 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750858AbeDTQO4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Apr 2018 12:14:56 -0400
-Date: Fri, 20 Apr 2018 19:14:51 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: "Daly, Dan" <dan.daly@intel.com>,
-        "Rustad, Mark D" <mark.d.rustad@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
-        Don Dutile <ddutile@redhat.com>,
-        Maximilian Heyne <mheyne@amazon.de>,
-        "Wang, Liang-min" <liang-min.wang@intel.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
-Subject: Re: [virtio-dev] [pci PATCH v7 2/5] virtio_pci: Add support for
- unmanaged SR-IOV on virtio_pci devices
-Message-ID: <20180420191055-mutt-send-email-mst@kernel.org>
-References: <20180316183042-mutt-send-email-mst@kernel.org>
- <CAKgT0UfgZ2gAdiAbCe4MTOr3o9cqq1q-mykCQsw68p2F-QEC8g@mail.gmail.com>
- <20180403161151-mutt-send-email-mst@kernel.org>
- <CAKgT0UfeSmG=xsd6sTkg4cOMnZ0QiqtCRDt4PynpF3d6nvvFCA@mail.gmail.com>
- <20180403212503-mutt-send-email-mst@kernel.org>
- <CAKgT0Ude79FYrK4qA0OKRJ1NackyqPi-hZ8Zh3WSdLDFxoOosQ@mail.gmail.com>
- <20180420030640-mutt-send-email-mst@kernel.org>
- <CAKgT0Ucpw9D1u8MYoEX5KOij6sxs-5O9gPFTmOVq=Dgt=HUJ=g@mail.gmail.com>
- <20180420180839-mutt-send-email-mst@kernel.org>
- <CAKgT0UeWzK=_8m9hhWfaKyYB02WXDsuCkgowS4hgQ9GkLMcAMA@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>
+CC: Stephen Hemminger <sthemmin@microsoft.com>,
+        Jake Oshins <jakeo@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v6] PCI: hv: Make sure the bus domain is really unique
+Date: Wed, 11 Apr 2018 00:36:25 +0000
+Message-ID: <9496B0D1-CC19-42F4-BE50-DEA4EFC8D615@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKgT0UeWzK=_8m9hhWfaKyYB02WXDsuCkgowS4hgQ9GkLMcAMA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 20, 2018 at 09:08:51AM -0700, Alexander Duyck wrote:
-> On Fri, Apr 20, 2018 at 8:28 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
-> > On Fri, Apr 20, 2018 at 07:56:14AM -0700, Alexander Duyck wrote:
-> >> > I think for virtio it should include the feature bit, yes.
-> >> > Adding feature bit is very easy - post a patch to the virtio TC mailing
-> >> > list, wait about a week to give people time to respond (two weeks if it
-> >> > is around holidays and such).
-> >>
-> >> The problem is we are talking about hardware/FPGA, not software.
-> >> Adding a feature bit means going back and updating RTL. The software
-> >> side of things is easy, re-validating things after a hardware/FPGA
-> >> change not so much.
-> >>
-> >> If this is a hard requirement I may just drop the virtio patch, push
-> >> what I have, and leave it to Mark/Dan to deal with the necessary RTL
-> >> and code changes needed to support Virtio as I don't expect the
-> >> turnaround to be as easy as just a patch.
-> >>
-> >> Thanks.
-> >>
-> >> - Alex
-> >
-> > Let's focus on virtio in this thread.
-> 
-> That is kind of what I was thinking, and why I was thinking it might
-> make sense to make the virtio specific changes a separate patch set. I
-> could get the PCI bits taken care of in the meantime since they effect
-> genetic PCI, NVMe, and the Amazon ENA interfaces.
-> 
-> > Involving the virtio TC in host/guest interface changes is a
-> > hard requirement. It's just too easy to create conflicts otherwise.
-> >
-> > So you guys should have just sent the proposal to the TC when you
-> > were doing your RTL and you would have been in the clear.
-> 
-> Agreed. I believe I brought this up when I was originally asked to
-> look into the coding for this.
-> 
-> > Generally adding a feature bit with any extension is a good idea:
-> > this way you merely reserve a feature bit for your feature through
-> > the TC and are more or less sure of forward and backward compatibility.
-> > It's incredibly easy.
-> 
-> Agreed, though in this case I am not sure it makes sense since this
-> isn't necessarily something that is a Virtio feature itself. It is
-> just a side effect of the fact that they are adding SR-IOV support to
-> a device that happens to emulate Virtio NET and apparently their PF
-> has to be identical to the VF other than the PCIe extended config
-> space.
-
-I got that. My point is not everyone implementing SR-IOV will
-want to do it like this. Others might want to have VFs
-be different from PFs somehow. Feature bits ensure forward
-not just backward compatibility.
-
-
-> > But maybe it's not needed here.  I am not making the decisions myself.
-> > Not too late: post to the TC list and let's see what the response is.
-> > Without a feature bit you are making a change affecting all future
-> > implementations without exception so the bar is a bit higher: you need
-> > to actually post a spec text proposal not just a patch showing how to
-> > use the feature, and TC needs to vote on it. Voting takes a week,
-> > review a week or two depending on change complexity.
-> >
-> > Hope this helps,
-> >
-> > --
-> > MST
-> 
-> I think I will leave this for Dan and Mark to handle since I am still
-> not all that familiar with the hardware in use here. Once a decision
-> has been made him and Mark could look at pushing either the one line
-> patch or something more complex involving a feature flag.
-> 
-> Thanks.
-> 
-> Alex
-
-As long as the TC is involved.
-
-I know it's a bit of a strange thing to block it at the driver level,
-the issue is with the device, but it's literally the only handle I have
-to prevent people from doing out of spec hacks then pushing it all on us
-to maintain.
-
--- 
-MST
+V2hlbiBMaW51eCBydW5zIGFzIGEgZ3Vlc3QgVk0gaW4gSHlwZXItViBhbmQgSHlwZXItViBhZGRz
+IHRoZSB2aXJ0dWFsDQpQQ0kgYnVzIHRvIHRoZSBndWVzdCwgSHlwZXItViBhbHdheXMgcHJvdmlk
+ZXMgdW5pcXVlIFBDSSBkb21haW4uDQoNCmNvbW1pdCA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBV
+c2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQpvdmVycm9kZSB1bmlxdWUg
+ZG9tYWluIHdpdGggdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGZpcnN0IGRldmljZSBhZGRlZA0K
+dG8gdGhlIHZpcnR1YWwgUENJIGJ1cy4gVGhlIHJlYXNvbiBmb3IgdGhhdCBwYXRjaCBpcyB0byBo
+YXZlIGEgY29uc2lzdGVudA0KYW5kIHNob3J0IG5hbWUgZm9yIHRoZSBkZXZpY2UuIEJ1dCBjb21t
+aXQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlDQpkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQ
+Q0kgZG9tYWluIikgd2lsbCBub3QgZ3VhcmFudGVlIHVuaXF1ZSBkb21haW4gaWQuDQpGb3IgZXhh
+bXBsZSwgaWYgdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGRldmljZSBpcyAwIGFuZCB0aGVyZSBl
+eGlzdHMgYQ0KUENJIGJ1cyB3aXRoIGRvbWFpbiAwIGFscmVhZHksIHRoaXMgd2lsbCBjYXVzZSB0
+aGUgUENJIGJ1cyByZWdpc3RyYXRpb24NCndpdGgga2VybmVsIGZhaWxzLg0KDQpjb21taXQgNGE5
+YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KZG9t
+YWluIikgbmVlZCB0byBiZSByZXZlcnRlZC4NCg0KUmV2ZXJ0IGNvbW1pdCA0YTliMDkzM2JkZmMg
+KCJQQ0k6IGh2OiBVc2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJDQpkb21haW4iKSBzbyB3
+ZSBjYW4gcmVsaWFibHkgc3VwcG9ydCBtdWx0aXBsZSBkZXZpY2VzIGJlaW5nIGFzc2lnbmVkIHRv
+DQphIGd1ZXN0Lg0KDQpGaXhlczogNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmljZSBz
+ZXJpYWwgbnVtYmVyIGFzIFBDSSBkb21haW4iKQ0KU2lnbmVkLW9mZi1ieTogU3JpZGhhciBQaXRj
+aGFpIDxzcmlkaGFyLnBpdGNoYWlAbWljcm9zb2Z0LmNvbT4NCkNjOiBzdGFibGVAdmdlci5rZXJu
+ZWwub3JnDQoNCi0tLQ0KQ2hhbmdlcyBpbiB2NjoNCiogZml4IHRoZSBjb21taXQgY29tbWVudC4g
+W0xvcmVuem8gUGllcmFsaXNpLCBCam9ybiBIZWxnYWFzXQ0KLS0tDQogZHJpdmVycy9wY2kvaG9z
+dC9wY2ktaHlwZXJ2LmMgfCAxMSAtLS0tLS0tLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCAxMSBkZWxl
+dGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jIGIv
+ZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCmluZGV4IDJmYWYzOGVhYjc4NS4uYWM2N2U1
+NmU0NTFhIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCisrKyBi
+L2RyaXZlcnMvcGNpL2hvc3QvcGNpLWh5cGVydi5jDQpAQCAtMTUxOCwxNyArMTUxOCw2IEBAIHN0
+YXRpYyBzdHJ1Y3QgaHZfcGNpX2RldiAqbmV3X3BjaWNoaWxkX2RldmljZShzdHJ1Y3QgaHZfcGNp
+YnVzX2RldmljZSAqaGJ1cywNCiAJZ2V0X3BjaWNoaWxkKGhwZGV2LCBodl9wY2lkZXZfcmVmX2No
+aWxkbGlzdCk7DQogCXNwaW5fbG9ja19pcnFzYXZlKCZoYnVzLT5kZXZpY2VfbGlzdF9sb2NrLCBm
+bGFncyk7DQogDQotCS8qDQotCSAqIFdoZW4gYSBkZXZpY2UgaXMgYmVpbmcgYWRkZWQgdG8gdGhl
+IGJ1cywgd2Ugc2V0IHRoZSBQQ0kgZG9tYWluDQotCSAqIG51bWJlciB0byBiZSB0aGUgZGV2aWNl
+IHNlcmlhbCBudW1iZXIsIHdoaWNoIGlzIG5vbi16ZXJvIGFuZA0KLQkgKiB1bmlxdWUgb24gdGhl
+IHNhbWUgVk0uICBUaGUgc2VyaWFsIG51bWJlcnMgc3RhcnQgd2l0aCAxLCBhbmQNCi0JICogaW5j
+cmVhc2UgYnkgMSBmb3IgZWFjaCBkZXZpY2UuICBTbyBkZXZpY2UgbmFtZXMgaW5jbHVkaW5nIHRo
+aXMNCi0JICogY2FuIGhhdmUgc2hvcnRlciBuYW1lcyB0aGFuIGJhc2VkIG9uIHRoZSBidXMgaW5z
+dGFuY2UgVVVJRC4NCi0JICogT25seSB0aGUgZmlyc3QgZGV2aWNlIHNlcmlhbCBudW1iZXIgaXMg
+dXNlZCBmb3IgZG9tYWluLCBzbyB0aGUNCi0JICogZG9tYWluIG51bWJlciB3aWxsIG5vdCBjaGFu
+Z2UgYWZ0ZXIgdGhlIGZpcnN0IGRldmljZSBpcyBhZGRlZC4NCi0JICovDQotCWlmIChsaXN0X2Vt
+cHR5KCZoYnVzLT5jaGlsZHJlbikpDQotCQloYnVzLT5zeXNkYXRhLmRvbWFpbiA9IGRlc2MtPnNl
+cjsNCiAJbGlzdF9hZGRfdGFpbCgmaHBkZXYtPmxpc3RfZW50cnksICZoYnVzLT5jaGlsZHJlbik7
+DQogCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJmhidXMtPmRldmljZV9saXN0X2xvY2ssIGZsYWdz
+KTsNCiAJcmV0dXJuIGhwZGV2Ow0KLS0gDQoyLjE0LjENCg0K
