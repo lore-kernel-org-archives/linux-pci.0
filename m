@@ -1,65 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52652 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751488AbeDYFQp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:16:45 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: sstabellini@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 11/13] mips,unicore32: swiotlb doesn't need sg->dma_length
-Date: Wed, 25 Apr 2018 07:15:37 +0200
-Message-Id: <20180425051539.1989-12-hch@lst.de>
-In-Reply-To: <20180425051539.1989-1-hch@lst.de>
-References: <20180425051539.1989-1-hch@lst.de>
+Received: from mail.kernel.org ([198.145.29.99]:41684 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751409AbeDKNdh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Apr 2018 09:33:37 -0400
+Date: Wed, 11 Apr 2018 08:33:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+        sparclinux@vger.kernel.org
+Subject: Re: sparc64 PCI BAR allocation is still problematic
+Message-ID: <20180411133334.GA91792@bhelgaas-glaptop.roam.corp.google.com>
+References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
+ <20180410173437.GB24642@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
+ <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Only mips and unicore32 select CONFIG_NEED_SG_DMA_LENGTH when building
-swiotlb.  swiotlb itself never merges segements and doesn't accesses the
-dma_length field directly, so drop the dependency.
+On Wed, Apr 11, 2018 at 10:59:19AM +0300, Meelis Roos wrote:
+> > Oops, sorry, I can't easily compile test it.  Here's an updated patch:
+> > 
+> > commit a9ded309cbf3f57e9979848fd0aa0ffacdf11f1a
+> > Author: Bjorn Helgaas <bhelgaas@google.com>
+> > Date:   Tue Apr 10 08:47:34 2018 -0500
+> 
+> Thanks, this patch compiles and works - Video RAM related BAR allocation 
+> errors are gone.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- arch/mips/cavium-octeon/Kconfig | 1 -
- arch/mips/loongson64/Kconfig    | 1 -
- arch/unicore32/mm/Kconfig       | 1 -
- 3 files changed, 3 deletions(-)
+Great, thanks!  I didn't mean to take up so much of your time testing
+*all* of your systems :)
 
-diff --git a/arch/mips/cavium-octeon/Kconfig b/arch/mips/cavium-octeon/Kconfig
-index 5d73041547a7..eb5faeed4f66 100644
---- a/arch/mips/cavium-octeon/Kconfig
-+++ b/arch/mips/cavium-octeon/Kconfig
-@@ -70,7 +70,6 @@ config CAVIUM_OCTEON_LOCK_L2_MEMCPY
- config SWIOTLB
- 	def_bool y
- 	select DMA_DIRECT_OPS
--	select NEED_SG_DMA_LENGTH
- 
- config OCTEON_ILM
- 	tristate "Module to measure interrupt latency using Octeon CIU Timer"
-diff --git a/arch/mips/loongson64/Kconfig b/arch/mips/loongson64/Kconfig
-index 641a1477031e..2a4fb91adbb6 100644
---- a/arch/mips/loongson64/Kconfig
-+++ b/arch/mips/loongson64/Kconfig
-@@ -135,7 +135,6 @@ config SWIOTLB
- 	default y
- 	depends on CPU_LOONGSON3
- 	select DMA_DIRECT_OPS
--	select NEED_SG_DMA_LENGTH
- 	select NEED_DMA_MAP_STATE
- 
- config PHYS48_TO_HT40
-diff --git a/arch/unicore32/mm/Kconfig b/arch/unicore32/mm/Kconfig
-index 1d9fed0ada71..45b7f769375e 100644
---- a/arch/unicore32/mm/Kconfig
-+++ b/arch/unicore32/mm/Kconfig
-@@ -43,4 +43,3 @@ config CPU_TLB_SINGLE_ENTRY_DISABLE
- config SWIOTLB
- 	def_bool y
- 	select DMA_DIRECT_OPS
--	select NEED_SG_DMA_LENGTH
--- 
-2.17.0
+> Hera are the /proc/iomem's but unfortunately the physical 
+> addresses have been censored by security:
+
+If you look at /proc/iomem as root, you should see the actual
+addresses.
+
+If you have any systems with VGA, it would be useful to test one of
+them.  
+
+I took a quick look through your lspci logs, and it *looks* like the
+Blade 100 has a VGA at 00:13.0, but I don't see the "Video RAM area"
+entry in /proc/iomem that I expected:
+
+> Blade 100: Video RAM related BAR error is gnone, this is still here:
+> [    6.131499] pci 0000:00:07.0: can't claim BAR 0 [io  0x1fe02000000-0x1fe0200ffff]: address conflict with 0000:00:03.0 [io  0x1fe02000600-0x1fe0200061f]
+> 
+> 00000000-00000000 : System RAM
+>   00000000-00000000 : Kernel code
+>   00000000-00000000 : Kernel data
+>   00000000-00000000 : Kernel bss
+> 00000000-00000000 : System RAM
+> 00000000-00000000 : System RAM
+> 00000000-00000000 : /pci@1f,0
+>   00000000-00000000 : 0000:00:07.0
+>   00000000-00000000 : 0000:00:0c.1
+>     00000000-00000000 : sungem
+>   00000000-00000000 : 0000:00:0c.2
+>   00000000-00000000 : 0000:00:0c.2
+>   00000000-00000000 : 0000:00:08.0
+>   00000000-00000000 : 0000:00:13.0
+>   00000000-00000000 : 0000:00:13.0
+>   00000000-00000000 : 0000:00:0c.1
+>   00000000-00000000 : 0000:00:0c.2
+>   00000000-00000000 : 0000:00:0c.3
+>   00000000-00000000 : 0000:00:0c.3
+>     00000000-00000000 : ohci_hcd
+>   00000000-00000000 : PCI Bus 0000:01
+>     00000000-00000000 : 0000:01:00.0
+>       00000000-00000000 : sym53c8xx
+>     00000000-00000000 : 0000:01:02.0
+>     00000000-00000000 : 0000:01:02.0
+>   00000000-00000000 : 0000:00:13.0
+>     00000000-00000000 : atyfb
+>   00000000-00000000 : IOMMU
+>   00000000-00000000 : eeprom
