@@ -1,59 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58280 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753011AbeDSUQt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Apr 2018 16:16:49 -0400
-Subject: [PATCH 4/4] lspci: Use spec name for RCRB ((Root Complex Register
- Block)
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org
-Date: Thu, 19 Apr 2018 15:16:47 -0500
-Message-ID: <152416900767.71364.196905236944429194.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=1PPZ=HA=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=1PPZ=HA=linuxfoundation.org=gregkh@kernel.org>
+Date: Wed, 11 Apr 2018 16:19:22 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	sulrich@codeaurora.org, timur@codeaurora.org,
+	linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	open list <linux-kernel@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
+ Extended Tags
+Message-ID: <20180411141922.GA13832@kroah.com>
+References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
+ <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
+ <20180410195008.GE54986@bhelgaas-glaptop.roam.corp.google.com>
+ <1c94361d-7a8d-ad18-12e5-1612326a54db@codeaurora.org>
+ <20180411135151.GB91792@bhelgaas-glaptop.roam.corp.google.com>
+ <ecdad8f4-6996-cfe0-d005-fbc67ba3cd79@codeaurora.org>
+ <20180411140849.GA12557@kroah.com>
+ <1290e3d3-e7f0-a4f5-925d-2b7c2cb42b93@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1290e3d3-e7f0-a4f5-925d-2b7c2cb42b93@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, Apr 11, 2018 at 10:13:11AM -0400, Sinan Kaya wrote:
+> On 4/11/2018 10:08 AM, Greg Kroah-Hartman wrote:
+> >>> So I added these stable tags:
+> >>>
+> >>>   CC: stable@vger.kernel.org      # v4.11: 62ce94a7a5a5 PCI: Mark Broadcom HT2100 Root Port Extended Tags as broken
+> >>>   CC: stable@vger.kernel.org      # v4.11
+> >>>
+> >>> I'm not sure I'm using the stable request correctly, but my intent is:
+> 
+> Asking if we placed the tags correctly. Sounds like we did.
+> 
+> >>>
+> >>>   - 62ce94a7a5a5 appeared in v4.14, so cherry-pick 62ce94a7a5a5 to
+> >>>     v4.11 through v4.13
+> >>>   - cherry-pick *this* patch on top of 62ce94a7a5a5 to v4.11 and later
+> > Bjorn is correct here, why are you dragging me into this?
+> 
+> Thanks
 
-Extended Capability ID 0x000a is the RCRB (Root Complex Register Block)
-capability.  Change the #define and the capability label to match the
-terminology used in the specs.
+Next time explicitly ask the question, don't expect someone to rummage
+through an email to determine what you are thinking.  You are being lazy
+by just adding someone else to an email thread like this, be considerate
+and take the time to explain yourself when asking someone else to do
+work.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- lib/header.h |    2 +-
- ls-ecaps.c   |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/lib/header.h b/lib/header.h
-index 0a8a548..d785473 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -222,7 +222,7 @@
- #define PCI_EXT_CAP_ID_RCECOLL	0x07	/* Root Complex Event Collector */
- #define PCI_EXT_CAP_ID_MFVC	0x08	/* Multi-Function Virtual Channel */
- #define PCI_EXT_CAP_ID_VC2	0x09	/* Virtual Channel (2nd ID) */
--#define PCI_EXT_CAP_ID_RBCB	0x0a	/* Root Bridge Control Block */
-+#define PCI_EXT_CAP_ID_RCRB	0x0a	/* Root Complex Register Block */
- #define PCI_EXT_CAP_ID_VNDR	0x0b	/* Vendor specific */
- #define PCI_EXT_CAP_ID_ACS	0x0d	/* Access Controls */
- #define PCI_EXT_CAP_ID_ARI	0x0e	/* Alternative Routing-ID Interpretation */
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index a6ae751..5505948 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -768,8 +768,8 @@ show_ext_caps(struct device *d, int type)
- 	  case PCI_EXT_CAP_ID_MFVC:
- 	    printf("Multi-Function Virtual Channel <?>\n");
- 	    break;
--	  case PCI_EXT_CAP_ID_RBCB:
--	    printf("Root Bridge Control Block <?>\n");
-+	  case PCI_EXT_CAP_ID_RCRB:
-+	    printf("Root Complex Register Block <?>\n");
- 	    break;
- 	  case PCI_EXT_CAP_ID_VNDR:
- 	    cap_evendor(d, where);
+greg k-h
