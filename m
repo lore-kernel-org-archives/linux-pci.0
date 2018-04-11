@@ -1,14 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 20 Apr 2018 13:42:14 -0500
+Date: Wed, 11 Apr 2018 08:51:51 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 09/12] PCI: remove CONFIG_PCI_BUS_ADDR_T_64BIT
-Message-ID: <20180420184214.GT28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180415145947.1248-1-hch@lst.de>
- <20180415145947.1248-10-hch@lst.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
+ Extended Tags
+Message-ID: <20180411135151.GB91792@bhelgaas-glaptop.roam.corp.google.com>
+References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
+ <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
+ <20180410195008.GE54986@bhelgaas-glaptop.roam.corp.google.com>
+ <1c94361d-7a8d-ad18-12e5-1612326a54db@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20180415145947.1248-10-hch@lst.de>
+In-Reply-To: <1c94361d-7a8d-ad18-12e5-1612326a54db@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,86 +19,54 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-pci@vger.kernel.org,
- x86@kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org,
- iommu@lists.linux-foundation.org, sparclinux@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Cc: sulrich@codeaurora.org, linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 15, 2018 at 04:59:44PM +0200, Christoph Hellwig wrote:
-> This symbol is now always identical to CONFIG_ARCH_DMA_ADDR_T_64BIT, so
-> remove it.
+On Tue, Apr 10, 2018 at 04:18:01PM -0400, Sinan Kaya wrote:
+> On 4/10/2018 3:50 PM, Bjorn Helgaas wrote:
+> > On Tue, Apr 10, 2018 at 02:41:44PM -0500, Bjorn Helgaas wrote:
+> >> On Wed, Apr 04, 2018 at 06:50:09PM -0400, Sinan Kaya wrote:
+> >>> Per PCIe r3.1, sec 2.2.6.2 and 7.8.4, a Requester may not use 8-bit Tags
+> >>> unless its Extended Tag Field Enable is set, but all Receivers/Completers
+> >>> must handle 8-bit Tags correctly regardless of their Extended Tag Field
+> >>> Enable.
+> >>>
+> >>> Some devices do not handle 8-bit Tags as Completers, so add a quirk for
+> >>> them.  If we find such a device, we disable Extended Tags for the entire
+> >>> hierarchy to make peer-to-peer DMA possible.
+> >>>
+> >>> The Broadcom HT1100/HT2000/HT2100 seems to have issues with handling 8-bit
+> >>> tags.  Mark it as broken.
+> >>>
+> >>> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+> >>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=196197
+> >>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> >> Applied to pci/enumeration for v4.18, thanks!
+> > Actually, this is a really annoying issue and I think the fix is
+> > appropriate for v4.17, so I moved it to my for-linus branch.
+> > 
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I agree. It causes boot issues on some AMD Opteron machines. It should
+> probably be back-ported too. 
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+We started enabling extended tags with 60db3a4d8cc9 ("PCI: Enable PCIe
+Extended Tags if supported"), which appeared in v4.11.
 
-Please merge this along with the rest of the series; let me know if you
-need anything more from me.
+So I added these stable tags:
 
-> ---
->  drivers/pci/Kconfig | 4 ----
->  drivers/pci/bus.c   | 4 ++--
->  include/linux/pci.h | 2 +-
->  3 files changed, 3 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 34b56a8f8480..29a487f31dae 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -5,10 +5,6 @@
->  
->  source "drivers/pci/pcie/Kconfig"
->  
-> -config PCI_BUS_ADDR_T_64BIT
-> -	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
-> -	depends on PCI
-> -
->  config PCI_MSI
->  	bool "Message Signaled Interrupts (MSI and MSI-X)"
->  	depends on PCI
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index bc2ded4c451f..35b7fc87eac5 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -120,7 +120,7 @@ int devm_request_pci_bus_resources(struct device *dev,
->  EXPORT_SYMBOL_GPL(devm_request_pci_bus_resources);
->  
->  static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
-> -#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
->  static struct pci_bus_region pci_64_bit = {0,
->  				(pci_bus_addr_t) 0xffffffffffffffffULL};
->  static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
-> @@ -230,7 +230,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
->  					  resource_size_t),
->  		void *alignf_data)
->  {
-> -#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
->  	int rc;
->  
->  	if (res->flags & IORESOURCE_MEM_64) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 73178a2fcee0..55371cb827ad 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -670,7 +670,7 @@ int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
->  int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
->  		  int reg, int len, u32 val);
->  
-> -#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
->  typedef u64 pci_bus_addr_t;
->  #else
->  typedef u32 pci_bus_addr_t;
-> -- 
-> 2.17.0
-> 
+  CC: stable@vger.kernel.org      # v4.11: 62ce94a7a5a5 PCI: Mark Broadcom HT2100 Root Port Extended Tags as broken
+  CC: stable@vger.kernel.org      # v4.11
+
+I'm not sure I'm using the stable request correctly, but my intent is:
+
+  - 62ce94a7a5a5 appeared in v4.14, so cherry-pick 62ce94a7a5a5 to
+    v4.11 through v4.13
+  - cherry-pick *this* patch on top of 62ce94a7a5a5 to v4.11 and later
 
 _______________________________________________
 linux-arm-kernel mailing list
