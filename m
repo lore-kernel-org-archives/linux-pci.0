@@ -1,87 +1,224 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
- robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
- gregkh@linuxfoundation.org
-Subject: [PATCH v4 0/6] Support for fsl-mc bus and its devices in SMMU
-Date: Mon, 30 Apr 2018 11:57:15 +0530
-Message-Id: <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <SRS0=OWiE=HA=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=OWiE=HA=redhat.com=alex.williamson@kernel.org>
+Date: Wed, 11 Apr 2018 11:38:03 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Sinan Kaya
+ <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH 1/2] PCI: Workaround hardware bugs in ACS functionality
+ by implementing it as a quirk
+Message-ID: <20180411113803.38e307dd@w520.home>
+In-Reply-To: <e6a55432-8c56-9c99-ce99-4ae80a0ed3ba@oracle.com>
+References: <e6a55432-8c56-9c99-ce99-4ae80a0ed3ba@oracle.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
- linux-pci@vger.kernel.org, bhelgaas@google.com, laurentiu.tudor@nxp.com,
- frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
- m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset defines IOMMU DT binding for fsl-mc bus and adds
-support in SMMU for fsl-mc bus.
+On Wed, 11 Apr 2018 11:58:43 -0400
+James Puthukattukaran <james.puthukattukaran@oracle.com> wrote:
 
-This patch series is dependent on patset:
-https://patchwork.kernel.org/patch/10317337/
+> There are bugs in ACS implementations by certain switch vendors that 
+> cause ACS violations in perfectly normal accesses. This patch provides 
+> the framework for enabling and disabling the functionality at certain 
+> points during endpoint bringup in the form of a quirk.
+> 
+> Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+> 
+> --
+> 
+> -v2: move workaround to pci_bus_read_dev_vendor_id() from 
+> pci_bus_check_dev()
+>       and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
+> -v3: add bus->self check for root bus and virtual bus for sriov vfs.
+> -v4: only do workaround for IDT switches
+> -v5: tweak pci_std_enable_acs_sv to deal with unimplemented SV
+> -v6: Added errata verbiage verbatim and resolved patch format issues
+> -v7: changed int to bool for found and idt_workaround declarations. Also
+>       added bugzilla https://bugzilla.kernel.org/show_bug.cgi?id=196979
+> -v8: Rewrote the patch by adding a new acs quirk to keep the workaround
+>       out of the main code path
+> -v9: changed function name from pci_dev_specific_fixup_acs_quirk to
+>       pci_bus_acs_quirk. Also, tested for FLR and hot reset scenarios 
+> and did
+>       not see issues where workaround was required. The issue seems to be
+>       related only to cold reset/power on situation.
+> -v10: Moved the contents of pci_bus_read_vendor_id into an internal function
+>        __pci_bus_read_vendor_id
+> -v11: Split the patch into two patches. The first a general quirk framework.
+> 
+> ---
+> 
+>   drivers/pci/pci.h    |  7 +++++++
+>   drivers/pci/probe.c  | 33 ++++++++++++++++++++++++++++-----
+>   drivers/pci/quirks.c | 41 +++++++++++++++++++++++++++++++++++++++++
+>   3 files changed, 76 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 023f7cf..a9e2a8c 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -387,11 +387,18 @@ struct pci_dev_reset_methods {
+> 
+>   #ifdef CONFIG_PCI_QUIRKS
+>   int pci_dev_specific_reset(struct pci_dev *dev, int probe);
+> +int pci_bus_specific_acs_quirk(struct pci_bus *bus , int devfn,
+> +					int enable, bool found);
+>   #else
+>   static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>   {
+>   	return -ENOTTY;
+>   }
+> +static inline int pci_bus_specific_acs_quirk(struct pc_bus *bus,
+> +					int devfn, int enable, bool found)
+> +{
+> +	return -ENOTTY;
+> +}
+>   #endif
+> 
+>   #if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac91b6f..0c93b3e 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2097,21 +2097,44 @@ static bool pci_bus_wait_crs(struct pci_bus 
+> *bus, int devfn, u32 *l,
+>   	return true;
+>   }
+> 
+> -bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+> +static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int 
+> devfn, u32 *l,
+>   				int timeout)
+>   {
+> +
+> +	int found = false;
+> +
+>   	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
+> -		return false;
+> +		goto out;
+> 
+>   	/* Some broken boards return 0 or ~0 if a slot is empty: */
+>   	if (*l == 0xffffffff || *l == 0x00000000 ||
+>   	    *l == 0x0000ffff || *l == 0xffff0000)
+> -		return false;
+> +		goto out;
+> 
+> +	found = true;
+>   	if (pci_bus_crs_vendor_id(*l))
+> -		return pci_bus_wait_crs(bus, devfn, l, timeout);
+> +		found = pci_bus_wait_crs(bus, devfn, l, timeout);
+> 
+> -	return true;
+> +out:
+> +	return found;
+> +
+> +}
 
-These patches
-  - Define property 'iommu-map' for fsl-mc bus (patch 1)
-  - Integrates the fsl-mc bus with the SMMU using this
-    IOMMU binding (patch 2,3,4)
-  - Adds the dma configuration support for fsl-mc bus (patch 5)
-  - Updates the fsl-mc device node with iommu/dma related changes (patch6)
+The changes to the above function do not change the behavior and are
+not an improvement to the function, imo.  There are no locks to be
+released, there's no resources to free, there's no reason to have a
+goto and common exit point.
 
-Changes in v2:
-  - use iommu-map property for fsl-mc bus
-  - rebase over patchset https://patchwork.kernel.org/patch/10317337/
-    and make corresponding changes for dma configuration of devices on
-    fsl-mc bus
+> +
+> +
+> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+> +				int timeout)
+> +{
+> +	bool ret;
+> +	int enable = -1;
 
-Changes in v3:
-  - move of_map_rid in drivers/of/address.c
+Unnecessary initialization.
 
-Changes in v4:
-  - move of_map_rid in drivers/of/base.c
+> +
+> +	enable = pci_bus_specific_acs_quirk(bus, devfn, false, false);
 
-Nipun Gupta (6):
-  Docs: dt: add fsl-mc iommu-map device-tree binding
-  iommu: of: make of_pci_map_rid() available for other devices too
-  iommu: support iommu configuration for fsl-mc devices
-  iommu: arm-smmu: Add support for the fsl-mc bus
-  bus: fsl-mc: supoprt dma configure for devices on fsl-mc bus
-  arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
+The prototype specifies the 3rd arg is an int, not bool.  The args are
+pretty cryptic regardless though, can we rename or create wrappers to
+make their usage better?  This looks like a test_and_clear sort of
+function and the below looks like a restore (if found?).
 
- .../devicetree/bindings/misc/fsl,qoriq-mc.txt      |  39 ++++++++
- arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi     |   6 +-
- drivers/bus/fsl-mc/fsl-mc-bus.c                    |  16 +++-
- drivers/iommu/arm-smmu.c                           |   7 ++
- drivers/iommu/iommu.c                              |  21 +++++
- drivers/iommu/of_iommu.c                           |  25 ++++-
- drivers/of/base.c                                  | 102 +++++++++++++++++++++
- drivers/of/irq.c                                   |   5 +-
- drivers/pci/of.c                                   | 101 --------------------
- include/linux/fsl/mc.h                             |   8 ++
- include/linux/iommu.h                              |   2 +
- include/linux/of.h                                 |  11 +++
- include/linux/of_pci.h                             |  10 --
- 13 files changed, 231 insertions(+), 122 deletions(-)
+> +
+> +	ret = __pci_bus_read_dev_vendor_id(bus, devfn, l, timeout);
+> +
+> +	if (enable > 0)
+> +		pci_bus_specific_acs_quirk(bus, devfn, enable, ret);
+> +
+> +	return ret;
+>   }
+>   EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 26141b1..bf423e3 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4737,3 +4737,44 @@ static void quirk_gpu_hda(struct pci_dev *hda)
+>   			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+>   DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+>   			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+> +
+> +
+> +
+> +static const struct pci_dev_acs_quirk{
+> +	u16 vendor;
+> +	u16 device;
+> +	int (*acs_quirk)(struct pci_bus *bus, int devfn, int enable, bool found);
+> +} pci_dev_acs_quirks[] = {
+> +	{0}
+> +};
+> +
+> +int pci_bus_specific_acs_quirk(struct pci_bus *bus, int devfn, int enable,
+> +				bool found)
+> +{
+> +	const struct pci_dev_acs_quirk *i;
+> +	struct pci_dev *dev;
+> +	int ret;
+> +
+> +	if (!bus || !bus->self)
+> +		return -ENOTTY;
+> +
+> +	dev = bus->self;
+> +
+> +	 /*
+> +	  * Allow devices that have HW bugs in the ACS implementations to
+> +	  * control enabling or disabling that ACS feature here.
+> +	  */
+> +	for (i = pci_dev_acs_quirks; i->acs_quirk; i++) {
+> +	if ((i->vendor == dev->vendor ||
+> +		i->vendor == (u16)PCI_ANY_ID) &&
+> +		(i->device == dev->device ||
+> +		 i->device == (u16)PCI_ANY_ID)) {
+> +			ret = i->acs_quirk(bus, devfn, enable, found);
+> +			if (ret >= 0)
+> +				return ret;
+> +		}
+> +	}
+> +
+> +	return -ENOTTY;
+> +}
+> +
 
--- 
-1.9.1
+What about a "pci_bus_specific_acs_quirk()" would make something think
+they need to call it in the presented use case above?  The commit log
+really doesn't shed any light on why it's used here and not elsewhere
+or specifically what condition this is meant to trap.  Should we
+instead be looking at a pci_bus_specific_read_dev_vendor_id()
+function?  For example:
 
+bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l, int timeout)
+{
+	int ret = pci_bus_specific_read_dev_vendor_id(...);
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	if (ret >= 0)
+		return ret > 0;
+
+	return pci_bus_generic_read_dev_vendor_id(...);
+}
+
+That makes the purpose and call point of the quirk function very well
+defined and you can reuse the generic code within your quirk without
+creating obscure calling conventions.
+
+Please also fix your sending of patch series, there should be a cover
+letter with patches referencing the message id for threading.  Thanks,
+
+Alex
