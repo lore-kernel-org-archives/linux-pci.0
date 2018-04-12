@@ -1,76 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:38731 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757721AbeD0Ibh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:31:37 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 4/9] PCI: aardvark: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Fri, 27 Apr 2018 16:23:34 +0800
-Message-Id: <1524817414-239302-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from esa2.dell-outbound.iphmx.com ([68.232.149.220]:59978 "EHLO
+        esa2.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752389AbeDLRG2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Apr 2018 13:06:28 -0400
+From: <Alex_Gagniuc@Dellteam.com>
+To: <keith.busch@intel.com>, <linux-pci@vger.kernel.org>,
+        <bhelgaas@google.com>
+CC: <scott.bauer@intel.com>
+Subject: RE: [PATCH 0/4] PCI/AER: Use-after-free fix
+Date: Thu, 12 Apr 2018 17:06:05 +0000
+Message-ID: <a97b5921e5cf4855b5e76110a7984fdf@ausx13mps321.AMER.DELL.COM>
+References: <20180409220444.6632-1-keith.busch@intel.com>
+In-Reply-To: <20180409220444.6632-1-keith.busch@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+From: Keith Busch [mailto:keith.busch@intel.com]=20
 
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+> AER error handling walks the PCI topology below a root port, saving point=
+ers of the pci_dev structs affected by the error along the way.
 
- drivers/pci/host/pci-aardvark.c | 24 +++++-------------------
- 1 file changed, 5 insertions(+), 19 deletions(-)
+Hi Keith,
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 9abf549..df02b9a 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -702,37 +702,23 @@ static void advk_pcie_remove_msi_irq_domain(struct advk_pcie *pcie)
- static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
- {
- 	struct device *dev = &pcie->pdev->dev;
--	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node;
- 	struct irq_chip *irq_chip;
- 
--	pcie_intc_node =  of_get_next_child(node, NULL);
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
- 	irq_chip = &pcie->irq_chip;
- 
- 	irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
- 					dev_name(dev));
--	if (!irq_chip->name) {
--		of_node_put(pcie_intc_node);
-+	if (!irq_chip->name)
- 		return -ENOMEM;
--	}
- 
- 	irq_chip->irq_mask = advk_pcie_irq_mask;
- 	irq_chip->irq_mask_ack = advk_pcie_irq_mask;
- 	irq_chip->irq_unmask = advk_pcie_irq_unmask;
- 
--	pcie->irq_domain =
--		irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--				      &advk_pcie_irq_domain_ops, pcie);
--	if (!pcie->irq_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		of_node_put(pcie_intc_node);
--		return -ENOMEM;
--	}
-+	pcie->irq_domain = pci_alloc_intx_irqd(dev, pcie, false,
-+				&advk_pcie_irq_domain_ops, NULL);
-+	if (IS_ERR(pcie->irq_domain))
-+		return PTR_ERR(pcie->irq_domain);
- 
- 	return 0;
- }
--- 
-1.9.1
+I've been trying to do an ABA test to confirm that your change eliminates t=
+he use-after-free issue we've seen. The race seems to be quite elusive, so =
+I can't reliably reproduce it. Your changes have not been forgotten; I have=
+ them staged for further testing.
+
+Alex
