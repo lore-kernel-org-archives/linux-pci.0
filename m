@@ -1,66 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49442 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751819AbeDLNUG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Apr 2018 09:20:06 -0400
-Date: Thu, 12 Apr 2018 08:20:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v7] Revert "PCI: hv: Use device serial number as PCI
- domain"
-Message-ID: <20180412132003.GC145698@bhelgaas-glaptop.roam.corp.google.com>
-References: <FE7CB779-F2C9-4967-BCF1-A0DFE846B2E5@microsoft.com>
- <20180412091742.GA31251@e107981-ln.cambridge.arm.com>
+Return-Path: <SRS0=TX9C=HB=fredlawl.com=fred@kernel.org>
+Return-Path: <SRS0=TX9C=HB=fredlawl.com=fred@kernel.org>
+Message-ID: <5ACEE178.2010107@fredlawl.com>
+Date: Wed, 11 Apr 2018 23:32:56 -0500
+From: Frederick Lawler <fred@fredlawl.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180412091742.GA31251@e107981-ln.cambridge.arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
+ linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] IB/hfi1: Cleanup PCIe link configuration
+References: <1523244898-25942-1-git-send-email-fred@fredlawl.com> <5ACBF5C6.60601@fredlawl.com> <20180410182933.GC24642@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180410182933.GC24642@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 12, 2018 at 10:17:42AM +0100, Lorenzo Pieralisi wrote:
-> On Thu, Apr 12, 2018 at 02:44:42AM +0000, Sridhar Pitchai wrote:
-> > When Linux runs as a guest VM in Hyper-V and Hyper-V adds the virtual PCI
-> > bus to the guest, Hyper-V always provides unique PCI domain.
-> > 
-> > commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
-> > overrode unique domain with the serial number of the first device added to
-> > the virtual PCI bus.
-> > 
-> > The reason for that patch was to have a consistent and short name for the
-> > device, but Hyper-V doesn't provide unique serial numbers. Using non-unique
-> > serial numbers as domain IDs leads to duplicate device addresses, which
-> > causes PCI bus registration to fail.
-> > 
-> > Revert commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI
-> > domain") so we can reliably support multiple devices being assigned to
-> > a guest.
-> > 
-> > Fixes: 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
-> > Signed-off-by: Sridhar Pitchai <sridhar.pitchai@microsoft.com>
-> > Cc: stable@vger.kernel.org
+Bjorn Helgaas wrote:
+> On Mon, Apr 09, 2018 at 06:22:46PM -0500, Frederick Lawler wrote:
+>> Frederick Lawler wrote:
+>>> The IB/hfi1 driver uses custom macros to configure link speed. Some macros were
+>>> previously replaced, but not fully. This patch series addresses the 
+>>> configuration inconsistencies and introduces minor cleanup by replacing
+>>> redundant magic number usage.
 > 
-> I am still not happy with this patch.
+> Sorry for not responding to the actual patches; I'm not subscribed to
+> linux-rdma, so reading them via an archive.
 > 
-> -  You do not explain at all the dependency on commit 0c195567a8f6 and
->    you should because that's fundamental, if that patch is not present
->    this revert breaks the kernel as per previous discussions[1].
-> -  You are sending this patch to all stable kernels that contain the
->    commit you are fixing - some that may not contain the commit above
->    (that was merged in v4.14), you are breaking those kernels, if not
->    explain me why please
+>>> Frederick Lawler (2):
+>>>   IB/hfi1: Replace custom hfi1 macros with PCIe macros
+> 
+> s/This patch removes/Remove/
+> s/infavor/in favor/
+> 
+>> @@ -320,7 +315,7 @@ int pcie_speeds(struct hfi1_devdata *dd)
+>> -	if ((linkcap & PCI_EXP_LNKCAP_SLS) != GEN3_SPEED_VECTOR) {
+>> +	if ((linkcap & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKSTA_CLS_8_0GB) {
+> 
+> Use PCI_EXP_LNKCAP_SLS_8_0GB (not PCI_EXP_LNKSTA_CLS_8_0GB) since
+> we're testing a PCI_EXP_LNKCAP value.  They happen to be the same
+> values, but we should use the matching definitions.
+> 
+>> @@ -1048,14 +1040,14 @@ int do_pcie_gen3_transition(struct hfi1_devdata *dd)
+>> -		target_vector = GEN1_SPEED_VECTOR;
+>> +		target_vector = PCI_EXP_LNKSTA_CLS_2_5GB;
+> 
+> target_vector is later ORed into a PCI_EXP_LNKCTL2 value.  We
+> currently do not have any definitions for PCI_EXP_LNKCTL2.  We should
+> add those, then use them here.  Similarly for the rest of this patch.
+> 
+>> -		target_speed = 8000;
+>> +		target_speed = 8000;
+> 
+> Is there an unintended whitespace change here, e.g., trailing space or
+> replacing tab with space?  I can't tell from the archive.
+> 
+>>>   IB/hfi1: Cleanup PCIe speed link configuration
+> 
+> s/speed link/link speed/
 
-If there's a dependency on 0c195567a8f6, I totally agree that
-needs to be cleared up.  I was assuming that turned out to be
-irrelevant.
+I'll add in the PCI_EXP_LINKCTL2_* macros into PCI and address the
+remaining items.
 
-> [1] https://marc.info/?l=linux-pci&m=152158684221212&w=2
+Thanks for the feedback.
+
+-- 
+Frederick Lawler
